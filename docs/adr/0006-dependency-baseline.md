@@ -35,6 +35,23 @@ Not added, because nothing uses them yet: NSubstitute, Bogus, Verify, CsCheck,
 Testcontainers, Respawn, EF Core Design. Each enters with the first test that
 needs it, and gets its licence checked then.
 
+## Known friction with the preview line
+
+Two things bite in day-to-day work and are worth writing down once:
+
+- **Rider (2026.2) reports "\.NET SDK 11.0.100 is not fully supported"** and
+  degrades some analysis. Expected: no IDE supports an SDK that has not shipped.
+  Build and run work — Rider picks up the preview MSBuild correctly. Nothing to
+  fix; it resolves itself at GA. `LangVersion` is deliberately *not* set, so the
+  language stays at the SDK default (C# 14, which is what CLAUDE.md prescribes)
+  rather than opting into preview language features nothing uses.
+- **Rider rewrites `global.json` on solution load and drops the `test` section.**
+  Without it `dotnet test` fails with "Testing with VSTest target is no longer
+  supported", because xUnit v3 runs on Microsoft.Testing.Platform and the .NET
+  10+ SDK needs the opt-in. If that error appears out of nowhere, the section is
+  what went missing — `dotnet.config` is not an alternative, the preview SDK
+  ignores it. Restore it and, ideally, report the rewrite to JetBrains.
+
 ## Consequences
 Adding a package means editing one reviewed file. A monthly preview bump is
 expected to break something; that is accepted and bloggable. If Npgsql's licence
