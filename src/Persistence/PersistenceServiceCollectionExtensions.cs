@@ -16,9 +16,12 @@ public static class PersistenceServiceCollectionExtensions
     {
         services.AddDbContext<TenderoDbContext>(options => options.UseNpgsql(connectionString));
 
+        // Un adaptador, dos puertos, UNA instancia por scope: registrar cada
+        // interfaz por separado daría dos objetos sobre el mismo DbContext, que
+        // funciona pero miente sobre cuántos adaptadores hay.
         services.AddScoped<EfProductRepository>();
-        services.AddScoped<IProductRepository>(sp => sp.GetRequiredService<EfProductRepository>());
-        services.AddScoped<IProductReader>(sp => sp.GetRequiredService<EfProductRepository>());
+        services.AddScoped<IProductRepository>(services => services.GetRequiredService<EfProductRepository>());
+        services.AddScoped<IProductReader>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
         return services;

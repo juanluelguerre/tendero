@@ -19,14 +19,12 @@ builder.Services.AddTenderoCqrs(
     typeof(SearchProductsQuery).Assembly);
 
 builder.Services.AddTenderoPersistence(
-    builder.Configuration.GetConnectionString("tendero-db")
-    ?? throw new InvalidOperationException("Connection string 'tendero-db' is missing."));
+    builder.Configuration.GetRequiredConnectionString("tendero-db"));
 
 builder.Services.AddCatalog(builder.Configuration);
 
 builder.Services.AddLexicalSearch(
-    builder.Configuration.GetConnectionString("elasticsearch")
-    ?? throw new InvalidOperationException("Connection string 'elasticsearch' is missing."));
+    builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
 builder.Services.AddCarter();
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();

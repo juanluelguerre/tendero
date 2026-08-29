@@ -1,9 +1,7 @@
 using System.Collections.Concurrent;
-using System.Reflection;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Tendero.SharedKernel;
 
@@ -22,7 +20,8 @@ public sealed class CommandDispatcher(IServiceProvider services) : ICommandDispa
 
         var wrapper = (RequestHandlerWrapper<TResult>)Wrappers.GetOrAdd(
             command.GetType(),
-            static type => RequestHandlerWrapper.Create(type, typeof(ICommand<>), typeof(ICommandHandler<,>)));
+            static type => RequestHandlerWrapper.Create(
+                type, typeof(ICommand<>), typeof(CommandHandlerWrapper<,>)));
 
         return wrapper.HandleAsync(command, services, cancellationToken);
     }
@@ -38,7 +37,8 @@ public sealed class QueryDispatcher(IServiceProvider services) : IQueryDispatche
 
         var wrapper = (RequestHandlerWrapper<TResult>)Wrappers.GetOrAdd(
             query.GetType(),
-            static type => RequestHandlerWrapper.Create(type, typeof(IQuery<>), typeof(IQueryHandler<,>)));
+            static type => RequestHandlerWrapper.Create(
+                type, typeof(IQuery<>), typeof(QueryHandlerWrapper<,>)));
 
         return wrapper.HandleAsync(query, services, cancellationToken);
     }
@@ -65,11 +65,37 @@ public sealed class DomainEventDispatcher(IServiceProvider services) : IDomainEv
     }
 }
 
-// ---------- Plumbing: reflexión una sola vez por tipo, luego llamadas virtuales ----------
+// ---------- Plumbing ----------
+//
+// La reflexión ocurre UNA vez por tipo de petición, sólo para construir el
+// wrapper cerrado. A partir de ahí todo son llamadas virtuales sobre la interfaz
+// genérica: el handler se invoca directamente, nunca vía MethodInfo.Invoke, para
+// que la excepción que lance el dominio llegue al llamante sin envolver.
 
 internal abstract class RequestHandlerWrapper<TResult>
 {
     public abstract Task<TResult> HandleAsync(object request, IServiceProvider services, CancellationToken ct);
+
+    /// <summary>Validar, resolver el handler, ejecutarlo. Command y query sólo se
+    /// diferencian en qué interfaz resuelven, así que el resto vive aquí.</summary>
+    protected static async Task<TResult> ValidateAndHandleAsync<TRequest, THandler>(
+        object request,
+        IServiceProvider services,
+        CancellationToken ct,
+        Func<THandler, TRequest, CancellationToken, Task<TResult>> handle)
+        where THandler : class
+    {
+        var typed = (TRequest)request;
+
+        await ValidationStep.EnsureValidAsync(typed, services, ct);
+
+        var handler = services.GetService<THandler>()
+            ?? throw new InvalidOperationException(
+                $"No handler registered for {typeof(TRequest).Name}. " +
+                $"Expected an implementation of {typeof(THandler).Name}.");
+
+        return await handle(handler, typed, ct);
+    }
 }
 
 internal static class RequestHandlerWrapper
@@ -79,66 +105,38 @@ internal static class RequestHandlerWrapper
     /// <paramref name="requestInterface"/> es ICommand&lt;&gt; o IQuery&lt;&gt;;
     /// de ahí se saca TResult sin que el llamante tenga que declararlo.
     /// </summary>
-    public static object Create(Type requestType, Type requestInterface, Type handlerInterface)
+    public static object Create(Type requestType, Type requestInterface, Type wrapperDefinition)
     {
         var closed = Array.Find(
             requestType.GetInterfaces(),
-            i => i.IsGenericType && i.GetGenericTypeDefinition() == requestInterface)
+            candidate => candidate.IsGenericType
+                         && candidate.GetGenericTypeDefinition() == requestInterface)
             ?? throw new InvalidOperationException(
                 $"{requestType.Name} does not implement {requestInterface.Name}.");
 
         var resultType = closed.GetGenericArguments()[0];
 
         return Activator.CreateInstance(
-            typeof(RequestHandlerWrapper<,>).MakeGenericType(requestType, resultType),
-            handlerInterface)!;
+            wrapperDefinition.MakeGenericType(requestType, resultType))!;
     }
 }
 
-internal sealed class RequestHandlerWrapper<TRequest, TResult>(Type handlerInterface)
-    : RequestHandlerWrapper<TResult>
+internal sealed class CommandHandlerWrapper<TCommand, TResult> : RequestHandlerWrapper<TResult>
+    where TCommand : ICommand<TResult>
 {
-    private readonly Type _handlerType = handlerInterface.MakeGenericType(typeof(TRequest), typeof(TResult));
-
-    public override async Task<TResult> HandleAsync(
-        object request, IServiceProvider services, CancellationToken ct)
-    {
-        var typed = (TRequest)request;
-
-        // Paso de validación: FluentValidation antes del handler, siempre.
-        await ValidationStep.EnsureValidAsync(typed, services, ct);
-
-        var handler = services.GetService(_handlerType)
-            ?? throw new InvalidOperationException(
-                $"No handler registered for {typeof(TRequest).Name}. " +
-                $"Expected an implementation of {_handlerType.Name}.");
-
-        return await HandlerInvoker<TRequest, TResult>.Invoke(handler, typed, ct);
-    }
+    public override Task<TResult> HandleAsync(object request, IServiceProvider services, CancellationToken ct) =>
+        ValidateAndHandleAsync<TCommand, ICommandHandler<TCommand, TResult>>(
+            request, services, ct,
+            static (handler, command, token) => handler.HandleAsync(command, token));
 }
 
-/// <summary>
-/// Puente entre el handler resuelto (object) y su interfaz genérica. Command y
-/// query tienen la misma forma de método, así que un único delegado cacheado sirve.
-/// </summary>
-internal static class HandlerInvoker<TRequest, TResult>
+internal sealed class QueryHandlerWrapper<TQuery, TResult> : RequestHandlerWrapper<TResult>
+    where TQuery : IQuery<TResult>
 {
-    private static readonly ConcurrentDictionary<Type, Func<object, TRequest, CancellationToken, Task<TResult>>>
-        Invokers = new();
-
-    public static Task<TResult> Invoke(object handler, TRequest request, CancellationToken ct)
-    {
-        var invoker = Invokers.GetOrAdd(handler.GetType(), static type =>
-        {
-            var method = type.GetMethod("HandleAsync", BindingFlags.Public | BindingFlags.Instance,
-                [typeof(TRequest), typeof(CancellationToken)])
-                ?? throw new InvalidOperationException($"{type.Name} has no HandleAsync method.");
-
-            return (h, r, token) => (Task<TResult>)method.Invoke(h, [r, token])!;
-        });
-
-        return invoker(handler, request, ct);
-    }
+    public override Task<TResult> HandleAsync(object request, IServiceProvider services, CancellationToken ct) =>
+        ValidateAndHandleAsync<TQuery, IQueryHandler<TQuery, TResult>>(
+            request, services, ct,
+            static (handler, query, token) => handler.HandleAsync(query, token));
 }
 
 internal abstract class DomainEventWrapper
@@ -162,16 +160,15 @@ internal static class ValidationStep
     public static async Task EnsureValidAsync<TRequest>(
         TRequest request, IServiceProvider services, CancellationToken ct)
     {
-        var validators = services.GetServices<IValidator<TRequest>>() as IValidator<TRequest>[]
-                         ?? [.. services.GetServices<IValidator<TRequest>>()];
-        if (validators.Length == 0)
-            return;
-
-        var context = new ValidationContext<TRequest>(request!);
+        ValidationContext<TRequest>? context = null;
         List<ValidationFailure>? failures = null;
 
-        foreach (var validator in validators)
+        foreach (var validator in services.GetServices<IValidator<TRequest>>())
         {
+            // El contexto se crea sólo si hay al menos un validador: la mayoría de
+            // queries internas no tienen ninguno y este paso debe salir barato.
+            context ??= new ValidationContext<TRequest>(request!);
+
             var result = await validator.ValidateAsync(context, ct);
             if (result.IsValid) continue;
 
@@ -179,7 +176,7 @@ internal static class ValidationStep
             failures.AddRange(result.Errors);
         }
 
-        if (failures is { Count: > 0 })
+        if (failures is not null)
             throw new ValidationException(failures);
     }
 }

@@ -13,5 +13,6 @@
   <Folder Name="/tests/">
     <Project Path="tests/Architecture.Tests/Tendero.Architecture.Tests.csproj" />
     <Project Path="tests/Catalog.Tests/Tendero.Catalog.Tests.csproj" />
+    <Project Path="tests/SharedKernel.Tests/Tendero.SharedKernel.Tests.csproj" />
   </Folder>
 </Solution>

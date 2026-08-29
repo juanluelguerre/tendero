@@ -9,19 +9,24 @@ var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.Configure<OutboxOptions>(builder.Configuration.GetSection(OutboxOptions.SectionName));
+// ValidateOnStart: una configuración imposible mata el arranque con un mensaje
+// legible, en vez de reventar dentro del BackgroundService donde nadie mira.
+builder.Services.AddOptions<OutboxOptions>()
+    .Bind(builder.Configuration.GetSection(OutboxOptions.SectionName))
+    .Validate(options => options.PollInterval > TimeSpan.Zero, "Outbox:PollInterval must be positive.")
+    .Validate(options => options.BatchSize > 0, "Outbox:BatchSize must be positive.")
+    .Validate(options => options.MaxAttempts > 0, "Outbox:MaxAttempts must be positive.")
+    .ValidateOnStart();
 
 // Sólo hace falta el ensamblado de Search: los handlers de eventos de dominio
 // que existen hoy son sus proyecciones al índice.
 builder.Services.AddTenderoCqrs(typeof(ProjectProductOnUpserted).Assembly);
 
 builder.Services.AddTenderoPersistence(
-    builder.Configuration.GetConnectionString("tendero-db")
-    ?? throw new InvalidOperationException("Connection string 'tendero-db' is missing."));
+    builder.Configuration.GetRequiredConnectionString("tendero-db"));
 
 builder.Services.AddLexicalSearch(
-    builder.Configuration.GetConnectionString("elasticsearch")
-    ?? throw new InvalidOperationException("Connection string 'elasticsearch' is missing."));
+    builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
 // Un solo sitio crea products_es/products_en, y es este.
 builder.Services.AddSearchIndexInitializer();

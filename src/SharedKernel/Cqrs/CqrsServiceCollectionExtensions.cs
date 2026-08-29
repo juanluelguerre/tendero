@@ -35,7 +35,10 @@ public static class CqrsServiceCollectionExtensions
 
     private static void RegisterHandlers(IServiceCollection services, Assembly assembly)
     {
-        foreach (var type in assembly.GetExportedTypes())
+        // GetTypes, no GetExportedTypes: un handler internal es legítimo (de hecho
+        // preferible: sólo el dispatcher lo invoca) y con GetExportedTypes se
+        // quedaría sin registrar en silencio, para fallar en runtime.
+        foreach (var type in assembly.GetTypes())
         {
             if (type is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } is false)
                 continue;

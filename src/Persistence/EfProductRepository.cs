@@ -25,8 +25,3 @@ internal sealed class EfProductRepository(TenderoDbContext context) : IProductRe
     public Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct) =>
         context.Products.AsNoTracking().FirstOrDefaultAsync(product => product.Id == id, ct);
 }
-
-internal sealed class EfUnitOfWork(TenderoDbContext context) : IUnitOfWork
-{
-    public Task SaveChangesAsync(CancellationToken ct) => context.SaveChangesAsync(ct);
-}

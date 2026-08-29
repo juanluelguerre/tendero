@@ -66,6 +66,9 @@ internal static class Jsonb
     private static Money ParseMoney(string text)
     {
         var separator = text.LastIndexOf(' ');
+        if (separator <= 0)
+            throw new FormatException($"'{text}' is not a stored Money value; expected \"<amount> <currency>\".");
+
         return new Money(
             decimal.Parse(text[..separator], CultureInfo.InvariantCulture),
             text[(separator + 1)..]);
