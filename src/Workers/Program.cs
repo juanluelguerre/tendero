@@ -1,5 +1,5 @@
 using Tendero.Persistence;
-using Tendero.Search;
+using Tendero.Search.Elasticsearch;
 using Tendero.Search.Features.ProjectProductToIndex;
 using Tendero.ServiceDefaults;
 using Tendero.SharedKernel;

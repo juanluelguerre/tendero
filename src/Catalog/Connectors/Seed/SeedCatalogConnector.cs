@@ -19,7 +19,7 @@ public sealed class SeedConnectorOptions
 /// con DeserializeAsyncEnumerable, así el fichero completo de ABO
 /// (~147k productos) no pasa por memoria de golpe.
 /// </summary>
-public sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> options) : ICatalogSourceConnector
+internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> options) : ICatalogSourceConnector
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

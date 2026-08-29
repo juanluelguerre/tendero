@@ -10,4 +10,8 @@
     <Project Path="src/SharedKernel/Tendero.SharedKernel.csproj" />
     <Project Path="src/Workers/Tendero.Workers.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Architecture.Tests/Tendero.Architecture.Tests.csproj" />
+    <Project Path="tests/Catalog.Tests/Tendero.Catalog.Tests.csproj" />
+  </Folder>
 </Solution>
