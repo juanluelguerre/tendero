@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Adaptador de salida: la única pieza que conoce EF Core y Postgres.
+       Los tests de arquitectura comprueban que ni Domain ni los slices
+       referencian Microsoft.EntityFrameworkCore. -->
+  <PropertyGroup>
+    <RootNamespace>Tendero.Persistence</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Implementa los puertos declarados por los slices: IProductRepository e
+         IUnitOfWork (Catalog/ImportProducts) e IProductReader (Search). -->
+    <ProjectReference Include="../Catalog/Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Ordering/Tendero.Ordering.csproj" />
+    <ProjectReference Include="../Search/Tendero.Search.csproj" />
+    <ProjectReference Include="../SharedKernel/Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>
