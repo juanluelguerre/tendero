@@ -1,0 +1,5 @@
+/* Puente hacia la unica fuente de verdad. design/tokens.css vive fuera de
+   frontend/ a proposito: lo comparten cuatro superficies (landing, docs,
+   storefront, backoffice), no solo las apps Angular. Este fichero es el unico
+   sitio del workspace que sabe donde esta. */
+@import '../../../../../design/tokens.css';
