@@ -29,6 +29,33 @@ public static class IndexAdmin
         string elasticsearch, IEnumerable<string> indexNames, CancellationToken cancellationToken) =>
         ForEachIndexAsync(elasticsearch, indexNames, HttpMethod.Post, "/_refresh", cancellationToken);
 
+    /// <summary>
+    /// Comprueba que hay un Elasticsearch al otro lado antes de empezar. Sin
+    /// esto, el primer fallo de red sale como una pila de excepciones anidadas
+    /// que no dice lo único importante: que no hay nadie escuchando.
+    /// </summary>
+    public static async Task EnsureReachableAsync(string elasticsearch, CancellationToken cancellationToken)
+    {
+        using var client = new HttpClient { BaseAddress = new Uri(elasticsearch), Timeout = TimeSpan.FromSeconds(5) };
+
+        try
+        {
+            using var response = await client.GetAsync(
+                new Uri("_cluster/health", UriKind.Relative), cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            throw new InvalidOperationException(
+                $"No Elasticsearch answering at {elasticsearch}. Start one with:{Environment.NewLine}" +
+                "  docker run -d --name tendero-es -p 9200:9200 \\" + Environment.NewLine +
+                "    -e discovery.type=single-node -e xpack.security.enabled=false \\" + Environment.NewLine +
+                "    docker.elastic.co/elasticsearch/elasticsearch:9.1.0" + Environment.NewLine +
+                "or point the tool elsewhere with --elasticsearch <url>.", exception);
+        }
+    }
+
     private static async Task ForEachIndexAsync(
         string elasticsearch,
         IEnumerable<string> indexNames,

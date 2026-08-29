@@ -25,6 +25,16 @@ catch (ArgumentException exception)
     return 2;
 }
 
+try
+{
+    await IndexAdmin.EnsureReachableAsync(options.Elasticsearch, CancellationToken.None);
+}
+catch (InvalidOperationException exception)
+{
+    Console.Error.WriteLine(exception.Message);
+    return 2;
+}
+
 // Corpus limpio antes de nada: la evaluación tiene que dar el mismo número dos
 // veces seguidas o no sirve como puerta.
 await IndexAdmin.DropAsync(
