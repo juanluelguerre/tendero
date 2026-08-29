@@ -127,6 +127,16 @@ product variants, multi-currency, inventory as its own aggregate, localized
 attribute values, import-error table in backoffice, Vendure adapter, Docling
 ingestion, Kubernetes/Azure deployment.
 
+Also pending, decided but not done: **prefix the .NET namespaces with the
+author's**, so `Tendero.Catalog` becomes `ElGuerre.Tendero.Catalog` and the root
+convention in CLAUDE.md becomes `ElGuerre.Tendero.*`. It is a mechanical rename
+but it is not small: 12 projects, their assembly names, every `using`, the
+`InternalsVisibleTo` in Catalog, and the architecture tests that build namespace
+strings from assembly names. Best done in one commit that touches nothing else,
+so the diff stays reviewable. Open question when it lands: whether the npm scope
+in `frontend/` follows (`@tendero/*` → `@elguerre/tendero-*`) or stays as is —
+npm scopes and .NET namespaces do not have to agree, and `@tendero` is shorter.
+
 Also deferred, with the measurement already taken: **outbox event coalescing.**
 `Product` raises a `ProductUpserted` on every mutation, so one imported product
 produces roughly eight of them — measured at 47 outbox rows for the 6-product
