@@ -91,7 +91,7 @@
     {
       "query": "flexo con usb",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 3, "why": "flexo es sinonimo de lampara de escritorio y el producto tiene puerto USB; el lexico NO lo resuelve y esta consulta existe para medir esa brecha hasta la fase 2" }
+        { "externalId": "B06GHIJ505", "relevance": 3, "why": "la descripcion en espanol empieza por \"Flexo LED\" y el producto tiene puerto USB: coincidencia literal, no un salto semantico" }
       ]
     },
     {

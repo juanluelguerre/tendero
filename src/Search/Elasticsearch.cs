@@ -92,6 +92,15 @@ public sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILe
 {
     private static readonly ActivitySource Telemetry = new("Tendero.Search");
 
+    /// <summary>
+    /// Campos de texto con sus boosts. `category` NO esta: se mapea como keyword
+    /// y solo casaria con el termino exacto ("COFFEE_MAKER"), asi que listarlo
+    /// entre campos de texto prometia una busqueda que nunca ocurria. Volvera
+    /// cuando la taxonomia sea texto de cara al usuario y no un codigo.
+    /// </summary>
+    private static readonly string[] SearchableFields =
+        ["name^3", "brand^2", "attributesText^2", "description"];
+
     public async Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
         using var activity = Telemetry.StartActivity("search.lexical");
@@ -103,11 +112,28 @@ public sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILe
             .From((query.Page - 1) * query.PageSize)
             .Size(query.PageSize)
             .Query(q => q.Bool(b => b
-                .Must(m => m.MultiMatch(mm => mm
-                    .Query(query.Text)
-                    .Fields(new[] { "name^3", "brand^2", "attributesText^2", "description", "category" })
-                    .Fuzziness(new Fuzziness("AUTO"))      // tolera erratas: "zapatilas"
-                    .Operator(Operator.And)))               // todas las palabras deben aparecer
+                // Dos formas de casar la misma consulta, unidas por should. Cada
+                // una cubre lo que la otra no puede, y eso NO es adorno: el
+                // golden set mide las dos (ver docs/search-evaluation.md).
+                .Must(m => m.Bool(alternatives => alternatives
+                    .Should(
+                        // cross_fields: los terminos pueden repartirse entre campos.
+                        // "zapatillas running mujer" tiene las dos primeras en name
+                        // y la tercera en attributesText; con best_fields no casaba
+                        // ninguna, porque exigia todas en UN campo.
+                        should => should.MultiMatch(mm => mm
+                            .Query(query.Text)
+                            .Fields(SearchableFields)
+                            .Type(TextQueryType.CrossFields)
+                            .Operator(Operator.And)),
+                        // best_fields con fuzziness: tolera erratas ("zapatilas").
+                        // Va aparte porque cross_fields NO admite fuzziness.
+                        should => should.MultiMatch(mm => mm
+                            .Query(query.Text)
+                            .Fields(SearchableFields)
+                            .Fuzziness(new Fuzziness("AUTO"))
+                            .Operator(Operator.And)))
+                    .MinimumShouldMatch(1)))
                 .Filter(f => f.Term(t => t.Field(d => d.Status).Value("active"))))),
             ct);
 

@@ -22,7 +22,9 @@ dotnet run --project tools/SearchEval -- --ci --report artifacts/relevance.md
    agregados en memoria, los publica y los indexa por `IProductIndexer`.
    **No toca Postgres**: lo que se mide es relevancia, y meter la persistencia
    por medio sólo añade formas de fallar que no son la que se está midiendo.
-4. Lanza cada consulta del golden set por `ILexicalProductSearch` y puntúa.
+4. **Refresca** los índices. Elasticsearch tarda hasta un segundo en hacer
+   visible lo indexado, y sin refrescar la nota depende de esa carrera.
+5. Lanza cada consulta del golden set por `ILexicalProductSearch` y puntúa.
 
 ## El golden set
 

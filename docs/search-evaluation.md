@@ -50,38 +50,66 @@ It does **not** start Elasticsearch itself — it takes `--elasticsearch <url>`
 and defaults to `http://localhost:9200`. Booting a container from the tool would
 mean a Testcontainers dependency for something a service container already does.
 
-Dropping the indexes first is not optional: product ids are GUID v7 minted per
-run, so without it the previous run's documents stay and compete in the ranking.
-Two runs of identical code scored 0.674 and 0.360 before that was fixed.
+Two things make the run reproducible, and both were learned the hard way:
+
+- **Drop the indexes first.** Product ids are GUID v7 minted per run, so without
+  it the previous run's documents stay and compete in the ranking. Two runs of
+  identical code scored 0.674 and then 0.360.
+- **Refresh explicitly after indexing.** Elasticsearch refreshes once a second,
+  so otherwise the score depends on whether the refresh landed before or after a
+  query: 0.860 and then 0.769. Polling until *some* query returns a hit is not
+  enough — it only proves one document is visible, not all six.
 
 ## Committed baseline
 
-Measured against the seed sample, lexical BM25 only:
+Measured against the seed sample, lexical BM25 only. Five consecutive runs give
+identical numbers.
 
 | culture | NDCG@10 | recall@50 | threshold NDCG | threshold recall |
 |---|---:|---:|---:|---:|
-| es | 0.769 | 0.750 | 0.76 | 0.74 |
-| en | 0.674 | 0.636 | 0.66 | 0.63 |
+| es | 0.860 | 0.841 | 0.85 | 0.83 |
+| en | 0.720 | 0.682 | 0.71 | 0.67 |
 
-## Known gaps the baseline exposes
+### What the first committed baseline bought
 
-The queries scoring 0.000 are diagnosis, not noise. Three distinct causes, all
-phase-2 work, all now measurable:
+The gate's first job was to justify a change to the query itself:
 
-1. **`best_fields` + `AND` does not span fields.** "zapatillas running mujer"
-   returns nothing: the first two terms live in `name`, `mujer` lives in
-   `attributesText`, and no single field holds all three. Same for "camiseta
-   hombre" and "laptop backpack 15 inch". `cross_fields` is the likely fix, and
-   this gate is what will prove it.
-2. **Attribute values are never translated.** Colour and gender are stored in
+| | before | after |
+|---|---:|---:|
+| es NDCG@10 | 0.769 | **0.860** |
+| es recall@50 | 0.750 | **0.841** |
+| en NDCG@10 | 0.674 | **0.720** |
+| en recall@50 | 0.636 | **0.682** |
+
+`best_fields` with `operator: and` requires every term in *one* field, so
+"zapatillas running mujer" matched nothing: the first two terms are in `name`,
+`mujer` is in `attributesText`. The query is now a `should` of two clauses —
+`cross_fields` (terms may spread across fields) and `best_fields` with
+`fuzziness: AUTO` — because `cross_fields` does not support fuzziness and typo
+tolerance had to survive. It did: "zapatilas" and "runing shoes" still score
+1.000. Three queries went from 0.000 to 1.000.
+
+`category` also left the searchable fields. It is mapped as a `keyword`, so
+listing it among text fields promised a match that could never happen.
+
+## Known gaps the baseline still exposes
+
+The queries scoring 0.000 are diagnosis, not noise:
+
+1. **Attribute values are never translated.** Colour and gender are stored in
    Spanish, so "navy blue shoes" and "womens running shoes" cannot match in the
    English index. Localized attribute values are deferred on purpose
    (initial-plan §7); this is what their absence costs.
-3. **Vocabulary gaps lexical search cannot bridge** — "flexo con usb",
-   "reading light with usb", "ropa deportiva", "menaje de cocina". These are in
-   the golden set deliberately: they are the headroom hybrid search has to earn
-   in phase 2, and the before/after number for that article.
+2. **The category taxonomy is not user vocabulary.** "induction cookware" fails
+   because `COOKWARE` is a code, not a label someone would type. It needs the
+   category to become localized text, not a mapping tweak.
+3. **Vocabulary gaps lexical search cannot bridge** — "reading light with usb",
+   "ropa deportiva", "menaje de cocina", "gift for the kitchen". These are in the
+   golden set deliberately: they are the headroom hybrid search has to earn in
+   phase 2, and the before/after number for that article.
 
-Note `category` is mapped as a `keyword` yet listed among the `multi_match` text
-fields, so "induction cookware" never matches category `COOKWARE`. That one is
-arguably a mapping bug rather than a missing feature.
+A cautionary note on annotating: "flexo con usb" was originally annotated as a
+synonym gap lexical search could not solve. It scores 1.000, and always did —
+the Spanish description literally begins "Flexo LED". The annotation was written
+from assumption instead of from the catalogue. That is precisely what the `why`
+field exists to make visible in review.

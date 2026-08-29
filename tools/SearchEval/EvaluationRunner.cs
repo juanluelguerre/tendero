@@ -56,29 +56,4 @@ public sealed class EvaluationRunner(IServiceProvider services)
 
         return new CultureScore(golden.Culture, scores);
     }
-
-    /// <summary>
-    /// Elasticsearch no hace visible un documento hasta el siguiente refresco
-    /// (1 s por defecto). En lugar de dormir a ciegas, se sondea por el puerto
-    /// hasta que la primera consulta del golden set devuelve algo.
-    /// </summary>
-    public async Task WaitUntilSearchableAsync(GoldenSet golden, CancellationToken cancellationToken)
-    {
-        var search = services.GetRequiredService<ILexicalProductSearch>();
-        var probe = golden.Queries[0].Query;
-
-        for (var attempt = 0; attempt < 30; attempt++)
-        {
-            var page = await search.SearchAsync(
-                new ProductSearchQuery(probe, golden.Culture, Page: 1, PageSize: 1), cancellationToken);
-
-            if (page.Total > 0)
-                return;
-
-            await Task.Delay(TimeSpan.FromMilliseconds(300), cancellationToken);
-        }
-
-        // No es un error: puede que esa consulta no tenga respuesta léxica. El
-        // informe lo dirá con un NDCG bajo, que es información, no un fallo.
-    }
 }

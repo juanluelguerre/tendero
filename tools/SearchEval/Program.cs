@@ -10,6 +10,8 @@ using Tendero.SearchEval;
 // Elasticsearch real, por los MISMOS puertos que usa la aplicación, y compara
 // NDCG@10 y recall@50 con los umbrales comprometidos.
 
+var IndexNames = SearchCultures.Analyzers.Keys.Select(ProductSearchDocument.IndexNameFor).ToArray();
+
 EvaluationOptions options;
 try
 {
@@ -25,9 +27,9 @@ catch (ArgumentException exception)
 
 // Corpus limpio antes de nada: la evaluación tiene que dar el mismo número dos
 // veces seguidas o no sirve como puerta.
-await IndexReset.DropAsync(
+await IndexAdmin.DropAsync(
     options.Elasticsearch,
-    SearchCultures.Analyzers.Keys.Select(ProductSearchDocument.IndexNameFor),
+    IndexNames,
     CancellationToken.None);
 
 var builder = Host.CreateApplicationBuilder();
@@ -50,6 +52,12 @@ var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 var services = host.Services;
 
 var corpus = await new SeedCorpus(services).IndexAsync("seed", cancellation.Token);
+
+// Refresco explícito: sin esto la puntuación depende de una carrera con el
+// refresco automático de Elasticsearch, y una puerta que da números distintos
+// en dos ejecuciones seguidas no es una puerta.
+await IndexAdmin.RefreshAsync(options.Elasticsearch, IndexNames, cancellation.Token);
+
 Console.WriteLine($"Indexed {corpus.Count} seed products into {options.Elasticsearch}");
 
 var thresholds = await EvaluationThresholds.LoadAsync(options.ThresholdsPath, cancellation.Token);
@@ -59,7 +67,6 @@ var scores = new List<CultureScore>();
 foreach (var path in Directory.EnumerateFiles(options.GoldenDirectory, "*.json").Order())
 {
     var golden = await GoldenSet.LoadAsync(path, cancellation.Token);
-    await runner.WaitUntilSearchableAsync(golden, cancellation.Token);
     scores.Add(await runner.RunAsync(golden, corpus, cancellation.Token));
 }
 
