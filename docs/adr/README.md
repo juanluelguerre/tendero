@@ -10,5 +10,6 @@
 | [0006](0006-dependency-baseline.md) | Dependency and toolchain baseline (licences, preview pins) | accepted |
 | [0007](0007-search-reads-catalog-domain.md) | Search reads the Catalog domain directly | accepted |
 | [0008](0008-persistence-shape.md) | Persistence shape: jsonb for documents, tables for keys | accepted |
+| [0009](0009-spec-driven-development-scope.md) | Lightweight specs now; Spec Kit as a phase-3 experiment | accepted |
 
 Format: context → decision → consequences. Keep each under a page.

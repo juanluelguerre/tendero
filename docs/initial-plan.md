@@ -140,8 +140,11 @@ ingestion, Kubernetes/Azure deployment.
   2025-2026 or had trust incidents). This is why the CQRS dispatcher, mapping
   and Outbox are hand-written.
 - Spec-driven development: lightweight — CLAUDE.md as constitution, one spec
-  per feature in docs/specs/, ADRs for constraining decisions. Full Spec Kit
-  ceremony evaluated later; Kiro discarded (separate IDE, leaves Claude Code).
+  per feature in docs/specs/, ADRs for constraining decisions. Kiro discarded
+  (separate IDE, leaves Claude Code). Spec Kit was evaluated once phase 1 was
+  built: lightweight stays through phases 1-2, and Spec Kit runs as a
+  controlled experiment on the phase-3 UCP server, with the comparison
+  published as the article (ADR 0009).
 - Claude Code setup: CLAUDE.md short + @docs imports; repo skills:
   `new-slice`, `run-search-eval`, `write-adr`, `blog-draft`; MCP servers:
   GitHub, Playwright (when Angular work starts).
