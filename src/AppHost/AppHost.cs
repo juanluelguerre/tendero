@@ -1,27 +1,17 @@
-// Orquestación completa de Tendero en local: nada aquí requiere darse de alta
-// en ningún sitio ni pagar nada (initial-plan §1). Postgres es la fuente de
-// verdad; Elasticsearch, Qdrant, Redis y Ollama son piezas reemplazables.
+// Orquestación de Tendero en local: nada aquí requiere darse de alta en ningún
+// sitio ni pagar nada (initial-plan §1).
+//
+// Sólo se declara lo que el código consume HOY. Qdrant, Ollama y Redis están en
+// la arquitectura objetivo (docs/architecture.md) y entrarán en el mismo PR que
+// traiga el worker de embeddings, en la fase 3: declararlos antes son cinco
+// gigas de descarga en el primer arranque y recursos que nadie lee.
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
-    .WithDataVolume()          // el catálogo importado sobrevive a un reinicio
-    .WithPgAdmin();
+    .WithDataVolume();          // el catálogo importado sobrevive a un reinicio
 
 var database = postgres.AddDatabase("tendero-db");
-
-var redis = builder.AddRedis("redis")
-    .WithRedisCommander();
-
-var qdrant = builder.AddQdrant("qdrant")
-    .WithDataVolume();
-
-// Ollama sirve embeddings (bge-m3, multilingüe) y los LLM locales de la fase 2.
-// Se descarga solo la primera vez; por eso el volumen no es opcional.
-var ollama = builder.AddOllama("ollama")
-    .WithDataVolume();
-
-var embeddings = ollama.AddModel("embeddings", "bge-m3");
 
 // Elasticsearch como recurso de contenedor: la integración de hosting publicada
 // para Aspire arrastra el cliente 8.x y chocaría con el 9.x que usa Search
@@ -37,15 +27,11 @@ var elasticsearchEndpoint = elasticsearch.GetEndpoint("http");
 
 var api = builder.AddProject<Projects.Tendero_Api>("api")
     .WithReference(database).WaitFor(database)
-    .WithReference(redis).WaitFor(redis)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
     .WithExternalHttpEndpoints();
 
 builder.AddProject<Projects.Tendero_Workers>("workers")
     .WithReference(database).WaitFor(database)
-    .WithReference(redis).WaitFor(redis)
-    .WithReference(qdrant).WaitFor(qdrant)
-    .WithReference(embeddings)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
     // El worker crea los índices y el esquema de desarrollo; que arranque
     // después de la API sólo evita ruido en el dashboard.

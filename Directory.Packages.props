@@ -48,12 +48,10 @@
   <ItemGroup Label="Aspire (AppHost only)">
     <!-- Aspire 13.5.3 — MIT -->
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.5.3" />
+    <!-- Only what the AppHost declares today. Qdrant, Redis and the Ollama
+         CommunityToolkit package return with the phase-3 embeddings worker;
+         Elasticsearch is a plain container resource (see ADR 0006). -->
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.5.3" />
-    <PackageVersion Include="Aspire.Hosting.Redis" Version="13.5.3" />
-    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="13.5.3" />
-    <!-- Ollama: CommunityToolkit 13.5.0 — MIT. Elasticsearch has no equivalent we
-         are willing to take (see ADR 0006); it is a plain container resource. -->
-    <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="13.5.0" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">
