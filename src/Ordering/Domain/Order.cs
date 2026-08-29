@@ -54,6 +54,10 @@ public sealed class Order : AggregateRoot
     // en esta cultura: el histórico del pedido no cambia si el catálogo se retraduce.
     public string Culture { get; private set; } = "es";
 
+    // La divisa es del pedido, no de cada línea: se fija al comprar y no cambia.
+    // Tenerla aquí es lo que permite que Total exista aunque no queden líneas.
+    public string Currency { get; private set; } = default!;
+
     public OrderStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -61,7 +65,7 @@ public sealed class Order : AggregateRoot
     public IReadOnlyList<OrderLine> Lines => _lines;
 
     public Money Total => _lines.Aggregate(
-        Money.Zero(_lines[0].UnitPrice.Currency),
+        Money.Zero(Currency),
         (sum, line) => sum + line.Total);
 
     private Order() { } // EF Core
@@ -75,6 +79,13 @@ public sealed class Order : AggregateRoot
         if (lines.Any(l => l.Quantity <= 0))
             throw new InvalidOperationException("Line quantity must be positive.");
 
+        // Un pedido tiene UNA divisa. Detectarlo aquí y no al sumar convierte un
+        // error de datos en un rechazo con nombre, en el único sitio que puede
+        // decidirlo. Multi-divisa está aplazado a propósito (initial-plan §7).
+        var currency = lines[0].UnitPrice.Currency;
+        if (lines.Any(l => !string.Equals(l.UnitPrice.Currency, currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("An order cannot mix currencies.");
+
         var now = DateTimeOffset.UtcNow;
         var order = new Order
         {
@@ -82,6 +93,7 @@ public sealed class Order : AggregateRoot
             CustomerId = customerId,
             IdempotencyKey = idempotencyKey,
             Culture = culture.Split('-', '_')[0].ToLowerInvariant(),
+            Currency = currency,
             Status = OrderStatus.Pending,
             CreatedAt = now,
             UpdatedAt = now

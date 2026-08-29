@@ -25,6 +25,7 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasIndex(o => o.IdempotencyKey).IsUnique();
 
         builder.Property(o => o.Culture).HasMaxLength(5).IsRequired();
+        builder.Property(o => o.Currency).HasMaxLength(3).IsRequired();
 
         builder.Property(o => o.Status)
             .HasConversion<string>()

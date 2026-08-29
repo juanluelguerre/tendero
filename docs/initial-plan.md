@@ -127,6 +127,19 @@ product variants, multi-currency, inventory as its own aggregate, localized
 attribute values, import-error table in backoffice, Vendure adapter, Docling
 ingestion, Kubernetes/Azure deployment.
 
+Also deferred, with the measurement already taken: **outbox event coalescing.**
+`Product` raises a `ProductUpserted` on every mutation, so one imported product
+produces roughly eight of them — measured at 47 outbox rows for the 6-product
+seed sample. It is correct (the projection is idempotent) and irrelevant at this
+size, but the full Amazon Berkeley Objects set would write ~1.2M rows to do
+147k products' worth of work. The fix belongs in the drain to the outbox, not in
+the aggregate: the domain is right to record what happened, and delivering the
+same "this product changed" eight times for one transaction is a delivery
+concern. It needs care, because collapsing by event type is only safe for
+state-snapshot events — two `OrderPaymentFailed` with different reasons in one
+unit of work are two facts. This lands with the full-dataset import script,
+which is when there are before/after numbers worth publishing.
+
 ## 8. Engineering practices
 
 - Testing: see docs/testing.md. xUnit v3, NSubstitute, builders + Bogus (no
