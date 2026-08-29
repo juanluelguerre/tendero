@@ -9,8 +9,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
 
-    <!-- CLAUDE.md: warnings are errors. The CI/dev command passes -warnaserror;
-         these two make the build strict even when it is not passed. -->
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -21,6 +19,14 @@
 
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- CLAUDE.md: warnings are errors — enforced in CI, not on the laptop. An
+       unused local while you are mid-edit should not break your build, but it
+       should not reach main either. GitHub Actions exports $(CI) on its own;
+       the explicit property reproduces CI locally without remembering a flag. -->
+  <PropertyGroup Condition="'$(CI)' == 'true' Or '$(ContinuousIntegrationBuild)' == 'true'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
 </Project>
