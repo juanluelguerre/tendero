@@ -106,6 +106,10 @@ flowchart TB
         APIP[Api]
         WKP[Workers]
     end
+    subgraph Adapters [Outbound adapters and cross-cutting]
+        PER[Persistence<br/>EF Core · Postgres · outbox]
+        SD[ServiceDefaults<br/>OTel · health · discovery]
+    end
     subgraph Ctx [Contexts and capabilities]
         C[Catalog]
         O[Ordering]
@@ -113,8 +117,15 @@ flowchart TB
         U[Ucp]
     end
     SK[Tendero.SharedKernel<br/>Money · LocalizedText · ids · CQRS · domain events]
-    Exec --> Ctx --> SK
+    Exec --> Adapters --> Ctx --> SK
+    Exec --> Ctx
 ```
+
+`Persistence` implements the ports the slices declare (`IProductRepository`,
+`IUnitOfWork`, `IProductReader`) and is the only project that knows EF Core
+exists; `Search` is the only one that knows Elasticsearch exists. Both facts are
+architecture tests, not conventions. `Search` referencing `Catalog` is the one
+edge that does not point straight down — see ADR 0007.
 
 Architecture tests (`docs/testing.md`) enforce the downward-only rule; the
 `tests/` and `frontend/` trees sit beside these layers without entering them.
