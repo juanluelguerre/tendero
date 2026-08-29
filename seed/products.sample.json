@@ -1,0 +1,157 @@
+[
+  {
+    "item_id": "B073WXYZ01",
+    "name": {
+      "es": "Zapatillas de running amortiguadas Pulse Runner",
+      "en": "Pulse Runner cushioned running shoes"
+    },
+    "description": {
+      "es": "Zapatillas de running neutras con mediasuela de espuma reactiva, upper de malla transpirable y refuerzo en el talon. Drop de 8 mm.",
+      "en": "Neutral running shoes with responsive foam midsole, breathable mesh upper and reinforced heel counter. 8 mm drop."
+    },
+    "brand": "Vertex",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 79.95,
+      "currency": "EUR"
+    },
+    "images": [
+      "https://cdn.example.com/seed/B073WXYZ01/main.jpg",
+      "https://cdn.example.com/seed/B073WXYZ01/side.jpg"
+    ],
+    "attributes": {
+      "color": "azul marino",
+      "material": "malla sintetica",
+      "genero": "mujer",
+      "tallas": "36-42",
+      "drop_mm": "8"
+    }
+  },
+  {
+    "item_id": "B08JKLM202",
+    "name": {
+      "es": "Mochila urbana impermeable 25L CityPack",
+      "en": "CityPack waterproof urban backpack 25L"
+    },
+    "description": {
+      "es": "Mochila de dia con compartimento acolchado para portatil de 15 pulgadas, tejido ripstop con tratamiento DWR y bolsillo antirrobo en la espalda.",
+      "en": "Daypack with padded 15-inch laptop compartment, DWR-treated ripstop fabric and anti-theft back pocket."
+    },
+    "brand": "Nordwind",
+    "product_type": "BACKPACK",
+    "price": {
+      "amount": 54.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "https://cdn.example.com/seed/B08JKLM202/main.jpg"
+    ],
+    "attributes": {
+      "color": "negro",
+      "capacidad_l": "25",
+      "material": "ripstop reciclado",
+      "portatil_max": "15\""
+    }
+  },
+  {
+    "item_id": "B09PQRS303",
+    "name": {
+      "es": "Cafetera de goteo programable Aroma 12 tazas",
+      "en": "Aroma programmable drip coffee maker, 12 cups"
+    },
+    "description": {
+      "es": "Cafetera de filtro con jarra de vidrio, temporizador de 24 horas, funcion pausa y sirve, y placa calefactora con apagado automatico.",
+      "en": "Filter coffee maker with glass carafe, 24-hour timer, pause-and-serve function and auto shut-off warming plate."
+    },
+    "brand": "Kuisina",
+    "product_type": "COFFEE_MAKER",
+    "price": {
+      "amount": 39.99,
+      "currency": "EUR"
+    },
+    "images": [
+      "https://cdn.example.com/seed/B09PQRS303/main.jpg"
+    ],
+    "attributes": {
+      "capacidad_tazas": "12",
+      "potencia_w": "900",
+      "color": "acero inoxidable"
+    }
+  },
+  {
+    "item_id": "B07TUVW404",
+    "name": {
+      "es": "Camiseta tecnica de trail manga corta",
+      "en": "Short-sleeve trail running tech tee"
+    },
+    "description": {
+      "es": "Camiseta ligera de secado rapido con costuras planas y tejido con proteccion UV UPF 30.",
+      "en": "Lightweight quick-dry tee with flat seams and UPF 30 sun-protective fabric."
+    },
+    "brand": "Vertex",
+    "product_type": "SHIRT",
+    "price": {
+      "amount": 24.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "https://cdn.example.com/seed/B07TUVW404/main.jpg"
+    ],
+    "attributes": {
+      "color": "verde bosque",
+      "genero": "hombre",
+      "tallas": "S-XXL",
+      "proteccion_uv": "UPF 30"
+    }
+  },
+  {
+    "item_id": "B06GHIJ505",
+    "name": {
+      "es": "Lampara de escritorio LED regulable con puerto USB",
+      "en": "Dimmable LED desk lamp with USB port"
+    },
+    "description": {
+      "es": "Flexo LED con tres temperaturas de color, brazo articulado y puerto de carga USB-A integrado en la base.",
+      "en": "LED desk lamp with three color temperatures, articulated arm and built-in USB-A charging port."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 29.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "https://cdn.example.com/seed/B06GHIJ505/main.jpg"
+    ],
+    "attributes": {
+      "temperatura_color": "3000K-6000K",
+      "potencia_w": "9",
+      "color": "blanco"
+    }
+  },
+  {
+    "item_id": "B05DEFG606",
+    "name": {
+      "es": "Set de 3 sartenes antiadherentes aptas para induccion",
+      "en": "Set of 3 induction-ready non-stick frying pans"
+    },
+    "description": {
+      "es": "Sartenes de 20, 24 y 28 cm con revestimiento antiadherente libre de PFOA, base de acero para induccion y mangos de baquelita.",
+      "en": "20, 24 and 28 cm pans with PFOA-free non-stick coating, induction steel base and bakelite handles."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 44.95,
+      "currency": "EUR"
+    },
+    "images": [
+      "https://cdn.example.com/seed/B05DEFG606/main.jpg"
+    ],
+    "attributes": {
+      "piezas": "3",
+      "diametros_cm": "20, 24, 28",
+      "induccion": "si"
+    }
+  }
+]

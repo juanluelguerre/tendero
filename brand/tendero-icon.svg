@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Tendero">
+  <title>Tendero</title>
+  <defs>
+    <clipPath id="t-awning"><path d="M34 24 L92 24 L110 58 L16 58 Z"/></clipPath>
+  </defs>
+  <rect width="120" height="120" rx="28" fill="#D85A30"/>
+  <path d="M34 24 L92 24 L110 58 L16 58 Z" fill="#FAECE7"/>
+  <g clip-path="url(#t-awning)">
+    <rect x="34" y="24" width="16" height="34" fill="#D85A30" opacity="0.35"/>
+    <rect x="66" y="24" width="16" height="34" fill="#D85A30" opacity="0.35"/>
+    <rect x="98" y="24" width="16" height="34" fill="#D85A30" opacity="0.35"/>
+  </g>
+  <rect x="48" y="66" width="30" height="38" rx="6" fill="#FAECE7"/>
+</svg>
