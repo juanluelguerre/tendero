@@ -1,0 +1,145 @@
+{
+  "culture": "en",
+  "source": "seed",
+  "queries": [
+    {
+      "query": "running shoes",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "exactly that: a running shoe" },
+        { "externalId": "B07TUVW404", "relevance": 1, "why": "trail running tee: same sport, different category" }
+      ]
+    },
+    {
+      "query": "womens running shoes",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "category and gender match (attribute genero=mujer)" },
+        { "externalId": "B07TUVW404", "relevance": 0, "why": "men's garment: the requested gender rules it out" }
+      ]
+    },
+    {
+      "query": "runing shoes",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "single-letter typo; fuzziness is supposed to cover it" }
+      ]
+    },
+    {
+      "query": "navy blue shoes",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "the only product whose colour attribute is navy; stored in Spanish as 'azul marino', so this also measures the untranslated-attribute gap" }
+      ]
+    },
+    {
+      "query": "backpack",
+      "judgments": [
+        { "externalId": "B08JKLM202", "relevance": 3, "why": "head category query, only possible result" }
+      ]
+    },
+    {
+      "query": "waterproof backpack",
+      "judgments": [
+        { "externalId": "B08JKLM202", "relevance": 3, "why": "waterproof is in the name" }
+      ]
+    },
+    {
+      "query": "laptop backpack 15 inch",
+      "judgments": [
+        { "externalId": "B08JKLM202", "relevance": 3, "why": "15-inch laptop compartment in the description" }
+      ]
+    },
+    {
+      "query": "coffee maker",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "head query, exact category match" }
+      ]
+    },
+    {
+      "query": "12 cup coffee maker",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "attribute query: 12 cups, in the name too" }
+      ]
+    },
+    {
+      "query": "programmable drip coffee maker",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "near-literal match with the name" }
+      ]
+    },
+    {
+      "query": "tech tee",
+      "judgments": [
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "exact match with the name" }
+      ]
+    },
+    {
+      "query": "trail running shirt",
+      "judgments": [
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "trail running tee" },
+        { "externalId": "B073WXYZ01", "relevance": 1, "why": "running product, wrong category" }
+      ]
+    },
+    {
+      "query": "desk lamp",
+      "judgments": [
+        { "externalId": "B06GHIJ505", "relevance": 3, "why": "exact category match" }
+      ]
+    },
+    {
+      "query": "dimmable led lamp",
+      "judgments": [
+        { "externalId": "B06GHIJ505", "relevance": 3, "why": "dimmable and LED are both in the name" }
+      ]
+    },
+    {
+      "query": "reading light with usb",
+      "judgments": [
+        { "externalId": "B06GHIJ505", "relevance": 3, "why": "a desk lamp with a USB port is what someone means here; lexical search cannot bridge 'reading light' to 'desk lamp' and this query exists to measure that gap until phase 2" }
+      ]
+    },
+    {
+      "query": "frying pans",
+      "judgments": [
+        { "externalId": "B05DEFG606", "relevance": 3, "why": "frying pans are in the name" }
+      ]
+    },
+    {
+      "query": "induction cookware",
+      "judgments": [
+        { "externalId": "B05DEFG606", "relevance": 3, "why": "induction-ready, and the category is COOKWARE" }
+      ]
+    },
+    {
+      "query": "non-stick pan set",
+      "judgments": [
+        { "externalId": "B05DEFG606", "relevance": 3, "why": "near-literal match with the name" }
+      ]
+    },
+    {
+      "query": "Vertex",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "brand query: the whole Vertex catalogue is relevant" },
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "brand query: the whole Vertex catalogue is relevant" }
+      ]
+    },
+    {
+      "query": "Kuisina",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "brand query" },
+        { "externalId": "B05DEFG606", "relevance": 3, "why": "brand query" }
+      ]
+    },
+    {
+      "query": "sportswear",
+      "judgments": [
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "a trail running tech tee is sportswear" },
+        { "externalId": "B073WXYZ01", "relevance": 2, "why": "sports footwear; sports yes, wear not exactly" }
+      ]
+    },
+    {
+      "query": "gift for the kitchen",
+      "judgments": [
+        { "externalId": "B05DEFG606", "relevance": 1, "why": "ambiguous query with no clear intent; pans work as a kitchen gift" },
+        { "externalId": "B09PQRS303", "relevance": 1, "why": "ambiguous query: a coffee maker works just as well" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Herramienta, no capa: se apoya en los puertos de Search y en el conector
+       de catálogo, y no conoce ni Elasticsearch ni EF Core. El test de
+       arquitectura 4 la vigila igual que al resto de la solución. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Tendero.SearchEval</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Catalog/Tendero.Catalog.csproj" />
+    <ProjectReference Include="../../src/Search/Tendero.Search.csproj" />
+    <ProjectReference Include="../../src/SharedKernel/Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

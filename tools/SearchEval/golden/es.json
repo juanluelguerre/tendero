@@ -1,0 +1,146 @@
+{
+  "culture": "es",
+  "source": "seed",
+  "queries": [
+    {
+      "query": "zapatillas running",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "es exactamente eso: zapatilla de running" },
+        { "externalId": "B07TUVW404", "relevance": 1, "why": "camiseta de trail running: mismo deporte, categoria distinta" }
+      ]
+    },
+    {
+      "query": "zapatillas running mujer",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "categoria y genero coinciden (atributo genero=mujer)" },
+        { "externalId": "B07TUVW404", "relevance": 0, "why": "prenda de hombre: el genero pedido lo descarta" }
+      ]
+    },
+    {
+      "query": "zapatilas",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "errata de una letra; la tolerancia a erratas debe cubrirla" }
+      ]
+    },
+    {
+      "query": "azul marino",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "unico producto con atributo color=azul marino" }
+      ]
+    },
+    {
+      "query": "mochila",
+      "judgments": [
+        { "externalId": "B08JKLM202", "relevance": 3, "why": "consulta de categoria, unico resultado posible" }
+      ]
+    },
+    {
+      "query": "mochila impermeable",
+      "judgments": [
+        { "externalId": "B08JKLM202", "relevance": 3, "why": "impermeable esta en el nombre" }
+      ]
+    },
+    {
+      "query": "mochila para portatil 15 pulgadas",
+      "judgments": [
+        { "externalId": "B08JKLM202", "relevance": 3, "why": "atributo portatil_max=15\"; compartimento acolchado en la descripcion" }
+      ]
+    },
+    {
+      "query": "cafetera",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "consulta de cabecera, coincidencia exacta de categoria" }
+      ]
+    },
+    {
+      "query": "cafetera 12 tazas",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "consulta por atributo: capacidad_tazas=12" }
+      ]
+    },
+    {
+      "query": "cafetera programable",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "programable esta en el nombre" }
+      ]
+    },
+    {
+      "query": "camiseta tecnica",
+      "judgments": [
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "coincidencia exacta con el nombre" }
+      ]
+    },
+    {
+      "query": "camiseta hombre",
+      "judgments": [
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "categoria y atributo genero=hombre" }
+      ]
+    },
+    {
+      "query": "lampara escritorio",
+      "judgments": [
+        { "externalId": "B06GHIJ505", "relevance": 3, "why": "coincidencia exacta de categoria" }
+      ]
+    },
+    {
+      "query": "lampara led regulable",
+      "judgments": [
+        { "externalId": "B06GHIJ505", "relevance": 3, "why": "led y regulable estan ambos en el nombre" }
+      ]
+    },
+    {
+      "query": "flexo con usb",
+      "judgments": [
+        { "externalId": "B06GHIJ505", "relevance": 3, "why": "flexo es sinonimo de lampara de escritorio y el producto tiene puerto USB; el lexico NO lo resuelve y esta consulta existe para medir esa brecha hasta la fase 2" }
+      ]
+    },
+    {
+      "query": "sartenes induccion",
+      "judgments": [
+        { "externalId": "B05DEFG606", "relevance": 3, "why": "sartenes en el nombre, atributo induccion=si" }
+      ]
+    },
+    {
+      "query": "set de sartenes antiadherentes",
+      "judgments": [
+        { "externalId": "B05DEFG606", "relevance": 3, "why": "coincidencia casi literal con el nombre" }
+      ]
+    },
+    {
+      "query": "menaje de cocina",
+      "judgments": [
+        { "externalId": "B05DEFG606", "relevance": 2, "why": "es menaje, pero la palabra no aparece: consulta de categoria amplia" },
+        { "externalId": "B09PQRS303", "relevance": 1, "why": "electrodomestico de cocina, no menaje en sentido estricto" }
+      ]
+    },
+    {
+      "query": "Vertex",
+      "judgments": [
+        { "externalId": "B073WXYZ01", "relevance": 3, "why": "consulta de marca: todo el catalogo de Vertex es relevante" },
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "consulta de marca: todo el catalogo de Vertex es relevante" }
+      ]
+    },
+    {
+      "query": "Kuisina",
+      "judgments": [
+        { "externalId": "B09PQRS303", "relevance": 3, "why": "consulta de marca" },
+        { "externalId": "B05DEFG606", "relevance": 3, "why": "consulta de marca" }
+      ]
+    },
+    {
+      "query": "ropa deportiva",
+      "judgments": [
+        { "externalId": "B07TUVW404", "relevance": 3, "why": "camiseta tecnica de trail: es ropa deportiva" },
+        { "externalId": "B073WXYZ01", "relevance": 2, "why": "calzado deportivo; deportivo si, ropa no exactamente" }
+      ]
+    },
+    {
+      "query": "regalo para casa",
+      "judgments": [
+        { "externalId": "B06GHIJ505", "relevance": 1, "why": "consulta ambigua sin intencion clara; la lampara encaja tanto como el resto" },
+        { "externalId": "B05DEFG606", "relevance": 1, "why": "consulta ambigua: sartenes valen igual como regalo de hogar" },
+        { "externalId": "B09PQRS303", "relevance": 1, "why": "consulta ambigua: cafetera vale igual como regalo de hogar" }
+      ]
+    }
+  ]
+}

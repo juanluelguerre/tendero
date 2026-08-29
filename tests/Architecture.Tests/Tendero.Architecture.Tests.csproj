@@ -24,6 +24,9 @@
     <ProjectReference Include="../../src/ServiceDefaults/Tendero.ServiceDefaults.csproj" />
     <ProjectReference Include="../../src/SharedKernel/Tendero.SharedKernel.csproj" />
     <ProjectReference Include="../../src/Workers/Tendero.Workers.csproj" />
+    <!-- La herramienta de evaluación entra en las reglas: un tool es justo donde
+         alguien atajaría hasta el cliente de Elastic saltándose los puertos. -->
+    <ProjectReference Include="../../tools/SearchEval/Tendero.SearchEval.csproj" />
   </ItemGroup>
 
 </Project>

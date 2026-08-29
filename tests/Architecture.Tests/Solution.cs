@@ -25,10 +25,11 @@ internal static class Solution
     public static readonly Assembly ServiceDefaults = typeof(TelemetrySources).Assembly;
     public static readonly Assembly Api = typeof(TenderoApi::Program).Assembly;
     public static readonly Assembly Workers = typeof(Workers.OutboxProcessor).Assembly;
+    public static readonly Assembly SearchEval = typeof(SearchEval.RelevanceMetrics).Assembly;
 
     /// <summary>Contextos y capacidades: donde viven dominio y slices.</summary>
     public static readonly Assembly[] Contexts = [Catalog, Ordering, Search];
 
     public static readonly Assembly[] All =
-        [SharedKernel, Catalog, Ordering, Search, Persistence, ServiceDefaults, Api, Workers];
+        [SharedKernel, Catalog, Ordering, Search, Persistence, ServiceDefaults, Api, Workers, SearchEval];
 }
