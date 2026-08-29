@@ -1,0 +1,14 @@
+{
+  "brand": { "name": "Tendero", "tagline": "comercio para personas y agentes" },
+  "search": {
+    "label": "Buscar productos",
+    "placeholder": "Zapatillas, cafetera, mochila…",
+    "submit": "Buscar",
+    "results": "{{total}} resultados para «{{query}}»",
+    "took": "{{ms}} ms",
+    "empty": "Nada para «{{query}}». Prueba con menos palabras.",
+    "idle": "Escribe algo y te lo busco.",
+    "failed": "La búsqueda no respondió. Vuelve a intentarlo en un momento."
+  },
+  "product": { "addToCart": "Añadir al carrito" }
+}

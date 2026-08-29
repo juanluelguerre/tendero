@@ -1,13 +1,9 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
-  selector: 'app-root',
-  templateUrl: './app.html',
-  styleUrl: './app.css',
+  imports: [RouterOutlet],
+  selector: 'backoffice-root',
+  template: '<router-outlet />',
 })
-export class App {
-  protected title = 'backoffice';
-}
+export class App {}

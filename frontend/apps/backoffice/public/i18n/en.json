@@ -1,0 +1,9 @@
+{
+  "brand": { "name": "Tendero", "area": "Backoffice" },
+  "nav": { "reviewQueue": "Review queue", "search": "Search evaluation", "orders": "Orders", "agents": "Agent activity" },
+  "reviewQueue": {
+    "title": "Review queue",
+    "empty": "Nothing here yet — import a catalog to get started.",
+    "emptyHint": "POST /api/catalog/import with { \"source\": \"seed\" }"
+  }
+}

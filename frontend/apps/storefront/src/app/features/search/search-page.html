@@ -1,0 +1,59 @@
+<ng-container *transloco="let t">
+  <form class="search" (submit)="$event.preventDefault(); submit(box.value)">
+    <label class="search__label" for="q">{{ t('search.label') }}</label>
+    <div class="search__row">
+      <input
+        #box
+        id="q"
+        name="q"
+        type="search"
+        class="search__input"
+        [attr.placeholder]="t('search.placeholder')"
+        autocomplete="off"
+      />
+      <!-- La unica accion clay de la vista (design/DESIGN.md). -->
+      <button type="submit" class="search__submit">{{ t('search.submit') }}</button>
+    </div>
+  </form>
+
+  @switch (state().status) {
+    @case ('idle') {
+      <p class="muted">{{ t('search.idle') }}</p>
+    }
+    @case ('searching') {
+      <p class="muted" role="status" aria-live="polite">…</p>
+    }
+    @case ('failed') {
+      <p class="failed" role="alert">{{ t('search.failed') }}</p>
+    }
+    @case ('done') {
+      @let done = state();
+      @if (done.status === 'done') {
+        @if (done.total === 0) {
+          <p class="muted">{{ t('search.empty', { query: done.query }) }}</p>
+        } @else {
+          <p class="results-meta" role="status" aria-live="polite">
+            {{ t('search.results', { total: done.total, query: done.query }) }}
+            <span class="numeric took">{{ t('search.took', { ms: done.tookMs }) }}</span>
+          </p>
+          <ul class="grid">
+            @for (hit of done.hits; track hit.productId) {
+              <li class="card">
+                @if (hit.imageUrl) {
+                  <img class="card__image" [src]="hit.imageUrl" [alt]="hit.name" loading="lazy" />
+                } @else {
+                  <div class="card__image card__image--empty" aria-hidden="true"></div>
+                }
+                <h2 class="card__name">{{ hit.name }}</h2>
+                @if (hit.brand) {
+                  <p class="card__brand">{{ hit.brand }}</p>
+                }
+                <p class="card__price numeric">{{ price(hit) }}</p>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  }
+</ng-container>

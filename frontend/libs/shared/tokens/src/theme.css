@@ -1,0 +1,119 @@
+/* Tendero — puente entre los tokens y Tailwind 4.
+ *
+ * Sustituye a design/tailwind-preset.js, que era formato v3. Tailwind 4 se
+ * configura desde CSS con @theme, lo que encaja mucho mejor aqui: los tokens
+ * YA son custom properties, asi que desaparece la indireccion del preset JS y
+ * queda una sola fuente de verdad de verdad.
+ *
+ * Cada entrada apunta a su token; cambiar design/tokens.css mueve las dos apps,
+ * modo oscuro incluido. Nunca escribas un hex aqui. */
+
+@import './tokens.css';
+@import 'tailwindcss';
+
+/* El backoffice enciende el modo oscuro con <html data-theme="dark">. */
+@custom-variant dark ([data-theme='dark'] &);
+
+@theme {
+  /* ---------- Color ---------- */
+  --color-clay-50: var(--clay-50);
+  --color-clay-100: var(--clay-100);
+  --color-clay-500: var(--clay-500);
+  --color-clay-600: var(--clay-600);
+  --color-clay-800: var(--clay-800);
+
+  --color-olive-50: var(--olive-50);
+  --color-olive-500: var(--olive-500);
+  --color-olive-700: var(--olive-700);
+
+  --color-stone-0: var(--stone-0);
+  --color-stone-50: var(--stone-50);
+  --color-stone-100: var(--stone-100);
+  --color-stone-200: var(--stone-200);
+  --color-stone-300: var(--stone-300);
+
+  --color-ink-400: var(--ink-400);
+  --color-ink-500: var(--ink-500);
+  --color-ink-700: var(--ink-700);
+  --color-ink-900: var(--ink-900);
+
+  /* Semanticos: usa ESTOS en los componentes, no los de la paleta. Son los
+     unicos que siguen al tema oscuro. */
+  --color-page: var(--bg-page);
+  --color-surface: var(--bg-surface);
+  --color-raised: var(--bg-raised);
+  --color-hairline: var(--border);
+  --color-hairline-strong: var(--border-strong);
+  --color-body: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-tint: var(--accent-tint);
+  --color-positive: var(--positive);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  /* ---------- Tipografia ---------- */
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --text-3xs: var(--text-3xs);
+  --text-2xs: var(--text-2xs);
+  --text-xs: var(--text-xs);
+  --text-sm: var(--text-sm);
+  --text-base: var(--text-md);
+  --text-lg: var(--text-lg);
+  --text-xl: var(--text-xl);
+  --text-2xl: var(--text-2xl);
+  --text-3xl: var(--text-3xl);
+  --text-4xl: var(--text-4xl);
+
+  --leading-tight: var(--leading-tight);
+  --leading-snug: var(--leading-snug);
+  --leading-body: var(--leading-body);
+
+  --tracking-tight: var(--tracking-tight);
+  --tracking-wide: var(--tracking-wide);
+
+  /* ---------- Forma ---------- */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+
+  --shadow-pop: var(--shadow-pop);
+
+  /* ---------- Movimiento y layout ---------- */
+  --ease-brand: var(--ease);
+  --container-prose: var(--container-prose);
+  --container-app: var(--container-app);
+}
+
+/* ---------- El unico elemento decorativo del sistema ----------
+   La raya de toldo, sacada del logo. Marca cortes de seccion, la pestana activa
+   del backoffice y la barra de carga de la importacion. Siempre significa
+   Tendero, asi que no se usa para nada mas. */
+@utility awning {
+  height: 6px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--clay-500) 0 14px,
+    var(--clay-100) 14px 28px
+  );
+}
+
+@utility awning-thin {
+  height: 3px;
+}
+
+/* El comercio se lee en columnas: precios, SKUs, totales y metricas van en
+   mono con cifras tabulares para que una columna de precios cuadre de verdad. */
+@utility numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}

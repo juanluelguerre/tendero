@@ -1,0 +1,14 @@
+{
+  "brand": { "name": "Tendero", "tagline": "commerce for humans and agents" },
+  "search": {
+    "label": "Search products",
+    "placeholder": "Running shoes, coffee maker, backpack…",
+    "submit": "Search",
+    "results": "{{total}} results for “{{query}}”",
+    "took": "{{ms}} ms",
+    "empty": "Nothing for “{{query}}”. Try fewer words.",
+    "idle": "Type something and I will look it up.",
+    "failed": "Search did not answer. Try again in a moment."
+  },
+  "product": { "addToCart": "Add to cart" }
+}

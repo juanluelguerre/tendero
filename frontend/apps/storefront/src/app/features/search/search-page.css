@@ -1,0 +1,105 @@
+/* Storefront: espacioso y claro. Ni un hex aqui — todo sale de los tokens. */
+.search { margin-block-end: var(--space-6); }
+
+.search__label {
+  display: block;
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-block-end: var(--space-2);
+}
+
+.search__row { display: flex; gap: var(--space-2); }
+
+.search__input {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  font: inherit;
+  font-size: var(--text-md);
+  color: var(--text);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.search__input:focus-visible,
+.search__submit:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* La unica accion clay de la vista. Si hubiera dos, ninguna seria la primaria. */
+.search__submit {
+  padding: var(--space-3) var(--space-5);
+  font: inherit;
+  font-weight: 600;
+  color: var(--stone-0);
+  background: var(--accent);
+  border: 0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.search__submit:hover { background: var(--accent-hover); }
+
+.muted { color: var(--text-muted); }
+.failed { color: var(--danger); }
+
+.results-meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-block-end: var(--space-5);
+}
+
+.took { color: var(--text-subtle); font-size: var(--text-2xs); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Las imagenes venden; el resto se quita de en medio. Sin sombra hasta el hover. */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: box-shadow var(--dur-base) var(--ease);
+}
+
+.card:hover { box-shadow: var(--shadow-pop); }
+
+.card__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+.card__image--empty { border: 1px dashed var(--border); }
+
+.card__name {
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+.card__brand {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-2);
+}
+
+.card__price { font-size: var(--text-lg); font-weight: 500; margin: 0; }
