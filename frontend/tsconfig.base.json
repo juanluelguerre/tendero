@@ -1,0 +1,38 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "paths": {
+      "@tendero/shared-api": [
+        "./libs/shared/api/src/index.ts"
+      ],
+      "@tendero/shared-i18n": [
+        "./libs/shared/i18n/src/index.ts"
+      ],
+      "@tendero/shared-ui": [
+        "./libs/shared/ui/src/index.ts"
+      ],
+      "@tendero/shared-util": [
+        "./libs/shared/util/src/index.ts"
+      ]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
+}
