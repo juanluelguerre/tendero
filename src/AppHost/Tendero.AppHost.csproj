@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.5.3" />
+
+  <!-- "dotnet run" sobre este proyecto levanta todo: la infraestructura en
+       Docker y los dos servicios .NET, con el dashboard de Aspire delante. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Tendero.AppHost</RootNamespace>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>tendero-apphost</UserSecretsId>
+    <!-- ASPIRE010 pide el bundle del CLI de Aspire. El repo se arranca con
+         "dotnet run" (CLAUDE.md), sin herramienta extra que instalar, así que
+         se silencia a conciencia en lugar de arrastrar la dependencia. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="Aspire.Hosting.Qdrant" />
+    <PackageReference Include="Aspire.Hosting.Redis" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Api/Tendero.Api.csproj" />
+    <ProjectReference Include="../Workers/Tendero.Workers.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bounded context Catalog: dominio + conectores + slices en un solo
+       ensamblado. Los tests de arquitectura vigilan que Tendero.Catalog.Domain
+       (namespace) no dependa de nada de lo que trae este .csproj. -->
+  <PropertyGroup>
+    <RootNamespace>Tendero.Catalog</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

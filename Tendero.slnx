@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AppHost/Tendero.AppHost.csproj" />
+    <Project Path="src/Api/Tendero.Api.csproj" />
+    <Project Path="src/Catalog/Tendero.Catalog.csproj" />
+    <Project Path="src/Ordering/Tendero.Ordering.csproj" />
+    <Project Path="src/Persistence/Tendero.Persistence.csproj" />
+    <Project Path="src/Search/Tendero.Search.csproj" />
+    <Project Path="src/ServiceDefaults/Tendero.ServiceDefaults.csproj" />
+    <Project Path="src/SharedKernel/Tendero.SharedKernel.csproj" />
+    <Project Path="src/Workers/Tendero.Workers.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Architecture.Tests/Tendero.Architecture.Tests.csproj" />
+    <Project Path="tests/Catalog.Tests/Tendero.Catalog.Tests.csproj" />
+    <Project Path="tests/Ordering.Tests/Tendero.Ordering.Tests.csproj" />
+    <Project Path="tests/SharedKernel.Tests/Tendero.SharedKernel.Tests.csproj" />
+  </Folder>
+</Solution>

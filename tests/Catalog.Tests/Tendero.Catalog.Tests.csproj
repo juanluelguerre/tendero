@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Tendero.Catalog.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Catalog/Tendero.Catalog.csproj" />
+  </ItemGroup>
+
+  <!-- La suite de contrato corre contra la MISMA muestra que trae el repo:
+       si el fichero seed deja de cumplir el contrato, se sabe aquí. -->
+  <ItemGroup>
+    <Content Include="../../seed/products.sample.json" Link="TestData/products.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

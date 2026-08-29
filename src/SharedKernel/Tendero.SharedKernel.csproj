@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bottom of the reference graph: everything points here, this points nowhere.
+       The only package allowed is the one the dispatchers genuinely need;
+       Microsoft.Extensions.DependencyInjection.Abstractions comes from the
+       shared framework in .NET 11 (NU1510) and must not be referenced. -->
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+</Project>

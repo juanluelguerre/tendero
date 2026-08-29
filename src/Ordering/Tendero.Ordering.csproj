@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Ordering no comparte ni una entidad con Catalog (CLAUDE.md, invariante 1):
+       de ahí que no haya ProjectReference a Tendero.Catalog y no vaya a haberla. -->
+  <PropertyGroup>
+    <RootNamespace>Tendero.Ordering</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

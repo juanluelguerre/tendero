@@ -1,0 +1,216 @@
+/* ============================================================
+   Tendero — design tokens
+   Single source of truth for landing, docs, storefront, backoffice.
+   Import once per app; never hardcode a hex outside this file.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ---------- Colour ----------
+     Clay: the awning. Olive: the produce crate. Stone: the counter.
+     Ink: the chalkboard. Everything else is state. */
+  --clay-50:   #FBEEE8;
+  --clay-100:  #F5D3C4;
+  --clay-500:  #D85A30;   /* brand primary */
+  --clay-600:  #B8451F;   /* hover / pressed */
+  --clay-800:  #7A2C11;   /* text on clay tints */
+
+  --olive-50:  #EEF2E6;
+  --olive-500: #5C7F38;   /* secondary accent: verified, in stock, passing */
+  --olive-700: #3D5623;
+
+  --stone-0:   #FFFFFF;   /* cards, inputs, app surfaces */
+  --stone-50:  #FAF9F7;   /* raised rows */
+  --stone-100: #F3F1ED;   /* page background */
+  --stone-200: #E4E0D9;   /* hairlines, dividers */
+  --stone-300: #CBC5BA;   /* disabled borders */
+
+  --ink-900:   #201D1B;   /* primary text, dark surfaces */
+  --ink-700:   #443F3A;
+  --ink-500:   #6B655F;   /* secondary text */
+  --ink-400:   #938C84;   /* hints, placeholders */
+
+  --amber-500: #C77F14;   /* needs review, pending */
+  --amber-50:  #FBF1DE;
+  --red-600:   #B3261E;   /* destructive, failed */
+  --red-50:    #FBEAE9;
+
+  /* ---------- Semantic aliases (use these in components) ---------- */
+  --bg-page:        var(--stone-100);
+  --bg-surface:     var(--stone-0);
+  --bg-raised:      var(--stone-50);
+  --border:         var(--stone-200);
+  --border-strong:  var(--stone-300);
+  --text:           var(--ink-900);
+  --text-muted:     var(--ink-500);
+  --text-subtle:    var(--ink-400);
+  --accent:         var(--clay-500);
+  --accent-hover:   var(--clay-600);
+  --accent-tint:    var(--clay-50);
+  --positive:       var(--olive-500);
+  --warning:        var(--amber-500);
+  --danger:         var(--red-600);
+  --focus-ring:     var(--clay-500);
+
+  /* ---------- Type ----------
+     Display: Bricolage Grotesque — a variable grotesque with real quirk,
+       used ONLY for headlines and the wordmark. Never for UI chrome.
+     Body: Instrument Sans — quiet, high x-height, excellent at 14–16px.
+     Utility: JetBrains Mono — prices, SKUs, metrics, code. The receipt voice. */
+  --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+  --font-body:    'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  /* Type scale — 1.25 ratio, capped so the app never shouts */
+  --text-3xs: 0.6875rem; /* 11px — table micro-labels */
+  --text-2xs: 0.75rem;   /* 12px — captions, badges */
+  --text-xs:  0.8125rem; /* 13px — dense table body */
+  --text-sm:  0.875rem;  /* 14px — backoffice body */
+  --text-md:  1rem;      /* 16px — storefront body */
+  --text-lg:  1.25rem;
+  --text-xl:  1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.75rem;
+  --text-4xl: 4rem;      /* landing hero only */
+
+  --leading-tight: 1.15;
+  --leading-snug:  1.35;
+  --leading-body:  1.6;
+
+  --tracking-tight: -0.02em;  /* display sizes */
+  --tracking-wide:  0.06em;   /* eyebrows, micro-labels (uppercase) */
+
+  /* ---------- Space — 4px base ---------- */
+  --space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
+  --space-4: 1rem;     --space-5: 1.5rem;   --space-6: 2rem;
+  --space-7: 3rem;     --space-8: 4rem;     --space-9: 6rem;
+
+  /* ---------- Shape ----------
+     Shop signage, not glassmorphism: modest radii, hairline borders,
+     shadows only where something genuinely floats. */
+  --radius-sm: 4px;
+  --radius-md: 6px;   /* buttons, inputs */
+  --radius-lg: 10px;  /* cards, panels */
+  --radius-full: 999px;
+
+  --shadow-pop: 0 4px 16px rgb(32 29 27 / 0.10);   /* menus, modals */
+  --shadow-none: none;
+
+  /* ---------- Motion ---------- */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+
+  /* ---------- Layout ---------- */
+  --container-prose: 68ch;   /* docs and blog measure */
+  --container-app: 1440px;
+  --header-h: 64px;
+}
+
+/* ============================================================
+   Dark mode — backoffice only by default (data work at night),
+   storefront and landing stay light. Opt in with data-theme="dark".
+   ============================================================ */
+[data-theme='dark'] {
+  --bg-page:       #171513;
+  --bg-surface:    #201D1B;
+  --bg-raised:     #2A2622;
+  --border:        #3A342F;
+  --border-strong: #4C453E;
+  --text:          #F3F1ED;
+  --text-muted:    #A9A199;
+  --text-subtle:   #7C746C;
+  --accent:        #F07A50;
+  --accent-hover:  #F59570;
+  --accent-tint:   #3A2115;
+  --positive:      #8FB463;
+}
+
+/* ============================================================
+   THE SIGNATURE: the awning stripe.
+   Lifted straight from the logo, it is the one decorative device
+   allowed in the whole system — and it always means "this is Tendero".
+   Used for: section dividers, active tab underline, loading bars,
+   the docs sidebar edge, and the top rule of the landing hero.
+   Never as a background fill, never rotated.
+   ============================================================ */
+.awning-rule {
+  height: 6px;
+  border: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--clay-500) 0 14px,
+    var(--clay-100) 14px 28px
+  );
+  border-radius: var(--radius-full);
+}
+
+.awning-rule--thin { height: 3px; }
+
+.awning-rule--muted {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--stone-200) 0 14px,
+    var(--stone-100) 14px 28px
+  );
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  margin: 0 0 var(--space-3);
+}
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-xl); }
+h3 { font-size: var(--text-lg); font-weight: 600; }
+
+/* Prices, SKUs, metrics, latencies — the receipt voice.
+   Tabular figures so columns of numbers line up. */
+.numeric,
+.price,
+.metric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Eyebrows and micro-labels: the only uppercase in the system. */
+.eyebrow {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

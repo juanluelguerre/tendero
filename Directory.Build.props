@@ -1,0 +1,32 @@
+<Project>
+
+  <!-- Defaults shared by every project in the repo. Anything that differs per
+       project (packages, output type) belongs in the .csproj, not here. -->
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- Root namespace is Tendero.*; folder names under src/ drop the prefix. -->
+    <RootNamespace>Tendero.$(MSBuildProjectName.Replace('Tendero.',''))</RootNamespace>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- CLAUDE.md: warnings are errors — enforced in CI, not on the laptop. An
+       unused local while you are mid-edit should not break your build, but it
+       should not reach main either. GitHub Actions exports $(CI) on its own;
+       the explicit property reproduces CI locally without remembering a flag. -->
+  <PropertyGroup Condition="'$(CI)' == 'true' Or '$(ContinuousIntegrationBuild)' == 'true'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>
