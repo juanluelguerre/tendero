@@ -39,16 +39,22 @@
           <ul class="grid">
             @for (hit of done.hits; track hit.productId) {
               <li class="card">
-                @if (hit.imageUrl && !broken().has(hit.productId)) {
+                @let source = imageUrl(hit);
+                @if (source && !broken().has(hit.productId)) {
                   <img
                     class="card__image"
-                    [src]="hit.imageUrl"
+                    [src]="source"
                     [alt]="hit.name"
                     loading="lazy"
                     (error)="onImageError(hit.productId)"
                   />
                 } @else {
-                  <div class="card__image card__image--empty" aria-hidden="true"></div>
+                  <!-- Estado por defecto, no un hueco: una ficha sin foto tiene
+                       que verse deliberada. -->
+                  <div class="card__image card__image--fallback" role="img"
+                       [attr.aria-label]="t('product.noImage')">
+                    <span class="card__initial" aria-hidden="true">{{ hit.name.charAt(0) }}</span>
+                  </div>
                 }
                 <h2 class="card__name">{{ hit.name }}</h2>
                 @if (hit.brand) {

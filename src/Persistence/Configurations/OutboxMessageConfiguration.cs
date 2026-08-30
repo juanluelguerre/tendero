@@ -18,7 +18,7 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
         builder.Property(m => m.OccurredAt);
         builder.Property(m => m.ProcessedAt);
         builder.Property(m => m.Attempts);
-        builder.Property(m => m.Error).HasMaxLength(2000);
+        builder.Property(m => m.Error).HasMaxLength(4000);
 
         // El worker sólo pregunta por lo pendiente en orden de llegada; el
         // índice filtrado mantiene barata esa consulta aunque la tabla crezca.

@@ -19,6 +19,16 @@ public readonly record struct CustomerId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+/// <summary>
+/// Identidad de una imagen: el hash de su contenido, no un GUID. Dos productos
+/// con la misma foto comparten id, así que la deduplicación sale gratis, y una
+/// clave nunca cambia de contenido, así que puede servirse como inmutable.
+/// </summary>
+public readonly record struct ImageId(string Value)
+{
+    public override string ToString() => Value;
+}
+
 // ---------- Dinero como value object ----------
 public readonly record struct Money(decimal Amount, string Currency)
 {

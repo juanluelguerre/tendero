@@ -26,6 +26,32 @@ internal static class Jsonb
         json => new LocalizedText(
             JsonSerializer.Deserialize<Dictionary<string, string>>(json, Options)!));
 
+    /// <summary>
+    /// Variante que tolera null. Hace falta para el texto alternativo de las
+    /// imágenes, que vive DENTRO de una columna JSON: ahí EF no cortocircuita el
+    /// null antes de llamar al conversor como sí hace con una propiedad normal,
+    /// y el conversor no nulable revienta con NullReferenceException al leer.
+    /// </summary>
+    public static readonly ValueConverter<LocalizedText?, string?> NullableLocalizedTextConverter = new(
+        text => text == null ? null : JsonSerializer.Serialize(text.Values, Options),
+        json => json == null ? null : ReadLocalizedText(json));
+
+    public static readonly ValueComparer<LocalizedText?> NullableLocalizedTextComparer = new(
+        (left, right) => LocalizedTextEquals(left, right),
+        text => text == null ? 0 : JsonSerializer.Serialize(text.Values, Options).GetHashCode(StringComparison.Ordinal),
+        text => text == null ? null : new LocalizedText(text.Values));
+
+    private static LocalizedText ReadLocalizedText(string json) =>
+        new(JsonSerializer.Deserialize<Dictionary<string, string>>(json, Options)!);
+
+    private static bool LocalizedTextEquals(LocalizedText? left, LocalizedText? right)
+    {
+        if (ReferenceEquals(left, right)) return true;
+        if (left is null || right is null) return false;
+        return JsonSerializer.Serialize(left.Values, Options)
+               == JsonSerializer.Serialize(right.Values, Options);
+    }
+
     public static readonly ValueComparer<LocalizedText> LocalizedTextComparer = new(
         (left, right) => JsonSerializer.Serialize(left!.Values, Options)
                          == JsonSerializer.Serialize(right!.Values, Options),

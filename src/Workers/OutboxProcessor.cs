@@ -92,7 +92,11 @@ public sealed class OutboxProcessor(
             }
             catch (Exception exception)
             {
-                message.MarkFailed(exception.Message);
+                // exception.ToString(), no .Message: "Object reference not set to
+                // an instance of an object" sin tipo ni traza no permite
+                // diagnosticar nada, y esta columna es lo único que queda de un
+                // mensaje que agotó sus reintentos.
+                message.MarkFailed(exception.ToString());
                 logger.LogWarning(exception,
                     "Outbox message {MessageId} of type {MessageType} failed (attempt {Attempts})",
                     message.Id, message.Type, message.Attempts);

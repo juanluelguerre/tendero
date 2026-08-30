@@ -40,6 +40,8 @@ public sealed class OutboxMessage
     public void MarkFailed(string error)
     {
         Attempts++;
-        Error = error.Length > 2000 ? error[..2000] : error;
+        // Se corta por delante: el tipo de excepción y las primeras líneas de
+        // la traza son lo que dice qué pasó; el final de una traza profunda, no.
+        Error = error.Length > 4000 ? error[..4000] : error;
     }
 }

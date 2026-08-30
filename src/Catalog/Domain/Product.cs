@@ -9,7 +9,14 @@ public enum ProductStatus
     Archived    // fuera de catálogo, se mantiene por histórico de pedidos
 }
 
-public sealed record ProductImage(Uri Url, string? Alt, int SortOrder);
+/// <summary>
+/// Una imagen del producto. Guarda la CLAVE en nuestro almacén, no una URL: la
+/// URL se compone al leer, así que cambiar de CDN o de dominio no es un UPDATE
+/// sobre millones de filas. El texto alternativo es de cara al usuario, luego
+/// LocalizedText (invariante 6): un lector de pantalla en inglés no puede oír
+/// español.
+/// </summary>
+public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder);
 
 // La clave de los N conectores: (origen, id externo). Ej.: ("shopify", "gid://shopify/Product/123")
 public sealed record ExternalReference(string Source, string ExternalId);
@@ -99,10 +106,12 @@ public sealed class Product : AggregateRoot
         Touch();
     }
 
-    public void AddImage(Uri url, string? alt = null)
+    // Idempotente por identidad de contenido: reimportar la misma foto no la
+    // duplica, porque el hash del contenido ES la clave.
+    public void AddImage(ImageId id, LocalizedText? alt = null)
     {
-        if (_images.Any(i => i.Url == url)) return; // idempotente
-        _images.Add(new ProductImage(url, alt, _images.Count));
+        if (_images.Any(i => i.Id == id)) return;
+        _images.Add(new ProductImage(id, alt, _images.Count));
         Touch();
     }
 

@@ -43,8 +43,9 @@ public sealed class SeedCorpus(IServiceProvider services)
             external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
         product.LinkExternal(source, external.ExternalId);
 
-        foreach (var url in external.ImageUrls)
-            product.AddImage(url);
+        // La evaluación NO ingiere imágenes: no son campo buscable, así que no
+        // afectan al ranking, y meter el almacén por medio sólo añadiría formas
+        // de fallar que no son la que se está midiendo.
 
         foreach (var (name, value) in external.Attributes)
             product.SetAttribute(name, value);

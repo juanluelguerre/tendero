@@ -45,6 +45,7 @@ public sealed class SearchIndexInitializer(
                     .Keyword(d => d.Category!)
                     .Text(d => d.AttributesText!, t => t.Analyzer(analyzer))
                     .Keyword(d => d.Slug)
+                    .Keyword(d => d.ImageId!)
                     .DoubleNumber(d => d.PriceAmount)
                     .Keyword(d => d.PriceCurrency)
                     .Keyword(d => d.Status))),
@@ -148,7 +149,7 @@ public sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILe
             h.Source.Category,
             h.Source.PriceAmount,
             h.Source.PriceCurrency,
-            h.Source.ImageUrl,
+            h.Source.ImageId,
             h.Score ?? 0d)).ToList();
 
         activity?.SetTag("search.total", response.Total);

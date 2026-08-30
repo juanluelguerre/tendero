@@ -1,5 +1,8 @@
 {
-  "brand": { "name": "Tendero", "tagline": "commerce for humans and agents" },
+  "brand": {
+    "name": "Tendero",
+    "tagline": "commerce for humans and agents"
+  },
   "search": {
     "label": "Search products",
     "placeholder": "Running shoes, coffee maker, backpack…",
@@ -10,5 +13,8 @@
     "idle": "Type something and I will look it up.",
     "failed": "Search did not answer. Try again in a moment."
   },
-  "product": { "addToCart": "Add to cart" }
+  "product": {
+    "addToCart": "Add to cart",
+    "noImage": "No image"
+  }
 }

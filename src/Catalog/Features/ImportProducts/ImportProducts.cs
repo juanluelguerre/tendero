@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Tendero.Catalog.Connectors;
 using Tendero.Catalog.Domain;
+using Tendero.Catalog.Ports;
 using Tendero.SharedKernel;
 
 namespace Tendero.Catalog.Features.ImportProducts;
@@ -50,6 +51,8 @@ public sealed class ImportProductsHandler(
     IServiceProvider services,
     IProductRepository repository,
     IUnitOfWork unitOfWork,
+    IExternalImageReader imageReader,
+    IImageStore imageStore,
     ILogger<ImportProductsHandler> logger)
     : ICommandHandler<ImportProductsCommand, ImportProductsResult>
 {
@@ -83,7 +86,7 @@ public sealed class ImportProductsHandler(
                     product.UpdateDetails(
                         external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
                     product.LinkExternal(connector.Source, external.ExternalId);
-                    ApplyMedia(product, external);
+                    await ApplyMediaAsync(product, external, cancellationToken);
                     repository.Add(product);
                     created++;
                 }
@@ -92,7 +95,7 @@ public sealed class ImportProductsHandler(
                     existing.UpdateDetails(
                         external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
                     existing.SetPrice(external.Price);
-                    ApplyMedia(existing, external);
+                    await ApplyMediaAsync(existing, external, cancellationToken);
                     updated++;
                 }
 
@@ -127,10 +130,28 @@ public sealed class ImportProductsHandler(
         return new ImportProductsResult(created, updated, failed, stopwatch.Elapsed.TotalSeconds);
     }
 
-    private static void ApplyMedia(Product product, ExternalProduct external)
+    /// <summary>
+    /// Ingiere las imágenes en vez de guardar la URL del origen: el catálogo
+    /// deja de depender de que Shopify o quien sea mantenga vivo su CDN, y la
+    /// fase 4 podrá calcular embeddings sobre bytes que controlamos
+    /// (docs/adr/0011-product-images.md).
+    ///
+    /// Una imagen que no se puede leer no aborta nada: el producto entra sin
+    /// ella y la siguiente importación lo reintenta.
+    /// </summary>
+    private async Task ApplyMediaAsync(
+        Product product, ExternalProduct external, CancellationToken cancellationToken)
     {
-        foreach (var url in external.ImageUrls)
-            product.AddImage(url);
+        foreach (var image in external.Images)
+        {
+            var content = await imageReader.OpenAsync(image, cancellationToken);
+            if (content is null)
+                continue;
+
+            await using var stream = content.Content;
+            var id = await imageStore.SaveAsync(stream, content.ContentType, cancellationToken);
+            product.AddImage(id, image.LocalizedAlt);
+        }
 
         foreach (var (name, value) in external.Attributes)
             product.SetAttribute(name, value);

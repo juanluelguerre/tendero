@@ -68,11 +68,22 @@ public abstract class CatalogSourceConnectorContractTests
     }
 
     [Fact]
-    public async Task Image_urls_are_absolute()
+    public async Task Image_locations_are_absolute_and_readable()
     {
+        // El origen puede servir sus imágenes por HTTP (Shopify desde su CDN) o
+        // tenerlas en disco (el conector seed, y el escaneo de PDFs de la fase 4).
+        // Lo que el contrato exige es que la ubicación sea RESOLUBLE sin contexto
+        // ambiental: el lector no sabe desde qué directorio se lanzó nadie.
         await foreach (var product in CreateConnector().StreamProductsAsync(TestContext.Current.CancellationToken))
-            foreach (var url in product.ImageUrls)
-                Assert.True(url.IsAbsoluteUri, $"Relative image url in '{product.ExternalId}'.");
+        {
+            foreach (var image in product.Images)
+            {
+                Assert.True(image.IsAbsoluteUri(),
+                    $"Relative image location in '{product.ExternalId}': {image.Location}.");
+                Assert.True(image.Location.IsFile || image.Location.Scheme is "http" or "https",
+                    $"Unsupported image scheme '{image.Location.Scheme}' in '{product.ExternalId}'.");
+            }
+        }
     }
 }
 

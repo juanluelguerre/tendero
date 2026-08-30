@@ -33,7 +33,7 @@ public sealed record ExternalProduct(
     string? Category,
     decimal PriceAmount,
     string PriceCurrency,
-    IReadOnlyList<Uri> ImageUrls,
+    IReadOnlyList<ExternalImage> Images,
     IReadOnlyDictionary<string, string> Attributes)
 {
     public Money Price => new(PriceAmount, PriceCurrency);
@@ -42,4 +42,24 @@ public sealed record ExternalProduct(
 
     public LocalizedText? LocalizedDescription =>
         Descriptions is { Count: > 0 } ? new LocalizedText(Descriptions) : null;
+}
+
+/// <summary>
+/// Una imagen tal y como la ofrece el origen. <see cref="Location"/> es un Uri a
+/// propósito: cubre <c>https</c> (Shopify sirve desde su CDN) y <c>file</c> (el
+/// conector seed lee del disco, y el escaneo de PDFs de la fase 4 escribirá a
+/// temporal). Un solo tipo para los dos casos, sin jerarquías.
+///
+/// La importación NO se queda con esta referencia: descarga el contenido y lo
+/// guarda en el almacén propio. El origen puede borrar la suya cuando quiera
+/// (ver docs/adr/0011-product-images.md).
+/// </summary>
+public sealed record ExternalImage(
+    Uri Location,
+    IReadOnlyDictionary<string, string>? Alt = null)
+{
+    public LocalizedText? LocalizedAlt =>
+        Alt is { Count: > 0 } ? new LocalizedText(Alt) : null;
+
+    public bool IsAbsoluteUri() => Location.IsAbsoluteUri;
 }

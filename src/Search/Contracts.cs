@@ -33,7 +33,7 @@ public sealed record SearchHit(
     string? Category,
     decimal PriceAmount,
     string PriceCurrency,
-    string? ImageUrl,
+    string? ImageId,
     double Score);
 
 public sealed record SearchResultPage(
@@ -63,7 +63,10 @@ public sealed record ProductSearchDocument
     public required string Slug { get; init; }
     public decimal PriceAmount { get; init; }
     public required string PriceCurrency { get; init; }
-    public string? ImageUrl { get; init; }
+    /// <summary>Clave de la imagen en el almacén, no una URL. La URL la compone
+    /// el borde HTTP, así que meter un CDN delante no toca ni el índice ni el
+    /// dominio (docs/adr/0011-product-images.md).</summary>
+    public string? ImageId { get; init; }
     public required string Status { get; init; }          // solo "active" es buscable
 
     public static string IndexNameFor(string culture) => $"products_{culture}";
@@ -82,7 +85,7 @@ public sealed record ProductSearchDocument
         Slug = product.Slug.In(culture),
         PriceAmount = product.Price.Amount,
         PriceCurrency = product.Price.Currency,
-        ImageUrl = product.Images.FirstOrDefault()?.Url.ToString(),
+        ImageId = product.Images.FirstOrDefault()?.Id.Value,
         Status = product.Status.ToString().ToLowerInvariant()
     };
 }

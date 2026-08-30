@@ -40,7 +40,7 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
             if (row is null || string.IsNullOrWhiteSpace(row.ItemId) || row.Name.Count == 0)
                 continue;
 
-            yield return row.ToExternalProduct();
+            yield return row.ToExternalProduct(ResolveImage);
         }
     }
 
@@ -59,7 +59,7 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         IReadOnlyList<string>? Images,
         IReadOnlyDictionary<string, string>? Attributes)
     {
-        public ExternalProduct ToExternalProduct() => new(
+        public ExternalProduct ToExternalProduct(Func<string, Uri> resolveImage) => new(
             ExternalId: ItemId,
             Names: Name,
             Descriptions: Description,
@@ -67,9 +67,24 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
             Category: ProductType,
             PriceAmount: Price.Amount,
             PriceCurrency: Price.Currency,
-            ImageUrls: (Images ?? []).Select(url => new Uri(url)).ToList(),
+            Images: (Images ?? []).Select(resolveImage).Select(location => new ExternalImage(location)).ToList(),
             Attributes: Attributes ?? new Dictionary<string, string>());
     }
 
     private sealed record SeedPrice(decimal Amount, string Currency);
+
+    /// <summary>
+    /// El fichero seed referencia sus imágenes en relativo ("images/X.png"), y
+    /// se resuelven contra su propio directorio: es un origen de catálogo que
+    /// vive en disco, igual que Shopify sirve las suyas desde su CDN. Una URL
+    /// absoluta se respeta tal cual, para poder apuntar a un origen remoto.
+    /// </summary>
+    private Uri ResolveImage(string reference)
+    {
+        if (Uri.TryCreate(reference, UriKind.Absolute, out var absolute))
+            return absolute;
+
+        var seedDirectory = Path.GetDirectoryName(Path.GetFullPath(options.Value.FilePath)) ?? ".";
+        return new Uri(Path.GetFullPath(Path.Combine(seedDirectory, reference)));
+    }
 }

@@ -16,8 +16,7 @@
       "currency": "EUR"
     },
     "images": [
-      "https://cdn.example.com/seed/B073WXYZ01/main.jpg",
-      "https://cdn.example.com/seed/B073WXYZ01/side.jpg"
+      "images/B073WXYZ01.png"
     ],
     "attributes": {
       "color": "azul marino",
@@ -44,7 +43,7 @@
       "currency": "EUR"
     },
     "images": [
-      "https://cdn.example.com/seed/B08JKLM202/main.jpg"
+      "images/B08JKLM202.png"
     ],
     "attributes": {
       "color": "negro",
@@ -70,7 +69,7 @@
       "currency": "EUR"
     },
     "images": [
-      "https://cdn.example.com/seed/B09PQRS303/main.jpg"
+      "images/B09PQRS303.png"
     ],
     "attributes": {
       "capacidad_tazas": "12",
@@ -95,7 +94,7 @@
       "currency": "EUR"
     },
     "images": [
-      "https://cdn.example.com/seed/B07TUVW404/main.jpg"
+      "images/B07TUVW404.png"
     ],
     "attributes": {
       "color": "verde bosque",
@@ -121,7 +120,7 @@
       "currency": "EUR"
     },
     "images": [
-      "https://cdn.example.com/seed/B06GHIJ505/main.jpg"
+      "images/B06GHIJ505.png"
     ],
     "attributes": {
       "temperatura_color": "3000K-6000K",
@@ -146,7 +145,7 @@
       "currency": "EUR"
     },
     "images": [
-      "https://cdn.example.com/seed/B05DEFG606/main.jpg"
+      "images/B05DEFG606.png"
     ],
     "attributes": {
       "piezas": "3",

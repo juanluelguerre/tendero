@@ -16,7 +16,9 @@ export interface SearchHit {
   category: string | null;
   priceAmount: number;
   priceCurrency: string;
-  imageUrl: string | null;
+  /** Clave de la imagen en el almacén. La URL se compone en el cliente:
+   *  `/api/images/{imageId}`. Ver docs/adr/0011-product-images.md. */
+  imageId: string | null;
   score: number;
 }
 

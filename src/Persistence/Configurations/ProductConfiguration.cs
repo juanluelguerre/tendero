@@ -55,7 +55,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         // compleja y el agregado expone IReadOnlyList<T>, que no se toca.
         builder.ComplexCollection<List<ProductImage>, ProductImage>("_images", image =>
         {
-            image.Property(i => i.Url).HasConversion(url => url.ToString(), value => new Uri(value));
+            image.Property(i => i.Id).HasConversion(id => id.Value, value => new ImageId(value));
+            // El texto alternativo es LocalizedText: dentro del JSON viaja como
+            // el mismo diccionario cultura -> texto que el resto del catálogo.
+            image.Property(i => i.Alt)
+                .HasConversion(Jsonb.NullableLocalizedTextConverter, Jsonb.NullableLocalizedTextComparer);
             image.ToJson("images");
         });
 

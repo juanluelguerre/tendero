@@ -61,6 +61,12 @@ export class SearchPage {
     });
   }
 
+  /** La URL se compone aquí, no viene del servidor: el índice guarda la clave,
+   *  así que meter un CDN delante no toca ni el backend ni el dominio. */
+  protected imageUrl(hit: SearchHit): string | null {
+    return hit.imageId ? `/api/images/${hit.imageId}` : null;
+  }
+
   protected price(hit: SearchHit): string {
     return new Intl.NumberFormat(this.transloco.getActiveLang(), {
       style: 'currency',
