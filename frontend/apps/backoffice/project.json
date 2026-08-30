@@ -4,11 +4,16 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/backoffice/src",
-  "tags": ["scope:backoffice", "type:app"],
+  "tags": [
+    "scope:backoffice",
+    "type:app"
+  ],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/backoffice",
@@ -20,7 +25,9 @@
             "input": "apps/backoffice/public"
           }
         ],
-        "styles": ["apps/backoffice/src/styles.css"]
+        "styles": [
+          "apps/backoffice/src/styles.css"
+        ]
       },
       "configurations": {
         "production": {
@@ -56,6 +63,9 @@
         "development": {
           "buildTarget": "backoffice:build:development"
         }
+      },
+      "options": {
+        "port": 4201
       }
     },
     "lint": {

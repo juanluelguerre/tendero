@@ -52,6 +52,9 @@
          CommunityToolkit package return with the phase-3 embeddings worker;
          Elasticsearch is a plain container resource (see ADR 0006). -->
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.5.3" />
+    <!-- Orquesta los dos Angular junto al backend: un comando levanta todo y la
+         URL de la API se inyecta en vez de escribirse a mano. MIT. -->
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.5.3" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">

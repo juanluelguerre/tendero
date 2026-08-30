@@ -65,7 +65,8 @@
         }
       },
       "options": {
-        "proxyConfig": "apps/storefront/proxy.conf.mjs"
+        "proxyConfig": "apps/storefront/proxy.conf.mjs",
+        "port": 4200
       }
     },
     "lint": {

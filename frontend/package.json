@@ -2,7 +2,12 @@
   "name": "@org/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "serve:storefront": "nx serve storefront",
+    "serve:backoffice": "nx serve backoffice",
+    "build:storefront": "nx build storefront",
+    "build:backoffice": "nx build backoffice"
+  },
   "private": true,
   "dependencies": {
     "@angular-devkit/build-angular": "22.0.6",
