@@ -26,6 +26,19 @@ export class SearchPage {
 
   protected readonly state = signal<SearchState>({ status: 'idle' });
 
+  /**
+   * Imagenes que el navegador no ha podido cargar. Un catalogo real las pierde
+   * constantemente — CDN caido, activo borrado, URL mal migrada — y una ficha
+   * con el icono de imagen rota se ve peor que una sin foto. El seed del repo
+   * apunta a cdn.example.com, que no resuelve a proposito, asi que este camino
+   * es el que se ve al arrancar recien clonado.
+   */
+  protected readonly broken = signal<ReadonlySet<string>>(new Set());
+
+  protected onImageError(productId: string): void {
+    this.broken.update((ids) => new Set(ids).add(productId));
+  }
+
   protected submit(query: string): void {
     const text = query.trim();
     if (text.length < 2) {

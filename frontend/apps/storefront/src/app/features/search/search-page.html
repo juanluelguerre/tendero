@@ -39,8 +39,14 @@
           <ul class="grid">
             @for (hit of done.hits; track hit.productId) {
               <li class="card">
-                @if (hit.imageUrl) {
-                  <img class="card__image" [src]="hit.imageUrl" [alt]="hit.name" loading="lazy" />
+                @if (hit.imageUrl && !broken().has(hit.productId)) {
+                  <img
+                    class="card__image"
+                    [src]="hit.imageUrl"
+                    [alt]="hit.name"
+                    loading="lazy"
+                    (error)="onImageError(hit.productId)"
+                  />
                 } @else {
                   <div class="card__image card__image--empty" aria-hidden="true"></div>
                 }
