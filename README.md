@@ -79,13 +79,33 @@ Design system: [design/DESIGN.md](design/DESIGN.md)
 | **Node 24** (`.nvmrc`) | Angular 22 requires `^22.22.3 \|\| ^24.15.0 \|\| >=26.0.0`. Node 22.21 fails. |
 | **Docker** | Postgres and Elasticsearch. Roughly 2.5 GB on the first run. |
 
+The repository runs on **Linux and Windows**. Nothing in the code assumes a
+platform — every path is built with `Path.Combine` — but the setup commands
+differ.
+
+**Linux / macOS**
+
 ```bash
-# .NET 11 preview, user-local, no sudo
 curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 11.0 --quality preview
 export PATH="$HOME/.dotnet:$PATH"          # add it to your shell profile
 
 nvm install && nvm use                     # reads .nvmrc
 ```
+
+**Windows (PowerShell)**
+
+```powershell
+Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
+./dotnet-install.ps1 -Channel 11.0 -Quality preview
+$env:PATH = "$env:USERPROFILE\.dotnet;$env:PATH"   # add it to your profile
+
+# nvm-windows does NOT read .nvmrc — pass the version explicitly
+nvm install 24
+nvm use 24
+```
+
+Docker Desktop on Windows needs at least 4 GB allocated to its WSL2 backend:
+Elasticsearch alone asks for a 1 GB heap.
 
 ### Run everything
 
@@ -135,7 +155,9 @@ dotnet run --project tools/SearchEval -- --ci  # exits 1 below the thresholds
 ### Everything else
 
 ```bash
-dotnet build Tendero.slnx            # warnings become errors when $CI is set
+dotnet build Tendero.slnx            # warnings become errors when CI is set
+                                     #   bash:       CI=true dotnet build …
+                                     #   PowerShell: $env:CI="true"; dotnet build …
 dotnet test Tendero.slnx             # unit, contract and architecture tests
 cd frontend && npx nx run-many -t lint,test,build
 ```

@@ -1,0 +1,24 @@
+# Normaliza los finales de línea. Sin esto, git en Windows convierte LF a CRLF
+# al hacer checkout (core.autocrlf por defecto) y el repositorio aparece entero
+# como modificado en cuanto se trabaja desde dos sistemas distintos.
+* text=auto eol=lf
+
+# Binarios: nunca tocar.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.pdf   binary
+
+# El SVG es texto y se beneficia de diffs legibles.
+*.svg text eol=lf
+
+# Los scripts de Windows quieren CRLF.
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf

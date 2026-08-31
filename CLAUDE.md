@@ -53,8 +53,16 @@ npx nx serve storefront|backoffice            # from frontend/
   GenAI calls follow the OTel GenAI semantic conventions.
 - UI: tokens from `design/tokens.css` only — never hardcode a hex in components.
   One clay accent action per view. Agent-driven actions are always clay.
-- Commit messages: conventional commits, scope = slice or context (`feat(search): ...`).
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
+
+## Git Workflow
+
+- Main branch for PRs: develop
+- Feature branches: feature/{feature-name}
+- Commit format: Conventional Commits style:
+  - DO NOT add `Co-Authored-By` lines to commit messages
+  - Write clear, descriptive commit messages in English
+  - Use conventional commit style when appropriate:feat(brands):, fix(auth):, chore(build), refactor(organizations), docs(readme), etc.
 
 ## Licensing policy (hard rule)
 
