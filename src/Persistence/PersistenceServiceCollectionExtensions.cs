@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Tendero.Catalog.Features.ImportProducts;
+using Tendero.Catalog.Ports;
 using Tendero.Search.Features.ProjectProductToIndex;
 
 namespace Tendero.Persistence;

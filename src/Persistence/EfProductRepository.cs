@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tendero.Catalog.Domain;
-using Tendero.Catalog.Features.ImportProducts;
+using Tendero.Catalog.Ports;
 using Tendero.Search.Features.ProjectProductToIndex;
 using Tendero.SharedKernel;
 
@@ -20,6 +20,12 @@ internal sealed class EfProductRepository(TenderoDbContext context) : IProductRe
             ct);
 
     public void Add(Product product) => context.Products.Add(product);
+
+    // CON seguimiento, al contrario que GetByIdAsync: quien busca por id desde un
+    // slice lo hace para mutar (publicar, archivar) y confirmar con IUnitOfWork.
+    // Con AsNoTracking el cambio de estado se perdería en silencio en SaveChanges.
+    public Task<Product?> FindByIdAsync(ProductId id, CancellationToken ct) =>
+        context.Products.FirstOrDefaultAsync(product => product.Id == id, ct);
 
     // AsNoTracking: el worker de indexación lee para proyectar, nunca para mutar.
     public Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct) =>

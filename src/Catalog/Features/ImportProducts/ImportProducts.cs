@@ -158,15 +158,5 @@ public sealed class ImportProductsHandler(
     }
 }
 
-// ---------- Puertos que usa este slice (defínelos donde tengas el resto) ----------
-
-public interface IProductRepository
-{
-    Task<Product?> FindByExternalReferenceAsync(string source, string externalId, CancellationToken ct);
-    void Add(Product product);
-}
-
-public interface IUnitOfWork
-{
-    Task SaveChangesAsync(CancellationToken ct);
-}
+// Los puertos que usa este slice viven en Catalog/Ports: PublishProduct necesita
+// los mismos, y un slice no puede referenciar a otro.

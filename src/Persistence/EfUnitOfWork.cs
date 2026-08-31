@@ -1,4 +1,4 @@
-using Tendero.Catalog.Features.ImportProducts;
+using Tendero.Catalog.Ports;
 
 namespace Tendero.Persistence;
 
