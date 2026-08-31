@@ -6,9 +6,7 @@
 <p align="center"><em>The AI-native shopkeeper — commerce for humans and agents.</em></p>
 
 <p align="center">
-  <a href="https://github.com/{owner}/tendero/actions/workflows/ci.yml"><img src="https://github.com/{owner}/tendero/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-tracked%20in%20CI-D85A30" alt="Search quality"></a>
-  <a href="https://codecov.io/gh/{owner}/tendero"><img src="https://codecov.io/gh/{owner}/tendero/branch/main/graph/badge.svg" alt="codecov"></a>
   <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-11%20(preview)-512BD4?logo=dotnet" alt=".NET 11"></a>
   <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" alt="Angular 22"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
@@ -73,29 +71,73 @@ Design system: [design/DESIGN.md](design/DESIGN.md)
 
 ## Getting started
 
-Prerequisites: [.NET 11 SDK (preview)](https://dotnet.microsoft.com), Docker
-Desktop, Node 22+.
+### Prerequisites
+
+| | why this exact version |
+|---|---|
+| **.NET 11 SDK, preview** | `global.json` pins a prerelease floor. `11.0.100` plus `allowPrerelease` resolves *nothing* on a preview-only machine: roll-forward only rolls up, and a preview sorts below its own release. |
+| **Node 24** (`.nvmrc`) | Angular 22 requires `^22.22.3 \|\| ^24.15.0 \|\| >=26.0.0`. Node 22.21 fails. |
+| **Docker** | Postgres and Elasticsearch. Roughly 2.5 GB on the first run. |
+
+```bash
+# .NET 11 preview, user-local, no sudo
+curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 11.0 --quality preview
+export PATH="$HOME/.dotnet:$PATH"          # add it to your shell profile
+
+nvm install && nvm use                     # reads .nvmrc
+```
+
+### Run everything
 
 ```bash
 git clone https://github.com/{owner}/tendero.git
 cd tendero
+(cd frontend && npm ci)
 
-# Starts everything: API, workers, Postgres, Elasticsearch, Qdrant, Redis, Ollama, Grafana
 dotnet run --project src/AppHost
-
-# Import the sample catalog (seed connector, no external services needed)
-curl -X POST http://localhost:5000/api/catalog/import -d '{"source":"seed"}' -H "Content-Type: application/json"
-
-# Search it
-curl "http://localhost:5000/api/search?q=zapatillas%20running&culture=es"
 ```
 
-Frontends:
+One command brings up Postgres, Elasticsearch, the API, the outbox worker and
+**both Angular apps**, with the Aspire dashboard in front. The frontends get the
+API address injected, so no URL is hardcoded anywhere in application code.
+
+| | |
+|---|---|
+| Storefront | http://localhost:4200 |
+| Backoffice | http://localhost:4201 |
+| Aspire dashboard | http://localhost:15130 |
+
+Then import the sample catalogue and search it — through the storefront's own
+dev-server proxy, which is the same path the browser uses:
 
 ```bash
-cd frontend && npm ci
-npx nx serve storefront   # http://localhost:4200
-npx nx serve backoffice   # http://localhost:4300
+curl -X POST http://localhost:4200/api/catalog/import \
+     -H 'Content-Type: application/json' -d '{"source":"seed"}'
+
+curl "http://localhost:4200/api/search?q=zapatillas%20running&culture=es"
+```
+
+Imported products land as `Draft`, and only `Active` is indexed — the review
+queue that publishes them is phase 2. Until then, flip them by hand in Postgres
+and reimport to trigger the projection.
+
+### The search quality gate
+
+```bash
+docker run -d --name tendero-es -p 9200:9200 \
+  -e discovery.type=single-node -e xpack.security.enabled=false \
+  docker.elastic.co/elasticsearch/elasticsearch:9.1.0
+
+dotnet run --project tools/SearchEval          # report
+dotnet run --project tools/SearchEval -- --ci  # exits 1 below the thresholds
+```
+
+### Everything else
+
+```bash
+dotnet build Tendero.slnx            # warnings become errors when $CI is set
+dotnet test Tendero.slnx             # unit, contract and architecture tests
+cd frontend && npx nx run-many -t lint,test,build
 ```
 
 ## Project structure
@@ -108,9 +150,15 @@ src/
   Ordering/                # bounded context: orders, checkout, payments
   Search/                  # indexing, lexical + hybrid search
   Ucp/                     # UCP + MCP server for AI agents
-frontend/                  # Angular workspace: storefront + backoffice + shared libs
+  Api/  Workers/            # composition roots: HTTP endpoints, outbox processor
+  Persistence/             # the only project that knows EF Core exists
+  ServiceDefaults/         # OTel, health checks, service discovery
+frontend/                  # Nx workspace
+  apps/storefront/         # light, roomy; search wired to the real API
+  apps/backoffice/         # dense, dark; review queue
+  libs/shared/             # tokens, ui, util, api, i18n — boundaries enforced by lint
 brand/                     # logo, icons, brand guide
-design/                    # tokens.css, Tailwind preset, design system
+design/                    # tokens.css — the single source of truth for both apps
 seed/                      # sample dataset (ABO-style schema, es/en)
 tools/SearchEval/          # golden set runner (NDCG@10, recall)
 docs/                      # plan, architecture, ADRs, specs, testing

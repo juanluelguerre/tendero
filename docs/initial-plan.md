@@ -127,6 +127,15 @@ product variants, multi-currency, inventory as its own aggregate, localized
 attribute values, import-error table in backoffice, Vendure adapter, Docling
 ingestion, Kubernetes/Azure deployment.
 
+Also deferred, and recorded when the decision was taken: **image derivatives**
+(thumbnails, WebP/AVIF per size). A real shop generates them; Tendero serves the
+original. It is a layer over the same `IImageStore` port, not a change to the
+model, and the URL shape already accommodates it (`/api/images/{key}?w=400`), so
+nothing has to be undone. With six 640px images there is nothing to measure, and
+the choice it forces — generate on upload, on demand with a cache, or at the CDN
+edge — depends on a deployment target that is itself deferred. Lands with the
+full ABO import.
+
 Also pending, decided but not done: **prefix the .NET namespaces with the
 author's**, so `Tendero.Catalog` becomes `ElGuerre.Tendero.Catalog` and the root
 convention in CLAUDE.md becomes `ElGuerre.Tendero.*`. It is a mechanical rename
