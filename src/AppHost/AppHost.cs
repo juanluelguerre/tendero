@@ -39,6 +39,12 @@ var api = builder.AddProject<Projects.Tendero_Api>("api")
     .WithHttpHealthCheck("/health")
     .WithReference(database).WaitFor(database)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
+    // La API lee de Elasticsearch en cada busqueda, asi que la dependencia es
+    // tan real como la del worker y faltaba declararla igual. Sin esto la API
+    // se declara healthy mientras el nodo todavia arranca, el storefront ya
+    // acepta busquedas y la primera devuelve un connection refused contra un
+    // contenedor que esta levantado pero aun no escucha.
+    .WaitFor(elasticsearch)
     .WithEnvironment(
         "Catalog__Connectors__Seed__FilePath",
         Path.Combine(repositoryRoot, "seed", "products.sample.json"))
