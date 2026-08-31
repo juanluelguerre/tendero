@@ -95,14 +95,19 @@ nvm install && nvm use                     # reads .nvmrc
 **Windows (PowerShell)**
 
 ```powershell
-Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1
-./dotnet-install.ps1 -Channel 11.0 -Quality preview
-$env:PATH = "$env:USERPROFILE\.dotnet;$env:PATH"   # add it to your profile
+winget install Microsoft.DotNet.SDK.Preview
 
 # nvm-windows does NOT read .nvmrc — pass the version explicitly
 nvm install 24
 nvm use 24
 ```
+
+Use winget, not `dotnet-install.ps1`. On Windows that script ignores
+`%USERPROFILE%\.dotnet` and installs into `%LOCALAPPDATA%\Microsoft\dotnet`,
+which is a second dotnet root: it only exists on the PATH of the shell that ran
+the script, and Rider and Visual Studio keep resolving the release SDK next to
+it. winget installs the same build into `C:\Program Files\dotnet` beside the
+10.x SDKs, so `global.json` picks it up everywhere, including the IDE.
 
 Docker Desktop on Windows needs at least 4 GB allocated to its WSL2 backend:
 Elasticsearch alone asks for a 1 GB heap.
