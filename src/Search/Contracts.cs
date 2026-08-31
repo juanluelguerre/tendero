@@ -23,6 +23,22 @@ public interface ILexicalProductSearch
     Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default);
 }
 
+/// <summary>
+/// El motor de búsqueda no ha podido responder. Es un tipo propio y no una
+/// InvalidOperationException porque la API tiene que distinguirla: un fallo del
+/// motor es 503 y se reintenta, no un 500 que sugiere un error de programación.
+///
+/// <paramref name="diagnostics"/> es el audit trail del cliente de Elastic, que
+/// es largo y contiene rutas y puertos internos: se conserva porque es lo que
+/// hace rápido el diagnóstico en el log, y por eso mismo no puede acabar en el
+/// cuerpo de una respuesta HTTP.
+/// </summary>
+public sealed class SearchUnavailableException(string operation, string diagnostics)
+    : Exception($"Search backend failed during {operation}. {diagnostics}")
+{
+    public string Operation { get; } = operation;
+}
+
 public sealed record ProductSearchQuery(string Text, string Culture, int Page = 1, int PageSize = 20);
 
 public sealed record SearchHit(

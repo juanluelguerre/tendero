@@ -139,7 +139,7 @@ public sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILe
             ct);
 
         if (!response.IsValidResponse)
-            throw new InvalidOperationException($"Search failed: {response.DebugInformation}");
+            throw new SearchUnavailableException("query", response.DebugInformation);
 
         var hits = response.Hits.Select(h => new SearchHit(
             h.Source!.Id,

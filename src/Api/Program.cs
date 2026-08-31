@@ -28,6 +28,7 @@ builder.Services.AddLexicalSearch(
 
 builder.Services.AddCarter();
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<SearchUnavailableExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
