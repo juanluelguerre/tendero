@@ -13,6 +13,16 @@ import { TranslocoDirective } from '@jsverse/transloco';
   template: `
     <ng-container *transloco="let t">
       <header class="bar">
+        <!-- Ver el shell del storefront: icono, no lockup, por la tipografia.
+             Aqui va a 28 px porque la barra mide 44 y es densa por diseno. -->
+        <img
+          class="bar__mark"
+          src="brand/tendero-icon-backoffice.svg"
+          alt=""
+          aria-hidden="true"
+          width="28"
+          height="28"
+        />
         <span class="bar__brand">{{ t('brand.name') }}</span>
         <span class="bar__area">{{ t('brand.area') }}</span>
       </header>
@@ -26,7 +36,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
   `,
   styles: `
     :host { display: block; min-height: 100dvh; background: var(--bg-page); color: var(--text); font-size: var(--text-sm); }
-    .bar { display: flex; align-items: baseline; gap: var(--space-2); height: 44px; padding-inline: var(--space-4); border-block-end: 1px solid var(--border); }
+    .bar { display: flex; align-items: center; gap: var(--space-2); height: 44px; padding-inline: var(--space-4); border-block-end: 1px solid var(--border); }
+    .bar__mark { display: block; width: 28px; height: 28px; }
     .bar__brand { font-family: var(--font-display); font-weight: 800; color: var(--accent); }
     .bar__area { font-size: var(--text-2xs); color: var(--text-muted); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
     .tabs { display: flex; gap: var(--space-4); padding-inline: var(--space-4); border-block-end: 1px solid var(--border); }

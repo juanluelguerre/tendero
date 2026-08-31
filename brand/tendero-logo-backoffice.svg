@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 372 96" width="372" height="96" role="img" aria-label="Tendero Backoffice">
+  <title>Tendero Backoffice</title>
+  <defs>
+    <clipPath id="t-awning-lockup-backoffice"><path d="M24 34 L53 34 L62 52 L15 52 Z"/></clipPath>
+  </defs>
+  <!-- Ver tendero-logo-shop.svg: misma construccion y mismas medidas, solo
+       cambia el sufijo. Que compartan geometria es lo que hace que las dos
+       cabeceras se lean como la misma marca. -->
+  <rect x="0" y="10" width="76" height="76" rx="18" fill="#D85A30"/>
+  <path d="M24 34 L53 34 L62 52 L15 52 Z" fill="#FAECE7"/>
+  <g clip-path="url(#t-awning-lockup-backoffice)">
+    <rect x="24" y="34" width="8" height="18" fill="#D85A30" opacity="0.35"/>
+    <rect x="40" y="34" width="8" height="18" fill="#D85A30" opacity="0.35"/>
+    <rect x="56" y="34" width="8" height="18" fill="#D85A30" opacity="0.35"/>
+  </g>
+  <rect x="32" y="57" width="15" height="21" rx="4" fill="#FAECE7"/>
+  <text x="94" y="43" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="34" font-weight="500" fill="#D85A30" dominant-baseline="central">Tendero</text>
+  <rect x="94" y="60" width="1" height="18" fill="#888780" opacity="0.5"/>
+  <text x="106" y="69" font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="16" font-weight="500" fill="#888780" dominant-baseline="central">Backoffice</text>
+</svg>
