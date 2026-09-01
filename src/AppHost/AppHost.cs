@@ -21,7 +21,7 @@ var database = postgres.AddDatabase("tendero-db");
 // Elasticsearch como recurso de contenedor: la integración de hosting publicada
 // para Aspire arrastra el cliente 8.x y chocaría con el 9.x que usa Search
 // (ver docs/adr/0006-dependency-baseline.md).
-var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/elasticsearch/elasticsearch", "9.1.0")
+var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/elasticsearch/elasticsearch", "9.5.0")
     .WithEnvironment("discovery.type", "single-node")
     .WithEnvironment("xpack.security.enabled", "false")
     .WithEnvironment("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
