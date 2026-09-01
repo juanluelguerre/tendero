@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Connectors.Seed;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
@@ -91,7 +92,7 @@ public sealed class SeedCatalogConnectorContractTests : CatalogSourceConnectorCo
 {
     protected override ICatalogSourceConnector CreateConnector() =>
         new SeedCatalogConnector(
-            Microsoft.Extensions.Options.Options.Create(
+            Options.Create(
                 new SeedConnectorOptions { FilePath = "TestData/products.sample.json" }));
 
     protected override int MinimumExpectedProducts => 6;

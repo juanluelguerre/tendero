@@ -113,6 +113,7 @@ updated if conventions changed · user-facing strings exist in es AND en.
 - ADR index: @docs/adr/README.md
 - Feature specs in progress: @docs/specs/
 - Blog article workflow: @docs/blog-workflow.md
+- Blog publication order and drafts: @docs/blog/index.md
 
 ## Do NOT
 

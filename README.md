@@ -245,11 +245,16 @@ More: [docs/testing.md](docs/testing.md) · [docs/search-evaluation.md](docs/sea
 
 ## Blog series
 
-Each phase will ship with an article — English first, Spanish on
-[elguerre.com](https://elguerre.com). **Nothing is published yet**: writing
-starts once more of the roadmap is built. Raw material is being collected as it
-happens in [docs/blog/notebook.md](docs/blog/notebook.md), which is where the
-numbers and the mistakes live.
+Each phase ships with an article — English first, Spanish on
+[elguerre.com](https://elguerre.com).
+
+**Nothing is published yet.** Drafts are: [docs/blog/index.md](docs/blog/index.md)
+has the publication order, the status of each article and what the unfinished ones
+are waiting on. Seven are drafted from shipped features and measured numbers.
+
+Raw material is collected as it happens in
+[docs/blog/notebook.md](docs/blog/notebook.md), which is where the numbers and the
+mistakes live — including the ones that cost an afternoon.
 
 ## License
 
