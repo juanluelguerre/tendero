@@ -1,8 +1,8 @@
-using Tendero.Catalog.Domain;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
-namespace Tendero.Catalog.Tests.Domain;
+namespace ElGuerre.Tendero.Catalog.Tests.Domain;
 
 /// <summary>
 /// Las dos reglas del agregado que se calculaban fuera de él, cada una con su

@@ -1,9 +1,9 @@
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.Extensions.DependencyInjection;
-using Tendero.Catalog.Connectors;
-using Tendero.Catalog.Domain;
-using Tendero.Search.Contracts;
 
-namespace Tendero.SearchEval;
+namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
 /// Indexa el catálogo semilla directamente desde el conector, sin pasar por

@@ -1,15 +1,15 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Carter;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tendero.Catalog.Domain;
-using Tendero.Catalog.Ports;
-using Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Features.PublishProduct;
+namespace ElGuerre.Tendero.Catalog.Features.PublishProduct;
 
 /// <summary>
 /// Saca un producto de Draft y lo hace visible. Es el paso que faltaba entre
@@ -97,7 +97,7 @@ public sealed class PublishProductHandler(
     IUnitOfWork unitOfWork)
     : ICommandHandler<PublishProductCommand, PublishProductResult>
 {
-    private static readonly ActivitySource Telemetry = new("Tendero.Catalog");
+    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Catalog");
 
     public async Task<PublishProductResult> HandleAsync(
         PublishProductCommand command, CancellationToken cancellationToken)

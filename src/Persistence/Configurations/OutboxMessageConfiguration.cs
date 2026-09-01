@@ -1,8 +1,8 @@
+using ElGuerre.Tendero.Persistence.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Tendero.Persistence.Outbox;
 
-namespace Tendero.Persistence.Configurations;
+namespace ElGuerre.Tendero.Persistence.Configurations;
 
 internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<OutboxMessage>
 {

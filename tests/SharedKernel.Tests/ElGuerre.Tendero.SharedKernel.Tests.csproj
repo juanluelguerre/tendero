@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Tendero.SharedKernel.Tests</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.SharedKernel.Tests</RootNamespace>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/SharedKernel/Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

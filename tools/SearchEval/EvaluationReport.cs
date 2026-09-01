@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Tendero.SearchEval;
+namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
 /// El informe se lee en consola y se publica como artefacto de CI, así que sale

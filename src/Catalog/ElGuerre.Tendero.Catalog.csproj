@@ -4,7 +4,7 @@
        ensamblado. Los tests de arquitectura vigilan que Tendero.Catalog.Domain
        (namespace) no dependa de nada de lo que trae este .csproj. -->
   <PropertyGroup>
-    <RootNamespace>Tendero.Catalog</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.Catalog</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../SharedKernel/Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-namespace Tendero.SearchEval;
+namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
 /// Parseo a mano: son cuatro opciones y no justifican un paquete

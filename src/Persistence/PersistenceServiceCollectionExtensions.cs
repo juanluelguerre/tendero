@@ -1,9 +1,9 @@
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Tendero.Catalog.Ports;
-using Tendero.Search.Contracts;
 
-namespace Tendero.Persistence;
+namespace ElGuerre.Tendero.Persistence;
 
 public static class PersistenceServiceCollectionExtensions
 {

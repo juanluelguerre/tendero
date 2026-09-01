@@ -1,11 +1,11 @@
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.Persistence.Configurations;
+using ElGuerre.Tendero.Persistence.Outbox;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
-using Tendero.Catalog.Domain;
-using Tendero.Ordering.Domain;
-using Tendero.Persistence.Configurations;
-using Tendero.Persistence.Outbox;
-using Tendero.SharedKernel;
 
-namespace Tendero.Persistence;
+namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
 /// Un DbContext, dos esquemas (catalog, ordering) y la outbox.

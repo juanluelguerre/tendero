@@ -1,7 +1,7 @@
 using System.Text;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Domain;
+namespace ElGuerre.Tendero.Catalog.Domain;
 
 public enum ProductStatus
 {

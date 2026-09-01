@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Tendero.Catalog.Tests</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.Catalog.Tests</RootNamespace>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Catalog/Tendero.Catalog.csproj" />
+    <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
   </ItemGroup>
 
   <!-- La suite de contrato corre contra la MISMA muestra que trae el repo:

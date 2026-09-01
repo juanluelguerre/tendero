@@ -1,8 +1,8 @@
-using Tendero.Catalog.Connectors;
-using Tendero.Catalog.Connectors.Seed;
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Connectors.Seed;
 using Xunit;
 
-namespace Tendero.Catalog.Tests.Connectors;
+namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
 
 /// <summary>
 /// Contrato ejecutable del puerto: TODA implementación (Seed, Shopify, Medusa...)

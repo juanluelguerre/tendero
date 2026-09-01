@@ -34,5 +34,5 @@ docker exec -it <contenedor-postgres> psql -U postgres -d tendero
 ## Elasticsearch no es una integración de Aspire
 
 Es un `AddContainer` normal a propósito: el paquete de hosting publicado fija el
-cliente Elastic 8.x y chocaría con el 9.x que usa `Tendero.Search`. Está
+cliente Elastic 8.x y chocaría con el 9.x que usa `ElGuerre.Tendero.Search`. Está
 razonado en `docs/adr/0006-dependency-baseline.md`.

@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,9 +8,8 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
-using Tendero.SharedKernel;
 
-namespace Tendero.ServiceDefaults;
+namespace ElGuerre.Tendero.ServiceDefaults;
 
 public static class HostingExtensions
 {

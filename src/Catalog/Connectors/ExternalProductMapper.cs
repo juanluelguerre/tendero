@@ -1,6 +1,6 @@
-using Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Domain;
 
-namespace Tendero.Catalog.Connectors;
+namespace ElGuerre.Tendero.Catalog.Connectors;
 
 /// <summary>
 /// Convierte lo que entrega un conector en el agregado del catálogo. Existe como

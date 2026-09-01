@@ -1,16 +1,16 @@
 using System.Diagnostics;
 using Carter;
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
-using Tendero.Catalog.Connectors;
-using Tendero.Catalog.Domain;
-using Tendero.Catalog.Ports;
-using Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Features.ImportProducts;
+namespace ElGuerre.Tendero.Catalog.Features.ImportProducts;
 
 public sealed record ImportProductsCommand(string Source) : ICommand<ImportProductsResult>;
 

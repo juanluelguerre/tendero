@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Tendero.SearchEval;
+namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
 /// Umbrales comprometidos por cultura. Bajarlos requiere justificarlo en el

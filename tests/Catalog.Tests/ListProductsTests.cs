@@ -1,10 +1,10 @@
-using Tendero.Catalog.Domain;
-using Tendero.Catalog.Features.ListProducts;
-using Tendero.Catalog.Ports;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Features.ListProducts;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
-namespace Tendero.Catalog.Tests.Features;
+namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
 /// <summary>
 /// Sin esta consulta la cola de revisión no puede existir: la API tenía cinco

@@ -1,11 +1,11 @@
 using Carter;
+using ElGuerre.Tendero.Search.Contracts;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tendero.Search.Contracts;
 
-namespace Tendero.Search.Features.SearchProducts;
+namespace ElGuerre.Tendero.Search.Features.SearchProducts;
 
 public sealed record SearchProductsQuery(string Q, string Culture, int Page, int PageSize)
     : IQuery<SearchResultPage>;

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace Tendero.Api;
+namespace ElGuerre.Tendero.Api;
 
 /// <summary>
 /// El paso de validación del dispatcher lanza ValidationException; aquí se

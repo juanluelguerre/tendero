@@ -4,7 +4,7 @@
        es el único proyecto (junto a la persistencia) que referencia Catalog.
        Ver docs/adr/0007-search-reads-catalog-domain.md. -->
   <PropertyGroup>
-    <RootNamespace>Tendero.Search</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.Search</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,14 +18,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Catalog/Tendero.Catalog.csproj" />
-    <ProjectReference Include="../SharedKernel/Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
   <!-- Los ficheros de Search usan IQuery/IDomainEventHandler sin `using`:
        se resuelven por global using en lugar de tocar los ficheros existentes. -->
   <ItemGroup>
-    <Using Include="Tendero.SharedKernel" />
+    <Using Include="ElGuerre.Tendero.SharedKernel" />
   </ItemGroup>
 
 </Project>

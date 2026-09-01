@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Tendero.SharedKernel.Tests;
+namespace ElGuerre.Tendero.SharedKernel.Tests;
 
 // Fakes deterministas en vez de mocks (docs/testing.md): lo que se prueba aquí
 // es el cableado del dispatcher, y un fake dice qué pasó sin ceremonia.

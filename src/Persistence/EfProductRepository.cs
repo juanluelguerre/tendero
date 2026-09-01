@@ -1,10 +1,10 @@
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
-using Tendero.Catalog.Domain;
-using Tendero.Catalog.Ports;
-using Tendero.Search.Contracts;
-using Tendero.SharedKernel;
 
-namespace Tendero.Persistence;
+namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
 /// Adaptador de los dos puertos de Product que hoy existen. Son dos interfaces

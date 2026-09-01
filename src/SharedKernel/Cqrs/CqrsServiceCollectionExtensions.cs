@@ -3,7 +3,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Tendero.SharedKernel;
+namespace ElGuerre.Tendero.SharedKernel;
 
 public static class CqrsServiceCollectionExtensions
 {

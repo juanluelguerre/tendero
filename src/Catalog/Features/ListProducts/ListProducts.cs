@@ -1,14 +1,14 @@
 using System.Diagnostics;
 using Carter;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tendero.Catalog.Domain;
-using Tendero.Catalog.Ports;
-using Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Features.ListProducts;
+namespace ElGuerre.Tendero.Catalog.Features.ListProducts;
 
 /// <summary>
 /// Lista el catálogo, filtrando por estado. Es lo que faltaba para que la cola
@@ -107,7 +107,7 @@ public sealed class ListProductsEndpoint : ICarterModule
 public sealed class ListProductsHandler(IProductCatalogReader products)
     : IQueryHandler<ListProductsQuery, ListProductsResult>
 {
-    private static readonly ActivitySource Telemetry = new("Tendero.Catalog");
+    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Catalog");
     private static readonly string[] Cultures = ["es", "en"];
 
     public async Task<ListProductsResult> HandleAsync(

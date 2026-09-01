@@ -1,4 +1,4 @@
-namespace Tendero.Persistence.Outbox;
+namespace ElGuerre.Tendero.Persistence.Outbox;
 
 /// <summary>
 /// Fila de la bandeja de salida. Se escribe en la MISMA transacción que el

@@ -1,8 +1,8 @@
-using Tendero.Catalog.Connectors;
-using Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Domain;
 using Xunit;
 
-namespace Tendero.Catalog.Tests.Connectors;
+namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
 
 /// <summary>
 /// El mapeo de origen a agregado tiene dos consumidores que no pueden llamarse

@@ -1,10 +1,10 @@
 using System.Security.Cryptography;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Tendero.Catalog.Ports;
-using Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Adapters;
+namespace ElGuerre.Tendero.Catalog.Adapters;
 
 public sealed class FileSystemImageStoreOptions
 {

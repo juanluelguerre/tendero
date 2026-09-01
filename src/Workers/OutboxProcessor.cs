@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using ElGuerre.Tendero.Persistence;
+using ElGuerre.Tendero.Persistence.Outbox;
+using ElGuerre.Tendero.ServiceDefaults;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
-using Tendero.Persistence;
-using Tendero.Persistence.Outbox;
-using Tendero.ServiceDefaults;
-using Tendero.SharedKernel;
 
-namespace Tendero.Workers;
+namespace ElGuerre.Tendero.Workers;
 
 public sealed class OutboxOptions
 {

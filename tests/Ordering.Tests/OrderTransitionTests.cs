@@ -1,7 +1,7 @@
-using Tendero.Ordering.Domain;
+using ElGuerre.Tendero.Ordering.Domain;
 using Xunit;
 
-namespace Tendero.Ordering.Tests;
+namespace ElGuerre.Tendero.Ordering.Tests;
 
 /// <summary>
 /// La tabla AllowedTransitions es la única fuente de verdad del ciclo de vida

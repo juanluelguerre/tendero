@@ -2,7 +2,7 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Tendero.SharedKernel.Tests;
+namespace ElGuerre.Tendero.SharedKernel.Tests;
 
 public sealed class DispatcherTests
 {

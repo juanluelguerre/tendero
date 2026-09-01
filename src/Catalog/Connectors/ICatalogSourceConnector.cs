@@ -1,6 +1,6 @@
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Connectors;
+namespace ElGuerre.Tendero.Catalog.Connectors;
 
 /// <summary>
 /// Puerto de entrada de catálogo. Cada origen (seed, shopify, medusa, prestashop...)

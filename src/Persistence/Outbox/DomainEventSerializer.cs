@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Persistence.Outbox;
+namespace ElGuerre.Tendero.Persistence.Outbox;
 
 /// <summary>
 /// Un evento de dominio es un record: System.Text.Json basta y el payload queda

@@ -3,7 +3,7 @@
   <!-- Lo que comparten API y Workers: OTel, health checks, service discovery y
        resiliencia HTTP. No conoce ningún contexto acotado. -->
   <PropertyGroup>
-    <RootNamespace>Tendero.ServiceDefaults</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.ServiceDefaults</RootNamespace>
     <IsAspireSharedProject>true</IsAspireSharedProject>
   </PropertyGroup>
 
@@ -14,7 +14,7 @@
   <!-- Los nombres de las fuentes de telemetria viven en el SharedKernel: los
        necesitan tanto quien abre el span como esta composicion que los registra. -->
   <ItemGroup>
-    <ProjectReference Include="../SharedKernel/Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,8 +1,8 @@
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Ports;
 using Microsoft.Extensions.DependencyInjection;
-using Tendero.Catalog.Connectors;
-using Tendero.Catalog.Ports;
 
-namespace Tendero.Catalog.Adapters;
+namespace ElGuerre.Tendero.Catalog.Adapters;
 
 /// <summary>
 /// El único sitio del catálogo que habla con el contenedor de dependencias. Los

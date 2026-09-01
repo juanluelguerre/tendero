@@ -1,9 +1,9 @@
+using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Tendero.Search.Contracts;
 
-namespace Tendero.Api;
+namespace ElGuerre.Tendero.Api;
 
 /// <summary>
 /// Traduce un fallo del motor de búsqueda a 503. Dos cosas que hace a propósito:

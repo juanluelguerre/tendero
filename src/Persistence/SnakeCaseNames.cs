@@ -2,7 +2,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace Tendero.Persistence;
+namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
 /// Nombres en snake_case sin añadir un paquete para ello: tablas, columnas e

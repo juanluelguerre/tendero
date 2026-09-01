@@ -1,4 +1,4 @@
-namespace Tendero.SearchEval;
+namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
 /// Operaciones sobre los índices que la evaluación necesita y que ningún puerto

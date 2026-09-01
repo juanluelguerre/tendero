@@ -1,7 +1,7 @@
-namespace Tendero.SharedKernel;
+namespace ElGuerre.Tendero.SharedKernel;
 
 // Las abstracciones viven en el namespace raíz a propósito: un slice sólo
-// necesita `using Tendero.SharedKernel;` para escribir su comando y su handler.
+// necesita `using ElGuerre.Tendero.SharedKernel;` para escribir su comando y su handler.
 // Hechas a mano por política de licencias (CLAUDE.md): NO MediatR.
 
 /// <summary>Intención de escritura que devuelve un resultado.</summary>

@@ -1,7 +1,7 @@
-using Tendero.Catalog.Domain;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Ports;
+namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
 /// Acceso al agregado Product. Vivía dentro del slice ImportProducts mientras

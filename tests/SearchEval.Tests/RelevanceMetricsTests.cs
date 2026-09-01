@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace Tendero.SearchEval.Tests;
+namespace ElGuerre.Tendero.SearchEval.Tests;
 
 /// <summary>
 /// Los valores esperados están calculados a mano, no capturados de la propia

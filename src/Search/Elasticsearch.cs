@@ -1,14 +1,14 @@
 using System.Diagnostics;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.SharedKernel;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Mapping;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Tendero.Catalog.Domain;
-using Tendero.Search.Contracts;
-using Tendero.SharedKernel;
 
-namespace Tendero.Search.Elasticsearch;
+namespace ElGuerre.Tendero.Search.Elasticsearch;
 
 /// <summary>
 /// Qué analizador nativo de Elasticsearch usa cada cultura. Detalle del motor y
@@ -110,7 +110,7 @@ internal sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : 
 
 internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILexicalProductSearch
 {
-    private static readonly ActivitySource Telemetry = new("Tendero.Search");
+    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Search");
 
     /// <summary>
     /// Campos de texto con sus boosts. `category` NO esta: se mapea como keyword

@@ -1,4 +1,4 @@
-namespace Tendero.SharedKernel;
+namespace ElGuerre.Tendero.SharedKernel;
 
 // ---------- Ids fuertemente tipados ----------
 public readonly record struct ProductId(Guid Value)

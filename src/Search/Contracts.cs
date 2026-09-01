@@ -1,7 +1,7 @@
-using Tendero.Catalog.Domain;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Search.Contracts;
+namespace ElGuerre.Tendero.Search.Contracts;
 
 /// <summary>
 /// Puerto de escritura: proyectar productos al motor de búsqueda.

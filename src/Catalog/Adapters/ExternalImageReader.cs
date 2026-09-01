@@ -1,8 +1,8 @@
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Ports;
 using Microsoft.Extensions.Logging;
-using Tendero.Catalog.Connectors;
-using Tendero.Catalog.Ports;
 
-namespace Tendero.Catalog.Adapters;
+namespace ElGuerre.Tendero.Catalog.Adapters;
 
 /// <summary>
 /// Lee imágenes de origen por HTTP o del disco, según el esquema del Uri. Es el

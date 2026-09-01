@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Composition root HTTP. No tiene lógica propia: registra puertos, adaptadores
+       y slices, y deja que Carter monte los endpoints que declaran los slices. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Api</RootNamespace>
+    <UserSecretsId>tendero-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <ProjectReference Include="../Persistence/ElGuerre.Tendero.Persistence.csproj" />
+    <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
+    <ProjectReference Include="../ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

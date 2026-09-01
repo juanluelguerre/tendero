@@ -1,10 +1,10 @@
 using System.Globalization;
 using System.Text.Json;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Tendero.SharedKernel;
 
-namespace Tendero.Persistence;
+namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
 /// Todo lo estructurado que no se consulta relacionalmente vive en jsonb.

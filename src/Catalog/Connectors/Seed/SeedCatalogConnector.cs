@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 
-namespace Tendero.Catalog.Connectors.Seed;
+namespace ElGuerre.Tendero.Catalog.Connectors.Seed;
 
 public sealed class SeedConnectorOptions
 {

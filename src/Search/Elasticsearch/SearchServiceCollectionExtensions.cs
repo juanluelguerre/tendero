@@ -1,11 +1,11 @@
+using ElGuerre.Tendero.Search.Contracts;
 using Elastic.Clients.Elasticsearch;
 using Microsoft.Extensions.DependencyInjection;
-using Tendero.Search.Contracts;
 
 // El namespace importa: la regla de arquitectura 4 dice que el cliente de
 // Elastic no se ve fuera de Tendero.Search.Elasticsearch, y la composición
 // de esos servicios es precisamente código de Elasticsearch.
-namespace Tendero.Search.Elasticsearch;
+namespace ElGuerre.Tendero.Search.Elasticsearch;
 
 public static class SearchServiceCollectionExtensions
 {

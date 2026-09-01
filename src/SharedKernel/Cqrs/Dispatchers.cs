@@ -3,7 +3,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Tendero.SharedKernel;
+namespace ElGuerre.Tendero.SharedKernel;
 
 /// <summary>
 /// Dispatcher sobre el contenedor de DI. La única "middleware" es la validación

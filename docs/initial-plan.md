@@ -148,15 +148,29 @@ the choice it forces — generate on upload, on demand with a cache, or at the C
 edge — depends on a deployment target that is itself deferred. Lands with the
 full ABO import.
 
-Also pending, decided but not done: **prefix the .NET namespaces with the
-author's**, so `Tendero.Catalog` becomes `ElGuerre.Tendero.Catalog` and the root
-convention in CLAUDE.md becomes `ElGuerre.Tendero.*`. It is a mechanical rename
-but it is not small: 12 projects, their assembly names, every `using`, the
-`InternalsVisibleTo` in Catalog, and the architecture tests that build namespace
-strings from assembly names. Best done in one commit that touches nothing else,
-so the diff stays reviewable. Open question when it lands: whether the npm scope
-in `frontend/` follows (`@tendero/*` → `@elguerre/tendero-*`) or stays as is —
-npm scopes and .NET namespaces do not have to agree, and `@tendero` is shorter.
+Done (2026-09-01): **the .NET namespaces carry the author's prefix.**
+`Tendero.Catalog` is now `ElGuerre.Tendero.Catalog`, and the root convention in
+CLAUDE.md is `ElGuerre.Tendero.*`. Fifteen projects, their assembly names, every
+`using`, the `InternalsVisibleTo` in Catalog, the `Projects.*` types Aspire
+generates for the AppHost, and the namespace strings the architecture tests
+compare against. It went in as one commit that touches nothing else, which is
+what makes a diff of that size reviewable at all.
+
+Two things the rename settled rather than moved:
+
+- **The npm scope stays `@tendero/*`.** Scopes and .NET namespaces do not have to
+  agree, the short one is the one people type, and following it would have pulled
+  `tsconfig.base.json`, five `project.json` files and every import in both apps
+  into a commit whose whole value is being boring.
+- **Project file name, assembly name and root namespace are now one string.**
+  `Directory.Build.props` derived the namespace by string-replacing the prefix out
+  of the project name, which was already fragile and would have produced
+  `ElGuerre.Tendero.ElGuerre.Catalog`. It is `$(MSBuildProjectName)` now, so there
+  is nothing left to keep in step.
+
+The telemetry source names followed the assemblies (`ElGuerre.Tendero.Catalog`),
+which is the OpenTelemetry convention and costs nothing today because no
+dashboard queries them yet. It would not have been free in six months.
 
 Also deferred, with the measurement already taken: **outbox event coalescing.**
 `Product` raises a `ProductUpserted` on every mutation, so one imported product

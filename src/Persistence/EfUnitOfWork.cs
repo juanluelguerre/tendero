@@ -1,6 +1,6 @@
-using Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Catalog.Ports;
 
-namespace Tendero.Persistence;
+namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
 /// Confirmar la unidad de trabajo pasa por TenderoDbContext.SaveChangesAsync,

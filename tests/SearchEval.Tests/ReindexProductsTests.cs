@@ -1,10 +1,10 @@
-using Tendero.Catalog.Domain;
-using Tendero.Search.Contracts;
-using Tendero.Search.Features.ReindexProducts;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Features.ReindexProducts;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
-namespace Tendero.SearchEval.Tests;
+namespace ElGuerre.Tendero.SearchEval.Tests;
 
 /// <summary>
 /// El índice es una proyección desechable y architecture.md promete poder

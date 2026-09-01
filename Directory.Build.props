@@ -12,8 +12,11 @@
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
-    <!-- Root namespace is Tendero.*; folder names under src/ drop the prefix. -->
-    <RootNamespace>Tendero.$(MSBuildProjectName.Replace('Tendero.',''))</RootNamespace>
+    <!-- Root namespace is ElGuerre.Tendero.*, which is exactly the project file
+         name; the folders under src/ drop the prefix and stay short (Catalog/,
+         Search/). Assembly, namespace and .csproj name are one string now, so
+         there is nothing to keep in step. -->
+    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
 
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>

@@ -1,11 +1,11 @@
 using Carter;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tendero.Catalog.Ports;
-using Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Features.GetProductImage;
+namespace ElGuerre.Tendero.Catalog.Features.GetProductImage;
 
 /// <summary>
 /// Sirve una imagen por su clave. El id ES el hash del contenido, así que la

@@ -1,10 +1,10 @@
-using Tendero.Catalog.Domain;
-using Tendero.Catalog.Features.PublishProduct;
-using Tendero.Catalog.Ports;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Features.PublishProduct;
+using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
-namespace Tendero.Catalog.Tests.Features;
+namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
 /// <summary>
 /// Publicar es lo que hace visible un producto: se importa en Draft y la

@@ -1,6 +1,6 @@
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Ordering.Domain;
+namespace ElGuerre.Tendero.Ordering.Domain;
 
 public enum OrderStatus
 {

@@ -1,11 +1,11 @@
+using ElGuerre.Tendero.Catalog.Adapters;
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Connectors.Seed;
+using ElGuerre.Tendero.Catalog.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Tendero.Catalog.Adapters;
-using Tendero.Catalog.Connectors;
-using Tendero.Catalog.Connectors.Seed;
-using Tendero.Catalog.Ports;
 
-namespace Tendero.Catalog;
+namespace ElGuerre.Tendero.Catalog;
 
 public static class CatalogServiceCollectionExtensions
 {

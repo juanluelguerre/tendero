@@ -32,7 +32,7 @@ var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/ela
 
 var elasticsearchEndpoint = elasticsearch.GetEndpoint("http");
 
-var api = builder.AddProject<Projects.Tendero_Api>("api")
+var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
     // Sin esto, WaitFor(api) espera para siempre: la API expone /health, pero
     // Aspire solo considera "healthy" lo que se le declara aqui. El worker se
     // quedo bloqueado en "Waiting" con 81 mensajes de outbox sin procesar.
@@ -67,7 +67,7 @@ builder.AddViteApp("backoffice", frontend, "serve:backoffice")
     .WithReference(api).WaitFor(api)
     .WithExternalHttpEndpoints();
 
-builder.AddProject<Projects.Tendero_Workers>("workers")
+builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     .WithReference(database).WaitFor(database)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
     // ESTA si es una dependencia real, y era la que faltaba: SearchIndexInitializer

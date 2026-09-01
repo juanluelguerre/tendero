@@ -1,4 +1,4 @@
-namespace Tendero.SearchEval;
+namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
 /// NDCG@k y recall@k, funciones puras sobre (ranking, juicios). Están aisladas

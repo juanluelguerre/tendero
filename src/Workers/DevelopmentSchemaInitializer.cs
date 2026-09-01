@@ -1,7 +1,7 @@
+using ElGuerre.Tendero.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Tendero.Persistence;
 
-namespace Tendero.Workers;
+namespace ElGuerre.Tendero.Workers;
 
 /// <summary>
 /// En desarrollo la base se crea desde el modelo para que `dotnet run --project

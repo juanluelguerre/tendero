@@ -1,11 +1,11 @@
 using System.Reflection;
 using NetArchTest.Rules;
 using TestResult = NetArchTest.Rules.TestResult;
-using Tendero.Catalog.Connectors;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
-namespace Tendero.Architecture.Tests;
+namespace ElGuerre.Tendero.Architecture.Tests;
 
 /// <summary>
 /// Las cinco reglas de docs/testing.md, una por test. Cada una falla con la
@@ -101,7 +101,7 @@ public sealed class ArchitectureRules
     public void Search_adapters_are_internal_so_only_the_port_is_public()
     {
         var result = Types.InAssembly(Solution.Search)
-            .That().ResideInNamespace("Tendero.Search.Elasticsearch")
+            .That().ResideInNamespace("ElGuerre.Tendero.Search.Elasticsearch")
             .And().AreClasses()
             .And().DoNotHaveNameEndingWith("Extensions")
             .Should().NotBePublic()
@@ -118,7 +118,7 @@ public sealed class ArchitectureRules
             // Elasticsearch es un detalle detrás de IProductIndexer /
             // ILexicalProductSearch. El día que se sustituya, sólo cambia una carpeta.
             var result = Types.InAssembly(assembly)
-                .That().DoNotResideInNamespace("Tendero.Search.Elasticsearch")
+                .That().DoNotResideInNamespace("ElGuerre.Tendero.Search.Elasticsearch")
                 .ShouldNot().HaveDependencyOn("Elastic.Clients")
                 .GetResult();
 

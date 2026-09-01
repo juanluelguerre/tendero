@@ -1,23 +1,23 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/AppHost/Tendero.AppHost.csproj" />
-    <Project Path="src/Api/Tendero.Api.csproj" />
-    <Project Path="src/Catalog/Tendero.Catalog.csproj" />
-    <Project Path="src/Ordering/Tendero.Ordering.csproj" />
-    <Project Path="src/Persistence/Tendero.Persistence.csproj" />
-    <Project Path="src/Search/Tendero.Search.csproj" />
-    <Project Path="src/ServiceDefaults/Tendero.ServiceDefaults.csproj" />
-    <Project Path="src/SharedKernel/Tendero.SharedKernel.csproj" />
-    <Project Path="src/Workers/Tendero.Workers.csproj" />
+    <Project Path="src/AppHost/ElGuerre.Tendero.AppHost.csproj" />
+    <Project Path="src/Api/ElGuerre.Tendero.Api.csproj" />
+    <Project Path="src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <Project Path="src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <Project Path="src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
+    <Project Path="src/Search/ElGuerre.Tendero.Search.csproj" />
+    <Project Path="src/ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
+    <Project Path="src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+    <Project Path="src/Workers/ElGuerre.Tendero.Workers.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Architecture.Tests/Tendero.Architecture.Tests.csproj" />
-    <Project Path="tests/Catalog.Tests/Tendero.Catalog.Tests.csproj" />
-    <Project Path="tests/Ordering.Tests/Tendero.Ordering.Tests.csproj" />
-    <Project Path="tests/SearchEval.Tests/Tendero.SearchEval.Tests.csproj" />
-    <Project Path="tests/SharedKernel.Tests/Tendero.SharedKernel.Tests.csproj" />
+    <Project Path="tests/Architecture.Tests/ElGuerre.Tendero.Architecture.Tests.csproj" />
+    <Project Path="tests/Catalog.Tests/ElGuerre.Tendero.Catalog.Tests.csproj" />
+    <Project Path="tests/Ordering.Tests/ElGuerre.Tendero.Ordering.Tests.csproj" />
+    <Project Path="tests/SearchEval.Tests/ElGuerre.Tendero.SearchEval.Tests.csproj" />
+    <Project Path="tests/SharedKernel.Tests/ElGuerre.Tendero.SharedKernel.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
-    <Project Path="tools/SearchEval/Tendero.SearchEval.csproj" />
+    <Project Path="tools/SearchEval/ElGuerre.Tendero.SearchEval.csproj" />
   </Folder>
 </Solution>

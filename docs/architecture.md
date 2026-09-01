@@ -6,7 +6,8 @@
    Shopify dev store, Medusa/Vendure/WooCommerce/PrestaShop, Merchant feed.
    Keyed DI by source name; contract-test suite per adapter; idempotent import
    keyed on `(source, externalId)` via `ExternalReference`.
-2. **Core** — `Tendero.Catalog` and `Tendero.Ordering` bounded contexts.
+2. **Core** — `ElGuerre.Tendero.Catalog` and `ElGuerre.Tendero.Ordering`
+   bounded contexts.
    Vertical slices (Carter endpoints + FluentValidation + custom CQRS
    dispatchers). Postgres is the source of truth; every side effect flows
    through domain events → Outbox (same transaction) → workers.
@@ -140,7 +141,7 @@ flowchart TB
         S[Search]
         U[Ucp]
     end
-    SK[Tendero.SharedKernel<br/>Money · LocalizedText · ids · CQRS · domain events]
+    SK[ElGuerre.Tendero.SharedKernel<br/>Money · LocalizedText · ids · CQRS · domain events]
     Exec --> Adapters --> Ctx --> SK
     Exec --> Ctx
 ```

@@ -1,6 +1,6 @@
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Catalog.Ports;
+namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
 /// Almacén de imágenes de producto. Puerto, no implementación: hoy hay un

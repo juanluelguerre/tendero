@@ -1,8 +1,8 @@
-using Tendero.Ordering.Domain;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
-namespace Tendero.Ordering.Tests;
+namespace ElGuerre.Tendero.Ordering.Tests;
 
 public sealed class OrderTests
 {

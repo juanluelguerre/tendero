@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <!-- Todo efecto lateral vive aquí: la petición HTTP termina cuando el estado
+       está guardado, y el worker se encarga del resto (CLAUDE.md, invariante 7). -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Workers</RootNamespace>
+    <UserSecretsId>tendero-workers</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Persistence/ElGuerre.Tendero.Persistence.csproj" />
+    <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
+    <ProjectReference Include="../ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

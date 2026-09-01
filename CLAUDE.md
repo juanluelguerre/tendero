@@ -5,8 +5,13 @@ The AI-native shopkeeper: an ecommerce platform for humans and AI agents.
 (Ollama, Qdrant, Elasticsearch) via Docker. Companion repo for a blog series —
 code quality and architectural clarity matter more than shipping fast.
 
-Root namespace: `Tendero.*` (`Tendero.Catalog`, `Tendero.Ordering`,
-`Tendero.Search`, `Tendero.SharedKernel`, `Tendero.Ucp`).
+Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
+`ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Search`,
+`ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Ucp`). Project file name,
+assembly name and root namespace are the same string; the folders under `src/`
+drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope in
+`frontend/` stays `@tendero/*` — npm scopes and .NET namespaces do not have to
+agree, and the short one is the one people type.
 
 ## Commands
 

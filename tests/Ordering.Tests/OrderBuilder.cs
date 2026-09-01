@@ -1,7 +1,7 @@
-using Tendero.Ordering.Domain;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Ordering.Tests;
+namespace ElGuerre.Tendero.Ordering.Tests;
 
 /// <summary>
 /// Builder explícito (docs/testing.md): cada valor por defecto declara que es

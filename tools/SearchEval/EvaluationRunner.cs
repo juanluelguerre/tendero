@@ -1,7 +1,7 @@
+using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.Extensions.DependencyInjection;
-using Tendero.Search.Contracts;
 
-namespace Tendero.SearchEval;
+namespace ElGuerre.Tendero.SearchEval;
 
 public sealed record QueryScore(string Query, double? NdcgAt10, double? RecallAt50, int Returned);
 

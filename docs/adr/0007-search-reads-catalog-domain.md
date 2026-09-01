@@ -4,8 +4,8 @@
 
 ## Context
 `ProductSearchDocument.FromProduct(Product, culture)` projects a catalog
-aggregate into a per-language index document. That makes `Tendero.Search`
-reference `Tendero.Catalog`, the one edge in the solution that does not point
+aggregate into a per-language index document. That makes `ElGuerre.Tendero.Search`
+reference `ElGuerre.Tendero.Catalog`, the one edge in the solution that does not point
 straight down to the SharedKernel.
 
 ## Decision

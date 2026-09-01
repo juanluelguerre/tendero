@@ -4,7 +4,7 @@
        Los tests de arquitectura comprueban que ni Domain ni los slices
        referencian Microsoft.EntityFrameworkCore. -->
   <PropertyGroup>
-    <RootNamespace>Tendero.Persistence</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.Persistence</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,10 +15,10 @@
   <ItemGroup>
     <!-- Implementa los puertos declarados por los slices: IProductRepository e
          IUnitOfWork (Catalog/ImportProducts) e IProductReader (Search). -->
-    <ProjectReference Include="../Catalog/Tendero.Catalog.csproj" />
-    <ProjectReference Include="../Ordering/Tendero.Ordering.csproj" />
-    <ProjectReference Include="../Search/Tendero.Search.csproj" />
-    <ProjectReference Include="../SharedKernel/Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

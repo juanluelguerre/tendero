@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using Carter;
+using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tendero.Search.Contracts;
-using Tendero.SharedKernel;
 
-namespace Tendero.Search.Features.ReindexProducts;
+namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 
 /// <summary>
 /// Rehace el índice desde Postgres. docs/architecture.md ya dice que el índice
@@ -61,7 +61,7 @@ public sealed class ReindexProductsHandler(
     IProductIndexer indexer)
     : ICommandHandler<ReindexProductsCommand, ReindexProductsResult>
 {
-    private static readonly ActivitySource Telemetry = new("Tendero.Search");
+    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Search");
 
     public async Task<ReindexProductsResult> HandleAsync(
         ReindexProductsCommand command, CancellationToken cancellationToken)

@@ -1,8 +1,8 @@
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.Extensions.Logging;
-using Tendero.Catalog.Domain;
-using Tendero.Search.Contracts;
 
-namespace Tendero.Search.Features.ProjectProductToIndex;
+namespace ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 
 // Estos handlers los invoca el procesador del Outbox (worker en segundo plano),
 // NO el request HTTP: la importación termina rápido y la indexación va detrás,

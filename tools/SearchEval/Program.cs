@@ -1,10 +1,10 @@
+using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Elasticsearch;
+using ElGuerre.Tendero.SearchEval;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Tendero.Catalog;
-using Tendero.Search.Contracts;
-using Tendero.Search.Elasticsearch;
-using Tendero.SearchEval;
 
 // Puerta de calidad de la búsqueda. Corre las consultas anotadas contra un
 // Elasticsearch real, por los MISMOS puertos que usa la aplicación, y compara

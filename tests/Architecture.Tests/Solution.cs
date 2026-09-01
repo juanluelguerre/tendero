@@ -1,14 +1,14 @@
 extern alias TenderoApi;
 
 using System.Reflection;
-using Tendero.Catalog.Domain;
-using Tendero.Ordering.Domain;
-using Tendero.Persistence;
-using Tendero.Search.Contracts;
-using Tendero.ServiceDefaults;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.Persistence;
+using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.ServiceDefaults;
+using ElGuerre.Tendero.SharedKernel;
 
-namespace Tendero.Architecture.Tests;
+namespace ElGuerre.Tendero.Architecture.Tests;
 
 /// <summary>
 /// Los ensamblados que componen la solución. Se referencian por un tipo real y

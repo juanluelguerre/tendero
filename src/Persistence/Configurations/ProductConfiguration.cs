@@ -1,9 +1,9 @@
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Tendero.Catalog.Domain;
-using Tendero.SharedKernel;
 
-namespace Tendero.Persistence.Configurations;
+namespace ElGuerre.Tendero.Persistence.Configurations;
 
 internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 {

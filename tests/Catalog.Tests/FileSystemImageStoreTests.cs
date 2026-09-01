@@ -1,11 +1,11 @@
 using System.Text;
+using ElGuerre.Tendero.Catalog.Adapters;
+using ElGuerre.Tendero.Catalog.Ports;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using Tendero.Catalog.Adapters;
-using Tendero.Catalog.Ports;
 using Xunit;
 
-namespace Tendero.Catalog.Tests.Adapters;
+namespace ElGuerre.Tendero.Catalog.Tests.Adapters;
 
 /// <summary>
 /// El almacén direcciona por contenido, y de ahí salen dos propiedades que la

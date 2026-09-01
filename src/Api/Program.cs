@@ -1,12 +1,12 @@
 using Carter;
-using Tendero.Api;
-using Tendero.Catalog;
-using Tendero.Catalog.Features.ImportProducts;
-using Tendero.Persistence;
-using Tendero.Search.Elasticsearch;
-using Tendero.Search.Features.SearchProducts;
-using Tendero.ServiceDefaults;
-using Tendero.SharedKernel;
+using ElGuerre.Tendero.Api;
+using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Catalog.Features.ImportProducts;
+using ElGuerre.Tendero.Persistence;
+using ElGuerre.Tendero.Search.Elasticsearch;
+using ElGuerre.Tendero.Search.Features.SearchProducts;
+using ElGuerre.Tendero.ServiceDefaults;
+using ElGuerre.Tendero.SharedKernel;
 
 var builder = WebApplication.CreateBuilder(args);
 

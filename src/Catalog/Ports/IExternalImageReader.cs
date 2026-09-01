@@ -1,6 +1,6 @@
-using Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Connectors;
 
-namespace Tendero.Catalog.Ports;
+namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
 /// Abre el contenido de una <see cref="ExternalImage"/>, venga de donde venga.

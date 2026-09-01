@@ -1,9 +1,9 @@
+using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Tendero.Ordering.Domain;
-using Tendero.SharedKernel;
 
-namespace Tendero.Persistence.Configurations;
+namespace ElGuerre.Tendero.Persistence.Configurations;
 
 internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
 {

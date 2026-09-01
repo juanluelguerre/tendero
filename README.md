@@ -51,7 +51,8 @@ flowchart TB
 
 Key principles:
 
-- **Two bounded contexts** (`Tendero.Catalog`, `Tendero.Ordering`) — orders
+- **Two bounded contexts** (`ElGuerre.Tendero.Catalog`,
+  `ElGuerre.Tendero.Ordering`) — orders
   snapshot product data, never reference it live.
 - **Ports and adapters at every boundary**: N catalog connectors behind one
   port, 3 payment adapters behind another. The `seed` connector and `fake`

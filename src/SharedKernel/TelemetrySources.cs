@@ -1,4 +1,4 @@
-namespace Tendero.SharedKernel;
+namespace ElGuerre.Tendero.SharedKernel;
 
 /// <summary>
 /// Los nombres de <c>ActivitySource</c> y <c>Meter</c> del sistema, en un solo
@@ -14,9 +14,9 @@ namespace Tendero.SharedKernel;
 /// </summary>
 public static class TelemetrySources
 {
-    public const string Catalog = "Tendero.Catalog";
-    public const string Search = "Tendero.Search";
-    public const string Outbox = "Tendero.Outbox";
+    public const string Catalog = "ElGuerre.Tendero.Catalog";
+    public const string Search = "ElGuerre.Tendero.Search";
+    public const string Outbox = "ElGuerre.Tendero.Outbox";
 
     public static readonly string[] All = [Catalog, Search, Outbox];
 }

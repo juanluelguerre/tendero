@@ -1,6 +1,6 @@
-using Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Connectors;
 
-namespace Tendero.Catalog.Ports;
+namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
 /// Resuelve un conector por el nombre de su origen. Existe para que el slice de

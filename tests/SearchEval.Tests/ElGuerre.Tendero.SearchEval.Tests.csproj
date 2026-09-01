@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>Tendero.Ordering.Tests</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.SearchEval.Tests</RootNamespace>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Ordering/Tendero.Ordering.csproj" />
+    <ProjectReference Include="../../tools/SearchEval/ElGuerre.Tendero.SearchEval.csproj" />
   </ItemGroup>
 
 </Project>
