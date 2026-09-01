@@ -46,3 +46,17 @@ export interface PublishProductResponse {
   outcome: PublishOutcome;
   status: ProductStatus;
 }
+
+/**
+ * Resultado de una importacion. Vivia suelto en el servicio del backoffice
+ * mientras el resto de contratos estaban aqui: un DTO de la API es un contrato
+ * de la API, venga de donde venga.
+ *
+ * Fuente: src/Catalog/Features/ImportProducts/ImportProducts.cs
+ */
+export interface ImportResult {
+  created: number;
+  updated: number;
+  failed: number;
+  elapsedSeconds: number;
+}

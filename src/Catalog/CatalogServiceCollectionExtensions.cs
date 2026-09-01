@@ -16,7 +16,11 @@ public static class CatalogServiceCollectionExtensions
     public static IServiceCollection AddCatalog(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<SeedConnectorOptions>(configuration.GetSection(SeedConnectorOptions.SectionName));
-        services.AddKeyedScoped<ICatalogSourceConnector, SeedCatalogConnector>("seed");
+        services.AddKeyedScoped<ICatalogSourceConnector, SeedCatalogConnector>(SeedCatalogConnector.Key);
+
+        // El registro es lo único que habla con el contenedor: los slices reciben
+        // el puerto, no el IServiceProvider.
+        services.AddScoped<ICatalogSourceRegistry, KeyedCatalogSourceRegistry>();
 
         // Almacén de imágenes: un puerto, y hoy un solo adaptador. El de S3
         // entra cuando el sistema de ficheros deje de bastar, sin tocar nada más.

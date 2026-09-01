@@ -27,6 +27,13 @@ public sealed record OrderConfirmed(OrderId OrderId, DateTimeOffset OccurredAt) 
 public sealed record OrderCancelled(OrderId OrderId, string Reason, DateTimeOffset OccurredAt) : IDomainEvent;
 public sealed record OrderShipped(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 
+/// <summary>
+/// La entrega también es un hecho. Era la única transición que no emitía nada, y
+/// resulta ser justo la que abre la ventana de devolución: el bucle de motivos de
+/// devolución de la fase 4 no tiene otro sitio del que colgarse.
+/// </summary>
+public sealed record OrderDelivered(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
+
 public sealed class Order : AggregateRoot
 {
     // Máquina de estados declarativa: una transición fuera de esta tabla es un bug.
@@ -92,7 +99,7 @@ public sealed class Order : AggregateRoot
             Id = OrderId.New(),
             CustomerId = customerId,
             IdempotencyKey = idempotencyKey,
-            Culture = culture.Split('-', '_')[0].ToLowerInvariant(),
+            Culture = SharedKernel.Culture.Normalize(culture),
             Currency = currency,
             Status = OrderStatus.Pending,
             CreatedAt = now,
@@ -116,14 +123,16 @@ public sealed class Order : AggregateRoot
         TransitionTo(OrderStatus.Shipped, now => new OrderShipped(Id, now));
 
     public void Deliver() =>
-        TransitionTo(OrderStatus.Delivered, _ => null);
+        TransitionTo(OrderStatus.Delivered, now => new OrderDelivered(Id, now));
 
     // La saga de compensación llama aquí cuando algo falla a mitad
     // (p. ej. pago autorizado pero sin stock): cancela y libera.
     public void Cancel(string reason) =>
         TransitionTo(OrderStatus.Cancelled, now => new OrderCancelled(Id, reason, now));
 
-    private void TransitionTo(OrderStatus target, Func<DateTimeOffset, IDomainEvent?> eventFactory)
+    // La fábrica dejó de ser nullable cuando Deliver() empezó a emitir su evento:
+    // el `IDomainEvent?` existía por una sola transición muda.
+    private void TransitionTo(OrderStatus target, Func<DateTimeOffset, IDomainEvent> eventFactory)
     {
         if (!AllowedTransitions[Status].Contains(target))
             throw new InvalidOperationException($"Illegal transition {Status} -> {target} for order {Id}.");
@@ -131,7 +140,6 @@ public sealed class Order : AggregateRoot
         Status = target;
         UpdatedAt = DateTimeOffset.UtcNow;
 
-        if (eventFactory(UpdatedAt) is { } domainEvent)
-            Raise(domainEvent);
+        Raise(eventFactory(UpdatedAt));
     }
 }

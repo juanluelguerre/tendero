@@ -34,24 +34,20 @@ public sealed class SeedCorpus(IServiceProvider services)
         return byInternalId;
     }
 
-    // Mismos pasos y mismo orden que ImportProductsHandler, más Publish: sólo lo
-    // Activo es buscable, y aquí no hay cola de revisión que lo publique.
+    /// <summary>
+    /// El MISMO mapeo que usa la importación —<see cref="ExternalProductMapper"/>—
+    /// y no una copia con un comentario prometiendo que son iguales. Si el import
+    /// cambia y esto no, la puerta de calidad puntúa un sistema que no existe.
+    ///
+    /// Lo único que añade es <c>Publish()</c>: sólo lo Activo es buscable y aquí
+    /// no hay cola de revisión que lo publique. Y lo único que omite son las
+    /// imágenes: no son campo buscable, así que no mueven el ranking, y meter el
+    /// almacén por medio sólo añade formas de fallar que no son la que se mide.
+    /// </summary>
     private static Product BuildProduct(ExternalProduct external, string source)
     {
-        var product = Product.Create(external.LocalizedName, external.Price, external.LocalizedDescription);
-        product.UpdateDetails(
-            external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
-        product.LinkExternal(source, external.ExternalId);
-
-        // La evaluación NO ingiere imágenes: no son campo buscable, así que no
-        // afectan al ranking, y meter el almacén por medio sólo añadiría formas
-        // de fallar que no son la que se está midiendo.
-
-        foreach (var (name, value) in external.Attributes)
-            product.SetAttribute(name, value);
-
+        var product = external.ToNewProduct(source);
         product.Publish();
-
         return product;
     }
 }

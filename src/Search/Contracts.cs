@@ -31,6 +31,50 @@ public interface IProductReader
 }
 
 /// <summary>
+/// Las culturas que el buscador sirve, y el orden en que se recorren. Es
+/// CONTRATO: la herramienta de evaluación necesita saber contra qué índices
+/// puntuar, y el inicializador necesita saber cuáles crear.
+///
+/// Vivía junto al mapa de analizadores dentro del adaptador de Elasticsearch, y
+/// son dos cosas distintas: que el catálogo hable español e inglés es una
+/// decisión de producto; que "es" se analice con el stemmer <c>spanish</c> es un
+/// detalle del motor, y ése se queda dentro del adaptador.
+/// </summary>
+public static class SearchCultures
+{
+    public static readonly string[] Supported = ["es", "en"];
+
+    public static IEnumerable<string> IndexNames =>
+        Supported.Select(ProductSearchDocument.IndexNameFor);
+}
+
+/// <summary>
+/// La regla del índice, en un solo sitio: sólo lo Active es buscable, y lo que
+/// deja de estarlo se retira. Estaba escrita dos veces —en la proyección del
+/// outbox y en el reindexado— con un comentario que decía "replica la regla en
+/// vez de inventar otra", que es la forma educada de decir que hay dos.
+///
+/// Que sean dos importa: si divergen, el reindexado deja de converger a lo mismo
+/// que produce la proyección, y la diferencia sólo se ve buscando.
+/// </summary>
+public static class ProductIndexProjection
+{
+    /// <summary>Devuelve true si el producto quedó indexado, false si se retiró.</summary>
+    public static async Task<bool> ApplyAsync(
+        IProductIndexer indexer, Product product, CancellationToken ct)
+    {
+        if (product.Status == ProductStatus.Active)
+        {
+            await indexer.IndexAsync(product, ct);
+            return true;
+        }
+
+        await indexer.RemoveAsync(product.Id, ct);
+        return false;
+    }
+}
+
+/// <summary>
 /// Puerto de lectura léxica (BM25). Cuando llegue la búsqueda híbrida
 /// habrá otro puerto que componga este con el vectorial; este NO cambia:
 /// es el modo degradado si la capa de IA se cae.
@@ -118,7 +162,10 @@ public sealed record ProductSearchDocument
         Slug = product.Slug.In(culture),
         PriceAmount = product.Price.Amount,
         PriceCurrency = product.Price.Currency,
-        ImageId = product.Images.FirstOrDefault()?.Id.Value,
+        // Portada = la de menor SortOrder, y esa regla vive en el agregado. Aquí
+        // se cogía la primera de la lista mientras el listado del backoffice
+        // ordenaba: el mismo producto podía enseñar dos fotos distintas.
+        ImageId = product.PrimaryImage?.Id.Value,
         Status = product.Status.ToString().ToLowerInvariant()
     };
 }

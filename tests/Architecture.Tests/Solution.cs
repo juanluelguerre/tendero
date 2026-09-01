@@ -22,7 +22,7 @@ internal static class Solution
     public static readonly Assembly Ordering = typeof(Order).Assembly;
     public static readonly Assembly Search = typeof(IProductIndexer).Assembly;
     public static readonly Assembly Persistence = typeof(TenderoDbContext).Assembly;
-    public static readonly Assembly ServiceDefaults = typeof(TelemetrySources).Assembly;
+    public static readonly Assembly ServiceDefaults = typeof(HostingExtensions).Assembly;
     public static readonly Assembly Api = typeof(TenderoApi::Program).Assembly;
     public static readonly Assembly Workers = typeof(Workers.OutboxProcessor).Assembly;
     public static readonly Assembly SearchEval = typeof(SearchEval.RelevanceMetrics).Assembly;

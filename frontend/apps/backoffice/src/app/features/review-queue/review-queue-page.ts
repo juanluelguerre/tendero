@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { ProductSummary } from '@tendero/shared-api';
+import { formatPrice } from '@tendero/shared-util';
 import { CatalogService } from '../../data-access/catalog.service';
 
 type QueueState =
@@ -17,10 +18,10 @@ type QueueState =
  * linea de comandos, la revision humana no es parte del producto, es una nota al
  * pie. Ese es literalmente el articulo de la fase 2.
  *
- * El estado optimista es deliberado: la fila desaparece en cuanto el servidor
- * confirma, no antes. Con Outbox de por medio el producto tarda un instante en
- * aparecer en el indice, y prometer en la UI algo que aun no es cierto en la
- * busqueda es peor que esperar 200 ms.
+ * NO hay estado optimista, y es deliberado: la fila desaparece cuando el
+ * servidor confirma, no antes. Con el Outbox de por medio el producto tarda un
+ * instante en aparecer en el indice, y prometer en la UI algo que todavia no es
+ * cierto en la busqueda es peor que esperar 200 ms.
  */
 @Component({
   selector: 'backoffice-review-queue-page',
@@ -181,10 +182,7 @@ export class ReviewQueuePage {
   }
 
   protected price(item: ProductSummary): string {
-    return new Intl.NumberFormat(this.transloco.getActiveLang(), {
-      style: 'currency',
-      currency: item.priceCurrency,
-    }).format(item.priceAmount);
+    return formatPrice(item.priceAmount, item.priceCurrency, this.transloco.getActiveLang());
   }
 
   private load(): void {

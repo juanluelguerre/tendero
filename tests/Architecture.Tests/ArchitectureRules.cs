@@ -91,6 +91,25 @@ public sealed class ArchitectureRules
         Assert.True(result.IsSuccessful, Describe(Solution.Catalog, result));
     }
 
+    /// <summary>
+    /// La misma regla 3, aplicada al otro puerto con adaptador. Estaban public
+    /// sin necesitarlo: se registran desde su propio ensamblado, así que nada
+    /// fuera tenía por qué poder nombrarlos — y mientras se pudiera, alguien
+    /// acabaría inyectando ElasticsearchLexicalSearch en vez del puerto.
+    /// </summary>
+    [Fact]
+    public void Search_adapters_are_internal_so_only_the_port_is_public()
+    {
+        var result = Types.InAssembly(Solution.Search)
+            .That().ResideInNamespace("Tendero.Search.Elasticsearch")
+            .And().AreClasses()
+            .And().DoNotHaveNameEndingWith("Extensions")
+            .Should().NotBePublic()
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, Describe(Solution.Search, result));
+    }
+
     [Fact]
     public void The_elasticsearch_client_stays_inside_its_adapter()
     {

@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
+import { formatPrice } from '@tendero/shared-util';
 import { ProductSearchService } from '../../data-access/product-search.service';
 
 type SearchState =
@@ -68,9 +69,6 @@ export class SearchPage {
   }
 
   protected price(hit: SearchHit): string {
-    return new Intl.NumberFormat(this.transloco.getActiveLang(), {
-      style: 'currency',
-      currency: hit.priceCurrency,
-    }).format(hit.priceAmount);
+    return formatPrice(hit.priceAmount, hit.priceCurrency, this.transloco.getActiveLang());
   }
 }

@@ -27,7 +27,18 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         ReadCommentHandling = JsonCommentHandling.Skip
     };
 
-    public string Source => "seed";
+    /// <summary>Clave de registro en DI y nombre del origen. Estaba escrita dos
+    /// veces —el literal del <c>AddKeyedScoped</c> y este <c>Source</c>— y si
+    /// divergen la importación falla en runtime, no al compilar.</summary>
+    public const string Key = "seed";
+
+    public string Source => Key;
+
+    // Se resuelve una vez y no por imagen: es la misma ruta para todo el fichero.
+    private string SeedDirectory =>
+        _seedDirectory ??= Path.GetDirectoryName(Path.GetFullPath(options.Value.FilePath)) ?? ".";
+
+    private string? _seedDirectory;
 
     public async IAsyncEnumerable<ExternalProduct> StreamProductsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -84,7 +95,6 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         if (Uri.TryCreate(reference, UriKind.Absolute, out var absolute))
             return absolute;
 
-        var seedDirectory = Path.GetDirectoryName(Path.GetFullPath(options.Value.FilePath)) ?? ".";
-        return new Uri(Path.GetFullPath(Path.Combine(seedDirectory, reference)));
+        return new Uri(Path.GetFullPath(Path.Combine(SeedDirectory, reference)));
     }
 }

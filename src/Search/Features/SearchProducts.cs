@@ -7,8 +7,6 @@ using Tendero.Search.Contracts;
 
 namespace Tendero.Search.Features.SearchProducts;
 
-// Query del MediatR custom; adapta IQuery/IQueryHandler/IQueryDispatcher a tu implementación.
-
 public sealed record SearchProductsQuery(string Q, string Culture, int Page, int PageSize)
     : IQuery<SearchResultPage>;
 

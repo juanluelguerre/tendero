@@ -139,7 +139,7 @@ public sealed class ListProductsHandler(IProductCatalogReader products)
             product.Category,
             product.Price.Amount,
             product.Price.Currency,
-            product.Images.OrderBy(image => image.SortOrder).FirstOrDefault()?.Id.Value,
+            product.PrimaryImage?.Id.Value,
             product.Status.ToString().ToLowerInvariant(),
             // Qué idiomas le faltan al producto, resuelto aquí y no en el
             // cliente: es el dato por el que existe la cola. LocalizedText cae

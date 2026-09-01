@@ -51,7 +51,7 @@ public static class IndexAdmin
                 $"No Elasticsearch answering at {elasticsearch}. Start one with:{Environment.NewLine}" +
                 "  docker run -d --name tendero-es -p 9200:9200 \\" + Environment.NewLine +
                 "    -e discovery.type=single-node -e xpack.security.enabled=false \\" + Environment.NewLine +
-                "    docker.elastic.co/elasticsearch/elasticsearch:9.1.0" + Environment.NewLine +
+                "    docker.elastic.co/elasticsearch/elasticsearch:9.5.0" + Environment.NewLine +
                 "or point the tool elsewhere with --elasticsearch <url>.", exception);
         }
     }

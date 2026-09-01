@@ -1,8 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type { SearchResultPage } from '@tendero/shared-api';
+import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
-import { API_BASE_URL } from '../core/api-base-url';
 
 /**
  * El unico sitio del storefront que sabe como se llama el endpoint de busqueda.

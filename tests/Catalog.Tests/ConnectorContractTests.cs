@@ -8,7 +8,6 @@ namespace Tendero.Catalog.Tests.Connectors;
 /// Contrato ejecutable del puerto: TODA implementación (Seed, Shopify, Medusa...)
 /// hereda de esta clase y debe pasar la misma suite. Si un conector nuevo
 /// rompe alguna regla, se sabe antes de tocar el dominio.
-/// Mismo patrón de clases base abstractas que usas en NEX.
 /// </summary>
 public abstract class CatalogSourceConnectorContractTests
 {

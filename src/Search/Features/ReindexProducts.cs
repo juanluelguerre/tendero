@@ -3,7 +3,6 @@ using Carter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
-using Tendero.Catalog.Domain;
 using Tendero.Search.Contracts;
 using Tendero.SharedKernel;
 
@@ -21,9 +20,10 @@ namespace Tendero.Search.Features.ReindexProducts;
 /// outbox ya entregó esos eventos y volver a publicar un producto ya activo no
 /// cambia nada (por diseño).
 ///
-/// Replica la regla de ProjectProductToIndex en vez de inventar otra: Active se
-/// indexa, lo demás se retira. Así el reindexado CONVERGE — un producto que dejó
-/// de estar activo sale del índice — en lugar de limitarse a añadir.
+/// Aplica la MISMA regla que la proyección del outbox, y literalmente el mismo
+/// código: <see cref="ProductIndexProjection"/>. Active se indexa, lo demás se
+/// retira, así que el reindexado CONVERGE — un producto que dejó de estar activo
+/// sale del índice — en lugar de limitarse a añadir.
 ///
 /// No recrea los índices ni toca sus mappings: eso es responsabilidad de
 /// SearchIndexInitializer, y duplicar aquí la definición del mapping seria tener
@@ -76,16 +76,10 @@ public sealed class ReindexProductsHandler(
         // sentido, y el lector ya lo entrega perezosamente.
         await foreach (var product in products.StreamAllAsync(cancellationToken))
         {
-            if (product.Status == ProductStatus.Active)
-            {
-                await indexer.IndexAsync(product, cancellationToken);
+            if (await ProductIndexProjection.ApplyAsync(indexer, product, cancellationToken))
                 indexed++;
-            }
             else
-            {
-                await indexer.RemoveAsync(product.Id, cancellationToken);
                 removed++;
-            }
         }
 
         stopwatch.Stop();

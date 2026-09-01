@@ -55,15 +55,27 @@ internal sealed class FileSystemImageStore(
         var destination = PathFor(hash, extension);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
 
-        if (File.Exists(destination))
+        try
         {
-            // Mismo contenido, misma clave: ya estaba. Deduplicación gratis.
-            File.Delete(staging);
+            // Move sin overwrite, y el choque tratado como éxito. Un `File.Exists`
+            // previo deja una ventana entre la comprobación y el movimiento: dos
+            // importaciones con la misma foto la cruzan y la segunda lanza. Da
+            // igual quién gane — el contenido es idéntico, ésa es la premisa del
+            // direccionamiento por hash.
+            File.Move(staging, destination, overwrite: false);
+        }
+        catch (IOException) when (File.Exists(destination))
+        {
             logger.LogDebug("Image {ImageId} already stored", id);
-            return id;
+        }
+        finally
+        {
+            // Si el movimiento no llegó a ocurrir, el temporal se queda huérfano
+            // para siempre: son 147k ficheros en el peor caso.
+            if (File.Exists(staging))
+                File.Delete(staging);
         }
 
-        File.Move(staging, destination);
         return id;
     }
 

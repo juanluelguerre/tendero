@@ -70,4 +70,36 @@ public sealed class OrderTests
 
         Assert.Equal("es", order.Culture);
     }
+
+    [Fact]
+    public void Delivering_an_order_records_that_it_happened()
+    {
+        // Era la unica transicion muda de la maquina de estados, y resulta ser
+        // la que abre la ventana de devolucion: el bucle de motivos de devolucion
+        // de la fase 4 no tiene otro hecho del que colgarse.
+        var order = OrderBuilder.Default().Build();
+        order.AuthorizePayment();
+        order.Confirm();
+        order.Ship();
+        order.ClearDomainEvents();
+
+        order.Deliver();
+
+        Assert.Contains(order.DomainEvents, e => e is OrderDelivered);
+    }
+
+    [Fact]
+    public void Every_reachable_transition_records_a_domain_event()
+    {
+        // Una transicion sin evento es un cambio de estado que el resto del
+        // sistema no puede ver: el outbox no lleva nada y ningun worker despierta.
+        var order = OrderBuilder.Default().Build();
+
+        foreach (var step in new Action[] { order.AuthorizePayment, order.Confirm, order.Ship, order.Deliver })
+        {
+            order.ClearDomainEvents();
+            step();
+            Assert.NotEmpty(order.DomainEvents);
+        }
+    }
 }

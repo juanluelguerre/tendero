@@ -52,6 +52,20 @@ public readonly record struct Money(decimal Amount, string Currency)
     public override string ToString() => $"{Amount:0.00} {Currency}";
 }
 
+// ---------- Culturas ----------
+/// <summary>
+/// Normalización de códigos de cultura, en un solo sitio. La regla —quedarse con
+/// la subetiqueta primaria en minúsculas, "es-ES" → "es"— la aplicaban por su
+/// cuenta <see cref="LocalizedText"/> y <c>Order.Place</c>, con el mismo
+/// <c>Split</c> escrito dos veces. Son la misma decisión: qué significa "la
+/// cultura de esto".
+/// </summary>
+public static class Culture
+{
+    public static string Normalize(string culture) =>
+        culture.Split('-', '_')[0].ToLowerInvariant();
+}
+
 // ---------- Texto localizado ----------
 /// <summary>
 /// Value object para textos multilenguaje. Claves ISO 639-1 en minúsculas ("es", "en").
@@ -88,8 +102,7 @@ public sealed class LocalizedText
         return new LocalizedText(copy);
     }
 
-    private static string Normalize(string culture) =>
-        culture.Split('-', '_')[0].ToLowerInvariant();
+    private static string Normalize(string culture) => Culture.Normalize(culture);
 }
 
 // ---------- Eventos de dominio ----------

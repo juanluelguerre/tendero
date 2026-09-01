@@ -1,6 +1,3 @@
-// Paquete: Elastic.Clients.Elasticsearch (9.x). Si la API fluida difiere en tu
-// versión, la forma de las peticiones es lo estable: mapping por idioma,
-// multi_match con boosts y filtro por status.
 using System.Diagnostics;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Mapping;
@@ -13,9 +10,15 @@ using Tendero.SharedKernel;
 
 namespace Tendero.Search.Elasticsearch;
 
-public static class SearchCultures
+/// <summary>
+/// Qué analizador nativo de Elasticsearch usa cada cultura. Detalle del motor y
+/// por eso internal: fuera de aquí lo que se conoce es
+/// <see cref="SearchCultures.Supported"/>, no que exista un stemmer llamado
+/// "spanish".
+/// </summary>
+internal static class CultureAnalyzers
 {
-    public static readonly IReadOnlyDictionary<string, string> Analyzers = new Dictionary<string, string>
+    public static readonly IReadOnlyDictionary<string, string> ByCulture = new Dictionary<string, string>
     {
         ["es"] = "spanish",   // analizadores nativos de ES: stemming + stopwords
         ["en"] = "english"
@@ -23,13 +26,13 @@ public static class SearchCultures
 }
 
 /// <summary>Crea products_es y products_en al arrancar si no existen (idempotente).</summary>
-public sealed class SearchIndexInitializer(
+internal sealed class SearchIndexInitializer(
     ElasticsearchClient client,
     ILogger<SearchIndexInitializer> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        foreach (var (culture, analyzer) in SearchCultures.Analyzers)
+        foreach (var (culture, analyzer) in CultureAnalyzers.ByCulture)
         {
             var index = ProductSearchDocument.IndexNameFor(culture);
             var exists = await client.Indices.ExistsAsync(index, cancellationToken);
@@ -61,11 +64,11 @@ public sealed class SearchIndexInitializer(
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
-public sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : IProductIndexer
+internal sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : IProductIndexer
 {
     public async Task IndexAsync(Product product, CancellationToken ct = default)
     {
-        foreach (var culture in SearchCultures.Analyzers.Keys)
+        foreach (var culture in SearchCultures.Supported)
         {
             var document = ProductSearchDocument.FromProduct(product, culture);
             var response = await client.IndexAsync(
@@ -73,23 +76,39 @@ public sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : IP
                 i => i.Index(ProductSearchDocument.IndexNameFor(culture)).Id(document.Id),
                 ct);
 
+            // SearchUnavailableException y no InvalidOperationException: un fallo
+            // del motor es 503 y reintentable. Salía como 500 por este camino y
+            // como 503 por el de consulta, para la misma avería.
             if (!response.IsValidResponse)
-                throw new InvalidOperationException(
-                    $"Indexing product {document.Id} into {culture} failed: {response.DebugInformation}");
+                throw new SearchUnavailableException(
+                    $"indexing {document.Id} into {culture}", response.DebugInformation);
         }
     }
 
     public async Task RemoveAsync(ProductId productId, CancellationToken ct = default)
     {
-        foreach (var culture in SearchCultures.Analyzers.Keys)
-            await client.DeleteAsync<ProductSearchDocument>(
+        foreach (var culture in SearchCultures.Supported)
+        {
+            var response = await client.DeleteAsync<ProductSearchDocument>(
                 productId.ToString(),
                 d => d.Index(ProductSearchDocument.IndexNameFor(culture)),
-                ct); // 404 aquí es aceptable: borrar lo no indexado es idempotente
+                ct);
+
+            // 404 es correcto y esperado: borrar lo que no está indexado es
+            // idempotente, y es el caso normal de un producto que nunca se
+            // publicó. Cualquier OTRO fallo no puede ignorarse — éste es el
+            // camino por el que Archive() saca un producto del catálogo, y
+            // tragarse un 503 dejaba indexado lo que se acababa de retirar.
+            if (response.IsValidResponse || response.Result == Result.NotFound)
+                continue;
+
+            throw new SearchUnavailableException(
+                $"removing {productId} from {culture}", response.DebugInformation);
+        }
     }
 }
 
-public sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILexicalProductSearch
+internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILexicalProductSearch
 {
     private static readonly ActivitySource Telemetry = new("Tendero.Search");
 

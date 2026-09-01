@@ -7,7 +7,7 @@ namespace Tendero.Search.Features.ProjectProductToIndex;
 // Estos handlers los invoca el procesador del Outbox (worker en segundo plano),
 // NO el request HTTP: la importación termina rápido y la indexación va detrás,
 // con reintentos. Consistencia eventual, asumida y medible (lag del outbox
-// como métrica en Grafana). IDomainEventHandler<T> es tu abstracción custom.
+// como métrica en Grafana).
 
 // IProductReader vive en Contracts.cs: ReindexProducts necesita el mismo puerto,
 // y un slice no puede referenciar a otro.
@@ -26,12 +26,10 @@ public sealed class ProjectProductOnUpserted(
             return;
         }
 
-        // Solo lo activo es buscable; un Draft que aún no pasó revisión no se indexa,
-        // y si estaba indexado y volvió a Draft, se retira.
-        if (product.Status == ProductStatus.Active)
-            await indexer.IndexAsync(product, ct);
-        else
-            await indexer.RemoveAsync(product.Id, ct);
+        // Solo lo activo es buscable; un Draft que aún no pasó revisión no se
+        // indexa, y si estaba indexado y volvió a Draft, se retira. La regla la
+        // comparte con ReindexProducts: ver ProductIndexProjection.
+        await ProductIndexProjection.ApplyAsync(indexer, product, ct);
     }
 }
 

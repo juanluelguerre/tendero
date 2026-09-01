@@ -10,7 +10,7 @@ using Tendero.SearchEval;
 // Elasticsearch real, por los MISMOS puertos que usa la aplicación, y compara
 // NDCG@10 y recall@50 con los umbrales comprometidos.
 
-var IndexNames = SearchCultures.Analyzers.Keys.Select(ProductSearchDocument.IndexNameFor).ToArray();
+var indexNames = SearchCultures.IndexNames.ToArray();
 
 EvaluationOptions options;
 try
@@ -39,7 +39,7 @@ catch (InvalidOperationException exception)
 // veces seguidas o no sirve como puerta.
 await IndexAdmin.DropAsync(
     options.Elasticsearch,
-    IndexNames,
+    indexNames,
     CancellationToken.None);
 
 var builder = Host.CreateApplicationBuilder();
@@ -58,7 +58,7 @@ using var host = builder.Build();
 // Arranca el hosted service que crea products_es y products_en si no existen.
 await host.StartAsync();
 
-var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 var services = host.Services;
 
 var corpus = await new SeedCorpus(services).IndexAsync("seed", cancellation.Token);
@@ -66,7 +66,7 @@ var corpus = await new SeedCorpus(services).IndexAsync("seed", cancellation.Toke
 // Refresco explícito: sin esto la puntuación depende de una carrera con el
 // refresco automático de Elasticsearch, y una puerta que da números distintos
 // en dos ejecuciones seguidas no es una puerta.
-await IndexAdmin.RefreshAsync(options.Elasticsearch, IndexNames, cancellation.Token);
+await IndexAdmin.RefreshAsync(options.Elasticsearch, indexNames, cancellation.Token);
 
 Console.WriteLine($"Indexed {corpus.Count} seed products into {options.Elasticsearch}");
 
