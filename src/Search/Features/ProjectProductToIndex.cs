@@ -9,11 +9,8 @@ namespace Tendero.Search.Features.ProjectProductToIndex;
 // con reintentos. Consistencia eventual, asumida y medible (lag del outbox
 // como métrica en Grafana). IDomainEventHandler<T> es tu abstracción custom.
 
-/// <summary>Puerto mínimo de lectura que necesita esta proyección.</summary>
-public interface IProductReader
-{
-    Task<Product?> GetByIdAsync(Tendero.SharedKernel.ProductId id, CancellationToken ct);
-}
+// IProductReader vive en Contracts.cs: ReindexProducts necesita el mismo puerto,
+// y un slice no puede referenciar a otro.
 
 public sealed class ProjectProductOnUpserted(
     IProductReader products,

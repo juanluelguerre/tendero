@@ -14,6 +14,23 @@ public interface IProductIndexer
 }
 
 /// <summary>
+/// Lectura del catálogo desde el lado de búsqueda. Vivía dentro del slice
+/// ProjectProductToIndex mientras fue el único que leía; con ReindexProducts
+/// pasa a ser compartido, y un slice no puede referenciar a otro.
+///
+/// <c>StreamAllAsync</c> devuelve TODOS los productos, no sólo los Active: el
+/// reindexado aplica la misma regla que la proyección (Active se indexa, el
+/// resto se retira), y así converge el índice a la verdad en vez de limitarse a
+/// añadir. Filtrar por Active aquí dejaría documentos rancios de lo que dejó de
+/// estarlo.
+/// </summary>
+public interface IProductReader
+{
+    Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct);
+    IAsyncEnumerable<Product> StreamAllAsync(CancellationToken ct);
+}
+
+/// <summary>
 /// Puerto de lectura léxica (BM25). Cuando llegue la búsqueda híbrida
 /// habrá otro puerto que componga este con el vectorial; este NO cambia:
 /// es el modo degradado si la capa de IA se cae.

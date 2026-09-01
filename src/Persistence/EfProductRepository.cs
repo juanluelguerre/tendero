@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tendero.Catalog.Domain;
 using Tendero.Catalog.Ports;
-using Tendero.Search.Features.ProjectProductToIndex;
+using Tendero.Search.Contracts;
 using Tendero.SharedKernel;
 
 namespace Tendero.Persistence;
@@ -30,4 +30,10 @@ internal sealed class EfProductRepository(TenderoDbContext context) : IProductRe
     // AsNoTracking: el worker de indexación lee para proyectar, nunca para mutar.
     public Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct) =>
         context.Products.AsNoTracking().FirstOrDefaultAsync(product => product.Id == id, ct);
+
+    // Igual que arriba, y ademas sin seguimiento por una razon de memoria: el
+    // change tracker retendria los 147k productos del catalogo completo durante
+    // todo el reindexado, que es justo lo que AsAsyncEnumerable evita.
+    public IAsyncEnumerable<Product> StreamAllAsync(CancellationToken ct) =>
+        context.Products.AsNoTracking().OrderBy(product => product.CreatedAt).AsAsyncEnumerable();
 }

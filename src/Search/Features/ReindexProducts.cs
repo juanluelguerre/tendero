@@ -1,0 +1,87 @@
+using System.Diagnostics;
+using Carter;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Tendero.Catalog.Domain;
+using Tendero.Search.Contracts;
+using Tendero.SharedKernel;
+
+namespace Tendero.Search.Features.ReindexProducts;
+
+/// <summary>
+/// Rehace el índice desde Postgres. docs/architecture.md ya dice que el índice
+/// es una proyección desechable y que se reindexa a voluntad; lo que faltaba era
+/// el "a voluntad".
+///
+/// Hace falta de verdad, no en teoría: Elasticsearch se declara con
+/// ContainerLifetime.Persistent pero SIN volumen, así que sus documentos viven
+/// en la capa de escritura del contenedor. En cuanto Aspire lo recrea, el índice
+/// queda vacío con el catálogo entero en Active — y nada lo repone, porque el
+/// outbox ya entregó esos eventos y volver a publicar un producto ya activo no
+/// cambia nada (por diseño).
+///
+/// Replica la regla de ProjectProductToIndex en vez de inventar otra: Active se
+/// indexa, lo demás se retira. Así el reindexado CONVERGE — un producto que dejó
+/// de estar activo sale del índice — en lugar de limitarse a añadir.
+///
+/// No recrea los índices ni toca sus mappings: eso es responsabilidad de
+/// SearchIndexInitializer, y duplicar aquí la definición del mapping seria tener
+/// dos fuentes para la misma verdad.
+/// </summary>
+public sealed record ReindexProductsCommand : ICommand<ReindexProductsResult>;
+
+public sealed record ReindexProductsResult(int Indexed, int Removed, double ElapsedSeconds);
+
+public sealed class ReindexProductsEndpoint : ICarterModule
+{
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        // POST /api/search/reindex
+        app.MapPost("/api/search/reindex",
+            async (ICommandDispatcher dispatcher, CancellationToken ct) =>
+                Results.Ok(await dispatcher.SendAsync(new ReindexProductsCommand(), ct)))
+            .WithTags("Search")
+            .WithName("ReindexProducts");
+    }
+}
+
+public sealed class ReindexProductsHandler(
+    IProductReader products,
+    IProductIndexer indexer)
+    : ICommandHandler<ReindexProductsCommand, ReindexProductsResult>
+{
+    private static readonly ActivitySource Telemetry = new("Tendero.Search");
+
+    public async Task<ReindexProductsResult> HandleAsync(
+        ReindexProductsCommand command, CancellationToken cancellationToken)
+    {
+        using var activity = Telemetry.StartActivity("search.reindex");
+        var stopwatch = Stopwatch.StartNew();
+
+        int indexed = 0, removed = 0;
+
+        // Stream, no ToList: con el catálogo completo de Amazon Berkeley Objects
+        // (147k) cargarlo entero en memoria para recorrerlo una vez no tiene
+        // sentido, y el lector ya lo entrega perezosamente.
+        await foreach (var product in products.StreamAllAsync(cancellationToken))
+        {
+            if (product.Status == ProductStatus.Active)
+            {
+                await indexer.IndexAsync(product, cancellationToken);
+                indexed++;
+            }
+            else
+            {
+                await indexer.RemoveAsync(product.Id, cancellationToken);
+                removed++;
+            }
+        }
+
+        stopwatch.Stop();
+        activity?.SetTag("search.reindex.indexed", indexed);
+        activity?.SetTag("search.reindex.removed", removed);
+
+        return new ReindexProductsResult(indexed, removed, stopwatch.Elapsed.TotalSeconds);
+    }
+}
