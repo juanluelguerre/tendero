@@ -11,8 +11,9 @@ site, not at Tendero content.
 
 What changed on 2026-09-01 is that the drafting started. `docs/blog/` now holds
 an [`index.md`](blog/index.md) with the publication order and one file per
-article — seven drafted from shipped features and real numbers, one half drafted,
-five outlines for work that does not exist yet. Each drafted file is **nothing
+article — an opening piece about the project itself, seven drafted from shipped
+features and real numbers, one half drafted, and five outlines for work that does
+not exist yet. Each drafted file is **nothing
 but the article**, so it can be pasted straight into WordPress; everything else
 (status, slug, excerpt, tags, what a draft is still waiting on) lives in the
 index.
@@ -48,7 +49,9 @@ exists to protect.
    existing draft in `docs/blog/`.
 2. Verify every code snippet compiles against the repo at that tag.
 3. Include real numbers (NDCG, latency, cost per operation) — no hand-waving.
-4. One diagram max, recreated in the article's own style.
+4. One diagram max, recreated in the article's own style. The single
+   exception is article 00, whose subject is the architecture itself and
+   which carries four; diagram sources live in `docs/blog/assets/`.
 5. Translate to Spanish; both versions link the repo tag.
 6. Add the article link to README's blog section.
 7. Update the row in `docs/blog/index.md` to published, with the URL.
