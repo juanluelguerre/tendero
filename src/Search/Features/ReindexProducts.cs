@@ -28,6 +28,16 @@ namespace Tendero.Search.Features.ReindexProducts;
 /// No recrea los índices ni toca sus mappings: eso es responsabilidad de
 /// SearchIndexInitializer, y duplicar aquí la definición del mapping seria tener
 /// dos fuentes para la misma verdad.
+///
+/// LÍMITE conocido: converge para los productos que EXISTEN. Un producto
+/// borrado de la tabla deja su documento huérfano, porque el recorrido no puede
+/// ver lo que ya no está. No ocurre por la aplicación —el dominio no borra,
+/// archiva, y Archive() emite ProductArchived que lo retira— pero sí con un
+/// DELETE a mano o restaurando una copia antigua de la base. Visto de verdad:
+/// seis filas borradas por SQL dejaron doce documentos para seis productos.
+/// Cerrarlo pide borrar los índices antes de reconstruir, y eso mueve la
+/// propiedad del mapping; se decide cuando exista un caso que no sea un reset
+/// manual en desarrollo.
 /// </summary>
 public sealed record ReindexProductsCommand : ICommand<ReindexProductsResult>;
 

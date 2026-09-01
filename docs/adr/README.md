@@ -13,5 +13,7 @@
 | [0009](0009-spec-driven-development-scope.md) | Lightweight specs now; Spec Kit as a phase-3 experiment | accepted |
 | [0010](0010-frontend-sharing-boundaries.md) | What the two frontends share, and what they duplicate | accepted |
 | [0011](0011-product-images.md) | Product images are ingested, not referenced | accepted |
+| [0012](0012-publishing-and-reindexing.md) | Publishing is an explicit step; the index is rebuildable | accepted |
+| [0013](0013-culture-negotiation.md) | Culture: explicit parameter wins, `Accept-Language` is the default | accepted |
 
 Format: context → decision → consequences. Keep each under a page.

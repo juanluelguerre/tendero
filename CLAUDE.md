@@ -32,9 +32,14 @@ npx nx serve storefront|backoffice            # from frontend/
 4. **Domain purity**: `*.Domain` code references SharedKernel only. No EF,
    no HTTP, no Elastic types. Architecture tests enforce this — run them.
 5. **State machines are tables**: `Order.AllowedTransitions` is the single source
-   of truth. Never add a status change outside `TransitionTo`.
+   of truth. Never add a status change outside `TransitionTo`. In Catalog,
+   **importing never publishes**: Draft is the review queue's reason to exist,
+   and only `PublishProduct` moves a product to Active (ADR 0012).
 6. **Everything user-facing is `LocalizedText`** (es/en). Never store a bare
    string for name/description. Resolution: requested culture → en → first.
+   An endpoint picks its culture as `?culture=` → `Accept-Language` → `es`, and
+   answers with `Content-Language` + `Vary: Accept-Language` (ADR 0013). The
+   explicit parameter wins because an agent has no browser locale.
 7. **Domain events → Outbox → workers.** Handlers never index/email/call LLMs
    inline in a request. Raise the event; the worker projects.
 8. **Lexical search is the permanent fallback.** AI features must degrade
@@ -106,7 +111,11 @@ updated if conventions changed · user-facing strings exist in es AND en.
 
 ## Do NOT
 
-- Do not add cross-slice references "just this once".
+- Do not add cross-slice references "just this once". When a second slice needs
+  a port, the port moves to `Ports/`; it never gets referenced where it was born.
+- Do not return a strongly-typed id straight from an endpoint. `ProductId` is a
+  record struct and serialises as `{"value":"…"}`; the wire wants a flat string,
+  and no unit test will catch it.
 - Do not bypass the Outbox for side effects.
 - Do not add npm/NuGet dependencies without asking — the dependency budget is
   deliberately small, every addition is an architectural decision, and it must

@@ -19,7 +19,10 @@
 - `Product` (Catalog): `LocalizedText` name/slug/description (es/en with
   fallback chain), typed attributes, images, `ExternalReferences`, status
   Draft → Active → Archived. Draft = imported or AI-generated, awaiting review;
-  only Active is indexed.
+  only Active is indexed. **Publishing is an explicit step** — importing never
+  does it — exposed as `POST /api/catalog/products/{id}/publish` and driven from
+  the backoffice review queue. Idempotent: publishing what is already Active
+  reports it and saves nothing (ADR 0012).
 - `Order` (Ordering): line snapshots (name resolved in the buyer's culture,
   price frozen), declarative `AllowedTransitions` table, `IdempotencyKey` on
   checkout (agent retries are the normal case), `Culture`.
@@ -29,12 +32,33 @@
 ## Search
 
 - Index = disposable projection. One index per language with the native
-  analyzer (`products_es` / `products_en`). Reindex from Postgres at will.
+  analyzer (`products_es` / `products_en`). Rebuilt from Postgres with
+  `POST /api/search/reindex`, which replays the outbox projection's rule — Active
+  is indexed, everything else removed — so it converges rather than merely adds.
+  Elasticsearch runs without a volume on purpose; the rebuild is what makes that
+  safe (ADR 0012).
 - Lexical (BM25) is the permanent fallback; hybrid (Qdrant + RRF + rerank) and
   every AI layer sit behind feature flags and degrade to lexical.
 - Multilingual embeddings (bge-m3 via Ollama) → one vector space serves both
   cultures.
 - Quality is tested: golden set per culture, NDCG@10 + recall@50 in CI.
+
+## HTTP surface
+
+Everything the API exposes today. Each is one vertical slice.
+
+| Endpoint | Slice |
+|---|---|
+| `POST /api/catalog/import` | `Catalog/Features/ImportProducts` |
+| `GET /api/catalog/products` | `Catalog/Features/ListProducts` |
+| `POST /api/catalog/products/{id}/publish` | `Catalog/Features/PublishProduct` |
+| `GET /api/images/{id}` | `Catalog/Features/GetProductImage` |
+| `GET /api/search` | `Search/Features/SearchProducts` |
+| `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
+
+Any of them returning localized text resolves culture the same way — explicit
+`?culture=` → `Accept-Language` → `es` — and answers with `Content-Language` and
+`Vary: Accept-Language` (ADR 0013).
 
 ## Payments
 

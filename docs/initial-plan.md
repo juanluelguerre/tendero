@@ -117,10 +117,22 @@ downloads and converts the full set.
 
 | Phase | Slices | Article |
 |---|---|---|
-| 1 | Import + Lexical + GoldenSet | "One port, N catalogs"; "Search with regression tests: NDCG as a CI gate" |
+| 1 | Import + Lexical + GoldenSet + Publish + Reindex | "One port, N catalogs"; "Search with regression tests: NDCG as a CI gate" |
 | 2 | Hybrid search; AI enrichment + translation with review queue; Shopify connector | "Hybrid search in .NET"; "Human-in-the-loop is a UI, not a slogan" |
 | 3 | Checkout + order saga + payment adapters; UCP + MCP server | "A UCP merchant server in .NET (the missing reference implementation)"; "When NOT to use the agent harness" |
 | 4 | Multimodal (image embeddings via ONNX/CLIP-class models); grounded post-sale Q&A; return-reason loop | "Search by photo, measured"; "Closing the returns loop with an LLM" |
+
+Phase 1 grew two slices that were not in this table, and both for the same
+reason: the plan described a catalogue with a review stage and never said who
+moved a product out of it. `PublishProduct` is that step, and `ReindexProducts`
+is the rebuild this document already promised ("index = disposable projection")
+without anyone implementing it. Both are recorded in ADR 0012. The lesson worth
+keeping is that a state machine with no transition **and a documented escape
+hatch with no code** are the same class of omission, and neither shows up in a
+plan review — only in a running system.
+
+No article has been published yet (`docs/blog-workflow.md`); writing starts when
+more of the roadmap is built.
 
 Deferred on purpose (each enters when its absence hurts; each is an article):
 product variants, multi-currency, inventory as its own aggregate, localized

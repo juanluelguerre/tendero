@@ -142,9 +142,24 @@ curl -X POST http://localhost:4200/api/catalog/import \
 curl "http://localhost:4200/api/search?q=zapatillas%20running&culture=es"
 ```
 
-Imported products land as `Draft`, and only `Active` is indexed — the review
-queue that publishes them is phase 2. Until then, flip them by hand in Postgres
-and reimport to trigger the projection.
+Imported products land as `Draft`, and **only `Active` is indexed**: importing
+never publishes, because the review stage is the point. Publish them from the
+backoffice review queue at http://localhost:4201/review, or over HTTP:
+
+```bash
+# what is waiting for review
+curl "http://localhost:4201/api/catalog/products?status=draft&culture=es"
+
+curl -X POST http://localhost:4201/api/catalog/products/{id}/publish
+```
+
+If the index ever comes back empty — Elasticsearch runs without a volume on
+purpose, so recreating its container loses the documents while Postgres keeps
+the catalogue — rebuild it from Postgres instead of reimporting:
+
+```bash
+curl -X POST http://localhost:4200/api/search/reindex   # {"indexed":6,"removed":0,…}
+```
 
 ### The search quality gate
 
@@ -215,9 +230,11 @@ More: [docs/testing.md](docs/testing.md) · [docs/search-evaluation.md](docs/sea
 
 | Phase | Feature | Status |
 |---|---|---|
-| 1 | Canonical multilanguage catalog + seed connector + import slice | ✅ designed |
-| 1 | Lexical search (BM25, per-language indexes) | ✅ designed |
-| 1 | Golden set + NDCG@10 as CI gate | 🔜 |
+| 1 | Canonical multilanguage catalog + seed connector + import slice | ✅ built |
+| 1 | Lexical search (BM25, per-language indexes) | ✅ built |
+| 1 | Golden set + NDCG@10 as CI gate | ✅ built, es 0.860 / en 0.720 |
+| 1 | Publish slice + backoffice review queue | ✅ built |
+| 1 | Index rebuild from Postgres | ✅ built |
 | 2 | Hybrid search (embeddings via Ollama + Qdrant, RRF) | 🔜 |
 | 2 | AI catalog enrichment + translation with human review | 🔜 |
 | 2 | Shopify connector (dev store) | 🔜 |
@@ -227,8 +244,11 @@ More: [docs/testing.md](docs/testing.md) · [docs/search-evaluation.md](docs/sea
 
 ## Blog series
 
-Each phase ships with an article — English first, Spanish on
-[elguerre.com](https://elguerre.com).
+Each phase will ship with an article — English first, Spanish on
+[elguerre.com](https://elguerre.com). **Nothing is published yet**: writing
+starts once more of the roadmap is built. Raw material is being collected as it
+happens in [docs/blog/notebook.md](docs/blog/notebook.md), which is where the
+numbers and the mistakes live.
 
 ## License
 
