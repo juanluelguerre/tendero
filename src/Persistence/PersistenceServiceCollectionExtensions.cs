@@ -22,6 +22,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<EfProductRepository>();
         services.AddScoped<IProductRepository>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IProductReader>(services => services.GetRequiredService<EfProductRepository>());
+        services.AddScoped<IProductCatalogReader>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
         return services;

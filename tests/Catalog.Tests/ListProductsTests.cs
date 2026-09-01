@@ -1,0 +1,109 @@
+using Tendero.Catalog.Domain;
+using Tendero.Catalog.Features.ListProducts;
+using Tendero.Catalog.Ports;
+using Tendero.SharedKernel;
+using Xunit;
+
+namespace Tendero.Catalog.Tests.Features;
+
+/// <summary>
+/// Sin esta consulta la cola de revisión no puede existir: la API tenía cinco
+/// endpoints y ninguno listaba nada, así que la única forma de saber qué estaba
+/// en Draft era abrir Postgres.
+///
+/// Lo que se comprueba aquí es el contrato de la consulta — filtro, paginación y
+/// resolución de idioma — no el SQL, que es del adaptador.
+/// </summary>
+public sealed class ListProductsTests
+{
+    [Fact]
+    public async Task Listing_filters_by_status()
+    {
+        var draft = ADraftProduct("Cafetera");
+        var active = ADraftProduct("Mochila");
+        active.Publish();
+
+        var result = await HandlerOver(draft, active).HandleAsync(
+            new ListProductsQuery("draft", "es", 1, 20), TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, result.Total);
+        Assert.Equal(draft.Id.Value.ToString(), Assert.Single(result.Items).ProductId);
+    }
+
+    [Fact]
+    public async Task Listing_without_a_status_returns_the_whole_catalogue()
+    {
+        var draft = ADraftProduct("Cafetera");
+        var active = ADraftProduct("Mochila");
+        active.Publish();
+
+        var result = await HandlerOver(draft, active).HandleAsync(
+            new ListProductsQuery(null, "es", 1, 20), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Total);
+    }
+
+    [Fact]
+    public async Task Listing_resolves_the_name_in_the_requested_culture()
+    {
+        var product = Product.Create(
+            new LocalizedText(new Dictionary<string, string> { ["es"] = "Cafetera", ["en"] = "Coffee maker" }),
+            new Money(29.90m, "EUR"));
+
+        var spanish = await HandlerOver(product).HandleAsync(
+            new ListProductsQuery(null, "es", 1, 20), TestContext.Current.CancellationToken);
+        var english = await HandlerOver(product).HandleAsync(
+            new ListProductsQuery(null, "en", 1, 20), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Cafetera", spanish.Items[0].Name);
+        Assert.Equal("Coffee maker", english.Items[0].Name);
+    }
+
+    [Fact]
+    public async Task Total_counts_the_whole_match_not_just_the_page()
+    {
+        // Si total contase solo la pagina, la UI no podria pintar el paginador ni
+        // decir cuantos quedan por revisar, que es el dato que importa en una cola.
+        var products = Enumerable.Range(0, 5).Select(i => ADraftProduct($"Producto {i}")).ToArray();
+
+        var result = await HandlerOver(products).HandleAsync(
+            new ListProductsQuery("draft", "es", 1, 2), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Items.Count);
+        Assert.Equal(5, result.Total);
+    }
+
+    [Theory]
+    [InlineData("draft")]
+    [InlineData("DRAFT")]
+    [InlineData("active")]
+    [InlineData("archived")]
+    [InlineData(null)]
+    public void Accepted_statuses_validate(string? status) =>
+        Assert.True(new ListProductsValidator()
+            .Validate(new ListProductsQuery(status, "es", 1, 20)).IsValid);
+
+    [Fact]
+    public void An_unknown_status_is_rejected_instead_of_silently_ignored() =>
+        Assert.False(new ListProductsValidator()
+            .Validate(new ListProductsQuery("pendiente", "es", 1, 20)).IsValid);
+
+    private static ListProductsHandler HandlerOver(params Product[] products) =>
+        new(new InMemoryProductCatalogReader(products));
+
+    private static Product ADraftProduct(string name) =>
+        Product.Create(LocalizedText.From("es", name), new Money(29.90m, "EUR"));
+
+    private sealed class InMemoryProductCatalogReader(params Product[] products) : IProductCatalogReader
+    {
+        public Task<ProductPage> ListAsync(
+            ProductStatus? status, int page, int pageSize, CancellationToken ct)
+        {
+            var matching = products.Where(p => status is null || p.Status == status).ToList();
+
+            return Task.FromResult(new ProductPage(
+                [.. matching.Skip((page - 1) * pageSize).Take(pageSize)],
+                matching.Count));
+        }
+    }
+}

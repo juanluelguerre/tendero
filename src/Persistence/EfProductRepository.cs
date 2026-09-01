@@ -11,8 +11,34 @@ namespace Tendero.Persistence;
 /// distintas a propósito: la importación necesita buscar por referencia externa
 /// y añadir; la proyección al índice sólo necesita leer por id.
 /// </summary>
-internal sealed class EfProductRepository(TenderoDbContext context) : IProductRepository, IProductReader
+internal sealed class EfProductRepository(TenderoDbContext context)
+    : IProductRepository, IProductReader, IProductCatalogReader
 {
+    // Dos consultas y no una con paginacion en memoria: el total es del filtro
+    // completo, no de la pagina, porque una cola de revision necesita decir
+    // cuantos quedan. Contar en SQL evita traerse el catalogo para descartarlo.
+    public async Task<ProductPage> ListAsync(
+        ProductStatus? status, int page, int pageSize, CancellationToken ct)
+    {
+        var query = context.Products.AsNoTracking();
+
+        if (status is not null)
+            query = query.Where(product => product.Status == status);
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
+            // Lo mas recientemente tocado primero: en una cola de revision lo
+            // que acaba de importarse es lo que espera decision.
+            .OrderByDescending(product => product.UpdatedAt)
+            .ThenBy(product => product.Id)   // desempate estable, o dos paginas pueden repetir fila
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return new ProductPage(items, total);
+    }
+
     public Task<Product?> FindByExternalReferenceAsync(string source, string externalId, CancellationToken ct) =>
         context.Products.FirstOrDefaultAsync(
             product => product.ExternalReferences.Any(
