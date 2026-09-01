@@ -44,6 +44,13 @@ public sealed class SearchProductsEndpoint : ICarterModule
                 var result = await dispatcher.SendAsync(
                     new SearchProductsQuery(q, resolved, page ?? 1, pageSize ?? 20), ct);
 
+                // La otra mitad de la negociacion: el cliente pide, el servidor
+                // declara en que idioma respondio. Vary porque la respuesta
+                // DEPENDE de Accept-Language cuando no viene el parametro, y una
+                // cache compartida sin esto sirve espanol a quien pidio ingles.
+                http.Response.Headers.ContentLanguage = resolved;
+                http.Response.Headers.Vary = "Accept-Language";
+
                 return Results.Ok(result);
             })
             .WithTags("Search")
