@@ -65,6 +65,7 @@
         }
       },
       "options": {
+        "proxyConfig": "apps/backoffice/proxy.conf.mjs",
         "port": 4201
       }
     },

@@ -1,9 +1,32 @@
 {
-  "brand": { "name": "Tendero", "area": "Backoffice" },
-  "nav": { "reviewQueue": "Review queue", "search": "Search evaluation", "orders": "Orders", "agents": "Agent activity" },
+  "brand": {
+    "area": "Backoffice",
+    "name": "Tendero"
+  },
+  "nav": {
+    "agents": "Agent activity",
+    "orders": "Orders",
+    "reviewQueue": "Review queue",
+    "search": "Search evaluation"
+  },
   "reviewQueue": {
-    "title": "Review queue",
+    "column": {
+      "action": "Action",
+      "brand": "Brand",
+      "languages": "Languages",
+      "price": "Price",
+      "product": "Product"
+    },
+    "complete": "es · en",
     "empty": "Nothing here yet — import a catalog to get started.",
-    "emptyHint": "POST /api/catalog/import with { \"source\": \"seed\" }"
+    "failed": "The queue did not answer. Try again in a moment.",
+    "import": "Import the sample catalog",
+    "importing": "Importing…",
+    "loading": "Loading…",
+    "missing": "Missing {{cultures}}",
+    "pending": "{{count}} waiting",
+    "publish": "Publish",
+    "publishing": "Publishing…",
+    "title": "Review queue"
   }
 }

@@ -1,9 +1,32 @@
 {
-  "brand": { "name": "Tendero", "area": "Backoffice" },
-  "nav": { "reviewQueue": "Cola de revisión", "search": "Evaluación de búsqueda", "orders": "Pedidos", "agents": "Actividad de agentes" },
+  "brand": {
+    "area": "Backoffice",
+    "name": "Tendero"
+  },
+  "nav": {
+    "agents": "Actividad de agentes",
+    "orders": "Pedidos",
+    "reviewQueue": "Cola de revisión",
+    "search": "Evaluación de búsqueda"
+  },
   "reviewQueue": {
-    "title": "Cola de revisión",
+    "column": {
+      "action": "Acción",
+      "brand": "Marca",
+      "languages": "Idiomas",
+      "price": "Precio",
+      "product": "Producto"
+    },
+    "complete": "es · en",
     "empty": "Aquí no hay nada todavía — importa un catálogo para empezar.",
-    "emptyHint": "POST /api/catalog/import con { \"source\": \"seed\" }"
+    "failed": "La cola no respondió. Vuelve a intentarlo en un momento.",
+    "import": "Importar catálogo de ejemplo",
+    "importing": "Importando…",
+    "loading": "Cargando…",
+    "missing": "Falta {{cultures}}",
+    "pending": "{{count}} pendientes",
+    "publish": "Publicar",
+    "publishing": "Publicando…",
+    "title": "Cola de revisión"
   }
 }
