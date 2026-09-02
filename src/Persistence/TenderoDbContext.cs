@@ -8,9 +8,9 @@ using Microsoft.EntityFrameworkCore;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// Un DbContext, dos esquemas (catalog, ordering) y la outbox.
-/// Los contextos acotados no comparten entidades — comparten conexión, que es
-/// lo que hace que evento y cambio de estado entren en la misma transacción.
+/// One DbContext, two schemas (catalog, ordering) and the outbox.
+/// Bounded contexts share no entities — they share a connection, which is what
+/// puts an event and its state change in the same transaction.
 /// </summary>
 public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options) : DbContext(options)
 {
@@ -29,9 +29,9 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     }
 
     /// <summary>
-    /// Aquí vive la invariante 7: nadie publica un evento a mano. Todo lo que
-    /// los agregados hayan levantado durante la unidad de trabajo se convierte
-    /// en filas de outbox y se guarda con el mismo commit.
+    /// Invariant 7 lives here: nobody publishes an event by hand. Everything the
+    /// aggregates raised during the unit of work becomes outbox rows and is saved
+    /// with the same commit.
     /// </summary>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

@@ -1,11 +1,11 @@
 namespace ElGuerre.Tendero.SharedKernel;
 
 /// <summary>
-/// Identificador de un agente. Es un tipo aparte de <see cref="CustomerId"/> a
-/// propósito: **un agente es un principal, no un cliente**. Cuando un agente
-/// compra en nombre de alguien, hay dos identidades en juego y colapsarlas en
-/// una hace imposible responder la única pregunta que importa después —
-/// ¿quién actuó, y por cuenta de quién?
+/// An agent's identifier. A separate type from <see cref="CustomerId"/> on
+/// purpose: **an agent is a principal, not a customer**. When an agent buys on
+/// somebody's behalf there are two identities in play, and collapsing them into
+/// one makes the only question that matters afterwards unanswerable — who acted,
+/// and on whose behalf?
 /// </summary>
 public readonly record struct AgentId(string Value)
 {
@@ -13,8 +13,8 @@ public readonly record struct AgentId(string Value)
 }
 
 /// <summary>
-/// Quién está actuando. Un cliente siempre; un agente cuando lo hay; y el
-/// mandato que lo autoriza cuando exista (fase 11, AP2).
+/// Who is acting. A customer always; an agent when there is one; and the mandate
+/// that authorises it once one exists (phase 11, AP2).
 /// </summary>
 public sealed record CommercePrincipal(
     CustomerId? Customer,
@@ -22,8 +22,8 @@ public sealed record CommercePrincipal(
     string? Subject,
     IReadOnlyCollection<string> Roles)
 {
-    /// <summary>Nadie autenticado. Es un valor, no null: un invitado navegando
-    /// es un caso normal, no la ausencia de un caso.</summary>
+    /// <summary>Nobody authenticated. A value and not null: a guest browsing is
+    /// a normal case, not the absence of a case.</summary>
     public static readonly CommercePrincipal Anonymous = new(null, null, null, []);
 
     public bool IsAgent => Agent is not null;
@@ -33,12 +33,12 @@ public sealed record CommercePrincipal(
 }
 
 /// <summary>
-/// De dónde sale el principal actual.
+/// Where the current principal comes from.
 ///
-/// Es un puerto y no una lectura de <c>HttpContext</c> porque **tiene que
-/// funcionar donde no hay HTTP**: sobre MCP, y dentro del worker que drena el
-/// outbox, donde el actor es el sistema. Esa restricción es la que lo hace
-/// innegociable; con un solo consumidor HTTP habría bastado el contexto.
+/// A port and not a read of <c>HttpContext</c>, because **it has to work where
+/// there is no HTTP**: over MCP, and inside the worker that drains the outbox,
+/// where the actor is the system. That constraint is what makes it
+/// non-negotiable; with a single HTTP consumer the context would have done.
 /// </summary>
 public interface IPrincipalAccessor
 {
@@ -46,9 +46,9 @@ public interface IPrincipalAccessor
 }
 
 /// <summary>
-/// El actor cuando no hay nadie: procesos de fondo. Se registra explícitamente
-/// en vez de dejar que <c>Current</c> devuelva null, para que un handler nunca
-/// tenga que preguntarse si "sin principal" significa invitado o error.
+/// The actor when there is nobody: background processes. Registered explicitly
+/// rather than letting <c>Current</c> return null, so that a handler never has
+/// to wonder whether "no principal" means guest or means error.
 /// </summary>
 public sealed class SystemPrincipalAccessor : IPrincipalAccessor
 {

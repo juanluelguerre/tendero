@@ -12,21 +12,21 @@ using Microsoft.Extensions.Logging;
 namespace ElGuerre.Tendero.Search.Elasticsearch;
 
 /// <summary>
-/// Qué analizador nativo de Elasticsearch usa cada cultura. Detalle del motor y
-/// por eso internal: fuera de aquí lo que se conoce es
-/// <see cref="SearchCultures.Supported"/>, no que exista un stemmer llamado
-/// "spanish".
+/// Which native Elasticsearch analyser each culture uses. An engine detail, and
+/// internal for that reason: outside here what is known is
+/// <see cref="SearchCultures.Supported"/>, not that a stemmer called "spanish"
+/// exists.
 /// </summary>
 internal static class CultureAnalyzers
 {
     public static readonly IReadOnlyDictionary<string, string> ByCulture = new Dictionary<string, string>
     {
-        ["es"] = "spanish",   // analizadores nativos de ES: stemming + stopwords
+        ["es"] = "spanish",   // native ES analysers: stemming + stopwords
         ["en"] = "english"
     };
 }
 
-/// <summary>Crea products_es y products_en al arrancar si no existen (idempotente).</summary>
+/// <summary>Creates products_es and products_en at startup if they are missing (idempotent).</summary>
 internal sealed class SearchIndexInitializer(
     ElasticsearchClient client,
     ILogger<SearchIndexInitializer> logger) : IHostedService
@@ -42,7 +42,7 @@ internal sealed class SearchIndexInitializer(
             var response = await client.Indices.CreateAsync(index, c => c
                 .Mappings(m => m.Properties<ProductSearchDocument>(p => p
                     .Keyword(d => d.Id)
-                    // El campo del collapse: tiene que ser keyword, no text.
+                    // The collapse field: it has to be a keyword, not text.
                     .Keyword(d => d.ProductId)
                     .Keyword(d => d.Sku)
                     .Keyword(d => d.AxisValues)
@@ -73,11 +73,11 @@ internal sealed class SearchIndexInitializer(
 }
 
 /// <summary>
-/// Construye el documento y lo escribe. Necesita las definiciones de atributo
-/// porque el texto buscable se renderiza EN LA CULTURA DEL ÍNDICE: sin ellas,
-/// products_en contendría "color azul marino" y ninguna consulta inglesa podría
-/// casarlo — que es exactamente por qué "navy blue shoes" puntúa 0.000 en la
-/// línea base commiteada.
+/// Builds the document and writes it. It needs the attribute definitions because
+/// the searchable text is rendered IN THE INDEX'S CULTURE: without them,
+/// products_en would contain "color azul marino" and no English query could match
+/// it — which is exactly why "navy blue shoes" scores 0.000 against the committed
+/// baseline.
 /// </summary>
 internal sealed class ElasticsearchProductIndexer(
     ElasticsearchClient client,
@@ -91,9 +91,9 @@ internal sealed class ElasticsearchProductIndexer(
 
         foreach (var culture in SearchCultures.Supported)
         {
-            // Reindexar un producto es reemplazar TODAS sus variantes, no añadir:
-            // si una se retira, su documento tiene que desaparecer, y escribir
-            // sólo las vivas dejaría la retirada ahí para siempre.
+            // Reindexing a product means replacing ALL of its variants, not
+            // adding: if one is retired its document has to disappear, and
+            // writing only the live ones would leave the retired one there forever.
             await RemoveAsync(product.Id, culture, ct);
 
             foreach (var document in ProductSearchDocument.ForVariants(product, culture, definitions, tree))
@@ -103,9 +103,9 @@ internal sealed class ElasticsearchProductIndexer(
                     i => i.Index(ProductSearchDocument.IndexNameFor(culture)).Id(document.Id),
                     ct);
 
-                // SearchUnavailableException y no InvalidOperationException: un
-                // fallo del motor es 503 y reintentable. Salía como 500 por este
-                // camino y como 503 por el de consulta, para la misma avería.
+                // SearchUnavailableException and not InvalidOperationException:
+                // an engine failure is a retryable 503. It came out as a 500 down
+                // this path and as a 503 down the query one, for the same fault.
                 if (!response.IsValidResponse)
                     throw new SearchUnavailableException(
                         $"indexing {document.Id} into {culture}", response.DebugInformation);
@@ -120,8 +120,8 @@ internal sealed class ElasticsearchProductIndexer(
     }
 
     /// <summary>
-    /// Borra por CONSULTA y no por id: el documento ya no es el producto sino
-    /// cada una de sus variantes, y cuántas hay no se sabe desde aquí.
+    /// Deletes by QUERY and not by id: the document is no longer the product but
+    /// each of its variants, and how many there are is not known from here.
     /// </summary>
     private async Task RemoveAsync(ProductId productId, string culture, CancellationToken ct)
     {
@@ -131,11 +131,11 @@ internal sealed class ElasticsearchProductIndexer(
                 d => d.Query(q => q.Term(t => t.Field(f => f.ProductId).Value(productId.ToString()))),
                 ct);
 
-            // Borrar lo que no está indexado es idempotente y es el caso normal
-            // de un producto que nunca se publicó: delete_by_query devuelve cero
-            // borrados, no un error. Cualquier fallo real no puede ignorarse —
-            // éste es el camino por el que Archive() saca un producto del
-            // catálogo, y tragarse un 503 dejaría indexado lo que se retiró.
+            // Deleting what is not indexed is idempotent, and it is the normal
+            // case for a product that was never published: delete_by_query
+            // returns zero deletions, not an error. A real failure cannot be
+            // ignored — this is the path Archive() takes a product out of the
+            // catalogue by, and swallowing a 503 would leave the retired one indexed.
             if (response.IsValidResponse)
                 return;
 
@@ -150,16 +150,13 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
     /// <summary>
-    /// Campos de texto con sus boosts. `category` NO esta: se mapea como keyword
-    /// y solo casaria con el termino exacto ("COFFEE_MAKER"), asi que listarlo
-    /// entre campos de texto prometia una busqueda que nunca ocurria. Volvera
-    /// cuando la taxonomia sea texto de cara al usuario y no un codigo.
-    /// </summary>
-    /// <summary>
-    /// `category` sigue fuera: es keyword y prometería una coincidencia
-    /// imposible. Lo que entra es `categoryPathText`, que es la MISMA taxonomía
-    /// convertida en texto de cara al usuario y analizada — la rama entera, así
-    /// que quien busca "cocina" encuentra lo que hay dentro.
+    /// The text fields with their boosts. `category` is NOT here: it is mapped as
+    /// a keyword and would only match the exact term ("COFFEE_MAKER"), so listing
+    /// it among text fields promised a search that never happened.
+    ///
+    /// What is here instead is `categoryPathText`, which is the SAME taxonomy
+    /// turned into user-facing text and analysed — the whole branch, so whoever
+    /// searches "cocina" finds what is inside it.
     /// </summary>
     private static readonly string[] SearchableFields =
         ["name^3", "brand^2", "attributesText^2", "categoryPathText^2", "description"];
@@ -174,32 +171,32 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
             .Indices(ProductSearchDocument.IndexNameFor(query.Culture))
             .From((query.Page - 1) * query.PageSize)
             .Size(query.PageSize)
-            // Colapsar por producto: el matching y los filtros ocurren por
-            // variante —que es lo que los hace exactos— y el resultado vuelve
-            // como producto, con la variante que ganó dentro.
+            // Collapse by product: matching and filtering happen per variant —
+            // which is what makes them exact — and the result comes back as a
+            // product, with the variant that won inside it.
             .Collapse(c => c.Field(d => d.ProductId))
-            // El total de `hits` cuenta DOCUMENTOS, y aquí un documento es una
-            // variante. El número que la interfaz enseña es de productos, así
-            // que sale de una cardinality sobre el campo colapsado. Es
-            // aproximada por encima de 40.000 grupos, exacta muy por debajo.
+            // The `hits` total counts DOCUMENTS, and here a document is a
+            // variant. The number the interface shows is products, so it comes
+            // from a cardinality over the collapsed field. Approximate above
+            // 40,000 groups, exact far below that.
             .Aggregations(a => a.Add("products", agg => agg.Cardinality(c => c.Field(d => d.ProductId))))
             .Query(q => q.Bool(b => b
-                // Dos formas de casar la misma consulta, unidas por should. Cada
-                // una cubre lo que la otra no puede, y eso NO es adorno: el
-                // golden set mide las dos (ver docs/search-evaluation.md).
+                // Two ways of matching the same query, joined by should. Each
+                // covers what the other cannot, and that is NOT decoration: the
+                // golden set measures both (see docs/search-evaluation.md).
                 .Must(m => m.Bool(alternatives => alternatives
                     .Should(
-                        // cross_fields: los terminos pueden repartirse entre campos.
-                        // "zapatillas running mujer" tiene las dos primeras en name
-                        // y la tercera en attributesText; con best_fields no casaba
-                        // ninguna, porque exigia todas en UN campo.
+                        // cross_fields: the terms may spread across fields.
+                        // "zapatillas running mujer" has the first two in name and
+                        // the third in attributesText; with best_fields none of
+                        // them matched, because it demanded all of them in ONE field.
                         should => should.MultiMatch(mm => mm
                             .Query(query.Text)
                             .Fields(SearchableFields)
                             .Type(TextQueryType.CrossFields)
                             .Operator(Operator.And)),
-                        // best_fields con fuzziness: tolera erratas ("zapatilas").
-                        // Va aparte porque cross_fields NO admite fuzziness.
+                        // best_fields with fuzziness: it tolerates typos ("zapatilas").
+                        // Kept apart because cross_fields does NOT support fuzziness.
                         should => should.MultiMatch(mm => mm
                             .Query(query.Text)
                             .Fields(SearchableFields)

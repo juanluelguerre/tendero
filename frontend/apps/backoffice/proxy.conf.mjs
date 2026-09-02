@@ -1,15 +1,15 @@
 /**
- * Mismo puente que el del storefront, y duplicado a proposito: es tres lineas de
- * configuracion por aplicacion, y una version compartida tendria que aprender
- * que existen dos apps para poder servirlas (docs/adr/0010).
+ * The same bridge as the storefront's, duplicated on purpose: it is three lines
+ * of configuration per application, and a shared version would have to learn
+ * that two apps exist in order to serve them (docs/adr/0010).
  *
- * El dev-server reenvia /api al backend. La URL la inyecta Aspire como
- * `services__api__http__0` al arrancar con `dotnet run --project src/AppHost`;
- * el valor de reserva solo sirve si alguien levanta el frontend suelto.
+ * The dev server forwards /api to the backend. Aspire injects the URL as
+ * `services__api__http__0` on starting with `dotnet run --project src/AppHost`;
+ * the fallback value only matters if somebody brings the frontend up on its own.
  *
- * Faltaba: hasta ahora el backoffice no declaraba proxy ninguno, asi que no
- * podia hablar con la API en absoluto. No se noto porque su unica pagina era un
- * estado vacio sin peticiones.
+ * It was missing: until now the backoffice declared no proxy at all, so it could
+ * not talk to the API whatsoever. Nobody noticed because its only page was an
+ * empty state that made no requests.
  */
 const api =
   process.env['services__api__http__0'] ??
@@ -18,9 +18,9 @@ const api =
 
 export default [
   {
-    // /dev-issuer tambien: el login pide el token al emisor de desarrollo, que
-    // vive dentro de la API. Cuando entre Keycloak sera otro origen y esta
-    // entrada desaparece.
+    // /dev-issuer too: the login asks the development issuer for the token, and
+    // that lives inside the API. When Keycloak arrives it will be another origin
+    // and this entry disappears.
     context: ['/api', '/dev-issuer'],
     target: api,
     secure: false,

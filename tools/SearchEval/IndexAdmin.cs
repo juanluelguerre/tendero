@@ -1,38 +1,38 @@
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// Operaciones sobre los índices que la evaluación necesita y que ningún puerto
-/// ofrece todavía. Van por HTTP plano a propósito: el "índice es una proyección
-/// desechable" (docs/architecture.md) aún no tiene operación de reconstrucción.
-/// Cuando el reindexado sea una funcionalidad y no una necesidad de esta
-/// herramienta, será un puerto y un ADR.
+/// The index operations the evaluation needs and that no port offers yet. They
+/// go over plain HTTP on purpose: "the index is a disposable projection"
+/// (docs/architecture.md) still has no rebuild operation. When reindexing is a
+/// feature and not a need of this tool, it becomes a port and an ADR.
 /// </summary>
 public static class IndexAdmin
 {
     /// <summary>
-    /// Borra los índices antes de evaluar. Imprescindible para reproducibilidad:
-    /// cada ejecución construye los agregados en memoria con ProductId nuevos, y
-    /// sin borrar, los documentos de la pasada anterior compiten en el ranking.
+    /// Drops the indexes before evaluating. Essential for reproducibility: every
+    /// run builds the aggregates in memory with fresh ProductIds, and without the
+    /// drop the previous run's documents compete in the ranking.
     /// </summary>
     public static Task DropAsync(
         string elasticsearch, IEnumerable<string> indexNames, CancellationToken cancellationToken) =>
         ForEachIndexAsync(elasticsearch, indexNames, HttpMethod.Delete, path: "", cancellationToken);
 
     /// <summary>
-    /// Hace visibles los documentos recién indexados. Elasticsearch refresca cada
-    /// segundo por defecto, así que sin esto la puntuación depende de si el
-    /// refresco cayó antes o después de la consulta: dos pasadas del mismo código
-    /// daban 0.860 y 0.769. Esperar a que "alguna" consulta devuelva algo no
-    /// basta — sólo prueba que UN documento es visible, no los seis.
+    /// Makes the freshly indexed documents visible. Elasticsearch refreshes once
+    /// a second by default, so without this the score depends on whether the
+    /// refresh landed before or after the query: two runs of the same code gave
+    /// 0.860 and 0.769. Waiting until "some" query returns something is not
+    /// enough — it only proves ONE document is visible, not all six.
     /// </summary>
     public static Task RefreshAsync(
         string elasticsearch, IEnumerable<string> indexNames, CancellationToken cancellationToken) =>
         ForEachIndexAsync(elasticsearch, indexNames, HttpMethod.Post, "/_refresh", cancellationToken);
 
     /// <summary>
-    /// Comprueba que hay un Elasticsearch al otro lado antes de empezar. Sin
-    /// esto, el primer fallo de red sale como una pila de excepciones anidadas
-    /// que no dice lo único importante: que no hay nadie escuchando.
+    /// Checks there is an Elasticsearch on the other side before starting.
+    /// Without this, the first network failure comes out as a stack of nested
+    /// exceptions that does not say the one thing that matters: nobody is
+    /// listening.
     /// </summary>
     public static async Task EnsureReachableAsync(string elasticsearch, CancellationToken cancellationToken)
     {
@@ -70,7 +70,7 @@ public static class IndexAdmin
             using var request = new HttpRequestMessage(method, new Uri(index + path, UriKind.Relative));
             using var response = await client.SendAsync(request, cancellationToken);
 
-            // 404 al borrar es la respuesta normal la primera vez.
+            // A 404 on delete is the normal answer the first time.
             if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 continue;
 

@@ -6,22 +6,23 @@ using Xunit;
 namespace ElGuerre.Tendero.Api.Tests;
 
 /// <summary>
-/// Ningún endpoint sin decidir quién puede llamarlo.
+/// No endpoint without a decision about who may call it.
 ///
-/// La regla no es "todo protegido": buscar y ver el catálogo son públicos y
-/// deben seguir siéndolo. La regla es que **ser público sea una decisión escrita
-/// en el código** — un `.AllowAnonymous()` explícito — y no la ausencia de una
-/// línea. Antes de esto la API tenía seis endpoints sin autenticación, incluido
-/// el que publica al catálogo público, y ninguno lo decía.
+/// The rule is not "everything protected": searching and browsing the catalogue
+/// are public and must stay that way. The rule is that **being public is a
+/// decision written in the code** — an explicit `.AllowAnonymous()` — and not
+/// the absence of a line. Before this the API had six endpoints with no
+/// authentication, including the one that publishes to the public catalogue, and
+/// none of them said so.
 ///
-/// Este test es lo que impide que el siguiente slice se olvide.
+/// This test is what stops the next slice from forgetting.
 /// </summary>
 public sealed class EndpointAuthorizationTests
 {
     /// <summary>
-    /// La infraestructura de ASP.NET Core y del emisor de desarrollo no está
-    /// sujeta a la regla: sanidad, y los tres endpoints OIDC, que son públicos
-    /// por definición del protocolo.
+    /// ASP.NET Core's and the development issuer's own infrastructure is not
+    /// bound by the rule: health, and the three OIDC endpoints, which are public
+    /// by definition of the protocol.
     /// </summary>
     private static readonly string[] Exempt = ["/health", "/alive", "/openapi/"];
 
@@ -30,7 +31,7 @@ public sealed class EndpointAuthorizationTests
     {
         using var factory = new TenderoApiFactory();
 
-        // Forzar la construcción del host antes de leer las rutas.
+        // Force the host to be built before reading the routes.
         _ = factory.CreateClient();
 
         var endpoints = factory.Services
@@ -63,9 +64,9 @@ public sealed class EndpointAuthorizationTests
     }
 
     /// <summary>
-    /// Lo contrario del anterior: que lo que escribe en el catálogo NO sea
-    /// anónimo. Un `.AllowAnonymous()` puesto por error en publish pasaría el
-    /// test de arriba tan campante.
+    /// The opposite of the one above: that what writes to the catalogue is NOT
+    /// anonymous. An `.AllowAnonymous()` put on publish by mistake would sail
+    /// through the test above.
     /// </summary>
     [Theory]
     [InlineData("/api/catalog/import")]

@@ -19,10 +19,10 @@ export default [
         {
           enforceBuildableLibDependency: true,
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
-          // El gemelo en TypeScript de los tests de NetArchTest del backend: la
-          // arquitectura se ejecuta, no se comenta. Ver docs/adr/0010.
+          // The TypeScript twin of the backend's NetArchTest rules: the
+          // architecture is executed, not commented. See docs/adr/0010.
           depConstraints: [
-            // Las dos apps NO se conocen. Solo pueden bajar a lo compartido.
+            // The two apps do NOT know each other. They can only reach down to shared.
             {
               sourceTag: 'scope:storefront',
               onlyDependOnLibsWithTags: ['scope:shared'],
@@ -31,13 +31,13 @@ export default [
               sourceTag: 'scope:backoffice',
               onlyDependOnLibsWithTags: ['scope:shared'],
             },
-            // Y lo compartido no sabe que las apps existen: si una primitiva
-            // necesita saber quien la usa, no es una primitiva.
+            // And shared does not know the apps exist: if a primitive needs to
+            // know who uses it, it is not a primitive.
             {
               sourceTag: 'scope:shared',
               onlyDependOnLibsWithTags: ['scope:shared'],
             },
-            // Nadie importa de una app, en ninguna direccion.
+            // Nobody imports from an app, in either direction.
             {
               sourceTag: '*',
               notDependOnLibsWithTags: ['type:app'],

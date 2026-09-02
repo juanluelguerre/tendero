@@ -4,26 +4,26 @@ namespace ElGuerre.Tendero.Ordering.Domain;
 
 public enum OrderStatus
 {
-    Pending,            // creado, esperando autorización de pago
-    PaymentAuthorized,  // el proveedor de pago autorizó el cargo
-    PaymentFailed,      // rechazado; se puede reintentar o cancelar
-    Confirmed,          // pago capturado y stock comprometido
+    Pending,            // created, awaiting payment authorization
+    PaymentAuthorized,  // the payment provider authorized the charge
+    PaymentFailed,      // declined; it can be retried or cancelled
+    Confirmed,          // payment captured and stock committed
     Shipped,
     Delivered,
     Cancelled
 }
 
-// Snapshot: el pedido guarda nombre y precio del momento de compra,
-// nunca una FK "viva" al producto (que puede cambiar o archivarse).
+// A snapshot: the order keeps the name and price as of the moment of purchase,
+// never a live FK to the product (which can change or be archived).
 /// <summary>
-/// Instantánea de lo comprado. Lleva la variante y su SKU porque **lo que se
-/// compra es una variante** (ADR 0015): sin ellos, un pedido no puede decir qué
-/// talla se envió, y el inventario —que habla por SKU— no tiene con qué
-/// descontar.
+/// A snapshot of what was bought. It carries the variant and its SKU because
+/// **what gets bought is a variant** (ADR 0015): without them an order cannot
+/// say which size was shipped, and inventory — which speaks in SKUs — has
+/// nothing to decrement.
 ///
-/// <c>VariantLabel</c> se congela igual que <c>ProductName</c>: es el texto que
-/// el comprador vio ("azul marino · 38"), y reordenar los ejes del catálogo
-/// después no debe reescribir su pedido.
+/// <c>VariantLabel</c> is frozen just like <c>ProductName</c>: it is the text the
+/// buyer saw ("azul marino · 38"), and reordering the catalogue's axes afterwards
+/// must not rewrite their order.
 /// </summary>
 public sealed record OrderLine(
     ProductId ProductId,
@@ -45,15 +45,15 @@ public sealed record OrderCancelled(OrderId OrderId, string Reason, DateTimeOffs
 public sealed record OrderShipped(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 
 /// <summary>
-/// La entrega también es un hecho. Era la única transición que no emitía nada, y
-/// resulta ser justo la que abre la ventana de devolución: el bucle de motivos de
-/// devolución de la fase 4 no tiene otro sitio del que colgarse.
+/// Delivery is a fact too. It was the only transition that emitted nothing, and
+/// it turns out to be exactly the one that opens the returns window: phase 4's
+/// return-reason loop has nothing else to hang from.
 /// </summary>
 public sealed record OrderDelivered(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 
 public sealed class Order : AggregateRoot
 {
-    // Máquina de estados declarativa: una transición fuera de esta tabla es un bug.
+    // A declarative state machine: a transition outside this table is a bug.
     private static readonly Dictionary<OrderStatus, OrderStatus[]> AllowedTransitions = new()
     {
         [OrderStatus.Pending]           = [OrderStatus.PaymentAuthorized, OrderStatus.PaymentFailed, OrderStatus.Cancelled],
@@ -70,16 +70,18 @@ public sealed class Order : AggregateRoot
     public OrderId Id { get; private set; }
     public CustomerId CustomerId { get; private set; }
 
-    // El storefront (o el agente vía UCP) manda esta clave: reintentar el
-    // checkout con la misma clave NO crea un segundo pedido.
+    // The storefront (or the agent over UCP) sends this key: retrying checkout
+    // with the same key does NOT create a second order.
     public string IdempotencyKey { get; private set; } = default!;
 
-    // Idioma del comprador al comprar. Las líneas guardan el nombre YA resuelto
-    // en esta cultura: el histórico del pedido no cambia si el catálogo se retraduce.
+    // The buyer's language at the time of purchase. The lines keep the name
+    // ALREADY resolved in this culture: an order's history does not change if the
+    // catalogue gets retranslated.
     public string Culture { get; private set; } = "es";
 
-    // La divisa es del pedido, no de cada línea: se fija al comprar y no cambia.
-    // Tenerla aquí es lo que permite que Total exista aunque no queden líneas.
+    // The currency belongs to the order, not to each line: it is fixed at
+    // purchase and does not change. Having it here is what lets Total exist even
+    // when no lines are left.
     public string Currency { get; private set; } = default!;
 
     public OrderStatus Status { get; private set; }
@@ -104,9 +106,9 @@ public sealed class Order : AggregateRoot
         if (lines.Any(l => l.Quantity <= 0))
             throw new InvalidOperationException("Line quantity must be positive.");
 
-        // Un pedido tiene UNA divisa. Detectarlo aquí y no al sumar convierte un
-        // error de datos en un rechazo con nombre, en el único sitio que puede
-        // decidirlo. Multi-divisa está aplazado a propósito (initial-plan §7).
+        // An order has ONE currency. Catching it here rather than while summing
+        // turns a data error into a named rejection, in the one place that can
+        // decide it. Multi-currency is deferred on purpose (initial-plan §7).
         var currency = lines[0].UnitPrice.Currency;
         if (lines.Any(l => !string.Equals(l.UnitPrice.Currency, currency, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("An order cannot mix currencies.");
@@ -143,13 +145,13 @@ public sealed class Order : AggregateRoot
     public void Deliver(TimeProvider clock) =>
         TransitionTo(clock, OrderStatus.Delivered, now => new OrderDelivered(Id, now));
 
-    // La saga de compensación llama aquí cuando algo falla a mitad
-    // (p. ej. pago autorizado pero sin stock): cancela y libera.
+    // The compensation saga calls here when something fails halfway (payment
+    // authorized but no stock, say): it cancels and releases.
     public void Cancel(TimeProvider clock, string reason) =>
         TransitionTo(clock, OrderStatus.Cancelled, now => new OrderCancelled(Id, reason, now));
 
-    // La fábrica dejó de ser nullable cuando Deliver() empezó a emitir su evento:
-    // el `IDomainEvent?` existía por una sola transición muda.
+    // The factory stopped being nullable when Deliver() started emitting its
+    // event: the `IDomainEvent?` existed for one mute transition.
     private void TransitionTo(
         TimeProvider clock, OrderStatus target, Func<DateTimeOffset, IDomainEvent> eventFactory)
     {

@@ -4,11 +4,11 @@ using System.Text.Json.Serialization;
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// Conjunto anotado de una cultura. Las anotaciones se identifican por
-/// <see cref="Judgment.ExternalId"/> y no por el id interno del producto: ese id
-/// es un GUID v7 que se genera en cada importación, así que un golden set que lo
-/// usara caducaría cada vez que se reimporta el catálogo. El id del origen
-/// ("B073WXYZ01") es estable, y además se puede leer y revisar en un PR.
+/// One culture's annotated set. Annotations are identified by
+/// <see cref="Judgment.ExternalId"/> and not by the product's internal id: that
+/// id is a GUID v7 generated on every import, so a golden set using it would
+/// expire each time the catalogue is reimported. The source's id ("B073WXYZ01")
+/// is stable, and it can also be read and reviewed in a PR.
 /// </summary>
 public sealed record GoldenSet(
     string Culture,
@@ -37,9 +37,10 @@ public sealed record GoldenQuery(string Query, IReadOnlyList<Judgment> Judgments
 }
 
 /// <summary>
-/// Un juicio de relevancia. <see cref="Why"/> no es un comentario decorativo: es
-/// lo que hace la anotación revisable en un PR. Sin él nadie puede juzgar si la
-/// nota está bien puesta, y la puerta acaba midiendo los prejuicios de quien anotó.
+/// One relevance judgment. <see cref="Why"/> is not a decorative comment: it is
+/// what makes the annotation reviewable in a PR. Without it nobody can judge
+/// whether the grade is right, and the gate ends up measuring the annotator's
+/// prejudices.
 /// </summary>
 public sealed record Judgment(
     string ExternalId,

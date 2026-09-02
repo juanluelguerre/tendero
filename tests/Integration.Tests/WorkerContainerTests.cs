@@ -10,23 +10,22 @@ using Xunit;
 namespace ElGuerre.Tendero.Integration.Tests;
 
 /// <summary>
-/// El contenedor del worker se puede construir.
+/// The worker's container can be built.
 ///
-/// Suena trivial y es el test que faltaba. El indexador pasó a necesitar las
-/// definiciones de atributo; la API las registra porque llama a
-/// <c>AddCatalog</c>, el worker no las registraba, y el proceso dejó de
-/// arrancar con "Unable to resolve service for type
-/// IAttributeDefinitionReader". El build estaba verde, los 149 tests también, y
-/// los de integración no lo vieron porque montan su propio contenedor con lo
-/// que necesitan.
+/// It sounds trivial and it is the test that was missing. The indexer came to
+/// need the attribute definitions; the API registers them because it calls
+/// <c>AddCatalog</c>, the worker did not, and the process stopped starting with
+/// "Unable to resolve service for type IAttributeDefinitionReader". The build
+/// was green, so were the 149 tests, and the integration ones did not see it
+/// because they compose their own container with what they need.
 ///
-/// Es la segunda vez que un fallo de composición pasa desapercibido — la
-/// primera dejó la API sin arrancar día y medio. La diferencia entre las dos es
-/// que aquella la encontró un test escrito para otra cosa, y ésta la encontró
-/// el usuario al pulsar F5.
+/// It is the second time a composition failure went unnoticed — the first left
+/// the API unable to start for a day and a half. The difference between them is
+/// that a test written for something else found that one, and the user pressing
+/// F5 found this one.
 ///
-/// No hace falta ni Postgres ni Elasticsearch: construir el contenedor no abre
-/// una conexión, y lo que se comprueba es la composición.
+/// Neither Postgres nor Elasticsearch is needed: building the container opens no
+/// connection, and what is being checked is the composition.
 /// </summary>
 public sealed class WorkerContainerTests
 {
@@ -35,15 +34,15 @@ public sealed class WorkerContainerTests
     {
         using var provider = BuildWorkerServices();
 
-        // ValidateOnBuild recorre TODOS los descriptores en vez de esperar a que
-        // alguien resuelva el que falta, que es lo que convierte esto en una
-        // comprobación y no en un muestreo.
+        // ValidateOnBuild walks EVERY descriptor instead of waiting for somebody
+        // to resolve the one that is missing, which is what turns this into a
+        // check rather than a sample.
         Assert.NotNull(provider);
     }
 
     /// <summary>
-    /// Lo que el worker existe para hacer: proyectar productos al índice. Si
-    /// alguno de los tres deja de resolverse, el outbox drena a ninguna parte.
+    /// What the worker exists to do: project products into the index. If any of
+    /// the three stops resolving, the outbox drains nowhere.
     /// </summary>
     [Theory]
     [InlineData(typeof(IProductIndexer))]
@@ -61,8 +60,8 @@ public sealed class WorkerContainerTests
     {
         var builder = Host.CreateApplicationBuilder();
 
-        // Las dos cadenas que el worker exige al arrancar. Ninguna se usa: ni el
-        // DbContext ni el cliente de Elastic conectan al construirse.
+        // The two strings the worker demands at startup. Neither is used: neither
+        // the DbContext nor the Elastic client connects on construction.
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ConnectionStrings:tendero-db"] = "Host=localhost;Database=worker-container-test",

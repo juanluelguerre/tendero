@@ -5,24 +5,23 @@ namespace ElGuerre.Tendero.Catalog.Domain;
 
 public enum ProductStatus
 {
-    Draft,      // importado o generado por IA, pendiente de revisión
-    Active,     // visible en storefront, indexable
-    Archived    // fuera de catálogo, se mantiene por histórico de pedidos
+    Draft,      // imported or AI-generated, awaiting review
+    Active,     // visible in the storefront, indexable
+    Archived    // out of the catalogue, kept for order history
 }
 
 /// <summary>
-/// Una imagen del producto. Guarda la CLAVE en nuestro almacén, no una URL: la
-/// URL se compone al leer, así que cambiar de CDN o de dominio no es un UPDATE
-/// sobre millones de filas. El texto alternativo es de cara al usuario, luego
-/// LocalizedText (invariante 6): un lector de pantalla en inglés no puede oír
-/// español.
+/// A product image. It stores the KEY in our own store, not a URL: the URL is
+/// composed on read, so changing CDN or domain is not an UPDATE over millions of
+/// rows. The alternative text is user-facing, hence LocalizedText (invariant 6):
+/// a screen reader in English cannot read out Spanish.
 /// </summary>
 public sealed record ProductImage(ImageId Id, LocalizedText? Alt, int SortOrder);
 
-// La clave de los N conectores: (origen, id externo). Ej.: ("shopify", "gid://shopify/Product/123")
+// The key across N connectors: (source, external id). E.g. ("shopify", "gid://shopify/Product/123")
 public sealed record ExternalReference(string Source, string ExternalId);
 
-// Evento que consume el worker de indexación (Elasticsearch + Qdrant) vía Outbox.
+// The event the indexing worker consumes (Elasticsearch + Qdrant) via the Outbox.
 public sealed record ProductUpserted(ProductId ProductId, DateTimeOffset OccurredAt) : IDomainEvent;
 public sealed record ProductArchived(ProductId ProductId, DateTimeOffset OccurredAt) : IDomainEvent;
 
@@ -48,11 +47,11 @@ public sealed class Product : AggregateRoot
     public IReadOnlyList<ProductImage> Images => _images;
 
     /// <summary>
-    /// La foto de portada: la de menor <see cref="ProductImage.SortOrder"/>. Vive
-    /// aquí porque es una regla del catálogo, no de quien pinta: el listado del
-    /// backoffice y el documento de búsqueda la calculaban por separado y uno de
-    /// los dos se limitaba a coger la primera de la lista, así que el mismo
-    /// producto podía enseñar una imagen distinta según por dónde se mirase.
+    /// The cover photo: the one with the lowest <see cref="ProductImage.SortOrder"/>.
+    /// It lives here because it is a catalogue rule and not a rendering one: the
+    /// backoffice listing and the search document computed it separately, and one
+    /// of the two simply took the first of the list — so the same product could
+    /// show a different image depending on where you looked.
     /// </summary>
     public ProductImage? PrimaryImage =>
         _images.Count == 0 ? null : _images.MinBy(image => image.SortOrder);
@@ -62,17 +61,16 @@ public sealed class Product : AggregateRoot
     public IReadOnlyList<Variant> Variants => _variants;
 
     /// <summary>
-    /// Los ejes que distinguen a las variantes, EN ORDEN. El orden es un dato
-    /// del catálogo — "azul marino · 38" y no "38 · azul marino" — y de un
-    /// diccionario no se puede sacar.
+    /// The axes that tell the variants apart, IN ORDER. The order is catalogue
+    /// data — "azul marino · 38" and not "38 · azul marino" — and a dictionary
+    /// cannot supply it.
     /// </summary>
     public IReadOnlyList<string> VariantAxes => _variantAxes;
 
     /// <summary>
-    /// El precio más bajo y el más alto entre las variantes disponibles. Es lo
-    /// que enseña una tarjeta de producto ("24,90 – 29,90 €") y lo que el índice
-    /// necesita para filtrar por rango sin prometer combinaciones que no
-    /// existen.
+    /// The lowest and highest price among the available variants. It is what a
+    /// product card shows ("24,90 – 29,90 €") and what the index needs to filter
+    /// by range without promising combinations that do not exist.
     /// </summary>
     public (Money From, Money To) PriceRange
     {
@@ -82,8 +80,8 @@ public sealed class Product : AggregateRoot
                 .Where(variant => variant.Status == VariantStatus.Available)
                 .ToArray();
 
-            // Sin variantes disponibles el precio del producto sigue siendo la
-            // respuesta honesta: es el de su variante por defecto.
+            // With no available variants the product's own price is still the
+            // honest answer: it is its default variant's.
             if (available.Length == 0)
                 return (Price, Price);
 
@@ -99,9 +97,9 @@ public sealed class Product : AggregateRoot
     private Product() { } // EF Core
 
     /// <summary>
-    /// Alta de un producto en Draft. Marca y categoría entran aquí y no en un
-    /// <see cref="UpdateDetails"/> posterior: crear un producto es UN hecho, y
-    /// partirlo en dos mutaciones emitía dos ProductUpserted por alta.
+    /// Creates a product in Draft. Brand and category go in here rather than in a
+    /// later <see cref="UpdateDetails"/>: creating a product is ONE fact, and
+    /// splitting it into two mutations emitted two ProductUpserted per creation.
     /// </summary>
     public static Product Create(
         TimeProvider clock,
@@ -141,9 +139,9 @@ public sealed class Product : AggregateRoot
     }
 
     /// <summary>
-    /// Añade o reemplaza la traducción de una cultura concreta.
-    /// Es el punto de entrada del slice de enriquecimiento con IA
-    /// (traducción automática + revisión humana en el backoffice).
+    /// Adds or replaces one culture's translation.
+    /// This is the entry point for the AI enrichment slice (machine translation
+    /// plus human review in the backoffice).
     /// </summary>
     public void Localize(TimeProvider clock, string culture, string name, string? description = null)
     {
@@ -164,14 +162,14 @@ public sealed class Product : AggregateRoot
     }
 
     /// <summary>
-    /// Añade o reemplaza el valor de un atributo, por código. Antes tomaba dos
-    /// cadenas y aceptaba cualquier cosa: <c>SetAttribute("colour", "banana")</c>
-    /// entraba sin rechistar, y "azul marino" era literalmente el dato — con lo
-    /// que el índice inglés contenía español.
+    /// Adds or replaces an attribute's value, by code. It used to take two
+    /// strings and accept anything: <c>SetAttribute("colour", "banana")</c> went
+    /// straight through, and "azul marino" was literally the data — so the
+    /// English index contained Spanish.
     ///
-    /// Quien valida contra la definición es el slice que llama, no esto: el
-    /// agregado no conoce el catálogo de definiciones, y hacer que lo conociera
-    /// convertiría cada `SetAttribute` en una consulta.
+    /// Validating against the definition is the calling slice's job, not this
+    /// one's: the aggregate does not know the definition catalogue, and making it
+    /// know would turn every `SetAttribute` into a query.
     /// </summary>
     public void SetAttribute(TimeProvider clock, AttributeValue value)
     {
@@ -185,8 +183,8 @@ public sealed class Product : AggregateRoot
         _attributes.FirstOrDefault(value =>
             string.Equals(value.Code, code, StringComparison.OrdinalIgnoreCase));
 
-    // Idempotente por identidad de contenido: reimportar la misma foto no la
-    // duplica, porque el hash del contenido ES la clave.
+    // Idempotent by content identity: re-importing the same photo does not
+    // duplicate it, because the content hash IS the key.
     public void AddImage(TimeProvider clock, ImageId id, LocalizedText? alt = null)
     {
         if (_images.Any(i => i.Id == id)) return;
@@ -194,7 +192,7 @@ public sealed class Product : AggregateRoot
         Touch(clock);
     }
 
-    // Idempotente: reimportar desde el mismo origen no duplica referencias.
+    // Idempotent: re-importing from the same source does not duplicate references.
     public void LinkExternal(TimeProvider clock, string source, string externalId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(source);
@@ -209,8 +207,8 @@ public sealed class Product : AggregateRoot
     }
 
     /// <summary>
-    /// Declara por qué ejes varía el producto. Se hace antes de añadir
-    /// variantes porque es lo que da sentido —y orden— a sus valores.
+    /// Declares which axes the product varies by. It happens before variants are
+    /// added, because it is what gives their values meaning — and order.
     /// </summary>
     public void DefineAxes(TimeProvider clock, IReadOnlyList<string> axes)
     {
@@ -221,8 +219,8 @@ public sealed class Product : AggregateRoot
 
         if (_variants.Count > 0 && !normalised.SequenceEqual(_variantAxes, StringComparer.OrdinalIgnoreCase))
         {
-            // Cambiar los ejes con variantes vivas dejaría a cada una descrita
-            // por unas coordenadas que ya no significan lo mismo.
+            // Changing the axes with live variants would leave each of them
+            // described by coordinates that no longer mean the same thing.
             throw new InvalidOperationException(
                 "Variant axes cannot change while variants exist. Discontinue them first.");
         }
@@ -233,8 +231,8 @@ public sealed class Product : AggregateRoot
     }
 
     /// <summary>
-    /// Añade una variante. Idempotente por SKU, como todo lo que puede llegar
-    /// dos veces desde un conector.
+    /// Adds a variant. Idempotent by SKU, like everything that can arrive twice
+    /// from a connector.
     /// </summary>
     public Variant AddVariant(
         TimeProvider clock,
@@ -260,8 +258,8 @@ public sealed class Product : AggregateRoot
                 $"{(_variantAxes.Count == 0 ? "(none)" : string.Join(", ", _variantAxes))}.");
         }
 
-        // Dos variantes con las mismas coordenadas son la misma variante con dos
-        // SKUs, y eso convierte el selector del PDP en una lotería.
+        // Two variants with the same coordinates are one variant with two SKUs,
+        // and that turns the PDP's picker into a lottery.
         if (values.Count > 0 && _variants.Any(variant => variant.Matches(values)))
         {
             throw new InvalidOperationException(
@@ -308,7 +306,7 @@ public sealed class Product : AggregateRoot
     {
         Status = ProductStatus.Archived;
         UpdatedAt = clock.GetUtcNow();
-        Raise(new ProductArchived(Id, UpdatedAt)); // el worker lo saca de los índices
+        Raise(new ProductArchived(Id, UpdatedAt)); // the worker takes it out of the indexes
     }
 
     private void Touch(TimeProvider clock)
@@ -317,30 +315,30 @@ public sealed class Product : AggregateRoot
         Raise(new ProductUpserted(Id, UpdatedAt));
     }
 
-    // Un slug por cultura, generado del nombre en esa cultura (SEO multilenguaje).
+    // One slug per culture, generated from the name in that culture (multilingual SEO).
     private static LocalizedText Slugify(LocalizedText name) =>
         new(name.Values.ToDictionary(kv => kv.Key, kv => Slugify(kv.Value)));
 
     /// <summary>
-    /// Plegado explícito de diacríticos. Lo natural sería
-    /// <c>Normalize(NormalizationForm.FormD)</c> y descartar las marcas
-    /// combinantes — y es lo que se escribió primero. No funciona: el repo
-    /// compila con <c>InvariantGlobalization=true</c>, y ahí la normalización
-    /// Unicode es un NO-OP silencioso. Devuelve la cadena intacta, sin excepción
-    /// y sin aviso, así que el código parecía correcto y "café" seguía saliendo
-    /// como <c>café</c> dentro de la URL.
+    /// Explicit diacritic folding. The natural thing would be
+    /// <c>Normalize(NormalizationForm.FormD)</c> followed by dropping the
+    /// combining marks — and that is what was written first. It does not work:
+    /// the repository builds with <c>InvariantGlobalization=true</c>, and there
+    /// Unicode normalisation is a silent NO-OP. It returns the string intact,
+    /// with no exception and no warning, so the code looked correct while "café"
+    /// kept coming out as <c>café</c> inside the URL.
     ///
-    /// Una tabla es más fea y es la que sí funciona. Cubre lo que un catálogo
-    /// es/en puede traer; lo que no esté aquí pasa a ser separador, que es el
-    /// fallo seguro: un slug feo, nunca un carácter que haya que escapar.
+    /// A table is uglier and it is the one that works. It covers what an es/en
+    /// catalogue can bring; anything not here becomes a separator, which is the
+    /// safe failure: an ugly slug, never a character that has to be escaped.
     /// </summary>
     private const string Accented = "áàâäãåéèêëíìîïóòôöõúùûüñçýÿšžœæø";
     private const string Folded   = "aaaaaaeeeeiiiiooooouuuuncyyszoao";
 
     /// <summary>
-    /// Letras y dígitos ASCII; todo lo demás separa. Partir sólo por espacios
-    /// dejaba paréntesis y tildes dentro de la URL — "Cafetera Espresso
-    /// (12 tazas)" salía como <c>cafetera-espresso-(12-tazas)</c>.
+    /// ASCII letters and digits; everything else separates. Splitting on spaces
+    /// alone left brackets and accents inside the URL — "Cafetera Espresso
+    /// (12 tazas)" came out as <c>cafetera-espresso-(12-tazas)</c>.
     /// </summary>
     private static string Slugify(string name)
     {

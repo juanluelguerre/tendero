@@ -4,13 +4,13 @@ using Microsoft.Extensions.Logging;
 
 namespace ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 
-// Estos handlers los invoca el procesador del Outbox (worker en segundo plano),
-// NO el request HTTP: la importación termina rápido y la indexación va detrás,
-// con reintentos. Consistencia eventual, asumida y medible (lag del outbox
-// como métrica en Grafana).
+// These handlers are invoked by the Outbox processor (the background worker),
+// NOT by the HTTP request: the import finishes quickly and indexing follows
+// behind it, with retries. Eventual consistency, assumed and measurable (outbox
+// lag as a metric in Grafana).
 
-// IProductReader vive en Contracts.cs: ReindexProducts necesita el mismo puerto,
-// y un slice no puede referenciar a otro.
+// IProductReader lives in Contracts.cs: ReindexProducts needs the same port, and
+// a slice cannot reference another slice.
 
 public sealed class ProjectProductOnUpserted(
     IProductReader products,
@@ -26,9 +26,10 @@ public sealed class ProjectProductOnUpserted(
             return;
         }
 
-        // Solo lo activo es buscable; un Draft que aún no pasó revisión no se
-        // indexa, y si estaba indexado y volvió a Draft, se retira. La regla la
-        // comparte con ReindexProducts: ver ProductIndexProjection.
+        // Only what is active is searchable; a Draft that has not passed review
+        // is not indexed, and if it was indexed and went back to Draft, it is
+        // removed. The rule is shared with ReindexProducts: see
+        // ProductIndexProjection.
         await ProductIndexProjection.ApplyAsync(indexer, product, ct);
     }
 }

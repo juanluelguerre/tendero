@@ -15,17 +15,17 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.Integration.Tests;
 
 /// <summary>
-/// Importar → outbox → drenaje → proyección, contra Postgres de verdad.
+/// Import -> outbox -> drain -> projection, against a real Postgres.
 ///
-/// Cada paso ya tenía tests unitarios y ninguno cubría lo que aquí se rompe:
-/// que el volcado de eventos ocurra DENTRO de la transacción que los provocó,
-/// que los convertidores jsonb sobrevivan a una ida y vuelta, que el índice
-/// único sobre <c>(source, external_id)</c> haga idempotente la reimportación,
-/// y que el mensaje deserializado del outbox llegue a su handler.
+/// Every step already had unit tests and none of them covered what breaks here:
+/// that the event drain happens INSIDE the transaction that caused it, that the
+/// jsonb converters survive a round trip, that the unique index on
+/// <c>(source, external_id)</c> makes re-importing idempotent, and that the
+/// message deserialised from the outbox reaches its handler.
 ///
-/// Elasticsearch no participa: el indexador es un doble en memoria. Lo que se
-/// mide es el mecanismo del outbox, no el motor de búsqueda — de eso ya se
-/// ocupa el gate de SearchEval, con un Elasticsearch real.
+/// Elasticsearch takes no part: the indexer is an in-memory double. What is
+/// measured is the outbox mechanism, not the search engine — the SearchEval gate
+/// already covers that one, with a real Elasticsearch.
 /// </summary>
 [Collection(PostgresCollection.Name)]
 public sealed class OutboxDrainTests(PostgresFixture postgres)
@@ -51,12 +51,12 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         await using var context = scope.Factory.Create();
         Assert.Equal(SeedProducts, await context.Products.CountAsync(ct));
 
-        // Los eventos existen ya, antes de que ningún worker corra: es lo que
-        // significa que el outbox sea transaccional y no una cola aparte.
+        // The events exist already, before any worker runs: that is what it means
+        // for the outbox to be transactional and not a queue on the side.
         Assert.NotEmpty(await context.OutboxMessages.Where(m => m.ProcessedAt == null).ToListAsync(ct));
 
-        // Ida y vuelta por jsonb: si el convertidor de LocalizedText o el de
-        // atributos se rompiera, se vería aquí y en ningún test unitario.
+        // A round trip through jsonb: if the LocalizedText converter or the
+        // attributes one broke, it would show here and in no unit test.
         var product = await context.Products.FirstAsync(ct);
         Assert.Contains("es", product.Name.Cultures);
         Assert.Contains("en", product.Name.Cultures);
@@ -73,8 +73,8 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         await using var scope = await ArrangeAsync("outbox_drain", ct);
         await scope.Import();
 
-        // Draft no se indexa (ADR 0012): publicar es lo que hace encontrable un
-        // producto, y sin este paso el drenaje no debería indexar nada.
+        // Draft is not indexed (ADR 0012): publishing is what makes a product
+        // findable, and without that step the drain should index nothing.
         await using (var context = scope.Factory.Create())
         {
             foreach (var product in await context.Products.ToListAsync(ct))
@@ -104,8 +104,8 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         await scope.Import();
         var second = await scope.Import();
 
-        // El índice único sobre (source, external_id) es la clave de
-        // idempotencia. Sólo un Postgres real puede confirmarlo.
+        // The unique index on (source, external_id) is the idempotency key. Only
+        // a real Postgres can confirm it.
         Assert.Equal(0, second.Created);
         Assert.Equal(SeedProducts, second.Updated);
 
@@ -124,9 +124,9 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
     }
 
     /// <summary>
-    /// El mismo contenedor de la aplicación, con el indexador sustituido. Se
-    /// registran los slices reales por assembly, igual que hace la API, para que
-    /// esto no acabe probando un cableado que sólo existe en los tests.
+    /// The application's own container, with the indexer swapped out. The real
+    /// slices are registered by assembly, exactly as the API does, so this does
+    /// not end up testing wiring that only exists in the tests.
     /// </summary>
     private sealed class TestScope : IAsyncDisposable
     {
@@ -167,8 +167,8 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         }
 
         /// <summary>
-        /// El mismo bucle que <c>OutboxProcessor</c>, sin el temporizador: leer
-        /// pendientes, deserializar, despachar, marcar.
+        /// The same loop as <c>OutboxProcessor</c>, without the timer: read what
+        /// is pending, deserialise, dispatch, mark.
         /// </summary>
         public async Task<int> DrainOutboxAsync(CancellationToken ct)
         {
@@ -196,8 +196,8 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
     }
 
     /// <summary>
-    /// Doble determinista, no un mock: lo que importa es qué llegó al puerto,
-    /// y una lista lo dice más claro que una verificación de llamadas.
+    /// A deterministic double, not a mock: what matters is what reached the port,
+    /// and a list says that more clearly than a call verification.
     /// </summary>
     private sealed class RecordingIndexer : IProductIndexer
     {

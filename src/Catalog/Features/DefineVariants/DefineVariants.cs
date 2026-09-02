@@ -12,16 +12,17 @@ using Microsoft.AspNetCore.Routing;
 namespace ElGuerre.Tendero.Catalog.Features.DefineVariants;
 
 /// <summary>
-/// Genera la matriz de variantes de un producto a partir de sus ejes.
+/// Generates a product's variant matrix from its axes.
 ///
-/// Es una operación del tendero, no del conector: un origen puede traer
-/// variantes o no traerlas, pero decidir que una camiseta se vende en tres
-/// colores por cuatro tallas es una decisión de catálogo. Por eso vive detrás de
-/// la política de tendero y no dentro de la importación.
+/// A shopkeeper's operation, not a connector's: a source may bring variants or
+/// not, but deciding that a shirt sells in three colours by four sizes is a
+/// catalogue decision. That is why it lives behind the shopkeeper policy and not
+/// inside importing.
 ///
-/// La matriz se genera entera —el producto cartesiano de los ejes— porque es lo
-/// que un tendero espera al declarar "colores × tallas", y retirar las
-/// combinaciones que no existen es más rápido que crearlas una a una.
+/// The whole matrix is generated — the cartesian product of the axes — because
+/// that is what a shopkeeper expects on declaring "colours × sizes", and
+/// retiring the combinations that do not exist is quicker than creating them one
+/// by one.
 /// </summary>
 public sealed record DefineVariantsCommand(
     ProductId ProductId,
@@ -42,9 +43,9 @@ public sealed record DefineVariantsResponse(int Created, int Existing);
 public sealed class DefineVariantsValidator : AbstractValidator<DefineVariantsCommand>
 {
     /// <summary>
-    /// El tope existe porque el producto cartesiano crece rápido y un error de
-    /// dedo —pegar una lista de doscientas tallas— no debería escribir miles de
-    /// filas antes de que nadie lo note.
+    /// The cap exists because the cartesian product grows fast, and a slip of the
+    /// finger — pasting a list of two hundred sizes — should not write thousands
+    /// of rows before anybody notices.
     /// </summary>
     private const int MaximumCombinations = 200;
 
@@ -96,7 +97,7 @@ public sealed class DefineVariantsEndpoint : ICarterModule
     }
 }
 
-/// <summary>La forma que entra por el cable, sin ids fuertemente tipados.</summary>
+/// <summary>The shape that arrives over the wire, without strongly-typed ids.</summary>
 public sealed record DefineVariantsRequest(
     IReadOnlyList<VariantAxisRequest> Axes, string? SkuPrefix);
 
@@ -138,8 +139,9 @@ public sealed class DefineVariantsHandler(
         }
         catch (InvalidOperationException rejected)
         {
-            // El agregado defiende sus invariantes; aquí sólo se traducen. Un
-            // 409 con el motivo del dominio dice más que un 500 con una traza.
+            // The aggregate defends its invariants; here they are only
+            // translated. A 409 with the domain's reason says more than a 500
+            // with a stack trace.
             activity?.SetTag("catalog.define_variants_rejected", rejected.Message);
             return new DefineVariantsResult(DefineVariantsOutcome.Rejected, 0, before, rejected.Message);
         }
@@ -153,15 +155,15 @@ public sealed class DefineVariantsHandler(
     }
 
     /// <summary>
-    /// El id externo del producto si lo tiene, y si no, su id. El SKU es lo que
-    /// otros contextos leen, así que conviene que se reconozca de un vistazo.
+    /// The product's external id if it has one, and its id otherwise. The SKU is
+    /// what other contexts read, so it is worth being recognisable at a glance.
     /// </summary>
     private static string DefaultPrefix(Product product) =>
         product.ExternalReferences.Count > 0
             ? product.ExternalReferences[0].ExternalId
             : product.Id.Value.ToString("N")[..8].ToUpperInvariant();
 
-    /// <summary>Producto cartesiano de los ejes, en el orden declarado.</summary>
+    /// <summary>The cartesian product of the axes, in the declared order.</summary>
     private static IEnumerable<Dictionary<string, string>> Combinations(IReadOnlyList<VariantAxis> axes)
     {
         IEnumerable<Dictionary<string, string>> combinations =

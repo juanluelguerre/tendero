@@ -2,16 +2,16 @@
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="13.5.3" />
 
-  <!-- "dotnet run" sobre este proyecto levanta todo: la infraestructura en
-       Docker y los dos servicios .NET, con el dashboard de Aspire delante. -->
+  <!-- "dotnet run" on this project brings everything up: the infrastructure in
+       Docker and both .NET services, with the Aspire dashboard in front. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>ElGuerre.Tendero.AppHost</RootNamespace>
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>tendero-apphost</UserSecretsId>
-    <!-- ASPIRE010 pide el bundle del CLI de Aspire. El repo se arranca con
-         "dotnet run" (CLAUDE.md), sin herramienta extra que instalar, así que
-         se silencia a conciencia en lugar de arrastrar la dependencia. -->
+    <!-- ASPIRE010 asks for the Aspire CLI bundle. The repo is started with
+         "dotnet run" (CLAUDE.md), with no extra tool to install, so it is
+         silenced deliberately rather than dragging the dependency in. -->
     <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
   </PropertyGroup>
 

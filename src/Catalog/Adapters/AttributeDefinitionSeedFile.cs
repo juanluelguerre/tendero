@@ -14,13 +14,13 @@ public sealed class AttributeSeedOptions
 }
 
 /// <summary>
-/// Las definiciones que trae el repositorio, leídas del mismo modo que el
-/// catálogo de muestra.
+/// The definitions the repository ships, read the same way the sample catalogue
+/// is.
 ///
-/// Existe el fichero y no un `INSERT` en una migración porque estas etiquetas
-/// son DATOS de catálogo, no esquema: se revisan en un diff, se traducen y se
-/// corrigen sin tocar la base de datos. Es la misma razón por la que el golden
-/// set vive en `tools/SearchEval/golden` y no en código.
+/// A file rather than an `INSERT` in a migration because these labels are
+/// catalogue DATA and not schema: they get reviewed in a diff, translated and
+/// corrected without touching the database. Same reason the golden set lives in
+/// `tools/SearchEval/golden` and not in code.
 /// </summary>
 public static class AttributeDefinitionSeedFile
 {
@@ -50,8 +50,8 @@ public static class AttributeDefinitionSeedFile
             entry.Code,
             new LocalizedText(entry.Label),
             entry.Kind,
-            // Una unidad vacía en el fichero es "sin unidad": tazas y piezas se
-            // cuentan, no se miden.
+            // An empty unit in the file means "no unit": cups and pieces are
+            // counted, not measured.
             string.IsNullOrWhiteSpace(entry.Unit) ? null : entry.Unit,
             entry.IsVariantAxis,
             entry.IsFacet,

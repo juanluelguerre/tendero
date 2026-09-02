@@ -7,16 +7,16 @@ using Microsoft.EntityFrameworkCore;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// Adaptador de los dos puertos de Product que hoy existen. Son dos interfaces
-/// distintas a propósito: la importación necesita buscar por referencia externa
-/// y añadir; la proyección al índice sólo necesita leer por id.
+/// The adapter for the two Product ports that exist today. Two distinct
+/// interfaces on purpose: importing needs to look up by external reference and
+/// add; the index projection only needs to read by id.
 /// </summary>
 internal sealed class EfProductRepository(TenderoDbContext context)
     : IProductRepository, IProductReader, IProductCatalogReader
 {
-    // Dos consultas y no una con paginacion en memoria: el total es del filtro
-    // completo, no de la pagina, porque una cola de revision necesita decir
-    // cuantos quedan. Contar en SQL evita traerse el catalogo para descartarlo.
+    // Two queries rather than one with in-memory paging: the total belongs to the
+    // whole filter and not to the page, because a review queue needs to say how
+    // many are left. Counting in SQL avoids pulling the catalogue in to discard it.
     public async Task<ProductPage> ListAsync(
         ProductStatus? status, int page, int pageSize, CancellationToken ct)
     {
@@ -28,8 +28,8 @@ internal sealed class EfProductRepository(TenderoDbContext context)
         var total = await query.CountAsync(ct);
 
         var items = await query
-            // Lo mas recientemente tocado primero: en una cola de revision lo
-            // que acaba de importarse es lo que espera decision.
+            // Most recently touched first: in a review queue, what has just been
+            // imported is what is waiting for a decision.
             .OrderByDescending(product => product.UpdatedAt)
             .ThenBy(product => product.Id)   // desempate estable, o dos paginas pueden repetir fila
             .Skip((page - 1) * pageSize)
@@ -47,19 +47,19 @@ internal sealed class EfProductRepository(TenderoDbContext context)
 
     public void Add(Product product) => context.Products.Add(product);
 
-    // CON seguimiento, al contrario que GetByIdAsync: quien busca por id desde un
-    // slice lo hace para mutar (publicar, archivar) y confirmar con IUnitOfWork.
-    // Con AsNoTracking el cambio de estado se perdería en silencio en SaveChanges.
+    // WITH tracking, unlike GetByIdAsync: whoever looks up by id from a slice is
+    // doing it to mutate (publish, archive) and commit through IUnitOfWork. With
+    // AsNoTracking the status change would be silently lost in SaveChanges.
     public Task<Product?> FindByIdAsync(ProductId id, CancellationToken ct) =>
         context.Products.FirstOrDefaultAsync(product => product.Id == id, ct);
 
-    // AsNoTracking: el worker de indexación lee para proyectar, nunca para mutar.
+    // AsNoTracking: the indexing worker reads to project, never to mutate.
     public Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct) =>
         context.Products.AsNoTracking().FirstOrDefaultAsync(product => product.Id == id, ct);
 
-    // Igual que arriba, y ademas sin seguimiento por una razon de memoria: el
-    // change tracker retendria los 147k productos del catalogo completo durante
-    // todo el reindexado, que es justo lo que AsAsyncEnumerable evita.
+    // Same as above, and additionally untracked for a memory reason: the change
+    // tracker would hold the full catalogue's 147k products for the whole
+    // reindex, which is exactly what AsAsyncEnumerable avoids.
     public IAsyncEnumerable<Product> StreamAllAsync(CancellationToken ct) =>
         context.Products.AsNoTracking().OrderBy(product => product.CreatedAt).AsAsyncEnumerable();
 }

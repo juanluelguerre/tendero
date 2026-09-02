@@ -9,12 +9,12 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
 /// <summary>
-/// Sin esta consulta la cola de revisión no puede existir: la API tenía cinco
-/// endpoints y ninguno listaba nada, así que la única forma de saber qué estaba
-/// en Draft era abrir Postgres.
+/// Without this query the review queue cannot exist: the API had five endpoints
+/// and none of them listed anything, so the only way to know what was in Draft
+/// was to open Postgres.
 ///
-/// Lo que se comprueba aquí es el contrato de la consulta — filtro, paginación y
-/// resolución de idioma — no el SQL, que es del adaptador.
+/// What is checked here is the query's contract — filter, paging and language
+/// resolution — not the SQL, which belongs to the adapter.
 /// </summary>
 public sealed class ListProductsTests
 {
@@ -66,8 +66,8 @@ public sealed class ListProductsTests
     [Fact]
     public async Task Total_counts_the_whole_match_not_just_the_page()
     {
-        // Si total contase solo la pagina, la UI no podria pintar el paginador ni
-        // decir cuantos quedan por revisar, que es el dato que importa en una cola.
+        // If total counted only the page, the UI could not draw the pager or say
+        // how many are left to review, which is the number a queue is about.
         var products = Enumerable.Range(0, 5).Select(i => ADraftProduct($"Producto {i}")).ToArray();
 
         var result = await HandlerOver(products).HandleAsync(

@@ -9,13 +9,13 @@ using Microsoft.AspNetCore.Routing;
 namespace ElGuerre.Tendero.Catalog.Features.GetProductImage;
 
 /// <summary>
-/// Sirve una imagen por su clave. El id ES el hash del contenido, así que la
-/// respuesta es inmutable por construcción: una clave nunca cambia de bytes y
-/// puede cachearse un año sin revalidar. Es lo que hace innecesario invalidar
-/// caché al cambiar una foto — cambiar la foto cambia la clave.
+/// Serves an image by its key. The id IS the content hash, so the response is
+/// immutable by construction: a key never changes bytes and can be cached for a
+/// year without revalidating. That is what makes cache invalidation unnecessary
+/// when a photo changes — changing the photo changes the key.
 ///
-/// Sin dispatcher: no hay comando ni consulta que despachar, es una lectura de
-/// stream. Meter CQRS aquí sería ceremonia sin contenido.
+/// No dispatcher: there is no command or query to dispatch, it is a stream read.
+/// Putting CQRS here would be ceremony with no content.
 /// </summary>
 public sealed class GetProductImageEndpoint : ICarterModule
 {
@@ -36,7 +36,7 @@ public sealed class GetProductImageEndpoint : ICarterModule
 
                 return TypedResults.Stream(stored.Content, stored.ContentType);
             })
-            .AllowAnonymous()   // las imágenes del catálogo también
+            .AllowAnonymous()   // catalogue images are public too
             .WithTags("Catalog")
             .WithName("GetProductImage");
     }

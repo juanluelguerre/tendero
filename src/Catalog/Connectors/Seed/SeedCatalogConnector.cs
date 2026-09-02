@@ -9,15 +9,15 @@ public sealed class SeedConnectorOptions
 {
     public const string SectionName = "Catalog:Connectors:Seed";
 
-    /// <summary>Ruta al JSON del dataset. Por defecto, la muestra versionada en el repo.</summary>
+    /// <summary>Path to the dataset's JSON. By default, the sample committed to the repo.</summary>
     public string FilePath { get; set; } = "seed/products.sample.json";
 }
 
 /// <summary>
-/// Conector por defecto del repo: cualquiera que clone puede ejecutar
-/// la importación sin darse de alta en nada. Lee el JSON en streaming
-/// con DeserializeAsyncEnumerable, así el fichero completo de ABO
-/// (~147k productos) no pasa por memoria de golpe.
+/// The repository's default connector: anybody who clones can run the import
+/// without signing up for anything. It reads the JSON as a stream with
+/// DeserializeAsyncEnumerable, so the full ABO file (~147k products) never goes
+/// through memory at once.
 /// </summary>
 internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> options) : ICatalogSourceConnector
 {
@@ -27,14 +27,15 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         ReadCommentHandling = JsonCommentHandling.Skip
     };
 
-    /// <summary>Clave de registro en DI y nombre del origen. Estaba escrita dos
-    /// veces —el literal del <c>AddKeyedScoped</c> y este <c>Source</c>— y si
-    /// divergen la importación falla en runtime, no al compilar.</summary>
+    /// <summary>The DI registration key and the source name. It used to be
+    /// written twice — the literal in <c>AddKeyedScoped</c> and this
+    /// <c>Source</c> — and if they diverge the import fails at runtime, not at
+    /// compile time.</summary>
     public const string Key = "seed";
 
     public string Source => Key;
 
-    // Se resuelve una vez y no por imagen: es la misma ruta para todo el fichero.
+    // Resolved once and not per image: it is the same path for the whole file.
     private string SeedDirectory =>
         _seedDirectory ??= Path.GetDirectoryName(Path.GetFullPath(options.Value.FilePath)) ?? ".";
 
@@ -56,9 +57,9 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
     }
 
     /// <summary>
-    /// Forma del fichero seed. Los textos son diccionarios cultura -> valor,
-    /// igual que el contrato; el esquema de Amazon Berkeley Objects (arrays con
-    /// language_tag) se convierte a esta forma en el script de descarga.
+    /// The shape of the seed file. Texts are culture -> value dictionaries, like
+    /// the contract; the Amazon Berkeley Objects schema (arrays with
+    /// language_tag) is converted into this shape by the download script.
     /// </summary>
     private sealed record SeedProductRow(
         [property: JsonPropertyName("item_id")] string ItemId,
@@ -85,10 +86,10 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
     private sealed record SeedPrice(decimal Amount, string Currency);
 
     /// <summary>
-    /// El fichero seed referencia sus imágenes en relativo ("images/X.png"), y
-    /// se resuelven contra su propio directorio: es un origen de catálogo que
-    /// vive en disco, igual que Shopify sirve las suyas desde su CDN. Una URL
-    /// absoluta se respeta tal cual, para poder apuntar a un origen remoto.
+    /// The seed file references its images relatively ("images/X.png"), and they
+    /// resolve against its own directory: it is a catalogue source that lives on
+    /// disk, just as Shopify serves its own from a CDN. An absolute URL is
+    /// respected as-is, so a remote source can be pointed at.
     /// </summary>
     private Uri ResolveImage(string reference)
     {

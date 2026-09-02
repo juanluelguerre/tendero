@@ -5,9 +5,9 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Persistence.Outbox;
 
 /// <summary>
-/// Un evento de dominio es un record: System.Text.Json basta y el payload queda
-/// legible en la tabla. El nombre de tipo se guarda sin versión a propósito —
-/// una fila pendiente debe seguir siendo procesable tras un despliegue.
+/// A domain event is a record: System.Text.Json is enough and the payload stays
+/// readable in the table. The type name is stored without a version on purpose —
+/// a pending row has to remain processable after a deployment.
 /// </summary>
 public static class DomainEventSerializer
 {

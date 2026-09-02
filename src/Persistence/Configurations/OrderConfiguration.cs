@@ -19,8 +19,8 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CustomerId)
             .HasConversion(id => id.Value, value => new CustomerId(value));
 
-        // Reintentar el checkout con la misma clave no puede crear un segundo
-        // pedido, y con agentes los reintentos son el caso normal, no el raro.
+        // Retrying checkout with the same key must not create a second order,
+        // and with agents retries are the normal case, not the rare one.
         builder.Property(o => o.IdempotencyKey).HasMaxLength(200).IsRequired();
         builder.HasIndex(o => o.IdempotencyKey).IsUnique();
 
@@ -34,15 +34,17 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CreatedAt);
         builder.Property(o => o.UpdatedAt);
 
-        // Snapshot, no FK viva al producto: nombre ya resuelto en la cultura del
-        // comprador y precio congelado (ADR 0002). Nunca se consultan sueltas
-        // desde el dominio, así que viajan con el pedido en una columna JSON.
+        // A snapshot, not a live FK to the product: the name already resolved in
+        // the buyer's culture and the price frozen (ADR 0002). They are never
+        // queried on their own from the domain, so they travel with the order in
+        // a JSON column.
         builder.ComplexCollection<List<OrderLine>, OrderLine>("_lines", line =>
         {
             line.Property(l => l.ProductId).HasConversion(id => id.Value, value => new ProductId(value));
-            // La variante viaja en la línea porque lo que se compra es una
-            // variante (ADR 0015): sin ella el pedido no sabe qué talla se
-            // envió, y el inventario, que descuenta por SKU, no tiene con qué.
+            // The variant travels on the line because what gets bought is a
+            // variant (ADR 0015): without it the order does not know which size
+            // was shipped, and inventory, which decrements by SKU, has nothing
+            // to work with.
             line.Property(l => l.VariantId).HasConversion(id => id.Value, value => new VariantId(value));
             line.Property(l => l.UnitPrice).HasConversion(Jsonb.MoneyAsTextConverter);
             line.Ignore(l => l.Total);

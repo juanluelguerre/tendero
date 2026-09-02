@@ -1,14 +1,14 @@
 namespace ElGuerre.Tendero.SharedKernel;
 
-// Las abstracciones viven en el namespace raíz a propósito: un slice sólo
-// necesita `using ElGuerre.Tendero.SharedKernel;` para escribir su comando y su handler.
-// Hechas a mano por política de licencias (CLAUDE.md): NO MediatR.
+// The abstractions live in the root namespace on purpose: a slice only needs
+// `using ElGuerre.Tendero.SharedKernel;` to write its command and its handler.
+// Hand-rolled by licensing policy (CLAUDE.md): NO MediatR.
 
-/// <summary>Intención de escritura que devuelve un resultado.</summary>
+/// <summary>A write intent that returns a result.</summary>
 public interface ICommand<TResult>;
 
-/// <summary>Intención de lectura. Separada de ICommand para que el dispatcher
-/// pueda tener políticas distintas (caché, réplicas de lectura) sin tocar slices.</summary>
+/// <summary>A read intent. Kept separate from ICommand so the dispatcher can
+/// have different policies (caching, read replicas) without touching slices.</summary>
 public interface IQuery<TResult>;
 
 public interface ICommandHandler<in TCommand, TResult>
@@ -24,8 +24,8 @@ public interface IQueryHandler<in TQuery, TResult>
 }
 
 /// <summary>
-/// Consumidor de un evento de dominio. Lo invoca el procesador del Outbox
-/// (worker), nunca el request HTTP: ver CLAUDE.md, invariante 7.
+/// A consumer of a domain event. The Outbox processor invokes it (in the
+/// worker), never the HTTP request: see CLAUDE.md, invariant 7.
 /// </summary>
 public interface IDomainEventHandler<in TDomainEvent>
     where TDomainEvent : IDomainEvent
@@ -44,8 +44,8 @@ public interface IQueryDispatcher
 }
 
 /// <summary>
-/// Publica un evento de dominio a todos sus <see cref="IDomainEventHandler{T}"/>.
-/// El procesador del Outbox rehidrata el evento y lo entrega por aquí.
+/// Publishes a domain event to every <see cref="IDomainEventHandler{T}"/>.
+/// The Outbox processor rehydrates the event and delivers it through here.
 /// </summary>
 public interface IDomainEventDispatcher
 {

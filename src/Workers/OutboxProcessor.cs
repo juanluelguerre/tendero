@@ -15,16 +15,16 @@ public sealed class OutboxOptions
     public int BatchSize { get; set; } = 50;
     public TimeSpan PollInterval { get; set; } = TimeSpan.FromSeconds(2);
 
-    /// <summary>Tras este número de intentos el mensaje deja de reintentarse y
-    /// se queda visible con su error: una cola envenenada no debe girar sola.</summary>
+    /// <summary>After this many attempts the message stops being retried and
+    /// stays visible with its error: a poisoned queue must not spin on its own.</summary>
     public int MaxAttempts { get; set; } = 5;
 }
 
 /// <summary>
-/// Bucle de la bandeja de salida. Deliberadamente simple: un SELECT ordenado por
-/// fecha, despacho al handler y marca. Lo que falta (FOR UPDATE SKIP LOCKED para
-/// varias réplicas, backoff exponencial) llega cuando haya una segunda réplica,
-/// no antes.
+/// The outbox loop. Deliberately simple: a SELECT ordered by date, dispatch to
+/// the handler, mark. What is missing (FOR UPDATE SKIP LOCKED for several
+/// replicas, exponential backoff) arrives when there is a second replica, not
+/// before.
 /// </summary>
 public sealed class OutboxProcessor(
     IServiceScopeFactory scopeFactory,
@@ -34,8 +34,8 @@ public sealed class OutboxProcessor(
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Outbox);
     private static readonly Meter Metrics = new(TelemetrySources.Outbox);
 
-    /// <summary>El retraso de la outbox es la métrica que dice si la consistencia
-    /// eventual sigue siendo "eventual" o ya es "nunca".</summary>
+    /// <summary>Outbox lag is the metric that says whether eventual consistency
+    /// is still "eventual" or has become "never".</summary>
     private static readonly Histogram<double> LagSeconds = Metrics.CreateHistogram<double>(
         "tendero.outbox.lag", unit: "s", description: "Seconds between an event being raised and processed.");
 
@@ -55,8 +55,8 @@ public sealed class OutboxProcessor(
             }
             catch (Exception exception)
             {
-                // Un fallo de infraestructura no puede matar el bucle: se registra
-                // y se reintenta en el siguiente tick.
+                // An infrastructure failure must not kill the loop: it is logged
+                // and retried on the next tick.
                 logger.LogError(exception, "Outbox batch failed; retrying on the next tick");
             }
         }
@@ -92,10 +92,10 @@ public sealed class OutboxProcessor(
             }
             catch (Exception exception)
             {
-                // exception.ToString(), no .Message: "Object reference not set to
-                // an instance of an object" sin tipo ni traza no permite
-                // diagnosticar nada, y esta columna es lo único que queda de un
-                // mensaje que agotó sus reintentos.
+                // exception.ToString(), not .Message: "Object reference not set
+                // to an instance of an object" with no type and no stack trace
+                // diagnoses nothing, and this column is all that is left of a
+                // message that exhausted its retries.
                 message.MarkFailed(exception.ToString());
                 logger.LogWarning(exception,
                     "Outbox message {MessageId} of type {MessageType} failed (attempt {Attempts})",
@@ -103,8 +103,8 @@ public sealed class OutboxProcessor(
             }
         }
 
-        // SaveChanges del propio DbContext: las marcas de procesado son el único
-        // cambio, y no generan eventos nuevos.
+        // The DbContext's own SaveChanges: the processed marks are the only
+        // change, and they raise no new events.
         await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Las reglas de docs/testing.md, ejecutables. Cuando una bloquea, la
-       respuesta es una conversación de diseño (quizá un ADR), nunca relajarla. -->
+  <!-- The rules from docs/testing.md, executable. When one blocks you, the
+       answer is a design conversation (perhaps an ADR), never relaxing it. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Architecture.Tests</RootNamespace>
     <OutputType>Exe</OutputType>
@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Api y Workers exponen ambos un `Program` de nivel superior en el
-         namespace global; el alias evita la ambigüedad sin tocar ninguno. -->
+    <!-- Api and Workers both expose a top-level `Program` in the global
+         namespace; the alias avoids the ambiguity without touching either. -->
     <ProjectReference Include="../../src/Api/ElGuerre.Tendero.Api.csproj" Aliases="TenderoApi" />
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
@@ -25,8 +25,8 @@
     <ProjectReference Include="../../src/ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
     <ProjectReference Include="../../src/Workers/ElGuerre.Tendero.Workers.csproj" />
-    <!-- La herramienta de evaluación entra en las reglas: un tool es justo donde
-         alguien atajaría hasta el cliente de Elastic saltándose los puertos. -->
+    <!-- The evaluation tool is subject to the rules: a tool is exactly where
+         somebody would shortcut to the Elastic client past the ports. -->
     <ProjectReference Include="../../tools/SearchEval/ElGuerre.Tendero.SearchEval.csproj" />
   </ItemGroup>
 

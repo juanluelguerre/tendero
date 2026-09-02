@@ -1,18 +1,18 @@
 /**
- * Contratos de catálogo, **derivados** del documento de OpenAPI.
+ * Catalogue contracts, **derived** from the OpenAPI document.
  *
- * Antes eran un espejo escrito a mano de `ElGuerre.Tendero.Catalog.Features.*`,
- * con una nota admitiendo que podían divergir en silencio hasta que apareciese
- * el documento. Ya existe: `docs/openapi/tendero.json`, y un test de contrato
- * (`tests/Api.Tests`) falla si la API deja de servir exactamente ese documento.
+ * They used to be a hand-written mirror of `ElGuerre.Tendero.Catalog.Features.*`,
+ * under a note admitting they could diverge in silence until the document
+ * existed. It does now: `docs/openapi/tendero.json`, plus a contract test
+ * (`tests/Api.Tests`) that fails if the API stops serving exactly that document.
  *
- * Los alias siguen aquí a propósito. `schema.ts` es generado y su forma
- * (`components['schemas'][...]`) es ruido en cada punto de uso; estos nombres
- * son la superficie estable que consumen las apps. Si un tipo desaparece del
- * documento, la línea que lo aliasa deja de compilar — que es exactamente el
- * aviso que antes no existía.
+ * The aliases stay here on purpose. `schema.ts` is generated and its shape
+ * (`components['schemas'][...]`) is noise at every point of use; these names are
+ * the stable surface the apps consume. If a type disappears from the document,
+ * the line that aliases it stops compiling — which is exactly the warning that
+ * did not exist before.
  *
- * Regenerar: `npm run generate:api-types` desde `frontend/`.
+ * Regenerate with `npm run generate:api-types` from `frontend/`.
  */
 import type { components } from './generated/schema';
 
@@ -25,29 +25,29 @@ export type ImportResult = Schemas['ImportProductsResult'];
 export type DefineVariantsResponse = Schemas['DefineVariantsResponse'];
 
 /**
- * Las etiquetas llegan SIN resolver —el diccionario de culturas entero— y es a
- * proposito: esta pantalla existe para ver si falta una traduccion, y un texto
- * ya resuelto escondería justo el dato por el que se mira.
+ * The labels arrive UNRESOLVED — the whole culture dictionary — and that is
+ * deliberate: this screen exists to see whether a translation is missing, and
+ * text already resolved would hide the very fact people come to look at.
  */
 export type AttributeDefinitionView = Schemas['AttributeDefinitionView'];
 export type AttributeDefinitionList = Schemas['ListAttributeDefinitionsResult'];
 
 /**
- * El 409 de publicar. Era un objeto anónimo en el endpoint, así que no tenía
- * esquema y desde el cliente era invisible: nada decía que publicar pudiera
- * rechazarse por archivado, ni con qué forma.
+ * Publish's 409. It was an anonymous object on the endpoint, so it had no schema
+ * and was invisible from the client: nothing said publishing could be refused
+ * for being archived, nor in what shape.
  */
 export type PublishProductConflict = Schemas['PublishProductConflict'];
 
 /**
- * Estos dos no salen del documento y no es un descuido: viajan como `string`
- * porque el servidor los serializa en camelCase a mano — ver el comentario de
- * `PublishProductResponse` en el slice, donde el enum salía como número y se
- * rompía en cuanto alguien reordenase los miembros.
+ * These two do not come from the document, and that is not an oversight: they
+ * travel as `string` because the server serialises them in camelCase by hand —
+ * see the comment on `PublishProductResponse` in the slice, where the enum came
+ * out as a number and broke the moment anybody reordered the members.
  *
- * Estrecharlos aquí es una decisión del cliente, no del contrato. Se documentan
- * juntos para que se vean como lo que son: una promesa que el documento todavía
- * no puede hacer cumplir.
+ * Narrowing them here is the client's decision, not the contract's. They are
+ * documented together so they read as what they are: a promise the document
+ * cannot enforce yet.
  */
 export type ProductStatus = 'draft' | 'active' | 'archived';
 export type PublishOutcome = 'published' | 'alreadyActive' | 'archived' | 'notFound';

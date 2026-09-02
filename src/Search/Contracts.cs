@@ -5,8 +5,8 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Search.Contracts;
 
 /// <summary>
-/// Puerto de escritura: proyectar productos al motor de búsqueda.
-/// Elasticsearch es un detalle de infraestructura detrás de esta interfaz.
+/// The write port: projecting products into the search engine.
+/// Elasticsearch is an infrastructure detail behind this interface.
 /// </summary>
 public interface IProductIndexer
 {
@@ -15,15 +15,15 @@ public interface IProductIndexer
 }
 
 /// <summary>
-/// Lectura del catálogo desde el lado de búsqueda. Vivía dentro del slice
-/// ProjectProductToIndex mientras fue el único que leía; con ReindexProducts
-/// pasa a ser compartido, y un slice no puede referenciar a otro.
+/// Reading the catalogue from the search side. It lived inside the
+/// ProjectProductToIndex slice while that was its only reader; with
+/// ReindexProducts it became shared, and a slice cannot reference another slice.
 ///
-/// <c>StreamAllAsync</c> devuelve TODOS los productos, no sólo los Active: el
-/// reindexado aplica la misma regla que la proyección (Active se indexa, el
-/// resto se retira), y así converge el índice a la verdad en vez de limitarse a
-/// añadir. Filtrar por Active aquí dejaría documentos rancios de lo que dejó de
-/// estarlo.
+/// <c>StreamAllAsync</c> returns ALL products, not only the Active ones: the
+/// reindex applies the same rule as the projection (Active is indexed, the rest
+/// is removed), and that is what makes the index converge on the truth instead
+/// of merely adding to it. Filtering by Active here would leave stale documents
+/// behind for whatever stopped being Active.
 /// </summary>
 public interface IProductReader
 {
@@ -32,14 +32,14 @@ public interface IProductReader
 }
 
 /// <summary>
-/// Las culturas que el buscador sirve, y el orden en que se recorren. Es
-/// CONTRATO: la herramienta de evaluación necesita saber contra qué índices
-/// puntuar, y el inicializador necesita saber cuáles crear.
+/// The cultures the search serves, and the order they are walked in. This is
+/// CONTRACT: the evaluation tool needs to know which indexes to score against,
+/// and the initialiser needs to know which ones to create.
 ///
-/// Vivía junto al mapa de analizadores dentro del adaptador de Elasticsearch, y
-/// son dos cosas distintas: que el catálogo hable español e inglés es una
-/// decisión de producto; que "es" se analice con el stemmer <c>spanish</c> es un
-/// detalle del motor, y ése se queda dentro del adaptador.
+/// It lived next to the analyser map inside the Elasticsearch adapter, and those
+/// are two different things: that the catalogue speaks Spanish and English is a
+/// product decision; that "es" is analysed with the <c>spanish</c> stemmer is an
+/// engine detail, and that one stays inside the adapter.
 /// </summary>
 public static class SearchCultures
 {
@@ -50,17 +50,17 @@ public static class SearchCultures
 }
 
 /// <summary>
-/// La regla del índice, en un solo sitio: sólo lo Active es buscable, y lo que
-/// deja de estarlo se retira. Estaba escrita dos veces —en la proyección del
-/// outbox y en el reindexado— con un comentario que decía "replica la regla en
-/// vez de inventar otra", que es la forma educada de decir que hay dos.
+/// The index's rule, in one place: only Active is searchable, and whatever stops
+/// being Active is removed. It was written twice — in the outbox projection and
+/// in the reindex — under a comment saying "replays the rule rather than
+/// inventing another", which is the polite way of saying there are two.
 ///
-/// Que sean dos importa: si divergen, el reindexado deja de converger a lo mismo
-/// que produce la proyección, y la diferencia sólo se ve buscando.
+/// That there were two matters: if they diverge, the reindex stops converging on
+/// what the projection produces, and the difference is only visible by searching.
 /// </summary>
 public static class ProductIndexProjection
 {
-    /// <summary>Devuelve true si el producto quedó indexado, false si se retiró.</summary>
+    /// <summary>True when the product ended up indexed, false when it was removed.</summary>
     public static async Task<bool> ApplyAsync(
         IProductIndexer indexer, Product product, CancellationToken ct)
     {
@@ -76,9 +76,9 @@ public static class ProductIndexProjection
 }
 
 /// <summary>
-/// Puerto de lectura léxica (BM25). Cuando llegue la búsqueda híbrida
-/// habrá otro puerto que componga este con el vectorial; este NO cambia:
-/// es el modo degradado si la capa de IA se cae.
+/// The lexical read port (BM25). When hybrid search arrives there will be
+/// another port composing this one with the vector side; this one does NOT
+/// change: it is the degraded mode when the AI layer goes down.
 /// </summary>
 public interface ILexicalProductSearch
 {
@@ -86,14 +86,15 @@ public interface ILexicalProductSearch
 }
 
 /// <summary>
-/// El motor de búsqueda no ha podido responder. Es un tipo propio y no una
-/// InvalidOperationException porque la API tiene que distinguirla: un fallo del
-/// motor es 503 y se reintenta, no un 500 que sugiere un error de programación.
+/// The search engine could not answer. Its own type and not an
+/// InvalidOperationException, because the API has to tell them apart: an engine
+/// failure is a 503 and gets retried, not a 500 that suggests a programming
+/// error.
 ///
-/// <paramref name="diagnostics"/> es el audit trail del cliente de Elastic, que
-/// es largo y contiene rutas y puertos internos: se conserva porque es lo que
-/// hace rápido el diagnóstico en el log, y por eso mismo no puede acabar en el
-/// cuerpo de una respuesta HTTP.
+/// <paramref name="diagnostics"/> is the Elastic client's audit trail, which is
+/// long and contains internal paths and ports: it is kept because it is what
+/// makes diagnosis quick in the log, and for that same reason it must never end
+/// up in an HTTP response body.
 /// </summary>
 public sealed class SearchUnavailableException(string operation, string diagnostics)
     : Exception($"Search backend failed during {operation}. {diagnostics}")
@@ -104,11 +105,11 @@ public sealed class SearchUnavailableException(string operation, string diagnost
 public sealed record ProductSearchQuery(string Text, string Culture, int Page = 1, int PageSize = 20);
 
 /// <summary>
-/// Un resultado es un PRODUCTO, aunque lo que casó fuese una variante concreta
-/// (ADR 0015). Por eso lleva las dos cosas: el producto, que es lo que se
-/// enseña, y la variante que ganó, que es la que el selector debe traer ya
-/// marcada y la que un agente puede meter en el carrito sin una segunda
-/// llamada.
+/// A result is a PRODUCT, even though what matched was one specific variant
+/// (ADR 0015). That is why it carries both: the product, which is what gets
+/// shown, and the variant that won, which is the one the picker should bring up
+/// already selected and the one an agent can add to a cart without a second
+/// call.
 /// </summary>
 public sealed record SearchHit(
     string ProductId,
@@ -133,43 +134,43 @@ public sealed record SearchResultPage(
     double TookMs);
 
 /// <summary>
-/// Documento plano por (VARIANTE, cultura), colapsado a producto al consultar.
+/// A flat document per (VARIANT, culture), collapsed to a product at query time.
 ///
-/// Indexar por variante es lo que hace exactos los filtros: con un documento por
-/// producto, `color=azul AND talla=38` casa un producto que tiene azul en la 40
-/// y negro en la 38, y el cliente llega a una combinación que no existe. El
-/// precio y el stock dejan de ser rangos y vuelven a ser hechos.
+/// Indexing per variant is what makes the filters exact: with one document per
+/// product, `colour=navy AND size=38` matches a product that has navy in a 40
+/// and black in a 38, and the customer arrives at a combination that does not
+/// exist. Price and stock stop being ranges and go back to being facts.
 ///
-/// Colapsar por `ProductId` al consultar es lo que evita el otro extremo: sin
-/// ello un producto con ocho variantes inunda el top diez, el golden set —que se
-/// anota por producto— deja de ser comparable, y el ranking vectorial, que es
-/// por producto porque las variantes comparten nombre y descripción, ya no
-/// fusiona con el léxico.
+/// Collapsing on `ProductId` at query time is what avoids the other extreme:
+/// without it a product with eight variants floods the top ten, the golden set —
+/// which is annotated per product — stops being comparable, and the vector
+/// ranking, which is per product because variants share a name and a
+/// description, no longer fuses with the lexical one.
 ///
-/// El rango de precios del producto viaja DUPLICADO en cada variante. Es
-/// desnormalización deliberada: es constante dentro del grupo y ahorra que la
-/// tarjeta necesite una segunda consulta para decir "24,90 – 29,90 €".
+/// The product's price range travels DUPLICATED on every variant. That is
+/// deliberate denormalisation: it is constant within the group, and it saves the
+/// card a second query to say "24,90 – 29,90 €".
 /// </summary>
 public sealed record ProductSearchDocument
 {
     public required string Id { get; init; }              // VariantId
-    public required string ProductId { get; init; }       // el campo del collapse
+    public required string ProductId { get; init; }       // the collapse field
     public required string Sku { get; init; }
     public required string Culture { get; init; }         // "es" | "en"
     public required string Name { get; init; }
     public string? Description { get; init; }
     public string? Brand { get; init; }
 
-    /// <summary>El código, como keyword: para filtrar y facetar, nunca para
-    /// casar texto. Listarlo entre los campos de texto prometía una coincidencia
-    /// que no podía ocurrir, y por eso salió de ellos.</summary>
+    /// <summary>The code, as a keyword: for filtering and faceting, never for
+    /// matching text. Listing it among the text fields promised a match that
+    /// could never happen, which is why it left them.</summary>
     public string? Category { get; init; }
 
     /// <summary>
-    /// La rama entera en la cultura del índice: "Hogar Cocina Menaje de cocina".
-    /// Esto SÍ es texto y sí se analiza. Es lo que hace que "induction cookware"
-    /// pueda casar, porque hasta ahora en el índice no existía la palabra
-    /// "cookware" — existía un código.
+    /// The whole branch in the index's culture: "Hogar Cocina Menaje de cocina".
+    /// This one IS text and it is analysed. It is what lets "induction cookware"
+    /// match at all, because until now the word "cookware" did not exist in the
+    /// index — a code did.
     /// </summary>
     public string? CategoryPathText { get; init; }
 
@@ -178,35 +179,35 @@ public sealed record ProductSearchDocument
 
     public required string Slug { get; init; }
 
-    /// <summary>Valores de eje como pares "COLOR:NAVY", que es lo que permite
-    /// filtrar por combinación exacta sin prometer una que no existe.</summary>
+    /// <summary>Axis values as "COLOR:NAVY" pairs, which is what allows
+    /// filtering by an exact combination without promising one that does not exist.</summary>
     public string[] AxisValues { get; init; } = [];
 
-    /// <summary>El precio de ESTA variante. Exacto, no un rango.</summary>
+    /// <summary>THIS variant's price. Exact, not a range.</summary>
     public decimal PriceAmount { get; init; }
 
     public decimal PriceFrom { get; init; }
     public decimal PriceTo { get; init; }
     public required string PriceCurrency { get; init; }
-    /// <summary>Clave de la imagen en el almacén, no una URL. La URL la compone
-    /// el borde HTTP, así que meter un CDN delante no toca ni el índice ni el
-    /// dominio (docs/adr/0011-product-images.md).</summary>
+    /// <summary>The image's key in the store, not a URL. The HTTP edge composes
+    /// the URL, so putting a CDN in front touches neither the index nor the
+    /// domain (docs/adr/0011-product-images.md).</summary>
     public string? ImageId { get; init; }
     public required string Status { get; init; }          // solo "active" es buscable
 
     public static string IndexNameFor(string culture) => $"products_{culture}";
 
     /// <summary>
-    /// El texto buscable de los atributos, EN LA CULTURA DEL ÍNDICE.
+    /// The attributes' searchable text, IN THE INDEX'S CULTURE.
     ///
-    /// Antes era <c>$"{clave} {valor}"</c> con el dato crudo, así que el índice
-    /// inglés contenía "color azul marino" y ninguna consulta inglesa podía
-    /// casarlo. Es la causa exacta de que "navy blue shoes" y "womens running
-    /// shoes" puntúen 0.000 en la línea base commiteada.
+    /// It used to be <c>$"{key} {value}"</c> over the raw data, so the English
+    /// index contained "color azul marino" and no English query could match it.
+    /// That is the exact cause of "navy blue shoes" and "womens running shoes"
+    /// scoring 0.000 against the committed baseline.
     ///
-    /// Ahora sale de la definición: su etiqueta en esta cultura, y la etiqueta
-    /// de la opción en esta cultura. Sin definición cae al código crudo, que es
-    /// el comportamiento anterior.
+    /// Now it comes from the definition: its label in this culture, and the
+    /// option's label in this culture. With no definition it falls back to the
+    /// raw code, which is the previous behaviour.
     /// </summary>
     private static string? RenderAttributes(
         Product product, string culture, AttributeDefinitions? definitions)
@@ -217,8 +218,8 @@ public sealed record ProductSearchDocument
             {
                 var definition = definitions?.ByCode(value.Code);
 
-                // Un atributo marcado como no buscable no entra: un código de
-                // fabricante mete ruido y nadie lo teclea.
+                // An attribute marked as not searchable does not go in: a
+                // manufacturer code adds noise and nobody types it.
                 if (definition is { IsSearchable: false })
                     return null;
 
@@ -234,9 +235,9 @@ public sealed record ProductSearchDocument
     }
 
     /// <summary>
-    /// Un documento por variante disponible. Un producto sin variantes no
-    /// debería existir —la importación siempre mina una por defecto— pero si
-    /// llegara, no se indexa: no hay nada que comprar.
+    /// One document per available variant. A product with no variants should not
+    /// exist — importing always mints a default one — but if one turned up it is
+    /// not indexed: there is nothing to buy.
     /// </summary>
     public static IEnumerable<ProductSearchDocument> ForVariants(
         Product product, string culture,
@@ -270,11 +271,11 @@ public sealed record ProductSearchDocument
         PriceFrom = priceFrom,
         PriceTo = priceTo,
         PriceCurrency = variant.Price.Currency,
-        // Portada = la de menor SortOrder, y esa regla vive en el agregado. Aquí
-        // se cogía la primera de la lista mientras el listado del backoffice
-        // ordenaba: el mismo producto podía enseñar dos fotos distintas.
-        // La foto de la variante cuando la tiene —el color la necesita, la talla
-        // no— y si no, la portada del producto.
+        // The cover is the lowest SortOrder, and that rule lives in the
+        // aggregate. Here it used to take the first of the list while the
+        // backoffice listing sorted: the same product could show two different
+        // photos. The variant's own photo when it has one — colour needs one,
+        // size does not — and the product's cover otherwise.
         ImageId = variant.Image?.Value ?? product.PrimaryImage?.Id.Value,
         Status = product.Status.ToString().ToLowerInvariant()
     };

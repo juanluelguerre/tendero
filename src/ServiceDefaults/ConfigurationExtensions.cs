@@ -5,9 +5,10 @@ namespace ElGuerre.Tendero.ServiceDefaults;
 public static class ConfigurationExtensions
 {
     /// <summary>
-    /// Una cadena de conexión que falta es un fallo de arranque, no un null que
-    /// viaja hasta el primer query. El mensaje dice de dónde debería venir,
-    /// porque el caso normal es haber lanzado el servicio fuera del AppHost.
+    /// A missing connection string is a startup failure, not a null that travels
+    /// as far as the first query. The message says where it should have come
+    /// from, because the normal case is having launched the service outside the
+    /// AppHost.
     /// </summary>
     public static string GetRequiredConnectionString(this IConfiguration configuration, string name) =>
         configuration.GetConnectionString(name)

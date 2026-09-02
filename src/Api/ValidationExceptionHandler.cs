@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace ElGuerre.Tendero.Api;
 
 /// <summary>
-/// El paso de validación del dispatcher lanza ValidationException; aquí se
-/// traduce a 400 con problem details. Los slices no escriben códigos HTTP de error.
+/// The dispatcher's validation step throws ValidationException; here it is
+/// translated into a 400 with problem details. Slices do not write HTTP error codes.
 /// </summary>
 internal sealed class ValidationExceptionHandler : IExceptionHandler
 {

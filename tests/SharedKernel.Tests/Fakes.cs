@@ -2,8 +2,8 @@ using FluentValidation;
 
 namespace ElGuerre.Tendero.SharedKernel.Tests;
 
-// Fakes deterministas en vez de mocks (docs/testing.md): lo que se prueba aquí
-// es el cableado del dispatcher, y un fake dice qué pasó sin ceremonia.
+// Deterministic fakes rather than mocks (docs/testing.md): what is under test
+// here is the dispatcher's wiring, and a fake says what happened without ceremony.
 
 internal sealed record Greet(string Name) : ICommand<string>;
 
@@ -26,8 +26,8 @@ internal sealed class CountLettersHandler : IQueryHandler<CountLetters, int>
         Task.FromResult(query.Text.Length);
 }
 
-/// <summary>Comando cuyo handler revienta: sirve para comprobar que la excepción
-/// del dominio llega al llamante tal cual, sin envoltorios de reflexión.</summary>
+/// <summary>A command whose handler blows up: it exists to check that the
+/// domain's exception reaches the caller as-is, with no reflection wrappers.</summary>
 internal sealed record Explode : ICommand<string>;
 
 internal sealed class ExplodeHandler : ICommandHandler<Explode, string>

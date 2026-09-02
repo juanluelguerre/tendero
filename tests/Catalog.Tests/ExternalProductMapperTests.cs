@@ -7,19 +7,20 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
 
 /// <summary>
-/// El mapeo de origen a agregado tiene dos consumidores que no pueden llamarse
-/// entre ellos: el slice de importación y la puerta de calidad de búsqueda.
-/// Mientras estuvo escrito dos veces, lo único que garantizaba que coincidieran
-/// era un comentario. Esto es lo que lo garantiza ahora.
+/// Mapping from source to aggregate has two consumers that cannot call each
+/// other: the import slice and the search quality gate. While it was written
+/// twice, the only thing guaranteeing they matched was a comment. This is what
+/// guarantees it now.
 /// </summary>
 public sealed class ExternalProductMapperTests
 {
     private static readonly TestClock Clock = new();
 
     /// <summary>
-    /// Un origen que no distingue tallas ni colores describe un producto con una
-    /// sola forma de comprarse. Llamarla variante por defecto es mas honesto que
-    /// dejar el carrito con dos caminos, uno con variante y otro sin.
+    /// A source that draws no distinction between sizes or colours is describing
+    /// a product with a single way of being bought. Calling that a default
+    /// variant is more honest than leaving the cart with two paths, one with a
+    /// variant and one without.
     /// </summary>
     [Fact]
     public void An_imported_product_always_has_something_to_buy()
@@ -66,9 +67,9 @@ public sealed class ExternalProductMapperTests
         Assert.Equal("Moka", product.Brand);
         Assert.Equal("COFFEE_MAKER", product.Category);
         Assert.Equal(29.90m, product.Price.Amount);
-        // Sin definiciones, el atributo cae a texto plano: es el comportamiento
-        // anterior, y degradar a lo que ya había es mejor que fallar la
-        // importación porque nadie definió los atributos primero.
+        // With no definitions the attribute falls back to plain text: that is the
+        // previous behaviour, and degrading to what was already there beats
+        // failing the import because nobody defined the attributes first.
         var colour = product.AttributeFor("COLOR");
         Assert.NotNull(colour);
         Assert.Equal(AttributeKind.Text, colour.Kind);
@@ -78,8 +79,8 @@ public sealed class ExternalProductMapperTests
     [Fact]
     public void A_new_product_is_linked_to_its_source_and_left_in_draft()
     {
-        // Importar nunca publica: Draft es la razón de ser de la cola de
-        // revisión, y sólo PublishProduct mueve un producto a Active (ADR 0012).
+        // Importing never publishes: Draft is the review queue's reason to exist,
+        // and only PublishProduct moves a product to Active (ADR 0012).
         var product = AnExternalProduct().ToNewProduct("seed", Clock);
 
         Assert.Equal(ProductStatus.Draft, product.Status);
@@ -89,9 +90,9 @@ public sealed class ExternalProductMapperTests
     [Fact]
     public void Reimporting_updates_the_product_without_unpublishing_it()
     {
-        // El origen manda sobre lo que el origen posee: textos, precio, atributos.
-        // No sobre el estado — que un proveedor cambie una descripción no puede
-        // devolver a la cola de revisión algo que ya estaba publicado.
+        // The source rules over what the source owns: texts, price, attributes.
+        // Not over the status — a supplier changing a description cannot put
+        // something already published back into the review queue.
         var product = AnExternalProduct().ToNewProduct("seed", Clock);
         product.Publish(Clock);
 

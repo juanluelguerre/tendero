@@ -7,20 +7,19 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.Catalog.Tests.Domain;
 
 /// <summary>
-/// Las dos reglas del agregado que se calculaban fuera de él, cada una con su
-/// propia versión: cuál es la foto de portada y cómo se escribe un slug.
+/// The aggregate's two rules that used to be computed outside it, each with its
+/// own version: which photo is the cover, and how a slug is written.
 /// </summary>
 public sealed class ProductTests
 {
     private static readonly TestClock Clock = new();
 
     /// <summary>
-    /// El motivo por el que el reloj es un parámetro y no DateTimeOffset.UtcNow:
-    /// sin esto, cualquier aserción sobre CreatedAt/UpdatedAt sólo puede
-    /// comprobar que el sello "es reciente", que es una forma elegante de no
-    /// comprobar nada. Las reglas con ventana temporal que vienen —validez de
-    /// promociones, caducidad de mandatos, plazo de devolución— dependen de que
-    /// esto sea exacto.
+    /// The reason the clock is a parameter and not DateTimeOffset.UtcNow: without
+    /// this, any assertion about CreatedAt/UpdatedAt can only check that the
+    /// stamp "is recent", which is an elegant way of checking nothing. The
+    /// time-bounded rules that are coming — promotion validity, mandate expiry,
+    /// the returns window — depend on this being exact.
     /// </summary>
     [Fact]
     public void Timestamps_come_from_the_clock_and_not_from_the_wall()
@@ -45,10 +44,10 @@ public sealed class ProductTests
     [Fact]
     public void The_cover_photo_is_the_one_with_the_lowest_sort_order()
     {
-        // La lista guarda el orden de inserción, así que "la primera de la lista"
-        // y "la de menor SortOrder" coinciden hasta que dejan de hacerlo. El
-        // listado del backoffice ordenaba y el documento de búsqueda no, de modo
-        // que el mismo producto podía enseñar dos fotos distintas.
+        // The list keeps insertion order, so "the first of the list" and "the one
+        // with the lowest SortOrder" agree until they do not. The backoffice
+        // listing sorted and the search document did not, so the same product
+        // could show two different photos.
         var product = AProduct();
         product.AddImage(Clock, new ImageId("aaa"));
         product.AddImage(Clock, new ImageId("bbb"));
@@ -72,7 +71,7 @@ public sealed class ProductTests
     }
 
     [Theory]
-    // Partir sólo por espacios dejaba paréntesis y tildes dentro de la URL.
+    // Splitting on spaces alone left brackets and accents inside the URL.
     [InlineData("Cafetera Espresso (12 tazas)", "cafetera-espresso-12-tazas")]
     [InlineData("Zapatillas de running — mujer", "zapatillas-de-running-mujer")]
     [InlineData("Mochila 25L", "mochila-25l")]
@@ -85,9 +84,9 @@ public sealed class ProductTests
     [InlineData("Ánfora Gütiérrez", "anfora-gutierrez")]
     public void Accents_are_folded_rather_than_escaped(string name, string expected)
     {
-        // Se pliegan con una tabla explícita, no con Normalize(FormD): el repo
-        // compila con InvariantGlobalization=true, donde la normalización Unicode
-        // devuelve la cadena intacta sin lanzar. Este test es lo que lo demostró.
+        // Folded with an explicit table, not with Normalize(FormD): the repo
+        // builds with InvariantGlobalization=true, where Unicode normalisation
+        // returns the string intact without throwing. This test is what proved it.
         Assert.Equal(expected, AProduct(name).Slug.In("es"));
     }
 
@@ -109,9 +108,9 @@ public sealed class ProductTests
     [Fact]
     public void Creating_a_product_is_one_event_not_two()
     {
-        // Marca y categoría entran en Create. Cuando llegaban en un UpdateDetails
-        // posterior, dar de alta un producto emitía dos ProductUpserted, y el
-        // worker de indexación escribía dos veces el mismo documento.
+        // Brand and category go into Create. When they arrived in a later
+        // UpdateDetails, creating a product emitted two ProductUpserted, and the
+        // indexing worker wrote the same document twice.
         var product = Product.Create(Clock, 
             LocalizedText.From("es", "Cafetera"),
             new Money(29.90m, "EUR"),

@@ -3,12 +3,12 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Catalog.Domain;
 
 /// <summary>
-/// Lo que un producto concreto dice de un atributo.
+/// What one particular product says about an attribute.
 ///
-/// Sustituye a <c>Dictionary&lt;string,string&gt;</c>, que no distinguía un
-/// número de un texto ni sabía que "azul marino" tiene traducción. Lleva el
-/// <see cref="Kind"/> consigo para que el índice pueda renderizarlo sin volver a
-/// preguntar por la definición campo a campo.
+/// It replaces <c>Dictionary&lt;string,string&gt;</c>, which told a number from
+/// a text apart in no way at all and did not know that "azul marino" has a
+/// translation. It carries its <see cref="Kind"/> along so the index can render
+/// it without asking the definition field by field.
 /// </summary>
 public sealed record AttributeValue(
     string Code,
@@ -36,16 +36,17 @@ public sealed record AttributeValue(
         new(AttributeDefinition.Normalise(code), AttributeKind.Boolean, Flag: flag);
 
     /// <summary>
-    /// El valor tal y como se lee en una cultura. Una opción necesita su
-    /// definición para traducirse; el resto se basta.
-    /// </summary>
-    /// <summary>
-    /// Si aporta algo al texto buscable. Un booleano en false no: indexar
-    /// "inducción" en una sartén que NO es de inducción es peor que no
-    /// indexarla, porque la hace aparecer justo en la búsqueda equivocada.
+    /// Whether it contributes anything to the searchable text. A boolean that is
+    /// false does not: indexing "induction" on a pan that is NOT induction is
+    /// worse than not indexing it, because it makes it turn up in exactly the
+    /// wrong search.
     /// </summary>
     public bool IsWorthIndexing => Kind != AttributeKind.Boolean || Flag == true;
 
+    /// <summary>
+    /// The value as it reads in one culture. An option needs its definition to
+    /// be translated; everything else is self-sufficient.
+    /// </summary>
     public string RenderIn(string culture, AttributeDefinition? definition) => Kind switch
     {
         AttributeKind.Option => definition?.LabelForOption(OptionCode!, culture) ?? OptionCode!,
@@ -53,9 +54,9 @@ public sealed record AttributeValue(
         AttributeKind.Number => definition?.Unit is { Length: > 0 } unit
             ? $"{Number} {unit}"
             : Number?.ToString() ?? string.Empty,
-        // Un booleano no aporta valor buscable: lo que alguien teclea es el
-        // NOMBRE del atributo ("inducción"), no la palabra "sí". Que se emita o
-        // no lo decide IsWorthIndexing, no esto.
+        // A boolean contributes no searchable value: what somebody types is the
+        // attribute's NAME ("induction"), not the word "yes". Whether it is
+        // emitted at all is IsWorthIndexing's call, not this one.
         AttributeKind.Boolean => string.Empty,
         _ => RawText ?? string.Empty
     };

@@ -1,5 +1,5 @@
-/* Puente hacia la unica fuente de verdad. design/tokens.css vive fuera de
-   frontend/ a proposito: lo comparten cuatro superficies (landing, docs,
-   storefront, backoffice), no solo las apps Angular. Este fichero es el unico
-   sitio del workspace que sabe donde esta. */
+/* The bridge to the single source of truth. design/tokens.css lives outside
+   frontend/ on purpose: four surfaces share it (landing, docs, storefront,
+   backoffice), not only the Angular apps. This file is the only place in the
+   workspace that knows where it is. */
 @import '../../../../../design/tokens.css';

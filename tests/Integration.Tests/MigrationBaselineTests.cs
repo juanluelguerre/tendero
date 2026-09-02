@@ -5,17 +5,17 @@ using Xunit;
 namespace ElGuerre.Tendero.Integration.Tests;
 
 /// <summary>
-/// La migración inicial tiene que producir EXACTAMENTE el esquema que produce el
-/// modelo. Es la única forma de saber que la línea base no nació torcida, y el
-/// fallo que evita es silencioso: <c>EnsureCreated</c> no hace nada si el
-/// esquema ya existe, así que una base de datos de desarrollo creada antes de la
-/// migración seguiría funcionando mientras diverge, sin un solo error.
+/// The initial migration has to produce EXACTLY the schema the model produces.
+/// It is the only way to know the baseline was not born crooked, and the failure
+/// it prevents is silent: <c>EnsureCreated</c> does nothing when the schema
+/// already exists, so a development database created before the migration would
+/// keep working while it diverged, without a single error.
 ///
-/// Sigue valiendo cuando haya diez migraciones: si aplicarlas todas deja de
-/// coincidir con el modelo, alguien editó una a mano o generó una contra un
-/// modelo distinto. Es más fuerte que <c>migrations has-pending-model-changes</c>,
-/// que compara el modelo con el snapshot — dos ficheros que se generan juntos y
-/// pueden estar de acuerdo en el mismo error.
+/// It still holds with ten migrations: if applying them all stops matching the
+/// model, somebody hand-edited one or generated one against a different model.
+/// It is stronger than <c>migrations has-pending-model-changes</c>, which
+/// compares the model with the snapshot — two files generated together, which can
+/// agree on the same mistake.
 /// </summary>
 [Collection(PostgresCollection.Name)]
 public sealed class MigrationBaselineTests(PostgresFixture postgres)
@@ -38,8 +38,8 @@ public sealed class MigrationBaselineTests(PostgresFixture postgres)
         var model = await DescribeSchemaAsync(fromModel.ConnectionString, ct);
         var migrated = await DescribeSchemaAsync(fromMigrations.ConnectionString, ct);
 
-        // Diferencia en ambos sentidos: sobra algo o falta algo, y el mensaje
-        // dice cuál para no tener que abrir psql.
+        // The difference both ways: something extra or something missing, and the
+        // message says which, so nobody has to open psql.
         var missing = model.Except(migrated).ToArray();
         var extra = migrated.Except(model).ToArray();
 
@@ -57,11 +57,11 @@ public sealed class MigrationBaselineTests(PostgresFixture postgres)
     }
 
     /// <summary>
-    /// Columnas e índices como conjunto de cadenas comparables. Se consulta el
-    /// catálogo en lugar de invocar pg_dump: no hace falta el binario, y el
-    /// resultado no depende de la versión de las herramientas cliente.
-    /// __EFMigrationsHistory queda fuera a propósito — sólo existe en el lado
-    /// migrado, y su ausencia en el otro no es una diferencia de esquema.
+    /// Columns and indexes as a comparable set of strings. The catalog is queried
+    /// instead of shelling out to pg_dump: no binary is needed, and the result
+    /// does not depend on the client tools' version. __EFMigrationsHistory is
+    /// left out on purpose — it only exists on the migrated side, and its absence
+    /// on the other is not a schema difference.
     /// </summary>
     private static async Task<HashSet<string>> DescribeSchemaAsync(string connectionString, CancellationToken ct)
     {

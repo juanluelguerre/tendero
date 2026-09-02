@@ -8,9 +8,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// Todo lo estructurado que no se consulta relacionalmente vive en jsonb.
-/// Un único sitio con las reglas de serialización evita que cada mapping
-/// invente la suya (y que el JSON de la BD deje de ser diffable).
+/// Everything structured that is not queried relationally lives in jsonb.
+/// A single place holding the serialisation rules keeps each mapping from
+/// inventing its own (and the database's JSON from stopping being diffable).
 /// </summary>
 internal static class Jsonb
 {
@@ -19,19 +19,19 @@ internal static class Jsonb
         WriteIndented = false
     };
 
-    /// <summary>LocalizedText se guarda como el diccionario cultura -> texto, no
-    /// como el objeto: la forma en Postgres es {"es": "...", "en": "..."} y se lee
-    /// a simple vista en psql.</summary>
+    /// <summary>LocalizedText is stored as the culture -> text dictionary and not
+    /// as the object: the shape in Postgres is {"es": "…", "en": "…"} and it reads
+    /// at a glance in psql.</summary>
     public static readonly ValueConverter<LocalizedText, string> LocalizedTextConverter = new(
         text => JsonSerializer.Serialize(text.Values, Options),
         json => new LocalizedText(
             JsonSerializer.Deserialize<Dictionary<string, string>>(json, Options)!));
 
     /// <summary>
-    /// Variante que tolera null. Hace falta para el texto alternativo de las
-    /// imágenes, que vive DENTRO de una columna JSON: ahí EF no cortocircuita el
-    /// null antes de llamar al conversor como sí hace con una propiedad normal,
-    /// y el conversor no nulable revienta con NullReferenceException al leer.
+    /// The null-tolerant variant. It is needed for the images' alternative text,
+    /// which lives INSIDE a JSON column: there EF does not short-circuit the null
+    /// before calling the converter the way it does for an ordinary property, and
+    /// the non-nullable converter blows up with a NullReferenceException on read.
     /// </summary>
     public static readonly ValueConverter<LocalizedText?, string?> NullableLocalizedTextConverter = new(
         text => text == null ? null : JsonSerializer.Serialize(text.Values, Options),
@@ -60,18 +60,18 @@ internal static class Jsonb
         text => new LocalizedText(text.Values));
 
     /// <summary>
-    /// El diccionario de atributos del agregado es OrdinalIgnoreCase; al
-    /// rehidratar hay que devolverle ese comparador o Product.SetAttribute
-    /// dejaría de ser insensible a mayúsculas tras un round-trip.
+    /// The aggregate's attribute dictionary is OrdinalIgnoreCase; on rehydration
+    /// it has to be given that comparer back, or Product.SetAttribute would stop
+    /// being case-insensitive after a round trip.
     /// </summary>
     public static readonly ValueConverter<Dictionary<string, string>, string> AttributesConverter = new(
         attributes => JsonSerializer.Serialize(attributes, Options),
         json => ReadAttributes(json));
 
     /// <summary>
-    /// El orden de los ejes de variante. Es una lista y no un conjunto porque el
-    /// orden es el dato: decide si la etiqueta de una línea de pedido dice
-    /// "azul marino · 38" o "38 · azul marino".
+    /// The order of the variant axes. A list and not a set because the order is
+    /// the data: it decides whether an order line's label reads
+    /// "azul marino · 38" or "38 · azul marino".
     /// </summary>
     public static readonly ValueConverter<List<string>, string> StringListConverter = new(
         values => JsonSerializer.Serialize(values, Options),
@@ -81,9 +81,9 @@ internal static class Jsonb
         JsonSerializer.Deserialize<List<string>>(json, Options) ?? new List<string>();
 
     /// <summary>
-    /// Los valores de atributo de un producto. Se leen SIEMPRE con su producto y
-    /// nunca se consultan sueltos, así que jsonb es lo correcto (ADR 0008) — lo
-    /// que sí se consulta son las DEFINICIONES, y esas van a tabla.
+    /// A product's attribute values. They are ALWAYS read with their product and
+    /// never queried on their own, so jsonb is the right call (ADR 0008) — what
+    /// does get queried are the DEFINITIONS, and those go to a table.
     /// </summary>
     public static readonly ValueConverter<List<AttributeValue>, string> AttributeValuesConverter = new(
         values => JsonSerializer.Serialize(values, Options),
@@ -125,9 +125,9 @@ internal static class Jsonb
         attributes => new Dictionary<string, string>(attributes, StringComparer.OrdinalIgnoreCase));
 
     /// <summary>
-    /// Money dentro de una colección compleja: EF (preview 6) no sabe enlazar un
-    /// tipo complejo anidado a un parámetro del constructor de un record, así que
-    /// el importe viaja como escalar "79.95 EUR" — legible y sin pérdida.
+    /// Money inside a complex collection: EF (preview 6) cannot bind a nested
+    /// complex type to a record constructor parameter, so the amount travels as
+    /// the scalar "79.95 EUR" — readable and lossless.
     /// </summary>
     public static readonly ValueConverter<Money, string> MoneyAsTextConverter = new(
         money => FormatMoney(money),

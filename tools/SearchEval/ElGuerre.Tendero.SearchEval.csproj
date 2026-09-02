@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Herramienta, no capa: se apoya en los puertos de Search y en el conector
-       de catálogo, y no conoce ni Elasticsearch ni EF Core. El test de
-       arquitectura 4 la vigila igual que al resto de la solución. -->
+  <!-- A tool, not a layer: it leans on Search's ports and on the catalogue
+       connector, and knows neither Elasticsearch nor EF Core. Architecture rule
+       4 watches it like the rest of the solution. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>ElGuerre.Tendero.SearchEval</RootNamespace>

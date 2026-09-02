@@ -4,10 +4,10 @@ import { AuthStore } from '@tendero/shared-auth';
 import { Shell } from './layout/shell';
 
 /**
- * Publicar es una operacion de tendero, y la API ya la rechaza sin token. El
- * guardia existe para que la interfaz no ofrezca lo que el servidor va a
- * denegar: sin el, la cola de revision cargaria vacia con un 401 en la consola
- * y sin nada que explique por que.
+ * Publishing is a shopkeeper's operation, and the API already refuses it without
+ * a token. The guard exists so the interface does not offer what the server is
+ * going to deny: without it, the review queue would load empty with a 401 in the
+ * console and nothing to explain why.
  */
 const signedIn = () => {
   const router = inject(Router);

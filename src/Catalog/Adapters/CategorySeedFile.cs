@@ -14,9 +14,9 @@ public sealed class CategorySeedOptions
 }
 
 /// <summary>
-/// El árbol de categorías que trae el repositorio. Mismo criterio que las
-/// definiciones de atributo: son datos de catálogo, se revisan en un diff y se
-/// traducen sin tocar la base de datos.
+/// The category tree the repository ships. Same reasoning as the attribute
+/// definitions: catalogue data, reviewed in a diff and translated without
+/// touching the database.
 /// </summary>
 internal sealed class SeedFileCategoryReader(
     IOptions<CategorySeedOptions> options, TimeProvider clock) : ICategoryReader
@@ -36,9 +36,9 @@ internal sealed class SeedFileCategoryReader(
         var raw = await JsonSerializer.DeserializeAsync<List<SeedCategory>>(
             file, new JsonSerializerOptions(JsonSerializerDefaults.Web), cancellationToken) ?? [];
 
-        // Se construye en el orden del fichero, así que un padre tiene que
-        // aparecer antes que sus hijos. Es una restricción del fichero y no del
-        // modelo, y salta a la vista al leerlo: los hijos van sangrados debajo.
+        // Built in file order, so a parent has to appear before its children.
+        // That is a constraint of the file and not of the model, and it is
+        // obvious on reading it: the children are indented underneath.
         var built = new Dictionary<string, Category>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in raw)
         {

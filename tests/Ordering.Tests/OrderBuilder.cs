@@ -6,8 +6,8 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.Ordering.Tests;
 
 /// <summary>
-/// Builder explícito (docs/testing.md): cada valor por defecto declara que es
-/// irrelevante para la conducta bajo prueba. Nada de datos anónimos.
+/// An explicit builder (docs/testing.md): every default value declares that it
+/// is irrelevant to the behaviour under test. No anonymous data.
 /// </summary>
 internal sealed class OrderBuilder
 {
@@ -45,9 +45,10 @@ internal sealed class OrderBuilder
     public Order Build() => Order.Place(Clock, CustomerId.New(), _idempotencyKey, _lines, _culture);
 
     /// <summary>
-    /// Un pedido en el estado pedido, alcanzado por transiciones legales. No hay
-    /// atajo por reflexión a propósito: si un estado deja de ser alcanzable, este
-    /// método deja de compilar o de pasar, que es justo lo que se quiere saber.
+    /// An order in the requested status, reached through legal transitions. There
+    /// is no reflection shortcut on purpose: if a status stops being reachable,
+    /// this method stops compiling or stops passing, which is exactly what one
+    /// wants to know.
     /// </summary>
     public Order InStatus(OrderStatus status)
     {

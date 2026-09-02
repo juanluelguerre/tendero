@@ -16,8 +16,8 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasConversion(id => id.Value, value => new ProductId(value))
             .ValueGeneratedNever();
 
-        // Nada de cara al usuario en columnas planas (invariante 6): el texto
-        // localizado se guarda como {"es": "...", "en": "..."} y se lee en psql.
+        // Nothing user-facing in flat columns (invariant 6): localized text is
+        // stored as {"es": "…", "en": "…"} and reads back in psql.
         builder.Property(p => p.Name)
             .HasColumnType("jsonb")
             .HasConversion(Jsonb.LocalizedTextConverter, Jsonb.LocalizedTextComparer)
@@ -41,7 +41,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             price.Property(m => m.Currency).HasColumnName("PriceCurrency").HasMaxLength(3);
         });
 
-        // Enum como texto: un SELECT en producción debe poder leerse.
+        // The enum as text: a SELECT in production has to be readable.
         builder.Property(p => p.Status)
             .HasConversion<string>()
             .HasMaxLength(20);
@@ -49,15 +49,16 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.CreatedAt);
         builder.Property(p => p.UpdatedAt);
 
-        // Las imágenes no se consultan por separado: colección compleja en una
-        // columna JSON. EF conoce la forma, así que sigue siendo un modelo, no un blob.
-        // Se mapea el campo, no la propiedad: EF exige IList<T> para una colección
-        // compleja y el agregado expone IReadOnlyList<T>, que no se toca.
+        // Images are not queried separately: a complex collection in a JSON
+        // column. EF knows the shape, so it is still a model and not a blob.
+        // The field is mapped, not the property: EF requires IList<T> for a
+        // complex collection and the aggregate exposes IReadOnlyList<T>, which
+        // stays untouched.
         builder.ComplexCollection<List<ProductImage>, ProductImage>("_images", image =>
         {
             image.Property(i => i.Id).HasConversion(id => id.Value, value => new ImageId(value));
-            // El texto alternativo es LocalizedText: dentro del JSON viaja como
-            // el mismo diccionario cultura -> texto que el resto del catálogo.
+            // The alternative text is LocalizedText: inside the JSON it travels
+            // as the same culture -> text dictionary as the rest of the catalogue.
             image.Property(i => i.Alt)
                 .HasConversion(Jsonb.NullableLocalizedTextConverter, Jsonb.NullableLocalizedTextComparer);
             image.ToJson("images");
@@ -65,11 +66,9 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Ignore(p => p.Images);
 
-        // Los atributos son un diccionario, que no tiene equivalente en tipos
-        // complejos: conversor a jsonb, preservando el comparador OrdinalIgnoreCase.
-        // Los valores de atributo pasaron de Dictionary<string,string> a una
-        // lista tipada. Siguen en jsonb porque se leen siempre con su producto;
-        // lo que se consulta son las DEFINICIONES, y esas van a tabla.
+        // Attribute values went from Dictionary<string,string> to a typed list.
+        // They stay in jsonb because they are always read with their product;
+        // what does get queried are the DEFINITIONS, and those go to a table.
         builder.Property<List<AttributeValue>>("_attributes")
             .HasColumnName("Attributes")
             .HasColumnType("jsonb")
@@ -80,8 +79,8 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Ignore(p => p.Attributes);
         builder.Ignore(p => p.DomainEvents);
 
-        // Las referencias externas SÍ se consultan: son la clave de idempotencia
-        // de la importación, así que van a tabla con índice único (source, externalId).
+        // External references ARE queried: they are the import's idempotency
+        // key, so they go to a table with a unique index on (source, externalId).
         builder.OwnsMany(p => p.ExternalReferences, reference =>
         {
             reference.ToTable("ProductExternalReferences", "catalog");
@@ -94,17 +93,17 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Navigation(p => p.ExternalReferences).AutoInclude();
 
-        // Las variantes van a TABLA y no a una columna JSON como las imágenes,
-        // con el criterio de ADR 0008: se consultan de verdad — por SKU, que es
-        // como inventario, carrito y UCP hablan de ellas.
+        // Variants go to a TABLE and not to a JSON column like the images, by
+        // ADR 0008's criterion: they are genuinely queried — by SKU, which is how
+        // inventory, the cart and UCP talk about them.
         //
-        // Y como ENTIDAD, no como colección propietaria, por una razón concreta:
-        // Money es un record struct, EF no admite structs como tipos
-        // propietarios, y OwnedNavigationBuilder no expone ComplexProperty. La
-        // salida habría sido guardar el precio como texto ("29.90 EUR"), que es
-        // lo que hace OrderLine dentro de su columna JSON. Ahí es consistente;
-        // aquí sería una tabla que existe para consultarse con la columna que
-        // más se consulta convertida en cadena.
+        // And as an ENTITY rather than an owned collection, for a concrete
+        // reason: Money is a record struct, EF does not accept structs as owned
+        // types, and OwnedNavigationBuilder exposes no ComplexProperty. The way
+        // out would have been storing the price as text ("29.90 EUR"), which is
+        // what OrderLine does inside its JSON column. There it is consistent;
+        // here it would be a table that exists to be queried, with the column
+        // that gets queried most turned into a string.
         builder.HasMany(p => p.Variants)
             .WithOne()
             .HasForeignKey("ProductId")
@@ -112,18 +111,19 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Navigation(p => p.Variants).AutoInclude();
 
-        // El orden de los ejes ES un dato (ADR 0015): "azul marino · 38" y no al
-        // revés. Como lista de cadenas cabe en jsonb sin ceremonia.
+        // The order of the axes IS data (ADR 0015): "azul marino · 38" and not
+        // the other way round. As a list of strings it fits in jsonb without
+        // ceremony.
         builder.Property<List<string>>("_variantAxes")
             .HasColumnName("VariantAxes")
             .HasColumnType("jsonb")
             .HasConversion(Jsonb.StringListConverter, Jsonb.StringListComparer)
-            // El default se declara AQUÍ y es un array, no un objeto. EF, al
-            // añadir una columna requerida a una tabla con filas, inventa uno
-            // por su cuenta — y eligió `'{}'`, un objeto JSON vacío, donde va
-            // una lista. Todo producto ya importado habría dejado de
-            // deserializar. Lo cazó el test que compara el esquema de la
-            // migración con el del modelo, que es exactamente para lo que está.
+            // The default is declared HERE and it is an array, not an object. EF,
+            // on adding a required column to a table with rows, invents one of
+            // its own — and it chose `'{}'`, an empty JSON object, where a list
+            // belongs. Every already-imported product would have stopped
+            // deserialising. The test that compares the migration's schema with
+            // the model's caught it, which is exactly what it is there for.
             .HasDefaultValueSql("'[]'::jsonb")
             .IsRequired();
 

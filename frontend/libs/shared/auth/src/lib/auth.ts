@@ -4,9 +4,8 @@ import { API_BASE_URL } from '@tendero/shared-util';
 import { firstValueFrom } from 'rxjs';
 
 /**
- * Quien puede iniciar sesion. Lo sirve el emisor, no lo escribe el cliente: el
- * dia que el emisor sea Keycloak esta lista vendra de un realm y aqui no cambia
- * nada.
+ * Who can sign in. The issuer serves this, the client does not write it: the day
+ * the issuer is Keycloak this list comes from a realm and nothing here changes.
  */
 export interface TenderoIdentity {
   subject: string;
@@ -24,13 +23,13 @@ interface TokenResponse {
 const STORAGE_KEY = 'tendero.token';
 
 /**
- * El token y quien es su dueno.
+ * The token and who owns it.
  *
- * Vive en shared porque es COMPORTAMIENTO —guardar, adjuntar, cerrar sesion— y
- * eso se escribe una vez (ADR 0010). La PANTALLA de login es identidad: el
- * storefront acabara pidiendo email y contrasena a un comprador, y el backoffice
- * elige entre identidades sembradas; compartir esa vista produciria un
- * componente con una matriz de variantes peor que dos componentes.
+ * It lives in shared because it is BEHAVIOUR — store, attach, sign out — and
+ * that gets written once (ADR 0010). The login SCREEN is identity: the
+ * storefront will end up asking a shopper for an email and a password, and the
+ * backoffice picks between seeded identities; sharing that view would produce a
+ * component with a variant matrix worse than two components.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
@@ -43,9 +42,9 @@ export class AuthStore {
   readonly isSignedIn = computed(() => this.token() !== null);
 
   /**
-   * Las identidades sembradas del emisor de desarrollo. Devuelve lista vacia si
-   * no responde: sin emisor no hay login, y una pantalla vacia se explica mejor
-   * que una excepcion.
+   * The development issuer's seeded identities. Returns an empty list when it
+   * does not answer: with no issuer there is no login, and an empty screen
+   * explains itself better than an exception.
    */
   async identities(): Promise<TenderoIdentity[]> {
     try {
@@ -58,9 +57,9 @@ export class AuthStore {
   }
 
   /**
-   * `password` para personas y `client_credentials` para agentes: son los dos
-   * flujos que Keycloak servira despues, asi que usarlos ya evita que el cliente
-   * cambie cuando cambie el emisor.
+   * `password` for people and `client_credentials` for agents: they are the two
+   * flows Keycloak will serve later, so using them now saves the client from
+   * changing when the issuer does.
    */
   async signIn(identity: TenderoIdentity): Promise<void> {
     const body = new URLSearchParams(
@@ -86,8 +85,9 @@ export class AuthStore {
 }
 
 /**
- * Adjunta el token a las llamadas a NUESTRA API y a nada mas. Sin ese filtro, un
- * dia alguien anade una llamada a un tercero y le manda nuestro token de paso.
+ * Attaches the token to calls to OUR API and to nothing else. Without that
+ * filter, one day somebody adds a call to a third party and sends them our token
+ * along with it.
  */
 export const tenderoAuthInterceptor: HttpInterceptorFn = (request, next) => {
   const token = inject(AuthStore).accessToken();
@@ -99,8 +99,9 @@ export const tenderoAuthInterceptor: HttpInterceptorFn = (request, next) => {
 };
 
 /**
- * localStorage puede lanzar (modo privado, cookies bloqueadas) y no arrancar la
- * aplicacion por no poder recordar una sesion seria desproporcionado.
+ * localStorage can throw (private mode, blocked cookies), and failing to start
+ * the application because a session cannot be remembered would be out of all
+ * proportion.
  */
 function readStoredToken(): string | null {
   try {
@@ -115,6 +116,6 @@ function write(token: string | null): void {
     if (token) localStorage.setItem(STORAGE_KEY, token);
     else localStorage.removeItem(STORAGE_KEY);
   } catch {
-    // Sin persistencia la sesion dura lo que la pestana. Es aceptable.
+    // Without persistence the session lasts as long as the tab. That is acceptable.
   }
 }

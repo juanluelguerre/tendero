@@ -4,8 +4,8 @@ using System.Text;
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// El informe se lee en consola y se publica como artefacto de CI, así que sale
-/// en Markdown: pegarlo en un PR tiene que ser legible sin herramientas.
+/// The report is read in a console and published as a CI artefact, so it comes
+/// out as Markdown: pasting it into a PR has to be readable without tools.
 /// </summary>
 public static class EvaluationReport
 {
@@ -33,7 +33,7 @@ public static class EvaluationReport
             report.AppendLine("| query | NDCG@10 | recall@50 | hits |");
             report.AppendLine("|---|---:|---:|---:|");
 
-            // Peores primero: el informe debe empezar por lo que hay que arreglar.
+            // Worst first: the report has to start with what needs fixing.
             foreach (var query in score.Queries.OrderBy(query => query.NdcgAt10 ?? double.MaxValue))
             {
                 report.AppendLine(string.Create(CultureInfo.InvariantCulture,

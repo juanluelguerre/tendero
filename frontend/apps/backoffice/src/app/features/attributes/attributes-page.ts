@@ -4,17 +4,17 @@ import type { AttributeDefinitionView } from '@tendero/shared-api';
 import { CatalogService } from '../../data-access/catalog.service';
 
 /**
- * Las definiciones de atributo, con una columna por idioma.
+ * The attribute definitions, with one column per language.
  *
- * Es de solo lectura, y eso no es un recorte silencioso: hoy las definiciones se
- * sirven del fichero del repositorio, donde se revisan en un diff y se traducen.
- * Editarlas desde aqui necesita persistirlas, y esa tabla se creo y se borro al
- * dia siguiente por no tener quien la leyera. Vuelve cuando editar sea la
- * funcionalidad, no la excusa.
+ * It is read-only, and that is not a silent cut: today the definitions are
+ * served from the repository's file, where they get reviewed in a diff and
+ * translated. Editing them from here needs somewhere to persist them, and that
+ * table was created and dropped the next day for having no reader. It comes back
+ * when editing is the feature, not the excuse.
  *
- * Lo que SI resuelve esta pantalla es la pregunta que valia 0.091 de NDCG: que
- * etiquetas no estan traducidas. Una opcion sin ingles es exactamente lo que
- * hacia que "navy blue shoes" no encontrara nada.
+ * What this screen DOES answer is the question that was worth 0.091 of NDCG:
+ * which labels are untranslated. An option with no English is exactly what made
+ * "navy blue shoes" find nothing.
  */
 @Component({
   selector: 'backoffice-attributes',
@@ -97,9 +97,9 @@ export class AttributesPage {
   }
 
   /**
-   * La etiqueta cruda de una cultura, SIN cadena de fallback. Resolverla aqui
-   * mostraria el espanol en la columna inglesa y la fila parecaria completa,
-   * que es justo el fallo que esta pantalla existe para hacer visible.
+   * One culture's raw label, with NO fallback chain. Resolving it here would
+   * show the Spanish in the English column and the row would look complete,
+   * which is exactly the failure this screen exists to make visible.
    */
   protected label(definition: AttributeDefinitionView, culture: string): string {
     return definition.label[culture] ?? '';

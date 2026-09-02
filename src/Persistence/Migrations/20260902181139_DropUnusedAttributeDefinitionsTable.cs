@@ -10,12 +10,12 @@ public partial class _20260902181139_DropUnusedAttributeDefinitionsTable : Migra
 {
     /// <inheritdoc />
     /// <summary>
-    /// La tabla se creó ayer y nadie la lee: las definiciones se sirven del
-    /// fichero del repositorio, que es donde se revisan en un diff y se
-    /// traducen. Una tabla sin lector es infraestructura especulativa, que es
-    /// justo lo que el artículo 07 argumenta que no hay que guardar — y esta la
-    /// puse yo. Vuelve el día que el backoffice permita editarlas, junto con el
-    /// adaptador que las lea.
+    /// The table was created yesterday and nobody reads it: the definitions are
+    /// served from the repository's file, which is where they get reviewed in a
+    /// diff and translated. A table with no reader is speculative infrastructure,
+    /// which is exactly what article 07 argues against keeping — and this one was
+    /// mine. It comes back the day the backoffice lets them be edited, together
+    /// with the adapter that reads them.
     /// </summary>
     protected override void Up(MigrationBuilder migrationBuilder)
     {

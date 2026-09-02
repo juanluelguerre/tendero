@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Metadata;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// Nombres en snake_case sin añadir un paquete para ello: tablas, columnas e
-/// índices se leen sin comillas en psql, que es donde se depura de verdad.
-/// Dentro de las columnas JSON la convención es camelCase, la misma que usan
-/// los conversores de <see cref="Jsonb"/>, para que todo el JSON de la base se
-/// vea igual venga de donde venga.
+/// snake_case names without adding a package for it: tables, columns and indexes
+/// read without quotes in psql, which is where debugging actually happens.
+/// Inside the JSON columns the convention is camelCase, the same one
+/// <see cref="Jsonb"/>'s converters use, so that all the database's JSON looks
+/// the same wherever it came from.
 /// </summary>
 internal static class SnakeCaseNames
 {
@@ -62,8 +62,8 @@ internal static class SnakeCaseNames
         });
 
     /// <summary>
-    /// Un guion bajo antes de cada mayúscula que empieza palabra. La condición
-    /// del final es lo que evita que "IX_Orders" acabe como "i_x_orders".
+    /// An underscore before every capital that starts a word. The condition at
+    /// the end is what keeps "IX_Orders" from becoming "i_x_orders".
     /// </summary>
     private static string ToSnakeCase(string name)
     {

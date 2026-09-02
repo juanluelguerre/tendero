@@ -6,9 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ElGuerre.Tendero.SharedKernel;
 
 /// <summary>
-/// Dispatcher sobre el contenedor de DI. La única "middleware" es la validación
-/// con FluentValidation: cualquier otra cosa (caché, reintentos, transacciones)
-/// entrará cuando exista un caso real, no antes.
+/// A dispatcher over the DI container. The only "middleware" is validation with
+/// FluentValidation: anything else (caching, retries, transactions) enters when
+/// there is a real case for it, not before.
 /// </summary>
 public sealed class CommandDispatcher(IServiceProvider services) : ICommandDispatcher
 {
@@ -45,9 +45,9 @@ public sealed class QueryDispatcher(IServiceProvider services) : IQueryDispatche
 }
 
 /// <summary>
-/// Entrega un evento de dominio a todos sus handlers. Sin filtrado ni orden
-/// garantizado: si dos proyecciones dependen entre sí, eso es un problema de
-/// diseño del slice, no del dispatcher.
+/// Delivers a domain event to every one of its handlers. No filtering and no
+/// guaranteed order: if two projections depend on each other, that is a design
+/// problem in the slice, not in the dispatcher.
 /// </summary>
 public sealed class DomainEventDispatcher(IServiceProvider services) : IDomainEventDispatcher
 {
@@ -67,17 +67,17 @@ public sealed class DomainEventDispatcher(IServiceProvider services) : IDomainEv
 
 // ---------- Plumbing ----------
 //
-// La reflexión ocurre UNA vez por tipo de petición, sólo para construir el
-// wrapper cerrado. A partir de ahí todo son llamadas virtuales sobre la interfaz
-// genérica: el handler se invoca directamente, nunca vía MethodInfo.Invoke, para
-// que la excepción que lance el dominio llegue al llamante sin envolver.
+// Reflection happens ONCE per request type, and only to build the closed
+// wrapper. From there on everything is virtual calls over the generic interface:
+// the handler is invoked directly, never through MethodInfo.Invoke, so that an
+// exception thrown by the domain reaches the caller unwrapped.
 
 internal abstract class RequestHandlerWrapper<TResult>
 {
     public abstract Task<TResult> HandleAsync(object request, IServiceProvider services, CancellationToken ct);
 
-    /// <summary>Validar, resolver el handler, ejecutarlo. Command y query sólo se
-    /// diferencian en qué interfaz resuelven, así que el resto vive aquí.</summary>
+    /// <summary>Validate, resolve the handler, run it. A command and a query
+    /// differ only in which interface they resolve, so the rest lives here.</summary>
     protected static async Task<TResult> ValidateAndHandleAsync<TRequest, THandler>(
         object request,
         IServiceProvider services,
@@ -101,9 +101,9 @@ internal abstract class RequestHandlerWrapper<TResult>
 internal static class RequestHandlerWrapper
 {
     /// <summary>
-    /// Construye el wrapper cerrado para el tipo concreto de la petición.
-    /// <paramref name="requestInterface"/> es ICommand&lt;&gt; o IQuery&lt;&gt;;
-    /// de ahí se saca TResult sin que el llamante tenga que declararlo.
+    /// Builds the closed wrapper for the request's concrete type.
+    /// <paramref name="requestInterface"/> is ICommand&lt;&gt; or IQuery&lt;&gt;;
+    /// TResult comes out of it, so the caller never has to declare it.
     /// </summary>
     public static object Create(Type requestType, Type requestInterface, Type wrapperDefinition)
     {
@@ -165,8 +165,8 @@ internal static class ValidationStep
 
         foreach (var validator in services.GetServices<IValidator<TRequest>>())
         {
-            // El contexto se crea sólo si hay al menos un validador: la mayoría de
-            // queries internas no tienen ninguno y este paso debe salir barato.
+            // The context is only created when there is at least one validator:
+            // most internal queries have none, and this step has to stay cheap.
             context ??= new ValidationContext<TRequest>(request!);
 
             var result = await validator.ValidateAsync(context, ct);

@@ -1,8 +1,8 @@
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// Parseo a mano: son cuatro opciones y no justifican un paquete
-/// (política de dependencias de CLAUDE.md).
+/// Parsed by hand: there are four options and they do not justify a package
+/// (CLAUDE.md's dependency policy).
 /// </summary>
 public sealed record EvaluationOptions(
     string Suite,

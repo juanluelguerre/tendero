@@ -8,17 +8,17 @@ using Xunit;
 namespace ElGuerre.Tendero.Architecture.Tests;
 
 /// <summary>
-/// Las cinco reglas de docs/testing.md, una por test. Cada una falla con la
-/// lista de tipos culpables: un mensaje que dice "algo está mal" no sirve.
+/// The rules from docs/testing.md, one per test. Each fails with the list of
+/// guilty types: a message saying "something is wrong" is no use.
 /// </summary>
 public sealed class ArchitectureRules
 {
     private const string DomainSuffix = ".Domain";
 
     /// <summary>
-    /// Suelo de la regla 1. Un contexto cuyo .csproj todavía está limpio (hoy,
-    /// Ordering) no debe dar un aprobado vacío: estas son las infraestructuras
-    /// que el dominio no puede ver ni el día que alguien añada el paquete.
+    /// The floor under rule 1. A context whose .csproj is still clean (today,
+    /// Ordering) must not give a vacuous pass: these are the infrastructures the
+    /// domain may not see, not even the day somebody adds the package.
     /// </summary>
     private static readonly string[] InfrastructureNamespaces =
     [
@@ -37,14 +37,14 @@ public sealed class ArchitectureRules
     {
         foreach (var assembly in Solution.Contexts)
         {
-            // Se prohíbe TODO lo que el ensamblado arrastra para sus slices más
-            // los namespaces no-Domain del propio ensamblado. La lista se calcula,
-            // no se escribe: añadir un paquete al contexto lo mete en la regla solo.
+            // EVERYTHING the assembly drags in for its slices is forbidden, plus
+            // the assembly's own non-Domain namespaces. The list is computed, not
+            // written: adding a package to the context puts it in the rule by itself.
             var forbidden = ForbiddenForDomainIn(assembly);
             Assert.NotEmpty(forbidden);
 
-            // El dominio es el corazón: si necesita algo más que el SharedKernel,
-            // o el concepto está mal colocado o hace falta un puerto.
+            // The domain is the heart: if it needs anything beyond the
+            // SharedKernel, either the concept is misplaced or a port is missing.
             var result = Types.InAssembly(assembly)
                 .That().ResideInNamespaceEndingWith(DomainSuffix)
                 .ShouldNot().HaveDependencyOnAny(forbidden)
@@ -67,7 +67,7 @@ public sealed class ArchitectureRules
                 if (others.Length == 0)
                     continue;
 
-                // Compartir baja (SharedKernel) o sale (un puerto). Nunca de lado.
+                // Share downwards (SharedKernel) or outwards (a port). Never sideways.
                 var result = Types.InAssembly(assembly)
                     .That().ResideInNamespace(slice)
                     .ShouldNot().HaveDependencyOnAny(others)
@@ -81,7 +81,7 @@ public sealed class ArchitectureRules
     [Fact]
     public void Connector_adapters_are_internal_so_only_the_port_is_public()
     {
-        // Un handler que pueda nombrar SeedCatalogConnector acabará haciéndolo.
+        // A handler that can name SeedCatalogConnector will end up doing it.
         var result = Types.InAssembly(Solution.Catalog)
             .That().ImplementInterface(typeof(ICatalogSourceConnector))
             .And().AreClasses()
@@ -92,10 +92,11 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
-    /// La misma regla 3, aplicada al otro puerto con adaptador. Estaban public
-    /// sin necesitarlo: se registran desde su propio ensamblado, así que nada
-    /// fuera tenía por qué poder nombrarlos — y mientras se pudiera, alguien
-    /// acabaría inyectando ElasticsearchLexicalSearch en vez del puerto.
+    /// The same rule 3, applied to the other port with an adapter. They were
+    /// public without needing to be: they register from their own assembly, so
+    /// nothing outside had any reason to be able to name them — and while it
+    /// could, somebody would end up injecting ElasticsearchLexicalSearch instead
+    /// of the port.
     /// </summary>
     [Fact]
     public void Search_adapters_are_internal_so_only_the_port_is_public()
@@ -115,8 +116,8 @@ public sealed class ArchitectureRules
     {
         foreach (var assembly in Solution.All)
         {
-            // Elasticsearch es un detalle detrás de IProductIndexer /
-            // ILexicalProductSearch. El día que se sustituya, sólo cambia una carpeta.
+            // Elasticsearch is a detail behind IProductIndexer /
+            // ILexicalProductSearch. The day it is replaced, only a folder changes.
             var result = Types.InAssembly(assembly)
                 .That().DoNotResideInNamespace("ElGuerre.Tendero.Search.Elasticsearch")
                 .ShouldNot().HaveDependencyOn("Elastic.Clients")
@@ -171,9 +172,9 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
-    /// Lo que el dominio de <paramref name="assembly"/> no puede tocar: los
-    /// ensamblados que su .csproj referencia (menos el framework y el
-    /// SharedKernel) y sus propios namespaces fuera de Domain.
+    /// What <paramref name="assembly"/>'s domain may not touch: the assemblies
+    /// its .csproj references (minus the framework and the SharedKernel) and its
+    /// own namespaces outside Domain.
     /// </summary>
     private static string[] ForbiddenForDomainIn(Assembly assembly)
     {
@@ -184,8 +185,9 @@ public sealed class ArchitectureRules
             .OfType<string>()
             .Where(name => !IsFramework(name) && name != typeof(LocalizedText).Assembly.GetName().Name);
 
-        // Ni el propio Domain ni sus namespaces padre (Tendero.Catalog es prefijo
-        // de Tendero.Catalog.Domain: prohibirlo prohibiría el dominio consigo mismo).
+        // Neither Domain itself nor its parent namespaces (Tendero.Catalog is a
+        // prefix of Tendero.Catalog.Domain: forbidding it would forbid the domain
+        // from itself).
         var siblings = assembly.GetTypes()
             .Select(type => type.Namespace)
             .OfType<string>()
@@ -204,8 +206,8 @@ public sealed class ArchitectureRules
         || assemblyName is "netstandard" or "mscorlib";
 
     /// <summary>
-    /// Un slice es la carpeta bajo Features: Tendero.Catalog.Features.ImportProducts.
-    /// Se descubren por reflexión para que un slice nuevo entre en la regla solo.
+    /// A slice is the folder under Features: Tendero.Catalog.Features.ImportProducts.
+    /// They are discovered by reflection so a new slice joins the rule by itself.
     /// </summary>
     private static string[] SliceNamespacesOf(Assembly assembly) =>
         [.. assembly.GetTypes()

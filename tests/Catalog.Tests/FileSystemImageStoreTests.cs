@@ -8,9 +8,9 @@ using Xunit;
 namespace ElGuerre.Tendero.Catalog.Tests.Adapters;
 
 /// <summary>
-/// El almacén direcciona por contenido, y de ahí salen dos propiedades que la
-/// aplicación da por hechas: la clave es estable (el mismo byte-a-byte da la
-/// misma clave siempre) y guardar dos veces no duplica.
+/// The store addresses by content, and two properties the application takes for
+/// granted follow from that: the key is stable (the same bytes always give the
+/// same key) and storing twice does not duplicate.
 /// </summary>
 public sealed class FileSystemImageStoreTests : IDisposable
 {
@@ -53,8 +53,8 @@ public sealed class FileSystemImageStoreTests : IDisposable
         await store.SaveAsync(Bytes("una foto"), "image/png", TestContext.Current.CancellationToken);
         await store.SaveAsync(Bytes("una foto"), "image/png", TestContext.Current.CancellationToken);
 
-        // Es la deduplicación que hace barato un catálogo donde media docena de
-        // productos comparten la misma foto de familia.
+        // This is the deduplication that makes a catalogue cheap where half a
+        // dozen products share the same family photo.
         Assert.Single(Directory.EnumerateFiles(_root, "*.*", SearchOption.AllDirectories));
     }
 
@@ -75,8 +75,8 @@ public sealed class FileSystemImageStoreTests : IDisposable
     [Fact]
     public async Task An_unknown_key_is_absent_not_an_error()
     {
-        // Las claves llegan por la URL y cualquiera puede inventarse una: eso es
-        // un 404, no una excepción.
+        // Keys arrive in the URL and anybody can invent one: that is a 404, not
+        // an exception.
         var stored = await Store().OpenAsync(
             new SharedKernel.ImageId(new string('0', 64)), TestContext.Current.CancellationToken);
 

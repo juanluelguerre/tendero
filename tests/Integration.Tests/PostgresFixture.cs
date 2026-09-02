@@ -7,17 +7,17 @@ using Xunit;
 namespace ElGuerre.Tendero.Integration.Tests;
 
 /// <summary>
-/// Un Postgres real, uno por ejecución, compartido por toda la colección.
+/// A real Postgres, one per run, shared by the whole collection.
 ///
-/// Estos son los primeros tests del repositorio que tocan una base de datos. Lo
-/// que prueban no significa nada contra un proveedor en memoria: los
-/// convertidores jsonb, las colecciones complejas en columnas JSON, el índice
-/// único sobre <c>(source, external_id)</c> que ES la clave de idempotencia de
-/// la importación, y el volcado del outbox dentro de la misma transacción.
+/// These are the repository's first tests that touch a database. What they prove
+/// means nothing against an in-memory provider: the jsonb converters, the complex
+/// collections in JSON columns, the unique index on <c>(source, external_id)</c>
+/// that IS the import's idempotency key, and the outbox drain inside the same
+/// transaction.
 ///
-/// Si no hay Docker, los tests se saltan con un motivo en vez de fallar: un
-/// clon recién hecho sin Docker debe poder correr <c>dotnet test</c> y ver verde
-/// lo que sí puede comprobar.
+/// With no Docker the tests skip with a reason rather than failing: a fresh clone
+/// without Docker has to be able to run <c>dotnet test</c> and see green for what
+/// it can check.
 /// </summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
@@ -25,7 +25,7 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public string ConnectionString { get; private set; } = string.Empty;
 
-    /// <summary>Motivo del salto, o null si el contenedor está en marcha.</summary>
+    /// <summary>The skip reason, or null when the container is running.</summary>
     public string? Unavailable { get; private set; }
 
     public async ValueTask InitializeAsync()
@@ -45,9 +45,9 @@ public sealed class PostgresFixture : IAsyncLifetime
         }
         catch (Exception exception)
         {
-            // Docker responde pero no puede darnos un contenedor (sin imagen y
-            // sin red, cuota, permisos). Sigue siendo un salto, no un fallo del
-            // código bajo prueba.
+            // Docker answers but cannot give us a container (no image and no
+            // network, quota, permissions). It is still a skip, not a failure of
+            // the code under test.
             Unavailable = $"Could not start the Postgres container: {exception.Message}";
         }
     }
@@ -58,7 +58,7 @@ public sealed class PostgresFixture : IAsyncLifetime
             await _container.DisposeAsync();
     }
 
-    /// <summary>Llamar al principio de cada test; salta si no hay contenedor.</summary>
+    /// <summary>Call at the start of every test; skips when there is no container.</summary>
     public void SkipIfUnavailable()
     {
         if (Unavailable is not null)
@@ -66,8 +66,8 @@ public sealed class PostgresFixture : IAsyncLifetime
     }
 
     /// <summary>
-    /// Una base nueva por test. Es más barato que parece —CREATE DATABASE sobre
-    /// un contenedor caliente— y evita que el orden de los tests importe.
+    /// A fresh database per test. Cheaper than it sounds — a CREATE DATABASE on a
+    /// warm container — and it stops the order of the tests from mattering.
     /// </summary>
     public async Task<TenderoDbContextFactory> CreateDatabaseAsync(string name)
     {
@@ -84,8 +84,8 @@ public sealed class PostgresFixture : IAsyncLifetime
     }
 
     /// <summary>
-    /// TestContainers necesita un daemon; preguntarle al socket es más rápido y
-    /// más honesto que atrapar una excepción treinta segundos después.
+    /// Testcontainers needs a daemon; asking the socket is faster and more honest
+    /// than catching an exception thirty seconds later.
     /// </summary>
     private static bool DockerIsListening()
     {

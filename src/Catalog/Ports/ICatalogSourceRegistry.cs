@@ -3,30 +3,29 @@ using ElGuerre.Tendero.Catalog.Connectors;
 namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
-/// Resuelve un conector por el nombre de su origen. Existe para que el slice de
-/// importación no tenga que inyectar el <c>IServiceProvider</c>: pedirle el
-/// contenedor a un handler es un service locator — depende de todo, no declara
-/// nada, y obliga a montar un contenedor entero para probar un bucle.
+/// Resolves a connector by its source name. It exists so the import slice does
+/// not have to inject the <c>IServiceProvider</c>: handing a handler the
+/// container is a service locator — it depends on everything, declares nothing,
+/// and forces you to stand up a whole container to test a loop.
 ///
-/// El origen llega en la petición, así que la resolución no puede ser una
-/// inyección normal; lo que sí puede es estar detrás de un puerto, que es
-/// exactamente lo que hace el resto del sistema con Elasticsearch o con el
-/// almacén de imágenes (ADR 0003).
+/// The source arrives in the request, so resolution cannot be ordinary
+/// injection; what it can be is behind a port, which is exactly what the rest of
+/// the system does with Elasticsearch or with the image store (ADR 0003).
 /// </summary>
 public interface ICatalogSourceRegistry
 {
-    /// <summary>Los orígenes registrados, en orden estable. Es lo que permite
-    /// que un origen desconocido se rechace con un 400 que dice cuáles hay, en
-    /// vez de con un 500 del contenedor de dependencias.</summary>
+    /// <summary>The registered sources, in stable order. It is what lets an
+    /// unknown source be rejected with a 400 that says which ones exist, rather
+    /// than with a 500 from the DI container.</summary>
     IReadOnlyCollection<string> Sources { get; }
 
     ICatalogSourceConnector Get(string source);
 }
 
 /// <summary>
-/// Nadie ha registrado un conector con ese nombre. Es un error del llamante, no
-/// del servidor: la validación del comando lo convierte en 400 antes de llegar
-/// aquí, y esto es la red por debajo para quien invoque el puerto directamente.
+/// Nobody registered a connector under that name. A caller's error, not the
+/// server's: the command's validation turns it into a 400 before it gets here,
+/// and this is the net underneath for whoever calls the port directly.
 /// </summary>
 public sealed class UnknownCatalogSourceException(string source, IEnumerable<string> known)
     : Exception($"Unknown catalog source '{source}'. Registered sources: {string.Join(", ", known)}.")

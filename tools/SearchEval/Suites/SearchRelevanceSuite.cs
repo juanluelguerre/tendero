@@ -8,16 +8,16 @@ using Microsoft.Extensions.Hosting;
 namespace ElGuerre.Tendero.SearchEval.Suites;
 
 /// <summary>
-/// Relevancia léxica: corre las consultas anotadas contra un Elasticsearch real,
-/// por los MISMOS puertos que usa la aplicación, y compara NDCG@10 y recall@50
-/// con los umbrales commiteados.
+/// Lexical relevance: it runs the annotated queries against a real
+/// Elasticsearch, through the SAME ports the application uses, and compares
+/// NDCG@10 and recall@50 with the committed thresholds.
 ///
-/// Dos cosas de aquí se aprendieron con números equivocados y no son
-/// negociables. Se BORRAN los índices antes de nada, porque los ProductId son
-/// GUID v7 nuevos en cada ejecución y los documentos viejos competirían en el
-/// ranking (dos ejecuciones del mismo código dieron 0.674 y 0.360). Y se
-/// REFRESCA explícitamente después de indexar, porque Elasticsearch refresca una
-/// vez por segundo y si no la puntuación depende de una carrera (0.860 y 0.769).
+/// Two things here were learned from wrong numbers and are not negotiable. The
+/// indexes are DROPPED before anything else, because the ProductIds are fresh
+/// GUID v7 on every run and the old documents would compete in the ranking (two
+/// runs of the same code gave 0.674 and 0.360). And a REFRESH is issued
+/// explicitly after indexing, because Elasticsearch refreshes once a second and
+/// otherwise the score depends on a race (0.860 and 0.769).
 /// </summary>
 internal sealed class SearchRelevanceSuite : IEvaluationSuite
 {
@@ -52,7 +52,7 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
 
         using var host = builder.Build();
 
-        // Arranca el hosted service que crea products_es y products_en si no existen.
+        // Starts the hosted service that creates products_es and products_en if they are missing.
         await host.StartAsync(cancellationToken);
 
         var corpus = await new SeedCorpus(host.Services).IndexAsync("seed", cancellationToken);
@@ -94,7 +94,7 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         Console.Error.WriteLine(
             "Either the change hurt relevance, or the golden set needs updating — and that needs justifying in the PR.");
 
-        // Sin --ci el informe se imprime igual pero no rompe la sesión de nadie.
+        // Without --ci the report still prints but breaks nobody's session.
         return options.FailUnderThresholds ? 1 : 0;
     }
 }

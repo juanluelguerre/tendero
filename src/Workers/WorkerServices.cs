@@ -8,23 +8,22 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Workers;
 
 /// <summary>
-/// Todo lo que el worker registra, en un método al que se puede llamar desde un
-/// test.
+/// Everything the worker registers, in a method a test can call.
 ///
-/// Vivía suelto en <c>Program.cs</c>, y eso significaba que **nada comprobaba
-/// nunca que su contenedor se pudiera construir**. Se notó de la peor manera:
-/// el indexador pasó a necesitar las definiciones de atributo, la API las
-/// registraba porque llama a <c>AddCatalog</c>, el worker no, y el proceso
-/// dejó de arrancar. El build estaba verde y los tests también, porque los de
-/// integración montan su propio contenedor.
+/// It sat loose in <c>Program.cs</c>, which meant **nothing ever checked that
+/// its container could be built**. It showed up the worst way: the indexer came
+/// to need the attribute definitions, the API registered them because it calls
+/// <c>AddCatalog</c>, the worker did not, and the process stopped starting. The
+/// build was green and so were the tests, because the integration ones compose
+/// their own container.
 /// </summary>
 public static class WorkerServices
 {
     public static IHostApplicationBuilder AddTenderoWorker(this IHostApplicationBuilder builder)
     {
-        // ValidateOnStart: una configuración imposible mata el arranque con un
-        // mensaje legible, en vez de reventar dentro del BackgroundService donde
-        // nadie mira.
+        // ValidateOnStart: an impossible configuration kills startup with a
+        // readable message, instead of blowing up inside the BackgroundService
+        // where nobody is looking.
         builder.Services.AddOptions<OutboxOptions>()
             .Bind(builder.Configuration.GetSection(OutboxOptions.SectionName))
             .Validate(options => options.PollInterval > TimeSpan.Zero, "Outbox:PollInterval must be positive.")
@@ -32,24 +31,24 @@ public static class WorkerServices
             .Validate(options => options.MaxAttempts > 0, "Outbox:MaxAttempts must be positive.")
             .ValidateOnStart();
 
-        // Sólo hace falta el ensamblado de Search: los handlers de eventos de
-        // dominio que existen hoy son sus proyecciones al índice.
+        // Only Search's assembly is needed: the domain event handlers that exist
+        // today are its projections into the index.
         builder.Services.AddTenderoCqrs(typeof(ProjectProductOnUpserted).Assembly);
 
         builder.Services.AddTenderoPersistence(
             builder.Configuration.GetRequiredConnectionString("tendero-db"));
 
-        // La mitad de LECTURA del catálogo, y nada más: el worker proyecta
-        // productos, no los importa. No tiene conectores ni almacén de imágenes
-        // porque no los necesita — pero sin las definiciones no puede renderizar
-        // "navy blue" en el índice inglés, y sin las categorías no puede escribir
-        // la rama.
+        // The catalogue's READ half, and nothing else: the worker projects
+        // products, it does not import them. It has no connectors and no image
+        // store because it does not need them — but without the definitions it
+        // cannot render "navy blue" into the English index, and without the
+        // categories it cannot write the branch.
         builder.Services.AddCatalogReaders(builder.Configuration);
 
         builder.Services.AddLexicalSearch(
             builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
-        // Un solo sitio crea products_es/products_en, y es este.
+        // One single place creates products_es/products_en, and this is it.
         builder.Services.AddSearchIndexInitializer();
 
         if (builder.Environment.IsDevelopment())

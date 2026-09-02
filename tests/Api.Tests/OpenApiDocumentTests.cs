@@ -6,24 +6,24 @@ using Xunit;
 namespace ElGuerre.Tendero.Api.Tests;
 
 /// <summary>
-/// El documento de OpenAPI commiteado tiene que ser el que la API sirve. No es
-/// una formalidad: de <c>docs/openapi/tendero.json</c> salen los tipos de
-/// <c>@tendero/shared-api</c>, que antes se escribían a mano sin nada que
-/// detectase la deriva, y de él saldrán los esquemas de las capabilities de UCP.
-/// Un documento desincronizado es peor que no tenerlo, porque se le cree.
+/// The committed OpenAPI document has to be the one the API serves. Not a
+/// formality: <c>docs/openapi/tendero.json</c> is where <c>@tendero/shared-api</c>'s
+/// types come from — previously hand-written with nothing to detect the drift —
+/// and where the UCP capability schemas will come from. A document out of sync is
+/// worse than no document, because people believe it.
 ///
-/// La API arranca de verdad, con <see cref="WebApplicationFactory{TEntryPoint}"/>,
-/// y no hace falta ni Postgres ni Elasticsearch: ni el DbContext ni el cliente de
-/// Elastic conectan al construirse, así que dos cadenas falsas bastan. Este es el
-/// primer test del repositorio que levanta la aplicación entera, y cuesta
-/// milisegundos.
+/// The API starts for real, with <see cref="WebApplicationFactory{TEntryPoint}"/>,
+/// and neither Postgres nor Elasticsearch is needed: neither the DbContext nor
+/// the Elastic client connects on construction, so two fake strings are enough.
+/// This is the first test in the repository that boots the whole application, and
+/// it costs milliseconds.
 /// </summary>
 public sealed class OpenApiDocumentTests
 {
     /// <summary>
-    /// Regenerar en vez de fallar: <c>UPDATE_OPENAPI=1 dotnet test</c>. Es el
-    /// flujo de una snapshot — el diff se revisa en el PR, que es justamente
-    /// donde un cambio de contrato tiene que verse.
+    /// Regenerate rather than fail: <c>UPDATE_OPENAPI=1 dotnet test</c>. It is a
+    /// snapshot's workflow — the diff gets reviewed in the PR, which is exactly
+    /// where a contract change has to be visible.
     /// </summary>
     private const string UpdateVariable = "UPDATE_OPENAPI";
 
@@ -49,8 +49,8 @@ public sealed class OpenApiDocumentTests
 
         var onDisk = JsonNode.Parse(await File.ReadAllTextAsync(committed, ct));
 
-        // DeepEquals y no comparación de cadenas: lo que importa es el documento,
-        // no su sangrado ni el orden en que el serializador escribió las claves.
+        // DeepEquals and not a string comparison: what matters is the document,
+        // not its indentation or the order the serialiser wrote the keys in.
         Assert.True(
             JsonNode.DeepEquals(onDisk, served),
             $"""
@@ -65,10 +65,10 @@ public sealed class OpenApiDocumentTests
     }
 
     /// <summary>
-    /// Toda ruta servida aparece en el documento. Cubre el fallo que
-    /// <c>DeepEquals</c> no puede ver: un endpoint nuevo que nadie regeneró se
-    /// caza arriba, pero uno que el generador se salta en silencio pasaría
-    /// inadvertido en los dos lados a la vez.
+    /// Every served route appears in the document. It covers the failure
+    /// <c>DeepEquals</c> cannot see: a new endpoint nobody regenerated is caught
+    /// above, but one the generator silently skips would go unnoticed on both
+    /// sides at once.
     /// </summary>
     [Fact]
     public async Task Every_documented_path_is_under_api()
@@ -95,9 +95,9 @@ public sealed class OpenApiDocumentTests
         document?.ToJsonString(Formatting) + Environment.NewLine;
 
     /// <summary>
-    /// Sube desde el directorio del test hasta encontrar la raíz del repositorio.
-    /// Buscar por marcador y no por una ristra de <c>..</c> mantiene el test
-    /// correcto si el proyecto cambia de sitio o el TFM del bin cambia.
+    /// Walks up from the test's directory until it finds the repository root.
+    /// Searching for a marker rather than a string of <c>..</c> keeps the test
+    /// correct if the project moves or the bin's TFM changes.
     /// </summary>
     private static string CommittedDocumentPath()
     {

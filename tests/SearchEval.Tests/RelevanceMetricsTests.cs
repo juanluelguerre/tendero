@@ -3,9 +3,9 @@ using Xunit;
 namespace ElGuerre.Tendero.SearchEval.Tests;
 
 /// <summary>
-/// Los valores esperados están calculados a mano, no capturados de la propia
-/// implementación: una métrica que se compara consigo misma no prueba nada, y
-/// esta es la que decide si un PR entra o no.
+/// The expected values are worked out by hand, not captured from the
+/// implementation itself: a metric compared against itself proves nothing, and
+/// this is the one that decides whether a PR goes in.
 /// </summary>
 public sealed class RelevanceMetricsTests
 {
@@ -29,8 +29,8 @@ public sealed class RelevanceMetricsTests
     [Fact]
     public void The_ideal_order_is_the_same_documents_sorted_by_relevance()
     {
-        // Mismos documentos, orden distinto: recall no cambia, NDCG sí. Esa es
-        // toda la razón de medir las dos cosas.
+        // Same documents, different order: recall does not change, NDCG does.
+        // That is the whole reason for measuring both.
         var scrambled = RelevanceMetrics.NdcgAt(10, ["d", "noise", "a", "b", "c"], Judgments);
 
         // DCG = 1/1 + 0/1.585 + 7/2 + 7/2.322 + 3/2.585 = 1 + 3.5 + 3.0146 + 1.1605 = 8.6751
@@ -42,7 +42,7 @@ public sealed class RelevanceMetricsTests
     [Fact]
     public void Relevance_grows_faster_than_linearly()
     {
-        // Un resultado perfecto (3) arriba vale más que dos tangenciales (1).
+        // One excellent result (3) at the top is worth more than two tangential ones (1).
         var oneExcellent = RelevanceMetrics.NdcgAt(10, ["a"], Judgments)!.Value;
         var twoWeak = RelevanceMetrics.NdcgAt(10, ["d"], new Dictionary<string, int> { ["d"] = 1 })!.Value;
 
@@ -72,7 +72,7 @@ public sealed class RelevanceMetricsTests
     [Fact]
     public void Recall_counts_what_was_found_regardless_of_where()
     {
-        // Cuatro relevantes (a, b, c, d); "noise" tiene relevancia 0 y no cuenta.
+        // Four relevant (a, b, c, d); "noise" has relevance 0 and does not count.
         Assert.Equal(0.5, RelevanceMetrics.RecallAt(50, ["b", "noise", "c"], Judgments)!.Value);
     }
 
@@ -81,7 +81,7 @@ public sealed class RelevanceMetricsTests
     {
         var onlyNoise = new Dictionary<string, int> { ["noise"] = 0 };
 
-        // null y no 0: castigar al motor por una anotación incompleta falsearía la media.
+        // null and not 0: punishing the engine for an incomplete annotation would skew the mean.
         Assert.Null(RelevanceMetrics.NdcgAt(10, ["noise"], onlyNoise));
         Assert.Null(RelevanceMetrics.RecallAt(50, ["noise"], onlyNoise));
     }

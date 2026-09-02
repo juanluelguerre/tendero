@@ -6,11 +6,11 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.Ordering.Tests;
 
 /// <summary>
-/// La tabla AllowedTransitions es la única fuente de verdad del ciclo de vida
-/// del pedido, así que aquí se recorre ENTERA: desde cada estado, sólo los
-/// destinos permitidos funcionan y todos los demás fallan. La matriz esperada se
-/// escribe a mano a propósito — es una segunda declaración independiente de la
-/// verdad, y cambiar la tabla obliga a cambiar también esta.
+/// The AllowedTransitions table is the single source of truth for an order's
+/// lifecycle, so it is walked WHOLE here: from every state, only the permitted
+/// targets work and every other one fails. The expected matrix is written by hand
+/// on purpose — it is a second, independent declaration of the truth, and
+/// changing the table forces this one to change too.
 /// </summary>
 public sealed class OrderTransitionTests
 {
@@ -27,9 +27,9 @@ public sealed class OrderTransitionTests
         [OrderStatus.Cancelled] = []
     };
 
-    // Pending no aparece como destino: la tabla del dominio permite
-    // PaymentFailed -> Pending (reintentar el cobro), pero ningún método público
-    // lo provoca todavía. Entrará con el slice de checkout.
+    // Pending does not appear as a target: the domain's table allows
+    // PaymentFailed -> Pending (retrying the charge), but no public method causes
+    // it yet. It arrives with the checkout slice.
     private static readonly OrderStatus[] ReachableTargets =
     [
         OrderStatus.PaymentAuthorized,

@@ -1,8 +1,9 @@
 /**
- * El dev-server reenvia /api al backend. La URL la inyecta Aspire como
- * `services__api__http__0` cuando se arranca con `dotnet run --project
- * src/AppHost`; el valor de reserva solo sirve si alguien levanta el frontend
- * suelto. Es el UNICO sitio del repo donde aparece un localhost del backend.
+ * The dev server forwards /api to the backend. Aspire injects the URL as
+ * `services__api__http__0` when started with `dotnet run --project
+ * src/AppHost`; the fallback value only matters if somebody brings the frontend
+ * up on its own. It is the ONLY place in the repo where a backend localhost
+ * appears.
  */
 const api =
   process.env['services__api__http__0'] ??

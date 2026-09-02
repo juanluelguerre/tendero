@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Capacidad, no bounded context: proyecta Catalog a los índices, por eso
-       es el único proyecto (junto a la persistencia) que referencia Catalog.
-       Ver docs/adr/0007-search-reads-catalog-domain.md. -->
+  <!-- A capability, not a bounded context: it projects Catalog into the indexes,
+       which is why it is the only project (alongside persistence) that references
+       Catalog. See docs/adr/0007-search-reads-catalog-domain.md. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Search</RootNamespace>
   </PropertyGroup>
@@ -22,8 +22,8 @@
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
-  <!-- Los ficheros de Search usan IQuery/IDomainEventHandler sin `using`:
-       se resuelven por global using en lugar de tocar los ficheros existentes. -->
+  <!-- Search's files use IQuery/IDomainEventHandler without a `using`: they
+       resolve through a global using rather than touching the existing files. -->
   <ItemGroup>
     <Using Include="ElGuerre.Tendero.SharedKernel" />
   </ItemGroup>

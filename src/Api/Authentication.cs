@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace ElGuerre.Tendero.Api;
 
-/// <summary>Los tres roles del laboratorio, en un sitio.</summary>
+/// <summary>The laboratory's three roles, in one place.</summary>
 public static class TenderoRoles
 {
     public const string Shopper = "shopper";
@@ -16,10 +16,10 @@ public static class TenderoRoles
 public static class AuthenticationExtensions
 {
     /// <summary>
-    /// La mitad CLIENTE de la identidad, y es la que nunca es falsa. Valida
-    /// firma, emisor, audiencia y caducidad contra el JWKS que publique quien
-    /// sea el emisor — el de desarrollo hoy, Keycloak después. Cambiar de uno a
-    /// otro es cambiar `Authentication:Authority`, no este código.
+    /// Identity's CLIENT half, and the half that is never fake. It validates the
+    /// signature, the issuer, the audience and the expiry against whatever JWKS
+    /// the issuer publishes — the development one today, Keycloak later. Going
+    /// from one to the other is changing `Authentication:Authority`, not this code.
     /// </summary>
     public static IServiceCollection AddTenderoAuthentication(
         this IServiceCollection services, IConfiguration configuration)
@@ -35,8 +35,8 @@ public static class AuthenticationExtensions
                 options.Authority = authority;
                 options.Audience = configuration["Authentication:Audience"] ?? "tendero-api";
 
-                // El emisor de desarrollo habla HTTP en local. Es la ÚNICA
-                // concesión, y está atada al entorno, no a una constante.
+                // The development issuer speaks HTTP locally. It is the ONLY
+                // concession, and it is tied to the environment, not to a constant.
                 options.RequireHttpsMetadata =
                     !string.Equals(configuration["Authentication:AllowHttpMetadata"], "true",
                         StringComparison.OrdinalIgnoreCase);
@@ -49,8 +49,8 @@ public static class AuthenticationExtensions
                     ValidateIssuerSigningKey = true,
                     RoleClaimType = ClaimTypes.Role,
                     NameClaimType = "name",
-                    // Sin esto, un token caducado sigue valiendo cinco minutos y
-                    // el test que lo comprueba pasa por accidente.
+                    // Without this an expired token is still good for five
+                    // minutes, and the test that checks it passes by accident.
                     ClockSkew = TimeSpan.Zero
                 };
             });
@@ -71,10 +71,10 @@ public static class AuthenticationExtensions
 }
 
 /// <summary>
-/// Traduce el <see cref="ClaimsPrincipal"/> de la petición al principal del
-/// dominio. Es la única clase que sabe que existen los claims: un handler
-/// pregunta por <see cref="CommercePrincipal"/> y funciona igual sobre HTTP,
-/// sobre MCP o dentro del worker.
+/// Translates the request's <see cref="ClaimsPrincipal"/> into the domain's
+/// principal. It is the only class that knows claims exist: a handler asks for
+/// <see cref="CommercePrincipal"/> and works the same over HTTP, over MCP or
+/// inside the worker.
 /// </summary>
 internal sealed class HttpPrincipalAccessor(IHttpContextAccessor accessor) : IPrincipalAccessor
 {
@@ -90,7 +90,7 @@ internal sealed class HttpPrincipalAccessor(IHttpContextAccessor accessor) : IPr
             var agent = user.FindFirstValue("agent_id");
 
             return new CommercePrincipal(
-                Customer: null, // Accounts todavía no existe: llega en la fase 7.
+                Customer: null, // Accounts does not exist yet: it arrives in phase 7.
                 Agent: agent is null ? null : new AgentId(agent),
                 Subject: subject,
                 Roles: [.. user.FindAll(ClaimTypes.Role).Select(claim => claim.Value)]);

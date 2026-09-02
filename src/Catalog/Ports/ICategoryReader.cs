@@ -3,9 +3,9 @@ using ElGuerre.Tendero.Catalog.Domain;
 namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
-/// El árbol de categorías, entero. Lo necesitan la proyección al índice (para
-/// renderizar la rama en cada cultura) y el backoffice; con dos consumidores y
-/// uno más a la vista, es un puerto y no una consulta suelta.
+/// The whole category tree. The index projection needs it (to render the branch
+/// in each culture) and so does the backoffice; with two consumers and a third
+/// in sight, it is a port and not a loose query.
 /// </summary>
 public interface ICategoryReader
 {

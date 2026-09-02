@@ -7,14 +7,14 @@ namespace ElGuerre.Tendero.DevIssuer;
 public static class DevIssuerServiceCollectionExtensions
 {
     /// <summary>
-    /// Registra el emisor de desarrollo. **Se niega a arrancar fuera de
-    /// Development**, y eso no es celo: un emisor que firma tokens para tres
-    /// identidades sin contraseña es un test fixture con superficie HTTP, y la
-    /// forma en que un fixture acaba en producción es siempre la misma — nadie
-    /// puso el guardia.
+    /// Registers the development issuer. **It refuses to start outside
+    /// Development**, and that is not zeal: an issuer that signs tokens for three
+    /// identities with no password is a test fixture with an HTTP surface, and
+    /// the way a fixture ends up in production is always the same — nobody posted
+    /// the guard.
     ///
-    /// El día que crezca un registro de usuarios o un cambio de contraseña, es
-    /// que había que haber traído Keycloak. Esa es su condición de retirada.
+    /// The day it grows a user registry or a password change, that means Keycloak
+    /// should have arrived. That is its retirement condition.
     /// </summary>
     public static IServiceCollection AddDevIssuer(
         this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)

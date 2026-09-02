@@ -3,27 +3,27 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Catalog.Connectors;
 
 /// <summary>
-/// Puerto de entrada de catálogo. Cada origen (seed, shopify, medusa, prestashop...)
-/// implementa este contrato y se registra como keyed service con su nombre de Source.
-/// El slice ImportProducts solo conoce esta interfaz, nunca un origen concreto.
+/// The catalogue's inbound port. Each source (seed, shopify, medusa, prestashop…)
+/// implements this contract and registers as a keyed service under its Source name.
+/// The ImportProducts slice knows only this interface, never a concrete source.
 /// </summary>
 public interface ICatalogSourceConnector
 {
-    /// <summary>Identificador estable en minúsculas: "seed", "shopify", "medusa"...</summary>
+    /// <summary>A stable lowercase identifier: "seed", "shopify", "medusa"…</summary>
     string Source { get; }
 
     /// <summary>
-    /// Stream de productos del origen. IAsyncEnumerable a propósito:
-    /// un catálogo de 150k productos no debe cargarse entero en memoria.
+    /// A stream of the source's products. IAsyncEnumerable on purpose: a
+    /// catalogue of 150k products must not be loaded whole into memory.
     /// </summary>
     IAsyncEnumerable<ExternalProduct> StreamProductsAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
-/// DTO del contrato, multilenguaje desde el origen: los textos llegan como
-/// diccionarios cultura -> valor ("es", "en"). Si un origen solo tiene un idioma
-/// (p. ej. una tienda Shopify solo en inglés), entrega esa única clave y el
-/// slice de enriquecimiento con IA completará las traducciones que falten.
+/// The contract's DTO, multilingual from the source: texts arrive as culture ->
+/// value dictionaries ("es", "en"). When a source has only one language (an
+/// English-only Shopify store, say) it delivers that single key, and the AI
+/// enrichment slice fills in the translations that are missing.
 /// </summary>
 public sealed record ExternalProduct(
     string ExternalId,
@@ -45,14 +45,14 @@ public sealed record ExternalProduct(
 }
 
 /// <summary>
-/// Una imagen tal y como la ofrece el origen. <see cref="Location"/> es un Uri a
-/// propósito: cubre <c>https</c> (Shopify sirve desde su CDN) y <c>file</c> (el
-/// conector seed lee del disco, y el escaneo de PDFs de la fase 4 escribirá a
-/// temporal). Un solo tipo para los dos casos, sin jerarquías.
+/// An image as the source offers it. <see cref="Location"/> is a Uri on purpose:
+/// it covers <c>https</c> (Shopify serves from its CDN) and <c>file</c> (the seed
+/// connector reads from disk, and phase 4's PDF scanning will write to a temp
+/// file). One type for both cases, with no hierarchy.
 ///
-/// La importación NO se queda con esta referencia: descarga el contenido y lo
-/// guarda en el almacén propio. El origen puede borrar la suya cuando quiera
-/// (ver docs/adr/0011-product-images.md).
+/// Importing does NOT keep this reference: it downloads the content and stores
+/// it in our own store. The source may delete its copy whenever it likes (see
+/// docs/adr/0011-product-images.md).
 /// </summary>
 public sealed record ExternalImage(
     Uri Location,

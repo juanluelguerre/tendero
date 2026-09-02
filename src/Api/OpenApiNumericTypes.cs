@@ -4,23 +4,23 @@ using Microsoft.OpenApi;
 namespace ElGuerre.Tendero.Api;
 
 /// <summary>
-/// Estrecha los tipos numéricos del documento a números.
+/// Narrows the document's numeric types down to numbers.
 ///
-/// El generador de ASP.NET Core emite <c>"type": ["number", "string"]</c> para
-/// <c>decimal</c>, <c>double</c> e <c>int</c>, con un <c>pattern</c> al lado.
-/// Describe lo que el deserializador ACEPTA — System.Text.Json puede leer
-/// <c>"79.95"</c> además de <c>79.95</c> — y aplicado a una respuesta es
-/// sencillamente falso: la API nunca serializa un precio como cadena.
+/// The ASP.NET Core generator emits <c>"type": ["number", "string"]</c> for
+/// <c>decimal</c>, <c>double</c> and <c>int</c>, with a <c>pattern</c> alongside.
+/// It describes what the deserialiser ACCEPTS — System.Text.Json can read
+/// <c>"79.95"</c> as well as <c>79.95</c> — and applied to a response it is
+/// simply false: the API never serialises a price as a string.
 ///
-/// No es cosmético. Sin esto los tipos generados salen como
-/// <c>string | number</c> y el error aparece donde no toca: `formatPrice` deja
-/// de compilar en el frontend por una imprecisión del documento, y la salida
-/// tentadora es relajar el cliente para que trague ambos, que es exactamente
-/// como un contrato deja de significar algo.
+/// It is not cosmetic. Without it the generated types come out as
+/// <c>string | number</c> and the error surfaces in the wrong place: `formatPrice`
+/// stops compiling in the frontend because of an imprecision in the document, and
+/// the tempting way out is to loosen the client until it swallows both — which is
+/// exactly how a contract stops meaning anything.
 ///
-/// La unión se conserva donde sí es cierta: los parámetros de entrada llegan de
-/// la query string y ahí todo es texto, así que sólo se tocan los esquemas de
-/// componentes, no los de parámetros.
+/// The union is kept where it is true: input parameters arrive from the query
+/// string and everything there is text, so only the component schemas are
+/// touched, never the parameter ones.
 /// </summary>
 internal sealed class NumbersAreNumbersTransformer : IOpenApiSchemaTransformer
 {
@@ -32,14 +32,14 @@ internal sealed class NumbersAreNumbersTransformer : IOpenApiSchemaTransformer
         if (schema.Type is not { } type)
             return Task.CompletedTask;
 
-        // Sólo cuando la unión es "número o cadena": un string puro se queda como está.
+        // Only when the union is "number or string": a pure string stays as it is.
         if ((type & JsonSchemaType.String) == 0 || (type & Numeric) == 0)
             return Task.CompletedTask;
 
         schema.Type = type & ~JsonSchemaType.String;
 
-        // El pattern existía para validar la variante en cadena. Sin ella, describe
-        // una restricción sobre algo que ya no puede llegar.
+        // The pattern existed to validate the string variant. Without it, it
+        // describes a constraint on something that can no longer arrive.
         schema.Pattern = null;
 
         return Task.CompletedTask;

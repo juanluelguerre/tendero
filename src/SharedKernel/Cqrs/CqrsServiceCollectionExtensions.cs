@@ -16,19 +16,19 @@ public static class CqrsServiceCollectionExtensions
     ];
 
     /// <summary>
-    /// Registra dispatchers y descubre handlers y validadores en los ensamblados
-    /// dados. Un slice nuevo no toca este método: basta con que su ensamblado
-    /// ya esté en la lista de la composition root.
+    /// Registers the dispatchers and discovers handlers and validators in the
+    /// given assemblies. A new slice does not touch this method: it is enough
+    /// that its assembly is already on the composition root's list.
     /// </summary>
     public static IServiceCollection AddTenderoCqrs(
         this IServiceCollection services, params Assembly[] assemblies)
     {
-        // El reloj se registra aquí y no en cada contexto porque el tiempo es
-        // una dependencia de todos: los agregados lo reciben para sellar, y las
-        // reglas con ventana temporal que vienen — validez de promociones,
-        // caducidad de mandatos, expiración de reservas, plazo de devolución —
-        // no son verificables con DateTimeOffset.UtcNow incrustado. TimeProvider
-        // está en la BCL, así que no es una dependencia nueva.
+        // The clock is registered here rather than in each context because time
+        // is everybody's dependency: aggregates take it to stamp themselves, and
+        // the time-bounded rules that are coming — promotion validity, mandate
+        // expiry, reservation expiry, the returns window — are not verifiable
+        // with DateTimeOffset.UtcNow baked in. TimeProvider is in the BCL, so it
+        // is not a new dependency.
         services.TryAddSingleton(TimeProvider.System);
 
         services.TryAddScoped<ICommandDispatcher, CommandDispatcher>();
@@ -43,9 +43,9 @@ public static class CqrsServiceCollectionExtensions
 
     private static void RegisterHandlers(IServiceCollection services, Assembly assembly)
     {
-        // GetTypes, no GetExportedTypes: un handler internal es legítimo (de hecho
-        // preferible: sólo el dispatcher lo invoca) y con GetExportedTypes se
-        // quedaría sin registrar en silencio, para fallar en runtime.
+        // GetTypes, not GetExportedTypes: an internal handler is legitimate (and
+        // in fact preferable, since only the dispatcher invokes it), and with
+        // GetExportedTypes it would go unregistered in silence, to fail at runtime.
         foreach (var type in assembly.GetTypes())
         {
             if (type is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } is false)
@@ -59,8 +59,8 @@ public static class CqrsServiceCollectionExtensions
                 if (!ScannedInterfaces.Contains(contract.GetGenericTypeDefinition()))
                     continue;
 
-                // TryAddEnumerable: reejecutar el escaneo (tests, host recargado)
-                // no duplica registros, y varios handlers por evento conviven.
+                // TryAddEnumerable: re-running the scan (tests, a reloaded host)
+                // does not duplicate registrations, and several handlers per event coexist.
                 services.TryAddEnumerable(ServiceDescriptor.Scoped(contract, type));
             }
         }

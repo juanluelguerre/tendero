@@ -16,35 +16,35 @@ public sealed record DevTokenResponse(string AccessToken, string TokenType, int 
 public sealed record DevIdentityView(string Subject, string Name, string Role, bool IsAgent);
 
 /// <summary>
-/// Los tres endpoints que hacen de esto un emisor OIDC de verdad y no un
-/// atajo: discovery, JWKS y token. Los dos primeros son lo que permite que la
-/// API use <c>AddJwtBearer</c> con validación real de firma — la mitad cliente
-/// nunca es falsa, sólo lo es quién firma.
+/// The three endpoints that make this a real OIDC issuer rather than a shortcut:
+/// discovery, JWKS and token. The first two are what let the API use
+/// <c>AddJwtBearer</c> with real signature validation — the client half is never
+/// fake, only who signs is.
 ///
-/// Todo cuelga de <c>/dev-issuer</c> y se registra sólo en Development.
+/// Everything hangs off <c>/dev-issuer</c> and is registered only in Development.
 /// </summary>
 public sealed class DevIssuerModule : ICarterModule
 {
     /// <summary>
-    /// La ruta base es una constante y no una opción: Carter prohíbe que un
-    /// módulo tenga dependencias en el constructor (analizador CARTER1), y las
-    /// rutas se declaran al registrar, antes de que haya contenedor del que
-    /// sacar la configuración. Un emisor de desarrollo no necesita que su ruta
-    /// sea configurable; lo que sí lo es —identidades, audiencia, caducidad—
-    /// se resuelve por petición.
+    /// The base path is a constant and not an option: Carter forbids a module
+    /// from having constructor dependencies (the CARTER1 analyzer), and routes
+    /// are declared at registration, before there is a container to pull
+    /// configuration from. A development issuer does not need its path to be
+    /// configurable; what does — identities, audience, lifetime — is resolved
+    /// per request.
     /// </summary>
     public const string BasePath = "/dev-issuer";
 
-    // ExcludeFromDescription en todos: el documento commiteado es el contrato de
-    // la API, y un emisor que sólo existe en Development no forma parte de él.
-    // Si entrase, el documento diferiría entre entornos y el test de contrato
-    // pasaría a medir el entorno en vez del contrato.
+    // ExcludeFromDescription on all of them: the committed document is the API's
+    // contract, and an issuer that only exists in Development is not part of it.
+    // If it went in, the document would differ between environments and the
+    // contract test would start measuring the environment instead of the contract.
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         const string path = BasePath;
 
-        // Discovery. Un cliente OIDC lo busca exactamente aquí, y de él saca el
-        // jwks_uri con el que verificará las firmas.
+        // Discovery. An OIDC client looks exactly here, and takes the jwks_uri
+        // from it to verify signatures with.
         app.MapGet($"{path}/.well-known/openid-configuration",
             (HttpContext http) =>
             {
@@ -72,8 +72,8 @@ public sealed class DevIssuerModule : ICarterModule
             .WithTags("DevIssuer")
             .WithName("DevIssuerKeys");
 
-        // Quién se puede pedir. Existe para que el login del backoffice sea un
-        // selector en vez de un formulario que pide una contraseña que no hay.
+        // Who can be asked for. It exists so the backoffice login is a picker
+        // rather than a form asking for a password that does not exist.
         app.MapGet($"{path}/identities",
             (IOptions<DevIssuerOptions> options) => TypedResults.Ok(options.Value.Identities
                 .Select(i => new DevIdentityView(i.Subject, i.Name, i.Role, i.IsAgent))
@@ -83,16 +83,17 @@ public sealed class DevIssuerModule : ICarterModule
             .WithTags("DevIssuer")
             .WithName("DevIssuerIdentities");
 
-        // `password` para personas, `client_credentials` para agentes: son los
-        // dos flujos que Keycloak servirá después, y usarlos ya evita que el
-        // cliente tenga que cambiar cuando cambie el emisor.
+        // `password` for people, `client_credentials` for agents: they are the
+        // two flows Keycloak will serve later, and using them now saves the
+        // client from changing when the issuer does.
         app.MapPost($"{path}/connect/token",
             async Task<Results<Ok<DevTokenResponse>, BadRequest<string>>> (
                 HttpContext http, IOptions<DevIssuerOptions> options, DevSigningKey key) =>
             {
-                // El formulario se lee a mano en vez de con [FromForm] sobre un
-                // tipo complejo: ese binding devolvía 400 sin decir por qué, y
-                // aquí el contrato es OAuth, que es application/x-www-form-urlencoded.
+                // The form is read by hand instead of with [FromForm] over a
+                // complex type: that binding returned 400 without saying why, and
+                // the contract here is OAuth, which is
+                // application/x-www-form-urlencoded.
                 if (!http.Request.HasFormContentType)
                     return TypedResults.BadRequest("Expected application/x-www-form-urlencoded.");
 
@@ -135,8 +136,8 @@ public sealed class DevIssuerModule : ICarterModule
             [ClaimTypes.Role] = identity.Role
         };
 
-        // Un agente lleva su propio identificador ADEMÁS del sujeto: es un
-        // principal distinto, no una persona con otro rol (ADR 0022, pendiente).
+        // An agent carries its own identifier AS WELL AS the subject: it is a
+        // different principal, not a person with another role (ADR 0022, pending).
         if (identity.IsAgent)
             claims["agent_id"] = identity.Subject;
 
@@ -156,9 +157,9 @@ public sealed class DevIssuerModule : ICarterModule
     }
 
     /// <summary>
-    /// El emisor se compone de la petición en vez de configurarse: el puerto
-    /// cambia entre Aspire, un `dotnet run` suelto y WebApplicationFactory, y un
-    /// issuer fijo haría fallar la validación en cuanto no coincidiese.
+    /// The issuer is composed from the request rather than configured: the port
+    /// changes between Aspire, a bare `dotnet run` and WebApplicationFactory, and
+    /// a fixed issuer would fail validation the moment it did not match.
     /// </summary>
     private static string Issuer(HttpContext http, string path) =>
         $"{http.Request.Scheme}://{http.Request.Host}{path}";

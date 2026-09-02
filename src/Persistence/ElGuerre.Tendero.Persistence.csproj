@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Adaptador de salida: la única pieza que conoce EF Core y Postgres.
-       Los tests de arquitectura comprueban que ni Domain ni los slices
-       referencian Microsoft.EntityFrameworkCore. -->
+  <!-- The outbound adapter: the only piece that knows EF Core and Postgres.
+       The architecture tests check that neither Domain nor the slices reference
+       Microsoft.EntityFrameworkCore. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Persistence</RootNamespace>
   </PropertyGroup>
@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Implementa los puertos declarados por los slices: IProductRepository e
-         IUnitOfWork (Catalog/ImportProducts) e IProductReader (Search). -->
+    <!-- Implements the ports the slices declare: IProductRepository and
+         IUnitOfWork (Catalog/ImportProducts) and IProductReader (Search). -->
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <!-- Pricing declares IPricedItemReader and deliberately cannot implement it:

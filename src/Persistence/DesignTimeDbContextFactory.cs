@@ -4,16 +4,17 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// Cómo construye <c>dotnet ef</c> el contexto sin arrancar la aplicación.
+/// How <c>dotnet ef</c> builds the context without starting the application.
 ///
-/// La alternativa habitual — <c>--startup-project src/Api</c> — no sirve aquí:
-/// la API exige dos cadenas de conexión al arrancar y las inyecta el AppHost,
-/// así que las herramientas de diseño fallarían con un error de configuración
-/// que no tiene nada que ver con el esquema.
+/// The usual alternative — <c>--startup-project src/Api</c> — does not work
+/// here: the API demands two connection strings at startup and the AppHost
+/// injects them, so the design-time tools would fail with a configuration error
+/// that has nothing to do with the schema.
 ///
-/// La cadena de abajo NUNCA se conecta. Generar y comparar migraciones sólo
-/// necesita el proveedor para saber traducir el modelo a SQL de PostgreSQL;
-/// para aplicarlas de verdad está <c>MigrateAsync</c>, con la cadena real.
+/// The string below NEVER connects. Generating and comparing migrations only
+/// needs the provider in order to know how to translate the model into
+/// PostgreSQL SQL; applying them for real is <c>MigrateAsync</c>'s job, with the
+/// real string.
 /// </summary>
 internal sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<TenderoDbContext>
 {

@@ -11,27 +11,27 @@ namespace ElGuerre.Tendero.Catalog;
 public static class CatalogServiceCollectionExtensions
 {
     /// <summary>
-    /// Registro keyed de los conectores de catálogo (ADR 0003). Un origen nuevo
-    /// es una línea más aquí y ni un `if` en ImportProductsHandler.
+    /// Keyed registration of the catalogue connectors (ADR 0003). A new source is
+    /// one more line here and not one `if` in ImportProductsHandler.
     /// </summary>
     public static IServiceCollection AddCatalog(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<SeedConnectorOptions>(configuration.GetSection(SeedConnectorOptions.SectionName));
         services.AddKeyedScoped<ICatalogSourceConnector, SeedCatalogConnector>(SeedCatalogConnector.Key);
 
-        // El registro es lo único que habla con el contenedor: los slices reciben
-        // el puerto, no el IServiceProvider.
-        // El reloj también aquí y no sólo en AddTenderoCqrs: el catálogo sella
-        // productos, y la puerta de calidad monta AddCatalog sin el dispatcher.
-        // TryAdd, así que registrarlo dos veces no es un problema.
+        // Registration is the only thing that talks to the container: slices
+        // receive the port, not the IServiceProvider.
+        // The clock is here too and not only in AddTenderoCqrs: the catalogue
+        // stamps products, and the quality gate composes AddCatalog without the
+        // dispatcher. TryAdd, so registering it twice is not a problem.
         services.TryAddSingleton(TimeProvider.System);
 
         services.AddScoped<ICatalogSourceRegistry, KeyedCatalogSourceRegistry>();
 
         services.AddCatalogReaders(configuration);
 
-        // Almacén de imágenes: un puerto, y hoy un solo adaptador. El de S3
-        // entra cuando el sistema de ficheros deje de bastar, sin tocar nada más.
+        // The image store: a port, and today a single adapter. The S3 one enters
+        // when the file system stops being enough, without touching anything else.
         services.Configure<FileSystemImageStoreOptions>(
             configuration.GetSection(FileSystemImageStoreOptions.SectionName));
         services.AddSingleton<IImageStore, FileSystemImageStore>();
@@ -41,26 +41,26 @@ public static class CatalogServiceCollectionExtensions
     }
 
     /// <summary>
-    /// La mitad de LECTURA del catálogo: qué significan los atributos y cómo se
-    /// llaman las categorías en cada idioma.
+    /// The catalogue's READ half: what the attributes mean and what the
+    /// categories are called in each language.
     ///
-    /// Está separada porque no sólo la necesita quien importa productos.
-    /// **Cualquiera que proyecte un producto la necesita**, y el worker de
-    /// indexación proyecta sin importar nada: no tiene conectores, ni almacén de
-    /// imágenes, ni razón para tenerlos — pero sin esto no puede renderizar
-    /// "navy blue" en el índice inglés.
+    /// It is separate because it is not only needed by whoever imports products.
+    /// **Anybody who projects a product needs it**, and the indexing worker
+    /// projects without importing anything: it has no connectors, no image store
+    /// and no reason to have them — but without this it cannot render "navy
+    /// blue" into the English index.
     ///
-    /// Que existieran juntas es lo que dejó al worker sin arrancar: la API
-    /// llamaba a AddCatalog y funcionaba, el worker no y reventaba al construir
-    /// el contenedor.
+    /// Their being one method is what left the worker unable to start: the API
+    /// called AddCatalog and worked, the worker did not and blew up building its
+    /// container.
     /// </summary>
     public static IServiceCollection AddCatalogReaders(
         this IServiceCollection services, IConfiguration configuration)
     {
         services.TryAddSingleton(TimeProvider.System);
 
-        // Singleton: cambian con muy poca frecuencia y la proyección al índice
-        // las pide una vez por producto y por cultura.
+        // Singleton: they change very rarely and the index projection asks for
+        // them once per product per culture.
         services.Configure<AttributeSeedOptions>(
             configuration.GetSection(AttributeSeedOptions.SectionName));
         services.TryAddSingleton<IAttributeDefinitionReader, SeedFileAttributeDefinitionReader>();

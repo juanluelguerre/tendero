@@ -9,18 +9,17 @@ using Microsoft.Extensions.Options;
 namespace ElGuerre.Tendero.Api.Tests;
 
 /// <summary>
-/// La API entera, en proceso, sin Postgres ni Elasticsearch: ni el DbContext ni
-/// el cliente de Elastic conectan al construirse, así que dos cadenas falsas
-/// bastan para levantarla y preguntarle cosas que no requieren datos — su
-/// documento de OpenAPI, sus políticas, su emisor de desarrollo.
+/// The whole API, in process, without Postgres or Elasticsearch: neither the
+/// DbContext nor the Elastic client connects on construction, so two fake strings
+/// are enough to bring it up and ask it things that need no data — its OpenAPI
+/// document, its policies, its development issuer.
 /// </summary>
 public sealed class TenderoApiFactory : WebApplicationFactory<Program>
 {
     /// <summary>
-    /// El servidor de test no escucha en ningún puerto, así que el emisor que
-    /// firma los tokens es <c>http://localhost/dev-issuer</c>, sin puerto. La
-    /// autoridad tiene que decir exactamente eso o <c>ValidateIssuer</c> rechaza
-    /// tokens perfectamente válidos.
+    /// The test server listens on no port, so the issuer signing the tokens is
+    /// <c>http://localhost/dev-issuer</c>, with no port. The authority has to say
+    /// exactly that or <c>ValidateIssuer</c> rejects perfectly valid tokens.
     /// </summary>
     private const string TestAuthority = "http://localhost/dev-issuer";
 
@@ -43,16 +42,16 @@ public sealed class TenderoApiFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureTestServices(services =>
         {
-            // JwtBearer descarga el discovery y el JWKS por HTTP. Aquí no hay
-            // HTTP: hay un servidor en memoria. Se le da su canal interno para
-            // que la validación siga siendo LA DE VERDAD — firma, emisor,
-            // audiencia y caducidad — en vez de sustituirla por un doble, que
-            // es la trampa habitual y deja el test sin nada que comprobar.
+            // JwtBearer downloads discovery and the JWKS over HTTP. There is no
+            // HTTP here: there is an in-memory server. It is handed its internal
+            // channel so that validation stays THE REAL ONE — signature, issuer,
+            // audience and expiry — instead of being replaced by a double, which
+            // is the usual trap and leaves the test with nothing to check.
             //
-            // Configure y NO PostConfigure: el propio JwtBearer crea su
-            // ConfigurationManager en su post-configure, así que uno posterior
-            // llega tarde y el handler se ignora en silencio. El síntoma era un
-            // 401 diciendo que el emisor no valía, con el emisor correcto.
+            // Configure and NOT PostConfigure: JwtBearer creates its own
+            // ConfigurationManager in its post-configure, so a later one arrives
+            // too late and the handler is silently ignored. The symptom was a 401
+            // saying the issuer was invalid, with the correct issuer.
             services.Configure<JwtBearerOptions>(
                 JwtBearerDefaults.AuthenticationScheme,
                 options => options.BackchannelHttpHandler = new LazyTestServerHandler(this));
@@ -61,11 +60,11 @@ public sealed class TenderoApiFactory : WebApplicationFactory<Program>
 
 
     /// <summary>
-    /// `factory.Server` construye el host, y pedirlo MIENTRAS se está
-    /// configurando ese mismo host es reentrante: la descarga del discovery se
-    /// quedaba colgada cuatro segundos y JwtBearer acababa sin metadatos, con lo
-    /// que rechazaba un token perfectamente válido diciendo que el emisor no
-    /// valía. Se resuelve en el primer envío, cuando el host ya existe.
+    /// `factory.Server` builds the host, and asking for it WHILE that same host
+    /// is being configured is re-entrant: the discovery download hung for four
+    /// seconds and JwtBearer ended up with no metadata, so it rejected a
+    /// perfectly valid token saying the issuer was invalid. It is resolved on the
+    /// first send, when the host already exists.
     /// </summary>
     private sealed class LazyTestServerHandler(TenderoApiFactory factory) : DelegatingHandler
     {
