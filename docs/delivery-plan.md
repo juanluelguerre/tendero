@@ -14,8 +14,8 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 2 — **complete** (10/10)
-- **Next task:** `P3-1`, `Money` grows division and a rounding policy — pricing
+- **Current phase:** 3 — pricing and promotions; `P3-1` done, 10 left
+- **Next task:** `P3-2`, the `src/Pricing` context with pure `IPriceResolver` and `IPromotionEngine`
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
@@ -238,9 +238,9 @@ telling me"* — the flagship of the floor. One table, four numbers, one cause.
 
 ## Phase 3 · Pricing and promotions
 
-`no empezada` · priority **high** · size **L**
+`en curso` · priority **high** · size **L**
 
-- [ ] `P3-1` `Money` grows division, percentage and a rounding + residual-allocation policy — **S**
+- [x] `P3-1` `Money` grows subtraction, division, percentage, comparison, a named rounding policy and largest-remainder allocation — **S**
 - [ ] `P3-2` `src/Pricing` context; pure `IPriceResolver` and `IPromotionEngine` — **M**
 - [ ] `P3-3` `PriceList` + entries; two lists (`retail`, `vip`); segment arrives as an input value — **M**
 - [ ] `P3-4` Four effects: `PercentOffLine`, `AmountOffOrder`, `BuyXGetY`, `FreeShipping` — **M**
