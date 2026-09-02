@@ -14,7 +14,7 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 3 — **complete** (11/11)
+- **Current phase:** 3 — **complete** (11/11). Since closing it: every code comment migrated to English, the AppHost seed-file wiring fixed, and a design pass over both frontends.
 - **Next task:** `P4-1`, the `src/Inventory` context — two warehouses and `StockItem(Sku, WarehouseId)`
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
