@@ -5,6 +5,7 @@
     "tagline": "comercio para personas y agentes"
   },
   "nav": {
+    "language": "Idioma",
     "skipToContent": "Saltar al contenido"
   },
   "product": {
@@ -24,6 +25,12 @@
     "results": "{{total}} resultados para «{{query}}»",
     "searching": "Buscando…",
     "submit": "Buscar",
+    "suggestions": [
+      "zapatillas running",
+      "cafetera 12 tazas",
+      "mochila",
+      "cocina"
+    ],
     "tooShort": "Con dos letras al menos — con una encuentro casi todo.",
     "took": "{{ms}} ms",
     "tryLabel": "Prueba"

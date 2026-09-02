@@ -1,6 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { CultureStore } from '@tendero/shared-i18n';
 import type { ProductSummary } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import { CatalogService } from '../../data-access/catalog.service';
@@ -142,7 +143,7 @@ type QueueState =
 })
 export class ReviewQueuePage {
   private readonly catalog = inject(CatalogService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly culture = inject(CultureStore);
 
   protected readonly state = signal<QueueState>({ status: 'loading' });
   protected readonly publishing = signal<ReadonlySet<string>>(new Set());
@@ -154,7 +155,15 @@ export class ReviewQueuePage {
   });
 
   constructor() {
-    this.load();
+    // Product names come from the server resolved into the requested culture, so
+    // the queue is reloaded when the language changes. Without it the chrome
+    // switches to English and the rows stay Spanish — and "missing cultures",
+    // the one fact this screen exists for, would be computed against the wrong
+    // one.
+    effect(() => {
+      this.culture.active();
+      untracked(() => this.load());
+    });
   }
 
   protected publish(item: ProductSummary): void {
@@ -189,13 +198,13 @@ export class ReviewQueuePage {
   }
 
   protected price(item: ProductSummary): string {
-    return formatPrice(item.priceAmount, item.priceCurrency, this.transloco.getActiveLang());
+    return formatPrice(item.priceAmount, item.priceCurrency, this.culture.active());
   }
 
   private load(): void {
     this.state.set({ status: 'loading' });
 
-    this.catalog.list('draft', this.transloco.getActiveLang()).subscribe({
+    this.catalog.list('draft', this.culture.active()).subscribe({
       next: (page) => this.state.set({ status: 'ready', items: page.items, total: page.total }),
       error: () => this.state.set({ status: 'failed' }),
     });

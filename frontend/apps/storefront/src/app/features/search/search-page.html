@@ -32,7 +32,7 @@
            gate actually measures rather than one that happens to look good. -->
       <ul class="suggestions">
         <li class="suggestions__label eyebrow">{{ t('search.tryLabel') }}</li>
-        @for (suggestion of suggestions; track suggestion) {
+        @for (suggestion of suggestions(); track suggestion) {
           <li>
             <button type="button" class="chip" (click)="box.value = suggestion; submit(suggestion)">
               {{ suggestion }}

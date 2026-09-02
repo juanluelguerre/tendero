@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { Culture, CultureStore } from '@tendero/shared-i18n';
 
 /**
  * The storefront shell. It is NOT shared with the backoffice: one is roomy and
@@ -39,7 +40,26 @@ import { TranslocoDirective } from '@jsverse/transloco';
               <span class="brand__tagline">{{ t('brand.tagline') }}</span>
             </span>
           </a>
-          <span class="brand__area eyebrow">{{ t('brand.area') }}</span>
+          <div class="header__end">
+            <!-- The switcher is a pair of buttons and not a <select>: with two
+                 options a dropdown hides half the answer behind a click, and
+                 the current language should be readable without opening
+                 anything. -->
+            <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
+              @for (option of cultures; track option) {
+                <button
+                  type="button"
+                  class="lang"
+                  [class.lang--active]="option === culture()"
+                  [attr.aria-pressed]="option === culture()"
+                  (click)="use(option)"
+                >
+                  {{ option }}
+                </button>
+              }
+            </div>
+            <span class="brand__area eyebrow">{{ t('brand.area') }}</span>
+          </div>
         </div>
         <!-- The signature, and the only decoration in the system. It marks where
              the chrome ends and the shop begins. -->
@@ -111,6 +131,29 @@ import { TranslocoDirective } from '@jsverse/transloco';
     }
     .brand__tagline { font-size: var(--text-2xs); color: var(--text-muted); }
 
+    .header__end { display: flex; align-items: center; gap: var(--space-4); }
+
+    .langs {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+    .lang {
+      padding: var(--space-1) var(--space-3);
+      border: 0;
+      background: none;
+      color: var(--text-muted);
+      font: inherit;
+      font-size: var(--text-2xs);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+      cursor: pointer;
+    }
+    .lang:hover { color: var(--text); }
+    .lang--active { background: var(--accent); color: var(--stone-0); }
+
     .main { flex: 1; padding-block: var(--space-6) var(--space-8); }
 
     .footer { border-block-start: 1px solid var(--border); }
@@ -124,4 +167,13 @@ import { TranslocoDirective } from '@jsverse/transloco';
     }
   `,
 })
-export class Shell {}
+export class Shell {
+  private readonly cultureStore = inject(CultureStore);
+
+  protected readonly cultures = this.cultureStore.available;
+  protected readonly culture = this.cultureStore.active;
+
+  protected use(culture: Culture): void {
+    this.cultureStore.use(culture);
+  }
+}

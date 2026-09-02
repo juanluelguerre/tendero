@@ -17,11 +17,12 @@
   },
   "nav": {
     "agents": "Actividad de agentes",
-    "orders": "Pedidos",
-    "reviewQueue": "Cola de revisión",
-    "search": "Evaluación de búsqueda",
     "attributes": "Atributos",
-    "promotions": "Promociones"
+    "language": "Idioma",
+    "orders": "Pedidos",
+    "promotions": "Promociones",
+    "reviewQueue": "Cola de revisión",
+    "search": "Evaluación de búsqueda"
   },
   "promotions": {
     "title": "Promociones",

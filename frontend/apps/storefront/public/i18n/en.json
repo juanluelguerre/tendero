@@ -5,6 +5,7 @@
     "tagline": "commerce for humans and agents"
   },
   "nav": {
+    "language": "Language",
     "skipToContent": "Skip to content"
   },
   "product": {
@@ -24,6 +25,12 @@
     "results": "{{total}} results for “{{query}}”",
     "searching": "Searching…",
     "submit": "Search",
+    "suggestions": [
+      "running shoes",
+      "coffee maker",
+      "backpack",
+      "kitchen"
+    ],
     "tooShort": "Two letters at least — one matches almost everything.",
     "took": "{{ms}} ms",
     "tryLabel": "Try"

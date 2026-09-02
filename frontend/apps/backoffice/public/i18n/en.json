@@ -17,11 +17,12 @@
   },
   "nav": {
     "agents": "Agent activity",
-    "orders": "Orders",
-    "reviewQueue": "Review queue",
-    "search": "Search evaluation",
     "attributes": "Attributes",
-    "promotions": "Promotions"
+    "language": "Language",
+    "orders": "Orders",
+    "promotions": "Promotions",
+    "reviewQueue": "Review queue",
+    "search": "Search evaluation"
   },
   "promotions": {
     "title": "Promotions",

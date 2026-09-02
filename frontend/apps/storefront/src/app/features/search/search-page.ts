@@ -1,5 +1,8 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, signal, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { map } from 'rxjs';
+import { CultureStore } from '@tendero/shared-i18n';
 import type { SearchHit } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import { ProductSearchService } from '../../data-access/product-search.service';
@@ -27,7 +30,28 @@ type SearchState =
 })
 export class SearchPage {
   private readonly search = inject(ProductSearchService);
+  private readonly culture = inject(CultureStore);
   private readonly transloco = inject(TranslocoService);
+
+  /**
+   * The last query that was actually sent, so switching language can re-run it.
+   *
+   * Without this, changing to English retranslates the chrome and leaves the
+   * Spanish products underneath it — labels and results disagreeing on the same
+   * page, which is worse than not offering the switch at all. The names, the
+   * attribute text and the promotion reasons all come from the server in the
+   * requested culture; only the server can answer again.
+   */
+  private readonly lastQuery = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const culture = this.culture.active();
+      const query = untracked(() => this.lastQuery());
+
+      if (query) this.run(query, culture);
+    });
+  }
 
   protected readonly state = signal<SearchState>({ status: 'idle' });
 
@@ -45,8 +69,24 @@ export class SearchPage {
    * The first thing a visitor clicks is then a query the NDCG gate actually
    * measures — if one of these ever stops returning something, the gate said so
    * before the shop did.
+   *
+   * They live in the translation files and not here because a suggestion IS a
+   * query: offering "zapatillas running" to somebody reading an English page
+   * would send a Spanish query to the English index, which is precisely the
+   * mismatch phase 2 spent a whole phase removing.
    */
-  protected readonly suggestions = ['zapatillas running', 'cafetera 12 tazas', 'mochila', 'cocina'];
+  protected readonly suggestions = toSignal(
+    this.transloco
+      .selectTranslateObject<string[]>('search.suggestions')
+      // `selectTranslateObject` waits for the language file and re-emits on
+      // every change; a computed over `translateObject` does neither, and read
+      // during the switch it returned the KEY as a string. `@for` over a string
+      // iterates characters, so the chips came out as s · e · a · r · c · h —
+      // a failure with no error, no warning and nothing in the console, visible
+      // only by looking at the page.
+      .pipe(map((value) => (Array.isArray(value) ? value : []))),
+    { initialValue: [] as string[] },
+  );
 
   /** Four, because the grid is four wide at the width most people have. */
   protected readonly placeholders = [0, 1, 2, 3];
@@ -68,18 +108,25 @@ export class SearchPage {
     // alternative is pressing the button and getting nothing back, which reads
     // as a broken shop rather than as a query that was never sent.
     if (text.length === 0) {
+      this.lastQuery.set(null);
       this.state.set({ status: 'idle' });
       return;
     }
 
     if (text.length < MinimumQueryLength) {
+      this.lastQuery.set(null);
       this.state.set({ status: 'tooShort' });
       return;
     }
 
+    this.lastQuery.set(text);
+    this.run(text, this.culture.active());
+  }
+
+  private run(text: string, culture: string): void {
     this.state.set({ status: 'searching' });
 
-    this.search.search(text, this.transloco.getActiveLang()).subscribe({
+    this.search.search(text, culture).subscribe({
       next: (page) =>
         this.state.set({
           status: 'done',
@@ -99,7 +146,10 @@ export class SearchPage {
   }
 
   protected price(hit: SearchHit): string {
-    const culture = this.transloco.getActiveLang();
+    // The signal, not transloco.getActiveLang(): a plain read would not tell
+    // change detection that the price has to be reformatted when the language —
+    // and with it the decimal separator — changes.
+    const culture = this.culture.active();
 
     // A product with several variants does NOT have a price, it has a range, and
     // showing only the matched variant's lies in both directions: it looks

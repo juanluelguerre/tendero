@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { PromotionView } from '@tendero/shared-api';
+import { CultureStore } from '@tendero/shared-i18n';
 import { PricingService } from '../../data-access/pricing.service';
 
 /**
@@ -132,6 +133,7 @@ import { PricingService } from '../../data-access/pricing.service';
 })
 export class PromotionsPage {
   private readonly pricing = inject(PricingService);
+  private readonly culture = inject(CultureStore);
 
   protected readonly items = signal<PromotionView[]>([]);
   protected readonly loading = signal(true);
@@ -142,13 +144,16 @@ export class PromotionsPage {
   }
 
   /**
-   * Spanish with an English fallback, unlike the attributes screen. Here the
-   * name is context for the rule rather than the thing under review, and an
-   * empty cell would say less than the other language does — the missing
-   * culture is still reported, by its own tag.
+   * The name in the active culture, with the same fallback chain the server's
+   * LocalizedText uses: requested -> en -> the code.
+   *
+   * It was hardcoded to Spanish, which was invisible while both apps were
+   * permanently Spanish and became a bug the moment there was a switcher: an
+   * English backoffice listed "Rebajas de verano". The missing culture is still
+   * reported by its own tag, so falling back here hides nothing.
    */
   protected name(promotion: PromotionView): string {
-    return promotion.name['es'] ?? promotion.name['en'] ?? promotion.code;
+    return promotion.name[this.culture.active()] ?? promotion.name['en'] ?? promotion.code;
   }
 
   constructor() {

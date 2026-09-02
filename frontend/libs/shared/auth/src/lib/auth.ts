@@ -1,7 +1,7 @@
-import { HttpClient, HttpInterceptorFn } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, throwError } from 'rxjs';
 
 /**
  * Who can sign in. The issuer serves this, the client does not write it: the day
@@ -124,12 +124,32 @@ export class AuthStore {
  * along with it.
  */
 export const tenderoAuthInterceptor: HttpInterceptorFn = (request, next) => {
-  const token = inject(AuthStore).accessToken();
+  const auth = inject(AuthStore);
+  const token = auth.accessToken();
   const isOurs = request.url.startsWith('/api') || request.url.startsWith('/dev-issuer');
 
-  return token && isOurs
-    ? next(request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }))
-    : next(request);
+  const outbound =
+    token && isOurs
+      ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+      : request;
+
+  return next(outbound).pipe(
+    catchError((error: unknown) => {
+      // A 401 with a token attached means the token is no longer good — expired,
+      // or signed by a key that no longer exists, which is what happens on every
+      // restart because the development issuer mints its key per process.
+      //
+      // Clearing it here turns "Could not load the promotions" into "you are
+      // signed out", which is the difference between an application that looks
+      // broken and one that tells you what happened. Everything else is left to
+      // the caller: this decides that the session is over, not what to show.
+      if (token && isOurs && error instanceof HttpErrorResponse && error.status === 401) {
+        auth.signOut();
+      }
+
+      return throwError(() => error);
+    }),
+  );
 };
 
 /**
