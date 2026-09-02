@@ -318,6 +318,7 @@ Everything agent-native depends on this being real.
 - [ ] `P5-10` Backoffice: orders list, order detail, ship/deliver, returns queue — **L**
 - [ ] `P5-11` Playwright: search → cart → checkout, and login → review → publish — **M**
 - [ ] `P5-12` Delete the dead `product.addToCart` and `nav.orders` keys by using them — **S**
+- [ ] `P5-13` **The locale and the query go into the URL** — `/es/…`, `?q=…`, `hreflang` between the two, and the per-culture slugs finally used on the PDP — **M** · today the language lives in a signal and in `localStorage`, so one URL serves two languages: not shareable, not cacheable, not indexable. It waits for the PDP because a locale segment without `?q=` is half a job, and without SSR it buys no indexing at all (ADR 0013, amended)
 
 **Risks.** The largest phase by far, and the one where "lab depth" is hardest to
 hold — resist gift cards, partial shipments and split payments. Second risk:

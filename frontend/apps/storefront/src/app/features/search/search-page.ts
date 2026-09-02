@@ -14,7 +14,21 @@ type SearchState =
   | { status: 'idle' }
   | { status: 'tooShort' }
   | { status: 'searching' }
-  | { status: 'done'; hits: SearchHit[]; total: number; tookMs: number; query: string }
+  | {
+      status: 'done';
+      hits: SearchHit[];
+      total: number;
+      tookMs: number;
+      query: string;
+      /**
+       * Whether this answer came from a language switch rather than from
+       * somebody pressing search. It changes what an empty result MEANS: not
+       * "we do not sell that" but "that query is in the other language", and
+       * telling somebody to use fewer words when the real answer is "try it in
+       * English" is worse than saying nothing.
+       */
+      afterLanguageChange: boolean;
+    }
   | { status: 'failed' };
 
 /**
@@ -49,7 +63,7 @@ export class SearchPage {
       const culture = this.culture.active();
       const query = untracked(() => this.lastQuery());
 
-      if (query) this.run(query, culture);
+      if (query) this.run(query, culture, { afterLanguageChange: true });
     });
   }
 
@@ -120,10 +134,10 @@ export class SearchPage {
     }
 
     this.lastQuery.set(text);
-    this.run(text, this.culture.active());
+    this.run(text, this.culture.active(), { afterLanguageChange: false });
   }
 
-  private run(text: string, culture: string): void {
+  private run(text: string, culture: string, origin: { afterLanguageChange: boolean }): void {
     this.state.set({ status: 'searching' });
 
     this.search.search(text, culture).subscribe({
@@ -134,6 +148,7 @@ export class SearchPage {
           total: page.total,
           tookMs: page.tookMs,
           query: text,
+          afterLanguageChange: origin.afterLanguageChange,
         }),
       error: () => this.state.set({ status: 'failed' }),
     });

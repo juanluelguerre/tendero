@@ -52,6 +52,22 @@ JSON API that no search engine indexes. The `hreflang` and distinct-URL advice
 comes from HTML and SEO; it becomes relevant if the storefront gains
 server-rendered pages.
 
+**Amended 2026-09-03.** That last sentence scoped this ADR to the API and left
+the storefront's half undecided, and the language switcher made the gap real: the
+active culture lives in a signal and in `localStorage`, so one URL serves two
+languages. Every serious commerce site puts the locale in the URL — `/es/`,
+`/en/`, or a per-country domain — for the three reasons this ADR already gives
+about the parameter: a shareable link, a cache key, and a reproducible page. To
+which HTML adds a fourth the API does not have: a search engine needs a distinct
+crawlable URL per language plus `hreflang` between them.
+
+It is **not** fixed here, and the reason is that it is half a job on its own. The
+query is not in the URL either, so a shareable link to a results page needs
+`?q=` as much as it needs `/es/`; and without SSR a locale segment buys
+shareability and no indexing at all. Both, plus `hreflang`, land with the product
+detail page — see `P5-13` on the board. The per-culture slugs the catalogue
+already generates and stores are waiting for exactly that.
+
 ## Consequences
 Every new endpoint returning localized text owes three things: the precedence
 chain, `Content-Language`, and `Vary`. Forgetting the last two is invisible in

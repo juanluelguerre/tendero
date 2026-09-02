@@ -14,6 +14,7 @@
   },
   "search": {
     "empty": "Nothing for “{{query}}”. Try fewer words.",
+    "emptyAfterLanguageChange": "Nothing for “{{query}}” in English. The shop searched its English catalogue — that query looks like it is in another language.",
     "emptyTitle": "Nothing matched",
     "failed": "Search did not answer. Try again in a moment.",
     "failedTitle": "The search did not answer",

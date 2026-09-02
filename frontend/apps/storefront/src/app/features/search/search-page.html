@@ -80,7 +80,13 @@
         @if (done.total === 0) {
           <div class="notice">
             <h2 class="notice__title">{{ t('search.emptyTitle') }}</h2>
-            <p class="muted">{{ t('search.empty', { query: done.query }) }}</p>
+            @if (done.afterLanguageChange) {
+              <!-- The query was written in the other language and re-run against
+                   this one's index. "Try fewer words" would be false advice. -->
+              <p class="muted">{{ t('search.emptyAfterLanguageChange', { query: done.query }) }}</p>
+            } @else {
+              <p class="muted">{{ t('search.empty', { query: done.query }) }}</p>
+            }
           </div>
         } @else {
           <div class="results-meta">

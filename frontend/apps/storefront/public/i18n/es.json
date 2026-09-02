@@ -14,6 +14,7 @@
   },
   "search": {
     "empty": "Nada para «{{query}}». Prueba con menos palabras.",
+    "emptyAfterLanguageChange": "Nada para «{{query}}» en español. La tienda ha buscado en su catálogo español — esa consulta parece estar en otro idioma.",
     "emptyTitle": "No hemos encontrado nada",
     "failed": "La búsqueda no respondió. Vuelve a intentarlo en un momento.",
     "failedTitle": "La búsqueda no ha respondido",
