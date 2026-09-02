@@ -22,20 +22,23 @@ import { CatalogService } from '../../data-access/catalog.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section *transloco="let t">
-      <header class="head">
-        <h1>{{ t('attributes.title') }}</h1>
+      <header class="page-head">
+        <h1 class="page-title">{{ t('attributes.title') }}</h1>
         @if (incomplete() > 0) {
           <span class="tag tag--warn">{{ t('attributes.incomplete', { count: incomplete() }) }}</span>
+        } @else {
+          <span class="tag tag--ok">es · en</span>
         }
       </header>
-      <p class="hint">{{ t('attributes.hint') }}</p>
+      <p class="page-hint">{{ t('attributes.hint') }}</p>
 
       @if (loading()) {
-        <p class="hint" role="status" aria-live="polite">{{ t('attributes.loading') }}</p>
+        <p class="muted" role="status" aria-live="polite">{{ t('attributes.loading') }}</p>
       } @else if (failed()) {
         <p class="failed" role="alert">{{ t('attributes.failed') }}</p>
       } @else {
-        <table>
+        <div class="table-wrap">
+        <table class="table">
           <caption class="sr-only">{{ t('attributes.title') }}</caption>
           <thead>
             <tr>
@@ -49,11 +52,11 @@ import { CatalogService } from '../../data-access/catalog.service';
           <tbody>
             @for (definition of items(); track definition.code) {
               <tr>
-                <td class="numeric">{{ definition.code }}</td>
+                <td class="numeric code">{{ definition.code }}</td>
                 <td [class.missing]="!label(definition, 'es')">{{ label(definition, 'es') }}</td>
                 <td [class.missing]="!label(definition, 'en')">{{ label(definition, 'en') }}</td>
-                <td class="hint">{{ definition.kind }}</td>
-                <td>
+                <td><span class="tag tag--code">{{ definition.kind }}</span></td>
+                <td class="options">
                   @if (definition.options.length > 0) {
                     <span class="numeric">{{ definition.options.length }}</span>
                   }
@@ -67,21 +70,26 @@ import { CatalogService } from '../../data-access/catalog.service';
             }
           </tbody>
         </table>
+        </div>
       }
     </section>
   `,
   styles: `
-    .head { display: flex; align-items: baseline; gap: var(--space-3); }
-    h1 { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
-    .hint { color: var(--text-muted); font-size: var(--text-xs); }
-    .failed { color: var(--danger); font-size: var(--text-sm); }
-    table { width: 100%; border-collapse: collapse; font-size: var(--text-xs); }
-    th, td { text-align: start; padding: var(--space-2); border-block-end: 1px solid var(--border); }
-    th { color: var(--text-muted); font-weight: 500; }
+    /* Only what this page adds; the rest is a primitive in styles.css. */
+    .code { color: var(--text); font-weight: 500; }
+
+    /* The option count and the completeness tag are two facts, not one word:
+       without the gap they read as "5es · en". */
+    .options { display: flex; align-items: center; gap: var(--space-2); }
+
+    /* A missing label is the fact this screen exists for, so it is loud: the
+       word "missing" in danger colour, not an empty cell somebody has to
+       notice. */
+    .missing::after {
+      content: '—';
+      color: var(--danger);
+    }
     .missing { color: var(--danger); }
-    .tag { display: inline-block; margin-inline-start: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-2xs); }
-    .tag--ok { background: color-mix(in srgb, var(--positive) 18%, transparent); color: var(--positive); }
-    .tag--warn { background: color-mix(in srgb, var(--warning) 18%, transparent); color: var(--warning); }
   `,
 })
 export class AttributesPage {

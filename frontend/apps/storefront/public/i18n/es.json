@@ -4,18 +4,28 @@
     "name": "Tendero",
     "tagline": "comercio para personas y agentes"
   },
-  "search": {
-    "label": "Buscar productos",
-    "placeholder": "Zapatillas, cafetera, mochila…",
-    "submit": "Buscar",
-    "results": "{{total}} resultados para «{{query}}»",
-    "took": "{{ms}} ms",
-    "empty": "Nada para «{{query}}». Prueba con menos palabras.",
-    "idle": "Escribe algo y te lo busco.",
-    "failed": "La búsqueda no respondió. Vuelve a intentarlo en un momento."
+  "nav": {
+    "skipToContent": "Saltar al contenido"
   },
   "product": {
     "addToCart": "Añadir al carrito",
     "noImage": "Sin imagen"
+  },
+  "search": {
+    "empty": "Nada para «{{query}}». Prueba con menos palabras.",
+    "emptyTitle": "No hemos encontrado nada",
+    "failed": "La búsqueda no respondió. Vuelve a intentarlo en un momento.",
+    "failedTitle": "La búsqueda no ha respondido",
+    "heading": "¿Qué estás buscando?",
+    "idle": "Escribe algo y te lo busco.",
+    "label": "Buscar productos",
+    "lede": "Seis productos, dos idiomas y una búsqueda que se mide en cada pull request.",
+    "placeholder": "Zapatillas, cafetera, mochila…",
+    "results": "{{total}} resultados para «{{query}}»",
+    "searching": "Buscando…",
+    "submit": "Buscar",
+    "tooShort": "Con dos letras al menos — con una encuentro casi todo.",
+    "took": "{{ms}} ms",
+    "tryLabel": "Prueba"
   }
 }

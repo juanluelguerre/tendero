@@ -1,41 +1,95 @@
 <ng-container *transloco="let t">
-  <form class="search" (submit)="$event.preventDefault(); submit(box.value)">
-    <label class="search__label" for="q">{{ t('search.label') }}</label>
-    <div class="search__row">
-      <input
-        #box
-        id="q"
-        name="q"
-        type="search"
-        class="search__input"
-        [attr.placeholder]="t('search.placeholder')"
-        autocomplete="off"
-      />
-      <!-- The view's only clay action (design/DESIGN.md). -->
-      <button type="submit" class="search__submit">{{ t('search.submit') }}</button>
-    </div>
-  </form>
+  <!-- The search band. It is the shop's front door, so it gets the room: a
+       shopkeeper's first act is to listen to what you are looking for. Once
+       there are results it shrinks (see .hero--compact) because from then on
+       what matters is what was found. -->
+  <section class="hero" [class.hero--compact]="hasResults()">
+    <h1 class="hero__title">{{ t('search.heading') }}</h1>
+    <p class="hero__lede muted">{{ t('search.lede') }}</p>
+
+    <form class="search" (submit)="$event.preventDefault(); submit(box.value)">
+      <label class="sr-only" for="q">{{ t('search.label') }}</label>
+      <div class="search__row">
+        <svg class="search__icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2" />
+          <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" />
+        </svg>
+        <input
+          #box
+          id="q"
+          name="q"
+          type="search"
+          class="field search__input"
+          [attr.placeholder]="t('search.placeholder')"
+          autocomplete="off"
+        />
+        <!-- The view's only clay action (design/DESIGN.md). -->
+        <button type="submit" class="button search__submit">{{ t('search.submit') }}</button>
+      </div>
+
+      <!-- Real queries from the golden set, so the first click is a query the
+           gate actually measures rather than one that happens to look good. -->
+      <ul class="suggestions">
+        <li class="suggestions__label eyebrow">{{ t('search.tryLabel') }}</li>
+        @for (suggestion of suggestions; track suggestion) {
+          <li>
+            <button type="button" class="chip" (click)="box.value = suggestion; submit(suggestion)">
+              {{ suggestion }}
+            </button>
+          </li>
+        }
+      </ul>
+    </form>
+  </section>
 
   @switch (state().status) {
-    @case ('idle') {
-      <p class="muted">{{ t('search.idle') }}</p>
+    @case ('idle') {}
+
+    @case ('tooShort') {
+      <p class="hint muted" role="status" aria-live="polite">{{ t('search.tooShort') }}</p>
     }
+
     @case ('searching') {
-      <p class="muted" role="status" aria-live="polite">…</p>
+      <p class="sr-only" role="status" aria-live="polite">{{ t('search.searching') }}</p>
+      <!-- Skeleton cards, not a spinner: the same shape the answer will have, so
+           the page does not jump when it arrives. -->
+      <ul class="grid" aria-hidden="true">
+        @for (placeholder of placeholders; track placeholder) {
+          <li class="card card--loading">
+            <div class="card__image skeleton"></div>
+            <div class="card__body">
+              <div class="skeleton skeleton--line"></div>
+              <div class="skeleton skeleton--line skeleton--short"></div>
+            </div>
+          </li>
+        }
+      </ul>
     }
+
     @case ('failed') {
-      <p class="failed" role="alert">{{ t('search.failed') }}</p>
+      <div class="notice notice--danger" role="alert">
+        <h2 class="notice__title">{{ t('search.failedTitle') }}</h2>
+        <p class="muted">{{ t('search.failed') }}</p>
+      </div>
     }
+
     @case ('done') {
       @let done = state();
       @if (done.status === 'done') {
         @if (done.total === 0) {
-          <p class="muted">{{ t('search.empty', { query: done.query }) }}</p>
+          <div class="notice">
+            <h2 class="notice__title">{{ t('search.emptyTitle') }}</h2>
+            <p class="muted">{{ t('search.empty', { query: done.query }) }}</p>
+          </div>
         } @else {
-          <p class="results-meta" role="status" aria-live="polite">
-            {{ t('search.results', { total: done.total, query: done.query }) }}
+          <div class="results-meta">
+            <p role="status" aria-live="polite">
+              {{ t('search.results', { total: done.total, query: done.query }) }}
+            </p>
             <span class="numeric took">{{ t('search.took', { ms: done.tookMs }) }}</span>
-          </p>
+          </div>
+
           <ul class="grid">
             @for (hit of done.hits; track hit.productId) {
               <li class="card">
@@ -56,11 +110,13 @@
                     <span class="card__initial" aria-hidden="true">{{ hit.name.charAt(0) }}</span>
                   </div>
                 }
-                <h2 class="card__name">{{ hit.name }}</h2>
-                @if (hit.brand) {
-                  <p class="card__brand">{{ hit.brand }}</p>
-                }
-                <p class="card__price numeric">{{ price(hit) }}</p>
+                <div class="card__body">
+                  @if (hit.brand) {
+                    <p class="card__brand eyebrow">{{ hit.brand }}</p>
+                  }
+                  <h2 class="card__name">{{ hit.name }}</h2>
+                  <p class="card__price numeric">{{ price(hit) }}</p>
+                </div>
               </li>
             }
           </ul>

@@ -1,2 +1,297 @@
 @import '../../../libs/shared/tokens/src/theme.css';
-/* You can add global styles to this file, and also import other style files */
+
+/* ============================================================
+   Backoffice — the base layer.
+
+   Dense and dark, which is the opposite of the storefront and the reason none of
+   this is shared (ADR 0010). A shopkeeper reads this screen for an hour at a
+   time: rows are 40px, the body is 14px, and the only colour that means anything
+   is a status.
+
+   The primitives below were each copied between three pages before they moved
+   here — the page header, the data table, the tag. Three is the repository's
+   threshold for extracting something, and it is the same rule that took the
+   culture-negotiation chain out of two endpoints and into the shared kernel.
+
+   Not one hex appears below.
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Without this the scrollbar appears between a loading and a loaded table and
+     the whole layout shifts sideways by its width. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+p {
+  margin: 0;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Layout ----------
+   Named `page-frame` and not `container`: Tailwind 4 is imported for the theme
+   bridge, so `.container` is one of ITS utilities and lands in a later cascade
+   layer. */
+.page-frame {
+  width: 100%;
+  max-width: var(--container-app);
+  margin-inline: auto;
+  padding-inline: var(--space-5);
+}
+
+@media (max-width: 640px) {
+  .page-frame {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* ---------- Page header ----------
+   Title, a live count beside it, and the page's actions on the right. Same shape
+   on every screen so a shopkeeper never has to look for the button. */
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-end: var(--space-2);
+}
+
+.page-title {
+  font-size: var(--text-xl);
+}
+
+.page-actions {
+  margin-inline-start: auto;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.page-hint {
+  max-width: 76ch;
+  margin-block-end: var(--space-5);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ---------- Text ---------- */
+.eyebrow {
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.muted { color: var(--text-muted); }
+.subtle { color: var(--text-subtle); }
+.failed { color: var(--danger); }
+
+.numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Buttons ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  padding-inline: var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.button:hover:not(:disabled) { background: var(--accent-hover); }
+.button:disabled { opacity: 0.55; cursor: default; }
+
+.button--quiet {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+}
+
+.button--quiet:hover:not(:disabled) {
+  background: var(--bg-raised);
+  color: var(--text);
+}
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ---------- Data table ----------
+   The header sticks under the tab bar: a shopkeeper scrolling a queue needs to
+   keep knowing which column is which, and that is the difference between a table
+   and a wall of values. */
+.table-wrap {
+  overflow-x: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+
+  /* A fade on the right edge while there is more table to the right, and gone
+     once you reach the end. On a phone this screen scrolls sideways rather than
+     stacking into cards: comparing the combination column across rows is the
+     whole reason the table exists, and cards destroy exactly that. The fade is
+     what stops the sideways scroll from being a secret.
+
+     Pinned to the scroll container with `local`, so it tracks the scroll
+     position instead of sitting there permanently. */
+  background-image: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--ink-900) 55%, transparent),
+    transparent 3rem
+  );
+  background-repeat: no-repeat;
+  background-attachment: local;
+  background-size: 100% 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+}
+
+.table th,
+.table td {
+  text-align: start;
+  padding: var(--space-3);
+  border-block-end: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--bg-raised);
+  font-weight: 600;
+  font-size: var(--text-3xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td { border-block-end: 0; }
+
+.table tbody tr:hover td { background: var(--bg-raised); }
+
+.table .right { text-align: end; }
+
+/* ---------- Tags ----------
+   Colour never carries meaning alone (design/DESIGN.md): every tag has a word
+   in it. The border-only treatment keeps a row of them from competing with the
+   one clay action on the page. */
+.tag {
+  display: inline-block;
+  padding: 1px var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-3xs);
+  white-space: nowrap;
+}
+
+.tag + .tag { margin-inline-start: var(--space-2); }
+
+.tag--ok { color: var(--positive); }
+.tag--warn { color: var(--warning); }
+.tag--danger { color: var(--danger); }
+.tag--code { color: var(--text-subtle); font-family: var(--font-mono); }
+
+/* ---------- Empty state ----------
+   "Nothing here yet — import a catalog to get started", never "No records
+   found": the interface speaks like a shopkeeper (design/DESIGN.md). */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-5);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.empty__text {
+  max-width: 46ch;
+  color: var(--text-muted);
+}
+
+/* ---------- Fields ---------- */
+.field {
+  width: 100%;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-page);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-xs);
+}
+
+.field::placeholder { color: var(--text-subtle); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

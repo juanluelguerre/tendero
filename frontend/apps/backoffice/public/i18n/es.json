@@ -60,6 +60,7 @@
     "complete": "es · en",
     "empty": "Aquí no hay nada todavía — importa un catálogo para empezar.",
     "failed": "La cola no respondió. Vuelve a intentarlo en un momento.",
+    "hint": "Importar nunca publica: Draft es la razón de ser de esta cola, y sólo publicar hace encontrable un producto.",
     "import": "Importar catálogo de ejemplo",
     "importing": "Importando…",
     "loading": "Cargando…",

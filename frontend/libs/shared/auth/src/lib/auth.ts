@@ -23,6 +23,20 @@ interface TokenResponse {
 const STORAGE_KEY = 'tendero.token';
 
 /**
+ * The role claim's key. It is the long Microsoft schema URI because that is what
+ * `ClaimTypes.Role` serialises to, and the API's RoleClaimType expects exactly
+ * it — shortening it on either side breaks the other.
+ */
+const ROLE_CLAIM = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+
+/** Who the token says is acting. Display only; the server checks the signature. */
+export interface SignedInIdentity {
+  subject: string;
+  name: string;
+  role: string;
+}
+
+/**
  * The token and who owns it.
  *
  * It lives in shared because it is BEHAVIOUR — store, attach, sign out — and
@@ -40,6 +54,26 @@ export class AuthStore {
 
   readonly accessToken = this.token.asReadonly();
   readonly isSignedIn = computed(() => this.token() !== null);
+
+  /**
+   * Who the current token says is acting, for the interface to name.
+   *
+   * It is read from the token's own payload rather than stored beside it. The
+   * token IS the statement of who you are, and keeping a second copy is how the
+   * bar ends up naming somebody who signed out three minutes ago. The signature
+   * is not checked here and does not need to be: this decides what to PRINT,
+   * and the server validates every request that does anything.
+   */
+  readonly identity = computed<SignedInIdentity | null>(() => {
+    const claims = readClaims(this.token());
+    if (!claims) return null;
+
+    return {
+      subject: String(claims['sub'] ?? ''),
+      name: String(claims['name'] ?? claims['sub'] ?? ''),
+      role: String(claims[ROLE_CLAIM] ?? ''),
+    };
+  });
 
   /**
    * The development issuer's seeded identities. Returns an empty list when it
@@ -117,5 +151,37 @@ function write(token: string | null): void {
     else localStorage.removeItem(STORAGE_KEY);
   } catch {
     // Without persistence the session lasts as long as the tab. That is acceptable.
+  }
+}
+
+/**
+ * The JWT payload, or null for anything that is not one.
+ *
+ * base64url, so the two URL-safe characters go back and the padding is put
+ * back; and decodeURIComponent/escape rather than a bare atob, because a name
+ * with an accent in it comes out as mojibake otherwise — which is exactly the
+ * kind of thing an es/en shop notices immediately.
+ */
+function readClaims(token: string | null): Record<string, unknown> | null {
+  if (!token) return null;
+
+  const payload = token.split('.')[1];
+  if (!payload) return null;
+
+  try {
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+    const json = decodeURIComponent(
+      atob(padded)
+        .split('')
+        .map((character) => `%${character.charCodeAt(0).toString(16).padStart(2, '0')}`)
+        .join(''),
+    );
+
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    // A token this cannot read is a token nobody should be signed in with, but
+    // the request will fail on its own merits: this only decides what to print.
+    return null;
   }
 }

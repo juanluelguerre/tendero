@@ -22,22 +22,23 @@ import { PricingService } from '../../data-access/pricing.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section *transloco="let t">
-      <header class="head">
-        <h1>{{ t('promotions.title') }}</h1>
+      <header class="page-head">
+        <h1 class="page-title">{{ t('promotions.title') }}</h1>
         @if (running() > 0) {
           <span class="tag tag--ok">{{ t('promotions.running', { count: running() }) }}</span>
         }
       </header>
-      <p class="hint">{{ t('promotions.hint') }}</p>
+      <p class="page-hint">{{ t('promotions.hint') }}</p>
 
       @if (loading()) {
-        <p class="hint" role="status" aria-live="polite">{{ t('promotions.loading') }}</p>
+        <p class="muted" role="status" aria-live="polite">{{ t('promotions.loading') }}</p>
       } @else if (failed()) {
         <p class="failed" role="alert">{{ t('promotions.failed') }}</p>
       } @else if (items().length === 0) {
-        <p class="hint">{{ t('promotions.empty') }}</p>
+        <div class="empty"><p class="empty__text">{{ t('promotions.empty') }}</p></div>
       } @else {
-        <table>
+        <div class="table-wrap">
+        <table class="table">
           <caption class="sr-only">{{ t('promotions.title') }}</caption>
           <thead>
             <tr>
@@ -52,7 +53,7 @@ import { PricingService } from '../../data-access/pricing.service';
           <tbody>
             @for (promotion of items(); track promotion.code) {
               <tr>
-                <td class="numeric">{{ promotion.code }}</td>
+                <td class="numeric code">{{ promotion.code }}</td>
                 <td>
                   {{ name(promotion) }}
                   @if (promotion.missingCultures.length > 0) {
@@ -60,8 +61,8 @@ import { PricingService } from '../../data-access/pricing.service';
                   }
                 </td>
                 <td>
-                  <span class="hint">{{ promotion.effect }}</span>
-                  <span class="numeric">{{ promotion.effectDetail }}</span>
+                  <span class="effect">{{ promotion.effect }}</span>
+                  <span class="numeric effect__detail">{{ promotion.effectDetail }}</span>
                 </td>
                 <!-- The load-bearing column. A group name beside the policy is
                      what turns "ExclusiveInGroup" into something actionable:
@@ -92,26 +93,41 @@ import { PricingService } from '../../data-access/pricing.service';
             }
           </tbody>
         </table>
+        </div>
       }
     </section>
   `,
   styles: `
-    .head { display: flex; align-items: baseline; gap: var(--space-3); }
-    h1 { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
-    .hint { color: var(--text-muted); font-size: var(--text-xs); }
-    .failed { color: var(--danger); font-size: var(--text-sm); }
-    table { width: 100%; border-collapse: collapse; font-size: var(--text-xs); }
-    th, td { text-align: start; padding: var(--space-2); border-block-end: 1px solid var(--border); vertical-align: top; }
-    th { color: var(--text-muted); font-weight: 500; }
-    .policy { display: inline-block; font-size: var(--text-2xs); padding: 0 var(--space-2); border-radius: var(--radius-sm); border: 1px solid var(--border); }
-    .policy--ExclusiveGlobal { border-color: var(--danger); color: var(--danger); }
-    .policy--ExclusiveInGroup { border-color: var(--warning); color: var(--warning); }
-    .policy--Stackable { border-color: var(--positive); color: var(--positive); }
-    .group { display: inline-block; margin-inline-start: var(--space-2); font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--text-muted); }
-    .tag { display: inline-block; margin-inline-start: var(--space-2); padding: 0 var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-2xs); }
-    .tag--ok { background: color-mix(in srgb, var(--positive) 18%, transparent); color: var(--positive); }
-    .tag--warn { background: color-mix(in srgb, var(--warning) 18%, transparent); color: var(--warning); }
-    .tag--code { background: color-mix(in srgb, var(--text-muted) 18%, transparent); color: var(--text-muted); font-family: var(--font-mono); }
+    /* Only what this page adds; the rest is a primitive in styles.css. */
+    .code { color: var(--text); font-weight: 500; }
+
+    /* The effect reads as one value: kind then amount, with a space that the
+       two spans did not have — "percent-off-line30%" was the first thing the
+       screen got wrong when it was seen running. */
+    .effect { color: var(--text-muted); }
+    .effect__detail { margin-inline-start: var(--space-2); color: var(--text); }
+
+    /* The load-bearing column. Each policy gets its own outline so the shape of
+       the table answers "what stops applying?" before anything is read. */
+    .policy {
+      display: inline-block;
+      padding: 1px var(--space-2);
+      border: 1px solid currentColor;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-3xs);
+      white-space: nowrap;
+    }
+    .policy--ExclusiveGlobal { color: var(--danger); }
+    .policy--ExclusiveInGroup { color: var(--warning); }
+    .policy--Stackable { color: var(--positive); }
+
+    .group {
+      display: inline-block;
+      margin-inline-start: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--text-3xs);
+      color: var(--text-subtle);
+    }
   `,
 })
 export class PromotionsPage {

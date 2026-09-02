@@ -4,8 +4,12 @@ import type { SearchHit } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import { ProductSearchService } from '../../data-access/product-search.service';
 
+/** Below this, a query matches so much that the answer is noise. */
+const MinimumQueryLength = 2;
+
 type SearchState =
   | { status: 'idle' }
+  | { status: 'tooShort' }
   | { status: 'searching' }
   | { status: 'done'; hits: SearchHit[]; total: number; tookMs: number; query: string }
   | { status: 'failed' };
@@ -36,14 +40,40 @@ export class SearchPage {
    */
   protected readonly broken = signal<ReadonlySet<string>>(new Set());
 
+  /**
+   * Real queries from the golden set, not ones chosen because they look good.
+   * The first thing a visitor clicks is then a query the NDCG gate actually
+   * measures — if one of these ever stops returning something, the gate said so
+   * before the shop did.
+   */
+  protected readonly suggestions = ['zapatillas running', 'cafetera 12 tazas', 'mochila', 'cocina'];
+
+  /** Four, because the grid is four wide at the width most people have. */
+  protected readonly placeholders = [0, 1, 2, 3];
+
+  /** Whether the search band should step back and let the results have the room. */
+  protected hasResults(): boolean {
+    const current = this.state();
+    return current.status !== 'idle';
+  }
+
   protected onImageError(productId: string): void {
     this.broken.update((ids) => new Set(ids).add(productId));
   }
 
   protected submit(query: string): void {
     const text = query.trim();
-    if (text.length < 2) {
+
+    // A single character is not a search, and saying so is not pedantry: the
+    // alternative is pressing the button and getting nothing back, which reads
+    // as a broken shop rather than as a query that was never sent.
+    if (text.length === 0) {
       this.state.set({ status: 'idle' });
+      return;
+    }
+
+    if (text.length < MinimumQueryLength) {
+      this.state.set({ status: 'tooShort' });
       return;
     }
 

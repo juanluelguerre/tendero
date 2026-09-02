@@ -4,18 +4,28 @@
     "name": "Tendero",
     "tagline": "commerce for humans and agents"
   },
-  "search": {
-    "label": "Search products",
-    "placeholder": "Running shoes, coffee maker, backpack…",
-    "submit": "Search",
-    "results": "{{total}} results for “{{query}}”",
-    "took": "{{ms}} ms",
-    "empty": "Nothing for “{{query}}”. Try fewer words.",
-    "idle": "Type something and I will look it up.",
-    "failed": "Search did not answer. Try again in a moment."
+  "nav": {
+    "skipToContent": "Skip to content"
   },
   "product": {
     "addToCart": "Add to cart",
     "noImage": "No image"
+  },
+  "search": {
+    "empty": "Nothing for “{{query}}”. Try fewer words.",
+    "emptyTitle": "Nothing matched",
+    "failed": "Search did not answer. Try again in a moment.",
+    "failedTitle": "The search did not answer",
+    "heading": "What are you looking for?",
+    "idle": "Type something and I will look it up.",
+    "label": "Search products",
+    "lede": "Six products, two languages, and a search that is measured on every pull request.",
+    "placeholder": "Running shoes, coffee maker, backpack…",
+    "results": "{{total}} results for “{{query}}”",
+    "searching": "Searching…",
+    "submit": "Search",
+    "tooShort": "Two letters at least — one matches almost everything.",
+    "took": "{{ms}} ms",
+    "tryLabel": "Try"
   }
 }

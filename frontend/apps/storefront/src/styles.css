@@ -1,2 +1,219 @@
 @import '../../../libs/shared/tokens/src/theme.css';
-/* You can add global styles to this file, and also import other style files */
+
+/* ============================================================
+   Storefront — the base layer.
+
+   Everything here is a primitive the pages compose: the page frame, the type
+   rhythm, form controls, buttons, cards and the loading skeleton. It lives in
+   the app and not in a shared library on purpose (ADR 0010): the storefront is
+   roomy and light and the backoffice is dense and dark, and a shared button
+   would immediately grow a variant matrix worse than two buttons.
+
+   Not one hex appears below. Every colour, size and radius is a token from
+   design/tokens.css, which is why dark mode and a rebrand are both one file.
+   ============================================================ */
+
+/* ---------- Reset, kept to what actually bites ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* The dev server can serve a page shorter than the viewport; without this the
+     scrollbar appears and disappears between searches and the whole layout
+     jumps sideways by its width. */
+  scrollbar-gutter: stable;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+p {
+  margin: 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ---------- Focus: visible, always, on everything ---------- */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Layout ----------
+   Named `page-frame` and not `container`: Tailwind 4 is imported for its theme
+   bridge, so `.container` is one of ITS utilities, it lands in a later cascade
+   layer and it wins. The symptom was a 1440px page laid out at 768. */
+.page-frame {
+  width: 100%;
+  max-width: var(--container-app);
+  margin-inline: auto;
+  padding-inline: var(--space-5);
+}
+
+@media (max-width: 640px) {
+  .page-frame {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* ---------- Micro-labels: the one place uppercase is allowed ---------- */
+.eyebrow {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* ---------- Numbers ----------
+   Commerce is read in columns. Tabular figures are what make a column of prices
+   actually line up, and it is the market vernacular doing real work. */
+.numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Buttons ----------
+   One clay action per view (design/DESIGN.md). If two things are clay, neither
+   is the primary. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 48px;
+  padding-inline: var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--stone-0);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+.button:hover {
+  background: var(--accent-hover);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  background: var(--border-strong);
+  cursor: not-allowed;
+}
+
+.button--quiet {
+  background: var(--bg-surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.button--quiet:hover {
+  background: var(--bg-raised);
+  border-color: var(--border-strong);
+}
+
+/* ---------- Fields ---------- */
+.field {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.field::placeholder {
+  color: var(--text-subtle);
+}
+
+/* ---------- Surfaces ---------- */
+.surface {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* ---------- Skeletons ----------
+   A shape where the answer will be, not a spinner. A spinner says "wait"; a
+   skeleton says "here is what is coming", and it stops the page jumping when it
+   arrives. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-raised) 0%,
+    var(--stone-100) 50%,
+    var(--bg-raised) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.2s var(--ease) infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* The awning bar is the only thing allowed to animate; everything else stops. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- Screen-reader only ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

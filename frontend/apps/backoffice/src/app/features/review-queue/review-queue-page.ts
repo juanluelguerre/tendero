@@ -30,12 +30,21 @@ type QueueState =
   imports: [RouterLink, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
-      <header class="head">
-        <h1 class="title">{{ t('reviewQueue.title') }}</h1>
+      <header class="page-head">
+        <h1 class="page-title">{{ t('reviewQueue.title') }}</h1>
         @if (state().status === 'ready' && pending() > 0) {
-          <span class="count numeric">{{ t('reviewQueue.pending', { count: pending() }) }}</span>
+          <span class="tag tag--warn">{{ t('reviewQueue.pending', { count: pending() }) }}</span>
+        }
+        @if (state().status === 'ready' && pending() > 0) {
+          <div class="page-actions">
+            <button type="button" class="button button--quiet" [disabled]="importing()"
+                    (click)="importSeed()">
+              {{ importing() ? t('reviewQueue.importing') : t('reviewQueue.import') }}
+            </button>
+          </div>
         }
       </header>
+      <p class="page-hint">{{ t('reviewQueue.hint') }}</p>
 
       @switch (state().status) {
         @case ('loading') {
@@ -51,12 +60,13 @@ type QueueState =
               <div class="empty">
                 <p class="empty__text">{{ t('reviewQueue.empty') }}</p>
                 <!-- The view's only clay action (design/DESIGN.md). -->
-                <button type="button" class="publish" [disabled]="importing()" (click)="importSeed()">
+                <button type="button" class="button" [disabled]="importing()" (click)="importSeed()">
                   {{ importing() ? t('reviewQueue.importing') : t('reviewQueue.import') }}
                 </button>
               </div>
             } @else {
-              <table class="grid">
+              <div class="table-wrap">
+              <table class="table">
                 <caption class="sr-only">{{ t('reviewQueue.title') }}</caption>
                 <thead>
                   <tr>
@@ -79,7 +89,7 @@ type QueueState =
                       <td class="right numeric">{{ price(item) }}</td>
                       <td>
                         @if (item.missingCultures.length === 0) {
-                          <!-- Color nunca solo: siempre con palabra (design/DESIGN.md). -->
+                          <!-- Colour never alone: always with a word (design/DESIGN.md). -->
                           <span class="tag tag--ok">{{ t('reviewQueue.complete') }}</span>
                         } @else {
                           <span class="tag tag--warn">{{
@@ -90,14 +100,14 @@ type QueueState =
                       <!-- Defining variants is a catalogue decision, not an
                            import one, so it is offered per row and not in bulk. -->
                       <td>
-                        <a class="variants-link" [routerLink]="['/products', item.productId, 'variants']">
+                        <a class="quiet-link" [routerLink]="['/products', item.productId, 'variants']">
                           {{ t('variants.title') }}
                         </a>
                       </td>
                       <td class="right">
                         <button
                           type="button"
-                          class="publish"
+                          class="button"
                           [disabled]="publishing().has(item.productId)"
                           (click)="publish(item)"
                         >
@@ -108,6 +118,7 @@ type QueueState =
                   }
                 </tbody>
               </table>
+              </div>
             }
           }
         }
@@ -115,34 +126,18 @@ type QueueState =
     </ng-container>
   `,
   styles: `
-    .head { display: flex; align-items: baseline; gap: var(--space-3); margin-block-end: var(--space-5); }
-    .title { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
-    .count { font-size: var(--text-2xs); color: var(--text-muted); }
-    .muted { color: var(--text-muted); }
-    .failed { color: var(--danger); }
+    /* Only what this page adds. The page header, the table, the tags, the
+       buttons and the empty state are primitives in styles.css: they were each
+       copied between three screens before they moved there. */
+    .name { display: block; color: var(--text); font-weight: 600; }
+    .slug { display: block; margin-block-start: 2px; font-size: var(--text-3xs); color: var(--text-subtle); }
 
-    .empty { border: 1px dashed var(--border); border-radius: var(--radius-lg); padding: var(--space-7); text-align: center; }
-    .empty__text { color: var(--text-muted); margin: 0 0 var(--space-4); }
+    .quiet-link { font-size: var(--text-xs); color: var(--text-muted); }
+    .quiet-link:hover { color: var(--accent); }
 
-    .grid { width: 100%; border-collapse: collapse; font-size: var(--text-xs); }
-    .grid th, .grid td { text-align: start; padding: 0 var(--space-3); height: 36px; border-block-end: 1px solid var(--border); }
-    .grid th { font-weight: 600; color: var(--text-muted); font-size: var(--text-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
-    .right { text-align: end; }
-    .name { display: block; color: var(--text); }
-    .slug { display: block; font-size: var(--text-2xs); color: var(--text-subtle); }
-
-    .tag { display: inline-block; padding: 1px var(--space-2); border-radius: var(--radius-sm); font-size: var(--text-2xs); }
-    .tag--ok { color: var(--positive); border: 1px solid var(--positive); }
-    .tag--warn { color: var(--warning); border: 1px solid var(--warning); }
-
-    .variants-link { font-size: var(--text-xs); color: var(--text-muted); }
-    .variants-link:hover { color: var(--text); }
-    .publish { font: inherit; color: var(--stone-0); background: var(--accent); border: 0; border-radius: var(--radius-sm); padding: var(--space-2) var(--space-4); cursor: pointer; }
-    .publish:hover:not(:disabled) { background: var(--accent-hover); }
-    .publish:disabled { opacity: 0.6; cursor: default; }
-    .publish:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-
-    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    /* The action column stays as narrow as its button and is pinned right, so a
+       queue of twenty rows has one straight edge to aim at. */
+    .table td:last-child { width: 1%; white-space: nowrap; }
   `,
 })
 export class ReviewQueuePage {

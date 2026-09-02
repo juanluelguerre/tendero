@@ -1,117 +1,245 @@
 /* Storefront: roomy and light. Not one hex here — it all comes from the tokens. */
-.search { margin-block-end: var(--space-6); }
 
-.search__label {
-  display: block;
-  font-size: var(--text-2xs);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-block-end: var(--space-2);
+/* ---------- The search band ----------
+   It dominates while there is nothing to show and steps back once there is.
+   Both states are the same element so the input keeps focus and its value
+   across a search — re-rendering it would drop the caret mid-query. */
+.hero {
+  padding-block: var(--space-7) var(--space-6);
+  transition: padding-block var(--dur-base) var(--ease);
 }
 
-.search__row { display: flex; gap: var(--space-2); }
+.hero__title {
+  font-size: var(--text-3xl);
+  max-width: 18ch;
+}
+
+.hero__lede {
+  margin-block-start: var(--space-3);
+  max-width: 52ch;
+  font-size: var(--text-md);
+}
+
+.hero--compact {
+  padding-block: var(--space-5) var(--space-4);
+}
+
+.hero--compact .hero__title,
+.hero--compact .hero__lede {
+  /* Kept in the accessibility tree, out of the way visually: the heading still
+     names the page for a screen reader once results push it aside. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- The field ---------- */
+.search { margin-block-start: var(--space-5); }
+
+.search__row {
+  display: flex;
+  gap: var(--space-3);
+  max-width: 720px;
+}
+
+.search__icon {
+  position: absolute;
+  inset-inline-start: var(--space-4);
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  width: 20px;
+  height: 20px;
+  color: var(--text-subtle);
+  pointer-events: none;
+}
+
+/* The input is wrapped by nothing, so the icon anchors to the row and the input
+   carries the padding that clears it. */
+.search__row { position: relative; }
 
 .search__input {
   flex: 1;
-  padding: var(--space-3) var(--space-4);
-  font: inherit;
+  min-width: 0;
+  padding-inline-start: calc(var(--space-4) * 2 + 20px);
   font-size: var(--text-md);
-  color: var(--text);
-  background: var(--bg-surface);
+}
+
+.search__input:focus-visible { outline-offset: 0; }
+
+.search__submit { flex: none; }
+
+/* ---------- Suggestions ---------- */
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggestions__label { margin-inline-end: var(--space-1); }
+
+.chip {
+  padding: var(--space-1) var(--space-3);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-}
-
-.search__input:focus-visible,
-.search__submit:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-/* The view's only clay action. If there were two, neither would be the primary. */
-.search__submit {
-  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--text-muted);
   font: inherit;
-  font-weight: 600;
-  color: var(--stone-0);
-  background: var(--accent);
-  border: 0;
-  border-radius: var(--radius-md);
+  font-size: var(--text-2xs);
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease);
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
-.search__submit:hover { background: var(--accent-hover); }
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
-.muted { color: var(--text-muted); }
-.failed { color: var(--danger); }
+/* A query that was never sent has to say so, or the shop looks broken. */
+.hint {
+  margin-block-start: var(--space-4);
+  font-size: var(--text-sm);
+}
 
+/* ---------- Result meta ---------- */
 .results-meta {
   display: flex;
   align-items: baseline;
-  gap: var(--space-3);
-  color: var(--text-muted);
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block-end: var(--space-4);
+  border-block-end: 1px solid var(--border);
   font-size: var(--text-sm);
-  margin-block-end: var(--space-5);
 }
 
 .took { color: var(--text-subtle); font-size: var(--text-2xs); }
 
+/* ---------- The grid ----------
+   auto-fill with a minimum, not a fixed column count: the shelf fills whatever
+   width it is given, from one column on a phone to five on a wide desktop,
+   without a media query per breakpoint. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--space-5);
-  list-style: none;
-  margin: 0;
+  margin: var(--space-5) 0 0;
   padding: 0;
+  list-style: none;
 }
 
-/* Images sell; everything else gets out of the way. No shadow until hover. */
+@media (max-width: 480px) {
+  .grid { grid-template-columns: 1fr; gap: var(--space-4); }
+}
+
+/* ---------- Cards ----------
+   Images sell; everything else gets out of the way. No shadow until hover, per
+   design/DESIGN.md: shadows are for things that genuinely float. */
 .card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  transition: box-shadow var(--dur-base) var(--ease);
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease),
+    translate var(--dur-fast) var(--ease);
 }
 
-.card:hover { box-shadow: var(--shadow-pop); }
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-pop);
+  translate: 0 -2px;
+}
+
+.card--loading:hover {
+  border-color: var(--border);
+  box-shadow: none;
+  translate: none;
+}
 
 .card__image {
-  display: block;
+  aspect-ratio: 4 / 3;
   width: 100%;
-  aspect-ratio: 1;
   object-fit: cover;
-  border-radius: var(--radius-md);
   background: var(--bg-raised);
+  border-block-end: 1px solid var(--border);
 }
 
 .card__image--fallback {
   display: grid;
   place-items: center;
   background: var(--accent-tint);
-  border: 1px solid var(--border);
 }
 
 .card__initial {
   font-family: var(--font-display);
-  font-size: var(--text-2xl);
   font-weight: 800;
+  font-size: var(--text-2xl);
   color: var(--accent);
+}
+
+.card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
 }
 
 .card__name {
   font-size: var(--text-md);
   font-weight: 600;
+  font-family: var(--font-body);
+  letter-spacing: normal;
   line-height: var(--leading-snug);
-  margin: var(--space-3) 0 var(--space-1);
 }
 
-.card__brand {
-  font-size: var(--text-2xs);
-  color: var(--text-muted);
-  margin: 0 0 var(--space-2);
+.card__price {
+  margin-block-start: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: 500;
 }
 
-.card__price { font-size: var(--text-lg); font-weight: 500; margin: 0; }
+/* Skeleton lines inside a loading card. */
+.skeleton--line { height: 1em; }
+.skeleton--short { width: 40%; }
+
+/* ---------- Notices ----------
+   An empty result and a broken engine are different events and must not look
+   the same: one is the shop saying "not here", the other is the shop saying
+   "ask me again". */
+.notice {
+  margin-block-start: var(--space-5);
+  padding: var(--space-6);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.notice__title {
+  font-size: var(--text-lg);
+  margin-block-end: var(--space-2);
+}
+
+.notice--danger {
+  border-color: var(--danger);
+  background: var(--red-50);
+}
+
+@media (max-width: 640px) {
+  .hero { padding-block: var(--space-5) var(--space-4); }
+  .hero__title { font-size: var(--text-2xl); }
+  .search__row { flex-direction: column; }
+  .search__submit { min-height: 48px; }
+  /* Stacked, the icon would sit over the button too. */
+  .search__icon { display: none; }
+  .search__input { padding-inline-start: var(--space-4); }
+}
