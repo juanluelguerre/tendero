@@ -2,6 +2,8 @@ using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Domain;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
 
 /// <summary>
@@ -12,6 +14,8 @@ namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
 /// </summary>
 public sealed class ExternalProductMapperTests
 {
+    private static readonly TestClock Clock = new();
+
     private static ExternalProduct AnExternalProduct(decimal price = 29.90m) => new(
         ExternalId: "B073WXYZ01",
         Names: new Dictionary<string, string> { ["es"] = "Cafetera", ["en"] = "Coffee maker" },
@@ -26,7 +30,7 @@ public sealed class ExternalProductMapperTests
     [Fact]
     public void A_new_product_carries_everything_the_source_gave()
     {
-        var product = AnExternalProduct().ToNewProduct("seed");
+        var product = AnExternalProduct().ToNewProduct("seed", Clock);
 
         Assert.Equal("Cafetera", product.Name.In("es"));
         Assert.Equal("Coffee maker", product.Name.In("en"));
@@ -42,7 +46,7 @@ public sealed class ExternalProductMapperTests
     {
         // Importar nunca publica: Draft es la razón de ser de la cola de
         // revisión, y sólo PublishProduct mueve un producto a Active (ADR 0012).
-        var product = AnExternalProduct().ToNewProduct("seed");
+        var product = AnExternalProduct().ToNewProduct("seed", Clock);
 
         Assert.Equal(ProductStatus.Draft, product.Status);
         Assert.Contains(new ExternalReference("seed", "B073WXYZ01"), product.ExternalReferences);
@@ -54,10 +58,10 @@ public sealed class ExternalProductMapperTests
         // El origen manda sobre lo que el origen posee: textos, precio, atributos.
         // No sobre el estado — que un proveedor cambie una descripción no puede
         // devolver a la cola de revisión algo que ya estaba publicado.
-        var product = AnExternalProduct().ToNewProduct("seed");
-        product.Publish();
+        var product = AnExternalProduct().ToNewProduct("seed", Clock);
+        product.Publish(Clock);
 
-        AnExternalProduct(price: 34.50m).ApplyTo(product);
+        AnExternalProduct(price: 34.50m).ApplyTo(product, Clock);
 
         Assert.Equal(34.50m, product.Price.Amount);
         Assert.Equal(ProductStatus.Active, product.Status);
@@ -67,10 +71,10 @@ public sealed class ExternalProductMapperTests
     public void Reimporting_twice_does_not_duplicate_the_external_reference()
     {
         var external = AnExternalProduct();
-        var product = external.ToNewProduct("seed");
+        var product = external.ToNewProduct("seed", Clock);
 
-        external.ApplyTo(product);
-        product.LinkExternal("seed", external.ExternalId);
+        external.ApplyTo(product, Clock);
+        product.LinkExternal(Clock, "seed", external.ExternalId);
 
         Assert.Single(product.ExternalReferences);
     }

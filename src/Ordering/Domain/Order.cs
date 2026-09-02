@@ -78,6 +78,7 @@ public sealed class Order : AggregateRoot
     private Order() { } // EF Core
 
     public static Order Place(
+        TimeProvider clock,
         CustomerId customerId, string idempotencyKey, IReadOnlyList<OrderLine> lines, string culture = "es")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
@@ -93,7 +94,7 @@ public sealed class Order : AggregateRoot
         if (lines.Any(l => !string.Equals(l.UnitPrice.Currency, currency, StringComparison.OrdinalIgnoreCase)))
             throw new InvalidOperationException("An order cannot mix currencies.");
 
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.GetUtcNow();
         var order = new Order
         {
             Id = OrderId.New(),
@@ -110,35 +111,36 @@ public sealed class Order : AggregateRoot
         return order;
     }
 
-    public void AuthorizePayment() =>
-        TransitionTo(OrderStatus.PaymentAuthorized, now => new OrderPaymentAuthorized(Id, now));
+    public void AuthorizePayment(TimeProvider clock) =>
+        TransitionTo(clock, OrderStatus.PaymentAuthorized, now => new OrderPaymentAuthorized(Id, now));
 
-    public void FailPayment(string reason) =>
-        TransitionTo(OrderStatus.PaymentFailed, now => new OrderPaymentFailed(Id, reason, now));
+    public void FailPayment(TimeProvider clock, string reason) =>
+        TransitionTo(clock, OrderStatus.PaymentFailed, now => new OrderPaymentFailed(Id, reason, now));
 
-    public void Confirm() =>
-        TransitionTo(OrderStatus.Confirmed, now => new OrderConfirmed(Id, now));
+    public void Confirm(TimeProvider clock) =>
+        TransitionTo(clock, OrderStatus.Confirmed, now => new OrderConfirmed(Id, now));
 
-    public void Ship() =>
-        TransitionTo(OrderStatus.Shipped, now => new OrderShipped(Id, now));
+    public void Ship(TimeProvider clock) =>
+        TransitionTo(clock, OrderStatus.Shipped, now => new OrderShipped(Id, now));
 
-    public void Deliver() =>
-        TransitionTo(OrderStatus.Delivered, now => new OrderDelivered(Id, now));
+    public void Deliver(TimeProvider clock) =>
+        TransitionTo(clock, OrderStatus.Delivered, now => new OrderDelivered(Id, now));
 
     // La saga de compensación llama aquí cuando algo falla a mitad
     // (p. ej. pago autorizado pero sin stock): cancela y libera.
-    public void Cancel(string reason) =>
-        TransitionTo(OrderStatus.Cancelled, now => new OrderCancelled(Id, reason, now));
+    public void Cancel(TimeProvider clock, string reason) =>
+        TransitionTo(clock, OrderStatus.Cancelled, now => new OrderCancelled(Id, reason, now));
 
     // La fábrica dejó de ser nullable cuando Deliver() empezó a emitir su evento:
     // el `IDomainEvent?` existía por una sola transición muda.
-    private void TransitionTo(OrderStatus target, Func<DateTimeOffset, IDomainEvent> eventFactory)
+    private void TransitionTo(
+        TimeProvider clock, OrderStatus target, Func<DateTimeOffset, IDomainEvent> eventFactory)
     {
         if (!AllowedTransitions[Status].Contains(target))
             throw new InvalidOperationException($"Illegal transition {Status} -> {target} for order {Id}.");
 
         Status = target;
-        UpdatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = clock.GetUtcNow();
 
         Raise(eventFactory(UpdatedAt));
     }

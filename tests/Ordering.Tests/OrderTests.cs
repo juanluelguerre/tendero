@@ -2,10 +2,14 @@ using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Ordering.Tests;
 
 public sealed class OrderTests
 {
+    private static readonly TestClock Clock = new();
+
     [Fact]
     public void An_order_keeps_the_currency_it_was_placed_in()
     {
@@ -78,12 +82,12 @@ public sealed class OrderTests
         // la que abre la ventana de devolucion: el bucle de motivos de devolucion
         // de la fase 4 no tiene otro hecho del que colgarse.
         var order = OrderBuilder.Default().Build();
-        order.AuthorizePayment();
-        order.Confirm();
-        order.Ship();
+        order.AuthorizePayment(Clock);
+        order.Confirm(Clock);
+        order.Ship(Clock);
         order.ClearDomainEvents();
 
-        order.Deliver();
+        order.Deliver(Clock);
 
         Assert.Contains(order.DomainEvents, e => e is OrderDelivered);
     }
@@ -95,7 +99,9 @@ public sealed class OrderTests
         // sistema no puede ver: el outbox no lleva nada y ningun worker despierta.
         var order = OrderBuilder.Default().Build();
 
-        foreach (var step in new Action[] { order.AuthorizePayment, order.Confirm, order.Ship, order.Deliver })
+        foreach (var step in new Action[]
+                 { () => order.AuthorizePayment(Clock), () => order.Confirm(Clock),
+                   () => order.Ship(Clock), () => order.Deliver(Clock) })
         {
             order.ClearDomainEvents();
             step();

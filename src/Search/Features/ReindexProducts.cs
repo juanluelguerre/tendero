@@ -4,6 +4,7 @@ using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
@@ -49,8 +50,9 @@ public sealed class ReindexProductsEndpoint : ICarterModule
     {
         // POST /api/search/reindex
         app.MapPost("/api/search/reindex",
-            async (ICommandDispatcher dispatcher, CancellationToken ct) =>
-                Results.Ok(await dispatcher.SendAsync(new ReindexProductsCommand(), ct)))
+            async Task<Ok<ReindexProductsResult>> (ICommandDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new ReindexProductsCommand(), ct)))
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Search")
             .WithName("ReindexProducts");
     }
@@ -61,7 +63,7 @@ public sealed class ReindexProductsHandler(
     IProductIndexer indexer)
     : ICommandHandler<ReindexProductsCommand, ReindexProductsResult>
 {
-    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Search");
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
     public async Task<ReindexProductsResult> HandleAsync(
         ReindexProductsCommand command, CancellationToken cancellationToken)

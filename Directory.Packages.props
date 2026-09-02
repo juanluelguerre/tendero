@@ -17,6 +17,17 @@
          las abstracciones (Options, Logging, Hosting) vienen en el shared
          framework de .NET 11 y referenciarlas explícitamente es un error NU1510. -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.7.26381.103" />
+    <!-- Microsoft.AspNetCore.OpenApi 11.0.0-preview.7 — MIT. En el framework, así
+         que ni Swashbuckle ni NSwag: el documento generado es la fuente de la
+         forma de la API, y de ahí salen los tipos del frontend y, más adelante,
+         los esquemas de las capabilities de UCP. Misma banda de preview que el
+         SDK; se mueve con él. -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0-preview.7.26381.103" />
+    <!-- JwtBearer 11.0.0-preview.7 — MIT. SÓLO valida tokens. Es la mitad
+         cliente de la identidad y no cambia cuando el emisor pase del
+         dev-issuer a Keycloak: eso es una cadena de configuración. Aquí no se
+         escribe un servidor de autorización (invariante 10). -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-preview.7.26381.103" />
   </ItemGroup>
 
   <ItemGroup Label="Persistence">
@@ -26,6 +37,11 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="11.0.0-preview.6.26359.118" />
     <!-- Npgsql provider 11.0.0-preview.6 — PostgreSQL License (OSI-approved, BSD-style) -->
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="11.0.0-preview.6" />
+    <!-- EF Core Design 11.0.0-preview.6 — MIT. Entra con la primera migración,
+         en la MISMA revisión que el runtime. La herramienta va fijada a la misma
+         en .config/dotnet-tools.json: el `dotnet ef` global de la máquina era
+         10.0.2 y no sirve contra un runtime 11. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="11.0.0-preview.6.26359.118" />
   </ItemGroup>
 
   <ItemGroup Label="Search">
@@ -63,6 +79,20 @@
     <PackageVersion Include="xunit.v3" Version="4.0.0" />
     <!-- NetArchTest.Rules 1.3.2 — MIT (declared in the repo, not in the nuspec) -->
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+    <!-- Microsoft.AspNetCore.Mvc.Testing 11.0.0-preview.7 — MIT. Entra con el
+         test de contrato de OpenAPI, que arranca la API de verdad con
+         WebApplicationFactory y le pide su documento. No arrastra Docker: ni el
+         DbContext ni el cliente de Elasticsearch conectan al construirse, así
+         que dos cadenas de conexión falsas bastan para levantarla. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0-preview.7.26381.103" />
+    <!-- Testcontainers.PostgreSql 4.14.0 — MIT. Postgres de verdad para los
+         tests que no significan nada contra un proveedor en memoria: el mapeo
+         jsonb, los índices únicos y el drenaje del outbox.
+         Respawn NO entra: CLAUDE.md ya pedía verificar su licencia al añadirlo,
+         y el repo escribe su propio CQRS justamente porque otros paquetes del
+         mismo autor pasaron a licencia comercial. El reset es un TRUNCATE de
+         veinte líneas (DatabaseReset), que es menos superficie que la duda. -->
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.14.0" />
   </ItemGroup>
 
 </Project>

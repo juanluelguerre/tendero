@@ -5,6 +5,7 @@ namespace ElGuerre.Tendero.SearchEval;
 /// (política de dependencias de CLAUDE.md).
 /// </summary>
 public sealed record EvaluationOptions(
+    string Suite,
     string Elasticsearch,
     string GoldenDirectory,
     string ThresholdsPath,
@@ -12,9 +13,12 @@ public sealed record EvaluationOptions(
     string? ReportPath,
     bool FailUnderThresholds)
 {
-    public const string Usage = """
+    public static string Usage(IReadOnlyList<Suites.IEvaluationSuite> suites) =>
+        $"""
         Usage: dotnet run --project tools/SearchEval -- [options]
 
+          --suite <name>          Which gate to run (default search)
+        {string.Join(Environment.NewLine, suites.Select(s => $"                            {s.Name}: {s.Description}"))}
           --elasticsearch <url>   Elasticsearch endpoint (default http://localhost:9200)
           --golden <dir>          Golden set directory  (default tools/SearchEval/golden)
           --thresholds <file>     Committed thresholds  (default tools/SearchEval/eval.thresholds.json)
@@ -48,6 +52,7 @@ public sealed record EvaluationOptions(
         }
 
         return new EvaluationOptions(
+            values.GetValueOrDefault("suite", "search"),
             values.GetValueOrDefault("elasticsearch", "http://localhost:9200"),
             values.GetValueOrDefault("golden", Path.Combine("tools", "SearchEval", "golden")),
             values.GetValueOrDefault("thresholds", Path.Combine("tools", "SearchEval", "eval.thresholds.json")),

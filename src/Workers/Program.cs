@@ -32,7 +32,7 @@ builder.Services.AddLexicalSearch(
 builder.Services.AddSearchIndexInitializer();
 
 if (builder.Environment.IsDevelopment())
-    builder.Services.AddHostedService<DevelopmentSchemaInitializer>();
+    builder.Services.AddHostedService<SchemaMigrator>();
 
 builder.Services.AddHostedService<OutboxProcessor>();
 

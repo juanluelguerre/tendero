@@ -28,5 +28,12 @@
     "publish": "Publicar",
     "publishing": "Publicando…",
     "title": "Cola de revisión"
+  },
+  "signIn": {
+    "title": "Identifícate",
+    "hint": "El emisor de desarrollo firma para estas identidades. No hay contraseñas: cuando entre Keycloak, esta pantalla se sustituye por su redirección.",
+    "failed": "No se pudo obtener el token. ¿Está la API en marcha?",
+    "noIssuer": "El emisor de desarrollo no responde. Arranca la API con dotnet run --project src/AppHost.",
+    "signOut": "Cerrar sesión"
   }
 }

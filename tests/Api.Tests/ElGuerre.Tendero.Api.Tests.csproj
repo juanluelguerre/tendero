@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Sdk.Web y no Sdk a secas: WebApplicationFactory necesita el framework
+       reference de ASP.NET Core para arrancar la API dentro del proceso. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>ElGuerre.Tendero.Api.Tests</RootNamespace>
+    <!-- El SDK Web genera un launchSettings.json con un puerto aleatorio y
+         launchBrowser. Aquí no se lanza nada: la API la levanta
+         WebApplicationFactory dentro del proceso. -->
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Api/ElGuerre.Tendero.Api.csproj" />
+  </ItemGroup>
+
+</Project>

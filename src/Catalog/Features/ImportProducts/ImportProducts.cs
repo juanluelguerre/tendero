@@ -7,6 +7,7 @@ using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -41,11 +42,13 @@ public sealed class ImportProductsEndpoint : ICarterModule
     {
         // POST /api/catalog/import  { "source": "seed" }
         app.MapPost("/api/catalog/import",
-            async (ImportProductsCommand command, ICommandDispatcher dispatcher, CancellationToken ct) =>
+            async Task<Ok<ImportProductsResult>> (
+                   ImportProductsCommand command, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(command, ct);
-                return Results.Ok(result);
+                return TypedResults.Ok(result);
             })
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Catalog")
             .WithName("ImportProducts");
     }
@@ -57,6 +60,7 @@ public sealed class ImportProductsHandler(
     IUnitOfWork unitOfWork,
     IExternalImageReader imageReader,
     IImageStore imageStore,
+    TimeProvider clock,
     ILogger<ImportProductsHandler> logger)
     : ICommandHandler<ImportProductsCommand, ImportProductsResult>
 {
@@ -127,14 +131,14 @@ public sealed class ImportProductsHandler(
 
         if (existing is null)
         {
-            var product = external.ToNewProduct(source);
+            var product = external.ToNewProduct(source, clock);
             await IngestImagesAsync(product, external, cancellationToken);
             repository.Add(product);
             tally.Created++;
         }
         else
         {
-            external.ApplyTo(existing);
+            external.ApplyTo(existing, clock);
             await IngestImagesAsync(existing, external, cancellationToken);
             tally.Updated++;
         }
@@ -190,7 +194,7 @@ public sealed class ImportProductsHandler(
 
             await using var stream = content.Content;
             var id = await imageStore.SaveAsync(stream, content.ContentType, cancellationToken);
-            product.AddImage(id, image.LocalizedAlt);
+            product.AddImage(clock, id, image.LocalizedAlt);
         }
     }
 

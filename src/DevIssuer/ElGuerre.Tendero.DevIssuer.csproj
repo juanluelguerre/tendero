@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- El adaptador de desarrollo del puerto de identidad. El contrato no es una
+       interfaz nuestra: es OIDC — documento de discovery, JWKS y JWT firmados.
+       Keycloak es el otro adaptador, y cambiarlo es cambiar una URL.
+
+       Es un proyecto aparte y no un fichero dentro de Api para que se vea que
+       es sustituible, y para que una regla de arquitectura pueda prohibir que
+       alguien dependa de él desde el dominio. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.DevIssuer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+  </ItemGroup>
+
+</Project>

@@ -6,6 +6,7 @@ using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace ElGuerre.Tendero.Catalog.Features.ListProducts;
@@ -62,8 +63,13 @@ public sealed class ListProductsEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         // GET /api/catalog/products?status=draft&culture=es&page=1&pageSize=20
+        // El tipo de retorno se declara en la lambda en vez de con .Produces<T>():
+        // así el compilador es quien mantiene el documento de OpenAPI en sintonía
+        // con lo que el endpoint devuelve de verdad. Un .Produces<T>() puede
+        // quedarse mintiendo tras un cambio y nadie se entera.
         app.MapGet("/api/catalog/products",
-            async (string? status, string? culture, int? page, int? pageSize,
+            async Task<Ok<ListProductsResult>> (
+                   string? status, string? culture, int? page, int? pageSize,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 // Cultura: query param explícito > Accept-Language > "es".
@@ -97,8 +103,9 @@ public sealed class ListProductsEndpoint : ICarterModule
                 http.Response.Headers.ContentLanguage = resolved;
                 http.Response.Headers.Vary = "Accept-Language";
 
-                return Results.Ok(result);
+                return TypedResults.Ok(result);
             })
+            .AllowAnonymous()   // el catálogo es público, y esto lo dice en el código
             .WithTags("Catalog")
             .WithName("ListProducts");
     }
@@ -107,7 +114,7 @@ public sealed class ListProductsEndpoint : ICarterModule
 public sealed class ListProductsHandler(IProductCatalogReader products)
     : IQueryHandler<ListProductsQuery, ListProductsResult>
 {
-    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Catalog");
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Catalog);
     private static readonly string[] Cultures = ["es", "en"];
 
     public async Task<ListProductsResult> HandleAsync(

@@ -28,5 +28,12 @@
     "publish": "Publish",
     "publishing": "Publishing…",
     "title": "Review queue"
+  },
+  "signIn": {
+    "title": "Sign in",
+    "hint": "The development issuer signs for these identities. There are no passwords: when Keycloak arrives, this screen is replaced by its redirect.",
+    "failed": "Could not get a token. Is the API running?",
+    "noIssuer": "The development issuer is not responding. Start the API with dotnet run --project src/AppHost.",
+    "signOut": "Sign out"
   }
 }

@@ -4,6 +4,8 @@ using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
 /// <summary>
@@ -17,6 +19,8 @@ namespace ElGuerre.Tendero.Catalog.Tests.Features;
 /// </summary>
 public sealed class PublishProductTests
 {
+    private static readonly TestClock Clock = new();
+
     [Fact]
     public async Task Publishing_a_draft_product_makes_it_active()
     {
@@ -35,7 +39,7 @@ public sealed class PublishProductTests
     public async Task Publishing_a_product_that_is_already_active_saves_nothing()
     {
         var product = ADraftProduct();
-        product.Publish();
+        product.Publish(Clock);
         var repository = new InMemoryProductRepository(product);
         var handler = HandlerOver(repository, out var unitOfWork);
 
@@ -53,7 +57,7 @@ public sealed class PublishProductTests
     public async Task Publishing_an_archived_product_is_rejected()
     {
         var product = ADraftProduct();
-        product.Archive();
+        product.Archive(Clock);
         var repository = new InMemoryProductRepository(product);
         var handler = HandlerOver(repository, out var unitOfWork);
 
@@ -96,11 +100,11 @@ public sealed class PublishProductTests
         InMemoryProductRepository repository, out CountingUnitOfWork unitOfWork)
     {
         unitOfWork = new CountingUnitOfWork();
-        return new PublishProductHandler(repository, unitOfWork);
+        return new PublishProductHandler(repository, unitOfWork, Clock);
     }
 
     private static Product ADraftProduct() =>
-        Product.Create(
+        Product.Create(Clock, 
             LocalizedText.From("es", "Cafetera italiana 12 tazas"),
             new Money(29.90m, "EUR"));
 

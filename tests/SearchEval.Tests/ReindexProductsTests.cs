@@ -4,6 +4,8 @@ using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.SearchEval.Tests;
 
 /// <summary>
@@ -18,6 +20,8 @@ namespace ElGuerre.Tendero.SearchEval.Tests;
 /// </summary>
 public sealed class ReindexProductsTests
 {
+    private static readonly TestClock Clock = new();
+
     [Fact]
     public async Task Reindexing_indexes_every_active_product()
     {
@@ -42,7 +46,7 @@ public sealed class ReindexProductsTests
         var active = AnActiveProduct();
         var draft = ADraftProduct();
         var archived = AnActiveProduct();
-        archived.Archive();
+        archived.Archive(Clock);
         var indexer = new RecordingIndexer();
 
         var result = await HandlerOver(indexer, active, draft, archived)
@@ -70,12 +74,12 @@ public sealed class ReindexProductsTests
         new(new InMemoryProductReader(products), indexer);
 
     private static Product ADraftProduct() =>
-        Product.Create(LocalizedText.From("es", "Cafetera"), new Money(29.90m, "EUR"));
+        Product.Create(Clock, LocalizedText.From("es", "Cafetera"), new Money(29.90m, "EUR"));
 
     private static Product AnActiveProduct()
     {
         var product = ADraftProduct();
-        product.Publish();
+        product.Publish(Clock);
         return product;
     }
 

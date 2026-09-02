@@ -1,31 +1,19 @@
 /**
- * Espejo en TypeScript del contrato de `GET /api/search`.
+ * Contrato de `GET /api/search`, **derivado** del documento de OpenAPI.
  *
- * Escrito a mano HOY, generado desde OpenAPI en cuanto la API publique el
- * documento: mientras sea manual, esto y `Tendero.Search.Contracts` pueden
- * divergir en silencio y el fallo aparece en runtime. Ver docs/adr/0010.
+ * Igual que los de catálogo: era un espejo a mano de `Search.Contracts` y ahora
+ * sale de `docs/openapi/tendero.json`, con un test que impide que el documento
+ * y la API se separen.
  *
- * Fuente: src/Search/Contracts.cs
+ * `imageId` sigue siendo la clave en el almacén, no una URL: la compone el
+ * cliente como `/api/images/{imageId}` para que cambiar de CDN no sea un UPDATE
+ * sobre millones de filas (ADR 0011).
+ *
+ * Regenerar: `npm run generate:api-types` desde `frontend/`.
  */
+import type { components } from './generated/schema';
 
-export interface SearchHit {
-  productId: string;
-  name: string;
-  slug: string;
-  brand: string | null;
-  category: string | null;
-  priceAmount: number;
-  priceCurrency: string;
-  /** Clave de la imagen en el almacén. La URL se compone en el cliente:
-   *  `/api/images/{imageId}`. Ver docs/adr/0011-product-images.md. */
-  imageId: string | null;
-  score: number;
-}
+type Schemas = components['schemas'];
 
-export interface SearchResultPage {
-  hits: SearchHit[];
-  total: number;
-  page: number;
-  pageSize: number;
-  tookMs: number;
-}
+export type SearchHit = Schemas['SearchHit'];
+export type SearchResultPage = Schemas['SearchResultPage'];

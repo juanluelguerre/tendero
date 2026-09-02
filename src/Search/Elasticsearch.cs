@@ -110,7 +110,7 @@ internal sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : 
 
 internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILexicalProductSearch
 {
-    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Search");
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
     /// <summary>
     /// Campos de texto con sus boosts. `category` NO esta: se mapea como keyword

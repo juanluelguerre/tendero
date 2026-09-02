@@ -13,16 +13,68 @@ drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope i
 `frontend/` stays `@tendero/*` — npm scopes and .NET namespaces do not have to
 agree, and the short one is the one people type.
 
+## Product vision
+
+Tendero has to be two things at once: a **credible commerce platform** and an
+**agent-native** one. The second is the differentiator, and it is only credible
+if the first is real — an agent checkout over a pretend cart demonstrates
+nothing.
+
+**The floor** (table stakes, and the substrate everything else needs): catalogue
+with variants and structured, localized attributes · a localized taxonomy ·
+prices, price lists and promotions with combination rules · real-time inventory ·
+cart and checkout with taxes and shipping · orders with a state machine, and
+returns · accounts and guests · idempotent payments with webhooks · faceted
+search · SEO · a backoffice with roles · audit · observability.
+
+**Standard 2026 AI** (expected, not differentiating): hybrid search, visual
+search, multimodal ingestion, a conversational assistant, personalization.
+
+**The six differentiators**, in priority order:
+
+1. **Agent-native merchant** — `/.well-known/ucp`, UCP capabilities and an MCP server. There is no .NET reference implementation of UCP; that gap is the project's headline contribution.
+2. **Product reasoning layer** — structured knowledge per product (specs, evidence, comparisons) carrying **source and confidence**. The AI proposes, the shopkeeper approves.
+3. **Know Your Agent** — identify legitimate agents (signatures, AP2-style mandates) and make anti-fraud rules agent-aware.
+4. **Backoffice copilot** — natural language over our own data and OpenTelemetry traces, proposing **approvable actions**.
+5. **Explainable, constrained recommendations** — "a kit for under X", showing its arithmetic.
+6. **AI observability and evaluation as a feature** — cost per conversation, evals, a trace for every decision.
+
+**Three agent surfaces, three trust models.** WebMCP runs in the user's browser
+and **inherits** their session, so it needs no second principal. The MCP server
+is external and read-only, `AllowAnonymous` by explicit decision. UCP + AP2 is
+server-to-server with its own principal and a signed mandate. They are not
+alternatives; each answers a different question.
+
+### Scale rule
+
+**Architectural completeness is total; data volume is laboratory scale.** These
+are different axes. If promotions need real combination rules, build them. If
+checkout needs a saga with compensation, build it. But the catalogue stays at
+six products, warehouses at two, roles at three. Work that exists only because of
+scale — outbox coalescing, bulk indexing, background reindex, image derivatives —
+is **deferred with its measured number recorded**. Nothing is cut for being
+laborious.
+
 ## Commands
 
 ```bash
 dotnet run --project src/AppHost              # full stack via Aspire
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
-dotnet test --filter Category=Integration     # Testcontainers (needs Docker)
+dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
+dotnet tool restore                           # EF tools, pinned to the runtime
+dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
 dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
+
+UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
+npm run generate:api-types                    # from frontend/, reads that document
 ```
+
+The last two go together, in that order: the contract test regenerates the
+document from the running API, and the frontend types are generated from the
+document. Run both after changing anything a response returns; CI fails on either
+being stale.
 
 ## Architecture invariants (never break these)
 
@@ -48,10 +100,35 @@ npx nx serve storefront|backoffice            # from frontend/
 7. **Domain events → Outbox → workers.** Handlers never index/email/call LLMs
    inline in a request. Raise the event; the worker projects.
 8. **Lexical search is the permanent fallback.** AI features must degrade
-   gracefully; never make BM25 depend on Ollama/Qdrant being up.
+   gracefully; never make BM25 depend on Ollama/Qdrant being up. Generalised:
+   **every AI feature has a non-AI path, and the degradation is tested** — not
+   asserted in a comment. In the browser this means feature-detecting
+   `navigator.modelContext`; without it the shop is unchanged.
 9. **AI layering**: Microsoft.Extensions.AI for pipelines, Microsoft Agent
    Framework only for real agents (phase 3 shopping assistant), no Agent
    Harness (our agents are short-lived and constrained).
+10. **The identity provider is a port; we only ever validate tokens.** The
+    contract is OIDC (discovery, JWKS, signed JWT), so the adapters are a
+    development `dev-issuer` first and Keycloak later — the `FakePaymentProvider`
+    pattern applied to identity, with a shared contract suite. **Nothing is
+    anonymous by default**: public endpoints carry an explicit `AllowAnonymous`.
+    Never write an authorization server as a feature. One issuer, two kinds of
+    principal: a person and an agent — and an agent is a principal, not a
+    customer.
+11. **OpenAPI is the single source of the API's shape.** The committed document
+    generates the frontend's TypeScript types and backs the UCP capability
+    schemas. Never hand-write a DTO mirror again.
+12. **AI proposes, humans approve, the system applies.** A model never writes to
+    an aggregate. It writes a claim or a proposed command, carrying its source,
+    confidence and provenance; approval is a domain operation with an audit row,
+    never a chat message. Anything a model decides that could be decided
+    deterministically, is: the model parses and phrases, code chooses.
+
+> **Open, not yet decided:** the roadmap takes the context count from two to six
+> (`Catalog`, `Pricing`, `Inventory`, `Ordering`, `Accounts`, `Knowledge`).
+> Invariant 1 and ADR 0002 still say two, and they stay that way until an ADR
+> generalises the principle — contexts share no entities — instead of the count.
+> See @docs/analysis/roadmap.md. Do not quietly add a context before that ADR.
 
 ## Conventions
 
@@ -86,6 +163,16 @@ NSubstitute. Respawn: verify its license at add time; fallback is a small
 TRUNCATE-based reset helper of our own. If a dependency later changes license,
 pin the last free version and open an ADR.
 
+**The rule has two tiers, because "dependency" means two different things.**
+
+- **Tier 1 — what we link or redistribute** (NuGet, npm, **and model weights**): permissive only, no exceptions. This is the rule above. A non-commercial or AGPL model shipped inside our process is exactly as much of a problem as an AGPL library, and the original policy did not cover weights at all.
+- **Tier 2 — services we run beside the app** (container images: Postgres, Elasticsearch, Keycloak, Qdrant, Grafana, …): **copyleft is acceptable**. Running stock AGPLv3 software as a separate process over a network boundary imposes no obligation on Tendero; the AGPL trigger is distributing or serving a *modified* version, and SSPL's is offering *that software* as a service. Tendero does neither. Prefer permissive when it is a genuine drop-in (**Valkey**, BSD-3, over Redis), but do not reject a better tool over a licence that never binds.
+
+Record the tier when adding anything, and check the exact tag or revision rather
+than the project — **Grafana** went AGPLv3 in April 2021 and **Redis** went
+RSALv2/SSPL in March 2024, and neither announcement is visible from the package
+name.
+
 ## Testing rules
 
 - New slice = unit tests + (if it has a port) contract test inheriting the
@@ -104,6 +191,10 @@ updated if conventions changed · user-facing strings exist in es AND en.
 
 ## Reference docs (read when relevant, not preloaded)
 
+- **What to do next — the living board: @docs/delivery-plan.md**
+- Review of what exists today (2026-09-02): @docs/analysis/current-state.md
+- Capability gap analysis: @docs/analysis/gap-analysis.md
+- Where each future capability fits architecturally: @docs/analysis/roadmap.md
 - Full project plan and phase breakdown: @docs/initial-plan.md
 - Architecture deep-dive: @docs/architecture.md
 - Testing strategy detail: @docs/testing.md

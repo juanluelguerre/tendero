@@ -1,6 +1,8 @@
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.SharedKernel;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Ordering.Tests;
 
 /// <summary>
@@ -9,6 +11,8 @@ namespace ElGuerre.Tendero.Ordering.Tests;
 /// </summary>
 internal sealed class OrderBuilder
 {
+    private static readonly TestClock Clock = new();
+
     private List<OrderLine> _lines =
     [
         new(ProductId.New(), "Zapatillas de running", new Money(79.95m, "EUR"), 1)
@@ -37,7 +41,7 @@ internal sealed class OrderBuilder
         return this;
     }
 
-    public Order Build() => Order.Place(CustomerId.New(), _idempotencyKey, _lines, _culture);
+    public Order Build() => Order.Place(Clock, CustomerId.New(), _idempotencyKey, _lines, _culture);
 
     /// <summary>
     /// Un pedido en el estado pedido, alcanzado por transiciones legales. No hay
@@ -53,28 +57,28 @@ internal sealed class OrderBuilder
             case OrderStatus.Pending:
                 break;
             case OrderStatus.PaymentAuthorized:
-                order.AuthorizePayment();
+                order.AuthorizePayment(Clock);
                 break;
             case OrderStatus.PaymentFailed:
-                order.FailPayment("card declined");
+                order.FailPayment(Clock, "card declined");
                 break;
             case OrderStatus.Confirmed:
-                order.AuthorizePayment();
-                order.Confirm();
+                order.AuthorizePayment(Clock);
+                order.Confirm(Clock);
                 break;
             case OrderStatus.Shipped:
-                order.AuthorizePayment();
-                order.Confirm();
-                order.Ship();
+                order.AuthorizePayment(Clock);
+                order.Confirm(Clock);
+                order.Ship(Clock);
                 break;
             case OrderStatus.Delivered:
-                order.AuthorizePayment();
-                order.Confirm();
-                order.Ship();
-                order.Deliver();
+                order.AuthorizePayment(Clock);
+                order.Confirm(Clock);
+                order.Ship(Clock);
+                order.Deliver(Clock);
                 break;
             case OrderStatus.Cancelled:
-                order.Cancel("customer changed their mind");
+                order.Cancel(Clock, "customer changed their mind");
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown order status.");

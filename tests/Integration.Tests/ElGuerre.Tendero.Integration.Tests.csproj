@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Integration.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../../src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
+    <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
+    <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../../src/Workers/ElGuerre.Tendero.Workers.csproj" />
+  </ItemGroup>
+
+  <!-- La importación corre contra la MISMA muestra que trae el repo, igual que
+       la suite de contrato del conector. -->
+  <ItemGroup>
+    <Content Include="../../seed/products.sample.json" Link="TestData/products.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Reloj fijo compartido por los proyectos de test (../TestClock.cs). -->
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+  </ItemGroup>
+
+</Project>

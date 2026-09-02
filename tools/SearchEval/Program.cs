@@ -1,16 +1,12 @@
-using ElGuerre.Tendero.Catalog;
-using ElGuerre.Tendero.Search.Contracts;
-using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.SearchEval;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ElGuerre.Tendero.SearchEval.Suites;
 
-// Puerta de calidad de la búsqueda. Corre las consultas anotadas contra un
-// Elasticsearch real, por los MISMOS puertos que usa la aplicación, y compara
-// NDCG@10 y recall@50 con los umbrales comprometidos.
+// Puertas de calidad de Tendero. Hoy sólo hay una suite; la selección por
+// --suite entra ahora y no con la búsqueda híbrida, porque si llegara después
+// la híbrida se mediría contra una línea base que ya no se puede comparar con
+// la commiteada.
 
-var indexNames = SearchCultures.IndexNames.ToArray();
+IEvaluationSuite[] suites = [new SearchRelevanceSuite()];
 
 EvaluationOptions options;
 try
@@ -21,88 +17,22 @@ catch (ArgumentException exception)
 {
     Console.Error.WriteLine(exception.Message);
     Console.Error.WriteLine();
-    Console.Error.WriteLine(EvaluationOptions.Usage);
+    Console.Error.WriteLine(EvaluationOptions.Usage(suites));
     return 2;
 }
 
-try
+var suite = suites.FirstOrDefault(
+    candidate => string.Equals(candidate.Name, options.Suite, StringComparison.OrdinalIgnoreCase));
+
+if (suite is null)
 {
-    await IndexAdmin.EnsureReachableAsync(options.Elasticsearch, CancellationToken.None);
-}
-catch (InvalidOperationException exception)
-{
-    Console.Error.WriteLine(exception.Message);
+    // Nombrar las que hay, igual que hace el validador de importación con los
+    // orígenes registrados: un nombre desconocido es un error del llamante y se
+    // responde con la lista, no con un fallo genérico.
+    Console.Error.WriteLine(
+        $"Unknown suite '{options.Suite}'. Available: {string.Join(", ", suites.Select(s => s.Name))}.");
     return 2;
 }
-
-// Corpus limpio antes de nada: la evaluación tiene que dar el mismo número dos
-// veces seguidas o no sirve como puerta.
-await IndexAdmin.DropAsync(
-    options.Elasticsearch,
-    indexNames,
-    CancellationToken.None);
-
-var builder = Host.CreateApplicationBuilder();
-
-builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
-{
-    ["Catalog:Connectors:Seed:FilePath"] = options.SeedPath
-});
-
-builder.Services.AddCatalog(builder.Configuration);
-builder.Services.AddLexicalSearch(options.Elasticsearch);
-builder.Services.AddSearchIndexInitializer();
-
-using var host = builder.Build();
-
-// Arranca el hosted service que crea products_es y products_en si no existen.
-await host.StartAsync();
 
 using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-var services = host.Services;
-
-var corpus = await new SeedCorpus(services).IndexAsync("seed", cancellation.Token);
-
-// Refresco explícito: sin esto la puntuación depende de una carrera con el
-// refresco automático de Elasticsearch, y una puerta que da números distintos
-// en dos ejecuciones seguidas no es una puerta.
-await IndexAdmin.RefreshAsync(options.Elasticsearch, indexNames, cancellation.Token);
-
-Console.WriteLine($"Indexed {corpus.Count} seed products into {options.Elasticsearch}");
-
-var thresholds = await EvaluationThresholds.LoadAsync(options.ThresholdsPath, cancellation.Token);
-var runner = new EvaluationRunner(services);
-var scores = new List<CultureScore>();
-
-foreach (var path in Directory.EnumerateFiles(options.GoldenDirectory, "*.json").Order())
-{
-    var golden = await GoldenSet.LoadAsync(path, cancellation.Token);
-    scores.Add(await runner.RunAsync(golden, corpus, cancellation.Token));
-}
-
-var report = EvaluationReport.Render(scores, thresholds);
-Console.WriteLine();
-Console.WriteLine(report);
-
-if (options.ReportPath is { } reportPath)
-{
-    Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(reportPath))!);
-    await File.WriteAllTextAsync(reportPath, report, cancellation.Token);
-}
-
-await host.StopAsync();
-
-var failures = scores
-    .Where(score => !EvaluationReport.Passes(score, thresholds.For(score.Culture)))
-    .Select(score => score.Culture)
-    .ToList();
-
-if (failures.Count == 0)
-    return 0;
-
-Console.Error.WriteLine($"Below the committed thresholds: {string.Join(", ", failures)}.");
-Console.Error.WriteLine(
-    "Either the change hurt relevance, or the golden set needs updating — and that needs justifying in the PR.");
-
-// Sin --ci el informe se imprime igual pero no rompe la sesión de nadie.
-return options.FailUnderThresholds ? 1 : 0;
+return await suite.RunAsync(options, cancellation.Token);

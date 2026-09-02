@@ -23,6 +23,14 @@ public static class CqrsServiceCollectionExtensions
     public static IServiceCollection AddTenderoCqrs(
         this IServiceCollection services, params Assembly[] assemblies)
     {
+        // El reloj se registra aquí y no en cada contexto porque el tiempo es
+        // una dependencia de todos: los agregados lo reciben para sellar, y las
+        // reglas con ventana temporal que vienen — validez de promociones,
+        // caducidad de mandatos, expiración de reservas, plazo de devolución —
+        // no son verificables con DateTimeOffset.UtcNow incrustado. TimeProvider
+        // está en la BCL, así que no es una dependencia nueva.
+        services.TryAddSingleton(TimeProvider.System);
+
         services.TryAddScoped<ICommandDispatcher, CommandDispatcher>();
         services.TryAddScoped<IQueryDispatcher, QueryDispatcher>();
         services.TryAddScoped<IDomainEventDispatcher, DomainEventDispatcher>();

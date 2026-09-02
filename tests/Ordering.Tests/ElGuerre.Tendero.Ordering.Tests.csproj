@@ -14,4 +14,9 @@
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
   </ItemGroup>
 
+  <!-- Reloj fijo compartido por los proyectos de test (../TestClock.cs). -->
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+  </ItemGroup>
+
 </Project>

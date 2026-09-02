@@ -14,6 +14,9 @@ namespace ElGuerre.Tendero.SearchEval;
 /// </summary>
 public sealed class SeedCorpus(IServiceProvider services)
 {
+    // El corpus del gate no depende del tiempo: sella con el reloj real.
+    private static readonly TimeProvider Clock = TimeProvider.System;
+
     /// <summary>Devuelve el mapa id interno -> id del origen. El índice guarda
     /// GUIDs; el golden set anota ids del origen, y este mapa los reconcilia.</summary>
     public async Task<IReadOnlyDictionary<string, string>> IndexAsync(
@@ -46,8 +49,8 @@ public sealed class SeedCorpus(IServiceProvider services)
     /// </summary>
     private static Product BuildProduct(ExternalProduct external, string source)
     {
-        var product = external.ToNewProduct(source);
-        product.Publish();
+        var product = external.ToNewProduct(source, Clock);
+        product.Publish(Clock);
         return product;
     }
 }

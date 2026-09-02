@@ -20,6 +20,9 @@
       "@tendero/shared-api": [
         "./libs/shared/api/src/index.ts"
       ],
+      "@tendero/shared-auth": [
+        "./libs/shared/auth/src/index.ts"
+      ],
       "@tendero/shared-i18n": [
         "./libs/shared/i18n/src/index.ts"
       ],
