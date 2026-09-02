@@ -1,0 +1,134 @@
+using System.Globalization;
+using ElGuerre.Tendero.SharedKernel;
+using Xunit;
+
+namespace ElGuerre.Tendero.SharedKernel.Tests;
+
+public sealed class MoneyTests
+{
+    private static Money Eur(decimal amount) => new(amount, "EUR");
+
+    [Fact]
+    public void Mixing_currencies_is_always_a_rejection()
+    {
+        Assert.Throws<InvalidOperationException>(() => Eur(10m) + new Money(10m, "USD"));
+        Assert.Throws<InvalidOperationException>(() => Eur(10m) - new Money(10m, "USD"));
+        Assert.Throws<InvalidOperationException>(() => Eur(10m) > new Money(10m, "USD"));
+    }
+
+    /// <summary>
+    /// Un porcentaje NO redondea. Es deliberado: encadenar descuento, impuesto y
+    /// prorrateo redondeando en cada paso es como se pierden céntimos que luego
+    /// nadie sabe explicar. Se redondea una vez, al final.
+    /// </summary>
+    [Fact]
+    public void A_percentage_keeps_its_precision_until_asked_to_round()
+    {
+        var vat = Eur(19.99m).Percent(21m);
+
+        Assert.Equal(4.1979m, vat.Amount);
+        Assert.Equal(4.20m, vat.Round().Amount);
+    }
+
+    /// <summary>
+    /// Los importes van como CADENA y no como decimal. `[InlineData(2.005)]`
+    /// pasa por un literal double, así que llega 2.00499999... y el test falla
+    /// midiendo la aritmética de coma flotante en vez del redondeo. La razón por
+    /// la que Money usa decimal es exactamente la que rompe su propio test si se
+    /// escribe de la forma obvia.
+    /// </summary>
+    [Theory]
+    [InlineData("2.005", Rounding.ToEven, "2.00")]
+    [InlineData("2.015", Rounding.ToEven, "2.02")]
+    [InlineData("2.005", Rounding.AwayFromZero, "2.01")]
+    [InlineData("-2.005", Rounding.AwayFromZero, "-2.01")]
+    public void Rounding_is_a_decision_with_a_name(string amount, Rounding rounding, string expected)
+    {
+        var rounded = Eur(decimal.Parse(amount, CultureInfo.InvariantCulture)).Round(rounding);
+
+        Assert.Equal(decimal.Parse(expected, CultureInfo.InvariantCulture), rounded.Amount);
+    }
+
+    [Fact]
+    public void Dividing_by_zero_says_so_instead_of_producing_infinity()
+    {
+        Assert.Throws<DivideByZeroException>(() => Eur(10m) / 0m);
+    }
+
+    /// <summary>
+    /// El caso que hace agua en todo sistema que lo improvisa: 10,00 € entre tres
+    /// partes iguales es 3,33 + 3,33 + 3,33 = 9,99, y el céntimo que falta acaba
+    /// como un descuadre en la factura.
+    /// </summary>
+    [Fact]
+    public void The_lost_cent_goes_somewhere_instead_of_disappearing()
+    {
+        var parts = Eur(10m).Allocate([1m, 1m, 1m]);
+
+        Assert.Equal([3.34m, 3.33m, 3.33m], parts.Select(part => part.Amount));
+        Assert.Equal(10.00m, parts.Sum(part => part.Amount));
+    }
+
+    /// <summary>
+    /// Prorratear un descuento de pedido entre líneas de distinto importe: cada
+    /// línea recibe en proporción a lo que pesa, y el resto va a la de mayor
+    /// fracción descartada.
+    /// </summary>
+    [Fact]
+    public void Allocation_follows_the_weights()
+    {
+        var parts = Eur(100m).Allocate([70m, 20m, 10m]);
+
+        Assert.Equal([70.00m, 20.00m, 10.00m], parts.Select(part => part.Amount));
+    }
+
+    [Fact]
+    public void A_negative_amount_is_allocated_without_losing_a_cent_either()
+    {
+        var parts = Eur(-10m).Allocate([1m, 1m, 1m]);
+
+        Assert.Equal(-10.00m, parts.Sum(part => part.Amount));
+    }
+
+    /// <summary>
+    /// Determinista: dos ejecuciones dan lo mismo. Es lo que permite congelar un
+    /// reparto en un pedido y que recalcularlo no cambie el histórico.
+    /// </summary>
+    [Fact]
+    public void The_same_allocation_twice_gives_the_same_answer()
+    {
+        var weights = new[] { 3m, 5m, 7m, 11m };
+
+        Assert.Equal(
+            Eur(37.13m).Allocate(weights).Select(part => part.Amount),
+            Eur(37.13m).Allocate(weights).Select(part => part.Amount));
+    }
+
+    [Fact]
+    public void Allocation_rejects_what_it_cannot_answer()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => Eur(10m).Allocate([]));
+        Assert.Throws<InvalidOperationException>(() => Eur(10m).Allocate([0m, 0m]));
+        Assert.Throws<InvalidOperationException>(() => Eur(10m).Allocate([1m, -1m]));
+    }
+
+    /// <summary>
+    /// La propiedad que importa, sobre un rango ancho en vez de tres ejemplos:
+    /// lo repartido suma EXACTAMENTE lo que se repartió. Un test de propiedades
+    /// de verdad llega con CsCheck en `P3-10`; esto es la versión que ya se puede
+    /// tener hoy sin añadir un paquete.
+    /// </summary>
+    [Fact]
+    public void Whatever_is_allocated_always_sums_back_to_the_total()
+    {
+        var weights = new[] { 1m, 2m, 3m, 5m, 8m };
+
+        for (var cents = 1; cents <= 2000; cents++)
+        {
+            var total = Eur(cents / 100m);
+            var allocated = total.Allocate(weights).Sum(part => part.Amount);
+
+            Assert.Equal(total.Amount, allocated);
+        }
+    }
+}
