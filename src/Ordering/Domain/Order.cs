@@ -15,7 +15,24 @@ public enum OrderStatus
 
 // Snapshot: el pedido guarda nombre y precio del momento de compra,
 // nunca una FK "viva" al producto (que puede cambiar o archivarse).
-public sealed record OrderLine(ProductId ProductId, string ProductName, Money UnitPrice, int Quantity)
+/// <summary>
+/// Instantánea de lo comprado. Lleva la variante y su SKU porque **lo que se
+/// compra es una variante** (ADR 0015): sin ellos, un pedido no puede decir qué
+/// talla se envió, y el inventario —que habla por SKU— no tiene con qué
+/// descontar.
+///
+/// <c>VariantLabel</c> se congela igual que <c>ProductName</c>: es el texto que
+/// el comprador vio ("azul marino · 38"), y reordenar los ejes del catálogo
+/// después no debe reescribir su pedido.
+/// </summary>
+public sealed record OrderLine(
+    ProductId ProductId,
+    VariantId VariantId,
+    string Sku,
+    string ProductName,
+    string? VariantLabel,
+    Money UnitPrice,
+    int Quantity)
 {
     public Money Total => UnitPrice * Quantity;
 }

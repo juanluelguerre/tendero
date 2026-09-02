@@ -89,5 +89,41 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         });
 
         builder.Navigation(p => p.ExternalReferences).AutoInclude();
+
+        // Las variantes van a TABLA y no a una columna JSON como las imágenes,
+        // con el criterio de ADR 0008: se consultan de verdad — por SKU, que es
+        // como inventario, carrito y UCP hablan de ellas.
+        //
+        // Y como ENTIDAD, no como colección propietaria, por una razón concreta:
+        // Money es un record struct, EF no admite structs como tipos
+        // propietarios, y OwnedNavigationBuilder no expone ComplexProperty. La
+        // salida habría sido guardar el precio como texto ("29.90 EUR"), que es
+        // lo que hace OrderLine dentro de su columna JSON. Ahí es consistente;
+        // aquí sería una tabla que existe para consultarse con la columna que
+        // más se consulta convertida en cadena.
+        builder.HasMany(p => p.Variants)
+            .WithOne()
+            .HasForeignKey("ProductId")
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(p => p.Variants).AutoInclude();
+
+        // El orden de los ejes ES un dato (ADR 0015): "azul marino · 38" y no al
+        // revés. Como lista de cadenas cabe en jsonb sin ceremonia.
+        builder.Property<List<string>>("_variantAxes")
+            .HasColumnName("VariantAxes")
+            .HasColumnType("jsonb")
+            .HasConversion(Jsonb.StringListConverter, Jsonb.StringListComparer)
+            // El default se declara AQUÍ y es un array, no un objeto. EF, al
+            // añadir una columna requerida a una tabla con filas, inventa uno
+            // por su cuenta — y eligió `'{}'`, un objeto JSON vacío, donde va
+            // una lista. Todo producto ya importado habría dejado de
+            // deserializar. Lo cazó el test que compara el esquema de la
+            // migración con el del modelo, que es exactamente para lo que está.
+            .HasDefaultValueSql("'[]'::jsonb")
+            .IsRequired();
+
+        builder.Ignore(p => p.VariantAxes);
+        builder.Ignore(p => p.PriceRange);
     }
 }

@@ -31,6 +31,8 @@ public sealed class Product : AggregateRoot
     private readonly List<ProductImage> _images = [];
     private readonly Dictionary<string, string> _attributes = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<ExternalReference> _externalReferences = [];
+    private readonly List<Variant> _variants = [];
+    private readonly List<string> _variantAxes = [];
 
     public ProductId Id { get; private set; }
     public LocalizedText Name { get; private set; } = default!;
@@ -56,6 +58,43 @@ public sealed class Product : AggregateRoot
         _images.Count == 0 ? null : _images.MinBy(image => image.SortOrder);
     public IReadOnlyDictionary<string, string> Attributes => _attributes;
     public IReadOnlyList<ExternalReference> ExternalReferences => _externalReferences;
+
+    public IReadOnlyList<Variant> Variants => _variants;
+
+    /// <summary>
+    /// Los ejes que distinguen a las variantes, EN ORDEN. El orden es un dato
+    /// del catálogo — "azul marino · 38" y no "38 · azul marino" — y de un
+    /// diccionario no se puede sacar.
+    /// </summary>
+    public IReadOnlyList<string> VariantAxes => _variantAxes;
+
+    /// <summary>
+    /// El precio más bajo y el más alto entre las variantes disponibles. Es lo
+    /// que enseña una tarjeta de producto ("24,90 – 29,90 €") y lo que el índice
+    /// necesita para filtrar por rango sin prometer combinaciones que no
+    /// existen.
+    /// </summary>
+    public (Money From, Money To) PriceRange
+    {
+        get
+        {
+            var available = _variants
+                .Where(variant => variant.Status == VariantStatus.Available)
+                .ToArray();
+
+            // Sin variantes disponibles el precio del producto sigue siendo la
+            // respuesta honesta: es el de su variante por defecto.
+            if (available.Length == 0)
+                return (Price, Price);
+
+            var ordered = available.OrderBy(variant => variant.Price.Amount).ToArray();
+            return (ordered[0].Price, ordered[^1].Price);
+        }
+    }
+
+    public Variant? VariantBySku(string sku) =>
+        _variants.FirstOrDefault(variant =>
+            string.Equals(variant.Sku, sku, StringComparison.OrdinalIgnoreCase));
 
     private Product() { } // EF Core
 
@@ -153,6 +192,94 @@ public sealed class Product : AggregateRoot
             Touch(clock);
         }
     }
+
+    /// <summary>
+    /// Declara por qué ejes varía el producto. Se hace antes de añadir
+    /// variantes porque es lo que da sentido —y orden— a sus valores.
+    /// </summary>
+    public void DefineAxes(TimeProvider clock, IReadOnlyList<string> axes)
+    {
+        var normalised = axes.Select(axis => axis.Trim()).Where(axis => axis.Length > 0).ToArray();
+
+        if (normalised.Distinct(StringComparer.OrdinalIgnoreCase).Count() != normalised.Length)
+            throw new InvalidOperationException("Variant axes must be distinct.");
+
+        if (_variants.Count > 0 && !normalised.SequenceEqual(_variantAxes, StringComparer.OrdinalIgnoreCase))
+        {
+            // Cambiar los ejes con variantes vivas dejaría a cada una descrita
+            // por unas coordenadas que ya no significan lo mismo.
+            throw new InvalidOperationException(
+                "Variant axes cannot change while variants exist. Discontinue them first.");
+        }
+
+        _variantAxes.Clear();
+        _variantAxes.AddRange(normalised);
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// Añade una variante. Idempotente por SKU, como todo lo que puede llegar
+    /// dos veces desde un conector.
+    /// </summary>
+    public Variant AddVariant(
+        TimeProvider clock,
+        string sku,
+        Money price,
+        IReadOnlyDictionary<string, string>? axisValues = null,
+        string? taxClass = null,
+        ImageId? image = null)
+    {
+        if (VariantBySku(sku) is { } existing)
+            return existing;
+
+        var values = axisValues ?? new Dictionary<string, string>();
+
+        var unknown = values.Keys
+            .Where(axis => !_variantAxes.Contains(axis, StringComparer.OrdinalIgnoreCase))
+            .ToArray();
+
+        if (unknown.Length > 0)
+        {
+            throw new InvalidOperationException(
+                $"Unknown variant axes: {string.Join(", ", unknown)}. Declared: " +
+                $"{(_variantAxes.Count == 0 ? "(none)" : string.Join(", ", _variantAxes))}.");
+        }
+
+        // Dos variantes con las mismas coordenadas son la misma variante con dos
+        // SKUs, y eso convierte el selector del PDP en una lotería.
+        if (values.Count > 0 && _variants.Any(variant => variant.Matches(values)))
+        {
+            throw new InvalidOperationException(
+                $"A variant already exists for {string.Join(", ", values.Select(v => $"{v.Key}={v.Value}"))}.");
+        }
+
+        var variant = Variant.Create(sku, price, values, taxClass, image);
+        _variants.Add(variant);
+        Touch(clock);
+        return variant;
+    }
+
+    public void SetVariantPrice(TimeProvider clock, string sku, Money price)
+    {
+        Required(sku).SetPrice(price);
+        Touch(clock);
+    }
+
+    public void DiscontinueVariant(TimeProvider clock, string sku)
+    {
+        Required(sku).Discontinue();
+        Touch(clock);
+    }
+
+    public void SetVariantImage(TimeProvider clock, string sku, ImageId? image)
+    {
+        Required(sku).SetImage(image);
+        Touch(clock);
+    }
+
+    private Variant Required(string sku) =>
+        VariantBySku(sku) ?? throw new InvalidOperationException(
+            $"No variant with SKU '{sku}' on product {Id}.");
 
     public void Publish(TimeProvider clock)
     {

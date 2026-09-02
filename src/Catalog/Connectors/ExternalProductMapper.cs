@@ -34,6 +34,7 @@ public static class ExternalProductMapper
 
         product.LinkExternal(clock, source, external.ExternalId);
         CopyAttributes(external, product, clock);
+        EnsureDefaultVariant(external, product, clock);
 
         return product;
     }
@@ -49,7 +50,34 @@ public static class ExternalProductMapper
             clock, external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
         product.SetPrice(clock, external.Price);
         CopyAttributes(external, product, clock);
+        EnsureDefaultVariant(external, product, clock);
     }
+
+    /// <summary>
+    /// Todo lo comprable es una variante, también lo que llega sin ninguna.
+    ///
+    /// Un origen que no distingue tallas ni colores describe un producto con una
+    /// sola forma de comprarse, y llamarla "variante por defecto" es más honesto
+    /// que dejar el carrito y la línea de pedido con dos caminos —uno con
+    /// variante y otro sin— que habría que mantener en paralelo para siempre.
+    ///
+    /// El SKU se deriva del id externo, así que reimportar no crea una segunda:
+    /// <c>AddVariant</c> es idempotente por SKU.
+    /// </summary>
+    private static void EnsureDefaultVariant(ExternalProduct external, Product product, TimeProvider clock)
+    {
+        if (product.Variants.Count > 0)
+        {
+            // Reimportación: el origen manda sobre el precio, como en el resto
+            // del producto.
+            product.SetVariantPrice(clock, DefaultSku(external), external.Price);
+            return;
+        }
+
+        product.AddVariant(clock, DefaultSku(external), external.Price);
+    }
+
+    private static string DefaultSku(ExternalProduct external) => $"{external.ExternalId}-DEFAULT";
 
     private static void CopyAttributes(ExternalProduct external, Product product, TimeProvider clock)
     {

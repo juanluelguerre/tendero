@@ -16,6 +16,34 @@ public sealed class ExternalProductMapperTests
 {
     private static readonly TestClock Clock = new();
 
+    /// <summary>
+    /// Un origen que no distingue tallas ni colores describe un producto con una
+    /// sola forma de comprarse. Llamarla variante por defecto es mas honesto que
+    /// dejar el carrito con dos caminos, uno con variante y otro sin.
+    /// </summary>
+    [Fact]
+    public void An_imported_product_always_has_something_to_buy()
+    {
+        var external = AnExternalProduct();
+
+        var product = external.ToNewProduct("seed", Clock);
+
+        var variant = Assert.Single(product.Variants);
+        Assert.Equal($"{external.ExternalId}-DEFAULT", variant.Sku);
+        Assert.Equal(external.Price, variant.Price);
+    }
+
+    [Fact]
+    public void Reimporting_does_not_add_a_second_default_variant()
+    {
+        var external = AnExternalProduct();
+        var product = external.ToNewProduct("seed", Clock);
+
+        external.ApplyTo(product, Clock);
+
+        Assert.Single(product.Variants);
+    }
+
     private static ExternalProduct AnExternalProduct(decimal price = 29.90m) => new(
         ExternalId: "B073WXYZ01",
         Names: new Dictionary<string, string> { ["es"] = "Cafetera", ["en"] = "Coffee maker" },
