@@ -164,8 +164,14 @@ export interface components {
             slug: string;
             brand: null | string;
             category: null | string;
+            matchedVariantId: string;
+            matchedSku: string;
             /** Format: double */
             priceAmount: number;
+            /** Format: double */
+            priceFrom: number;
+            /** Format: double */
+            priceTo: number;
             priceCurrency: string;
             imageId: null | string;
             /** Format: double */

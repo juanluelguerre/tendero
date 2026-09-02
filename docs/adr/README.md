@@ -15,5 +15,6 @@
 | [0011](0011-product-images.md) | Product images are ingested, not referenced | accepted |
 | [0012](0012-publishing-and-reindexing.md) | Publishing is an explicit step; the index is rebuildable | accepted |
 | [0013](0013-culture-negotiation.md) | Culture: explicit parameter wins, `Accept-Language` is the default | accepted |
+| [0015](0015-variant-is-the-indexed-unit.md) | The variant is the indexed unit; the product is the returned unit | accepted |
 
 Format: context → decision → consequences. Keep each under a page.

@@ -430,7 +430,11 @@
           "slug",
           "brand",
           "category",
+          "matchedVariantId",
+          "matchedSku",
           "priceAmount",
+          "priceFrom",
+          "priceTo",
           "priceCurrency",
           "imageId",
           "score"
@@ -458,7 +462,21 @@
               "string"
             ]
           },
+          "matchedVariantId": {
+            "type": "string"
+          },
+          "matchedSku": {
+            "type": "string"
+          },
           "priceAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceFrom": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceTo": {
             "type": "number",
             "format": "double"
           },
