@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthStore } from '@tendero/shared-auth';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 /**
@@ -10,6 +11,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 @Component({
   selector: 'backoffice-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-container *transloco="let t">
       <header class="bar">
@@ -25,6 +27,13 @@ import { TranslocoDirective } from '@jsverse/transloco';
         />
         <span class="bar__brand">{{ t('brand.name') }}</span>
         <span class="bar__area">{{ t('brand.area') }}</span>
+        <!-- Sin esto no se puede cambiar de identidad, y probar los roles pasa
+             por borrar localStorage a mano. -->
+        @if (signedIn()) {
+          <button class="bar__signout" type="button" (click)="signOut()">
+            {{ t('signIn.signOut') }}
+          </button>
+        }
       </header>
       <nav class="tabs" [attr.aria-label]="t('brand.area')">
         <a class="tab" routerLink="/review" routerLinkActive="tab--active">
@@ -40,6 +49,9 @@ import { TranslocoDirective } from '@jsverse/transloco';
     .bar__mark { display: block; width: 28px; height: 28px; }
     .bar__brand { font-family: var(--font-display); font-weight: 800; color: var(--accent); }
     .bar__area { font-size: var(--text-2xs); color: var(--text-muted); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+    .bar__signout { margin-inline-start: auto; background: none; border: 0; color: var(--text-muted); font: inherit; font-size: var(--text-xs); cursor: pointer; }
+    .bar__signout:hover { color: var(--text); }
+    .bar__signout:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
     .tabs { display: flex; gap: var(--space-4); padding-inline: var(--space-4); border-block-end: 1px solid var(--border); }
     .tab { position: relative; padding-block: var(--space-3); font-size: var(--text-xs); color: var(--text-muted); text-decoration: none; }
     .tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
@@ -49,4 +61,14 @@ import { TranslocoDirective } from '@jsverse/transloco';
     .main { padding: var(--space-5) var(--space-4); }
   `,
 })
-export class Shell {}
+export class Shell {
+  private readonly auth = inject(AuthStore);
+  private readonly router = inject(Router);
+
+  protected readonly signedIn = this.auth.isSignedIn;
+
+  protected signOut(): void {
+    this.auth.signOut();
+    void this.router.navigate(['/sign-in']);
+  }
+}

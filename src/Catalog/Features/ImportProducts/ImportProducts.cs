@@ -48,6 +48,7 @@ public sealed class ImportProductsEndpoint : ICarterModule
                 var result = await dispatcher.SendAsync(command, ct);
                 return TypedResults.Ok(result);
             })
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Catalog")
             .WithName("ImportProducts");
     }

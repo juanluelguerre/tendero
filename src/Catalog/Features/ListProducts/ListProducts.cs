@@ -105,6 +105,7 @@ public sealed class ListProductsEndpoint : ICarterModule
 
                 return TypedResults.Ok(result);
             })
+            .AllowAnonymous()   // el catálogo es público, y esto lo dice en el código
             .WithTags("Catalog")
             .WithName("ListProducts");
     }

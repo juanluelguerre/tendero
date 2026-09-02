@@ -179,11 +179,17 @@ though it were a project.
 
 ## 4. Technical debt, ordered by what it blocks
 
-**1. No authentication, authorization or CORS.** `src/Api/Program.cs` registers
+**1. No authentication, authorization or CORS.** ~~`src/Api/Program.cs` registers
 Carter, validation, problem details, and nothing else.
 `POST /api/catalog/products/{id}/publish` publishes to the public catalogue and
-is open to anyone who can reach the port. Nothing downstream — accounts, roles,
-audit, agent identity, UCP — can start until this does.
+is open to anyone who can reach the port.~~
+**Resolved 2026-09-02.** JWT bearer validation, CORS, three policies, and every
+endpoint carrying either a policy or an explicit `AllowAnonymous` — enforced by a
+test, so public stays a decision rather than an omission. The issuer is a
+development one for now (`src/DevIssuer`), which publishes a real discovery
+document and JWKS; the validation is production code and does not change when
+Keycloak replaces it. Verified live: no token 401, wrong role 403, right role
+passes, public search unaffected.
 
 **2. No CI.** ~~There is no `.github/` directory and not a single `.yml` file in
 the repository. The NDCG gate, the six architecture rules and the contract suite

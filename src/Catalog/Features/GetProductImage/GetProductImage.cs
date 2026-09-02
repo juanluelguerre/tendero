@@ -36,6 +36,7 @@ public sealed class GetProductImageEndpoint : ICarterModule
 
                 return TypedResults.Stream(stored.Content, stored.ContentType);
             })
+            .AllowAnonymous()   // las imágenes del catálogo también
             .WithTags("Catalog")
             .WithName("GetProductImage");
     }

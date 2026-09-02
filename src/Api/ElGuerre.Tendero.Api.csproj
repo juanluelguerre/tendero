@@ -10,10 +10,12 @@
   <ItemGroup>
     <PackageReference Include="Carter" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../DevIssuer/ElGuerre.Tendero.DevIssuer.csproj" />
     <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <ProjectReference Include="../Persistence/ElGuerre.Tendero.Persistence.csproj" />
     <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />

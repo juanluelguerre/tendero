@@ -53,6 +53,7 @@ public sealed class SearchProductsEndpoint : ICarterModule
 
                 return TypedResults.Ok(result);
             })
+            .AllowAnonymous()   // buscar es lo que un agente hace sin identificarse
             .WithTags("Search")
             .WithName("SearchProducts");
     }

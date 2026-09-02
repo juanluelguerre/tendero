@@ -97,6 +97,7 @@ public sealed class PublishProductEndpoint : ICarterModule
                         result.Status))
                 };
             })
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Catalog")
             .WithName("PublishProduct");
     }

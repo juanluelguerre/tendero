@@ -52,6 +52,7 @@ public sealed class ReindexProductsEndpoint : ICarterModule
         app.MapPost("/api/search/reindex",
             async Task<Ok<ReindexProductsResult>> (ICommandDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(new ReindexProductsCommand(), ct)))
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Search")
             .WithName("ReindexProducts");
     }

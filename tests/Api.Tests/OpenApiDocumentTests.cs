@@ -1,8 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace ElGuerre.Tendero.Api.Tests;
@@ -112,22 +110,4 @@ public sealed class OpenApiDocumentTests
         return Path.Combine(directory.FullName, "docs", "openapi", "tendero.json");
     }
 
-    private sealed class TenderoApiFactory : WebApplicationFactory<Program>
-    {
-        protected override IHost CreateHost(IHostBuilder builder)
-        {
-            // Program exige ambas cadenas y falla si faltan. Ninguna se usa: el
-            // documento se construye a partir de los endpoints declarados, no de
-            // una consulta.
-            builder.ConfigureHostConfiguration(configuration => configuration.AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["ConnectionStrings:tendero-db"] = "Host=localhost;Database=openapi-contract-test",
-                    ["ConnectionStrings:elasticsearch"] = "http://localhost:9200"
-                }));
-
-            builder.UseEnvironment("Development");
-            return base.CreateHost(builder);
-        }
-    }
 }

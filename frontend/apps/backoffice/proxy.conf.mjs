@@ -18,7 +18,10 @@ const api =
 
 export default [
   {
-    context: ['/api'],
+    // /dev-issuer tambien: el login pide el token al emisor de desarrollo, que
+    // vive dentro de la API. Cuando entre Keycloak sera otro origen y esta
+    // entrada desaparece.
+    context: ['/api', '/dev-issuer'],
     target: api,
     secure: false,
     changeOrigin: true,

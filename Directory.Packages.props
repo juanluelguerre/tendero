@@ -23,6 +23,11 @@
          los esquemas de las capabilities de UCP. Misma banda de preview que el
          SDK; se mueve con él. -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0-preview.7.26381.103" />
+    <!-- JwtBearer 11.0.0-preview.7 — MIT. SÓLO valida tokens. Es la mitad
+         cliente de la identidad y no cambia cuando el emisor pase del
+         dev-issuer a Keycloak: eso es una cadena de configuración. Aquí no se
+         escribe un servidor de autorización (invariante 10). -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-preview.7.26381.103" />
   </ItemGroup>
 
   <ItemGroup Label="Persistence">

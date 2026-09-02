@@ -1,6 +1,7 @@
 using Carter;
 using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search.Elasticsearch;
@@ -33,6 +34,30 @@ builder.Services.AddLexicalSearch(
 // una dependencia cautiva, y la API dejaba de arrancar en Development con
 // "Cannot consume scoped service ... from singleton". Un mecanismo que nadie usa
 // no debería poder tumbar el proceso.
+// El emisor de desarrollo se registra ANTES de la autenticación y sólo en
+// Development. Su propio AddDevIssuer lanza si el entorno no es Development,
+// así que el guardia está en los dos lados.
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDevIssuer(builder.Configuration, builder.Environment);
+
+    // La autoridad apunta al emisor que este mismo proceso publica. Cuando entre
+    // Keycloak, esto sale de appsettings y este bloque desaparece.
+    builder.Configuration["Authentication:Authority"] ??=
+        $"http://localhost:{builder.Configuration["ASPNETCORE_HTTP_PORT"] ?? "5130"}/dev-issuer";
+    builder.Configuration["Authentication:AllowHttpMetadata"] ??= "true";
+}
+
+builder.Services.AddTenderoAuthentication(builder.Configuration);
+
+// CORS: los dos Angular corren en otro origen que la API, así que sin esto el
+// navegador bloquea toda llamada autenticada.
+builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
+    .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
+        ?? ["http://localhost:4200", "http://localhost:4201"])
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
+
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 
 // El documento es la forma de la API, y de él salen los tipos del frontend
@@ -49,6 +74,9 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapDefaultEndpoints();
 
 // Servido siempre, no sólo en Development: el test de contrato lo lee de aquí,
