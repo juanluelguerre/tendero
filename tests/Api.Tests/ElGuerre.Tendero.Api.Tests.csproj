@@ -6,6 +6,10 @@
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
     <RootNamespace>ElGuerre.Tendero.Api.Tests</RootNamespace>
+    <!-- El SDK Web genera un launchSettings.json con un puerto aleatorio y
+         launchBrowser. Aquí no se lanza nada: la API la levanta
+         WebApplicationFactory dentro del proceso. -->
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
   </PropertyGroup>
 
   <ItemGroup>
