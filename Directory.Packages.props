@@ -17,6 +17,12 @@
          las abstracciones (Options, Logging, Hosting) vienen en el shared
          framework de .NET 11 y referenciarlas explícitamente es un error NU1510. -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0-preview.7.26381.103" />
+    <!-- Microsoft.AspNetCore.OpenApi 11.0.0-preview.7 — MIT. En el framework, así
+         que ni Swashbuckle ni NSwag: el documento generado es la fuente de la
+         forma de la API, y de ahí salen los tipos del frontend y, más adelante,
+         los esquemas de las capabilities de UCP. Misma banda de preview que el
+         SDK; se mueve con él. -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0-preview.7.26381.103" />
   </ItemGroup>
 
   <ItemGroup Label="Persistence">
@@ -63,6 +69,12 @@
     <PackageVersion Include="xunit.v3" Version="4.0.0" />
     <!-- NetArchTest.Rules 1.3.2 — MIT (declared in the repo, not in the nuspec) -->
     <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+    <!-- Microsoft.AspNetCore.Mvc.Testing 11.0.0-preview.7 — MIT. Entra con el
+         test de contrato de OpenAPI, que arranca la API de verdad con
+         WebApplicationFactory y le pide su documento. No arrastra Docker: ni el
+         DbContext ni el cliente de Elasticsearch conectan al construirse, así
+         que dos cadenas de conexión falsas bastan para levantarla. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0-preview.7.26381.103" />
   </ItemGroup>
 
 </Project>

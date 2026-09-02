@@ -35,6 +35,13 @@ builder.Services.AddLexicalSearch(
 // no debería poder tumbar el proceso.
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 
+// El documento es la forma de la API, y de él salen los tipos del frontend
+// (antes escritos a mano en shared-api, sin nada que detectase la deriva) y,
+// en la fase 9, los esquemas de las capabilities de UCP. Va en el framework:
+// ni Swashbuckle ni NSwag, que serían dos dependencias para lo mismo.
+builder.Services.AddOpenApi(options =>
+    options.AddSchemaTransformer<NumbersAreNumbersTransformer>());
+
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<SearchUnavailableExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -43,6 +50,10 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.MapDefaultEndpoints();
+
+// Servido siempre, no sólo en Development: el test de contrato lo lee de aquí,
+// y un agente que descubra la tienda por UCP necesita alcanzarlo en producción.
+app.MapOpenApi();
 
 app.MapCarter();
 

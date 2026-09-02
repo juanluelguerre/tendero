@@ -6,7 +6,8 @@
     "serve:storefront": "nx serve storefront",
     "serve:backoffice": "nx serve backoffice",
     "build:storefront": "nx build storefront",
-    "build:backoffice": "nx build backoffice"
+    "build:backoffice": "nx build backoffice",
+    "generate:api-types": "npx --yes openapi-typescript@7.13.0 ../docs/openapi/tendero.json -o libs/shared/api/src/lib/generated/schema.ts"
   },
   "private": true,
   "dependencies": {

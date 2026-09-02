@@ -7,6 +7,7 @@ using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace ElGuerre.Tendero.Catalog.Features.PublishProduct;
@@ -47,6 +48,13 @@ public sealed record PublishProductResult(PublishOutcome Outcome, ProductId Prod
 /// </summary>
 public sealed record PublishProductResponse(string ProductId, string Outcome, string Status);
 
+/// <summary>
+/// El cuerpo del 409. Era un objeto anónimo, que produce el mismo JSON y ningún
+/// esquema: un cliente generado no podía ver que este endpoint puede rechazar
+/// por archivado, ni con qué forma.
+/// </summary>
+public sealed record PublishProductConflict(string Title, string Detail);
+
 public sealed class PublishProductValidator : AbstractValidator<PublishProductCommand>
 {
     public PublishProductValidator()
@@ -62,8 +70,12 @@ public sealed class PublishProductEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         // POST /api/catalog/products/{id}/publish
+        // Los tres resultados se declaran en la firma. El objeto anónimo del
+        // conflicto era invisible para cualquier cliente — no tenía nombre, así
+        // que no podía tener esquema — y ahora es un record con el mismo JSON.
         app.MapPost("/api/catalog/products/{id:guid}/publish",
-            async (Guid id, ICommandDispatcher dispatcher, CancellationToken ct) =>
+            async Task<Results<Ok<PublishProductResponse>, NotFound, Conflict<PublishProductConflict>>> (
+                   Guid id, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(new PublishProductCommand(new ProductId(id)), ct);
 
@@ -72,16 +84,14 @@ public sealed class PublishProductEndpoint : ICarterModule
                 // a 404 sin que el puerto conozca códigos de estado.
                 return result.Outcome switch
                 {
-                    PublishOutcome.NotFound => Results.NotFound(),
-                    PublishOutcome.Archived => Results.Conflict(new
-                    {
-                        title = "The product is archived.",
-                        detail = "Archived products stay out of the catalogue. Restore it before publishing."
-                    }),
+                    PublishOutcome.NotFound => TypedResults.NotFound(),
+                    PublishOutcome.Archived => TypedResults.Conflict(new PublishProductConflict(
+                        "The product is archived.",
+                        "Archived products stay out of the catalogue. Restore it before publishing.")),
                     // camelCase, no ToLowerInvariant: "alreadyactive" pierde el
                     // limite de palabra y las propiedades del payload ya van en
                     // camelCase, asi que el valor sigue la misma convencion.
-                    _ => Results.Ok(new PublishProductResponse(
+                    _ => TypedResults.Ok(new PublishProductResponse(
                         result.ProductId.Value.ToString(),
                         JsonNamingPolicy.CamelCase.ConvertName(result.Outcome.ToString()),
                         result.Status))

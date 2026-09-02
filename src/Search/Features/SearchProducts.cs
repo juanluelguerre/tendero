@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Search.Contracts;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace ElGuerre.Tendero.Search.Features.SearchProducts;
@@ -28,7 +29,8 @@ public sealed class SearchProductsEndpoint : ICarterModule
     {
         // GET /api/search?q=zapatillas%20running&culture=es&page=1&pageSize=20
         app.MapGet("/api/search",
-            async (string q, string? culture, int? page, int? pageSize,
+            async Task<Ok<SearchResultPage>> (
+                   string q, string? culture, int? page, int? pageSize,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 // Cultura: query param explícito > Accept-Language > "es".
@@ -49,7 +51,7 @@ public sealed class SearchProductsEndpoint : ICarterModule
                 http.Response.Headers.ContentLanguage = resolved;
                 http.Response.Headers.Vary = "Accept-Language";
 
-                return Results.Ok(result);
+                return TypedResults.Ok(result);
             })
             .WithTags("Search")
             .WithName("SearchProducts");

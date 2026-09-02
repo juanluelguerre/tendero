@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace ElGuerre.Tendero.Catalog.Features.GetProductImage;
@@ -23,16 +24,17 @@ public sealed class GetProductImageEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("/api/images/{id}",
-            async (string id, IImageStore store, HttpContext http, CancellationToken ct) =>
+            async Task<Results<FileStreamHttpResult, NotFound>> (
+                   string id, IImageStore store, HttpContext http, CancellationToken ct) =>
             {
                 var stored = await store.OpenAsync(new ImageId(id), ct);
                 if (stored is null)
-                    return Results.NotFound();
+                    return TypedResults.NotFound();
 
                 http.Response.Headers.CacheControl = $"public, max-age={OneYearInSeconds}, immutable";
                 http.Response.Headers.ETag = $"\"{id}\"";
 
-                return Results.Stream(stored.Content, stored.ContentType);
+                return TypedResults.Stream(stored.Content, stored.ContentType);
             })
             .WithTags("Catalog")
             .WithName("GetProductImage");

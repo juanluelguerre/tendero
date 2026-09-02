@@ -201,9 +201,14 @@ Development only. The failure mode is quiet: `EnsureCreated` does nothing when t
 schema already exists, so the first additive model change leaves every existing
 developer database silently wrong, with no error.
 
-**4. No OpenAPI.** `frontend/libs/shared/api/src/lib/*.ts` hand-mirrors the .NET
+**4. No OpenAPI.** ~~`frontend/libs/shared/api/src/lib/*.ts` hand-mirrors the .NET
 DTOs, and its own docblocks flag the risk. There is no contract test on either
-side, so drift is silent and surfaces at runtime.
+side, so drift is silent and surfaces at runtime.~~
+**Resolved 2026-09-02.** `docs/openapi/tendero.json` is committed, a contract
+test asserts it is what the API serves, and the frontend types are generated
+from it. Getting there required moving the endpoints to `TypedResults`: with
+`Results.Ok(...)` the generator could infer nothing and the document had no
+response schemas at all.
 
 **5. No integration tests.** No `WebApplicationFactory`, no Testcontainers, no
 `Category` trait. Nothing exercises Postgres, the jsonb converters, the outbox

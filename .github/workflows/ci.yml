@@ -46,9 +46,18 @@ jobs:
 
       # The architecture rules are ordinary xUnit facts, so this line is also
       # what enforces slice isolation, domain purity and "Elastic.Clients stays
-      # inside its adapter".
+      # inside its adapter". It now also boots the API through
+      # WebApplicationFactory, which is what catches a DI misconfiguration —
+      # the kind of failure that only ever shows up at startup.
       - name: Test
         run: dotnet test --no-build
+
+      # The contract test above compares the served document against the
+      # committed one and fails on a difference. This is belt and braces for the
+      # opposite mistake: a run with UPDATE_OPENAPI left set would rewrite the
+      # file and pass, so assert the working tree is clean afterwards.
+      - name: The committed OpenAPI document is unchanged
+        run: git diff --exit-code -- docs/openapi/tendero.json
 
   search-quality:
     name: Search relevance gate (NDCG@10)
@@ -159,3 +168,13 @@ jobs:
       # two apps was a convention rather than a rule.
       - name: Lint and test
         run: npx nx run-many -t lint test
+
+      # The generated types are committed so the apps compile without a
+      # generation step. Regenerating and diffing is what stops them drifting
+      # from docs/openapi/tendero.json — which the backend job has already
+      # proved is what the API serves. Between the two, a change to a C# DTO
+      # cannot reach `main` without the TypeScript following it.
+      - name: The generated API types match the document
+        run: |
+          npm run generate:api-types
+          git diff --exit-code -- libs/shared/api/src/lib/generated/

@@ -64,7 +64,15 @@ dotnet test                                   # unit + contract + architecture
 dotnet test --filter Category=Integration     # Testcontainers (needs Docker)
 dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
+
+UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
+npm run generate:api-types                    # from frontend/, reads that document
 ```
+
+The last two go together, in that order: the contract test regenerates the
+document from the running API, and the frontend types are generated from the
+document. Run both after changing anything a response returns; CI fails on either
+being stale.
 
 ## Architecture invariants (never break these)
 

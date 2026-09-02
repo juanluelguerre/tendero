@@ -11,6 +11,7 @@
     <Project Path="src/Workers/ElGuerre.Tendero.Workers.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Api.Tests/ElGuerre.Tendero.Api.Tests.csproj" />
     <Project Path="tests/Architecture.Tests/ElGuerre.Tendero.Architecture.Tests.csproj" />
     <Project Path="tests/Catalog.Tests/ElGuerre.Tendero.Catalog.Tests.csproj" />
     <Project Path="tests/Ordering.Tests/ElGuerre.Tendero.Ordering.Tests.csproj" />

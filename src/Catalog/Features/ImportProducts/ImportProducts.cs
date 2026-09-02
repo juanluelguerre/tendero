@@ -7,6 +7,7 @@ using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
@@ -41,10 +42,11 @@ public sealed class ImportProductsEndpoint : ICarterModule
     {
         // POST /api/catalog/import  { "source": "seed" }
         app.MapPost("/api/catalog/import",
-            async (ImportProductsCommand command, ICommandDispatcher dispatcher, CancellationToken ct) =>
+            async Task<Ok<ImportProductsResult>> (
+                   ImportProductsCommand command, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(command, ct);
-                return Results.Ok(result);
+                return TypedResults.Ok(result);
             })
             .WithTags("Catalog")
             .WithName("ImportProducts");
