@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Catalog.Domain;
 using System.Globalization;
 using System.Text.Json;
 using ElGuerre.Tendero.SharedKernel;
@@ -78,6 +79,35 @@ internal static class Jsonb
 
     private static List<string> ReadStringList(string json) =>
         JsonSerializer.Deserialize<List<string>>(json, Options) ?? new List<string>();
+
+    /// <summary>
+    /// Los valores de atributo de un producto. Se leen SIEMPRE con su producto y
+    /// nunca se consultan sueltos, así que jsonb es lo correcto (ADR 0008) — lo
+    /// que sí se consulta son las DEFINICIONES, y esas van a tabla.
+    /// </summary>
+    public static readonly ValueConverter<List<AttributeValue>, string> AttributeValuesConverter = new(
+        values => JsonSerializer.Serialize(values, Options),
+        json => ReadAttributeValues(json));
+
+    public static readonly ValueComparer<List<AttributeValue>> AttributeValuesComparer = new(
+        (left, right) => left != null && right != null && left.SequenceEqual(right),
+        values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode())),
+        values => new List<AttributeValue>(values));
+
+    private static List<AttributeValue> ReadAttributeValues(string json) =>
+        JsonSerializer.Deserialize<List<AttributeValue>>(json, Options) ?? new List<AttributeValue>();
+
+    public static readonly ValueComparer<List<AttributeOption>> AttributeOptionsComparer = new(
+        (left, right) => left != null && right != null && left.SequenceEqual(right),
+        options => options.Aggregate(0, (hash, option) => HashCode.Combine(hash, option.Code.GetHashCode(StringComparison.Ordinal))),
+        options => new List<AttributeOption>(options));
+
+    public static readonly ValueConverter<List<AttributeOption>, string> AttributeOptionsConverter = new(
+        options => JsonSerializer.Serialize(options, Options),
+        json => ReadAttributeOptions(json));
+
+    private static List<AttributeOption> ReadAttributeOptions(string json) =>
+        JsonSerializer.Deserialize<List<AttributeOption>>(json, Options) ?? new List<AttributeOption>();
 
     public static readonly ValueComparer<List<string>> StringListComparer = new(
         (left, right) => left != null && right != null && left.SequenceEqual(right, StringComparer.Ordinal),

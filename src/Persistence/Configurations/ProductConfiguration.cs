@@ -67,10 +67,14 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         // Los atributos son un diccionario, que no tiene equivalente en tipos
         // complejos: conversor a jsonb, preservando el comparador OrdinalIgnoreCase.
-        builder.Property<Dictionary<string, string>>("_attributes")
+        // Los valores de atributo pasaron de Dictionary<string,string> a una
+        // lista tipada. Siguen en jsonb porque se leen siempre con su producto;
+        // lo que se consulta son las DEFINICIONES, y esas van a tabla.
+        builder.Property<List<AttributeValue>>("_attributes")
             .HasColumnName("Attributes")
             .HasColumnType("jsonb")
-            .HasConversion(Jsonb.AttributesConverter, Jsonb.AttributesComparer)
+            .HasConversion(Jsonb.AttributeValuesConverter, Jsonb.AttributeValuesComparer)
+            .HasDefaultValueSql("'[]'::jsonb")
             .IsRequired();
 
         builder.Ignore(p => p.Attributes);

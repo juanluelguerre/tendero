@@ -68,7 +68,31 @@ identical numbers.
 | culture | NDCG@10 | recall@50 | threshold NDCG | threshold recall |
 |---|---:|---:|---:|---:|
 | es | 0.860 | 0.841 | 0.85 | 0.83 |
-| en | 0.720 | 0.682 | 0.71 | 0.67 |
+| en | 0.811 | 0.773 | 0.80 | 0.76 |
+
+### What localized attribute values bought (2026-09-02)
+
+The first gap below, closed. Attribute values became typed and localized: the
+catalogue stores the option code `NAVY_BLUE`, and the index renders it as "azul
+marino" in `products_es` and "navy blue" in `products_en`.
+
+| | before | after |
+|---|---:|---:|
+| en NDCG@10 | 0.720 | **0.811** |
+| en recall@50 | 0.682 | **0.773** |
+| es NDCG@10 | 0.860 | 0.860 |
+| es recall@50 | 0.841 | 0.841 |
+
+**Spanish did not move, and that was the test.** The change only alters how the
+searchable text is rendered; if the Spanish numbers had shifted, the rendering
+would have changed something it had no business changing. English thresholds
+raised to 0.80 / 0.76, keeping roughly the same margin the previous ones had.
+
+Two queries went from 0.000 to 1.000: `navy blue shoes` and `womens running
+shoes` — the two the gap below named. `induction cookware` did **not** move, and
+that is the diagnosis holding: the pan now indexes "induction" from its boolean
+attribute, but the query needs both terms and "cookware" still lives in a
+category code nobody types.
 
 ### What the first committed baseline bought
 
@@ -96,10 +120,9 @@ listing it among text fields promised a match that could never happen.
 
 The queries scoring 0.000 are diagnosis, not noise:
 
-1. **Attribute values are never translated.** Colour and gender are stored in
-   Spanish, so "navy blue shoes" and "womens running shoes" cannot match in the
-   English index. Localized attribute values are deferred on purpose
-   (initial-plan §7); this is what their absence costs.
+1. ~~**Attribute values are never translated.**~~ **Closed 2026-09-02** — see
+   the before/after above. Colour and gender are option codes now, with a label
+   per culture, and the two queries this cost went from 0.000 to 1.000.
 2. **The category taxonomy is not user vocabulary.** "induction cookware" fails
    because `COOKWARE` is a code, not a label someone would type. It needs the
    category to become localized text, not a mapping tweak.

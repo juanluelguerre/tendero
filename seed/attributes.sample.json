@@ -1,0 +1,111 @@
+[
+  {
+    "code": "COLOR",
+    "aliases": ["color", "colour"],
+    "kind": "Option",
+    "isVariantAxis": true,
+    "isFacet": true,
+    "label": { "es": "color", "en": "colour" },
+    "options": [
+      { "code": "NAVY_BLUE", "label": { "es": "azul marino", "en": "navy blue" } },
+      { "code": "BLACK", "label": { "es": "negro", "en": "black" } },
+      { "code": "WHITE", "label": { "es": "blanco", "en": "white" } },
+      { "code": "FOREST_GREEN", "label": { "es": "verde bosque", "en": "forest green" } },
+      { "code": "STAINLESS_STEEL", "label": { "es": "acero inoxidable", "en": "stainless steel" } }
+    ]
+  },
+  {
+    "code": "GENDER",
+    "aliases": ["genero", "género", "gender"],
+    "kind": "Option",
+    "isFacet": true,
+    "label": { "es": "género", "en": "gender" },
+    "options": [
+      { "code": "WOMEN", "label": { "es": "mujer", "en": "women" } },
+      { "code": "MEN", "label": { "es": "hombre", "en": "men" } }
+    ]
+  },
+  {
+    "code": "MATERIAL",
+    "aliases": ["material"],
+    "kind": "Option",
+    "isFacet": true,
+    "label": { "es": "material", "en": "material" },
+    "options": [
+      { "code": "SYNTHETIC_MESH", "label": { "es": "malla sintética", "en": "synthetic mesh" } },
+      { "code": "RECYCLED_RIPSTOP", "label": { "es": "ripstop reciclado", "en": "recycled ripstop" } }
+    ]
+  },
+  {
+    "code": "INDUCTION",
+    "aliases": ["induccion", "inducción", "induction"],
+    "kind": "Boolean",
+    "isFacet": true,
+    "label": { "es": "inducción", "en": "induction" }
+  },
+  {
+    "code": "SIZE_RANGE",
+    "aliases": ["tallas", "sizes"],
+    "kind": "Text",
+    "label": { "es": "tallas", "en": "sizes" }
+  },
+  {
+    "code": "UV_PROTECTION",
+    "aliases": ["proteccion_uv", "protección_uv"],
+    "kind": "Text",
+    "label": { "es": "protección solar", "en": "sun protection" }
+  },
+  {
+    "code": "COLOUR_TEMPERATURE",
+    "aliases": ["temperatura_color"],
+    "kind": "Text",
+    "label": { "es": "temperatura de color", "en": "colour temperature" }
+  },
+  {
+    "code": "DIAMETERS_CM",
+    "aliases": ["diametros_cm", "diámetros_cm"],
+    "kind": "Text",
+    "label": { "es": "diámetros", "en": "diameters" }
+  },
+  {
+    "code": "DROP_MM",
+    "aliases": ["drop_mm"],
+    "kind": "Number",
+    "unit": "mm",
+    "label": { "es": "drop", "en": "drop" }
+  },
+  {
+    "code": "CAPACITY_L",
+    "aliases": ["capacidad_l"],
+    "kind": "Number",
+    "unit": "L",
+    "label": { "es": "capacidad", "en": "capacity" }
+  },
+  {
+    "code": "LAPTOP_MAX_IN",
+    "aliases": ["portatil_max", "portátil_max"],
+    "kind": "Text",
+    "label": { "es": "portátil máximo", "en": "laptop up to" }
+  },
+  {
+    "code": "CUPS",
+    "aliases": ["capacidad_tazas"],
+    "kind": "Number",
+    "unit": "",
+    "label": { "es": "tazas", "en": "cups" }
+  },
+  {
+    "code": "POWER_W",
+    "aliases": ["potencia_w"],
+    "kind": "Number",
+    "unit": "W",
+    "label": { "es": "potencia", "en": "power" }
+  },
+  {
+    "code": "PIECES",
+    "aliases": ["piezas"],
+    "kind": "Number",
+    "unit": "",
+    "label": { "es": "piezas", "en": "pieces" }
+  }
+]

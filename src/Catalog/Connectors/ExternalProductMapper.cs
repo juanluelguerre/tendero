@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
 
 namespace ElGuerre.Tendero.Catalog.Connectors;
 
@@ -22,7 +23,9 @@ namespace ElGuerre.Tendero.Catalog.Connectors;
 public static class ExternalProductMapper
 {
     /// <summary>Alta: producto nuevo en Draft, ya enlazado a su origen.</summary>
-    public static Product ToNewProduct(this ExternalProduct external, string source, TimeProvider clock)
+    public static Product ToNewProduct(
+        this ExternalProduct external, string source, TimeProvider clock,
+        AttributeDefinitions? definitions = null)
     {
         var product = Product.Create(
             clock,
@@ -33,7 +36,7 @@ public static class ExternalProductMapper
             external.Category);
 
         product.LinkExternal(clock, source, external.ExternalId);
-        CopyAttributes(external, product, clock);
+        CopyAttributes(external, product, clock, definitions);
         EnsureDefaultVariant(external, product, clock);
 
         return product;
@@ -44,12 +47,14 @@ public static class ExternalProductMapper
     /// estado — un producto ya publicado no vuelve a Draft porque su proveedor
     /// haya cambiado una descripción (ADR 0012).
     /// </summary>
-    public static void ApplyTo(this ExternalProduct external, Product product, TimeProvider clock)
+    public static void ApplyTo(
+        this ExternalProduct external, Product product, TimeProvider clock,
+        AttributeDefinitions? definitions = null)
     {
         product.UpdateDetails(
             clock, external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
         product.SetPrice(clock, external.Price);
-        CopyAttributes(external, product, clock);
+        CopyAttributes(external, product, clock, definitions);
         EnsureDefaultVariant(external, product, clock);
     }
 
@@ -79,9 +84,49 @@ public static class ExternalProductMapper
 
     private static string DefaultSku(ExternalProduct external) => $"{external.ExternalId}-DEFAULT";
 
-    private static void CopyAttributes(ExternalProduct external, Product product, TimeProvider clock)
+    /// <summary>
+    /// Traduce lo que manda el origen a valores tipados, resolviendo contra las
+    /// definiciones del catálogo. Es aquí donde "azul marino" deja de ser el
+    /// dato y pasa a ser la opción <c>NAVY_BLUE</c>, que sabe decirse en inglés.
+    ///
+    /// Sin definiciones —SearchEval antes de sembrarlas, un test— cae a texto
+    /// plano, que es exactamente el comportamiento anterior. Degradar a lo que
+    /// ya había es mejor que fallar: la importación no debería depender de que
+    /// alguien haya definido los atributos primero.
+    /// </summary>
+    private static void CopyAttributes(
+        ExternalProduct external, Product product, TimeProvider clock, AttributeDefinitions? definitions)
     {
         foreach (var (name, value) in external.Attributes)
-            product.SetAttribute(clock, name, value);
+            product.SetAttribute(clock, Resolve(name, value, definitions));
+    }
+
+    internal static AttributeValue Resolve(string name, string value, AttributeDefinitions? definitions)
+    {
+        var definition = definitions?.ForSourceKey(name);
+        if (definition is null)
+            return AttributeValue.Plain(name, value);
+
+        return definition.Kind switch
+        {
+            AttributeKind.Option => definition.ResolveOption(value) is { } option
+                ? AttributeValue.Option(definition.Code, option.Code)
+                // El origen mandó un valor que la definición no conoce. Se
+                // guarda tal cual en vez de descartarlo: perder el dato sería
+                // peor, y así queda visible para quien revise.
+                : AttributeValue.Plain(definition.Code, value),
+
+            AttributeKind.Number => decimal.TryParse(
+                value.TrimEnd('"'), System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var number)
+                    ? AttributeValue.Numeric(definition.Code, number)
+                    : AttributeValue.Plain(definition.Code, value),
+
+            AttributeKind.Boolean => AttributeValue.Boolean(
+                definition.Code,
+                value.Trim() is "si" or "sí" or "yes" or "true" or "1"),
+
+            _ => AttributeValue.Plain(definition.Code, value)
+        };
     }
 }

@@ -29,7 +29,7 @@ public sealed record ProductArchived(ProductId ProductId, DateTimeOffset Occurre
 public sealed class Product : AggregateRoot
 {
     private readonly List<ProductImage> _images = [];
-    private readonly Dictionary<string, string> _attributes = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<AttributeValue> _attributes = [];
     private readonly List<ExternalReference> _externalReferences = [];
     private readonly List<Variant> _variants = [];
     private readonly List<string> _variantAxes = [];
@@ -56,7 +56,7 @@ public sealed class Product : AggregateRoot
     /// </summary>
     public ProductImage? PrimaryImage =>
         _images.Count == 0 ? null : _images.MinBy(image => image.SortOrder);
-    public IReadOnlyDictionary<string, string> Attributes => _attributes;
+    public IReadOnlyList<AttributeValue> Attributes => _attributes;
     public IReadOnlyList<ExternalReference> ExternalReferences => _externalReferences;
 
     public IReadOnlyList<Variant> Variants => _variants;
@@ -163,12 +163,27 @@ public sealed class Product : AggregateRoot
         Touch(clock);
     }
 
-    public void SetAttribute(TimeProvider clock, string name, string value)
+    /// <summary>
+    /// Añade o reemplaza el valor de un atributo, por código. Antes tomaba dos
+    /// cadenas y aceptaba cualquier cosa: <c>SetAttribute("colour", "banana")</c>
+    /// entraba sin rechistar, y "azul marino" era literalmente el dato — con lo
+    /// que el índice inglés contenía español.
+    ///
+    /// Quien valida contra la definición es el slice que llama, no esto: el
+    /// agregado no conoce el catálogo de definiciones, y hacer que lo conociera
+    /// convertiría cada `SetAttribute` en una consulta.
+    /// </summary>
+    public void SetAttribute(TimeProvider clock, AttributeValue value)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        _attributes[name.Trim()] = value;
+        _attributes.RemoveAll(existing =>
+            string.Equals(existing.Code, value.Code, StringComparison.OrdinalIgnoreCase));
+        _attributes.Add(value);
         Touch(clock);
     }
+
+    public AttributeValue? AttributeFor(string code) =>
+        _attributes.FirstOrDefault(value =>
+            string.Equals(value.Code, code, StringComparison.OrdinalIgnoreCase));
 
     // Idempotente por identidad de contenido: reimportar la misma foto no la
     // duplica, porque el hash del contenido ES la clave.

@@ -1,4 +1,4 @@
 {
   "es": { "ndcgAt10": 0.85, "recallAt50": 0.83 },
-  "en": { "ndcgAt10": 0.71, "recallAt50": 0.67 }
+  "en": { "ndcgAt10": 0.80, "recallAt50": 0.76 }
 }

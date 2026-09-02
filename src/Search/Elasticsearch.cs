@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using Elastic.Clients.Elasticsearch;
@@ -70,10 +71,20 @@ internal sealed class SearchIndexInitializer(
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
-internal sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : IProductIndexer
+/// <summary>
+/// Construye el documento y lo escribe. Necesita las definiciones de atributo
+/// porque el texto buscable se renderiza EN LA CULTURA DEL ÍNDICE: sin ellas,
+/// products_en contendría "color azul marino" y ninguna consulta inglesa podría
+/// casarlo — que es exactamente por qué "navy blue shoes" puntúa 0.000 en la
+/// línea base commiteada.
+/// </summary>
+internal sealed class ElasticsearchProductIndexer(
+    ElasticsearchClient client, IAttributeDefinitionReader attributeDefinitions) : IProductIndexer
 {
     public async Task IndexAsync(Product product, CancellationToken ct = default)
     {
+        var definitions = await attributeDefinitions.AllAsync(ct);
+
         foreach (var culture in SearchCultures.Supported)
         {
             // Reindexar un producto es reemplazar TODAS sus variantes, no añadir:
@@ -81,7 +92,7 @@ internal sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : 
             // sólo las vivas dejaría la retirada ahí para siempre.
             await RemoveAsync(product.Id, culture, ct);
 
-            foreach (var document in ProductSearchDocument.ForVariants(product, culture))
+            foreach (var document in ProductSearchDocument.ForVariants(product, culture, definitions))
             {
                 var response = await client.IndexAsync(
                     document,
