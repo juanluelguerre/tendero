@@ -1,0 +1,17 @@
+[
+  { "code": "APPAREL", "name": { "es": "Ropa", "en": "Clothing" } },
+  { "code": "FOOTWEAR", "parent": "APPAREL", "name": { "es": "Calzado", "en": "Footwear" } },
+  { "code": "SHOES", "parent": "FOOTWEAR", "name": { "es": "Zapatillas deportivas", "en": "Sports shoes" } },
+  { "code": "SPORTSWEAR", "parent": "APPAREL", "name": { "es": "Ropa deportiva", "en": "Sportswear" } },
+  { "code": "SHIRT", "parent": "SPORTSWEAR", "name": { "es": "Camisetas", "en": "Shirts" } },
+
+  { "code": "HOME", "name": { "es": "Hogar", "en": "Home" } },
+  { "code": "KITCHEN", "parent": "HOME", "name": { "es": "Cocina", "en": "Kitchen" } },
+  { "code": "COOKWARE", "parent": "KITCHEN", "name": { "es": "Menaje de cocina", "en": "Cookware" } },
+  { "code": "COFFEE_MAKER", "parent": "KITCHEN", "name": { "es": "Cafeteras", "en": "Coffee makers" } },
+  { "code": "LIGHTING", "parent": "HOME", "name": { "es": "Iluminación", "en": "Lighting" } },
+  { "code": "DESK_LAMP", "parent": "LIGHTING", "name": { "es": "Flexos y lámparas de escritorio", "en": "Desk and reading lamps" } },
+
+  { "code": "BAGS", "name": { "es": "Bolsas y mochilas", "en": "Bags and backpacks" } },
+  { "code": "BACKPACK", "parent": "BAGS", "name": { "es": "Mochilas", "en": "Backpacks" } }
+]

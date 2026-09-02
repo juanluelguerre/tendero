@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using ElGuerre.Tendero.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,14 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ElGuerre.Tendero.Persistence.Migrations;
 
 [DbContext(typeof(TenderoDbContext))]
-partial class TenderoDbContextModelSnapshot : ModelSnapshot
+[Migration("20260902180144_LocalizedAttributes")]
+partial class _20260902180144_LocalizedAttributes
 {
-    // If you encounter a merge conflict in the line below, it means you need to
-    // discard one of the migration branches and recreate its migrations on top of
-    // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260902181139_DropUnusedAttributeDefinitionsTable";
-
-    protected override void BuildModel(ModelBuilder modelBuilder)
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder
@@ -27,6 +25,73 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+        modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.AttributeDefinition", b =>
+            {
+                b.Property<string>("Code")
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("code");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<bool>("IsDraft")
+                    .HasColumnType("boolean")
+                    .HasColumnName("is_draft");
+
+                b.Property<bool>("IsFacet")
+                    .HasColumnType("boolean")
+                    .HasColumnName("is_facet");
+
+                b.Property<bool>("IsSearchable")
+                    .HasColumnType("boolean")
+                    .HasColumnName("is_searchable");
+
+                b.Property<bool>("IsVariantAxis")
+                    .HasColumnType("boolean")
+                    .HasColumnName("is_variant_axis");
+
+                b.Property<string>("Kind")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("kind");
+
+                b.Property<string>("Label")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("label");
+
+                b.Property<string>("Unit")
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("unit");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.Property<string>("_aliases")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("aliases")
+                    .HasDefaultValueSql("'[]'::jsonb");
+
+                b.Property<string>("_options")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("options")
+                    .HasDefaultValueSql("'[]'::jsonb");
+
+                b.HasKey("Code")
+                    .HasName("pk_attribute_definitions");
+
+                b.ToTable("attribute_definitions", "catalog");
+            });
 
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>
             {

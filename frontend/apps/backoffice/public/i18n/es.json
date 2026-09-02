@@ -1,4 +1,16 @@
 {
+  "attributes": {
+    "title": "Atributos",
+    "hint": "Una etiqueta sin traducir no es cosmetica: una opcion sin ingles es exactamente lo que hacia que «navy blue shoes» no encontrara nada.",
+    "loading": "Cargando...",
+    "failed": "No se pudieron cargar las definiciones.",
+    "incomplete": "{{count}} sin completar",
+    "column": {
+      "code": "Codigo",
+      "kind": "Tipo",
+      "options": "Opciones"
+    }
+  },
   "brand": {
     "area": "Backoffice",
     "name": "Tendero"
@@ -7,7 +19,8 @@
     "agents": "Actividad de agentes",
     "orders": "Pedidos",
     "reviewQueue": "Cola de revisión",
-    "search": "Evaluación de búsqueda"
+    "search": "Evaluación de búsqueda",
+    "attributes": "Atributos"
   },
   "reviewQueue": {
     "column": {

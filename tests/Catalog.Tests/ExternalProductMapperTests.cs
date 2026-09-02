@@ -66,7 +66,13 @@ public sealed class ExternalProductMapperTests
         Assert.Equal("Moka", product.Brand);
         Assert.Equal("COFFEE_MAKER", product.Category);
         Assert.Equal(29.90m, product.Price.Amount);
-        Assert.Equal("negro", product.Attributes["color"]);
+        // Sin definiciones, el atributo cae a texto plano: es el comportamiento
+        // anterior, y degradar a lo que ya había es mejor que fallar la
+        // importación porque nadie definió los atributos primero.
+        var colour = product.AttributeFor("COLOR");
+        Assert.NotNull(colour);
+        Assert.Equal(AttributeKind.Text, colour.Kind);
+        Assert.Equal("negro", colour.RawText);
     }
 
     [Fact]

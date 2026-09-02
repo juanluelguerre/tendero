@@ -67,8 +67,63 @@ identical numbers.
 
 | culture | NDCG@10 | recall@50 | threshold NDCG | threshold recall |
 |---|---:|---:|---:|---:|
-| es | 0.860 | 0.841 | 0.85 | 0.83 |
-| en | 0.720 | 0.682 | 0.71 | 0.67 |
+| es | 0.943 | 0.909 | 0.93 | 0.90 |
+| en | 0.937 | 0.886 | 0.93 | 0.88 |
+
+### What localized attribute values bought (2026-09-02)
+
+The first gap below, closed. Attribute values became typed and localized: the
+catalogue stores the option code `NAVY_BLUE`, and the index renders it as "azul
+marino" in `products_es` and "navy blue" in `products_en`.
+
+| | before | after |
+|---|---:|---:|
+| en NDCG@10 | 0.720 | **0.811** |
+| en recall@50 | 0.682 | **0.773** |
+| es NDCG@10 | 0.860 | 0.860 |
+| es recall@50 | 0.841 | 0.841 |
+
+**Spanish did not move, and that was the test.** The change only alters how the
+searchable text is rendered; if the Spanish numbers had shifted, the rendering
+would have changed something it had no business changing. English thresholds
+raised to 0.80 / 0.76, keeping roughly the same margin the previous ones had.
+
+Two queries went from 0.000 to 1.000: `navy blue shoes` and `womens running
+shoes` — the two the gap below named. `induction cookware` did **not** move, and
+that is the diagnosis holding: the pan now indexes "induction" from its boolean
+attribute, but the query needs both terms and "cookware" still lives in a
+category code nobody types.
+
+### What the localized taxonomy bought (2026-09-02)
+
+`Product.Category` was the string `COOKWARE`. The index carried a code nobody
+types, which is why the field had been taken *out* of the searchable fields —
+mapped as `keyword`, it promised a match that could never happen. Categories are
+now an aggregate with a localized name and a materialized path, and the document
+carries two fields instead of one: `categoryCode` stays a keyword for filters,
+`categoryPathText` is analysed text with the whole branch — "Hogar Cocina Menaje
+de cocina" / "Home Kitchen Cookware".
+
+| | before | after |
+|---|---:|---:|
+| es NDCG@10 | 0.860 | **0.943** |
+| es recall@50 | 0.841 | **0.909** |
+| en NDCG@10 | 0.811 | **0.937** |
+| en recall@50 | 0.773 | **0.886** |
+
+**Both cultures moved this time, and that is the expected shape.** The attribute
+change only added English text, so Spanish holding still was the test. This one
+adds text in both, so Spanish moving is the confirmation rather than the alarm.
+
+The whole branch is indexed, not just the leaf, because someone searching
+"cocina" expects to find what is inside it. That is what carried `menaje de
+cocina`, `ropa deportiva`, `sportswear`, `induction cookware` and `reading light
+with usb` from 0.000 to a hit.
+
+**One query per culture still scores 0.000**, and they are the same query:
+`gift for the kitchen` and `regalo para casa`. No amount of taxonomy reaches
+them — nothing in the catalogue contains the word "gift". They are the
+semantic-intent gap, and they are the number hybrid search has to earn.
 
 ### What the first committed baseline bought
 
@@ -96,17 +151,18 @@ listing it among text fields promised a match that could never happen.
 
 The queries scoring 0.000 are diagnosis, not noise:
 
-1. **Attribute values are never translated.** Colour and gender are stored in
-   Spanish, so "navy blue shoes" and "womens running shoes" cannot match in the
-   English index. Localized attribute values are deferred on purpose
-   (initial-plan §7); this is what their absence costs.
-2. **The category taxonomy is not user vocabulary.** "induction cookware" fails
-   because `COOKWARE` is a code, not a label someone would type. It needs the
-   category to become localized text, not a mapping tweak.
-3. **Vocabulary gaps lexical search cannot bridge** — "reading light with usb",
-   "ropa deportiva", "menaje de cocina", "gift for the kitchen". These are in the
-   golden set deliberately: they are the headroom hybrid search has to earn in
-   phase 2, and the before/after number for that article.
+1. ~~**Attribute values are never translated.**~~ **Closed 2026-09-02** — see
+   the before/after above. Colour and gender are option codes now, with a label
+   per culture, and the two queries this cost went from 0.000 to 1.000.
+2. ~~**The category taxonomy is not user vocabulary.**~~ **Closed 2026-09-02** —
+   categories carry a localized name and the index carries the whole branch as
+   analysed text. It took `induction cookware`, `menaje de cocina`, `ropa
+   deportiva`, `sportswear` and `reading light with usb` off this list.
+3. **Vocabulary gaps lexical search cannot bridge** — down to one query per
+   culture: `gift for the kitchen` and `regalo para casa`. Nothing in the
+   catalogue contains the word "gift", so no taxonomy reaches them. This is the
+   semantic-intent gap, and it is the before/after number hybrid search has to
+   earn.
 
 A cautionary note on annotating: "flexo con usb" was originally annotated as a
 synonym gap lexical search could not solve. It scores 1.000, and always did —

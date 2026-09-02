@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,11 +26,18 @@ public sealed class SeedCorpus(IServiceProvider services)
         var connector = services.GetRequiredKeyedService<ICatalogSourceConnector>(source);
         var indexer = services.GetRequiredService<IProductIndexer>();
 
+        // Las MISMAS definiciones que usa la importación. Sin ellas el corpus
+        // guardaría "azul marino" como texto plano y la puerta mediría un
+        // sistema distinto del que corre.
+        var definitions = await services
+            .GetRequiredService<IAttributeDefinitionReader>()
+            .AllAsync(cancellationToken);
+
         var byInternalId = new Dictionary<string, string>(StringComparer.Ordinal);
 
         await foreach (var external in connector.StreamProductsAsync(cancellationToken))
         {
-            var product = BuildProduct(external, connector.Source);
+            var product = BuildProduct(external, connector.Source, definitions);
             await indexer.IndexAsync(product, cancellationToken);
             byInternalId[product.Id.ToString()] = external.ExternalId;
         }
@@ -47,9 +55,10 @@ public sealed class SeedCorpus(IServiceProvider services)
     /// imágenes: no son campo buscable, así que no mueven el ranking, y meter el
     /// almacén por medio sólo añade formas de fallar que no son la que se mide.
     /// </summary>
-    private static Product BuildProduct(ExternalProduct external, string source)
+    private static Product BuildProduct(
+        ExternalProduct external, string source, AttributeDefinitions definitions)
     {
-        var product = external.ToNewProduct(source, Clock);
+        var product = external.ToNewProduct(source, Clock, definitions);
         product.Publish(Clock);
         return product;
     }

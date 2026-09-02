@@ -60,6 +60,7 @@ public sealed class ImportProductsHandler(
     IUnitOfWork unitOfWork,
     IExternalImageReader imageReader,
     IImageStore imageStore,
+    IAttributeDefinitionReader attributeDefinitions,
     TimeProvider clock,
     ILogger<ImportProductsHandler> logger)
     : ICommandHandler<ImportProductsCommand, ImportProductsResult>
@@ -81,11 +82,16 @@ public sealed class ImportProductsHandler(
         var stopwatch = Stopwatch.StartNew();
         var tally = new ImportTally();
 
+        // Una vez por importación, no por producto: resolver "azul marino" a
+        // NAVY_BLUE necesita el catálogo entero de definiciones, y pedirlo por
+        // producto sería N+1 sobre algo que no cambia durante la importación.
+        var definitions = await attributeDefinitions.AllAsync(cancellationToken);
+
         await foreach (var external in connector.StreamProductsAsync(cancellationToken))
         {
             try
             {
-                await ImportOneAsync(external, connector.Source, tally, cancellationToken);
+                await ImportOneAsync(external, connector.Source, definitions, tally, cancellationToken);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
@@ -124,21 +130,22 @@ public sealed class ImportProductsHandler(
     /// (tools/SearchEval) construye el mismo producto y no puede llamar aquí.
     /// </summary>
     private async Task ImportOneAsync(
-        ExternalProduct external, string source, ImportTally tally, CancellationToken cancellationToken)
+        ExternalProduct external, string source, AttributeDefinitions definitions,
+        ImportTally tally, CancellationToken cancellationToken)
     {
         var existing = await repository.FindByExternalReferenceAsync(
             source, external.ExternalId, cancellationToken);
 
         if (existing is null)
         {
-            var product = external.ToNewProduct(source, clock);
+            var product = external.ToNewProduct(source, clock, definitions);
             await IngestImagesAsync(product, external, cancellationToken);
             repository.Add(product);
             tally.Created++;
         }
         else
         {
-            external.ApplyTo(existing, clock);
+            external.ApplyTo(existing, clock, definitions);
             await IngestImagesAsync(existing, external, cancellationToken);
             tally.Updated++;
         }

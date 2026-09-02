@@ -106,6 +106,26 @@
         }
       }
     },
+    "/api/catalog/attributes": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "ListAttributeDefinitions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAttributeDefinitionsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/import": {
       "post": {
         "tags": [
@@ -289,6 +309,86 @@
   },
   "components": {
     "schemas": {
+      "AttributeDefinitionView": {
+        "required": [
+          "code",
+          "label",
+          "kind",
+          "unit",
+          "isVariantAxis",
+          "isFacet",
+          "isSearchable",
+          "aliases",
+          "options",
+          "missingCultures"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "type": "string"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isVariantAxis": {
+            "type": "boolean"
+          },
+          "isFacet": {
+            "type": "boolean"
+          },
+          "isSearchable": {
+            "type": "boolean"
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttributeOptionView"
+            }
+          },
+          "missingCultures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AttributeOptionView": {
+        "required": [
+          "code",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "DefineVariantsRequest": {
         "required": [
           "axes",
@@ -362,6 +462,20 @@
           "elapsedSeconds": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "ListAttributeDefinitionsResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AttributeDefinitionView"
+            }
           }
         }
       },

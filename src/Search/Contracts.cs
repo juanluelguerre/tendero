@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Search.Contracts;
@@ -158,7 +159,19 @@ public sealed record ProductSearchDocument
     public required string Name { get; init; }
     public string? Description { get; init; }
     public string? Brand { get; init; }
+
+    /// <summary>El código, como keyword: para filtrar y facetar, nunca para
+    /// casar texto. Listarlo entre los campos de texto prometía una coincidencia
+    /// que no podía ocurrir, y por eso salió de ellos.</summary>
     public string? Category { get; init; }
+
+    /// <summary>
+    /// La rama entera en la cultura del índice: "Hogar Cocina Menaje de cocina".
+    /// Esto SÍ es texto y sí se analiza. Es lo que hace que "induction cookware"
+    /// pueda casar, porque hasta ahora en el índice no existía la palabra
+    /// "cookware" — existía un código.
+    /// </summary>
+    public string? CategoryPathText { get; init; }
 
     /// <summary>Atributos aplanados a texto buscable: "color azul marino talla 36-42 drop 8".</summary>
     public string? AttributesText { get; init; }
@@ -184,21 +197,62 @@ public sealed record ProductSearchDocument
     public static string IndexNameFor(string culture) => $"products_{culture}";
 
     /// <summary>
+    /// El texto buscable de los atributos, EN LA CULTURA DEL ÍNDICE.
+    ///
+    /// Antes era <c>$"{clave} {valor}"</c> con el dato crudo, así que el índice
+    /// inglés contenía "color azul marino" y ninguna consulta inglesa podía
+    /// casarlo. Es la causa exacta de que "navy blue shoes" y "womens running
+    /// shoes" puntúen 0.000 en la línea base commiteada.
+    ///
+    /// Ahora sale de la definición: su etiqueta en esta cultura, y la etiqueta
+    /// de la opción en esta cultura. Sin definición cae al código crudo, que es
+    /// el comportamiento anterior.
+    /// </summary>
+    private static string? RenderAttributes(
+        Product product, string culture, AttributeDefinitions? definitions)
+    {
+        var parts = product.Attributes
+            .Where(value => value.IsWorthIndexing)
+            .Select(value =>
+            {
+                var definition = definitions?.ByCode(value.Code);
+
+                // Un atributo marcado como no buscable no entra: un código de
+                // fabricante mete ruido y nadie lo teclea.
+                if (definition is { IsSearchable: false })
+                    return null;
+
+                var label = definition?.Label.In(culture) ?? value.Code;
+                var rendered = value.RenderIn(culture, definition);
+
+                return string.IsNullOrWhiteSpace(rendered) ? label : $"{label} {rendered}";
+            })
+            .Where(part => !string.IsNullOrWhiteSpace(part))
+            .ToArray();
+
+        return parts.Length == 0 ? null : string.Join(' ', parts!);
+    }
+
+    /// <summary>
     /// Un documento por variante disponible. Un producto sin variantes no
     /// debería existir —la importación siempre mina una por defecto— pero si
     /// llegara, no se indexa: no hay nada que comprar.
     /// </summary>
-    public static IEnumerable<ProductSearchDocument> ForVariants(Product product, string culture)
+    public static IEnumerable<ProductSearchDocument> ForVariants(
+        Product product, string culture,
+        AttributeDefinitions? definitions = null, CategoryTree? categories = null)
     {
         var (from, to) = product.PriceRange;
 
         return product.Variants
             .Where(variant => variant.Status == VariantStatus.Available)
-            .Select(variant => FromVariant(product, variant, culture, from.Amount, to.Amount));
+            .Select(variant => FromVariant(
+                product, variant, culture, from.Amount, to.Amount, definitions, categories));
     }
 
     private static ProductSearchDocument FromVariant(
-        Product product, Variant variant, string culture, decimal priceFrom, decimal priceTo) => new()
+        Product product, Variant variant, string culture, decimal priceFrom, decimal priceTo,
+        AttributeDefinitions? definitions, CategoryTree? categories) => new()
     {
         Id = variant.Id.ToString(),
         ProductId = product.Id.ToString(),
@@ -208,9 +262,8 @@ public sealed record ProductSearchDocument
         Description = product.Description?.In(culture),
         Brand = product.Brand,
         Category = product.Category,
-        AttributesText = product.Attributes.Count == 0
-            ? null
-            : string.Join(' ', product.Attributes.Select(kv => $"{kv.Key} {kv.Value}")),
+        CategoryPathText = categories?.PathTextIn(product.Category, culture),
+        AttributesText = RenderAttributes(product, culture, definitions),
         Slug = product.Slug.In(culture),
         AxisValues = [.. variant.AxisValues.Select(pair => $"{pair.Key}:{pair.Value}")],
         PriceAmount = variant.Price.Amount,

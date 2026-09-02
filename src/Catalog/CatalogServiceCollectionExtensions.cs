@@ -4,6 +4,7 @@ using ElGuerre.Tendero.Catalog.Connectors.Seed;
 using ElGuerre.Tendero.Catalog.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ElGuerre.Tendero.Catalog;
 
@@ -20,7 +21,22 @@ public static class CatalogServiceCollectionExtensions
 
         // El registro es lo único que habla con el contenedor: los slices reciben
         // el puerto, no el IServiceProvider.
+        // El reloj también aquí y no sólo en AddTenderoCqrs: el catálogo sella
+        // productos, y la puerta de calidad monta AddCatalog sin el dispatcher.
+        // TryAdd, así que registrarlo dos veces no es un problema.
+        services.TryAddSingleton(TimeProvider.System);
+
         services.AddScoped<ICatalogSourceRegistry, KeyedCatalogSourceRegistry>();
+
+        // Las definiciones de atributo. Singleton porque cambian con muy poca
+        // frecuencia y la proyección al índice las pide por producto y cultura.
+        services.Configure<AttributeSeedOptions>(
+            configuration.GetSection(AttributeSeedOptions.SectionName));
+        services.AddSingleton<IAttributeDefinitionReader, SeedFileAttributeDefinitionReader>();
+
+        services.Configure<CategorySeedOptions>(
+            configuration.GetSection(CategorySeedOptions.SectionName));
+        services.AddSingleton<ICategoryReader, SeedFileCategoryReader>();
 
         // Almacén de imágenes: un puerto, y hoy un solo adaptador. El de S3
         // entra cuando el sistema de ficheros deje de bastar, sin tocar nada más.
