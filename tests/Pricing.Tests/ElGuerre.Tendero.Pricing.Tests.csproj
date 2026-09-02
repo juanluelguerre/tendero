@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Pricing.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Pricing/ElGuerre.Tendero.Pricing.csproj" />
+    <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The shipped seed is validated by the tests that read it, exactly as the
+         catalogue sample is validated by the connector contract suite. -->
+    <None Include="../../seed/pricelists.sample.json" Link="seed/pricelists.sample.json"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../seed/promotions.sample.json" Link="seed/promotions.sample.json"
+          CopyToOutputDirectory="PreserveNewest" />
+    <!-- The catalogue and taxonomy samples come along so the pricing seed can be
+         checked AGAINST them: a tariff pointing at a SKU nobody sells, or a
+         promotion scoped to a category that does not exist, is a rule that can
+         never fire and nothing else in the build would notice. -->
+    <None Include="../../seed/products.sample.json" Link="seed/products.sample.json"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../seed/categories.sample.json" Link="seed/categories.sample.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

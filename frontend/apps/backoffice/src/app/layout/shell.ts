@@ -42,6 +42,9 @@ import { TranslocoDirective } from '@jsverse/transloco';
         <a class="tab" routerLink="/attributes" routerLinkActive="tab--active">
           {{ t('nav.attributes') }}<hr class="awning awning-thin tab__mark" />
         </a>
+        <a class="tab" routerLink="/promotions" routerLinkActive="tab--active">
+          {{ t('nav.promotions') }}<hr class="awning awning-thin tab__mark" />
+        </a>
       </nav>
       <main class="main"><router-outlet /></main>
     </ng-container>

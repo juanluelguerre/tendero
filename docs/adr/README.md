@@ -15,6 +15,8 @@
 | [0011](0011-product-images.md) | Product images are ingested, not referenced | accepted |
 | [0012](0012-publishing-and-reindexing.md) | Publishing is an explicit step; the index is rebuildable | accepted |
 | [0013](0013-culture-negotiation.md) | Culture: explicit parameter wins, `Accept-Language` is the default | accepted |
+| [0014](0014-context-map.md) | Contexts share no entities; the count is not the rule | accepted |
 | [0015](0015-variant-is-the-indexed-unit.md) | The variant is the indexed unit; the product is the returned unit | accepted |
+| [0016](0016-quoted-live-frozen-at-order.md) | Prices are quoted live and frozen at order time | accepted |
 
 Format: context → decision → consequences. Keep each under a page.

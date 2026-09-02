@@ -4,6 +4,8 @@ using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Persistence;
+using ElGuerre.Tendero.Pricing;
+using ElGuerre.Tendero.Pricing.Features.QuoteCart;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.ServiceDefaults;
@@ -17,12 +19,15 @@ builder.AddServiceDefaults();
 // nuevo dentro de uno de ellos no toca esta línea.
 builder.Services.AddTenderoCqrs(
     typeof(ImportProductsCommand).Assembly,
-    typeof(SearchProductsQuery).Assembly);
+    typeof(SearchProductsQuery).Assembly,
+    typeof(QuoteCartQuery).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
 
 builder.Services.AddCatalog(builder.Configuration);
+
+builder.Services.AddPricing(builder.Configuration);
 
 builder.Services.AddLexicalSearch(
     builder.Configuration.GetRequiredConnectionString("elasticsearch"));

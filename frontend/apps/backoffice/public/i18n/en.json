@@ -20,7 +20,34 @@
     "orders": "Orders",
     "reviewQueue": "Review queue",
     "search": "Search evaluation",
-    "attributes": "Attributes"
+    "attributes": "Attributes",
+    "promotions": "Promotions"
+  },
+  "promotions": {
+    "title": "Promotions",
+    "hint": "The column that matters is the combination one: it says what stops applying when this promotion does.",
+    "loading": "Loading...",
+    "failed": "Could not load the promotions.",
+    "empty": "No promotions yet.",
+    "running": "{{count}} running",
+    "needsCoupon": "coupon",
+    "column": {
+      "code": "Code",
+      "name": "Name",
+      "effect": "Effect",
+      "combination": "Combines",
+      "priority": "Priority",
+      "state": "State"
+    },
+    "policy": {
+      "ExclusiveGlobal": "Exclusive",
+      "ExclusiveInGroup": "One per group",
+      "Stackable": "Stacks"
+    },
+    "state": {
+      "running": "Running",
+      "scheduled": "Not running"
+    }
   },
   "reviewQueue": {
     "column": {

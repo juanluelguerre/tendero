@@ -1,0 +1,63 @@
+[
+  {
+    "code": "SUMMER25",
+    "name": { "es": "Rebajas de verano", "en": "Summer sale" },
+    "effect": { "kind": "percent-off-line", "percent": 25 },
+    "condition": { "categoryCode": "APPAREL" },
+    "combination": "ExclusiveInGroup",
+    "exclusivityGroup": "seasonal",
+    "priority": 10
+  },
+  {
+    "code": "APPAREL10",
+    "name": { "es": "10% en ropa", "en": "10% off clothing" },
+    "effect": { "kind": "percent-off-line", "percent": 10 },
+    "condition": { "categoryCode": "APPAREL" },
+    "combination": "ExclusiveInGroup",
+    "exclusivityGroup": "seasonal",
+    "priority": 20
+  },
+  {
+    "code": "KITCHEN5",
+    "name": { "es": "5 € en menaje", "en": "5 € off cookware" },
+    "effect": { "kind": "amount-off-order", "amount": 5.00 },
+    "condition": { "categoryCode": "KITCHEN", "minimumSubtotal": 40.00 },
+    "combination": "Stackable",
+    "priority": 30
+  },
+  {
+    "code": "SHIP0",
+    "name": { "es": "Envío gratis desde 50 €", "en": "Free shipping over 50 €" },
+    "effect": { "kind": "free-shipping" },
+    "condition": { "minimumSubtotal": 50.00 },
+    "combination": "Stackable",
+    "priority": 40
+  },
+  {
+    "code": "SHIRT3X2",
+    "name": { "es": "3x2 en camisetas", "en": "3 for 2 on shirts" },
+    "effect": { "kind": "buy-x-get-y", "buy": 2, "free": 1 },
+    "condition": { "categoryCode": "SHIRT", "minimumQuantity": 3 },
+    "combination": "Stackable",
+    "priority": 25
+  },
+  {
+    "code": "BLACKFRIDAY",
+    "name": { "es": "Black Friday", "en": "Black Friday" },
+    "effect": { "kind": "percent-off-line", "percent": 30 },
+    "combination": "ExclusiveGlobal",
+    "priority": 5,
+    "couponCode": "BF2026",
+    "validFrom": "2026-11-27T00:00:00Z",
+    "validTo": "2026-11-30T00:00:00Z"
+  },
+  {
+    "code": "VIPWELCOME",
+    "name": { "es": "Bienvenida VIP", "en": "VIP welcome" },
+    "effect": { "kind": "amount-off-order", "amount": 10.00 },
+    "condition": { "minimumSubtotal": 100.00 },
+    "combination": "Stackable",
+    "segment": "vip",
+    "priority": 50
+  }
+]

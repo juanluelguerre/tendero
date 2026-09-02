@@ -100,6 +100,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["QuoteCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/promotions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListPromotions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search": {
         parameters: {
             query?: never;
@@ -136,6 +168,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AppliedDiscountResponse: {
+            promotionCode: string;
+            label: string;
+            /** Format: double */
+            amount: number;
+            effect: string;
+            combination: string;
+            outcome: string;
+            reasonCode: null | string;
+            reason: null | string;
+        };
         AttributeDefinitionView: {
             code: string;
             label: {
@@ -191,6 +234,9 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
         };
+        ListPromotionsResult: {
+            items: components["schemas"]["PromotionView"][];
+        };
         ProductSummary: {
             productId: string;
             name: string;
@@ -206,6 +252,26 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        PromotionView: {
+            code: string;
+            name: {
+                [key: string]: string;
+            };
+            effect: string;
+            effectDetail: string;
+            combination: string;
+            /** Format: int32 */
+            priority: number;
+            exclusivityGroup: null | string;
+            segment: null | string;
+            couponCode: null | string;
+            /** Format: date-time */
+            validFrom: null | string;
+            /** Format: date-time */
+            validTo: null | string;
+            isActive: boolean;
+            missingCultures: string[];
+        };
         PublishProductConflict: {
             title: string;
             detail: string;
@@ -214,6 +280,54 @@ export interface components {
             productId: string;
             outcome: string;
             status: string;
+        };
+        QuoteCartRequest: {
+            lines: components["schemas"]["QuoteLineRequest"][];
+            segment?: null | string;
+            /** Format: double */
+            shipping?: null | number;
+            coupons?: null | string[];
+        };
+        QuoteLineRequest: {
+            sku: string;
+            /** Format: int32 */
+            quantity: number;
+        };
+        QuoteResponse: {
+            quoteId: string;
+            inputHash: string;
+            /** Format: date-time */
+            issuedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            currency: string;
+            segment: string;
+            lines: components["schemas"]["QuotedLineResponse"][];
+            discounts: components["schemas"]["AppliedDiscountResponse"][];
+            taxes: components["schemas"]["TaxLineResponse"][];
+            /** Format: double */
+            subtotal: number;
+            /** Format: double */
+            discountTotal: number;
+            /** Format: double */
+            shipping: number;
+            /** Format: double */
+            taxTotal: number;
+            /** Format: double */
+            total: number;
+        };
+        QuotedLineResponse: {
+            variantId: string;
+            sku: string;
+            /** Format: int32 */
+            quantity: number;
+            /** Format: double */
+            unitPrice: number;
+            priceSource: string;
+            /** Format: double */
+            discount: number;
+            /** Format: double */
+            net: number;
         };
         ReindexProductsResult: {
             /** Format: int32 */
@@ -252,6 +366,15 @@ export interface components {
             pageSize: number;
             /** Format: double */
             tookMs: number;
+        };
+        TaxLineResponse: {
+            taxClass: string;
+            /** Format: double */
+            rate: number;
+            /** Format: double */
+            base: number;
+            /** Format: double */
+            amount: number;
         };
         VariantAxisRequest: {
             code: string;
@@ -431,6 +554,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    QuoteCart: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteCartRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuoteResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    ListPromotions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListPromotionsResult"];
                 };
             };
         };

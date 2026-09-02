@@ -78,8 +78,13 @@ being stale.
 
 ## Architecture invariants (never break these)
 
-1. **Bounded contexts**: `Catalog` and `Ordering` never share entities. Orders
-   snapshot product name/price into `OrderLine` — no live references.
+1. **Bounded contexts share no entities** (ADR 0014 — the principle, not a
+   count). A crossing carries values or an event record, never a reference:
+   orders snapshot product name/price into `OrderLine`, an applied discount
+   snapshots the promotion's code and label. Today: `Catalog`, `Ordering`,
+   `Pricing`. `Pricing` references SharedKernel and nothing else, and an
+   architecture rule computes that by reflection — that purity is what makes its
+   engine verifiable with properties.
 2. **Vertical slices**: one folder per feature under `Features/`. Slices never
    reference other slices; shared behavior goes down (SharedKernel) or out (ports).
    Reference pattern: `Catalog/Features/ImportProducts`.
@@ -124,11 +129,14 @@ being stale.
     never a chat message. Anything a model decides that could be decided
     deterministically, is: the model parses and phrases, code chooses.
 
-> **Open, not yet decided:** the roadmap takes the context count from two to six
-> (`Catalog`, `Pricing`, `Inventory`, `Ordering`, `Accounts`, `Knowledge`).
-> Invariant 1 and ADR 0002 still say two, and they stay that way until an ADR
-> generalises the principle — contexts share no entities — instead of the count.
-> See @docs/analysis/roadmap.md. Do not quietly add a context before that ADR.
+> **Settled 2026-09-02 by ADR 0014.** The roadmap takes the context count to six
+> (`Catalog`, `Pricing`, `Inventory`, `Ordering`, `Accounts`, `Knowledge`), and
+> the rule is now the principle rather than the count. Adding a context is fine;
+> adding one that shares an entity is not, and a test says which happened. A
+> context still has to earn its boundary — its own lifecycle, its own actor, or
+> a consistency boundary genuinely its own — and **a context with no writer is
+> not a context yet**: `Pricing` reads committed files and owns no table.
+> `Mcp`, `Ucp` and `Assist` are not contexts; they own no state.
 
 ## Conventions
 

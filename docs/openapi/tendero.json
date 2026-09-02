@@ -233,6 +233,75 @@
         }
       }
     },
+    "/api/pricing/quote": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "QuoteCart",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteCartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/promotions": {
+      "get": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ListPromotions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListPromotionsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/search": {
       "get": {
         "tags": [
@@ -309,6 +378,52 @@
   },
   "components": {
     "schemas": {
+      "AppliedDiscountResponse": {
+        "required": [
+          "promotionCode",
+          "label",
+          "amount",
+          "effect",
+          "combination",
+          "outcome",
+          "reasonCode",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "promotionCode": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          },
+          "effect": {
+            "type": "string"
+          },
+          "combination": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "AttributeDefinitionView": {
         "required": [
           "code",
@@ -508,6 +623,20 @@
           }
         }
       },
+      "ListPromotionsResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromotionView"
+            }
+          }
+        }
+      },
       "ProductSummary": {
         "required": [
           "productId",
@@ -573,6 +702,89 @@
           }
         }
       },
+      "PromotionView": {
+        "required": [
+          "code",
+          "name",
+          "effect",
+          "effectDetail",
+          "combination",
+          "priority",
+          "exclusivityGroup",
+          "segment",
+          "couponCode",
+          "validFrom",
+          "validTo",
+          "isActive",
+          "missingCultures"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "effect": {
+            "type": "string"
+          },
+          "effectDetail": {
+            "type": "string"
+          },
+          "combination": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "exclusivityGroup": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "segment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "couponCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "validFrom": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "validTo": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "missingCultures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "PublishProductConflict": {
         "required": [
           "title",
@@ -604,6 +816,176 @@
           },
           "status": {
             "type": "string"
+          }
+        }
+      },
+      "QuoteCartRequest": {
+        "required": [
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteLineRequest"
+            }
+          },
+          "segment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "shipping": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "coupons": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "QuoteLineRequest": {
+        "required": [
+          "sku",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "QuoteResponse": {
+        "required": [
+          "quoteId",
+          "inputHash",
+          "issuedAt",
+          "expiresAt",
+          "currency",
+          "segment",
+          "lines",
+          "discounts",
+          "taxes",
+          "subtotal",
+          "discountTotal",
+          "shipping",
+          "taxTotal",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "quoteId": {
+            "type": "string"
+          },
+          "inputHash": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "segment": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuotedLineResponse"
+            }
+          },
+          "discounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppliedDiscountResponse"
+            }
+          },
+          "taxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxLineResponse"
+            }
+          },
+          "subtotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "discountTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "shipping": {
+            "type": "number",
+            "format": "double"
+          },
+          "taxTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "total": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "QuotedLineResponse": {
+        "required": [
+          "variantId",
+          "sku",
+          "quantity",
+          "unitPrice",
+          "priceSource",
+          "discount",
+          "net"
+        ],
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceSource": {
+            "type": "string"
+          },
+          "discount": {
+            "type": "number",
+            "format": "double"
+          },
+          "net": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -735,6 +1117,32 @@
           }
         }
       },
+      "TaxLineResponse": {
+        "required": [
+          "taxClass",
+          "rate",
+          "base",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "taxClass": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
+          },
+          "base": {
+            "type": "number",
+            "format": "double"
+          },
+          "amount": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "VariantAxisRequest": {
         "required": [
           "code",
@@ -758,6 +1166,9 @@
   "tags": [
     {
       "name": "Catalog"
+    },
+    {
+      "name": "Pricing"
     },
     {
       "name": "Search"

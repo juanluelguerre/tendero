@@ -93,6 +93,12 @@
          mismo autor pasaron a licencia comercial. El reset es un TRUNCATE de
          veinte líneas (DatabaseReset), que es menos superficie que la duda. -->
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.14.0" />
+    <!-- CsCheck 4.8.0 — Apache-2.0, verified for this exact version. Enters with
+         the promotion combination rules, which is the canonical property-based
+         case: totals never negative, stackable sets order-independent, two
+         exclusives of a group never co-apply. Three examples cannot say that.
+         It comes back for the kit solver in phase 13. -->
+    <PackageVersion Include="CsCheck" Version="4.8.0" />
   </ItemGroup>
 
 </Project>
