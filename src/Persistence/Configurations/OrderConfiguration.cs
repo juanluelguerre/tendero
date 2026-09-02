@@ -40,6 +40,10 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.ComplexCollection<List<OrderLine>, OrderLine>("_lines", line =>
         {
             line.Property(l => l.ProductId).HasConversion(id => id.Value, value => new ProductId(value));
+            // La variante viaja en la línea porque lo que se compra es una
+            // variante (ADR 0015): sin ella el pedido no sabe qué talla se
+            // envió, y el inventario, que descuenta por SKU, no tiene con qué.
+            line.Property(l => l.VariantId).HasConversion(id => id.Value, value => new VariantId(value));
             line.Property(l => l.UnitPrice).HasConversion(Jsonb.MoneyAsTextConverter);
             line.Ignore(l => l.Total);
             line.ToJson("lines");

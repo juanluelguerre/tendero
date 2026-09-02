@@ -15,7 +15,8 @@ internal sealed class OrderBuilder
 
     private List<OrderLine> _lines =
     [
-        new(ProductId.New(), "Zapatillas de running", new Money(79.95m, "EUR"), 1)
+        new(ProductId.New(), VariantId.New(), "B073WXYZ01-38", "Zapatillas de running",
+            "azul marino · 38", new Money(79.95m, "EUR"), 1)
     ];
 
     private string _culture = "es";
@@ -88,5 +89,6 @@ internal sealed class OrderBuilder
     }
 
     public static OrderLine Line(decimal amount, string currency, int quantity = 1) =>
-        new(ProductId.New(), "Línea de prueba", new Money(amount, currency), quantity);
+        new(ProductId.New(), VariantId.New(), $"TEST-{Guid.NewGuid():N}", "Línea de prueba",
+            null, new Money(amount, currency), quantity);
 }

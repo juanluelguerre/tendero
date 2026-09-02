@@ -67,6 +67,23 @@ internal static class Jsonb
         attributes => JsonSerializer.Serialize(attributes, Options),
         json => ReadAttributes(json));
 
+    /// <summary>
+    /// El orden de los ejes de variante. Es una lista y no un conjunto porque el
+    /// orden es el dato: decide si la etiqueta de una línea de pedido dice
+    /// "azul marino · 38" o "38 · azul marino".
+    /// </summary>
+    public static readonly ValueConverter<List<string>, string> StringListConverter = new(
+        values => JsonSerializer.Serialize(values, Options),
+        json => ReadStringList(json));
+
+    private static List<string> ReadStringList(string json) =>
+        JsonSerializer.Deserialize<List<string>>(json, Options) ?? new List<string>();
+
+    public static readonly ValueComparer<List<string>> StringListComparer = new(
+        (left, right) => left != null && right != null && left.SequenceEqual(right, StringComparer.Ordinal),
+        values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode(StringComparison.Ordinal))),
+        values => new List<string>(values));
+
     public static readonly ValueComparer<Dictionary<string, string>> AttributesComparer = new(
         (left, right) => AttributesEqual(left, right),
         attributes => attributes.Aggregate(

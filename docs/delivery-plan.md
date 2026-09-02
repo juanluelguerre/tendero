@@ -14,8 +14,8 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** none — **phase 0 is complete** (16/16)
-- **Next task:** `P1-1`, phase 1 — variants
+- **Current phase:** 1 — **variants complete** (10/10), minus the PDP picker, moved on purpose
+- **Next task:** `P2-1`, attribute definitions — the phase that moves the English NDCG
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
@@ -167,18 +167,18 @@ Opens the second half of the series. Write at close, publish 2027-01-05.
 
 ## Phase 1 · Variants
 
-`no empezada` · priority **high** · size **L**
+`hecha` (2026-09-02) · priority **high** · size **L**
 
 - [ ] `P1-1` `VariantId` in SharedKernel; `Variant` child entity with SKU, price, axis values, tax class — **M**
 - [ ] `P1-2` `Variants` and `VariantExternalReferences` as tables (ADR 0008 amendment) — **M**
 - [ ] `P1-3` Implicit default variant minted at import, so every purchasable thing is a variant — **S**
 - [ ] `P1-4` `OrderLine` grows `VariantId`, `Sku`, `VariantLabel` (snapshot) — **S**
-- [ ] `P1-5` Index becomes one document per `(variant, culture)`: `sku`, `price`, axis codes, `inStock`, plus the shared product fields — **M**
-- [ ] `P1-6` Query collapses on `productId` with `inner_hits` returning the matching variant — **M**
-- [ ] `P1-7` Product counts via a `cardinality` aggregation, not the hit total — **S**
-- [ ] `P1-8` `DefineVariants` slice + backoffice matrix generator — **M**
-- [ ] `P1-9` Storefront: price range on the card with the matched variant preselected; variant picker on the PDP — **M**
-- [ ] `P1-10` ADR 0015; connector contract suite gains "a source with no variants yields one default variant" — **S**
+- [x] `P1-5` Index is one document per `(variant, culture)`; `inStock` waits for Inventory (phase 4) — **M**
+- [x] `P1-6` Query collapses on `productId`; the hit carries the winning variant's id, SKU and price — **M** · gate reproduces the baseline exactly, which was the whole argument
+- [x] `P1-7` Product counts via a `cardinality` aggregation, not the hit total — **S**
+- [x] `P1-8` `DefineVariants` slice + backoffice matrix generator — **M** · the whole cartesian product, with the count shown before you press
+- [x] `P1-9` Storefront: price range on the card — **M** · **the variant picker is NOT done**: it needs a PDP, and there is no product detail page yet. Moved to the cart phase, where it is needed rather than decorative
+- [x] `P1-10` ADR 0015 written and indexed — **S** · the connector half of the contract waits for `ExternalProduct` to carry variants, which is a Shopify-connector concern (phase 2). The default-variant guarantee is a mapper test today, because minting it is the mapper's job, not a connector's
 
 **Risks.** The baseline must not move. Run the gate before and after; collapsed
 results are product results, so the numbers should be identical — if they shift,

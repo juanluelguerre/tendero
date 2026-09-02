@@ -41,6 +41,10 @@ internal sealed class SearchIndexInitializer(
             var response = await client.Indices.CreateAsync(index, c => c
                 .Mappings(m => m.Properties<ProductSearchDocument>(p => p
                     .Keyword(d => d.Id)
+                    // El campo del collapse: tiene que ser keyword, no text.
+                    .Keyword(d => d.ProductId)
+                    .Keyword(d => d.Sku)
+                    .Keyword(d => d.AxisValues)
                     .Keyword(d => d.Culture)
                     .Text(d => d.Name, t => t.Analyzer(analyzer))
                     .Text(d => d.Description!, t => t.Analyzer(analyzer))
@@ -50,6 +54,8 @@ internal sealed class SearchIndexInitializer(
                     .Keyword(d => d.Slug)
                     .Keyword(d => d.ImageId!)
                     .DoubleNumber(d => d.PriceAmount)
+                    .DoubleNumber(d => d.PriceFrom)
+                    .DoubleNumber(d => d.PriceTo)
                     .Keyword(d => d.PriceCurrency)
                     .Keyword(d => d.Status))),
                 cancellationToken);
@@ -70,37 +76,53 @@ internal sealed class ElasticsearchProductIndexer(ElasticsearchClient client) : 
     {
         foreach (var culture in SearchCultures.Supported)
         {
-            var document = ProductSearchDocument.FromProduct(product, culture);
-            var response = await client.IndexAsync(
-                document,
-                i => i.Index(ProductSearchDocument.IndexNameFor(culture)).Id(document.Id),
-                ct);
+            // Reindexar un producto es reemplazar TODAS sus variantes, no añadir:
+            // si una se retira, su documento tiene que desaparecer, y escribir
+            // sólo las vivas dejaría la retirada ahí para siempre.
+            await RemoveAsync(product.Id, culture, ct);
 
-            // SearchUnavailableException y no InvalidOperationException: un fallo
-            // del motor es 503 y reintentable. Salía como 500 por este camino y
-            // como 503 por el de consulta, para la misma avería.
-            if (!response.IsValidResponse)
-                throw new SearchUnavailableException(
-                    $"indexing {document.Id} into {culture}", response.DebugInformation);
+            foreach (var document in ProductSearchDocument.ForVariants(product, culture))
+            {
+                var response = await client.IndexAsync(
+                    document,
+                    i => i.Index(ProductSearchDocument.IndexNameFor(culture)).Id(document.Id),
+                    ct);
+
+                // SearchUnavailableException y no InvalidOperationException: un
+                // fallo del motor es 503 y reintentable. Salía como 500 por este
+                // camino y como 503 por el de consulta, para la misma avería.
+                if (!response.IsValidResponse)
+                    throw new SearchUnavailableException(
+                        $"indexing {document.Id} into {culture}", response.DebugInformation);
+            }
         }
     }
 
     public async Task RemoveAsync(ProductId productId, CancellationToken ct = default)
     {
         foreach (var culture in SearchCultures.Supported)
+            await RemoveAsync(productId, culture, ct);
+    }
+
+    /// <summary>
+    /// Borra por CONSULTA y no por id: el documento ya no es el producto sino
+    /// cada una de sus variantes, y cuántas hay no se sabe desde aquí.
+    /// </summary>
+    private async Task RemoveAsync(ProductId productId, string culture, CancellationToken ct)
+    {
         {
-            var response = await client.DeleteAsync<ProductSearchDocument>(
-                productId.ToString(),
-                d => d.Index(ProductSearchDocument.IndexNameFor(culture)),
+            var response = await client.DeleteByQueryAsync<ProductSearchDocument>(
+                ProductSearchDocument.IndexNameFor(culture),
+                d => d.Query(q => q.Term(t => t.Field(f => f.ProductId).Value(productId.ToString()))),
                 ct);
 
-            // 404 es correcto y esperado: borrar lo que no está indexado es
-            // idempotente, y es el caso normal de un producto que nunca se
-            // publicó. Cualquier OTRO fallo no puede ignorarse — éste es el
-            // camino por el que Archive() saca un producto del catálogo, y
-            // tragarse un 503 dejaba indexado lo que se acababa de retirar.
-            if (response.IsValidResponse || response.Result == Result.NotFound)
-                continue;
+            // Borrar lo que no está indexado es idempotente y es el caso normal
+            // de un producto que nunca se publicó: delete_by_query devuelve cero
+            // borrados, no un error. Cualquier fallo real no puede ignorarse —
+            // éste es el camino por el que Archive() saca un producto del
+            // catálogo, y tragarse un 503 dejaría indexado lo que se retiró.
+            if (response.IsValidResponse)
+                return;
 
             throw new SearchUnavailableException(
                 $"removing {productId} from {culture}", response.DebugInformation);
@@ -131,6 +153,15 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
             .Indices(ProductSearchDocument.IndexNameFor(query.Culture))
             .From((query.Page - 1) * query.PageSize)
             .Size(query.PageSize)
+            // Colapsar por producto: el matching y los filtros ocurren por
+            // variante —que es lo que los hace exactos— y el resultado vuelve
+            // como producto, con la variante que ganó dentro.
+            .Collapse(c => c.Field(d => d.ProductId))
+            // El total de `hits` cuenta DOCUMENTOS, y aquí un documento es una
+            // variante. El número que la interfaz enseña es de productos, así
+            // que sale de una cardinality sobre el campo colapsado. Es
+            // aproximada por encima de 40.000 grupos, exacta muy por debajo.
+            .Aggregations(a => a.Add("products", agg => agg.Cardinality(c => c.Field(d => d.ProductId))))
             .Query(q => q.Bool(b => b
                 // Dos formas de casar la misma consulta, unidas por should. Cada
                 // una cubre lo que la otra no puede, y eso NO es adorno: el
@@ -161,19 +192,28 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
             throw new SearchUnavailableException("query", response.DebugInformation);
 
         var hits = response.Hits.Select(h => new SearchHit(
-            h.Source!.Id,
+            h.Source!.ProductId,
             h.Source.Name,
             h.Source.Slug,
             h.Source.Brand,
             h.Source.Category,
+            h.Source.Id,
+            h.Source.Sku,
             h.Source.PriceAmount,
+            h.Source.PriceFrom,
+            h.Source.PriceTo,
             h.Source.PriceCurrency,
             h.Source.ImageId,
             h.Score ?? 0d)).ToList();
 
-        activity?.SetTag("search.total", response.Total);
+        var products = response.Aggregations?.GetCardinality("products")?.Value is { } value
+            ? (long)value
+            : hits.Count;
+
+        activity?.SetTag("search.total", products);
+        activity?.SetTag("search.variants", response.Total);
         activity?.SetTag("search.took_ms", response.Took);
 
-        return new SearchResultPage(hits, response.Total, query.Page, query.PageSize, response.Took);
+        return new SearchResultPage(hits, products, query.Page, query.PageSize, response.Took);
     }
 }

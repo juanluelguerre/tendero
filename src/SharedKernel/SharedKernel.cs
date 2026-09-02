@@ -13,6 +13,18 @@ public readonly record struct OrderId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+/// <summary>
+/// Identidad de una variante — la unidad COMPRABLE. El producto es la unidad
+/// encontrable (ADR 0015): la búsqueda casa y filtra por variante y devuelve
+/// productos colapsados, así que un carrito y una línea de pedido hablan de
+/// esto, y un resultado de búsqueda habla de <see cref="ProductId"/>.
+/// </summary>
+public readonly record struct VariantId(Guid Value)
+{
+    public static VariantId New() => new(Guid.CreateVersion7());
+    public override string ToString() => Value.ToString();
+}
+
 public readonly record struct CustomerId(Guid Value)
 {
     public static CustomerId New() => new(Guid.CreateVersion7());
