@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/attributes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListAttributeDefinitions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/import": {
         parameters: {
             query?: never;
@@ -120,6 +136,26 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AttributeDefinitionView: {
+            code: string;
+            label: {
+                [key: string]: string;
+            };
+            kind: string;
+            unit: null | string;
+            isVariantAxis: boolean;
+            isFacet: boolean;
+            isSearchable: boolean;
+            aliases: string[];
+            options: components["schemas"]["AttributeOptionView"][];
+            missingCultures: string[];
+        };
+        AttributeOptionView: {
+            code: string;
+            label: {
+                [key: string]: string;
+            };
+        };
         DefineVariantsRequest: {
             axes: components["schemas"]["VariantAxisRequest"][];
             skuPrefix: null | string;
@@ -142,6 +178,9 @@ export interface components {
             failed: number;
             /** Format: double */
             elapsedSeconds: number;
+        };
+        ListAttributeDefinitionsResult: {
+            items: components["schemas"]["AttributeDefinitionView"][];
         };
         ListProductsResult: {
             items: components["schemas"]["ProductSummary"][];
@@ -286,6 +325,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListProductsResult"];
+                };
+            };
+        };
+    };
+    ListAttributeDefinitions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListAttributeDefinitionsResult"];
                 };
             };
         };

@@ -15,7 +15,6 @@ namespace ElGuerre.Tendero.Persistence;
 public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options) : DbContext(options)
 {
     public DbSet<Product> Products => Set<Product>();
-    public DbSet<AttributeDefinition> AttributeDefinitions => Set<AttributeDefinition>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -23,7 +22,6 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     {
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new VariantConfiguration());
-        modelBuilder.ApplyConfiguration(new AttributeDefinitionConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 

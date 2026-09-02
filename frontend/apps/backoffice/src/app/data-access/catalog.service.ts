@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type {
+  AttributeDefinitionList,
   DefineVariantsResponse,
   ImportResult,
   ProductListPage,
@@ -64,5 +65,10 @@ export class CatalogService {
       `${this.baseUrl}/api/catalog/products/${productId}/variants`,
       { axes, skuPrefix: null },
     );
+  }
+
+  /** Las definiciones de atributo, con su etiqueta en todas las culturas. */
+  attributeDefinitions(): Observable<AttributeDefinitionList> {
+    return this.http.get<AttributeDefinitionList>(`${this.baseUrl}/api/catalog/attributes`);
   }
 }

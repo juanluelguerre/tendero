@@ -1,4 +1,16 @@
 {
+  "attributes": {
+    "title": "Attributes",
+    "hint": "An untranslated label is not cosmetic: an option with no English is exactly what made 'navy blue shoes' find nothing.",
+    "loading": "Loading...",
+    "failed": "Could not load the definitions.",
+    "incomplete": "{{count}} incomplete",
+    "column": {
+      "code": "Code",
+      "kind": "Kind",
+      "options": "Options"
+    }
+  },
   "brand": {
     "area": "Backoffice",
     "name": "Tendero"
@@ -7,7 +19,8 @@
     "agents": "Agent activity",
     "orders": "Orders",
     "reviewQueue": "Review queue",
-    "search": "Search evaluation"
+    "search": "Search evaluation",
+    "attributes": "Attributes"
   },
   "reviewQueue": {
     "column": {

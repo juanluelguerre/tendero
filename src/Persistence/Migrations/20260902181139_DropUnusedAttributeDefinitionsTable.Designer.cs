@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using ElGuerre.Tendero.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,14 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ElGuerre.Tendero.Persistence.Migrations;
 
 [DbContext(typeof(TenderoDbContext))]
-partial class TenderoDbContextModelSnapshot : ModelSnapshot
+[Migration("20260902181139_DropUnusedAttributeDefinitionsTable")]
+partial class _20260902181139_DropUnusedAttributeDefinitionsTable
 {
-    // If you encounter a merge conflict in the line below, it means you need to
-    // discard one of the migration branches and recreate its migrations on top of
-    // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260902181139_DropUnusedAttributeDefinitionsTable";
-
-    protected override void BuildModel(ModelBuilder modelBuilder)
+    /// <inheritdoc />
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder

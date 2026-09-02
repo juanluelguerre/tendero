@@ -14,8 +14,8 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 2 — 9/10. Only the backoffice editing screen (`P2-10`) left
-- **Next task:** `P2-10`, the attribute definitions screen with es/en label columns
+- **Current phase:** 2 — **complete** (10/10)
+- **Next task:** `P3-1`, `Money` grows division and a rounding policy — pricing
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
@@ -203,7 +203,7 @@ matching happens per variant and results come back per product, and what
 
 ## Phase 2 · Localized attributes and taxonomy
 
-`en curso` · priority **high** · size **L**
+`hecha` (2026-09-02) · priority **high** · size **L** · **es 0.860 → 0.943, en 0.720 → 0.937**
 
 The highest-value phase in the floor, because it is the one that produces a
 number.
@@ -217,7 +217,7 @@ number.
 - [x] `P2-7` `seed/attributes.sample.json`: 14 definitions, 9 options, es+en — **S**
 - [x] `P2-8` Measured: **en 0.720 → 0.811, recall 0.682 → 0.773; es unchanged** — **S** · Spanish not moving was the regression test
 - [x] `P2-9` English thresholds raised to 0.80 / 0.76, same margin as before — **S**
-- [ ] `P2-10` Backoffice: attribute definitions screen with es/en label columns — **M**
+- [x] `P2-10` Backoffice: attribute definitions screen with es/en columns and a missing-translation tag — **M** · read-only, and said so: editing needs persistence, and the table for it was created and dropped the next day for having no reader
 
 **Risks.** The Spanish score must **not** move. If it does, the rendering changed
 something it should not have — that is the regression test, and it is worth

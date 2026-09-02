@@ -25,6 +25,14 @@ export type ImportResult = Schemas['ImportProductsResult'];
 export type DefineVariantsResponse = Schemas['DefineVariantsResponse'];
 
 /**
+ * Las etiquetas llegan SIN resolver —el diccionario de culturas entero— y es a
+ * proposito: esta pantalla existe para ver si falta una traduccion, y un texto
+ * ya resuelto escondería justo el dato por el que se mira.
+ */
+export type AttributeDefinitionView = Schemas['AttributeDefinitionView'];
+export type AttributeDefinitionList = Schemas['ListAttributeDefinitionsResult'];
+
+/**
  * El 409 de publicar. Era un objeto anónimo en el endpoint, así que no tenía
  * esquema y desde el cliente era invisible: nada decía que publicar pudiera
  * rechazarse por archivado, ni con qué forma.
