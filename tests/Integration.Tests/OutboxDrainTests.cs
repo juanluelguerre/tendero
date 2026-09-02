@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Integration.Tests;
 
 /// <summary>
@@ -28,6 +30,8 @@ namespace ElGuerre.Tendero.Integration.Tests;
 [Collection(PostgresCollection.Name)]
 public sealed class OutboxDrainTests(PostgresFixture postgres)
 {
+    private static readonly TestClock Clock = new();
+
     private const int SeedProducts = 6;
 
     [Fact]
@@ -74,7 +78,7 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         await using (var context = scope.Factory.Create())
         {
             foreach (var product in await context.Products.ToListAsync(ct))
-                product.Publish();
+                product.Publish(Clock);
 
             await context.SaveChangesAsync(ct);
         }

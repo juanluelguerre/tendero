@@ -14,8 +14,8 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 0 — `P0-1`…`P0-7` done; 9 tasks left
-- **Next task:** `P0-8`, `TimeProvider` into `Product` and `Order` — small, and the floor needs it
+- **Current phase:** 0 — `P0-1`…`P0-10` done; 6 left, all auth
+- **Next task:** `P0-11` → `P0-16`, the dev issuer and the policies
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
@@ -129,9 +129,9 @@ turns each promise into something a pull request enforces.
 - [x] `P0-5` `openapi-typescript` generating `shared-api` types; hand-written clients kept (ADR 0010) — **S** · run via pinned `npx`, not a devDependency: its peer excludes TypeScript 6
 - [x] `P0-6` EF Core Design + an initial migration reproducing today's schema exactly; `MigrateAsync` replaces `EnsureCreatedAsync` — **M** · EF tools pinned in `.config/dotnet-tools.json`; the machine's global `dotnet ef` was 10.0.2 and useless against an 11 runtime
 - [x] `P0-7` Testcontainers + a database per test; four integration tests — **M** · Respawn declined, a fresh database per test is cheaper than a reset; tests skip with a reason when Docker is absent
-- [ ] `P0-8` `TimeProvider` injected into `Product` and `Order` — **S**
-- [ ] `P0-9` `SearchEval --suite` switch, search suite behind it — **S**
-- [ ] `P0-10` `TelemetrySources` constants replacing the four string literals — **S**
+- [x] `P0-8` `TimeProvider` injected into `Product` and `Order` — **S** · 53 call sites, which is the argument for doing it at two aggregates rather than eight
+- [x] `P0-9` `SearchEval --suite` switch, search suite behind it — **S** · baseline reproduced identically afterwards
+- [x] `P0-10` `TelemetrySources` constants replacing the four string literals — **S**
 - [ ] `P0-11` `dev-issuer`: OIDC discovery + JWKS + token minting for seeded users and agents. Development only; refuses to start outside it — **M**
 - [ ] `P0-12` `AddJwtBearer` + CORS + the four policies (`Shopper`, `Shopkeeper`, `AgentOrShopper`, anonymous-by-decision) — **S**
 - [ ] `P0-13` `IPrincipalAccessor` port — must work outside HTTP (MCP, worker) — **S**

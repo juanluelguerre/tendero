@@ -113,7 +113,7 @@ public sealed class ListProductsEndpoint : ICarterModule
 public sealed class ListProductsHandler(IProductCatalogReader products)
     : IQueryHandler<ListProductsQuery, ListProductsResult>
 {
-    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Catalog");
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Catalog);
     private static readonly string[] Cultures = ["es", "en"];
 
     public async Task<ListProductsResult> HandleAsync(

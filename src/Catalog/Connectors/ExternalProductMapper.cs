@@ -22,17 +22,18 @@ namespace ElGuerre.Tendero.Catalog.Connectors;
 public static class ExternalProductMapper
 {
     /// <summary>Alta: producto nuevo en Draft, ya enlazado a su origen.</summary>
-    public static Product ToNewProduct(this ExternalProduct external, string source)
+    public static Product ToNewProduct(this ExternalProduct external, string source, TimeProvider clock)
     {
         var product = Product.Create(
+            clock,
             external.LocalizedName,
             external.Price,
             external.LocalizedDescription,
             external.Brand,
             external.Category);
 
-        product.LinkExternal(source, external.ExternalId);
-        CopyAttributes(external, product);
+        product.LinkExternal(clock, source, external.ExternalId);
+        CopyAttributes(external, product, clock);
 
         return product;
     }
@@ -42,17 +43,17 @@ public static class ExternalProductMapper
     /// estado — un producto ya publicado no vuelve a Draft porque su proveedor
     /// haya cambiado una descripción (ADR 0012).
     /// </summary>
-    public static void ApplyTo(this ExternalProduct external, Product product)
+    public static void ApplyTo(this ExternalProduct external, Product product, TimeProvider clock)
     {
         product.UpdateDetails(
-            external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
-        product.SetPrice(external.Price);
-        CopyAttributes(external, product);
+            clock, external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
+        product.SetPrice(clock, external.Price);
+        CopyAttributes(external, product, clock);
     }
 
-    private static void CopyAttributes(ExternalProduct external, Product product)
+    private static void CopyAttributes(ExternalProduct external, Product product, TimeProvider clock)
     {
         foreach (var (name, value) in external.Attributes)
-            product.SetAttribute(name, value);
+            product.SetAttribute(clock, name, value);
     }
 }

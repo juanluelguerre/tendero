@@ -1,6 +1,8 @@
 using ElGuerre.Tendero.Ordering.Domain;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Ordering.Tests;
 
 /// <summary>
@@ -12,6 +14,8 @@ namespace ElGuerre.Tendero.Ordering.Tests;
 /// </summary>
 public sealed class OrderTransitionTests
 {
+    private static readonly TestClock Clock = new();
+
     private static readonly Dictionary<OrderStatus, OrderStatus[]> Expected = new()
     {
         [OrderStatus.Pending] = [OrderStatus.PaymentAuthorized, OrderStatus.PaymentFailed, OrderStatus.Cancelled],
@@ -71,7 +75,7 @@ public sealed class OrderTransitionTests
     {
         var order = OrderBuilder.Default().InStatus(OrderStatus.Delivered);
 
-        Assert.Throws<InvalidOperationException>(() => order.Cancel("too late"));
+        Assert.Throws<InvalidOperationException>(() => order.Cancel(Clock, "too late"));
         Assert.Equal(OrderStatus.Delivered, order.Status);
     }
 
@@ -80,7 +84,7 @@ public sealed class OrderTransitionTests
     {
         var order = OrderBuilder.Default().Build();
 
-        order.Cancel("out of stock");
+        order.Cancel(Clock, "out of stock");
 
         var cancelled = Assert.IsType<OrderCancelled>(
             Assert.Single(order.DomainEvents, domainEvent => domainEvent is OrderCancelled));
@@ -91,12 +95,12 @@ public sealed class OrderTransitionTests
     {
         switch (target)
         {
-            case OrderStatus.PaymentAuthorized: order.AuthorizePayment(); break;
-            case OrderStatus.PaymentFailed: order.FailPayment("card declined"); break;
-            case OrderStatus.Confirmed: order.Confirm(); break;
-            case OrderStatus.Shipped: order.Ship(); break;
-            case OrderStatus.Delivered: order.Deliver(); break;
-            case OrderStatus.Cancelled: order.Cancel("test"); break;
+            case OrderStatus.PaymentAuthorized: order.AuthorizePayment(Clock); break;
+            case OrderStatus.PaymentFailed: order.FailPayment(Clock, "card declined"); break;
+            case OrderStatus.Confirmed: order.Confirm(Clock); break;
+            case OrderStatus.Shipped: order.Ship(Clock); break;
+            case OrderStatus.Delivered: order.Deliver(Clock); break;
+            case OrderStatus.Cancelled: order.Cancel(Clock, "test"); break;
             default: throw new ArgumentOutOfRangeException(nameof(target), target, "Unreachable target.");
         }
     }

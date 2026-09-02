@@ -4,6 +4,8 @@ using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
 /// <summary>
@@ -16,12 +18,14 @@ namespace ElGuerre.Tendero.Catalog.Tests.Features;
 /// </summary>
 public sealed class ListProductsTests
 {
+    private static readonly TestClock Clock = new();
+
     [Fact]
     public async Task Listing_filters_by_status()
     {
         var draft = ADraftProduct("Cafetera");
         var active = ADraftProduct("Mochila");
-        active.Publish();
+        active.Publish(Clock);
 
         var result = await HandlerOver(draft, active).HandleAsync(
             new ListProductsQuery("draft", "es", 1, 20), TestContext.Current.CancellationToken);
@@ -35,7 +39,7 @@ public sealed class ListProductsTests
     {
         var draft = ADraftProduct("Cafetera");
         var active = ADraftProduct("Mochila");
-        active.Publish();
+        active.Publish(Clock);
 
         var result = await HandlerOver(draft, active).HandleAsync(
             new ListProductsQuery(null, "es", 1, 20), TestContext.Current.CancellationToken);
@@ -46,7 +50,7 @@ public sealed class ListProductsTests
     [Fact]
     public async Task Listing_resolves_the_name_in_the_requested_culture()
     {
-        var product = Product.Create(
+        var product = Product.Create(Clock, 
             new LocalizedText(new Dictionary<string, string> { ["es"] = "Cafetera", ["en"] = "Coffee maker" }),
             new Money(29.90m, "EUR"));
 
@@ -92,7 +96,7 @@ public sealed class ListProductsTests
         new(new InMemoryProductCatalogReader(products));
 
     private static Product ADraftProduct(string name) =>
-        Product.Create(LocalizedText.From("es", name), new Money(29.90m, "EUR"));
+        Product.Create(Clock, LocalizedText.From("es", name), new Money(29.90m, "EUR"));
 
     private sealed class InMemoryProductCatalogReader(params Product[] products) : IProductCatalogReader
     {

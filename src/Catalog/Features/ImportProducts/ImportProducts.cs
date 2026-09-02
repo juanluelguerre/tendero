@@ -59,6 +59,7 @@ public sealed class ImportProductsHandler(
     IUnitOfWork unitOfWork,
     IExternalImageReader imageReader,
     IImageStore imageStore,
+    TimeProvider clock,
     ILogger<ImportProductsHandler> logger)
     : ICommandHandler<ImportProductsCommand, ImportProductsResult>
 {
@@ -129,14 +130,14 @@ public sealed class ImportProductsHandler(
 
         if (existing is null)
         {
-            var product = external.ToNewProduct(source);
+            var product = external.ToNewProduct(source, clock);
             await IngestImagesAsync(product, external, cancellationToken);
             repository.Add(product);
             tally.Created++;
         }
         else
         {
-            external.ApplyTo(existing);
+            external.ApplyTo(existing, clock);
             await IngestImagesAsync(existing, external, cancellationToken);
             tally.Updated++;
         }
@@ -192,7 +193,7 @@ public sealed class ImportProductsHandler(
 
             await using var stream = content.Content;
             var id = await imageStore.SaveAsync(stream, content.ContentType, cancellationToken);
-            product.AddImage(id, image.LocalizedAlt);
+            product.AddImage(clock, id, image.LocalizedAlt);
         }
     }
 

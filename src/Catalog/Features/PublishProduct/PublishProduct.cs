@@ -104,10 +104,11 @@ public sealed class PublishProductEndpoint : ICarterModule
 
 public sealed class PublishProductHandler(
     IProductRepository repository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    TimeProvider clock)
     : ICommandHandler<PublishProductCommand, PublishProductResult>
 {
-    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Catalog");
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Catalog);
 
     public async Task<PublishProductResult> HandleAsync(
         PublishProductCommand command, CancellationToken cancellationToken)
@@ -130,7 +131,7 @@ public sealed class PublishProductHandler(
         if (product.Status == ProductStatus.Active)
             return Outcome(PublishOutcome.AlreadyActive, product.Id, product.Status, activity);
 
-        product.Publish();
+        product.Publish(clock);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return Outcome(PublishOutcome.Published, product.Id, product.Status, activity);

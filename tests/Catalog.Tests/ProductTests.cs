@@ -2,6 +2,8 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
+using ElGuerre.Tendero.Tests;
+
 namespace ElGuerre.Tendero.Catalog.Tests.Domain;
 
 /// <summary>
@@ -10,8 +12,35 @@ namespace ElGuerre.Tendero.Catalog.Tests.Domain;
 /// </summary>
 public sealed class ProductTests
 {
+    private static readonly TestClock Clock = new();
+
+    /// <summary>
+    /// El motivo por el que el reloj es un parámetro y no DateTimeOffset.UtcNow:
+    /// sin esto, cualquier aserción sobre CreatedAt/UpdatedAt sólo puede
+    /// comprobar que el sello "es reciente", que es una forma elegante de no
+    /// comprobar nada. Las reglas con ventana temporal que vienen —validez de
+    /// promociones, caducidad de mandatos, plazo de devolución— dependen de que
+    /// esto sea exacto.
+    /// </summary>
+    [Fact]
+    public void Timestamps_come_from_the_clock_and_not_from_the_wall()
+    {
+        var clock = new TestClock();
+
+        var product = Product.Create(clock, LocalizedText.From("es", "Cafetera"), new Money(29.90m, "EUR"));
+
+        Assert.Equal(TestClock.Default, product.CreatedAt);
+        Assert.Equal(TestClock.Default, product.UpdatedAt);
+
+        var later = clock.Advance(TimeSpan.FromHours(3));
+        product.Publish(clock);
+
+        Assert.Equal(TestClock.Default, product.CreatedAt);
+        Assert.Equal(later, product.UpdatedAt);
+    }
+
     private static Product AProduct(string name = "Cafetera") =>
-        Product.Create(LocalizedText.From("es", name), new Money(29.90m, "EUR"));
+        Product.Create(Clock, LocalizedText.From("es", name), new Money(29.90m, "EUR"));
 
     [Fact]
     public void The_cover_photo_is_the_one_with_the_lowest_sort_order()
@@ -21,8 +50,8 @@ public sealed class ProductTests
         // listado del backoffice ordenaba y el documento de búsqueda no, de modo
         // que el mismo producto podía enseñar dos fotos distintas.
         var product = AProduct();
-        product.AddImage(new ImageId("aaa"));
-        product.AddImage(new ImageId("bbb"));
+        product.AddImage(Clock, new ImageId("aaa"));
+        product.AddImage(Clock, new ImageId("bbb"));
 
         Assert.Equal(new ImageId("aaa"), product.PrimaryImage?.Id);
         Assert.Equal(0, product.PrimaryImage?.SortOrder);
@@ -36,8 +65,8 @@ public sealed class ProductTests
     public void Adding_the_same_image_twice_does_not_duplicate_it()
     {
         var product = AProduct();
-        product.AddImage(new ImageId("aaa"));
-        product.AddImage(new ImageId("aaa"));
+        product.AddImage(Clock, new ImageId("aaa"));
+        product.AddImage(Clock, new ImageId("aaa"));
 
         Assert.Single(product.Images);
     }
@@ -65,7 +94,7 @@ public sealed class ProductTests
     [Fact]
     public void Every_culture_gets_its_own_slug()
     {
-        var product = Product.Create(
+        var product = Product.Create(Clock, 
             new LocalizedText(new Dictionary<string, string>
             {
                 ["es"] = "Cafetera de goteo",
@@ -83,7 +112,7 @@ public sealed class ProductTests
         // Marca y categoría entran en Create. Cuando llegaban en un UpdateDetails
         // posterior, dar de alta un producto emitía dos ProductUpserted, y el
         // worker de indexación escribía dos veces el mismo documento.
-        var product = Product.Create(
+        var product = Product.Create(Clock, 
             LocalizedText.From("es", "Cafetera"),
             new Money(29.90m, "EUR"),
             description: null,

@@ -62,7 +62,7 @@ public sealed class ReindexProductsHandler(
     IProductIndexer indexer)
     : ICommandHandler<ReindexProductsCommand, ReindexProductsResult>
 {
-    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.Search");
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
     public async Task<ReindexProductsResult> HandleAsync(
         ReindexProductsCommand command, CancellationToken cancellationToken)

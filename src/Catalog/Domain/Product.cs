@@ -65,13 +65,14 @@ public sealed class Product : AggregateRoot
     /// partirlo en dos mutaciones emitía dos ProductUpserted por alta.
     /// </summary>
     public static Product Create(
+        TimeProvider clock,
         LocalizedText name,
         Money price,
         LocalizedText? description = null,
         string? brand = null,
         string? category = null)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.GetUtcNow();
         var product = new Product
         {
             Id = ProductId.New(),
@@ -89,14 +90,15 @@ public sealed class Product : AggregateRoot
         return product;
     }
 
-    public void UpdateDetails(LocalizedText name, LocalizedText? description, string? brand, string? category)
+    public void UpdateDetails(
+        TimeProvider clock, LocalizedText name, LocalizedText? description, string? brand, string? category)
     {
         Name = name;
         Slug = Slugify(name);
         Description = description;
         Brand = brand;
         Category = category;
-        Touch();
+        Touch(clock);
     }
 
     /// <summary>
@@ -104,42 +106,42 @@ public sealed class Product : AggregateRoot
     /// Es el punto de entrada del slice de enriquecimiento con IA
     /// (traducción automática + revisión humana en el backoffice).
     /// </summary>
-    public void Localize(string culture, string name, string? description = null)
+    public void Localize(TimeProvider clock, string culture, string name, string? description = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         Name = Name.With(culture, name);
         Slug = Slugify(Name);
         if (description is not null)
             Description = (Description ?? LocalizedText.From(culture, description)).With(culture, description);
-        Touch();
+        Touch(clock);
     }
 
-    public void SetPrice(Money price)
+    public void SetPrice(TimeProvider clock, Money price)
     {
         if (price.Amount < 0)
             throw new InvalidOperationException("Price cannot be negative.");
         Price = price;
-        Touch();
+        Touch(clock);
     }
 
-    public void SetAttribute(string name, string value)
+    public void SetAttribute(TimeProvider clock, string name, string value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         _attributes[name.Trim()] = value;
-        Touch();
+        Touch(clock);
     }
 
     // Idempotente por identidad de contenido: reimportar la misma foto no la
     // duplica, porque el hash del contenido ES la clave.
-    public void AddImage(ImageId id, LocalizedText? alt = null)
+    public void AddImage(TimeProvider clock, ImageId id, LocalizedText? alt = null)
     {
         if (_images.Any(i => i.Id == id)) return;
         _images.Add(new ProductImage(id, alt, _images.Count));
-        Touch();
+        Touch(clock);
     }
 
     // Idempotente: reimportar desde el mismo origen no duplica referencias.
-    public void LinkExternal(string source, string externalId)
+    public void LinkExternal(TimeProvider clock, string source, string externalId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(source);
         ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
@@ -148,28 +150,28 @@ public sealed class Product : AggregateRoot
         if (!_externalReferences.Contains(reference))
         {
             _externalReferences.Add(reference);
-            Touch();
+            Touch(clock);
         }
     }
 
-    public void Publish()
+    public void Publish(TimeProvider clock)
     {
         if (Status == ProductStatus.Archived)
             throw new InvalidOperationException("Cannot publish an archived product.");
         Status = ProductStatus.Active;
-        Touch();
+        Touch(clock);
     }
 
-    public void Archive()
+    public void Archive(TimeProvider clock)
     {
         Status = ProductStatus.Archived;
-        UpdatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = clock.GetUtcNow();
         Raise(new ProductArchived(Id, UpdatedAt)); // el worker lo saca de los índices
     }
 
-    private void Touch()
+    private void Touch(TimeProvider clock)
     {
-        UpdatedAt = DateTimeOffset.UtcNow;
+        UpdatedAt = clock.GetUtcNow();
         Raise(new ProductUpserted(Id, UpdatedAt));
     }
 
