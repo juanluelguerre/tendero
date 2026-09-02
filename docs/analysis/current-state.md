@@ -195,11 +195,16 @@ container — posting the report to the job summary and to the pull request. The
 finding stays here rather than being deleted, because it is what the badge on the
 README was claiming for four days.
 
-**3. No migrations.** ADR 0008 says so explicitly, and
+**3. No migrations.** ~~ADR 0008 says so explicitly, and
 `src/Workers/DevelopmentSchemaInitializer.cs` calls `EnsureCreatedAsync` in
 Development only. The failure mode is quiet: `EnsureCreated` does nothing when the
 schema already exists, so the first additive model change leaves every existing
-developer database silently wrong, with no error.
+developer database silently wrong, with no error.~~
+**Resolved 2026-09-02.** An initial migration, `SchemaMigrator` in place of
+`EnsureCreatedAsync`, and an integration test that creates one database from the
+model and another from the migrations and compares the two schemas column by
+column and index by index — which is what makes the baseline trustworthy rather
+than merely generated.
 
 **4. No OpenAPI.** ~~`frontend/libs/shared/api/src/lib/*.ts` hand-mirrors the .NET
 DTOs, and its own docblocks flag the risk. There is no contract test on either
@@ -210,10 +215,15 @@ from it. Getting there required moving the endpoints to `TypedResults`: with
 `Results.Ok(...)` the generator could infer nothing and the document had no
 response schemas at all.
 
-**5. No integration tests.** No `WebApplicationFactory`, no Testcontainers, no
+**5. No integration tests.** ~~No `WebApplicationFactory`, no Testcontainers, no
 `Category` trait. Nothing exercises Postgres, the jsonb converters, the outbox
 drain, the unique indexes, the Carter wiring or the Elasticsearch adapter against
-a real dependency.
+a real dependency.~~
+**Resolved 2026-09-02.** `tests/Integration.Tests` covers import → outbox →
+drain → projection against a real Postgres, plus the migration baseline;
+`tests/Api.Tests` boots the API. `dotnet test --filter Category=Integration` —
+documented in `CLAUDE.md` and matching zero tests until now — matches four.
+The Elasticsearch adapter is still only exercised by the SearchEval gate.
 
 **6. The two real frontend pages are untested.** `search-page.ts` and
 `review-queue-page.ts` hold all the logic — state machines, broken-image

@@ -49,6 +49,10 @@ jobs:
       # inside its adapter". It now also boots the API through
       # WebApplicationFactory, which is what catches a DI misconfiguration —
       # the kind of failure that only ever shows up at startup.
+      #
+      # The integration tests run here too: the runner has Docker, so
+      # Testcontainers starts a real Postgres. Without Docker they skip with a
+      # reason rather than failing, so a fresh clone can still run the suite.
       - name: Test
         run: dotnet test --no-build
 

@@ -61,7 +61,9 @@ laborious.
 dotnet run --project src/AppHost              # full stack via Aspire
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
-dotnet test --filter Category=Integration     # Testcontainers (needs Docker)
+dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
+dotnet tool restore                           # EF tools, pinned to the runtime
+dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
 dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
 

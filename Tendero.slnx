@@ -14,6 +14,7 @@
     <Project Path="tests/Api.Tests/ElGuerre.Tendero.Api.Tests.csproj" />
     <Project Path="tests/Architecture.Tests/ElGuerre.Tendero.Architecture.Tests.csproj" />
     <Project Path="tests/Catalog.Tests/ElGuerre.Tendero.Catalog.Tests.csproj" />
+    <Project Path="tests/Integration.Tests/ElGuerre.Tendero.Integration.Tests.csproj" />
     <Project Path="tests/Ordering.Tests/ElGuerre.Tendero.Ordering.Tests.csproj" />
     <Project Path="tests/SearchEval.Tests/ElGuerre.Tendero.SearchEval.Tests.csproj" />
     <Project Path="tests/SharedKernel.Tests/ElGuerre.Tendero.SharedKernel.Tests.csproj" />
