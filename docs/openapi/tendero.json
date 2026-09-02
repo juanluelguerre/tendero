@@ -159,6 +159,60 @@
         }
       }
     },
+    "/api/catalog/products/{id}/variants": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "DefineVariants",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefineVariantsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefineVariantsResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/search": {
       "get": {
         "tags": [
@@ -235,6 +289,44 @@
   },
   "components": {
     "schemas": {
+      "DefineVariantsRequest": {
+        "required": [
+          "axes",
+          "skuPrefix"
+        ],
+        "type": "object",
+        "properties": {
+          "axes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantAxisRequest"
+            }
+          },
+          "skuPrefix": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DefineVariantsResponse": {
+        "required": [
+          "created",
+          "existing"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "existing": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -526,6 +618,24 @@
           "tookMs": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "VariantAxisRequest": {
+        "required": [
+          "code",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

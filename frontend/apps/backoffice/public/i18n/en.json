@@ -35,5 +35,17 @@
     "failed": "Could not get a token. Is the API running?",
     "noIssuer": "The development issuer is not responding. Start the API with dotnet run --project src/AppHost.",
     "signOut": "Sign out"
+  },
+  "variants": {
+    "title": "Variants",
+    "hint": "Declare which axes the product varies by. The whole matrix is generated: retiring the combinations that do not exist costs less than creating the ones that do.",
+    "axisCode": "Axis",
+    "axisOptions": "Options (comma separated)",
+    "addAxis": "Add axis",
+    "willCreate": "{{count}} variants",
+    "generate": "Generate",
+    "generating": "Generating…",
+    "created": "{{count}} variants created",
+    "back": "Back to the queue"
   }
 }

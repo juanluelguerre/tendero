@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { ProductSummary } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
@@ -25,7 +26,7 @@ type QueueState =
  */
 @Component({
   selector: 'backoffice-review-queue-page',
-  imports: [TranslocoDirective],
+  imports: [RouterLink, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
       <header class="head">
@@ -62,6 +63,7 @@ type QueueState =
                     <th scope="col">{{ t('reviewQueue.column.brand') }}</th>
                     <th scope="col" class="right">{{ t('reviewQueue.column.price') }}</th>
                     <th scope="col">{{ t('reviewQueue.column.languages') }}</th>
+                    <th scope="col"><span class="sr-only">{{ t('variants.title') }}</span></th>
                     <th scope="col"><span class="sr-only">{{ t('reviewQueue.column.action') }}</span></th>
                   </tr>
                 </thead>
@@ -83,6 +85,13 @@ type QueueState =
                             t('reviewQueue.missing', { cultures: item.missingCultures.join(', ') })
                           }}</span>
                         }
+                      </td>
+                      <!-- Definir variantes es una decision de catalogo, no de
+                           importacion, asi que se ofrece por fila y no en masa. -->
+                      <td>
+                        <a class="variants-link" [routerLink]="['/products', item.productId, 'variants']">
+                          {{ t('variants.title') }}
+                        </a>
                       </td>
                       <td class="right">
                         <button
@@ -125,6 +134,8 @@ type QueueState =
     .tag--ok { color: var(--positive); border: 1px solid var(--positive); }
     .tag--warn { color: var(--warning); border: 1px solid var(--warning); }
 
+    .variants-link { font-size: var(--text-xs); color: var(--text-muted); }
+    .variants-link:hover { color: var(--text); }
     .publish { font: inherit; color: var(--stone-0); background: var(--accent); border: 0; border-radius: var(--radius-sm); padding: var(--space-2) var(--space-4); cursor: pointer; }
     .publish:hover:not(:disabled) { background: var(--accent-hover); }
     .publish:disabled { opacity: 0.6; cursor: default; }

@@ -108,28 +108,4 @@ public sealed class PublishProductTests
             LocalizedText.From("es", "Cafetera italiana 12 tazas"),
             new Money(29.90m, "EUR"));
 
-    private sealed class InMemoryProductRepository(params Product[] products) : IProductRepository
-    {
-        private readonly List<Product> _products = [.. products];
-
-        public Task<Product?> FindByIdAsync(ProductId id, CancellationToken ct) =>
-            Task.FromResult(_products.SingleOrDefault(p => p.Id == id));
-
-        public Task<Product?> FindByExternalReferenceAsync(string source, string externalId, CancellationToken ct) =>
-            Task.FromResult(_products.SingleOrDefault(
-                p => p.ExternalReferences.Any(r => r.Source == source && r.ExternalId == externalId)));
-
-        public void Add(Product product) => _products.Add(product);
-    }
-
-    private sealed class CountingUnitOfWork : IUnitOfWork
-    {
-        public int SaveCount { get; private set; }
-
-        public Task SaveChangesAsync(CancellationToken ct)
-        {
-            SaveCount++;
-            return Task.CompletedTask;
-        }
-    }
 }

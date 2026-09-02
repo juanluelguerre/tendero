@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type {
+  DefineVariantsResponse,
   ImportResult,
   ProductListPage,
   ProductStatus,
@@ -48,5 +49,20 @@ export class CatalogService {
   import(source = 'seed'): Observable<ImportResult> {
     return this.http.post<ImportResult>(`${this.baseUrl}/api/catalog/import`, { source });
   }
-}
 
+  /**
+   * Genera la matriz de variantes: el producto cartesiano de los ejes. Se manda
+   * entera porque es lo que un tendero espera al declarar "colores x tallas", y
+   * retirar despues las combinaciones que no existen cuesta menos que crearlas
+   * una a una.
+   */
+  defineVariants(
+    productId: string,
+    axes: { code: string; options: string[] }[],
+  ): Observable<DefineVariantsResponse> {
+    return this.http.post<DefineVariantsResponse>(
+      `${this.baseUrl}/api/catalog/products/${productId}/variants`,
+      { axes, skuPrefix: null },
+    );
+  }
+}

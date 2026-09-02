@@ -22,6 +22,7 @@ export type ProductSummary = Schemas['ProductSummary'];
 export type ProductListPage = Schemas['ListProductsResult'];
 export type PublishProductResponse = Schemas['PublishProductResponse'];
 export type ImportResult = Schemas['ImportProductsResult'];
+export type DefineVariantsResponse = Schemas['DefineVariantsResponse'];
 
 /**
  * El 409 de publicar. Era un objeto anónimo en el endpoint, así que no tenía

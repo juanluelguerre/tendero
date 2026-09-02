@@ -35,5 +35,17 @@
     "failed": "No se pudo obtener el token. ¿Está la API en marcha?",
     "noIssuer": "El emisor de desarrollo no responde. Arranca la API con dotnet run --project src/AppHost.",
     "signOut": "Cerrar sesión"
+  },
+  "variants": {
+    "title": "Variantes",
+    "hint": "Declara por qué ejes varía el producto. Se genera la matriz entera: retirar después las combinaciones que no existen cuesta menos que crearlas una a una.",
+    "axisCode": "Eje",
+    "axisOptions": "Opciones (separadas por comas)",
+    "addAxis": "Añadir eje",
+    "willCreate": "{{count}} variantes",
+    "generate": "Generar",
+    "generating": "Generando…",
+    "created": "{{count}} variantes creadas",
+    "back": "Volver a la cola"
   }
 }

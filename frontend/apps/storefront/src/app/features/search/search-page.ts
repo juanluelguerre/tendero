@@ -69,6 +69,21 @@ export class SearchPage {
   }
 
   protected price(hit: SearchHit): string {
-    return formatPrice(hit.priceAmount, hit.priceCurrency, this.transloco.getActiveLang());
+    const culture = this.transloco.getActiveLang();
+
+    // Un producto con varias variantes NO tiene un precio, tiene un rango, y
+    // ensenar solo el de la variante que caso miente en las dos direcciones:
+    // parece caro si gano la talla grande y barato si gano la pequena.
+    // priceFrom/priceTo viajan en el propio documento (ADR 0015), asi que la
+    // tarjeta no necesita una segunda llamada para decirlo.
+    if (hit.priceFrom < hit.priceTo) {
+      return `${formatPrice(hit.priceFrom, hit.priceCurrency, culture)} – ${formatPrice(
+        hit.priceTo,
+        hit.priceCurrency,
+        culture,
+      )}`;
+    }
+
+    return formatPrice(hit.priceFrom, hit.priceCurrency, culture);
   }
 }
