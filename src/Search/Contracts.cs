@@ -159,7 +159,19 @@ public sealed record ProductSearchDocument
     public required string Name { get; init; }
     public string? Description { get; init; }
     public string? Brand { get; init; }
+
+    /// <summary>El código, como keyword: para filtrar y facetar, nunca para
+    /// casar texto. Listarlo entre los campos de texto prometía una coincidencia
+    /// que no podía ocurrir, y por eso salió de ellos.</summary>
     public string? Category { get; init; }
+
+    /// <summary>
+    /// La rama entera en la cultura del índice: "Hogar Cocina Menaje de cocina".
+    /// Esto SÍ es texto y sí se analiza. Es lo que hace que "induction cookware"
+    /// pueda casar, porque hasta ahora en el índice no existía la palabra
+    /// "cookware" — existía un código.
+    /// </summary>
+    public string? CategoryPathText { get; init; }
 
     /// <summary>Atributos aplanados a texto buscable: "color azul marino talla 36-42 drop 8".</summary>
     public string? AttributesText { get; init; }
@@ -227,18 +239,20 @@ public sealed record ProductSearchDocument
     /// llegara, no se indexa: no hay nada que comprar.
     /// </summary>
     public static IEnumerable<ProductSearchDocument> ForVariants(
-        Product product, string culture, AttributeDefinitions? definitions = null)
+        Product product, string culture,
+        AttributeDefinitions? definitions = null, CategoryTree? categories = null)
     {
         var (from, to) = product.PriceRange;
 
         return product.Variants
             .Where(variant => variant.Status == VariantStatus.Available)
-            .Select(variant => FromVariant(product, variant, culture, from.Amount, to.Amount, definitions));
+            .Select(variant => FromVariant(
+                product, variant, culture, from.Amount, to.Amount, definitions, categories));
     }
 
     private static ProductSearchDocument FromVariant(
         Product product, Variant variant, string culture, decimal priceFrom, decimal priceTo,
-        AttributeDefinitions? definitions) => new()
+        AttributeDefinitions? definitions, CategoryTree? categories) => new()
     {
         Id = variant.Id.ToString(),
         ProductId = product.Id.ToString(),
@@ -248,6 +262,7 @@ public sealed record ProductSearchDocument
         Description = product.Description?.In(culture),
         Brand = product.Brand,
         Category = product.Category,
+        CategoryPathText = categories?.PathTextIn(product.Category, culture),
         AttributesText = RenderAttributes(product, culture, definitions),
         Slug = product.Slug.In(culture),
         AxisValues = [.. variant.AxisValues.Select(pair => $"{pair.Key}:{pair.Value}")],

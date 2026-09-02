@@ -34,6 +34,10 @@ public static class CatalogServiceCollectionExtensions
             configuration.GetSection(AttributeSeedOptions.SectionName));
         services.AddSingleton<IAttributeDefinitionReader, SeedFileAttributeDefinitionReader>();
 
+        services.Configure<CategorySeedOptions>(
+            configuration.GetSection(CategorySeedOptions.SectionName));
+        services.AddSingleton<ICategoryReader, SeedFileCategoryReader>();
+
         // Almacén de imágenes: un puerto, y hoy un solo adaptador. El de S3
         // entra cuando el sistema de ficheros deje de bastar, sin tocar nada más.
         services.Configure<FileSystemImageStoreOptions>(
