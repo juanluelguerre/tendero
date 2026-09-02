@@ -1,0 +1,161 @@
+# The gates this repository already had, finally executed by something other
+# than someone remembering. Nothing here is new policy: `-warnaserror`, the six
+# NetArchTest rules, the connector contract suite, the Nx module boundaries and
+# the NDCG gate were all committed before this file existed — they just never
+# ran on a pull request.
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+# A second push supersedes the first; the gate takes long enough that queueing
+# stale runs is just noise.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Build · tests · architecture rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # global.json pins 11.0.0 with allowPrerelease; `dotnet-quality: preview`
+      # is what lets the installer actually resolve a preview SDK
+      # (initial-plan.md §8).
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: preview
+
+      - run: dotnet restore
+
+      # GitHub Actions sets CI=true, which already flips TreatWarningsAsErrors
+      # in Directory.Build.props. The flag is here anyway because it is the
+      # command CLAUDE.md documents, and a reader should not have to know about
+      # the props file to understand what this line enforces.
+      - name: Build
+        run: dotnet build --no-restore -warnaserror
+
+      # The architecture rules are ordinary xUnit facts, so this line is also
+      # what enforces slice isolation, domain purity and "Elastic.Clients stays
+      # inside its adapter".
+      - name: Test
+        run: dotnet test --no-build
+
+  search-quality:
+    name: Search relevance gate (NDCG@10)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    services:
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:9.5.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          # Same heap the AppHost asks for. The runner has enough; the README
+          # warns that a laptop needs 4 GB given to WSL2 for the same reason.
+          ES_JAVA_OPTS: -Xms1g -Xmx1g
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd "curl -fsS http://localhost:9200/_cluster/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: preview
+
+      # SearchEval deliberately does not start Elasticsearch itself
+      # (docs/search-evaluation.md) — a service container is exactly the thing
+      # it expects to be handed. Defaults for --golden, --thresholds and --seed
+      # are relative to the repository root, so only the endpoint is passed.
+      - name: Run the gate
+        run: >-
+          dotnet run --project tools/SearchEval --
+          --ci
+          --elasticsearch http://localhost:9200
+          --report ndcg-report.md
+
+      # Everything below runs even when the gate fails, because a failed gate is
+      # precisely when you want to read the per-query table.
+      - name: Add the report to the job summary
+        if: always() && hashFiles('ndcg-report.md') != ''
+        run: cat ndcg-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the report
+        if: always() && hashFiles('ndcg-report.md') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ndcg-report
+          path: ndcg-report.md
+
+      # One sticky comment per pull request, edited in place. Skipped for forks,
+      # where GITHUB_TOKEN is read-only — the job summary above is the fallback
+      # and needs no permissions at all.
+      - name: Comment the report on the pull request
+        if: >-
+          always()
+          && hashFiles('ndcg-report.md') != ''
+          && github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          marker='<!-- tendero-search-eval -->'
+          body="$marker"$'\n'"$(cat ndcg-report.md)"
+          existing=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq "map(select(.body | startswith(\"$marker\"))) | .[0].id // empty")
+          if [ -n "$existing" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$existing" -f body="$body" --silent
+          else
+            gh api -X POST "repos/$REPO/issues/$PR/comments" -f body="$body" --silent
+          fi
+
+  frontend:
+    name: Frontend lint and tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      # The daemon is a local dev optimisation and only adds a moving part here.
+      NX_DAEMON: 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      # Angular 22 requires ^22.22.3 || ^24.15.0 || >=26.0.0 — see the README
+      # prerequisites table. Node 22.21 fails.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      # `lint` is not a formatting pass here: it carries
+      # @nx/enforce-module-boundaries, which is the TypeScript twin of the
+      # NetArchTest rules (ADR 0010). Until this ran, the boundary between the
+      # two apps was a convention rather than a rule.
+      - name: Lint and test
+        run: npx nx run-many -t lint test

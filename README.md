@@ -6,7 +6,8 @@
 <p align="center"><em>The AI-native shopkeeper — commerce for humans and agents.</em></p>
 
 <p align="center">
-  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-tracked%20in%20CI-D85A30" alt="Search quality"></a>
+  <a href="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml"><img src="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
+  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.860%20es%20%C2%B7%200.720%20en-D85A30" alt="Search quality"></a>
   <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-11%20(preview)-512BD4?logo=dotnet" alt=".NET 11"></a>
   <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" alt="Angular 22"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>

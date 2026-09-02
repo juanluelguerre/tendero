@@ -14,8 +14,8 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** none started — phase 0 is next
-- **Next task:** `P0-1`, the GitHub Actions workflow
+- **Current phase:** 0 — CI is done (`P0-1`, `P0-2`); 14 tasks left
+- **Next task:** `P0-3` → `P0-5`, OpenAPI and the generated frontend types
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
@@ -117,13 +117,13 @@ proposal — not only in one article on one Tuesday.
 
 ## Phase 0 · Make the gates real
 
-`no empezada` · priority **critical** · size **M**
+`en curso` · priority **critical** · size **M**
 
 Everything in this phase already exists as a promise somewhere in the docs. This
 turns each promise into something a pull request enforces.
 
-- [ ] `P0-1` GitHub Actions: build with `-warnaserror`, run all tests, run the architecture rules — **S**
-- [ ] `P0-2` Elasticsearch as a service container; run `SearchEval --ci` on every PR and post the report as a comment — **S**
+- [x] `P0-1` GitHub Actions: build with `-warnaserror`, run all tests, run the architecture rules — **S** · also runs the Nx module boundaries, which were enforced by nothing
+- [x] `P0-2` Elasticsearch as a service container; run `SearchEval --ci` on every PR and post the report as a comment — **S** · sticky comment, job summary as the fork-safe fallback
 - [ ] `P0-3` `Microsoft.AspNetCore.OpenApi`, document generated at build into `docs/openapi/tendero.json`, committed — **S**
 - [ ] `P0-4` Contract test: committed document equals the runtime one — **S**
 - [ ] `P0-5` `openapi-typescript` generating `shared-api` types; keep the hand-written clients (ADR 0010) — **S**

@@ -185,9 +185,15 @@ Carter, validation, problem details, and nothing else.
 is open to anyone who can reach the port. Nothing downstream — accounts, roles,
 audit, agent identity, UCP — can start until this does.
 
-**2. No CI.** There is no `.github/` directory and not a single `.yml` file in
+**2. No CI.** ~~There is no `.github/` directory and not a single `.yml` file in
 the repository. The NDCG gate, the six architecture rules and the contract suite
-all exist and all run only when someone remembers.
+all exist and all run only when someone remembers.~~
+**Resolved 2026-09-02**, the first task off this review: `.github/workflows/ci.yml`
+runs the build with `-warnaserror`, the 117 tests, the six architecture rules,
+the Nx module boundaries, and the NDCG gate against an Elasticsearch service
+container — posting the report to the job summary and to the pull request. The
+finding stays here rather than being deleted, because it is what the badge on the
+README was claiming for four days.
 
 **3. No migrations.** ADR 0008 says so explicitly, and
 `src/Workers/DevelopmentSchemaInitializer.cs` calls `EnsureCreatedAsync` in
