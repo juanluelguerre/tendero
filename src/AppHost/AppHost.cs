@@ -45,9 +45,7 @@ var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
     // accepts searches already, and the first one comes back as a connection
     // refused against a container that is up but not yet listening.
     .WaitFor(elasticsearch)
-    .WithEnvironment(
-        "Catalog__Connectors__Seed__FilePath",
-        Path.Combine(repositoryRoot, "seed", "products.sample.json"))
+    .WithSeedFiles(repositoryRoot)
     .WithExternalHttpEndpoints();
 
 // Aspire brings up both Angular apps too: one command starts everything, and the
@@ -74,6 +72,7 @@ builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     // SearchIndexInitializer creates products_es/products_en during startup, so
     // if Elasticsearch is not ready the hosted service throws and the process
     // dies without retrying.
+    .WithSeedFiles(repositoryRoot)
     .WaitFor(elasticsearch);
 
 // The worker does NOT wait for the API: it does not depend on it. That was there
@@ -82,3 +81,44 @@ builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
 // is a deadlock waiting its turn.
 
 builder.Build().Run();
+
+/// <summary>
+/// Every committed data file, resolved against the repository root.
+///
+/// This exists because of a failure that only shows up when the stack actually
+/// runs. Each path defaults to something like "seed/attributes.sample.json",
+/// relative to the CONTENT ROOT — which is src/Api/ for the API and src/Workers/
+/// for the worker, and neither of them has a seed folder. The readers are
+/// deliberately forgiving: a missing file means no attribute definitions, no
+/// categories, no tariffs and no promotions, and everything carries on working
+/// with the previous behaviour.
+///
+/// So nothing fails. The catalogue imports, search answers, quotes come back —
+/// and phase 2's localized attributes, phase 2's category branch and the whole
+/// of phase 3's pricing are silently absent. Searching "cocina" found nothing
+/// and every quote answered at catalogue price with no promotions, with a green
+/// build and 241 passing tests behind it.
+///
+/// One line per project instead of five: the sixth file is the one that gets
+/// forgotten, and this is the only place that has to know the list.
+/// </summary>
+internal static class SeedFileEnvironment
+{
+    private static readonly (string Key, string File)[] Files =
+    [
+        ("Catalog__Connectors__Seed__FilePath", "products.sample.json"),
+        ("Catalog__Attributes__FilePath", "attributes.sample.json"),
+        ("Catalog__Categories__FilePath", "categories.sample.json"),
+        ("Pricing__Seed__PriceListsPath", "pricelists.sample.json"),
+        ("Pricing__Seed__PromotionsPath", "promotions.sample.json")
+    ];
+
+    public static IResourceBuilder<ProjectResource> WithSeedFiles(
+        this IResourceBuilder<ProjectResource> project, string repositoryRoot)
+    {
+        foreach (var (key, file) in Files)
+            project = project.WithEnvironment(key, Path.Combine(repositoryRoot, "seed", file));
+
+        return project;
+    }
+}
