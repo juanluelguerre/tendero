@@ -13,45 +13,44 @@ using Microsoft.AspNetCore.Routing;
 namespace ElGuerre.Tendero.Catalog.Features.PublishProduct;
 
 /// <summary>
-/// Saca un producto de Draft y lo hace visible. Es el paso que faltaba entre
-/// importar y buscar: el conector deja los productos en Draft esperando
-/// revisión, y la búsqueda filtra por Active, así que sin esto un catálogo
-/// importado es un catálogo invisible.
+/// Takes a product out of Draft and makes it visible. It is the step that was
+/// missing between importing and searching: the connector leaves products in
+/// Draft awaiting review, and search filters on Active, so without this an
+/// imported catalogue is an invisible catalogue.
 ///
-/// La cola de revisión del backoffice (fase 2) consumirá este mismo comando;
-/// lo que aquí es una llamada HTTP será allí un botón sobre la misma operación
-/// de dominio, sin tocar el slice.
+/// The backoffice review queue consumes this very command; what is an HTTP call
+/// here is a button there, over the same domain operation, without touching the
+/// slice.
 /// </summary>
 public sealed record PublishProductCommand(ProductId ProductId) : ICommand<PublishProductResult>;
 
 public enum PublishOutcome
 {
-    Published,      // estaba en Draft, ahora es Active
-    AlreadyActive,  // no había nada que hacer
-    Archived,       // fuera de catálogo: reactivar es otra decisión, no ésta
+    Published,      // it was in Draft, it is Active now
+    AlreadyActive,  // there was nothing to do
+    Archived,       // out of the catalogue: restoring it is a different decision
     NotFound
 }
 
 public sealed record PublishProductResult(PublishOutcome Outcome, ProductId ProductId, string Status);
 
 /// <summary>
-/// La forma que sale por el cable. Existe separada del resultado del handler por
-/// dos motivos que se vieron al probarlo contra la API de verdad:
+/// The shape that goes out over the wire. It exists apart from the handler's
+/// result for two reasons, both found by trying it against the real API:
 ///
-/// `ProductId` es un record struct, así que serializado tal cual sale como
-/// <c>{"value":"…"}</c>, mientras que el endpoint de búsqueda devuelve el id
-/// plano. Dos formas del mismo id en la misma API es una trampa para quien la
-/// consuma.
+/// `ProductId` is a record struct, so serialised as-is it comes out as
+/// <c>{"value":"…"}</c>, while the search endpoint returns the flat id. Two
+/// shapes of the same id in one API is a trap for whoever consumes it.
 ///
-/// Y el enum sale como número: <c>"outcome":1</c> no le dice nada a un agente y
-/// se rompe en cuanto alguien reordene los miembros.
+/// And the enum comes out as a number: <c>"outcome":1</c> tells an agent nothing
+/// and breaks the moment somebody reorders the members.
 /// </summary>
 public sealed record PublishProductResponse(string ProductId, string Outcome, string Status);
 
 /// <summary>
-/// El cuerpo del 409. Era un objeto anónimo, que produce el mismo JSON y ningún
-/// esquema: un cliente generado no podía ver que este endpoint puede rechazar
-/// por archivado, ni con qué forma.
+/// The 409's body. It used to be an anonymous object, which produces the same
+/// JSON and no schema at all: a generated client could not see that this
+/// endpoint can refuse on the grounds of being archived, nor in what shape.
 /// </summary>
 public sealed record PublishProductConflict(string Title, string Detail);
 
@@ -70,27 +69,28 @@ public sealed class PublishProductEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         // POST /api/catalog/products/{id}/publish
-        // Los tres resultados se declaran en la firma. El objeto anónimo del
-        // conflicto era invisible para cualquier cliente — no tenía nombre, así
-        // que no podía tener esquema — y ahora es un record con el mismo JSON.
+        // All three results are declared in the signature. The conflict's
+        // anonymous object was invisible to any client — it had no name, so it
+        // could have no schema — and it is now a record with the same JSON.
         app.MapPost("/api/catalog/products/{id:guid}/publish",
             async Task<Results<Ok<PublishProductResponse>, NotFound, Conflict<PublishProductConflict>>> (
                    Guid id, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var result = await dispatcher.SendAsync(new PublishProductCommand(new ProductId(id)), ct);
 
-                // El handler no sabe de HTTP: decide el resultado de dominio y
-                // aquí se traduce, igual que GetProductImage traduce "no está"
-                // a 404 sin que el puerto conozca códigos de estado.
+                // The handler knows nothing about HTTP: it decides the domain
+                // outcome and it is translated here, the same way GetProductImage
+                // translates "not there" into a 404 without the port knowing
+                // status codes.
                 return result.Outcome switch
                 {
                     PublishOutcome.NotFound => TypedResults.NotFound(),
                     PublishOutcome.Archived => TypedResults.Conflict(new PublishProductConflict(
                         "The product is archived.",
                         "Archived products stay out of the catalogue. Restore it before publishing.")),
-                    // camelCase, no ToLowerInvariant: "alreadyactive" pierde el
-                    // limite de palabra y las propiedades del payload ya van en
-                    // camelCase, asi que el valor sigue la misma convencion.
+                    // camelCase, not ToLowerInvariant: "alreadyactive" loses the
+                    // word boundary, and the payload's properties already travel
+                    // in camelCase, so the value follows the same convention.
                     _ => TypedResults.Ok(new PublishProductResponse(
                         result.ProductId.Value.ToString(),
                         JsonNamingPolicy.CamelCase.ConvertName(result.Outcome.ToString()),
@@ -125,10 +125,10 @@ public sealed class PublishProductHandler(
         if (product.Status == ProductStatus.Archived)
             return Outcome(PublishOutcome.Archived, product.Id, product.Status, activity);
 
-        // Publicar lo ya publicado no es un error, pero tampoco es un cambio.
-        // Llamar a Publish() de nuevo emitiría otro ProductUpserted y pondría al
-        // worker a reescribir un documento idéntico: ruido en el outbox por una
-        // operación que no ha alterado nada.
+        // Publishing what is already published is not an error, but it is not a
+        // change either. Calling Publish() again would emit another
+        // ProductUpserted and set the worker rewriting an identical document:
+        // noise in the outbox for an operation that altered nothing.
         if (product.Status == ProductStatus.Active)
             return Outcome(PublishOutcome.AlreadyActive, product.Id, product.Status, activity);
 

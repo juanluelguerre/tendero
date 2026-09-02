@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Lo que comparten API y Workers: OTel, health checks, service discovery y
-       resiliencia HTTP. No conoce ningún contexto acotado. -->
+  <!-- What the API and the Workers share: OTel, health checks, service discovery
+       and HTTP resilience. It knows no bounded context. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.ServiceDefaults</RootNamespace>
     <IsAspireSharedProject>true</IsAspireSharedProject>
@@ -11,8 +11,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <!-- Los nombres de las fuentes de telemetria viven en el SharedKernel: los
-       necesitan tanto quien abre el span como esta composicion que los registra. -->
+  <!-- The telemetry source names live in the SharedKernel: both whoever opens
+       the span and this composition that registers them need them. -->
   <ItemGroup>
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>

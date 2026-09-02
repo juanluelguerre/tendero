@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
-  <!-- Todo efecto lateral vive aquí: la petición HTTP termina cuando el estado
-       está guardado, y el worker se encarga del resto (CLAUDE.md, invariante 7). -->
+  <!-- Every side effect lives here: the HTTP request ends when the state is
+       saved, and the worker takes care of the rest (CLAUDE.md, invariant 7). -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Workers</RootNamespace>
     <UserSecretsId>tendero-workers</UserSecretsId>

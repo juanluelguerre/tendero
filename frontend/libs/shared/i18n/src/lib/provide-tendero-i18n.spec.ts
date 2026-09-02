@@ -6,9 +6,9 @@ import { DEFAULT_CULTURE, provideTenderoI18n, SUPPORTED_CULTURES } from './provi
 
 describe('provideTenderoI18n', () => {
   it('serves the two cultures the project supports, Spanish first', () => {
-    // Las mismas dos culturas que los indices de busqueda (products_es /
-    // products_en) y que los golden sets. Si aqui aparece una tercera sin
-    // indice detras, la busqueda devolvera vacio en silencio.
+    // The same two cultures as the search indexes (products_es / products_en)
+    // and as the golden sets. If a third appears here with no index behind it,
+    // search will come back empty in silence.
     expect(SUPPORTED_CULTURES).toEqual(['es', 'en']);
     expect(DEFAULT_CULTURE).toBe('es');
   });

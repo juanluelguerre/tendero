@@ -20,8 +20,8 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
         builder.Property(m => m.Attempts);
         builder.Property(m => m.Error).HasMaxLength(4000);
 
-        // El worker sólo pregunta por lo pendiente en orden de llegada; el
-        // índice filtrado mantiene barata esa consulta aunque la tabla crezca.
+        // The worker only asks for what is pending, in arrival order; the
+        // filtered index keeps that query cheap however large the table grows.
         builder.HasIndex(m => new { m.ProcessedAt, m.OccurredAt })
             .HasFilter("processed_at IS NULL");
     }

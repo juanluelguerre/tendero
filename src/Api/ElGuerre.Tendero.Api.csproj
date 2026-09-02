@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <!-- Composition root HTTP. No tiene lógica propia: registra puertos, adaptadores
-       y slices, y deja que Carter monte los endpoints que declaran los slices. -->
+  <!-- The HTTP composition root. It has no logic of its own: it registers ports,
+       adapters and slices, and lets Carter mount the endpoints the slices declare. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Api</RootNamespace>
     <UserSecretsId>tendero-api</UserSecretsId>

@@ -10,14 +10,14 @@ public sealed class FileSystemImageStoreOptions
 {
     public const string SectionName = "Catalog:Images";
 
-    /// <summary>Raíz del almacén. Fuera del repositorio: son datos, no código.</summary>
+    /// <summary>The store's root. Outside the repository: it is data, not code.</summary>
     public string RootPath { get; set; } = Path.Combine(Path.GetTempPath(), "tendero-images");
 }
 
 /// <summary>
-/// Adaptador de sistema de ficheros. Los ficheros se reparten en subcarpetas por
-/// los dos primeros caracteres del hash: un directorio con 147k entradas es
-/// lento de listar en cualquier sistema de ficheros.
+/// The file system adapter. Files are spread across subfolders by the first two
+/// characters of the hash: a directory with 147k entries is slow to list on any
+/// file system.
 /// </summary>
 internal sealed class FileSystemImageStore(
     IOptions<FileSystemImageStoreOptions> options,
@@ -38,8 +38,8 @@ internal sealed class FileSystemImageStore(
 
     public async Task<ImageId> SaveAsync(Stream content, string contentType, CancellationToken ct = default)
     {
-        // A temporal primero: hasta no tener el hash no se sabe el destino, y
-        // hashear en memoria no escala a un catálogo entero.
+        // Staging first: the destination is unknown until the hash is known, and
+        // hashing in memory does not scale to a whole catalogue.
         var extension = ExtensionByContentType.GetValueOrDefault(contentType, ".bin");
         var staging = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
@@ -57,11 +57,11 @@ internal sealed class FileSystemImageStore(
 
         try
         {
-            // Move sin overwrite, y el choque tratado como éxito. Un `File.Exists`
-            // previo deja una ventana entre la comprobación y el movimiento: dos
-            // importaciones con la misma foto la cruzan y la segunda lanza. Da
-            // igual quién gane — el contenido es idéntico, ésa es la premisa del
-            // direccionamiento por hash.
+            // Move without overwrite, and a collision treated as success. A
+            // preceding `File.Exists` leaves a window between the check and the
+            // move: two imports of the same photo cross it and the second throws.
+            // It does not matter who wins — the content is identical, which is
+            // the premise of content addressing.
             File.Move(staging, destination, overwrite: false);
         }
         catch (IOException) when (File.Exists(destination))
@@ -70,8 +70,8 @@ internal sealed class FileSystemImageStore(
         }
         finally
         {
-            // Si el movimiento no llegó a ocurrir, el temporal se queda huérfano
-            // para siempre: son 147k ficheros en el peor caso.
+            // If the move never happened, the staging file is orphaned forever:
+            // 147k files in the worst case.
             if (File.Exists(staging))
                 File.Delete(staging);
         }

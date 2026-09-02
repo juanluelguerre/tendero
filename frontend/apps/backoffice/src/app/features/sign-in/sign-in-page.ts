@@ -4,14 +4,13 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore, TenderoIdentity } from '@tendero/shared-auth';
 
 /**
- * Un selector de identidad, no un formulario: el emisor de desarrollo firma para
- * identidades sembradas y no hay contrasenas que pedir. Pedirlas seria teatro, y
- * el dia que entre Keycloak esta pantalla se sustituye por su redireccion — no
- * se adapta.
+ * An identity picker, not a form: the development issuer signs for seeded
+ * identities and there are no passwords to ask for. Asking would be theatre, and
+ * the day Keycloak arrives this screen is replaced by its redirect — not adapted.
  *
- * La pantalla vive en la app y no en shared por ADR 0010: el storefront pedira
- * email y contrasena a un comprador, y unificar las dos daria un componente con
- * una matriz de variantes peor que dos componentes.
+ * The screen lives in the app and not in shared, per ADR 0010: the storefront
+ * will ask a shopper for an email and a password, and unifying the two would
+ * give a component with a variant matrix worse than two components.
  */
 @Component({
   selector: 'backoffice-sign-in',

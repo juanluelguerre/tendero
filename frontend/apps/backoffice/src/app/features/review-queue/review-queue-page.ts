@@ -11,18 +11,19 @@ type QueueState =
   | { status: 'failed' };
 
 /**
- * Cola de revision: lo que se importa entra en Draft y solo lo Active se indexa,
- * asi que este es el paso que decide si un producto existe para el cliente.
+ * The review queue: what gets imported lands in Draft and only Active is
+ * indexed, so this is the step that decides whether a product exists for a
+ * customer.
  *
- * Hasta ahora era un estado vacio fijo cuyo texto de ayuda pedia lanzar un curl.
- * Publicar desde aqui no es azucar: mientras la unica forma de hacerlo sea la
- * linea de comandos, la revision humana no es parte del producto, es una nota al
- * pie. Ese es literalmente el articulo de la fase 2.
+ * Until now it was a fixed empty state whose help text asked you to run a curl.
+ * Publishing from here is not sugar: while the only way to do it is the command
+ * line, human review is not part of the product, it is a footnote. That is
+ * literally phase 2's article.
  *
- * NO hay estado optimista, y es deliberado: la fila desaparece cuando el
- * servidor confirma, no antes. Con el Outbox de por medio el producto tarda un
- * instante en aparecer en el indice, y prometer en la UI algo que todavia no es
- * cierto en la busqueda es peor que esperar 200 ms.
+ * There is NO optimistic state, and that is deliberate: the row disappears when
+ * the server confirms, not before. With the Outbox in the middle the product
+ * takes a moment to appear in the index, and promising something in the UI that
+ * is not true in search yet is worse than waiting 200 ms.
  */
 @Component({
   selector: 'backoffice-review-queue-page',
@@ -49,7 +50,7 @@ type QueueState =
             @if (ready.items.length === 0) {
               <div class="empty">
                 <p class="empty__text">{{ t('reviewQueue.empty') }}</p>
-                <!-- La unica accion clay de la vista (design/DESIGN.md). -->
+                <!-- The view's only clay action (design/DESIGN.md). -->
                 <button type="button" class="publish" [disabled]="importing()" (click)="importSeed()">
                   {{ importing() ? t('reviewQueue.importing') : t('reviewQueue.import') }}
                 </button>
@@ -86,8 +87,8 @@ type QueueState =
                           }}</span>
                         }
                       </td>
-                      <!-- Definir variantes es una decision de catalogo, no de
-                           importacion, asi que se ofrece por fila y no en masa. -->
+                      <!-- Defining variants is a catalogue decision, not an
+                           import one, so it is offered per row and not in bulk. -->
                       <td>
                         <a class="variants-link" [routerLink]="['/products', item.productId, 'variants']">
                           {{ t('variants.title') }}
@@ -167,8 +168,8 @@ export class ReviewQueuePage {
     this.catalog.publish(item.productId).subscribe({
       next: () => {
         this.clearPublishing(item.productId);
-        // Recargar en vez de quitar la fila a mano: la cola es del servidor y
-        // otro revisor puede haber publicado algo mientras tanto.
+        // Reload rather than removing the row by hand: the queue belongs to the
+        // server, and another reviewer may have published something meanwhile.
         this.load();
       },
       error: () => {

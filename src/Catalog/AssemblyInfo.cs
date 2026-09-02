@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-// Los adaptadores de conector son internal (regla de arquitectura 3: fuera del
-// ensamblado sólo se ve el puerto). Su suite de contrato vive en los tests, que
-// sí necesitan instanciarlos.
+// Connector adapters are internal (architecture rule 3: outside the assembly
+// only the port is visible). Their contract suite lives in the tests, which do
+// need to instantiate them.
 [assembly: InternalsVisibleTo("ElGuerre.Tendero.Catalog.Tests")]

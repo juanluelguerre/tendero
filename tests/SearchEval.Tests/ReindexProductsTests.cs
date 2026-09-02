@@ -9,14 +9,14 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.SearchEval.Tests;
 
 /// <summary>
-/// El índice es una proyección desechable y architecture.md promete poder
-/// rehacerlo desde Postgres. Hasta ahora esa promesa no tenía implementación, y
-/// cuando el contenedor de Elasticsearch se recreó, un catálogo entero en Active
-/// quedó invisible sin forma de reconciliarlo: el outbox ya había entregado sus
-/// eventos y publicar de nuevo no cambia nada.
+/// The index is a disposable projection, and architecture.md promises it can be
+/// rebuilt from Postgres. Until now that promise had no implementation, and when
+/// the Elasticsearch container was recreated, a whole catalogue in Active became
+/// invisible with no way to reconcile it: the outbox had already delivered its
+/// events, and publishing again changes nothing.
 ///
-/// Fakes deterministas: un indexador que recuerda lo que le mandaron se lee
-/// mejor que aserciones sobre un mock (docs/testing.md).
+/// Deterministic fakes: an indexer that remembers what it was sent reads better
+/// than assertions over a mock (docs/testing.md).
 /// </summary>
 public sealed class ReindexProductsTests
 {
@@ -40,9 +40,9 @@ public sealed class ReindexProductsTests
     [Fact]
     public async Task Reindexing_removes_what_is_no_longer_active()
     {
-        // Converger, no solo añadir: si un producto dejó de estar Active, el
-        // reindexado tiene que sacarlo, o el indice conserva un documento rancio
-        // que la busqueda seguiria devolviendo.
+        // Converge, not merely add: if a product stopped being Active, the
+        // reindex has to take it out, or the index keeps a stale document that
+        // search would go on returning.
         var active = AnActiveProduct();
         var draft = ADraftProduct();
         var archived = AnActiveProduct();

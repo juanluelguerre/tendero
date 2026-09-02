@@ -11,7 +11,7 @@
         [attr.placeholder]="t('search.placeholder')"
         autocomplete="off"
       />
-      <!-- La unica accion clay de la vista (design/DESIGN.md). -->
+      <!-- The view's only clay action (design/DESIGN.md). -->
       <button type="submit" class="search__submit">{{ t('search.submit') }}</button>
     </div>
   </form>
@@ -49,8 +49,8 @@
                     (error)="onImageError(hit.productId)"
                   />
                 } @else {
-                  <!-- Estado por defecto, no un hueco: una ficha sin foto tiene
-                       que verse deliberada. -->
+                  <!-- A default state, not a gap: a card with no photo has to
+                       look deliberate. -->
                   <div class="card__image card__image--fallback" role="img"
                        [attr.aria-label]="t('product.noImage')">
                     <span class="card__initial" aria-hidden="true">{{ hit.name.charAt(0) }}</span>

@@ -140,6 +140,11 @@ being stale.
 
 ## Conventions
 
+- **Code comments are in English**, all of them, everywhere — the repository is
+  public and the articles quote it. User-facing strings stay in es AND en
+  (invariant 6), and Spanish still appears inside comments as *data being
+  discussed* (`"azul marino"`, `"menaje de cocina"`); that is the example, not
+  the prose.
 - C# 14, file-scoped namespaces, primary constructors, collection expressions.
 - Strongly-typed ids (`ProductId`, `OrderId`) — never raw Guids in signatures.
 - Custom CQRS abstractions (`ICommand`/`IQuery` + dispatchers), NOT MediatR-the-package.

@@ -9,13 +9,13 @@ using ElGuerre.Tendero.Tests;
 namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
 /// <summary>
-/// Publicar es lo que hace visible un producto: se importa en Draft y la
-/// búsqueda sólo mira lo Active. Sin este paso el storefront no puede devolver
-/// un resultado, por correcto que sea todo lo demás.
+/// Publishing is what makes a product visible: it is imported into Draft and
+/// search only looks at Active. Without that step the storefront cannot return a
+/// result, however correct everything else is.
 ///
-/// Fake determinista en vez de NSubstitute: el repositorio tiene comportamiento
-/// (guarda, encuentra, cuenta guardados) y un doble con comportamiento se lee
-/// mejor que tres Returns() encadenados (docs/testing.md).
+/// A deterministic fake rather than NSubstitute: the repository has behaviour (it
+/// saves, finds, counts saves) and a double with behaviour reads better than
+/// three chained Returns() (docs/testing.md).
 /// </summary>
 public sealed class PublishProductTests
 {
@@ -47,9 +47,9 @@ public sealed class PublishProductTests
 
         Assert.Equal(PublishOutcome.AlreadyActive, result.Outcome);
         Assert.Equal(ProductStatus.Active, product.Status);
-        // Publicar dos veces no es un error, pero tampoco es un cambio: volver a
-        // llamar a Publish() emitiría otro ProductUpserted y haría trabajar al
-        // worker de indexación para dejar el índice exactamente como estaba.
+        // Publishing twice is not an error, but it is not a change either:
+        // calling Publish() again would emit another ProductUpserted and set the
+        // indexing worker to work leaving the index exactly as it was.
         Assert.Equal(0, unitOfWork.SaveCount);
     }
 
@@ -83,9 +83,9 @@ public sealed class PublishProductTests
     [Fact]
     public async Task Publishing_raises_the_event_the_indexer_listens_to()
     {
-        // El índice no se escribe aquí: se emite ProductUpserted, el outbox lo
-        // entrega y el worker proyecta (invariante 7). Lo que este slice debe
-        // garantizar es que el evento sale.
+        // The index is not written here: ProductUpserted is emitted, the outbox
+        // delivers it and the worker projects (invariant 7). What this slice has
+        // to guarantee is that the event goes out.
         var product = ADraftProduct();
         product.ClearDomainEvents();
         var repository = new InMemoryProductRepository(product);

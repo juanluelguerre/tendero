@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Ordering no comparte ni una entidad con Catalog (CLAUDE.md, invariante 1):
-       de ahí que no haya ProjectReference a Tendero.Catalog y no vaya a haberla. -->
+  <!-- Ordering shares not one entity with Catalog (CLAUDE.md, invariant 1):
+       hence no ProjectReference to Tendero.Catalog, and there will not be one. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Ordering</RootNamespace>
   </PropertyGroup>

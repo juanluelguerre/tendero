@@ -1,10 +1,10 @@
 using ElGuerre.Tendero.SearchEval;
 using ElGuerre.Tendero.SearchEval.Suites;
 
-// Puertas de calidad de Tendero. Hoy sólo hay una suite; la selección por
-// --suite entra ahora y no con la búsqueda híbrida, porque si llegara después
-// la híbrida se mediría contra una línea base que ya no se puede comparar con
-// la commiteada.
+// Tendero's quality gates. There is only one suite today; selection by --suite
+// enters now and not with hybrid search, because if it arrived afterwards the
+// hybrid one would be measured against a baseline that can no longer be compared
+// with the committed one.
 
 IEvaluationSuite[] suites = [new SearchRelevanceSuite()];
 
@@ -26,9 +26,9 @@ var suite = suites.FirstOrDefault(
 
 if (suite is null)
 {
-    // Nombrar las que hay, igual que hace el validador de importación con los
-    // orígenes registrados: un nombre desconocido es un error del llamante y se
-    // responde con la lista, no con un fallo genérico.
+    // Name the ones that exist, the way the import validator does with the
+    // registered sources: an unknown name is a caller's error, and the answer is
+    // the list, not a generic failure.
     Console.Error.WriteLine(
         $"Unknown suite '{options.Suite}'. Available: {string.Join(", ", suites.Select(s => s.Name))}.");
     return 2;

@@ -5,13 +5,13 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Catalog.Tests;
 
 /// <summary>
-/// Dobles deterministas en lugar de mocks, que es la regla del repositorio
-/// (docs/testing.md): lo que importa de un puerto es qué le llegó, y una lista
-/// lo dice más claro que una verificación de llamadas.
+/// Deterministic doubles instead of mocks, which is the repository's rule
+/// (docs/testing.md): what matters about a port is what reached it, and a list
+/// says that more clearly than a call verification.
 ///
-/// Vivían anidados y privados dentro de PublishProductTests. Salieron aquí al
-/// necesitarlos un segundo slice, que es exactamente el momento en que algo deja
-/// de ser un detalle de un test y pasa a ser utillaje.
+/// They lived nested and private inside PublishProductTests. They came out here
+/// when a second slice needed them, which is exactly the moment something stops
+/// being one test's detail and becomes tooling.
 /// </summary>
 internal sealed class InMemoryProductRepository(params Product[] products) : IProductRepository
 {
@@ -28,9 +28,9 @@ internal sealed class InMemoryProductRepository(params Product[] products) : IPr
 }
 
 /// <summary>
-/// Cuenta los guardados. Es lo que permite afirmar que publicar algo ya activo
-/// NO escribe — una aserción sobre el estado final no distinguiría entre "no
-/// hizo nada" y "lo hizo dos veces".
+/// Counts the saves. It is what lets us assert that publishing something already
+/// active writes NOTHING — an assertion on the final state could not tell "it did
+/// nothing" from "it did it twice".
 /// </summary>
 internal sealed class CountingUnitOfWork : IUnitOfWork
 {

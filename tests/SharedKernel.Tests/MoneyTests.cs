@@ -18,9 +18,9 @@ public sealed class MoneyTests
     }
 
     /// <summary>
-    /// Un porcentaje NO redondea. Es deliberado: encadenar descuento, impuesto y
-    /// prorrateo redondeando en cada paso es como se pierden céntimos que luego
-    /// nadie sabe explicar. Se redondea una vez, al final.
+    /// A percentage does NOT round. That is deliberate: chaining a discount, tax
+    /// and a proportional split while rounding at every step is how cents go
+    /// missing in a way nobody can explain. Rounding happens once, at the end.
     /// </summary>
     [Fact]
     public void A_percentage_keeps_its_precision_until_asked_to_round()
@@ -32,11 +32,11 @@ public sealed class MoneyTests
     }
 
     /// <summary>
-    /// Los importes van como CADENA y no como decimal. `[InlineData(2.005)]`
-    /// pasa por un literal double, así que llega 2.00499999... y el test falla
-    /// midiendo la aritmética de coma flotante en vez del redondeo. La razón por
-    /// la que Money usa decimal es exactamente la que rompe su propio test si se
-    /// escribe de la forma obvia.
+    /// The amounts travel as STRINGS and not as decimals. `[InlineData(2.005)]`
+    /// goes through a double literal, so 2.00499999… arrives and the test fails
+    /// measuring floating-point arithmetic instead of rounding. The reason Money
+    /// uses decimal is exactly the one that breaks its own test when written the
+    /// obvious way.
     /// </summary>
     [Theory]
     [InlineData("2.005", Rounding.ToEven, "2.00")]
@@ -57,9 +57,9 @@ public sealed class MoneyTests
     }
 
     /// <summary>
-    /// El caso que hace agua en todo sistema que lo improvisa: 10,00 € entre tres
-    /// partes iguales es 3,33 + 3,33 + 3,33 = 9,99, y el céntimo que falta acaba
-    /// como un descuadre en la factura.
+    /// The case that springs a leak in every system that improvises it: 10.00 €
+    /// across three equal parts is 3.33 + 3.33 + 3.33 = 9.99, and the missing
+    /// cent ends up as an invoice that does not balance.
     /// </summary>
     [Fact]
     public void The_lost_cent_goes_somewhere_instead_of_disappearing()
@@ -71,9 +71,9 @@ public sealed class MoneyTests
     }
 
     /// <summary>
-    /// Prorratear un descuento de pedido entre líneas de distinto importe: cada
-    /// línea recibe en proporción a lo que pesa, y el resto va a la de mayor
-    /// fracción descartada.
+    /// Prorating an order discount across lines of different amounts: each line
+    /// gets its share in proportion to its weight, and the remainder goes to the
+    /// one with the largest discarded fraction.
     /// </summary>
     [Fact]
     public void Allocation_follows_the_weights()
@@ -92,8 +92,8 @@ public sealed class MoneyTests
     }
 
     /// <summary>
-    /// Determinista: dos ejecuciones dan lo mismo. Es lo que permite congelar un
-    /// reparto en un pedido y que recalcularlo no cambie el histórico.
+    /// Deterministic: two runs give the same answer. It is what lets a split be
+    /// frozen onto an order and recomputed without changing history.
     /// </summary>
     [Fact]
     public void The_same_allocation_twice_gives_the_same_answer()

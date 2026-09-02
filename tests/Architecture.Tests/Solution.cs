@@ -12,9 +12,9 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Architecture.Tests;
 
 /// <summary>
-/// Los ensamblados que componen la solución. Se referencian por un tipo real y
-/// no por nombre: si alguien renombra un proyecto, esto deja de compilar en vez
-/// de dejar de comprobar nada en silencio.
+/// The assemblies that make up the solution. Referenced by a real type and not
+/// by name: if somebody renames a project, this stops compiling instead of
+/// silently stopping checking anything.
 /// </summary>
 internal static class Solution
 {

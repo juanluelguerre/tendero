@@ -10,35 +10,35 @@ using Microsoft.AspNetCore.Routing;
 namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 
 /// <summary>
-/// Rehace el índice desde Postgres. docs/architecture.md ya dice que el índice
-/// es una proyección desechable y que se reindexa a voluntad; lo que faltaba era
-/// el "a voluntad".
+/// Rebuilds the index from Postgres. docs/architecture.md already says the index
+/// is a disposable projection and gets reindexed at will; what was missing was
+/// the "at will".
 ///
-/// Hace falta de verdad, no en teoría: Elasticsearch se declara con
-/// ContainerLifetime.Persistent pero SIN volumen, así que sus documentos viven
-/// en la capa de escritura del contenedor. En cuanto Aspire lo recrea, el índice
-/// queda vacío con el catálogo entero en Active — y nada lo repone, porque el
-/// outbox ya entregó esos eventos y volver a publicar un producto ya activo no
-/// cambia nada (por diseño).
+/// It is genuinely needed, not needed in theory: Elasticsearch is declared with
+/// ContainerLifetime.Persistent but WITHOUT a volume, so its documents live in
+/// the container's write layer. The moment Aspire recreates it, the index is
+/// empty with the whole catalogue in Active — and nothing restores it, because
+/// the outbox already delivered those events and republishing an already-active
+/// product changes nothing (by design).
 ///
-/// Aplica la MISMA regla que la proyección del outbox, y literalmente el mismo
-/// código: <see cref="ProductIndexProjection"/>. Active se indexa, lo demás se
-/// retira, así que el reindexado CONVERGE — un producto que dejó de estar activo
-/// sale del índice — en lugar de limitarse a añadir.
+/// It applies the SAME rule as the outbox projection, and literally the same
+/// code: <see cref="ProductIndexProjection"/>. Active is indexed, the rest is
+/// removed, so the reindex CONVERGES — a product that stopped being active
+/// leaves the index — rather than merely adding.
 ///
-/// No recrea los índices ni toca sus mappings: eso es responsabilidad de
-/// SearchIndexInitializer, y duplicar aquí la definición del mapping seria tener
-/// dos fuentes para la misma verdad.
+/// It does not recreate the indexes or touch their mappings: that is
+/// SearchIndexInitializer's job, and duplicating the mapping definition here
+/// would be two sources for the same truth.
 ///
-/// LÍMITE conocido: converge para los productos que EXISTEN. Un producto
-/// borrado de la tabla deja su documento huérfano, porque el recorrido no puede
-/// ver lo que ya no está. No ocurre por la aplicación —el dominio no borra,
-/// archiva, y Archive() emite ProductArchived que lo retira— pero sí con un
-/// DELETE a mano o restaurando una copia antigua de la base. Visto de verdad:
-/// seis filas borradas por SQL dejaron doce documentos para seis productos.
-/// Cerrarlo pide borrar los índices antes de reconstruir, y eso mueve la
-/// propiedad del mapping; se decide cuando exista un caso que no sea un reset
-/// manual en desarrollo.
+/// A known LIMIT: it converges for the products that EXIST. A product deleted
+/// from the table leaves its document orphaned, because the walk cannot see what
+/// is no longer there. It does not happen through the application — the domain
+/// does not delete, it archives, and Archive() emits ProductArchived which
+/// removes it — but it does with a hand-written DELETE or by restoring an old
+/// copy of the database. Actually observed: six rows deleted by SQL left twelve
+/// documents for six products. Closing that means dropping the indexes before
+/// rebuilding, and that moves ownership of the mapping; it gets decided when
+/// there is a case that is not a manual reset in development.
 /// </summary>
 public sealed record ReindexProductsCommand : ICommand<ReindexProductsResult>;
 
@@ -73,9 +73,9 @@ public sealed class ReindexProductsHandler(
 
         int indexed = 0, removed = 0;
 
-        // Stream, no ToList: con el catálogo completo de Amazon Berkeley Objects
-        // (147k) cargarlo entero en memoria para recorrerlo una vez no tiene
-        // sentido, y el lector ya lo entrega perezosamente.
+        // Streamed, not ToList: with the full Amazon Berkeley Objects catalogue
+        // (147k) loading it whole into memory to walk it once makes no sense, and
+        // the reader already hands it over lazily.
         await foreach (var product in products.StreamAllAsync(cancellationToken))
         {
             if (await ProductIndexProjection.ApplyAsync(indexer, product, cancellationToken))

@@ -20,10 +20,10 @@ public sealed record ImportProductsResult(int Created, int Updated, int Failed, 
 public sealed class ImportProductsValidator : AbstractValidator<ImportProductsCommand>
 {
     /// <summary>
-    /// Se comprueba que el origen EXISTA, no que tenga forma de origen. Un
-    /// <c>^[a-z0-9-]+$</c> aceptaba "shopify" mientras no hubiera conector de
-    /// Shopify, y el fallo salía como 500 desde el contenedor de dependencias:
-    /// un error del llamante contado como avería del servidor.
+    /// It checks that the source EXISTS, not that it looks like a source. A
+    /// <c>^[a-z0-9-]+$</c> accepted "shopify" while there was no Shopify
+    /// connector, and the failure came out as a 500 from the DI container: a
+    /// caller's error reported as a server fault.
     /// </summary>
     public ImportProductsValidator(ICatalogSourceRegistry sources)
     {
@@ -71,9 +71,9 @@ public sealed class ImportProductsHandler(
     public async Task<ImportProductsResult> HandleAsync(
         ImportProductsCommand command, CancellationToken cancellationToken)
     {
-        // El nombre del origen llega en la petición, así que la resolución es
-        // dinámica; lo que NO es dinámico es de quién depende este handler.
-        // Añadir un origen nuevo sigue siendo registrar una clase y cero `if`s.
+        // The source name arrives in the request, so resolution is dynamic; what
+        // is NOT dynamic is what this handler depends on. Adding a new source is
+        // still registering a class and zero `if`s.
         var connector = sources.Get(command.Source);
 
         using var activity = Telemetry.StartActivity("catalog.import");
@@ -82,9 +82,9 @@ public sealed class ImportProductsHandler(
         var stopwatch = Stopwatch.StartNew();
         var tally = new ImportTally();
 
-        // Una vez por importación, no por producto: resolver "azul marino" a
-        // NAVY_BLUE necesita el catálogo entero de definiciones, y pedirlo por
-        // producto sería N+1 sobre algo que no cambia durante la importación.
+        // Once per import, not per product: resolving "azul marino" to NAVY_BLUE
+        // needs the whole definition catalogue, and asking for it per product
+        // would be N+1 over something that does not change during the import.
         var definitions = await attributeDefinitions.AllAsync(cancellationToken);
 
         await foreach (var external in connector.StreamProductsAsync(cancellationToken))
@@ -95,10 +95,10 @@ public sealed class ImportProductsHandler(
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                // Un producto ilegible no puede tumbar un catálogo de 147k. Una
-                // CANCELACIÓN sí tiene que parar: cuando entraba por aquí se
-                // contaba como producto fallido y el bucle seguía girando hasta
-                // agotar el origen entero, así que Ctrl+C no cancelaba nada.
+                // One unreadable product cannot bring down a catalogue of 147k. A
+                // CANCELLATION does have to stop: while it came through here it
+                // was counted as a failed product and the loop kept turning until
+                // the whole source was exhausted, so Ctrl+C cancelled nothing.
                 tally.Failed++;
                 logger.LogWarning(exception, "Failed to import product {ExternalId} from {Source}",
                     external.ExternalId, connector.Source);
@@ -124,10 +124,10 @@ public sealed class ImportProductsHandler(
     }
 
     /// <summary>
-    /// Un producto del origen: alta o reimportación, idempotente por
-    /// (origen, id externo). El mapeo a agregado vive en
-    /// <see cref="ExternalProductMapper"/> porque la puerta de calidad
-    /// (tools/SearchEval) construye el mismo producto y no puede llamar aquí.
+    /// One product from the source: created or re-imported, idempotent by
+    /// (source, external id). The mapping to the aggregate lives in
+    /// <see cref="ExternalProductMapper"/> because the quality gate
+    /// (tools/SearchEval) builds the same product and cannot call here.
     /// </summary>
     private async Task ImportOneAsync(
         ExternalProduct external, string source, AttributeDefinitions definitions,
@@ -154,13 +154,13 @@ public sealed class ImportProductsHandler(
     }
 
     /// <summary>
-    /// Confirma el lote. Los <c>ProductUpserted</c> viajan a la tabla outbox en
-    /// ESTA misma transacción; el worker de indexación hace el resto.
+    /// Commits the batch. The <c>ProductUpserted</c> events travel to the outbox
+    /// table in THIS same transaction; the indexing worker does the rest.
     ///
-    /// Si el lote no se puede guardar, se pierde entero, y los productos que ya
-    /// se habían contado como creados o actualizados pasan a fallidos. Contarlos
-    /// como buenos porque el bucle no lanzó es lo que hacía que la respuesta
-    /// dijese <c>"created": 200</c> de una transacción que nunca llegó a Postgres.
+    /// If the batch cannot be saved it is lost whole, and the products already
+    /// counted as created or updated become failures. Counting them as good
+    /// because the loop did not throw is what made the response say
+    /// <c>"created": 200</c> about a transaction that never reached Postgres.
     /// </summary>
     private async Task FlushAsync(ImportTally tally, CancellationToken cancellationToken)
     {
@@ -182,13 +182,13 @@ public sealed class ImportProductsHandler(
     }
 
     /// <summary>
-    /// Ingiere las imágenes en vez de guardar la URL del origen: el catálogo
-    /// deja de depender de que Shopify o quien sea mantenga vivo su CDN, y la
-    /// fase 4 podrá calcular embeddings sobre bytes que controlamos
+    /// Ingests the images instead of storing the source's URL: the catalogue
+    /// stops depending on Shopify or whoever keeping their CDN alive, and phase 4
+    /// will be able to compute embeddings over bytes we control
     /// (docs/adr/0011-product-images.md).
     ///
-    /// Una imagen que no se puede leer no aborta nada: el producto entra sin
-    /// ella y la siguiente importación lo reintenta.
+    /// An image that cannot be read aborts nothing: the product goes in without
+    /// it and the next import retries.
     /// </summary>
     private async Task IngestImagesAsync(
         Product product, ExternalProduct external, CancellationToken cancellationToken)
@@ -206,9 +206,9 @@ public sealed class ImportProductsHandler(
     }
 
     /// <summary>
-    /// Los contadores de la importación. Son un tipo y no cuatro variables
-    /// locales porque el volcado tiene que poder CORREGIRLOS: hasta que el lote
-    /// no está en Postgres, "creado" es una intención, no un hecho.
+    /// The import's counters. A type and not four local variables, because the
+    /// flush has to be able to CORRECT them: until the batch is in Postgres,
+    /// "created" is an intention and not a fact.
     /// </summary>
     private sealed class ImportTally
     {
@@ -237,5 +237,5 @@ public sealed class ImportProductsHandler(
     }
 }
 
-// Los puertos que usa este slice viven en Catalog/Ports: PublishProduct necesita
-// los mismos, y un slice no puede referenciar a otro.
+// The ports this slice uses live in Catalog/Ports: PublishProduct needs the same
+// ones, and a slice cannot reference another slice.

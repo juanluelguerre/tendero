@@ -14,10 +14,10 @@ public readonly record struct OrderId(Guid Value)
 }
 
 /// <summary>
-/// Identidad de una variante — la unidad COMPRABLE. El producto es la unidad
-/// encontrable (ADR 0015): la búsqueda casa y filtra por variante y devuelve
-/// productos colapsados, así que un carrito y una línea de pedido hablan de
-/// esto, y un resultado de búsqueda habla de <see cref="ProductId"/>.
+/// A variant's identity — the PURCHASABLE unit. The product is the findable one
+/// (ADR 0015): search matches and filters per variant and returns collapsed
+/// products, so a cart and an order line talk about this, and a search result
+/// talks about <see cref="ProductId"/>.
 /// </summary>
 public readonly record struct VariantId(Guid Value)
 {
@@ -32,41 +32,41 @@ public readonly record struct CustomerId(Guid Value)
 }
 
 /// <summary>
-/// Identidad de una imagen: el hash de su contenido, no un GUID. Dos productos
-/// con la misma foto comparten id, así que la deduplicación sale gratis, y una
-/// clave nunca cambia de contenido, así que puede servirse como inmutable.
+/// An image's identity: the hash of its content, not a GUID. Two products with
+/// the same photo share an id, so deduplication comes free, and a key never
+/// changes content, so it can be served as immutable.
 /// </summary>
 public readonly record struct ImageId(string Value)
 {
     public override string ToString() => Value;
 }
 
-// ---------- Dinero como value object ----------
+// ---------- Money as a value object ----------
 /// <summary>
-/// Cómo se redondea al partir dinero. Existe como decisión con nombre y no como
-/// una llamada suelta a <c>Math.Round</c> porque el redondeo de dinero es una
-/// regla de negocio: dos sistemas que redondean distinto no discrepan en un
-/// céntimo, discrepan en la factura.
+/// How money is rounded when it is split. It exists as a named decision and not
+/// as a loose call to <c>Math.Round</c> because rounding money is a business
+/// rule: two systems that round differently do not disagree by a cent, they
+/// disagree by an invoice.
 /// </summary>
 public enum Rounding
 {
-    /// <summary>Bancario: 0,5 va al par más cercano. El que no sesga al alza
-    /// sobre muchas operaciones, y el que usa .NET por defecto.</summary>
+    /// <summary>Banker's: 0.5 goes to the nearest even. The one that does not
+    /// bias upwards over many operations, and .NET's default.</summary>
     ToEven,
 
-    /// <summary>0,5 se aleja del cero. Es lo que la mayoría de la gente entiende
-    /// por "redondear", y lo que muchas haciendas exigen.</summary>
+    /// <summary>0.5 moves away from zero. What most people mean by "rounding",
+    /// and what many tax authorities require.</summary>
     AwayFromZero
 }
 
 public readonly record struct Money(decimal Amount, string Currency)
 {
     /// <summary>
-    /// Dos decimales. Es una simplificación deliberada de laboratorio: el euro,
-    /// el dólar y la libra los tienen, pero el yen tiene cero y el dinar
-    /// kuwaití tres. El día que entre una segunda divisa, esto sale de aquí y
-    /// pasa a ser un dato de la divisa — y multi-divisa está aplazado a
-    /// propósito (initial-plan §7).
+    /// Two decimals. A deliberate laboratory simplification: the euro, the
+    /// dollar and the pound have them, but the yen has none and the Kuwaiti
+    /// dinar has three. The day a second currency arrives this leaves here and
+    /// becomes a fact about the currency — and multi-currency is deferred on
+    /// purpose (initial-plan §7).
     /// </summary>
     public const int Decimals = 2;
 
@@ -88,10 +88,10 @@ public readonly record struct Money(decimal Amount, string Currency)
         m with { Amount = m.Amount * factor };
 
     /// <summary>
-    /// Multiplicación por un factor fraccionario, SIN redondear. Devuelve el
-    /// importe exacto para que quien encadene operaciones no redondee a cada
-    /// paso: redondear tres veces seguidas es cómo se pierden céntimos que nadie
-    /// sabe explicar. El redondeo se pide una vez, al final, con
+    /// Multiplication by a fractional factor, WITHOUT rounding. It returns the
+    /// exact amount so that whoever chains operations does not round at every
+    /// step: rounding three times in a row is how cents go missing in a way
+    /// nobody can explain. Rounding is asked for once, at the end, with
     /// <see cref="Round"/>.
     /// </summary>
     public static Money operator *(Money m, decimal factor) =>
@@ -111,12 +111,12 @@ public readonly record struct Money(decimal Amount, string Currency)
     public bool IsNegative => Amount < 0m;
 
     /// <summary>
-    /// Un porcentaje de este importe, sin redondear. <c>Percent(21)</c> es el
-    /// IVA español; <c>Percent(10)</c> un descuento del diez por ciento.
+    /// A percentage of this amount, unrounded. <c>Percent(21)</c> is Spanish
+    /// VAT; <c>Percent(10)</c> is a ten per cent discount.
     /// </summary>
     public Money Percent(decimal percent) => this * (percent / 100m);
 
-    /// <summary>Al número de decimales de la divisa, con la política pedida.</summary>
+    /// <summary>To the currency's number of decimals, with the policy asked for.</summary>
     public Money Round(Rounding rounding = Rounding.ToEven) =>
         this with
         {
@@ -127,22 +127,23 @@ public readonly record struct Money(decimal Amount, string Currency)
         };
 
     /// <summary>
-    /// Reparte este importe entre varios pesos, sin perder ni inventar un
-    /// céntimo.
+    /// Splits this amount across weights, without losing or inventing a cent.
     ///
-    /// Es la operación por la que <see cref="Money"/> tenía que crecer, y la que
-    /// hace agua en todo sistema de comercio que la improvisa: repartir 10,00 €
-    /// entre tres líneas iguales da 3,33 + 3,33 + 3,33 = 9,99, y el céntimo que
-    /// falta acaba apareciendo como un descuadre en la factura.
+    /// This is the operation <see cref="Money"/> had to grow for, and the one
+    /// that springs a leak in every commerce system that improvises it:
+    /// splitting 10.00 € across three equal lines gives 3.33 + 3.33 + 3.33 =
+    /// 9.99, and the missing cent turns up later as an invoice that does not
+    /// balance.
     ///
-    /// El método es el del RESTO MAYOR: se redondea cada parte hacia abajo y los
-    /// céntimos sobrantes se dan de uno en uno a las partes cuya fracción
-    /// descartada era mayor. Con empate gana el índice más bajo, para que el
-    /// reparto sea determinista y dos ejecuciones den lo mismo — que es lo que
-    /// permite congelarlo en un pedido.
+    /// The method is LARGEST REMAINDER: every share is floored, and the leftover
+    /// cents are handed out one at a time to the shares whose discarded fraction
+    /// was biggest. Ties go to the lowest index, so the split is deterministic
+    /// and two runs give the same answer — which is what lets it be frozen onto
+    /// an order.
     ///
-    /// La suma de lo devuelto es EXACTAMENTE este importe. Esa es la propiedad,
-    /// y es la que merece un test de propiedades en vez de tres ejemplos.
+    /// The sum of what comes back is EXACTLY this amount. That is the property,
+    /// and it is the one that deserves a property test rather than three
+    /// examples.
     /// </summary>
     public IReadOnlyList<Money> Allocate(IReadOnlyList<decimal> weights)
     {
@@ -158,8 +159,8 @@ public readonly record struct Money(decimal Amount, string Currency)
         var unit = Smallest();
         var target = Round();
 
-        // En unidades mínimas —céntimos— porque repartir en decimales y redondear
-        // al final es exactamente el error que esto existe para evitar.
+        // In minimal units — cents — because splitting in decimals and rounding
+        // at the end is exactly the mistake this exists to avoid.
         var totalUnits = (long)decimal.Round(target.Amount / unit, 0, MidpointRounding.AwayFromZero);
 
         var shares = new long[weights.Count];
@@ -176,8 +177,8 @@ public readonly record struct Money(decimal Amount, string Currency)
             assigned += shares[index];
         }
 
-        // Los céntimos que quedan, al mayor resto. Puede ser negativo si el
-        // importe lo era, y entonces se quitan en el mismo orden.
+        // The cents left over go to the largest remainders. It can be negative
+        // if the amount was, and then they are taken away in the same order.
         var leftover = totalUnits - assigned;
         var order = Enumerable.Range(0, weights.Count)
             .OrderByDescending(index => remainders[index])
@@ -187,12 +188,12 @@ public readonly record struct Money(decimal Amount, string Currency)
         for (var step = 0; step < Math.Abs(leftover); step++)
             shares[order[step % order.Length]] += Math.Sign(leftover);
 
-        // Copia local: una lambda dentro de un struct no puede capturar `this`.
+        // A local copy: a lambda inside a struct cannot capture `this`.
         var currency = Currency;
         return [.. shares.Select(share => new Money(share * unit, currency))];
     }
 
-    /// <summary>La unidad mínima de la divisa: 0,01 con dos decimales.</summary>
+    /// <summary>The currency's smallest unit: 0.01 with two decimals.</summary>
     private static decimal Smallest() => 1m / (decimal)Math.Pow(10, Decimals);
 
     private static int Compare(Money a, Money b)
@@ -210,13 +211,13 @@ public readonly record struct Money(decimal Amount, string Currency)
     public override string ToString() => $"{Amount:0.00} {Currency}";
 }
 
-// ---------- Culturas ----------
+// ---------- Cultures ----------
 /// <summary>
-/// Normalización de códigos de cultura, en un solo sitio. La regla —quedarse con
-/// la subetiqueta primaria en minúsculas, "es-ES" → "es"— la aplicaban por su
-/// cuenta <see cref="LocalizedText"/> y <c>Order.Place</c>, con el mismo
-/// <c>Split</c> escrito dos veces. Son la misma decisión: qué significa "la
-/// cultura de esto".
+/// Normalisation of culture codes, in one place. The rule — keep the primary
+/// subtag, lowercased, "es-ES" becomes "es" — was applied independently by
+/// <see cref="LocalizedText"/> and by <c>Order.Place</c>, with the same
+/// <c>Split</c> written twice. They are the same decision: what "the culture of
+/// this" means.
 /// </summary>
 public static class Culture
 {
@@ -224,10 +225,10 @@ public static class Culture
         culture.Split('-', '_')[0].ToLowerInvariant();
 }
 
-// ---------- Texto localizado ----------
+// ---------- Localized text ----------
 /// <summary>
-/// Value object para textos multilenguaje. Claves ISO 639-1 en minúsculas ("es", "en").
-/// La resolución con fallback vive aquí, no repartida por la aplicación.
+/// A value object for multilingual text. ISO 639-1 keys, lowercase ("es", "en").
+/// The fallback resolution lives here, not scattered through the application.
 /// </summary>
 public sealed class LocalizedText
 {
@@ -246,14 +247,14 @@ public sealed class LocalizedText
     public IReadOnlyDictionary<string, string> Values => _values;
     public IReadOnlyCollection<string> Cultures => _values.Keys;
 
-    /// <summary>Cadena de resolución: cultura pedida -> fallback -> primera disponible.</summary>
+    /// <summary>The resolution chain: requested culture -> fallback -> first available.</summary>
     public string In(string culture, string fallback = "en") =>
         _values.TryGetValue(Normalize(culture), out var value) ? value
         : _values.TryGetValue(Normalize(fallback), out var fb) ? fb
         : _values.Values.First();
 
-    /// <summary>Devuelve una copia con la traducción añadida o reemplazada
-    /// (lo usará el slice de enriquecimiento con IA).</summary>
+    /// <summary>Returns a copy with the translation added or replaced (the AI
+    /// enrichment slice will use it).</summary>
     public LocalizedText With(string culture, string value)
     {
         var copy = new Dictionary<string, string>(_values) { [Normalize(culture)] = value };
@@ -277,6 +278,6 @@ public abstract class AggregateRoot
 
     protected void Raise(IDomainEvent domainEvent) => _events.Add(domainEvent);
 
-    // El pipeline de persistencia los vuelca a la tabla Outbox y los limpia.
+    // The persistence pipeline drains them into the Outbox table and clears them.
     public void ClearDomainEvents() => _events.Clear();
 }

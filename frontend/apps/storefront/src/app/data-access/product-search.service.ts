@@ -5,9 +5,9 @@ import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
 /**
- * El unico sitio del storefront que sabe como se llama el endpoint de busqueda.
- * El contrato de `/api/search` no cambia aunque debajo entre la busqueda
- * hibrida: es la promesa del ADR 0004.
+ * The only place in the storefront that knows what the search endpoint is
+ * called. `/api/search`'s contract does not change even when hybrid search
+ * arrives underneath: that is ADR 0004's promise.
  */
 @Injectable({ providedIn: 'root' })
 export class ProductSearchService {

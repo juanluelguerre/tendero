@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- El adaptador de desarrollo del puerto de identidad. El contrato no es una
-       interfaz nuestra: es OIDC — documento de discovery, JWKS y JWT firmados.
-       Keycloak es el otro adaptador, y cambiarlo es cambiar una URL.
+  <!-- The development adapter for the identity port. The contract is not an
+       interface of ours: it is OIDC — a discovery document, JWKS and signed JWTs.
+       Keycloak is the other adapter, and switching is changing a URL.
 
-       Es un proyecto aparte y no un fichero dentro de Api para que se vea que
-       es sustituible, y para que una regla de arquitectura pueda prohibir que
-       alguien dependa de él desde el dominio. -->
+       It is a separate project and not a file inside Api so that it is visibly
+       replaceable, and so an architecture rule can forbid anybody depending on it
+       from the domain. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.DevIssuer</RootNamespace>
   </PropertyGroup>

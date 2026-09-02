@@ -1,31 +1,30 @@
 namespace ElGuerre.Tendero.SearchEval.Suites;
 
 /// <summary>
-/// Una puerta de calidad ejecutable. Hoy hay una — relevancia de búsqueda — y
-/// esta abstracción no añade ninguna capacidad: existe para que las siguientes
-/// sean baratas.
+/// An executable quality gate. There is one today — search relevance — and this
+/// abstraction adds no capability: it exists so the next ones are cheap.
 ///
-/// Lo que se generaliza es lo que costó caro y no es específico de la búsqueda:
-/// el formato del conjunto anotado, los umbrales commiteados, el informe en
-/// Markdown y el código de salida. Las dos suites que vienen —extracción de
-/// claims con fuente y confianza, y las acciones que propone el copiloto— usan
-/// exactamente esa maquinaria contra otro tipo de dato.
+/// What is generalised is what cost dearly and is not specific to search: the
+/// annotated set's format, the committed thresholds, the Markdown report and the
+/// exit code. The two suites that are coming — extraction of claims with source
+/// and confidence, and the actions the copilot proposes — use exactly that
+/// machinery against a different kind of data.
 ///
-/// El orden importa: esto entra ANTES que la búsqueda híbrida. Si llegara
-/// después, la híbrida se mediría contra una línea base que ya no se puede
-/// comparar con la que hay commiteada.
+/// The order matters: this enters BEFORE hybrid search. If it arrived
+/// afterwards, the hybrid one would be measured against a baseline that can no
+/// longer be compared with the committed one.
 /// </summary>
 public interface IEvaluationSuite
 {
-    /// <summary>El nombre que se pasa en <c>--suite</c>.</summary>
+    /// <summary>The name passed in <c>--suite</c>.</summary>
     string Name { get; }
 
-    /// <summary>Qué mide, para el mensaje de ayuda.</summary>
+    /// <summary>What it measures, for the help message.</summary>
     string Description { get; }
 
     /// <summary>
-    /// 0 si pasa, 1 si queda por debajo de los umbrales y se pidió <c>--ci</c>,
-    /// 2 si no se pudo ni ejecutar (una dependencia no responde).
+    /// 0 when it passes, 1 when it falls below the thresholds and <c>--ci</c> was
+    /// asked for, 2 when it could not even run (a dependency is not answering).
     /// </summary>
     Task<int> RunAsync(EvaluationOptions options, CancellationToken cancellationToken);
 }

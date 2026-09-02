@@ -1,58 +1,58 @@
-// Orquestación de Tendero en local: nada aquí requiere darse de alta en ningún
-// sitio ni pagar nada (initial-plan §1).
+// Orchestrating Tendero locally: nothing here requires signing up anywhere or
+// paying for anything (initial-plan §1).
 //
-// Sólo se declara lo que el código consume HOY. Qdrant, Ollama y Redis están en
-// la arquitectura objetivo (docs/architecture.md) y entrarán en el mismo PR que
-// traiga el worker de embeddings, en la fase 3: declararlos antes son cinco
-// gigas de descarga en el primer arranque y recursos que nadie lee.
+// Only what the code consumes TODAY is declared. Qdrant, Ollama and Redis are in
+// the target architecture (docs/architecture.md) and arrive in the same PR that
+// brings the embeddings worker: declaring them earlier is five gigabytes of
+// download on first start and resources nobody reads.
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// La raiz del repo, para las rutas de ficheros que la API necesita. Sin esto,
-// "seed/products.sample.json" se resuelve contra el content root de la API
-// (src/Api/) y la importacion falla con 500 en un repo recien clonado.
+// The repository root, for the file paths the API needs. Without this,
+// "seed/products.sample.json" resolves against the API's content root (src/Api/)
+// and the import fails with a 500 on a freshly cloned repo.
 var repositoryRoot = Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", ".."));
 
 var postgres = builder.AddPostgres("postgres")
-    .WithDataVolume();          // el catálogo importado sobrevive a un reinicio
+    .WithDataVolume();          // the imported catalogue survives a restart
 
 var database = postgres.AddDatabase("tendero-db");
 
-// Elasticsearch como recurso de contenedor: la integración de hosting publicada
-// para Aspire arrastra el cliente 8.x y chocaría con el 9.x que usa Search
-// (ver docs/adr/0006-dependency-baseline.md).
+// Elasticsearch as a plain container resource: the hosting integration published
+// for Aspire drags in the 8.x client and would clash with the 9.x that Search
+// uses (see docs/adr/0006-dependency-baseline.md).
 var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/elasticsearch/elasticsearch", "9.5.0")
     .WithEnvironment("discovery.type", "single-node")
     .WithEnvironment("xpack.security.enabled", "false")
     .WithEnvironment("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
     .WithHttpEndpoint(targetPort: 9200, name: "http")
-    // Sin health check, WaitFor(elasticsearch) no tiene nada que esperar.
+    // Without a health check, WaitFor(elasticsearch) has nothing to wait for.
     .WithHttpHealthCheck("/_cluster/health", endpointName: "http")
     .WithLifetime(ContainerLifetime.Persistent);
 
 var elasticsearchEndpoint = elasticsearch.GetEndpoint("http");
 
 var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
-    // Sin esto, WaitFor(api) espera para siempre: la API expone /health, pero
-    // Aspire solo considera "healthy" lo que se le declara aqui. El worker se
-    // quedo bloqueado en "Waiting" con 81 mensajes de outbox sin procesar.
+    // Without this, WaitFor(api) waits forever: the API exposes /health, but
+    // Aspire only treats as "healthy" what is declared here. The worker sat
+    // blocked on "Waiting" with 81 unprocessed outbox messages.
     .WithHttpHealthCheck("/health")
     .WithReference(database).WaitFor(database)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
-    // La API lee de Elasticsearch en cada busqueda, asi que la dependencia es
-    // tan real como la del worker y faltaba declararla igual. Sin esto la API
-    // se declara healthy mientras el nodo todavia arranca, el storefront ya
-    // acepta busquedas y la primera devuelve un connection refused contra un
-    // contenedor que esta levantado pero aun no escucha.
+    // The API reads from Elasticsearch on every search, so the dependency is as
+    // real as the worker's and was equally undeclared. Without this the API
+    // declares itself healthy while the node is still starting, the storefront
+    // accepts searches already, and the first one comes back as a connection
+    // refused against a container that is up but not yet listening.
     .WaitFor(elasticsearch)
     .WithEnvironment(
         "Catalog__Connectors__Seed__FilePath",
         Path.Combine(repositoryRoot, "seed", "products.sample.json"))
     .WithExternalHttpEndpoints();
 
-// Los dos Angular los levanta Aspire tambien: un solo comando arranca todo, y
-// la URL de la API llega inyectada (services__api__http__0) en vez de escrita a
-// mano en un environment.ts. El proxy del dev-server la lee de ahi.
+// Aspire brings up both Angular apps too: one command starts everything, and the
+// API's URL arrives injected (services__api__http__0) instead of hand-written in
+// an environment.ts. The dev server's proxy reads it from there.
 var frontend = Path.Combine("..", "..", "frontend");
 
 builder.AddViteApp("storefront", frontend, "serve:storefront")
@@ -70,14 +70,15 @@ builder.AddViteApp("backoffice", frontend, "serve:backoffice")
 builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     .WithReference(database).WaitFor(database)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
-    // ESTA si es una dependencia real, y era la que faltaba: SearchIndexInitializer
-    // crea products_es/products_en durante el arranque, asi que si Elasticsearch
-    // no esta listo el hosted service lanza y el proceso muere sin reintentar.
+    // THIS one is a real dependency, and it was the one missing:
+    // SearchIndexInitializer creates products_es/products_en during startup, so
+    // if Elasticsearch is not ready the hosted service throws and the process
+    // dies without retrying.
     .WaitFor(elasticsearch);
 
-// El worker NO espera a la API: no depende de ella. Lo tenia por ordenar el
-// dashboard, y esa dependencia inventada lo dejaba bloqueado en "Waiting" con
-// la outbox sin drenar. Una dependencia declarada que no existe es un deadlock
-// esperando su turno.
+// The worker does NOT wait for the API: it does not depend on it. That was there
+// to tidy the dashboard, and the invented dependency left it blocked on
+// "Waiting" with the outbox undrained. A declared dependency that does not exist
+// is a deadlock waiting its turn.
 
 builder.Build().Run();

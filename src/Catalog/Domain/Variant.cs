@@ -4,22 +4,22 @@ namespace ElGuerre.Tendero.Catalog.Domain;
 
 public enum VariantStatus
 {
-    Available,      // se puede comprar
-    Discontinued    // se deja de vender, pero el histórico de pedidos la nombra
+    Available,      // can be bought
+    Discontinued    // no longer sold, but order history still names it
 }
 
 /// <summary>
-/// Lo que un cliente compra de verdad: una talla concreta de un color concreto.
+/// What a customer actually buys: one specific size in one specific colour.
 ///
-/// Es una entidad HIJA de <see cref="Product"/>, no un agregado: no tiene ciclo
-/// de vida propio —no existe una variante sin producto— y su invariante (los
-/// valores de eje son únicos dentro del producto) sólo se puede sostener desde
-/// el padre.
+/// It is a CHILD entity of <see cref="Product"/>, not an aggregate: it has no
+/// lifecycle of its own — a variant without a product does not exist — and its
+/// invariant (axis values are unique within the product) can only be held from
+/// the parent.
 ///
-/// El SKU es lo que cruza fronteras de contexto. Inventory guarda stock por SKU
-/// y no por <see cref="VariantId"/>, que es lo que le permite no referenciar
-/// Catalog en absoluto: el SKU es al stock lo que <c>ProductName</c> es a una
-/// línea de pedido, vocabulario compartido en vez de una referencia viva.
+/// The SKU is what crosses context boundaries. Inventory keys stock on SKU and
+/// not on <see cref="VariantId"/>, which is what lets it not reference Catalog
+/// at all: the SKU is to stock what <c>ProductName</c> is to an order line,
+/// shared vocabulary instead of a live reference.
 /// </summary>
 public sealed class Variant
 {
@@ -27,24 +27,24 @@ public sealed class Variant
 
     public VariantId Id { get; private set; }
 
-    /// <summary>Único en todo el catálogo. Es la clave con la que hablan
-    /// inventario, carrito, pedidos y UCP.</summary>
+    /// <summary>Unique across the whole catalogue. It is the key inventory, the
+    /// cart, orders and UCP all speak.</summary>
     public string Sku { get; private set; } = default!;
 
     public Money Price { get; private set; }
 
     /// <summary>
-    /// Qué la distingue de sus hermanas: código de atributo → código de opción,
-    /// p. ej. <c>{"COLOR": "NAVY_BLUE", "SIZE": "38"}</c>. Códigos y no
-    /// etiquetas: la etiqueta es texto de cara al usuario y por tanto
-    /// <c>LocalizedText</c>, que vive en la definición del atributo (fase 2).
+    /// What tells it apart from its siblings: attribute code to option code, for
+    /// example <c>{"COLOR": "NAVY_BLUE", "SIZE": "38"}</c>. Codes and not
+    /// labels: a label is user-facing text and therefore <c>LocalizedText</c>,
+    /// which lives on the attribute's definition (phase 2).
     /// </summary>
     public IReadOnlyDictionary<string, string> AxisValues => _axisValues;
 
     public string? TaxClass { get; private set; }
 
-    /// <summary>Foto propia cuando la variante se ve distinta — el color la
-    /// necesita, la talla no. Null significa "usa la del producto".</summary>
+    /// <summary>Its own photo when the variant looks different — colour needs
+    /// one, size does not. Null means "use the product's".</summary>
     public ImageId? Image { get; private set; }
 
     public VariantStatus Status { get; private set; }
@@ -87,10 +87,10 @@ public sealed class Variant
     internal void SetImage(ImageId? image) => Image = image;
 
     /// <summary>
-    /// Cómo se nombra en una línea de pedido: "NAVY_BLUE · 38". Se congela en el
-    /// pedido (ADR 0002), así que reordenar los ejes después no reescribe
-    /// históricos. El orden lo fija el producto, no el diccionario, porque el
-    /// orden de un diccionario no es un dato.
+    /// How it is named on an order line: "NAVY_BLUE · 38". It is frozen onto the
+    /// order (ADR 0002), so reordering the axes afterwards does not rewrite
+    /// history. The product fixes the order, not the dictionary, because a
+    /// dictionary's order is not data.
     /// </summary>
     public string LabelFor(IReadOnlyList<string> axisOrder) =>
         string.Join(" · ", axisOrder

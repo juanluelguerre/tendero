@@ -1,17 +1,17 @@
-/* Tendero — puente entre los tokens y Tailwind 4.
+/* Tendero — the bridge between the tokens and Tailwind 4.
  *
- * Sustituye a design/tailwind-preset.js, que era formato v3. Tailwind 4 se
- * configura desde CSS con @theme, lo que encaja mucho mejor aqui: los tokens
- * YA son custom properties, asi que desaparece la indireccion del preset JS y
- * queda una sola fuente de verdad de verdad.
+ * It replaces design/tailwind-preset.js, which was v3 format. Tailwind 4 is
+ * configured from CSS with @theme, which fits much better here: the tokens ARE
+ * custom properties already, so the JS preset's indirection disappears and one
+ * genuine source of truth is left.
  *
- * Cada entrada apunta a su token; cambiar design/tokens.css mueve las dos apps,
- * modo oscuro incluido. Nunca escribas un hex aqui. */
+ * Every entry points at its token; changing design/tokens.css moves both apps,
+ * dark mode included. Never write a hex here. */
 
 @import './tokens.css';
 @import 'tailwindcss';
 
-/* El backoffice enciende el modo oscuro con <html data-theme="dark">. */
+/* The backoffice turns dark mode on with <html data-theme="dark">. */
 @custom-variant dark ([data-theme='dark'] &);
 
 @theme {
@@ -37,8 +37,8 @@
   --color-ink-700: var(--ink-700);
   --color-ink-900: var(--ink-900);
 
-  /* Semanticos: usa ESTOS en los componentes, no los de la paleta. Son los
-     unicos que siguen al tema oscuro. */
+  /* Semantic: use THESE in components, not the palette ones. They are the only
+     ones that follow the dark theme. */
   --color-page: var(--bg-page);
   --color-surface: var(--bg-surface);
   --color-raised: var(--bg-raised);
@@ -91,10 +91,10 @@
   --container-app: var(--container-app);
 }
 
-/* ---------- El unico elemento decorativo del sistema ----------
-   La raya de toldo, sacada del logo. Marca cortes de seccion, la pestana activa
-   del backoffice y la barra de carga de la importacion. Siempre significa
-   Tendero, asi que no se usa para nada mas. */
+/* ---------- The system's only decorative element ----------
+   The awning stripe, taken from the logo. It marks section breaks, the
+   backoffice's active tab and the import's loading bar. It always means Tendero,
+   so it is used for nothing else. */
 @utility awning {
   height: 6px;
   border: 0;
@@ -110,8 +110,8 @@
   height: 3px;
 }
 
-/* El comercio se lee en columnas: precios, SKUs, totales y metricas van en
-   mono con cifras tabulares para que una columna de precios cuadre de verdad. */
+/* Commerce is read in columns: prices, SKUs, totals and metrics go in mono with
+   tabular figures so that a column of prices genuinely lines up. */
 @utility numeric {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;

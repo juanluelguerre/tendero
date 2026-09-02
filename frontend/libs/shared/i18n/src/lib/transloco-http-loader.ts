@@ -4,8 +4,8 @@ import { Translation, TranslocoLoader } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 
 /**
- * Carga las traducciones desde los assets de la app. Cada app sirve las suyas:
- * la voz del storefront y la del backoffice no son la misma (design/DESIGN.md).
+ * Loads the translations from the app's assets. Each app serves its own: the
+ * storefront's voice and the backoffice's are not the same (design/DESIGN.md).
  */
 @Injectable({ providedIn: 'root' })
 export class TranslocoHttpLoader implements TranslocoLoader {

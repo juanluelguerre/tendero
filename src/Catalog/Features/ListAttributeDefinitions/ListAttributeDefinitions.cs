@@ -11,13 +11,13 @@ using Microsoft.AspNetCore.Routing;
 namespace ElGuerre.Tendero.Catalog.Features.ListAttributeDefinitions;
 
 /// <summary>
-/// Las definiciones de atributo, con su etiqueta en TODAS las culturas.
+/// The attribute definitions, with their label in EVERY culture.
 ///
-/// Y en todas a propósito, en contra de lo que hacen los demás endpoints: aquí
-/// lo que se revisa es precisamente si falta una traducción, así que devolver el
-/// texto ya resuelto en una cultura escondería el dato por el que existe la
-/// pantalla. Es el mismo razonamiento que `missingCultures` en la cola de
-/// revisión, llevado un paso más allá.
+/// In every culture on purpose, against what the other endpoints do: what is
+/// being reviewed here is precisely whether a translation is missing, so
+/// returning text already resolved into one culture would hide the very fact the
+/// screen exists for. Same reasoning as `missingCultures` in the review queue,
+/// taken one step further.
 /// </summary>
 public sealed record ListAttributeDefinitionsQuery : IQuery<ListAttributeDefinitionsResult>;
 
@@ -83,10 +83,10 @@ public sealed class ListAttributeDefinitionsHandler(IAttributeDefinitionReader d
         definition.IsSearchable,
         definition.Aliases,
         [.. definition.Options.Select(option => new AttributeOptionView(option.Code, option.Label.Values))],
-        // Le faltan culturas a la definición o a CUALQUIERA de sus opciones: una
-        // etiqueta sin traducir en una opción es exactamente lo que hacía que
-        // "navy blue shoes" no casara, así que contarla sólo a nivel de
-        // definición dejaría fuera el caso que importa.
+        // Cultures missing from the definition or from ANY of its options: an
+        // untranslated label on an option is exactly what kept "navy blue shoes"
+        // from matching, so counting only at definition level would leave out the
+        // case that matters.
         [
             .. Cultures.Where(culture =>
                 !definition.Label.Cultures.Contains(culture) ||

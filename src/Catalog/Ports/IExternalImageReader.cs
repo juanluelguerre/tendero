@@ -3,13 +3,14 @@ using ElGuerre.Tendero.Catalog.Connectors;
 namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
-/// Abre el contenido de una <see cref="ExternalImage"/>, venga de donde venga.
-/// Aísla al slice de importación de saber si detrás hay HTTP o disco.
+/// Opens the content of an <see cref="ExternalImage"/>, wherever it comes from.
+/// It keeps the import slice from having to know whether HTTP or a disk is
+/// behind it.
 /// </summary>
 public interface IExternalImageReader
 {
-    /// <summary>Null si la imagen no se puede leer (404, DNS caído, fichero que
-    /// no está). Una imagen ilegible no puede abortar la importación de un
-    /// catálogo de 147k productos.</summary>
+    /// <summary>Null when the image cannot be read (404, DNS down, a file that
+    /// is not there). One unreadable image cannot abort the import of a
+    /// 147k-product catalogue.</summary>
     Task<StoredImage?> OpenAsync(ExternalImage image, CancellationToken ct = default);
 }

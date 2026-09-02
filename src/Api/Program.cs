@@ -15,8 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Los ensamblados que se escanean en busca de handlers y validadores. Un slice
-// nuevo dentro de uno de ellos no toca esta línea.
+// The assemblies scanned for handlers and validators. A new slice inside one of
+// them does not touch this line.
 builder.Services.AddTenderoCqrs(
     typeof(ImportProductsCommand).Assembly,
     typeof(SearchProductsQuery).Assembly,
@@ -32,22 +32,22 @@ builder.Services.AddPricing(builder.Configuration);
 builder.Services.AddLexicalSearch(
     builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
-// WithEmptyValidators: Carter escanea validadores y los registra como SINGLETON,
-// y aquí no se usa ninguno — la validación vive en el ValidationStep del
-// dispatcher, que los resuelve del scope. Ese escaneo no era neutro: convertía
-// `ImportProductsValidator`, que inyecta el `ICatalogSourceRegistry` scoped, en
-// una dependencia cautiva, y la API dejaba de arrancar en Development con
-// "Cannot consume scoped service ... from singleton". Un mecanismo que nadie usa
-// no debería poder tumbar el proceso.
-// El emisor de desarrollo se registra ANTES de la autenticación y sólo en
-// Development. Su propio AddDevIssuer lanza si el entorno no es Development,
-// así que el guardia está en los dos lados.
+// WithEmptyValidators: Carter scans for validators and registers them as
+// SINGLETONS, and none is used here — validation lives in the dispatcher's
+// ValidationStep, which resolves them from the scope. That scan was not neutral:
+// it turned `ImportProductsValidator`, which injects the scoped
+// `ICatalogSourceRegistry`, into a captive dependency, and the API stopped
+// starting in Development with "Cannot consume scoped service … from singleton".
+// A mechanism nobody uses should not be able to bring the process down.
+// The development issuer is registered BEFORE authentication and only in
+// Development. Its own AddDevIssuer throws when the environment is not
+// Development, so the guard is on both sides.
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDevIssuer(builder.Configuration, builder.Environment);
 
-    // La autoridad apunta al emisor que este mismo proceso publica. Cuando entre
-    // Keycloak, esto sale de appsettings y este bloque desaparece.
+    // The authority points at the issuer this very process publishes. When
+    // Keycloak arrives this comes out of appsettings and this block disappears.
     builder.Configuration["Authentication:Authority"] ??=
         $"http://localhost:{builder.Configuration["ASPNETCORE_HTTP_PORT"] ?? "5130"}/dev-issuer";
     builder.Configuration["Authentication:AllowHttpMetadata"] ??= "true";
@@ -55,8 +55,8 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddTenderoAuthentication(builder.Configuration);
 
-// CORS: los dos Angular corren en otro origen que la API, así que sin esto el
-// navegador bloquea toda llamada autenticada.
+// CORS: the two Angular apps run on a different origin from the API, so without
+// this the browser blocks every authenticated call.
 builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>()
         ?? ["http://localhost:4200", "http://localhost:4201"])
@@ -65,10 +65,10 @@ builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
 
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 
-// El documento es la forma de la API, y de él salen los tipos del frontend
-// (antes escritos a mano en shared-api, sin nada que detectase la deriva) y,
-// en la fase 9, los esquemas de las capabilities de UCP. Va en el framework:
-// ni Swashbuckle ni NSwag, que serían dos dependencias para lo mismo.
+// The document is the API's shape, and from it come the frontend's types
+// (previously hand-written in shared-api, with nothing to detect the drift) and,
+// in phase 9, the UCP capability schemas. It lives in the framework: neither
+// Swashbuckle nor NSwag, which would be two dependencies for one job.
 builder.Services.AddOpenApi(options =>
     options.AddSchemaTransformer<NumbersAreNumbersTransformer>());
 
@@ -84,13 +84,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapDefaultEndpoints();
 
-// Servido siempre, no sólo en Development: el test de contrato lo lee de aquí,
-// y un agente que descubra la tienda por UCP necesita alcanzarlo en producción.
+// Always served, not only in Development: the contract test reads it from here,
+// and an agent discovering the shop over UCP needs to reach it in production.
 app.MapOpenApi();
 
 app.MapCarter();
 
 app.Run();
 
-// Visible para los tests de integración (WebApplicationFactory) más adelante.
+// Visible to the integration tests (WebApplicationFactory).
 public partial class Program;

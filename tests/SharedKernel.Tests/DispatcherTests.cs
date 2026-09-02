@@ -59,9 +59,9 @@ public sealed class DispatcherTests
     }
 
     /// <summary>
-    /// El dispatcher es infraestructura: no puede cambiar la excepción que lanza
-    /// un handler. Si el dominio dice InvalidOperationException, eso es lo que
-    /// tiene que ver el endpoint — ni TargetInvocationException ni nada envuelto.
+    /// The dispatcher is infrastructure: it cannot change the exception a handler
+    /// throws. If the domain says InvalidOperationException, that is what the
+    /// endpoint has to see — not a TargetInvocationException and nothing wrapped.
     /// </summary>
     [Fact]
     public async Task An_exception_from_the_handler_reaches_the_caller_unwrapped()
@@ -104,8 +104,8 @@ public sealed class DispatcherTests
     [Fact]
     public async Task Scanning_the_same_assembly_twice_does_not_duplicate_handlers()
     {
-        // El host puede reconstruir el contenedor (tests, recarga); registrar dos
-        // veces no puede convertir un handler en dos ejecuciones.
+        // The host can rebuild the container (tests, a reload); registering twice
+        // cannot turn one handler into two executions.
         await using var provider = new ServiceCollection()
             .AddTenderoCqrs(typeof(DispatcherTests).Assembly)
             .AddTenderoCqrs(typeof(DispatcherTests).Assembly)

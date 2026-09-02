@@ -1,9 +1,9 @@
 namespace ElGuerre.Tendero.SharedKernel;
 
 /// <summary>
-/// Los nombres de las políticas, en SharedKernel y no en Api, porque los slices
-/// los declaran y la composición los define. Un slice no debe referenciar el
-/// proyecto que lo aloja para poder decir quién puede llamarlo.
+/// The policy names, in SharedKernel and not in Api, because slices declare them
+/// and composition defines them. A slice should not have to reference the project
+/// that hosts it in order to say who may call it.
 /// </summary>
 public static class TenderoPolicyNames
 {

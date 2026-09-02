@@ -6,15 +6,15 @@ using Xunit;
 namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
 
 /// <summary>
-/// Contrato ejecutable del puerto: TODA implementación (Seed, Shopify, Medusa...)
-/// hereda de esta clase y debe pasar la misma suite. Si un conector nuevo
-/// rompe alguna regla, se sabe antes de tocar el dominio.
+/// The port's executable contract: EVERY implementation (Seed, Shopify, Medusa…)
+/// inherits this class and has to pass the same suite. If a new connector breaks
+/// a rule, it is known before the domain is touched.
 /// </summary>
 public abstract class CatalogSourceConnectorContractTests
 {
     protected abstract ICatalogSourceConnector CreateConnector();
 
-    /// <summary>Los conectores contra sandbox externos pueden relajar esto a >= 1.</summary>
+    /// <summary>Connectors against external sandboxes may relax this to >= 1.</summary>
     protected virtual int MinimumExpectedProducts => 1;
 
     [Fact]
@@ -70,10 +70,10 @@ public abstract class CatalogSourceConnectorContractTests
     [Fact]
     public async Task Image_locations_are_absolute_and_readable()
     {
-        // El origen puede servir sus imágenes por HTTP (Shopify desde su CDN) o
-        // tenerlas en disco (el conector seed, y el escaneo de PDFs de la fase 4).
-        // Lo que el contrato exige es que la ubicación sea RESOLUBLE sin contexto
-        // ambiental: el lector no sabe desde qué directorio se lanzó nadie.
+        // A source may serve its images over HTTP (Shopify from its CDN) or have
+        // them on disk (the seed connector, and phase 4's PDF scanning). What the
+        // contract demands is that the location be RESOLVABLE without ambient
+        // context: the reader does not know what directory anybody launched from.
         await foreach (var product in CreateConnector().StreamProductsAsync(TestContext.Current.CancellationToken))
         {
             foreach (var image in product.Images)
@@ -87,7 +87,7 @@ public abstract class CatalogSourceConnectorContractTests
     }
 }
 
-/// <summary>La implementación concreta para Seed queda en tres líneas.</summary>
+/// <summary>The concrete implementation for Seed takes three lines.</summary>
 public sealed class SeedCatalogConnectorContractTests : CatalogSourceConnectorContractTests
 {
     protected override ICatalogSourceConnector CreateConnector() =>

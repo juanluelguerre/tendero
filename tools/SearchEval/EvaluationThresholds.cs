@@ -3,9 +3,9 @@ using System.Text.Json;
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// Umbrales comprometidos por cultura. Bajarlos requiere justificarlo en el
-/// cuerpo del PR (docs/search-evaluation.md): es la única defensa contra
-/// "ajustar el listón hasta que pase".
+/// The committed thresholds per culture. Lowering them requires a justification
+/// in the PR body (docs/search-evaluation.md): it is the only defence against
+/// "move the bar until it passes".
 /// </summary>
 public sealed record EvaluationThresholds(IReadOnlyDictionary<string, CultureThresholds> Cultures)
 {

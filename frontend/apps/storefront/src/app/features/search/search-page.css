@@ -1,4 +1,4 @@
-/* Storefront: espacioso y claro. Ni un hex aqui — todo sale de los tokens. */
+/* Storefront: roomy and light. Not one hex here — it all comes from the tokens. */
 .search { margin-block-end: var(--space-6); }
 
 .search__label {
@@ -29,7 +29,7 @@
   outline-offset: 2px;
 }
 
-/* La unica accion clay de la vista. Si hubiera dos, ninguna seria la primaria. */
+/* The view's only clay action. If there were two, neither would be the primary. */
 .search__submit {
   padding: var(--space-3) var(--space-5);
   font: inherit;
@@ -67,7 +67,7 @@
   padding: 0;
 }
 
-/* Las imagenes venden; el resto se quita de en medio. Sin sombra hasta el hover. */
+/* Images sell; everything else gets out of the way. No shadow until hover. */
 .card {
   background: var(--bg-surface);
   border: 1px solid var(--border);

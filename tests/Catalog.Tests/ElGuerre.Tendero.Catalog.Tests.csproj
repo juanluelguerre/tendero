@@ -14,15 +14,15 @@
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
   </ItemGroup>
 
-  <!-- La suite de contrato corre contra la MISMA muestra que trae el repo:
-       si el fichero seed deja de cumplir el contrato, se sabe aquí. -->
+  <!-- The contract suite runs against the SAME sample the repository ships: if
+       the seed file stops honouring the contract, it is known here. -->
   <ItemGroup>
     <Content Include="../../seed/products.sample.json" Link="TestData/products.sample.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
-  <!-- Reloj fijo compartido por los proyectos de test (../TestClock.cs). -->
+  <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
   </ItemGroup>

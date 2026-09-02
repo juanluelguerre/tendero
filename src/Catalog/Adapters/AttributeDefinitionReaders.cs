@@ -5,16 +5,16 @@ using Microsoft.Extensions.Options;
 namespace ElGuerre.Tendero.Catalog.Adapters;
 
 /// <summary>
-/// Las definiciones que trae el repositorio, cacheadas para el proceso.
+/// The definitions the repository ships, cached for the process.
 ///
-/// Es el adaptador por defecto y el que usa la puerta de calidad, que
-/// deliberadamente no toca Postgres. Cachea porque la proyección al índice las
-/// pide una vez por producto y por cultura: sin caché, reindexar seis productos
-/// leería el fichero veinticuatro veces.
+/// It is the default adapter and the one the quality gate uses, which
+/// deliberately never touches Postgres. It caches because the index projection
+/// asks for them once per product per culture: without a cache, reindexing six
+/// products would read the file twenty-four times.
 ///
-/// Cuando el backoffice permita editarlas (fase 2, pantalla pendiente), el
-/// adaptador que lea de Postgres se registra en su lugar y nada más cambia —
-/// que es la razón de que esto sea un puerto.
+/// When the backoffice lets them be edited, the adapter that reads from Postgres
+/// registers in its place and nothing else changes — which is the reason this is
+/// a port at all.
 /// </summary>
 internal sealed class SeedFileAttributeDefinitionReader(
     IOptions<AttributeSeedOptions> options, TimeProvider clock) : IAttributeDefinitionReader
@@ -28,9 +28,9 @@ internal sealed class SeedFileAttributeDefinitionReader(
 
         var path = options.Value.FilePath;
 
-        // Sin fichero se sigue: un catálogo sin definiciones indexa los
-        // atributos como texto plano, que es el comportamiento anterior. Fallar
-        // aquí convertiría un dato que falta en una tienda caída.
+        // With no file it carries on: a catalogue with no definitions indexes
+        // attributes as plain text, which is the previous behaviour. Failing
+        // here would turn missing data into a shop that is down.
         if (!File.Exists(path))
             return _cached = AttributeDefinitions.Empty;
 

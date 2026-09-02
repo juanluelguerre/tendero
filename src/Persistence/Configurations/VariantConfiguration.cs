@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace ElGuerre.Tendero.Persistence.Configurations;
 
 /// <summary>
-/// La variante es una entidad del agregado Product, no un agregado: se carga y
-/// se guarda con su padre (<c>AutoInclude</c> y borrado en cascada), y ninguna
-/// operación la modifica sin pasar por él.
+/// A variant is an entity of the Product aggregate, not an aggregate: it is
+/// loaded and saved with its parent (<c>AutoInclude</c> and cascade delete), and
+/// no operation modifies it without going through it.
 ///
-/// Tiene configuración propia porque necesita <c>ComplexProperty</c> para
-/// <see cref="Money"/>, que sólo está disponible sobre un tipo de entidad — ver
-/// la nota en <see cref="ProductConfiguration"/>.
+/// It has its own configuration because it needs <c>ComplexProperty</c> for
+/// <see cref="Money"/>, which is only available on an entity type — see the note
+/// in <see cref="ProductConfiguration"/>.
 /// </summary>
 internal sealed class VariantConfiguration : IEntityTypeConfiguration<Variant>
 {
@@ -27,8 +27,8 @@ internal sealed class VariantConfiguration : IEntityTypeConfiguration<Variant>
 
         builder.Property(variant => variant.Sku).HasMaxLength(100).IsRequired();
 
-        // Único en TODO el catálogo, no dentro del producto: es la clave con la
-        // que otros contextos hablan de esto sin conocer Catalog.
+        // Unique across the WHOLE catalogue, not within the product: it is the
+        // key other contexts talk about this by, without knowing Catalog.
         builder.HasIndex(variant => variant.Sku).IsUnique();
 
         builder.ComplexProperty(variant => variant.Price, price =>
@@ -47,8 +47,8 @@ internal sealed class VariantConfiguration : IEntityTypeConfiguration<Variant>
             .HasColumnName("ImageId")
             .HasMaxLength(64);
 
-        // Los ejes son un diccionario, que no tiene equivalente complejo en EF:
-        // mismo convertidor jsonb que los atributos del producto.
+        // The axes are a dictionary, which has no complex equivalent in EF: the
+        // same jsonb converter as the product's attributes.
         builder.Property<Dictionary<string, string>>("_axisValues")
             .HasColumnName("AxisValues")
             .HasColumnType("jsonb")

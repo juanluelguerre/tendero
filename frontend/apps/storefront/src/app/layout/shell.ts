@@ -3,9 +3,9 @@ import { RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 /**
- * El shell del storefront. NO se comparte con el backoffice: uno es espacioso y
- * claro y el otro denso y oscuro, y unificarlos daria un componente con matriz
- * de variantes. Ver docs/adr/0010.
+ * The storefront shell. It is NOT shared with the backoffice: one is roomy and
+ * light and the other dense and dark, and unifying them would give a component
+ * with a variant matrix. See docs/adr/0010.
  */
 @Component({
   selector: 'storefront-shell',
@@ -14,11 +14,11 @@ import { TranslocoDirective } from '@jsverse/transloco';
     <ng-container *transloco="let t">
       <header class="shell__header">
         <div class="shell__brand">
-          <!-- El icono, no el lockup completo: el wordmark de al lado ya usa
-               Bricolage de verdad, y el texto incrustado en el SVG solo tiene
-               Inter como recurso. Dos tipografias distintas para la misma
-               palabra se notan. alt vacio y aria-hidden porque el nombre esta
-               justo al lado como texto: leerlo dos veces molesta. -->
+          <!-- The icon, not the full lockup: the wordmark beside it already uses
+               real Bricolage, and the text embedded in the SVG only has Inter to
+               fall back on. Two different typefaces for the same word show. Empty
+               alt and aria-hidden because the name is right next to it as text:
+               reading it twice is a nuisance. -->
           <img
             class="shell__mark"
             src="brand/tendero-icon-shop.svg"
@@ -39,8 +39,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
   styles: `
     :host { display: block; max-width: var(--container-app); margin-inline: auto; padding: 0 var(--space-5); }
     .shell__header { display: flex; align-items: center; min-height: var(--header-h); }
-    /* center, no baseline: una imagen no tiene linea base tipografica y con
-       baseline el icono quedaba colgando por debajo del wordmark. */
+    /* center, not baseline: an image has no typographic baseline, and with
+       baseline the icon hung below the wordmark. */
     .shell__brand { display: flex; align-items: center; gap: var(--space-3); }
     .shell__mark { display: block; width: 44px; height: 44px; }
     .shell__wordmark { font-family: var(--font-display); font-weight: 800; font-size: var(--text-xl); color: var(--accent); }

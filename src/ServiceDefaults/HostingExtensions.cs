@@ -54,15 +54,15 @@ public static class HostingExtensions
                 .AddHttpClientInstrumentation()
                 .AddSource(TelemetrySources.All));
 
-        // El endpoint OTLP lo inyecta Aspire; sin él, no se exporta y ya está.
+        // Aspire injects the OTLP endpoint; without it nothing is exported, and that is that.
         if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
             builder.Services.AddOpenTelemetry().UseOtlpExporter();
     }
 
     /// <summary>
-    /// /health responde cuando el servicio puede atender tráfico; /alive sólo
-    /// dice que el proceso vive. Separarlos es lo que evita reinicios en cadena
-    /// cuando lo que está caído es una dependencia, no el servicio.
+    /// /health answers when the service can take traffic; /alive only says the
+    /// process is up. Keeping them apart is what avoids cascading restarts when
+    /// what is down is a dependency and not the service.
     /// </summary>
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {

@@ -5,17 +5,17 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ElGuerre.Tendero.Catalog.Adapters;
 
 /// <summary>
-/// El único sitio del catálogo que habla con el contenedor de dependencias. Los
-/// conectores se registran como keyed services por su nombre de origen (ADR
-/// 0003), así que añadir Shopify sigue siendo una línea de registro y ni un
-/// <c>if</c> — pero el <c>IServiceProvider</c> se queda aquí, detrás del puerto,
-/// en vez de viajar hasta el handler.
+/// The only place in the catalogue that talks to the DI container. Connectors
+/// register as keyed services under their source name (ADR 0003), so adding
+/// Shopify is still one line of registration and not one <c>if</c> — but the
+/// <c>IServiceProvider</c> stays here, behind the port, instead of travelling as
+/// far as the handler.
 /// </summary>
 internal sealed class KeyedCatalogSourceRegistry(IServiceProvider services) : ICatalogSourceRegistry
 {
-    // La lista sale del contenedor, no de una constante: una constante y un
-    // registro son dos verdades que divergen el día que alguien añada la segunda
-    // sin tocar la primera.
+    // The list comes from the container and not from a constant: a constant and
+    // a registry are two truths that diverge the day somebody adds the second
+    // without touching the first.
     public IReadOnlyCollection<string> Sources =>
         [.. services.GetKeyedServices<ICatalogSourceConnector>(KeyedService.AnyKey)
             .Select(connector => connector.Source)

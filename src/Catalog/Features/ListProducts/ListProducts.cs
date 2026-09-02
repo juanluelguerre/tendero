@@ -12,14 +12,14 @@ using Microsoft.AspNetCore.Routing;
 namespace ElGuerre.Tendero.Catalog.Features.ListProducts;
 
 /// <summary>
-/// Lista el catálogo, filtrando por estado. Es lo que faltaba para que la cola
-/// de revisión del backoffice fuese algo más que un estado vacío: la API tenía
-/// cinco endpoints y ninguno permitía ver qué había en Draft, así que revisar un
-/// catálogo importado pasaba por abrir Postgres.
+/// Lists the catalogue, filtered by status. It is what was missing for the
+/// backoffice review queue to be more than an empty state: the API had five
+/// endpoints and none of them let you see what was in Draft, so reviewing an
+/// imported catalogue meant opening Postgres.
 ///
-/// Lee del catálogo, NO del índice, y eso es deliberado: lo que se revisa es
-/// justamente lo que todavía no está indexado, porque sólo lo Active se indexa.
-/// Una cola de revisión servida desde Elasticsearch estaría siempre vacía.
+/// It reads from the catalogue, NOT from the index, and that is deliberate: what
+/// is under review is precisely what is not indexed yet, because only Active is
+/// indexed. A review queue served from Elasticsearch would always be empty.
 /// </summary>
 public sealed record ListProductsQuery(string? Status, string Culture, int Page, int PageSize)
     : IQuery<ListProductsResult>;
@@ -44,9 +44,9 @@ public sealed class ListProductsValidator : AbstractValidator<ListProductsQuery>
 {
     public ListProductsValidator()
     {
-        // Un estado desconocido se rechaza en vez de ignorarse: filtrar por
-        // "pendiente" y recibir el catalogo entero es peor que un 400, porque
-        // parece que funciona.
+        // An unknown status is rejected rather than ignored: filtering by
+        // "pending" and getting the whole catalogue back is worse than a 400,
+        // because it looks like it worked.
         RuleFor(x => x.Status)
             .Must(status => status is null || Enum.TryParse<ProductStatus>(status, ignoreCase: true, out _))
             .WithMessage("Status must be one of: draft, active, archived.");
@@ -63,22 +63,22 @@ public sealed class ListProductsEndpoint : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         // GET /api/catalog/products?status=draft&culture=es&page=1&pageSize=20
-        // El tipo de retorno se declara en la lambda en vez de con .Produces<T>():
-        // así el compilador es quien mantiene el documento de OpenAPI en sintonía
-        // con lo que el endpoint devuelve de verdad. Un .Produces<T>() puede
-        // quedarse mintiendo tras un cambio y nadie se entera.
+        // The return type is declared on the lambda rather than with
+        // .Produces<T>(): that way the compiler is what keeps the OpenAPI
+        // document in step with what the endpoint actually returns. A
+        // .Produces<T>() can go on lying after a change and nobody finds out.
         app.MapGet("/api/catalog/products",
             async Task<Ok<ListProductsResult>> (
                    string? status, string? culture, int? page, int? pageSize,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
-                // Cultura: query param explícito > Accept-Language > "es".
+                // Culture: explicit query parameter > Accept-Language > "es".
                 //
-                // El parámetro gana porque una URL con idioma es compartible,
-                // cacheable y es la ÚNICA vía para un agente UCP, que no tiene
-                // locale de navegador. La cabecera decide cuando no hay
-                // parámetro, que es lo que hace que alguien que llega sin pedir
-                // nada vea su idioma y no el nuestro.
+                // The parameter wins because a URL carrying a language is
+                // shareable, cacheable and the ONLY route for a UCP agent, which
+                // has no browser locale. The header decides when there is no
+                // parameter, which is what makes somebody who arrives without
+                // asking see their language and not ours.
                 //
                 // It was copied from /api/search under a comment saying when
                 // that would stop being fine: "with a third it moves to a shared
@@ -89,19 +89,20 @@ public sealed class ListProductsEndpoint : ICarterModule
                 var result = await dispatcher.SendAsync(
                     new ListProductsQuery(status, resolved, page ?? 1, pageSize ?? 20), ct);
 
-                // El cliente pide, el servidor declara. Vary porque la respuesta
-                // depende de Accept-Language cuando no viene el parámetro.
+                // The client asks, the server declares. Vary because the response
+                // depends on Accept-Language when the parameter is absent.
                 //
-                // Declara la cultura NEGOCIADA, no la de cada fila: LocalizedText
-                // cae en cadena, así que un producto sin inglés servido en "en"
-                // vuelve en español. Una cabecera no puede decir "esta fila sí y
-                // aquella no"; eso es lo que lleva `missingCultures` por ítem.
+                // It declares the NEGOTIATED culture, not each row's:
+                // LocalizedText falls back in a chain, so a product with no
+                // English served in "en" comes back in Spanish. A header cannot
+                // say "this row yes and that one no"; that is what per-item
+                // `missingCultures` carries.
                 http.Response.Headers.ContentLanguage = resolved;
                 http.Response.Headers.Vary = "Accept-Language";
 
                 return TypedResults.Ok(result);
             })
-            .AllowAnonymous()   // el catálogo es público, y esto lo dice en el código
+            .AllowAnonymous()   // the catalogue is public, and this says so in code
             .WithTags("Catalog")
             .WithName("ListProducts");
     }
@@ -144,10 +145,10 @@ public sealed class ListProductsHandler(IProductCatalogReader products)
             product.Price.Currency,
             product.PrimaryImage?.Id.Value,
             product.Status.ToString().ToLowerInvariant(),
-            // Qué idiomas le faltan al producto, resuelto aquí y no en el
-            // cliente: es el dato por el que existe la cola. LocalizedText cae
-            // en cadena (cultura → en → primera), así que sin esto la ficha se
-            // ve completa en inglés y nadie se entera de que falta el español.
+            // Which languages the product is missing, resolved here and not in
+            // the client: it is the fact the queue exists for. LocalizedText
+            // falls back in a chain (culture -> en -> first), so without this the
+            // record looks complete in English and nobody notices Spanish is gone.
             [.. Cultures.Where(c => !product.Name.Cultures.Contains(c))],
             product.UpdatedAt);
 }

@@ -7,8 +7,9 @@ public sealed record QueryScore(string Query, double? NdcgAt10, double? RecallAt
 
 public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Queries)
 {
-    // Media sobre las consultas puntuables. Una consulta sin juicios relevantes
-    // no puntúa: contarla como 0 castigaría al motor por una anotación a medias.
+    // The mean over the scoreable queries. A query with no relevant judgments
+    // does not score: counting it as 0 would punish the engine for a half-written
+    // annotation.
     public double MeanNdcgAt10 => Mean(Queries.Select(query => query.NdcgAt10));
     public double MeanRecallAt50 => Mean(Queries.Select(query => query.RecallAt50));
     public int ScoredQueries => Queries.Count(query => query.NdcgAt10 is not null);
@@ -39,7 +40,7 @@ public sealed class EvaluationRunner(IServiceProvider services)
                 new ProductSearchQuery(goldenQuery.Query, golden.Culture, Page: 1, PageSize: RecallCutoff),
                 cancellationToken);
 
-            // El índice devuelve ids internos; el golden set anota ids del origen.
+            // The index returns internal ids; the golden set annotates source ids.
             var ranked = page.Hits
                 .Select(hit => externalIdByInternalId.GetValueOrDefault(hit.ProductId))
                 .OfType<string>()

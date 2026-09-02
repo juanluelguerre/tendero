@@ -6,17 +6,17 @@ using Xunit;
 namespace ElGuerre.Tendero.Api.Tests;
 
 /// <summary>
-/// Lo que cualquier emisor de identidad tiene que cumplir para que Tendero
-/// funcione con él. Es abstracta a propósito: el emisor de desarrollo la hereda
-/// hoy, y Keycloak la heredará cuando llegue, **sin cambiar una línea**.
+/// What any identity provider has to honour for Tendero to work with it.
+/// Abstract on purpose: the development issuer inherits it today, and Keycloak
+/// will inherit it when it arrives, **without changing a line**.
 ///
-/// Ese es el punto de que la identidad sea un puerto (ADR 0003 aplicado a un
-/// sistema externo que no es nuestro). El día del cambio, la pregunta "¿se puede
-/// sustituir?" tiene una respuesta ejecutable en vez de una opinión — y un
-/// Keycloak que no pase esto es un Keycloak que habría roto producción.
+/// That is the point of identity being a port (ADR 0003 applied to an external
+/// system that is not ours). On the day of the swap, "can it be replaced?" has an
+/// executable answer instead of an opinion — and a Keycloak that does not pass
+/// this is a Keycloak that would have broken production.
 ///
-/// El contrato no es una interfaz de C#: es OIDC. Discovery, JWKS, y un token
-/// que la API valide.
+/// The contract is not a C# interface: it is OIDC. Discovery, JWKS, and a token
+/// the API validates.
 /// </summary>
 public abstract class IdentityProviderContractTests : IDisposable
 {
@@ -27,7 +27,7 @@ public abstract class IdentityProviderContractTests : IDisposable
     /// <summary>Ruta base del emisor bajo prueba.</summary>
     protected abstract string IssuerPath { get; }
 
-    /// <summary>Una identidad con rol de tendero que el emisor sepa firmar.</summary>
+    /// <summary>An identity with the shopkeeper role that the issuer can sign for.</summary>
     protected abstract string ShopkeeperSubject { get; }
 
     protected IdentityProviderContractTests() => Client = _factory.CreateClient();
@@ -49,7 +49,7 @@ public abstract class IdentityProviderContractTests : IDisposable
 
         var document = JsonNode.Parse(await response.Content.ReadAsStringAsync(ct))!;
 
-        // Sin issuer ni jwks_uri, JwtBearer no puede ni empezar a validar.
+        // With no issuer and no jwks_uri, JwtBearer cannot even begin to validate.
         Assert.False(string.IsNullOrWhiteSpace(document["issuer"]?.GetValue<string>()));
         Assert.False(string.IsNullOrWhiteSpace(document["jwks_uri"]?.GetValue<string>()));
         Assert.False(string.IsNullOrWhiteSpace(document["token_endpoint"]?.GetValue<string>()));
@@ -66,8 +66,8 @@ public abstract class IdentityProviderContractTests : IDisposable
         var keys = JsonNode.Parse(await response.Content.ReadAsStringAsync(ct))!["keys"]!.AsArray();
 
         Assert.NotEmpty(keys);
-        // `kid` es lo que permite rotar: sin él, cambiar de clave invalida todo
-        // token en vuelo en vez de solaparse.
+        // `kid` is what makes rotation possible: without it, changing keys
+        // invalidates every token in flight instead of overlapping.
         Assert.All(keys, key => Assert.False(string.IsNullOrWhiteSpace(key!["kid"]?.GetValue<string>())));
     }
 
@@ -82,13 +82,13 @@ public abstract class IdentityProviderContractTests : IDisposable
 
         var response = await Client.SendAsync(request, ct);
 
-        // No se comprueba 200: reindexar necesita Postgres y Elasticsearch, y
-        // aquí no hay ninguno. Lo que se comprueba es que la AUTORIZACIÓN pasó,
-        // que es lo único que este contrato mide.
+        // It does not check for a 200: reindexing needs Postgres and
+        // Elasticsearch, and there is neither here. What is checked is that
+        // AUTHORIZATION passed, which is the only thing this contract measures.
         //
-        // El mensaje lleva la cabecera WWW-Authenticate porque es donde JwtBearer
-        // dice POR QUÉ rechazó — firma, emisor, audiencia o caducidad — y sin
-        // ella un 401 es indistinguible de otro.
+        // The message carries the WWW-Authenticate header because that is where
+        // JwtBearer says WHY it refused — signature, issuer, audience or expiry —
+        // and without it one 401 is indistinguishable from another.
         var reason = response.Headers.WwwAuthenticate.ToString();
         Assert.True(
             response.StatusCode is not (HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden),
@@ -112,9 +112,9 @@ public abstract class IdentityProviderContractTests : IDisposable
 
         var token = await GetTokenAsync(ShopkeeperSubject, ct);
 
-        // Cambiar un carácter de la firma: el payload sigue siendo válido y la
-        // firma ya no. Es el fallo que ValidateIssuerSigningKey existe para
-        // atrapar, y el que un emisor falso mal hecho dejaría pasar.
+        // Change one character of the signature: the payload is still valid and
+        // the signature is not. It is the failure ValidateIssuerSigningKey exists
+        // to catch, and the one a badly built fake issuer would let through.
         var tampered = token[..^2] + (token[^2] == 'A' ? "B" : "A") + token[^1];
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/search/reindex");
@@ -130,21 +130,21 @@ public abstract class IdentityProviderContractTests : IDisposable
     {
         var ct = TestContext.Current.CancellationToken;
 
-        // El catálogo es público por decisión escrita, no por olvido. Si alguien
-        // pusiera una política aquí, esto lo diría antes que un usuario.
+        // The catalogue is public by a written decision, not by an oversight. If
+        // somebody put a policy here, this would say so before a user did.
         var response = await Client.GetAsync("/api/catalog/products", ct);
 
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    /// <summary>Cómo se pide un token a ESTE emisor.</summary>
+    /// <summary>How a token is asked of THIS issuer.</summary>
     protected abstract Task<string> GetTokenAsync(string subject, CancellationToken cancellationToken);
 }
 
 /// <summary>
-/// El emisor de desarrollo, cumpliendo el contrato. Tres líneas, que es lo que
-/// debería costar añadir un adaptador cuando la suite está bien escrita —
-/// exactamente como <c>SeedCatalogConnectorContractTests</c>.
+/// The development issuer, honouring the contract. Three lines, which is what
+/// adding an adapter should cost when the suite is well written — exactly like
+/// <c>SeedCatalogConnectorContractTests</c>.
 /// </summary>
 public sealed class DevIssuerContractTests : IdentityProviderContractTests
 {

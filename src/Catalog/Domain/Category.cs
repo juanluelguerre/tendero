@@ -5,16 +5,16 @@ namespace ElGuerre.Tendero.Catalog.Domain;
 public sealed record CategoryChanged(string Code, DateTimeOffset OccurredAt) : IDomainEvent;
 
 /// <summary>
-/// Una categoría del catálogo, con nombre por cultura.
+/// A catalogue category, with a name per culture.
 ///
-/// Antes `Product.Category` era la cadena `COOKWARE` y nada más. Ese código no
-/// es vocabulario de nadie: "induction cookware" no casaba porque en el índice
-/// no había la palabra "cookware", había un código. El campo llegó a salir de
-/// los campos buscables por eso mismo — estaba mapeado como `keyword` y prometía
-/// una coincidencia que no podía ocurrir.
+/// `Product.Category` used to be the string `COOKWARE` and nothing else. That
+/// code is nobody's vocabulary: "induction cookware" did not match because the
+/// index held no word "cookware", it held a code. The field was even taken out
+/// of the searchable fields for that reason — mapped as a `keyword`, it promised
+/// a match that could never happen.
 ///
-/// El CÓDIGO sigue siendo la identidad y no cambia; lo que se añade es el nombre
-/// traducible y el sitio en el árbol.
+/// The CODE is still the identity and does not change; what is added is the
+/// translatable name and the place in the tree.
 /// </summary>
 public sealed class Category : AggregateRoot
 {
@@ -23,10 +23,10 @@ public sealed class Category : AggregateRoot
     public string? ParentCode { get; private set; }
 
     /// <summary>
-    /// La ruta completa de códigos, <c>HOME/KITCHEN/COOKWARE</c>. Se guarda en
-    /// vez de recorrerse porque el índice necesita la rama entera —"Hogar Cocina
-    /// Menaje"— y subir por punteros en cada proyección sería una consulta por
-    /// nivel y por producto.
+    /// The full path of codes, <c>HOME/KITCHEN/COOKWARE</c>. Stored rather than
+    /// walked, because the index needs the whole branch — "Hogar Cocina Menaje"
+    /// — and climbing by pointers on every projection would be one query per
+    /// level per product.
     /// </summary>
     public string Path { get; private set; } = default!;
 
@@ -64,14 +64,14 @@ public sealed class Category : AggregateRoot
         Raise(new CategoryChanged(Code, UpdatedAt));
     }
 
-    /// <summary>Los códigos de la rama, de la raíz a esta.</summary>
+    /// <summary>The branch's codes, from the root down to this one.</summary>
     public IReadOnlyList<string> Ancestry => Path.Split('/');
 }
 
 /// <summary>
-/// El árbol entero, resoluble por código. Igual que con los atributos: son
-/// decenas de filas que cambian poco, y una proyección que consultase por
-/// producto haría N+1 en cada reindexado.
+/// The whole tree, resolvable by code. Same as with the attributes: they are
+/// dozens of rows that change rarely, and a projection querying per product
+/// would be N+1 on every reindex.
 /// </summary>
 public sealed class CategoryTree(IReadOnlyList<Category> categories)
 {
@@ -86,9 +86,9 @@ public sealed class CategoryTree(IReadOnlyList<Category> categories)
         code is null ? null : _byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
 
     /// <summary>
-    /// El texto buscable de una categoría en una cultura: los nombres de toda su
-    /// rama, "Hogar Cocina Menaje de cocina". La rama entera y no sólo la hoja,
-    /// porque quien busca "cocina" espera encontrar lo que hay dentro.
+    /// A category's searchable text in one culture: the names of its whole
+    /// branch, "Hogar Cocina Menaje de cocina". The whole branch and not just
+    /// the leaf, because somebody searching "cocina" expects to find what is inside it.
     /// </summary>
     public string? PathTextIn(string? code, string culture)
     {

@@ -1,18 +1,18 @@
 namespace ElGuerre.Tendero.Tests;
 
 /// <summary>
-/// Un reloj fijo que sólo avanza cuando se le dice. Escrito a mano en vez de
-/// traer <c>Microsoft.Extensions.TimeProvider.Testing</c>: son quince líneas, y
-/// el presupuesto de dependencias del repositorio es deliberadamente pequeño.
+/// A fixed clock that only moves when it is told to. Hand-written rather than
+/// bringing in <c>Microsoft.Extensions.TimeProvider.Testing</c>: it is fifteen
+/// lines, and the repository's dependency budget is deliberately small.
 ///
-/// Se enlaza como fichero en cada proyecto de test que lo necesita. Un proyecto
-/// compartido para una clase sería más ceremonia que código.
+/// It is linked as a file into each test project that needs it. A shared project
+/// for one class would be more ceremony than code.
 /// </summary>
 public sealed class TestClock(DateTimeOffset? start = null) : TimeProvider
 {
     /// <summary>
-    /// Un instante concreto y legible, no <c>UtcNow</c>: si un test falla, el
-    /// mensaje debe contener una fecha que se reconozca como fija.
+    /// A concrete, readable instant rather than <c>UtcNow</c>: when a test fails,
+    /// the message has to contain a date that is recognisably fixed.
     /// </summary>
     public static readonly DateTimeOffset Default = new(2026, 1, 15, 9, 30, 0, TimeSpan.Zero);
 
@@ -20,6 +20,6 @@ public sealed class TestClock(DateTimeOffset? start = null) : TimeProvider
 
     public override DateTimeOffset GetUtcNow() => _now;
 
-    /// <summary>Avanza el reloj y devuelve el nuevo instante.</summary>
+    /// <summary>Moves the clock and returns the new instant.</summary>
     public DateTimeOffset Advance(TimeSpan by) => _now = _now.Add(by);
 }

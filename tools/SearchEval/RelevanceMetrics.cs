@@ -1,24 +1,24 @@
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// NDCG@k y recall@k, funciones puras sobre (ranking, juicios). Están aisladas
-/// de Elasticsearch a propósito: una métrica mal implementada invalida la puerta
-/// de CI en silencio, así que se prueba con valores calculados a mano.
+/// NDCG@k and recall@k, pure functions over (ranking, judgments). They are kept
+/// away from Elasticsearch on purpose: a badly implemented metric invalidates the
+/// CI gate in silence, so it is tested against values worked out by hand.
 /// </summary>
 public static class RelevanceMetrics
 {
-    /// <summary>Relevancia mínima para considerar un resultado "relevante" en recall.</summary>
+    /// <summary>The minimum relevance for a result to count as "relevant" in recall.</summary>
     private const int RelevantFrom = 1;
 
     /// <summary>
-    /// Normalized Discounted Cumulative Gain. La ganancia crece como 2^rel - 1
-    /// (un resultado perfecto vale mucho más que varios mediocres) y se descuenta
-    /// por log2(posición + 1), porque nadie baja. Se normaliza contra el orden
-    /// ideal, así que 1.0 significa "imposible ordenarlo mejor".
+    /// Normalized Discounted Cumulative Gain. Gain grows as 2^rel - 1 (one
+    /// perfect result is worth far more than several mediocre ones) and is
+    /// discounted by log2(position + 1), because nobody scrolls. It is normalised
+    /// against the ideal ordering, so 1.0 means "impossible to order better".
     /// </summary>
-    /// <returns>null si la consulta no tiene ningún juicio relevante: NDCG no
-    /// está definido ahí, y promediar un 0 falso castigaría al motor por una
-    /// anotación incompleta.</returns>
+    /// <returns>null when the query has no relevant judgment at all: NDCG is not
+    /// defined there, and averaging in a false 0 would punish the engine for an
+    /// incomplete annotation.</returns>
     public static double? NdcgAt(
         int k, IReadOnlyList<string> rankedIds, IReadOnlyDictionary<string, int> judgments)
     {
@@ -48,9 +48,9 @@ public static class RelevanceMetrics
     }
 
     /// <summary>
-    /// Proporción de lo relevante que aparece en los primeros k. Vigila la fase
-    /// de recuperación con independencia del orden: si recall cae, el problema es
-    /// que no se encuentran, no que estén mal colocados.
+    /// The proportion of what is relevant that appears in the first k. It watches
+    /// the retrieval stage independently of ordering: if recall falls, the
+    /// problem is that things are not found, not that they are badly placed.
     /// </summary>
     public static double? RecallAt(
         int k, IReadOnlyList<string> rankedIds, IReadOnlyDictionary<string, int> judgments)
@@ -72,6 +72,6 @@ public static class RelevanceMetrics
 
     private static double Gain(int relevance) => Math.Pow(2, relevance) - 1;
 
-    // position es 0-based; la primera posición no se descuenta (log2(2) = 1).
+    // position is 0-based; the first position is not discounted (log2(2) = 1).
     private static double Discount(int position) => Math.Log2(position + 2);
 }

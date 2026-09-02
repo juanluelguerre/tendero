@@ -42,16 +42,17 @@ public sealed class SearchProductsEndpoint : ICarterModule
                 var result = await dispatcher.SendAsync(
                     new SearchProductsQuery(q, resolved, page ?? 1, pageSize ?? 20), ct);
 
-                // La otra mitad de la negociacion: el cliente pide, el servidor
-                // declara en que idioma respondio. Vary porque la respuesta
-                // DEPENDE de Accept-Language cuando no viene el parametro, y una
-                // cache compartida sin esto sirve espanol a quien pidio ingles.
+                // The other half of the negotiation: the client asks, the server
+                // declares which language it answered in. Vary because the
+                // response DEPENDS on Accept-Language when the parameter is
+                // absent, and a shared cache without it serves Spanish to
+                // whoever asked for English.
                 http.Response.Headers.ContentLanguage = resolved;
                 http.Response.Headers.Vary = "Accept-Language";
 
                 return TypedResults.Ok(result);
             })
-            .AllowAnonymous()   // buscar es lo que un agente hace sin identificarse
+            .AllowAnonymous()   // searching is what an agent does without identifying itself
             .WithTags("Search")
             .WithName("SearchProducts");
     }
@@ -60,9 +61,10 @@ public sealed class SearchProductsEndpoint : ICarterModule
 public sealed class SearchProductsHandler(ILexicalProductSearch search)
     : IQueryHandler<SearchProductsQuery, SearchResultPage>
 {
-    // Hoy delega en el léxico. Cuando exista la búsqueda híbrida, este handler
-    // decidirá por feature flag entre léxico / híbrido, y el endpoint no cambia:
-    // el contrato público del storefront queda estable desde el primer día.
+    // Today it delegates to the lexical one. When hybrid search exists, this
+    // handler will choose between lexical and hybrid by feature flag, and the
+    // endpoint does not change: the storefront's public contract has been stable
+    // since day one.
     public Task<SearchResultPage> HandleAsync(SearchProductsQuery query, CancellationToken ct) =>
         search.SearchAsync(new ProductSearchQuery(query.Q, query.Culture, query.Page, query.PageSize), ct);
 }

@@ -28,15 +28,15 @@ public sealed class DefineVariantsTests
         Assert.Equal(6, product.Variants.Count);
         Assert.Equal(1, unitOfWork.SaveCount);
 
-        // El SKU se lee de un vistazo, que es lo que se le pide: es lo que otros
-        // contextos —inventario, carrito, UCP— usan para hablar de esto.
+        // The SKU reads at a glance, which is what is asked of it: it is what
+        // other contexts — inventory, cart, UCP — use to talk about this.
         Assert.NotNull(product.VariantBySku("SHIRT-NAVY-M"));
         Assert.NotNull(product.VariantBySku("SHIRT-BLACK-XL"));
     }
 
     /// <summary>
-    /// El agregado defiende su invariante y el handler la traduce: un 409 con el
-    /// motivo del dominio dice más que un 500 con una traza.
+    /// The aggregate defends its invariant and the handler translates it: a 409
+    /// with the domain's reason says more than a 500 with a stack trace.
     /// </summary>
     [Fact]
     public async Task Redefining_axes_over_existing_variants_is_rejected_with_a_reason()
@@ -71,8 +71,8 @@ public sealed class DefineVariantsTests
     }
 
     /// <summary>
-    /// El producto cartesiano crece rápido, y pegar una lista larga por error no
-    /// debería escribir miles de filas antes de que nadie lo note.
+    /// The cartesian product grows fast, and pasting a long list by mistake
+    /// should not write thousands of rows before anybody notices.
     /// </summary>
     [Fact]
     public void A_matrix_that_would_explode_is_rejected_by_the_validator()

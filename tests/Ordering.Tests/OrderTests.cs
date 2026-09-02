@@ -42,16 +42,16 @@ public sealed class OrderTests
     }
 
     /// <summary>
-    /// La divisa vive en el pedido, no en la primera línea. Sin esto, un pedido
-    /// sin líneas hacía estallar Total con un ArgumentOutOfRange desde dentro
-    /// del agregado — inalcanzable hoy, pero con la espoleta puesta.
+    /// The currency lives on the order, not on the first line. Without this, an
+    /// order with no lines blew Total up with an ArgumentOutOfRange from inside
+    /// the aggregate — unreachable today, but with the fuse already lit.
     /// </summary>
     [Fact]
     public void The_total_of_an_order_with_no_lines_is_zero_in_its_own_currency()
     {
-        // El constructor privado es el que usa EF al materializar; llegar por ahí
-        // es la única forma de construir el estado que preocupa, porque ningún
-        // método público deja un pedido sin líneas.
+        // The private constructor is the one EF uses when materialising; going in
+        // that way is the only way to build the state in question, because no
+        // public method leaves an order with no lines.
         var materialised = (Order)Activator.CreateInstance(typeof(Order), nonPublic: true)!;
         typeof(Order).GetProperty(nameof(Order.Currency))!.SetValue(materialised, "EUR");
 
@@ -78,9 +78,9 @@ public sealed class OrderTests
     [Fact]
     public void Delivering_an_order_records_that_it_happened()
     {
-        // Era la unica transicion muda de la maquina de estados, y resulta ser
-        // la que abre la ventana de devolucion: el bucle de motivos de devolucion
-        // de la fase 4 no tiene otro hecho del que colgarse.
+        // It was the state machine's only mute transition, and it turns out to be
+        // the one that opens the returns window: phase 4's return-reason loop has
+        // no other fact to hang from.
         var order = OrderBuilder.Default().Build();
         order.AuthorizePayment(Clock);
         order.Confirm(Clock);
@@ -95,8 +95,8 @@ public sealed class OrderTests
     [Fact]
     public void Every_reachable_transition_records_a_domain_event()
     {
-        // Una transicion sin evento es un cambio de estado que el resto del
-        // sistema no puede ver: el outbox no lleva nada y ningun worker despierta.
+        // A transition with no event is a state change the rest of the system
+        // cannot see: the outbox carries nothing and no worker wakes up.
         var order = OrderBuilder.Default().Build();
 
         foreach (var step in new Action[]

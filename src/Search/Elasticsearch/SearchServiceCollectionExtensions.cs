@@ -2,16 +2,16 @@ using ElGuerre.Tendero.Search.Contracts;
 using Elastic.Clients.Elasticsearch;
 using Microsoft.Extensions.DependencyInjection;
 
-// El namespace importa: la regla de arquitectura 4 dice que el cliente de
-// Elastic no se ve fuera de Tendero.Search.Elasticsearch, y la composición
-// de esos servicios es precisamente código de Elasticsearch.
+// The namespace matters: architecture rule 4 says the Elastic client is not
+// visible outside Tendero.Search.Elasticsearch, and composing those services is
+// precisely Elasticsearch code.
 namespace ElGuerre.Tendero.Search.Elasticsearch;
 
 public static class SearchServiceCollectionExtensions
 {
     /// <summary>
-    /// Búsqueda léxica: dependencia dura y modo degradado permanente (ADR 0004).
-    /// Las capas de IA se enchufarán encima, nunca por debajo.
+    /// Lexical search: a hard dependency and the permanent degraded mode (ADR
+    /// 0004). The AI layers plug in on top, never underneath.
     /// </summary>
     public static IServiceCollection AddLexicalSearch(this IServiceCollection services, string endpoint)
     {
@@ -24,8 +24,8 @@ public static class SearchServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>Crea products_es y products_en al arrancar. Sólo lo hospeda el
-    /// worker: que dos réplicas de la API compitan por crear el índice no aporta nada.</summary>
+    /// <summary>Creates products_es and products_en at startup. Only the worker
+    /// hosts it: two API replicas racing to create the index adds nothing.</summary>
     public static IServiceCollection AddSearchIndexInitializer(this IServiceCollection services)
     {
         services.AddHostedService<SearchIndexInitializer>();

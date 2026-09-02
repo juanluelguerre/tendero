@@ -32,9 +32,9 @@ public sealed class VariantTests
     }
 
     /// <summary>
-    /// Reimportar no puede duplicar. Es la misma regla que <c>LinkExternal</c> y
-    /// <c>AddImage</c> ya cumplen: todo lo que un conector puede mandar dos veces
-    /// es idempotente por identidad.
+    /// Re-importing cannot duplicate. It is the same rule <c>LinkExternal</c> and
+    /// <c>AddImage</c> already honour: everything a connector can send twice is
+    /// idempotent by identity.
     /// </summary>
     [Fact]
     public void Adding_the_same_sku_twice_returns_the_first_one()
@@ -50,8 +50,8 @@ public sealed class VariantTests
     }
 
     /// <summary>
-    /// Dos variantes con las mismas coordenadas son la misma variante con dos
-    /// SKUs, y eso convierte el selector del PDP en una lotería.
+    /// Two variants with the same coordinates are one variant with two SKUs, and
+    /// that turns the PDP's picker into a lottery.
     /// </summary>
     [Fact]
     public void Two_variants_cannot_share_the_same_axis_values()
@@ -79,8 +79,8 @@ public sealed class VariantTests
     }
 
     /// <summary>
-    /// Cambiar los ejes con variantes vivas dejaría a cada una descrita por unas
-    /// coordenadas que ya no significan lo mismo.
+    /// Changing the axes with live variants would leave each of them described by
+    /// coordinates that no longer mean the same thing.
     /// </summary>
     [Fact]
     public void Axes_cannot_change_while_variants_exist()
@@ -108,8 +108,8 @@ public sealed class VariantTests
     }
 
     /// <summary>
-    /// Una variante retirada no puede seguir fijando el precio "desde": la
-    /// tarjeta anunciaría un precio que no se puede comprar.
+    /// A retired variant cannot go on setting the "from" price: the card would
+    /// advertise a price nobody can buy.
     /// </summary>
     [Fact]
     public void A_discontinued_variant_leaves_the_price_range()
@@ -129,8 +129,8 @@ public sealed class VariantTests
     }
 
     /// <summary>
-    /// El orden lo fija el producto, no el diccionario: de un diccionario no se
-    /// puede sacar si la etiqueta dice "azul marino · 38" o al revés.
+    /// The product fixes the order, not the dictionary: a dictionary cannot say
+    /// whether the label reads "azul marino · 38" or the other way round.
     /// </summary>
     [Fact]
     public void The_label_follows_the_declared_axis_order()

@@ -1,11 +1,11 @@
 /**
- * Formato de precio para las dos apps. Estaba escrito identico en la pagina de
- * busqueda del storefront y en la cola de revision del backoffice.
+ * Price formatting for both apps. It was written identically in the storefront's
+ * search page and in the backoffice's review queue.
  *
- * Se comparte porque es COMPORTAMIENTO, no identidad (ADR 0010): agrupacion de
- * millares, posicion del simbolo y separador decimal cambian con la cultura, y
- * el Intl del navegador ya sabe hacerlo. Lo que NO se comparte es como se ve el
- * precio — eso es de cada surface, y vive en su CSS.
+ * It is shared because it is BEHAVIOUR, not identity (ADR 0010): thousands
+ * grouping, symbol position and decimal separator all change with the culture,
+ * and the browser's Intl already knows how. What is NOT shared is how the price
+ * LOOKS — that belongs to each surface, and lives in its CSS.
  */
 export function formatPrice(amount: number, currency: string, culture: string): string {
   return new Intl.NumberFormat(culture, { style: 'currency', currency }).format(amount);

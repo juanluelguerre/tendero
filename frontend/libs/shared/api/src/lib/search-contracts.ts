@@ -1,15 +1,15 @@
 /**
- * Contrato de `GET /api/search`, **derivado** del documento de OpenAPI.
+ * The contract for `GET /api/search`, **derived** from the OpenAPI document.
  *
- * Igual que los de catálogo: era un espejo a mano de `Search.Contracts` y ahora
- * sale de `docs/openapi/tendero.json`, con un test que impide que el documento
- * y la API se separen.
+ * Same as the catalogue ones: it was a hand mirror of `Search.Contracts` and now
+ * comes out of `docs/openapi/tendero.json`, with a test that stops the document
+ * and the API from parting ways.
  *
- * `imageId` sigue siendo la clave en el almacén, no una URL: la compone el
- * cliente como `/api/images/{imageId}` para que cambiar de CDN no sea un UPDATE
- * sobre millones de filas (ADR 0011).
+ * `imageId` is still the key in the store and not a URL: the client composes it
+ * as `/api/images/{imageId}` so that changing CDN is not an UPDATE over millions
+ * of rows (ADR 0011).
  *
- * Regenerar: `npm run generate:api-types` desde `frontend/`.
+ * Regenerate with `npm run generate:api-types` from `frontend/`.
  */
 import type { components } from './generated/schema';
 

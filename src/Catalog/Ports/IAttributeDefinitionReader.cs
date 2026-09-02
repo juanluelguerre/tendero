@@ -3,16 +3,16 @@ using ElGuerre.Tendero.Catalog.Domain;
 namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
-/// Todas las definiciones de atributo, de una vez.
+/// Every attribute definition, at once.
 ///
-/// Es un puerto y no una consulta suelta porque lo necesitan TRES sitios: el
-/// mapeador de importación (para resolver "azul marino" a NAVY_BLUE), la
-/// proyección al índice (para renderizar "navy blue" en el índice inglés) y el
-/// backoffice. Con tres consumidores, CLAUDE.md dice que es un puerto.
+/// A port and not a loose query because THREE places need it: the import mapper
+/// (to resolve "azul marino" to NAVY_BLUE), the index projection (to render
+/// "navy blue" into the English index) and the backoffice. With three consumers,
+/// CLAUDE.md says it is a port.
 ///
-/// Devuelve el catálogo entero y no una definición cada vez a propósito: son
-/// decenas de filas que cambian con muy poca frecuencia, y una proyección que
-/// consultase por atributo haría N+1 en cada reindexado.
+/// It returns the whole catalogue rather than one definition at a time, on
+/// purpose: these are dozens of rows that change very rarely, and a projection
+/// querying per attribute would be N+1 on every reindex.
 /// </summary>
 public interface IAttributeDefinitionReader
 {
@@ -20,9 +20,9 @@ public interface IAttributeDefinitionReader
 }
 
 /// <summary>
-/// Las definiciones, indexadas por código y resolubles por alias. Es una clase
-/// y no un diccionario porque la resolución por alias es lógica, y repartirla
-/// por cada consumidor es como se acaba con tres reglas distintas.
+/// The definitions, indexed by code and resolvable by alias. A class and not a
+/// dictionary because alias resolution is logic, and spreading it across each
+/// consumer is how you end up with three different rules.
 /// </summary>
 public sealed class AttributeDefinitions(IReadOnlyList<AttributeDefinition> definitions)
 {
@@ -36,7 +36,7 @@ public sealed class AttributeDefinitions(IReadOnlyList<AttributeDefinition> defi
     public AttributeDefinition? ByCode(string code) =>
         _byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
 
-    /// <summary>La definición que responde a la clave que manda un origen.</summary>
+    /// <summary>The definition that answers to the key a source sends.</summary>
     public AttributeDefinition? ForSourceKey(string key) =>
         ByCode(key) ?? All.FirstOrDefault(definition => definition.AnswersTo(key));
 }

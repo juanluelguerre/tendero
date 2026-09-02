@@ -4,22 +4,21 @@ using Microsoft.EntityFrameworkCore;
 namespace ElGuerre.Tendero.Workers;
 
 /// <summary>
-/// Aplica las migraciones pendientes al arrancar, para que
-/// <c>dotnet run --project src/AppHost</c> siga funcionando recién clonado el
-/// repositorio.
+/// Applies the pending migrations at startup, so that
+/// <c>dotnet run --project src/AppHost</c> keeps working on a fresh clone.
 ///
-/// Antes esto era <c>EnsureCreatedAsync</c>, con una nota diciendo que las
-/// migraciones llegarían cuando hubiera un esquema que preservar. El problema es
-/// que <c>EnsureCreated</c> **no hace nada si el esquema ya existe**: no
-/// compara, no avisa, no falla. El primer cambio aditivo del modelo habría
-/// dejado toda base de datos de desarrollo ya creada en silencio incorrecta, y
-/// el síntoma habría aparecido mucho más tarde, como una columna que no existe.
-/// Es la misma clase de fallo que documenta ADR 0012: una promesa escrita sin
-/// nada que la ejecute.
+/// This used to be <c>EnsureCreatedAsync</c>, under a note saying migrations
+/// would arrive when there was a schema worth preserving. The problem is that
+/// <c>EnsureCreated</c> **does nothing when the schema already exists**: it does
+/// not compare, does not warn, does not fail. The first additive model change
+/// would have left every already-created development database silently wrong, and
+/// the symptom would have shown up much later as a column that does not exist.
+/// Same class of failure ADR 0012 documents: a promise written with nothing to
+/// execute it.
 ///
-/// Sigue restringido a Development. En producción aplicar migraciones al
-/// arrancar es una decisión de despliegue, no del proceso — y este proyecto no
-/// tiene aún un destino de despliegue sobre el que decidirlo.
+/// It is still restricted to Development. In production, applying migrations at
+/// startup is a deployment decision and not the process's — and this project has
+/// no deployment target to decide it against yet.
 /// </summary>
 public sealed class SchemaMigrator(
     IServiceScopeFactory scopeFactory,
@@ -34,8 +33,8 @@ public sealed class SchemaMigrator(
         if (pending.Length == 0)
             return;
 
-        // Nombrarlas al aplicarlas: cuando algo salga mal, lo primero que se
-        // quiere saber es qué migración se estaba aplicando.
+        // Naming them as they are applied: when something goes wrong, the first
+        // thing anybody wants to know is which migration was running.
         logger.LogInformation(
             "Applying {Count} pending migration(s): {Migrations}", pending.Length, string.Join(", ", pending));
 

@@ -11,9 +11,9 @@ type SearchState =
   | { status: 'failed' };
 
 /**
- * La home del storefront es la busqueda: lo primero que hace un tendero es
- * escuchar que buscas. Lo que se ve aqui es EXACTAMENTE lo que mide la puerta
- * de NDCG (tools/SearchEval) — mismo endpoint, mismo ranking.
+ * The storefront's home is the search: the first thing a shopkeeper does is
+ * listen to what you are looking for. What is seen here is EXACTLY what the NDCG
+ * gate measures (tools/SearchEval) — same endpoint, same ranking.
  */
 @Component({
   selector: 'storefront-search-page',
@@ -28,11 +28,11 @@ export class SearchPage {
   protected readonly state = signal<SearchState>({ status: 'idle' });
 
   /**
-   * Imagenes que el navegador no ha podido cargar. Un catalogo real las pierde
-   * constantemente — CDN caido, activo borrado, URL mal migrada — y una ficha
-   * con el icono de imagen rota se ve peor que una sin foto. El seed del repo
-   * apunta a cdn.example.com, que no resuelve a proposito, asi que este camino
-   * es el que se ve al arrancar recien clonado.
+   * Images the browser could not load. A real catalogue loses them constantly —
+   * a CDN down, a deleted asset, a badly migrated URL — and a card showing the
+   * broken-image icon looks worse than one with no photo. The repo's seed points
+   * at cdn.example.com, which deliberately does not resolve, so this path is the
+   * one you see on a fresh clone.
    */
   protected readonly broken = signal<ReadonlySet<string>>(new Set());
 
@@ -62,8 +62,8 @@ export class SearchPage {
     });
   }
 
-  /** La URL se compone aquí, no viene del servidor: el índice guarda la clave,
-   *  así que meter un CDN delante no toca ni el backend ni el dominio. */
+  /** The URL is composed here and does not come from the server: the index
+   *  stores the key, so putting a CDN in front touches neither backend nor domain. */
   protected imageUrl(hit: SearchHit): string | null {
     return hit.imageId ? `/api/images/${hit.imageId}` : null;
   }
@@ -71,11 +71,11 @@ export class SearchPage {
   protected price(hit: SearchHit): string {
     const culture = this.transloco.getActiveLang();
 
-    // Un producto con varias variantes NO tiene un precio, tiene un rango, y
-    // ensenar solo el de la variante que caso miente en las dos direcciones:
-    // parece caro si gano la talla grande y barato si gano la pequena.
-    // priceFrom/priceTo viajan en el propio documento (ADR 0015), asi que la
-    // tarjeta no necesita una segunda llamada para decirlo.
+    // A product with several variants does NOT have a price, it has a range, and
+    // showing only the matched variant's lies in both directions: it looks
+    // expensive if the large size won and cheap if the small one did.
+    // priceFrom/priceTo travel in the document itself (ADR 0015), so the card
+    // needs no second call to say it.
     if (hit.priceFrom < hit.priceTo) {
       return `${formatPrice(hit.priceFrom, hit.priceCurrency, culture)} – ${formatPrice(
         hit.priceTo,

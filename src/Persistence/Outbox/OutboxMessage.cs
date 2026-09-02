@@ -1,16 +1,16 @@
 namespace ElGuerre.Tendero.Persistence.Outbox;
 
 /// <summary>
-/// Fila de la bandeja de salida. Se escribe en la MISMA transacción que el
-/// cambio de estado que la originó: si el commit falla, el efecto lateral no
-/// existe; si tiene éxito, el worker acabará ejecutándolo (CLAUDE.md, 7).
+/// A row in the outbox. It is written in the SAME transaction as the state
+/// change that raised it: if the commit fails the side effect does not exist; if
+/// it succeeds, the worker will eventually run it (CLAUDE.md, 7).
 /// </summary>
 public sealed class OutboxMessage
 {
     public Guid Id { get; private set; }
 
-    /// <summary>"Namespace.Tipo, Ensamblado" — suficiente para Type.GetType sin
-    /// atarse a la versión del ensamblado.</summary>
+    /// <summary>"Namespace.Type, Assembly" — enough for Type.GetType without
+    /// tying itself to the assembly's version.</summary>
     public string Type { get; private set; } = default!;
 
     public string Payload { get; private set; } = default!;
@@ -40,8 +40,8 @@ public sealed class OutboxMessage
     public void MarkFailed(string error)
     {
         Attempts++;
-        // Se corta por delante: el tipo de excepción y las primeras líneas de
-        // la traza son lo que dice qué pasó; el final de una traza profunda, no.
+        // Truncated from the front: the exception type and the first lines of the
+        // trace are what say what happened; the tail of a deep trace is not.
         Error = error.Length > 4000 ? error[..4000] : error;
     }
 }

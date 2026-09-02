@@ -6,19 +6,20 @@ import { CatalogService } from '../../data-access/catalog.service';
 
 interface AxisDraft {
   code: string;
-  /** Opciones separadas por coma, que es como se pegan desde una hoja de calculo. */
+  /** Comma-separated options, which is how they get pasted from a spreadsheet. */
   options: string;
 }
 
 /**
- * Declarar por que ejes varia un producto y generar la matriz.
+ * Declaring which axes a product varies by, and generating the matrix.
  *
- * Es una pantalla de tendero, no de importacion: un origen puede traer variantes
- * o no, pero decidir que una camiseta se vende en tres colores por cuatro tallas
- * es una decision de catalogo.
+ * It is a shopkeeper's screen, not an import one: a source may bring variants or
+ * not, but deciding that a shirt sells in three colours by four sizes is a
+ * catalogue decision.
  *
- * Se genera el producto cartesiano entero a proposito. Retirar despues las tres
- * combinaciones que no existen cuesta menos que crear las veintiuna que si.
+ * The whole cartesian product is generated on purpose. Retiring the three
+ * combinations that do not exist afterwards costs less than creating the
+ * twenty-one that do.
  */
 @Component({
   selector: 'backoffice-define-variants',
@@ -93,8 +94,8 @@ export class DefineVariantsPage {
   protected readonly created = signal<number | null>(null);
   protected readonly failed = signal<string | null>(null);
 
-  /** Cuantas variantes saldrian. Se ensena ANTES de pulsar, porque el producto
-   *  cartesiano crece mas rapido de lo que la intuicion espera. */
+  /** How many variants would come out. It is shown BEFORE you press, because the
+   *  cartesian product grows faster than intuition expects. */
   protected combinations(): number {
     const counts = this.axes()
       .map((axis) => this.parse(axis.options).length)
@@ -125,8 +126,8 @@ export class DefineVariantsPage {
       );
       this.created.set(response.created);
     } catch (error: unknown) {
-      // El 409 del servidor trae el motivo del dominio; ensenarlo es mas util
-      // que un "algo ha fallado" que obliga a abrir la consola.
+      // The server's 409 carries the domain's reason; showing it is more useful
+      // than a "something went wrong" that forces you to open the console.
       const conflict = error as { error?: string };
       this.failed.set(typeof conflict.error === 'string' ? conflict.error : 'Could not define the variants.');
     } finally {

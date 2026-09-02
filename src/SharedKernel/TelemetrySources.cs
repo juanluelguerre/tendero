@@ -1,16 +1,16 @@
 namespace ElGuerre.Tendero.SharedKernel;
 
 /// <summary>
-/// Los nombres de <c>ActivitySource</c> y <c>Meter</c> del sistema, en un solo
-/// sitio. Añadir un slice con E/S significa añadir aquí su nombre — si no
-/// aparece en <see cref="All"/>, OpenTelemetry no lo registra y el slice deja de
-/// trazarse sin que nada falle.
+/// The system's <c>ActivitySource</c> and <c>Meter</c> names, in one place.
+/// Adding a slice with I/O means adding its name here — if it does not appear in
+/// <see cref="All"/>, OpenTelemetry does not register it and the slice stops
+/// being traced without anything failing.
 ///
-/// Viven en el SharedKernel y no en ServiceDefaults porque hacen falta en los dos
-/// extremos: quien ABRE el span (un slice de Catalog o de Search) y quien lo
-/// REGISTRA (la composition root). Mientras fueron literales en cada slice, el
-/// acuerdo era una coincidencia de cadenas que ningún compilador comprobaba, y
-/// el castigo por una errata era una traza vacía en el dashboard.
+/// They live in SharedKernel and not in ServiceDefaults because both ends need
+/// them: whoever OPENS the span (a Catalog or Search slice) and whoever
+/// REGISTERS it (the composition root). While they were literals in each slice,
+/// the agreement was a string coincidence no compiler checked, and the penalty
+/// for a typo was an empty trace in the dashboard.
 /// </summary>
 public static class TelemetrySources
 {

@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace ElGuerre.Tendero.Catalog.Adapters;
 
 /// <summary>
-/// Lee imágenes de origen por HTTP o del disco, según el esquema del Uri. Es el
-/// único sitio que sabe que un origen puede ser remoto: ni el slice de
-/// importación ni el dominio se enteran.
+/// Reads source images over HTTP or from disk, depending on the Uri's scheme.
+/// It is the only place that knows a source can be remote: neither the import
+/// slice nor the domain finds out.
 /// </summary>
 internal sealed class ExternalImageReader(
     HttpClient http,
@@ -33,9 +33,9 @@ internal sealed class ExternalImageReader(
         }
         catch (Exception exception) when (exception is HttpRequestException or IOException or TaskCanceledException)
         {
-            // Una imagen ilegible no puede tumbar la importación de un catálogo
-            // entero: se registra, el producto entra sin ella y se reintenta en
-            // la siguiente importación.
+            // One unreadable image cannot bring down the import of a whole
+            // catalogue: it is logged, the product goes in without it, and the
+            // next import retries.
             logger.LogWarning(exception, "Could not read image {Location}", image.Location);
             return null;
         }

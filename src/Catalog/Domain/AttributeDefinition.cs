@@ -3,88 +3,88 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Catalog.Domain;
 
 /// <summary>
-/// Qué clase de dato es un atributo. Decide cómo se guarda, cómo se valida y
-/// cómo se renderiza al índice.
+/// What kind of data an attribute is. It decides how the value is stored, how it
+/// is validated and how it is rendered into the index.
 /// </summary>
 public enum AttributeKind
 {
-    /// <summary>Texto libre en una sola lengua (un código de fabricante).</summary>
+    /// <summary>Free text in a single language (a manufacturer code).</summary>
     Text,
 
-    /// <summary>Texto libre de cara al usuario, y por tanto traducible.</summary>
+    /// <summary>User-facing free text, and therefore translatable.</summary>
     LocalizedText,
 
     Number,
     Boolean,
 
-    /// <summary>Uno de un conjunto cerrado de opciones con etiqueta por cultura.</summary>
+    /// <summary>One of a closed set of options, each labelled per culture.</summary>
     Option
 }
 
 /// <summary>
-/// Una opción posible. El CÓDIGO es estable y la etiqueta es texto de cara al
-/// usuario, luego <see cref="LocalizedText"/> (invariante 6).
+/// One possible option. The CODE is stable and the label is user-facing text,
+/// hence <see cref="LocalizedText"/> (invariant 6).
 ///
-/// Esta separación es la que arregla las consultas inglesas que puntúan 0.000:
-/// hoy el catálogo guarda "azul marino" y nada sabe que en inglés eso se dice
-/// "navy blue".
+/// This separation is what fixes the English queries scoring 0.000: today the
+/// catalogue stores "azul marino" and nothing knows that in English that is
+/// called "navy blue".
 /// </summary>
 public sealed record AttributeOption(string Code, LocalizedText Label);
 
 public sealed record AttributeDefinitionChanged(string Code, DateTimeOffset OccurredAt) : IDomainEvent;
 
 /// <summary>
-/// Qué significa un atributo, una sola vez y para todo el catálogo.
+/// What an attribute means, once and for the whole catalogue.
 ///
-/// Antes los atributos eran <c>Dictionary&lt;string,string&gt;</c>: sin tipo, sin
-/// unidad, sin etiqueta y sin traducción. <c>SetAttribute("colour", "banana")</c>
-/// se aceptaba, y "azul marino" era literalmente el dato — con lo que el índice
-/// inglés contenía español y ninguna consulta inglesa podía casarlo.
+/// Attributes used to be a <c>Dictionary&lt;string,string&gt;</c>: no type, no
+/// unit, no label and no translation. <c>SetAttribute("colour", "banana")</c>
+/// was accepted, and "azul marino" was literally the data — so the English index
+/// contained Spanish and no English query could match it.
 ///
-/// Es un agregado propio y no una tabla de referencia dentro de Product porque
-/// tiene su propio ciclo de vida: el tendero define "COLOR" una vez y mil
-/// productos lo usan.
+/// An aggregate of its own rather than a lookup table inside Product, because it
+/// has its own lifecycle: the shopkeeper defines "COLOR" once and a thousand
+/// products use it.
 /// </summary>
 public sealed class AttributeDefinition : AggregateRoot
 {
     private readonly List<AttributeOption> _options = [];
     private readonly List<string> _aliases = [];
 
-    /// <summary>Estable y en mayúsculas: es la clave con la que un producto se
-    /// refiere a esto, y cambiarla reescribiría todo el catálogo.</summary>
+    /// <summary>Stable and uppercase: it is the key a product refers to this by,
+    /// and changing it would rewrite the whole catalogue.</summary>
     public string Code { get; private set; } = default!;
 
     public LocalizedText Label { get; private set; } = default!;
     public AttributeKind Kind { get; private set; }
 
-    /// <summary>"mm", "W", "L". Va aparte del valor para que el número siga
-    /// siendo un número.</summary>
+    /// <summary>"mm", "W", "L". Kept apart from the value so that the number
+    /// stays a number.</summary>
     public string? Unit { get; private set; }
 
-    /// <summary>Si puede distinguir variantes (COLOR sí, POTENCIA no).</summary>
+    /// <summary>Whether it can tell variants apart (COLOR yes, WATTAGE no).</summary>
     public bool IsVariantAxis { get; private set; }
 
-    /// <summary>Si aparece como faceta en la búsqueda.</summary>
+    /// <summary>Whether it shows up as a search facet.</summary>
     public bool IsFacet { get; private set; }
 
-    /// <summary>Si su texto entra en el índice. Un código de fabricante no
-    /// debería: mete ruido y nadie lo teclea.</summary>
+    /// <summary>Whether its text enters the index. A manufacturer code should
+    /// not: it adds noise and nobody types it.</summary>
     public bool IsSearchable { get; private set; }
 
     /// <summary>
-    /// Propuesta por el importador y pendiente de que un humano le ponga
-    /// etiquetas. Es la misma idea que Draft en un producto: importar no
-    /// publica, y aquí tampoco define.
+    /// Proposed by the importer and waiting for a human to give it labels. Same
+    /// idea as Draft on a product: importing does not publish, and here it does
+    /// not define either.
     /// </summary>
     public bool IsDraft { get; private set; }
 
     public IReadOnlyList<AttributeOption> Options => _options;
 
     /// <summary>
-    /// Cómo llama cada origen a esto: <c>genero</c>, <c>gender</c>,
-    /// <c>g:gender</c>. Se declaran en vez de adivinarse por la etiqueta porque
-    /// adivinar falla justo donde duele — "genero" sin tilde no casa con la
-    /// etiqueta "género", y el fallo es silencioso.
+    /// What each source calls this: <c>genero</c>, <c>gender</c>,
+    /// <c>g:gender</c>. Declared rather than guessed from the label, because
+    /// guessing fails exactly where it hurts — "genero" without the accent does
+    /// not match the label "género", and the failure is silent.
     /// </summary>
     public IReadOnlyList<string> Aliases => _aliases;
 
@@ -125,7 +125,7 @@ public sealed class AttributeDefinition : AggregateRoot
         return definition;
     }
 
-    /// <summary>Añade o reemplaza una opción. Idempotente por código.</summary>
+    /// <summary>Adds or replaces an option. Idempotent by code.</summary>
     public void AddOption(TimeProvider clock, string code, LocalizedText label)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
@@ -149,7 +149,7 @@ public sealed class AttributeDefinition : AggregateRoot
         Touch(clock);
     }
 
-    /// <summary>Si esta definición responde a la clave que manda un origen.</summary>
+    /// <summary>Whether this definition answers to the key a source sends.</summary>
     public bool AnswersTo(string key)
     {
         var normalised = Normalise(key);
@@ -171,10 +171,10 @@ public sealed class AttributeDefinition : AggregateRoot
     }
 
     /// <summary>
-    /// Busca la opción cuyo texto coincide con lo que manda un origen, EN
-    /// CUALQUIER cultura. Un conector español manda "azul marino" y un feed de
-    /// Google manda "navy blue"; los dos apuntan a <c>NAVY_BLUE</c>, y quien
-    /// tiene que saberlo es el catálogo, no cada conector.
+    /// Finds the option whose text matches what a source sends, IN ANY culture.
+    /// A Spanish connector sends "azul marino" and a Google feed sends "navy
+    /// blue"; both point at <c>NAVY_BLUE</c>, and the one that has to know that
+    /// is the catalogue, not each connector.
     /// </summary>
     public AttributeOption? ResolveOption(string incoming)
     {
@@ -187,7 +187,7 @@ public sealed class AttributeDefinition : AggregateRoot
                        string.Equals(label, trimmed, StringComparison.OrdinalIgnoreCase)));
     }
 
-    /// <summary>Cómo se lee esto en una cultura: "azul marino" / "navy blue".</summary>
+    /// <summary>How this reads in one culture: "azul marino" / "navy blue".</summary>
     public string LabelForOption(string optionCode, string culture) =>
         _options.FirstOrDefault(option =>
             string.Equals(option.Code, optionCode, StringComparison.OrdinalIgnoreCase))
@@ -200,8 +200,8 @@ public sealed class AttributeDefinition : AggregateRoot
     }
 
     /// <summary>
-    /// Mayúsculas y guiones bajos. Un código con espacios o acentos acaba
-    /// escapado en una URL o en un nombre de campo del índice.
+    /// Uppercase and underscores. A code with spaces or accents ends up escaped
+    /// in a URL or in an index field name.
     /// </summary>
     public static string Normalise(string code) =>
         code.Trim().Replace(' ', '_').Replace('-', '_').ToUpperInvariant();

@@ -12,10 +12,10 @@ import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
 /**
- * El unico sitio del backoffice que sabe como se llaman los endpoints de
- * catalogo. La cola de revision lee de AQUI y no del indice de busqueda: lo que
- * se revisa es justo lo que todavia no esta indexado, porque solo lo Active se
- * indexa.
+ * The only place in the backoffice that knows what the catalogue endpoints are
+ * called. The review queue reads from HERE and not from the search index: what
+ * is under review is precisely what is not indexed yet, because only Active is
+ * indexed.
  */
 @Injectable({ providedIn: 'root' })
 export class CatalogService {
@@ -33,8 +33,8 @@ export class CatalogService {
       .set('page', page)
       .set('pageSize', pageSize);
 
-    // Sin el parametro, no con el vacio: la API rechaza un estado desconocido,
-    // y "" lo es.
+    // No parameter at all rather than an empty one: the API rejects an unknown
+    // status, and "" is one.
     if (status) params = params.set('status', status);
 
     return this.http.get<ProductListPage>(`${this.baseUrl}/api/catalog/products`, { params });
@@ -52,10 +52,10 @@ export class CatalogService {
   }
 
   /**
-   * Genera la matriz de variantes: el producto cartesiano de los ejes. Se manda
-   * entera porque es lo que un tendero espera al declarar "colores x tallas", y
-   * retirar despues las combinaciones que no existen cuesta menos que crearlas
-   * una a una.
+   * Generates the variant matrix: the cartesian product of the axes. It is sent
+   * whole because that is what a shopkeeper expects on declaring "colours ×
+   * sizes", and retiring the combinations that do not exist afterwards costs
+   * less than creating them one by one.
    */
   defineVariants(
     productId: string,
@@ -67,7 +67,7 @@ export class CatalogService {
     );
   }
 
-  /** Las definiciones de atributo, con su etiqueta en todas las culturas. */
+  /** The attribute definitions, with their label in every culture. */
   attributeDefinitions(): Observable<AttributeDefinitionList> {
     return this.http.get<AttributeDefinitionList>(`${this.baseUrl}/api/catalog/attributes`);
   }

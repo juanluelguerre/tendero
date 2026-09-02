@@ -4,10 +4,10 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Catalog.Ports;
 
 /// <summary>
-/// Acceso al agregado Product. Vivía dentro del slice ImportProducts mientras
-/// fue el único que lo usaba; con PublishProduct pasa a ser compartido, y la
-/// regla dice que lo compartido sale a puertos, nunca a una referencia entre
-/// slices (CLAUDE.md, invariante 2). El test de arquitectura lo comprueba.
+/// Access to the Product aggregate. It lived inside the ImportProducts slice
+/// while that was its only user; with PublishProduct it became shared, and the
+/// rule says what is shared goes out to a port, never to a reference between
+/// slices (CLAUDE.md, invariant 2). The architecture test checks it.
 /// </summary>
 public interface IProductRepository
 {
@@ -16,15 +16,15 @@ public interface IProductRepository
     void Add(Product product);
 }
 
-/// <summary>Una página de productos con el total de la consulta completa, no el
-/// de la página: una cola de revisión necesita saber cuántos quedan.</summary>
+/// <summary>A page of products carrying the total of the whole query, not of the
+/// page: a review queue needs to know how many are left.</summary>
 public sealed record ProductPage(IReadOnlyList<Product> Items, int Total);
 
 /// <summary>
-/// Lado de lectura del catálogo. Separado de <see cref="IProductRepository"/>
-/// porque son responsabilidades distintas: aquél carga agregados para mutarlos,
-/// éste proyecta listados para pintarlos. Mezclarlas acaba en un repositorio con
-/// veinte métodos del que nadie sabe qué mitad usa cada slice.
+/// The catalogue's read side. Separate from <see cref="IProductRepository"/>
+/// because they are different responsibilities: that one loads aggregates to
+/// mutate them, this one projects listings to render them. Mixing them ends in a
+/// repository with twenty methods where nobody knows which half each slice uses.
 /// </summary>
 public interface IProductCatalogReader
 {
@@ -32,9 +32,9 @@ public interface IProductCatalogReader
 }
 
 /// <summary>
-/// Confirma la unidad de trabajo. Los eventos de dominio pendientes viajan a la
-/// tabla outbox en ESTA misma transacción (invariante 7): quien no llama aquí,
-/// no ha publicado nada.
+/// Commits the unit of work. Pending domain events travel to the outbox table in
+/// THIS same transaction (invariant 7): whoever does not call here has published
+/// nothing.
 /// </summary>
 public interface IUnitOfWork
 {

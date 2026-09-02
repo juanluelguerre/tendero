@@ -7,28 +7,28 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ElGuerre.Tendero.SearchEval;
 
 /// <summary>
-/// Indexa el catálogo semilla directamente desde el conector, sin pasar por
-/// Postgres ni por el outbox. La evaluación mide RELEVANCIA: meter la
-/// persistencia en medio sólo añadiría formas de fallar que no son la que se
-/// está midiendo. Lo que llega al índice es el mismo
-/// <c>ProductSearchDocument</c> que produce la aplicación.
+/// Indexes the seed catalogue straight from the connector, without going through
+/// Postgres or the outbox. The evaluation measures RELEVANCE: putting
+/// persistence in the middle would only add ways to fail that are not the thing
+/// being measured. What reaches the index is the same
+/// <c>ProductSearchDocument</c> the application produces.
 /// </summary>
 public sealed class SeedCorpus(IServiceProvider services)
 {
-    // El corpus del gate no depende del tiempo: sella con el reloj real.
+    // The gate's corpus does not depend on time: it stamps with the real clock.
     private static readonly TimeProvider Clock = TimeProvider.System;
 
-    /// <summary>Devuelve el mapa id interno -> id del origen. El índice guarda
-    /// GUIDs; el golden set anota ids del origen, y este mapa los reconcilia.</summary>
+    /// <summary>Returns the internal id -> source id map. The index stores GUIDs;
+    /// the golden set annotates source ids, and this map reconciles them.</summary>
     public async Task<IReadOnlyDictionary<string, string>> IndexAsync(
         string source, CancellationToken cancellationToken)
     {
         var connector = services.GetRequiredKeyedService<ICatalogSourceConnector>(source);
         var indexer = services.GetRequiredService<IProductIndexer>();
 
-        // Las MISMAS definiciones que usa la importación. Sin ellas el corpus
-        // guardaría "azul marino" como texto plano y la puerta mediría un
-        // sistema distinto del que corre.
+        // The SAME definitions the import uses. Without them the corpus would
+        // store "azul marino" as plain text and the gate would be measuring a
+        // different system from the one that runs.
         var definitions = await services
             .GetRequiredService<IAttributeDefinitionReader>()
             .AllAsync(cancellationToken);
@@ -46,14 +46,16 @@ public sealed class SeedCorpus(IServiceProvider services)
     }
 
     /// <summary>
-    /// El MISMO mapeo que usa la importación —<see cref="ExternalProductMapper"/>—
-    /// y no una copia con un comentario prometiendo que son iguales. Si el import
-    /// cambia y esto no, la puerta de calidad puntúa un sistema que no existe.
+    /// The SAME mapping the import uses — <see cref="ExternalProductMapper"/> —
+    /// and not a copy with a comment promising they are the same. If the import
+    /// changes and this does not, the quality gate scores a system that does not
+    /// exist.
     ///
-    /// Lo único que añade es <c>Publish()</c>: sólo lo Activo es buscable y aquí
-    /// no hay cola de revisión que lo publique. Y lo único que omite son las
-    /// imágenes: no son campo buscable, así que no mueven el ranking, y meter el
-    /// almacén por medio sólo añade formas de fallar que no son la que se mide.
+    /// The only thing it adds is <c>Publish()</c>: only Active is searchable and
+    /// there is no review queue here to publish it. And the only thing it omits
+    /// is the images: they are not a searchable field, so they do not move the
+    /// ranking, and putting the store in the middle only adds ways to fail that
+    /// are not the thing being measured.
     /// </summary>
     private static Product BuildProduct(
         ExternalProduct external, string source, AttributeDefinitions definitions)

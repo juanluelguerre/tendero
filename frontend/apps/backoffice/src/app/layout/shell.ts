@@ -4,9 +4,9 @@ import { AuthStore } from '@tendero/shared-auth';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 /**
- * Shell del backoffice: denso y oscuro. Nada de esto se comparte con el
- * storefront (docs/adr/0010) — la raya de toldo marca la pestana activa, que es
- * uno de los tres sitios donde el sistema permite decoracion.
+ * The backoffice shell: dense and dark. None of this is shared with the
+ * storefront (docs/adr/0010) — the awning stripe marks the active tab, which is
+ * one of the three places the system allows decoration.
  */
 @Component({
   selector: 'backoffice-shell',
@@ -15,8 +15,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
   template: `
     <ng-container *transloco="let t">
       <header class="bar">
-        <!-- Ver el shell del storefront: icono, no lockup, por la tipografia.
-             Aqui va a 28 px porque la barra mide 44 y es densa por diseno. -->
+        <!-- See the storefront shell: the icon, not the lockup, because of the
+             typeface. It is 28 px here because the bar is 44 and dense by design. -->
         <img
           class="bar__mark"
           src="brand/tendero-icon-backoffice.svg"
@@ -27,8 +27,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
         />
         <span class="bar__brand">{{ t('brand.name') }}</span>
         <span class="bar__area">{{ t('brand.area') }}</span>
-        <!-- Sin esto no se puede cambiar de identidad, y probar los roles pasa
-             por borrar localStorage a mano. -->
+        <!-- Without this you cannot switch identity, and trying the roles means
+             clearing localStorage by hand. -->
         @if (signedIn()) {
           <button class="bar__signout" type="button" (click)="signOut()">
             {{ t('signIn.signOut') }}

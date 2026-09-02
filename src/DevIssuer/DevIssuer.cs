@@ -4,9 +4,9 @@ using Microsoft.IdentityModel.Tokens;
 namespace ElGuerre.Tendero.DevIssuer;
 
 /// <summary>
-/// Una identidad que el emisor de desarrollo sabe firmar. Son las mismas que
-/// trae el realm de Keycloak cuando llegue: si divergen, cada fixture de test se
-/// bifurca en dos.
+/// An identity the development issuer knows how to sign for. They are the same
+/// ones Keycloak's realm will bring when it arrives: if they diverge, every test
+/// fixture forks in two.
 /// </summary>
 public sealed record DevIdentity(string Subject, string Name, string Role, bool IsAgent = false);
 
@@ -19,9 +19,9 @@ public sealed class DevIssuerOptions
     public TimeSpan TokenLifetime { get; set; } = TimeSpan.FromHours(8);
 
     /// <summary>
-    /// Tres roles, que es la profundidad de laboratorio que pide CLAUDE.md.
-    /// Un agente es un principal distinto de una persona, no una persona con
-    /// otro rol — por eso lleva su propia marca y no sólo <c>Role</c>.
+    /// Three roles, which is the laboratory depth CLAUDE.md asks for. An agent is
+    /// a different principal from a person, not a person with another role — which
+    /// is why it carries its own marker and not just a <c>Role</c>.
     /// </summary>
     public List<DevIdentity> Identities { get; set; } =
     [
@@ -32,12 +32,12 @@ public sealed class DevIssuerOptions
 }
 
 /// <summary>
-/// La clave con la que se firma, viva sólo mientras el proceso.
+/// The key it signs with, alive only for as long as the process.
 ///
-/// Generarla al arrancar y no commitearla es deliberado: una clave privada en el
-/// repositorio es una clave privada filtrada, por mucho que diga "dev" al lado.
-/// El coste es que los tokens no sobreviven a un reinicio, que en desarrollo es
-/// exactamente lo que uno espera.
+/// Generating it at startup and not committing it is deliberate: a private key
+/// in the repository is a leaked private key, however loudly it says "dev" next
+/// to it. The cost is that tokens do not survive a restart, which in development
+/// is exactly what anybody expects.
 /// </summary>
 public sealed class DevSigningKey : IDisposable
 {

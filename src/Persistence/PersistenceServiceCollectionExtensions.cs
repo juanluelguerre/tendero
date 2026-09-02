@@ -9,17 +9,17 @@ namespace ElGuerre.Tendero.Persistence;
 public static class PersistenceServiceCollectionExtensions
 {
     /// <summary>
-    /// Registra el DbContext y los adaptadores de los puertos. Los slices siguen
-    /// sin saber que existe EF Core: sólo ven IProductRepository/IUnitOfWork.
+    /// Registers the DbContext and the ports' adapters. Slices still do not know
+    /// EF Core exists: all they see is IProductRepository/IUnitOfWork.
     /// </summary>
     public static IServiceCollection AddTenderoPersistence(
         this IServiceCollection services, string connectionString)
     {
         services.AddDbContext<TenderoDbContext>(options => options.UseNpgsql(connectionString));
 
-        // Un adaptador, dos puertos, UNA instancia por scope: registrar cada
-        // interfaz por separado daría dos objetos sobre el mismo DbContext, que
-        // funciona pero miente sobre cuántos adaptadores hay.
+        // One adapter, two ports, ONE instance per scope: registering each
+        // interface separately would give two objects over the same DbContext,
+        // which works but lies about how many adapters there are.
         services.AddScoped<EfProductRepository>();
         services.AddScoped<IProductRepository>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IProductReader>(services => services.GetRequiredService<EfProductRepository>());
