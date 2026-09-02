@@ -1,4 +1,5 @@
 using System.Globalization;
+using CsCheck;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 
@@ -113,22 +114,51 @@ public sealed class MoneyTests
     }
 
     /// <summary>
-    /// La propiedad que importa, sobre un rango ancho en vez de tres ejemplos:
-    /// lo repartido suma EXACTAMENTE lo que se repartió. Un test de propiedades
-    /// de verdad llega con CsCheck en `P3-10`; esto es la versión que ya se puede
-    /// tener hoy sin añadir un paquete.
+    /// The property that matters, and the reason CsCheck earns its place: what
+    /// is allocated sums back EXACTLY to what was allocated — for any amount and
+    /// any weights, not for the handful of cases somebody thought of.
+    ///
+    /// This started life as a loop over two thousand amounts with one fixed set
+    /// of weights, written that way because there was no property library yet.
+    /// The loop only ever varied one of the two inputs; the generator varies
+    /// both, and it shrinks a failure down to the smallest cart that shows it.
     /// </summary>
     [Fact]
     public void Whatever_is_allocated_always_sums_back_to_the_total()
     {
-        var weights = new[] { 1m, 2m, 3m, 5m, 8m };
+        Gen.Select(Gen.Int[-500_000, 500_000], Gen.Int[1, 5_000].Array[1, 8])
+            .Sample(pair =>
+            {
+                var (cents, weights) = pair;
 
-        for (var cents = 1; cents <= 2000; cents++)
-        {
-            var total = Eur(cents / 100m);
-            var allocated = total.Allocate(weights).Sum(part => part.Amount);
+                var total = Eur(cents / 100m);
+                var parts = total.Allocate([.. weights.Select(weight => (decimal)weight)]);
 
-            Assert.Equal(total.Amount, allocated);
-        }
+                Assert.Equal(total.Amount, parts.Sum(part => part.Amount));
+                Assert.Equal(weights.Length, parts.Count);
+            }, iter: 5_000);
+    }
+
+    /// <summary>
+    /// Allocation is deterministic. It is what lets a discount be frozen onto an
+    /// order and recomputed later without rewriting history — and it is only
+    /// true because ties in the largest-remainder step break on the lowest
+    /// index rather than on whatever order the sort happened to produce.
+    /// </summary>
+    [Fact]
+    public void The_same_inputs_always_allocate_the_same_way()
+    {
+        Gen.Select(Gen.Int[1, 100_000], Gen.Int[1, 100].Array[2, 6])
+            .Sample(pair =>
+            {
+                var (cents, weights) = pair;
+
+                var total = Eur(cents / 100m);
+                var asDecimals = weights.Select(weight => (decimal)weight).ToArray();
+
+                Assert.Equal(
+                    total.Allocate(asDecimals).Select(part => part.Amount),
+                    total.Allocate(asDecimals).Select(part => part.Amount));
+            }, iter: 2_000);
     }
 }

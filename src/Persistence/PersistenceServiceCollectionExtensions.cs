@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Pricing.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +25,10 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IProductReader>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IProductCatalogReader>(services => services.GetRequiredService<EfProductRepository>());
         services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+
+        // The catalogue facts pricing needs. Registered here rather than in
+        // AddPricing because this is the only project that knows both contexts.
+        services.AddScoped<IPricedItemReader, EfPricedItemReader>();
 
         return services;
     }

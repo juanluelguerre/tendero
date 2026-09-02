@@ -14,8 +14,8 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 3 — pricing and promotions; `P3-1` done, 10 left
-- **Next task:** `P3-2`, the `src/Pricing` context with pure `IPriceResolver` and `IPromotionEngine`
+- **Current phase:** 3 — **complete** (11/11)
+- **Next task:** `P4-1`, the `src/Inventory` context — two warehouses and `StockItem(Sku, WarehouseId)`
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
@@ -238,27 +238,31 @@ telling me"* — the flagship of the floor. One table, four numbers, one cause.
 
 ## Phase 3 · Pricing and promotions
 
-`en curso` · priority **high** · size **L**
+`hecha` (2026-09-02) · priority **high** · size **L** · **73 pricing tests, 239 in total**
 
 - [x] `P3-1` `Money` grows subtraction, division, percentage, comparison, a named rounding policy and largest-remainder allocation — **S**
-- [ ] `P3-2` `src/Pricing` context; pure `IPriceResolver` and `IPromotionEngine` — **M**
-- [ ] `P3-3` `PriceList` + entries; two lists (`retail`, `vip`); segment arrives as an input value — **M**
-- [ ] `P3-4` Four effects: `PercentOffLine`, `AmountOffOrder`, `BuyXGetY`, `FreeShipping` — **M**
-- [ ] `P3-5` `CombinationPolicy` as a declarative table, in the `AllowedTransitions` idiom — **M**
-- [ ] `P3-6` `AppliedDiscount` carries a `RuleReason` — the suppressed-discount explanation — **S**
-- [ ] `P3-7` `ITaxCalculator` keyed adapters + contract suite — **M**
-- [ ] `P3-8` `PriceQuote` with expiry and input hash; ADR 0016 — **M**
-- [ ] `P3-9` `POST /api/pricing/quote`, callable before Cart exists — **S**
-- [ ] `P3-10` CsCheck properties: totals never negative, stackable sets order-independent, exclusives never co-apply — **M**
-- [ ] `P3-11` Backoffice promotions screen with a combination column — **M**
+- [x] `P3-2` `src/Pricing` context; pure `IPriceResolver` and `IPromotionEngine` — **M** · an architecture rule computes, by reflection, that Pricing references SharedKernel and nothing else
+- [x] `P3-3` `PriceList` + entries; two lists (`retail`, `vip`) — **M** · **keyed on SKU, not `VariantId`**: the internal id is a GUID v7 minted per import, so a tariff keyed on it would expire on every reimport — the same call the golden set already made
+- [x] `P3-4` Four effects: `PercentOffLine`, `AmountOffOrder`, `BuyXGetY`, `FreeShipping` — **M** · four branches in one place; the effect is data and the arithmetic is the engine's
+- [x] `P3-5` `CombinationPolicy` as a declarative table, in the `AllowedTransitions` idiom — **M** · three rows, two booleans, and a test that walks the enum in full
+- [x] `P3-6` `AppliedDiscount` carries a `RuleReason` — **S** · suppressed promotions come back too, with a code a test asserts and a text in es+en
+- [x] `P3-7` `ITaxCalculator` keyed adapters + contract suite — **M** · `flat-vat` and `zero`, seven shared assertions each
+- [x] `P3-8` `PriceQuote` with expiry and input hash; ADR 0016 — **M** · the hash covers the tariffs and promotions too, which is the half that gets forgotten
+- [x] `P3-9` `POST /api/pricing/quote`, callable before Cart exists — **S** · `AllowAnonymous`, but the **segment comes from the principal and never from the body**: a guest asking for `vip` is quoted `retail`
+- [x] `P3-10` CsCheck properties — **M** · seven of them at 2,000 carts each, and **one found a real bug**: the engine matched lines by SKU, so a cart with the same SKU twice threw while allocating an order discount. Matches by position now
+- [x] `P3-11` Backoffice promotions screen with a combination column — **M** · read-only, and says so: promotions come from a committed file, and the table for editing them waits for an editor
 
-**Risks.** Rounding. Percentage discounts plus tax plus an order-level discount
-allocated across lines is where every commerce system leaks cents, and it is
-worth a property test rather than an example test. Second risk: scope creep in
-effect types — four, and no more.
+**Risks, and what actually happened.** Rounding was the predicted one, and it
+behaved: `Money.Allocate` plus a single named policy applied once at the end
+held across 5,000 generated allocations. The risk that *bit* was not on the list
+— matching lines by SKU instead of by position, found by a property test in a
+cart the API cannot currently produce. Scope creep in effect types did not
+happen: four, and no more.
 
-**Demo.** A cart showing two stacked discounts and a third **suppressed**, with
-the reason printed: *"no acumulable con Rebajas de verano"*.
+**Demo.** `POST /api/pricing/quote` with two shirts and a pan: two discounts
+applied and a third **suppressed**, with the reason printed —
+*"No acumulable con Rebajas de verano."* Then the same cart as a guest and as a
+signed-in VIP, and watch the unit price change without the request changing.
 
 **Evidences.** Modelling complex business rules declaratively; property-based
 verification of a combinatorial space; keeping a context pure enough to test.
@@ -606,5 +610,6 @@ oversight, and each is a paragraph in some future article.
 | Full ABO import (147k) | not attempted | It is the trigger for the four rows above |
 | Shopify connector | one connector today, and the port is proven | A second source is genuinely wanted |
 | Multi-currency | one currency per order, enforced | A second market |
+| Promotions and tariffs in Postgres | 2 lists, 7 promotions, both in committed files | The backoffice can edit one. Building the table first is what phase 2 already did and undid |
 | Spec Kit experiment | ADR 0009 reserves it for the UCP work | Phase 11 |
 | `.claude/` skills and plugin | none exist; article 14 is blocked on it | After enough repetition to have opinions |

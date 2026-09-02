@@ -33,13 +33,11 @@ public sealed class SearchProductsEndpoint : ICarterModule
                    string q, string? culture, int? page, int? pageSize,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
-                // Cultura: query param explícito > Accept-Language > "es".
-                var resolved = culture
-                    ?? http.Request.GetTypedHeaders().AcceptLanguage
-                        .OrderByDescending(l => l.Quality ?? 1)
-                        .Select(l => l.Value.Value?.Split('-')[0].ToLowerInvariant())
-                        .FirstOrDefault(c => c is "es" or "en")
-                    ?? "es";
+                // Culture: explicit query parameter > Accept-Language > "es"
+                // (ADR 0013). The chain lives in CultureNegotiation since the
+                // third endpoint that needed it turned up.
+                var resolved = CultureNegotiation.Resolve(
+                    culture, http.Request.Headers.AcceptLanguage);
 
                 var result = await dispatcher.SendAsync(
                     new SearchProductsQuery(q, resolved, page ?? 1, pageSize ?? 20), ct);

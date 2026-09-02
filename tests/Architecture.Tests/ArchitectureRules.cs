@@ -141,6 +141,36 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// Pricing knows the shared kernel and nothing else — not Catalog, not
+    /// Ordering, not Persistence.
+    ///
+    /// This is not tidiness. It is the property the whole context is shaped
+    /// around: the promotion engine takes values and returns values, so its
+    /// combination rules can be verified with CsCheck over thousands of carts
+    /// without a database. The day Pricing can load a Product, quoting needs
+    /// Postgres and those properties stop being writable.
+    ///
+    /// The check is reflection over the actual assembly references rather than
+    /// a hand-kept list, for the same reason rule 1 computes its forbidden set:
+    /// a list somebody has to remember to update is a rule that stops being one.
+    /// </summary>
+    [Fact]
+    public void Pricing_knows_only_the_shared_kernel()
+    {
+        var sharedKernel = Solution.SharedKernel.GetName().Name;
+
+        var contexts = Solution.Pricing.GetReferencedAssemblies()
+            .Select(reference => reference.Name)
+            .OfType<string>()
+            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal)
+                           && name != sharedKernel)
+            .ToArray();
+
+        Assert.True(contexts.Length == 0,
+            $"Pricing references {string.Join(", ", contexts)}. It may reference only {sharedKernel}.");
+    }
+
+    /// <summary>
     /// Lo que el dominio de <paramref name="assembly"/> no puede tocar: los
     /// ensamblados que su .csproj referencia (menos el framework y el
     /// SharedKernel) y sus propios namespaces fuera de Domain.

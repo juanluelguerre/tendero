@@ -15,8 +15,9 @@ namespace ElGuerre.Tendero.SharedKernel;
 public static class TelemetrySources
 {
     public const string Catalog = "ElGuerre.Tendero.Catalog";
+    public const string Pricing = "ElGuerre.Tendero.Pricing";
     public const string Search = "ElGuerre.Tendero.Search";
     public const string Outbox = "ElGuerre.Tendero.Outbox";
 
-    public static readonly string[] All = [Catalog, Search, Outbox];
+    public static readonly string[] All = [Catalog, Pricing, Search, Outbox];
 }

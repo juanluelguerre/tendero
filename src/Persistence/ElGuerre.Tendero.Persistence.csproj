@@ -21,6 +21,10 @@
          IUnitOfWork (Catalog/ImportProducts) e IProductReader (Search). -->
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <!-- Pricing declares IPricedItemReader and deliberately cannot implement it:
+         it must not reference Catalog. This project already knows both, so the
+         bridge lives where every other outbound adapter does. -->
+    <ProjectReference Include="../Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>

@@ -259,7 +259,7 @@ implements the thing it describes.
 | Claimed | Where | Reality |
 |---|---|---|
 | "NDCG@10 — tracked in CI" badge, four prose mentions, a *draft-ready* article | `README.md`, `docs/testing.md`, `docs/blog/02-*.md` | No CI exists |
-| NSubstitute, Bogus, CsCheck, Verify, Testcontainers, Respawn | `docs/testing.md`, README | None in `Directory.Packages.props` |
+| NSubstitute, Bogus, CsCheck, Verify, Testcontainers, Respawn | `docs/testing.md`, README | Testcontainers landed with the migrations (phase 0) and CsCheck with the promotion combination rules (phase 3). Respawn was declined — a fresh database per test is cheaper than a reset. NSubstitute, Bogus and Verify are still prescribed and still absent. |
 | `dotnet test --filter Category=Integration` spins up containers | `CLAUDE.md`, README | Matches **zero** tests; the trait does not exist |
 | Snapshot of `ProductSearchDocument` per culture, "a public contract with Elasticsearch" | `docs/testing.md` | No snapshot test of any kind |
 | `IPaymentProvider`, three adapters behind a port — present tense | ADR 0003, README | The port does not exist |

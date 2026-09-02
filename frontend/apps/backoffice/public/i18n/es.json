@@ -20,7 +20,34 @@
     "orders": "Pedidos",
     "reviewQueue": "Cola de revisión",
     "search": "Evaluación de búsqueda",
-    "attributes": "Atributos"
+    "attributes": "Atributos",
+    "promotions": "Promociones"
+  },
+  "promotions": {
+    "title": "Promociones",
+    "hint": "La columna que importa es la de combinación: dice qué deja de aplicarse cuando ésta se aplica.",
+    "loading": "Cargando...",
+    "failed": "No se pudieron cargar las promociones.",
+    "empty": "Todavía no hay promociones.",
+    "running": "{{count}} activas",
+    "needsCoupon": "cupón",
+    "column": {
+      "code": "Código",
+      "name": "Nombre",
+      "effect": "Efecto",
+      "combination": "Combina",
+      "priority": "Prioridad",
+      "state": "Estado"
+    },
+    "policy": {
+      "ExclusiveGlobal": "Exclusiva",
+      "ExclusiveInGroup": "Una por grupo",
+      "Stackable": "Acumula"
+    },
+    "state": {
+      "running": "Activa",
+      "scheduled": "Sin activar"
+    }
   },
   "reviewQueue": {
     "column": {

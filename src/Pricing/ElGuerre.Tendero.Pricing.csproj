@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bounded context Pricing: price lists, promotions and taxes.
+
+       References SharedKernel and NOTHING else — not Catalog, not Ordering, not
+       Persistence. That is not tidiness: it is what makes the engine a function
+       of values, and therefore verifiable with properties. The moment Pricing
+       can load a Product, quoting a cart needs a database and the properties in
+       P3-10 stop being writable.
+
+       Not depending on Catalog is also why it does not live INSIDE Catalog: a
+       price list is not a fact about a product, and Catalog would have to learn
+       what a customer segment is in order to host one. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Pricing</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The combination table is internal, and its test walks it in full. Same
+         arrangement Catalog already uses: a rule nobody outside can name, and a
+         test that still checks every row exists. -->
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Pricing.Tests" />
+  </ItemGroup>
+
+</Project>

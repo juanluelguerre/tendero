@@ -1,0 +1,27 @@
+[
+  {
+    "code": "retail",
+    "segment": "retail",
+    "currency": "EUR",
+    "priority": 100,
+    "entries": [
+      { "sku": "B073WXYZ01-DEFAULT", "amount": 79.95 },
+      { "sku": "B08JKLM202-DEFAULT", "amount": 54.90 },
+      { "sku": "B09PQRS303-DEFAULT", "amount": 39.99 },
+      { "sku": "B07TUVW404-DEFAULT", "amount": 24.50 },
+      { "sku": "B06GHIJ505-DEFAULT", "amount": 29.90 },
+      { "sku": "B05DEFG606-DEFAULT", "amount": 44.95 }
+    ]
+  },
+  {
+    "code": "vip",
+    "segment": "vip",
+    "currency": "EUR",
+    "priority": 10,
+    "entries": [
+      { "sku": "B073WXYZ01-DEFAULT", "amount": 71.95 },
+      { "sku": "B08JKLM202-DEFAULT", "amount": 49.40 },
+      { "sku": "B05DEFG606-DEFAULT", "amount": 39.95 }
+    ]
+  }
+]

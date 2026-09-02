@@ -80,15 +80,11 @@ public sealed class ListProductsEndpoint : ICarterModule
                 // parámetro, que es lo que hace que alguien que llega sin pedir
                 // nada vea su idioma y no el nuestro.
                 //
-                // Misma cadena que /api/search, copiada a propósito: son dos
-                // casos, y extraer una abstracción con dos casos es adivinar.
-                // Con un tercero se saca a un binder compartido.
-                var resolved = culture
-                    ?? http.Request.GetTypedHeaders().AcceptLanguage
-                        .OrderByDescending(l => l.Quality ?? 1)
-                        .Select(l => l.Value.Value?.Split('-')[0].ToLowerInvariant())
-                        .FirstOrDefault(c => c is "es" or "en")
-                    ?? "es";
+                // It was copied from /api/search under a comment saying when
+                // that would stop being fine: "with a third it moves to a shared
+                // binder". Price quoting was the third.
+                var resolved = CultureNegotiation.Resolve(
+                    culture, http.Request.Headers.AcceptLanguage);
 
                 var result = await dispatcher.SendAsync(
                     new ListProductsQuery(status, resolved, page ?? 1, pageSize ?? 20), ct);

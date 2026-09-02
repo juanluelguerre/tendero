@@ -6,8 +6,10 @@
    Shopify dev store, Medusa/Vendure/WooCommerce/PrestaShop, Merchant feed.
    Keyed DI by source name; contract-test suite per adapter; idempotent import
    keyed on `(source, externalId)` via `ExternalReference`.
-2. **Core** — `ElGuerre.Tendero.Catalog` and `ElGuerre.Tendero.Ordering`
-   bounded contexts.
+2. **Core** — the bounded contexts: `ElGuerre.Tendero.Catalog`,
+   `ElGuerre.Tendero.Ordering` and `ElGuerre.Tendero.Pricing`. They share no
+   entities (ADR 0014); `Pricing` references SharedKernel alone, which is what
+   makes its promotion engine a function of values.
    Vertical slices (Carter endpoints + FluentValidation + custom CQRS
    dispatchers). Postgres is the source of truth; every side effect flows
    through domain events → Outbox (same transaction) → workers.
@@ -54,12 +56,34 @@ Everything the API exposes today. Each is one vertical slice.
 | `GET /api/catalog/products` | `Catalog/Features/ListProducts` |
 | `POST /api/catalog/products/{id}/publish` | `Catalog/Features/PublishProduct` |
 | `GET /api/images/{id}` | `Catalog/Features/GetProductImage` |
+| `GET /api/catalog/attributes` | `Catalog/Features/ListAttributeDefinitions` |
+| `POST /api/catalog/products/{id}/variants` | `Catalog/Features/DefineVariants` |
+| `POST /api/pricing/quote` | `Pricing/Features/QuoteCart` |
+| `GET /api/pricing/promotions` | `Pricing/Features/ListPromotions` |
 | `GET /api/search` | `Search/Features/SearchProducts` |
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 
 Any of them returning localized text resolves culture the same way — explicit
 `?culture=` → `Accept-Language` → `es` — and answers with `Content-Language` and
 `Vary: Accept-Language` (ADR 0013).
+
+## Pricing
+
+Prices are **quoted live and frozen at order time** (ADR 0016). `Pricing` is a
+pure context: price lists, promotions and tax calculation take values in and
+return values out, with the instant passed as an argument rather than read from
+a clock. That is what lets the combination rules be verified with property tests
+over thousands of generated carts.
+
+Combination is a declarative table in the `AllowedTransitions` idiom —
+`ExclusiveGlobal` stops evaluation, `ExclusiveInGroup` closes its group,
+`Stackable` continues — evaluated in the total order `(Priority, Code)`. A
+suppressed promotion is returned with its `RuleReason`, in both cultures, because
+a discount that did not apply and a discount of zero look identical in a total.
+
+A `PriceQuote` carries an expiry and a fingerprint over **both** the request and
+the pricing data it was answered with, so a tariff edit invalidates the quotes it
+would otherwise keep promising.
 
 ## Payments
 
