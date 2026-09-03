@@ -25,12 +25,12 @@ jobs:
     name: Build · tests · architecture rules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # global.json pins 11.0.0 with allowPrerelease; `dotnet-quality: preview`
       # is what lets the installer actually resolve a preview SDK
       # (initial-plan.md §8).
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '11.0.x'
           dotnet-quality: preview
@@ -88,9 +88,9 @@ jobs:
           --health-retries 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '11.0.x'
           dotnet-quality: preview
@@ -114,7 +114,7 @@ jobs:
 
       - name: Upload the report
         if: always() && hashFiles('ndcg-report.md') != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ndcg-report
           path: ndcg-report.md
@@ -154,11 +154,11 @@ jobs:
       # The daemon is a local dev optimisation and only adds a moving part here.
       NX_DAEMON: 'false'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Angular 22 requires ^22.22.3 || ^24.15.0 || >=26.0.0 — see the README
       # prerequisites table. Node 22.21 fails.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -193,14 +193,14 @@ jobs:
     # before it can click anything.
     needs: [backend, frontend]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '11.0.x'
           dotnet-quality: preview
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -243,7 +243,7 @@ jobs:
       # guessing from a stack.
       - name: Keep the report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: frontend/apps/backoffice-e2e/playwright-report/
