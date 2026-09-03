@@ -17,6 +17,9 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "paths": {
+      "@tendero/shared-agent": [
+        "./libs/shared/agent/src/index.ts"
+      ],
       "@tendero/shared-api": [
         "./libs/shared/api/src/index.ts"
       ],

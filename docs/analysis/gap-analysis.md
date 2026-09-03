@@ -89,20 +89,20 @@ projection; the outbox for driving any of it off a domain event.
 
 | Capability | Verdict | Evidence |
 |---|---|---|
-| **1 · Agent-native merchant** — `/.well-known/ucp`, UCP capabilities, MCP server | **Missing** | `src/Ucp/` is a directory holding one 65-byte README, with no `.csproj`, absent from `Tendero.slnx`. No `/.well-known/` route exists. No MCP package, no `MapMcp`, no tool definitions. |
+| **1 · Agent-native merchant** — `/.well-known/ucp`, UCP capabilities, MCP server | **Partial** | **The first of the three surfaces ships (2026-09-03, phase 6).** WebMCP: four tools registered on `navigator.modelContext`, calling the same Angular services the interface calls — a rule an eslint boundary enforces rather than review. The agent **inherits** the shopper's session, so it needs no principal, no token and no mandate, which is what makes this surface small and phase 11 large. Degradation is the feature detection itself: without the capability nothing registers and the shop is unchanged, tested in jsdom and in a browser. Still Partial because the other two surfaces — the MCP server and UCP — are phases 9 and 11. |
 | **2 · Product reasoning layer** — specs, evidence, comparisons with source and confidence | **Missing**, but the hard half is built | No claim, evidence, source-document or confidence type exists. However the **human-in-the-loop pattern already ships and is measured**: the backoffice review queue lists drafts, publishes them, and deliberately reloads from the server instead of updating optimistically because the outbox means the index lags. That is the interface this differentiator needs, already proven. |
 | **3 · Know Your Agent** — signatures, AP2 mandates, agent-aware anti-fraud | **Missing** | No agent principal, no mandate, no signature verification, no policy. There is no authentication to build on. |
 | **4 · Backoffice copilot** — natural language over own data and traces, with approvable actions | **Missing** | No copilot. Also missing is what it would read: there is no persistent trace store and no audit table. The `nav.agents` translation key exists in both languages and routes nowhere. |
 | **5 · Explainable, constrained recommendations** | **Missing** | No recommender, no solver, no constraint model. |
 | **6 · AI observability and evals as a feature** | **Partial** | This is the differentiator Tendero is furthest along on, and it does not look like it. `tools/SearchEval` is a real offline gate — NDCG@10 and recall@50 per culture, thresholds committed in `eval.thresholds.json`, non-zero exit under threshold, and two hard-won reproducibility fixes (drop the indexes; refresh explicitly). What is missing is everything about *AI* specifically: no cost, no token count, no latency per operation, no per-decision trace, no eval for anything but lexical relevance. And **nothing runs the gate automatically**, because there is no CI. |
 
-**Differentiator summary: 0 Done, 1 Partial, 5 Missing.**
+**Differentiator summary: 0 Done, 2 Partial, 4 Missing.**
 
 Three qualifiers matter more than the scores:
 
 1. **The evaluation discipline is the real asset.** Most projects that reach for AI features have no way to tell whether they helped. Tendero has a measured, reproducible, committed baseline before it has a single AI feature — which is the correct order and is rare enough to be the headline of an article.
 2. **The human-in-the-loop UI is already built.** Differentiator 2 inherits a proven review interface instead of inventing one.
-3. **The agent-native claim is entirely unbuilt.** `initial-plan.md` calls the absence of a .NET UCP reference implementation "Tendero's headline contribution". Today the contribution is a README.
+3. **The agent-native claim has its first surface.** WebMCP shipped on 2026-09-03, and it is the cheapest of the three by a wide margin precisely because of its trust model: the agent runs in the shopper's tab and inherits their session, so there is no principal to establish. The expensive two remain — the MCP server (phase 9) and UCP + AP2 (phase 11) — and `initial-plan.md`'s claim that there is no .NET reference implementation of UCP is still a README rather than a contribution.
 
 ---
 
@@ -115,7 +115,7 @@ Four translation keys exist in Spanish and English, in both apps, and are used
 |---|---|---|
 | `product.addToCart` | Cart, PDP, checkout | **used** (2026-09-03) |
 | `nav.orders` | Order management in the backoffice | **used** (2026-09-03) |
-| `nav.agents` | The agent activity panel | still dead — phase 11 |
+| `nav.agents` | The agent activity panel | still dead — phase 11. WebMCP shipped in phase 6 and needs no panel: an agent that inherits the shopper's session leaves no row an audit table would show. The panel is for the agents that have a principal of their own |
 | `nav.search` | The search evaluation panel | still dead — phase 8 |
 
 Somebody wrote the labels for four features that did not exist. Two of them do

@@ -14,13 +14,15 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 5 — **12 of 14**. The commerce loop is closed end to end: cart, checkout, payments and returns, on **430 tests** with the search baseline unmoved. Since closing the loop: every component split into three files, the token rule turned into a test, six backoffice Playwright specs, a Dependabot config, and the product page's query keyed on a public code (ADR 0026).
-- **Next task:** the product detail page's **screen**. Its query landed on 2026-09-03 (`GET /api/catalog/products/{code}`, 430 tests) — keyed on a public code and not on the slug, because a slug cannot be unique and does not survive a rename (ADR 0026). It carries the whole axis so a sold-out size renders disabled rather than absent, stock disclosed only below five, and every culture's slug for `hreflang`. What remains is the Angular route `/p/{slug}/{code}`, then `P5-13` in full and the storefront spec (`P5-11`).
+- **Current phase:** 6 — **complete (5/5)**, closed 2026-09-03. Phase 5 closed the same day. The commerce loop runs end to end and the shop now has a product page: a variant picker that disables what it does not sell, the language in the URL, `hreflang`, and eight browser specs. **434 tests · 19 frontend · 8 storefront + 6 backoffice specs · es 0.943 / en 0.937 reproduced exactly** on a throwaway engine.
+- **Next task:** phase 7 — **Accounts, audit, and swapping the issuer**. Audit is the **only** `Missing` row left in the floor and three later features read it; accounts is the other half of the guest work; and pointing `AddJwtBearer` at Keycloak is the test of whether phase 0 leaked.
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Standing chore:** seven commits sit unpushed on `develop`, from `79198e6`. The one CI has not yet verified is `0bfb443`, the GitHub Actions major bump. Pushing needs a token carrying the `workflow` scope — see the notebook entry for why that is not obvious.
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
+
+**Decisions taken 2026-09-03 (evening)** — 7 · WebMCP offers `get_product` and **not** `apply_filter`: a filter tool over a shop with no facets is speculative, and facets land in phase 8 · 8 · the "same services the UI calls" rule is an **eslint boundary**, because review cannot enforce it · 9 · the browser's model context is injected rather than read from `navigator`, so the degradation is testable where it actually happens.
 
 **Decisions taken 2026-09-03** — 1 · the outbox is the process manager, orchestrated from `Ordering` (ADR 0024) · 2 · checkout authorises the payment before it places the order, so a decline costs nothing (ADR 0025) · 3 · cart lines are jsonb, not a table — mutating one through the aggregate is not querying it · 4 · returns are their own aggregate, because they are per line · 5 · Playwright stays the thinnest layer, and no self-healing agent touches a suite whose point is what the system refuses · 6 · **the URL carries a public code and the slug is decoration** (ADR 0026), because a slug cannot be unique inside jsonb and does not survive a rename. The Shopify alternative — a slug table with history and `-2` suffixes — was built halfway and rejected for managing both problems rather than removing them.
 
@@ -53,7 +55,7 @@ important process decision in the file, because the failure mode of a developer
 blog is not running out of material — it is publishing four things in a week and
 then vanishing for two months.
 
-You start with an unusual advantage: **nine finished drafts and one half-written**.
+You start with an unusual advantage: **nine finished drafts, two writable outlines and one half-written**.
 That is roughly four and a half months of publishing without writing a new line,
 during which phases 0–5 refill the queue.
 
@@ -69,9 +71,10 @@ during which phases 0–5 refill the queue.
 | 2026-12-22 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
 | 2027-01-05 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
 | 2027-01-19 | 16 · The URL that guessed which product you meant | outline — writable now, ADR 0026 carries it |
-| 2027-02-02 | **NEW** · from phase 0 | write when P0 closes |
-| 2027-02-16 | **NEW** · from phase 2 | write when P2 closes |
-| 2027-03-02 | **NEW** · from phase 3 | write when P3 closes |
+| 2027-02-02 | 17 · The slice that could not run | outline — writable now, pairs with 16 |
+| 2027-02-16 | **NEW** · from phase 0 | write when P0 closes |
+| 2027-03-02 | **NEW** · from phase 2 | write when P2 closes |
+| 2027-03-16 | **NEW** · from phase 3 | write when P3 closes |
 | … | one per closed phase, in order | |
 
 One standing blocker before 2026-09-29: cut a repo tag so article 01's snippets
@@ -331,7 +334,7 @@ and no architecture rule could see. Write at close, publish per calendar.
 
 ## Phase 5 · Cart, checkout, payments, returns
 
-`en curso` · priority **critical** · size **XL** — the gateway phase · **12 of 14 · 430 tests, es 0.943 / en 0.937 unmoved**
+`hecha` (2026-09-03) · priority **critical** · size **XL** — the gateway phase · **434 tests, es 0.943 / en 0.937 unmoved**
 
 Everything agent-native depends on this being real.
 
@@ -345,13 +348,23 @@ Everything agent-native depends on this being real.
 - [x] `P5-8` Refund via the payment port; restock via the stock ledger — **M** · **receiving** restocks, not approving, and damaged goods never do. The refund carries the returned lines' share of the order's discount and tax
 - [x] `P5-9` Storefront: cart, checkout, order confirmation, order page with a return request — **L** · the cart shows **suppressed** promotions with their reason, which is the phase-3 engine finally visible
 - [x] `P5-10` Backoffice: orders list, ship/deliver, returns queue — **L** · the orders table shows **authorised** and **captured** apart, because a shipped order that was never captured is the row worth finding
-- [~] `P5-11` Playwright — **M** · **backoffice done** (6 specs, 7s, against the real stack), storefront waits on the PDP because the PDP changes the flow it would test. The pyramid's thinnest layer on purpose: the loop is already covered against a real Postgres, so these assert only what a browser can — the guard, the interceptor, and a table that never keeps its own copy of `AllowedTransitions`. Verified by mutation: a heading downgraded to a `<p>` turns the tab spec red
+- [x] `P5-11` Playwright — **M** · **6 backoffice specs + 8 storefront**, 7.8s, against the real stack. The storefront half waited on the PDP because the PDP changed the flow it would test. The pyramid's thinnest layer on purpose: the loop is already covered against a real Postgres, so these assert only what a browser can — the guard, the interceptor, and a table that never keeps its own copy of `AllowedTransitions`. Verified by mutation: a heading downgraded to a `<p>` turns the tab spec red
 - [x] `P5-12` Delete the dead `product.addToCart` and `nav.orders` keys by using them — **S** · both used. `nav.agents` and `nav.search` stay dead on purpose: they belong to phases 11 and 8, and they are the gap analysis written in i18n
-- [~] `P5-13` **The locale and the query go into the URL** — **M** · **half done**: `?q=` is in the URL, so a result page is shareable, bookmarkable and works with the back button. The locale segment, `hreflang` and the per-culture slugs waited on a PDP; its **query** landed 2026-09-03 and already answers with every culture's slug, so what is left is the route that consumes it
+- [x] `P5-13` **The locale and the query go into the URL** — **M** · `?q=` and now `/es/…`. A path with no language gets one rather than a 404, switching NAVIGATES instead of flipping a signal, and the PDP carries canonical + `hreflang` listing itself among its alternates. One route table mounted once per culture, so `/es/cart` and `/en/cart` cannot drift
 - [x] `P5-14` `GET /api/catalog/products/{code}` — **M** · not on the original list, and it should have been: the PDP was three tasks' blocker and had no query. Reads the catalogue and not the index, because the page needs structured attributes and out-of-stock variants and has to survive Elasticsearch being down. Catalog became the third context to reference Inventory's ports, so the picker renders **once**. Keyed on a **public code**, not the slug: a slug cannot carry a unique constraint inside jsonb and does not survive a rename, so looking a product up by one meant guessing between two and 404ing every link on a typo fix (ADR 0026). The first version WAS by slug, and replacing it deleted three runtime-only failures along with the hand-written SQL that caused them
 
-**Still open, and why.** The product detail page has a **query** and not yet a
-screen. Phase 1 deferred the variant picker to "the cart phase, where it is
+- [x] `P5-15` **The product detail page** — **L** · not on the original list, and it is what `P1-9`, `P5-13` and `P5-11` had all been waiting on. The picker shows every option the catalogue defines with **three** states — chosen, sold out (selectable), not sold (disabled and still rendered) — because an option that vanishes tells a shopper their size is not made. Building it found two older defects: `DefineVariants` was **unreachable for the entire shipped catalogue** (the axis guard counted variants rather than coordinated ones, and importing mints an implicit `-DEFAULT`), and an axis with no definition rendered a control with nothing to press
+
+**What building it found.** Two defects older than this phase, both invisible
+until a screen needed them. `DefineVariants` had tests, shipped in phase 1, and
+could not run on a single real product — every imported product carries an
+implicit `-DEFAULT` variant, and the guard refused to declare axes while any
+variant existed. And the seed declares `COLOR` but no `SIZE`, so the axis came
+back with an empty option list: a dead control above six variants that plainly
+had sizes.
+
+**Old text, kept because it was the plan.** The product detail page had a
+**query** and not yet a screen. Phase 1 deferred the variant picker to "the cart phase, where it is
 needed rather than decorative", and the cart phase went straight from the search
 card to the basket — which works at one variant per product and would not at
 eight. `P5-14` closed the half that was three tasks' blocker; the Angular route
@@ -393,13 +406,20 @@ already predicted. `#DDD #ecommerce #dotnet`
 
 ## Phase 6 · WebMCP
 
-`no empezada` · priority **high** · size **M** — the cheapest differentiator
+`hecha` (2026-09-03) · priority **high** · size **M** — the cheapest differentiator · **6 agent specs, 28 frontend tests**
 
-- [ ] `P6-1` `libs/shared/agent`: registration mechanism, feature-detected — **S**
-- [ ] `P6-2` Storefront tools: `search_products`, `apply_filter`, `add_to_cart`, `get_cart` — **M**
-- [ ] `P6-3` Tools call the same Angular services the UI calls — enforced by review and an eslint boundary — **S**
-- [ ] `P6-4` Descriptors in one file, so a spec change is one edit — **S**
-- [ ] `P6-5` Degradation: without `navigator.modelContext` the shop is unchanged — **S**
+- [x] `P6-1` `libs/shared/agent`: registration mechanism, feature-detected — **S** · the browser's context is an **injection token** defaulting to null, because reaching for `navigator` inside the service makes the degradation untestable in the one environment that matters — jsdom has no `modelContext`, so every test would take the "unsupported" branch and the registration path would never run
+- [x] `P6-2` Storefront tools — **M** · `search_products`, **`get_product`**, `add_to_cart`, `get_cart`. **Not `apply_filter`**: a filter tool over a shop with no facets is a tool over something that does not exist, and facets are phase 8's aggregations. `get_product` replaced it because `add_to_cart` takes a SKU and only that says which SKUs exist
+- [x] `P6-3` Tools call the same Angular services the UI calls — **S** · an **eslint boundary**, not review: a tool file may not import `HttpClient`. Verified by mutation in both directions
+- [x] `P6-4` Descriptors in one file, so a spec change is one edit — **S** · and a spec asserts the exact list, so a fifth tool is a deliberate act rather than a drift
+- [x] `P6-5` Degradation: without `navigator.modelContext` the shop is unchanged — **S** · tested in jsdom (the real absence, not a simulated one) **and** in a browser: no errors, no visual difference, nothing registered
+
+**What the demo actually shows.** An agent inside the shopper's tab searching,
+being **refused** a one-character query and an unknown code, adding two variants
+to *their* cart, and reading it back with the suppressed discounts and their
+reasons — *"10% en ropa: not applied — No acumulable con Rebajas de verano."*
+The phase-3 promotion engine reaching a model, refusals intact. **Nothing in that
+flow authenticates**, which is the entire point.
 
 **Risks.** The spec is under incubation at the W3C Web Machine Learning CG and
 Chrome-only — label it as such in the article rather than presenting it as

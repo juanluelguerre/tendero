@@ -48,6 +48,35 @@ export default [
     },
   },
   {
+    // The agent surface calls the SAME services the interface calls (P6-3).
+    //
+    // It is the frontend sibling of "MCP is a transport over the query
+    // dispatcher": if a tool could reach the API by its own route, the two paths
+    // would drift and only one of them would have tests — the agent would get a
+    // cart that skipped a revalidation, or an error shape nobody had seen.
+    //
+    // Review cannot enforce that, so this does. A tool file may not import
+    // HttpClient, and the day it needs one it is telling you the service it
+    // should have called does not exist yet.
+    files: ['apps/*/src/app/agent/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@angular/common/http',
+              importNames: ['HttpClient', 'HttpHeaders', 'HttpParams'],
+              message:
+                'Agent tools call the same services the UI calls. Use the data-access ' +
+                'service rather than talking to the API directly (P6-3).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: [
       '**/*.ts',
       '**/*.tsx',

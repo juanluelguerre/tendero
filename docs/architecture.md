@@ -196,6 +196,38 @@ is the whole security model: HMAC-SHA256 over `<timestamp>.<raw body>`, compared
 in fixed time, with a five-minute tolerance that stops a captured request being
 replayed tomorrow.
 
+## Agent surfaces
+
+Tendero ends up with **three**, and their trust models differ. That difference is
+the interesting part, and it is why they are three features rather than three
+implementations of one.
+
+| Surface | The agent is | Authorization | Phase |
+|---|---|---|---|
+| **WebMCP** | code inside the user's own browser session | **inherits** it — no second principal, no token, no mandate | 6 (done) |
+| **MCP server** | an external process | `AllowAnonymous` by explicit decision; read-only | 9 |
+| **UCP + AP2** | its own principal, server to server | bearer token plus a signed mandate | 11 |
+
+**WebMCP ships.** `libs/shared/agent` holds the registration mechanism — the
+browser's `ModelContext` reached through an injection token, so the degradation
+is testable where it actually happens — and each app owns its own tool set
+(ADR 0010): behaviour is shared, identity is not. The storefront offers
+`search_products`, `get_product`, `add_to_cart` and `get_cart`, all in one file
+so a specification change is one edit.
+
+**Tools call the same Angular services the interface calls**, and an eslint
+boundary refuses an `HttpClient` import inside a tool file. It is the frontend
+sibling of "MCP is a transport over the query dispatcher": a tool with its own
+route to the API is a second implementation of a rule, and only one of the two
+would have tests.
+
+**The degradation is the feature detection.** Without `navigator.modelContext`
+nothing registers, nothing renders differently and there is no fallback path to
+maintain — invariant 8 read the way it was meant. `navigator.modelContext` is
+Chrome-only and under incubation at the W3C Web Machine Learning Community
+Group, and that label travels with it in the code rather than being discovered
+by a reader later.
+
 ## Observability
 
 OpenTelemetry from slice 1: every I/O slice opens an `ActivitySource` span with

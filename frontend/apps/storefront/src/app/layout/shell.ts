@@ -1,7 +1,9 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { AgentTools } from '@tendero/shared-agent';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
+import { StorefrontTools } from '../agent/storefront-tools';
 import { CartStore } from '../data-access/cart.service';
 
 /**
@@ -32,8 +34,22 @@ export class Shell {
    */
   protected readonly cart = inject(CartStore);
 
+  private readonly agent = inject(AgentTools);
+  private readonly tools = inject(StorefrontTools);
+
   constructor() {
     void this.cart.load();
+
+    // The shop opens itself to a browser agent, ONCE, from the one component
+    // that exists for the whole session.
+    //
+    // This is the entire degradation story (`P6-5`, CLAUDE.md invariant 8):
+    // without `navigator.modelContext` the call returns having done nothing,
+    // nothing renders differently, and the shop is exactly the shop it was.
+    // There is no flag, no fallback path and no second code path to keep
+    // working — which is what "degrades gracefully" should mean and usually
+    // does not.
+    this.agent.register(this.tools.all());
   }
 
   private readonly router = inject(Router);
