@@ -20,5 +20,14 @@ public interface IOrderRepository
 {
     Task<Order?> FindByIdAsync(OrderId id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// The order this checkout already produced, if any.
+    ///
+    /// It is the FIRST thing `PlaceOrder` asks, before anything is charged. The
+    /// unique index on the column is what makes it true under a race; this is
+    /// what makes the common case answer without one.
+    /// </summary>
+    Task<Order?> FindByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default);
+
     void Add(Order order);
 }

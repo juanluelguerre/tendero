@@ -1,11 +1,13 @@
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Inventory;
+using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ElGuerre.Tendero.Workers;
 
@@ -58,6 +60,20 @@ public static class WorkerServices
         // search projection reads availability, and the development seeder
         // receives goods.
         builder.Services.AddInventory(builder.Configuration);
+
+        // And it takes the money: the saga captures on shipping and releases the
+        // hold on cancellation, both through the payment port.
+        builder.Services.AddOrdering(builder.Configuration);
+
+        // Inside the worker the actor is the system, and this is the
+        // implementation `IPrincipalAccessor` documented and nobody had
+        // registered. It surfaced the moment Ordering's assembly was scanned
+        // here: `PlaceOrderHandler` asks who is buying, `ValidateOnBuild` walks
+        // every descriptor, and the container refused to build. Nothing drains
+        // a checkout — but a container that cannot be built is a process that
+        // does not start, which is the failure this project has now had three
+        // times.
+        builder.Services.TryAddSingleton<IPrincipalAccessor, SystemPrincipalAccessor>();
         builder.Services.Configure<StockSeedOptions>(
             builder.Configuration.GetSection(StockSeedOptions.SectionName));
 

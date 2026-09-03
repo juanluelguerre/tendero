@@ -17,6 +17,8 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
 {
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<ReturnRequest> ReturnRequests => Set<ReturnRequest>();
     public DbSet<StockItem> StockItems => Set<StockItem>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
@@ -26,6 +28,8 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new VariantConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
+        modelBuilder.ApplyConfiguration(new CartConfiguration());
+        modelBuilder.ApplyConfiguration(new ReturnRequestConfiguration());
         modelBuilder.ApplyConfiguration(new StockItemConfiguration());
         modelBuilder.ApplyConfiguration(new ReservationConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());

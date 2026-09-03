@@ -63,9 +63,17 @@ public sealed class ReserveStockOnOrderPlaced(
             return;
         }
 
-        // Only from Pending. Anything further along has already been through
-        // here, and re-reserving on a redelivery would hold the stock twice.
-        if (order.Status != OrderStatus.Pending)
+        // Pending or PaymentAuthorized, and nothing further along.
+        //
+        // Both are legitimate because checkout authorises BEFORE it places, so
+        // by the time this message drains the order is usually already
+        // PaymentAuthorized — the two happened in one transaction. Pending is
+        // what an order looks like when it was placed some other way, and the
+        // saga should not care which.
+        //
+        // Anything past that has been through here already, and re-reserving on
+        // a redelivery would hold the stock twice.
+        if (order.Status is not (OrderStatus.Pending or OrderStatus.PaymentAuthorized))
             return;
 
         var requests = order.Lines
@@ -79,11 +87,6 @@ public sealed class ReserveStockOnOrderPlaced(
 
         if (outcome.Reserved)
         {
-            // Held, and that is all. Reserving is NOT confirming: the order's own
-            // table says Pending goes to PaymentAuthorized before Confirmed, and
-            // stock says nothing about whether anybody paid. The roadmap drew
-            // this arrow as "on StockReserved -> Confirm()", and the state
-            // machine is what says it is wrong.
             logger.LogInformation("Stock held for order {OrderId}", order.Id);
             return;
         }
@@ -95,6 +98,48 @@ public sealed class ReserveStockOnOrderPlaced(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         activity?.SetTag("ordering.cancelled_reason", outcome.Reason);
+    }
+}
+
+/// <summary>
+/// The order is paid for and the shelf is holding it. Confirm it.
+///
+/// It hangs off the PAYMENT and not off the stock, and the two are not
+/// interchangeable. Checkout authorises before it places, so the payment event
+/// is the later of the two facts in every ordinary order — and an order that
+/// reached `PaymentAuthorized` without stock being held is one this handler must
+/// leave alone, which is why it asks the ledger rather than assuming.
+///
+/// The roadmap drew this arrow as "on StockReserved -> Confirm()", and the
+/// order's own transition table is what says that was wrong: `Pending` goes to
+/// `PaymentAuthorized` before `Confirmed`, and stock says nothing about whether
+/// anybody paid.
+/// </summary>
+public sealed class ConfirmOrderWhenPaidAndHeld(
+    IOrderRepository orders,
+    IStockLedger stock,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock) : IDomainEventHandler<OrderPaymentAuthorized>
+{
+    public async Task HandleAsync(
+        OrderPaymentAuthorized domainEvent, CancellationToken cancellationToken)
+    {
+        var order = await orders.FindByIdAsync(domainEvent.OrderId, cancellationToken);
+
+        // Idempotent by state: a redelivery finds it Confirmed and stops.
+        if (order?.Status != OrderStatus.PaymentAuthorized)
+            return;
+
+        // Both messages are drained in the order they were written, so this one
+        // arrives AFTER the reservation was attempted. If there is no hold, the
+        // stock arm has either refused (and cancelled the order, which this
+        // status check has already excluded) or has not run yet — and the
+        // redelivery will find the hold next time.
+        if (!await stock.IsHeldAsync(order.Id, cancellationToken))
+            return;
+
+        order.Confirm(clock);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
 
@@ -115,6 +160,49 @@ public sealed class ReleaseStockOnOrderCancelled(IStockLedger stock)
 }
 
 /// <summary>
+/// The other half of the same compensation, and the one that costs a customer
+/// real money if it is missing.
+///
+/// Checkout authorises before it places, so an order that cannot be filled has
+/// somebody's card holding funds against a parcel that will not ship. Releasing
+/// it is <c>VoidAsync</c> and never <c>RefundAsync</c>: nothing was ever taken,
+/// and crediting money that was not charged is a different conversation with the
+/// customer AND with the bank.
+///
+/// It is a separate handler from the stock release rather than two calls in one,
+/// because they fail independently: a provider being down must not leave stock
+/// held, and the outbox retries each message on its own.
+/// </summary>
+public sealed class VoidPaymentOnOrderCancelled(
+    IOrderRepository orders,
+    IPaymentProviderRegistry payments,
+    ILogger<VoidPaymentOnOrderCancelled> logger) : IDomainEventHandler<OrderCancelled>
+{
+    public async Task HandleAsync(OrderCancelled domainEvent, CancellationToken cancellationToken)
+    {
+        var order = await orders.FindByIdAsync(domainEvent.OrderId, cancellationToken);
+
+        // Nothing authorised, or already captured. A captured payment is a
+        // REFUND, which belongs to the returns flow and not here.
+        if (order?.Payment is not { CaptureId: null } payment)
+            return;
+
+        var released = await payments.Get(payment.Provider)
+            .VoidAsync(payment.AuthorizationId, cancellationToken);
+
+        if (released.Succeeded)
+            logger.LogInformation("Released the hold on cancelled order {OrderId}", order.Id);
+        else
+            // Loudly, and without throwing: a hold that could not be released
+            // expires on its own in about a week, and dead-lettering the message
+            // would hide it behind a retry count.
+            logger.LogError(
+                "Could not release the hold on cancelled order {OrderId}: {Reason}",
+                order.Id, released.FailureReason);
+    }
+}
+
+/// <summary>
 /// The goods left the building: the hold becomes a decrement. On shipping and
 /// not on confirming, because confirming is a promise and shipping is a fact —
 /// and stock that left the shelf on a promise is stock a cancellation cannot
@@ -125,4 +213,50 @@ public sealed class CommitStockOnOrderShipped(IStockLedger stock)
 {
     public Task HandleAsync(OrderShipped domainEvent, CancellationToken cancellationToken) =>
         stock.CommitAsync(domainEvent.OrderId, cancellationToken);
+}
+
+/// <summary>
+/// The parcel is out; take the money.
+///
+/// Capture on SHIPPING and not on confirming, for the same reason stock is
+/// committed there: confirming is a promise and shipping is a fact. Charging for
+/// a promise is how a shop ends up refunding things it never sent.
+///
+/// The order records the capture itself, so a redelivery finds it already
+/// captured and raises nothing — the aggregate holds that check rather than this
+/// handler, because the webhook path reaches it too.
+/// </summary>
+public sealed class CapturePaymentOnOrderShipped(
+    IOrderRepository orders,
+    IPaymentProviderRegistry payments,
+    IUnitOfWork unitOfWork,
+    TimeProvider clock,
+    ILogger<CapturePaymentOnOrderShipped> logger) : IDomainEventHandler<OrderShipped>
+{
+    public async Task HandleAsync(OrderShipped domainEvent, CancellationToken cancellationToken)
+    {
+        var order = await orders.FindByIdAsync(domainEvent.OrderId, cancellationToken);
+
+        if (order?.Payment is not { CaptureId: null } payment)
+            return;
+
+        var capture = await payments.Get(payment.Provider)
+            .CaptureAsync(payment.AuthorizationId, order.Total, cancellationToken);
+
+        if (!capture.Succeeded)
+        {
+            // The compensation path nobody tests, and the reason authorise and
+            // capture are separate operations at all: the goods have shipped and
+            // the money did not move. It is a human problem, so it is logged
+            // rather than swallowed — and the order stays uncaptured, which is
+            // exactly what a report of unpaid shipments would look for.
+            logger.LogError(
+                "Shipped order {OrderId} could not be captured: {Reason}",
+                order.Id, capture.FailureReason);
+            return;
+        }
+
+        order.CapturePayment(clock, capture.CaptureId!);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
 }

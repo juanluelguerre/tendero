@@ -16,6 +16,7 @@
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <ProjectReference Include="../../src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
+    <ProjectReference Include="../../src/Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
     <ProjectReference Include="../../src/Workers/ElGuerre.Tendero.Workers.csproj" />
@@ -32,11 +33,24 @@
     <Content Include="../../seed/warehouses.sample.json" Link="TestData/warehouses.sample.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="../../seed/attributes.sample.json" Link="TestData/attributes.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../seed/categories.sample.json" Link="TestData/categories.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../seed/pricelists.sample.json" Link="TestData/pricelists.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../seed/promotions.sample.json" Link="TestData/promotions.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+    <Compile Include="../OrderBuilder.cs" Link="OrderBuilder.cs" />
   </ItemGroup>
 
 </Project>

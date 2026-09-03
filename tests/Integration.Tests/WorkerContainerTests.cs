@@ -60,6 +60,7 @@ public sealed class WorkerContainerTests
     [InlineData(typeof(IDomainEventHandler<OrderPlaced>))]
     [InlineData(typeof(IDomainEventHandler<OrderCancelled>))]
     [InlineData(typeof(IDomainEventHandler<OrderShipped>))]
+    [InlineData(typeof(IDomainEventHandler<OrderPaymentAuthorized>))]
     public void Everything_the_outbox_dispatches_to_can_be_resolved(Type service)
     {
         using var provider = BuildWorkerServices();

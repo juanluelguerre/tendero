@@ -135,6 +135,9 @@ public sealed class StockLedger(
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<bool> IsHeldAsync(OrderId orderId, CancellationToken cancellationToken = default) =>
+        await Held(orderId, cancellationToken) is not null;
+
     public async Task ReceiveAsync(
         string sku, string warehouseCode, int quantity, CancellationToken cancellationToken = default)
     {

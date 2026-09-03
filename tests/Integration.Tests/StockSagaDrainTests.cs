@@ -2,11 +2,13 @@ using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Persistence.Outbox;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Tests;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -189,6 +191,12 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
             services.AddTenderoPersistence(factory.ConnectionString);
             services.AddInventory(configuration);
 
+            // The saga now has a payment arm too — cancelling releases the hold
+            // as well as the stock — so the scope has to compose the same
+            // Ordering the worker does.
+            services.AddOrdering(configuration);
+            services.AddSingleton<IPrincipalAccessor, SystemPrincipalAccessor>();
+
             return new SagaScope(services.BuildServiceProvider(validateScopes: true), factory);
         }
 
@@ -206,17 +214,15 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
             var orders = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var order = Order.Place(
-                TimeProvider.System,
-                CustomerId.New(),
-                idempotencyKey: Guid.NewGuid().ToString(),
-                culture: "es",
-                lines:
+            var order = OrderBuilder.Default()
+                .WithIdempotencyKey(Guid.NewGuid().ToString())
+                .WithLines(
                 [
                     .. lines.Select(line => new OrderLine(
                         ProductId.New(), VariantId.New(), line.Sku, "A product", null,
                         new Money(10m, "EUR"), line.Quantity))
-                ]);
+                ])
+                .Build();
 
             orders.Add(order);
             await unitOfWork.SaveChangesAsync(ct);

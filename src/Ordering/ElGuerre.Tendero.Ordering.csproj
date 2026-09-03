@@ -7,7 +7,14 @@
        the process being managed, so Ordering orchestrates and Inventory is a
        service it calls in SKUs and quantities (ADR 0024). The reverse would make
        stock — which exists without orders — depend on orders, and an
-       architecture rule proves that it does not. -->
+       architecture rule proves that it does not.
+
+       Pricing is referenced for the same reason and under a stricter rule:
+       checkout has to revalidate the quote against the SAME engine that issued
+       it, or the fingerprint check is two systems agreeing about nothing. The
+       dependency is confined to one adapter — PricingCartPricer — and an
+       architecture rule fails the build if any other type in this assembly
+       touches it, exactly as the Elasticsearch client is confined in Search. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Ordering</RootNamespace>
   </PropertyGroup>
@@ -17,10 +24,20 @@
          handler nobody can diagnose. Logging abstractions come with the shared
          framework, so this is a FrameworkReference and not a package. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <!-- Declared, not inherited. Carter compiled fine through Inventory's
+         transitive reference and then found none of the modules in this
+         assembly: its catalogue only scans libraries that depend on Carter
+         DIRECTLY, so cart, checkout, returns and the webhook were all absent
+         from the OpenAPI document and from the running API. The build was
+         green. -->
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
+    <ProjectReference Include="../Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 

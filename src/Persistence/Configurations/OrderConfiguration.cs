@@ -53,6 +53,55 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         builder.Ignore(o => o.Lines);
 
+        // Addresses are VALUES and each order keeps its own copy (ADR 0002).
+        // Two JSON columns and not a shared address table: a table would let
+        // editing your address next year rewrite where last month's parcel went,
+        // which is the exact failure the snapshot rule exists to prevent.
+        builder.ComplexProperty(o => o.ShippingAddress, address => address.ToJson("shipping_address"));
+        builder.ComplexProperty(o => o.BillingAddress, address => address.ToJson("billing_address"));
+
+        builder.ComplexProperty(o => o.Shipping, shipping =>
+        {
+            shipping.Property(s => s.Amount).HasConversion(Jsonb.MoneyAsTextConverter);
+            shipping.ToJson("shipping");
+        });
+
+        builder.ComplexProperty(o => o.Quote, quote => quote.ToJson("quote"));
+
+        // The frozen totals, in one column. Five separate decimal columns would
+        // read better in psql and would let four of them be updated without the
+        // fifth, which is how a total stops matching its parts.
+        builder.ComplexProperty(o => o.Totals, totals =>
+        {
+            totals.Property(t => t.Subtotal).HasConversion(Jsonb.MoneyAsTextConverter);
+            totals.Property(t => t.DiscountTotal).HasConversion(Jsonb.MoneyAsTextConverter);
+            totals.Property(t => t.Shipping).HasConversion(Jsonb.MoneyAsTextConverter);
+            totals.Property(t => t.TaxTotal).HasConversion(Jsonb.MoneyAsTextConverter);
+            totals.Property(t => t.Total).HasConversion(Jsonb.MoneyAsTextConverter);
+            totals.ToJson("totals");
+        });
+
+        builder.ComplexCollection<List<OrderDiscount>, OrderDiscount>("_discounts", discount =>
+        {
+            discount.Property(d => d.Amount).HasConversion(Jsonb.MoneyAsTextConverter);
+            discount.ToJson("discounts");
+        });
+
+        builder.ComplexCollection<List<OrderTax>, OrderTax>("_taxes", tax =>
+        {
+            tax.Property(t => t.Base).HasConversion(Jsonb.MoneyAsTextConverter);
+            tax.Property(t => t.Amount).HasConversion(Jsonb.MoneyAsTextConverter);
+            tax.ToJson("taxes");
+        });
+
+        builder.Ignore(o => o.Discounts);
+        builder.Ignore(o => o.Taxes);
+
+        // Nullable: an order exists before anybody has paid for it, and the
+        // absence is what tells a return there is nothing to refund.
+        builder.ComplexProperty(o => o.Payment, payment => payment.ToJson("payment"));
+
+        builder.Ignore(o => o.LinesTotal);
         builder.Ignore(o => o.Total);
         builder.Ignore(o => o.DomainEvents);
     }

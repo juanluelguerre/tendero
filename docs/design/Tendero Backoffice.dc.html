@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"><style>body{margin:0;background:#E8E5DE;font-family:'Instrument Sans',system-ui,sans-serif}a{color:#D85A30}a:hover{color:#B8451F}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px 'JetBrains Mono',monospace;padding:3px 7px;background:#201D1B;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 'Instrument Sans',sans-serif;color:#201D1B}.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px 'JetBrains Mono',monospace;padding:3px 7px;background:rgba(32,29,27,.1);color:#201D1B;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'Instrument Sans',sans-serif;color:rgba(32,29,27,.6)}.dv-card{background:#171513;border:1px solid #3A342F;border-radius:10px;box-shadow:0 4px 16px rgb(32 29 27/.24);overflow:hidden}.dv-opt:target .dv-oid{background:#D85A30;color:#fff}.dv-note{font:400 12px/1.55 'Instrument Sans',sans-serif;color:#6B655F;text-wrap:pretty}.dv-next{margin:24px 0 0;font:12px/1.5 'Instrument Sans',sans-serif;color:#6B655F}</style></helmet>
+
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Tendero · Backoffice — mockups sobre el sistema real (denso y oscuro)</span></div>
+
+<div style="max-width:820px;margin:0 0 28px;padding:14px 16px;border:1px solid #CBC5BA;border-radius:10px;background:#F3F1ED">
+<div style="font:600 11px/1 'Instrument Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#6B655F;margin-bottom:8px">Ya con el repo delante</div>
+<div class="dv-note" style="font-size:13px">Reconstruido desde el código: <code style="font-family:'JetBrains Mono',monospace;font-size:11px">data-theme="dark"</code> por defecto, cuerpo 14px, tablas 13px, cabecera de tabla pegada, la franja de toldo marcando la pestaña activa, y los estados siempre <b>color + palabra</b>. Las pantallas son las que existen: cola de revisión, stock, promociones, atributos, variantes, identifícate. Copy literal de <code style="font-family:'JetBrains Mono',monospace;font-size:11px">i18n/es.json</code>. Sustituyen a los wireframes de la ronda 1. La tienda está en <b>Tendero Storefront.dc.html</b>.</div>
+</div>
+
+<div class="dv-opts">
+
+<div class="dv-opt" id="2f">
+<div class="dv-olabel"><a class="dv-oid" href="#2f">2f</a>Cola de revisión — la pantalla que decide si un producto existe</div>
+<div class="dv-card" style="width:1120px">
+<div style="background:#171513;color:#F3F1ED">
+<div style="border-bottom:1px solid #3A342F;background:#201D1B"><div style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 24px">
+<img src="assets/tendero-icon-backoffice.svg" alt="" width="26" height="26" style="display:block;width:26px;height:26px">
+<span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:#F07A50">Tendero</span>
+<span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199">Backoffice</span>
+<div style="margin-left:auto;display:flex;border:1px solid #4C453E;border-radius:6px;overflow:hidden"><span style="padding:2px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#F07A50;color:#201D1B">es</span><span style="padding:2px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#A9A199">en</span></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#A9A199">Sandra G.</span><span style="padding:1px 8px;border:1px solid #7C746C;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">catalog-manager</span></div>
+<div style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border:1px solid #4C453E;border-radius:6px;font-size:13px;font-weight:600;color:#A9A199">Cerrar sesión</div>
+</div></div>
+<div style="border-bottom:1px solid #3A342F;background:#201D1B"><div style="display:flex;gap:24px;padding:0 24px">
+<div style="position:relative;padding:12px 0;font-size:13px;color:#F3F1ED">Cola de revisión<div style="position:absolute;left:0;right:0;bottom:-1px;height:3px;background:repeating-linear-gradient(90deg,#D85A30 0 14px,#F5D3C4 14px 28px);border-radius:999px"></div></div>
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Atributos</div>
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Promociones</div>
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Stock</div>
+</div></div>
+<div style="padding:32px 24px 48px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:8px">
+<h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;line-height:1.15;letter-spacing:-.02em;color:#F3F1ED">Cola de revisión</h1>
+<span style="padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">4 pendientes</span>
+<div style="margin-left:auto;display:flex;gap:8px"><div style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border:1px solid #4C453E;border-radius:6px;font-size:13px;font-weight:600;color:#A9A199">Importar catálogo de ejemplo</div></div>
+</div>
+<p style="margin:0 0 24px;max-width:76ch;font-size:13px;line-height:1.35;color:#A9A199">Importar nunca publica: Draft es la razón de ser de esta cola, y sólo publicar hace encontrable un producto.</p>
+<div style="background:#201D1B;border:1px solid #3A342F;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:minmax(0,2.2fr) 1fr 110px 150px 90px 110px;gap:12px;padding:12px;background:#2A2622;border-bottom:1px solid #3A342F;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199"><span>Producto</span><span>Marca</span><span style="text-align:end">Precio</span><span>Idiomas</span><span></span><span></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,2.2fr) 1fr 110px 150px 90px 110px;gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start"><span><span style="display:block;font-weight:600;color:#F3F1ED">Zapatillas de running amortiguadas Pulse Runner</span><span style="display:block;margin-top:2px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">pulse-runner-zapatillas</span></span><span style="color:#F3F1ED">Vertex</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">79,95 €</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">es · en</span></span><span style="font-size:13px;color:#A9A199">Variantes</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border-radius:6px;background:#F07A50;color:#201D1B;font-size:13px;font-weight:600">Publicar</span></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,2.2fr) 1fr 110px 150px 90px 110px;gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start;background:#2A2622"><span><span style="display:block;font-weight:600;color:#F3F1ED">Mochila urbana impermeable 25L CityPack</span><span style="display:block;margin-top:2px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">citypack-mochila-25l</span></span><span style="color:#F3F1ED">Nordwind</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">54,90 €</span><span><span style="padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">Falta en</span></span><span style="font-size:13px;color:#F07A50">Variantes</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border-radius:6px;background:#F07A50;color:#201D1B;font-size:13px;font-weight:600">Publicar</span></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,2.2fr) 1fr 110px 150px 90px 110px;gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start"><span><span style="display:block;font-weight:600;color:#F3F1ED">Cafetera de goteo programable Aroma 12 tazas</span><span style="display:block;margin-top:2px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">aroma-cafetera-12-tazas</span></span><span style="color:#F3F1ED">Kuisina</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">39,99 €</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">es · en</span></span><span style="font-size:13px;color:#A9A199">Variantes</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border-radius:6px;background:#F07A50;color:#201D1B;font-size:13px;font-weight:600;opacity:.55">Publicando…</span></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,2.2fr) 1fr 110px 150px 90px 110px;gap:12px;padding:12px;font-size:13px;align-items:start"><span><span style="display:block;font-weight:600;color:#F3F1ED">Set de 3 sartenes antiadherentes aptas para inducción</span><span style="display:block;margin-top:2px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">kuisina-sartenes-set-3</span></span><span style="color:#F3F1ED">Kuisina</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">44,95 €</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">es · en</span></span><span style="font-size:13px;color:#A9A199">Variantes</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border-radius:6px;background:#F07A50;color:#201D1B;font-size:13px;font-weight:600">Publicar</span></span></div>
+</div>
+</div>
+</div>
+</div>
+<p class="dv-note" style="width:1120px;margin:2px 0 0">Sin estado optimista: la fila se va cuando el servidor confirma, no antes — de ahí «Publicando…» con el botón desactivado. La identidad y el rol viven en la barra, porque «¿por qué no puedo publicar?» es una pregunta que la interfaz debería responder antes de que se haga.</p>
+</div>
+
+<div class="dv-opt" id="2g">
+<div class="dv-olabel"><a class="dv-oid" href="#2g">2g</a>Stock — el recuento sustituye, y el panel que lo explica</div>
+<div class="dv-card" style="width:1120px">
+<div style="background:#171513;color:#F3F1ED">
+<div style="border-bottom:1px solid #3A342F;background:#201D1B"><div style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 24px">
+<img src="assets/tendero-icon-backoffice.svg" alt="" width="26" height="26" style="width:26px;height:26px">
+<span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:#F07A50">Tendero</span>
+<span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199">Backoffice</span>
+<div style="margin-left:auto;display:flex;border:1px solid #4C453E;border-radius:6px;overflow:hidden"><span style="padding:2px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#F07A50;color:#201D1B">es</span><span style="padding:2px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#A9A199">en</span></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#A9A199">Sandra G.</span><span style="padding:1px 8px;border:1px solid #7C746C;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">catalog-manager</span></div>
+<div style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border:1px solid #4C453E;border-radius:6px;font-size:13px;font-weight:600;color:#A9A199">Cerrar sesión</div>
+</div></div>
+<div style="border-bottom:1px solid #3A342F;background:#201D1B"><div style="display:flex;gap:24px;padding:0 24px">
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Cola de revisión</div>
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Atributos</div>
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Promociones</div>
+<div style="position:relative;padding:12px 0;font-size:13px;color:#F3F1ED">Stock<div style="position:absolute;left:0;right:0;bottom:-1px;height:3px;background:repeating-linear-gradient(90deg,#D85A30 0 14px,#F5D3C4 14px 28px);border-radius:999px"></div></div>
+</div></div>
+<div style="padding:32px 24px 48px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:8px"><h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em;color:#F3F1ED">Stock</h1><span style="padding:1px 8px;border:1px solid #B3261E;border-radius:4px;font-size:11px;color:#B3261E">1 sin existencias</span></div>
+<p style="margin:0 0 24px;max-width:76ch;font-size:13px;line-height:1.35;color:#A9A199">Un recuento sustituye lo que hay en la estantería; no suma. Guardar dos veces no cambia nada la segunda.</p>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start">
+<div style="background:#201D1B;border:1px solid #3A342F;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:130px minmax(0,1fr) 90px 90px 90px 88px;gap:12px;padding:12px;background:#2A2622;border-bottom:1px solid #3A342F;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199"><span>SKU</span><span>Almacén</span><span style="text-align:end">En almacén</span><span style="text-align:end">Reservado</span><span style="text-align:end">Disponible</span><span></span></div>
+<div style="display:grid;grid-template-columns:130px minmax(0,1fr) 90px 90px 90px 88px;gap:12px;padding:10px 12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:center"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">B073WXYZ01</span><span style="color:#F3F1ED">Almacén central</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;justify-content:flex-end;width:72px;padding:2px 8px;border:1px solid #4C453E;border-radius:6px;background:#171513;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">14</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#C77F14">2</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;color:#F3F1ED">12</span><span></span></div>
+<div style="display:grid;grid-template-columns:130px minmax(0,1fr) 90px 90px 90px 88px;gap:12px;padding:10px 12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:center;background:#2A2622"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">B08JKLM202</span><span style="color:#F3F1ED">Almacén central</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;justify-content:flex-end;width:72px;padding:2px 8px;border:1px solid #F07A50;border-radius:6px;background:#171513;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">9</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#7C746C">0</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;color:#F3F1ED">9</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;min-height:24px;padding:0 12px;border-radius:6px;background:#F07A50;color:#201D1B;font-size:11px;font-weight:600">Guardar</span></span></div>
+<div style="display:grid;grid-template-columns:130px minmax(0,1fr) 90px 90px 90px 88px;gap:12px;padding:10px 12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:center"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">B09PQRS303</span><span style="color:#F3F1ED">Tienda Chamberí</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;justify-content:flex-end;width:72px;padding:2px 8px;border:1px solid #4C453E;border-radius:6px;background:#171513;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">6</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#C77F14">1</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;color:#F3F1ED">5</span><span style="text-align:end"><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Guardado</span></span></div>
+<div style="display:grid;grid-template-columns:130px minmax(0,1fr) 90px 90px 90px 88px;gap:12px;padding:10px 12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:center"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">B07TUVW404</span><span style="color:#F3F1ED">Almacén central</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;justify-content:flex-end;width:72px;padding:2px 8px;border:1px solid #4C453E;border-radius:6px;background:#171513;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">31</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#C77F14">4</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;color:#F3F1ED">27</span><span></span></div>
+<div style="display:grid;grid-template-columns:130px minmax(0,1fr) 90px 90px 90px 88px;gap:12px;padding:10px 12px;font-size:13px;align-items:center"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">B06GHIJ505</span><span style="color:#F3F1ED">Tienda Chamberí</span><span style="text-align:end"><span style="display:inline-flex;align-items:center;justify-content:flex-end;width:72px;padding:2px 8px;border:1px solid #4C453E;border-radius:6px;background:#171513;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">3</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#C77F14">3</span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:500;color:#B3261E">0</span><span></span></div>
+</div>
+<div style="padding:16px;border:1px solid #3A342F;border-radius:10px;background:#201D1B">
+<h2 style="margin:0 0 12px;font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#A9A199">Reservas recientes</h2>
+<div style="display:grid;gap:12px">
+<div style="padding-bottom:12px;border-bottom:1px solid #3A342F;font-size:13px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">Reservado</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">8f13a2c4</span></div>
+<ul style="margin:8px 0 0;padding:0;list-style:none"><li style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A9A199">B073WXYZ01 ×2</li></ul>
+</div>
+<div style="padding-bottom:12px;border-bottom:1px solid #3A342F;font-size:13px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Enviado</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">4b90ee71</span></div>
+<ul style="margin:8px 0 0;padding:0;list-style:none"><li style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A9A199">B07TUVW404 ×4</li><li style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A9A199">B09PQRS303 ×1</li></ul>
+</div>
+<div style="padding-bottom:12px;border-bottom:1px solid #3A342F;font-size:13px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="padding:1px 8px;border:1px solid #B3261E;border-radius:4px;font-size:11px;color:#B3261E">Liberado</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">c721f008</span></div>
+<ul style="margin:8px 0 0;padding:0;list-style:none"><li style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A9A199">B06GHIJ505 ×2</li></ul>
+<p style="margin:8px 0 0;color:#A9A199">Sólo quedaban 3 unidades en Tienda Chamberí y ya estaban reservadas para otro pedido.</p>
+</div>
+<div style="font-size:13px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="padding:1px 8px;border:1px solid #7C746C;border-radius:4px;font-size:11px;color:#7C746C">Caducado</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">1de54aa9</span></div>
+<ul style="margin:8px 0 0;padding:0;list-style:none"><li style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#A9A199">B08JKLM202 ×1</li></ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p class="dv-note" style="width:1120px;margin:2px 0 0">Tres números y sólo dos significan algo a la vista: lo reservado (ámbar, y gris cuando es cero — un cero en ámbar convertiría la columna entera en una alarma) y lo que queda, en rojo cuando es cero. La reserva más interesante del panel es la <b>negativa</b>: lleva la frase con la que el inventario dijo que no.</p>
+</div>
+
+<div class="dv-opt" id="2h">
+<div class="dv-olabel"><a class="dv-oid" href="#2h">2h</a>Promociones — la columna que importa es «Combina»</div>
+<div class="dv-card" style="width:1120px">
+<div style="background:#171513;color:#F3F1ED">
+<div style="border-bottom:1px solid #3A342F;background:#201D1B"><div style="display:flex;align-items:center;gap:12px;min-height:48px;padding:0 24px">
+<img src="assets/tendero-icon-backoffice.svg" alt="" width="26" height="26" style="width:26px;height:26px">
+<span style="font-family:'Bricolage Grotesque',sans-serif;font-weight:800;color:#F07A50">Tendero</span>
+<span style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199">Backoffice</span>
+<div style="margin-left:auto;display:flex;border:1px solid #4C453E;border-radius:6px;overflow:hidden"><span style="padding:2px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:#F07A50;color:#201D1B">es</span><span style="padding:2px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#A9A199">en</span></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="color:#A9A199">Rubén A.</span><span style="padding:1px 8px;border:1px solid #7C746C;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">pricing-viewer</span></div>
+<div style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border:1px solid #4C453E;border-radius:6px;font-size:13px;font-weight:600;color:#A9A199">Cerrar sesión</div>
+</div></div>
+<div style="border-bottom:1px solid #3A342F;background:#201D1B"><div style="display:flex;gap:24px;padding:0 24px">
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Cola de revisión</div>
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Atributos</div>
+<div style="position:relative;padding:12px 0;font-size:13px;color:#F3F1ED">Promociones<div style="position:absolute;left:0;right:0;bottom:-1px;height:3px;background:repeating-linear-gradient(90deg,#D85A30 0 14px,#F5D3C4 14px 28px);border-radius:999px"></div></div>
+<div style="padding:12px 0;font-size:13px;color:#A9A199">Stock</div>
+</div></div>
+<div style="padding:32px 24px 48px">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:8px"><h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.02em;color:#F3F1ED">Promociones</h1><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">5 activas</span></div>
+<p style="margin:0 0 24px;max-width:76ch;font-size:13px;line-height:1.35;color:#A9A199">La columna que importa es la de combinación: dice qué deja de aplicarse cuando ésta se aplica.</p>
+<div style="background:#201D1B;border:1px solid #3A342F;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;background:#2A2622;border-bottom:1px solid #3A342F;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199"><span>Código</span><span>Nombre</span><span>Efecto</span><span>Combina</span><span style="text-align:end">Prioridad</span><span>Estado</span></div>
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">BLACKFRIDAY</span><span style="color:#F3F1ED">Black Friday</span><span><span style="color:#A9A199">percent-off-line</span> <span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">30%</span></span><span><span style="display:inline-block;padding:1px 8px;border:1px solid #B3261E;border-radius:4px;font-size:11px;color:#B3261E">Exclusiva</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">5</span><span><span style="padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">Sin activar</span> <span style="padding:1px 8px;border:1px solid #7C746C;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">cupón</span></span></div>
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start;background:#2A2622"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">SUMMER25</span><span style="color:#F3F1ED">Rebajas de verano</span><span><span style="color:#A9A199">percent-off-line</span> <span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">25%</span></span><span><span style="display:inline-block;padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">Una por grupo</span> <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">seasonal</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">10</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Activa</span></span></div>
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">APPAREL10</span><span style="color:#F3F1ED">10% en ropa</span><span><span style="color:#A9A199">percent-off-line</span> <span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">10%</span></span><span><span style="display:inline-block;padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">Una por grupo</span> <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">seasonal</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">20</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Activa</span></span></div>
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">SHIRT3X2</span><span style="color:#F3F1ED">3x2 en camisetas</span><span><span style="color:#A9A199">buy-x-get-y</span> <span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">2+1</span></span><span><span style="display:inline-block;padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Acumula</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">25</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Activa</span></span></div>
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">KITCHEN5</span><span style="color:#F3F1ED">5 € en menaje <span style="margin-left:8px;padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">en</span></span><span><span style="color:#A9A199">amount-off-order</span> <span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">5,00 €</span></span><span><span style="display:inline-block;padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Acumula</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">30</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Activa</span></span></div>
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;border-bottom:1px solid #3A342F;font-size:13px;align-items:start"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">SHIP0</span><span style="color:#F3F1ED">Envío gratis desde 50 €</span><span><span style="color:#A9A199">free-shipping</span></span><span><span style="display:inline-block;padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Acumula</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">40</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Activa</span></span></div>
+<div style="display:grid;grid-template-columns:120px minmax(0,1.3fr) minmax(0,1.2fr) minmax(0,1.3fr) 90px minmax(0,1.1fr);gap:12px;padding:12px;font-size:13px;align-items:start"><span style="font-family:'JetBrains Mono',monospace;font-weight:500;color:#F3F1ED">VIPWELCOME</span><span style="color:#F3F1ED">Bienvenida VIP</span><span><span style="color:#A9A199">amount-off-order</span> <span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">10,00 €</span></span><span><span style="display:inline-block;padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Acumula</span></span><span style="text-align:end;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">50</span><span><span style="padding:1px 8px;border:1px solid #8FB463;border-radius:4px;font-size:11px;color:#8FB463">Activa</span></span><span></span></div>
+</div>
+</div>
+</div>
+</div>
+<p class="dv-note" style="width:1120px;margin:2px 0 0">Sólo lectura, y dicho en voz alta: hoy las promociones vienen de un fichero. Cada política tiene su propio contorno, así que la forma de la tabla responde «¿qué deja de aplicarse?» antes de leer nada. Las dos <code style="font-family:'JetBrains Mono',monospace">seasonal</code> se ven juntas a propósito: son rivales.</p>
+</div>
+
+<div class="dv-opt" id="2i">
+<div class="dv-olabel"><a class="dv-oid" href="#2i">2i</a>Atributos, variantes, identifícate y el vacío</div>
+<div style="display:flex;flex-wrap:wrap;gap:20px;width:1120px">
+<div class="dv-card" style="width:550px">
+<div style="background:#171513;color:#F3F1ED;padding:24px">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><h1 style="margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;color:#F3F1ED">Atributos</h1><span style="padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">2 sin completar</span></div>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.35;color:#A9A199">Una etiqueta sin traducir no es cosmética: una opción sin inglés es exactamente lo que hacía que «navy blue shoes» no encontrara nada.</p>
+<div style="background:#201D1B;border:1px solid #3A342F;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:140px 100px minmax(0,1fr);gap:12px;padding:10px 12px;background:#2A2622;border-bottom:1px solid #3A342F;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199"><span>Código</span><span>Tipo</span><span>Opciones</span></div>
+<div style="display:grid;grid-template-columns:140px 100px minmax(0,1fr);gap:12px;padding:10px 12px;border-bottom:1px solid #3A342F;font-size:13px"><span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">color</span><span style="color:#A9A199">select</span><span style="color:#F3F1ED">azul marino, negro, blanco, verde bosque</span></div>
+<div style="display:grid;grid-template-columns:140px 100px minmax(0,1fr);gap:12px;padding:10px 12px;border-bottom:1px solid #3A342F;font-size:13px;background:#2A2622"><span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">material</span><span style="color:#A9A199">select</span><span style="color:#F3F1ED">malla sintética, ripstop reciclado <span style="margin-left:6px;padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">falta en</span></span></div>
+<div style="display:grid;grid-template-columns:140px 100px minmax(0,1fr);gap:12px;padding:10px 12px;border-bottom:1px solid #3A342F;font-size:13px"><span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">tallas</span><span style="color:#A9A199">text</span><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#F3F1ED">36-42 · S-XXL</span></div>
+<div style="display:grid;grid-template-columns:140px 100px minmax(0,1fr);gap:12px;padding:10px 12px;font-size:13px;background:#2A2622"><span style="font-family:'JetBrains Mono',monospace;color:#F3F1ED">genero</span><span style="color:#A9A199">select</span><span style="color:#F3F1ED">mujer, hombre <span style="margin-left:6px;padding:1px 8px;border:1px solid #C77F14;border-radius:4px;font-size:11px;color:#C77F14">falta en</span></span></div>
+</div>
+</div>
+</div>
+<div class="dv-card" style="width:550px">
+<div style="background:#171513;color:#F3F1ED;padding:24px">
+<h1 style="margin:0 0 8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;color:#F3F1ED">Variantes</h1>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.35;color:#A9A199">Declara por qué ejes varía el producto. Se genera la matriz entera: retirar después las combinaciones que no existen cuesta menos que crearlas una a una.</p>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px"><div><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199;margin-bottom:6px">Eje</div><div style="min-height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid #4C453E;border-radius:6px;background:#171513;font-family:'JetBrains Mono',monospace;font-size:13px;color:#F3F1ED">color</div></div><div><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#A9A199;margin-bottom:6px">Opciones (separadas por comas)</div><div style="min-height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid #4C453E;border-radius:6px;background:#171513;font-size:13px;color:#F3F1ED">azul marino, negro, verde bosque</div></div></div>
+<div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px"><div style="min-height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid #4C453E;border-radius:6px;background:#171513;font-family:'JetBrains Mono',monospace;font-size:13px;color:#F3F1ED">talla</div><div style="min-height:32px;display:flex;align-items:center;padding:0 12px;border:1px solid #F07A50;border-radius:6px;background:#171513;font-size:13px;color:#F3F1ED">36, 37, 38, 39, 40, 41, 42</div></div>
+<div style="display:inline-flex;align-self:flex-start;align-items:center;min-height:32px;padding:0 16px;border:1px solid #4C453E;border-radius:6px;font-size:13px;font-weight:600;color:#A9A199">Añadir eje</div>
+<div style="display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid #3A342F"><span style="font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:13px;color:#A9A199">21 variantes</span><div style="margin-left:auto;display:flex;gap:8px"><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border:1px solid #4C453E;border-radius:6px;font-size:13px;font-weight:600;color:#A9A199">Volver a la cola</span><span style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border-radius:6px;background:#F07A50;color:#201D1B;font-size:13px;font-weight:600">Generar</span></div></div>
+</div>
+</div>
+</div>
+<div class="dv-card" style="width:550px">
+<div style="background:#171513;color:#F3F1ED;padding:24px">
+<h1 style="margin:0 0 8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;color:#F3F1ED">Identifícate</h1>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.35;color:#A9A199">El emisor de desarrollo firma para estas identidades. No hay contraseñas: cuando entre Keycloak, esta pantalla se sustituye por su redirección.</p>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #4C453E;border-radius:6px;background:#201D1B"><span style="flex:1;font-size:14px;color:#F3F1ED">Sandra G.</span><span style="padding:1px 8px;border:1px solid #7C746C;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">catalog-manager</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #4C453E;border-radius:6px;background:#201D1B"><span style="flex:1;font-size:14px;color:#F3F1ED">Rubén A.</span><span style="padding:1px 8px;border:1px solid #7C746C;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#7C746C">pricing-viewer</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #4C453E;border-radius:6px;background:#201D1B"><span style="flex:1;font-size:14px;color:#F3F1ED">Agente UCP</span><span style="padding:1px 8px;border:1px solid #F07A50;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#F07A50">agent</span></div>
+</div>
+<p style="margin:16px 0 0;font-size:13px;color:#B3261E">El emisor de desarrollo no responde. Arranca la API con dotnet run --project src/AppHost.</p>
+</div>
+</div>
+<div class="dv-card" style="width:550px">
+<div style="background:#171513;color:#F3F1ED;padding:24px">
+<h1 style="margin:0 0 8px;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;color:#F3F1ED">Cola de revisión</h1>
+<p style="margin:0 0 20px;font-size:13px;line-height:1.35;color:#A9A199">Importar nunca publica: Draft es la razón de ser de esta cola, y sólo publicar hace encontrable un producto.</p>
+<div style="display:grid;justify-items:center;gap:16px;padding:64px 20px;border:1px dashed #4C453E;border-radius:10px;text-align:center">
+<p style="margin:0;max-width:46ch;font-size:14px;line-height:1.35;color:#A9A199">Aquí no hay nada todavía — importa un catálogo para empezar.</p>
+<span style="display:inline-flex;align-items:center;min-height:32px;padding:0 16px;border-radius:6px;background:#F07A50;color:#201D1B;font-size:13px;font-weight:600">Importar catálogo de ejemplo</span>
+</div>
+<p style="margin:16px 0 0;font-size:12px;color:#7C746C">Nunca «No records found»: la interfaz habla como un tendero.</p>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Prueba: “añade Actividad de agentes y Evaluación de búsqueda (están en el nav pero no tienen pantalla)” · “<a class="dv-oid" href="#2f">2f</a> en móvil” · “versión clara del backoffice” · “el detalle de un producto en Draft”</p>
+</section>
+
+
+</x-dc>
+</body>
+</html>

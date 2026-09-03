@@ -38,6 +38,15 @@ public interface IStockLedger
     Task CommitAsync(OrderId orderId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Whether this order currently has stock held for it.
+    ///
+    /// A question and not a state machine: the caller is another context's
+    /// handler deciding whether an order can be confirmed, and it must be able
+    /// to ask without ever seeing a <c>Reservation</c>. Values in, a boolean out.
+    /// </summary>
+    Task<bool> IsHeldAsync(OrderId orderId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Give the hold back. This is the compensation arm of the saga, and the one
     /// that never runs on the happy path — which is exactly why it gets its own
     /// test rather than being assumed.

@@ -239,6 +239,32 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// And Ordering sees Pricing through exactly ONE file.
+    ///
+    /// The reference is deliberate: checkout has to revalidate a quote against
+    /// the same engine that issued it, or the fingerprint check is two systems
+    /// agreeing about nothing (ADR 0016). What must not happen is the dependency
+    /// spreading — a handler that reached for `IPriceResolver` itself would be a
+    /// second pricing engine, and the day the two drifted the check would still
+    /// pass.
+    ///
+    /// So the rule is the one the Elasticsearch client already lives under: the
+    /// adapter may know, and nothing else may. Adding a second file that touches
+    /// Pricing fails the build, which is the moment to ask whether the crossing
+    /// still belongs in one place.
+    /// </summary>
+    [Fact]
+    public void Ordering_sees_pricing_through_one_adapter_and_nowhere_else()
+    {
+        var result = Types.InAssembly(Solution.Ordering)
+            .That().DoNotHaveName("PricingCartPricer")
+            .ShouldNot().HaveDependencyOn("ElGuerre.Tendero.Pricing")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, Describe(Solution.Ordering, result));
+    }
+
+    /// <summary>
     /// What <paramref name="assembly"/>'s domain may not touch: the assemblies
     /// its .csproj references (minus the framework and the SharedKernel) and its
     /// own namespaces outside Domain.

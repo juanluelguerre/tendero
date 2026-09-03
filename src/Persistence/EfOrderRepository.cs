@@ -18,5 +18,9 @@ internal sealed class EfOrderRepository(TenderoDbContext context) : IOrderReposi
     public Task<Order?> FindByIdAsync(OrderId id, CancellationToken cancellationToken = default) =>
         context.Orders.FirstOrDefaultAsync(order => order.Id == id, cancellationToken);
 
+    public Task<Order?> FindByIdempotencyKeyAsync(
+        string key, CancellationToken cancellationToken = default) =>
+        context.Orders.FirstOrDefaultAsync(order => order.IdempotencyKey == key, cancellationToken);
+
     public void Add(Order order) => context.Orders.Add(order);
 }

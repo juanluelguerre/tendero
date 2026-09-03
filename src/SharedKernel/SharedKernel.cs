@@ -1,6 +1,6 @@
 namespace ElGuerre.Tendero.SharedKernel;
 
-// ---------- Ids fuertemente tipados ----------
+// ---------- Strongly-typed ids ----------
 public readonly record struct ProductId(Guid Value)
 {
     public static ProductId New() => new(Guid.CreateVersion7());
@@ -28,6 +28,27 @@ public readonly record struct VariantId(Guid Value)
 public readonly record struct CustomerId(Guid Value)
 {
     public static CustomerId New() => new(Guid.CreateVersion7());
+    public override string ToString() => Value.ToString();
+}
+
+/// <summary>
+/// A cart's identity. Distinct from the token a guest's browser holds: the id is
+/// how the system names the cart, the token is how an anonymous visitor proves
+/// it is theirs, and conflating them would put a bearer credential in every URL
+/// and every log line.
+/// </summary>
+public readonly record struct CartId(Guid Value)
+{
+    public static CartId New() => new(Guid.CreateVersion7());
+    public override string ToString() => Value.ToString();
+}
+
+/// <summary>A return request's identity. Returns are their own aggregate because
+/// they are per LINE, which an order-level state machine cannot express without
+/// a combinatorial explosion.</summary>
+public readonly record struct ReturnRequestId(Guid Value)
+{
+    public static ReturnRequestId New() => new(Guid.CreateVersion7());
     public override string ToString() => Value.ToString();
 }
 

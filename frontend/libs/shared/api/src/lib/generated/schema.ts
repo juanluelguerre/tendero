@@ -132,6 +132,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{orderId}/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RequestReturn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/{provider}/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PaymentWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pricing/quote": {
         parameters: {
             query?: never;
@@ -196,10 +228,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListReturns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/returns/{returnId}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DecideReturn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetCart"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cart/lines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AddToCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cart/lines/{sku}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetCartLine"];
+        post?: never;
+        delete: operations["RemoveCartLine"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkout/shipping-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["GetShippingOptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PlaceOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AddToCartRequest: {
+            sku: string;
+            /**
+             * Format: int32
+             * @default 1
+             */
+            quantity: number;
+        };
+        AddressRequest: {
+            recipientName: string;
+            line1: string;
+            line2: null | string;
+            city: string;
+            region: null | string;
+            postalCode: string;
+            countryCode: string;
+            phone: null | string;
+        };
         AppliedDiscountResponse: {
             promotionCode: string;
             label: string;
@@ -231,6 +393,27 @@ export interface components {
                 [key: string]: string;
             };
         };
+        CartLineView: {
+            productId: string;
+            variantId: string;
+            sku: string;
+            productName: string;
+            variantLabel: null | string;
+            imageId: null | string;
+            /** Format: int32 */
+            quantity: number;
+        };
+        CartView: {
+            cartId: string;
+            token: string;
+            culture: string;
+            currency: string;
+            /** Format: int32 */
+            itemCount: number;
+            /** Format: date-time */
+            expiresAt: string;
+            lines: components["schemas"]["CartLineView"][];
+        };
         CountStockRequest: {
             /** Format: int32 */
             onHand: number;
@@ -242,6 +425,10 @@ export interface components {
             onHand: number;
             /** Format: int32 */
             available: number;
+        };
+        DecideReturnRequest: {
+            decision: string;
+            reason: null | string;
         };
         DefineVariantsRequest: {
             axes: components["schemas"]["VariantAxisRequest"][];
@@ -284,6 +471,73 @@ export interface components {
         ListStockResult: {
             rows: components["schemas"]["StockRowView"][];
             reservations: components["schemas"]["ReservationView"][];
+        };
+        OrderDiscountView: {
+            promotionCode: string;
+            label: string;
+            /** Format: double */
+            amount: number;
+        };
+        OrderLineView: {
+            sku: string;
+            productName: string;
+            variantLabel: null | string;
+            /** Format: double */
+            unitPrice: number;
+            /** Format: int32 */
+            quantity: number;
+        };
+        OrderTaxView: {
+            taxClass: string;
+            /** Format: double */
+            rate: number;
+            /** Format: double */
+            base: number;
+            /** Format: double */
+            amount: number;
+        };
+        OrderView: {
+            orderId: string;
+            status: string;
+            culture: string;
+            currency: string;
+            /** Format: date-time */
+            createdAt: string;
+            shippingAddress: string;
+            shippingLabel: string;
+            lines: components["schemas"]["OrderLineView"][];
+            discounts: components["schemas"]["OrderDiscountView"][];
+            taxes: components["schemas"]["OrderTaxView"][];
+            /** Format: double */
+            subtotal: number;
+            /** Format: double */
+            discountTotal: number;
+            /** Format: double */
+            shipping: number;
+            /** Format: double */
+            taxTotal: number;
+            /** Format: double */
+            total: number;
+        };
+        PlaceOrderRequest: {
+            shippingAddress: components["schemas"]["AddressRequest"];
+            shippingOptionCode: string;
+            quoteHash: string;
+            instrument: string;
+            idempotencyKey: string;
+            billingAddress?: null | components["schemas"]["AddressRequest"];
+            coupons?: null | string[];
+        };
+        PriceChangedResponse: {
+            quoteHash: string;
+            /** Format: double */
+            total: number;
+            /** Format: double */
+            shipping: number;
+            /** Format: double */
+            taxTotal: number;
+            /** Format: double */
+            discountTotal: number;
         };
         ProductSummary: {
             productId: string;
@@ -385,6 +639,9 @@ export interface components {
             /** Format: double */
             elapsedSeconds: number;
         };
+        RequestReturnRequest: {
+            lines: components["schemas"]["ReturnLineRequest"][];
+        };
         ReservationView: {
             reservationId: string;
             orderId: string;
@@ -395,6 +652,31 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             expiresAt: string;
+        };
+        ReturnLineRequest: {
+            sku: string;
+            /** Format: int32 */
+            quantity: number;
+            reason: string;
+            comment: null | string;
+        };
+        ReturnLineView: {
+            sku: string;
+            /** Format: int32 */
+            quantity: number;
+            reason: string;
+            comment: null | string;
+        };
+        ReturnView: {
+            returnId: string;
+            orderId: string;
+            status: string;
+            resolution: null | string;
+            /** Format: double */
+            refundAmount: null | number;
+            /** Format: date-time */
+            createdAt: string;
+            lines: components["schemas"]["ReturnLineView"][];
         };
         SearchHit: {
             productId: string;
@@ -426,6 +708,22 @@ export interface components {
             pageSize: number;
             /** Format: double */
             tookMs: number;
+        };
+        SetCartLineRequest: {
+            /** Format: int32 */
+            quantity: number;
+        };
+        ShippingOptionView: {
+            code: string;
+            label: string;
+            /** Format: double */
+            amount: number;
+            /** Format: int32 */
+            estimatedDays: null | number;
+        };
+        ShippingOptionsResponse: {
+            currency: string;
+            options: components["schemas"]["ShippingOptionView"][];
         };
         StockRowView: {
             sku: string;
@@ -689,6 +987,90 @@ export interface operations {
             };
         };
     };
+    RequestReturn: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    PaymentWebhook: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     QuoteCart: {
         parameters: {
             query?: {
@@ -785,6 +1167,321 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReindexProductsResult"];
+                };
+            };
+        };
+    };
+    ListReturns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnView"][];
+                };
+            };
+        };
+    };
+    DecideReturn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                returnId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecideReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    GetCart: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartView"];
+                };
+            };
+        };
+    };
+    AddToCart: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddToCartRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    SetCartLine: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                sku: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetCartLineRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    RemoveCartLine: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                sku: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    GetShippingOptions: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingOptionsResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    PlaceOrder: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlaceOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderView"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PriceChangedResponse"];
                 };
             };
         };

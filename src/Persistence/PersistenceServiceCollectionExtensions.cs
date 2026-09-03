@@ -40,6 +40,12 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAvailabilityReader>(services => services.GetRequiredService<EfStockRepository>());
 
         services.AddScoped<IOrderRepository, EfOrderRepository>();
+        services.AddScoped<ICartRepository, EfCartRepository>();
+        services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();
+
+        // The Ordering side of the catalogue crossing, the sibling of
+        // IPricedItemReader: values out, no entity shared (ADR 0014).
+        services.AddScoped<IPurchasableReader, EfPurchasableReader>();
 
         return services;
     }

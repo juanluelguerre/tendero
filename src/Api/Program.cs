@@ -5,6 +5,8 @@ using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Features.ListStock;
+using ElGuerre.Tendero.Ordering;
+using ElGuerre.Tendero.Ordering.Features.Checkout;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Pricing;
 using ElGuerre.Tendero.Pricing.Features.QuoteCart;
@@ -23,7 +25,8 @@ builder.Services.AddTenderoCqrs(
     typeof(ImportProductsCommand).Assembly,
     typeof(SearchProductsQuery).Assembly,
     typeof(QuoteCartQuery).Assembly,
-    typeof(ListStockQuery).Assembly);
+    typeof(ListStockQuery).Assembly,
+    typeof(PlaceOrderCommand).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -33,6 +36,8 @@ builder.Services.AddCatalog(builder.Configuration);
 builder.Services.AddPricing(builder.Configuration);
 
 builder.Services.AddInventory(builder.Configuration);
+
+builder.Services.AddOrdering(builder.Configuration);
 
 builder.Services.AddLexicalSearch(
     builder.Configuration.GetRequiredConnectionString("elasticsearch"));

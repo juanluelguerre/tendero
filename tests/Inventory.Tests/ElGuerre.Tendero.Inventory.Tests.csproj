@@ -21,6 +21,7 @@
   <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+    <Compile Include="../OrderBuilder.cs" Link="OrderBuilder.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260902221753_AddInventory";
+    public override string LastMigrationId => "20260903080235_AddReturns";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -289,6 +289,97 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("stock_items", "inventory");
             });
 
+        modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.Cart", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<string>("Culture")
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .HasColumnType("character varying(5)")
+                    .HasColumnName("culture");
+
+                b.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnType("character varying(3)")
+                    .HasColumnName("currency");
+
+                b.Property<Guid?>("CustomerId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("customer_id");
+
+                b.Property<DateTimeOffset>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("expires_at");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<string>("Token")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("token");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Ordering.Domain.Cart._lines#CartLine", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("ImageId")
+                            .HasJsonPropertyName("imageId");
+
+                        b1.Property<Guid>("ProductId")
+                            .HasJsonPropertyName("productId");
+
+                        b1.Property<string>("ProductName")
+                            .IsRequired()
+                            .HasJsonPropertyName("productName");
+
+                        b1.Property<int>("Quantity")
+                            .HasJsonPropertyName("quantity");
+
+                        b1.Property<string>("Sku")
+                            .IsRequired()
+                            .HasJsonPropertyName("sku");
+
+                        b1.Property<Guid>("VariantId")
+                            .HasJsonPropertyName("variantId");
+
+                        b1.Property<string>("VariantLabel")
+                            .HasJsonPropertyName("variantLabel");
+
+                        b1
+                            .ToJson("lines")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.HasKey("Id")
+                    .HasName("pk_carts");
+
+                b.HasIndex("Token")
+                    .IsUnique()
+                    .HasDatabaseName("ix_carts_token");
+
+                b.HasIndex("Status", "ExpiresAt")
+                    .HasDatabaseName("ix_carts_status_expires_at");
+
+                b.ToTable("carts", "ordering");
+            });
+
         modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.Order", b =>
             {
                 b.Property<Guid>("Id")
@@ -331,6 +422,194 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("updated_at");
 
+                b.ComplexProperty(typeof(Dictionary<string, object>), "BillingAddress", "ElGuerre.Tendero.Ordering.Domain.Order.BillingAddress#Address", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("City")
+                            .IsRequired()
+                            .HasJsonPropertyName("city");
+
+                        b1.Property<string>("CountryCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("countryCode");
+
+                        b1.Property<string>("Line1")
+                            .IsRequired()
+                            .HasJsonPropertyName("line1");
+
+                        b1.Property<string>("Line2")
+                            .HasJsonPropertyName("line2");
+
+                        b1.Property<string>("Phone")
+                            .HasJsonPropertyName("phone");
+
+                        b1.Property<string>("PostalCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("postalCode");
+
+                        b1.Property<string>("RecipientName")
+                            .IsRequired()
+                            .HasJsonPropertyName("recipientName");
+
+                        b1.Property<string>("Region")
+                            .HasJsonPropertyName("region");
+
+                        b1
+                            .ToJson("billing_address")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Payment", "ElGuerre.Tendero.Ordering.Domain.Order.Payment#OrderPayment", b1 =>
+                    {
+                        b1.Property<string>("AuthorizationId")
+                            .IsRequired()
+                            .HasJsonPropertyName("authorizationId");
+
+                        b1.Property<string>("CaptureId")
+                            .HasJsonPropertyName("captureId");
+
+                        b1.Property<string>("Provider")
+                            .IsRequired()
+                            .HasJsonPropertyName("provider");
+
+                        b1
+                            .ToJson("payment")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Quote", "ElGuerre.Tendero.Ordering.Domain.Order.Quote#OrderQuote", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("InputHash")
+                            .IsRequired()
+                            .HasJsonPropertyName("inputHash");
+
+                        b1.Property<DateTimeOffset>("IssuedAt")
+                            .HasJsonPropertyName("issuedAt");
+
+                        b1.Property<string>("QuoteId")
+                            .IsRequired()
+                            .HasJsonPropertyName("quoteId");
+
+                        b1
+                            .ToJson("quote")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Shipping", "ElGuerre.Tendero.Ordering.Domain.Order.Shipping#OrderShipping", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("Amount")
+                            .IsRequired()
+                            .HasJsonPropertyName("amount");
+
+                        b1.Property<int?>("EstimatedDays")
+                            .HasJsonPropertyName("estimatedDays");
+
+                        b1.Property<string>("Label")
+                            .IsRequired()
+                            .HasJsonPropertyName("label");
+
+                        b1.Property<string>("OptionCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("optionCode");
+
+                        b1
+                            .ToJson("shipping")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "ShippingAddress", "ElGuerre.Tendero.Ordering.Domain.Order.ShippingAddress#Address", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("City")
+                            .IsRequired()
+                            .HasJsonPropertyName("city");
+
+                        b1.Property<string>("CountryCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("countryCode");
+
+                        b1.Property<string>("Line1")
+                            .IsRequired()
+                            .HasJsonPropertyName("line1");
+
+                        b1.Property<string>("Line2")
+                            .HasJsonPropertyName("line2");
+
+                        b1.Property<string>("Phone")
+                            .HasJsonPropertyName("phone");
+
+                        b1.Property<string>("PostalCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("postalCode");
+
+                        b1.Property<string>("RecipientName")
+                            .IsRequired()
+                            .HasJsonPropertyName("recipientName");
+
+                        b1.Property<string>("Region")
+                            .HasJsonPropertyName("region");
+
+                        b1
+                            .ToJson("shipping_address")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Totals", "ElGuerre.Tendero.Ordering.Domain.Order.Totals#OrderTotals", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("DiscountTotal")
+                            .IsRequired()
+                            .HasJsonPropertyName("discountTotal");
+
+                        b1.Property<string>("Shipping")
+                            .IsRequired()
+                            .HasJsonPropertyName("shipping");
+
+                        b1.Property<string>("Subtotal")
+                            .IsRequired()
+                            .HasJsonPropertyName("subtotal");
+
+                        b1.Property<string>("TaxTotal")
+                            .IsRequired()
+                            .HasJsonPropertyName("taxTotal");
+
+                        b1.Property<string>("Total")
+                            .IsRequired()
+                            .HasJsonPropertyName("total");
+
+                        b1
+                            .ToJson("totals")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_discounts", "ElGuerre.Tendero.Ordering.Domain.Order._discounts#OrderDiscount", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("Amount")
+                            .IsRequired()
+                            .HasJsonPropertyName("amount");
+
+                        b1.Property<string>("Label")
+                            .IsRequired()
+                            .HasJsonPropertyName("label");
+
+                        b1.Property<string>("PromotionCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("promotionCode");
+
+                        b1
+                            .ToJson("discounts")
+                            .HasColumnType("jsonb");
+                    });
+
                 b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Ordering.Domain.Order._lines#OrderLine", b1 =>
                     {
                         b1.IsRequired();
@@ -364,6 +643,30 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnType("jsonb");
                     });
 
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_taxes", "ElGuerre.Tendero.Ordering.Domain.Order._taxes#OrderTax", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("Amount")
+                            .IsRequired()
+                            .HasJsonPropertyName("amount");
+
+                        b1.Property<string>("Base")
+                            .IsRequired()
+                            .HasJsonPropertyName("base");
+
+                        b1.Property<decimal>("Rate")
+                            .HasJsonPropertyName("rate");
+
+                        b1.Property<string>("TaxClass")
+                            .IsRequired()
+                            .HasJsonPropertyName("taxClass");
+
+                        b1
+                            .ToJson("taxes")
+                            .HasColumnType("jsonb");
+                    });
+
                 b.HasKey("Id")
                     .HasName("pk_orders");
 
@@ -372,6 +675,86 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ix_orders_idempotency_key");
 
                 b.ToTable("orders", "ordering");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.ReturnRequest", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<Guid>("CustomerId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("customer_id");
+
+                b.Property<Guid>("OrderId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("order_id");
+
+                b.Property<string>("RefundAmount")
+                    .HasColumnType("text")
+                    .HasColumnName("refund_amount");
+
+                b.Property<string>("RefundReference")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("refund_reference");
+
+                b.Property<string>("Resolution")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("resolution");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Ordering.Domain.ReturnRequest._lines#ReturnLine", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("Comment")
+                            .HasJsonPropertyName("comment");
+
+                        b1.Property<int>("Quantity")
+                            .HasJsonPropertyName("quantity");
+
+                        b1.Property<string>("Reason")
+                            .IsRequired()
+                            .HasJsonPropertyName("reason");
+
+                        b1.Property<string>("Sku")
+                            .IsRequired()
+                            .HasJsonPropertyName("sku");
+
+                        b1.Property<Guid>("VariantId")
+                            .HasJsonPropertyName("variantId");
+
+                        b1
+                            .ToJson("lines")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.HasKey("Id")
+                    .HasName("pk_return_requests");
+
+                b.HasIndex("OrderId")
+                    .HasDatabaseName("ix_return_requests_order_id");
+
+                b.HasIndex("Status")
+                    .HasDatabaseName("ix_return_requests_status");
+
+                b.ToTable("return_requests", "ordering");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Persistence.Outbox.OutboxMessage", b =>

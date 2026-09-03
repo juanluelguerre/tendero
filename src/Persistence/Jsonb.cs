@@ -133,6 +133,15 @@ internal static class Jsonb
         money => FormatMoney(money),
         text => ParseMoney(text));
 
+    /// <summary>
+    /// The nullable variant, for an amount that genuinely has not happened yet:
+    /// a return carries no refund until one is paid. Null and zero are different
+    /// facts, and a converter that flattened them would lose the difference.
+    /// </summary>
+    public static readonly ValueConverter<Money?, string?> NullableMoneyAsTextConverter = new(
+        money => money == null ? null : FormatMoney(money.Value),
+        text => text == null ? null : ParseMoney(text));
+
     private static string FormatMoney(Money money) =>
         string.Concat(money.Amount.ToString(CultureInfo.InvariantCulture), " ", money.Currency);
 

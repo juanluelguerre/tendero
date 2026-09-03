@@ -38,17 +38,15 @@ public sealed class StockSagaTests
 
     private Order Placed(params (string Sku, int Quantity)[] lines)
     {
-        var order = Order.Place(
-            _clock,
-            CustomerId.New(),
-            idempotencyKey: Guid.NewGuid().ToString(),
-            culture: "es",
-            lines:
+        var order = OrderBuilder.Default()
+            .WithIdempotencyKey(Guid.NewGuid().ToString())
+            .WithLines(
             [
                 .. lines.Select(line => new OrderLine(
                     ProductId.New(), VariantId.New(), line.Sku, "A product", null,
                     new Money(10m, "EUR"), line.Quantity))
-            ]);
+            ])
+            .Build();
 
         _orders.Add(order);
         return order;
@@ -166,11 +164,29 @@ public sealed class StockSagaTests
 
     // ---------- At-least-once delivery ----------
 
+    /// <summary>
+    /// Checkout authorises BEFORE it places, so by the time this message drains
+    /// the order is normally already `PaymentAuthorized` — the two happened in
+    /// one transaction. Refusing to reserve for it would mean no ordinary order
+    /// ever held stock, which is the bug the guard nearly shipped with.
+    /// </summary>
+    [Fact]
+    public async Task An_order_that_was_paid_for_at_checkout_still_gets_its_stock()
+    {
+        var order = Placed(("SHOES", 1));
+        order.AuthorizePayment(_clock);
+
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
+
+        Assert.Single(_ledger.Requested);
+    }
+
     [Fact]
     public async Task An_order_that_has_moved_on_is_not_reserved_again()
     {
         var order = Placed(("SHOES", 1));
         order.AuthorizePayment(_clock);
+        order.Confirm(_clock);
 
         await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
 
@@ -215,6 +231,9 @@ public sealed class StockSagaTests
             return Task.CompletedTask;
         }
 
+        public Task<bool> IsHeldAsync(OrderId orderId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_refusal is null && Requested.Count > 0);
+
         public Task ReleaseAsync(OrderId orderId, string reason, CancellationToken cancellationToken = default)
         {
             Released.Add((orderId, reason));
@@ -236,6 +255,10 @@ public sealed class StockSagaTests
 
         public Task<Order?> FindByIdAsync(OrderId id, CancellationToken cancellationToken = default) =>
             Task.FromResult(_orders.FirstOrDefault(order => order.Id == id));
+
+        public Task<Order?> FindByIdempotencyKeyAsync(
+            string key, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_orders.FirstOrDefault(order => order.IdempotencyKey == key));
 
         public void Add(Order order) => _orders.Add(order);
     }

@@ -163,7 +163,7 @@ public sealed class AttributeDefinition : AggregateRoot
         Touch(clock);
     }
 
-    /// <summary>Sacarla de Draft: alguien ha mirado sus etiquetas.</summary>
+    /// <summary>Out of Draft: somebody has looked at its labels.</summary>
     public void Approve(TimeProvider clock)
     {
         IsDraft = false;
