@@ -1,6 +1,6 @@
 import { Component, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -8,6 +8,7 @@ import type { SearchHit } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
 import { ProductSearchService } from '../../data-access/product-search.service';
+import { ShopLinks } from '../../shop-links';
 
 /** Below this, a query matches so much that the answer is noise. */
 const MinimumQueryLength = 2;
@@ -40,11 +41,14 @@ type SearchState =
  */
 @Component({
   selector: 'storefront-search-page',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, RouterLink],
   templateUrl: './search-page.html',
   styleUrl: './search-page.css',
 })
 export class SearchPage {
+  /** Every link carries the language segment (P5-13). */
+  protected readonly links = inject(ShopLinks);
+
   private readonly search = inject(ProductSearchService);
   private readonly culture = inject(CultureStore);
   private readonly transloco = inject(TranslocoService);

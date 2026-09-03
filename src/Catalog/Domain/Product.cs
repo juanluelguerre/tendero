@@ -227,7 +227,16 @@ public sealed class Product : AggregateRoot
         if (normalised.Distinct(StringComparer.OrdinalIgnoreCase).Count() != normalised.Length)
             throw new InvalidOperationException("Variant axes must be distinct.");
 
-        if (_variants.Count > 0 && !normalised.SequenceEqual(_variantAxes, StringComparer.OrdinalIgnoreCase))
+        // A variant with NO coordinates is not described by the axes at all, so
+        // declaring them cannot invalidate it. That distinction is not academic:
+        // importing mints an implicit `{externalId}-DEFAULT` variant on every
+        // product (ADR 0015), and a guard that counted variants rather than
+        // coordinated ones made this method unreachable for the entire shipped
+        // catalogue — the slice existed, was tested, and could not run on a
+        // single real product.
+        var coordinated = _variants.Where(variant => variant.AxisValues.Count > 0).ToArray();
+
+        if (coordinated.Length > 0 && !normalised.SequenceEqual(_variantAxes, StringComparer.OrdinalIgnoreCase))
         {
             // Changing the axes with live variants would leave each of them
             // described by coordinates that no longer mean the same thing.
@@ -237,6 +246,18 @@ public sealed class Product : AggregateRoot
 
         _variantAxes.Clear();
         _variantAxes.AddRange(normalised);
+
+        // The default variant is superseded by the matrix about to be generated:
+        // "this product has exactly one purchasable thing" stops being true the
+        // moment it has axes. Discontinued and not removed, because an order
+        // placed against it still names its SKU — which is what
+        // VariantStatus.Discontinued exists for.
+        if (normalised.Length > 0)
+        {
+            foreach (var placeholder in _variants.Where(variant => variant.AxisValues.Count == 0))
+                placeholder.Discontinue();
+        }
+
         Touch(clock);
     }
 

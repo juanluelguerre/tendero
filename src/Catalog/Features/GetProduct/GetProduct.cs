@@ -226,9 +226,23 @@ public sealed class GetProductHandler(
                 .Select(image => new ProductImageView(
                     image.Id.Value, image.Alt?.In(query.Culture), image.SortOrder))],
             [.. product.Attributes
+                // An attribute the catalogue never defined is DROPPED here, and
+                // only here. It is raw text a connector could not resolve — the
+                // seed's "DIAMETROS_CM: 20, 24, 28" beside the "DIAMETERS_CM"
+                // that did resolve — and showing a shopper an unlabelled source
+                // key is not a gap they can act on, it is a page that looks
+                // broken.
+                //
+                // The gap still has to be visible to somebody, and it is: the
+                // backoffice's review queue is where a missing definition
+                // belongs, because a shopkeeper is who can create one. Same
+                // fact, two audiences, and only one of them can do anything
+                // about it.
+                .Where(value => attributes.ByCode(value.Code) is not null)
                 .Select(value => Render(value, attributes.ByCode(value.Code), query.Culture))
                 .OrderBy(view => view.Label, StringComparer.OrdinalIgnoreCase)],
-            [.. product.VariantAxes.Select(axis => Axis(axis, attributes.ByCode(axis), query.Culture))],
+            [.. product.VariantAxes.Select(axis =>
+                Axis(axis, attributes.ByCode(axis), product, query.Culture))],
             [.. product.Variants.Select(variant =>
                 View(variant, product, attributes, available, query.Culture))],
             from.Amount,
@@ -268,9 +282,10 @@ public sealed class GetProductHandler(
     private static ProductAttributeView Render(
         AttributeValue value, AttributeDefinition? definition, string culture) =>
         new(value.Code,
-            // A value whose definition was never created still shows its code
-            // rather than nothing: an unlabelled row is a gap somebody can see
-            // and fix, an absent one is a gap nobody knows about.
+            // The caller has already dropped values with no definition, so the
+            // fallback is unreachable from the product page. It stays because
+            // the method is the rendering rule and not the filtering one, and a
+            // renderer that threw on a null definition would be a worse shape.
             definition?.Label.In(culture) ?? value.Code,
             value.Kind.ToString().ToLowerInvariant(),
             value.Kind is AttributeKind.Number or AttributeKind.Boolean
@@ -280,13 +295,46 @@ public sealed class GetProductHandler(
             definition?.Unit,
             value.Flag);
 
-    private static VariantAxisView Axis(string code, AttributeDefinition? definition, string culture) =>
-        new(code,
-            definition?.Label.In(culture) ?? code,
-            definition is null
-                ? []
-                : [.. definition.Options.Select(option =>
-                    new VariantOptionView(option.Code, option.Label.In(culture)))]);
+    /// <summary>
+    /// One axis and every option a shopper could press on it.
+    ///
+    /// The DEFINITION's options come first and in its order, because that order
+    /// is catalogue data and because an option with no variant is exactly what
+    /// the picker has to render disabled. Then any option a variant actually
+    /// uses that the definition never declared is appended.
+    ///
+    /// That second half is not defensive padding. An axis whose attribute was
+    /// never defined — the seed declares COLOR and no SIZE — would otherwise
+    /// come back with an empty option list, and the page would render a control
+    /// with nothing to press: a dead axis above six variants that plainly have
+    /// sizes. An option that exists on a variant is real whether or not somebody
+    /// remembered to define it, and it belongs on the page; the missing
+    /// definition is a gap for the backoffice to close, not a reason to hide
+    /// what is on sale.
+    /// </summary>
+    private static VariantAxisView Axis(
+        string code, AttributeDefinition? definition, Product product, string culture)
+    {
+        var declared = definition?.Options
+            .Select(option => new VariantOptionView(option.Code, option.Label.In(culture)))
+            .ToList() ?? [];
+
+        var known = declared.Select(option => option.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var used = product.Variants
+            .Where(variant => variant.Status == VariantStatus.Available)
+            .Select(variant => variant.AxisValues.GetValueOrDefault(code))
+            .OfType<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(option => !known.Contains(option))
+            .OrderBy(option => option, StringComparer.OrdinalIgnoreCase)
+            // With no definition there is no label to resolve, so the code is
+            // the honest answer — "38" reads as itself, which is the common case
+            // for a size.
+            .Select(option => new VariantOptionView(option, option));
+
+        return new VariantAxisView(code, definition?.Label.In(culture) ?? code, [.. declared, .. used]);
+    }
 
     private static VariantView View(
         Variant variant,

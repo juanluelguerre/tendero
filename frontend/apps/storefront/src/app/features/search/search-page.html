@@ -105,13 +105,15 @@
               <li class="card" [class.card--soldOut]="!hit.inStock">
                 @let source = imageUrl(hit);
                 @if (source && !broken().has(hit.productId)) {
-                  <img
-                    class="card__image"
-                    [src]="source"
-                    [alt]="hit.name"
-                    loading="lazy"
-                    (error)="onImageError(hit.productId)"
-                  />
+                  <a [routerLink]="links.product(hit.slug, hit.code)" tabindex="-1" aria-hidden="true">
+                    <img
+                      class="card__image"
+                      [src]="source"
+                      [alt]="hit.name"
+                      loading="lazy"
+                      (error)="onImageError(hit.productId)"
+                    />
+                  </a>
                 } @else {
                   <!-- A default state, not a gap: a card with no photo has to
                        look deliberate. -->
@@ -124,7 +126,13 @@
                   @if (hit.brand) {
                     <p class="card__brand eyebrow">{{ hit.brand }}</p>
                   }
-                  <h2 class="card__name">{{ hit.name }}</h2>
+                  <!-- The whole card is not the link; the NAME is. A card whose
+                       every pixel navigates cannot also hold an add button, and
+                       the heading is what a screen reader reads out as the
+                       destination. -->
+                  <h2 class="card__name">
+                    <a class="card__link" [routerLink]="links.product(hit.slug, hit.code)">{{ hit.name }}</a>
+                  </h2>
                   <p class="card__price numeric">{{ price(hit) }}</p>
                   <!-- Only when it cannot be bought. "In stock" on every card is
                        a label, not information; the absence is the default and

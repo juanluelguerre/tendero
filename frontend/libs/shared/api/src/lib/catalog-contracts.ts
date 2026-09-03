@@ -25,6 +25,23 @@ export type ImportResult = Schemas['ImportProductsResult'];
 export type DefineVariantsResponse = Schemas['DefineVariantsResponse'];
 
 /**
+ * The product detail page, keyed on the public code (ADR 0026).
+ *
+ * `Axes` carries every option the CATALOGUE defines and `Variants` only the
+ * combinations that exist, and the picker needs both: an option with no variant
+ * has to render disabled rather than vanish, and it cannot render at all if the
+ * response never mentions it.
+ */
+export type ProductDetail = Schemas['ProductDetail'];
+export type VariantView = Schemas['VariantView'];
+export type VariantAxisView = Schemas['VariantAxisView'];
+export type VariantOptionView = Schemas['VariantOptionView'];
+export type ProductAttributeView = Schemas['ProductAttributeView'];
+export type ProductImageView = Schemas['ProductImageView'];
+export type CategoryStep = Schemas['CategoryStep'];
+export type AlternateSlug = Schemas['AlternateSlug'];
+
+/**
  * The labels arrive UNRESOLVED — the whole culture dictionary — and that is
  * deliberate: this screen exists to see whether a translation is missing, and
  * text already resolved would hide the very fact people come to look at.

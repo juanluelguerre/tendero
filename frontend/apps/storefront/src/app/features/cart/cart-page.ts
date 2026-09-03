@@ -5,6 +5,7 @@ import type { AppliedDiscount, CartLineView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { API_BASE_URL, formatPrice } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
+import { ShopLinks } from '../../shop-links';
 
 /**
  * The basket, and what it costs right now.
@@ -28,6 +29,9 @@ import { CartStore } from '../../data-access/cart.service';
   styleUrl: './cart-page.css',
 })
 export class CartPage {
+  /** Every link carries the language segment (P5-13). */
+  protected readonly links = inject(ShopLinks);
+
   protected readonly store = inject(CartStore);
   private readonly culture = inject(CultureStore);
   private readonly baseUrl = inject(API_BASE_URL);

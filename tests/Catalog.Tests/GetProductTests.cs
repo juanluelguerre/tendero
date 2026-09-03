@@ -262,6 +262,27 @@ public sealed class GetProductTests
     }
 
     /// <summary>
+    /// A source key the catalogue never defined does not reach the shopper.
+    ///
+    /// The seed carries them — "DIAMETROS_CM" beside the "DIAMETERS_CM" that
+    /// resolved — and an unlabelled code on a product page is not a gap somebody
+    /// can act on, it is a page that looks broken. The review queue is where a
+    /// missing definition belongs, because a shopkeeper is who can create one.
+    /// </summary>
+    [Fact]
+    public async Task An_attribute_the_catalogue_never_defined_is_not_shown()
+    {
+        var shirt = AShirt();
+        shirt.SetAttribute(Clock, AttributeValue.Plain("DIAMETROS_CM", "20, 24, 28"));
+
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
+
+        Assert.DoesNotContain(result!.Attributes, a => a.Code == "DIAMETROS_CM");
+        Assert.Contains(result.Attributes, a => a.Code == "MATERIAL");
+    }
+
+    /// <summary>
     /// A variant with no photo of its own borrows the product's cover: a size does
     /// not change what a thing looks like, a colour does, and only the ones that
     /// differ carry an image.

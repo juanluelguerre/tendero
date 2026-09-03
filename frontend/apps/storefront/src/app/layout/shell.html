@@ -3,7 +3,7 @@
 
   <header class="header">
     <div class="page-frame header__inner">
-      <a class="brand" href="/">
+      <a class="brand" [routerLink]="home()">
         <!-- The icon, not the full lockup: the wordmark beside it already
              uses real Bricolage, and the text embedded in the SVG only has
              Inter to fall back on. Two different typefaces for the same word
@@ -45,7 +45,7 @@
         <!-- The basket. The count is on the badge and also in the label,
              because a number in a circle is not something a screen reader
              can make sense of on its own. -->
-        <a class="cart" routerLink="/cart"
+        <a class="cart" [routerLink]="cartLink()"
            [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'">
           <svg class="cart__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path

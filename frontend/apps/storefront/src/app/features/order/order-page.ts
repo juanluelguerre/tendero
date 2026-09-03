@@ -8,6 +8,7 @@ import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { API_BASE_URL, formatPrice } from '@tendero/shared-util';
 import { firstValueFrom } from 'rxjs';
+import { ShopLinks } from '../../shop-links';
 
 /**
  * The order, and the way back.
@@ -28,6 +29,9 @@ import { firstValueFrom } from 'rxjs';
   styleUrl: './order-page.css',
 })
 export class OrderPage {
+  /** Every link carries the language segment (P5-13). */
+  protected readonly links = inject(ShopLinks);
+
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
   private readonly culture = inject(CultureStore);

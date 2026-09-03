@@ -201,6 +201,25 @@
   line-height: var(--leading-snug);
 }
 
+/* The name is the link to the product page, and it does not advertise itself
+   as one until you reach it: a grid of underlined blue headings reads as a
+   directory rather than a shop. The focus ring is not optional — every
+   interactive element has a visible one (design/DESIGN.md). */
+.card__link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card__link:hover {
+  text-decoration: underline;
+}
+
+.card__link:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .card__price {
   margin-block-start: var(--space-2);
   font-size: var(--text-lg);

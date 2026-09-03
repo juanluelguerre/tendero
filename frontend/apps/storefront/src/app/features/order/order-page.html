@@ -159,7 +159,7 @@
           <p class="ship__value">{{ order.shippingAddress }}</p>
         </div>
 
-        <a class="quiet" routerLink="/">{{ t('nav.continueShopping') }}</a>
+        <a class="quiet" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
       </aside>
     </div>
   } @else if (loading()) {
@@ -167,7 +167,7 @@
   } @else {
     <div class="blank">
       <p class="blank__text">{{ t('order.notFound') }}</p>
-      <a class="button" routerLink="/">{{ t('nav.continueShopping') }}</a>
+      <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
     </div>
   }
 </section>

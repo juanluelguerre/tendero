@@ -1,0 +1,265 @@
+/* The product page: the one screen where the shopper decides. Roomy, and not one
+   hex here — it all comes from design/tokens.css, which a test enforces. */
+
+/* ---------- Breadcrumb ---------- */
+.crumbs {
+  padding-block: var(--space-5) var(--space-3);
+}
+
+.crumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.crumbs__item + .crumbs__item::before {
+  content: '›';
+  margin-inline-end: var(--space-2);
+  color: var(--text-subtle);
+}
+
+/* ---------- The two columns ---------- */
+.product {
+  display: grid;
+  gap: var(--space-6);
+  padding-block-end: var(--space-8);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .product {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-7);
+    align-items: start;
+  }
+}
+
+/* ---------- Gallery ---------- */
+.gallery__main {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+/* A default state, not a gap: a product with no photo has to look deliberate.
+   The seed points at a host that does not resolve, so this is the path a fresh
+   clone actually sees. */
+.gallery__main--fallback {
+  display: grid;
+  place-items: center;
+}
+
+.gallery__initial {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  color: var(--text-subtle);
+}
+
+.thumbs {
+  display: flex;
+  gap: var(--space-3);
+  margin-block-start: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.thumb {
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  cursor: pointer;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.thumb img {
+  inline-size: 64px;
+  block-size: 64px;
+  object-fit: cover;
+}
+
+.thumb--current {
+  border-color: var(--border-strong);
+}
+
+.thumb:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---------- Detail ---------- */
+.detail__brand {
+  color: var(--text-muted);
+}
+
+.detail__name {
+  margin-block: var(--space-2) var(--space-3);
+  font-size: var(--text-3xl);
+  line-height: var(--leading-tight);
+}
+
+.detail__price {
+  font-size: var(--text-xl);
+  color: var(--text);
+}
+
+.detail__description {
+  margin-block-start: var(--space-4);
+  max-width: 60ch;
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+}
+
+/* ---------- The picker ---------- */
+.axis {
+  margin-block-start: var(--space-5);
+  padding: 0;
+  border: 0;
+}
+
+.axis__label {
+  padding: 0;
+  color: var(--text-muted);
+}
+
+.axis__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block-start: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.option {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.option:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.option:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.option--chosen {
+  border-color: var(--ink-900);
+  background: var(--stone-100);
+}
+
+/* Sold out is SELECTABLE. The shopper can pick it, see the answer and
+   understand why — hiding it would say the size is not made. */
+.option--soldOut {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Not sold at all: disabled, and still rendered. An option that disappears
+   makes the picker jump and makes the shopper think the shop lost something. */
+.option:disabled {
+  color: var(--text-subtle);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
+/* ---------- Buy ---------- */
+.buy {
+  margin-block-start: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.buy__add {
+  font-size: var(--text-md);
+  padding: var(--space-3) var(--space-6);
+}
+
+.buy__soldOut,
+.buy__unavailable {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--stone-50);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.buy__remaining {
+  margin: 0;
+  color: var(--warning);
+  font-size: var(--text-sm);
+}
+
+.buy__sku {
+  margin: 0;
+  font-size: var(--text-xs);
+}
+
+/* ---------- Specs ---------- */
+.specs {
+  margin-block-start: var(--space-7);
+  padding-block-start: var(--space-5);
+  border-block-start: 1px solid var(--border);
+}
+
+.specs__title {
+  font-size: var(--text-lg);
+  margin-block-end: var(--space-4);
+}
+
+.specs__list {
+  margin: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.specs__row {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+
+.specs__key {
+  color: var(--text-muted);
+}
+
+.specs__value {
+  margin: 0;
+  color: var(--text);
+}
+
+.specs__unit {
+  margin-inline-start: var(--space-1);
+  color: var(--text-muted);
+}
+
+/* ---------- Loading ---------- */
+.product--loading .skeleton--block {
+  block-size: 8rem;
+  margin-block-start: var(--space-4);
+}

@@ -99,8 +99,22 @@
   },
   "product": {
     "addToCart": "Add to cart",
+    "adding": "Adding...",
+    "breadcrumb": "Where you are",
+    "combinationNotSold": "That combination is not sold.",
+    "failed": "We could not load the product. Try again in a moment.",
+    "failedTitle": "Something went wrong",
+    "loading": "Loading the product...",
+    "no": "No",
     "noImage": "No image",
-    "soldOut": "Sold out"
+    "notFound": "It may no longer be on sale.",
+    "notFoundTitle": "That product does not exist",
+    "notSold": "Not sold",
+    "remaining": "Only {{count}} left",
+    "sku": "Reference {{sku}}",
+    "soldOut": "Sold out",
+    "specs": "Details",
+    "yes": "Yes"
   },
   "search": {
     "empty": "Nothing for “{{query}}”. Try fewer words.",

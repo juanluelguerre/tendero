@@ -4,7 +4,7 @@
   @if (store.isEmpty()) {
     <div class="blank">
       <p class="blank__text">{{ t('cart.empty') }}</p>
-      <a class="button" routerLink="/">{{ t('nav.continueShopping') }}</a>
+      <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
     </div>
   } @else {
     @if (problem(); as message) {
@@ -169,7 +169,7 @@
           <p class="muted">{{ t('cart.noQuote') }}</p>
         }
 
-        <a class="quiet" routerLink="/cart">{{ t('cart.title') }}</a>
+        <a class="quiet" [routerLink]="links.cart()">{{ t('cart.title') }}</a>
       </aside>
     </div>
   }

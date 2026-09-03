@@ -1,0 +1,195 @@
+<ng-container *transloco="let t">
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="sr-only" role="status" aria-live="polite">{{ t('product.loading') }}</p>
+      <!-- The shape the answer will have, so the page does not jump when it
+           arrives. Same argument as the search grid's skeleton cards. -->
+      <div class="product product--loading" aria-hidden="true">
+        <div class="gallery__main skeleton"></div>
+        <div class="detail">
+          <div class="skeleton skeleton--line"></div>
+          <div class="skeleton skeleton--line skeleton--short"></div>
+          <div class="skeleton skeleton--block"></div>
+        </div>
+      </div>
+    }
+
+    @case ('notFound') {
+      <div class="notice">
+        <h1 class="notice__title">{{ t('product.notFoundTitle') }}</h1>
+        <p class="muted">{{ t('product.notFound') }}</p>
+        <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
+      </div>
+    }
+
+    @case ('failed') {
+      <div class="notice">
+        <h1 class="notice__title">{{ t('product.failedTitle') }}</h1>
+        <p class="muted">{{ t('product.failed') }}</p>
+      </div>
+    }
+
+    @case ('done') {
+      @let item = product();
+      @if (item) {
+        <!-- The whole branch, not the leaf: "Hogar › Cocina › Menaje" is where
+             the shopper is, and the leaf alone does not say it. -->
+        @if (item.category.length > 0) {
+          <nav class="crumbs" [attr.aria-label]="t('product.breadcrumb')">
+            <ol class="crumbs__list">
+              @for (step of item.category; track step.code) {
+                <li class="crumbs__item">{{ step.name }}</li>
+              }
+            </ol>
+          </nav>
+        }
+
+        <article class="product">
+          <section class="gallery">
+            @let images = gallery();
+            @if (images.length > 0 && !broken().has(images[0].imageId)) {
+              <img
+                class="gallery__main"
+                [src]="imageUrl(images[0].imageId)"
+                [alt]="images[0].alt ?? item.name"
+                (error)="onImageError(images[0].imageId)"
+              />
+            } @else {
+              <div class="gallery__main gallery__main--fallback" role="img"
+                   [attr.aria-label]="t('product.noImage')">
+                <span class="gallery__initial" aria-hidden="true">{{ item.name.charAt(0) }}</span>
+              </div>
+            }
+
+            @if (images.length > 1) {
+              <ul class="thumbs">
+                @for (image of images; track image.imageId) {
+                  <li>
+                    <button
+                      type="button"
+                      class="thumb"
+                      [class.thumb--current]="image.imageId === images[0].imageId"
+                      (click)="shown.set(image.imageId)"
+                    >
+                      <img [src]="imageUrl(image.imageId)" [alt]="image.alt ?? item.name" />
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+
+          <section class="detail">
+            @if (item.brand) {
+              <p class="detail__brand eyebrow">{{ item.brand }}</p>
+            }
+            <h1 class="detail__name">{{ item.name }}</h1>
+            <p class="detail__price numeric">{{ price() }}</p>
+
+            @if (item.description) {
+              <p class="detail__description">{{ item.description }}</p>
+            }
+
+            <!-- Every option the CATALOGUE defines, not the ones that happen to
+                 have a variant. A size that exists in navy and not in black
+                 renders disabled: hiding it tells the shopper their size is not
+                 made, disabling it tells them the truth. -->
+            @for (axis of item.axes; track axis.code) {
+              <fieldset class="axis">
+                <legend class="axis__label eyebrow">{{ axis.label }}</legend>
+                <ul class="axis__options">
+                  @for (option of axis.options; track option.code) {
+                    @let state = availability(axis.code, option.code);
+                    <li>
+                      <button
+                        type="button"
+                        class="option"
+                        [class.option--chosen]="isChosen(axis.code, option.code)"
+                        [class.option--soldOut]="state === 'soldOut'"
+                        [disabled]="state === 'unavailable'"
+                        [attr.aria-pressed]="isChosen(axis.code, option.code)"
+                        (click)="choose(axis.code, option.code)"
+                      >
+                        {{ option.label }}
+                        <!-- Colour never carries meaning alone (design/DESIGN.md):
+                             a struck-through option says why it is struck. -->
+                        @if (state === 'soldOut') {
+                          <span class="sr-only">{{ t('product.soldOut') }}</span>
+                        }
+                        @if (state === 'unavailable') {
+                          <span class="sr-only">{{ t('product.notSold') }}</span>
+                        }
+                      </button>
+                    </li>
+                  }
+                </ul>
+              </fieldset>
+            }
+
+            @let variant = chosen();
+            <div class="buy">
+              @if (!variant) {
+                <p class="buy__unavailable">{{ t('product.combinationNotSold') }}</p>
+              } @else if (!variant.inStock) {
+                <p class="buy__soldOut">{{ t('product.soldOut') }}</p>
+              } @else {
+                <!-- The view's one clay action (design/DESIGN.md). -->
+                <button
+                  type="button"
+                  class="button buy__add"
+                  [disabled]="adding()"
+                  (click)="addToCart()"
+                >
+                  {{ adding() ? t('product.adding') : t('product.addToCart') }}
+                </button>
+
+                @let left = remaining();
+                @if (left !== null) {
+                  <!-- Only when it is a reason to hurry. The server decides the
+                       threshold and sends nothing above it, so the page cannot
+                       leak a shelf depth it was not given. -->
+                  <p class="buy__remaining">{{ t('product.remaining', { count: left }) }}</p>
+                }
+              }
+
+              @if (variant) {
+                <p class="buy__sku numeric muted">{{ t('product.sku', { sku: variant.sku }) }}</p>
+              }
+            </div>
+
+            @if (item.attributes.length > 0) {
+              <section class="specs">
+                <h2 class="specs__title">{{ t('product.specs') }}</h2>
+                <dl class="specs__list">
+                  @for (attribute of item.attributes; track attribute.code) {
+                    <div class="specs__row">
+                      <dt class="specs__key">{{ attribute.label }}</dt>
+                      <dd class="specs__value">
+                        <!-- Typed, never phrased by the API: "Sí"/"Yes" is
+                             interface copy and lives in the translation files. -->
+                        @switch (attribute.kind) {
+                          @case ('boolean') {
+                            {{ attribute.flag ? t('product.yes') : t('product.no') }}
+                          }
+                          @case ('number') {
+                            <span class="numeric">{{ attribute.number }}</span>
+                            @if (attribute.unit) {
+                              <span class="specs__unit">{{ attribute.unit }}</span>
+                            }
+                          }
+                          @default {
+                            {{ attribute.value }}
+                          }
+                        }
+                      </dd>
+                    </div>
+                  }
+                </dl>
+              </section>
+            }
+          </section>
+        </article>
+      }
+    }
+  }
+</ng-container>

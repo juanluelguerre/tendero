@@ -9,6 +9,10 @@ public sealed class VariantTests
 {
     private static readonly TestClock Clock = new();
 
+    /// <summary>A product as importing leaves it: no axes declared yet.</summary>
+    private static Product AnImportedProduct() =>
+        Product.Create(Clock, LocalizedText.From("es", "Zapatillas"), new Money(79.95m, "EUR"));
+
     private static Product AShirt()
     {
         var product = Product.Create(
@@ -152,5 +156,72 @@ public sealed class VariantTests
 
         Assert.Equal(29.90m, from.Amount);
         Assert.Equal(29.90m, to.Amount);
+    }
+
+    /// <summary>
+    /// The defect that made `DefineVariants` unreachable for the whole shipped
+    /// catalogue.
+    ///
+    /// Importing mints an implicit `{externalId}-DEFAULT` variant on every
+    /// product (ADR 0015), and the axis guard counted VARIANTS rather than
+    /// coordinated ones — so declaring "colour × size" on any imported product
+    /// was refused with "Variant axes cannot change while variants exist". The
+    /// slice existed, had tests, and could not run on a single real product.
+    /// Nothing noticed until a product page needed a picker.
+    ///
+    /// A variant with no coordinates is not described by the axes, so declaring
+    /// them cannot invalidate it.
+    /// </summary>
+    [Fact]
+    public void Axes_can_be_declared_over_the_implicit_default_variant()
+    {
+        var product = AnImportedProduct();
+        product.AddVariant(Clock, "SHOES-DEFAULT", new Money(79.95m, "EUR"));
+
+        product.DefineAxes(Clock, ["COLOR", "SIZE"]);
+
+        product.AddVariant(Clock, "SHOES-NAVY-38", new Money(79.95m, "EUR"),
+            new Dictionary<string, string> { ["COLOR"] = "NAVY", ["SIZE"] = "38" });
+
+        Assert.Equal(["COLOR", "SIZE"], product.VariantAxes);
+        Assert.Equal(VariantStatus.Available, product.VariantBySku("SHOES-NAVY-38")!.Status);
+    }
+
+    /// <summary>
+    /// And the placeholder is retired rather than left beside the matrix. "This
+    /// product has exactly one purchasable thing" stops being true the moment it
+    /// has axes — but the SKU is kept, because an order placed against it still
+    /// names it.
+    /// </summary>
+    [Fact]
+    public void Declaring_axes_retires_the_placeholder_without_deleting_it()
+    {
+        var product = AnImportedProduct();
+        product.AddVariant(Clock, "SHOES-DEFAULT", new Money(79.95m, "EUR"));
+
+        product.DefineAxes(Clock, ["COLOR"]);
+
+        var placeholder = product.VariantBySku("SHOES-DEFAULT");
+        Assert.NotNull(placeholder);
+        Assert.Equal(VariantStatus.Discontinued, placeholder.Status);
+    }
+
+    /// <summary>
+    /// The invariant that survives, and the reason the guard existed: variants
+    /// that DO carry coordinates would be left described by axes that no longer
+    /// mean the same thing.
+    /// </summary>
+    [Fact]
+    public void Axes_still_cannot_change_under_variants_that_carry_coordinates()
+    {
+        var product = AnImportedProduct();
+        product.DefineAxes(Clock, ["COLOR"]);
+        product.AddVariant(Clock, "SHOES-NAVY", new Money(79.95m, "EUR"),
+            new Dictionary<string, string> { ["COLOR"] = "NAVY" });
+
+        var rejected = Assert.Throws<InvalidOperationException>(
+            () => { product.DefineAxes(Clock, ["SIZE"]); });
+
+        Assert.Contains("cannot change", rejected.Message);
     }
 }

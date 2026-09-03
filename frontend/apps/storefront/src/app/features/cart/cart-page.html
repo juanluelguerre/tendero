@@ -14,7 +14,7 @@
     <div class="blank">
       <p class="blank__text">{{ t('cart.empty') }}</p>
       <p class="blank__hint">{{ t('cart.emptyHint') }}</p>
-      <a class="button" routerLink="/">{{ t('nav.continueShopping') }}</a>
+      <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
     </div>
   } @else {
     <div class="layout">
@@ -124,8 +124,8 @@
         }
 
         <!-- The one clay action on the page (design/DESIGN.md). -->
-        <a class="button button--block" routerLink="/checkout">{{ t('cart.checkout') }}</a>
-        <a class="quiet" routerLink="/">{{ t('nav.continueShopping') }}</a>
+        <a class="button button--block" [routerLink]="links.checkout()">{{ t('cart.checkout') }}</a>
+        <a class="quiet" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
       </aside>
     </div>
   }

@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
 import { CartStore } from '../data-access/cart.service';
@@ -36,7 +36,32 @@ export class Shell {
     void this.cart.load();
   }
 
+  private readonly router = inject(Router);
+
+  /**
+   * Switching language NAVIGATES; it does not just flip a signal.
+   *
+   * The URL is what carries the culture now (`P5-13`), so swapping the first
+   * segment is the switch — and it means a language change is a page a person
+   * can bookmark, share and go back from, rather than a hidden bit of state
+   * that made two people looking at the same link see different words.
+   *
+   * The rest of the path is kept as it is. On a product page the SLUG is then
+   * wrong for a moment — `/en/p/camisa-de-lino/K7M2QX9P4T` — and that is fine,
+   * and is exactly why the code is the key: the page still resolves, and it
+   * replaces the slug with the canonical one as soon as the answer arrives
+   * (ADR 0026). Under a slug-keyed URL this switch would have been a 404.
+   */
   protected use(culture: Culture): void {
-    this.cultureStore.use(culture);
+    const [path, query] = this.router.url.split('?');
+    const segments = path.split('/').filter(Boolean);
+
+    segments[0] = culture;
+
+    void this.router.navigateByUrl(`/${segments.join('/')}${query ? `?${query}` : ''}`);
   }
+
+  /** Links have to carry the language segment, so they are built from it. */
+  protected readonly home = computed(() => ['/', this.culture()]);
+  protected readonly cartLink = computed(() => ['/', this.culture(), 'cart']);
 }

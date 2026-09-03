@@ -13,6 +13,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { API_BASE_URL, formatPrice } from '@tendero/shared-util';
 import { firstValueFrom } from 'rxjs';
 import { CartStore } from '../../data-access/cart.service';
+import { ShopLinks } from '../../shop-links';
 
 /**
  * The test cards the fake provider understands.
@@ -43,6 +44,9 @@ const CARDS = ['card-ok', 'card-declined', 'card-unreachable', 'card-capture-fai
   styleUrl: './checkout-page.css',
 })
 export class CheckoutPage {
+  /** Every link carries the language segment (P5-13). */
+  protected readonly links = inject(ShopLinks);
+
   protected readonly store = inject(CartStore);
   private readonly culture = inject(CultureStore);
   private readonly baseUrl = inject(API_BASE_URL);
