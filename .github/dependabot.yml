@@ -1,0 +1,41 @@
+version: 2
+
+# GitHub Actions, and deliberately nothing else.
+#
+# The four actions in ci.yml sat three majors behind until a deprecation notice
+# pointed it out, which is exactly the failure mode a bot exists for: nobody
+# opens a workflow file to check whether `checkout` moved. They are also the
+# safest thing in the repository to bump — pinned by major, no transitive graph,
+# and a bad one fails the very run that introduced it.
+#
+# **NuGet and npm are absent on purpose**, and the reason is this project's own
+# discipline rather than laziness:
+#
+#   · `Directory.Packages.props` pins EF Core one preview BEHIND the SDK,
+#     because the Npgsql provider takes an exact dependency on it. A bot that
+#     did not know that would open the same rejected pull request every week —
+#     and restore already refuses the change (NU1107), so the bot would be
+#     arguing with the resolver.
+#   · Every package entry carries the licence it was verified for at that exact
+#     version (CLAUDE.md's two-tier policy). A version bump is a licence
+#     re-check, and that is a human reading a nuspec, not an automerge.
+#   · Angular and Nx are upgraded with `nx migrate`, which runs code mods. A
+#     dependency bump that skips the mods produces a workspace that installs and
+#     does not build.
+#
+# Both come back the day one of those three stops being true.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    # One pull request for all of them. Four separate ones for the same
+    # deprecation is four reviews of the same decision.
+    groups:
+      actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci
+    labels:
+      - dependencies
