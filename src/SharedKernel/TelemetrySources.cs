@@ -21,5 +21,14 @@ public static class TelemetrySources
     public const string Search = "ElGuerre.Tendero.Search";
     public const string Outbox = "ElGuerre.Tendero.Outbox";
 
-    public static readonly string[] All = [Catalog, Inventory, Ordering, Pricing, Search, Outbox];
+    /// <summary>
+    /// The dispatcher pipeline itself. It gets a source because the audit step
+    /// is the one place that swallows an exception on purpose, and a swallowed
+    /// exception with nowhere to surface is indistinguishable from one that
+    /// never happened.
+    /// </summary>
+    public const string SharedKernel = "ElGuerre.Tendero.SharedKernel";
+
+    public static readonly string[] All =
+        [Catalog, Inventory, Ordering, Pricing, Search, Outbox, SharedKernel];
 }

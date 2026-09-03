@@ -16,4 +16,11 @@
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
+  <!-- The fixed clock shared by the test projects (../TestClock.cs). The audit
+       step stamps an entry, and a test that could not pin the instant would be
+       asserting the wall clock. -->
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+  </ItemGroup>
+
 </Project>

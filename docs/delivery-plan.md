@@ -14,8 +14,8 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 6 — **complete (5/5)**, closed 2026-09-03. Phase 5 closed the same day. The commerce loop runs end to end and the shop now has a product page: a variant picker that disables what it does not sell, the language in the URL, `hreflang`, and eight browser specs. **434 tests · 19 frontend · 8 storefront + 6 backoffice specs · es 0.943 / en 0.937 reproduced exactly** on a throwaway engine.
-- **Next task:** phase 7 — **Accounts, audit, and swapping the issuer**. Audit is the **only** `Missing` row left in the floor and three later features read it; accounts is the other half of the guest work; and pointing `AddJwtBearer` at Keycloak is the test of whether phase 0 leaked.
+- **Current phase:** 7 — **1 of 10**. `P7-3` (audit) is done, which closes the last `Missing` row in the floor. Phases 5 and 6 closed on 2026-09-03. **452 tests**, and the build now also checks formatting: `.editorconfig` replaced a Rider `.DotSettings` nothing read, and CI verifies it. The commerce loop runs end to end and the shop now has a product page: a variant picker that disables what it does not sell, the language in the URL, `hreflang`, and eight browser specs. **434 tests · 19 frontend · 8 storefront + 6 backoffice specs · es 0.943 / en 0.937 reproduced exactly** on a throwaway engine.
+- **Next task:** `P7-1` and `P7-2` — the `Accounts` context and `ClaimGuestAccount`. Audit already records who acted; what it cannot yet say is who that CUSTOMER is, because there is no `Customer` entity. Then `P7-4`'s screens, and the Keycloak swap (`P7-5`…`P7-8`), which is the test of whether phase 0 leaked: if it needs more than configuration, the abstraction was false.
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Standing chore:** seven commits sit unpushed on `develop`, from `79198e6`. The one CI has not yet verified is `0bfb443`, the GitHub Actions major bump. Pushing needs a token carrying the `workflow` scope — see the notebook entry for why that is not obvious.
@@ -451,7 +451,7 @@ real one, which should be a configuration change if phase 0 was done properly.
 
 - [ ] `P7-1` `src/Accounts`: `Customer` with nullable `Subject`; guests first class — **M**
 - [ ] `P7-2` `ClaimGuestAccount(cartToken, subject)` — link or merge on login — **M**
-- [ ] `P7-3` Audit decorator on the dispatcher; `audit.AuditEntries` — **M**
+- [x] `P7-3` Audit decorator on the dispatcher; `audit.AuditEntries` — **M** · writes on its OWN connection, outside the command's transaction (ADR 0027): a row inside it disappears exactly when the command fails, so the log would hold every success and no refusal. Three outcomes and not two — `Denied` is the system WORKING, and it is the row phase 11's panel opens on. Validation failures and queries leave no row. Credentials are redacted, which is not hypothetical: the guest claim and checkout both carry a cart token
 - [ ] `P7-4` Audit screen; storefront account page with order history — **M**
 - [ ] `P7-5` Verify the Aspire Keycloak integration's licence and exact version against 13.5.3 (ADR 0006 discipline). Fallback: plain container resource — **S**
 - [ ] `P7-6` `AddKeycloak(...).WithRealmImport("./realms")`; realm JSON committed with the same users, roles and clients the dev issuer seeds — **M**

@@ -124,10 +124,23 @@ internal static class RequestHandlerWrapper
 internal sealed class CommandHandlerWrapper<TCommand, TResult> : RequestHandlerWrapper<TResult>
     where TCommand : ICommand<TResult>
 {
+    /// <summary>
+    /// Validation, then audit, then the handler — and the order is the point.
+    ///
+    /// A command that fails validation is not an attempt worth a row: it never
+    /// reached a rule, it reached a form check. Auditing INSIDE validation would
+    /// fill the table with mistyped requests and bury the denials, which are the
+    /// rows three later features are built on.
+    ///
+    /// Queries get none of this. A query is not an action, and auditing reads
+    /// would bury the hundred rows that matter under a hundred thousand that do
+    /// not.
+    /// </summary>
     public override Task<TResult> HandleAsync(object request, IServiceProvider services, CancellationToken ct) =>
         ValidateAndHandleAsync<TCommand, ICommandHandler<TCommand, TResult>>(
             request, services, ct,
-            static (handler, command, token) => handler.HandleAsync(command, token));
+            (handler, command, token) => AuditStep.RecordAsync<TCommand, TResult>(
+                command, services, token, () => handler.HandleAsync(command, token)));
 }
 
 internal sealed class QueryHandlerWrapper<TQuery, TResult> : RequestHandlerWrapper<TResult>

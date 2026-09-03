@@ -20,6 +20,23 @@ public static class PersistenceServiceCollectionExtensions
     {
         services.AddDbContext<TenderoDbContext>(options => options.UseNpgsql(connectionString));
 
+        // A FACTORY as well as the scoped context, and only the audit writer
+        // uses it. An audit row written on the command's own context shares its
+        // transaction and vanishes when the command fails — so the log would
+        // hold every success and no denial, which is the inverse of what an
+        // audit log is for.
+        //
+        // SCOPED, not singleton, and the correction is worth the line: what
+        // separates the audit row from the command is a different CONTEXT
+        // INSTANCE, not a different DI lifetime. Registering the factory as a
+        // singleton reads as "it must outlive the request" and buys nothing —
+        // `AddDbContext` registers its options as scoped, so the container
+        // refuses to construct it at all. `WorkerContainerTests` caught it,
+        // which is what that test exists for.
+        services.AddDbContextFactory<TenderoDbContext>(
+            options => options.UseNpgsql(connectionString),
+            lifetime: ServiceLifetime.Scoped);
+
         // One adapter, two ports, ONE instance per scope: registering each
         // interface separately would give two objects over the same DbContext,
         // which works but lies about how many adapters there are.
@@ -47,6 +64,11 @@ public static class PersistenceServiceCollectionExtensions
         // The Ordering side of the catalogue crossing, the sibling of
         // IPricedItemReader: values out, no entity shared (ADR 0014).
         services.AddScoped<IPurchasableReader, EfPurchasableReader>();
+
+        // The dispatcher's audit step runs wherever a command does, including
+        // the outbox worker — which opens a scope per batch, so scoped is
+        // exactly right and nothing needs to outlive a request.
+        services.AddScoped<IAuditWriter, EfAuditWriter>();
 
         return services;
     }

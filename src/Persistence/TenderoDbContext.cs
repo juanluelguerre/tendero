@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// One DbContext, three schemas (catalog, inventory, ordering) and the outbox.
+/// One DbContext, four schemas (catalog, inventory, ordering, audit) and the outbox.
 /// Bounded contexts share no entities — they share a connection, which is what
 /// puts an event and its state change in the same transaction.
 /// </summary>
@@ -23,6 +23,13 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
+    /// <summary>
+    /// One writer, three readers: the audit screen, phase 11's agent activity
+    /// panel and phase 12's copilot. It has its own schema because it belongs to
+    /// no context — every context writes to it and none owns it.
+    /// </summary>
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
@@ -32,6 +39,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ReturnRequestConfiguration());
         modelBuilder.ApplyConfiguration(new StockItemConfiguration());
         modelBuilder.ApplyConfiguration(new ReservationConfiguration());
+        modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 
         SnakeCaseNames.Apply(modelBuilder);
