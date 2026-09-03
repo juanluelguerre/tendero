@@ -15,7 +15,7 @@ The board. Open this to know what to do next; everything else is reference.
 > Update these three lines at the end of every session. They are the point of the file.
 
 - **Current phase:** 5 — **11 of 13**. The commerce loop is closed end to end: cart, checkout, payments and returns, on 395 tests with the search baseline unmoved. Since closing the loop: every component split into three files, the token rule turned into a test, six backoffice Playwright specs, a Dependabot config and two blog sections.
-- **Next task:** **the product detail page** (`/p/{slug}`). It is the single blocker on three separate things — `P5-13`'s locale segment and `hreflang`, phase 1's deferred variant picker (`P1-9`), and the storefront Playwright spec (`P5-11`). Nothing else in the board is waiting on anything.
+- **Next task:** the product detail page's **screen**. Its query landed on 2026-09-03 (`GET /api/catalog/products/by-slug/{slug}`, 416 tests), carrying the whole axis so a sold-out size renders disabled rather than absent, stock disclosed only below five, and every culture's URL for `hreflang`. What remains is the Angular route, then `P5-13` in full and the storefront spec (`P5-11`).
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
 **Standing chore:** four commits sit unpushed on `develop` (`79198e6`…`41bab07`). The one CI has not yet verified is `0bfb443`, the GitHub Actions major bump. Pushing needs a token carrying the `workflow` scope — see the notebook entry for why that is not obvious.
@@ -330,7 +330,7 @@ and no architecture rule could see. Write at close, publish per calendar.
 
 ## Phase 5 · Cart, checkout, payments, returns
 
-`en curso` · priority **critical** · size **XL** — the gateway phase · **395 tests, es 0.943 / en 0.937 unmoved**
+`en curso` · priority **critical** · size **XL** — the gateway phase · **416 tests, es 0.943 / en 0.937 unmoved**
 
 Everything agent-native depends on this being real.
 
@@ -346,14 +346,16 @@ Everything agent-native depends on this being real.
 - [x] `P5-10` Backoffice: orders list, ship/deliver, returns queue — **L** · the orders table shows **authorised** and **captured** apart, because a shipped order that was never captured is the row worth finding
 - [~] `P5-11` Playwright — **M** · **backoffice done** (6 specs, 7s, against the real stack), storefront waits on the PDP because the PDP changes the flow it would test. The pyramid's thinnest layer on purpose: the loop is already covered against a real Postgres, so these assert only what a browser can — the guard, the interceptor, and a table that never keeps its own copy of `AllowedTransitions`. Verified by mutation: a heading downgraded to a `<p>` turns the tab spec red
 - [x] `P5-12` Delete the dead `product.addToCart` and `nav.orders` keys by using them — **S** · both used. `nav.agents` and `nav.search` stay dead on purpose: they belong to phases 11 and 8, and they are the gap analysis written in i18n
-- [ ] `P5-13` **The locale and the query go into the URL** — **M** · **half done**: `?q=` is in the URL, so a result page is shareable, bookmarkable and works with the back button. The locale segment, `hreflang` and the per-culture slugs still wait on a PDP, which this phase did not build
+- [~] `P5-13` **The locale and the query go into the URL** — **M** · **half done**: `?q=` is in the URL, so a result page is shareable, bookmarkable and works with the back button. The locale segment, `hreflang` and the per-culture slugs waited on a PDP; its **query** landed 2026-09-03 and already answers with every culture's slug, so what is left is the route that consumes it
+- [x] `P5-14` `GET /api/catalog/products/by-slug/{slug}` — **M** · not on the original list, and it should have been: the PDP was three tasks' blocker and had no query. Reads the catalogue and not the index, because the page needs structured attributes and out-of-stock variants and has to survive Elasticsearch being down. Catalog became the third context to reference Inventory's ports, so the picker renders **once**. Three runtime-only failures — snake_case identifiers, EF preview's `GenerateComplexJsonShaper` over `FromSql`, and the `"Value"` column `SqlQuery` projects — none of which a unit test could reach
 
-**Still open, and why.** There is **no product detail page**. Phase 1 deferred
-the variant picker to "the cart phase, where it is needed rather than
-decorative", and the cart phase went straight from the search card to the
-basket — which works at one variant per product and would not at eight. The PDP
-is what `P5-13`'s locale segment and phase 1's picker both wait on, and it is the
-first task of the next session.
+**Still open, and why.** The product detail page has a **query** and not yet a
+screen. Phase 1 deferred the variant picker to "the cart phase, where it is
+needed rather than decorative", and the cart phase went straight from the search
+card to the basket — which works at one variant per product and would not at
+eight. `P5-14` closed the half that was three tasks' blocker; the Angular route
+is what `P5-13`'s locale segment, phase 1's picker (`P1-9`) and the storefront
+spec (`P5-11`) now wait on, and it is the next session's first task.
 
 **Risks, and what actually happened.** The scope creep the phase was warned about
 did not happen: no gift cards, no partial shipments, no split payments. Returns
