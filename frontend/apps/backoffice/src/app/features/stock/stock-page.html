@@ -22,6 +22,7 @@
           <caption class="sr-only">{{ t('stock.title') }}</caption>
           <thead>
             <tr>
+              <th scope="col">{{ t('stock.column.product') }}</th>
               <th scope="col">{{ t('stock.column.sku') }}</th>
               <th scope="col">{{ t('stock.column.warehouse') }}</th>
               <th scope="col" class="numeric">{{ t('stock.column.onHand') }}</th>
@@ -33,6 +34,24 @@
           <tbody>
             @for (row of rows(); track key(row)) {
               <tr [class.row--empty]="row.available === 0">
+                <!-- The name comes from the CATALOGUE, in a second call: the
+                     inventory endpoint cannot supply one, because stock exists
+                     without a catalogue (ADR 0024). It is the boundary showing
+                     through the screen rather than a gap in it. -->
+                <td class="product">
+                  @let described = describe(row);
+                  @if (described) {
+                    <span class="product__name">{{ described.productName }}</span>
+                    @if (described.variantLabel) {
+                      <span class="product__variant code">{{ described.variantLabel }}</span>
+                    }
+                  } @else {
+                    <!-- Not a blank cell. The catalogue has never heard of this
+                         SKU, and that is a row worth finding: stock can outlive
+                         a product. -->
+                    <span class="product__unknown">{{ t('stock.unknownProduct') }}</span>
+                  }
+                </td>
                 <td class="numeric code">{{ row.sku }}</td>
                 <td>{{ row.warehouseName }}</td>
                 <td class="numeric">

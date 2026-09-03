@@ -219,6 +219,46 @@
         }
       }
     },
+    "/api/catalog/skus": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "DescribeSkus",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DescribeSkusResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/variants": {
       "post": {
         "tags": [
@@ -1572,6 +1612,20 @@
           }
         }
       },
+      "DescribeSkusResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkuDescriptionView"
+            }
+          }
+        }
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -2909,6 +2963,36 @@
             "items": {
               "$ref": "#/components/schemas/ShippingOptionView"
             }
+          }
+        }
+      },
+      "SkuDescriptionView": {
+        "required": [
+          "sku",
+          "productCode",
+          "productName",
+          "variantLabel",
+          "slug"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "productCode": {
+            "type": "string"
+          },
+          "productName": {
+            "type": "string"
+          },
+          "variantLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "slug": {
+            "type": "string"
           }
         }
       },

@@ -46,4 +46,29 @@ public interface IProductCatalogReader
     /// an SEO event rather than a broken link.
     /// </summary>
     Task<Product?> FindByCodeAsync(string code, CancellationToken ct);
+
+    /// <summary>
+    /// What a set of SKUs is called.
+    ///
+    /// It exists because of a boundary rather than in spite of one. `Inventory`
+    /// may reference the SharedKernel and nothing else — stock exists without a
+    /// catalogue exactly as it exists without orders (ADR 0024) — so
+    /// `GET /api/inventory/stock` structurally cannot say what
+    /// `B05DEFG606-DEFAULT` is. The catalogue can, and the screen that needs
+    /// both asks both.
+    ///
+    /// A SET and not one at a time: a stock grid is a page of SKUs, and a
+    /// lookup per row is the N+1 the whole reader exists to avoid.
+    ///
+    /// A SKU with no product comes back missing rather than invented. That is
+    /// not defensive: the same rule that lets Inventory ignore Catalog lets
+    /// stock OUTLIVE a product, so a shelf holding something the catalogue no
+    /// longer lists is a real state and the screen should say so.
+    /// </summary>
+    Task<IReadOnlyList<SkuDescription>> DescribeSkusAsync(
+        IReadOnlyCollection<string> skus, string culture, CancellationToken ct);
 }
+
+/// <summary>What one SKU is, in the culture it was asked for.</summary>
+public sealed record SkuDescription(
+    string Sku, string ProductCode, string ProductName, string? VariantLabel, string Slug);

@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type {
   AttributeDefinitionList,
+  SkuDescriptionList,
   DefineVariantsResponse,
   ImportResult,
   ProductListPage,
@@ -21,6 +22,28 @@ import { Observable } from 'rxjs';
 export class CatalogService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+
+  /**
+   * What a set of SKUs is called.
+   *
+   * It is here and not in `InventoryService` for the reason that service
+   * already states: one service per bounded context, because a service reaching
+   * into two is how a frontend starts pretending they are one.
+   *
+   * And the reason the stock screen needs two calls at all is the boundary
+   * itself. `Inventory` may reference the SharedKernel and nothing else — stock
+   * exists without a catalogue — so `/api/inventory/stock` structurally cannot
+   * name a product. The catalogue answers that separately and the SCREEN joins
+   * them, which is what a screen is for.
+   */
+  describeSkus(skus: readonly string[], culture: string): Observable<SkuDescriptionList> {
+    const params = skus.reduce(
+      (query, sku) => query.append('sku', sku),
+      new HttpParams().set('culture', culture),
+    );
+
+    return this.http.get<SkuDescriptionList>(`${this.baseUrl}/api/catalog/skus`, { params });
+  }
 
   list(
     status: ProductStatus | null,

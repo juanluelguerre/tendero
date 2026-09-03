@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { ReservationRow, StockRow } from '@tendero/shared-api';
+import type { ReservationRow, SkuDescription, StockRow } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { without } from '@tendero/shared-util';
+import { CatalogService } from '../../data-access/catalog.service';
 import { InventoryService } from '../../data-access/inventory.service';
 
 /**
@@ -35,6 +36,7 @@ import { InventoryService } from '../../data-access/inventory.service';
 })
 export class StockPage {
   private readonly inventory = inject(InventoryService);
+  private readonly catalog = inject(CatalogService);
   private readonly culture = inject(CultureStore);
 
   protected readonly rows = signal<StockRow[]>([]);
@@ -50,9 +52,35 @@ export class StockPage {
   /** What has been typed but not saved, keyed by row. */
   private readonly drafts = signal<Record<string, number>>({});
 
+  /**
+   * What each SKU is called, keyed by SKU.
+   *
+   * It comes from a SECOND call, to the catalogue, and that is the boundary
+   * rather than a shortcoming: `Inventory` may reference the SharedKernel and
+   * nothing else, so `/api/inventory/stock` structurally cannot name a product.
+   * Stock exists without a catalogue exactly as it exists without orders
+   * (ADR 0024). The grid asks both and joins them here, which is what a screen
+   * is for.
+   */
+  private readonly descriptions = signal<Record<string, SkuDescription>>({});
+
   protected readonly outOfStock = computed(
     () => this.rows().filter((row) => row.available === 0).length,
   );
+
+  /**
+   * The product a row is holding, or null when the catalogue has never heard of
+   * the SKU.
+   *
+   * That null is a real state and the template renders it as one. The same rule
+   * that lets Inventory ignore Catalog lets stock OUTLIVE a product: a shelf can
+   * hold something that was archived, or that arrived before anybody catalogued
+   * it. A row that quietly showed its SKU again would hide exactly the case a
+   * shopkeeper needs to act on.
+   */
+  protected describe(row: StockRow): SkuDescription | null {
+    return this.descriptions()[row.sku] ?? null;
+  }
 
   protected key(row: StockRow): string {
     return `${row.sku}@${row.warehouseCode}`;
@@ -117,11 +145,41 @@ export class StockPage {
         this.rows.set(result.rows);
         this.reservations.set(result.reservations);
         this.loading.set(false);
+        this.name(result.rows);
       },
       error: () => {
         this.failed.set(true);
         this.loading.set(false);
       },
+    });
+  }
+
+  /**
+   * Fills in the product names, after the grid is already on screen.
+   *
+   * Deliberately not awaited before rendering: the numbers are what the screen
+   * is FOR, and holding a stocktake behind a second request would make the
+   * catalogue's availability a prerequisite for counting a shelf — which is the
+   * dependency the boundary exists to refuse. The names arrive a moment later
+   * and the column fills in.
+   *
+   * Distinct SKUs, because two warehouses hold the same one and asking twice
+   * for the same answer is the N+1 the endpoint takes a set to avoid.
+   */
+  private name(rows: readonly StockRow[]): void {
+    const skus = [...new Set(rows.map((row) => row.sku))];
+    if (skus.length === 0) return;
+
+    this.catalog.describeSkus(skus, this.culture.active()).subscribe({
+      next: (result) =>
+        this.descriptions.set(
+          Object.fromEntries(result.items.map((item) => [item.sku, item])),
+        ),
+      // A failure here leaves the SKUs unlabelled and the grid working. The
+      // shelf numbers do not depend on the catalogue being reachable, and a
+      // screen that broke because a name could not be fetched would have made
+      // them depend on it.
+      error: () => undefined,
     });
   }
 }

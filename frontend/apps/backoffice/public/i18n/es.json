@@ -154,34 +154,36 @@
     "signOut": "Cerrar sesión"
   },
   "stock": {
-    "title": "Stock",
+    "allAvailable": "Todo disponible",
+    "column": {
+      "action": "Guardar el recuento",
+      "available": "Disponible",
+      "onHand": "En almacén",
+      "product": "Producto",
+      "reserved": "Reservado",
+      "sku": "SKU",
+      "warehouse": "Almacén"
+    },
+    "countLabel": "Unidades de {{sku}} en {{warehouse}}",
+    "empty": "Todavía no hay nada en ninguna estantería.",
+    "failed": "No se ha podido cargar el stock.",
     "hint": "Un recuento sustituye lo que hay en la estantería; no suma. Guardar dos veces no cambia nada la segunda.",
     "loading": "Cargando...",
-    "failed": "No se ha podido cargar el stock.",
-    "empty": "Todavía no hay nada en ninguna estantería.",
-    "outOfStock": "{{count}} sin existencias",
-    "allAvailable": "Todo disponible",
-    "save": "Guardar",
-    "saving": "Guardando...",
-    "saved": "Guardado",
-    "saveFailed": "No se ha podido guardar el recuento.",
-    "countLabel": "Unidades de {{sku}} en {{warehouse}}",
-    "reservations": "Reservas recientes",
     "noReservations": "No hay nada reservado.",
-    "column": {
-      "sku": "SKU",
-      "warehouse": "Almacén",
-      "onHand": "En almacén",
-      "reserved": "Reservado",
-      "available": "Disponible",
-      "action": "Guardar el recuento"
-    },
+    "outOfStock": "{{count}} sin existencias",
+    "reservations": "Reservas recientes",
+    "save": "Guardar",
+    "saveFailed": "No se ha podido guardar el recuento.",
+    "saved": "Guardado",
+    "saving": "Guardando...",
     "status": {
       "Held": "Reservado",
       "Committed": "Enviado",
       "Released": "Liberado",
       "Expired": "Caducado"
-    }
+    },
+    "title": "Stock",
+    "unknownProduct": "No está en el catálogo"
   },
   "variants": {
     "title": "Variantes",

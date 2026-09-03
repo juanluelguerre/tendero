@@ -64,6 +64,52 @@ internal sealed class EfProductRepository(TenderoDbContext context)
             .AsNoTracking()
             .FirstOrDefaultAsync(product => product.Code == code, ct);
 
+    /// <summary>
+    /// What a set of SKUs is called, in one query.
+    ///
+    /// The variant label is resolved the way the product page resolves it — the
+    /// axes in the product's declared order, rendered through the attribute
+    /// definitions — except that this reader has no definition catalogue and
+    /// does not want one: it answers with the option CODES, which is what
+    /// `Variant.LabelFor` produces and what a shopkeeper reading a stock grid
+    /// can match against a SKU. A backoffice row saying "NAVY_BLUE · 38" beside
+    /// `PULSE-NAVY_BLUE-38` is more useful than one saying "azul marino · 38",
+    /// because the thing on the shelf is labelled with the code.
+    ///
+    /// The implicit default variant has no axis values, so its label is empty
+    /// and comes back null — there is nothing to tell apart.
+    /// </summary>
+    public async Task<IReadOnlyList<SkuDescription>> DescribeSkusAsync(
+        IReadOnlyCollection<string> skus, string culture, CancellationToken ct)
+    {
+        if (skus.Count == 0)
+            return [];
+
+        var wanted = skus.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var products = await context.Products
+            .AsNoTracking()
+            .Where(product => product.Variants.Any(variant => wanted.Contains(variant.Sku)))
+            .ToListAsync(ct);
+
+        return
+        [
+            .. products.SelectMany(product => product.Variants
+                .Where(variant => wanted.Contains(variant.Sku))
+                .Select(variant =>
+                {
+                    var label = variant.LabelFor(product.VariantAxes);
+
+                    return new SkuDescription(
+                        variant.Sku,
+                        product.Code,
+                        product.Name.In(culture),
+                        label.Length > 0 ? label : null,
+                        product.Slug.In(culture));
+                }))
+        ];
+    }
+
     public Task<Product?> FindByExternalReferenceAsync(string source, string externalId, CancellationToken ct) =>
         context.Products.FirstOrDefaultAsync(
             product => product.ExternalReferences.Any(

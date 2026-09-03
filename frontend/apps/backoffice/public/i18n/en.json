@@ -154,34 +154,36 @@
     "signOut": "Sign out"
   },
   "stock": {
-    "title": "Stock",
+    "allAvailable": "All available",
+    "column": {
+      "action": "Save the count",
+      "available": "Available",
+      "onHand": "On hand",
+      "product": "Product",
+      "reserved": "Held",
+      "sku": "SKU",
+      "warehouse": "Warehouse"
+    },
+    "countLabel": "Units of {{sku}} in {{warehouse}}",
+    "empty": "Nothing on any shelf yet.",
+    "failed": "Could not load the stock.",
     "hint": "A count replaces what the shelf holds; it is not an increment. Saving twice changes nothing the second time.",
     "loading": "Loading...",
-    "failed": "Could not load the stock.",
-    "empty": "Nothing on any shelf yet.",
-    "outOfStock": "{{count}} out of stock",
-    "allAvailable": "All available",
-    "save": "Save",
-    "saving": "Saving...",
-    "saved": "Saved",
-    "saveFailed": "Could not save the count.",
-    "countLabel": "Units of {{sku}} in {{warehouse}}",
-    "reservations": "Recent holds",
     "noReservations": "Nothing is being held.",
-    "column": {
-      "sku": "SKU",
-      "warehouse": "Warehouse",
-      "onHand": "On hand",
-      "reserved": "Held",
-      "available": "Available",
-      "action": "Save the count"
-    },
+    "outOfStock": "{{count}} out of stock",
+    "reservations": "Recent holds",
+    "save": "Save",
+    "saveFailed": "Could not save the count.",
+    "saved": "Saved",
+    "saving": "Saving...",
     "status": {
       "Held": "Held",
       "Committed": "Shipped",
       "Released": "Released",
       "Expired": "Expired"
-    }
+    },
+    "title": "Stock",
+    "unknownProduct": "Not in the catalogue"
   },
   "variants": {
     "title": "Variants",

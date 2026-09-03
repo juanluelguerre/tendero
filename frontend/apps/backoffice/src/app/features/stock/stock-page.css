@@ -75,3 +75,28 @@
 @media (max-width: 1100px) {
   .grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- The product column ----------
+   It leads the row because it is what somebody scans for. The SKU stays, in
+   mono, because it is what is printed on the box — the two answer different
+   questions and neither replaces the other. */
+.product {
+  min-inline-size: 14rem;
+}
+
+.product__name {
+  display: block;
+}
+
+.product__variant {
+  display: block;
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+
+/* A SKU the catalogue has never heard of. Stock can outlive a product, and this
+   is the row a shopkeeper needs to find rather than one to hide. */
+.product__unknown {
+  color: var(--warning);
+  font-size: var(--text-xs);
+}

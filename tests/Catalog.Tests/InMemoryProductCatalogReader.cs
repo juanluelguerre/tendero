@@ -29,4 +29,32 @@ internal sealed class InMemoryProductCatalogReader(params Product[] products) : 
     /// </summary>
     public Task<Product?> FindByCodeAsync(string code, CancellationToken ct) =>
         Task.FromResult(products.FirstOrDefault(product => product.Code == code));
+
+    public Task<IReadOnlyList<SkuDescription>> DescribeSkusAsync(
+        IReadOnlyCollection<string> skus, string culture, CancellationToken ct)
+    {
+        var wanted = skus.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // A SKU the catalogue does not know is ABSENT, not empty. The fake has
+        // to reproduce that, because it is the case the screen renders
+        // differently — stock can outlive a product.
+        IReadOnlyList<SkuDescription> found =
+        [
+            .. products.SelectMany(product => product.Variants
+                .Where(variant => wanted.Contains(variant.Sku))
+                .Select(variant =>
+                {
+                    var label = variant.LabelFor(product.VariantAxes);
+
+                    return new SkuDescription(
+                        variant.Sku,
+                        product.Code,
+                        product.Name.In(culture),
+                        label.Length > 0 ? label : null,
+                        product.Slug.In(culture));
+                }))
+        ];
+
+        return Task.FromResult(found);
+    }
 }

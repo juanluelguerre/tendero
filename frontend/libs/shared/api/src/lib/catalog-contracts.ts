@@ -42,6 +42,14 @@ export type CategoryStep = Schemas['CategoryStep'];
 export type AlternateSlug = Schemas['AlternateSlug'];
 
 /**
+ * What a SKU is called. It exists because `Inventory` cannot say — stock is
+ * keyed on SKU precisely so it need not know a catalogue exists — so the stock
+ * screen asks both and joins them.
+ */
+export type SkuDescription = Schemas['SkuDescriptionView'];
+export type SkuDescriptionList = Schemas['DescribeSkusResult'];
+
+/**
  * The labels arrive UNRESOLVED — the whole culture dictionary — and that is
  * deliberate: this screen exists to see whether a translation is missing, and
  * text already resolved would hide the very fact people come to look at.
