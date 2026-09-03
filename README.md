@@ -1,15 +1,13 @@
-<p align="center">
-  <img src="brand/tendero-logo.svg" alt="Tendero" width="340">
-</p>
-
-<h1 align="center">Tendero</h1>
-<p align="center"><em>The AI-native shopkeeper — commerce for humans and agents.</em></p>
+<h1 align="center">
+  <img src="brand/tendero-logo.svg" alt="Tendero — commerce for humans and agents" width="340">
+</h1>
 
 <p align="center">
   <a href="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml"><img src="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
-  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.860%20es%20%C2%B7%200.720%20en-D85A30" alt="Search quality"></a>
+  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.943%20es%20%C2%B7%200.937%20en-D85A30" alt="Search quality"></a>
   <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-11%20(preview)-512BD4?logo=dotnet" alt=".NET 11"></a>
   <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" alt="Angular 22"></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript 6.0"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
   <a href="https://elguerre.com"><img src="https://img.shields.io/badge/blog-elguerre.com-D85A30" alt="Blog"></a>
 </p>
@@ -28,43 +26,75 @@ AI-enriched multilanguage catalog with human review, agent-ready commerce
 (UCP/MCP), and observability for every token spent. It doubles as the companion
 code for a blog series on AI architecture.
 
+### What runs today
+
+Phases 0–5 of [the board](docs/delivery-plan.md) are in. That means the shop
+works end to end, on a six-product catalogue:
+
+> Search it, put two things in a basket, and the cart shows one discount applied
+> and **four suppressed, each with the reason the engine gave**. Pay with the
+> card that declines and nothing happens — no order, no stock held, the basket
+> untouched. Pay with the good one and stock is reserved and the order confirms
+> itself through the outbox. Ship it: the money is captured and the shelf goes
+> 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3 before a
+> euro moves.
+
+**395 tests and 6 browser specs**, with search relevance at **NDCG@10 0.943 es /
+0.937 en** and a CI gate that fails a regression.
+
+The AI half is the part that is designed and not built: embeddings, hybrid
+search and the reranker are phase 8, the MCP server and the UCP manifest phase 9.
+Everything they attach to — the outbox, a second projection target, a rebuildable
+index, an evaluation harness with a committed baseline — is already here, which
+is the order this project argues for.
+
 ## Architecture at a glance
 
 ```mermaid
 flowchart TB
     SF[Storefront · Angular] --> API
     BO[Backoffice · Angular] --> API
-    AG[AI agents] -->|UCP / MCP| API
+    AG[AI agents] -.->|UCP / MCP · phase 9| API
     subgraph Backend [.NET 11 · Aspire]
         API[API · Carter vertical slices]
-        UCP[UCP + MCP server]
-        WK[Workers · outbox, indexing]
+        WK[Workers · outbox, indexing, saga]
     end
     API --> PG[(Postgres)]
     WK --> ES[(Elasticsearch)]
-    WK --> QD[(Qdrant)]
-    API --> RD[(Redis)]
-    WK --> OL[Ollama]
-    Backend -->|OTel| OBS[Grafana · Langfuse]
-    EXT[Catalog connectors: seed · Shopify · Medusa...] --> API
+    WK -.->|phase 8| QD[(Qdrant)]
+    WK -.->|phase 8| OL[Ollama]
+    Backend -.->|OTel · phase 12| OBS[Grafana · Langfuse]
+    EXT[Catalog connectors: seed · Shopify...] --> API
     PAY[Payments: fake · stripe-mock · Stripe test] --- API
 ```
 
+Dotted edges are designed and not built; the phase each one lands in is on the
+arrow. What is solid runs today.
+
 Key principles:
 
-- **Two bounded contexts** (`ElGuerre.Tendero.Catalog`,
-  `ElGuerre.Tendero.Ordering`) — orders
-  snapshot product data, never reference it live.
-- **Ports and adapters at every boundary**: N catalog connectors behind one
-  port, 3 payment adapters behind another. The `seed` connector and `fake`
-  payment provider are the defaults — clone and run, no sign-ups.
+- **Five bounded contexts that share no entities** — `Catalog`, `Pricing`,
+  `Inventory`, `Ordering` and `Search`. A crossing carries values or an event
+  record, never a reference: an order snapshots the product's name and price,
+  and stock is keyed on a SKU so inventory never learns what a product is
+  (ADR 0014).
+- **The outbox is the process manager.** Placing an order holds stock, failing
+  to hold it cancels the order, and cancelling gives both the stock and the
+  payment hold back — every arrow an ordinary event handler, no saga framework
+  (ADR 0024).
+- **Ports and adapters at every boundary**, each with an abstract contract suite
+  every adapter inherits: catalog connectors, allocation strategies, tax
+  calculators, shipping rates, payment providers, identity issuers. The `seed`
+  connector, the `fake` payment provider and a development OIDC issuer are the
+  defaults — clone and run, no sign-ups.
 - **Lexical search (BM25) is the permanent fallback.** AI layers degrade
   gracefully; the store never stops searching.
 - **Search quality is a CI gate**: a curated golden set is scored with NDCG@10
-  on every PR.
+  on every PR, and a regression fails it.
 - **Multilanguage by design** (es/en): per-culture indexes with native
-  analyzers, `LocalizedText` value object, AI-assisted translation with human
-  review.
+  analyzers, `LocalizedText` everywhere user-facing, and an explicit `?culture=`
+  that beats `Accept-Language` because an agent has no browser locale
+  (ADR 0013).
 
 Full plan: [docs/initial-plan.md](docs/initial-plan.md) ·
 Architecture: [docs/architecture.md](docs/architecture.md) ·
@@ -181,77 +211,113 @@ dotnet build Tendero.slnx            # warnings become errors when CI is set
                                      #   bash:       CI=true dotnet build …
                                      #   PowerShell: $env:CI="true"; dotnet build …
 dotnet test Tendero.slnx             # unit, contract and architecture tests
-cd frontend && npx nx run-many -t lint,test,build
+cd frontend && npx nx run-many -t lint test build
 ```
+
+The browser specs need the stack running and Chromium installed once:
+
+```bash
+cd frontend && npx playwright install chromium
+npx nx e2e backoffice-e2e
+```
+
+`npx nx` when you type it, `nx` inside a `package.json` script — Nx is a local
+dependency, and the prefix is about who resolves the command. The reasoning is
+in [frontend/README.md](frontend/README.md).
 
 ## Project structure
 
 ```
 src/
   AppHost/                 # Aspire orchestration
-  SharedKernel/            # Money, LocalizedText, ids, AggregateRoot
-  Catalog/                 # bounded context: products, connectors, import slices
-  Ordering/                # bounded context: orders, checkout, payments
-  Search/                  # indexing, lexical + hybrid search
-  Ucp/                     # UCP + MCP server for AI agents
-  Api/  Workers/            # composition roots: HTTP endpoints, outbox processor
+  SharedKernel/            # Money, LocalizedText, Address, ids, AggregateRoot, CQRS
+  Catalog/                 # products, variants, attributes, categories, connectors
+  Pricing/                 # price lists, promotions, tax — references SharedKernel ONLY
+  Inventory/               # warehouses, stock, reservations — SharedKernel only too
+  Ordering/                # cart, checkout, orders, payments, returns, the stock saga
+  Search/                  # indexing and lexical search (hybrid in phase 8)
+  Ucp/                     # UCP + MCP server for AI agents (phase 9; a README today)
+  DevIssuer/               # OIDC discovery, JWKS and signed tokens, Development only
+  Api/  Workers/           # composition roots: HTTP endpoints, outbox processor
   Persistence/             # the only project that knows EF Core exists
   ServiceDefaults/         # OTel, health checks, service discovery
 frontend/                  # Nx workspace
-  apps/storefront/         # light, roomy; search wired to the real API
-  apps/backoffice/         # dense, dark; review queue
+  apps/storefront/         # light, roomy: search, cart, checkout, orders, returns
+  apps/backoffice/         # dense, dark: review, attributes, promotions, stock, orders
+  apps/backoffice-e2e/     # Playwright — the thinnest layer of the pyramid
   libs/shared/             # tokens, ui, util, api, i18n — boundaries enforced by lint
 brand/                     # logo, icons, brand guide
-design/                    # tokens.css — the single source of truth for both apps
+design/                    # tokens.css — the single source of truth for four surfaces
 seed/                      # sample dataset (ABO-style schema, es/en)
 tools/SearchEval/          # golden set runner (NDCG@10, recall)
-docs/                      # plan, architecture, ADRs, specs, testing
-tests/
+docs/                      # plan, architecture, ADRs, analysis, testing, blog
+tests/                     # unit, contract, architecture, integration, API
 ```
 
 ## Testing strategy
 
+**395 tests and 6 browser specs**, and the table below is what each layer is
+for. Only tools actually in the repository are listed: NSubstitute, Bogus and
+Verify are still prescribed by `docs/testing.md` and still absent, and Respawn
+was declined — a fresh database per test turned out cheaper than a reset.
+
 | Layer | Tools | What it protects |
 |---|---|---|
-| Unit | xUnit v3, NSubstitute, Bogus, CsCheck | Domain invariants, value objects (property-based) |
-| Contract | xUnit abstract suites | Every connector/payment adapter honors its port |
-| Snapshot | Verify | Search documents, AI prompt outputs |
-| Integration | Testcontainers, Respawn | Real Postgres + Elasticsearch, per-test isolation |
-| Architecture | NetArchTest.Rules | Domain never references infra; slices stay independent |
+| Unit | xUnit v3 | Domain invariants and every transition table, walked in full |
+| Property-based | CsCheck | The promotion engine over thousands of generated carts — it found a real bug |
+| Contract | xUnit abstract suites | Every connector, allocation strategy, tax calculator, shipping rate, payment provider and identity issuer honours its port |
+| Architecture | NetArchTest.Rules | Domain never references infra; slices stay independent; `Pricing` and `Inventory` see only the SharedKernel |
+| Integration | Testcontainers | A real Postgres: the outbox drain, the migration baseline, and the commerce loop end to end |
+| Design tokens | vitest | Not one hex outside `design/tokens.css`, across every stylesheet in the repo |
 | Search quality | Golden set + NDCG@10 in CI | Relevance never regresses silently |
+| End-to-end | Playwright | The browser: the route guard, the token interceptor, and a table that never keeps its own copy of a state machine |
 
 ```bash
-dotnet test                                   # unit + contract + architecture
+dotnet test                                   # unit, property, contract, architecture
 dotnet test --filter Category=Integration     # spins up containers
 dotnet run --project tools/SearchEval         # relevance report
+cd frontend && npx nx e2e backoffice-e2e      # needs the stack up
 ```
 
 More: [docs/testing.md](docs/testing.md) · [docs/search-evaluation.md](docs/search-evaluation.md)
 
 ## Roadmap
 
-| Phase | Feature | Status |
+The living board — what is next, what each phase evidences, and what was
+deferred with its measured number — is
+**[docs/delivery-plan.md](docs/delivery-plan.md)**. This is the short version.
+
+| Phase | | Status |
 |---|---|---|
-| 1 | Canonical multilanguage catalog + seed connector + import slice | ✅ built |
-| 1 | Lexical search (BM25, per-language indexes) | ✅ built |
-| 1 | Golden set + NDCG@10 as CI gate | ✅ built, es 0.860 / en 0.720 |
-| 1 | Publish slice + backoffice review queue | ✅ built |
-| 1 | Index rebuild from Postgres | ✅ built |
-| 2 | Hybrid search (embeddings via Ollama + Qdrant, RRF) | 🔜 |
-| 2 | AI catalog enrichment + translation with human review | 🔜 |
-| 2 | Shopify connector (dev store) | 🔜 |
-| 3 | Checkout, order saga, payment adapters | 🔜 |
-| 3 | UCP + MCP server: agent-ready commerce | 🔜 |
-| 4 | Multimodal search (image embeddings) | 🔜 |
+| 0 | CI, OpenAPI contract, migrations, Testcontainers, the identity port | ✅ |
+| 1 | Variants: the indexed unit is the variant, the returned one the product | ✅ |
+| 2 | Localized attributes and taxonomy | ✅ **es 0.860 → 0.943, en 0.720 → 0.937** |
+| 3 | Price lists, promotions with combination rules, tax | ✅ 73 pricing tests |
+| 4 | Inventory: two warehouses, reservations, the stock saga on the outbox | ✅ |
+| 5 | Cart, checkout, payments, returns | ✅ 11/13 — the PDP and the storefront spec remain |
+| 6 | WebMCP in the storefront | 🔜 the cheapest differentiator |
+| 7 | Accounts, audit, and swapping the dev issuer for Keycloak | 🔜 |
+| 8 | Embeddings, hybrid search, evals | 🔜 |
+| 9 | Read-only MCP server and the UCP manifest | 🔜 |
+| 10 | Knowledge: product claims with source and confidence | 🔜 |
+| 11 | UCP transactional, AP2 and Know Your Agent | 🔜 **the headline** |
+| 12 | Backoffice copilot and AI observability | 🔜 |
+| 13 | Multimodal search and the kit solver | 🔜 |
+
+The numbering changed on 2026-09-02: `initial-plan.md` §7 had four phases, the
+review that produced `docs/analysis/` reordered the work by **what it evidences**
+rather than by what is cheap, and the board is the one that is maintained.
 
 ## Blog series
 
 Each phase ships with an article — English first, Spanish on
 [elguerre.com](https://elguerre.com).
 
-**Nothing is published yet.** Drafts are: [docs/blog/index.md](docs/blog/index.md)
-has the publication order, the status of each article and what the unfinished ones
-are waiting on. Seven are drafted from shipped features and measured numbers.
+**Nothing is published yet**, and the first date is 2026-09-15.
+[docs/blog/index.md](docs/blog/index.md) owns the publication order, the status of
+each article and what the unfinished ones are waiting on — eight are drafted from
+shipped features and measured numbers, which is roughly four months of publishing
+without writing a new line.
 
 Raw material is collected as it happens in
 [docs/blog/notebook.md](docs/blog/notebook.md), which is where the numbers and the
