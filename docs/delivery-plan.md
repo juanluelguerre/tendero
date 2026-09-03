@@ -49,9 +49,9 @@ important process decision in the file, because the failure mode of a developer
 blog is not running out of material — it is publishing four things in a week and
 then vanishing for two months.
 
-You start with an unusual advantage: **eight finished drafts and one half-written**.
-That is roughly four months of publishing without writing a new line, during
-which phases 0–3 refill the queue.
+You start with an unusual advantage: **nine finished drafts and one half-written**.
+That is roughly four and a half months of publishing without writing a new line,
+during which phases 0–5 refill the queue.
 
 | Date | Article | State |
 |---|---|---|
@@ -63,9 +63,10 @@ which phases 0–3 refill the queue.
 | 2026-11-24 | 05 · The parameter and the header are not alternatives | ready |
 | 2026-12-08 | 06 · A repository that built on exactly one machine | ready |
 | 2026-12-22 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
-| 2027-01-05 | **NEW** · from phase 0 | write when P0 closes |
-| 2027-01-19 | **NEW** · from phase 2 | write when P2 closes |
-| 2027-02-02 | **NEW** · from phase 3 | write when P3 closes |
+| 2027-01-05 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
+| 2027-01-19 | **NEW** · from phase 0 | write when P0 closes |
+| 2027-02-02 | **NEW** · from phase 2 | write when P2 closes |
+| 2027-02-16 | **NEW** · from phase 3 | write when P3 closes |
 | … | one per closed phase, in order | |
 
 One standing blocker before 2026-09-29: cut a repo tag so article 01's snippets
@@ -160,7 +161,7 @@ day one against a fake issuer**.
 
 **Article.** *"The gate that never ran"* — a repo carrying a "tracked in CI"
 badge with no CI, and what it costs to make eight documented guarantees real.
-Opens the second half of the series. Write at close, publish 2027-01-05.
+Opens the second half of the series. Write at close, publish 2027-01-19.
 `#dotnet #CI #testing #ecommerce`
 
 ---
