@@ -692,3 +692,51 @@ oversight, and each is a paragraph in some future article.
 | A slug table with uniqueness and redirects | **settled, not deferred** — ADR 0026 makes the slug decorative and the URL carries a code, so there is nothing to make unique and no history to keep | Never, unless the code leaves the URL |
 | Spec Kit experiment | ADR 0009 reserves it for the UCP work | Phase 11 |
 | `.claude/` skills and plugin | none exist; article 14 is blocked on it | After enough repetition to have opinions |
+| **A storefront that looks like a shop** | the home page IS the search box; no landing, no browsable taxonomy, no editorial imagery, no returns or delivery promise on the PDP | Deliberately after the floor. See below — it is the largest single item here and the only one that is not deferred for scale |
+
+### A storefront that looks like a shop
+
+**Reference: [warbyparker.com](https://www.warbyparker.com)** — the user's own,
+recorded 2026-09-04. It could not be inspected when this was written (its server
+answers 403 to a fetcher and no browser was connected), so nothing below claims
+anything about how *they* do it. What is written down instead is what THIS shop
+is missing, which is the half that matters when the work starts.
+
+**The honest position today.** Every screen in the storefront is correct,
+accessible, tokenised and tested. None of them is a shop. What exists is a
+search box, a result grid, a product page, a cart and a checkout — the
+transactional spine and nothing around it:
+
+| gap | what is there today |
+|---|---|
+| **No home** | `/es` renders the search page. A shop's front door is the one screen that says what kind of shop it is, and there is nothing between the header and an empty result grid |
+| **The taxonomy is invisible** | phase 2 built categories with a localized name, a parent and a materialized path, and the ONLY consumer is the search index. Nothing browses them, so "Hogar › Cocina › Menaje" exists as data and as a breadcrumb and never as a way in |
+| **No imagery beyond the product shot** | and the seed's point at `cdn.example.com` on purpose, so a fresh clone is a grid of fallback tiles. The design has an editorial device — the awning stripe — used on exactly one `<hr>` |
+| **No promise on the PDP** | `initial-plan.md` §2 already carries the number: **44% of sites do not show the return policy on the product page while ~60% of shoppers look for it there.** The returns machinery shipped in phase 5 and the page says nothing about it |
+| **The empty states are the honest minimum** | "Nothing here yet" is correct and is not a reason to stay |
+
+**What it is NOT.** Not a rewrite of `design/tokens.css`, and not a change to
+`design/DESIGN.md`'s opinions — the awning stripe, the clay accent, one accent
+action per view, Bricolage/Instrument Sans/JetBrains Mono and tabular numbers all
+stay. The system is fine; it is barely used. This is a **page** problem, not a
+token problem, and any proposal that starts by picking new colours has
+misdiagnosed it.
+
+**Why it is not scheduled.** Every other row in this table is deferred for
+scale; this one is deferred for sequence. A shop that looks beautiful and cannot
+tell you why a discount did not apply is the demo this project exists to argue
+against — the floor first, then the surface. It also wants two things that do not
+exist yet: real photography (the image derivatives row above) and something to
+browse (facets, phase 8).
+
+**Enters when** phase 8 gives the catalogue facets to browse by, or earlier if a
+published article needs the screenshots to carry it — article 00 leads with a
+live search box, and a front page nobody has designed is a poor first impression
+for the piece that introduces the project.
+
+**One caution for whoever picks this up.** Take the *shape* of a reference, never
+its palette. The single most recognisable failure mode in 2026 design is the
+warm-cream, high-contrast-serif, terracotta-accent cluster that DESIGN.md already
+names and deliberately avoids — and it is exactly what "make it look like that
+nice site" produces.
+
