@@ -79,6 +79,12 @@ import { TranslocoDirective } from '@jsverse/transloco';
             <a class="tab" routerLink="/stock" routerLinkActive="tab--active">
               {{ t('nav.stock') }}<hr class="awning awning-thin tab__mark" />
             </a>
+            <a class="tab" routerLink="/orders" routerLinkActive="tab--active">
+              {{ t('nav.orders') }}<hr class="awning awning-thin tab__mark" />
+            </a>
+            <a class="tab" routerLink="/returns" routerLinkActive="tab--active">
+              {{ t('nav.returns') }}<hr class="awning awning-thin tab__mark" />
+            </a>
           </div>
         </nav>
       }

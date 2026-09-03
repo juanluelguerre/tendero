@@ -24,37 +24,42 @@ Verified against a clean build (0 warnings) and 117 passing tests on 2026-09-02.
 | Prices | **Done** | ~~`Money` has only `+` and `*int`.~~ Closed 2026-09-02: `Money` grew subtraction, decimal multiplication, division, comparison, `Percent`, a named `Rounding` policy and largest-remainder `Allocate`. `src/Pricing` carries `PriceList` + entries keyed on SKU, two lists (`retail`, `vip`), validity windows and a segment resolved from the principal. |
 | Promotions with combination rules | **Done** | Closed 2026-09-02. Four effects (`PercentOffLine`, `AmountOffOrder`, `BuyXGetY`, `FreeShipping`), coupons, segments and validity windows; combination as a declarative table with three policies, evaluated in the total order `(Priority, Code)`. Suppressed promotions come back with a localized `RuleReason`. Seven CsCheck properties at 2,000 carts each — one of which found a real bug. |
 | Real-time inventory | **Done** | Closed 2026-09-03 (phase 4). `src/Inventory` with two warehouses, `StockItem(Sku, WarehouseCode)`, and `Reservation` with its own transition table. `IStockLedger` and two keyed allocation strategies with a shared contract suite; the process runs on the existing outbox rather than a saga framework (ADR 0024), compensation included, verified end to end against a real Postgres. `inStock` is on the search document and on the hit, and a count typed in the backoffice reaches the storefront card by the same path an order takes. |
-| Cart | **Missing** | No cart aggregate, table, endpoint or service. The storefront translation key `product.addToCart` exists in both languages and is referenced **zero** times. |
-| Checkout | **Missing** | No command, no endpoint, no handler. `Order.Place` is called only from `tests/Ordering.Tests/OrderBuilder.cs`. |
+| Cart | **Done** | Closed 2026-09-03 (phase 5). An aggregate inside `Ordering`, addressed by a 256-bit token rather than by its id, with guests first class. It carries **no money**: every figure comes from a live quote (ADR 0016), and the storefront shows suppressed promotions with their reason. `product.addToCart` is finally used. |
+| Checkout | **Done** | Closed 2026-09-03. Quote revalidated against the same engine that issued it, idempotency checked before anything is charged, payment authorised **before** the order exists (ADR 0025), and the cart closed in one transaction with the events that drive the saga. A price that moved comes back as a 409 carrying the new quote. |
 | Taxes | **Done** | Closed 2026-09-02. `ITaxCalculator` with two keyed adapters (`flat-vat`, `zero`) and a shared contract suite; per-class rates, a breakdown grouped one line per rate, and shipping taxed as one more base. Destination rules are a declared simplification — the field already travels, so it is a third adapter and not an `if`. |
-| Shipping | **Missing** | No address, no shipping option, no rate provider. `Order` has no destination of any kind. |
-| Order state machine | **Partial** | The best-built thing that nothing uses. `AllowedTransitions` is a real declarative table with 7 states, 12 edges and full test coverage of the matrix — and **no production code calls a single transition**. |
-| Returns / RMA | **Missing** | No return states, no `ReturnRequest`, no reason codes, no refund. The `OrderDelivered` event exists and its comment says it is there to open the return window; nothing consumes it. |
-| Accounts and guests | **Missing** | `CustomerId` is a record struct with no entity behind it. No customer table, no guest identity, no session. |
-| Idempotent payments with webhooks | **Missing** | `Order.IdempotencyKey` exists with a unique index — that is the whole of it. No `IPaymentProvider` (despite ADR 0003 describing it in the present tense), no adapter, no webhook endpoint, no signature verification. |
+| Shipping | **Done** | Closed 2026-09-03. `Address` in the SharedKernel, frozen onto the order; `IShippingRateProvider` with `flat-rate` and `zone-rate` behind a shared contract suite. A country nobody ships to is an empty answer and not an exception, which is what lets checkout say "we do not deliver there yet". |
+| Order state machine | **Done** | Closed 2026-09-03. Every transition now has a caller: checkout places and authorises, the saga confirms and cancels, the backoffice ships and delivers, the webhook fails a payment. The screen derives its buttons from the status and shows the server's refusal when it guesses wrong — the table stays the single source of truth. |
+| Returns / RMA | **Done** | Closed 2026-09-03. `ReturnRequest` as its own aggregate because returns are per LINE, with a six-state table, a closed set of five reasons, and the window opening on `OrderDelivered` — cashing a design that event's own comment made in phase 1. Receiving restocks through the ledger, damaged goods do not, and the refund carries the returned lines' share of the discount and tax. |
+| Accounts and guests | **Partial** | Guests became first class on 2026-09-03: a cart belongs to nobody until somebody signs in, a `CustomerId` is minted at checkout and written back onto the cart, and `Cart.Claim` is the half `Ordering` owns. What is missing is the other half — there is no `Customer` entity, no order history, and an order is read by its id. `Accounts` lands in phase 7. |
+| Idempotent payments with webhooks | **Done** | Closed 2026-09-03. `IPaymentProvider` with four operations — authorise, capture, refund and **void** — one adapter and the contract suite ADR 0003 described in the present tense. The webhook verifies an HMAC over the raw body with a five-minute tolerance and tells forging, replaying and "none of our business" apart. |
 | Faceted search | **Partial** | BM25 is solid: per-language analysers, `cross_fields` + fuzzy `best_fields`, sensible boosts. But **no aggregations, no filters beyond `status: active`, no sorting, no price range, no facet counts**. Paging is `from`/`size` only. |
-| SEO | **Partial** | Per-culture slugs are generated and stored, which is the hard half, and they are used nowhere. Nothing else: no SSR or prerender (`@angular/ssr` is not installed), no meta or Open Graph tags beyond `viewport`, no `hreflang`, no sitemap, no structured data. The storefront is a client-rendered SPA on one route, and since the language switcher landed (2026-09-03) that one route serves **two languages** — the locale lives in a signal and in `localStorage`, so a link cannot carry it and a crawler cannot see it. `P5-13`. |
+| SEO | **Partial** | Half of `P5-13` closed on 2026-09-03: the query is in the URL, so a result page is shareable, bookmarkable and survives the back button. The **locale is still not**, so one route serves two languages, and the per-culture slugs are still used nowhere because there is no PDP. Nothing else either: no SSR or prerender (`@angular/ssr` is not installed), no meta or Open Graph tags beyond `viewport`, no `hreflang`, no sitemap, no structured data. |
 | Backoffice with roles | **Partial** | Closed on the auth side 2026-09-02 (phase 0): JWT validation, three policies, and every endpoint carrying a policy or an explicit `AllowAnonymous`, enforced in both directions by a test. The backoffice has a login screen, a token interceptor and a route guard. Still Partial because the issuer is the development one and the roles live in claims rather than in a domain — `Accounts` lands in phase 7. |
-| Audit | **Missing** | No audit table, no actor recorded on any command. The dispatcher has one pipeline step and it is validation. |
+| Audit | **Missing** | No audit table, no actor recorded on any command. The dispatcher has one pipeline step and it is validation. It is now the **only** Missing row in the floor, and three later features read it: the audit screen, the agent activity panel and the copilot. |
 | Observability | **Partial** | Genuinely good instrumentation, no persistence. `ActivitySource` spans with tags in every I/O slice, an outbox-lag histogram, OTel wired from the first slice. But the OTLP exporter only activates if `OTEL_EXPORTER_OTLP_ENDPOINT` is set, and **the AppHost declares no backend** — traces live in the Aspire dashboard's memory and die with it. |
 
-**Floor summary (2026-09-03, after phase 4): 8 Done, 5 Partial, 7 Missing** — of 20.
+**Floor summary (2026-09-03, after phase 5): 14 Done, 5 Partial, 1 Missing** — of 20.
 
-Phases 1–4 closed variants, structured localized attributes, the taxonomy,
-prices, promotions, taxes and inventory. What the floor is still missing is the
-rest of the transactional half — cart, checkout, payments, shipping, returns —
-plus accounts and audit.
+Phases 1–5 closed the whole transactional half. The one thing still **Missing**
+is audit; the five **Partial** rows are faceted search (no aggregations), SEO
+(no locale in the URL, no SSR, no PDP), accounts (guests yes, customers no),
+the backoffice's roles (claims, not a domain) and observability (instrumented,
+no persistent backend).
 
 (The pre-phase counts in earlier revisions of this file read "3 Done, 6 Partial,
 15 Missing" against the same twenty rows. They did not add up; these are counted
 from the table.)
 
-The honest reading after phase 4 is that the floor is four bounded contexts and
-one working cross-context process. `Order` is no longer the aggregate nobody
-calls: placing one holds stock, failing to hold it cancels the order, and
-cancelling gives the stock back — all of it through handlers on the outbox that
-already existed. What still does not run is the half a customer touches: there is
-no cart, so the only thing that can place an order is a test.
+The honest reading after phase 5 is that the shop works. A guest fills a basket,
+is quoted live, pays, and gets an order that holds stock, captures on shipping
+and gives the goods back on a return — every crossing between the five contexts
+running over the outbox that phase 1 built.
+
+What is left in the floor is not transactional. It is **audit**, which nothing
+writes yet and three later features read; **accounts**, which is the other half
+of the guest work; and the parts of SEO and faceted search that need screens
+nobody has built — a product detail page above all, which phase 1 deferred to
+"the cart phase" and the cart phase did not reach.
 
 ---
 
@@ -106,16 +111,16 @@ Three qualifiers matter more than the scores:
 Four translation keys exist in Spanish and English, in both apps, and are used
 **zero** times:
 
-| Key | What it implies |
-|---|---|
-| `product.addToCart` | Cart, PDP, checkout |
-| `nav.orders` | Order management in the backoffice |
-| `nav.agents` | The agent activity panel |
-| `nav.search` | The search evaluation panel |
+| Key | What it implies | State |
+|---|---|---|
+| `product.addToCart` | Cart, PDP, checkout | **used** (2026-09-03) |
+| `nav.orders` | Order management in the backoffice | **used** (2026-09-03) |
+| `nav.agents` | The agent activity panel | still dead — phase 11 |
+| `nav.search` | The search evaluation panel | still dead — phase 8 |
 
-Somebody wrote the labels for four features that do not exist. That is this gap
-analysis, written in `i18n` by the repository itself, and it is a good sign: the
-shape of the product is understood, it is just not built.
+Somebody wrote the labels for four features that did not exist. Two of them do
+now. The other two stay dead on purpose: they are this gap analysis written in
+`i18n` by the repository itself, and deleting them would be deleting the note.
 
 ---
 

@@ -40,6 +40,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAvailabilityReader>(services => services.GetRequiredService<EfStockRepository>());
 
         services.AddScoped<IOrderRepository, EfOrderRepository>();
+        services.AddScoped<IOrderReader, EfOrderReader>();
         services.AddScoped<ICartRepository, EfCartRepository>();
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();
 

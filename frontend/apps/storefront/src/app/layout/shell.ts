@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
+import { CartStore } from '../data-access/cart.service';
 
 /**
  * The storefront shell. It is NOT shared with the backoffice: one is roomy and
@@ -14,7 +15,7 @@ import { Culture, CultureStore } from '@tendero/shared-i18n';
  */
 @Component({
   selector: 'storefront-shell',
-  imports: [RouterOutlet, TranslocoDirective],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
       <a class="skip" href="#main">{{ t('nav.skipToContent') }}</a>
@@ -59,6 +60,24 @@ import { Culture, CultureStore } from '@tendero/shared-i18n';
               }
             </div>
             <span class="brand__area eyebrow">{{ t('brand.area') }}</span>
+
+            <!-- The basket. The count is on the badge and also in the label,
+                 because a number in a circle is not something a screen reader
+                 can make sense of on its own. -->
+            <a class="cart" routerLink="/cart"
+               [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'">
+              <svg class="cart__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path
+                  d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6"
+                  fill="none" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="10" cy="19.5" r="1.4" fill="currentColor" />
+                <circle cx="17" cy="19.5" r="1.4" fill="currentColor" />
+              </svg>
+              @if (cart.itemCount() > 0) {
+                <span class="cart__badge numeric">{{ cart.itemCount() }}</span>
+              }
+            </a>
           </div>
         </div>
         <!-- The signature, and the only decoration in the system. It marks where
@@ -133,6 +152,41 @@ import { Culture, CultureStore } from '@tendero/shared-i18n';
 
     .header__end { display: flex; align-items: center; gap: var(--space-4); }
 
+    /* The basket. It is NOT clay: one accent action per view, and on a results
+       page that is the search button. The badge is, because it is the one thing
+       here that changes and wants to be noticed when it does. */
+    .cart {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      color: var(--text);
+      text-decoration: none;
+      transition: background var(--dur-fast) var(--ease);
+    }
+
+    .cart:hover { background: var(--bg-raised); }
+    .cart__icon { width: 22px; height: 22px; }
+
+    .cart__badge {
+      position: absolute;
+      inset-block-start: 2px;
+      inset-inline-end: 0;
+      min-width: 18px;
+      height: 18px;
+      padding-inline: 4px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--accent);
+      color: var(--stone-0);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
     .langs {
       display: flex;
       border: 1px solid var(--border);
@@ -172,6 +226,17 @@ export class Shell {
 
   protected readonly cultures = this.cultureStore.available;
   protected readonly culture = this.cultureStore.active;
+
+  /**
+   * Read once, here, so the badge is right on a cold load. Every page that
+   * changes the cart updates the same store, so nothing else has to remember to
+   * refresh it.
+   */
+  protected readonly cart = inject(CartStore);
+
+  constructor() {
+    void this.cart.load();
+  }
 
   protected use(culture: Culture): void {
     this.cultureStore.use(culture);

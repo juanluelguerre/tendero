@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Carter;
+using ElGuerre.Tendero.Ordering.Contracts;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Features.ManageCart;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -373,58 +374,6 @@ public sealed record PlaceOrderRequest(
     string IdempotencyKey,
     AddressRequest? BillingAddress = null,
     IReadOnlyList<string>? Coupons = null);
-
-public sealed record OrderLineView(
-    string Sku, string ProductName, string? VariantLabel, decimal UnitPrice, int Quantity);
-
-public sealed record OrderDiscountView(string PromotionCode, string Label, decimal Amount);
-
-public sealed record OrderTaxView(string TaxClass, decimal Rate, decimal Base, decimal Amount);
-
-public sealed record OrderView(
-    string OrderId,
-    string Status,
-    string Culture,
-    string Currency,
-    DateTimeOffset CreatedAt,
-    string ShippingAddress,
-    string ShippingLabel,
-    IReadOnlyList<OrderLineView> Lines,
-    IReadOnlyList<OrderDiscountView> Discounts,
-    IReadOnlyList<OrderTaxView> Taxes,
-    decimal Subtotal,
-    decimal DiscountTotal,
-    decimal Shipping,
-    decimal TaxTotal,
-    decimal Total)
-{
-    public static OrderView From(Order order) => new(
-        // Flat. OrderId is a record struct and would serialise as {"value":"…"}.
-        order.Id.ToString(),
-        order.Status.ToString(),
-        order.Culture,
-        order.Currency,
-        order.CreatedAt,
-        order.ShippingAddress.SingleLine(),
-        order.Shipping.Label,
-        [
-            .. order.Lines.Select(line => new OrderLineView(
-                line.Sku, line.ProductName, line.VariantLabel, line.UnitPrice.Amount, line.Quantity))
-        ],
-        [
-            .. order.Discounts.Select(discount => new OrderDiscountView(
-                discount.PromotionCode, discount.Label, discount.Amount.Amount))
-        ],
-        [
-            .. order.Taxes.Select(tax => new OrderTaxView(
-                tax.TaxClass, tax.Rate, tax.Base.Amount, tax.Amount.Amount))
-        ],
-        order.Totals.Subtotal.Amount,
-        order.Totals.DiscountTotal.Amount,
-        order.Totals.Shipping.Amount,
-        order.Totals.TaxTotal.Amount,
-        order.Totals.Total.Amount);
-}
 
 /// <summary>
 /// What comes back when the price moved: the new fingerprint and the new total,

@@ -50,6 +50,16 @@ export const appRoutes: Route[] = [
           import('./features/stock/stock-page').then((m) => m.StockPage),
       },
       {
+        path: 'orders',
+        canActivate: [signedIn],
+        loadComponent: () => import('./features/orders/orders-page').then((m) => m.OrdersPage),
+      },
+      {
+        path: 'returns',
+        canActivate: [signedIn],
+        loadComponent: () => import('./features/returns/returns-page').then((m) => m.ReturnsPage),
+      },
+      {
         path: 'review',
         canActivate: [signedIn],
         loadComponent: () =>

@@ -1,10 +1,12 @@
 import { Component, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { SearchHit } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
+import { CartStore } from '../../data-access/cart.service';
 import { ProductSearchService } from '../../data-access/product-search.service';
 
 /** Below this, a query matches so much that the answer is noise. */
@@ -58,12 +60,43 @@ export class SearchPage {
    */
   private readonly lastQuery = signal<string | null>(null);
 
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * The query the URL is carrying. It is what makes a result page shareable,
+   * bookmarkable and — once there is server rendering — crawlable, and its
+   * absence was a row in the standing backlog: the query lived in a signal, so
+   * two people could not look at the same results.
+   *
+   * It is also the half an agent needs. Handing a person a link to what it
+   * found is the cheapest thing an agent surface can do, and it cannot do it
+   * against a URL that says nothing.
+   */
+  protected readonly queryFromUrl = toSignal(
+    this.route.queryParamMap.pipe(map((params) => params.get('q') ?? '')),
+    { initialValue: '' },
+  );
+
   constructor() {
     effect(() => {
       const culture = this.culture.active();
       const query = untracked(() => this.lastQuery());
 
       if (query) this.run(query, culture, { afterLanguageChange: true });
+    });
+
+    // The URL is the source of truth for what is being searched, so back and
+    // forward work without anything extra: the browser changes the parameter
+    // and this runs. Typing into the box only navigates.
+    effect(() => {
+      const query = this.queryFromUrl();
+
+      untracked(() => {
+        if (query === (this.lastQuery() ?? '')) return;
+
+        this.execute(query);
+      });
     });
   }
 
@@ -115,7 +148,26 @@ export class SearchPage {
     this.broken.update((ids) => new Set(ids).add(productId));
   }
 
+  /**
+   * Pressing search does not search: it navigates. The URL then carries the
+   * query, and the effect above runs it — one path in, so the answer is the
+   * same whether somebody typed it, pressed a suggestion, followed a link or
+   * used the back button.
+   */
   protected submit(query: string): void {
+    const text = query.trim();
+
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { q: text.length > 0 ? text : null },
+      queryParamsHandling: 'merge',
+      // A search is not a page in its own history entry: pressing back after
+      // three refinements should leave the shop, not walk back through them.
+      replaceUrl: true,
+    });
+  }
+
+  private execute(query: string): void {
     const text = query.trim();
 
     // A single character is not a search, and saying so is not pedantry: the
@@ -158,6 +210,31 @@ export class SearchPage {
    *  stores the key, so putting a CDN in front touches neither backend nor domain. */
   protected imageUrl(hit: SearchHit): string | null {
     return hit.imageId ? `/api/images/${hit.imageId}` : null;
+  }
+
+  /**
+   * Which SKU is in flight. A per-card flag and not a page-wide one: pressing
+   * add on one card must not grey out the rest of the results.
+   */
+  protected readonly adding = signal<string | null>(null);
+
+  private readonly cart = inject(CartStore);
+
+  /**
+   * Adds the matched variant and leaves the shopper where they are.
+   *
+   * No redirect to the cart, deliberately. The header badge changes, which is
+   * the confirmation, and a shop that threw you out of your results after every
+   * add is a shop you buy one thing from.
+   */
+  protected async addToCart(hit: SearchHit): Promise<void> {
+    this.adding.set(hit.matchedSku);
+
+    try {
+      await this.cart.add(hit.matchedSku);
+    } finally {
+      this.adding.set(null);
+    }
   }
 
   protected price(hit: SearchHit): string {

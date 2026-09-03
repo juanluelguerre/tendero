@@ -64,6 +64,18 @@ Everything the API exposes today. Each is one vertical slice.
 | `GET /api/pricing/promotions` | `Pricing/Features/ListPromotions` |
 | `GET /api/inventory/stock` | `Inventory/Features/ListStock` |
 | `PUT /api/inventory/stock/{sku}/{warehouse}` | `Inventory/Features/ListStock` (CountStock) |
+| `GET /api/cart` | `Ordering/Features/ManageCart` |
+| `POST /api/cart/lines` | `Ordering/Features/ManageCart` (AddToCart) |
+| `PUT`/`DELETE /api/cart/lines/{sku}` | `Ordering/Features/ManageCart` (SetCartLine) |
+| `POST /api/checkout/shipping-options` | `Ordering/Features/Checkout` (GetShippingOptions) |
+| `POST /api/checkout` | `Ordering/Features/Checkout` (PlaceOrder) |
+| `GET /api/orders` | `Ordering/Features/ListOrders` |
+| `GET /api/orders/{id}` | `Ordering/Features/GetOrder` |
+| `POST /api/orders/{id}/move` | `Ordering/Features/ListOrders` (MoveOrder) |
+| `POST /api/orders/{id}/returns` | `Ordering/Features/Returns` (RequestReturn) |
+| `GET /api/returns` | `Ordering/Features/Returns` (ListReturns) |
+| `POST /api/returns/{id}/decide` | `Ordering/Features/Returns` (DecideReturn) |
+| `POST /api/payments/{provider}/webhook` | `Ordering/Features/PaymentWebhook` |
 | `GET /api/search` | `Search/Features/SearchProducts` |
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 
@@ -114,12 +126,74 @@ say zero — which is what puts an out-of-stock shelf on the record rather than 
 row at all. Both raise `StockLevelChanged`, so a count typed in the backoffice
 reaches the search index by the same path an order takes.
 
+## Cart and checkout
+
+`Cart` is an aggregate **inside** `Ordering`, not a context: cart to order is one
+transactional conversion, and splitting it would buy a distributed saga to move a
+row between two states. Guests are first class — the cart is addressed by a
+256-bit token, and a `CustomerId` is minted at checkout.
+
+**The cart carries no money.** Prices are quoted live and frozen at order time
+(ADR 0016), so every figure a shopper sees comes from `POST /api/pricing/quote`,
+recomputed after each change. That costs a second round trip per click and is
+what keeps `Ordering` from owning a second pricing engine.
+
+Checkout **authorises before it places** (ADR 0025), so a declined card costs
+nothing: no order, no reservation, an untouched cart. The quote is revalidated by
+re-running the engine that issued it, through one adapter an architecture rule
+confines to a single file — a checkout with its own arithmetic would compare two
+fingerprints from two systems and call the agreement proof.
+
+Shipping lives here and tax lives in `Pricing`, and the split is deliberate: a
+rate needs an address, and dragging `Address` into `Pricing` would ruin the
+purity that makes the promotion engine property-testable. The chosen rate then
+feeds back into `Pricing` as the input `FreeShipping` needs. Both directions are
+values, so the loop is fine.
+
+## Returns
+
+**A return is not a state of the order.** They are per LINE, which a seven-state
+order machine cannot express without a combinatorial explosion, so
+`ReturnRequest` is its own aggregate with its own table:
+
+```
+Requested → Approved | Rejected | Cancelled
+Approved  → Received | Cancelled
+Received  → Refunded | Rejected
+```
+
+The window opens on `OrderDelivered` — the event phase 1 added with a comment
+saying it existed for exactly this. **Receiving** restocks through
+`IStockLedger.ReceiveAsync`, not approving: approving is a promise and a shop
+that restocked on one would be selling parcels still in the post. Damaged goods
+never restock at all.
+
+`ReturnReason` is a closed set of five, and the closure is the point: it is the
+input to the return-reason analysis a later phase promises, and a text box would
+make that a language model guessing at what somebody typed.
+
 ## Payments
 
-One port, three adapters: Fake (in-process, failure injection, default),
-stripe-mock (protocol contract tests), Stripe test mode (real webhooks).
-The order saga compensates via `Order.Cancel(reason)` from any intermediate
-state.
+One port, **four** operations — authorise, capture, refund and void — with keyed
+adapters and a shared contract suite. Today one adapter: `fake`, in-process, with
+failure injected through the instrument so a decline, an unreachable provider and
+an authorise-then-fail are one click apart in the demo. `stripe-mock` and Stripe
+test mode remain the second and third.
+
+Void is not refund and the port refuses to let them be confused: a refund takes a
+**capture** reference and a void takes an **authorisation**, because crediting
+money that was never taken is a different conversation with the customer and with
+the bank.
+
+Capture happens on **shipping**, for the reason stock is committed there:
+confirming is a promise and shipping is a fact. The order saga compensates via
+`Order.Cancel(reason)` from any intermediate state, releasing both the stock and
+the payment hold.
+
+The webhook is the one endpoint a stranger is supposed to call, so the signature
+is the whole security model: HMAC-SHA256 over `<timestamp>.<raw body>`, compared
+in fixed time, with a five-minute tolerance that stops a captured request being
+replayed tomorrow.
 
 ## Observability
 

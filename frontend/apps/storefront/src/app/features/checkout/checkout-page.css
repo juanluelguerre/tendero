@@ -1,0 +1,136 @@
+/* Steps on the left, the total on the right — the same shape as the cart, so
+   moving between the two does not move the thing a shopper is watching. */
+.checkout {
+  padding-block: var(--space-6) var(--space-8);
+}
+
+.checkout__title {
+  margin: 0 0 var(--space-5);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.steps { display: grid; gap: var(--space-5); }
+
+/* A fieldset, because these ARE groups of controls and a screen reader should
+   be told so. The border is removed and the legend restyled; the semantics stay. */
+.step {
+  margin: 0;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+.step__title {
+  padding-inline: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 800;
+}
+
+.step__hint {
+  margin: 0 0 var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-block-end: var(--space-4);
+}
+
+.row { display: grid; gap: var(--space-2); }
+.row--wide { grid-column: 1 / -1; }
+
+.row__label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+/* ---------- Radio rows ----------
+   The whole row is the target, not the 16px circle. Delivery and payment are
+   the two choices a checkout is made of, and both are made on a phone. */
+.options { display: grid; gap: var(--space-2); }
+
+.option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 56px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.option:hover { border-color: var(--border-strong); }
+
+.option--picked {
+  border-color: var(--accent);
+  background: var(--accent-soft, var(--bg-raised));
+}
+
+.option__body { display: grid; gap: 2px; min-width: 0; }
+.option__label { font-weight: 500; }
+.option__days { color: var(--text-muted); font-size: var(--text-xs); }
+.option__price { font-weight: 600; }
+
+/* ---------- The summary ----------
+   Duplicated from the cart's stylesheet rather than shared. Two pages with the
+   same panel is not the same as a component: the cart's has a link to checkout
+   and this one has the pay button, and a shared component with a slot for its
+   only different part is a component that earns nothing. */
+.summary {
+  position: sticky;
+  inset-block-start: calc(var(--header-h) + var(--space-4));
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.totals { margin: 0; display: grid; gap: var(--space-2); }
+
+.totals__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.totals__row dt, .totals__row dd { margin: 0; }
+.totals__row--off { color: var(--positive); }
+
+.totals__row--total {
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.totals__tax { margin: 0; color: var(--text-subtle); font-size: var(--text-xs); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .summary { position: static; }
+}
+
+@media (max-width: 560px) {
+  .grid { grid-template-columns: minmax(0, 1fr); }
+}

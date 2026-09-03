@@ -164,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetOrder"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pricing/quote": {
         parameters: {
             query?: never;
@@ -303,6 +319,38 @@ export interface paths {
         put: operations["SetCartLine"];
         post?: never;
         delete: operations["RemoveCartLine"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListOrders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{orderId}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MoveOrder"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -456,6 +504,9 @@ export interface components {
         ListAttributeDefinitionsResult: {
             items: components["schemas"]["AttributeDefinitionView"][];
         };
+        ListOrdersResult: {
+            orders: components["schemas"]["OrderSummary"][];
+        };
         ListProductsResult: {
             items: components["schemas"]["ProductSummary"][];
             /** Format: int32 */
@@ -472,6 +523,14 @@ export interface components {
             rows: components["schemas"]["StockRowView"][];
             reservations: components["schemas"]["ReservationView"][];
         };
+        MoveOrderRequest: {
+            move: string;
+            reason: null | string;
+        };
+        OrderDetail: {
+            order: components["schemas"]["OrderView"];
+            returns: components["schemas"]["ReturnView"][];
+        };
         OrderDiscountView: {
             promotionCode: string;
             label: string;
@@ -486,6 +545,21 @@ export interface components {
             unitPrice: number;
             /** Format: int32 */
             quantity: number;
+        };
+        OrderSummary: {
+            orderId: string;
+            status: string;
+            currency: string;
+            /** Format: double */
+            total: number;
+            /** Format: int32 */
+            lineCount: number;
+            recipientName: string;
+            city: string;
+            isPaid: boolean;
+            isCaptured: boolean;
+            /** Format: date-time */
+            createdAt: string;
         };
         OrderTaxView: {
             taxClass: string;
@@ -1071,6 +1145,39 @@ export interface operations {
             };
         };
     };
+    GetOrder: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     QuoteCart: {
         parameters: {
             query?: {
@@ -1389,6 +1496,79 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    ListOrders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListOrdersResult"];
+                };
+            };
+        };
+    };
+    MoveOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

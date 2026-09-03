@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReservationRow, StockRow } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
+import { without } from '@tendero/shared-util';
 import { InventoryService } from '../../data-access/inventory.service';
 
 /**
@@ -295,7 +296,7 @@ export class StockPage {
           ),
         );
 
-        this.drafts.update(({ [key]: _, ...rest }) => rest);
+        this.drafts.update((current) => without(current, key));
         this.saving.set(null);
         this.saved.set(key);
       },

@@ -146,6 +146,54 @@ img {
   border-color: var(--border-strong);
 }
 
+/* Full width, for a summary panel where the action IS the panel's last line. */
+.button--block {
+  display: flex;
+  width: 100%;
+}
+
+/* ---------- Notices ----------
+   Something happened that the shopper has to read before carrying on. It says
+   what happened and what to do, never just "error" (design/DESIGN.md). */
+.notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--text-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  font-size: var(--text-sm);
+}
+
+.notice--bad { border-inline-start-color: var(--danger); }
+.notice--warn { border-inline-start-color: var(--warning); }
+.notice--good { border-inline-start-color: var(--positive); }
+
+/* ---------- Empty states ----------
+   "Nothing here yet — do this" and not "no records found". */
+.blank {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.blank__text { margin: 0; font-size: var(--text-md); font-weight: 600; }
+.blank__hint { margin: 0; color: var(--text-muted); }
+
+/* A link that reads as a link and not as a second button: one clay action per
+   view, and the way back is never it. */
+.quiet {
+  display: inline-block;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.quiet:hover { color: var(--text); text-decoration: underline; }
+
 /* ---------- Fields ---------- */
 .field {
   width: 100%;

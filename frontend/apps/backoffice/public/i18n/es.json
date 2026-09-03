@@ -21,9 +21,45 @@
     "language": "Idioma",
     "orders": "Pedidos",
     "promotions": "Promociones",
+    "returns": "Devoluciones",
     "reviewQueue": "Cola de revisión",
     "search": "Evaluación de búsqueda",
     "stock": "Stock"
+  },
+  "orders": {
+    "captured": "Cobrado",
+    "column": {
+      "order": "Pedido",
+      "customer": "Para",
+      "status": "Estado",
+      "payment": "Pago",
+      "lines": "Líneas",
+      "total": "Total",
+      "action": "Moverlo"
+    },
+    "empty": "Todavía no hay pedidos. Compra algo en la tienda y aparecerá aquí.",
+    "failed": "No se han podido cargar los pedidos.",
+    "hint": "La máquina de estados decide qué movimiento es legal. Uno rechazado vuelve con el motivo, en las palabras del servidor.",
+    "loading": "Cargando pedidos...",
+    "move": {
+      "Ship": "Enviar",
+      "Deliver": "Entregado",
+      "Cancel": "Cancelar"
+    },
+    "moving": "Trabajando...",
+    "openCount": "{{count}} por atender",
+    "paid": "Autorizado",
+    "status": {
+      "Pending": "Pendiente de pago",
+      "PaymentAuthorized": "Pagado",
+      "PaymentFailed": "Pago fallido",
+      "Confirmed": "Confirmado",
+      "Shipped": "Enviado",
+      "Delivered": "Entregado",
+      "Cancelled": "Cancelado"
+    },
+    "title": "Pedidos",
+    "unpaid": "Sin pagar"
   },
   "promotions": {
     "title": "Promociones",
@@ -50,6 +86,44 @@
       "running": "Activa",
       "scheduled": "Sin activar"
     }
+  },
+  "returns": {
+    "column": {
+      "return": "Devolución",
+      "order": "Pedido",
+      "what": "Qué vuelve",
+      "status": "Estado",
+      "refund": "Reembolso",
+      "action": "Decidir"
+    },
+    "decide": {
+      "Approve": "Aprobar",
+      "Reject": "Rechazar",
+      "Receive": "Marcar recibida",
+      "Refund": "Reembolsar"
+    },
+    "deciding": "Trabajando...",
+    "empty": "Nada en espera. Un pedido entregado se puede devolver durante 14 días.",
+    "failed": "No se han podido cargar las devoluciones.",
+    "hint": "Aprobar es una promesa; recibir es un hecho. Solo recibir devuelve la mercancía a la estantería, y lo dañado nunca vuelve.",
+    "loading": "Cargando devoluciones...",
+    "openCount": "{{count}} abiertas",
+    "reason": {
+      "WrongSize": "Talla equivocada",
+      "NotAsDescribed": "No es como se describía",
+      "Damaged": "Dañado",
+      "WrongItem": "Artículo equivocado",
+      "ChangedMind": "Cambió de opinión"
+    },
+    "status": {
+      "Requested": "Solicitada",
+      "Approved": "Aprobada",
+      "Received": "Recibida",
+      "Refunded": "Reembolsada",
+      "Rejected": "Rechazada",
+      "Cancelled": "Cancelada"
+    },
+    "title": "Devoluciones"
   },
   "reviewQueue": {
     "column": {

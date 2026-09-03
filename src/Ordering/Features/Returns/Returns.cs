@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Inventory.Ports;
+using ElGuerre.Tendero.Ordering.Contracts;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
@@ -288,31 +289,6 @@ public sealed class ReturnOptions
 }
 
 // ---------- Reading ----------
-
-public sealed record ReturnLineView(
-    string Sku, int Quantity, string Reason, string? Comment);
-
-public sealed record ReturnView(
-    string ReturnId,
-    string OrderId,
-    string Status,
-    string? Resolution,
-    decimal? RefundAmount,
-    DateTimeOffset CreatedAt,
-    IReadOnlyList<ReturnLineView> Lines)
-{
-    public static ReturnView From(ReturnRequest request) => new(
-        request.Id.ToString(),
-        request.OrderId.ToString(),
-        request.Status.ToString(),
-        request.Resolution,
-        request.RefundAmount?.Amount,
-        request.CreatedAt,
-        [
-            .. request.Lines.Select(line => new ReturnLineView(
-                line.Sku, line.Quantity, line.Reason.ToString(), line.Comment))
-        ]);
-}
 
 public sealed record ListReturnsQuery : IQuery<IReadOnlyList<ReturnView>>;
 

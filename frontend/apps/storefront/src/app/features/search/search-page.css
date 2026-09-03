@@ -263,3 +263,31 @@
   font-weight: 600;
   color: var(--danger);
 }
+
+/* Add to cart. Quiet by default and clay on hover: the accent on a grid of
+   twelve cards would be twelve accents, which is none (design/DESIGN.md). */
+.card__add {
+  margin-block-start: var(--space-3);
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.card__add:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--stone-0);
+}
+
+.card__add:disabled { opacity: 0.6; cursor: default; }

@@ -19,6 +19,7 @@
 | [0015](0015-variant-is-the-indexed-unit.md) | The variant is the indexed unit; the product is the returned unit | accepted |
 | [0016](0016-quoted-live-frozen-at-order.md) | Prices are quoted live and frozen at order time | accepted |
 | [0024](0024-the-outbox-is-the-process-manager.md) | The outbox is the process manager, orchestrated from Ordering | accepted |
+| [0025](0025-authorise-before-placing.md) | Checkout authorises the payment before it places the order | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

@@ -325,32 +325,54 @@ and no architecture rule could see. Write at close, publish per calendar.
 
 ## Phase 5 · Cart, checkout, payments, returns
 
-`no empezada` · priority **critical** · size **XL** — the gateway phase
+`en curso` · priority **critical** · size **XL** — the gateway phase · **395 tests, es 0.943 / en 0.937 unmoved**
 
 Everything agent-native depends on this being real.
 
-- [ ] `P5-1` `Cart` aggregate; lines as a table; guest token; expiry — **M**
-- [ ] `P5-2` `Address` value object; shipping and billing on `Order` — **S**
-- [ ] `P5-3` `IShippingRateProvider` keyed (`flat-rate`, `weight-bands`) + contract suite — **M**
-- [ ] `P5-4` `IPaymentProvider` keyed (`fake` with failure injection, `stripe-mock`) + contract suite — **M**
-- [ ] `P5-5` `PlaceOrder`: quote revalidation, hash mismatch path, idempotency key — **M**
-- [ ] `P5-6` Payment webhook endpoint with signature verification and replay protection — **M**
-- [ ] `P5-7` `ReturnRequest` aggregate + its transition table; window opens on `OrderDelivered` — **M**
-- [ ] `P5-8` Refund via the payment port; restock via the stock ledger — **M**
-- [ ] `P5-9` Storefront: cart, checkout, order confirmation, order page with a return request — **L**
-- [ ] `P5-10` Backoffice: orders list, order detail, ship/deliver, returns queue — **L**
-- [ ] `P5-11` Playwright: search → cart → checkout, and login → review → publish — **M**
-- [ ] `P5-12` Delete the dead `product.addToCart` and `nav.orders` keys by using them — **S**
-- [ ] `P5-13` **The locale and the query go into the URL** — `/es/…`, `?q=…`, `hreflang` between the two, and the per-culture slugs finally used on the PDP — **M** · today the language lives in a signal and in `localStorage`, so one URL serves two languages: not shareable, not cacheable, not indexable. It waits for the PDP because a locale segment without `?q=` is half a job, and without SSR it buys no indexing at all (ADR 0013, amended)
+- [x] `P5-1` `Cart` aggregate; lines as a table; guest token; expiry — **M** · lines are **jsonb, not a table**: the roadmap's reason was "UCP mutates single lines", and mutating one through the aggregate is not querying it. ADR 0008's actual criterion sends them to a column
+- [x] `P5-2` `Address` value object; shipping and billing on `Order` — **S** · in the **SharedKernel**, because three contexts need the shape and none owns it
+- [x] `P5-3` `IShippingRateProvider` keyed (`flat-rate`, `zone-rate`) + contract suite — **M** · **not `weight-bands`**: the catalogue carries no weight, and adding one changes `attributesText`, which moves a measured search baseline for a reason unrelated to search. The two adapters differ in the input they READ instead, which tests the port better
+- [x] `P5-4` `IPaymentProvider` keyed (`fake` with failure injection) + contract suite — **M** · the suite ADR 0003 described in the present tense and `docs/testing.md` named by filename. **Four** operations, not three: `VoidAsync` exists because an order that authorises and cannot be filled has to give the hold back. `stripe-mock` needs a NuGet package and a container — a dependency decision, not a coding one
+- [x] `P5-5` `PlaceOrder`: quote revalidation, hash mismatch path, idempotency key — **M** · revalidation re-runs the **same engine** through one confined adapter (ADR 0025); a checkout with its own arithmetic would compare two hashes from two systems and call it agreement
+- [x] `P5-6` Payment webhook endpoint with signature verification and replay protection — **M** · HMAC over `<timestamp>.<raw body>`, fixed-time compare, five-minute tolerance. Three refusals and three verdicts: forging, replaying, and none of our business
+- [x] `P5-7` `ReturnRequest` aggregate + its transition table; window opens on `OrderDelivered` — **M** · six states, and the edge that is easy to leave out is `Received → Rejected`: the parcel arrived and the goods are not what the reason claimed
+- [x] `P5-8` Refund via the payment port; restock via the stock ledger — **M** · **receiving** restocks, not approving, and damaged goods never do. The refund carries the returned lines' share of the order's discount and tax
+- [x] `P5-9` Storefront: cart, checkout, order confirmation, order page with a return request — **L** · the cart shows **suppressed** promotions with their reason, which is the phase-3 engine finally visible
+- [x] `P5-10` Backoffice: orders list, ship/deliver, returns queue — **L** · the orders table shows **authorised** and **captured** apart, because a shipped order that was never captured is the row worth finding
+- [ ] `P5-11` Playwright: search → cart → checkout, and login → review → publish — **M** · not started. The loop is covered by five integration tests against a real Postgres; what Playwright would add is the browser, and the browser is what was verified by hand this time
+- [x] `P5-12` Delete the dead `product.addToCart` and `nav.orders` keys by using them — **S** · both used. `nav.agents` and `nav.search` stay dead on purpose: they belong to phases 11 and 8, and they are the gap analysis written in i18n
+- [ ] `P5-13` **The locale and the query go into the URL** — **M** · **half done**: `?q=` is in the URL, so a result page is shareable, bookmarkable and works with the back button. The locale segment, `hreflang` and the per-culture slugs still wait on a PDP, which this phase did not build
 
-**Risks.** The largest phase by far, and the one where "lab depth" is hardest to
-hold — resist gift cards, partial shipments and split payments. Second risk:
-returns per line, not per order; if it starts leaking states into `Order`, stop
-and reread the design.
+**Still open, and why.** There is **no product detail page**. Phase 1 deferred
+the variant picker to "the cart phase, where it is needed rather than
+decorative", and the cart phase went straight from the search card to the
+basket — which works at one variant per product and would not at eight. The PDP
+is what `P5-13`'s locale segment and phase 1's picker both wait on, and it is the
+first task of the next session.
 
-**Demo.** The whole loop on six products: add to cart, two discounts and VAT,
-three shipping options, pay with the fake provider, ship, deliver, request a
-return, refund, stock comes back.
+**Risks, and what actually happened.** The scope creep the phase was warned about
+did not happen: no gift cards, no partial shipments, no split payments. Returns
+stayed out of `Order` and are per line.
+
+What bit instead was **composition, for the fifth time**. Carter only scans
+assemblies that reference it **directly**; `Ordering` inherited it transitively,
+compiled cleanly, and cart, checkout, returns and the webhook were absent from
+the running API and from the OpenAPI document with every test green. And
+`IPrincipalAccessor` documented the worker case while nobody had registered
+`SystemPrincipalAccessor` — caught this time by a test, which is the first time
+one of these was found before a person found it.
+
+The migration baseline test earned its keep too: EF generated `DEFAULT '{}'` on
+the new jsonb columns, the model declares none, and the schema comparison went
+red on the drift.
+
+**Demo.** The whole loop on six products, and the refusals are the point. Add two
+pairs of shoes: the cart shows one discount applied and **four suppressed, each
+with its reason**. Pay with the card that declines — no order, no reservation,
+the basket untouched. Pay again with the good one: stock is held and the order
+confirms itself through the outbox. Ship it and the money is captured and the
+shelf goes 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3
+before a euro moves.
 
 **Evidences.** Owning the commerce plane; ports with contract suites across three
 adapters; a state machine that stays readable because the second one is separate.
@@ -635,7 +657,9 @@ oversight, and each is a paragraph in some future article.
 | Shopify connector | one connector today, and the port is proven | A second source is genuinely wanted |
 | Multi-currency | one currency per order, enforced | A second market |
 | Promotions and tariffs in Postgres | 2 lists, 7 promotions, both in committed files | The backoffice can edit one. Building the table first is what phase 2 already did and undid |
-| Reservation expiry sweep | `Reservation.Lifetime` is 15 min and `HasExpiredAt` exists; nothing sweeps | Carts (phase 5). An abandoned cart is what actually produces a stale hold; without one, nothing can leave a reservation behind |
-| Search deep link (`?q=`) | the query lives in a signal, not in the URL, so a result page cannot be shared, bookmarked or crawled | SEO, or the first agent that wants to hand a human a link |
+| Reservation expiry sweep | `Reservation.Lifetime` is 15 min and `HasExpiredAt` exists; nothing sweeps. Carts exist now and expire in 7 days, and `ix_carts_status_expires_at` is already the index the sweep would read | A scheduled worker. Checkout authorises before it places (ADR 0025), so a declined card leaves nothing behind — which is what took the urgency out of this |
+| `stripe-mock` as a second payment adapter | one adapter, one contract suite; the same shape `SeedCatalogConnector` and `dev-issuer` ship in | It needs `Stripe.net` (or hand-rolled form-encoded HTTP) and a container. A dependency decision, and the port is proven without it |
+| Cart lines as a table | jsonb, read only with the cart that owns them | Something queries a line on its own. UCP mutating one goes through the aggregate, so it is not that |
+| Locale in the URL (`/es/…`) | one route serves two languages; the query is in the URL now, the language is still in a signal and in `localStorage` | The PDP, which is where the per-culture slugs and `hreflang` both land (`P5-13`) |
 | Spec Kit experiment | ADR 0009 reserves it for the UCP work | Phase 11 |
 | `.claude/` skills and plugin | none exist; article 14 is blocked on it | After enough repetition to have opinions |

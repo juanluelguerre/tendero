@@ -5,8 +5,13 @@
     <title>Tendero Backoffice</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- The SVG first, for every browser that takes one. The .ico is the
+         fallback, and it is generated FROM the same brand icon: the one Nx
+         scaffolded was still sitting here, identical in both apps, so a
+         browser that preferred it showed the framework's logo on the
+         shop's tab. -->
     <link rel="icon" type="image/svg+xml" href="brand/tendero-icon-backoffice.svg" />
-    <link rel="alternate icon" href="favicon.ico" />
+    <link rel="alternate icon" type="image/x-icon" href="favicon.ico" />
   </head>
   <body>
     <backoffice-root></backoffice-root>

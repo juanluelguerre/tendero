@@ -24,3 +24,22 @@ internal sealed class EfOrderRepository(TenderoDbContext context) : IOrderReposi
 
     public void Add(Order order) => context.Orders.Add(order);
 }
+
+/// <summary>The read side. No tracking, newest first, capped.</summary>
+internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
+{
+    /// <summary>
+    /// Enough to see what the shop has been doing without a page control that
+    /// nothing needs yet. The number is here rather than in configuration
+    /// because it is a laboratory-scale decision, and the standing backlog is
+    /// where scale work goes.
+    /// </summary>
+    private const int Recent = 50;
+
+    public async Task<IReadOnlyList<Order>> RecentAsync(CancellationToken cancellationToken = default) =>
+        await context.Orders
+            .AsNoTracking()
+            .OrderByDescending(order => order.CreatedAt)
+            .Take(Recent)
+            .ToListAsync(cancellationToken);
+}

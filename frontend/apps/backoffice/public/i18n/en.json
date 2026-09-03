@@ -21,9 +21,45 @@
     "language": "Language",
     "orders": "Orders",
     "promotions": "Promotions",
+    "returns": "Returns",
     "reviewQueue": "Review queue",
     "search": "Search evaluation",
     "stock": "Stock"
+  },
+  "orders": {
+    "captured": "Captured",
+    "column": {
+      "order": "Order",
+      "customer": "To",
+      "status": "Status",
+      "payment": "Payment",
+      "lines": "Lines",
+      "total": "Total",
+      "action": "Move it along"
+    },
+    "empty": "No orders yet. Buy something from the storefront and it lands here.",
+    "failed": "Could not load the orders.",
+    "hint": "The state machine decides which move is legal. A refused one comes back with the reason, in the server's own words.",
+    "loading": "Loading orders...",
+    "move": {
+      "Ship": "Ship",
+      "Deliver": "Delivered",
+      "Cancel": "Cancel"
+    },
+    "moving": "Working...",
+    "openCount": "{{count}} to handle",
+    "paid": "Authorised",
+    "status": {
+      "Pending": "Awaiting payment",
+      "PaymentAuthorized": "Paid",
+      "PaymentFailed": "Payment failed",
+      "Confirmed": "Confirmed",
+      "Shipped": "Shipped",
+      "Delivered": "Delivered",
+      "Cancelled": "Cancelled"
+    },
+    "title": "Orders",
+    "unpaid": "Not paid"
   },
   "promotions": {
     "title": "Promotions",
@@ -50,6 +86,44 @@
       "running": "Running",
       "scheduled": "Not running"
     }
+  },
+  "returns": {
+    "column": {
+      "return": "Return",
+      "order": "Order",
+      "what": "What is coming back",
+      "status": "Status",
+      "refund": "Refund",
+      "action": "Decide"
+    },
+    "decide": {
+      "Approve": "Approve",
+      "Reject": "Reject",
+      "Receive": "Mark received",
+      "Refund": "Refund"
+    },
+    "deciding": "Working...",
+    "empty": "Nothing waiting. A delivered order can be sent back for 14 days.",
+    "failed": "Could not load the returns.",
+    "hint": "Approving is a promise; receiving is a fact. Only receiving puts the goods back on the shelf, and damaged goods never do.",
+    "loading": "Loading returns...",
+    "openCount": "{{count}} open",
+    "reason": {
+      "WrongSize": "Wrong size",
+      "NotAsDescribed": "Not as described",
+      "Damaged": "Damaged",
+      "WrongItem": "Wrong item",
+      "ChangedMind": "Changed their mind"
+    },
+    "status": {
+      "Requested": "Requested",
+      "Approved": "Approved",
+      "Received": "Received",
+      "Refunded": "Refunded",
+      "Rejected": "Rejected",
+      "Cancelled": "Cancelled"
+    },
+    "title": "Returns"
   },
   "reviewQueue": {
     "column": {

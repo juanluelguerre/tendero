@@ -31,3 +31,22 @@ public interface IOrderRepository
 
     void Add(Order order);
 }
+
+/// <summary>
+/// The READ side of orders, separate from the repository that writes them.
+///
+/// The same split `IProductCatalogReader` makes against `IProductRepository`,
+/// and for the same reason: everything on the write side is tracked because it
+/// exists to move an aggregate through its state machine, and a list that
+/// tracked thirty orders to render six columns would be paying for change
+/// detection nobody uses.
+/// </summary>
+public interface IOrderReader
+{
+    /// <summary>
+    /// The most recent orders, newest first. There is no paging: the shop has
+    /// six products and a laboratory's worth of orders, and a cap is the honest
+    /// version of a page size nobody has asked for yet.
+    /// </summary>
+    Task<IReadOnlyList<Order>> RecentAsync(CancellationToken cancellationToken = default);
+}

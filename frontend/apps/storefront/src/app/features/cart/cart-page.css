@@ -1,0 +1,223 @@
+/* The cart: lines on the left, what they cost on the right. The summary sticks
+   because the total is the thing a shopper checks while editing the lines, and
+   scrolling to find it is how a basket gets abandoned. */
+.cart {
+  padding-block: var(--space-6) var(--space-8);
+}
+
+.cart__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin-block-end: var(--space-5);
+}
+
+.cart__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+}
+
+.cart__count {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+/* ---------- Lines ---------- */
+.lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.line__image {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+/* A deliberate default state and not a gap: a line with no photo has to look
+   like a decision. Same rule the search card already follows. */
+.line__image--blank {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--text-subtle);
+}
+
+.line__body { min-width: 0; }
+.line__name { margin: 0; font-weight: 600; }
+.line__variant { margin: 2px 0 0; color: var(--text-muted); font-size: var(--text-sm); }
+
+.line__sku {
+  margin: 2px 0 0;
+  color: var(--text-subtle);
+  font-size: var(--text-xs);
+}
+
+.line__price { margin: 0; font-weight: 600; min-width: 5rem; text-align: end; }
+
+.line__remove {
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-subtle);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.line__remove:hover:not(:disabled) { color: var(--danger); border-color: var(--border); }
+.line__remove:disabled { opacity: 0.4; cursor: default; }
+
+/* ---------- The stepper ----------
+   48px targets, because this is the control people press most on a phone. */
+.stepper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.stepper__button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: var(--bg-surface);
+  color: var(--text);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepper__button:hover:not(:disabled) { background: var(--bg-raised); }
+.stepper__button:disabled { opacity: 0.4; cursor: default; }
+
+.stepper__value {
+  min-width: 2.5rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ---------- The summary ---------- */
+.summary {
+  position: sticky;
+  inset-block-start: calc(var(--header-h) + var(--space-4));
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.totals { margin: 0; display: grid; gap: var(--space-2); }
+
+.totals__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.totals__row dt, .totals__row dd { margin: 0; }
+.totals__row--muted { color: var(--text-muted); font-size: var(--text-sm); }
+.totals__row--off { color: var(--positive); }
+
+.totals__row--total {
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.totals__tax {
+  margin: 0;
+  color: var(--text-subtle);
+  font-size: var(--text-xs);
+}
+
+/* ---------- Promotions ----------
+   Including the ones that did NOT apply. A discount that was suppressed and a
+   discount of zero look identical in a total, and only one of them is something
+   a shopper can act on. */
+.promos {
+  margin: 0;
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+  list-style: none;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.promo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.promo__label { font-weight: 500; }
+.promo__amount { color: var(--positive); font-family: var(--font-mono); }
+
+.promo--off .promo__label { color: var(--text-muted); text-decoration: line-through; }
+
+.promo--off .promo__amount {
+  color: var(--text-subtle);
+  font-family: inherit;
+  font-size: var(--text-xs);
+}
+
+.promo__reason {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+
+  /* Unstuck below the fold: on a phone the summary is under the lines, and
+     sticking it there would cover them. */
+  .summary { position: static; }
+}
+
+@media (max-width: 560px) {
+  .line {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    row-gap: var(--space-3);
+  }
+
+  .line__image { width: 56px; height: 56px; }
+  .line__price { grid-column: 2; text-align: start; }
+  .stepper { grid-column: 3; grid-row: 2; }
+  .line__remove { grid-row: 1; grid-column: 3; }
+}

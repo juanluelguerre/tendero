@@ -15,12 +15,16 @@
           <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" />
         </svg>
+        <!-- The URL is what the box shows. Following it rather than owning the
+             text is what makes a shared link, a bookmark and the back button all
+             land on the same results. -->
         <input
           #box
           id="q"
           name="q"
           type="search"
           class="field search__input"
+          [value]="queryFromUrl()"
           [attr.placeholder]="t('search.placeholder')"
           autocomplete="off"
         />
@@ -127,6 +131,19 @@
                        the presence is the news. -->
                   @if (!hit.inStock) {
                     <p class="card__soldOut">{{ t('product.soldOut') }}</p>
+                  } @else {
+                    <!-- The SKU comes from the search hit, which is the winning
+                         VARIANT (ADR 0015). That is the whole reason the index is
+                         per variant: a card that only knew a product id would
+                         have to guess which size somebody meant. -->
+                    <button
+                      class="card__add"
+                      type="button"
+                      [disabled]="adding() === hit.matchedSku"
+                      (click)="addToCart(hit)"
+                    >
+                      {{ adding() === hit.matchedSku ? '…' : t('product.addToCart') }}
+                    </button>
                   }
                 </div>
               </li>

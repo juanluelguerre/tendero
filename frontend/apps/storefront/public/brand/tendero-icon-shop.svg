@@ -10,9 +10,9 @@
     <rect x="66" y="24" width="16" height="34" fill="#D85A30" opacity="0.35"/>
     <rect x="98" y="24" width="16" height="34" fill="#D85A30" opacity="0.35"/>
   </g>
-  <!-- La inicial va SOBRE el toldo, en terracota plena: las rayas siguen
-       dibujadas debajo, intactas, que es lo que pide BRAND.md. Es lo unico que
-       separa este icono del maestro. -->
+  <!-- The initial sits ON the awning, in full terracotta: the stripes stay
+       drawn underneath, untouched, which is what BRAND.md requires. It is the
+       only thing separating this icon from the master. -->
   <text x="63" y="42" text-anchor="middle" dominant-baseline="central"
         font-family="Inter, Segoe UI, system-ui, sans-serif" font-size="30" font-weight="700"
         fill="#D85A30">S</text>
