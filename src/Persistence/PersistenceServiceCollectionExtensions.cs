@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Accounts.Ports;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -69,6 +70,11 @@ public static class PersistenceServiceCollectionExtensions
         // the outbox worker — which opens a scope per batch, so scoped is
         // exactly right and nothing needs to outlive a request.
         services.AddScoped<IAuditWriter, EfAuditWriter>();
+
+        // One adapter, two Accounts ports, one instance per scope.
+        services.AddScoped<EfCustomerRepository>();
+        services.AddScoped<ICustomerRepository>(services => services.GetRequiredService<EfCustomerRepository>());
+        services.AddScoped<ICustomerDirectory>(services => services.GetRequiredService<EfCustomerRepository>());
 
         return services;
     }

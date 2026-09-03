@@ -265,6 +265,36 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// Accounts knows only the shared kernel, and this one is load-bearing in a
+    /// way the others are not.
+    ///
+    /// Ordering WILL need Accounts — an order history is per customer — so a
+    /// dependency in this direction would close a cycle rather than merely
+    /// widen the graph. That is why signing in is two requests instead of one:
+    /// `POST /api/accounts/me` establishes the customer and
+    /// `POST /api/cart/claim` attaches the basket, each in the context that owns
+    /// its half.
+    ///
+    /// Accounts answers "who is this". It never asks what they bought.
+    /// </summary>
+    [Fact]
+    public void Accounts_knows_only_the_shared_kernel()
+    {
+        var sharedKernel = Solution.SharedKernel.GetName().Name;
+
+        var contexts = Solution.Accounts.GetReferencedAssemblies()
+            .Select(reference => reference.Name)
+            .OfType<string>()
+            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal)
+                           && name != sharedKernel)
+            .ToArray();
+
+        Assert.True(contexts.Length == 0,
+            $"Accounts references {string.Join(", ", contexts)}. It may reference only {sharedKernel} — "
+            + "Ordering will need Accounts for order history, so a dependency this way closes a cycle.");
+    }
+
+    /// <summary>
     /// And so does Catalog, for the same reason and under the same limit.
     ///
     /// The product page renders a variant picker where a sold-out size is

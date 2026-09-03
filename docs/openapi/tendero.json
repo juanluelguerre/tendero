@@ -10,6 +10,42 @@
     }
   ],
   "paths": {
+    "/api/accounts/me": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "LinkIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LinkIdentityRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedIdentity"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/publish": {
       "post": {
         "tags": [
@@ -507,6 +543,39 @@
           },
           "401": {
             "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/cart/claim": {
+      "post": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "ClaimCart",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -1661,6 +1730,68 @@
           "elapsedSeconds": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "LinkIdentityRequest": {
+        "required": [
+          "displayName",
+          "culture",
+          "guest"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "culture": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "guest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "LinkOutcome": {
+        "type": "integer"
+      },
+      "LinkedIdentity": {
+        "required": [
+          "customerId",
+          "displayName",
+          "segment",
+          "culture",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "customerId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "segment": {
+            "type": "string"
+          },
+          "culture": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/LinkOutcome"
           }
         }
       },
@@ -3178,6 +3309,9 @@
   },
   "tags": [
     {
+      "name": "Accounts"
+    },
+    {
       "name": "Cart"
     },
     {
@@ -3188,6 +3322,9 @@
     },
     {
       "name": "Inventory"
+    },
+    {
+      "name": "Ordering"
     },
     {
       "name": "Orders"

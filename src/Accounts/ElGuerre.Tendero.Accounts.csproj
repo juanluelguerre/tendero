@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bounded context Accounts: who the customer is.
+
+       It references the SharedKernel and NOTHING else, and that is deliberate in
+       a way the other contexts' emptiness is not. Ordering will need Accounts —
+       order history is per customer — so a dependency in this direction would
+       close a cycle. Accounts answers "who is this"; it never asks what they
+       bought.
+
+       Which is also why claiming a cart is Ordering's command and not this
+       context's: the cart belongs to Ordering, the customer belongs here, and
+       neither needs to reach into the other for a person to sign in. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Accounts</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Declared, not inherited. Carter only scans assemblies that depend on it
+         DIRECTLY, and inheriting it transitively is how cart, checkout, returns
+         and the webhook were all absent from the running API with a green
+         build. -->
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

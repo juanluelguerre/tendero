@@ -17,6 +17,7 @@
     <!-- Api and Workers both expose a top-level `Program` in the global
          namespace; the alias avoids the ambiguity without touching either. -->
     <ProjectReference Include="../../src/Api/ElGuerre.Tendero.Api.csproj" Aliases="TenderoApi" />
+    <ProjectReference Include="../../src/Accounts/ElGuerre.Tendero.Accounts.csproj" />
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using ElGuerre.Tendero.Accounts.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -76,24 +77,48 @@ public static class AuthenticationExtensions
 /// <see cref="CommercePrincipal"/> and works the same over HTTP, over MCP or
 /// inside the worker.
 /// </summary>
-internal sealed class HttpPrincipalAccessor(IHttpContextAccessor accessor) : IPrincipalAccessor
+internal sealed class HttpPrincipalAccessor(
+    IHttpContextAccessor accessor,
+    ICustomerDirectory customers) : IPrincipalAccessor
 {
-    public CommercePrincipal Current
+    /// <summary>
+    /// Resolved once per request and then remembered.
+    ///
+    /// <c>Current</c> is a property, and a handler may read it several times —
+    /// the pricing engine asks for the segment, the audit step asks who acted.
+    /// Without this, each read is a database round trip for an answer that
+    /// cannot have changed inside one request.
+    /// </summary>
+    private CommercePrincipal? _resolved;
+
+    public CommercePrincipal Current => _resolved ??= Resolve();
+
+    private CommercePrincipal Resolve()
     {
-        get
-        {
-            var user = accessor.HttpContext?.User;
-            if (user?.Identity?.IsAuthenticated != true)
-                return CommercePrincipal.Anonymous;
+        var user = accessor.HttpContext?.User;
+        if (user?.Identity?.IsAuthenticated != true)
+            return CommercePrincipal.Anonymous;
 
-            var subject = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub");
-            var agent = user.FindFirstValue("agent_id");
+        var subject = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub");
+        var agent = user.FindFirstValue("agent_id");
 
-            return new CommercePrincipal(
-                Customer: null, // Accounts does not exist yet: it arrives in phase 7.
-                Agent: agent is null ? null : new AgentId(agent),
-                Subject: subject,
-                Roles: [.. user.FindAll(ClaimTypes.Role).Select(claim => claim.Value)]);
-        }
+        return new CommercePrincipal(
+            // Null until `LinkIdentity` has run, and deliberately so: this is a
+            // READ. An accessor that created a customer on first sight would
+            // turn every GET into a write — a page view would register an
+            // account, and the row would appear with no audit entry, because
+            // queries are not audited. Registration is a command the storefront
+            // calls once after login.
+            //
+            // Blocking on the lookup is the honest shape here: the property is
+            // synchronous because it must work over MCP and inside the outbox
+            // worker, where there is no request to await on. One indexed
+            // single-column read, once per request, is the price of that.
+            Customer: subject is null
+                ? null
+                : customers.ForSubjectAsync(subject).GetAwaiter().GetResult(),
+            Agent: agent is null ? null : new AgentId(agent),
+            Subject: subject,
+            Roles: [.. user.FindAll(ClaimTypes.Role).Select(claim => claim.Value)]);
     }
 }

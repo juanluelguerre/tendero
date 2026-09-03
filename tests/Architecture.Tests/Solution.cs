@@ -1,5 +1,6 @@
 extern alias TenderoApi;
 using System.Reflection;
+using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
@@ -19,6 +20,7 @@ namespace ElGuerre.Tendero.Architecture.Tests;
 internal static class Solution
 {
     public static readonly Assembly SharedKernel = typeof(LocalizedText).Assembly;
+    public static readonly Assembly Accounts = typeof(Customer).Assembly;
     public static readonly Assembly Catalog = typeof(Product).Assembly;
     public static readonly Assembly Ordering = typeof(Order).Assembly;
     public static readonly Assembly Search = typeof(IProductIndexer).Assembly;
@@ -30,12 +32,12 @@ internal static class Solution
     public static readonly Assembly Workers = typeof(Workers.OutboxProcessor).Assembly;
     public static readonly Assembly SearchEval = typeof(SearchEval.RelevanceMetrics).Assembly;
 
-    /// <summary>Contextos y capacidades: donde viven dominio y slices.</summary>
-    public static readonly Assembly[] Contexts = [Catalog, Inventory, Ordering, Pricing, Search];
+    /// <summary>Contexts and capabilities: where the domain and the slices live.</summary>
+    public static readonly Assembly[] Contexts = [Accounts, Catalog, Inventory, Ordering, Pricing, Search];
 
     public static readonly Assembly[] All =
     [
-        SharedKernel, Catalog, Inventory, Ordering, Pricing, Search,
+        SharedKernel, Accounts, Catalog, Inventory, Ordering, Pricing, Search,
         Persistence, ServiceDefaults, Api, Workers, SearchEval
     ];
 }

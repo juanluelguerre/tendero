@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/accounts/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LinkIdentity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/publish": {
         parameters: {
             query?: never;
@@ -190,6 +206,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["PaymentWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/cart/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ClaimCart"];
         delete?: never;
         options?: never;
         head?: never;
@@ -543,6 +575,20 @@ export interface components {
             failed: number;
             /** Format: double */
             elapsedSeconds: number;
+        };
+        LinkIdentityRequest: {
+            displayName: null | string;
+            culture: null | string;
+            /** Format: uuid */
+            guest: null | string;
+        };
+        LinkOutcome: number;
+        LinkedIdentity: {
+            customerId: string;
+            displayName: null | string;
+            segment: string;
+            culture: string;
+            outcome: components["schemas"]["LinkOutcome"];
         };
         ListAttributeDefinitionsResult: {
             items: components["schemas"]["AttributeDefinitionView"][];
@@ -950,6 +996,30 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    LinkIdentity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["LinkIdentityRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkedIdentity"];
+                };
+            };
+        };
+    };
     PublishProduct: {
         parameters: {
             query?: never;
@@ -1312,6 +1382,42 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ClaimCart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
             };
         };
     };

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Accounts.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Accounts/ElGuerre.Tendero.Accounts.csproj" />
+  </ItemGroup>
+
+  <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+  </ItemGroup>
+
+</Project>

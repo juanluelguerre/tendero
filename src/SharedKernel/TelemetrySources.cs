@@ -14,6 +14,7 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// </summary>
 public static class TelemetrySources
 {
+    public const string Accounts = "ElGuerre.Tendero.Accounts";
     public const string Catalog = "ElGuerre.Tendero.Catalog";
     public const string Inventory = "ElGuerre.Tendero.Inventory";
     public const string Ordering = "ElGuerre.Tendero.Ordering";
@@ -30,5 +31,5 @@ public static class TelemetrySources
     public const string SharedKernel = "ElGuerre.Tendero.SharedKernel";
 
     public static readonly string[] All =
-        [Catalog, Inventory, Ordering, Pricing, Search, Outbox, SharedKernel];
+        [Accounts, Catalog, Inventory, Ordering, Pricing, Search, Outbox, SharedKernel];
 }

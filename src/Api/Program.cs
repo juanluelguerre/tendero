@@ -1,4 +1,6 @@
 using Carter;
+using ElGuerre.Tendero.Accounts;
+using ElGuerre.Tendero.Accounts.Features.LinkIdentity;
 using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
@@ -26,10 +28,13 @@ builder.Services.AddTenderoCqrs(
     typeof(SearchProductsQuery).Assembly,
     typeof(QuoteCartQuery).Assembly,
     typeof(ListStockQuery).Assembly,
-    typeof(PlaceOrderCommand).Assembly);
+    typeof(PlaceOrderCommand).Assembly,
+    typeof(LinkIdentityCommand).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
+
+builder.Services.AddAccounts();
 
 builder.Services.AddCatalog(builder.Configuration);
 

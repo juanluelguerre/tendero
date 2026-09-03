@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
@@ -9,12 +10,13 @@ using Microsoft.EntityFrameworkCore;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// One DbContext, four schemas (catalog, inventory, ordering, audit) and the outbox.
+/// One DbContext, five schemas (accounts, catalog, inventory, ordering, audit) and the outbox.
 /// Bounded contexts share no entities — they share a connection, which is what
 /// puts an event and its state change in the same transaction.
 /// </summary>
 public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options) : DbContext(options)
 {
+    public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Cart> Carts => Set<Cart>();
@@ -32,6 +34,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new CustomerConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new VariantConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
