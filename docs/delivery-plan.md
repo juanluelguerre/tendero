@@ -14,11 +14,15 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 3 — **complete** (11/11). Since closing it: every code comment migrated to English, the AppHost seed-file wiring fixed, and a design pass over both frontends.
-- **Next task:** `P4-1`, the `src/Inventory` context — two warehouses and `StockItem(Sku, WarehouseId)`
+- **Current phase:** 5 — **11 of 13**. The commerce loop is closed end to end: cart, checkout, payments and returns, on 395 tests with the search baseline unmoved. Since closing the loop: every component split into three files, the token rule turned into a test, six backoffice Playwright specs, a Dependabot config and two blog sections.
+- **Next task:** **the product detail page** (`/p/{slug}`). It is the single blocker on three separate things — `P5-13`'s locale segment and `hreflang`, phase 1's deferred variant picker (`P1-9`), and the storefront Playwright spec (`P5-11`). Nothing else in the board is waiting on anything.
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
+**Standing chore:** four commits sit unpushed on `develop` (`79198e6`…`41bab07`). The one CI has not yet verified is `0bfb443`, the GitHub Actions major bump. Pushing needs a token carrying the `workflow` scope — see the notebook entry for why that is not obvious.
+
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
+
+**Decisions taken 2026-09-03** — 1 · the outbox is the process manager, orchestrated from `Ordering` (ADR 0024) · 2 · checkout authorises the payment before it places the order, so a decline costs nothing (ADR 0025) · 3 · cart lines are jsonb, not a table — mutating one through the aggregate is not querying it · 4 · returns are their own aggregate, because they are per line · 5 · Playwright stays the thinnest layer, and no self-healing agent touches a suite whose point is what the system refuses.
 
 ---
 
