@@ -1,8 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- A capability, not a bounded context: it projects Catalog into the indexes,
-       which is why it is the only project (alongside persistence) that references
-       Catalog. See docs/adr/0007-search-reads-catalog-domain.md. -->
+  <!-- A capability, not a bounded context: it projects other contexts into the
+       indexes, which is why it references them and nothing references it. It
+       reads Catalog for the product and Inventory for availability — ADR 0007
+       widened from "Search reads Catalog" to "Search may reference any context
+       it projects; no context may reference Search", which is the invariant it
+       was protecting all along. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Search</RootNamespace>
   </PropertyGroup>
@@ -19,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 

@@ -13,16 +13,23 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
+    <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <ProjectReference Include="../../src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
     <ProjectReference Include="../../src/Workers/ElGuerre.Tendero.Workers.csproj" />
   </ItemGroup>
 
-  <!-- The import runs against the SAME sample the repository ships, exactly as
-       the connector's contract suite does. -->
+  <!-- The import and the saga run against the SAME samples the repository
+       ships, exactly as the connector's contract suite does: a test that
+       invented its own warehouses would not be testing the shop's preference
+       order. -->
   <ItemGroup>
     <Content Include="../../seed/products.sample.json" Link="TestData/products.sample.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../../seed/warehouses.sample.json" Link="TestData/warehouses.sample.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

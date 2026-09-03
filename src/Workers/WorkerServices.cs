@@ -1,4 +1,6 @@
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Inventory;
+using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
@@ -31,9 +33,16 @@ public static class WorkerServices
             .Validate(options => options.MaxAttempts > 0, "Outbox:MaxAttempts must be positive.")
             .ValidateOnStart();
 
-        // Only Search's assembly is needed: the domain event handlers that exist
-        // today are its projections into the index.
-        builder.Services.AddTenderoCqrs(typeof(ProjectProductOnUpserted).Assembly);
+        // Two assemblies, and the second one is the phase's whole claim. Search
+        // holds the projections into the index; Ordering holds the stock saga,
+        // which is not a framework and not a state machine of its own — it is
+        // three IDomainEventHandler<T> that the outbox already knows how to
+        // deliver to. Forgetting this line would leave every order placed
+        // without stock ever being held, and nothing would say so: the outbox
+        // marks a message processed whether or not anybody handled it.
+        builder.Services.AddTenderoCqrs(
+            typeof(ProjectProductOnUpserted).Assembly,
+            typeof(ReserveStockOnOrderPlaced).Assembly);
 
         builder.Services.AddTenderoPersistence(
             builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -45,6 +54,13 @@ public static class WorkerServices
         // categories it cannot write the branch.
         builder.Services.AddCatalogReaders(builder.Configuration);
 
+        // The worker holds stock: the saga reserves through the ledger, the
+        // search projection reads availability, and the development seeder
+        // receives goods.
+        builder.Services.AddInventory(builder.Configuration);
+        builder.Services.Configure<StockSeedOptions>(
+            builder.Configuration.GetSection(StockSeedOptions.SectionName));
+
         builder.Services.AddLexicalSearch(
             builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
@@ -52,7 +68,14 @@ public static class WorkerServices
         builder.Services.AddSearchIndexInitializer();
 
         if (builder.Environment.IsDevelopment())
+        {
             builder.Services.AddHostedService<SchemaMigrator>();
+
+            // After the migrator, and hosted services start in registration
+            // order: seeding into a schema that does not exist yet is the one
+            // ordering constraint here.
+            builder.Services.AddHostedService<StockSeeder>();
+        }
 
         builder.Services.AddHostedService<OutboxProcessor>();
 

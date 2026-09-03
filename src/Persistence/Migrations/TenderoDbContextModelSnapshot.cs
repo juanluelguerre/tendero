@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260902181139_DropUnusedAttributeDefinitionsTable";
+    public override string LastMigrationId => "20260902221753_AddInventory";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -191,6 +191,102 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ix_variants_sku");
 
                 b.ToTable("variants", "catalog");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Inventory.Domain.Reservation", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<DateTimeOffset>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("expires_at");
+
+                b.Property<Guid>("OrderId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("order_id");
+
+                b.Property<string>("Reason")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("reason");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Inventory.Domain.Reservation._lines#ReservationLine", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<int>("Quantity")
+                            .HasJsonPropertyName("quantity");
+
+                        b1.Property<string>("Sku")
+                            .IsRequired()
+                            .HasJsonPropertyName("sku");
+
+                        b1.Property<string>("WarehouseCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("warehouseCode");
+
+                        b1
+                            .ToJson("lines")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.HasKey("Id")
+                    .HasName("pk_reservations");
+
+                b.HasIndex("OrderId")
+                    .IsUnique()
+                    .HasDatabaseName("ix_reservations_order_id");
+
+                b.ToTable("reservations", "inventory");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Inventory.Domain.StockItem", b =>
+            {
+                b.Property<string>("Sku")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("sku");
+
+                b.Property<string>("WarehouseCode")
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("warehouse_code");
+
+                b.Property<int>("OnHand")
+                    .HasColumnType("integer")
+                    .HasColumnName("on_hand");
+
+                b.Property<int>("Reserved")
+                    .HasColumnType("integer")
+                    .HasColumnName("reserved");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.HasKey("Sku", "WarehouseCode")
+                    .HasName("pk_stock_items");
+
+                b.HasIndex("Sku")
+                    .HasDatabaseName("ix_stock_items_sku");
+
+                b.ToTable("stock_items", "inventory");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.Order", b =>

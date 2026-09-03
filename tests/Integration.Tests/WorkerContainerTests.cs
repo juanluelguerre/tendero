@@ -1,4 +1,6 @@
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Inventory.Domain;
+using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Workers;
@@ -41,13 +43,23 @@ public sealed class WorkerContainerTests
     }
 
     /// <summary>
-    /// What the worker exists to do: project products into the index. If any of
-    /// the three stops resolving, the outbox drains nowhere.
+    /// What the worker exists to do. The outbox marks a message processed
+    /// whether or not a handler was found for it, so a handler the worker cannot
+    /// resolve — or an assembly it never scanned — is silent: orders would be
+    /// placed, the messages would drain, and no stock would ever be held.
+    ///
+    /// This list is the closest thing the repository has to a declaration of
+    /// what the outbox is FOR, which is why every arm of the saga is named here
+    /// individually rather than checked as a group.
     /// </summary>
     [Theory]
     [InlineData(typeof(IProductIndexer))]
     [InlineData(typeof(IDomainEventHandler<ProductUpserted>))]
     [InlineData(typeof(IDomainEventHandler<ProductArchived>))]
+    [InlineData(typeof(IDomainEventHandler<StockLevelChanged>))]
+    [InlineData(typeof(IDomainEventHandler<OrderPlaced>))]
+    [InlineData(typeof(IDomainEventHandler<OrderCancelled>))]
+    [InlineData(typeof(IDomainEventHandler<OrderShipped>))]
     public void Everything_the_outbox_dispatches_to_can_be_resolved(Type service)
     {
         using var provider = BuildWorkerServices();

@@ -50,6 +50,13 @@ It does **not** start Elasticsearch itself — it takes `--elasticsearch <url>`
 and defaults to `http://localhost:9200`. Booting a container from the tool would
 mean a Testcontainers dependency for something a service container already does.
 
+**Point it at a throwaway engine, never at a running stack's.** The tool drops
+the indexes on the way in, and it mints fresh product ids per run — so its corpus
+and the application's occupy the same index under different ids, and neither
+sweep can see the other's documents. Running it against the Aspire container left
+six orphans per culture claiming `inStock: false` for products that were in
+stock, which reads exactly like an application bug and is not one.
+
 Two things make the run reproducible, and both were learned the hard way:
 
 - **Drop the indexes first.** Product ids are GUID v7 minted per run, so without
@@ -146,6 +153,19 @@ tolerance had to survive. It did: "zapatilas" and "runing shoes" still score
 
 `category` also left the searchable fields. It is mapped as a `keyword`, so
 listing it among text fields promised a match that could never happen.
+
+### What phase 4 did not move (2026-09-03)
+
+Inventory adds `inStock` to the document and **nothing to the query**, so the
+expected result was no result: es 0.943 / 0.909 and en 0.937 / 0.886, identical
+across runs. The score moving would have been the alarm.
+
+The run did surface something else. `SearchEval` composes its own container, the
+indexer had grown an `IAvailabilityReader` dependency, and the gate had been
+throwing on startup since the day that landed — with nothing to notice, because
+nothing runs it locally between phases. It is registered now as a deliberately
+named `NoInventory` fake: this corpus has no warehouses, and the day a filter
+puts `inStock` in the query, that type is what will make the omission obvious.
 
 ## Known gaps the baseline still exposes
 

@@ -10,7 +10,8 @@
   },
   "product": {
     "addToCart": "Añadir al carrito",
-    "noImage": "Sin imagen"
+    "noImage": "Sin imagen",
+    "soldOut": "Agotado"
   },
   "search": {
     "empty": "Nada para «{{query}}». Prueba con menos palabras.",

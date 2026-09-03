@@ -19,6 +19,14 @@ Search.** Catalog raises `ProductUpserted`; the outbox worker calls the
 projection. And `Ordering` references neither — orders snapshot product data
 (ADR 0002), so no cross-context read is needed there either.
 
+## Amendment (2026-09-03, phase 4)
+
+Search now projects **two** contexts: the document's `inStock` comes from
+`Inventory` via `StockLevelChanged`. The rule generalises to what it was
+protecting all along — *Search may reference any context it projects; no context
+may reference Search* — and phase 10 adds a third when `specsText` arrives from
+`Knowledge` (see [ADR 0024](0024-the-outbox-is-the-process-manager.md)).
+
 ## Consequences
 A change to `Product` can break the index shape, which is exactly what the
 Verify snapshot of `ProductSearchDocument` is for. If Search ever grows state of

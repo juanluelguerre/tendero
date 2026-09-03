@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Persistence.Configurations;
 using ElGuerre.Tendero.Persistence.Outbox;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// One DbContext, two schemas (catalog, ordering) and the outbox.
+/// One DbContext, three schemas (catalog, inventory, ordering) and the outbox.
 /// Bounded contexts share no entities — they share a connection, which is what
 /// puts an event and its state change in the same transaction.
 /// </summary>
@@ -16,6 +17,8 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
 {
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<StockItem> StockItems => Set<StockItem>();
+    public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -23,6 +26,8 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new VariantConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());
+        modelBuilder.ApplyConfiguration(new StockItemConfiguration());
+        modelBuilder.ApplyConfiguration(new ReservationConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 
         SnakeCaseNames.Apply(modelBuilder);

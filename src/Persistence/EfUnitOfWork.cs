@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Persistence;
 

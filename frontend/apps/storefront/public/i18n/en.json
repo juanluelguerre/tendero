@@ -10,7 +10,8 @@
   },
   "product": {
     "addToCart": "Add to cart",
-    "noImage": "No image"
+    "noImage": "No image",
+    "soldOut": "Sold out"
   },
   "search": {
     "empty": "Nothing for “{{query}}”. Try fewer words.",

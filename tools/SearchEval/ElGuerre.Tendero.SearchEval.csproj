@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>

@@ -22,7 +22,8 @@
     "orders": "Pedidos",
     "promotions": "Promociones",
     "reviewQueue": "Cola de revisión",
-    "search": "Evaluación de búsqueda"
+    "search": "Evaluación de búsqueda",
+    "stock": "Stock"
   },
   "promotions": {
     "title": "Promociones",
@@ -77,6 +78,36 @@
     "failed": "No se pudo obtener el token. ¿Está la API en marcha?",
     "noIssuer": "El emisor de desarrollo no responde. Arranca la API con dotnet run --project src/AppHost.",
     "signOut": "Cerrar sesión"
+  },
+  "stock": {
+    "title": "Stock",
+    "hint": "Un recuento sustituye lo que hay en la estantería; no suma. Guardar dos veces no cambia nada la segunda.",
+    "loading": "Cargando...",
+    "failed": "No se ha podido cargar el stock.",
+    "empty": "Todavía no hay nada en ninguna estantería.",
+    "outOfStock": "{{count}} sin existencias",
+    "allAvailable": "Todo disponible",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "saved": "Guardado",
+    "saveFailed": "No se ha podido guardar el recuento.",
+    "countLabel": "Unidades de {{sku}} en {{warehouse}}",
+    "reservations": "Reservas recientes",
+    "noReservations": "No hay nada reservado.",
+    "column": {
+      "sku": "SKU",
+      "warehouse": "Almacén",
+      "onHand": "En almacén",
+      "reserved": "Reservado",
+      "available": "Disponible",
+      "action": "Guardar el recuento"
+    },
+    "status": {
+      "Held": "Reservado",
+      "Committed": "Enviado",
+      "Released": "Liberado",
+      "Expired": "Caducado"
+    }
   },
   "variants": {
     "title": "Variantes",

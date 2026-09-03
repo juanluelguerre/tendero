@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using Microsoft.Extensions.Configuration;
@@ -49,6 +50,16 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         builder.Services.AddCatalog(builder.Configuration);
         builder.Services.AddLexicalSearch(options.Elasticsearch);
         builder.Services.AddSearchIndexInitializer();
+
+        // The indexer needs to know what can be bought, and this corpus has no
+        // warehouses: it measures RELEVANCE, and nothing in the golden set or in
+        // the query mentions stock. So availability answers "unknown" for every
+        // SKU, deliberately and by a named type rather than by a null.
+        //
+        // The day a filter puts `inStock` in the query, this line is what has to
+        // change — and a fake called `NoInventory` is the thing that will make
+        // that obvious, which "no registration" would not.
+        builder.Services.AddSingleton<IAvailabilityReader, NoInventory>();
 
         using var host = builder.Build();
 

@@ -1,0 +1,14 @@
+[
+  {
+    "code": "MAD",
+    "name": { "es": "Almacén central (Madrid)", "en": "Central warehouse (Madrid)" },
+    "priority": 10,
+    "isActive": true
+  },
+  {
+    "code": "BCN",
+    "name": { "es": "Almacén norte (Barcelona)", "en": "Northern warehouse (Barcelona)" },
+    "priority": 20,
+    "isActive": true
+  }
+]

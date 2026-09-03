@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using Elastic.Clients.Elasticsearch;
@@ -55,6 +56,7 @@ internal sealed class SearchIndexInitializer(
                     .Text(d => d.AttributesText!, t => t.Analyzer(analyzer))
                     .Keyword(d => d.Slug)
                     .Keyword(d => d.ImageId!)
+                    .Boolean(d => d.InStock)
                     .DoubleNumber(d => d.PriceAmount)
                     .DoubleNumber(d => d.PriceFrom)
                     .DoubleNumber(d => d.PriceTo)
@@ -82,21 +84,45 @@ internal sealed class SearchIndexInitializer(
 internal sealed class ElasticsearchProductIndexer(
     ElasticsearchClient client,
     IAttributeDefinitionReader attributeDefinitions,
-    ICategoryReader categories) : IProductIndexer
+    ICategoryReader categories,
+    IAvailabilityReader availability) : IProductIndexer
 {
     public async Task IndexAsync(Product product, CancellationToken ct = default)
     {
         var definitions = await attributeDefinitions.AllAsync(ct);
         var tree = await categories.AllAsync(ct);
 
+        // One question for the whole product, not one per variant per culture:
+        // a product with eight variants would otherwise be sixteen round trips
+        // to answer a boolean.
+        var available = await availability.AvailableAsync(
+            [.. product.Variants.Select(variant => variant.Sku)], ct);
+
         foreach (var culture in SearchCultures.Supported)
         {
-            // Reindexing a product means replacing ALL of its variants, not
-            // adding: if one is retired its document has to disappear, and
-            // writing only the live ones would leave the retired one there forever.
-            await RemoveAsync(product.Id, culture, ct);
+            // WRITE FIRST, THEN SWEEP. Reindexing a product means replacing all
+            // of its variants — a retired one has to disappear, and writing only
+            // the live ones would leave it there forever — but doing the delete
+            // first was wrong twice over.
+            //
+            // It opened a window in which a published product was not in the
+            // index at all. And it deadlocked against itself: `delete_by_query`
+            // takes a snapshot and aborts with a 409 if a document's version
+            // moved underneath it, which is exactly what happens when the same
+            // product is projected twice in quick succession. Phase 4 made that
+            // the normal case — `ProductUpserted` and `StockLevelChanged` both
+            // rebuild the whole document — and it dead-lettered ten messages
+            // with `inStock` stuck false on a shop that had stock.
+            //
+            // Indexing by document id is an upsert, so writing first is safe and
+            // the sweep afterwards only ever has to remove ids that are NOT in
+            // this write. That is also why `conflicts: proceed` is honest here:
+            // a document being rewritten concurrently is by definition a current
+            // one, and current ones are excluded from the sweep.
+            var written = new List<string>();
 
-            foreach (var document in ProductSearchDocument.ForVariants(product, culture, definitions, tree))
+            foreach (var document in ProductSearchDocument.ForVariants(
+                         product, culture, definitions, tree, available))
             {
                 var response = await client.IndexAsync(
                     document,
@@ -109,39 +135,59 @@ internal sealed class ElasticsearchProductIndexer(
                 if (!response.IsValidResponse)
                     throw new SearchUnavailableException(
                         $"indexing {document.Id} into {culture}", response.DebugInformation);
+
+                written.Add(document.Id);
             }
+
+            await SweepAsync(product.Id, culture, written, ct);
         }
     }
 
     public async Task RemoveAsync(ProductId productId, CancellationToken ct = default)
     {
         foreach (var culture in SearchCultures.Supported)
-            await RemoveAsync(productId, culture, ct);
+            await SweepAsync(productId, culture, [], ct);
     }
 
     /// <summary>
     /// Deletes by QUERY and not by id: the document is no longer the product but
     /// each of its variants, and how many there are is not known from here.
+    ///
+    /// <paramref name="keep"/> is the set of document ids just written. Passing
+    /// none removes the product entirely, which is what archiving does; passing
+    /// the current variants turns it into the sweep half of a reindex.
     /// </summary>
-    private async Task RemoveAsync(ProductId productId, string culture, CancellationToken ct)
+    private async Task SweepAsync(
+        ProductId productId, string culture, IReadOnlyCollection<string> keep, CancellationToken ct)
     {
-        {
-            var response = await client.DeleteByQueryAsync<ProductSearchDocument>(
-                ProductSearchDocument.IndexNameFor(culture),
-                d => d.Query(q => q.Term(t => t.Field(f => f.ProductId).Value(productId.ToString()))),
-                ct);
+        var response = await client.DeleteByQueryAsync<ProductSearchDocument>(
+            ProductSearchDocument.IndexNameFor(culture),
+            d => d
+                .Query(q => q.Bool(b =>
+                {
+                    b.Filter(f => f.Term(t => t.Field(field => field.ProductId).Value(productId.ToString())));
 
-            // Deleting what is not indexed is idempotent, and it is the normal
-            // case for a product that was never published: delete_by_query
-            // returns zero deletions, not an error. A real failure cannot be
-            // ignored — this is the path Archive() takes a product out of the
-            // catalogue by, and swallowing a 503 would leave the retired one indexed.
-            if (response.IsValidResponse)
-                return;
+                    if (keep.Count > 0)
+                        b.MustNot(m => m.Ids(i => i.Values(new Ids([.. keep]))));
+                }))
+                // The sweep never touches a document this call just wrote, so a
+                // version that moved underneath the snapshot belongs to another
+                // projection of the SAME product — which will write it correctly
+                // and sweep after itself. Aborting there is how ten messages
+                // dead-lettered; proceeding loses nothing.
+                .Conflicts(Conflicts.Proceed),
+            ct);
 
-            throw new SearchUnavailableException(
-                $"removing {productId} from {culture}", response.DebugInformation);
-        }
+        // Deleting what is not indexed is idempotent, and it is the normal
+        // case for a product that was never published: delete_by_query
+        // returns zero deletions, not an error. A real failure cannot be
+        // ignored — this is the path Archive() takes a product out of the
+        // catalogue by, and swallowing a 503 would leave the retired one indexed.
+        if (response.IsValidResponse)
+            return;
+
+        throw new SearchUnavailableException(
+            $"removing {productId} from {culture}", response.DebugInformation);
     }
 }
 
@@ -222,6 +268,7 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
             h.Source.PriceTo,
             h.Source.PriceCurrency,
             h.Source.ImageId,
+            h.Source.InStock,
             h.Score ?? 0d)).ToList();
 
         var products = response.Aggregations?.GetCardinality("products")?.Value is { } value

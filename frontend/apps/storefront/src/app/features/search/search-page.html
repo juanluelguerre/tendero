@@ -98,7 +98,7 @@
 
           <ul class="grid">
             @for (hit of done.hits; track hit.productId) {
-              <li class="card">
+              <li class="card" [class.card--soldOut]="!hit.inStock">
                 @let source = imageUrl(hit);
                 @if (source && !broken().has(hit.productId)) {
                   <img
@@ -122,6 +122,12 @@
                   }
                   <h2 class="card__name">{{ hit.name }}</h2>
                   <p class="card__price numeric">{{ price(hit) }}</p>
+                  <!-- Only when it cannot be bought. "In stock" on every card is
+                       a label, not information; the absence is the default and
+                       the presence is the news. -->
+                  @if (!hit.inStock) {
+                    <p class="card__soldOut">{{ t('product.soldOut') }}</p>
+                  }
                 </div>
               </li>
             }
