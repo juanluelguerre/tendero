@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using NetArchTest.Rules;
 using TestResult = NetArchTest.Rules.TestResult;
 using ElGuerre.Tendero.Catalog.Connectors;
@@ -54,6 +55,25 @@ public sealed class ArchitectureRules
         }
     }
 
+    /// <summary>
+    /// A slice never reaches sideways. Share downwards (SharedKernel) or outwards
+    /// (a port), never across.
+    ///
+    /// The selector is a regex and not <c>ResideInNamespace</c>, and that is not
+    /// fussiness: <c>ResideInNamespace</c> matches by PREFIX, so the slice
+    /// <c>GetProduct</c> also swept up every type in <c>GetProductImage</c>. The
+    /// rule then reported the image endpoint depending on itself, and would
+    /// equally have missed a genuine crossing between those two, because from
+    /// inside the wrong grouping it does not look like a crossing at all.
+    ///
+    /// It went unnoticed for six phases because no slice had been named a prefix
+    /// of another until the product page arrived — and then it went red without a
+    /// crossing existing at all, which is the worse half: the rule could not tell
+    /// its own false positive from the thing it is for. Verified by mutation:
+    /// adding a reference from <c>GetProduct</c> to a type in
+    /// <c>GetProductImage</c> turns this red, and removing it turns it green,
+    /// which is what the prefix form could no longer do.
+    /// </summary>
     [Fact]
     public void Slices_never_reference_another_slice()
     {
@@ -67,9 +87,8 @@ public sealed class ArchitectureRules
                 if (others.Length == 0)
                     continue;
 
-                // Share downwards (SharedKernel) or outwards (a port). Never sideways.
                 var result = Types.InAssembly(assembly)
-                    .That().ResideInNamespace(slice)
+                    .That().ResideInNamespaceMatching(Exactly(slice))
                     .ShouldNot().HaveDependencyOnAny(others)
                     .GetResult();
 
@@ -77,6 +96,13 @@ public sealed class ArchitectureRules
             }
         }
     }
+
+    /// <summary>
+    /// The slice's own namespace and anything nested under it — and nothing that
+    /// merely starts with the same letters.
+    /// </summary>
+    private static string Exactly(string @namespace) =>
+        $@"^{Regex.Escape(@namespace)}($|\.)";
 
     [Fact]
     public void Connector_adapters_are_internal_so_only_the_port_is_public()
@@ -236,6 +262,29 @@ public sealed class ArchitectureRules
             .GetResult();
 
         Assert.True(result.IsSuccessful, Describe(Solution.Ordering, result));
+    }
+
+    /// <summary>
+    /// And so does Catalog, for the same reason and under the same limit.
+    ///
+    /// The product page renders a variant picker where a sold-out size is
+    /// DISABLED rather than absent, and it renders it once — a second round trip
+    /// would let a shopper click a size the next response takes away. So the
+    /// slice asks <c>IAvailabilityReader</c> for a set of SKUs and gets back a
+    /// set of quantities.
+    ///
+    /// That is the whole crossing, and this is what holds it there. A page that
+    /// named a <c>StockItem</c> would be Catalog reading Inventory's model, and
+    /// the next thing it would want is a warehouse.
+    /// </summary>
+    [Fact]
+    public void Catalog_sees_inventorys_ports_and_never_its_domain()
+    {
+        var result = Types.InAssembly(Solution.Catalog)
+            .ShouldNot().HaveDependencyOn("ElGuerre.Tendero.Inventory.Domain")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, Describe(Solution.Catalog, result));
     }
 
     /// <summary>

@@ -1,8 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Bounded context Catalog: dominio + conectores + slices en un solo
-       ensamblado. Los tests de arquitectura vigilan que Tendero.Catalog.Domain
-       (namespace) no dependa de nada de lo que trae este .csproj. -->
+  <!-- Bounded context Catalog: domain, connectors and slices in one assembly.
+       The architecture tests watch that the ElGuerre.Tendero.Catalog.Domain
+       namespace depends on nothing this .csproj drags in.
+
+       Inventory IS referenced, and only for its ports. The product page has to
+       render a picker where the size that is sold out is DISABLED rather than
+       missing, and it has to render it once: a second round trip would let the
+       shopper click a size that the next response takes away. That is the same
+       call Search already made in putting `inStock` on the document instead of
+       looking it up at render time.
+
+       The crossing carries SKUs in and quantities out — values, never entities
+       (invariant 1) — and an architecture rule fails the build if anything here
+       reaches past Inventory.Ports into its domain. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Catalog</RootNamespace>
   </PropertyGroup>
@@ -17,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 

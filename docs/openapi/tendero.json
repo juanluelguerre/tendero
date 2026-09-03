@@ -156,6 +156,46 @@
         }
       }
     },
+    "/api/catalog/products/by-slug/{slug}": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "GetProductBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/images/{id}": {
       "get": {
         "tags": [
@@ -1201,6 +1241,21 @@
           }
         }
       },
+      "AlternateSlug": {
+        "required": [
+          "culture",
+          "slug"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
       "AppliedDiscountResponse": {
         "required": [
           "promotionCode",
@@ -1406,6 +1461,21 @@
             "items": {
               "$ref": "#/components/schemas/CartLineView"
             }
+          }
+        }
+      },
+      "CategoryStep": {
+        "required": [
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
           }
         }
       },
@@ -1952,6 +2022,182 @@
           "discountTotal": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "ProductAttributeView": {
+        "required": [
+          "code",
+          "label",
+          "kind",
+          "value",
+          "number",
+          "unit",
+          "flag"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "number": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "flag": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "ProductDetail": {
+        "required": [
+          "productId",
+          "name",
+          "slug",
+          "description",
+          "brand",
+          "category",
+          "images",
+          "attributes",
+          "axes",
+          "variants",
+          "priceFrom",
+          "priceTo",
+          "priceCurrency",
+          "alternates",
+          "missingCultures",
+          "status",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "brand": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryStep"
+            }
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductImageView"
+            }
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeView"
+            }
+          },
+          "axes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantAxisView"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantView"
+            }
+          },
+          "priceFrom": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceTo": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceCurrency": {
+            "type": "string"
+          },
+          "alternates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlternateSlug"
+            }
+          },
+          "missingCultures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProductImageView": {
+        "required": [
+          "imageId",
+          "alt",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string"
+          },
+          "alt": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2734,6 +2980,101 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "VariantAxisView": {
+        "required": [
+          "code",
+          "label",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantOptionView"
+            }
+          }
+        }
+      },
+      "VariantOptionView": {
+        "required": [
+          "code",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "VariantView": {
+        "required": [
+          "variantId",
+          "sku",
+          "priceAmount",
+          "priceCurrency",
+          "axisValues",
+          "label",
+          "imageId",
+          "discontinued",
+          "inStock",
+          "remaining"
+        ],
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "priceAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceCurrency": {
+            "type": "string"
+          },
+          "axisValues": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "label": {
+            "type": "string"
+          },
+          "imageId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "discontinued": {
+            "type": "boolean"
+          },
+          "inStock": {
+            "type": "boolean"
+          },
+          "remaining": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       }

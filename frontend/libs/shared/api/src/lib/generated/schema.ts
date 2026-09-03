@@ -68,6 +68,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/products/by-slug/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetProductBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/images/{id}": {
         parameters: {
             query?: never;
@@ -410,6 +426,10 @@ export interface components {
             countryCode: string;
             phone: null | string;
         };
+        AlternateSlug: {
+            culture: string;
+            slug: string;
+        };
         AppliedDiscountResponse: {
             promotionCode: string;
             label: string;
@@ -461,6 +481,10 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
             lines: components["schemas"]["CartLineView"][];
+        };
+        CategoryStep: {
+            code: string;
+            name: string;
         };
         CountStockRequest: {
             /** Format: int32 */
@@ -612,6 +636,44 @@ export interface components {
             taxTotal: number;
             /** Format: double */
             discountTotal: number;
+        };
+        ProductAttributeView: {
+            code: string;
+            label: string;
+            kind: string;
+            value: null | string;
+            /** Format: double */
+            number: null | number;
+            unit: null | string;
+            flag: null | boolean;
+        };
+        ProductDetail: {
+            productId: string;
+            name: string;
+            slug: string;
+            description: null | string;
+            brand: null | string;
+            category: components["schemas"]["CategoryStep"][];
+            images: components["schemas"]["ProductImageView"][];
+            attributes: components["schemas"]["ProductAttributeView"][];
+            axes: components["schemas"]["VariantAxisView"][];
+            variants: components["schemas"]["VariantView"][];
+            /** Format: double */
+            priceFrom: number;
+            /** Format: double */
+            priceTo: number;
+            priceCurrency: string;
+            alternates: components["schemas"]["AlternateSlug"][];
+            missingCultures: string[];
+            status: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProductImageView: {
+            imageId: string;
+            alt: null | string;
+            /** Format: int32 */
+            sortOrder: number;
         };
         ProductSummary: {
             productId: string;
@@ -825,6 +887,31 @@ export interface components {
             code: string;
             options: string[];
         };
+        VariantAxisView: {
+            code: string;
+            label: string;
+            options: components["schemas"]["VariantOptionView"][];
+        };
+        VariantOptionView: {
+            code: string;
+            label: string;
+        };
+        VariantView: {
+            variantId: string;
+            sku: string;
+            /** Format: double */
+            priceAmount: number;
+            priceCurrency: string;
+            axisValues: {
+                [key: string]: string;
+            };
+            label: string;
+            imageId: null | string;
+            discontinued: boolean;
+            inStock: boolean;
+            /** Format: int32 */
+            remaining: null | number;
+        };
     };
     responses: never;
     parameters: never;
@@ -938,6 +1025,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ImportProductsResult"];
                 };
+            };
+        };
+    };
+    GetProductBySlug: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

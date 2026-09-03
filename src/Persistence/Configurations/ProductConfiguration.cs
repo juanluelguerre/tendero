@@ -28,6 +28,20 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasConversion(Jsonb.LocalizedTextConverter, Jsonb.LocalizedTextComparer)
             .IsRequired();
 
+        // The slug is now a lookup key and not only a rendered string: it is what
+        // a product URL carries. GIN over the whole jsonb column rather than an
+        // expression index per culture, because `@> {"es": "..."}`  is what the
+        // query asks and because adding a third culture must not be a migration.
+        //
+        // Deliberately NOT unique: uniqueness across a jsonb object's values is
+        // not expressible as a constraint, so two products that slugify alike
+        // are still possible. Six products, zero collisions today; the lookup
+        // resolves it by preferring the requested culture, and the real fix — a
+        // (culture, slug) table — is in the standing backlog with that number.
+        builder.HasIndex(p => p.Slug)
+            .HasMethod("gin")
+            .HasDatabaseName("ix_products_slug");
+
         builder.Property(p => p.Description)
             .HasColumnType("jsonb")
             .HasConversion(Jsonb.LocalizedTextConverter!, Jsonb.LocalizedTextComparer!);

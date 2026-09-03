@@ -98,16 +98,4 @@ public sealed class ListProductsTests
     private static Product ADraftProduct(string name) =>
         Product.Create(Clock, LocalizedText.From("es", name), new Money(29.90m, "EUR"));
 
-    private sealed class InMemoryProductCatalogReader(params Product[] products) : IProductCatalogReader
-    {
-        public Task<ProductPage> ListAsync(
-            ProductStatus? status, int page, int pageSize, CancellationToken ct)
-        {
-            var matching = products.Where(p => status is null || p.Status == status).ToList();
-
-            return Task.FromResult(new ProductPage(
-                [.. matching.Skip((page - 1) * pageSize).Take(pageSize)],
-                matching.Count));
-        }
-    }
 }
