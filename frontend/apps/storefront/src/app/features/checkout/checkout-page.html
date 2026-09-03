@@ -1,0 +1,176 @@
+<section *transloco="let t" class="checkout">
+  <h1 class="checkout__title">{{ t('checkout.title') }}</h1>
+
+  @if (store.isEmpty()) {
+    <div class="blank">
+      <p class="blank__text">{{ t('cart.empty') }}</p>
+      <a class="button" routerLink="/">{{ t('nav.continueShopping') }}</a>
+    </div>
+  } @else {
+    @if (problem(); as message) {
+      <p class="notice notice--bad" role="alert">{{ message }}</p>
+    }
+
+    <div class="layout">
+      <div class="steps">
+        <!-- 1 · Where -->
+        <fieldset class="step">
+          <legend class="step__title">{{ t('checkout.address') }}</legend>
+
+          <div class="grid">
+            <label class="row row--wide">
+              <span class="row__label">{{ t('checkout.recipientName') }}</span>
+              <input class="field" name="recipientName" [(ngModel)]="address.recipientName" autocomplete="name" />
+            </label>
+
+            <label class="row row--wide">
+              <span class="row__label">{{ t('checkout.line1') }}</span>
+              <input class="field" name="line1" [(ngModel)]="address.line1" autocomplete="address-line1" />
+            </label>
+
+            <label class="row row--wide">
+              <span class="row__label">{{ t('checkout.line2') }}</span>
+              <input class="field" name="line2" [(ngModel)]="address.line2" autocomplete="address-line2" />
+            </label>
+
+            <label class="row">
+              <span class="row__label">{{ t('checkout.postalCode') }}</span>
+              <input class="field" name="postalCode" [(ngModel)]="address.postalCode" autocomplete="postal-code" />
+            </label>
+
+            <label class="row">
+              <span class="row__label">{{ t('checkout.city') }}</span>
+              <input class="field" name="city" [(ngModel)]="address.city" autocomplete="address-level2" />
+            </label>
+
+            <label class="row">
+              <span class="row__label">{{ t('checkout.region') }}</span>
+              <input class="field" name="region" [(ngModel)]="address.region" autocomplete="address-level1" />
+            </label>
+
+            <label class="row">
+              <span class="row__label">{{ t('checkout.country') }}</span>
+              <!-- Two letters, uppercase: the value three different things
+                   look up (a rate, a tax rule, a market). -->
+              <input
+                class="field numeric"
+                name="countryCode"
+                maxlength="2"
+                autocomplete="country"
+                [(ngModel)]="address.countryCode"
+                (blur)="loadOptions()"
+              />
+            </label>
+          </div>
+
+          <button class="button button--quiet" type="button" [disabled]="rating()" (click)="loadOptions()">
+            {{ rating() ? t('checkout.loadingOptions') : t('checkout.delivery') }}
+          </button>
+        </fieldset>
+
+        <!-- 2 · How -->
+        @if (options().length > 0) {
+          <fieldset class="step">
+            <legend class="step__title">{{ t('checkout.delivery') }}</legend>
+
+            <div class="options">
+              @for (option of options(); track option.code) {
+                <label class="option" [class.option--picked]="option.code === chosen()?.code">
+                  <input
+                    type="radio"
+                    name="shipping"
+                    [value]="option.code"
+                    [checked]="option.code === chosen()?.code"
+                    (change)="choose(option)"
+                  />
+                  <span class="option__body">
+                    <span class="option__label">{{ option.label }}</span>
+                    @if (option.estimatedDays) {
+                      <span class="option__days">
+                        {{ option.estimatedDays === 1
+                            ? t('checkout.deliveryOneDay')
+                            : t('checkout.deliveryDays', { days: option.estimatedDays }) }}
+                      </span>
+                    }
+                  </span>
+                  <span class="option__price numeric">{{ money(option.amount) }}</span>
+                </label>
+              }
+            </div>
+          </fieldset>
+        }
+
+        <!-- 3 · Pay -->
+        <fieldset class="step">
+          <legend class="step__title">{{ t('checkout.payment') }}</legend>
+          <p class="step__hint">{{ t('checkout.paymentHint') }}</p>
+
+          <div class="options">
+            @for (card of cards; track card) {
+              <label class="option" [class.option--picked]="card === instrument()">
+                <input
+                  type="radio"
+                  name="instrument"
+                  [value]="card"
+                  [checked]="card === instrument()"
+                  (change)="instrument.set(card)"
+                />
+                <span class="option__body">
+                  <span class="option__label">{{ t(cardKey(card)) }}</span>
+                  <span class="option__days numeric">{{ card }}</span>
+                </span>
+              </label>
+            }
+          </div>
+        </fieldset>
+      </div>
+
+      <aside class="summary">
+        @if (store.quote(); as quote) {
+          <dl class="totals">
+            <div class="totals__row">
+              <dt>{{ t('cart.subtotal') }}</dt>
+              <dd class="numeric">{{ money(quote.subtotal) }}</dd>
+            </div>
+
+            @if (quote.discountTotal > 0) {
+              <div class="totals__row totals__row--off">
+                <dt>{{ t('cart.discounts') }}</dt>
+                <dd class="numeric">−{{ money(quote.discountTotal) }}</dd>
+              </div>
+            }
+
+            <div class="totals__row">
+              <dt>{{ t('cart.shipping') }}</dt>
+              <dd class="numeric">
+                {{ chosen() ? money(quote.shipping) : t('cart.shippingAtCheckout') }}
+              </dd>
+            </div>
+
+            <div class="totals__row totals__row--total">
+              <dt>{{ t('cart.total') }}</dt>
+              <dd class="numeric">{{ money(quote.total) }}</dd>
+            </div>
+
+            @if (quote.taxTotal > 0) {
+              <p class="totals__tax">{{ t('cart.tax') }} · {{ money(quote.taxTotal) }}</p>
+            }
+          </dl>
+
+          <button
+            class="button button--block"
+            type="button"
+            [disabled]="paying() || !chosen()"
+            (click)="pay()"
+          >
+            {{ paying() ? t('checkout.paying') : t('checkout.pay', { total: money(quote.total) }) }}
+          </button>
+        } @else {
+          <p class="muted">{{ t('cart.noQuote') }}</p>
+        }
+
+        <a class="quiet" routerLink="/cart">{{ t('cart.title') }}</a>
+      </aside>
+    </div>
+  }
+</section>

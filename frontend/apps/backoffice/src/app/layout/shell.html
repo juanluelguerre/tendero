@@ -1,0 +1,73 @@
+<ng-container *transloco="let t">
+  <header class="bar">
+    <div class="page-frame bar__inner">
+      <!-- See the storefront shell: the icon, not the lockup, because of the
+           typeface. It is 26 px here because the bar is dense by design. -->
+      <img
+        class="bar__mark"
+        src="brand/tendero-icon-backoffice.svg"
+        alt=""
+        aria-hidden="true"
+        width="26"
+        height="26"
+      />
+      <span class="bar__brand">{{ t('brand.name') }}</span>
+      <span class="bar__area eyebrow">{{ t('brand.area') }}</span>
+
+      <!-- Same control as the storefront's, styled for a dense dark bar:
+           ADR 0010 shares the behaviour and not the component. -->
+      <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
+        @for (option of cultures; track option) {
+          <button
+            type="button"
+            class="lang"
+            [class.lang--active]="option === culture()"
+            [attr.aria-pressed]="option === culture()"
+            (click)="use(option)"
+          >
+            {{ option }}
+          </button>
+        }
+      </div>
+
+      @if (identity(); as who) {
+        <div class="who">
+          <span class="who__name">{{ who.name }}</span>
+          <span class="tag tag--code">{{ who.role }}</span>
+        </div>
+        <!-- Without this you cannot switch identity, and trying the roles
+             means clearing localStorage by hand. -->
+        <button class="button button--quiet" type="button" (click)="signOut()">
+          {{ t('signIn.signOut') }}
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (signedIn()) {
+    <nav class="tabs" [attr.aria-label]="t('brand.area')">
+      <div class="page-frame tabs__inner">
+        <a class="tab" routerLink="/review" routerLinkActive="tab--active">
+          {{ t('nav.reviewQueue') }}<hr class="awning awning-thin tab__mark" />
+        </a>
+        <a class="tab" routerLink="/attributes" routerLinkActive="tab--active">
+          {{ t('nav.attributes') }}<hr class="awning awning-thin tab__mark" />
+        </a>
+        <a class="tab" routerLink="/promotions" routerLinkActive="tab--active">
+          {{ t('nav.promotions') }}<hr class="awning awning-thin tab__mark" />
+        </a>
+        <a class="tab" routerLink="/stock" routerLinkActive="tab--active">
+          {{ t('nav.stock') }}<hr class="awning awning-thin tab__mark" />
+        </a>
+        <a class="tab" routerLink="/orders" routerLinkActive="tab--active">
+          {{ t('nav.orders') }}<hr class="awning awning-thin tab__mark" />
+        </a>
+        <a class="tab" routerLink="/returns" routerLinkActive="tab--active">
+          {{ t('nav.returns') }}<hr class="awning awning-thin tab__mark" />
+        </a>
+      </div>
+    </nav>
+  }
+
+  <main class="page-frame main"><router-outlet /></main>
+</ng-container>

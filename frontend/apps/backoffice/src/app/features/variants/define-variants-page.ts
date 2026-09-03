@@ -25,65 +25,8 @@ interface AxisDraft {
   selector: 'backoffice-define-variants',
   imports: [FormsModule, RouterLink, TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <section class="variants" *transloco="let t">
-      <h1>{{ t('variants.title') }}</h1>
-      <p class="hint">{{ t('variants.hint') }}</p>
-
-      @for (axis of axes(); track $index) {
-        <div class="axis">
-          <label>
-            <span>{{ t('variants.axisCode') }}</span>
-            <input [(ngModel)]="axis.code" [name]="'code' + $index" placeholder="COLOR" />
-          </label>
-          <label class="grow">
-            <span>{{ t('variants.axisOptions') }}</span>
-            <input [(ngModel)]="axis.options" [name]="'options' + $index" placeholder="NAVY, BLACK" />
-          </label>
-        </div>
-      }
-
-      <div class="actions">
-        <button type="button" class="secondary" (click)="addAxis()">{{ t('variants.addAxis') }}</button>
-        <span class="preview numeric">{{ t('variants.willCreate', { count: combinations() }) }}</span>
-        <button type="button" [disabled]="busy() || combinations() === 0" (click)="generate()">
-          {{ busy() ? t('variants.generating') : t('variants.generate') }}
-        </button>
-      </div>
-
-      @if (created() !== null) {
-        <p class="done" role="status">{{ t('variants.created', { count: created() }) }}</p>
-      }
-      @if (failed()) {
-        <p class="failed" role="alert">{{ failed() }}</p>
-      }
-
-      <a routerLink="/review">{{ t('variants.back') }}</a>
-    </section>
-  `,
-  styles: `
-    .variants { display: flex; flex-direction: column; gap: var(--space-3); max-width: 40rem; }
-    h1 { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
-    .hint, .muted { color: var(--text-muted); font-size: var(--text-xs); margin: 0; }
-    .axis { display: flex; gap: var(--space-2); }
-    label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-xs); }
-    label.grow { flex: 1; }
-    input {
-      padding: var(--space-2); background: var(--bg-surface); color: inherit;
-      border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit;
-    }
-    .actions { display: flex; align-items: center; gap: var(--space-3); }
-    .preview { color: var(--text-muted); font-size: var(--text-xs); margin-inline-start: auto; }
-    button {
-      padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
-      border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent);
-      font: inherit; cursor: pointer;
-    }
-    button.secondary { background: none; color: inherit; border-color: var(--border); }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    .done { color: var(--positive); font-size: var(--text-sm); margin: 0; }
-    .failed { color: var(--danger); font-size: var(--text-sm); margin: 0; }
-  `,
+  templateUrl: './define-variants-page.html',
+  styleUrl: './define-variants-page.css',
 })
 export class DefineVariantsPage {
   private readonly catalog = inject(CatalogService);

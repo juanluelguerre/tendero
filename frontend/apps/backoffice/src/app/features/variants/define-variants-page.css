@@ -1,0 +1,21 @@
+.variants { display: flex; flex-direction: column; gap: var(--space-3); max-width: 40rem; }
+h1 { font-family: var(--font-display); font-size: var(--text-lg); margin: 0; }
+.hint, .muted { color: var(--text-muted); font-size: var(--text-xs); margin: 0; }
+.axis { display: flex; gap: var(--space-2); }
+label { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--text-xs); }
+label.grow { flex: 1; }
+input {
+  padding: var(--space-2); background: var(--bg-surface); color: inherit;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); font: inherit;
+}
+.actions { display: flex; align-items: center; gap: var(--space-3); }
+.preview { color: var(--text-muted); font-size: var(--text-xs); margin-inline-start: auto; }
+button {
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent);
+  font: inherit; cursor: pointer;
+}
+button.secondary { background: none; color: inherit; border-color: var(--border); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+.done { color: var(--positive); font-size: var(--text-sm); margin: 0; }
+.failed { color: var(--danger); font-size: var(--text-sm); margin: 0; }

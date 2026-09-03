@@ -1,0 +1,124 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+/* Hidden until focused: the first thing a keyboard user meets should be a
+   way past the chrome, and the first thing everyone else meets should not
+   be a stray link. */
+.skip {
+  position: absolute;
+  inset-inline-start: var(--space-4);
+  inset-block-start: calc(var(--space-4) * -4);
+  z-index: 20;
+  padding: var(--space-2) var(--space-4);
+  background: var(--accent);
+  color: var(--stone-0);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: inset-block-start var(--dur-fast) var(--ease);
+}
+.skip:focus-visible { inset-block-start: var(--space-4); }
+
+.header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 10;
+  background: var(--bg-page);
+}
+
+.header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--header-h);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  color: inherit;
+}
+.brand__mark { width: 40px; height: 40px; }
+.brand__text { display: flex; flex-direction: column; line-height: var(--leading-tight); }
+.brand__wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: var(--accent);
+}
+.brand__tagline { font-size: var(--text-2xs); color: var(--text-muted); }
+
+.header__end { display: flex; align-items: center; gap: var(--space-4); }
+
+/* The basket. It is NOT clay: one accent action per view, and on a results
+   page that is the search button. The badge is, because it is the one thing
+   here that changes and wants to be noticed when it does. */
+.cart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  color: var(--text);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.cart:hover { background: var(--bg-raised); }
+.cart__icon { width: 22px; height: 22px; }
+
+.cart__badge {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-end: 0;
+  min-width: 18px;
+  height: 18px;
+  padding-inline: 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--stone-0);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.langs {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+.lang {
+  padding: var(--space-1) var(--space-3);
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+}
+.lang:hover { color: var(--text); }
+.lang--active { background: var(--accent); color: var(--stone-0); }
+
+.main { flex: 1; padding-block: var(--space-6) var(--space-8); }
+
+.footer { border-block-start: 1px solid var(--border); }
+.footer__inner { padding-block: var(--space-5); font-size: var(--text-2xs); }
+
+/* The tagline already says it under the wordmark; the area label is chrome
+   and the first thing a narrow screen can afford to lose. */
+@media (max-width: 640px) {
+  .brand__area { display: none; }
+  .main { padding-block: var(--space-5) var(--space-6); }
+}

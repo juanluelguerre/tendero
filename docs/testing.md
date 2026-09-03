@@ -13,6 +13,7 @@ Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short
 | Architecture | NetArchTest.Rules | ms | every build |
 | Integration | Testcontainers + Respawn | s | `--filter Category=Integration` |
 | Search relevance | tools/SearchEval (NDCG@10) | s | CI gate on every PR |
+| End-to-end | Playwright | s | its own CI job, after the rest |
 
 ## Unit tests
 
@@ -84,6 +85,51 @@ never weakening the rule inline.
 - CI computes NDCG@10 and recall@50 against a freshly indexed seed catalog and
   fails under the committed thresholds in `eval.thresholds.json`.
 - Changing thresholds or annotations requires justification in the PR body.
+
+## End-to-end, and how little of it there should be
+
+Playwright is the **thinnest** layer here, and deliberately so. Below it there
+are already 395 tests, five of which drive the whole commerce loop against a
+real Postgres and the real outbox. Repeating any of that in a browser buys a
+slower copy of a test that exists.
+
+**What only a browser can prove** is the wiring between Angular and the API: a
+route guard, a token interceptor, a table that derives its buttons from a status
+the server sent, and an HTTP status rendered as a sentence a shopper can act on.
+That is the whole brief.
+
+Three rules keep it honest:
+
+1. **Assert the browser, not the arithmetic.** That a refund is 72.55 € is
+   `CheckoutLoopTests`'s job. The spec asserts that an amount appears.
+2. **Web-first assertions, never a sleep.** Half of this system is asynchronous
+   by design — an order ships and the capture arrives through the outbox — so
+   `expect(...).toPass()` and auto-retrying locators are the only correct tool.
+   A `waitForTimeout` here is a flake with a timer on it.
+3. **Sign in through the screen every time.** A cached `storageState` looks like
+   the obvious optimisation and does not work: the development issuer mints its
+   signing key per process, so a saved token dies with the next restart.
+
+### Writing them with an agent, running them in CI
+
+The two are different jobs and only one of them produces an artifact.
+
+**Claude Code with the Playwright MCP server is for authoring and diagnosis.**
+It reads the accessibility tree, so the locators it proposes are role-and-name
+rather than brittle CSS, and it can replay a failing trace and say what changed.
+That is genuinely faster than writing selectors by hand.
+
+**The committed spec is the gate.** A check that only exists when somebody asks
+an agent to look is the badge this repository already wrote an article about —
+"NDCG tracked in CI" on a repo with no CI. Whatever the agent produces goes
+through a pull request like any other code.
+
+**No self-healing.** The Playwright Healer agent replays a failure, finds an
+"equivalent" element and patches until the test passes. In a shop whose whole
+argument is that a system saying *no* is the interesting part — a suppressed
+discount, a declined card, a denied mandate — a tool designed to turn a refusal
+into a pass is pointed the wrong way. Use the agent to explain a failure; let a
+person write the fix.
 
 ## Naming
 

@@ -1,0 +1,132 @@
+<section *transloco="let t" class="cart">
+  <header class="cart__head">
+    <h1 class="cart__title">{{ t('cart.title') }}</h1>
+    @if (!store.isEmpty()) {
+      <span class="cart__count">{{ items(t) }}</span>
+    }
+  </header>
+
+  @if (store.failed(); as problem) {
+    <p class="notice notice--bad" role="alert">{{ t('cart.failed') }}</p>
+  }
+
+  @if (store.isEmpty()) {
+    <div class="blank">
+      <p class="blank__text">{{ t('cart.empty') }}</p>
+      <p class="blank__hint">{{ t('cart.emptyHint') }}</p>
+      <a class="button" routerLink="/">{{ t('nav.continueShopping') }}</a>
+    </div>
+  } @else {
+    <div class="layout">
+      <ul class="lines">
+        @for (line of store.cart()!.lines; track line.sku) {
+          <li class="line">
+            @let source = imageUrl(line);
+            @if (source) {
+              <img class="line__image" [src]="source" [alt]="line.productName" loading="lazy" />
+            } @else {
+              <div class="line__image line__image--blank" aria-hidden="true">
+                {{ line.productName.charAt(0) }}
+              </div>
+            }
+
+            <div class="line__body">
+              <p class="line__name">{{ line.productName }}</p>
+              @if (line.variantLabel) {
+                <p class="line__variant">{{ line.variantLabel }}</p>
+              }
+              <p class="line__sku numeric">{{ line.sku }}</p>
+            </div>
+
+            <div class="stepper" role="group" [attr.aria-label]="t('cart.quantity', { name: line.productName })">
+              <button
+                type="button"
+                class="stepper__button"
+                [attr.aria-label]="t('cart.decrease')"
+                [disabled]="store.busy()"
+                (click)="change(line, -1)"
+              >−</button>
+              <span class="stepper__value numeric">{{ line.quantity }}</span>
+              <button
+                type="button"
+                class="stepper__button"
+                [attr.aria-label]="t('cart.increase')"
+                [disabled]="store.busy()"
+                (click)="change(line, 1)"
+              >+</button>
+            </div>
+
+            <p class="line__price numeric">{{ lineTotal(line.sku) }}</p>
+
+            <button
+              type="button"
+              class="line__remove"
+              [attr.aria-label]="t('cart.remove', { name: line.productName })"
+              [disabled]="store.busy()"
+              (click)="remove(line)"
+            >×</button>
+          </li>
+        }
+      </ul>
+
+      <aside class="summary">
+        @if (store.quote(); as quote) {
+          <dl class="totals">
+            <div class="totals__row">
+              <dt>{{ t('cart.subtotal') }}</dt>
+              <dd class="numeric">{{ money(quote.subtotal) }}</dd>
+            </div>
+
+            @if (quote.discountTotal > 0) {
+              <div class="totals__row totals__row--off">
+                <dt>{{ t('cart.discounts') }}</dt>
+                <dd class="numeric">−{{ money(quote.discountTotal) }}</dd>
+              </div>
+            }
+
+            <div class="totals__row totals__row--muted">
+              <dt>{{ t('cart.shipping') }}</dt>
+              <dd>{{ t('cart.shippingAtCheckout') }}</dd>
+            </div>
+
+            <div class="totals__row totals__row--total">
+              <dt>{{ t('cart.total') }}</dt>
+              <dd class="numeric">{{ money(quote.total) }}</dd>
+            </div>
+
+            @if (quote.taxTotal > 0) {
+              <p class="totals__tax">{{ t('cart.tax') }} · {{ money(quote.taxTotal) }}</p>
+            }
+          </dl>
+
+          <!-- The point of the screen. A suppressed promotion comes back
+               with its reason, and saying so is the difference between a
+               promotions engine and magic. -->
+          @if (quote.discounts.length > 0) {
+            <ul class="promos">
+              @for (discount of quote.discounts; track discount.promotionCode) {
+                <li class="promo" [class.promo--off]="discount.outcome !== 'Applied'">
+                  <span class="promo__label">{{ discount.label }}</span>
+                  @if (discount.outcome === 'Applied') {
+                    <span class="promo__amount numeric">−{{ money(discount.amount) }}</span>
+                  } @else {
+                    <span class="promo__amount">{{ t('cart.suppressed') }}</span>
+                  }
+                  @if (discount.reason) {
+                    <p class="promo__reason">{{ discount.reason }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <p class="muted">{{ store.busy() ? t('cart.loading') : t('cart.noQuote') }}</p>
+        }
+
+        <!-- The one clay action on the page (design/DESIGN.md). -->
+        <a class="button button--block" routerLink="/checkout">{{ t('cart.checkout') }}</a>
+        <a class="quiet" routerLink="/">{{ t('nav.continueShopping') }}</a>
+      </aside>
+    </div>
+  }
+</section>

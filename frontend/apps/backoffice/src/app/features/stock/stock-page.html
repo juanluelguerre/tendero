@@ -1,0 +1,117 @@
+<section *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('stock.title') }}</h1>
+    @if (outOfStock() > 0) {
+      <span class="tag tag--danger">{{ t('stock.outOfStock', { count: outOfStock() }) }}</span>
+    } @else if (rows().length > 0) {
+      <span class="tag tag--ok">{{ t('stock.allAvailable') }}</span>
+    }
+  </header>
+  <p class="page-hint">{{ t('stock.hint') }}</p>
+
+  @if (loading()) {
+    <p class="muted" role="status" aria-live="polite">{{ t('stock.loading') }}</p>
+  } @else if (failed()) {
+    <p class="failed" role="alert">{{ t('stock.failed') }}</p>
+  } @else if (rows().length === 0) {
+    <div class="empty"><p class="empty__text">{{ t('stock.empty') }}</p></div>
+  } @else {
+    <div class="grid">
+      <div class="table-wrap">
+        <table class="table">
+          <caption class="sr-only">{{ t('stock.title') }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ t('stock.column.sku') }}</th>
+              <th scope="col">{{ t('stock.column.warehouse') }}</th>
+              <th scope="col" class="numeric">{{ t('stock.column.onHand') }}</th>
+              <th scope="col" class="numeric">{{ t('stock.column.reserved') }}</th>
+              <th scope="col" class="numeric">{{ t('stock.column.available') }}</th>
+              <th scope="col"><span class="sr-only">{{ t('stock.column.action') }}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track key(row)) {
+              <tr [class.row--empty]="row.available === 0">
+                <td class="numeric code">{{ row.sku }}</td>
+                <td>{{ row.warehouseName }}</td>
+                <td class="numeric">
+                  <!-- The only editable cell on the screen. A count replaces
+                       the number; it does not add to it. -->
+                  <input
+                    class="field field--count numeric"
+                    type="number"
+                    min="0"
+                    step="1"
+                    [attr.aria-label]="t('stock.countLabel', { sku: row.sku, warehouse: row.warehouseName })"
+                    [value]="row.onHand"
+                    [disabled]="saving() === key(row)"
+                    (input)="draft(row, $event)"
+                    (keydown.enter)="save(row)"
+                  />
+                </td>
+                <td class="numeric held" [class.held--none]="row.reserved === 0">
+                  {{ row.reserved }}
+                </td>
+                <td class="numeric available">{{ row.available }}</td>
+                <td class="actions">
+                  @if (changed(row)) {
+                    <button
+                      class="button button--small"
+                      type="button"
+                      [disabled]="saving() === key(row)"
+                      (click)="save(row)"
+                    >
+                      {{ saving() === key(row) ? t('stock.saving') : t('stock.save') }}
+                    </button>
+                  } @else if (saved() === key(row)) {
+                    <span class="tag tag--ok">{{ t('stock.saved') }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        @if (saveFailed()) {
+          <p class="failed" role="alert">{{ t('stock.saveFailed') }}</p>
+        }
+      </div>
+
+      <!-- The panel that explains the grid. Its most interesting row is a
+           refusal: a reservation that never held anything, carrying the
+           sentence inventory answered with. -->
+      <aside class="holds">
+        <h2 class="holds__title">{{ t('stock.reservations') }}</h2>
+
+        @if (reservations().length === 0) {
+          <p class="muted">{{ t('stock.noReservations') }}</p>
+        } @else {
+          <ul class="holds__list">
+            @for (hold of reservations(); track hold.reservationId) {
+              <li class="hold">
+                <div class="hold__head">
+                  <span class="hold__status" [class]="'hold__status--' + hold.status">
+                    {{ t('stock.status.' + hold.status) }}
+                  </span>
+                  <span class="hold__order">{{ shortId(hold) }}</span>
+                </div>
+
+                @if (hold.lines.length > 0) {
+                  <ul class="hold__lines">
+                    @for (line of hold.lines; track line) {
+                      <li class="hold__line">{{ line }}</li>
+                    }
+                  </ul>
+                }
+
+                @if (hold.reason) {
+                  <p class="hold__reason">{{ hold.reason }}</p>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </aside>
+    </div>
+  }
+</section>

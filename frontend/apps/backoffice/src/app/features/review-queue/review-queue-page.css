@@ -1,0 +1,12 @@
+/* Only what this page adds. The page header, the table, the tags, the
+   buttons and the empty state are primitives in styles.css: they were each
+   copied between three screens before they moved there. */
+.name { display: block; color: var(--text); font-weight: 600; }
+.slug { display: block; margin-block-start: 2px; font-size: var(--text-3xs); color: var(--text-subtle); }
+
+.quiet-link { font-size: var(--text-xs); color: var(--text-muted); }
+.quiet-link:hover { color: var(--accent); }
+
+/* The action column stays as narrow as its button and is pinned right, so a
+   queue of twenty rows has one straight edge to aim at. */
+.table td:last-child { width: 1%; white-space: nowrap; }

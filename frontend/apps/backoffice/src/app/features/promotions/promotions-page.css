@@ -1,0 +1,30 @@
+/* Only what this page adds; the rest is a primitive in styles.css. */
+.code { color: var(--text); font-weight: 500; }
+
+/* The effect reads as one value: kind then amount, with a space that the
+   two spans did not have — "percent-off-line30%" was the first thing the
+   screen got wrong when it was seen running. */
+.effect { color: var(--text-muted); }
+.effect__detail { margin-inline-start: var(--space-2); color: var(--text); }
+
+/* The load-bearing column. Each policy gets its own outline so the shape of
+   the table answers "what stops applying?" before anything is read. */
+.policy {
+  display: inline-block;
+  padding: 1px var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-3xs);
+  white-space: nowrap;
+}
+.policy--ExclusiveGlobal { color: var(--danger); }
+.policy--ExclusiveInGroup { color: var(--warning); }
+.policy--Stackable { color: var(--positive); }
+
+.group {
+  display: inline-block;
+  margin-inline-start: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--text-subtle);
+}

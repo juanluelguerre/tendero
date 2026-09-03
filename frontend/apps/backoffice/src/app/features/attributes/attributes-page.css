@@ -1,0 +1,15 @@
+/* Only what this page adds; the rest is a primitive in styles.css. */
+.code { color: var(--text); font-weight: 500; }
+
+/* The option count and the completeness tag are two facts, not one word:
+   without the gap they read as "5es · en". */
+.options { display: flex; align-items: center; gap: var(--space-2); }
+
+/* A missing label is the fact this screen exists for, so it is loud: the
+   word "missing" in danger colour, not an empty cell somebody has to
+   notice. */
+.missing::after {
+  content: '—';
+  color: var(--danger);
+}
+.missing { color: var(--danger); }

@@ -1,0 +1,40 @@
+.code { color: var(--text); font-weight: 500; }
+.actions { text-align: end; white-space: nowrap; }
+.actions .button + .button { margin-inline-start: var(--space-2); }
+.refund { font-weight: 600; }
+
+.what { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+
+.what__line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-3xs);
+}
+
+.reason { color: var(--text-muted); }
+
+/* The one reason that changes what happens: damaged goods do not go back on
+   sale, so the row that will not restock is the row to notice. */
+.reason--damaged { color: var(--danger); }
+
+.status {
+  display: inline-block;
+  padding: 1px var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-3xs);
+  white-space: nowrap;
+}
+
+.status--Requested { color: var(--text-subtle); }
+.status--Approved { color: var(--warning); }
+.status--Received { color: var(--accent); }
+.status--Refunded { color: var(--positive); }
+.status--Rejected, .status--Cancelled { color: var(--danger); }
+
+.refusal td {
+  padding-block: var(--space-2);
+  color: var(--danger);
+  font-size: var(--text-xs);
+}

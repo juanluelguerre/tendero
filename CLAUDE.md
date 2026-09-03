@@ -151,8 +151,14 @@ being stale.
 - FluentValidation per slice; Carter modules for endpoints.
 - OpenTelemetry: every slice with I/O gets an `ActivitySource` span with tags.
   GenAI calls follow the OTel GenAI semantic conventions.
-- UI: tokens from `design/tokens.css` only — never hardcode a hex in components.
+- UI: tokens from `design/tokens.css` only — never hardcode a hex in components,
+  and a test enforces it across every `.css` in the repository.
   One clay accent action per view. Agent-driven actions are always clay.
+- **An Angular component is three files** — `name.ts`, `name.html`, `name.css` —
+  which is what the current Angular style guide describes. Not a style
+  preference: a template inside a `.ts` literal is invisible to every HTML tool
+  and a stylesheet inside one is invisible to every CSS tool, including the token
+  test.
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
 
 ## Git Workflow

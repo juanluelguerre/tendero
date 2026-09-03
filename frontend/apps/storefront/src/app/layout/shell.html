@@ -1,0 +1,76 @@
+<ng-container *transloco="let t">
+  <a class="skip" href="#main">{{ t('nav.skipToContent') }}</a>
+
+  <header class="header">
+    <div class="page-frame header__inner">
+      <a class="brand" href="/">
+        <!-- The icon, not the full lockup: the wordmark beside it already
+             uses real Bricolage, and the text embedded in the SVG only has
+             Inter to fall back on. Two different typefaces for the same word
+             show. Empty alt and aria-hidden because the name is right next
+             to it as text: reading it twice is a nuisance. -->
+        <img
+          class="brand__mark"
+          src="brand/tendero-icon-shop.svg"
+          alt=""
+          aria-hidden="true"
+          width="40"
+          height="40"
+        />
+        <span class="brand__text">
+          <span class="brand__wordmark">{{ t('brand.name') }}</span>
+          <span class="brand__tagline">{{ t('brand.tagline') }}</span>
+        </span>
+      </a>
+      <div class="header__end">
+        <!-- The switcher is a pair of buttons and not a <select>: with two
+             options a dropdown hides half the answer behind a click, and
+             the current language should be readable without opening
+             anything. -->
+        <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
+          @for (option of cultures; track option) {
+            <button
+              type="button"
+              class="lang"
+              [class.lang--active]="option === culture()"
+              [attr.aria-pressed]="option === culture()"
+              (click)="use(option)"
+            >
+              {{ option }}
+            </button>
+          }
+        </div>
+        <span class="brand__area eyebrow">{{ t('brand.area') }}</span>
+
+        <!-- The basket. The count is on the badge and also in the label,
+             because a number in a circle is not something a screen reader
+             can make sense of on its own. -->
+        <a class="cart" routerLink="/cart"
+           [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'">
+          <svg class="cart__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6"
+              fill="none" stroke="currentColor" stroke-width="1.6"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="10" cy="19.5" r="1.4" fill="currentColor" />
+            <circle cx="17" cy="19.5" r="1.4" fill="currentColor" />
+          </svg>
+          @if (cart.itemCount() > 0) {
+            <span class="cart__badge numeric">{{ cart.itemCount() }}</span>
+          }
+        </a>
+      </div>
+    </div>
+    <!-- The signature, and the only decoration in the system. It marks where
+         the chrome ends and the shop begins. -->
+    <hr class="awning" />
+  </header>
+
+  <main id="main" class="page-frame main"><router-outlet /></main>
+
+  <footer class="footer">
+    <div class="page-frame footer__inner">
+      <span class="muted">{{ t('brand.name') }} · {{ t('brand.tagline') }}</span>
+    </div>
+  </footer>
+</ng-container>

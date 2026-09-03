@@ -182,3 +182,73 @@ jobs:
         run: |
           npm run generate:api-types
           git diff --exit-code -- libs/shared/api/src/lib/generated/
+
+  end-to-end:
+    name: End-to-end (browser)
+    runs-on: ubuntu-latest
+    # The thinnest layer of the pyramid, and the only one that needs the whole
+    # stack. It is a separate job so the fast checks stay fast: the backend and
+    # frontend jobs answer in a couple of minutes and this one has to bring up
+    # Postgres, Elasticsearch, the API, the workers and an Angular dev server
+    # before it can click anything.
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '11.0.x'
+          dotnet-quality: preview
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install the frontend
+        run: npm ci
+        working-directory: frontend
+
+      # Only the browser the specs actually run in. `--with-deps` because a
+      # bare ubuntu runner has none of the shared libraries Chromium needs.
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      # Aspire IS the composition. A workflow that started each container and
+      # each process by hand would be a second, worse AppHost — and the one
+      # thing this repository has learned five times over is that composition
+      # nobody exercises is composition that is broken.
+      - name: Bring up the stack
+        run: |
+          dotnet run --project src/AppHost > "$RUNNER_TEMP/aspire.log" 2>&1 &
+          for _ in $(seq 1 120); do
+            if curl -sf -o /dev/null http://localhost:4201; then
+              echo "the backoffice is up"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "the stack did not come up"
+          tail -100 "$RUNNER_TEMP/aspire.log"
+          exit 1
+
+      - name: Run the specs
+        run: npx nx e2e backoffice-e2e
+        working-directory: frontend
+
+      # The trace of a failing attempt is what makes a failure diagnosable
+      # afterwards — including by an agent, which can read it instead of
+      # guessing from a stack.
+      - name: Keep the report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/apps/backoffice-e2e/playwright-report/
+          retention-days: 7
+
+      - name: Keep the stack's log
+        if: failure()
+        run: tail -200 "$RUNNER_TEMP/aspire.log"

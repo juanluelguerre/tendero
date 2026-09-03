@@ -1,0 +1,34 @@
+<section class="variants" *transloco="let t">
+  <h1>{{ t('variants.title') }}</h1>
+  <p class="hint">{{ t('variants.hint') }}</p>
+
+  @for (axis of axes(); track $index) {
+    <div class="axis">
+      <label>
+        <span>{{ t('variants.axisCode') }}</span>
+        <input [(ngModel)]="axis.code" [name]="'code' + $index" placeholder="COLOR" />
+      </label>
+      <label class="grow">
+        <span>{{ t('variants.axisOptions') }}</span>
+        <input [(ngModel)]="axis.options" [name]="'options' + $index" placeholder="NAVY, BLACK" />
+      </label>
+    </div>
+  }
+
+  <div class="actions">
+    <button type="button" class="secondary" (click)="addAxis()">{{ t('variants.addAxis') }}</button>
+    <span class="preview numeric">{{ t('variants.willCreate', { count: combinations() }) }}</span>
+    <button type="button" [disabled]="busy() || combinations() === 0" (click)="generate()">
+      {{ busy() ? t('variants.generating') : t('variants.generate') }}
+    </button>
+  </div>
+
+  @if (created() !== null) {
+    <p class="done" role="status">{{ t('variants.created', { count: created() }) }}</p>
+  }
+  @if (failed()) {
+    <p class="failed" role="alert">{{ failed() }}</p>
+  }
+
+  <a routerLink="/review">{{ t('variants.back') }}</a>
+</section>

@@ -1,0 +1,20 @@
+{
+  "name": "backoffice-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/backoffice-e2e/src",
+  "implicitDependencies": ["backoffice"],
+  "tags": ["scope:backoffice", "type:e2e"],
+  "targets": {
+    "e2e": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx playwright test",
+        "cwd": "apps/backoffice-e2e"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

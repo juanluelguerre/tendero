@@ -1,0 +1,30 @@
+.code { color: var(--text); font-weight: 500; }
+.city { display: block; color: var(--text-subtle); font-size: var(--text-3xs); }
+.total { font-weight: 600; }
+.actions { text-align: end; white-space: nowrap; }
+.actions .button + .button { margin-inline-start: var(--space-2); }
+
+/* Colour never carries meaning alone: every one of these has the word in
+   it, and the colour only makes the word findable in a column. */
+.status {
+  display: inline-block;
+  padding: 1px var(--space-2);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-3xs);
+  white-space: nowrap;
+}
+
+.status--Pending { color: var(--text-subtle); }
+.status--PaymentAuthorized, .status--Confirmed { color: var(--warning); }
+.status--Shipped { color: var(--accent); }
+.status--Delivered { color: var(--positive); }
+.status--PaymentFailed, .status--Cancelled { color: var(--danger); }
+
+/* The server's own sentence, under the row it belongs to. A toast would
+   float away from the thing it is about. */
+.refusal td {
+  padding-block: var(--space-2);
+  color: var(--danger);
+  font-size: var(--text-xs);
+}

@@ -1,0 +1,80 @@
+<section *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('returns.title') }}</h1>
+    @if (requests().length > 0) {
+      <span class="tag tag--warn">{{ t('returns.openCount', { count: requests().length }) }}</span>
+    }
+  </header>
+  <p class="page-hint">{{ t('returns.hint') }}</p>
+
+  @if (loading()) {
+    <p class="muted" role="status" aria-live="polite">{{ t('returns.loading') }}</p>
+  } @else if (failed()) {
+    <p class="failed" role="alert">{{ t('returns.failed') }}</p>
+  } @else if (requests().length === 0) {
+    <div class="empty"><p class="empty__text">{{ t('returns.empty') }}</p></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">{{ t('returns.title') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('returns.column.return') }}</th>
+            <th scope="col">{{ t('returns.column.order') }}</th>
+            <th scope="col">{{ t('returns.column.what') }}</th>
+            <th scope="col">{{ t('returns.column.status') }}</th>
+            <th scope="col" class="numeric">{{ t('returns.column.refund') }}</th>
+            <th scope="col"><span class="sr-only">{{ t('returns.column.action') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (request of requests(); track request.returnId) {
+            <tr>
+              <td class="numeric code" [title]="request.returnId">{{ shortId(request.returnId) }}</td>
+              <td class="numeric" [title]="request.orderId">{{ shortId(request.orderId) }}</td>
+              <td>
+                <ul class="what">
+                  @for (line of request.lines; track line.sku) {
+                    <li class="what__line">
+                      <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
+                      <span class="reason" [class.reason--damaged]="line.reason === 'Damaged'">
+                        {{ t('returns.reason.' + line.reason) }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </td>
+              <td>
+                <span class="status" [class]="'status--' + request.status">
+                  {{ t('returns.status.' + request.status) }}
+                </span>
+              </td>
+              <td class="numeric refund">
+                {{ request.refundAmount ? money(request.refundAmount) : '—' }}
+              </td>
+              <td class="actions">
+                @for (decision of decisions(request); track decision) {
+                  <button
+                    class="button button--small"
+                    [class.button--quiet]="decision !== decisions(request)[0]"
+                    type="button"
+                    [disabled]="busy() === request.returnId"
+                    (click)="decide(request, decision)"
+                  >
+                    {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decide.' + decision) }}
+                  </button>
+                }
+              </td>
+            </tr>
+
+            @if (refusal()[request.returnId]; as reason) {
+              <tr class="refusal">
+                <td colspan="6">{{ reason }}</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

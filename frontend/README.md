@@ -1,69 +1,109 @@
 # frontend
 
-Workspace Nx con las dos aplicaciones Angular 22 de Tendero.
+The Nx workspace holding Tendero's two Angular 22 applications.
 
 ```bash
-nvm use                      # Node 24: Angular 22 exige >= 24.15 (ver .nvmrc)
+nvm use                      # Node 24: Angular 22 requires >= 24.15 (see .nvmrc)
 npm install
 
 npx nx serve storefront      # http://localhost:4200
 npx nx serve backoffice      # http://localhost:4201
 ```
 
-Normalmente no hace falta arrancarlas a mano: `dotnet run --project src/AppHost`
-levanta también estas dos, con la URL de la API inyectada.
+Usually there is no need to start them by hand:
+`dotnet run --project src/AppHost` brings these two up as well, with the API's
+URL injected.
 
-## Estructura
+## `npx nx …` in a terminal, `nx …` in a script
+
+Nx is a **local** dependency, not a global one. That single fact decides which
+of the two you write, and getting it backwards is the sort of thing that costs
+ten minutes and reads like a broken machine:
+
+| Where | Write | Why |
+|---|---|---|
+| A terminal, by hand | `npx nx run-many -t lint` | `npx` resolves the binary out of `node_modules/.bin`. Without it the shell looks on `PATH`, finds nothing, and says `nx: command not found` — or worse, finds a **globally installed Nx of a different version** and runs that against this workspace |
+| Inside `package.json` scripts | `nx run-many -t lint` | npm already puts `node_modules/.bin` on `PATH` for the script it is running, so `npx` is redundant there |
+| A CI step | `npx nx …` | A runner's shell is a terminal like any other |
+
+The same rule applies to `playwright`, `tsc` and every other local binary. The
+short version: **the prefix is about who is resolving the command, not about
+what the command is.**
+
+## Layout
 
 ```
 apps/
-  storefront/    tienda. Espaciosa, clara, una accion clay por vista
-  backoffice/    denso, oscuro por defecto, filas de 36px
+  storefront/       the shop. Roomy, light, one clay action per view
+  backoffice/       dense, dark by default, 36px rows
+  backoffice-e2e/   Playwright. The browser half of the pyramid, kept thin
 libs/shared/
-  tokens/        puente a design/tokens.css + el bloque @theme de Tailwind
-  ui/            primitivas SIN identidad: inputs, tablas, anillo de foco
-  util/          pipes y helpers (Money, resolucion de LocalizedText)
-  api/           tipos del contrato de la API
-  i18n/          cableado de Transloco (no las traducciones)
+  tokens/           bridge to design/tokens.css plus Tailwind's @theme block
+  ui/               primitives with NO identity: inputs, tables, focus ring
+  util/             pipes and helpers (Money, LocalizedText resolution)
+  api/              the API contract's types, generated from the OpenAPI document
+  i18n/             the Transloco wiring (not the translations)
 ```
 
-Dentro de cada app: `core/` (interceptores, config), `layout/` (su shell, que
-**no** se comparte), `features/` (una carpeta por feature, gemelas de los
-vertical slices del backend) y `data-access/`.
+Inside each app: `layout/` (its own shell, which is **not** shared),
+`features/` (one folder per feature, twins of the backend's vertical slices) and
+`data-access/`.
 
-## Las dos apps no se conocen
+## A component is three files
 
-No por convencion: por regla de lint que rompe el build.
+```
+cart-page.ts      the class
+cart-page.html    the template
+cart-page.css     the styles
+```
 
-| desde | puede importar de |
+Same name, three extensions, which is what the current Angular style guide
+describes. The old "extract anything over three lines" rule is gone from it, and
+the reason this repository keeps the split anyway is concrete rather than
+stylistic: a template in a `.ts` literal is invisible to every HTML tool, and a
+stylesheet in one is invisible to every CSS tool — including the test that
+enforces the first rule below.
+
+## The two apps do not know about each other
+
+Not by convention: by a lint rule that breaks the build.
+
+| from | may import from |
 |---|---|
-| `scope:storefront` | `scope:shared` — y de nada mas |
-| `scope:backoffice` | `scope:shared` — y de nada mas |
-| `scope:shared` | `scope:shared` — no sabe que las apps existen |
+| `scope:storefront` | `scope:shared` — and nothing else |
+| `scope:backoffice` | `scope:shared` — and nothing else |
+| `scope:shared` | `scope:shared` — it does not know the apps exist |
 
-Es el gemelo en TypeScript de los tests de NetArchTest del backend. Verificado
-por mutacion: un import cruzado hace fallar `nx lint`.
+It is the TypeScript twin of the backend's NetArchTest rules. There is no
+mutation tooling here; what there is, is the habit of checking a new rule by
+breaking something on purpose and watching it go red — which is how the boundary
+rule, the Pricing confinement rule and the design-token rule were each verified
+the day they were written.
 
-**Que se comparte y que se duplica**: se comparte lo dificil por su
-*comportamiento* (un DatePicker es logica de calendario, teclado y
-accesibilidad); se duplica lo dificil por su *identidad* (los dos layouts no
-comparten mas que la palabra). Razonado en `docs/adr/0010`.
+**What is shared and what is duplicated**: what is hard because of its
+*behaviour* is shared (a DatePicker is calendar logic, keyboard handling and
+accessibility); what is hard because of its *identity* is duplicated (the two
+layouts share nothing but the word). Argued in `docs/adr/0010`.
 
-## Reglas que no se negocian
+## Rules that are not negotiable
 
-- **Ni un hex fuera de `design/tokens.css`.** Los componentes leen tokens.
-- **Ni un literal de cara al usuario fuera de los ficheros de Transloco**, y
-  siempre en es *y* en en. Cada app tiene los suyos: la voz de la tienda y la
-  del backoffice no son la misma.
-- **Ni una URL del backend en el codigo.** El dev-server hace de proxy hacia la
-  direccion que inyecta Aspire; `proxy.conf.mjs` es el unico sitio con un
-  localhost de reserva.
+- **Not one hex outside `design/tokens.css`.** Components read tokens. This one
+  is now a test — `libs/shared/i18n/src/lib/design-tokens.spec.ts` scans every
+  `.css` in the repository — and it only became possible once the styles left
+  the TypeScript files.
+- **Not one user-facing literal outside the Transloco files**, and always in es
+  *and* en. Each app has its own: the shop's voice and the backoffice's are not
+  the same.
+- **Not one backend URL in the code.** The dev server proxies to the address
+  Aspire injects; `proxy.conf.mjs` is the only place with a fallback localhost.
 
-## Comandos
+## Commands
 
 ```bash
-npx nx run-many -t lint      # incluye las reglas de frontera
+npx nx run-many -t lint      # includes the boundary rules and the token rule
 npx nx run-many -t test
 npx nx run-many -t build
-npx nx affected -t build     # solo lo que toco tu cambio
+npx nx affected -t build     # only what your change touched
+
+npx nx e2e backoffice-e2e    # needs the stack up: dotnet run --project src/AppHost
 ```
