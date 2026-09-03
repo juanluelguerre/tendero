@@ -243,3 +243,23 @@
   .search__icon { display: none; }
   .search__input { padding-inline-start: var(--space-4); }
 }
+
+/* Sold out. The photo is dimmed rather than hidden — the shopper still has to
+   recognise the thing they searched for — and the words carry the meaning, so
+   the state survives without colour (design/DESIGN.md). */
+.card--soldOut .card__image,
+.card--soldOut .card__image--fallback {
+  opacity: 0.45;
+  filter: saturate(0.4);
+}
+
+.card--soldOut .card__price {
+  color: var(--text-subtle);
+}
+
+.card__soldOut {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--danger);
+}

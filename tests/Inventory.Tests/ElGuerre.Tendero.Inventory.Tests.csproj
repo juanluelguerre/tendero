@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Inventory.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsCheck" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
+    <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <!-- The fixed clock shared by the test projects (../TestClock.cs). -->
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The warehouses the repository ships: a strategy suite that invented its
+         own would not be testing the shop's preference order. -->
+    <None Include="../../seed/warehouses.sample.json" Link="seed/warehouses.sample.json"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

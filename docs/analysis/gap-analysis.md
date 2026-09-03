@@ -23,7 +23,7 @@ Verified against a clean build (0 warnings) and 117 passing tests on 2026-09-02.
 | Category taxonomy | **Done** | Closed 2026-09-02 (phase 2). `Category` with a localized name, a parent and a materialized path; the document carries `categoryCode` as a keyword for filters and `categoryPathText` as analysed text over the **whole branch**. es 0.860 → 0.943, en 0.811 → 0.937. |
 | Prices | **Done** | ~~`Money` has only `+` and `*int`.~~ Closed 2026-09-02: `Money` grew subtraction, decimal multiplication, division, comparison, `Percent`, a named `Rounding` policy and largest-remainder `Allocate`. `src/Pricing` carries `PriceList` + entries keyed on SKU, two lists (`retail`, `vip`), validity windows and a segment resolved from the principal. |
 | Promotions with combination rules | **Done** | Closed 2026-09-02. Four effects (`PercentOffLine`, `AmountOffOrder`, `BuyXGetY`, `FreeShipping`), coupons, segments and validity windows; combination as a declarative table with three policies, evaluated in the total order `(Priority, Code)`. Suppressed promotions come back with a localized `RuleReason`. Seven CsCheck properties at 2,000 carts each — one of which found a real bug. |
-| Real-time inventory | **Missing** | No stock, no warehouse, no reservation, no availability. `InStock` does not exist in the search document. |
+| Real-time inventory | **Done** | Closed 2026-09-03 (phase 4). `src/Inventory` with two warehouses, `StockItem(Sku, WarehouseCode)`, and `Reservation` with its own transition table. `IStockLedger` and two keyed allocation strategies with a shared contract suite; the process runs on the existing outbox rather than a saga framework (ADR 0024), compensation included, verified end to end against a real Postgres. `inStock` is on the search document and on the hit, and a count typed in the backoffice reaches the storefront card by the same path an order takes. |
 | Cart | **Missing** | No cart aggregate, table, endpoint or service. The storefront translation key `product.addToCart` exists in both languages and is referenced **zero** times. |
 | Checkout | **Missing** | No command, no endpoint, no handler. `Order.Place` is called only from `tests/Ordering.Tests/OrderBuilder.cs`. |
 | Taxes | **Done** | Closed 2026-09-02. `ITaxCalculator` with two keyed adapters (`flat-vat`, `zero`) and a shared contract suite; per-class rates, a breakdown grouped one line per rate, and shipping taxed as one more base. Destination rules are a declared simplification — the field already travels, so it is a third adapter and not an `if`. |
@@ -38,20 +38,23 @@ Verified against a clean build (0 warnings) and 117 passing tests on 2026-09-02.
 | Audit | **Missing** | No audit table, no actor recorded on any command. The dispatcher has one pipeline step and it is validation. |
 | Observability | **Partial** | Genuinely good instrumentation, no persistence. `ActivitySource` spans with tags in every I/O slice, an outbox-lag histogram, OTel wired from the first slice. But the OTLP exporter only activates if `OTEL_EXPORTER_OTLP_ENDPOINT` is set, and **the AppHost declares no backend** — traces live in the Aspire dashboard's memory and die with it. |
 
-**Floor summary (2026-09-02, after phase 3): 7 Done, 5 Partial, 8 Missing** — of 20.
+**Floor summary (2026-09-03, after phase 4): 8 Done, 5 Partial, 7 Missing** — of 20.
 
-Phases 1–3 closed variants, structured localized attributes, the taxonomy,
-prices, promotions and taxes. What the floor is still missing is everything
-transactional — inventory, cart, checkout, payments, returns — plus accounts and
-audit.
+Phases 1–4 closed variants, structured localized attributes, the taxonomy,
+prices, promotions, taxes and inventory. What the floor is still missing is the
+rest of the transactional half — cart, checkout, payments, shipping, returns —
+plus accounts and audit.
 
 (The pre-phase counts in earlier revisions of this file read "3 Done, 6 Partial,
 15 Missing" against the same twenty rows. They did not add up; these are counted
 from the table.)
 
-The honest reading is that the floor is one bounded context (`Catalog`) plus half
-of a second. The pieces that exist are well made; the commerce plane the project
-claims to own — cart, checkout, orders, payments — does not run.
+The honest reading after phase 4 is that the floor is four bounded contexts and
+one working cross-context process. `Order` is no longer the aggregate nobody
+calls: placing one holds stock, failing to hold it cancels the order, and
+cancelling gives the stock back — all of it through handlers on the outbox that
+already existed. What still does not run is the half a customer touches: there is
+no cart, so the only thing that can place an order is a test.
 
 ---
 

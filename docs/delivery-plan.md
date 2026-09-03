@@ -275,28 +275,51 @@ combination rules as a table, and explainability as a domain concern.
 
 ## Phase 4 · Inventory
 
-`no empezada` · priority **high** · size **M**
+`hecha` (2026-09-03) · priority **high** · size **M** · **303 tests, es 0.943 / en 0.937 unmoved**
 
-- [ ] `P4-1` `src/Inventory` context; `Warehouse` (two), `StockItem(Sku, WarehouseId)` — **M**
-- [ ] `P4-2` `Reservation` with its own transition table — **M**
-- [ ] `P4-3` `IStockLedger` (reserve/commit/release/receive), `IAllocationStrategy` keyed + contract suite — **M**
-- [ ] `P4-4` Saga handlers over the existing outbox, both directions including compensation — **M**
-- [ ] `P4-5` Architecture rule: `Inventory.*` must not depend on `Ordering.Domain` — **S**
-- [ ] `P4-6` `StockLevelChanged` → `inStock` on the search document (ADR 0007 widening) — **S**
-- [ ] `P4-7` Backoffice stock grid, editable; reservations list — **M**
+- [x] `P4-1` `src/Inventory` context; `Warehouse` (two), `StockItem(Sku, WarehouseId)` — **M** · keyed on **SKU, not `VariantId`**, which is what keeps Inventory from referencing Catalog at all
+- [x] `P4-2` `Reservation` with its own transition table — **M** · four states, and a refusal is born `Released` carrying its reason
+- [x] `P4-3` `IStockLedger` (reserve/commit/release/receive/**count**), `IAllocationStrategy` keyed + contract suite — **M** · `count` was not on the list and had to be: receiving nothing is a delivery that did not happen, and only a stocktake can say zero
+- [x] `P4-4` Saga handlers over the existing outbox, both directions including compensation — **M** · **orchestrated from Ordering**, because the roadmap's own architecture rule contradicted its arrows (ADR 0024). Four integration tests drive it through a real Postgres and the real outbox
+- [x] `P4-5` Architecture rule: `Inventory.*` must not depend on `Ordering.Domain` — **S** · two rules, and both had to be checked against a real coupling: the compiler omits an unused ProjectReference from the manifest, so a rule written against references alone passes vacuously
+- [x] `P4-6` `StockLevelChanged` → `inStock` on the search document (ADR 0007 widening) — **S** · and exposed on the hit, because a field nobody reads is the half-built seam this repo already complains about
+- [x] `P4-7` Backoffice stock grid, editable; reservations list — **M** · the first screen in the backoffice that **writes**
 
-**Risks.** Reservation expiry needs `TimeProvider` (P0-8) or it is untestable.
-Compensation is the part that looks done and is not — test the cancel path
-explicitly, not just the happy one.
+**Risks, and what actually happened.** Compensation was the predicted one and it
+behaved — but only because the test drains the outbox **twice**: the cancellation
+the saga itself causes is a new message, and a test that drained once would have
+looked green while the release never ran.
 
-**Demo.** Set MAD to 0 and BCN to 3; watch allocation pick BCN. Set both to 0;
-watch the order auto-cancel and the reservation appear as `Released`.
+Three failures were not on the list, and all three are the same failure.
+**Composition is invisible to every gate this repository owns.** The saga shipped
+with the worker scanning only `Search`'s assembly, so orders would have been
+placed, messages drained, and no stock ever held — the outbox marks a message
+processed whether or not anybody handled it. The NDCG gate composes its own
+container and had been broken since the indexer grew an `IAvailabilityReader`;
+nobody noticed because nothing runs it locally. And the seeder filtered its zero
+rows out, so the out-of-stock product the demo exists to show had no row at all.
+
+The fourth was real and only phase 4 could have caused it: `delete_by_query`
+aborts with a 409 when a document's version moved under its snapshot, and two
+projections now rebuild the same product. **Ten dead-lettered messages, and
+`inStock` stuck false on a shop that had stock.** The projection writes first and
+sweeps after now, which also closes the window where a published product was
+briefly absent from the index.
+
+**Demo.** Type 0 into the pans row in the backoffice. The count goes through the
+ledger, raises `StockLevelChanged`, drains through the outbox, reindexes the
+product — and the storefront card comes back desaturated with *Sold out* beside a
+coffee maker that is not. Then the refusal: an order for more than exists cancels
+itself, and the reservation is there in `Released` saying
+*"PANS: 2 asked for, 1 available."*
 
 **Evidences.** Cross-context consistency without shared entities; a saga built on
 an outbox rather than a framework; compensation as a first-class path.
 
 **Article.** *"My saga was already there and I hadn't noticed"* — the outbox as
-the process manager. `#distributedsystems #DDD #ecommerce`
+the process manager, and the three composition failures that no build, no test
+and no architecture rule could see. Write at close, publish per calendar.
+`#distributedsystems #DDD #ecommerce`
 
 ---
 
@@ -606,11 +629,13 @@ oversight, and each is a paragraph in some future article.
 | Bulk indexing | one HTTP call per product per culture | Same |
 | Reindex as a background job | fine for 6 products; the wrong shape for 147k | Same |
 | Image derivatives | six 640px images — nothing to measure | A deployment target exists |
-| Orphan index documents | 6 hard-deleted rows left 12 documents | Something other than `psql` produces the case |
+| Orphan index documents | 6 hard-deleted rows left 12 documents; running SearchEval against the stack's own Elasticsearch left 6 more, because the gate mints fresh product ids per run and the sweep filters by `productId` | Something other than `psql` produces the case. Meanwhile: **do not point the gate at a running stack's engine** |
 | `SKIP LOCKED`, exponential backoff | one replica | A second replica |
 | Full ABO import (147k) | not attempted | It is the trigger for the four rows above |
 | Shopify connector | one connector today, and the port is proven | A second source is genuinely wanted |
 | Multi-currency | one currency per order, enforced | A second market |
 | Promotions and tariffs in Postgres | 2 lists, 7 promotions, both in committed files | The backoffice can edit one. Building the table first is what phase 2 already did and undid |
+| Reservation expiry sweep | `Reservation.Lifetime` is 15 min and `HasExpiredAt` exists; nothing sweeps | Carts (phase 5). An abandoned cart is what actually produces a stale hold; without one, nothing can leave a reservation behind |
+| Search deep link (`?q=`) | the query lives in a signal, not in the URL, so a result page cannot be shared, bookmarked or crawled | SEO, or the first agent that wants to hand a human a link |
 | Spec Kit experiment | ADR 0009 reserves it for the UCP work | Phase 11 |
 | `.claude/` skills and plugin | none exist; article 14 is blocked on it | After enough repetition to have opinions |

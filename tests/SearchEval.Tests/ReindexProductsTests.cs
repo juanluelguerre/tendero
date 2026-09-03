@@ -85,6 +85,10 @@ public sealed class ReindexProductsTests
 
     private sealed class InMemoryProductReader(params Product[] products) : IProductReader
     {
+        public Task<Product?> FindBySkuAsync(string sku, CancellationToken ct) =>
+            Task.FromResult(products.FirstOrDefault(
+                product => product.Variants.Any(variant => variant.Sku == sku)));
+
         public Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct) =>
             Task.FromResult(products.SingleOrDefault(p => p.Id == id));
 

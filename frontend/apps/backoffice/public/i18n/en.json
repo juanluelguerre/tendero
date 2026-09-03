@@ -22,7 +22,8 @@
     "orders": "Orders",
     "promotions": "Promotions",
     "reviewQueue": "Review queue",
-    "search": "Search evaluation"
+    "search": "Search evaluation",
+    "stock": "Stock"
   },
   "promotions": {
     "title": "Promotions",
@@ -77,6 +78,36 @@
     "failed": "Could not get a token. Is the API running?",
     "noIssuer": "The development issuer is not responding. Start the API with dotnet run --project src/AppHost.",
     "signOut": "Sign out"
+  },
+  "stock": {
+    "title": "Stock",
+    "hint": "A count replaces what the shelf holds; it is not an increment. Saving twice changes nothing the second time.",
+    "loading": "Loading...",
+    "failed": "Could not load the stock.",
+    "empty": "Nothing on any shelf yet.",
+    "outOfStock": "{{count}} out of stock",
+    "allAvailable": "All available",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "saveFailed": "Could not save the count.",
+    "countLabel": "Units of {{sku}} in {{warehouse}}",
+    "reservations": "Recent holds",
+    "noReservations": "Nothing is being held.",
+    "column": {
+      "sku": "SKU",
+      "warehouse": "Warehouse",
+      "onHand": "On hand",
+      "reserved": "Held",
+      "available": "Available",
+      "action": "Save the count"
+    },
+    "status": {
+      "Held": "Held",
+      "Committed": "Shipped",
+      "Released": "Released",
+      "Expired": "Expired"
+    }
   },
   "variants": {
     "title": "Variants",

@@ -30,13 +30,3 @@ public interface IProductCatalogReader
 {
     Task<ProductPage> ListAsync(ProductStatus? status, int page, int pageSize, CancellationToken ct);
 }
-
-/// <summary>
-/// Commits the unit of work. Pending domain events travel to the outbox table in
-/// THIS same transaction (invariant 7): whoever does not call here has published
-/// nothing.
-/// </summary>
-public interface IUnitOfWork
-{
-    Task SaveChangesAsync(CancellationToken ct);
-}

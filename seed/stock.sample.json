@@ -1,0 +1,17 @@
+[
+  { "sku": "B073WXYZ01-DEFAULT", "warehouse": "MAD", "onHand": 4 },
+  { "sku": "B073WXYZ01-DEFAULT", "warehouse": "BCN", "onHand": 2 },
+
+  { "sku": "B08JKLM202-DEFAULT", "warehouse": "MAD", "onHand": 7 },
+
+  { "sku": "B09PQRS303-DEFAULT", "warehouse": "BCN", "onHand": 3 },
+
+  { "sku": "B07TUVW404-DEFAULT", "warehouse": "MAD", "onHand": 12 },
+  { "sku": "B07TUVW404-DEFAULT", "warehouse": "BCN", "onHand": 5 },
+
+  { "sku": "B06GHIJ505-DEFAULT", "warehouse": "MAD", "onHand": 1 },
+  { "sku": "B06GHIJ505-DEFAULT", "warehouse": "BCN", "onHand": 1 },
+
+  { "sku": "B05DEFG606-DEFAULT", "warehouse": "MAD", "onHand": 0 },
+  { "sku": "B05DEFG606-DEFAULT", "warehouse": "BCN", "onHand": 0 }
+]

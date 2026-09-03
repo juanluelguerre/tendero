@@ -44,6 +44,12 @@ export const appRoutes: Route[] = [
           import('./features/promotions/promotions-page').then((m) => m.PromotionsPage),
       },
       {
+        path: 'stock',
+        canActivate: [signedIn],
+        loadComponent: () =>
+          import('./features/stock/stock-page').then((m) => m.StockPage),
+      },
+      {
         path: 'review',
         canActivate: [signedIn],
         loadComponent: () =>

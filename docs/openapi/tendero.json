@@ -233,6 +233,93 @@
         }
       }
     },
+    "/api/inventory/stock": {
+      "get": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "ListStock",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListStockResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/inventory/stock/{sku}/{warehouse}": {
+      "put": {
+        "tags": [
+          "Inventory"
+        ],
+        "operationId": "CountStock",
+        "parameters": [
+          {
+            "name": "sku",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouse",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountStockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CountStockResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pricing/quote": {
       "post": {
         "tags": [
@@ -504,6 +591,43 @@
           }
         }
       },
+      "CountStockRequest": {
+        "required": [
+          "onHand"
+        ],
+        "type": "object",
+        "properties": {
+          "onHand": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CountStockResponse": {
+        "required": [
+          "sku",
+          "warehouseCode",
+          "onHand",
+          "available"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "warehouseCode": {
+            "type": "string"
+          },
+          "onHand": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "available": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "DefineVariantsRequest": {
         "required": [
           "axes",
@@ -633,6 +757,27 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PromotionView"
+            }
+          }
+        }
+      },
+      "ListStockResult": {
+        "required": [
+          "rows",
+          "reservations"
+        ],
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockRowView"
+            }
+          },
+          "reservations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservationView"
             }
           }
         }
@@ -1011,6 +1156,49 @@
           }
         }
       },
+      "ReservationView": {
+        "required": [
+          "reservationId",
+          "orderId",
+          "status",
+          "reason",
+          "lines",
+          "createdAt",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "SearchHit": {
         "required": [
           "productId",
@@ -1025,6 +1213,7 @@
           "priceTo",
           "priceCurrency",
           "imageId",
+          "inStock",
           "score"
         ],
         "type": "object",
@@ -1077,6 +1266,9 @@
               "string"
             ]
           },
+          "inStock": {
+            "type": "boolean"
+          },
           "score": {
             "type": "number",
             "format": "double"
@@ -1114,6 +1306,45 @@
           "tookMs": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "StockRowView": {
+        "required": [
+          "sku",
+          "warehouseCode",
+          "warehouseName",
+          "onHand",
+          "reserved",
+          "available",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "warehouseCode": {
+            "type": "string"
+          },
+          "warehouseName": {
+            "type": "string"
+          },
+          "onHand": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reserved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "available": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1166,6 +1397,9 @@
   "tags": [
     {
       "name": "Catalog"
+    },
+    {
+      "name": "Inventory"
     },
     {
       "name": "Pricing"

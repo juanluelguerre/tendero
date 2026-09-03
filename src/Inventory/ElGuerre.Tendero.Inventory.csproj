@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bounded context Inventory: warehouses, stock and reservations.
+
+       It references SharedKernel and NOTHING else — in particular not Ordering.
+       That direction is the whole point: stock exists without orders (receipts,
+       adjustments, counts, a warehouse operator), so a warehouse that had to
+       know what an order is would be the general thing depending on the
+       specific one. An architecture rule computes it by reflection.
+
+       What crosses the boundary is a SKU, which is a string. That is the same
+       shared vocabulary `ProductName` is between Catalog and Ordering, and it is
+       why StockItem is keyed on the SKU and not on a VariantId. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Inventory</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The allocation strategies are internal, like the catalogue connectors:
+         outside the assembly only the port is visible. Their contract suite
+         lives in the tests, which do need to instantiate them. -->
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Inventory.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -153,7 +153,14 @@ public sealed class ArchitectureRules
     ///
     /// The check is reflection over the actual assembly references rather than
     /// a hand-kept list, for the same reason rule 1 computes its forbidden set:
-    /// a list somebody has to remember to update is a rule that stops being one.
+    /// a list somebody has to remember to update is a rule that stops being one.    ///
+    /// **What this catches, exactly.** `GetReferencedAssemblies` reads the
+    /// compiled manifest, and the compiler leaves out a reference nothing uses —
+    /// so adding the ProjectReference alone passes, and the first line of code
+    /// that actually touches the other context fails. That is the right
+    /// semantics (the rule is about coupling, not about a line in an XML file)
+    /// and it is worth knowing rather than discovering: verified by adding both
+    /// the reference and a use of it, and watching this go red.
     /// </summary>
     [Fact]
     public void Pricing_knows_only_the_shared_kernel()
@@ -169,6 +176,66 @@ public sealed class ArchitectureRules
 
         Assert.True(contexts.Length == 0,
             $"Pricing references {string.Join(", ", contexts)}. It may reference only {sharedKernel}.");
+    }
+
+    /// <summary>
+    /// Inventory knows nothing about Ordering.
+    ///
+    /// This is the direction of the whole phase, and it is the one that is easy
+    /// to get backwards. Stock exists without orders — goods arrive, shelves are
+    /// counted, a warehouse operator adjusts a number — so a warehouse that had
+    /// to know what an order is would be the general thing depending on the
+    /// specific one, and Inventory would stop being reusable by anything else
+    /// that moves goods.
+    ///
+    /// So the saga lives in Ordering and calls <c>IStockLedger</c> in SKUs,
+    /// quantities and an <c>OrderId</c> from the SharedKernel (ADR 0024). The
+    /// textbook alternative — Inventory subscribing to <c>OrderPlaced</c> — needs
+    /// exactly the reference this forbids.
+    ///
+    /// Computed from the assembly's own references rather than a hand-kept list,
+    /// like every other rule here.    ///
+    /// **What this catches, exactly.** `GetReferencedAssemblies` reads the
+    /// compiled manifest, and the compiler leaves out a reference nothing uses —
+    /// so adding the ProjectReference alone passes, and the first line of code
+    /// that actually touches the other context fails. That is the right
+    /// semantics (the rule is about coupling, not about a line in an XML file)
+    /// and it is worth knowing rather than discovering: verified by adding both
+    /// the reference and a use of it, and watching this go red.
+    /// </summary>
+    [Fact]
+    public void Inventory_knows_only_the_shared_kernel()
+    {
+        var sharedKernel = Solution.SharedKernel.GetName().Name;
+
+        var contexts = Solution.Inventory.GetReferencedAssemblies()
+            .Select(reference => reference.Name)
+            .OfType<string>()
+            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal)
+                           && name != sharedKernel)
+            .ToArray();
+
+        Assert.True(contexts.Length == 0,
+            $"Inventory references {string.Join(", ", contexts)}. It may reference only {sharedKernel} — "
+            + "stock exists without orders, and the saga lives in Ordering for that reason (ADR 0024).");
+    }
+
+    /// <summary>
+    /// And Ordering only ever sees Inventory's PORTS.
+    ///
+    /// The reference exists, deliberately, and this is what keeps it to an
+    /// interface: the moment a handler names a <c>StockItem</c> or a
+    /// <c>Reservation</c>, two contexts share an entity and ADR 0014's whole
+    /// point is gone. The crossing has to stay values in, values out.
+    /// </summary>
+    [Fact]
+    public void Ordering_sees_inventorys_ports_and_never_its_domain()
+    {
+        var result = Types.InAssembly(Solution.Ordering)
+            .ShouldNot().HaveDependencyOn("ElGuerre.Tendero.Inventory.Domain")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, Describe(Solution.Ordering, result));
     }
 
     /// <summary>

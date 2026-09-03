@@ -110,7 +110,9 @@ internal static class SeedFileEnvironment
         ("Catalog__Attributes__FilePath", "attributes.sample.json"),
         ("Catalog__Categories__FilePath", "categories.sample.json"),
         ("Pricing__Seed__PriceListsPath", "pricelists.sample.json"),
-        ("Pricing__Seed__PromotionsPath", "promotions.sample.json")
+        ("Pricing__Seed__PromotionsPath", "promotions.sample.json"),
+        ("Inventory__Warehouses__FilePath", "warehouses.sample.json"),
+        ("Inventory__Stock__FilePath", "stock.sample.json")
     ];
 
     public static IResourceBuilder<ProjectResource> WithSeedFiles(

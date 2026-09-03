@@ -4,6 +4,7 @@
     <Project Path="src/Api/ElGuerre.Tendero.Api.csproj" />
     <Project Path="src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <Project Path="src/DevIssuer/ElGuerre.Tendero.DevIssuer.csproj" />
+    <Project Path="src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <Project Path="src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <Project Path="src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
     <Project Path="src/Pricing/ElGuerre.Tendero.Pricing.csproj" />
@@ -17,6 +18,7 @@
     <Project Path="tests/Architecture.Tests/ElGuerre.Tendero.Architecture.Tests.csproj" />
     <Project Path="tests/Catalog.Tests/ElGuerre.Tendero.Catalog.Tests.csproj" />
     <Project Path="tests/Integration.Tests/ElGuerre.Tendero.Integration.Tests.csproj" />
+    <Project Path="tests/Inventory.Tests/ElGuerre.Tendero.Inventory.Tests.csproj" />
     <Project Path="tests/Ordering.Tests/ElGuerre.Tendero.Ordering.Tests.csproj" />
     <Project Path="tests/Pricing.Tests/ElGuerre.Tendero.Pricing.Tests.csproj" />
     <Project Path="tests/SearchEval.Tests/ElGuerre.Tendero.SearchEval.Tests.csproj" />

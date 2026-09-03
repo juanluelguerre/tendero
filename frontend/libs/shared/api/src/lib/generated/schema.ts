@@ -100,6 +100,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/inventory/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListStock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/inventory/stock/{sku}/{warehouse}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["CountStock"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pricing/quote": {
         parameters: {
             query?: never;
@@ -199,6 +231,18 @@ export interface components {
                 [key: string]: string;
             };
         };
+        CountStockRequest: {
+            /** Format: int32 */
+            onHand: number;
+        };
+        CountStockResponse: {
+            sku: string;
+            warehouseCode: string;
+            /** Format: int32 */
+            onHand: number;
+            /** Format: int32 */
+            available: number;
+        };
         DefineVariantsRequest: {
             axes: components["schemas"]["VariantAxisRequest"][];
             skuPrefix: null | string;
@@ -236,6 +280,10 @@ export interface components {
         };
         ListPromotionsResult: {
             items: components["schemas"]["PromotionView"][];
+        };
+        ListStockResult: {
+            rows: components["schemas"]["StockRowView"][];
+            reservations: components["schemas"]["ReservationView"][];
         };
         ProductSummary: {
             productId: string;
@@ -337,6 +385,17 @@ export interface components {
             /** Format: double */
             elapsedSeconds: number;
         };
+        ReservationView: {
+            reservationId: string;
+            orderId: string;
+            status: string;
+            reason: null | string;
+            lines: string[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
         SearchHit: {
             productId: string;
             name: string;
@@ -353,6 +412,7 @@ export interface components {
             priceTo: number;
             priceCurrency: string;
             imageId: null | string;
+            inStock: boolean;
             /** Format: double */
             score: number;
         };
@@ -366,6 +426,19 @@ export interface components {
             pageSize: number;
             /** Format: double */
             tookMs: number;
+        };
+        StockRowView: {
+            sku: string;
+            warehouseCode: string;
+            warehouseName: string;
+            /** Format: int32 */
+            onHand: number;
+            /** Format: int32 */
+            reserved: number;
+            /** Format: int32 */
+            available: number;
+            /** Format: date-time */
+            updatedAt: string;
         };
         TaxLineResponse: {
             taxClass: string;
@@ -549,6 +622,64 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    ListStock: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListStockResult"];
+                };
+            };
+        };
+    };
+    CountStock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sku: string;
+                warehouse: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CountStockRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CountStockResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

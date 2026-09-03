@@ -7,9 +7,11 @@
    Keyed DI by source name; contract-test suite per adapter; idempotent import
    keyed on `(source, externalId)` via `ExternalReference`.
 2. **Core** — the bounded contexts: `ElGuerre.Tendero.Catalog`,
-   `ElGuerre.Tendero.Ordering` and `ElGuerre.Tendero.Pricing`. They share no
-   entities (ADR 0014); `Pricing` references SharedKernel alone, which is what
-   makes its promotion engine a function of values.
+   `ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Pricing` and
+   `ElGuerre.Tendero.Inventory`. They share no entities (ADR 0014); `Pricing` and
+   `Inventory` reference SharedKernel alone, which is what makes the promotion
+   engine a function of values and the allocation strategies testable without a
+   database.
    Vertical slices (Carter endpoints + FluentValidation + custom CQRS
    dispatchers). Postgres is the source of truth; every side effect flows
    through domain events → Outbox (same transaction) → workers.
@@ -60,6 +62,8 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/catalog/products/{id}/variants` | `Catalog/Features/DefineVariants` |
 | `POST /api/pricing/quote` | `Pricing/Features/QuoteCart` |
 | `GET /api/pricing/promotions` | `Pricing/Features/ListPromotions` |
+| `GET /api/inventory/stock` | `Inventory/Features/ListStock` |
+| `PUT /api/inventory/stock/{sku}/{warehouse}` | `Inventory/Features/ListStock` (CountStock) |
 | `GET /api/search` | `Search/Features/SearchProducts` |
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 
@@ -84,6 +88,31 @@ a discount that did not apply and a discount of zero look identical in a total.
 A `PriceQuote` carries an expiry and a fingerprint over **both** the request and
 the pricing data it was answered with, so a tariff edit invalidates the quotes it
 would otherwise keep promising.
+
+## Inventory, and the saga that was already there
+
+Stock is keyed on **SKU**, not on `VariantId`: the SKU is the vocabulary the two
+contexts share, exactly as `ProductName` is between Catalog and Ordering. Two
+warehouses, `StockItem` with `OnHand`/`Reserved`/derived `Available`, and
+`Reservation` with its own four-state transition table.
+
+The process is **orchestrated from `Ordering` over the existing outbox** — three
+`IDomainEventHandler<T>` and no framework (ADR 0024):
+
+```
+Order.Place()      → OrderPlaced     → IStockLedger.Reserve → held | refused
+refused                              → order.Cancel(reason) → OrderCancelled
+OrderCancelled                       → IStockLedger.Release        (compensation)
+OrderShipped                         → IStockLedger.Commit
+```
+
+Holding stock does **not** confirm the order: `AllowedTransitions` routes
+`Pending → PaymentAuthorized → Confirmed`, and stock says nothing about payment.
+
+A stocktake is a different operation from a delivery, and only a stocktake can
+say zero — which is what puts an out-of-stock shelf on the record rather than no
+row at all. Both raise `StockLevelChanged`, so a count typed in the backoffice
+reaches the search index by the same path an order takes.
 
 ## Payments
 

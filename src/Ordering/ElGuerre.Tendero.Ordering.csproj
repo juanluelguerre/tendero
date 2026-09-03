@@ -1,12 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Ordering shares not one entity with Catalog (CLAUDE.md, invariant 1):
-       hence no ProjectReference to Tendero.Catalog, and there will not be one. -->
+       hence no ProjectReference to Tendero.Catalog, and there will not be one.
+
+       Inventory IS referenced, and only for its ports. The order's lifecycle is
+       the process being managed, so Ordering orchestrates and Inventory is a
+       service it calls in SKUs and quantities (ADR 0024). The reverse would make
+       stock — which exists without orders — depend on orders, and an
+       architecture rule proves that it does not. -->
   <PropertyGroup>
     <RootNamespace>ElGuerre.Tendero.Ordering</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The stock saga logs, and a handler that cannot say what it did is a
+         handler nobody can diagnose. Logging abstractions come with the shared
+         framework, so this is a FrameworkReference and not a package. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 

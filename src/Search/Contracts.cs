@@ -27,6 +27,13 @@ public interface IProductIndexer
 /// </summary>
 public interface IProductReader
 {
+    /// <summary>
+    /// The product a SKU belongs to. Inventory raises its events with a SKU
+    /// because that is the only vocabulary it has; turning one into a product is
+    /// Search's job, since Search is the only thing that reads both.
+    /// </summary>
+    Task<Product?> FindBySkuAsync(string sku, CancellationToken ct = default);
+
     Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct);
     IAsyncEnumerable<Product> StreamAllAsync(CancellationToken ct);
 }
@@ -124,6 +131,15 @@ public sealed record SearchHit(
     decimal PriceTo,
     string PriceCurrency,
     string? ImageId,
+    /// <summary>
+    /// Whether the variant that matched can be bought right now.
+    ///
+    /// It is the WINNING VARIANT's availability, not the product's, and that is
+    /// the whole reason the variant is the indexed unit: "some variant of this
+    /// is in stock" is how a card says available and the size you want is not
+    /// (ADR 0015).
+    /// </summary>
+    bool InStock,
     double Score);
 
 public sealed record SearchResultPage(
@@ -186,6 +202,22 @@ public sealed record ProductSearchDocument
     /// <summary>THIS variant's price. Exact, not a range.</summary>
     public decimal PriceAmount { get; init; }
 
+    /// <summary>
+    /// Whether THIS variant can be bought, summed across the open warehouses.
+    ///
+    /// Per variant and not per product, which is the same argument that made the
+    /// variant the indexed unit (ADR 0015): "some variant is available" is how a
+    /// card says in stock and the size you want is not. Because the document is
+    /// already per variant, a filter on `inStock` is exact — and it is exact for
+    /// free, with no extra field and no second query.
+    ///
+    /// It is a boolean and not the quantity on purpose. The number is inventory's
+    /// business and it changes constantly; publishing it would mean reindexing on
+    /// every single movement, and telling a shopper there are two left is a
+    /// promise the shop cannot keep between the page and the checkout.
+    /// </summary>
+    public bool InStock { get; init; }
+
     public decimal PriceFrom { get; init; }
     public decimal PriceTo { get; init; }
     public required string PriceCurrency { get; init; }
@@ -241,19 +273,24 @@ public sealed record ProductSearchDocument
     /// </summary>
     public static IEnumerable<ProductSearchDocument> ForVariants(
         Product product, string culture,
-        AttributeDefinitions? definitions = null, CategoryTree? categories = null)
+        AttributeDefinitions? definitions = null, CategoryTree? categories = null,
+        IReadOnlyDictionary<string, int>? available = null)
     {
         var (from, to) = product.PriceRange;
 
         return product.Variants
             .Where(variant => variant.Status == VariantStatus.Available)
             .Select(variant => FromVariant(
-                product, variant, culture, from.Amount, to.Amount, definitions, categories));
+                product, variant, culture, from.Amount, to.Amount, definitions, categories,
+                // No stock row at all is not in stock. A SKU nobody has counted
+                // is a SKU nobody can ship, and defaulting the other way is how
+                // a shop sells what it does not have.
+                available?.GetValueOrDefault(variant.Sku, 0) > 0));
     }
 
     private static ProductSearchDocument FromVariant(
         Product product, Variant variant, string culture, decimal priceFrom, decimal priceTo,
-        AttributeDefinitions? definitions, CategoryTree? categories) => new()
+        AttributeDefinitions? definitions, CategoryTree? categories, bool inStock) => new()
     {
         Id = variant.Id.ToString(),
         ProductId = product.Id.ToString(),
@@ -268,6 +305,7 @@ public sealed record ProductSearchDocument
         Slug = product.Slug.In(culture),
         AxisValues = [.. variant.AxisValues.Select(pair => $"{pair.Key}:{pair.Value}")],
         PriceAmount = variant.Price.Amount,
+        InStock = inStock,
         PriceFrom = priceFrom,
         PriceTo = priceTo,
         PriceCurrency = variant.Price.Currency,

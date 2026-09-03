@@ -18,5 +18,12 @@
 | [0014](0014-context-map.md) | Contexts share no entities; the count is not the rule | accepted |
 | [0015](0015-variant-is-the-indexed-unit.md) | The variant is the indexed unit; the product is the returned unit | accepted |
 | [0016](0016-quoted-live-frozen-at-order.md) | Prices are quoted live and frozen at order time | accepted |
+| [0024](0024-the-outbox-is-the-process-manager.md) | The outbox is the process manager, orchestrated from Ordering | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
+
+The gap between 0016 and 0024 is deliberate: `roadmap.md` reserves 0017-0023 for
+decisions later phases are already committed to making (the identity provider,
+claims, the copilot, MCP/UCP transports, the capability registry, agent
+principals, feature flags). Renumbering them as they land would break the
+references the roadmap and the code already carry.

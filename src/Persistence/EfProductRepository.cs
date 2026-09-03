@@ -53,6 +53,13 @@ internal sealed class EfProductRepository(TenderoDbContext context)
     public Task<Product?> FindByIdAsync(ProductId id, CancellationToken ct) =>
         context.Products.FirstOrDefaultAsync(product => product.Id == id, ct);
 
+    // The product a SKU belongs to, for the stock projection. AsNoTracking for
+    // the same reason as below: the worker reads to project.
+    public Task<Product?> FindBySkuAsync(string sku, CancellationToken ct) =>
+        context.Products
+            .AsNoTracking()
+            .FirstOrDefaultAsync(product => product.Variants.Any(variant => variant.Sku == sku), ct);
+
     // AsNoTracking: the indexing worker reads to project, never to mutate.
     public Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct) =>
         context.Products.AsNoTracking().FirstOrDefaultAsync(product => product.Id == id, ct);
