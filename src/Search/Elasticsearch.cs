@@ -55,6 +55,7 @@ internal sealed class SearchIndexInitializer(
                     .Text(d => d.CategoryPathText!, t => t.Analyzer(analyzer))
                     .Text(d => d.AttributesText!, t => t.Analyzer(analyzer))
                     .Keyword(d => d.Slug)
+                    .Keyword(d => d.Code)
                     .Keyword(d => d.ImageId!)
                     .Boolean(d => d.InStock)
                     .DoubleNumber(d => d.PriceAmount)
@@ -257,6 +258,7 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
 
         var hits = response.Hits.Select(h => new SearchHit(
             h.Source!.ProductId,
+            h.Source.Code,
             h.Source.Name,
             h.Source.Slug,
             h.Source.Brand,

@@ -29,7 +29,7 @@ namespace ElGuerre.Tendero.Catalog.Features.GetProduct;
 /// work when Elasticsearch does not, which is invariant 8 read the way it was
 /// meant: search degrades, the shop does not go dark.
 /// </summary>
-public sealed record GetProductQuery(string Slug, string Culture) : IQuery<ProductDetail?>;
+public sealed record GetProductQuery(string Code, string Culture) : IQuery<ProductDetail?>;
 
 /// <summary>
 /// A rendered attribute. The VALUE is resolved here because it needs the
@@ -83,6 +83,7 @@ public sealed record AlternateSlug(string Culture, string Slug);
 
 public sealed record ProductDetail(
     string ProductId,
+    string Code,
     string Name,
     string Slug,
     string? Description,
@@ -104,9 +105,12 @@ public sealed class GetProductValidator : AbstractValidator<GetProductQuery>
 {
     public GetProductValidator()
     {
-        RuleFor(query => query.Slug)
-            .NotEmpty().WithMessage("A slug is required.")
-            .MaximumLength(400);
+        // Checked before it reaches the database, so a mistyped URL is a 404
+        // and not a query. It is also the only place that knows a code is ten
+        // characters of a particular alphabet.
+        RuleFor(query => query.Code)
+            .Must(ProductCode.IsWellFormed)
+            .WithMessage($"A product code is {ProductCode.Length} characters of Crockford base32.");
 
         RuleFor(query => query.Culture).Must(culture => culture is "es" or "en")
             .WithMessage("Supported cultures: es, en.");
@@ -117,16 +121,20 @@ public sealed class GetProductEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // GET /api/catalog/products/by-slug/{slug}?culture=es
+        // GET /api/catalog/products/{code}?culture=es
         //
-        // by-slug and not {key}, because a route that takes either an id or a
-        // slug has to guess which one it got, and the first product slugified to
-        // something that parses as a GUID is a bug nobody writes a test for. It
-        // also leaves /api/catalog/products/{id} free for the lookup the MCP tool
-        // will want in phase 9.
-        app.MapGet("/api/catalog/products/by-slug/{slug}",
+        // The API takes the CODE alone and knows nothing about the slug in the
+        // storefront's URL (ADR 0026). That is the whole benefit of the split:
+        // the page is /p/{slug}/{code}, the slug is there for humans and for
+        // crawlers, and this endpoint never has to decide what a slug means.
+        //
+        // The response carries the canonical slug, so the storefront compares it
+        // against the one in its own address bar and redirects when they differ
+        // — which makes a rename a 301 rather than a 404 without anything here
+        // keeping a history of names.
+        app.MapGet("/api/catalog/products/{code}",
             async Task<Results<Ok<ProductDetail>, NotFound>> (
-                   string slug, string? culture,
+                   string code, string? culture,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 var resolved = CultureNegotiation.Resolve(
@@ -138,7 +146,11 @@ public sealed class GetProductEndpoint : ICarterModule
                 http.Response.Headers.ContentLanguage = resolved;
                 http.Response.Headers.Vary = "Accept-Language";
 
-                var product = await dispatcher.SendAsync(new GetProductQuery(slug, resolved), ct);
+                var product = await dispatcher.SendAsync(
+                    // Folded up and de-ambiguated here: people lowercase URLs,
+                    // and answering 404 to a correct code in the wrong case
+                    // loses a visitor for nothing.
+                    new GetProductQuery(ProductCode.Normalise(code), resolved), ct);
 
                 return product is null
                     ? TypedResults.NotFound()
@@ -146,7 +158,7 @@ public sealed class GetProductEndpoint : ICarterModule
             })
             .AllowAnonymous()   // a product page is public, and this says so in code
             .WithTags("Catalog")
-            .WithName("GetProductBySlug");
+            .WithName("GetProduct");
     }
 }
 
@@ -171,10 +183,10 @@ public sealed class GetProductHandler(
         GetProductQuery query, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("catalog.get");
-        activity?.SetTag("catalog.slug", query.Slug);
+        activity?.SetTag("catalog.code", query.Code);
         activity?.SetTag("catalog.culture", query.Culture);
 
-        var product = await products.FindBySlugAsync(query.Slug, query.Culture, cancellationToken);
+        var product = await products.FindByCodeAsync(query.Code, cancellationToken);
 
         if (product is null || product.Status != ProductStatus.Active)
         {
@@ -203,6 +215,7 @@ public sealed class GetProductHandler(
 
         return new ProductDetail(
             product.Id.Value.ToString(),
+            product.Code,
             product.Name.In(query.Culture),
             product.Slug.In(query.Culture),
             product.Description?.In(query.Culture),

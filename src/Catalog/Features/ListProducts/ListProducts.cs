@@ -26,6 +26,7 @@ public sealed record ListProductsQuery(string? Status, string Culture, int Page,
 
 public sealed record ProductSummary(
     string ProductId,
+    string Code,
     string Name,
     string Slug,
     string? Brand,
@@ -137,6 +138,7 @@ public sealed class ListProductsHandler(IProductCatalogReader products)
 
     private static ProductSummary Summarise(Product product, string culture) =>
         new(product.Id.Value.ToString(),
+            product.Code,
             product.Name.In(culture),
             product.Slug.In(culture),
             product.Brand,

@@ -31,19 +31,19 @@ public interface IProductCatalogReader
     Task<ProductPage> ListAsync(ProductStatus? status, int page, int pageSize, CancellationToken ct);
 
     /// <summary>
-    /// The product a URL names. The slug is <see cref="LocalizedText"/> — one per
-    /// culture, generated from the name in that culture — so the lookup takes the
-    /// culture the caller is asking in.
+    /// The product a URL names, by its public code.
     ///
-    /// It resolves a slug belonging to ANOTHER culture too, and that is not
-    /// laxity: the two URLs name the same product, and answering 404 for
-    /// <c>/en/p/cafetera-espresso</c> would lose a visitor who is one redirect
-    /// away from the page they wanted. The response carries every culture's slug
-    /// so the caller can send them to the canonical one — which is the same data
-    /// <c>hreflang</c> needs, resolved once here instead of guessed twice there.
+    /// The code and not the slug, because a URL has to keep meaning one thing.
+    /// A slug is derived from a name: two products called the same thing produce
+    /// the same one, and renaming a product changes it — so looking up by slug
+    /// means guessing between products and losing every inbound link on a
+    /// rename. The code is minted once, is unique by constraint, and never moves
+    /// (ADR 0026).
     ///
-    /// The requested culture wins when a slug is ambiguous across cultures. It is
-    /// the only tie-break that keeps a URL meaning one thing.
+    /// The slug stays in the URL beside it, for humans and for search engines,
+    /// and the caller compares the one it was given against the canonical one it
+    /// gets back — answering 301 when they differ, which is how a rename stays
+    /// an SEO event rather than a broken link.
     /// </summary>
-    Task<Product?> FindBySlugAsync(string slug, string culture, CancellationToken ct);
+    Task<Product?> FindByCodeAsync(string code, CancellationToken ct);
 }

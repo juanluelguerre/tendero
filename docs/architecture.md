@@ -56,7 +56,7 @@ Everything the API exposes today. Each is one vertical slice.
 |---|---|
 | `POST /api/catalog/import` | `Catalog/Features/ImportProducts` |
 | `GET /api/catalog/products` | `Catalog/Features/ListProducts` |
-| `GET /api/catalog/products/by-slug/{slug}` | `Catalog/Features/GetProduct` |
+| `GET /api/catalog/products/{code}` | `Catalog/Features/GetProduct` |
 | `POST /api/catalog/products/{id}/publish` | `Catalog/Features/PublishProduct` |
 | `GET /api/images/{id}` | `Catalog/Features/GetProductImage` |
 | `GET /api/catalog/attributes` | `Catalog/Features/ListAttributeDefinitions` |

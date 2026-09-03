@@ -156,15 +156,15 @@
         }
       }
     },
-    "/api/catalog/products/by-slug/{slug}": {
+    "/api/catalog/products/{code}": {
       "get": {
         "tags": [
           "Catalog"
         ],
-        "operationId": "GetProductBySlug",
+        "operationId": "GetProduct",
         "parameters": [
           {
-            "name": "slug",
+            "name": "code",
             "in": "path",
             "required": true,
             "schema": {
@@ -2076,6 +2076,7 @@
       "ProductDetail": {
         "required": [
           "productId",
+          "code",
           "name",
           "slug",
           "description",
@@ -2096,6 +2097,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "code": {
             "type": "string"
           },
           "name": {
@@ -2204,6 +2208,7 @@
       "ProductSummary": {
         "required": [
           "productId",
+          "code",
           "name",
           "slug",
           "brand",
@@ -2218,6 +2223,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "code": {
             "type": "string"
           },
           "name": {
@@ -2735,6 +2743,7 @@
       "SearchHit": {
         "required": [
           "productId",
+          "code",
           "name",
           "slug",
           "brand",
@@ -2752,6 +2761,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "code": {
             "type": "string"
           },
           "name": {

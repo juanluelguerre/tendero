@@ -14,15 +14,15 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** 5 — **11 of 13**. The commerce loop is closed end to end: cart, checkout, payments and returns, on 395 tests with the search baseline unmoved. Since closing the loop: every component split into three files, the token rule turned into a test, six backoffice Playwright specs, a Dependabot config and two blog sections.
-- **Next task:** the product detail page's **screen**. Its query landed on 2026-09-03 (`GET /api/catalog/products/by-slug/{slug}`, 416 tests), carrying the whole axis so a sold-out size renders disabled rather than absent, stock disclosed only below five, and every culture's URL for `hreflang`. What remains is the Angular route, then `P5-13` in full and the storefront spec (`P5-11`).
+- **Current phase:** 5 — **12 of 14**. The commerce loop is closed end to end: cart, checkout, payments and returns, on **430 tests** with the search baseline unmoved. Since closing the loop: every component split into three files, the token rule turned into a test, six backoffice Playwright specs, a Dependabot config, and the product page's query keyed on a public code (ADR 0026).
+- **Next task:** the product detail page's **screen**. Its query landed on 2026-09-03 (`GET /api/catalog/products/{code}`, 430 tests) — keyed on a public code and not on the slug, because a slug cannot be unique and does not survive a rename (ADR 0026). It carries the whole axis so a sold-out size renders disabled rather than absent, stock disclosed only below five, and every culture's slug for `hreflang`. What remains is the Angular route `/p/{slug}/{code}`, then `P5-13` in full and the storefront spec (`P5-11`).
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
 
-**Standing chore:** four commits sit unpushed on `develop` (`79198e6`…`41bab07`). The one CI has not yet verified is `0bfb443`, the GitHub Actions major bump. Pushing needs a token carrying the `workflow` scope — see the notebook entry for why that is not obvious.
+**Standing chore:** seven commits sit unpushed on `develop`, from `79198e6`. The one CI has not yet verified is `0bfb443`, the GitHub Actions major bump. Pushing needs a token carrying the `workflow` scope — see the notebook entry for why that is not obvious.
 
 **Decisions taken 2026-09-02** — 1 · an ADR generalises the context principle rather than fixing a count · 2 · nothing is anonymous; the identity provider is a port whose first adapter is a development issuer, Keycloak later · 3 · the variant is the indexed unit and the product the returned one, via `collapse` · 4 · licensing splits into two tiers, so the Grafana stack is back in · 5 · UCP is split, read capabilities in phase 9 and the transactional half in phase 11.
 
-**Decisions taken 2026-09-03** — 1 · the outbox is the process manager, orchestrated from `Ordering` (ADR 0024) · 2 · checkout authorises the payment before it places the order, so a decline costs nothing (ADR 0025) · 3 · cart lines are jsonb, not a table — mutating one through the aggregate is not querying it · 4 · returns are their own aggregate, because they are per line · 5 · Playwright stays the thinnest layer, and no self-healing agent touches a suite whose point is what the system refuses.
+**Decisions taken 2026-09-03** — 1 · the outbox is the process manager, orchestrated from `Ordering` (ADR 0024) · 2 · checkout authorises the payment before it places the order, so a decline costs nothing (ADR 0025) · 3 · cart lines are jsonb, not a table — mutating one through the aggregate is not querying it · 4 · returns are their own aggregate, because they are per line · 5 · Playwright stays the thinnest layer, and no self-healing agent touches a suite whose point is what the system refuses · 6 · **the URL carries a public code and the slug is decoration** (ADR 0026), because a slug cannot be unique inside jsonb and does not survive a rename. The Shopify alternative — a slug table with history and `-2` suffixes — was built halfway and rejected for managing both problems rather than removing them.
 
 ---
 
@@ -68,9 +68,10 @@ during which phases 0–5 refill the queue.
 | 2026-12-08 | 06 · A repository that built on exactly one machine | ready |
 | 2026-12-22 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
 | 2027-01-05 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
-| 2027-01-19 | **NEW** · from phase 0 | write when P0 closes |
-| 2027-02-02 | **NEW** · from phase 2 | write when P2 closes |
-| 2027-02-16 | **NEW** · from phase 3 | write when P3 closes |
+| 2027-01-19 | 16 · The URL that guessed which product you meant | outline — writable now, ADR 0026 carries it |
+| 2027-02-02 | **NEW** · from phase 0 | write when P0 closes |
+| 2027-02-16 | **NEW** · from phase 2 | write when P2 closes |
+| 2027-03-02 | **NEW** · from phase 3 | write when P3 closes |
 | … | one per closed phase, in order | |
 
 One standing blocker before 2026-09-29: cut a repo tag so article 01's snippets
@@ -330,7 +331,7 @@ and no architecture rule could see. Write at close, publish per calendar.
 
 ## Phase 5 · Cart, checkout, payments, returns
 
-`en curso` · priority **critical** · size **XL** — the gateway phase · **416 tests, es 0.943 / en 0.937 unmoved**
+`en curso` · priority **critical** · size **XL** — the gateway phase · **12 of 14 · 430 tests, es 0.943 / en 0.937 unmoved**
 
 Everything agent-native depends on this being real.
 
@@ -347,7 +348,7 @@ Everything agent-native depends on this being real.
 - [~] `P5-11` Playwright — **M** · **backoffice done** (6 specs, 7s, against the real stack), storefront waits on the PDP because the PDP changes the flow it would test. The pyramid's thinnest layer on purpose: the loop is already covered against a real Postgres, so these assert only what a browser can — the guard, the interceptor, and a table that never keeps its own copy of `AllowedTransitions`. Verified by mutation: a heading downgraded to a `<p>` turns the tab spec red
 - [x] `P5-12` Delete the dead `product.addToCart` and `nav.orders` keys by using them — **S** · both used. `nav.agents` and `nav.search` stay dead on purpose: they belong to phases 11 and 8, and they are the gap analysis written in i18n
 - [~] `P5-13` **The locale and the query go into the URL** — **M** · **half done**: `?q=` is in the URL, so a result page is shareable, bookmarkable and works with the back button. The locale segment, `hreflang` and the per-culture slugs waited on a PDP; its **query** landed 2026-09-03 and already answers with every culture's slug, so what is left is the route that consumes it
-- [x] `P5-14` `GET /api/catalog/products/by-slug/{slug}` — **M** · not on the original list, and it should have been: the PDP was three tasks' blocker and had no query. Reads the catalogue and not the index, because the page needs structured attributes and out-of-stock variants and has to survive Elasticsearch being down. Catalog became the third context to reference Inventory's ports, so the picker renders **once**. Three runtime-only failures — snake_case identifiers, EF preview's `GenerateComplexJsonShaper` over `FromSql`, and the `"Value"` column `SqlQuery` projects — none of which a unit test could reach
+- [x] `P5-14` `GET /api/catalog/products/{code}` — **M** · not on the original list, and it should have been: the PDP was three tasks' blocker and had no query. Reads the catalogue and not the index, because the page needs structured attributes and out-of-stock variants and has to survive Elasticsearch being down. Catalog became the third context to reference Inventory's ports, so the picker renders **once**. Keyed on a **public code**, not the slug: a slug cannot carry a unique constraint inside jsonb and does not survive a rename, so looking a product up by one meant guessing between two and 404ing every link on a typo fix (ADR 0026). The first version WAS by slug, and replacing it deleted three runtime-only failures along with the hand-written SQL that caused them
 
 **Still open, and why.** The product detail page has a **query** and not yet a
 screen. Phase 1 deferred the variant picker to "the cart phase, where it is
@@ -667,6 +668,7 @@ oversight, and each is a paragraph in some future article.
 | Reservation expiry sweep | `Reservation.Lifetime` is 15 min and `HasExpiredAt` exists; nothing sweeps. Carts exist now and expire in 7 days, and `ix_carts_status_expires_at` is already the index the sweep would read | A scheduled worker. Checkout authorises before it places (ADR 0025), so a declined card leaves nothing behind — which is what took the urgency out of this |
 | `stripe-mock` as a second payment adapter | one adapter, one contract suite; the same shape `SeedCatalogConnector` and `dev-issuer` ship in | It needs `Stripe.net` (or hand-rolled form-encoded HTTP) and a container. A dependency decision, and the port is proven without it |
 | Cart lines as a table | jsonb, read only with the cart that owns them | Something queries a line on its own. UCP mutating one goes through the aggregate, so it is not that |
-| Locale in the URL (`/es/…`) | one route serves two languages; the query is in the URL now, the language is still in a signal and in `localStorage` | The PDP, which is where the per-culture slugs and `hreflang` both land (`P5-13`) |
+| Locale in the URL (`/es/…`) | one route serves two languages; the query is in the URL now, the language is still in a signal and in `localStorage` | The PDP route, which is where the per-culture slugs and `hreflang` both land (`P5-13`). The query already answers with every culture's slug |
+| A slug table with uniqueness and redirects | **settled, not deferred** — ADR 0026 makes the slug decorative and the URL carries a code, so there is nothing to make unique and no history to keep | Never, unless the code leaves the URL |
 | Spec Kit experiment | ADR 0009 reserves it for the UCP work | Phase 11 |
 | `.claude/` skills and plugin | none exist; article 14 is blocked on it | After enough repetition to have opinions |

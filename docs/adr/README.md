@@ -20,6 +20,7 @@
 | [0016](0016-quoted-live-frozen-at-order.md) | Prices are quoted live and frozen at order time | accepted |
 | [0024](0024-the-outbox-is-the-process-manager.md) | The outbox is the process manager, orchestrated from Ordering | accepted |
 | [0025](0025-authorise-before-placing.md) | Checkout authorises the payment before it places the order | accepted |
+| [0026](0026-the-url-carries-a-code.md) | The URL carries a code; the slug is decoration | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

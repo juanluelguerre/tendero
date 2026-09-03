@@ -120,6 +120,7 @@ public sealed record ProductSearchQuery(string Text, string Culture, int Page = 
 /// </summary>
 public sealed record SearchHit(
     string ProductId,
+    string Code,
     string Name,
     string Slug,
     string? Brand,
@@ -190,10 +191,17 @@ public sealed record ProductSearchDocument
     /// </summary>
     public string? CategoryPathText { get; init; }
 
-    /// <summary>Atributos aplanados a texto buscable: "color azul marino talla 36-42 drop 8".</summary>
+    /// <summary>Attributes flattened into searchable text: "color azul marino talla 36-42 drop 8".</summary>
     public string? AttributesText { get; init; }
 
     public required string Slug { get; init; }
+
+    /// <summary>
+    /// The product's public code. It travels on the document so a result card
+    /// can build the product URL — <c>/p/{slug}/{code}</c> — without a second
+    /// lookup. The slug alone could not: it is not a key (ADR 0026).
+    /// </summary>
+    public required string Code { get; init; }
 
     /// <summary>Axis values as "COLOR:NAVY" pairs, which is what allows
     /// filtering by an exact combination without promising one that does not exist.</summary>
@@ -303,6 +311,7 @@ public sealed record ProductSearchDocument
         CategoryPathText = categories?.PathTextIn(product.Category, culture),
         AttributesText = RenderAttributes(product, culture, definitions),
         Slug = product.Slug.In(culture),
+        Code = product.Code,
         AxisValues = [.. variant.AxisValues.Select(pair => $"{pair.Key}:{pair.Value}")],
         PriceAmount = variant.Price.Amount,
         InStock = inStock,

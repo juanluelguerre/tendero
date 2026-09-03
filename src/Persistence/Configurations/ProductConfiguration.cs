@@ -28,19 +28,24 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasConversion(Jsonb.LocalizedTextConverter, Jsonb.LocalizedTextComparer)
             .IsRequired();
 
-        // The slug is now a lookup key and not only a rendered string: it is what
-        // a product URL carries. GIN over the whole jsonb column rather than an
-        // expression index per culture, because `@> {"es": "..."}`  is what the
-        // query asks and because adding a third culture must not be a migration.
+        // The public identifier, and the only one a URL ever carries (ADR 0026).
+        // Unique because it IS the key — which is the whole argument for its
+        // existing: the slug could never carry a unique constraint, because
+        // uniqueness across the values of a jsonb object is not expressible as
+        // one, and the id could not be published because a GUID v7 leaks the
+        // creation time it sorts by.
         //
-        // Deliberately NOT unique: uniqueness across a jsonb object's values is
-        // not expressible as a constraint, so two products that slugify alike
-        // are still possible. Six products, zero collisions today; the lookup
-        // resolves it by preferring the requested culture, and the real fix — a
-        // (culture, slug) table — is in the standing backlog with that number.
-        builder.HasIndex(p => p.Slug)
-            .HasMethod("gin")
-            .HasDatabaseName("ix_products_slug");
+        // The index is what makes the guarantee real rather than statistical.
+        // Fifty bits of randomness make a collision vanishingly unlikely; this
+        // makes one impossible.
+        builder.Property(p => p.Code)
+            .HasMaxLength(ProductCode.Length)
+            .IsFixedLength()
+            .IsRequired();
+
+        builder.HasIndex(p => p.Code)
+            .IsUnique()
+            .HasDatabaseName("ux_products_code");
 
         builder.Property(p => p.Description)
             .HasColumnType("jsonb")

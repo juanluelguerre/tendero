@@ -11,43 +11,77 @@ namespace ElGuerre.Tendero.Catalog.Tests.Features;
 /// <summary>
 /// The product page's query.
 ///
-/// What is asserted here is the shape a page depends on: the slug resolves in
-/// both directions, a picker gets every option and not only the sold ones, an
+/// What is asserted here is the shape a page depends on: the code resolves and
+/// survives a rename, a picker gets every option and not only the sold ones, an
 /// unpublished product does not exist, and stock is disclosed the way a shop
-/// discloses it. The SQL belongs to the adapter and is covered against a real
-/// Postgres in the integration tests — this suite would pass over a broken query
-/// and says so out loud rather than pretending otherwise.
+/// discloses it.
 /// </summary>
 public sealed class GetProductTests
 {
     private static readonly TestClock Clock = new();
 
     [Fact]
-    public async Task A_slug_resolves_to_the_product_it_names()
+    public async Task A_code_resolves_to_the_product_it_names()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal("Camisa de lino", result.Name);
         Assert.Equal("camisa-de-lino", result.Slug);
+        Assert.Equal(shirt.Code, result.Code);
     }
 
     /// <summary>
-    /// The English page asked for by its Spanish URL still answers, and answers
-    /// in English with its own canonical slug. That is the redirect the frontend
-    /// needs, and returning 404 would throw away a visitor who is one hop from
-    /// the page they wanted.
+    /// One code, every language. The slug is per culture and the code is not,
+    /// which is what lets the four URLs of a product in four languages share a
+    /// key and differ only in the part that is for humans.
     /// </summary>
     [Fact]
-    public async Task A_slug_from_another_culture_still_finds_the_product()
+    public async Task The_same_code_answers_in_every_culture()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "en"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "en"), TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Equal("Linen shirt", result.Name);
         Assert.Equal("linen-shirt", result.Slug);
+        Assert.Equal(shirt.Code, result.Code);
+    }
+
+    /// <summary>
+    /// The promise the whole design rests on (ADR 0026): renaming a product
+    /// changes its slug and leaves its URL working. The page comes back with the
+    /// NEW canonical slug, which is what the storefront compares against the one
+    /// in its address bar to decide whether to redirect.
+    ///
+    /// Under the alternative — looking a product up by slug — this test is the
+    /// one that could not pass without a table of every name the product has
+    /// ever had.
+    /// </summary>
+    [Fact]
+    public async Task Renaming_a_product_does_not_change_its_address()
+    {
+        var shirt = AShirt();
+        var code = shirt.Code;
+
+        shirt.UpdateDetails(
+            Clock,
+            new LocalizedText(new Dictionary<string, string>
+            {
+                ["es"] = "Camisa de lino de verano",
+                ["en"] = "Summer linen shirt"
+            }),
+            description: null, brand: null, category: "CLOTHING");
+
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(code, "es"), TestContext.Current.CancellationToken);
+
+        Assert.NotNull(result);
+        Assert.Equal(code, result.Code);
+        Assert.Equal("camisa-de-lino-de-verano", result.Slug);
     }
 
     /// <summary>
@@ -58,8 +92,9 @@ public sealed class GetProductTests
     [Fact]
     public async Task The_page_carries_every_cultures_url()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.Equal(
             [("en", "linen-shirt"), ("es", "camisa-de-lino")],
@@ -76,16 +111,17 @@ public sealed class GetProductTests
         var draft = AShirt(publish: false);
 
         var result = await HandlerOver(draft).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+            new GetProductQuery(draft.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.Null(result);
     }
 
     [Fact]
-    public async Task An_unknown_slug_is_nothing()
+    public async Task An_unknown_code_is_nothing()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("no-existe", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(ProductCode.New(), "es"), TestContext.Current.CancellationToken);
 
         Assert.Null(result);
     }
@@ -100,8 +136,9 @@ public sealed class GetProductTests
     public async Task An_axis_offers_every_option_the_catalogue_defines()
     {
         // The shirt sells navy in 38 and 40, and black only in 38.
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         var colour = Assert.Single(result!.Axes, axis => axis.Code == "COLOR");
         Assert.Equal(["NAVY_BLUE", "BLACK"], colour.Options.Select(option => option.Code));
@@ -119,11 +156,12 @@ public sealed class GetProductTests
     [Fact]
     public async Task A_variant_reads_in_the_shoppers_language()
     {
-        var spanish = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var spanish = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
-        var english = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("linen-shirt", "en"), TestContext.Current.CancellationToken);
+        var english = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "en"), TestContext.Current.CancellationToken);
 
         Assert.Equal("Azul marino · 38", Navy38(spanish!).Label);
         Assert.Equal("Navy blue · 38", Navy38(english!).Label);
@@ -134,8 +172,9 @@ public sealed class GetProductTests
     [Fact]
     public async Task The_axes_keep_the_order_the_catalogue_declared()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.Equal(["COLOR", "SIZE"], result!.Axes.Select(axis => axis.Code));
     }
@@ -150,8 +189,9 @@ public sealed class GetProductTests
     {
         var stock = new StockOf(("SHIRT-NAVY-38", 40), ("SHIRT-NAVY-40", 2), ("SHIRT-BLACK-38", 0));
 
-        var result = await HandlerOver(AShirt(), stock).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt, stock).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
 
@@ -176,8 +216,9 @@ public sealed class GetProductTests
     [Fact]
     public async Task A_sku_with_no_stock_row_is_simply_sold_out()
     {
-        var result = await HandlerOver(AShirt(), new StockOf()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt, new StockOf()).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.All(result!.Variants, variant => Assert.False(variant.InStock));
     }
@@ -187,8 +228,9 @@ public sealed class GetProductTests
     [Fact]
     public async Task The_breadcrumb_is_the_whole_branch()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.Equal(["HOME", "CLOTHING"], result!.Category.Select(step => step.Code));
         Assert.Equal(["Hogar", "Ropa"], result.Category.Select(step => step.Name));
@@ -202,8 +244,9 @@ public sealed class GetProductTests
     [Fact]
     public async Task An_attribute_is_returned_typed_and_never_phrased()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         var washing = Assert.Single(result!.Attributes, a => a.Code == "WASH_TEMPERATURE");
         Assert.Equal(30m, washing.Number);
@@ -226,8 +269,9 @@ public sealed class GetProductTests
     [Fact]
     public async Task A_variant_without_a_photo_borrows_the_products()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.All(result!.Variants, variant => Assert.Equal("cover", variant.ImageId));
     }
@@ -239,8 +283,9 @@ public sealed class GetProductTests
     [Fact]
     public async Task The_price_range_spans_what_can_be_bought()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
-            new GetProductQuery("camisa-de-lino", "es"), TestContext.Current.CancellationToken);
+        var shirt = AShirt();
+        var result = await HandlerOver(shirt).HandleAsync(
+            new GetProductQuery(shirt.Code, "es"), TestContext.Current.CancellationToken);
 
         Assert.Equal(29.90m, result!.PriceFrom);
         Assert.Equal(34.90m, result.PriceTo);

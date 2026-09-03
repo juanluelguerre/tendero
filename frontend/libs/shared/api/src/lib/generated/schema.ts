@@ -68,14 +68,14 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/catalog/products/by-slug/{slug}": {
+    "/api/catalog/products/{code}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["GetProductBySlug"];
+        get: operations["GetProduct"];
         put?: never;
         post?: never;
         delete?: never;
@@ -649,6 +649,7 @@ export interface components {
         };
         ProductDetail: {
             productId: string;
+            code: string;
             name: string;
             slug: string;
             description: null | string;
@@ -677,6 +678,7 @@ export interface components {
         };
         ProductSummary: {
             productId: string;
+            code: string;
             name: string;
             slug: string;
             brand: null | string;
@@ -816,6 +818,7 @@ export interface components {
         };
         SearchHit: {
             productId: string;
+            code: string;
             name: string;
             slug: string;
             brand: null | string;
@@ -1028,14 +1031,14 @@ export interface operations {
             };
         };
     };
-    GetProductBySlug: {
+    GetProduct: {
         parameters: {
             query?: {
                 culture?: string;
             };
             header?: never;
             path: {
-                slug: string;
+                code: string;
             };
             cookie?: never;
         };

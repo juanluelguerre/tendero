@@ -34,6 +34,15 @@ public sealed class Product : AggregateRoot
     private readonly List<string> _variantAxes = [];
 
     public ProductId Id { get; private set; }
+
+    /// <summary>
+    /// What the URL carries, and the only identifier this product ever shows the
+    /// public. Minted once and never regenerated — renaming the product changes
+    /// its slug and leaves this alone, which is what keeps a rename from
+    /// breaking every link to it (ADR 0026).
+    /// </summary>
+    public string Code { get; private set; } = default!;
+
     public LocalizedText Name { get; private set; } = default!;
     public LocalizedText Slug { get; private set; } = default!;
     public LocalizedText? Description { get; private set; }
@@ -113,6 +122,7 @@ public sealed class Product : AggregateRoot
         var product = new Product
         {
             Id = ProductId.New(),
+            Code = ProductCode.New(),
             Name = name,
             Slug = Slugify(name),
             Description = description,
