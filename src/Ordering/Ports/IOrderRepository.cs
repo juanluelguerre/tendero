@@ -49,4 +49,16 @@ public interface IOrderReader
     /// version of a page size nobody has asked for yet.
     /// </summary>
     Task<IReadOnlyList<Order>> RecentAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// One customer's orders, newest first.
+    ///
+    /// A separate method rather than a nullable filter on <see cref="RecentAsync"/>,
+    /// and the reason is that the two have different failure modes. The
+    /// shopkeeper's list is allowed to be everything; this one must NEVER be —
+    /// a filter that could be passed null would be one refactor away from
+    /// showing a shopper the whole shop's orders, and the type would not say so.
+    /// </summary>
+    Task<IReadOnlyList<Order>> ForCustomerAsync(
+        CustomerId customer, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,78 @@
+<ng-container *transloco="let t">
+  @switch (state().status) {
+    @case ('signingIn') {
+      <p class="muted" role="status" aria-live="polite">{{ t('account.loading') }}</p>
+    }
+
+    @case ('failed') {
+      <div class="notice">
+        <h1 class="notice__title">{{ t('account.failedTitle') }}</h1>
+        <p class="muted">{{ t('account.failed') }}</p>
+      </div>
+    }
+
+    @case ('signedOut') {
+      @let out = state();
+      @if (out.status === 'signedOut') {
+        <section class="signIn">
+          <h1 class="signIn__title">{{ t('account.title') }}</h1>
+          <!-- The shop works without this, and it says so. Nothing here is a
+               prerequisite for buying anything. -->
+          <p class="signIn__lede muted">{{ t('account.lede') }}</p>
+
+          @if (out.identities.length === 0) {
+            <p class="muted">{{ t('account.noIssuer') }}</p>
+          } @else {
+            <p class="eyebrow">{{ t('account.pick') }}</p>
+            <ul class="identities">
+              @for (identity of out.identities; track identity.subject) {
+                <li>
+                  <button type="button" class="identity" (click)="use(identity)">
+                    <span class="identity__name">{{ identity.name }}</span>
+                    <span class="identity__role">{{ identity.role }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+            <p class="hint muted">{{ t('account.devIssuer') }}</p>
+          }
+        </section>
+      }
+    }
+
+    @case ('signedIn') {
+      @let session = state();
+      @if (session.status === 'signedIn') {
+        <header class="head">
+          <h1 class="head__title">{{ identity()?.name }}</h1>
+          <button type="button" class="quiet" (click)="signOut()">{{ t('account.signOut') }}</button>
+        </header>
+
+        <h2 class="orders__title">{{ t('account.orders') }}</h2>
+
+        @if (session.orders.length === 0) {
+          <!-- Truthful rather than helpful-sounding: somebody who has never
+               ordered has no orders, and telling them about our wiring would be
+               worse than saying nothing. -->
+          <p class="muted">{{ t('account.noOrders') }}</p>
+          <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
+        } @else {
+          <ul class="orders">
+            @for (order of session.orders; track order.orderId) {
+              <li class="order">
+                <a class="order__link" [routerLink]="links.order(order.orderId)">
+                  <span class="order__when">{{ when(order) }}</span>
+                  <span class="order__status">{{ t('order.status.' + order.status) }}</span>
+                  <span class="order__total numeric">{{ price(order) }}</span>
+                </a>
+                <span class="order__lines muted">
+                  {{ t('account.lineCount', { count: order.lineCount }) }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  }
+</ng-container>

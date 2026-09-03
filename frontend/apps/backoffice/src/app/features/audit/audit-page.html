@@ -1,0 +1,98 @@
+<ng-container *transloco="let t">
+  <header class="head">
+    <h1 class="head__title">
+      {{ t('audit.title') }}
+      @if (refused() > 0) {
+        <!-- Colour never carries meaning alone (design/DESIGN.md). -->
+        <span class="pill pill--warning">{{ t('audit.refused', { count: refused() }) }}</span>
+      }
+    </h1>
+    <p class="head__lede muted">{{ t('audit.lede') }}</p>
+  </header>
+
+  <!-- It opens on the refusals. An audit log whose default view is a thousand
+       successful publishes is a changelog. -->
+  <div class="filters" role="group" [attr.aria-label]="t('audit.filterLabel')">
+    @for (option of filters; track option) {
+      <button
+        type="button"
+        class="chip"
+        [class.chip--active]="filter() === option"
+        [attr.aria-pressed]="filter() === option"
+        (click)="use(option)"
+      >
+        {{ option ? t('audit.outcome.' + option) : t('audit.all') }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="muted" role="status" aria-live="polite">{{ t('audit.loading') }}</p>
+  } @else if (failed()) {
+    <p class="notice notice--danger">{{ t('audit.failed') }}</p>
+  } @else if (entries().length === 0) {
+    <p class="muted">{{ t('audit.empty') }}</p>
+  } @else {
+    <table class="table">
+      <caption class="sr-only">{{ t('audit.title') }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t('audit.column.when') }}</th>
+          <th scope="col">{{ t('audit.column.command') }}</th>
+          <th scope="col">{{ t('audit.column.who') }}</th>
+          <th scope="col">{{ t('audit.column.outcome') }}</th>
+          <th scope="col">{{ t('audit.column.reason') }}</th>
+          <th scope="col"><span class="sr-only">{{ t('audit.column.payload') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of entries(); track entry.id) {
+          <tr [class.row--refused]="entry.outcome !== 'allowed'">
+            <td class="numeric when">{{ when(entry.at) }}</td>
+            <td class="command">{{ entry.commandType }}</td>
+            <td class="who">
+              <!-- An agent is a principal, not a customer, and both travel: the
+                   question worth answering later is who acted AND on whose
+                   behalf. Agent-driven rows render in clay (design/DESIGN.md). -->
+              @if (entry.agentId) {
+                <span class="agent">{{ entry.agentId }}</span>
+              }
+              <span class="subject">{{ entry.subject ?? t('audit.system') }}</span>
+            </td>
+            <td>
+              <span
+                class="pill"
+                [class.pill--warning]="entry.outcome === 'denied'"
+                [class.pill--danger]="entry.outcome === 'failed'"
+              >
+                {{ t('audit.outcome.' + entry.outcome) }}
+              </span>
+            </td>
+            <td class="reason">{{ entry.reason }}</td>
+            <td class="numeric">
+              <button type="button" class="quiet" (click)="toggle(entry.id)">
+                {{ opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
+              </button>
+            </td>
+          </tr>
+
+          @if (opened() === entry.id) {
+            <tr class="payload-row">
+              <td colspan="6">
+                <!-- The command as it was sent, with credentials replaced. The
+                     trace id is here rather than in a column because it is what
+                     you copy once you have already found the row. -->
+                <pre class="payload code">{{ pretty(entry.payload) }}</pre>
+                @if (entry.traceId) {
+                  <p class="trace muted code" [title]="entry.traceId">
+                    {{ t('audit.trace', { id: short(entry.traceId) }) }}
+                  </p>
+                }
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  }
+</ng-container>

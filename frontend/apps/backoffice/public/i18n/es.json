@@ -11,6 +11,33 @@
       "options": "Opciones"
     }
   },
+  "audit": {
+    "all": "Todo",
+    "column": {
+      "command": "Comando",
+      "outcome": "Resultado",
+      "payload": "Comando enviado",
+      "reason": "Motivo",
+      "when": "Cuándo",
+      "who": "Quién"
+    },
+    "empty": "No hay nada registrado todavía.",
+    "failed": "No se ha podido cargar la auditoría.",
+    "filterLabel": "Filtrar por resultado",
+    "hidePayload": "Ocultar",
+    "lede": "Quién hizo qué, y qué rechazó la tienda. Abre por los rechazos: un registro que empieza por los aciertos es un historial de cambios.",
+    "loading": "Cargando la auditoría...",
+    "outcome": {
+      "allowed": "Permitido",
+      "denied": "Rechazado",
+      "failed": "Fallo"
+    },
+    "refused": "{{count}} rechazados",
+    "showPayload": "Ver comando",
+    "system": "sistema",
+    "title": "Auditoría",
+    "trace": "Traza {{id}}"
+  },
   "brand": {
     "area": "Backoffice",
     "name": "Tendero"
@@ -18,6 +45,7 @@
   "nav": {
     "agents": "Actividad de agentes",
     "attributes": "Atributos",
+    "audit": "Auditoría",
     "language": "Idioma",
     "orders": "Pedidos",
     "promotions": "Promociones",

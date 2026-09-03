@@ -10,6 +10,43 @@
     }
   ],
   "paths": {
+    "/api/audit": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ListAuditEntries",
+        "parameters": [
+          {
+            "name": "outcome",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListAuditEntriesResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/accounts/me": {
       "post": {
         "tags": [
@@ -573,6 +610,26 @@
               "application/json": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/mine": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "MyOrders",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyOrdersResult"
                 }
               }
             }
@@ -1491,6 +1548,69 @@
           }
         }
       },
+      "AuditEntryView": {
+        "required": [
+          "id",
+          "commandType",
+          "payload",
+          "customerId",
+          "agentId",
+          "subject",
+          "outcome",
+          "reason",
+          "traceId",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "commandType": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "string"
+          },
+          "customerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "agentId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "subject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "traceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "CartLineView": {
         "required": [
           "productId",
@@ -1762,9 +1882,6 @@
           }
         }
       },
-      "LinkOutcome": {
-        "type": "integer"
-      },
       "LinkedIdentity": {
         "required": [
           "customerId",
@@ -1791,7 +1908,7 @@
             "type": "string"
           },
           "outcome": {
-            "$ref": "#/components/schemas/LinkOutcome"
+            "type": "string"
           }
         }
       },
@@ -1806,6 +1923,25 @@
             "items": {
               "$ref": "#/components/schemas/AttributeDefinitionView"
             }
+          }
+        }
+      },
+      "ListAuditEntriesResult": {
+        "required": [
+          "entries",
+          "refused"
+        ],
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryView"
+            }
+          },
+          "refused": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1902,6 +2038,20 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "MyOrdersResult": {
+        "required": [
+          "orders"
+        ],
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderSummary"
+            }
           }
         }
       },

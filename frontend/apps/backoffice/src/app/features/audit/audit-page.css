@@ -1,0 +1,82 @@
+/* Dense, like the rest of the backoffice. Not one hex here — a test enforces it. */
+
+.head__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.head__lede {
+  margin-block-start: var(--space-2);
+  max-width: 62ch;
+}
+
+.filters {
+  display: flex;
+  gap: var(--space-2);
+  margin-block: var(--space-5) var(--space-4);
+}
+
+.chip--active {
+  border-color: var(--border-strong);
+  background: var(--stone-100);
+}
+
+/* A refused row is marked on the LEFT EDGE as well as by its pill, because a
+   pill is easy to miss when you are scanning forty rows for the one that
+   matters. */
+.row--refused {
+  box-shadow: inset 2px 0 0 0 var(--warning);
+}
+
+.when,
+.command {
+  white-space: nowrap;
+}
+
+.command {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Agent-driven rows are always clay (design/DESIGN.md), so scanning the table
+   shows at a glance what an agent did rather than a person. */
+.agent {
+  color: var(--accent);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+}
+
+.subject {
+  color: var(--text-muted);
+}
+
+.reason {
+  max-width: 32ch;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.payload-row td {
+  background: var(--bg-raised);
+}
+
+.payload {
+  margin: 0;
+  padding: var(--space-3);
+  max-block-size: 20rem;
+  overflow: auto;
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+}
+
+.trace {
+  margin-block: var(--space-2) 0;
+  font-size: var(--text-3xs);
+}

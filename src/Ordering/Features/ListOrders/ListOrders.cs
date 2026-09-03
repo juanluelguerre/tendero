@@ -28,7 +28,32 @@ public sealed record OrderSummary(
     string City,
     bool IsPaid,
     bool IsCaptured,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt)
+{
+    /// <summary>
+    /// The one projection, used by the shopkeeper's list, by a status move and
+    /// by a shopper's own history.
+    ///
+    /// It was written out three times before the third caller arrived, which is
+    /// the moment a copy becomes a divergence waiting to happen: a column added
+    /// to one of them would have been silently missing from the other two.
+    /// </summary>
+    public static OrderSummary Of(Order order) => new(
+        // Flat. OrderId is a record struct and would serialise as {"value":"…"}.
+        order.Id.ToString(),
+        order.Status.ToString(),
+        order.Currency,
+        order.Total.Amount,
+        order.Lines.Count,
+        order.ShippingAddress.RecipientName,
+        order.ShippingAddress.City,
+        // Two booleans and not one status string: authorised and captured are
+        // different facts, and a shopkeeper chasing unpaid shipments needs to
+        // tell them apart.
+        order.Payment is not null,
+        order.Payment?.CaptureId is not null,
+        order.CreatedAt);
+}
 
 public sealed record ListOrdersResult(IReadOnlyList<OrderSummary> Orders);
 
@@ -47,25 +72,7 @@ public sealed class ListOrdersHandler(IOrderReader orders) : IQueryHandler<ListO
 
         activity?.SetTag("ordering.order_count", rows.Count);
 
-        return new ListOrdersResult(
-        [
-            .. rows.Select(order => new OrderSummary(
-                // Flat. OrderId is a record struct and would serialise as
-                // {"value":"…"}.
-                order.Id.ToString(),
-                order.Status.ToString(),
-                order.Currency,
-                order.Total.Amount,
-                order.Lines.Count,
-                order.ShippingAddress.RecipientName,
-                order.ShippingAddress.City,
-                // Two booleans and not one status string: authorised and
-                // captured are different facts, and a shopkeeper chasing unpaid
-                // shipments needs to tell them apart.
-                order.Payment is not null,
-                order.Payment?.CaptureId is not null,
-                order.CreatedAt))
-        ]);
+        return new ListOrdersResult([.. rows.Select(OrderSummary.Of)]);
     }
 }
 
@@ -164,21 +171,10 @@ public sealed class OrderAdminEndpoints : ICarterModule
                 {
                     MoveOrderOutcome.UnknownOrder => TypedResults.NotFound($"There is no order {orderId}."),
                     MoveOrderOutcome.IllegalTransition => TypedResults.Conflict(result.Detail!),
-                    _ => TypedResults.Ok(Summary(result.Order!))
+                    _ => TypedResults.Ok(OrderSummary.Of(result.Order!))
                 };
             })
             .WithName("MoveOrder");
     }
 
-    private static OrderSummary Summary(Order order) => new(
-        order.Id.ToString(),
-        order.Status.ToString(),
-        order.Currency,
-        order.Total.Amount,
-        order.Lines.Count,
-        order.ShippingAddress.RecipientName,
-        order.ShippingAddress.City,
-        order.Payment is not null,
-        order.Payment?.CaptureId is not null,
-        order.CreatedAt);
 }

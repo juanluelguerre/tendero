@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListAuditEntries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts/me": {
         parameters: {
             query?: never;
@@ -222,6 +238,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ClaimCart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MyOrders"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -509,6 +541,19 @@ export interface components {
                 [key: string]: string;
             };
         };
+        AuditEntryView: {
+            id: string;
+            commandType: string;
+            payload: string;
+            customerId: null | string;
+            agentId: null | string;
+            subject: null | string;
+            outcome: string;
+            reason: null | string;
+            traceId: null | string;
+            /** Format: date-time */
+            at: string;
+        };
         CartLineView: {
             productId: string;
             variantId: string;
@@ -582,16 +627,20 @@ export interface components {
             /** Format: uuid */
             guest: null | string;
         };
-        LinkOutcome: number;
         LinkedIdentity: {
             customerId: string;
             displayName: null | string;
             segment: string;
             culture: string;
-            outcome: components["schemas"]["LinkOutcome"];
+            outcome: string;
         };
         ListAttributeDefinitionsResult: {
             items: components["schemas"]["AttributeDefinitionView"][];
+        };
+        ListAuditEntriesResult: {
+            entries: components["schemas"]["AuditEntryView"][];
+            /** Format: int32 */
+            refused: number;
         };
         ListOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
@@ -615,6 +664,9 @@ export interface components {
         MoveOrderRequest: {
             move: string;
             reason: null | string;
+        };
+        MyOrdersResult: {
+            orders: components["schemas"]["OrderSummary"][];
         };
         OrderDetail: {
             order: components["schemas"]["OrderView"];
@@ -996,6 +1048,29 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    ListAuditEntries: {
+        parameters: {
+            query?: {
+                outcome?: string;
+                take?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListAuditEntriesResult"];
+                };
+            };
+        };
+    };
     LinkIdentity: {
         parameters: {
             query?: never;
@@ -1417,6 +1492,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    MyOrders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyOrdersResult"];
                 };
             };
         };

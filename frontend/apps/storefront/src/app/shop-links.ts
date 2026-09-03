@@ -20,6 +20,7 @@ export class ShopLinks {
   readonly home = computed(() => ['/', this.culture()]);
   readonly cart = computed(() => ['/', this.culture(), 'cart']);
   readonly checkout = computed(() => ['/', this.culture(), 'checkout']);
+  readonly account = computed(() => ['/', this.culture(), 'account']);
 
   product(slug: string, code: string): unknown[] {
     return ['/', this.culture(), 'p', slug, code];

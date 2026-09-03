@@ -84,6 +84,21 @@ public interface IAuditWriter
 }
 
 /// <summary>
+/// A page of the audit log, newest first.
+///
+/// Reading it is a separate port from writing it, and not out of symmetry: the
+/// writer runs on every command and must never do more than one insert, while
+/// the reader is a screen somebody opens occasionally and filters. One interface
+/// with both would be a port whose two halves have nothing in common but a
+/// table.
+/// </summary>
+public interface IAuditReader
+{
+    Task<IReadOnlyList<AuditEntry>> RecentAsync(
+        AuditOutcome? outcome, int take, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// Marks a property that must never reach the audit log.
 ///
 /// Not speculative: `ClaimGuestAccount` and checkout both carry a CART TOKEN,

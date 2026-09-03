@@ -28,6 +28,10 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/product/product-page').then((m) => m.ProductPage),
   },
   {
+    path: 'account',
+    loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
+  },
+  {
     path: 'cart',
     loadComponent: () => import('./features/cart/cart-page').then((m) => m.CartPage),
   },

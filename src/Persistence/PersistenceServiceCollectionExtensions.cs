@@ -69,7 +69,9 @@ public static class PersistenceServiceCollectionExtensions
         // The dispatcher's audit step runs wherever a command does, including
         // the outbox worker — which opens a scope per batch, so scoped is
         // exactly right and nothing needs to outlive a request.
-        services.AddScoped<IAuditWriter, EfAuditWriter>();
+        services.AddScoped<EfAuditWriter>();
+        services.AddScoped<IAuditWriter>(services => services.GetRequiredService<EfAuditWriter>());
+        services.AddScoped<IAuditReader>(services => services.GetRequiredService<EfAuditWriter>());
 
         // One adapter, two Accounts ports, one instance per scope.
         services.AddScoped<EfCustomerRepository>();

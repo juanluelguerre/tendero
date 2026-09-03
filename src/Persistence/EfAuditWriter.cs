@@ -20,7 +20,7 @@ namespace ElGuerre.Tendero.Persistence;
 /// success is the better of the two failures, and a second outbox would buy
 /// durability for a table nobody reads in real time.
 /// </summary>
-internal sealed class EfAuditWriter(IDbContextFactory<TenderoDbContext> contexts) : IAuditWriter
+internal sealed class EfAuditWriter(IDbContextFactory<TenderoDbContext> contexts) : IAuditWriter, IAuditReader
 {
     public async Task WriteAsync(AuditEntry entry, CancellationToken cancellationToken = default)
     {
@@ -28,5 +28,29 @@ internal sealed class EfAuditWriter(IDbContextFactory<TenderoDbContext> contexts
 
         context.AuditEntries.Add(entry);
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// A page of the log, newest first, on the same separate context.
+    ///
+    /// The `outcome` filter is what the screen opens on. Denials and failures
+    /// have their own partial index precisely because they are the rows somebody
+    /// goes looking for — an audit screen whose default view is a thousand
+    /// successful publishes is a changelog.
+    /// </summary>
+    public async Task<IReadOnlyList<AuditEntry>> RecentAsync(
+        AuditOutcome? outcome, int take, CancellationToken cancellationToken = default)
+    {
+        await using var context = await contexts.CreateDbContextAsync(cancellationToken);
+
+        var entries = context.AuditEntries.AsNoTracking();
+
+        if (outcome is { } wanted)
+            entries = entries.Where(entry => entry.Outcome == wanted);
+
+        return await entries
+            .OrderByDescending(entry => entry.At)
+            .Take(take)
+            .ToListAsync(cancellationToken);
     }
 }

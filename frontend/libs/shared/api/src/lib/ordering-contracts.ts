@@ -85,3 +85,8 @@ export const RETURN_REASONS = [
 ] as const;
 
 export type ReturnReason = (typeof RETURN_REASONS)[number];
+
+/** A shopper's own orders. A different endpoint from the shopkeeper's list, and
+ *  deliberately so: that one is allowed to return everything and this one is not. */
+export type MyOrders = Schemas['MyOrdersResult'];
+export type LinkedIdentity = Schemas['LinkedIdentity'];

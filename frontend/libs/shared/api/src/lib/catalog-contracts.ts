@@ -50,6 +50,15 @@ export type SkuDescription = Schemas['SkuDescriptionView'];
 export type SkuDescriptionList = Schemas['DescribeSkusResult'];
 
 /**
+ * The audit log. It lives in the catalogue contracts file only because
+ * `Accounts` has no file of its own yet; the schema belongs to no context — the
+ * dispatcher writes it and three later features read it.
+ */
+export type AuditEntryView = Schemas['AuditEntryView'];
+export type AuditLog = Schemas['ListAuditEntriesResult'];
+export type AuditOutcome = 'allowed' | 'denied' | 'failed';
+
+/**
  * The labels arrive UNRESOLVED — the whole culture dictionary — and that is
  * deliberate: this screen exists to see whether a translation is missing, and
  * text already resolved would hide the very fact people come to look at.

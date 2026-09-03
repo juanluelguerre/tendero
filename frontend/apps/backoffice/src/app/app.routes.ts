@@ -32,6 +32,11 @@ export const appRoutes: Route[] = [
           import('./features/variants/define-variants-page').then((m) => m.DefineVariantsPage),
       },
       {
+        path: 'audit',
+        canActivate: [signedIn],
+        loadComponent: () => import('./features/audit/audit-page').then((m) => m.AuditPage),
+      },
+      {
         path: 'attributes',
         canActivate: [signedIn],
         loadComponent: () =>

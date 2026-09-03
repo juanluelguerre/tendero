@@ -122,3 +122,33 @@
   .brand__area { display: none; }
   .main { padding-block: var(--space-5) var(--space-6); }
 }
+
+/* ---------- Account ----------
+   Beside the basket and quieter than it: the shop works signed out, so this is
+   not an action anybody has to take. Never clay — one accent action per view
+   (design/DESIGN.md), and on a shop page that is add-to-cart. */
+.account {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.account:hover {
+  color: var(--text);
+  background: var(--stone-50);
+}
+
+.account:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.account__icon {
+  inline-size: 22px;
+  block-size: 22px;
+}

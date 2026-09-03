@@ -42,4 +42,18 @@ internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
             .OrderByDescending(order => order.CreatedAt)
             .Take(Recent)
             .ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// One customer's orders. The filter is not optional and cannot be made so
+    /// by passing null — which is the whole reason it is a separate method
+    /// rather than a nullable argument on the one above.
+    /// </summary>
+    public async Task<IReadOnlyList<Order>> ForCustomerAsync(
+        CustomerId customer, CancellationToken cancellationToken = default) =>
+        await context.Orders
+            .AsNoTracking()
+            .Where(order => order.CustomerId == customer)
+            .OrderByDescending(order => order.CreatedAt)
+            .Take(Recent)
+            .ToListAsync(cancellationToken);
 }

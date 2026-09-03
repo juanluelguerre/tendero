@@ -80,4 +80,5 @@ export class Shell {
   /** Links have to carry the language segment, so they are built from it. */
   protected readonly home = computed(() => ['/', this.culture()]);
   protected readonly cartLink = computed(() => ['/', this.culture(), 'cart']);
+  protected readonly accountLink = computed(() => ['/', this.culture(), 'account']);
 }

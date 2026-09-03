@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type {
   AttributeDefinitionList,
+  AuditLog,
   SkuDescriptionList,
   DefineVariantsResponse,
   ImportResult,
@@ -43,6 +44,21 @@ export class CatalogService {
     );
 
     return this.http.get<SkuDescriptionList>(`${this.baseUrl}/api/catalog/skus`, { params });
+  }
+
+  /**
+   * The audit log, newest first.
+   *
+   * It is on the catalogue service only because `Accounts` has no service of
+   * its own yet, and the log belongs to no context: the dispatcher writes it and
+   * three later features read it. The day the agent activity panel arrives
+   * (phase 11), both move to an `accounts.service.ts` together.
+   */
+  audit(outcome: string | null, take = 50): Observable<AuditLog> {
+    let params = new HttpParams().set('take', take);
+    if (outcome) params = params.set('outcome', outcome);
+
+    return this.http.get<AuditLog>(`${this.baseUrl}/api/audit`, { params });
   }
 
   list(

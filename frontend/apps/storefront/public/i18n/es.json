@@ -1,4 +1,18 @@
 {
+  "account": {
+    "devIssuer": "Identidades del emisor de desarrollo. No hay contraseñas: firma tokens para identidades sembradas y se niega a arrancar fuera de desarrollo.",
+    "failed": "No hemos podido cargar tu cuenta.",
+    "failedTitle": "Algo ha fallado",
+    "lede": "La tienda funciona sin cuenta: puedes comprar como invitado. Entrar solo le pone tu nombre a los pedidos que ya son tuyos.",
+    "lineCount": "{{count}} líneas",
+    "loading": "Cargando tu cuenta...",
+    "noIssuer": "El emisor de desarrollo no responde, así que no hay con quién entrar.",
+    "noOrders": "Todavía no has hecho ningún pedido.",
+    "orders": "Tus pedidos",
+    "pick": "Entra como",
+    "signOut": "Salir",
+    "title": "Tu cuenta"
+  },
   "brand": {
     "area": "Tienda",
     "name": "Tendero",
@@ -55,6 +69,7 @@
     "unserved": "Esta tienda todavía no envía a {{country}}."
   },
   "nav": {
+    "account": "Tu cuenta",
     "cart": "Cesta",
     "continueShopping": "Seguir comprando",
     "language": "Idioma",

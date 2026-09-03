@@ -11,6 +11,33 @@
       "options": "Options"
     }
   },
+  "audit": {
+    "all": "Everything",
+    "column": {
+      "command": "Command",
+      "outcome": "Outcome",
+      "payload": "Command sent",
+      "reason": "Reason",
+      "when": "When",
+      "who": "Who"
+    },
+    "empty": "Nothing recorded yet.",
+    "failed": "The audit log could not be loaded.",
+    "filterLabel": "Filter by outcome",
+    "hidePayload": "Hide",
+    "lede": "Who did what, and what the shop refused. It opens on the refusals: a log that leads with successes is a changelog.",
+    "loading": "Loading the audit log...",
+    "outcome": {
+      "allowed": "Allowed",
+      "denied": "Denied",
+      "failed": "Failed"
+    },
+    "refused": "{{count}} refused",
+    "showPayload": "Show command",
+    "system": "system",
+    "title": "Audit",
+    "trace": "Trace {{id}}"
+  },
   "brand": {
     "area": "Backoffice",
     "name": "Tendero"
@@ -18,6 +45,7 @@
   "nav": {
     "agents": "Agent activity",
     "attributes": "Attributes",
+    "audit": "Audit",
     "language": "Language",
     "orders": "Orders",
     "promotions": "Promotions",

@@ -26,7 +26,7 @@ public sealed class LinkIdentityTests
 
         var result = await world.Link(new LinkIdentityCommand("Ana Ruiz", "es", Guest: null));
 
-        Assert.Equal(LinkOutcome.Registered, result.Outcome);
+        Assert.Equal("registered", result.Outcome);
         Assert.Equal("Ana Ruiz", result.DisplayName);
         Assert.Equal(Segments.Retail, result.Segment);
         Assert.Single(world.Customers);
@@ -46,7 +46,7 @@ public sealed class LinkIdentityTests
 
         var result = await world.Link(new LinkIdentityCommand("Ana Ruiz", "es", guest.Id));
 
-        Assert.Equal(LinkOutcome.Linked, result.Outcome);
+        Assert.Equal("linked", result.Outcome);
         Assert.Equal(guest.Id.Value.ToString(), result.CustomerId);
         Assert.Equal("ana", guest.Subject);
         Assert.False(guest.IsGuest);
@@ -69,7 +69,7 @@ public sealed class LinkIdentityTests
 
         var result = await world.Link(new LinkIdentityCommand("Ana Ruiz", "es", guest.Id));
 
-        Assert.Equal(LinkOutcome.Recognised, result.Outcome);
+        Assert.Equal("recognised", result.Outcome);
         Assert.Equal(account.Id.Value.ToString(), result.CustomerId);
         Assert.Equal(account.Id, guest.SupersededBy);
         // Still there. History is not tidied away.
@@ -84,7 +84,7 @@ public sealed class LinkIdentityTests
 
         var result = await world.Link(new LinkIdentityCommand("Ana Ruiz", "es", Guest: null));
 
-        Assert.Equal(LinkOutcome.Recognised, result.Outcome);
+        Assert.Equal("recognised", result.Outcome);
         Assert.Equal(account.Id.Value.ToString(), result.CustomerId);
         Assert.Single(world.Customers);
     }
@@ -107,7 +107,7 @@ public sealed class LinkIdentityTests
         var result = await world.Link(new LinkIdentityCommand("Ana Ruiz", "es", victim.Id));
 
         // Ana gets her own new account, and Juan Luis's is untouched.
-        Assert.Equal(LinkOutcome.Registered, result.Outcome);
+        Assert.Equal("registered", result.Outcome);
         Assert.NotEqual(victim.Id.Value.ToString(), result.CustomerId);
         Assert.Null(victim.SupersededBy);
         Assert.Equal("juanlu", victim.Subject);
@@ -123,7 +123,7 @@ public sealed class LinkIdentityTests
 
         var result = await world.Link(new LinkIdentityCommand("Ana Ruiz", "es", guest.Id));
 
-        Assert.Equal(LinkOutcome.Recognised, result.Outcome);
+        Assert.Equal("recognised", result.Outcome);
         Assert.Equal(account.Id, guest.SupersededBy);
     }
 
