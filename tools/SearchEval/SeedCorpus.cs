@@ -1,6 +1,6 @@
 using ElGuerre.Tendero.Catalog.Connectors;
-using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 

@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Carter;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;

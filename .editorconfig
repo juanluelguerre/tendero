@@ -1,0 +1,60 @@
+# Code style, in the one file every editor and the CLI agree on.
+#
+# It replaces a `Tendero.sln.DotSettings` that Rider wrote and nothing read: the
+# repository's solution is `Tendero.slnx` (CLAUDE.md), so a file named after a
+# `.sln` that does not exist was an orphan.
+#
+# The reason to prefer this beyond tidiness: `.editorconfig` is understood by
+# Rider, Visual Studio, VS Code AND `dotnet format`, which means the style is
+# VERIFIABLE — `dotnet format --verify-no-changes` fails a build. A
+# `.DotSettings` is a preference one editor honours and CI cannot see, which is
+# the same class of thing as a badge for a gate nobody runs.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+
+[*.{cs,csx}]
+indent_size = 4
+max_line_length = 120
+
+# File-scoped namespaces, primary constructors and collection expressions are
+# CLAUDE.md conventions; these make the editor produce them rather than leaving
+# it to review.
+csharp_style_namespace_declarations = file_scoped:error
+csharp_style_prefer_primary_constructors = true:suggestion
+dotnet_style_prefer_collection_expression = true:suggestion
+
+csharp_using_directive_placement = outside_namespace:error
+dotnet_sort_system_directives_first = true
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_prefer_braces = when_multiline:suggestion
+
+# Nothing is anonymous by default (invariant 10) and nothing is accidentally
+# public either: an explicit modifier is a decision, its absence is a shrug.
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:error
+
+[*.{ts,js,mjs,cjs,html,css,json,yml,yaml}]
+indent_size = 2
+
+# Prettier owns the frontend's formatting; these keep an editor from fighting it
+# before Prettier ever runs.
+[*.{ts,html,css}]
+max_line_length = 100
+
+[*.{md,mdx}]
+# Two trailing spaces are a hard line break in Markdown, so trimming them
+# silently rewrites the prose. This repository's documentation is the product.
+trim_trailing_whitespace = false
+
+[*.{csproj,props,targets,slnx,xml}]
+indent_size = 2
+
+[*.sh]
+end_of_line = lf

@@ -44,6 +44,17 @@ jobs:
       - name: Build
         run: dotnet build --no-restore -warnaserror
 
+      # The whole reason style lives in `.editorconfig` rather than in a Rider
+      # `.DotSettings`: this line. Both describe a preference; only one of them
+      # can be checked by something other than the person who set it.
+      #
+      # `--severity error` on purpose — the file marks file-scoped namespaces,
+      # using placement and explicit accessibility as errors and everything else
+      # as a suggestion, so this fails on the conventions CLAUDE.md actually
+      # states and stays quiet about taste.
+      - name: The code is formatted the way .editorconfig says
+        run: dotnet format --no-restore --verify-no-changes --severity error
+
       # The architecture rules are ordinary xUnit facts, so this line is also
       # what enforces slice isolation, domain purity and "Elastic.Clients stays
       # inside its adapter". It now also boots the API through

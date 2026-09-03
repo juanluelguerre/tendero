@@ -1,9 +1,8 @@
 extern alias TenderoApi;
-
 using System.Reflection;
 using ElGuerre.Tendero.Catalog.Domain;
-using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
+using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Pricing.Domain;
 using ElGuerre.Tendero.Search.Contracts;

@@ -63,13 +63,13 @@ public sealed class Order : AggregateRoot
     // A declarative state machine: a transition outside this table is a bug.
     private static readonly Dictionary<OrderStatus, OrderStatus[]> AllowedTransitions = new()
     {
-        [OrderStatus.Pending]           = [OrderStatus.PaymentAuthorized, OrderStatus.PaymentFailed, OrderStatus.Cancelled],
+        [OrderStatus.Pending] = [OrderStatus.PaymentAuthorized, OrderStatus.PaymentFailed, OrderStatus.Cancelled],
         [OrderStatus.PaymentAuthorized] = [OrderStatus.Confirmed, OrderStatus.Cancelled],
-        [OrderStatus.PaymentFailed]     = [OrderStatus.Pending, OrderStatus.Cancelled],
-        [OrderStatus.Confirmed]         = [OrderStatus.Shipped, OrderStatus.Cancelled],
-        [OrderStatus.Shipped]           = [OrderStatus.Delivered],
-        [OrderStatus.Delivered]         = [],
-        [OrderStatus.Cancelled]         = []
+        [OrderStatus.PaymentFailed] = [OrderStatus.Pending, OrderStatus.Cancelled],
+        [OrderStatus.Confirmed] = [OrderStatus.Shipped, OrderStatus.Cancelled],
+        [OrderStatus.Shipped] = [OrderStatus.Delivered],
+        [OrderStatus.Delivered] = [],
+        [OrderStatus.Cancelled] = []
     };
 
     private readonly List<OrderLine> _lines = [];

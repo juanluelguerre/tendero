@@ -1,5 +1,5 @@
-using ElGuerre.Tendero.Search.Contracts;
 using Elastic.Clients.Elasticsearch;
+using ElGuerre.Tendero.Search.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
 // The namespace matters: architecture rule 4 says the Elastic client is not

@@ -2,9 +2,8 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.PublishProduct;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
-using Xunit;
-
 using ElGuerre.Tendero.Tests;
+using Xunit;
 
 namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
@@ -104,7 +103,7 @@ public sealed class PublishProductTests
     }
 
     private static Product ADraftProduct() =>
-        Product.Create(Clock, 
+        Product.Create(Clock,
             LocalizedText.From("es", "Cafetera italiana 12 tazas"),
             new Money(29.90m, "EUR"));
 

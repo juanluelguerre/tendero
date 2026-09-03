@@ -100,16 +100,16 @@ public sealed class ReturnRequest : AggregateRoot
     private static readonly Dictionary<ReturnStatus, ReturnStatus[]> AllowedTransitions = new()
     {
         [ReturnStatus.Requested] = [ReturnStatus.Approved, ReturnStatus.Rejected, ReturnStatus.Cancelled],
-        [ReturnStatus.Approved]  = [ReturnStatus.Received, ReturnStatus.Cancelled],
+        [ReturnStatus.Approved] = [ReturnStatus.Received, ReturnStatus.Cancelled],
 
         // Rejected from Received too: the parcel arrived and the goods are not
         // what was described, or are damaged in a way the reason did not claim.
         // Refusing after inspection is the whole reason receiving and refunding
         // are two steps.
-        [ReturnStatus.Received]  = [ReturnStatus.Refunded, ReturnStatus.Rejected],
+        [ReturnStatus.Received] = [ReturnStatus.Refunded, ReturnStatus.Rejected],
 
-        [ReturnStatus.Refunded]  = [],
-        [ReturnStatus.Rejected]  = [],
+        [ReturnStatus.Refunded] = [],
+        [ReturnStatus.Rejected] = [],
         [ReturnStatus.Cancelled] = []
     };
 

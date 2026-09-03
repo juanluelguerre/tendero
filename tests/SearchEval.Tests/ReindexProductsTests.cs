@@ -2,9 +2,8 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.SharedKernel;
-using Xunit;
-
 using ElGuerre.Tendero.Tests;
+using Xunit;
 
 namespace ElGuerre.Tendero.SearchEval.Tests;
 

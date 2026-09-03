@@ -42,17 +42,13 @@ internal sealed class InMemoryProductCatalogReader(params Product[] products) : 
         [
             .. products.SelectMany(product => product.Variants
                 .Where(variant => wanted.Contains(variant.Sku))
-                .Select(variant =>
-                {
-                    var label = variant.LabelFor(product.VariantAxes);
-
-                    return new SkuDescription(
-                        variant.Sku,
-                        product.Code,
-                        product.Name.In(culture),
-                        label.Length > 0 ? label : null,
-                        product.Slug.In(culture));
-                }))
+                .Select(variant => new SkuDescription(
+                    variant.Sku,
+                    product.Code,
+                    product.Name.In(culture),
+                    product.Slug.In(culture),
+                    product.VariantAxes,
+                    variant.AxisValues)))
         ];
 
         return Task.FromResult(found);

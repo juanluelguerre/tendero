@@ -1,10 +1,10 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
-using NetArchTest.Rules;
-using TestResult = NetArchTest.Rules.TestResult;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.SharedKernel;
+using NetArchTest.Rules;
 using Xunit;
+using TestResult = NetArchTest.Rules.TestResult;
 
 namespace ElGuerre.Tendero.Architecture.Tests;
 

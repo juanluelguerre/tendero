@@ -1,8 +1,7 @@
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Domain;
-using Xunit;
-
 using ElGuerre.Tendero.Tests;
+using Xunit;
 
 namespace ElGuerre.Tendero.Catalog.Tests.Connectors;
 

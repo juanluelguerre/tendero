@@ -1,8 +1,7 @@
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.SharedKernel;
-using Xunit;
-
 using ElGuerre.Tendero.Tests;
+using Xunit;
 
 namespace ElGuerre.Tendero.Ordering.Tests;
 

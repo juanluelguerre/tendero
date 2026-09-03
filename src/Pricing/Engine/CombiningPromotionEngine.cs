@@ -46,9 +46,9 @@ public sealed class CombiningPromotionEngine : IPromotionEngine
     internal static readonly IReadOnlyDictionary<CombinationPolicy, CombinationRule> Rules =
         new Dictionary<CombinationPolicy, CombinationRule>
         {
-            [CombinationPolicy.ExclusiveGlobal]  = new(StopsEvaluation: true,  SuppressesGroup: false),
+            [CombinationPolicy.ExclusiveGlobal] = new(StopsEvaluation: true, SuppressesGroup: false),
             [CombinationPolicy.ExclusiveInGroup] = new(StopsEvaluation: false, SuppressesGroup: true),
-            [CombinationPolicy.Stackable]        = new(StopsEvaluation: false, SuppressesGroup: false)
+            [CombinationPolicy.Stackable] = new(StopsEvaluation: false, SuppressesGroup: false)
         };
 
     /// <summary>

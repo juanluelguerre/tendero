@@ -5,12 +5,11 @@ using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Persistence.Outbox;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Tests;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-
-using ElGuerre.Tendero.Tests;
 
 namespace ElGuerre.Tendero.Integration.Tests;
 

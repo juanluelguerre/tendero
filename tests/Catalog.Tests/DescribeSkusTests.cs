@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.DescribeSkus;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
@@ -29,22 +30,44 @@ public sealed class DescribeSkusTests
         var described = Assert.Single(result.Items);
         Assert.Equal("SHIRT-NAVY-38", described.Sku);
         Assert.Equal("Camisa de lino", described.ProductName);
-        Assert.Equal("NAVY_BLUE · 38", described.VariantLabel);
+        Assert.Equal("Azul marino · 38", described.VariantLabel);
         Assert.Equal(shirt.Code, described.ProductCode);
     }
 
     /// <summary>
-    /// The label is the option CODES, not their translations, and that is the
-    /// right answer for a backoffice: the box on the shelf is labelled
-    /// `PULSE-NAVY_BLUE-38`, so a row reading "NAVY_BLUE · 38" matches what a
-    /// shopkeeper is holding. The storefront resolves the same axes into "azul
-    /// marino · 38" because a shopper is not holding a box.
+    /// The label is TRANSLATED, the same words the product page shows.
+    ///
+    /// The first version answered with the option codes, arguing that the box on
+    /// the shelf is labelled `PULSE-NAVY_BLUE-38`. The layout kills that
+    /// argument: the SKU is already in the next column, so the code appeared
+    /// twice and the translation never — a backoffice ignoring the work phase 2
+    /// did to give every option a label per culture.
     /// </summary>
     [Fact]
-    public async Task The_label_matches_what_is_printed_on_the_box()
+    public async Task The_label_reads_in_the_requested_culture()
     {
-        var result = await HandlerOver(AShirt()).HandleAsync(
+        var spanish = await HandlerOver(AShirt()).HandleAsync(
+            new DescribeSkusQuery(["SHIRT-NAVY-38"], "es"), TestContext.Current.CancellationToken);
+
+        var english = await HandlerOver(AShirt()).HandleAsync(
             new DescribeSkusQuery(["SHIRT-NAVY-38"], "en"), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Azul marino · 38", Assert.Single(spanish.Items).VariantLabel);
+        Assert.Equal("Navy blue · 38", Assert.Single(english.Items).VariantLabel);
+    }
+
+    /// <summary>
+    /// An option nobody defined falls back to its CODE rather than vanishing.
+    ///
+    /// The product page drops undefined attributes because a shopper cannot act
+    /// on one. Here the reader is the person who CAN create the definition, so
+    /// the gap belongs on their screen.
+    /// </summary>
+    [Fact]
+    public async Task An_undefined_option_falls_back_to_its_code()
+    {
+        var result = await HandlerOver(AShirt(), new NoDefinitions()).HandleAsync(
+            new DescribeSkusQuery(["SHIRT-NAVY-38"], "es"), TestContext.Current.CancellationToken);
 
         Assert.Equal("NAVY_BLUE · 38", Assert.Single(result.Items).VariantLabel);
     }
@@ -121,8 +144,51 @@ public sealed class DescribeSkusTests
         Assert.False(new DescribeSkusValidator().Validate(query).IsValid);
     }
 
-    private static DescribeSkusHandler HandlerOver(Product product) =>
-        new(new InMemoryProductCatalogReader(product));
+    private static DescribeSkusHandler HandlerOver(
+        Product product, IAttributeDefinitionReader? definitions = null) =>
+        new(new InMemoryProductCatalogReader(product), definitions ?? new Definitions());
+
+    /// <summary>Colour and size, labelled per culture — the phase-2 catalogue.</summary>
+    private sealed class Definitions : IAttributeDefinitionReader
+    {
+        public Task<AttributeDefinitions> AllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AttributeDefinitions(
+            [
+                Option("COLOR", "Color", "Colour",
+                    ("NAVY_BLUE", "Azul marino", "Navy blue"),
+                    ("BLACK", "Negro", "Black")),
+                Option("SIZE", "Talla", "Size", ("38", "38", "38"))
+            ]));
+
+        private static AttributeDefinition Option(
+            string code, string es, string en, params (string Code, string Es, string En)[] options)
+        {
+            var definition = AttributeDefinition.Define(
+                Clock, code,
+                new LocalizedText(new Dictionary<string, string> { ["es"] = es, ["en"] = en }),
+                AttributeKind.Option, isVariantAxis: true);
+
+            foreach (var (optionCode, optionEs, optionEn) in options)
+            {
+                definition.AddOption(Clock, optionCode,
+                    new LocalizedText(new Dictionary<string, string>
+                    {
+                        ["es"] = optionEs,
+                        ["en"] = optionEn
+                    }));
+            }
+
+            return definition;
+        }
+    }
+
+    /// <summary>A catalogue that never defined its axes — deliberately named,
+    /// so a test reading it knows the emptiness is the fixture.</summary>
+    private sealed class NoDefinitions : IAttributeDefinitionReader
+    {
+        public Task<AttributeDefinitions> AllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(AttributeDefinitions.Empty);
+    }
 
     private static Product AShirt()
     {

@@ -1,8 +1,8 @@
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Inventory.Ports;
-using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering;
+using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Persistence;

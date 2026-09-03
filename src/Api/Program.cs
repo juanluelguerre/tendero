@@ -1,8 +1,8 @@
 using Carter;
 using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Catalog;
-using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
+using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Features.ListStock;
 using ElGuerre.Tendero.Ordering;

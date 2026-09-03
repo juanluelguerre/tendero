@@ -1,7 +1,7 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Inventory.Ports;
-using Microsoft.EntityFrameworkCore;
 using ElGuerre.Tendero.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace ElGuerre.Tendero.Workers;
 

@@ -1,6 +1,6 @@
-using ElGuerre.Tendero.Catalog.Domain;
 using System.Globalization;
 using System.Text.Json;
+using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;

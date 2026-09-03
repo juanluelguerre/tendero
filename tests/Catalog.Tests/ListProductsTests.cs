@@ -2,9 +2,8 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ListProducts;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
-using Xunit;
-
 using ElGuerre.Tendero.Tests;
+using Xunit;
 
 namespace ElGuerre.Tendero.Catalog.Tests.Features;
 
@@ -50,7 +49,7 @@ public sealed class ListProductsTests
     [Fact]
     public async Task Listing_resolves_the_name_in_the_requested_culture()
     {
-        var product = Product.Create(Clock, 
+        var product = Product.Create(Clock,
             new LocalizedText(new Dictionary<string, string> { ["es"] = "Cafetera", ["en"] = "Coffee maker" }),
             new Money(29.90m, "EUR"));
 

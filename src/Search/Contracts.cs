@@ -299,31 +299,31 @@ public sealed record ProductSearchDocument
     private static ProductSearchDocument FromVariant(
         Product product, Variant variant, string culture, decimal priceFrom, decimal priceTo,
         AttributeDefinitions? definitions, CategoryTree? categories, bool inStock) => new()
-    {
-        Id = variant.Id.ToString(),
-        ProductId = product.Id.ToString(),
-        Sku = variant.Sku,
-        Culture = culture,
-        Name = product.Name.In(culture),
-        Description = product.Description?.In(culture),
-        Brand = product.Brand,
-        Category = product.Category,
-        CategoryPathText = categories?.PathTextIn(product.Category, culture),
-        AttributesText = RenderAttributes(product, culture, definitions),
-        Slug = product.Slug.In(culture),
-        Code = product.Code,
-        AxisValues = [.. variant.AxisValues.Select(pair => $"{pair.Key}:{pair.Value}")],
-        PriceAmount = variant.Price.Amount,
-        InStock = inStock,
-        PriceFrom = priceFrom,
-        PriceTo = priceTo,
-        PriceCurrency = variant.Price.Currency,
-        // The cover is the lowest SortOrder, and that rule lives in the
-        // aggregate. Here it used to take the first of the list while the
-        // backoffice listing sorted: the same product could show two different
-        // photos. The variant's own photo when it has one — colour needs one,
-        // size does not — and the product's cover otherwise.
-        ImageId = variant.Image?.Value ?? product.PrimaryImage?.Id.Value,
-        Status = product.Status.ToString().ToLowerInvariant()
-    };
+        {
+            Id = variant.Id.ToString(),
+            ProductId = product.Id.ToString(),
+            Sku = variant.Sku,
+            Culture = culture,
+            Name = product.Name.In(culture),
+            Description = product.Description?.In(culture),
+            Brand = product.Brand,
+            Category = product.Category,
+            CategoryPathText = categories?.PathTextIn(product.Category, culture),
+            AttributesText = RenderAttributes(product, culture, definitions),
+            Slug = product.Slug.In(culture),
+            Code = product.Code,
+            AxisValues = [.. variant.AxisValues.Select(pair => $"{pair.Key}:{pair.Value}")],
+            PriceAmount = variant.Price.Amount,
+            InStock = inStock,
+            PriceFrom = priceFrom,
+            PriceTo = priceTo,
+            PriceCurrency = variant.Price.Currency,
+            // The cover is the lowest SortOrder, and that rule lives in the
+            // aggregate. Here it used to take the first of the list while the
+            // backoffice listing sorted: the same product could show two different
+            // photos. The variant's own photo when it has one — colour needs one,
+            // size does not — and the product's cover otherwise.
+            ImageId = variant.Image?.Value ?? product.PrimaryImage?.Id.Value,
+            Status = product.Status.ToString().ToLowerInvariant()
+        };
 }

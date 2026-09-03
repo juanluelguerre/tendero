@@ -67,17 +67,11 @@ internal sealed class EfProductRepository(TenderoDbContext context)
     /// <summary>
     /// What a set of SKUs is called, in one query.
     ///
-    /// The variant label is resolved the way the product page resolves it — the
-    /// axes in the product's declared order, rendered through the attribute
-    /// definitions — except that this reader has no definition catalogue and
-    /// does not want one: it answers with the option CODES, which is what
-    /// `Variant.LabelFor` produces and what a shopkeeper reading a stock grid
-    /// can match against a SKU. A backoffice row saying "NAVY_BLUE · 38" beside
-    /// `PULSE-NAVY_BLUE-38` is more useful than one saying "azul marino · 38",
-    /// because the thing on the shelf is labelled with the code.
-    ///
-    /// The implicit default variant has no axis values, so its label is empty
-    /// and comes back null — there is nothing to tell apart.
+    /// It returns the variant's raw COORDINATES and renders nothing. Turning
+    /// `{"COLOR": "NAVY_BLUE"}` into "azul marino" needs the attribute
+    /// definitions, and a repository that held a translation catalogue would be
+    /// a second renderer to keep in step with the product page's. The slice
+    /// renders; this reads.
     /// </summary>
     public async Task<IReadOnlyList<SkuDescription>> DescribeSkusAsync(
         IReadOnlyCollection<string> skus, string culture, CancellationToken ct)
@@ -96,17 +90,13 @@ internal sealed class EfProductRepository(TenderoDbContext context)
         [
             .. products.SelectMany(product => product.Variants
                 .Where(variant => wanted.Contains(variant.Sku))
-                .Select(variant =>
-                {
-                    var label = variant.LabelFor(product.VariantAxes);
-
-                    return new SkuDescription(
-                        variant.Sku,
-                        product.Code,
-                        product.Name.In(culture),
-                        label.Length > 0 ? label : null,
-                        product.Slug.In(culture));
-                }))
+                .Select(variant => new SkuDescription(
+                    variant.Sku,
+                    product.Code,
+                    product.Name.In(culture),
+                    product.Slug.In(culture),
+                    product.VariantAxes,
+                    variant.AxisValues)))
         ];
     }
 

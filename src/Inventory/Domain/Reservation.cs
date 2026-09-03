@@ -55,10 +55,10 @@ public sealed class Reservation : AggregateRoot
     /// </summary>
     private static readonly Dictionary<ReservationStatus, ReservationStatus[]> AllowedTransitions = new()
     {
-        [ReservationStatus.Held]      = [ReservationStatus.Committed, ReservationStatus.Released, ReservationStatus.Expired],
+        [ReservationStatus.Held] = [ReservationStatus.Committed, ReservationStatus.Released, ReservationStatus.Expired],
         [ReservationStatus.Committed] = [],
-        [ReservationStatus.Released]  = [],
-        [ReservationStatus.Expired]   = []
+        [ReservationStatus.Released] = [],
+        [ReservationStatus.Expired] = []
     };
 
     /// <summary>

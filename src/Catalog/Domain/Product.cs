@@ -364,7 +364,7 @@ public sealed class Product : AggregateRoot
     /// safe failure: an ugly slug, never a character that has to be escaped.
     /// </summary>
     private const string Accented = "áàâäãåéèêëíìîïóòôöõúùûüñçýÿšžœæø";
-    private const string Folded   = "aaaaaaeeeeiiiiooooouuuuncyyszoao";
+    private const string Folded = "aaaaaaeeeeiiiiooooouuuuncyyszoao";
 
     /// <summary>
     /// ASCII letters and digits; everything else separates. Splitting on spaces

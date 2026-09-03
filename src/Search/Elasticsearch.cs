@@ -1,12 +1,12 @@
 using System.Diagnostics;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Mapping;
+using Elastic.Clients.Elasticsearch.QueryDsl;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
-using Elastic.Clients.Elasticsearch;
-using Elastic.Clients.Elasticsearch.Mapping;
-using Elastic.Clients.Elasticsearch.QueryDsl;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 

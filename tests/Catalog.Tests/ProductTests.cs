@@ -1,8 +1,7 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.SharedKernel;
-using Xunit;
-
 using ElGuerre.Tendero.Tests;
+using Xunit;
 
 namespace ElGuerre.Tendero.Catalog.Tests.Domain;
 
@@ -93,7 +92,7 @@ public sealed class ProductTests
     [Fact]
     public void Every_culture_gets_its_own_slug()
     {
-        var product = Product.Create(Clock, 
+        var product = Product.Create(Clock,
             new LocalizedText(new Dictionary<string, string>
             {
                 ["es"] = "Cafetera de goteo",
@@ -111,7 +110,7 @@ public sealed class ProductTests
         // Brand and category go into Create. When they arrived in a later
         // UpdateDetails, creating a product emitted two ProductUpserted, and the
         // indexing worker wrote the same document twice.
-        var product = Product.Create(Clock, 
+        var product = Product.Create(Clock,
             LocalizedText.From("es", "Cafetera"),
             new Money(29.90m, "EUR"),
             description: null,

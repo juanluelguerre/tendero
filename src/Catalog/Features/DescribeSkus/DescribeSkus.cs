@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Carter;
+using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -94,7 +95,9 @@ public sealed class DescribeSkusEndpoint : ICarterModule
     }
 }
 
-public sealed class DescribeSkusHandler(IProductCatalogReader products)
+public sealed class DescribeSkusHandler(
+    IProductCatalogReader products,
+    IAttributeDefinitionReader definitions)
     : IQueryHandler<DescribeSkusQuery, DescribeSkusResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Catalog);
@@ -108,6 +111,8 @@ public sealed class DescribeSkusHandler(IProductCatalogReader products)
         var descriptions = await products.DescribeSkusAsync(
             query.Skus, query.Culture, cancellationToken);
 
+        var attributes = await definitions.AllAsync(cancellationToken);
+
         // A SKU the catalogue does not know is simply absent from the answer,
         // and the caller is expected to notice. Returning a row with an empty
         // name would say "this product is called nothing", which is a different
@@ -119,7 +124,40 @@ public sealed class DescribeSkusHandler(IProductCatalogReader products)
                 description.Sku,
                 description.ProductCode,
                 description.ProductName,
-                description.VariantLabel,
+                Label(description, attributes, query.Culture),
                 description.Slug))]);
+    }
+
+    /// <summary>
+    /// "Azul marino · 38", the same words the product page shows.
+    ///
+    /// The first version answered with the option CODES, on the argument that a
+    /// shopkeeper is holding a box labelled `PULSE-NAVY_BLUE-38`. That argument
+    /// does not survive the layout: the SKU is already in the next column, so
+    /// the code appeared twice and the translation never — a backoffice
+    /// deliberately ignoring the work phase 2 did to give every option a label
+    /// per culture.
+    ///
+    /// The axes render in the product's DECLARED order, because that order is
+    /// catalogue data (ADR 0015) and a dictionary has none.
+    ///
+    /// An option with no definition falls back to its code rather than
+    /// disappearing. Unlike the product page, which drops undefined attributes
+    /// because a shopper cannot act on them, here the reader is the person who
+    /// CAN create the missing definition — so the gap belongs on their screen.
+    /// </summary>
+    private static string? Label(
+        SkuDescription description, AttributeDefinitions definitions, string culture)
+    {
+        var parts = description.AxisOrder
+            .Where(description.AxisValues.ContainsKey)
+            .Select(axis => definitions.ByCode(axis)?.LabelForOption(description.AxisValues[axis], culture)
+                            ?? description.AxisValues[axis])
+            .ToArray();
+
+        // The implicit default variant has no coordinates, so there is nothing
+        // to tell it apart from — and null says that better than an empty
+        // string, which a template renders as a stray separator.
+        return parts.Length > 0 ? string.Join(" · ", parts) : null;
     }
 }

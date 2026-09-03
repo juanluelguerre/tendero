@@ -69,6 +69,19 @@ public interface IProductCatalogReader
         IReadOnlyCollection<string> skus, string culture, CancellationToken ct);
 }
 
-/// <summary>What one SKU is, in the culture it was asked for.</summary>
+/// <summary>
+/// What one SKU is, in the culture it was asked for.
+///
+/// It carries the variant's raw COORDINATES rather than a rendered label,
+/// because rendering one needs the attribute definitions and a repository has
+/// no business holding a translation catalogue. The slice renders, exactly as
+/// the product page does — same axes, same definitions, one place that knows
+/// how an axis becomes words.
+/// </summary>
 public sealed record SkuDescription(
-    string Sku, string ProductCode, string ProductName, string? VariantLabel, string Slug);
+    string Sku,
+    string ProductCode,
+    string ProductName,
+    string Slug,
+    IReadOnlyList<string> AxisOrder,
+    IReadOnlyDictionary<string, string> AxisValues);

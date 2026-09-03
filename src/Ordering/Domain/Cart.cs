@@ -68,9 +68,9 @@ public sealed class Cart : AggregateRoot
     /// </summary>
     private static readonly Dictionary<CartStatus, CartStatus[]> AllowedTransitions = new()
     {
-        [CartStatus.Open]       = [CartStatus.CheckedOut, CartStatus.Abandoned],
+        [CartStatus.Open] = [CartStatus.CheckedOut, CartStatus.Abandoned],
         [CartStatus.CheckedOut] = [],
-        [CartStatus.Abandoned]  = []
+        [CartStatus.Abandoned] = []
     };
 
     /// <summary>

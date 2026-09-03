@@ -3,9 +3,9 @@ using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Pricing.Ports;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Persistence;
 
