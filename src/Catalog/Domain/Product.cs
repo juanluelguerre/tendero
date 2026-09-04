@@ -47,6 +47,17 @@ public sealed class Product : AggregateRoot
     public LocalizedText Slug { get; private set; } = default!;
     public LocalizedText? Description { get; private set; }
     public string? Brand { get; private set; }
+
+    /// <summary>
+    /// When the SOURCE first listed it. Null when the source did not say.
+    ///
+    /// It is not `CreatedAt`. That one records when this shop imported the row,
+    /// which for a seeded catalogue is the same second for all hundred of them —
+    /// so a "new arrivals" row sorted by it would be sorting by import order and
+    /// calling it news. This is a fact the supplier stated, and the shop repeats
+    /// it.
+    /// </summary>
+    public DateOnly? AvailableFrom { get; private set; }
     public string? Category { get; private set; }
     public Money Price { get; private set; }
     public ProductStatus Status { get; private set; }
@@ -160,6 +171,22 @@ public sealed class Product : AggregateRoot
         Slug = Slugify(Name);
         if (description is not null)
             Description = (Description ?? LocalizedText.From(culture, description)).With(culture, description);
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// What the source says about when it was first listed.
+    ///
+    /// It does NOT raise a status change and it does not un-publish anything: it
+    /// is a fact about the product, not a decision about it — the same call
+    /// `UpdateDetails` already makes on a re-import (ADR 0012).
+    /// </summary>
+    public void SetAvailableFrom(TimeProvider clock, DateOnly? availableFrom)
+    {
+        if (AvailableFrom == availableFrom)
+            return;
+
+        AvailableFrom = availableFrom;
         Touch(clock);
     }
 

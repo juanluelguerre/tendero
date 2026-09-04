@@ -90,6 +90,19 @@ public sealed class CategoryTree(IReadOnlyList<Category> categories)
     /// branch, "Hogar Cocina Menaje de cocina". The whole branch and not just
     /// the leaf, because somebody searching "cocina" expects to find what is inside it.
     /// </summary>
+    /// <summary>
+    /// A category's whole branch as CODES, root first: `["HOME", "KITCHEN",
+    /// "COOKWARE"]`.
+    ///
+    /// It is the filtering half of what `PathTextIn` does for matching, and it
+    /// exists for the same reason: somebody browsing "Cocina" expects what is
+    /// inside it. A term filter on the leaf alone would answer "Cocina" with the
+    /// products filed directly under it and none of the twenty-five below,
+    /// which is a shop that hides its own stock.
+    /// </summary>
+    public IReadOnlyList<string> BranchCodes(string? code) =>
+        ByCode(code) is { } category ? category.Ancestry : [];
+
     public string? PathTextIn(string? code, string culture)
     {
         var category = ByCode(code);

@@ -77,9 +77,9 @@
            the page does not jump when it arrives. -->
       <ul class="grid" aria-hidden="true">
         @for (placeholder of placeholders; track placeholder) {
-          <li class="card card--loading">
-            <div class="card__image skeleton"></div>
-            <div class="card__body">
+          <li class="skeleton-card">
+            <div class="skeleton-card__image skeleton"></div>
+            <div class="skeleton-card__body">
               <div class="skeleton skeleton--line"></div>
               <div class="skeleton skeleton--line skeleton--short"></div>
             </div>
@@ -119,58 +119,8 @@
 
           <ul class="grid">
             @for (hit of done.hits; track hit.productId) {
-              <li class="card" [class.card--soldOut]="!hit.inStock">
-                @let source = imageUrl(hit);
-                @if (source && !broken().has(hit.productId)) {
-                  <a [routerLink]="links.product(hit.slug, hit.code)" tabindex="-1" aria-hidden="true">
-                    <img
-                      class="card__image"
-                      [src]="source"
-                      [alt]="hit.name"
-                      loading="lazy"
-                      (error)="onImageError(hit.productId)"
-                    />
-                  </a>
-                } @else {
-                  <!-- A default state, not a gap: a card with no photo has to
-                       look deliberate. -->
-                  <storefront-product-image-placeholder
-                    class="card__image card__image--fallback"
-                    [alt]="t('product.noImage')"
-                    [label]="t('product.noImage')" />
-                }
-                <div class="card__body">
-                  @if (hit.brand) {
-                    <p class="card__brand eyebrow">{{ hit.brand }}</p>
-                  }
-                  <!-- The whole card is not the link; the NAME is. A card whose
-                       every pixel navigates cannot also hold an add button, and
-                       the heading is what a screen reader reads out as the
-                       destination. -->
-                  <h2 class="card__name">
-                    <a class="card__link" [routerLink]="links.product(hit.slug, hit.code)">{{ hit.name }}</a>
-                  </h2>
-                  <p class="card__price numeric">{{ price(hit) }}</p>
-                  <!-- Only when it cannot be bought. "In stock" on every card is
-                       a label, not information; the absence is the default and
-                       the presence is the news. -->
-                  @if (!hit.inStock) {
-                    <p class="card__soldOut">{{ t('product.soldOut') }}</p>
-                  } @else {
-                    <!-- The SKU comes from the search hit, which is the winning
-                         VARIANT (ADR 0015). That is the whole reason the index is
-                         per variant: a card that only knew a product id would
-                         have to guess which size somebody meant. -->
-                    <button
-                      class="card__add"
-                      type="button"
-                      [disabled]="adding() === hit.matchedSku"
-                      (click)="addToCart(hit)"
-                    >
-                      {{ adding() === hit.matchedSku ? '…' : t('product.addToCart') }}
-                    </button>
-                  }
-                </div>
+              <li>
+                <storefront-product-card class="card" [hit]="hit" />
               </li>
             }
           </ul>

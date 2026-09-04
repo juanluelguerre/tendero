@@ -6,10 +6,8 @@ import { map } from 'rxjs';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { SearchHit } from '@tendero/shared-api';
-import { formatPrice } from '@tendero/shared-util';
-import { CartStore } from '../../data-access/cart.service';
 import { ProductSearchService } from '../../data-access/product-search.service';
-import { ProductImagePlaceholder } from '../../product-image-placeholder';
+import { ProductCard } from '../../product-card';
 import { ShopLinks } from '../../shop-links';
 
 /** Below this, a query matches so much that the answer is noise. */
@@ -43,7 +41,7 @@ type SearchState =
  */
 @Component({
   selector: 'storefront-search-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
+  imports: [TranslocoDirective, RouterLink, ProductCard],
   templateUrl: './search-page.html',
   styleUrl: './search-page.css',
 })
@@ -118,7 +116,6 @@ export class SearchPage {
    * at cdn.example.com, which deliberately does not resolve, so this path is the
    * one you see on a fresh clone.
    */
-  protected readonly broken = signal<ReadonlySet<string>>(new Set());
 
   /**
    * Real queries from the golden set, not ones chosen because they look good.
@@ -153,10 +150,7 @@ export class SearchPage {
     return current.status !== 'idle';
   }
 
-  protected onImageError(productId: string): void {
-    this.broken.update((ids) => new Set(ids).add(productId));
-  }
-
+  
   /**
    * Pressing search does not search: it navigates. The URL then carries the
    * query, and the effect above runs it — one path in, so the answer is the
@@ -217,17 +211,12 @@ export class SearchPage {
 
   /** The URL is composed here and does not come from the server: the index
    *  stores the key, so putting a CDN in front touches neither backend nor domain. */
-  protected imageUrl(hit: SearchHit): string | null {
-    return hit.imageId ? `/api/images/${hit.imageId}` : null;
-  }
-
+  
   /**
    * Which SKU is in flight. A per-card flag and not a page-wide one: pressing
    * add on one card must not grey out the rest of the results.
    */
-  protected readonly adding = signal<string | null>(null);
 
-  private readonly cart = inject(CartStore);
 
   /**
    * Adds the matched variant and leaves the shopper where they are.
@@ -236,35 +225,6 @@ export class SearchPage {
    * the confirmation, and a shop that threw you out of your results after every
    * add is a shop you buy one thing from.
    */
-  protected async addToCart(hit: SearchHit): Promise<void> {
-    this.adding.set(hit.matchedSku);
-
-    try {
-      await this.cart.add(hit.matchedSku);
-    } finally {
-      this.adding.set(null);
-    }
-  }
-
-  protected price(hit: SearchHit): string {
-    // The signal, not transloco.getActiveLang(): a plain read would not tell
-    // change detection that the price has to be reformatted when the language —
-    // and with it the decimal separator — changes.
-    const culture = this.culture.active();
-
-    // A product with several variants does NOT have a price, it has a range, and
-    // showing only the matched variant's lies in both directions: it looks
-    // expensive if the large size won and cheap if the small one did.
-    // priceFrom/priceTo travel in the document itself (ADR 0015), so the card
-    // needs no second call to say it.
-    if (hit.priceFrom < hit.priceTo) {
-      return `${formatPrice(hit.priceFrom, hit.priceCurrency, culture)} – ${formatPrice(
-        hit.priceTo,
-        hit.priceCurrency,
-        culture,
-      )}`;
-    }
-
-    return formatPrice(hit.priceFrom, hit.priceCurrency, culture);
-  }
+  
+  
 }

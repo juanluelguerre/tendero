@@ -37,6 +37,7 @@ public static class ExternalProductMapper
             external.Brand,
             external.Category);
 
+        product.SetAvailableFrom(clock, external.AvailableFrom);
         product.LinkExternal(clock, source, external.ExternalId);
         CopyAttributes(external, product, clock, definitions);
         EnsureDefaultVariant(external, product, clock);
@@ -56,6 +57,7 @@ public static class ExternalProductMapper
         product.UpdateDetails(
             clock, external.LocalizedName, external.LocalizedDescription, external.Brand, external.Category);
         product.SetPrice(clock, external.Price);
+        product.SetAvailableFrom(clock, external.AvailableFrom);
         CopyAttributes(external, product, clock, definitions);
         EnsureDefaultVariant(external, product, clock);
     }

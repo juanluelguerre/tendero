@@ -34,7 +34,21 @@ public sealed record ExternalProduct(
     decimal PriceAmount,
     string PriceCurrency,
     IReadOnlyList<ExternalImage> Images,
-    IReadOnlyDictionary<string, string> Attributes)
+    IReadOnlyDictionary<string, string> Attributes,
+
+    /// <summary>
+    /// When the SOURCE first listed it, or null when the source does not say.
+    ///
+    /// It is a supplier fact and not ours, which is the whole reason it belongs
+    /// on this contract: a shop cannot know when a product was designed, and it
+    /// should not invent it. What it CAN do is repeat what the feed said, which
+    /// is what makes "new arrivals" a claim about the catalogue rather than a
+    /// sort by internal id dressed up as one.
+    ///
+    /// Nullable because a connector may not carry it, and a row without one is
+    /// simply never new — not an import failure.
+    /// </summary>
+    DateOnly? AvailableFrom = null)
 {
     public Money Price => new(PriceAmount, PriceCurrency);
 

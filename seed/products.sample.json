@@ -24,7 +24,8 @@
       "genero": "mujer",
       "tallas": "36-42",
       "drop_mm": "8"
-    }
+    },
+    "available_from": "2026-03-26"
   },
   {
     "item_id": "B08JKLM202",
@@ -50,7 +51,8 @@
       "capacidad_l": "25",
       "material": "ripstop reciclado",
       "portatil_max": "15\""
-    }
+    },
+    "available_from": "2025-04-15"
   },
   {
     "item_id": "B09PQRS303",
@@ -75,7 +77,8 @@
       "capacidad_tazas": "12",
       "potencia_w": "900",
       "color": "acero inoxidable"
-    }
+    },
+    "available_from": "2026-07-01"
   },
   {
     "item_id": "B07TUVW404",
@@ -101,7 +104,8 @@
       "genero": "hombre",
       "tallas": "S-XXL",
       "proteccion_uv": "UPF 30"
-    }
+    },
+    "available_from": "2025-10-14"
   },
   {
     "item_id": "B06GHIJ505",
@@ -126,7 +130,8 @@
       "temperatura_color": "3000K-6000K",
       "potencia_w": "9",
       "color": "blanco"
-    }
+    },
+    "available_from": "2026-02-15"
   },
   {
     "item_id": "B05DEFG606",
@@ -151,7 +156,8 @@
       "piezas": "3",
       "diametros_cm": "20, 24, 28",
       "induccion": "si"
-    }
+    },
+    "available_from": "2025-03-15"
   },
   {
     "item_id": "B10SHO0101",
@@ -178,7 +184,8 @@
       "genero": "mujer",
       "tallas": "36-42",
       "drop_mm": "8"
-    }
+    },
+    "available_from": "2026-06-08"
   },
   {
     "item_id": "B10SHO0102",
@@ -205,7 +212,8 @@
       "genero": "hombre",
       "tallas": "40-44",
       "drop_mm": "6"
-    }
+    },
+    "available_from": "2025-05-20"
   },
   {
     "item_id": "B10SHO0103",
@@ -231,7 +239,8 @@
       "material": "malla sintetica",
       "genero": "mujer",
       "tallas": "36-42"
-    }
+    },
+    "available_from": "2024-10-27"
   },
   {
     "item_id": "B10SHO0104",
@@ -257,7 +266,8 @@
       "material": "algodon",
       "genero": "mujer",
       "tallas": "36-42"
-    }
+    },
+    "available_from": "2026-05-21"
   },
   {
     "item_id": "B10SHO0105",
@@ -284,7 +294,8 @@
       "genero": "hombre",
       "tallas": "40-44",
       "drop_mm": "10"
-    }
+    },
+    "available_from": "2025-11-22"
   },
   {
     "item_id": "B10SHO0106",
@@ -309,7 +320,8 @@
       "color": "gris",
       "material": "lana merino",
       "tallas": "36-44"
-    }
+    },
+    "available_from": "2024-11-18"
   },
   {
     "item_id": "B10SHO0107",
@@ -336,7 +348,8 @@
       "genero": "hombre",
       "tallas": "40-44",
       "drop_mm": "4"
-    }
+    },
+    "available_from": "2026-04-05"
   },
   {
     "item_id": "B10SHO0108",
@@ -362,7 +375,8 @@
       "material": "ripstop reciclado",
       "genero": "mujer",
       "tallas": "36-42"
-    }
+    },
+    "available_from": "2026-07-24"
   },
   {
     "item_id": "B10SHI0201",
@@ -389,7 +403,8 @@
       "genero": "mujer",
       "tallas": "36-42",
       "proteccion_uv": "UPF 40+"
-    }
+    },
+    "available_from": "2025-07-01"
   },
   {
     "item_id": "B10SHI0202",
@@ -416,7 +431,8 @@
       "genero": "mujer",
       "tallas": "36-42",
       "proteccion_uv": "UPF 30+"
-    }
+    },
+    "available_from": "2025-10-01"
   },
   {
     "item_id": "B10SHI0203",
@@ -442,7 +458,8 @@
       "material": "lana merino",
       "genero": "hombre",
       "tallas": "38-44"
-    }
+    },
+    "available_from": "2026-07-22"
   },
   {
     "item_id": "B10SHI0204",
@@ -468,7 +485,8 @@
       "material": "algodon",
       "genero": "hombre",
       "tallas": "38-44"
-    }
+    },
+    "available_from": "2026-04-05"
   },
   {
     "item_id": "B10SHI0205",
@@ -494,7 +512,8 @@
       "material": "ripstop reciclado",
       "genero": "hombre",
       "tallas": "38-44"
-    }
+    },
+    "available_from": "2025-02-18"
   },
   {
     "item_id": "B10SHI0206",
@@ -520,7 +539,8 @@
       "material": "algodon",
       "genero": "mujer",
       "tallas": "36-44"
-    }
+    },
+    "available_from": "2026-02-08"
   },
   {
     "item_id": "B10SHI0207",
@@ -546,7 +566,8 @@
       "material": "ripstop reciclado",
       "genero": "mujer",
       "tallas": "36-42"
-    }
+    },
+    "available_from": "2026-07-26"
   },
   {
     "item_id": "B10SHI0208",
@@ -572,7 +593,8 @@
       "material": "ripstop reciclado",
       "genero": "hombre",
       "tallas": "38-44"
-    }
+    },
+    "available_from": "2025-02-02"
   },
   {
     "item_id": "B10SHI0209",
@@ -598,7 +620,8 @@
       "material": "ripstop reciclado",
       "genero": "mujer",
       "tallas": "36-42"
-    }
+    },
+    "available_from": "2024-09-20"
   },
   {
     "item_id": "B10SHI0210",
@@ -624,7 +647,8 @@
       "material": "lana merino",
       "tallas": "38-44",
       "piezas": "3"
-    }
+    },
+    "available_from": "2024-12-04"
   },
   {
     "item_id": "B11COO0301",
@@ -650,7 +674,8 @@
       "induccion": "si",
       "diametros_cm": "26",
       "piezas": "1"
-    }
+    },
+    "available_from": "2026-04-25"
   },
   {
     "item_id": "B11COO0302",
@@ -676,7 +701,8 @@
       "induccion": "si",
       "diametros_cm": "24",
       "capacidad_l": "4"
-    }
+    },
+    "available_from": "2026-07-21"
   },
   {
     "item_id": "B11COO0303",
@@ -701,7 +727,8 @@
       "material": "acero inoxidable",
       "induccion": "si",
       "capacidad_l": "6"
-    }
+    },
+    "available_from": "2024-12-09"
   },
   {
     "item_id": "B11COO0304",
@@ -727,7 +754,8 @@
       "induccion": "si",
       "diametros_cm": "30",
       "piezas": "1"
-    }
+    },
+    "available_from": "2025-03-07"
   },
   {
     "item_id": "B11COO0305",
@@ -753,7 +781,8 @@
       "induccion": "si",
       "diametros_cm": "16",
       "capacidad_l": "1"
-    }
+    },
+    "available_from": "2025-11-11"
   },
   {
     "item_id": "B11COO0306",
@@ -777,7 +806,8 @@
     "attributes": {
       "material": "ceramica",
       "induccion": "no"
-    }
+    },
+    "available_from": "2026-05-25"
   },
   {
     "item_id": "B11COO0307",
@@ -801,7 +831,8 @@
     "attributes": {
       "material": "bambu",
       "piezas": "1"
-    }
+    },
+    "available_from": "2025-09-13"
   },
   {
     "item_id": "B11COO0308",
@@ -825,7 +856,8 @@
     "attributes": {
       "material": "bambu",
       "piezas": "5"
-    }
+    },
+    "available_from": "2024-11-06"
   },
   {
     "item_id": "B11COO0309",
@@ -849,7 +881,8 @@
     "attributes": {
       "material": "acero inoxidable",
       "piezas": "1"
-    }
+    },
+    "available_from": "2025-08-15"
   },
   {
     "item_id": "B11COO0310",
@@ -873,7 +906,8 @@
     "attributes": {
       "material": "acero inoxidable",
       "piezas": "3"
-    }
+    },
+    "available_from": "2026-02-05"
   },
   {
     "item_id": "B11COO0311",
@@ -897,7 +931,8 @@
     "attributes": {
       "material": "ceramica",
       "piezas": "1"
-    }
+    },
+    "available_from": "2025-06-17"
   },
   {
     "item_id": "B11COO0312",
@@ -921,7 +956,8 @@
     "attributes": {
       "material": "acero inoxidable",
       "diametros_cm": "24"
-    }
+    },
+    "available_from": "2026-02-10"
   },
   {
     "item_id": "B11COF0401",
@@ -946,7 +982,8 @@
       "material": "aluminio",
       "induccion": "no",
       "capacidad_tazas": "6"
-    }
+    },
+    "available_from": "2025-02-22"
   },
   {
     "item_id": "B11COF0402",
@@ -971,7 +1008,8 @@
       "material": "acero inoxidable",
       "induccion": "si",
       "capacidad_tazas": "4"
-    }
+    },
+    "available_from": "2024-08-24"
   },
   {
     "item_id": "B11COF0403",
@@ -996,7 +1034,8 @@
       "material": "cristal",
       "capacidad_l": "1",
       "capacidad_tazas": "8"
-    }
+    },
+    "available_from": "2024-12-01"
   },
   {
     "item_id": "B11COF0404",
@@ -1021,7 +1060,8 @@
       "capacidad_tazas": "6",
       "potencia_w": "650",
       "material": "cristal"
-    }
+    },
+    "available_from": "2025-02-17"
   },
   {
     "item_id": "B11COF0405",
@@ -1045,7 +1085,8 @@
     "attributes": {
       "material": "acero inoxidable",
       "potencia_w": "150"
-    }
+    },
+    "available_from": "2026-01-16"
   },
   {
     "item_id": "B11COF0406",
@@ -1070,7 +1111,8 @@
       "material": "acero inoxidable",
       "capacidad_l": "1.7",
       "potencia_w": "2200"
-    }
+    },
+    "available_from": "2025-04-14"
   },
   {
     "item_id": "B11COF0407",
@@ -1095,7 +1137,8 @@
       "material": "acero inoxidable",
       "potencia_w": "900",
       "piezas": "2"
-    }
+    },
+    "available_from": "2026-05-06"
   },
   {
     "item_id": "B11COF0408",
@@ -1120,7 +1163,8 @@
       "material": "cristal",
       "capacidad_l": "1.5",
       "potencia_w": "1000"
-    }
+    },
+    "available_from": "2026-08-18"
   },
   {
     "item_id": "B11TAB0501",
@@ -1146,7 +1190,8 @@
       "diametros_cm": "27",
       "piezas": "4",
       "color": "crema"
-    }
+    },
+    "available_from": "2026-01-08"
   },
   {
     "item_id": "B11TAB0502",
@@ -1172,7 +1217,8 @@
       "piezas": "4",
       "capacidad_l": "0.45",
       "color": "terracota"
-    }
+    },
+    "available_from": "2025-01-08"
   },
   {
     "item_id": "B11TAB0503",
@@ -1196,7 +1242,8 @@
     "attributes": {
       "material": "cristal",
       "capacidad_l": "1.2"
-    }
+    },
+    "available_from": "2024-12-30"
   },
   {
     "item_id": "B11TAB0504",
@@ -1221,7 +1268,8 @@
       "material": "cristal",
       "piezas": "6",
       "capacidad_l": "0.35"
-    }
+    },
+    "available_from": "2025-12-11"
   },
   {
     "item_id": "B11TAB0505",
@@ -1245,7 +1293,8 @@
     "attributes": {
       "material": "cristal",
       "piezas": "3"
-    }
+    },
+    "available_from": "2026-07-27"
   },
   {
     "item_id": "B11TAB0506",
@@ -1269,7 +1318,8 @@
     "attributes": {
       "material": "lino",
       "color": "crema"
-    }
+    },
+    "available_from": "2025-12-24"
   },
   {
     "item_id": "B12LAM0601",
@@ -1294,7 +1344,8 @@
       "temperatura_color": "2700-5000 K",
       "potencia_w": "12",
       "color": "negro"
-    }
+    },
+    "available_from": "2026-08-19"
   },
   {
     "item_id": "B12LAM0602",
@@ -1319,7 +1370,8 @@
       "temperatura_color": "3000-6000 K",
       "potencia_w": "15",
       "color": "blanco"
-    }
+    },
+    "available_from": "2025-06-08"
   },
   {
     "item_id": "B12LAM0603",
@@ -1344,7 +1396,8 @@
       "temperatura_color": "2700 K",
       "potencia_w": "14",
       "color": "negro"
-    }
+    },
+    "available_from": "2026-07-28"
   },
   {
     "item_id": "B12LAM0604",
@@ -1369,7 +1422,8 @@
       "material": "ceramica",
       "color": "terracota",
       "temperatura_color": "2700 K"
-    }
+    },
+    "available_from": "2026-06-10"
   },
   {
     "item_id": "B12LAM0605",
@@ -1394,7 +1448,8 @@
       "potencia_w": "8",
       "color": "negro",
       "temperatura_color": "3000 K"
-    }
+    },
+    "available_from": "2026-01-24"
   },
   {
     "item_id": "B12LAM0606",
@@ -1419,7 +1474,8 @@
       "potencia_w": "3",
       "color": "crema",
       "temperatura_color": "2200 K"
-    }
+    },
+    "available_from": "2025-07-25"
   },
   {
     "item_id": "B12LAM0607",
@@ -1443,7 +1499,8 @@
     "attributes": {
       "potencia_w": "18",
       "temperatura_color": "2700-6500 K"
-    }
+    },
+    "available_from": "2026-08-04"
   },
   {
     "item_id": "B12LAM0608",
@@ -1468,7 +1525,8 @@
       "potencia_w": "9",
       "piezas": "4",
       "temperatura_color": "2700 K"
-    }
+    },
+    "available_from": "2026-07-27"
   },
   {
     "item_id": "B12LAM0609",
@@ -1493,7 +1551,8 @@
       "potencia_w": "2",
       "color": "blanco",
       "temperatura_color": "2200 K"
-    }
+    },
+    "available_from": "2025-03-11"
   },
   {
     "item_id": "B12LAM0610",
@@ -1518,7 +1577,8 @@
       "potencia_w": "10",
       "color": "blanco",
       "temperatura_color": "4000 K"
-    }
+    },
+    "available_from": "2026-05-14"
   },
   {
     "item_id": "B13BAG0701",
@@ -1544,7 +1604,8 @@
       "material": "ripstop reciclado",
       "capacidad_l": "18",
       "portatil_max": "13"
-    }
+    },
+    "available_from": "2026-03-23"
   },
   {
     "item_id": "B13BAG0702",
@@ -1569,7 +1630,8 @@
       "color": "verde bosque",
       "material": "ripstop reciclado",
       "capacidad_l": "30"
-    }
+    },
+    "available_from": "2026-07-10"
   },
   {
     "item_id": "B13BAG0703",
@@ -1595,7 +1657,8 @@
       "material": "ripstop reciclado",
       "capacidad_l": "40",
       "portatil_max": "16"
-    }
+    },
+    "available_from": "2026-04-18"
   },
   {
     "item_id": "B13BAG0704",
@@ -1621,7 +1684,8 @@
       "material": "ripstop reciclado",
       "capacidad_l": "22",
       "portatil_max": "16"
-    }
+    },
+    "available_from": "2025-03-26"
   },
   {
     "item_id": "B13BAG0705",
@@ -1646,7 +1710,8 @@
       "color": "negro",
       "material": "ripstop reciclado",
       "capacidad_l": "8"
-    }
+    },
+    "available_from": "2026-01-22"
   },
   {
     "item_id": "B13BAG0706",
@@ -1671,7 +1736,8 @@
       "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "35"
-    }
+    },
+    "available_from": "2026-03-23"
   },
   {
     "item_id": "B13BAG0707",
@@ -1696,7 +1762,8 @@
       "color": "crema",
       "material": "algodon",
       "capacidad_l": "20"
-    }
+    },
+    "available_from": "2026-08-18"
   },
   {
     "item_id": "B13BAG0708",
@@ -1721,7 +1788,8 @@
       "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "3"
-    }
+    },
+    "available_from": "2025-09-13"
   },
   {
     "item_id": "B13BAG0709",
@@ -1746,7 +1814,8 @@
       "color": "crema",
       "material": "ripstop reciclado",
       "capacidad_l": "4"
-    }
+    },
+    "available_from": "2024-12-19"
   },
   {
     "item_id": "B13BAG0710",
@@ -1771,7 +1840,8 @@
       "color": "gris",
       "material": "lana merino",
       "portatil_max": "14"
-    }
+    },
+    "available_from": "2026-02-20"
   },
   {
     "item_id": "B13BAG0711",
@@ -1796,7 +1866,8 @@
       "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "20"
-    }
+    },
+    "available_from": "2026-02-26"
   },
   {
     "item_id": "B13BAG0712",
@@ -1820,7 +1891,8 @@
     "attributes": {
       "material": "ripstop reciclado",
       "piezas": "3"
-    }
+    },
+    "available_from": "2025-08-27"
   },
   {
     "item_id": "B14HOM0801",
@@ -1845,7 +1917,8 @@
       "material": "lino",
       "piezas": "2",
       "color": "crema"
-    }
+    },
+    "available_from": "2025-09-24"
   },
   {
     "item_id": "B14HOM0802",
@@ -1869,7 +1942,8 @@
     "attributes": {
       "material": "lino",
       "color": "oliva"
-    }
+    },
+    "available_from": "2026-04-16"
   },
   {
     "item_id": "B14HOM0803",
@@ -1894,7 +1968,8 @@
       "material": "lino",
       "piezas": "2",
       "color": "terracota"
-    }
+    },
+    "available_from": "2025-09-04"
   },
   {
     "item_id": "B14HOM0804",
@@ -1919,7 +1994,8 @@
       "material": "bambu",
       "diametros_cm": "40",
       "color": "crema"
-    }
+    },
+    "available_from": "2026-02-01"
   },
   {
     "item_id": "B14HOM0805",
@@ -1943,7 +2019,8 @@
     "attributes": {
       "material": "lana merino",
       "color": "oliva"
-    }
+    },
+    "available_from": "2026-02-15"
   },
   {
     "item_id": "B14HOM0806",
@@ -1968,7 +2045,8 @@
       "material": "lino",
       "piezas": "2",
       "color": "terracota"
-    }
+    },
+    "available_from": "2026-04-28"
   },
   {
     "item_id": "B14HOM0807",
@@ -1992,7 +2070,8 @@
     "attributes": {
       "material": "algodon",
       "color": "crema"
-    }
+    },
+    "available_from": "2026-07-03"
   },
   {
     "item_id": "B14HOM0808",
@@ -2017,7 +2096,8 @@
       "material": "lino",
       "piezas": "4",
       "color": "oliva"
-    }
+    },
+    "available_from": "2024-11-03"
   },
   {
     "item_id": "B14ORG0901",
@@ -2041,7 +2121,8 @@
     "attributes": {
       "material": "bambu",
       "piezas": "1"
-    }
+    },
+    "available_from": "2025-10-05"
   },
   {
     "item_id": "B14ORG0902",
@@ -2064,7 +2145,8 @@
     ],
     "attributes": {
       "material": "bambu"
-    }
+    },
+    "available_from": "2026-03-26"
   },
   {
     "item_id": "B14ORG0903",
@@ -2087,7 +2169,8 @@
     ],
     "attributes": {
       "material": "acero inoxidable"
-    }
+    },
+    "available_from": "2026-02-27"
   },
   {
     "item_id": "B14ORG0904",
@@ -2111,7 +2194,8 @@
     "attributes": {
       "material": "acero inoxidable",
       "capacidad_l": "60"
-    }
+    },
+    "available_from": "2025-09-28"
   },
   {
     "item_id": "B15APP1001",
@@ -2137,7 +2221,8 @@
       "genero": "hombre",
       "tallas": "38-44",
       "color": "blanco"
-    }
+    },
+    "available_from": "2025-11-18"
   },
   {
     "item_id": "B15APP1002",
@@ -2163,7 +2248,8 @@
       "genero": "mujer",
       "tallas": "36-42",
       "color": "gris"
-    }
+    },
+    "available_from": "2026-03-23"
   },
   {
     "item_id": "B15APP1003",
@@ -2189,7 +2275,8 @@
       "genero": "hombre",
       "tallas": "38-44",
       "color": "verde bosque"
-    }
+    },
+    "available_from": "2026-06-29"
   },
   {
     "item_id": "B15APP1004",
@@ -2215,7 +2302,8 @@
       "genero": "mujer",
       "tallas": "36-42",
       "color": "azul marino"
-    }
+    },
+    "available_from": "2026-05-11"
   },
   {
     "item_id": "B15APP1005",
@@ -2241,7 +2329,8 @@
       "genero": "hombre",
       "tallas": "38-44",
       "color": "gris"
-    }
+    },
+    "available_from": "2025-09-04"
   },
   {
     "item_id": "B15APP1006",
@@ -2265,7 +2354,8 @@
     "attributes": {
       "material": "lana merino",
       "color": "terracota"
-    }
+    },
+    "available_from": "2026-03-27"
   },
   {
     "item_id": "B15APP1007",
@@ -2289,7 +2379,8 @@
     "attributes": {
       "material": "lana merino",
       "color": "negro"
-    }
+    },
+    "available_from": "2025-08-18"
   },
   {
     "item_id": "B15APP1008",
@@ -2314,7 +2405,8 @@
       "material": "ripstop reciclado",
       "color": "negro",
       "tallas": "38-44"
-    }
+    },
+    "available_from": "2026-04-29"
   },
   {
     "item_id": "B15SHO1101",
@@ -2338,7 +2430,8 @@
     "attributes": {
       "color": "verde bosque",
       "tallas": "36-44"
-    }
+    },
+    "available_from": "2026-08-02"
   },
   {
     "item_id": "B15SHO1102",
@@ -2363,7 +2456,8 @@
       "color": "negro",
       "genero": "mujer",
       "tallas": "36-42"
-    }
+    },
+    "available_from": "2025-11-17"
   },
   {
     "item_id": "B15SHO1103",
@@ -2389,7 +2483,8 @@
       "material": "malla sintetica",
       "genero": "hombre",
       "tallas": "40-44"
-    }
+    },
+    "available_from": "2026-08-09"
   },
   {
     "item_id": "B15SHO1104",
@@ -2415,7 +2510,8 @@
       "material": "algodon",
       "genero": "mujer",
       "tallas": "36-42"
-    }
+    },
+    "available_from": "2026-06-26"
   },
   {
     "item_id": "B15KIT1201",
@@ -2438,7 +2534,8 @@
     ],
     "attributes": {
       "material": "cristal"
-    }
+    },
+    "available_from": "2026-07-25"
   },
   {
     "item_id": "B15KIT1202",
@@ -2461,7 +2558,8 @@
     ],
     "attributes": {
       "material": "acero inoxidable"
-    }
+    },
+    "available_from": "2025-09-18"
   },
   {
     "item_id": "B15KIT1203",
@@ -2485,7 +2583,8 @@
     "attributes": {
       "material": "acero inoxidable",
       "diametros_cm": "24"
-    }
+    },
+    "available_from": "2025-04-05"
   },
   {
     "item_id": "B15KIT1204",
@@ -2509,6 +2608,7 @@
     "attributes": {
       "material": "acero inoxidable",
       "piezas": "3"
-    }
+    },
+    "available_from": "2025-11-13"
   }
 ]

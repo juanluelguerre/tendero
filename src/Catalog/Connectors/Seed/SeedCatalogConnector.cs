@@ -69,7 +69,8 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         [property: JsonPropertyName("product_type")] string? ProductType,
         SeedPrice Price,
         IReadOnlyList<string>? Images,
-        IReadOnlyDictionary<string, string>? Attributes)
+        IReadOnlyDictionary<string, string>? Attributes,
+        [property: JsonPropertyName("available_from")] DateOnly? AvailableFrom)
     {
         public ExternalProduct ToExternalProduct(Func<string, Uri> resolveImage) => new(
             ExternalId: ItemId,
@@ -80,7 +81,8 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
             PriceAmount: Price.Amount,
             PriceCurrency: Price.Currency,
             Images: (Images ?? []).Select(resolveImage).Select(location => new ExternalImage(location)).ToList(),
-            Attributes: Attributes ?? new Dictionary<string, string>());
+            Attributes: Attributes ?? new Dictionary<string, string>(),
+            AvailableFrom: AvailableFrom);
     }
 
     private sealed record SeedPrice(decimal Amount, string Currency);

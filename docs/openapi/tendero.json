@@ -199,6 +199,35 @@
         }
       }
     },
+    "/api/catalog/categories": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "ListCategories",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCategoriesResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/attributes": {
       "get": {
         "tags": [
@@ -784,7 +813,6 @@
           {
             "name": "q",
             "in": "query",
-            "required": true,
             "schema": {
               "type": "string"
             }
@@ -810,6 +838,20 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1754,6 +1796,40 @@
           }
         }
       },
+      "CategoryView": {
+        "required": [
+          "code",
+          "parent",
+          "name",
+          "path",
+          "depth"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "parent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "depth": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "CountStockRequest": {
         "required": [
           "onHand"
@@ -1988,6 +2064,20 @@
           "refused": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ListCategoriesResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryView"
+            }
           }
         }
       },

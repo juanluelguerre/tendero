@@ -698,6 +698,30 @@ oversight, and each is a paragraph in some future article.
 | `.claude/` skills and plugin | none exist; article 14 is blocked on it | After enough repetition to have opinions |
 | **A storefront that looks like a shop** | the home page IS the search box; no landing, no browsable taxonomy, no editorial imagery, no returns or delivery promise on the PDP | Deliberately after the floor. See below — it is the largest single item here and the only one that is not deferred for scale |
 
+### A real account, and the menu it earns
+
+Recorded 2026-09-04, unscheduled. Today the account page is one screen: who you
+are, sign out, and your orders. A shop people come back to has more, and the
+list is worth writing down because each item needs a different amount of work
+and two of them are not ours to hold.
+
+| section | what it needs | where it lands |
+|---|---|---|
+| **Mis pedidos** | nothing — it ships | done |
+| **Direcciones** | `Address` exists in the SharedKernel and is frozen onto orders; a BOOK of them is a new thing `Accounts` would own, with a default for checkout to preselect | `Accounts`, small |
+| **Preferencias** | `Customer` already carries culture and currency; this is a screen over facts that exist, plus whatever notification settings arrive with a mailer | `Accounts`, small |
+| **Cheques regalo** | a balance that is spent at checkout, so it is a second tender beside the payment port and it touches `Pricing` (it is not a discount), `Ordering` and the refund path. The interesting question is whether an unspent balance is a liability the shop tracks — it is | new, real work |
+| **Mis pagos** | **not card data.** Storing a PAN is out of the question and the port has no tokenisation concept yet; what a shop keeps is a provider-side token and a masked label. It is a change to `IPaymentProvider` before it is a screen | `Ordering` + the port, medium |
+
+**And this is the moment the account grows a sidebar.** One was declined on
+2026-09-04 with the reason that Amazon has a menu because it has fifteen
+sections and this had one — a menu with a single item is chrome pretending to be
+structure. Three real sections is when it stops pretending, and addresses is the
+one that gets it there.
+
+**What to resist:** building the menu first. The order is a section, then a
+second section, then the thing that lists them.
+
 ### A storefront that looks like a shop
 
 **Reference: [warbyparker.com](https://www.warbyparker.com)** — the user's own,

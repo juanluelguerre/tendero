@@ -109,7 +109,28 @@ public sealed class SearchUnavailableException(string operation, string diagnost
     public string Operation { get; } = operation;
 }
 
-public sealed record ProductSearchQuery(string Text, string Culture, int Page = 1, int PageSize = 20);
+/// <param name="Text">
+/// What was typed, or empty to BROWSE.
+///
+/// An empty query used to be a validation failure, which meant the only way into
+/// the catalogue was to already know what you wanted. A shop is not a search
+/// engine with products behind it: somebody who has just arrived has nothing to
+/// type, and every row on a home page — a category, the new arrivals, what is on
+/// offer — is the same question with no words in it.
+/// </param>
+/// <param name="Category">
+/// A category code, matched against the whole BRANCH rather than the leaf, so
+/// "Cocina" returns what is inside it. It is the same call the index already
+/// made when it chose to store the materialised path as analysed text.
+/// </param>
+/// <param name="Sort">
+/// `newest` orders by the source's first-listed date; anything else, including
+/// null, leaves relevance in charge — which is the right default and the only
+/// one that means anything when there IS a query.
+/// </param>
+public sealed record ProductSearchQuery(
+    string Text, string Culture, int Page = 1, int PageSize = 20,
+    string? Category = null, string? Sort = null);
 
 /// <summary>
 /// A result is a PRODUCT, even though what matched was one specific variant
@@ -190,6 +211,25 @@ public sealed record ProductSearchDocument
     /// index — a code did.
     /// </summary>
     public string? CategoryPathText { get; init; }
+
+    /// <summary>
+    /// The branch's codes as keywords: `["HOME", "KITCHEN", "COOKWARE"]`.
+    ///
+    /// Filtering on this is what makes a category page show the whole branch.
+    /// It is a keyword array and takes no part in scoring — it is not among
+    /// `SearchableFields` — so adding it moves no number in the golden set, and
+    /// the gate is the thing that says whether that held.
+    /// </summary>
+    public IReadOnlyList<string> CategoryCodes { get; init; } = [];
+
+    /// <summary>
+    /// When the source first listed it, for sorting a "new arrivals" row.
+    ///
+    /// Not `UpdatedAt`: a reimport touches every product in the same second, so
+    /// sorting by it would put whatever was imported last at the front and call
+    /// it new. Like the branch codes above it takes no part in scoring.
+    /// </summary>
+    public DateOnly? AvailableFrom { get; init; }
 
     /// <summary>Attributes flattened into searchable text: "color azul marino talla 36-42 drop 8".</summary>
     public string? AttributesText { get; init; }
@@ -309,6 +349,8 @@ public sealed record ProductSearchDocument
             Brand = product.Brand,
             Category = product.Category,
             CategoryPathText = categories?.PathTextIn(product.Category, culture),
+            CategoryCodes = categories?.BranchCodes(product.Category) ?? [],
+            AvailableFrom = product.AvailableFrom,
             AttributesText = RenderAttributes(product, culture, definitions),
             Slug = product.Slug.In(culture),
             Code = product.Code,

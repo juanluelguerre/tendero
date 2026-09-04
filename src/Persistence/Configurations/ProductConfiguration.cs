@@ -52,6 +52,11 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasConversion(Jsonb.LocalizedTextConverter!, Jsonb.LocalizedTextComparer!);
 
         builder.Property(p => p.Brand).HasMaxLength(200);
+
+        // A column and not jsonb: "the newest twenty" is an ORDER BY, and this
+        // is the criterion for it — which is ADR 0008's own test for what earns
+        // a column.
+        builder.Property(p => p.AvailableFrom);
         builder.Property(p => p.Category).HasMaxLength(200);
 
         builder.ComplexProperty(p => p.Price, price =>

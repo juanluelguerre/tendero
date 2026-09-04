@@ -52,6 +52,10 @@ internal sealed class SearchIndexInitializer(
                     .Text(d => d.Description!, t => t.Analyzer(analyzer))
                     .Text(d => d.Brand!, t => t.Fields(f => f.Keyword("raw")))
                     .Keyword(d => d.Category!)
+                    // The branch, for filtering a category page. A keyword array
+                    // so a term filter on "KITCHEN" reaches everything below it.
+                    .Keyword(d => d.CategoryCodes)
+                    .Date(d => d.AvailableFrom!)
                     .Text(d => d.CategoryPathText!, t => t.Analyzer(analyzer))
                     .Text(d => d.AttributesText!, t => t.Analyzer(analyzer))
                     .Keyword(d => d.Slug)
@@ -222,35 +226,73 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
             // which is what makes them exact — and the result comes back as a
             // product, with the variant that won inside it.
             .Collapse(c => c.Field(d => d.ProductId))
+            // Sorting is opt-in and there is exactly one option, because a sort
+            // is a promise the index has to be able to keep. Relevance stays the
+            // default: it is the only order that means anything when somebody
+            // typed something, and the golden set measures it.
+            .Sort(sort =>
+            {
+                if (!string.Equals(query.Sort, "newest", StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                sort.Field(d => d.AvailableFrom!, f => f.Order(SortOrder.Desc));
+            })
             // The `hits` total counts DOCUMENTS, and here a document is a
             // variant. The number the interface shows is products, so it comes
             // from a cardinality over the collapsed field. Approximate above
             // 40,000 groups, exact far below that.
             .Aggregations(a => a.Add("products", agg => agg.Cardinality(c => c.Field(d => d.ProductId))))
             .Query(q => q.Bool(b => b
-                // Two ways of matching the same query, joined by should. Each
-                // covers what the other cannot, and that is NOT decoration: the
-                // golden set measures both (see docs/search-evaluation.md).
-                .Must(m => m.Bool(alternatives => alternatives
-                    .Should(
-                        // cross_fields: the terms may spread across fields.
-                        // "zapatillas running mujer" has the first two in name and
-                        // the third in attributesText; with best_fields none of
-                        // them matched, because it demanded all of them in ONE field.
-                        should => should.MultiMatch(mm => mm
-                            .Query(query.Text)
-                            .Fields(SearchableFields)
-                            .Type(TextQueryType.CrossFields)
-                            .Operator(Operator.And)),
-                        // best_fields with fuzziness: it tolerates typos ("zapatilas").
-                        // Kept apart because cross_fields does NOT support fuzziness.
-                        should => should.MultiMatch(mm => mm
-                            .Query(query.Text)
-                            .Fields(SearchableFields)
-                            .Fuzziness(new Fuzziness("AUTO"))
-                            .Operator(Operator.And)))
-                    .MinimumShouldMatch(1)))
-                .Filter(f => f.Term(t => t.Field(d => d.Status).Value("active"))))),
+                // **An empty query is a BROWSE, not a failure.** Everything a
+                // home page shows — a category, what is new, what is on offer —
+                // is this question with no words in it, and until there was a
+                // home page nobody noticed the only way in was to already know
+                // what you wanted.
+                //
+                // `MinimumShouldMatch` is what makes it safe: with no `should`
+                // clauses the boolean matches everything, and the filters below
+                // still apply.
+                .Must(m =>
+                {
+                    // `Must` takes an action rather than returning a clause, so
+                    // this is an if and not the ternary it wants to be.
+                    if (string.IsNullOrWhiteSpace(query.Text))
+                    {
+                        m.MatchAll(_ => { });
+                        return;
+                    }
+
+                    m.Bool(alternatives => alternatives
+                        .Should(
+                            // cross_fields: the terms may spread across fields.
+                            // "zapatillas running mujer" has the first two in name
+                            // and the third in attributesText; with best_fields
+                            // none matched, because it demanded all of them in ONE
+                            // field.
+                            should => should.MultiMatch(mm => mm
+                                .Query(query.Text)
+                                .Fields(SearchableFields)
+                                .Type(TextQueryType.CrossFields)
+                                .Operator(Operator.And)),
+                            // best_fields with fuzziness: it tolerates typos
+                            // ("zapatilas"). Kept apart because cross_fields does
+                            // NOT support fuzziness.
+                            should => should.MultiMatch(mm => mm
+                                .Query(query.Text)
+                                .Fields(SearchableFields)
+                                .Fuzziness(new Fuzziness("AUTO"))
+                                .Operator(Operator.And)))
+                        .MinimumShouldMatch(1));
+                })
+                .Filter(filters =>
+                {
+                    filters.Term(t => t.Field(d => d.Status).Value("active"));
+
+                    // The branch, not the leaf: `CategoryCodes` holds the whole
+                    // ancestry, so one term reaches everything under it.
+                    if (!string.IsNullOrWhiteSpace(query.Category))
+                        filters.Term(t => t.Field(d => d.CategoryCodes).Value(query.Category));
+                }))),
             ct);
 
         if (!response.IsValidResponse)
