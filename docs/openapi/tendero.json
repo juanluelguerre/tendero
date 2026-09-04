@@ -803,6 +803,35 @@
         }
       }
     },
+    "/api/pricing/offers": {
+      "get": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ListOffers",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOffersResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/search": {
       "get": {
         "tags": [
@@ -2090,6 +2119,20 @@
           }
         }
       },
+      "ListOffersResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OfferView"
+            }
+          }
+        }
+      },
       "ListOrdersResult": {
         "required": [
           "orders"
@@ -2197,6 +2240,41 @@
             "items": {
               "$ref": "#/components/schemas/OrderSummary"
             }
+          }
+        }
+      },
+      "OfferView": {
+        "required": [
+          "code",
+          "name",
+          "kind",
+          "amount",
+          "until"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "until": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

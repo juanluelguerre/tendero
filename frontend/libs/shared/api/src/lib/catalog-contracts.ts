@@ -85,3 +85,10 @@ export type PublishProductConflict = Schemas['PublishProductConflict'];
  */
 export type ProductStatus = 'draft' | 'active' | 'archived';
 export type PublishOutcome = 'published' | 'alreadyActive' | 'archived' | 'notFound';
+
+/**
+ * One node of the taxonomy. Flat rather than nested, because the shape is
+ * already in `parent` and every consumer nests it differently.
+ */
+export type CategoryView = Schemas['CategoryView'];
+export type CategoryList = Schemas['ListCategoriesResult'];

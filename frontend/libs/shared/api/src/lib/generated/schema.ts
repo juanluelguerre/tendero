@@ -340,6 +340,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListOffers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search": {
         parameters: {
             query?: never;
@@ -691,6 +707,9 @@ export interface components {
         ListCategoriesResult: {
             items: components["schemas"]["CategoryView"][];
         };
+        ListOffersResult: {
+            items: components["schemas"]["OfferView"][];
+        };
         ListOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
         };
@@ -716,6 +735,15 @@ export interface components {
         };
         MyOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
+        };
+        OfferView: {
+            code: string;
+            name: string;
+            kind: string;
+            /** Format: double */
+            amount: null | number;
+            /** Format: date-time */
+            until: null | string;
         };
         OrderDetail: {
             order: components["schemas"]["OrderView"];
@@ -1701,6 +1729,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListPromotionsResult"];
+                };
+            };
+        };
+    };
+    ListOffers: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListOffersResult"];
                 };
             };
         };

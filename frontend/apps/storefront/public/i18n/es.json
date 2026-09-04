@@ -72,7 +72,8 @@
     "cart": "Cesta",
     "continueShopping": "Seguir comprando",
     "language": "Idioma",
-    "skipToContent": "Saltar al contenido"
+    "skipToContent": "Saltar al contenido",
+    "shop": "Tienda"
   },
   "order": {
     "lines": "Lo que has comprado",
@@ -144,7 +145,7 @@
     "heading": "¿Qué estás buscando?",
     "idle": "Escribe algo y te lo busco.",
     "label": "Buscar productos",
-    "lede": "Seis productos, dos idiomas y una búsqueda que se mide en cada pull request.",
+    "lede": "Cien productos, dos idiomas y una búsqueda que se mide en cada pull request.",
     "placeholder": "Zapatillas, cafetera, mochila…",
     "results": "{{total}} resultados para «{{query}}»",
     "searching": "Buscando…",
@@ -160,5 +161,23 @@
     "tryLabel": "Prueba",
     "returning": "¿Ya has pedido antes?",
     "seeOrders": "Consulta tus pedidos"
+  },
+  "home": {
+    "departments": "Secciones de la tienda",
+    "offers": "Ofertas",
+    "offersLede": "Se aplican solas en el carrito. Sin códigos y sin letra pequeña.",
+    "newest": "Novedades",
+    "freeShipping": "Envío gratis",
+    "until": "Hasta el {{date}}"
+  },
+  "category": {
+    "breadcrumb": "Dónde estás",
+    "loading": "Cargando…",
+    "unknown": "Esa sección no existe. Puede que el enlace esté mal.",
+    "failed": "No hemos podido cargar esta sección.",
+    "empty": "Aquí no hay nada todavía.",
+    "count": "{{count}} productos",
+    "more": "Ver más productos",
+    "loadingMore": "Cargando…"
   }
 }

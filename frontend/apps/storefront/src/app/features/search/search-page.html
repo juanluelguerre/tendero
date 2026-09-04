@@ -4,6 +4,17 @@
        there are results it shrinks (see .hero--compact) because from then on
        what matters is what was found. -->
   <section class="hero" [class.hero--compact]="hasResults()">
+    <!--
+      The shop front, and it goes away the moment there are results: an
+      illustration next to a list of what somebody asked for is decoration in
+      the way. `alt` is empty because it says nothing the heading beside it does
+      not already say, and it is `aria-hidden` for the same reason.
+    -->
+    @if (!hasResults()) {
+      <img class="hero__art" src="/img/hero-shopfront.svg" alt="" aria-hidden="true"
+           width="720" height="460" />
+    }
+
     <h1 class="hero__title">{{ t('search.heading') }}</h1>
     <p class="hero__lede muted">{{ t('search.lede') }}</p>
 
@@ -65,7 +76,16 @@
   </section>
 
   @switch (state().status) {
-    @case ('idle') {}
+    @case ('idle') {
+      <!--
+        The shop's front, and it lives here rather than on a route of its own
+        because `/es` already IS this page: the query is in the URL (P5-13), so a
+        separate home route would be a second component answering the same
+        address. Nothing typed means nothing searched, which is exactly when
+        somebody needs to be shown around.
+      -->
+      <storefront-home-sections />
+    }
 
     @case ('tooShort') {
       <p class="hint muted" role="status" aria-live="polite">{{ t('search.tooShort') }}</p>

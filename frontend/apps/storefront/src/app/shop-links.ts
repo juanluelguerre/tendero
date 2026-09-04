@@ -22,6 +22,15 @@ export class ShopLinks {
   readonly checkout = computed(() => ['/', this.culture(), 'checkout']);
   readonly account = computed(() => ['/', this.culture(), 'account']);
 
+  /**
+   * A department or a section. The CODE is in the URL and not the name, for the
+   * reason ADR 0026 gives about products: a name is not stable and does not
+   * survive a translation, and this one has two of them.
+   */
+  category(code: string): unknown[] {
+    return ['/', this.culture(), 'c', code];
+  }
+
   product(slug: string, code: string): unknown[] {
     return ['/', this.culture(), 'p', slug, code];
   }

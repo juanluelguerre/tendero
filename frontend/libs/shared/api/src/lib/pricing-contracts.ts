@@ -38,3 +38,12 @@ export type AppliedDiscount = Schemas['AppliedDiscountResponse'];
  */
 export type CombinationPolicy = 'ExclusiveGlobal' | 'ExclusiveInGroup' | 'Stackable';
 export type DiscountOutcome = 'Applied' | 'Suppressed';
+
+/**
+ * A promotion as a SHOPPER may see it, which is a different type from
+ * `PromotionView` above and deliberately so: no coupon code, no segment, no
+ * priority, no combination rule. The server decides what reaches the wire; this
+ * alias only names it.
+ */
+export type OfferView = Schemas['OfferView'];
+export type OfferList = Schemas['ListOffersResult'];

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="presentation">
+  <!-- Ropa · Clothing. Flat, two colours and the awning, so a photograph can
+       replace it later without the page around it changing shape. -->
+  <rect width="400" height="300" fill="#FAECE7"/>
+  <rect x="0" y="0" width="400" height="34" fill="#D85A30"/>
+  <g fill="#FAECE7">
+    <rect x="26" y="0" width="26" height="34"/>
+    <rect x="78" y="0" width="26" height="34"/>
+    <rect x="130" y="0" width="26" height="34"/>
+    <rect x="182" y="0" width="26" height="34"/>
+    <rect x="234" y="0" width="26" height="34"/>
+    <rect x="286" y="0" width="26" height="34"/>
+    <rect x="338" y="0" width="26" height="34"/>
+  </g>
+  <rect x="0" y="34" width="400" height="4" fill="#993C1D"/>
+  <!-- One scale for all of them, so three cards side by side do not look like
+       three different illustrators. -->
+  <g transform="translate(200 184) scale(0.88) translate(-200 -184)">
+    <path d="M200 96 L146 118 L254 118 Z" fill="none" stroke="#2C2C2A" stroke-width="6"
+          stroke-linejoin="round"/>
+    <path d="M150 112 L200 130 L250 112 L286 152 L262 172 L250 162 L250 254 L150 254 L150 162
+             L138 172 L114 152 Z" fill="#D85A30"/>
+    <path d="M200 130 L200 92" stroke="#2C2C2A" stroke-width="6" stroke-linecap="round"/>
+    <path d="M200 92 C200 78 216 78 216 90" fill="none" stroke="#2C2C2A" stroke-width="6"
+          stroke-linecap="round"/>
+    <path d="M172 254 L172 190" stroke="#993C1D" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

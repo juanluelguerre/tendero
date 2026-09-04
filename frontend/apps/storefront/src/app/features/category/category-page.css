@@ -1,0 +1,94 @@
+/* Same grid the search results use, because a category page IS a result page
+   with the query in the path instead of the query string. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grid > li { display: flex; }
+.grid .card { flex: 1; }
+
+/*
+  The picture beside the words, not behind them. Text over an illustration is a
+  contrast problem that has to be re-solved for every image somebody drops in
+  later, and the point of this layout is that a photograph can replace the
+  drawing without anything being re-checked.
+*/
+.category__head {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--space-5);
+  align-items: center;
+}
+
+.category__art {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 640px) {
+  /* One column, and the picture stops being worth its vertical room before the
+     products are. */
+  .category__head { grid-template-columns: 1fr; }
+  .category__art { display: none; }
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.crumbs a { color: inherit; }
+.crumbs a:hover { color: var(--accent); }
+
+.category__title {
+  margin: var(--space-3) 0 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+}
+
+.sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Quiet chips, not buttons. They are a way to narrow, and the view's one accent
+   action is elsewhere (design/DESIGN.md). */
+.section {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: inherit;
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.section:hover { border-color: var(--border-strong); }
+
+.category__count { margin: var(--space-4) 0 0; font-size: var(--text-sm); }
+
+/* Centred and quiet: it is a way forward, not the view's accent action —
+   that one belongs to the cards (design/DESIGN.md). */
+.more {
+  margin-block-start: var(--space-6);
+  text-align: center;
+}

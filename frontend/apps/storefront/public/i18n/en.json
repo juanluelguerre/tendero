@@ -72,7 +72,8 @@
     "cart": "Cart",
     "continueShopping": "Continue shopping",
     "language": "Language",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "shop": "Shop"
   },
   "order": {
     "lines": "What you bought",
@@ -144,7 +145,7 @@
     "heading": "What are you looking for?",
     "idle": "Type something and I will look it up.",
     "label": "Search products",
-    "lede": "Six products, two languages, and a search that is measured on every pull request.",
+    "lede": "A hundred products, two languages and a search that is measured on every pull request.",
     "placeholder": "Running shoes, coffee maker, backpack…",
     "results": "{{total}} results for “{{query}}”",
     "searching": "Searching…",
@@ -160,5 +161,23 @@
     "tryLabel": "Try",
     "returning": "Ordered before?",
     "seeOrders": "See your orders"
+  },
+  "home": {
+    "departments": "Around the shop",
+    "offers": "Offers",
+    "offersLede": "They apply themselves in the basket. No codes, no small print.",
+    "newest": "New in",
+    "freeShipping": "Free shipping",
+    "until": "Until {{date}}"
+  },
+  "category": {
+    "breadcrumb": "Where you are",
+    "loading": "Loading…",
+    "unknown": "That section does not exist. The link may be wrong.",
+    "failed": "We could not load this section.",
+    "empty": "Nothing here yet.",
+    "count": "{{count}} products",
+    "more": "Show more products",
+    "loadingMore": "Loading…"
   }
 }

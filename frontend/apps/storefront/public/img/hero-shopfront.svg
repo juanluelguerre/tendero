@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" width="720" height="460" role="presentation">
+  <!--
+    The shop front: an awning over a counter, with the three departments the
+    catalogue actually has standing on it — clothing, home, bags.
+
+    It is deliberately an illustration and not a stock photograph. A photograph
+    of somebody else's shop is a promise this catalogue cannot keep, and the one
+    thing worse than no imagery is imagery that belongs to another shop. When
+    real photography exists it replaces this file and nothing else.
+  -->
+  <defs>
+    <clipPath id="awning">
+      <path d="M60 96 h600 v70 a600 600 0 0 1 -600 0 z"/>
+    </clipPath>
+  </defs>
+
+  <rect x="88" y="150" width="544" height="266" rx="18" fill="#FAECE7"/>
+
+  <g clip-path="url(#awning)">
+    <rect x="60" y="96" width="600" height="120" fill="#D85A30"/>
+    <g fill="#FAECE7">
+      <rect x="120" y="96" width="60" height="120"/>
+      <rect x="240" y="96" width="60" height="120"/>
+      <rect x="360" y="96" width="60" height="120"/>
+      <rect x="480" y="96" width="60" height="120"/>
+      <rect x="600" y="96" width="60" height="120"/>
+    </g>
+  </g>
+  <path d="M60 96 h600 v70 a600 600 0 0 1 -600 0 z" fill="none" stroke="#993C1D" stroke-width="5"
+        stroke-linejoin="round"/>
+  <rect x="52" y="82" width="616" height="18" rx="9" fill="#2C2C2A"/>
+
+  <!-- Ropa -->
+  <g transform="translate(150 226) scale(0.62)">
+    <path d="M100 46 L46 68 L154 68 Z" fill="none" stroke="#2C2C2A" stroke-width="8"
+          stroke-linejoin="round"/>
+    <path d="M50 62 L100 80 L150 62 L186 102 L162 122 L150 112 L150 204 L50 204 L50 112
+             L38 122 L14 102 Z" fill="#D85A30"/>
+    <path d="M100 80 L100 42" stroke="#2C2C2A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M100 42 C100 28 116 28 116 40" fill="none" stroke="#2C2C2A" stroke-width="8"
+          stroke-linecap="round"/>
+  </g>
+
+  <!-- Hogar -->
+  <g transform="translate(300 236) scale(0.62)">
+    <path d="M60 200 L60 128 L102 88" fill="none" stroke="#2C2C2A" stroke-width="10"
+          stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="60" cy="202" rx="40" ry="9" fill="#2C2C2A"/>
+    <g transform="rotate(-38 112 90)">
+      <path d="M86 68 h52 l16 40 h-84 z" fill="#D85A30"/>
+    </g>
+    <rect x="126" y="150" width="86" height="10" rx="5" fill="#2C2C2A"/>
+    <path d="M130 162 h78 l-9 40 a10 10 0 0 1 -10 8 h-40 a10 10 0 0 1 -10 -8 z" fill="#D85A30"/>
+    <rect x="212" y="166" width="52" height="10" rx="5" fill="#2C2C2A"/>
+  </g>
+
+  <!-- Bolsas -->
+  <g transform="translate(492 232) scale(0.62)">
+    <path d="M52 44 C48 8 108 8 104 44" fill="none" stroke="#2C2C2A" stroke-width="12"
+          stroke-linecap="round"/>
+    <rect x="18" y="36" width="120" height="164" rx="30" fill="#D85A30"/>
+    <path d="M18 82 v-16 a30 30 0 0 1 30 -30 h60 a30 30 0 0 1 30 30 v16 z" fill="#993C1D"/>
+    <rect x="46" y="118" width="64" height="50" rx="14" fill="#FAECE7"/>
+    <rect x="46" y="118" width="64" height="50" rx="14" fill="none" stroke="#2C2C2A" stroke-width="5"/>
+  </g>
+
+  <rect x="72" y="368" width="576" height="16" rx="8" fill="#2C2C2A"/>
+  <rect x="112" y="384" width="24" height="48" rx="8" fill="#2C2C2A" opacity=".5"/>
+  <rect x="584" y="384" width="24" height="48" rx="8" fill="#2C2C2A" opacity=".5"/>
+</svg>

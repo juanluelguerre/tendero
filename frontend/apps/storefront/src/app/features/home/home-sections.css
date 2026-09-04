@@ -1,0 +1,170 @@
+/*
+  Bands, not a grid of everything.
+
+  The reference is Apple: one idea per band, room around it, and the reader
+  moving down rather than scanning across. What is borrowed from a catalogue
+  shop is only the entry points — a hundred products need somewhere to start,
+  which is the thing ten products do not.
+*/
+:host {
+  display: block;
+  margin-block-start: var(--space-7);
+}
+
+.band + .band {
+  margin-block-start: var(--space-7);
+  padding-block-start: var(--space-6);
+  border-block-start: 1px solid var(--border);
+}
+
+.band__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+.band__lede {
+  margin: var(--space-2) 0 0;
+  max-width: 56ch;
+}
+
+/* ---------- Departments ---------- */
+
+.departments {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.department {
+  display: grid;
+  align-content: start;
+  block-size: 100%;
+  /* No padding: the picture reaches the edges and only the words are inset. An
+     illustration inset on a tinted ground reads as a sticker, not a window. */
+  overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    translate var(--dur-fast) var(--ease);
+}
+
+.department:hover {
+  border-color: var(--border-strong);
+  translate: 0 -2px;
+}
+
+.department:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.department__art {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  /* Whatever replaces these drawings will be a photograph with its own
+     proportions; the box is what keeps the row of cards level either way. */
+  background: var(--accent-tint);
+}
+
+.department__name,
+.department__sections {
+  padding-inline: var(--space-5);
+}
+
+.department__name { padding-block-start: var(--space-4); }
+.department__sections { padding-block-end: var(--space-5); }
+
+.department__name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+.department__sections {
+  display: block;
+  margin-block-start: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* ---------- Offers ---------- */
+
+.offers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.offer {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  background: var(--accent-tint);
+  border-radius: var(--radius-lg);
+}
+
+/*
+  The figure is the only clay thing on this page, and there is exactly one kind
+  of it: an offer band is where an accent earns its keep, and the search button
+  above is the view's one ACTION. A number is not an action.
+*/
+.offer__headline {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.offer__name { font-size: var(--text-sm); }
+.offer__until { font-size: var(--text-xs); }
+
+/* ---------- A row you scroll yourself ---------- */
+
+.row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(230px, 1fr);
+  gap: var(--space-4);
+  margin: var(--space-5) 0 0;
+  padding: 0 0 var(--space-3);
+  list-style: none;
+
+  overflow-x: auto;
+  /* Each card lands square rather than half off the edge, and the snap is the
+     only thing here that moves — in response to a hand, never on a timer. */
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+
+.row__item {
+  display: flex;
+  scroll-snap-align: start;
+}
+
+.row .card { flex: 1; }
+
+@media (max-width: 640px) {
+  .row { grid-auto-columns: minmax(72%, 1fr); }
+}
+
+/* Words, not a figure: the display face at a readable size rather than the mono
+   one stretched to fit. */
+.offer__headline--words {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1.15;
+}

@@ -1,0 +1,92 @@
+<section *transloco="let t" class="category">
+  @if (category(); as current) {
+    <header class="category__head">
+      <!-- The department's picture, not the section's. It says which part of
+           the shop you are standing in, which is what the crumb beside it says
+           in words. Decorative, so it carries an empty `alt`. -->
+      @if (art(); as illustration) {
+        <img class="category__art" [src]="illustration" alt="" width="400" height="300" />
+      }
+
+      <div>
+        <!-- The whole branch, which is what the API returns beside the name: a
+             breadcrumb that had to walk parents itself would be the client
+             keeping its own copy of the tree. -->
+        <nav class="crumbs" [attr.aria-label]="t('category.breadcrumb')">
+          <a [routerLink]="links.home()">{{ t('nav.shop') }}</a>
+          @for (name of current.path; track $index) {
+            <span aria-hidden="true">›</span>
+            <span>{{ name }}</span>
+          }
+        </nav>
+
+        <h1 class="category__title">{{ current.name }}</h1>
+      </div>
+    </header>
+
+    <!-- The sections inside, when there are any. A department is a way in, and
+         landing on fifty-five products with no way to narrow them is the same
+         problem the shop had before it had categories at all. -->
+    @if (children().length > 0) {
+      <ul class="sections">
+        @for (child of children(); track child.code) {
+          <li>
+            <a class="section" [routerLink]="links.category(child.code)">{{ child.name }}</a>
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="muted" role="status" aria-live="polite">{{ t('category.loading') }}</p>
+    }
+
+    @case ('unknown') {
+      <!-- A code nobody recognises is not an empty shelf. Saying so is the
+           difference between "we do not sell that" and "that link is wrong". -->
+      <div class="notice">
+        <p>{{ t('category.unknown') }}</p>
+        <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
+      </div>
+    }
+
+    @case ('failed') {
+      <p class="notice notice--danger" role="alert">{{ t('category.failed') }}</p>
+    }
+
+    @case ('ready') {
+      @let ready = state();
+      @if (ready.status === 'ready') {
+        @if (ready.hits.length === 0) {
+          <p class="muted">{{ t('category.empty') }}</p>
+        } @else {
+          <p class="category__count muted" role="status">
+            {{ t('category.count', { count: ready.total }) }}
+          </p>
+
+          <ul class="grid">
+            @for (hit of ready.hits; track hit.productId) {
+              <li>
+                <storefront-product-card class="card" [hit]="hit" />
+              </li>
+            }
+          </ul>
+
+          <!-- Not infinite scroll: a footer nobody can reach is the price of
+               that, and this page has one. A button also survives the back
+               button, which an accumulating scroll position does not. -->
+          @if (hasMore()) {
+            <p class="more">
+              <button type="button" class="button button--quiet"
+                      [disabled]="loadingMore()" (click)="loadMore()">
+                {{ loadingMore() ? t('category.loadingMore') : t('category.more') }}
+              </button>
+            </p>
+          }
+        }
+      }
+    }
+  }
+</section>

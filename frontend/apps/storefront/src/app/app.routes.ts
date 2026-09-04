@@ -28,6 +28,14 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/product/product-page').then((m) => m.ProductPage),
   },
   {
+    // `c` for category, matching `p` for product. The CODE and not the name: a
+    // name is not stable and this one exists in two languages, which is the same
+    // argument ADR 0026 makes about products — except that a category has no
+    // slug to decorate the URL with, so there is nothing to put in front of it.
+    path: 'c/:code',
+    loadComponent: () => import('./features/category/category-page').then((m) => m.CategoryPage),
+  },
+  {
     path: 'account',
     loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
   },

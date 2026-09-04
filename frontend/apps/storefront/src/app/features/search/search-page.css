@@ -9,6 +9,51 @@
   transition: padding-block var(--dur-base) var(--ease);
 }
 
+/*
+  The illustration sits BESIDE the words, never behind them. A picture under
+  text is a contrast problem that has to be solved again for every image
+  somebody supplies later; beside them, a photograph can replace the drawing and
+  nothing has to be re-checked.
+
+  Below 900px it is gone rather than shrunk: on a phone the search box is the
+  page, and a drawing above it pushes the one thing somebody came to use off
+  the screen.
+*/
+.hero__art {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 40%);
+    grid-template-areas:
+      'title art'
+      'lede art'
+      'account art'
+      'form art';
+    column-gap: var(--space-6);
+    align-items: start;
+  }
+
+  .hero__title { grid-area: title; }
+  .hero__lede { grid-area: lede; }
+  .hero__account { grid-area: account; }
+  .hero .search { grid-area: form; }
+
+  .hero__art {
+    display: block;
+    grid-area: art;
+    align-self: center;
+    inline-size: 100%;
+    block-size: auto;
+  }
+
+  /* Once there are results the grid has nothing in its second column, so it
+     goes back to being one. */
+  .hero--compact { display: block; }
+}
+
 .hero__title {
   font-size: var(--text-3xl);
   max-width: 18ch;

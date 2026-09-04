@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300" role="presentation">
+  <!-- The fallback: the awning and a basket, which is the shop itself. A
+       department with no art of its own gets this rather than a broken tile. -->
+  <rect width="400" height="300" fill="#FAECE7"/>
+  <rect x="0" y="0" width="400" height="34" fill="#D85A30"/>
+  <g fill="#FAECE7">
+    <rect x="26" y="0" width="26" height="34"/>
+    <rect x="78" y="0" width="26" height="34"/>
+    <rect x="130" y="0" width="26" height="34"/>
+    <rect x="182" y="0" width="26" height="34"/>
+    <rect x="234" y="0" width="26" height="34"/>
+    <rect x="286" y="0" width="26" height="34"/>
+    <rect x="338" y="0" width="26" height="34"/>
+  </g>
+  <rect x="0" y="34" width="400" height="4" fill="#993C1D"/>
+  <!-- One scale for all of them, so three cards side by side do not look like
+       three different illustrators. -->
+  <g transform="translate(200 184) scale(0.94) translate(-200 -184)">
+    <path d="M150 132 L172 92" stroke="#2C2C2A" stroke-width="7" stroke-linecap="round"/>
+    <path d="M250 132 L228 92" stroke="#2C2C2A" stroke-width="7" stroke-linecap="round"/>
+    <rect x="112" y="132" width="176" height="18" rx="9" fill="#2C2C2A"/>
+    <path d="M126 156 h148 l-16 92 a12 12 0 0 1 -12 10 h-92 a12 12 0 0 1 -12 -10 z"
+          fill="#D85A30"/>
+    <g stroke="#993C1D" stroke-width="6" stroke-linecap="round">
+      <path d="M164 176 L158 232"/>
+      <path d="M200 176 L200 232"/>
+      <path d="M236 176 L242 232"/>
+    </g>
+  </g>
+</svg>

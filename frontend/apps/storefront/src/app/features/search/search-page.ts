@@ -7,6 +7,7 @@ import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { SearchHit } from '@tendero/shared-api';
 import { ProductSearchService } from '../../data-access/product-search.service';
+import { HomeSections } from '../home/home-sections';
 import { ProductCard } from '../../product-card';
 import { ShopLinks } from '../../shop-links';
 
@@ -41,7 +42,7 @@ type SearchState =
  */
 @Component({
   selector: 'storefront-search-page',
-  imports: [TranslocoDirective, RouterLink, ProductCard],
+  imports: [TranslocoDirective, RouterLink, ProductCard, HomeSections],
   templateUrl: './search-page.html',
   styleUrl: './search-page.css',
 })
