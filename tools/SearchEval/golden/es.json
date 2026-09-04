@@ -5,141 +5,816 @@
     {
       "query": "zapatillas running",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "es exactamente eso: zapatilla de running" },
-        { "externalId": "B07TUVW404", "relevance": 1, "why": "camiseta de trail running: mismo deporte, categoria distinta" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "es exactamente eso: zapatilla de running"
+        },
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 1,
+          "why": "camiseta de trail running: mismo deporte, categoria distinta"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "zapatilla de running, version de trail de la misma gama"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 3,
+          "why": "zapatilla de running de competicion"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 2,
+          "why": "zapatilla de montana: se corre con ella, pero no es su uso principal"
+        },
+        {
+          "externalId": "B10SHO0107",
+          "relevance": 1,
+          "why": "zapatilla deportiva de gimnasio, no de correr"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 1,
+          "why": "zapatilla deportiva de pista, otro deporte"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 1,
+          "why": "mallas de running: mismo deporte, categoria distinta"
+        }
       ]
     },
     {
       "query": "zapatillas running mujer",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "categoria y genero coinciden (atributo genero=mujer)" },
-        { "externalId": "B07TUVW404", "relevance": 0, "why": "prenda de hombre: el genero pedido lo descarta" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "categoria y genero coinciden (atributo genero=mujer)"
+        },
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 0,
+          "why": "prenda de hombre: el genero pedido lo descarta"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "running de mujer, tallas 36-42"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 1,
+          "why": "running, pero de hombre"
+        }
       ]
     },
     {
       "query": "zapatilas",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "errata de una letra; la tolerancia a erratas debe cubrirla" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "errata de una letra; la tolerancia a erratas debe cubrirla"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "zapatilla: la consulta lleva una errata y debe encontrarla igual"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 3,
+          "why": "zapatilla"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 3,
+          "why": "zapatilla de andar"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 3,
+          "why": "zapatilla de lona"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 3,
+          "why": "zapatilla de montana"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 2,
+          "why": "zapatilla, pero de casa"
+        },
+        {
+          "externalId": "B10SHO0107",
+          "relevance": 3,
+          "why": "zapatilla de gimnasio"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 3,
+          "why": "zapatilla de padel"
+        }
       ]
     },
     {
       "query": "azul marino",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "unico producto con atributo color=azul marino" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "unico producto con atributo color=azul marino"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "camiseta en azul marino"
+        },
+        {
+          "externalId": "B10SHI0206",
+          "relevance": 3,
+          "why": "sudadera en azul marino"
+        },
+        {
+          "externalId": "B13BAG0703",
+          "relevance": 3,
+          "why": "mochila en azul marino"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 3,
+          "why": "chaqueta en azul marino"
+        }
       ]
     },
     {
       "query": "mochila",
       "judgments": [
-        { "externalId": "B08JKLM202", "relevance": 3, "why": "consulta de categoria, unico resultado posible" }
+        {
+          "externalId": "B08JKLM202",
+          "relevance": 3,
+          "why": "consulta de categoria, unico resultado posible"
+        },
+        {
+          "externalId": "B13BAG0701",
+          "relevance": 3,
+          "why": "mochila urbana"
+        },
+        {
+          "externalId": "B13BAG0702",
+          "relevance": 3,
+          "why": "mochila de senderismo"
+        },
+        {
+          "externalId": "B13BAG0703",
+          "relevance": 3,
+          "why": "mochila de viaje"
+        },
+        {
+          "externalId": "B13BAG0704",
+          "relevance": 3,
+          "why": "mochila para portatil"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 2,
+          "why": "chaleco de running con capacidad: mochila pequena de correr"
+        },
+        {
+          "externalId": "B13BAG0708",
+          "relevance": 1,
+          "why": "rinonera: se lleva encima, no es una mochila"
+        },
+        {
+          "externalId": "B13BAG0706",
+          "relevance": 1,
+          "why": "bolsa de deporte, no mochila"
+        }
       ]
     },
     {
       "query": "mochila impermeable",
       "judgments": [
-        { "externalId": "B08JKLM202", "relevance": 3, "why": "impermeable esta en el nombre" }
+        {
+          "externalId": "B08JKLM202",
+          "relevance": 3,
+          "why": "impermeable esta en el nombre"
+        },
+        {
+          "externalId": "B13BAG0711",
+          "relevance": 3,
+          "why": "alforja estanca de cierre enrollable"
+        },
+        {
+          "externalId": "B13BAG0702",
+          "relevance": 2,
+          "why": "mochila de senderismo con funda de lluvia, no estanca"
+        },
+        {
+          "externalId": "B13BAG0703",
+          "relevance": 1,
+          "why": "mochila de viaje, sin impermeabilidad declarada"
+        }
       ]
     },
     {
       "query": "mochila para portatil 15 pulgadas",
       "judgments": [
-        { "externalId": "B08JKLM202", "relevance": 3, "why": "atributo portatil_max=15\"; compartimento acolchado en la descripcion" }
+        {
+          "externalId": "B08JKLM202",
+          "relevance": 3,
+          "why": "atributo portatil_max=15\"; compartimento acolchado en la descripcion"
+        },
+        {
+          "externalId": "B13BAG0704",
+          "relevance": 3,
+          "why": "mochila de trabajo con compartimento de 16 pulgadas"
+        },
+        {
+          "externalId": "B13BAG0703",
+          "relevance": 2,
+          "why": "mochila de viaje que admite portatil de 16"
+        },
+        {
+          "externalId": "B13BAG0701",
+          "relevance": 2,
+          "why": "mochila urbana, pero solo hasta 13 pulgadas"
+        },
+        {
+          "externalId": "B13BAG0710",
+          "relevance": 1,
+          "why": "funda de portatil, no mochila"
+        }
       ]
     },
     {
       "query": "cafetera",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "consulta de cabecera, coincidencia exacta de categoria" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "consulta de cabecera, coincidencia exacta de categoria"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 3,
+          "why": "cafetera italiana"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 3,
+          "why": "cafetera italiana de induccion"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 3,
+          "why": "prensa francesa"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 3,
+          "why": "cafetera de goteo"
+        },
+        {
+          "externalId": "B11COF0405",
+          "relevance": 1,
+          "why": "molinillo: hace falta para el cafe, no es la cafetera"
+        }
       ]
     },
     {
       "query": "cafetera 12 tazas",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "consulta por atributo: capacidad_tazas=12" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "consulta por atributo: capacidad_tazas=12"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 2,
+          "why": "cafetera de goteo, pero de 6 tazas"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 1,
+          "why": "prensa de 8 tazas"
+        }
       ]
     },
     {
       "query": "cafetera programable",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "programable esta en el nombre" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "programable esta en el nombre"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 2,
+          "why": "misma gama sin temporizador"
+        }
       ]
     },
     {
       "query": "camiseta tecnica",
       "judgments": [
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "coincidencia exacta con el nombre" }
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "coincidencia exacta con el nombre"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "camiseta tecnica de manga larga"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 3,
+          "why": "camiseta tecnica sin mangas"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 2,
+          "why": "maillot de ciclismo: prenda tecnica de torso"
+        },
+        {
+          "externalId": "B10SHI0203",
+          "relevance": 1,
+          "why": "camiseta de merino, tecnica por material y no por uso"
+        }
       ]
     },
     {
       "query": "camiseta hombre",
       "judgments": [
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "categoria y atributo genero=hombre" }
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "categoria y atributo genero=hombre"
+        },
+        {
+          "externalId": "B10SHI0203",
+          "relevance": 3,
+          "why": "camiseta de merino de hombre"
+        },
+        {
+          "externalId": "B10SHI0204",
+          "relevance": 3,
+          "why": "camiseta de algodon de hombre"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 2,
+          "why": "maillot de hombre, camiseta de ciclismo"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 1,
+          "why": "camiseta tecnica, pero de mujer"
+        }
       ]
     },
     {
       "query": "lampara escritorio",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 3, "why": "coincidencia exacta de categoria" }
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 3,
+          "why": "coincidencia exacta de categoria"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 3,
+          "why": "flexo de escritorio articulado"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 3,
+          "why": "lampara de escritorio con carga inalambrica"
+        },
+        {
+          "externalId": "B12LAM0610",
+          "relevance": 3,
+          "why": "flexo de arquitecto con lupa"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 2,
+          "why": "lampara de sobremesa, no especifica de escritorio"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 1,
+          "why": "lampara de pie para leer en butaca"
+        },
+        {
+          "externalId": "B12LAM0605",
+          "relevance": 1,
+          "why": "aplique de pared"
+        }
       ]
     },
     {
       "query": "lampara led regulable",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 3, "why": "led y regulable estan ambos en el nombre" }
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 3,
+          "why": "led y regulable estan ambos en el nombre"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 3,
+          "why": "flexo LED regulable en tres temperaturas"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 3,
+          "why": "tira LED regulable"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 2,
+          "why": "lampara LED de escritorio, regulacion no declarada"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 2,
+          "why": "lampara de pie con regulador en el cuello"
+        }
       ]
     },
     {
       "query": "flexo con usb",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 3, "why": "la descripcion en espanol empieza por \"Flexo LED\" y el producto tiene puerto USB: coincidencia literal, no un salto semantico" }
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 3,
+          "why": "la descripcion en espanol empieza por \"Flexo LED\" y el producto tiene puerto USB: coincidencia literal, no un salto semantico"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 3,
+          "why": "lampara de escritorio con puerto USB-C"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 1,
+          "why": "flexo de escritorio sin USB"
+        }
       ]
     },
     {
       "query": "sartenes induccion",
       "judgments": [
-        { "externalId": "B05DEFG606", "relevance": 3, "why": "sartenes en el nombre, atributo induccion=si" }
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 3,
+          "why": "sartenes en el nombre, atributo induccion=si"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 3,
+          "why": "sarten de hierro fundido apta para induccion"
+        },
+        {
+          "externalId": "B11COO0304",
+          "relevance": 2,
+          "why": "wok con fondo plano para induccion"
+        },
+        {
+          "externalId": "B11COO0302",
+          "relevance": 1,
+          "why": "cazuela de induccion, no sarten"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 1,
+          "why": "cazo de induccion, no sarten"
+        }
       ]
     },
     {
       "query": "set de sartenes antiadherentes",
       "judgments": [
-        { "externalId": "B05DEFG606", "relevance": 3, "why": "coincidencia casi literal con el nombre" }
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 3,
+          "why": "coincidencia casi literal con el nombre"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 2,
+          "why": "sarten suelta, gana antiadherencia con el uso"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 1,
+          "why": "utensilios que no rayan el antiadherente"
+        }
       ]
     },
     {
       "query": "menaje de cocina",
       "judgments": [
-        { "externalId": "B05DEFG606", "relevance": 2, "why": "es menaje, pero la palabra no aparece: consulta de categoria amplia" },
-        { "externalId": "B09PQRS303", "relevance": 1, "why": "electrodomestico de cocina, no menaje en sentido estricto" }
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 2,
+          "why": "es menaje, pero la palabra no aparece: consulta de categoria amplia"
+        },
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 1,
+          "why": "electrodomestico de cocina, no menaje en sentido estricto"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 3,
+          "why": "sarten"
+        },
+        {
+          "externalId": "B11COO0302",
+          "relevance": 3,
+          "why": "cazuela"
+        },
+        {
+          "externalId": "B11COO0303",
+          "relevance": 3,
+          "why": "olla a presion"
+        },
+        {
+          "externalId": "B11COO0304",
+          "relevance": 3,
+          "why": "wok"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 3,
+          "why": "cazo"
+        },
+        {
+          "externalId": "B11COO0306",
+          "relevance": 3,
+          "why": "fuente de horno"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 2,
+          "why": "tabla de cortar"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 2,
+          "why": "utensilios de cocina"
+        },
+        {
+          "externalId": "B11COO0312",
+          "relevance": 2,
+          "why": "colador"
+        },
+        {
+          "externalId": "B11COO0309",
+          "relevance": 2,
+          "why": "cuchillo de cocina"
+        },
+        {
+          "externalId": "B15KIT1203",
+          "relevance": 2,
+          "why": "molde de horno"
+        },
+        {
+          "externalId": "B15KIT1204",
+          "relevance": 2,
+          "why": "boles de mezclar"
+        }
       ]
     },
     {
       "query": "Vertex",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "consulta de marca: todo el catalogo de Vertex es relevante" },
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "consulta de marca: todo el catalogo de Vertex es relevante" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "consulta de marca: todo el catalogo de Vertex es relevante"
+        },
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "consulta de marca: todo el catalogo de Vertex es relevante"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHO0107",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 3,
+          "why": "marca Vertex"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 3,
+          "why": "marca Vertex"
+        }
       ]
     },
     {
       "query": "Kuisina",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "consulta de marca" },
-        { "externalId": "B05DEFG606", "relevance": 3, "why": "consulta de marca" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "consulta de marca"
+        },
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 3,
+          "why": "consulta de marca"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COO0302",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COO0303",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COO0304",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COF0406",
+          "relevance": 3,
+          "why": "marca Kuisina"
+        }
       ]
     },
     {
       "query": "ropa deportiva",
       "judgments": [
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "camiseta tecnica de trail: es ropa deportiva" },
-        { "externalId": "B073WXYZ01", "relevance": 2, "why": "calzado deportivo; deportivo si, ropa no exactamente" }
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "camiseta tecnica de trail: es ropa deportiva"
+        },
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 2,
+          "why": "calzado deportivo; deportivo si, ropa no exactamente"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "camiseta tecnica de deporte"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 3,
+          "why": "camiseta de running"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 3,
+          "why": "maillot de ciclismo"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 3,
+          "why": "mallas de running"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 3,
+          "why": "pantalon corto de running"
+        },
+        {
+          "externalId": "B15APP1005",
+          "relevance": 2,
+          "why": "pantalon de montana"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 2,
+          "why": "calzado deportivo, no ropa"
+        }
       ]
     },
     {
       "query": "regalo para casa",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 1, "why": "consulta ambigua sin intencion clara; la lampara encaja tanto como el resto" },
-        { "externalId": "B05DEFG606", "relevance": 1, "why": "consulta ambigua: sartenes valen igual como regalo de hogar" },
-        { "externalId": "B09PQRS303", "relevance": 1, "why": "consulta ambigua: cafetera vale igual como regalo de hogar" }
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 1,
+          "why": "consulta ambigua sin intencion clara; la lampara encaja tanto como el resto"
+        },
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 1,
+          "why": "consulta ambigua: sartenes valen igual como regalo de hogar"
+        },
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 1,
+          "why": "consulta ambigua: cafetera vale igual como regalo de hogar"
+        },
+        {
+          "externalId": "B14HOM0805",
+          "relevance": 2,
+          "why": "manta de lana: regalo tipico de hogar"
+        },
+        {
+          "externalId": "B14HOM0806",
+          "relevance": 2,
+          "why": "cojines"
+        },
+        {
+          "externalId": "B11TAB0501",
+          "relevance": 2,
+          "why": "vajilla de gres"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 2,
+          "why": "lampara de ceramica"
+        }
       ]
     }
   ]

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
@@ -31,7 +32,19 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
 {
     private static readonly TestClock Clock = new();
 
-    private const int SeedProducts = 6;
+    /// <summary>
+    /// How many products the seed file holds, READ FROM THE FILE.
+    ///
+    /// It was the constant `6`, and the catalogue growing to a hundred turned
+    /// three green tests red for a reason that had nothing to do with the outbox.
+    /// A test that hard-codes the size of its fixture is asserting the fixture,
+    /// and this one is about the mechanism: every product in the file arrives,
+    /// whatever number that is.
+    /// </summary>
+    private static readonly int SeedProducts = JsonDocument
+        .Parse(File.ReadAllText(
+            Path.Combine(AppContext.BaseDirectory, "TestData", "products.sample.json")))
+        .RootElement.GetArrayLength();
 
     [Fact]
     [Trait("Category", "Integration")]

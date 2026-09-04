@@ -49,8 +49,17 @@ alternatives; each answers a different question.
 
 **Architectural completeness is total; data volume is laboratory scale.** These
 are different axes. If promotions need real combination rules, build them. If
-checkout needs a saga with compensation, build it. But the catalogue stays at
-six products, warehouses at two, roles at three. Work that exists only because of
+checkout needs a saga with compensation, build it. But warehouses stay at two and
+roles at three.
+
+**The catalogue is 100 products** (raised from six on 2026-09-04). It is still
+laboratory scale — the full ABO set is 147k — and the reason for the raise is
+that six was below the floor at which a *shop* can be judged: nothing to browse,
+a taxonomy with one product per leaf, and a search quality gate measuring
+ranking over a corpus small enough that everything retrieved was annotated. The
+NDCG baseline was re-derived for the new corpus and the old numbers are not
+comparable; `docs/search-evaluation.md` carries the before and after and the
+reasoning. Work that exists only because of
 scale — outbox coalescing, bulk indexing, background reindex, image derivatives —
 is **deferred with its measured number recorded**. Nothing is cut for being
 laborious.

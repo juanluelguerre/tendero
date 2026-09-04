@@ -152,5 +152,2364 @@
       "diametros_cm": "20, 24, 28",
       "induccion": "si"
     }
+  },
+  {
+    "item_id": "B10SHO0101",
+    "name": {
+      "es": "Zapatillas de running de trail Pulse Runner Trail",
+      "en": "Pulse Runner Trail running shoes"
+    },
+    "description": {
+      "es": "Version de trail de la Pulse Runner: zapatilla de running con taco de 4 mm, placa de roca bajo el antepie y upper con refuerzo antiabrasion. Drop de 8 mm.",
+      "en": "The trail version of the Pulse Runner: 4 mm lugs, a rock plate under the forefoot and an abrasion-resistant upper. 8 mm drop."
+    },
+    "brand": "Vertex",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 94.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0101.png"
+    ],
+    "attributes": {
+      "color": "verde bosque",
+      "material": "malla sintetica",
+      "genero": "mujer",
+      "tallas": "36-42",
+      "drop_mm": "8"
+    }
+  },
+  {
+    "item_id": "B10SHO0102",
+    "name": {
+      "es": "Zapatillas de running de competicion Pulse Runner Carbon",
+      "en": "Pulse Runner Carbon racing shoes"
+    },
+    "description": {
+      "es": "Zapatilla de running para competir, con placa de carbono y espuma de alto retorno. Pesa 218 g en talla 42. Drop de 6 mm.",
+      "en": "Racing shoe with a carbon plate and high-rebound foam. 218 g in a size 42. 6 mm drop."
+    },
+    "brand": "Vertex",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 169.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0102.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "malla sintetica",
+      "genero": "hombre",
+      "tallas": "40-44",
+      "drop_mm": "6"
+    }
+  },
+  {
+    "item_id": "B10SHO0103",
+    "name": {
+      "es": "Zapatillas de andar Sendero",
+      "en": "Sendero everyday walking shoes"
+    },
+    "description": {
+      "es": "Zapatilla de paseo con suela de goma flexible y plantilla extraible. Pensada para caminar por ciudad todo el dia.",
+      "en": "Everyday walking shoe with a flexible rubber sole and a removable insole. Made for a whole day on pavement."
+    },
+    "brand": "Caminante",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 59.95,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0103.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "malla sintetica",
+      "genero": "mujer",
+      "tallas": "36-42"
+    }
+  },
+  {
+    "item_id": "B10SHO0104",
+    "name": {
+      "es": "Zapatillas de lona Puerto",
+      "en": "Puerto canvas trainers"
+    },
+    "description": {
+      "es": "Zapatilla de lona de algodon con suela vulcanizada y ojales metalicos. Un clasico de verano que se lava en frio.",
+      "en": "Cotton canvas trainer with a vulcanised sole and metal eyelets. A summer classic that washes cold."
+    },
+    "brand": "Caminante",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 39.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0104.png"
+    ],
+    "attributes": {
+      "color": "blanco",
+      "material": "algodon",
+      "genero": "mujer",
+      "tallas": "36-42"
+    }
+  },
+  {
+    "item_id": "B10SHO0105",
+    "name": {
+      "es": "Zapatillas de montana Roca 3",
+      "en": "Roca 3 mountain shoes"
+    },
+    "description": {
+      "es": "Zapatilla de montana con horma ancha, drenaje lateral y proteccion en la puntera. Para terreno tecnico y humedo.",
+      "en": "Mountain shoe with a wide fit, side drainage and a protected toe box. For technical, wet ground."
+    },
+    "brand": "Vertex",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 119.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0105.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "malla sintetica",
+      "genero": "hombre",
+      "tallas": "40-44",
+      "drop_mm": "10"
+    }
+  },
+  {
+    "item_id": "B10SHO0106",
+    "name": {
+      "es": "Zapatillas de casa Hogar",
+      "en": "Hogar house slippers"
+    },
+    "description": {
+      "es": "Zapatilla de estar por casa forrada en lana con suela antideslizante. Se lava a mano.",
+      "en": "Wool-lined house slipper with a non-slip sole. Hand washable."
+    },
+    "brand": "Caminante",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 29.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0106.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "lana merino",
+      "tallas": "36-44"
+    }
+  },
+  {
+    "item_id": "B10SHO0107",
+    "name": {
+      "es": "Zapatillas de gimnasio Estable",
+      "en": "Estable gym trainers"
+    },
+    "description": {
+      "es": "Zapatilla deportiva de suela plana y firme para levantar peso. Sujecion en el mediopie y talon estable. Drop de 4 mm.",
+      "en": "Flat, firm-soled trainer for lifting. Midfoot hold and a stable heel. 4 mm drop."
+    },
+    "brand": "Vertex",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 84.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0107.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "malla sintetica",
+      "genero": "hombre",
+      "tallas": "40-44",
+      "drop_mm": "4"
+    }
+  },
+  {
+    "item_id": "B10SHO0108",
+    "name": {
+      "es": "Sandalias de trekking Vado",
+      "en": "Vado trekking sandals"
+    },
+    "description": {
+      "es": "Sandalia de tres tiras regulables con suela de agarre para rio y roca mojada. Se seca en una hora.",
+      "en": "Three-strap adjustable sandal with a grippy sole for rivers and wet rock. Dries in an hour."
+    },
+    "brand": "Caminante",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 49.95,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHO0108.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "genero": "mujer",
+      "tallas": "36-42"
+    }
+  },
+  {
+    "item_id": "B10SHI0201",
+    "name": {
+      "es": "Camiseta tecnica de manga larga Trail",
+      "en": "Trail long-sleeve technical tee"
+    },
+    "description": {
+      "es": "Camiseta de manga larga en tejido reciclado con costuras planas y pulgareras. Secado rapido y control de olor.",
+      "en": "Long-sleeve tee in recycled fabric with flat seams and thumb loops. Fast drying, odour controlled."
+    },
+    "brand": "Vertex",
+    "product_type": "SHIRT",
+    "price": {
+      "amount": 44.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0201.png"
+    ],
+    "attributes": {
+      "color": "azul marino",
+      "material": "ripstop reciclado",
+      "genero": "mujer",
+      "tallas": "36-42",
+      "proteccion_uv": "UPF 40+"
+    }
+  },
+  {
+    "item_id": "B10SHI0202",
+    "name": {
+      "es": "Camiseta de tirantes Ligera",
+      "en": "Ligera running vest"
+    },
+    "description": {
+      "es": "Camiseta sin mangas de 92 g con espalda perforada. Pensada para correr en verano sin que se pegue.",
+      "en": "92 g sleeveless vest with a perforated back. Made to run in summer without clinging."
+    },
+    "brand": "Vertex",
+    "product_type": "SHIRT",
+    "price": {
+      "amount": 32.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0202.png"
+    ],
+    "attributes": {
+      "color": "blanco",
+      "material": "ripstop reciclado",
+      "genero": "mujer",
+      "tallas": "36-42",
+      "proteccion_uv": "UPF 30+"
+    }
+  },
+  {
+    "item_id": "B10SHI0203",
+    "name": {
+      "es": "Camiseta de lana merino de manga corta",
+      "en": "Merino wool short-sleeve tee"
+    },
+    "description": {
+      "es": "Camiseta de lana merino de 150 g. Regula la temperatura, no coge olor y aguanta varios dias seguidos.",
+      "en": "150 g merino wool tee. Regulates temperature, resists odour and lasts several days running."
+    },
+    "brand": "Lanar",
+    "product_type": "SHIRT",
+    "price": {
+      "amount": 69.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0203.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "lana merino",
+      "genero": "hombre",
+      "tallas": "38-44"
+    }
+  },
+  {
+    "item_id": "B10SHI0204",
+    "name": {
+      "es": "Camiseta de algodon organico Diario",
+      "en": "Diario organic cotton tee"
+    },
+    "description": {
+      "es": "Camiseta de algodon organico de 180 g con cuello reforzado. Corte recto que no se deforma al lavar.",
+      "en": "180 g organic cotton tee with a reinforced collar. A straight cut that holds its shape in the wash."
+    },
+    "brand": "Lanar",
+    "product_type": "SHIRT",
+    "price": {
+      "amount": 24.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0204.png"
+    ],
+    "attributes": {
+      "color": "blanco",
+      "material": "algodon",
+      "genero": "hombre",
+      "tallas": "38-44"
+    }
+  },
+  {
+    "item_id": "B10SHI0205",
+    "name": {
+      "es": "Maillot de ciclismo Cadencia",
+      "en": "Cadencia cycling jersey"
+    },
+    "description": {
+      "es": "Maillot con tres bolsillos traseros, cremallera completa y banda siliconada en la cintura.",
+      "en": "Jersey with three rear pockets, a full-length zip and a silicone waist gripper."
+    },
+    "brand": "Vertex",
+    "product_type": "SHIRT",
+    "price": {
+      "amount": 74.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0205.png"
+    ],
+    "attributes": {
+      "color": "verde bosque",
+      "material": "ripstop reciclado",
+      "genero": "hombre",
+      "tallas": "38-44"
+    }
+  },
+  {
+    "item_id": "B10SHI0206",
+    "name": {
+      "es": "Sudadera de algodon cepillado Taller",
+      "en": "Taller brushed cotton sweatshirt"
+    },
+    "description": {
+      "es": "Sudadera de interior cepillado con punos elasticos y cuello acanalado. Gramaje de 320 g.",
+      "en": "Brushed-inside sweatshirt with elastic cuffs and a ribbed collar. 320 g weight."
+    },
+    "brand": "Lanar",
+    "product_type": "SHIRT",
+    "price": {
+      "amount": 54.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0206.png"
+    ],
+    "attributes": {
+      "color": "azul marino",
+      "material": "algodon",
+      "genero": "mujer",
+      "tallas": "36-44"
+    }
+  },
+  {
+    "item_id": "B10SHI0207",
+    "name": {
+      "es": "Mallas largas de running Kilometro",
+      "en": "Kilometro running tights"
+    },
+    "description": {
+      "es": "Mallas largas con cintura alta, bolsillo lateral para el telefono y reflectantes en el gemelo.",
+      "en": "Full-length tights with a high waist, a side phone pocket and reflective detail at the calf."
+    },
+    "brand": "Vertex",
+    "product_type": "TROUSERS",
+    "price": {
+      "amount": 59.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0207.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "genero": "mujer",
+      "tallas": "36-42"
+    }
+  },
+  {
+    "item_id": "B10SHI0208",
+    "name": {
+      "es": "Pantalon corto de running de doble capa",
+      "en": "Two-layer running shorts"
+    },
+    "description": {
+      "es": "Pantalon corto con malla interior, bolsillo con cremallera y tiro de 13 cm.",
+      "en": "Running shorts with an inner brief, a zipped pocket and a 13 cm inseam."
+    },
+    "brand": "Vertex",
+    "product_type": "TROUSERS",
+    "price": {
+      "amount": 42.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0208.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "genero": "hombre",
+      "tallas": "38-44"
+    }
+  },
+  {
+    "item_id": "B10SHI0209",
+    "name": {
+      "es": "Cortavientos plegable Racha",
+      "en": "Racha packable windbreaker"
+    },
+    "description": {
+      "es": "Cortavientos de 140 g que cabe en su propio bolsillo. Costuras selladas en los hombros.",
+      "en": "A 140 g windbreaker that folds into its own pocket. Sealed shoulder seams."
+    },
+    "brand": "Lanar",
+    "product_type": "OUTERWEAR",
+    "price": {
+      "amount": 89.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0209.png"
+    ],
+    "attributes": {
+      "color": "verde bosque",
+      "material": "ripstop reciclado",
+      "genero": "mujer",
+      "tallas": "36-42"
+    }
+  },
+  {
+    "item_id": "B10SHI0210",
+    "name": {
+      "es": "Calcetines de lana merino, pack de 3",
+      "en": "Merino wool socks, pack of 3"
+    },
+    "description": {
+      "es": "Tres pares de calcetines de merino con puntera sin costura y refuerzo en el talon.",
+      "en": "Three pairs of merino socks with a seamless toe and a reinforced heel."
+    },
+    "brand": "Lanar",
+    "product_type": "ACCESSORIES",
+    "price": {
+      "amount": 34.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B10SHI0210.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "lana merino",
+      "tallas": "38-44",
+      "piezas": "3"
+    }
+  },
+  {
+    "item_id": "B11COO0301",
+    "name": {
+      "es": "Sarten de hierro fundido de 26 cm",
+      "en": "26 cm cast iron frying pan"
+    },
+    "description": {
+      "es": "Sarten de hierro fundido precurada, apta para induccion, horno y fuego directo. Gana antiadherencia con el uso.",
+      "en": "Pre-seasoned cast iron pan for induction, oven and open flame. It gets more non-stick the more you use it."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 49.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0301.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "induccion": "si",
+      "diametros_cm": "26",
+      "piezas": "1"
+    }
+  },
+  {
+    "item_id": "B11COO0302",
+    "name": {
+      "es": "Cazuela de acero inoxidable de 24 cm con tapa",
+      "en": "24 cm stainless steel casserole with lid"
+    },
+    "description": {
+      "es": "Cazuela de fondo triple difusor que reparte el calor sin puntos calientes. Tapa de cristal templado con salida de vapor.",
+      "en": "Triple-base casserole that spreads heat without hot spots. Tempered glass lid with a steam vent."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 69.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0302.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "induccion": "si",
+      "diametros_cm": "24",
+      "capacidad_l": "4"
+    }
+  },
+  {
+    "item_id": "B11COO0303",
+    "name": {
+      "es": "Olla a presion de 6 litros",
+      "en": "6 litre pressure cooker"
+    },
+    "description": {
+      "es": "Olla a presion con dos niveles de coccion, valvula de seguridad y cierre que no abre bajo presion.",
+      "en": "Pressure cooker with two cooking levels, a safety valve and a lid that will not open under pressure."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 89.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0303.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "induccion": "si",
+      "capacidad_l": "6"
+    }
+  },
+  {
+    "item_id": "B11COO0304",
+    "name": {
+      "es": "Wok de acero al carbono de 30 cm",
+      "en": "30 cm carbon steel wok"
+    },
+    "description": {
+      "es": "Wok de acero al carbono con fondo plano para induccion y mango de madera que no se calienta.",
+      "en": "Carbon steel wok with a flat base for induction and a wooden handle that stays cool."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 44.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0304.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "induccion": "si",
+      "diametros_cm": "30",
+      "piezas": "1"
+    }
+  },
+  {
+    "item_id": "B11COO0305",
+    "name": {
+      "es": "Cazo lechero de 16 cm",
+      "en": "16 cm milk pan"
+    },
+    "description": {
+      "es": "Cazo pequeno con pico vertedor a ambos lados y asa fria. Para salsas, leche y una racion de pasta.",
+      "en": "Small pan with a pouring lip on both sides and a cool handle. For sauces, milk and one portion of pasta."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 27.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0305.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "induccion": "si",
+      "diametros_cm": "16",
+      "capacidad_l": "1"
+    }
+  },
+  {
+    "item_id": "B11COO0306",
+    "name": {
+      "es": "Bandeja de horno de ceramica",
+      "en": "Ceramic oven dish"
+    },
+    "description": {
+      "es": "Fuente de ceramica esmaltada de 33 x 22 cm apta para horno, microondas y lavavajillas.",
+      "en": "Glazed ceramic dish, 33 by 22 cm, for the oven, the microwave and the dishwasher."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 32.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0306.png"
+    ],
+    "attributes": {
+      "material": "ceramica",
+      "induccion": "no"
+    }
+  },
+  {
+    "item_id": "B11COO0307",
+    "name": {
+      "es": "Tabla de cortar de bambu con canal",
+      "en": "Bamboo chopping board with juice groove"
+    },
+    "description": {
+      "es": "Tabla de bambu de 38 x 28 cm con canal perimetral para los jugos. Ligera y facil de secar de pie.",
+      "en": "38 by 28 cm bamboo board with a groove around the edge for juices. Light, and easy to dry standing up."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 24.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0307.png"
+    ],
+    "attributes": {
+      "material": "bambu",
+      "piezas": "1"
+    }
+  },
+  {
+    "item_id": "B11COO0308",
+    "name": {
+      "es": "Juego de 5 utensilios de bambu",
+      "en": "Set of 5 bamboo utensils"
+    },
+    "description": {
+      "es": "Cinco utensilios de bambu prensado que no rayan el antiadherente: cuchara, espatula, esparragos, cucharon y espumadera.",
+      "en": "Five pressed bamboo utensils that will not scratch a non-stick coating: spoon, spatula, tongs, ladle and skimmer."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 19.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0308.png"
+    ],
+    "attributes": {
+      "material": "bambu",
+      "piezas": "5"
+    }
+  },
+  {
+    "item_id": "B11COO0309",
+    "name": {
+      "es": "Cuchillo de chef de 20 cm",
+      "en": "20 cm chef knife"
+    },
+    "description": {
+      "es": "Cuchillo de chef en acero forjado con mango remachado y filo de 15 grados por lado.",
+      "en": "Forged steel chef knife with a riveted handle and a 15-degree edge per side."
+    },
+    "brand": "Filo",
+    "product_type": "KNIVES",
+    "price": {
+      "amount": 64.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0309.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "piezas": "1"
+    }
+  },
+  {
+    "item_id": "B11COO0310",
+    "name": {
+      "es": "Juego de 3 cuchillos de cocina",
+      "en": "Set of 3 kitchen knives"
+    },
+    "description": {
+      "es": "Cuchillo de chef, puntilla y cuchillo de pan en un bloque de bambu. Los tres del mismo acero.",
+      "en": "Chef knife, paring knife and bread knife in a bamboo block. All three from the same steel."
+    },
+    "brand": "Filo",
+    "product_type": "KNIVES",
+    "price": {
+      "amount": 119.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0310.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "piezas": "3"
+    }
+  },
+  {
+    "item_id": "B11COO0311",
+    "name": {
+      "es": "Afilador de cuchillos de dos etapas",
+      "en": "Two-stage knife sharpener"
+    },
+    "description": {
+      "es": "Afilador manual con una etapa de diamante para reperfilar y otra de ceramica para pulir el filo.",
+      "en": "Manual sharpener with a diamond stage to reprofile and a ceramic stage to polish the edge."
+    },
+    "brand": "Filo",
+    "product_type": "KNIVES",
+    "price": {
+      "amount": 29.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0311.png"
+    ],
+    "attributes": {
+      "material": "ceramica",
+      "piezas": "1"
+    }
+  },
+  {
+    "item_id": "B11COO0312",
+    "name": {
+      "es": "Colador de acero de 24 cm",
+      "en": "24 cm stainless steel colander"
+    },
+    "description": {
+      "es": "Colador con base elevada y dos asas que apoyan en el fregadero. Perforado fino para pasta y arroz.",
+      "en": "Colander with a raised base and two handles that rest on the sink. Fine perforation for pasta and rice."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 18.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COO0312.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "diametros_cm": "24"
+    }
+  },
+  {
+    "item_id": "B11COF0401",
+    "name": {
+      "es": "Cafetera italiana de 6 tazas",
+      "en": "6-cup stovetop coffee maker"
+    },
+    "description": {
+      "es": "Cafetera de aluminio de toda la vida, con junta de silicona recambiable y valvula de seguridad.",
+      "en": "The classic aluminium moka pot, with a replaceable silicone gasket and a safety valve."
+    },
+    "brand": "Kuisina",
+    "product_type": "COFFEE_MAKER",
+    "price": {
+      "amount": 29.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0401.png"
+    ],
+    "attributes": {
+      "material": "aluminio",
+      "induccion": "no",
+      "capacidad_tazas": "6"
+    }
+  },
+  {
+    "item_id": "B11COF0402",
+    "name": {
+      "es": "Cafetera italiana de induccion de 4 tazas",
+      "en": "4-cup induction stovetop coffee maker"
+    },
+    "description": {
+      "es": "Version en acero inoxidable de la cafetera italiana, con base ferromagnetica para induccion.",
+      "en": "The stainless steel version of the moka pot, with a ferromagnetic base for induction hobs."
+    },
+    "brand": "Kuisina",
+    "product_type": "COFFEE_MAKER",
+    "price": {
+      "amount": 44.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0402.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "induccion": "si",
+      "capacidad_tazas": "4"
+    }
+  },
+  {
+    "item_id": "B11COF0403",
+    "name": {
+      "es": "Prensa francesa de cristal de 1 litro",
+      "en": "1 litre glass french press"
+    },
+    "description": {
+      "es": "Cafetera de embolo con jarra de borosilicato y filtro de acero de doble malla. Sin papel y sin plastico.",
+      "en": "Plunger coffee maker with a borosilicate jug and a double stainless mesh filter. No paper, no plastic."
+    },
+    "brand": "Kuisina",
+    "product_type": "COFFEE_MAKER",
+    "price": {
+      "amount": 34.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0403.png"
+    ],
+    "attributes": {
+      "material": "cristal",
+      "capacidad_l": "1",
+      "capacidad_tazas": "8"
+    }
+  },
+  {
+    "item_id": "B11COF0404",
+    "name": {
+      "es": "Cafetera de goteo Aroma Compacta",
+      "en": "Aroma Compact drip coffee maker"
+    },
+    "description": {
+      "es": "Version de 6 tazas de la Aroma, con jarra de cristal y placa que mantiene el calor treinta minutos.",
+      "en": "The 6-cup version of the Aroma, with a glass jug and a hotplate that holds heat for thirty minutes."
+    },
+    "brand": "Kuisina",
+    "product_type": "COFFEE_MAKER",
+    "price": {
+      "amount": 49.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0404.png"
+    ],
+    "attributes": {
+      "capacidad_tazas": "6",
+      "potencia_w": "650",
+      "material": "cristal"
+    }
+  },
+  {
+    "item_id": "B11COF0405",
+    "name": {
+      "es": "Molinillo de cafe de muelas conicas",
+      "en": "Conical burr coffee grinder"
+    },
+    "description": {
+      "es": "Molinillo de muelas conicas con 15 puntos de molienda, de espresso a prensa francesa.",
+      "en": "Conical burr grinder with 15 grind settings, from espresso to french press."
+    },
+    "brand": "Kuisina",
+    "product_type": "SMALL_APPLIANCE",
+    "price": {
+      "amount": 79.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0405.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "potencia_w": "150"
+    }
+  },
+  {
+    "item_id": "B11COF0406",
+    "name": {
+      "es": "Hervidor de agua con control de temperatura",
+      "en": "Temperature-controlled kettle"
+    },
+    "description": {
+      "es": "Hervidor de 1,7 litros con cinco temperaturas fijas y cuello de cisne para vertido lento.",
+      "en": "A 1.7 litre kettle with five fixed temperatures and a gooseneck spout for slow pouring."
+    },
+    "brand": "Kuisina",
+    "product_type": "SMALL_APPLIANCE",
+    "price": {
+      "amount": 69.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0406.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "capacidad_l": "1.7",
+      "potencia_w": "2200"
+    }
+  },
+  {
+    "item_id": "B11COF0407",
+    "name": {
+      "es": "Tostadora de dos ranuras anchas",
+      "en": "Two wide-slot toaster"
+    },
+    "description": {
+      "es": "Tostadora con ranuras anchas para pan de hogaza, siete niveles y bandeja recogemigas extraible.",
+      "en": "Toaster with wide slots for sourdough, seven levels and a removable crumb tray."
+    },
+    "brand": "Kuisina",
+    "product_type": "SMALL_APPLIANCE",
+    "price": {
+      "amount": 54.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0407.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "potencia_w": "900",
+      "piezas": "2"
+    }
+  },
+  {
+    "item_id": "B11COF0408",
+    "name": {
+      "es": "Batidora de vaso de 1,5 litros",
+      "en": "1.5 litre jug blender"
+    },
+    "description": {
+      "es": "Batidora de vaso de cristal con cuchilla de seis aspas y dos velocidades mas pulso.",
+      "en": "Glass jug blender with a six-blade assembly, two speeds and a pulse setting."
+    },
+    "brand": "Kuisina",
+    "product_type": "SMALL_APPLIANCE",
+    "price": {
+      "amount": 84.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11COF0408.png"
+    ],
+    "attributes": {
+      "material": "cristal",
+      "capacidad_l": "1.5",
+      "potencia_w": "1000"
+    }
+  },
+  {
+    "item_id": "B11TAB0501",
+    "name": {
+      "es": "Juego de 4 platos llanos de gres",
+      "en": "Set of 4 stoneware dinner plates"
+    },
+    "description": {
+      "es": "Cuatro platos de gres esmaltado a mano de 27 cm. Aptos para horno, microondas y lavavajillas.",
+      "en": "Four hand-glazed stoneware plates, 27 cm across. Oven, microwave and dishwasher safe."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 59.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11TAB0501.png"
+    ],
+    "attributes": {
+      "material": "ceramica",
+      "diametros_cm": "27",
+      "piezas": "4",
+      "color": "crema"
+    }
+  },
+  {
+    "item_id": "B11TAB0502",
+    "name": {
+      "es": "Juego de 4 tazones de desayuno",
+      "en": "Set of 4 breakfast bowls"
+    },
+    "description": {
+      "es": "Cuatro tazones de gres de 450 ml con base sin esmaltar para que no resbalen.",
+      "en": "Four 450 ml stoneware bowls with an unglazed base so they do not slide."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 44.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11TAB0502.png"
+    ],
+    "attributes": {
+      "material": "ceramica",
+      "piezas": "4",
+      "capacidad_l": "0.45",
+      "color": "terracota"
+    }
+  },
+  {
+    "item_id": "B11TAB0503",
+    "name": {
+      "es": "Jarra de agua de cristal de 1,2 litros",
+      "en": "1.2 litre glass water jug"
+    },
+    "description": {
+      "es": "Jarra de borosilicato con tapa de bambu y pico antigoteo. Resiste el cambio de temperatura.",
+      "en": "Borosilicate jug with a bamboo lid and a drip-free lip. It takes a temperature change."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 26.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11TAB0503.png"
+    ],
+    "attributes": {
+      "material": "cristal",
+      "capacidad_l": "1.2"
+    }
+  },
+  {
+    "item_id": "B11TAB0504",
+    "name": {
+      "es": "Juego de 6 vasos de cristal reciclado",
+      "en": "Set of 6 recycled glass tumblers"
+    },
+    "description": {
+      "es": "Seis vasos de 350 ml soplados en cristal reciclado. Cada uno sale ligeramente distinto.",
+      "en": "Six 350 ml tumblers blown from recycled glass. Each one comes out slightly different."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 32.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11TAB0504.png"
+    ],
+    "attributes": {
+      "material": "cristal",
+      "piezas": "6",
+      "capacidad_l": "0.35"
+    }
+  },
+  {
+    "item_id": "B11TAB0505",
+    "name": {
+      "es": "Botes de cocina hermeticos, juego de 3",
+      "en": "Airtight kitchen jars, set of 3"
+    },
+    "description": {
+      "es": "Tres botes de cristal de 0,5, 1 y 1,5 litros con tapa de bambu y junta de silicona.",
+      "en": "Three glass jars of 0.5, 1 and 1.5 litres with a bamboo lid and a silicone seal."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 38.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11TAB0505.png"
+    ],
+    "attributes": {
+      "material": "cristal",
+      "piezas": "3"
+    }
+  },
+  {
+    "item_id": "B11TAB0506",
+    "name": {
+      "es": "Mantel de lino lavado de 240 cm",
+      "en": "240 cm washed linen tablecloth"
+    },
+    "description": {
+      "es": "Mantel de lino lavado a la piedra que no necesita plancha. Encoge lo justo en el primer lavado.",
+      "en": "Stone-washed linen tablecloth that needs no ironing. It shrinks a little on the first wash, and no more."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 64.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B11TAB0506.png"
+    ],
+    "attributes": {
+      "material": "lino",
+      "color": "crema"
+    }
+  },
+  {
+    "item_id": "B12LAM0601",
+    "name": {
+      "es": "Flexo LED articulado Taller",
+      "en": "Taller articulated LED desk lamp"
+    },
+    "description": {
+      "es": "Flexo de brazo doble con pinza de mesa, giro de 350 grados y luz regulable en tres temperaturas.",
+      "en": "Double-arm lamp with a desk clamp, 350 degrees of rotation and dimmable light at three temperatures."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 74.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0601.png"
+    ],
+    "attributes": {
+      "temperatura_color": "2700-5000 K",
+      "potencia_w": "12",
+      "color": "negro"
+    }
+  },
+  {
+    "item_id": "B12LAM0602",
+    "name": {
+      "es": "Lampara de escritorio con carga inalambrica",
+      "en": "Desk lamp with wireless charging"
+    },
+    "description": {
+      "es": "Lampara de mesa con base de carga inalambrica de 10 W y puerto USB-C adicional en el lateral.",
+      "en": "Desk lamp with a 10 W wireless charging base and an extra USB-C port on the side."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 99.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0602.png"
+    ],
+    "attributes": {
+      "temperatura_color": "3000-6000 K",
+      "potencia_w": "15",
+      "color": "blanco"
+    }
+  },
+  {
+    "item_id": "B12LAM0603",
+    "name": {
+      "es": "Lampara de pie de lectura Butaca",
+      "en": "Butaca reading floor lamp"
+    },
+    "description": {
+      "es": "Lampara de pie de 150 cm con cabezal orientable y regulador de intensidad en el propio cuello.",
+      "en": "A 150 cm floor lamp with an adjustable head and a dimmer on the neck itself."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 129.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0603.png"
+    ],
+    "attributes": {
+      "temperatura_color": "2700 K",
+      "potencia_w": "14",
+      "color": "negro"
+    }
+  },
+  {
+    "item_id": "B12LAM0604",
+    "name": {
+      "es": "Lampara de sobremesa de ceramica Cantaro",
+      "en": "Cantaro ceramic table lamp"
+    },
+    "description": {
+      "es": "Lampara de mesa con base de ceramica torneada y pantalla de lino. Casquillo E27 estandar.",
+      "en": "Table lamp with a thrown ceramic base and a linen shade. Standard E27 fitting."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 89.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0604.png"
+    ],
+    "attributes": {
+      "material": "ceramica",
+      "color": "terracota",
+      "temperatura_color": "2700 K"
+    }
+  },
+  {
+    "item_id": "B12LAM0605",
+    "name": {
+      "es": "Aplique de pared orientable Rincon",
+      "en": "Rincon adjustable wall light"
+    },
+    "description": {
+      "es": "Aplique de pared con brazo plegable, interruptor propio y cable textil de dos metros.",
+      "en": "Wall light with a folding arm, its own switch and a two-metre fabric cable."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 59.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0605.png"
+    ],
+    "attributes": {
+      "potencia_w": "8",
+      "color": "negro",
+      "temperatura_color": "3000 K"
+    }
+  },
+  {
+    "item_id": "B12LAM0606",
+    "name": {
+      "es": "Lampara portatil recargable Vela",
+      "en": "Vela rechargeable portable lamp"
+    },
+    "description": {
+      "es": "Lampara sin cable con doce horas de autonomia y tres niveles. Se carga por USB-C.",
+      "en": "Cordless lamp with twelve hours of battery and three levels. Charges over USB-C."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 49.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0606.png"
+    ],
+    "attributes": {
+      "potencia_w": "3",
+      "color": "crema",
+      "temperatura_color": "2200 K"
+    }
+  },
+  {
+    "item_id": "B12LAM0607",
+    "name": {
+      "es": "Tira LED regulable de 3 metros",
+      "en": "3 metre dimmable LED strip"
+    },
+    "description": {
+      "es": "Tira LED de tres metros con adhesivo, mando y fuente incluida. Se puede cortar cada 5 cm.",
+      "en": "Three-metre LED strip with adhesive backing, a remote and a power supply. Cuts every 5 cm."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 34.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0607.png"
+    ],
+    "attributes": {
+      "potencia_w": "18",
+      "temperatura_color": "2700-6500 K"
+    }
+  },
+  {
+    "item_id": "B12LAM0608",
+    "name": {
+      "es": "Bombillas LED E27 calidas, pack de 4",
+      "en": "Warm E27 LED bulbs, pack of 4"
+    },
+    "description": {
+      "es": "Cuatro bombillas LED de 9 W equivalentes a 60 W, con indice de reproduccion cromatica alto.",
+      "en": "Four 9 W LED bulbs equivalent to 60 W, with a high colour rendering index."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 19.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0608.png"
+    ],
+    "attributes": {
+      "potencia_w": "9",
+      "piezas": "4",
+      "temperatura_color": "2700 K"
+    }
+  },
+  {
+    "item_id": "B12LAM0609",
+    "name": {
+      "es": "Lampara de noche con sensor de movimiento",
+      "en": "Night light with motion sensor"
+    },
+    "description": {
+      "es": "Luz de paso que se enciende al detectar movimiento en la oscuridad y se apaga sola a los treinta segundos.",
+      "en": "A corridor light that comes on when it detects movement in the dark and turns itself off after thirty seconds."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 24.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0609.png"
+    ],
+    "attributes": {
+      "potencia_w": "2",
+      "color": "blanco",
+      "temperatura_color": "2200 K"
+    }
+  },
+  {
+    "item_id": "B12LAM0610",
+    "name": {
+      "es": "Lampara de arquitecto con lupa",
+      "en": "Architect lamp with magnifier"
+    },
+    "description": {
+      "es": "Flexo de brazo largo con lente de aumento de tres dioptrias y anillo LED alrededor.",
+      "en": "Long-arm lamp with a three-dioptre magnifying lens and an LED ring around it."
+    },
+    "brand": "Lumen&Co",
+    "product_type": "DESK_LAMP",
+    "price": {
+      "amount": 109.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B12LAM0610.png"
+    ],
+    "attributes": {
+      "potencia_w": "10",
+      "color": "blanco",
+      "temperatura_color": "4000 K"
+    }
+  },
+  {
+    "item_id": "B13BAG0701",
+    "name": {
+      "es": "Mochila urbana CityPack 18L",
+      "en": "CityPack 18L urban backpack"
+    },
+    "description": {
+      "es": "Version compacta de la CityPack, con compartimento acolchado para tablet y espalda ventilada.",
+      "en": "The compact CityPack, with a padded tablet sleeve and a ventilated back panel."
+    },
+    "brand": "Nordwind",
+    "product_type": "BACKPACK",
+    "price": {
+      "amount": 69.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0701.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "capacidad_l": "18",
+      "portatil_max": "13"
+    }
+  },
+  {
+    "item_id": "B13BAG0702",
+    "name": {
+      "es": "Mochila de senderismo Cumbre 30L",
+      "en": "Cumbre 30L hiking backpack"
+    },
+    "description": {
+      "es": "Mochila de montana con cinturon lumbar, salida para bolsa de hidratacion y funda de lluvia integrada.",
+      "en": "Mountain pack with a hip belt, a hydration port and a rain cover in its own pocket."
+    },
+    "brand": "Nordwind",
+    "product_type": "BACKPACK",
+    "price": {
+      "amount": 109.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0702.png"
+    ],
+    "attributes": {
+      "color": "verde bosque",
+      "material": "ripstop reciclado",
+      "capacidad_l": "30"
+    }
+  },
+  {
+    "item_id": "B13BAG0703",
+    "name": {
+      "es": "Mochila de viaje Trayecto 40L",
+      "en": "Trayecto 40L travel backpack"
+    },
+    "description": {
+      "es": "Mochila de apertura frontal completa, con correas ocultables y medida de equipaje de mano.",
+      "en": "Front-loading pack with stowable straps, sized to go in the cabin."
+    },
+    "brand": "Nordwind",
+    "product_type": "LUGGAGE",
+    "price": {
+      "amount": 139.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0703.png"
+    ],
+    "attributes": {
+      "color": "azul marino",
+      "material": "ripstop reciclado",
+      "capacidad_l": "40",
+      "portatil_max": "16"
+    }
+  },
+  {
+    "item_id": "B13BAG0704",
+    "name": {
+      "es": "Mochila para portatil Oficina 22L",
+      "en": "Oficina 22L laptop backpack"
+    },
+    "description": {
+      "es": "Mochila de trabajo con compartimento acolchado de 16 pulgadas, bolsillo antirrobo y pasador para trolley.",
+      "en": "Work backpack with a padded 16-inch compartment, a hidden pocket and a trolley sleeve."
+    },
+    "brand": "Nordwind",
+    "product_type": "BACKPACK",
+    "price": {
+      "amount": 89.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0704.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "ripstop reciclado",
+      "capacidad_l": "22",
+      "portatil_max": "16"
+    }
+  },
+  {
+    "item_id": "B13BAG0705",
+    "name": {
+      "es": "Mochila de running Ligera 8L",
+      "en": "Ligera 8L running vest pack"
+    },
+    "description": {
+      "es": "Chaleco de running con dos bolsillos frontales para botellines blandos y ajuste elastico en el pecho.",
+      "en": "Running vest with two front pockets for soft flasks and an elastic chest adjustment."
+    },
+    "brand": "Nordwind",
+    "product_type": "BACKPACK",
+    "price": {
+      "amount": 74.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0705.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "capacidad_l": "8"
+    }
+  },
+  {
+    "item_id": "B13BAG0706",
+    "name": {
+      "es": "Bolsa de deporte Vestuario 35L",
+      "en": "Vestuario 35L gym duffel"
+    },
+    "description": {
+      "es": "Bolsa de deporte con compartimento separado para el calzado y bandolera acolchada desmontable.",
+      "en": "Gym bag with a separate shoe compartment and a detachable padded shoulder strap."
+    },
+    "brand": "Nordwind",
+    "product_type": "LUGGAGE",
+    "price": {
+      "amount": 59.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0706.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "capacidad_l": "35"
+    }
+  },
+  {
+    "item_id": "B13BAG0707",
+    "name": {
+      "es": "Bolsa de lona Mercado",
+      "en": "Mercado canvas tote"
+    },
+    "description": {
+      "es": "Bolsa de lona de algodon con asas largas y fondo reforzado. Aguanta la compra de la semana.",
+      "en": "Cotton canvas tote with long handles and a reinforced base. It takes a week of shopping."
+    },
+    "brand": "Nordwind",
+    "product_type": "BAGS_TOTE",
+    "price": {
+      "amount": 29.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0707.png"
+    ],
+    "attributes": {
+      "color": "crema",
+      "material": "algodon",
+      "capacidad_l": "20"
+    }
+  },
+  {
+    "item_id": "B13BAG0708",
+    "name": {
+      "es": "Rinonera Cinturon 3L",
+      "en": "Cinturon 3L hip pack"
+    },
+    "description": {
+      "es": "Rinonera de tres litros con cremallera estanca y correa que se ajusta sin hebilla suelta.",
+      "en": "Three-litre hip pack with a water-resistant zip and a strap that adjusts without a loose buckle."
+    },
+    "brand": "Nordwind",
+    "product_type": "BAGS_TOTE",
+    "price": {
+      "amount": 34.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0708.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "capacidad_l": "3"
+    }
+  },
+  {
+    "item_id": "B13BAG0709",
+    "name": {
+      "es": "Neceser de viaje Aseo",
+      "en": "Aseo travel wash bag"
+    },
+    "description": {
+      "es": "Neceser con gancho para colgar, interior impermeable y espejo desmontable.",
+      "en": "Wash bag with a hanging hook, a waterproof lining and a removable mirror."
+    },
+    "brand": "Nordwind",
+    "product_type": "LUGGAGE",
+    "price": {
+      "amount": 27.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0709.png"
+    ],
+    "attributes": {
+      "color": "verde bosque",
+      "material": "ripstop reciclado",
+      "capacidad_l": "4"
+    }
+  },
+  {
+    "item_id": "B13BAG0710",
+    "name": {
+      "es": "Funda para portatil de 14 pulgadas",
+      "en": "14-inch laptop sleeve"
+    },
+    "description": {
+      "es": "Funda acolchada de fieltro de lana con cierre magnetico y bolsillo exterior para el cargador.",
+      "en": "Padded wool felt sleeve with a magnetic closure and an outer pocket for the charger."
+    },
+    "brand": "Nordwind",
+    "product_type": "BAGS_TOTE",
+    "price": {
+      "amount": 39.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0710.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "lana merino",
+      "portatil_max": "14"
+    }
+  },
+  {
+    "item_id": "B13BAG0711",
+    "name": {
+      "es": "Alforja de bicicleta impermeable 20L",
+      "en": "20L waterproof bike pannier"
+    },
+    "description": {
+      "es": "Alforja de cierre enrollable totalmente estanca, con gancho rapido y asa para llevarla en la mano.",
+      "en": "Roll-top pannier that is fully waterproof, with a quick hook and a handle to carry it by hand."
+    },
+    "brand": "Nordwind",
+    "product_type": "BAGS_TOTE",
+    "price": {
+      "amount": 79.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0711.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "material": "ripstop reciclado",
+      "capacidad_l": "20"
+    }
+  },
+  {
+    "item_id": "B13BAG0712",
+    "name": {
+      "es": "Organizadores de equipaje, juego de 3",
+      "en": "Packing cubes, set of 3"
+    },
+    "description": {
+      "es": "Tres cubos de malla de tamanos distintos que comprimen la ropa y dejan ver lo que hay dentro.",
+      "en": "Three mesh cubes in different sizes that compress clothes and let you see what is inside."
+    },
+    "brand": "Nordwind",
+    "product_type": "LUGGAGE",
+    "price": {
+      "amount": 32.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B13BAG0712.png"
+    ],
+    "attributes": {
+      "color": "gris",
+      "material": "ripstop reciclado",
+      "piezas": "3"
+    }
+  },
+  {
+    "item_id": "B14HOM0801",
+    "name": {
+      "es": "Juego de 2 panos de cocina de lino",
+      "en": "Set of 2 linen tea towels"
+    },
+    "description": {
+      "es": "Dos panos de lino de 50 x 70 cm que secan sin dejar pelusa y ganan absorcion con los lavados.",
+      "en": "Two 50 by 70 cm linen towels that dry without leaving lint and absorb better with every wash."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 22.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0801.png"
+    ],
+    "attributes": {
+      "material": "lino",
+      "piezas": "2",
+      "color": "crema"
+    }
+  },
+  {
+    "item_id": "B14HOM0802",
+    "name": {
+      "es": "Delantal de lino con peto",
+      "en": "Linen bib apron"
+    },
+    "description": {
+      "es": "Delantal de lino lavado con tirantes cruzados que no aprietan el cuello y dos bolsillos frontales.",
+      "en": "Washed linen apron with crossed straps that do not pull on the neck, and two front pockets."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 44.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0802.png"
+    ],
+    "attributes": {
+      "material": "lino",
+      "color": "oliva"
+    }
+  },
+  {
+    "item_id": "B14HOM0803",
+    "name": {
+      "es": "Manoplas de horno acolchadas, par",
+      "en": "Padded oven mitts, pair"
+    },
+    "description": {
+      "es": "Par de manoplas con relleno de algodon y exterior de lino, resistentes hasta 220 grados.",
+      "en": "A pair of mitts with cotton wadding and a linen outer, rated to 220 degrees."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 24.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0803.png"
+    ],
+    "attributes": {
+      "material": "lino",
+      "piezas": "2",
+      "color": "terracota"
+    }
+  },
+  {
+    "item_id": "B14HOM0804",
+    "name": {
+      "es": "Cesta de almacenaje de fibra natural",
+      "en": "Natural fibre storage basket"
+    },
+    "description": {
+      "es": "Cesta tejida a mano de 40 cm de diametro con asas. Para lena, mantas o juguetes.",
+      "en": "Hand-woven basket, 40 cm across, with handles. For firewood, blankets or toys."
+    },
+    "brand": "Barro",
+    "product_type": "STORAGE",
+    "price": {
+      "amount": 49.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0804.png"
+    ],
+    "attributes": {
+      "material": "bambu",
+      "diametros_cm": "40",
+      "color": "crema"
+    }
+  },
+  {
+    "item_id": "B14HOM0805",
+    "name": {
+      "es": "Manta de lana de 130 x 180 cm",
+      "en": "130 by 180 cm wool blanket"
+    },
+    "description": {
+      "es": "Manta de lana virgen tejida en telar con fleco cosido a mano. Pesa 1,4 kg.",
+      "en": "Loom-woven virgin wool blanket with a hand-sewn fringe. It weighs 1.4 kg."
+    },
+    "brand": "Barro",
+    "product_type": "TEXTILES",
+    "price": {
+      "amount": 119.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0805.png"
+    ],
+    "attributes": {
+      "material": "lana merino",
+      "color": "oliva"
+    }
+  },
+  {
+    "item_id": "B14HOM0806",
+    "name": {
+      "es": "Juego de 2 cojines de lino de 45 cm",
+      "en": "Set of 2 45 cm linen cushion covers"
+    },
+    "description": {
+      "es": "Dos fundas de cojin de lino con cierre oculto de cremallera. Relleno no incluido.",
+      "en": "Two linen cushion covers with a hidden zip. Inner pad not included."
+    },
+    "brand": "Barro",
+    "product_type": "TEXTILES",
+    "price": {
+      "amount": 39.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0806.png"
+    ],
+    "attributes": {
+      "material": "lino",
+      "piezas": "2",
+      "color": "terracota"
+    }
+  },
+  {
+    "item_id": "B14HOM0807",
+    "name": {
+      "es": "Alfombra de bano de algodon",
+      "en": "Cotton bath mat"
+    },
+    "description": {
+      "es": "Alfombra de bano de algodon de rizo doble de 50 x 80 cm con base antideslizante.",
+      "en": "Double-loop cotton bath mat, 50 by 80 cm, with a non-slip backing."
+    },
+    "brand": "Barro",
+    "product_type": "TEXTILES",
+    "price": {
+      "amount": 34.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0807.png"
+    ],
+    "attributes": {
+      "material": "algodon",
+      "color": "crema"
+    }
+  },
+  {
+    "item_id": "B14HOM0808",
+    "name": {
+      "es": "Juego de 4 servilletas de lino",
+      "en": "Set of 4 linen napkins"
+    },
+    "description": {
+      "es": "Cuatro servilletas de 45 cm con dobladillo en inglete. Se lavan con el mantel y a la misma temperatura.",
+      "en": "Four 45 cm napkins with mitred hems. They wash with the tablecloth, at the same temperature."
+    },
+    "brand": "Barro",
+    "product_type": "TABLEWARE",
+    "price": {
+      "amount": 32.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14HOM0808.png"
+    ],
+    "attributes": {
+      "material": "lino",
+      "piezas": "4",
+      "color": "oliva"
+    }
+  },
+  {
+    "item_id": "B14ORG0901",
+    "name": {
+      "es": "Estante especiero de bambu de dos alturas",
+      "en": "Two-tier bamboo spice rack"
+    },
+    "description": {
+      "es": "Especiero de bambu de dos niveles que deja ver la fila de atras. Cabe dentro de un armario estandar.",
+      "en": "Two-tier bamboo rack that lets you see the back row. It fits inside a standard cupboard."
+    },
+    "brand": "Barro",
+    "product_type": "STORAGE",
+    "price": {
+      "amount": 27.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14ORG0901.png"
+    ],
+    "attributes": {
+      "material": "bambu",
+      "piezas": "1"
+    }
+  },
+  {
+    "item_id": "B14ORG0902",
+    "name": {
+      "es": "Organizador de cubiertos extensible",
+      "en": "Expandable cutlery tray"
+    },
+    "description": {
+      "es": "Bandeja de cubiertos de bambu que se ensancha de 33 a 55 cm para ajustarse al cajon.",
+      "en": "Bamboo cutlery tray that widens from 33 to 55 cm to fit the drawer."
+    },
+    "brand": "Barro",
+    "product_type": "STORAGE",
+    "price": {
+      "amount": 32.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14ORG0902.png"
+    ],
+    "attributes": {
+      "material": "bambu"
+    }
+  },
+  {
+    "item_id": "B14ORG0903",
+    "name": {
+      "es": "Escurreplatos de acero con bandeja",
+      "en": "Steel dish rack with tray"
+    },
+    "description": {
+      "es": "Escurridor de acero inoxidable con bandeja de goteo orientable y soporte para cubiertos.",
+      "en": "Stainless steel rack with a tilting drip tray and a cutlery holder."
+    },
+    "brand": "Barro",
+    "product_type": "STORAGE",
+    "price": {
+      "amount": 46.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14ORG0903.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable"
+    }
+  },
+  {
+    "item_id": "B14ORG0904",
+    "name": {
+      "es": "Cubo de reciclaje de tres compartimentos",
+      "en": "Three-compartment recycling bin"
+    },
+    "description": {
+      "es": "Cubo de 3 x 20 litros con pedal y cubetas extraibles que se lavan por separado.",
+      "en": "A 3 by 20 litre bin with a pedal and removable buckets that wash separately."
+    },
+    "brand": "Barro",
+    "product_type": "STORAGE",
+    "price": {
+      "amount": 89.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B14ORG0904.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "capacidad_l": "60"
+    }
+  },
+  {
+    "item_id": "B15APP1001",
+    "name": {
+      "es": "Camisa de lino de manga larga",
+      "en": "Long-sleeve linen shirt"
+    },
+    "description": {
+      "es": "Camisa de lino lavado con cuello suave y un solo bolsillo. Se arruga, y esa es la idea.",
+      "en": "Washed linen shirt with a soft collar and a single pocket. It creases, and that is the point."
+    },
+    "brand": "Lanar",
+    "product_type": "OUTERWEAR",
+    "price": {
+      "amount": 79.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1001.png"
+    ],
+    "attributes": {
+      "material": "lino",
+      "genero": "hombre",
+      "tallas": "38-44",
+      "color": "blanco"
+    }
+  },
+  {
+    "item_id": "B15APP1002",
+    "name": {
+      "es": "Jersey de lana merino de cuello redondo",
+      "en": "Merino wool crew neck jumper"
+    },
+    "description": {
+      "es": "Jersey de merino de 250 g con cuello, punos y bajo acanalados. Fino pero abrigado.",
+      "en": "A 250 g merino jumper with a ribbed collar, cuffs and hem. Thin, and still warm."
+    },
+    "brand": "Lanar",
+    "product_type": "OUTERWEAR",
+    "price": {
+      "amount": 99.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1002.png"
+    ],
+    "attributes": {
+      "material": "lana merino",
+      "genero": "mujer",
+      "tallas": "36-42",
+      "color": "gris"
+    }
+  },
+  {
+    "item_id": "B15APP1003",
+    "name": {
+      "es": "Chaleco acolchado Refugio",
+      "en": "Refugio padded gilet"
+    },
+    "description": {
+      "es": "Chaleco acolchado con relleno reciclado y bolsillos con cremallera. Se pliega al tamano de un libro.",
+      "en": "Padded gilet with recycled filling and zipped pockets. It folds to the size of a book."
+    },
+    "brand": "Lanar",
+    "product_type": "OUTERWEAR",
+    "price": {
+      "amount": 109.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1003.png"
+    ],
+    "attributes": {
+      "material": "ripstop reciclado",
+      "genero": "hombre",
+      "tallas": "38-44",
+      "color": "verde bosque"
+    }
+  },
+  {
+    "item_id": "B15APP1004",
+    "name": {
+      "es": "Chaqueta impermeable Aguacero 3 capas",
+      "en": "Aguacero 3-layer waterproof jacket"
+    },
+    "description": {
+      "es": "Chaqueta de tres capas con capucha ajustable, cremalleras de ventilacion y costuras termoselladas.",
+      "en": "Three-layer jacket with an adjustable hood, pit zips and taped seams."
+    },
+    "brand": "Vertex",
+    "product_type": "OUTERWEAR",
+    "price": {
+      "amount": 199.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1004.png"
+    ],
+    "attributes": {
+      "material": "ripstop reciclado",
+      "genero": "mujer",
+      "tallas": "36-42",
+      "color": "azul marino"
+    }
+  },
+  {
+    "item_id": "B15APP1005",
+    "name": {
+      "es": "Pantalon de montana desmontable",
+      "en": "Convertible hiking trousers"
+    },
+    "description": {
+      "es": "Pantalon de montana con perneras desmontables por cremallera y tejido elastico en cuatro direcciones.",
+      "en": "Hiking trousers with zip-off legs and four-way stretch fabric."
+    },
+    "brand": "Vertex",
+    "product_type": "TROUSERS",
+    "price": {
+      "amount": 84.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1005.png"
+    ],
+    "attributes": {
+      "material": "ripstop reciclado",
+      "genero": "hombre",
+      "tallas": "38-44",
+      "color": "gris"
+    }
+  },
+  {
+    "item_id": "B15APP1006",
+    "name": {
+      "es": "Bufanda de lana de doble cara",
+      "en": "Double-faced wool scarf"
+    },
+    "description": {
+      "es": "Bufanda de 180 x 30 cm tejida en dos colores, uno por cara, sin costura de union.",
+      "en": "A 180 by 30 cm scarf woven in two colours, one per face, with no joining seam."
+    },
+    "brand": "Lanar",
+    "product_type": "ACCESSORIES",
+    "price": {
+      "amount": 59.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1006.png"
+    ],
+    "attributes": {
+      "material": "lana merino",
+      "color": "terracota"
+    }
+  },
+  {
+    "item_id": "B15APP1007",
+    "name": {
+      "es": "Gorro de punto de lana merino",
+      "en": "Merino wool knitted beanie"
+    },
+    "description": {
+      "es": "Gorro de punto fino con banda doble en la frente. Abriga sin dar calor de mas.",
+      "en": "Fine-knit beanie with a doubled band at the forehead. Warm without overheating."
+    },
+    "brand": "Lanar",
+    "product_type": "ACCESSORIES",
+    "price": {
+      "amount": 29.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1007.png"
+    ],
+    "attributes": {
+      "material": "lana merino",
+      "color": "negro"
+    }
+  },
+  {
+    "item_id": "B15APP1008",
+    "name": {
+      "es": "Guantes tecnicos tactiles",
+      "en": "Touchscreen technical gloves"
+    },
+    "description": {
+      "es": "Guantes finos con punta conductiva en indice y pulgar y silicona en la palma.",
+      "en": "Thin gloves with conductive index and thumb tips and silicone on the palm."
+    },
+    "brand": "Vertex",
+    "product_type": "ACCESSORIES",
+    "price": {
+      "amount": 27.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15APP1008.png"
+    ],
+    "attributes": {
+      "material": "ripstop reciclado",
+      "color": "negro",
+      "tallas": "38-44"
+    }
+  },
+  {
+    "item_id": "B15SHO1101",
+    "name": {
+      "es": "Botas de agua cortas Charco",
+      "en": "Charco short wellington boots"
+    },
+    "description": {
+      "es": "Botas de agua de caucho natural con forro de algodon y suela con dibujo profundo.",
+      "en": "Natural rubber boots with a cotton lining and a deep-tread sole."
+    },
+    "brand": "Caminante",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 64.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15SHO1101.png"
+    ],
+    "attributes": {
+      "color": "verde bosque",
+      "tallas": "36-44"
+    }
+  },
+  {
+    "item_id": "B15SHO1102",
+    "name": {
+      "es": "Botines de piel Adoquin",
+      "en": "Adoquin leather ankle boots"
+    },
+    "description": {
+      "es": "Botin de piel curtida al vegetal con suela cosida, que se puede recambiar en un zapatero.",
+      "en": "Vegetable-tanned leather boot with a stitched sole that a cobbler can replace."
+    },
+    "brand": "Caminante",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 159.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15SHO1102.png"
+    ],
+    "attributes": {
+      "color": "negro",
+      "genero": "mujer",
+      "tallas": "36-42"
+    }
+  },
+  {
+    "item_id": "B15SHO1103",
+    "name": {
+      "es": "Zapatillas de padel Pista",
+      "en": "Pista padel shoes"
+    },
+    "description": {
+      "es": "Zapatilla de pista con suela de espiga para tierra batida y refuerzo en el lateral del arrastre.",
+      "en": "Court shoe with a herringbone sole for clay and a reinforced drag panel."
+    },
+    "brand": "Vertex",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 99.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15SHO1103.png"
+    ],
+    "attributes": {
+      "color": "blanco",
+      "material": "malla sintetica",
+      "genero": "hombre",
+      "tallas": "40-44"
+    }
+  },
+  {
+    "item_id": "B15SHO1104",
+    "name": {
+      "es": "Alpargatas de esparto Verano",
+      "en": "Verano esparto espadrilles"
+    },
+    "description": {
+      "es": "Alpargata de lona con suela de esparto trenzado a mano y puntera reforzada.",
+      "en": "Canvas espadrille with a hand-braided esparto sole and a reinforced toe."
+    },
+    "brand": "Caminante",
+    "product_type": "SHOES",
+    "price": {
+      "amount": 36.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15SHO1104.png"
+    ],
+    "attributes": {
+      "color": "crema",
+      "material": "algodon",
+      "genero": "mujer",
+      "tallas": "36-42"
+    }
+  },
+  {
+    "item_id": "B15KIT1201",
+    "name": {
+      "es": "Bascula de cocina digital de 5 kg",
+      "en": "5 kg digital kitchen scale"
+    },
+    "description": {
+      "es": "Bascula de precision de 1 g con funcion de tara y pantalla que se lee con el bol encima.",
+      "en": "Precision scale to 1 g with a tare function and a display you can read with the bowl on top."
+    },
+    "brand": "Kuisina",
+    "product_type": "SMALL_APPLIANCE",
+    "price": {
+      "amount": 26.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15KIT1201.png"
+    ],
+    "attributes": {
+      "material": "cristal"
+    }
+  },
+  {
+    "item_id": "B15KIT1202",
+    "name": {
+      "es": "Termometro de cocina de sonda",
+      "en": "Probe kitchen thermometer"
+    },
+    "description": {
+      "es": "Termometro digital de lectura instantanea con sonda plegable y rango de -50 a 300 grados.",
+      "en": "Instant-read digital thermometer with a folding probe and a range from -50 to 300 degrees."
+    },
+    "brand": "Kuisina",
+    "product_type": "SMALL_APPLIANCE",
+    "price": {
+      "amount": 22.5,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15KIT1202.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable"
+    }
+  },
+  {
+    "item_id": "B15KIT1203",
+    "name": {
+      "es": "Molde de horno desmontable de 24 cm",
+      "en": "24 cm springform cake tin"
+    },
+    "description": {
+      "es": "Molde desmontable con base antiadherente y cierre lateral que se abre sin romper el bizcocho.",
+      "en": "Springform tin with a non-stick base and a side clasp that opens without breaking the cake."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 24.0,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15KIT1203.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "diametros_cm": "24"
+    }
+  },
+  {
+    "item_id": "B15KIT1204",
+    "name": {
+      "es": "Juego de 3 boles de acero para mezclar",
+      "en": "Set of 3 stainless mixing bowls"
+    },
+    "description": {
+      "es": "Tres boles apilables de 1, 2 y 3 litros con base de silicona para que no bailen.",
+      "en": "Three stackable bowls of 1, 2 and 3 litres with a silicone base so they do not wander."
+    },
+    "brand": "Kuisina",
+    "product_type": "COOKWARE",
+    "price": {
+      "amount": 39.9,
+      "currency": "EUR"
+    },
+    "images": [
+      "images/B15KIT1204.png"
+    ],
+    "attributes": {
+      "material": "acero inoxidable",
+      "piezas": "3"
+    }
   }
 ]

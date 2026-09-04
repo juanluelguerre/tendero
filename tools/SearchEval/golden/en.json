@@ -5,140 +5,746 @@
     {
       "query": "running shoes",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "exactly that: a running shoe" },
-        { "externalId": "B07TUVW404", "relevance": 1, "why": "trail running tee: same sport, different category" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "exactly that: a running shoe"
+        },
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 1,
+          "why": "trail running tee: same sport, different category"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "trail version of the same running shoe"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 3,
+          "why": "racing shoe, still a running shoe"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 2,
+          "why": "mountain shoe: you can run in it, but that is not its job"
+        },
+        {
+          "externalId": "B10SHO0107",
+          "relevance": 1,
+          "why": "gym trainer, not a running shoe"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 1,
+          "why": "court shoe, another sport"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 1,
+          "why": "running tights: same sport, different category"
+        }
       ]
     },
     {
       "query": "womens running shoes",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "category and gender match (attribute genero=mujer)" },
-        { "externalId": "B07TUVW404", "relevance": 0, "why": "men's garment: the requested gender rules it out" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "category and gender match (attribute genero=mujer)"
+        },
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 0,
+          "why": "men's garment: the requested gender rules it out"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "women's running shoe, sizes 36-42"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 1,
+          "why": "running, but a men's shoe"
+        }
       ]
     },
     {
       "query": "runing shoes",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "single-letter typo; fuzziness is supposed to cover it" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "single-letter typo; fuzziness is supposed to cover it"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "the query has a typo and must find the shoe anyway"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 3,
+          "why": "running shoe"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 2,
+          "why": "mountain shoe"
+        },
+        {
+          "externalId": "B10SHO0107",
+          "relevance": 1,
+          "why": "gym trainer"
+        }
       ]
     },
     {
       "query": "navy blue shoes",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "the only product whose colour attribute is navy; stored in Spanish as 'azul marino', so this also measures the untranslated-attribute gap" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "the only product whose colour attribute is navy; stored in Spanish as 'azul marino', so this also measures the untranslated-attribute gap"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 1,
+          "why": "black, not navy: retrieved on 'shoes' alone"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 1,
+          "why": "navy, but a tee rather than a shoe"
+        }
       ]
     },
     {
       "query": "backpack",
       "judgments": [
-        { "externalId": "B08JKLM202", "relevance": 3, "why": "head category query, only possible result" }
+        {
+          "externalId": "B08JKLM202",
+          "relevance": 3,
+          "why": "head category query, only possible result"
+        },
+        {
+          "externalId": "B13BAG0701",
+          "relevance": 3,
+          "why": "urban backpack"
+        },
+        {
+          "externalId": "B13BAG0702",
+          "relevance": 3,
+          "why": "hiking backpack"
+        },
+        {
+          "externalId": "B13BAG0703",
+          "relevance": 3,
+          "why": "travel backpack"
+        },
+        {
+          "externalId": "B13BAG0704",
+          "relevance": 3,
+          "why": "laptop backpack"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 2,
+          "why": "running vest pack: a small backpack for running"
+        },
+        {
+          "externalId": "B13BAG0708",
+          "relevance": 1,
+          "why": "hip pack, worn but not a backpack"
+        },
+        {
+          "externalId": "B13BAG0706",
+          "relevance": 1,
+          "why": "duffel, not a backpack"
+        }
       ]
     },
     {
       "query": "waterproof backpack",
       "judgments": [
-        { "externalId": "B08JKLM202", "relevance": 3, "why": "waterproof is in the name" }
+        {
+          "externalId": "B08JKLM202",
+          "relevance": 3,
+          "why": "waterproof is in the name"
+        },
+        {
+          "externalId": "B13BAG0711",
+          "relevance": 3,
+          "why": "fully waterproof roll-top pannier"
+        },
+        {
+          "externalId": "B13BAG0702",
+          "relevance": 2,
+          "why": "hiking pack with a rain cover, not waterproof itself"
+        },
+        {
+          "externalId": "B13BAG0703",
+          "relevance": 1,
+          "why": "travel pack, no waterproofing claimed"
+        }
       ]
     },
     {
       "query": "laptop backpack 15 inch",
       "judgments": [
-        { "externalId": "B08JKLM202", "relevance": 3, "why": "15-inch laptop compartment in the description" }
+        {
+          "externalId": "B08JKLM202",
+          "relevance": 3,
+          "why": "15-inch laptop compartment in the description"
+        },
+        {
+          "externalId": "B13BAG0704",
+          "relevance": 3,
+          "why": "work backpack with a 16-inch compartment"
+        },
+        {
+          "externalId": "B13BAG0703",
+          "relevance": 2,
+          "why": "travel pack that takes a 16-inch laptop"
+        },
+        {
+          "externalId": "B13BAG0701",
+          "relevance": 2,
+          "why": "urban backpack, but only up to 13 inches"
+        },
+        {
+          "externalId": "B13BAG0710",
+          "relevance": 1,
+          "why": "laptop sleeve, not a backpack"
+        }
       ]
     },
     {
       "query": "coffee maker",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "head query, exact category match" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "head query, exact category match"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 3,
+          "why": "stovetop coffee maker"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 3,
+          "why": "induction stovetop coffee maker"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 3,
+          "why": "french press"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 3,
+          "why": "drip coffee maker"
+        },
+        {
+          "externalId": "B11COF0405",
+          "relevance": 1,
+          "why": "grinder: needed for coffee, not the maker"
+        }
       ]
     },
     {
       "query": "12 cup coffee maker",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "attribute query: 12 cups, in the name too" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "attribute query: 12 cups, in the name too"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 2,
+          "why": "drip coffee maker, but six cups"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 1,
+          "why": "eight-cup press"
+        }
       ]
     },
     {
       "query": "programmable drip coffee maker",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "near-literal match with the name" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "near-literal match with the name"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 2,
+          "why": "same range without the timer"
+        }
       ]
     },
     {
       "query": "tech tee",
       "judgments": [
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "exact match with the name" }
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "exact match with the name"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "long-sleeve technical tee"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 3,
+          "why": "sleeveless technical vest"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 2,
+          "why": "cycling jersey: a technical top"
+        },
+        {
+          "externalId": "B10SHI0203",
+          "relevance": 1,
+          "why": "merino tee, technical by fabric rather than by use"
+        }
       ]
     },
     {
       "query": "trail running shirt",
       "judgments": [
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "trail running tee" },
-        { "externalId": "B073WXYZ01", "relevance": 1, "why": "running product, wrong category" }
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "trail running tee"
+        },
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 1,
+          "why": "running product, wrong category"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "long-sleeve trail technical tee"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 2,
+          "why": "running vest"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 1,
+          "why": "trail running shoe, not a shirt"
+        }
       ]
     },
     {
       "query": "desk lamp",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 3, "why": "exact category match" }
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 3,
+          "why": "exact category match"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 3,
+          "why": "articulated desk lamp"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 3,
+          "why": "desk lamp with wireless charging"
+        },
+        {
+          "externalId": "B12LAM0610",
+          "relevance": 3,
+          "why": "architect lamp with magnifier"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 2,
+          "why": "table lamp, not specifically for a desk"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 1,
+          "why": "floor lamp for reading"
+        },
+        {
+          "externalId": "B12LAM0605",
+          "relevance": 1,
+          "why": "wall light"
+        }
       ]
     },
     {
       "query": "dimmable led lamp",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 3, "why": "dimmable and LED are both in the name" }
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 3,
+          "why": "dimmable and LED are both in the name"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 3,
+          "why": "dimmable LED lamp, three temperatures"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 3,
+          "why": "dimmable LED strip"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 2,
+          "why": "LED desk lamp, dimming not stated"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 2,
+          "why": "floor lamp with a dimmer on the neck"
+        }
       ]
     },
     {
       "query": "reading light with usb",
       "judgments": [
-        { "externalId": "B06GHIJ505", "relevance": 3, "why": "a desk lamp with a USB port is what someone means here; lexical search cannot bridge 'reading light' to 'desk lamp' and this query exists to measure that gap until phase 2" }
+        {
+          "externalId": "B06GHIJ505",
+          "relevance": 3,
+          "why": "a desk lamp with a USB port is what someone means here; lexical search cannot bridge 'reading light' to 'desk lamp' and this query exists to measure that gap until phase 2"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 3,
+          "why": "desk lamp with a USB-C port"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 2,
+          "why": "reading floor lamp, no USB"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 1,
+          "why": "portable lamp charged over USB-C, which is not the same thing"
+        }
       ]
     },
     {
       "query": "frying pans",
       "judgments": [
-        { "externalId": "B05DEFG606", "relevance": 3, "why": "frying pans are in the name" }
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 3,
+          "why": "frying pans are in the name"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 3,
+          "why": "cast iron frying pan"
+        },
+        {
+          "externalId": "B11COO0304",
+          "relevance": 2,
+          "why": "wok, a pan of another shape"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 1,
+          "why": "milk pan"
+        }
       ]
     },
     {
       "query": "induction cookware",
       "judgments": [
-        { "externalId": "B05DEFG606", "relevance": 3, "why": "induction-ready, and the category is COOKWARE" }
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 3,
+          "why": "induction-ready, and the category is COOKWARE"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 3,
+          "why": "cast iron pan for induction"
+        },
+        {
+          "externalId": "B11COO0302",
+          "relevance": 3,
+          "why": "casserole for induction"
+        },
+        {
+          "externalId": "B11COO0303",
+          "relevance": 3,
+          "why": "pressure cooker for induction"
+        },
+        {
+          "externalId": "B11COO0304",
+          "relevance": 3,
+          "why": "wok for induction"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 3,
+          "why": "milk pan for induction"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 2,
+          "why": "stovetop coffee maker for induction, not cookware"
+        }
       ]
     },
     {
       "query": "non-stick pan set",
       "judgments": [
-        { "externalId": "B05DEFG606", "relevance": 3, "why": "near-literal match with the name" }
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 3,
+          "why": "near-literal match with the name"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 2,
+          "why": "single pan that becomes non-stick with use"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 1,
+          "why": "utensils that will not scratch a non-stick coating"
+        }
       ]
     },
     {
       "query": "Vertex",
       "judgments": [
-        { "externalId": "B073WXYZ01", "relevance": 3, "why": "brand query: the whole Vertex catalogue is relevant" },
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "brand query: the whole Vertex catalogue is relevant" }
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 3,
+          "why": "brand query: the whole Vertex catalogue is relevant"
+        },
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "brand query: the whole Vertex catalogue is relevant"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHO0107",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 3,
+          "why": "Vertex brand"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 3,
+          "why": "Vertex brand"
+        }
       ]
     },
     {
       "query": "Kuisina",
       "judgments": [
-        { "externalId": "B09PQRS303", "relevance": 3, "why": "brand query" },
-        { "externalId": "B05DEFG606", "relevance": 3, "why": "brand query" }
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 3,
+          "why": "brand query"
+        },
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 3,
+          "why": "brand query"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COO0302",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COO0303",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COO0304",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COF0404",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COF0406",
+          "relevance": 3,
+          "why": "Kuisina brand"
+        }
       ]
     },
     {
       "query": "sportswear",
       "judgments": [
-        { "externalId": "B07TUVW404", "relevance": 3, "why": "a trail running tech tee is sportswear" },
-        { "externalId": "B073WXYZ01", "relevance": 2, "why": "sports footwear; sports yes, wear not exactly" }
+        {
+          "externalId": "B07TUVW404",
+          "relevance": 3,
+          "why": "a trail running tech tee is sportswear"
+        },
+        {
+          "externalId": "B073WXYZ01",
+          "relevance": 2,
+          "why": "sports footwear; sports yes, wear not exactly"
+        },
+        {
+          "externalId": "B10SHI0201",
+          "relevance": 3,
+          "why": "technical sports tee"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 3,
+          "why": "running vest"
+        },
+        {
+          "externalId": "B10SHI0205",
+          "relevance": 3,
+          "why": "cycling jersey"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 3,
+          "why": "running tights"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 3,
+          "why": "running shorts"
+        },
+        {
+          "externalId": "B15APP1005",
+          "relevance": 2,
+          "why": "hiking trousers"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 2,
+          "why": "sports footwear rather than clothing"
+        }
       ]
     },
     {
       "query": "gift for the kitchen",
       "judgments": [
-        { "externalId": "B05DEFG606", "relevance": 1, "why": "ambiguous query with no clear intent; pans work as a kitchen gift" },
-        { "externalId": "B09PQRS303", "relevance": 1, "why": "ambiguous query: a coffee maker works just as well" }
+        {
+          "externalId": "B05DEFG606",
+          "relevance": 1,
+          "why": "ambiguous query with no clear intent; pans work as a kitchen gift"
+        },
+        {
+          "externalId": "B09PQRS303",
+          "relevance": 1,
+          "why": "ambiguous query: a coffee maker works just as well"
+        },
+        {
+          "externalId": "B11TAB0501",
+          "relevance": 2,
+          "why": "stoneware plates: a typical kitchen gift"
+        },
+        {
+          "externalId": "B11TAB0504",
+          "relevance": 2,
+          "why": "recycled glass tumblers"
+        },
+        {
+          "externalId": "B11COO0310",
+          "relevance": 2,
+          "why": "knife set in a block"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 1,
+          "why": "french press"
+        }
       ]
     }
   ]

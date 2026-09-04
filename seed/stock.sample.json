@@ -1,17 +1,992 @@
 [
-  { "sku": "B073WXYZ01-DEFAULT", "warehouse": "MAD", "onHand": 4 },
-  { "sku": "B073WXYZ01-DEFAULT", "warehouse": "BCN", "onHand": 2 },
-
-  { "sku": "B08JKLM202-DEFAULT", "warehouse": "MAD", "onHand": 7 },
-
-  { "sku": "B09PQRS303-DEFAULT", "warehouse": "BCN", "onHand": 3 },
-
-  { "sku": "B07TUVW404-DEFAULT", "warehouse": "MAD", "onHand": 12 },
-  { "sku": "B07TUVW404-DEFAULT", "warehouse": "BCN", "onHand": 5 },
-
-  { "sku": "B06GHIJ505-DEFAULT", "warehouse": "MAD", "onHand": 1 },
-  { "sku": "B06GHIJ505-DEFAULT", "warehouse": "BCN", "onHand": 1 },
-
-  { "sku": "B05DEFG606-DEFAULT", "warehouse": "MAD", "onHand": 0 },
-  { "sku": "B05DEFG606-DEFAULT", "warehouse": "BCN", "onHand": 0 }
+  {
+    "sku": "B073WXYZ01-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B073WXYZ01-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B08JKLM202-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 7
+  },
+  {
+    "sku": "B09PQRS303-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B07TUVW404-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B07TUVW404-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B06GHIJ505-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 1
+  },
+  {
+    "sku": "B06GHIJ505-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B05DEFG606-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B05DEFG606-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B10SHO0101-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 1
+  },
+  {
+    "sku": "B10SHO0101-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B10SHO0102-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B10SHO0102-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B10SHO0103-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B10SHO0103-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B10SHO0104-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B10SHO0104-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B10SHO0105-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B10SHO0105-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B10SHO0106-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B10SHO0106-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B10SHO0107-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B10SHO0107-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B10SHO0108-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B10SHO0108-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B10SHI0201-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B10SHI0201-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B10SHI0202-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 1
+  },
+  {
+    "sku": "B10SHI0202-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B10SHI0203-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B10SHI0203-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B10SHI0204-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B10SHI0204-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B10SHI0205-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B10SHI0205-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B10SHI0206-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B10SHI0206-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B10SHI0207-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B10SHI0207-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B10SHI0208-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B10SHI0208-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B10SHI0209-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B10SHI0209-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B10SHI0210-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 1
+  },
+  {
+    "sku": "B10SHI0210-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B11COO0301-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B11COO0301-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B11COO0302-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B11COO0302-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B11COO0303-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B11COO0303-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B11COO0304-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B11COO0304-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B11COO0305-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B11COO0305-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B11COO0306-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B11COO0306-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B11COO0307-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B11COO0307-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B11COO0308-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B11COO0308-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B11COO0309-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B11COO0309-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B11COO0310-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B11COO0310-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B11COO0311-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B11COO0311-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B11COO0312-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B11COO0312-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B11COF0401-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B11COF0401-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B11COF0402-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B11COF0402-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B11COF0403-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B11COF0403-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B11COF0404-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B11COF0404-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B11COF0405-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B11COF0405-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B11COF0406-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B11COF0406-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B11COF0407-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B11COF0407-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B11COF0408-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B11COF0408-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 3
+  },
+  {
+    "sku": "B11TAB0501-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B11TAB0501-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B11TAB0502-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B11TAB0502-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B11TAB0503-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B11TAB0503-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B11TAB0504-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B11TAB0504-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B11TAB0505-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B11TAB0505-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B11TAB0506-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B11TAB0506-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B12LAM0601-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B12LAM0601-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B12LAM0602-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B12LAM0602-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B12LAM0603-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B12LAM0603-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B12LAM0604-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B12LAM0604-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B12LAM0605-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B12LAM0605-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B12LAM0606-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B12LAM0606-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B12LAM0607-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B12LAM0607-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B12LAM0608-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B12LAM0608-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B12LAM0609-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B12LAM0609-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B12LAM0610-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 1
+  },
+  {
+    "sku": "B12LAM0610-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B13BAG0701-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B13BAG0701-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B13BAG0702-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B13BAG0702-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B13BAG0703-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B13BAG0703-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B13BAG0704-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B13BAG0704-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B13BAG0705-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B13BAG0705-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B13BAG0706-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B13BAG0706-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B13BAG0707-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B13BAG0707-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B13BAG0708-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B13BAG0708-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B13BAG0709-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B13BAG0709-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B13BAG0710-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B13BAG0710-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B13BAG0711-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B13BAG0711-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B13BAG0712-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B13BAG0712-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B14HOM0801-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B14HOM0801-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B14HOM0802-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B14HOM0802-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B14HOM0803-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B14HOM0803-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B14HOM0804-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B14HOM0804-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B14HOM0805-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B14HOM0805-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 2
+  },
+  {
+    "sku": "B14HOM0806-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B14HOM0806-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B14HOM0807-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B14HOM0807-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B14HOM0808-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B14HOM0808-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B14ORG0901-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B14ORG0901-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B14ORG0902-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 1
+  },
+  {
+    "sku": "B14ORG0902-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B14ORG0903-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B14ORG0903-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B14ORG0904-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B14ORG0904-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B15APP1001-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B15APP1001-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B15APP1002-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B15APP1002-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B15APP1003-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B15APP1003-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 7
+  },
+  {
+    "sku": "B15APP1004-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 12
+  },
+  {
+    "sku": "B15APP1004-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B15APP1005-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B15APP1005-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B15APP1006-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B15APP1006-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B15APP1007-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 0
+  },
+  {
+    "sku": "B15APP1007-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B15APP1008-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B15APP1008-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B15SHO1101-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 4
+  },
+  {
+    "sku": "B15SHO1101-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B15SHO1102-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 2
+  },
+  {
+    "sku": "B15SHO1102-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B15SHO1103-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 6
+  },
+  {
+    "sku": "B15SHO1103-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 1
+  },
+  {
+    "sku": "B15SHO1104-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 8
+  },
+  {
+    "sku": "B15SHO1104-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B15KIT1201-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 10
+  },
+  {
+    "sku": "B15KIT1201-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 4
+  },
+  {
+    "sku": "B15KIT1202-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 1
+  },
+  {
+    "sku": "B15KIT1202-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 0
+  },
+  {
+    "sku": "B15KIT1203-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 3
+  },
+  {
+    "sku": "B15KIT1203-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  },
+  {
+    "sku": "B15KIT1204-DEFAULT",
+    "warehouse": "MAD",
+    "onHand": 5
+  },
+  {
+    "sku": "B15KIT1204-DEFAULT",
+    "warehouse": "BCN",
+    "onHand": 5
+  }
 ]

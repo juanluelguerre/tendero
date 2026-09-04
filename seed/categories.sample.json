@@ -1,17 +1,183 @@
 [
-  { "code": "APPAREL", "name": { "es": "Ropa", "en": "Clothing" } },
-  { "code": "FOOTWEAR", "parent": "APPAREL", "name": { "es": "Calzado", "en": "Footwear" } },
-  { "code": "SHOES", "parent": "FOOTWEAR", "name": { "es": "Zapatillas deportivas", "en": "Sports shoes" } },
-  { "code": "SPORTSWEAR", "parent": "APPAREL", "name": { "es": "Ropa deportiva", "en": "Sportswear" } },
-  { "code": "SHIRT", "parent": "SPORTSWEAR", "name": { "es": "Camisetas", "en": "Shirts" } },
-
-  { "code": "HOME", "name": { "es": "Hogar", "en": "Home" } },
-  { "code": "KITCHEN", "parent": "HOME", "name": { "es": "Cocina", "en": "Kitchen" } },
-  { "code": "COOKWARE", "parent": "KITCHEN", "name": { "es": "Menaje de cocina", "en": "Cookware" } },
-  { "code": "COFFEE_MAKER", "parent": "KITCHEN", "name": { "es": "Cafeteras", "en": "Coffee makers" } },
-  { "code": "LIGHTING", "parent": "HOME", "name": { "es": "Iluminación", "en": "Lighting" } },
-  { "code": "DESK_LAMP", "parent": "LIGHTING", "name": { "es": "Flexos y lámparas de escritorio", "en": "Desk and reading lamps" } },
-
-  { "code": "BAGS", "name": { "es": "Bolsas y mochilas", "en": "Bags and backpacks" } },
-  { "code": "BACKPACK", "parent": "BAGS", "name": { "es": "Mochilas", "en": "Backpacks" } }
+  {
+    "code": "APPAREL",
+    "name": {
+      "es": "Ropa",
+      "en": "Clothing"
+    }
+  },
+  {
+    "code": "FOOTWEAR",
+    "parent": "APPAREL",
+    "name": {
+      "es": "Calzado",
+      "en": "Footwear"
+    }
+  },
+  {
+    "code": "SHOES",
+    "parent": "FOOTWEAR",
+    "name": {
+      "es": "Zapatillas deportivas",
+      "en": "Sports shoes"
+    }
+  },
+  {
+    "code": "SPORTSWEAR",
+    "parent": "APPAREL",
+    "name": {
+      "es": "Ropa deportiva",
+      "en": "Sportswear"
+    }
+  },
+  {
+    "code": "SHIRT",
+    "parent": "SPORTSWEAR",
+    "name": {
+      "es": "Camisetas",
+      "en": "Shirts"
+    }
+  },
+  {
+    "code": "HOME",
+    "name": {
+      "es": "Hogar",
+      "en": "Home"
+    }
+  },
+  {
+    "code": "KITCHEN",
+    "parent": "HOME",
+    "name": {
+      "es": "Cocina",
+      "en": "Kitchen"
+    }
+  },
+  {
+    "code": "COOKWARE",
+    "parent": "KITCHEN",
+    "name": {
+      "es": "Menaje de cocina",
+      "en": "Cookware"
+    }
+  },
+  {
+    "code": "COFFEE_MAKER",
+    "parent": "KITCHEN",
+    "name": {
+      "es": "Cafeteras",
+      "en": "Coffee makers"
+    }
+  },
+  {
+    "code": "LIGHTING",
+    "parent": "HOME",
+    "name": {
+      "es": "Iluminación",
+      "en": "Lighting"
+    }
+  },
+  {
+    "code": "DESK_LAMP",
+    "parent": "LIGHTING",
+    "name": {
+      "es": "Flexos y lámparas de escritorio",
+      "en": "Desk and reading lamps"
+    }
+  },
+  {
+    "code": "BAGS",
+    "name": {
+      "es": "Bolsas y mochilas",
+      "en": "Bags and backpacks"
+    }
+  },
+  {
+    "code": "BACKPACK",
+    "parent": "BAGS",
+    "name": {
+      "es": "Mochilas",
+      "en": "Backpacks"
+    }
+  },
+  {
+    "code": "OUTERWEAR",
+    "parent": "APPAREL",
+    "name": {
+      "es": "Abrigos y chaquetas",
+      "en": "Coats and jackets"
+    }
+  },
+  {
+    "code": "TROUSERS",
+    "parent": "APPAREL",
+    "name": {
+      "es": "Pantalones",
+      "en": "Trousers"
+    }
+  },
+  {
+    "code": "ACCESSORIES",
+    "parent": "APPAREL",
+    "name": {
+      "es": "Complementos",
+      "en": "Accessories"
+    }
+  },
+  {
+    "code": "TABLEWARE",
+    "parent": "KITCHEN",
+    "name": {
+      "es": "Mesa y mantel",
+      "en": "Tableware and linen"
+    }
+  },
+  {
+    "code": "KNIVES",
+    "parent": "KITCHEN",
+    "name": {
+      "es": "Cuchillos",
+      "en": "Knives"
+    }
+  },
+  {
+    "code": "SMALL_APPLIANCE",
+    "parent": "KITCHEN",
+    "name": {
+      "es": "Pequeno electrodomestico",
+      "en": "Small appliances"
+    }
+  },
+  {
+    "code": "TEXTILES",
+    "parent": "HOME",
+    "name": {
+      "es": "Textil de hogar",
+      "en": "Home textiles"
+    }
+  },
+  {
+    "code": "STORAGE",
+    "parent": "HOME",
+    "name": {
+      "es": "Almacenaje y orden",
+      "en": "Storage and tidying"
+    }
+  },
+  {
+    "code": "BAGS_TOTE",
+    "parent": "BAGS",
+    "name": {
+      "es": "Bolsas y rinoneras",
+      "en": "Totes and hip packs"
+    }
+  },
+  {
+    "code": "LUGGAGE",
+    "parent": "BAGS",
+    "name": {
+      "es": "Equipaje y viaje",
+      "en": "Luggage and travel"
+    }
+  }
 ]

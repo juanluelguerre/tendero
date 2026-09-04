@@ -67,6 +67,46 @@ Two things make the run reproducible, and both were learned the hard way:
   query: 0.860 and then 0.769. Polling until *some* query returns a hit is not
   enough — it only proves one document is visible, not all six.
 
+## The baseline was re-derived when the catalogue reached 100 products (2026-09-04)
+
+**The old numbers are not comparable, and lowering the thresholds is not a
+regression being waved through.** The corpus went from 6 products to 100 and the
+golden set from 30 judgments to 268. NDCG@10 over six documents is a different
+measurement from NDCG@10 over a hundred: with six, almost everything retrieved
+is annotated, and the metric mostly asks whether the order is right.
+
+| | 6 products | 100 products |
+|---|---:|---:|
+| es NDCG@10 | 0.943 | **0.819** |
+| es recall@50 | 0.909 | **0.642** |
+| en NDCG@10 | 0.937 | **0.766** |
+| en recall@50 | 0.886 | **0.556** |
+
+What happened in two steps, and the order matters because the first number was
+the diagnosis:
+
+**Adding the products alone gave es 0.787 / en 0.844 with recall UNCHANGED** at
+0.909 and 0.886. Retrieval still found exactly what it found before; only the
+ranking fell, because ninety-four unannotated products were competing for the top
+ten and an unannotated product counts as irrelevant. That is a golden set that
+has gone out of date, not an engine that got worse.
+
+**Annotating them dropped recall to 0.642 / 0.556**, and that is the honest half.
+The new judgments include products a shopper would accept seeing — a gym trainer
+under "zapatillas running", a duffel under "mochila" — that a lexical `AND` query
+cannot retrieve, because they do not contain the query's words. Recall now
+measures that gap instead of hiding it.
+
+**The gap is the number hybrid search has to earn**, and it is finally worth
+measuring: it used to be one query per culture scoring 0.000, which is a rounding
+error. It is now roughly forty per cent of the annotated set.
+
+One catalogue defect the exercise found, which is the kind only a query can find:
+the two new running shoes were called *"de trail"* and *"de competicion"* and the
+word **running** appeared nowhere in their Spanish. A shop that sells running
+shoes and never writes the word is invisible to the search its own customers
+type.
+
 ## Committed baseline
 
 Measured against the seed sample, lexical BM25 only. Five consecutive runs give
@@ -74,8 +114,11 @@ identical numbers.
 
 | culture | NDCG@10 | recall@50 | threshold NDCG | threshold recall |
 |---|---:|---:|---:|---:|
-| es | 0.943 | 0.909 | 0.93 | 0.90 |
-| en | 0.937 | 0.886 | 0.93 | 0.88 |
+| es | 0.819 | 0.642 | 0.81 | 0.63 |
+| en | 0.766 | 0.556 | 0.75 | 0.54 |
+
+Measured against 100 products and 268 judgments; identical across three
+consecutive runs. See the section above for why these replaced 0.943 / 0.937.
 
 ### What localized attribute values bought (2026-09-02)
 

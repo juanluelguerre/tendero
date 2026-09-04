@@ -28,7 +28,14 @@ zapatilla de otra marca haciéndola pasar por "Pulse Runner" sería *menos*
 honesta que una marca que no finge ser nada.
 
 Colores tomados de `design/tokens.css`. Cuando entre el dataset real de ABO,
-estas seis se quedan como muestra de arranque sin descarga.
+estas se quedan como muestra de arranque sin descarga.
+
+**El catálogo son 100 productos desde 2026-09-04 y aquí hay seis imágenes.** No
+es un olvido: una imagen que no se puede leer no aborta nada — el producto se
+importa igual y la ficha muestra el tile de reserva, que en este repositorio es
+la ruta por defecto desde el primer día. Las noventa y cuatro que faltan están
+listadas, con su nombre y su descripción en los dos idiomas, en
+[`IMAGES-TODO.md`](IMAGES-TODO.md).
 
 | fichero | producto |
 |---|---|

@@ -47,6 +47,34 @@
           "es": "acero inoxidable",
           "en": "stainless steel"
         }
+      },
+      {
+        "code": "GREY",
+        "label": {
+          "es": "gris",
+          "en": "grey"
+        }
+      },
+      {
+        "code": "TERRACOTTA",
+        "label": {
+          "es": "terracota",
+          "en": "terracotta"
+        }
+      },
+      {
+        "code": "CREAM",
+        "label": {
+          "es": "crema",
+          "en": "cream"
+        }
+      },
+      {
+        "code": "OLIVE",
+        "label": {
+          "es": "oliva",
+          "en": "olive"
+        }
       }
     ]
   },
@@ -155,6 +183,62 @@
         "label": {
           "es": "ripstop reciclado",
           "en": "recycled ripstop"
+        }
+      },
+      {
+        "code": "COTTON",
+        "label": {
+          "es": "algodon",
+          "en": "cotton"
+        }
+      },
+      {
+        "code": "MERINO_WOOL",
+        "label": {
+          "es": "lana merino",
+          "en": "merino wool"
+        }
+      },
+      {
+        "code": "CERAMIC",
+        "label": {
+          "es": "ceramica",
+          "en": "ceramic"
+        }
+      },
+      {
+        "code": "GLASS",
+        "label": {
+          "es": "cristal",
+          "en": "glass"
+        }
+      },
+      {
+        "code": "BAMBOO",
+        "label": {
+          "es": "bambu",
+          "en": "bamboo"
+        }
+      },
+      {
+        "code": "ALUMINIUM",
+        "label": {
+          "es": "aluminio",
+          "en": "aluminium"
+        }
+      },
+      {
+        "code": "LINEN",
+        "label": {
+          "es": "lino",
+          "en": "linen"
+        }
+      },
+      {
+        "code": "STAINLESS_STEEL",
+        "label": {
+          "es": "acero inoxidable",
+          "en": "stainless steel"
         }
       }
     ]

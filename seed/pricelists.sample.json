@@ -5,12 +5,406 @@
     "currency": "EUR",
     "priority": 100,
     "entries": [
-      { "sku": "B073WXYZ01-DEFAULT", "amount": 79.95 },
-      { "sku": "B08JKLM202-DEFAULT", "amount": 54.90 },
-      { "sku": "B09PQRS303-DEFAULT", "amount": 39.99 },
-      { "sku": "B07TUVW404-DEFAULT", "amount": 24.50 },
-      { "sku": "B06GHIJ505-DEFAULT", "amount": 29.90 },
-      { "sku": "B05DEFG606-DEFAULT", "amount": 44.95 }
+      {
+        "sku": "B073WXYZ01-DEFAULT",
+        "amount": 79.95
+      },
+      {
+        "sku": "B08JKLM202-DEFAULT",
+        "amount": 54.9
+      },
+      {
+        "sku": "B09PQRS303-DEFAULT",
+        "amount": 39.99
+      },
+      {
+        "sku": "B07TUVW404-DEFAULT",
+        "amount": 24.5
+      },
+      {
+        "sku": "B06GHIJ505-DEFAULT",
+        "amount": 29.9
+      },
+      {
+        "sku": "B05DEFG606-DEFAULT",
+        "amount": 44.95
+      },
+      {
+        "sku": "B10SHO0101-DEFAULT",
+        "amount": 94.9
+      },
+      {
+        "sku": "B10SHO0102-DEFAULT",
+        "amount": 169.0
+      },
+      {
+        "sku": "B10SHO0103-DEFAULT",
+        "amount": 59.95
+      },
+      {
+        "sku": "B10SHO0104-DEFAULT",
+        "amount": 39.9
+      },
+      {
+        "sku": "B10SHO0105-DEFAULT",
+        "amount": 119.0
+      },
+      {
+        "sku": "B10SHO0106-DEFAULT",
+        "amount": 29.9
+      },
+      {
+        "sku": "B10SHO0107-DEFAULT",
+        "amount": 84.9
+      },
+      {
+        "sku": "B10SHO0108-DEFAULT",
+        "amount": 49.95
+      },
+      {
+        "sku": "B10SHI0201-DEFAULT",
+        "amount": 44.9
+      },
+      {
+        "sku": "B10SHI0202-DEFAULT",
+        "amount": 32.0
+      },
+      {
+        "sku": "B10SHI0203-DEFAULT",
+        "amount": 69.0
+      },
+      {
+        "sku": "B10SHI0204-DEFAULT",
+        "amount": 24.9
+      },
+      {
+        "sku": "B10SHI0205-DEFAULT",
+        "amount": 74.9
+      },
+      {
+        "sku": "B10SHI0206-DEFAULT",
+        "amount": 54.0
+      },
+      {
+        "sku": "B10SHI0207-DEFAULT",
+        "amount": 59.9
+      },
+      {
+        "sku": "B10SHI0208-DEFAULT",
+        "amount": 42.0
+      },
+      {
+        "sku": "B10SHI0209-DEFAULT",
+        "amount": 89.0
+      },
+      {
+        "sku": "B10SHI0210-DEFAULT",
+        "amount": 34.9
+      },
+      {
+        "sku": "B11COO0301-DEFAULT",
+        "amount": 49.9
+      },
+      {
+        "sku": "B11COO0302-DEFAULT",
+        "amount": 69.0
+      },
+      {
+        "sku": "B11COO0303-DEFAULT",
+        "amount": 89.9
+      },
+      {
+        "sku": "B11COO0304-DEFAULT",
+        "amount": 44.0
+      },
+      {
+        "sku": "B11COO0305-DEFAULT",
+        "amount": 27.5
+      },
+      {
+        "sku": "B11COO0306-DEFAULT",
+        "amount": 32.9
+      },
+      {
+        "sku": "B11COO0307-DEFAULT",
+        "amount": 24.9
+      },
+      {
+        "sku": "B11COO0308-DEFAULT",
+        "amount": 19.9
+      },
+      {
+        "sku": "B11COO0309-DEFAULT",
+        "amount": 64.0
+      },
+      {
+        "sku": "B11COO0310-DEFAULT",
+        "amount": 119.0
+      },
+      {
+        "sku": "B11COO0311-DEFAULT",
+        "amount": 29.9
+      },
+      {
+        "sku": "B11COO0312-DEFAULT",
+        "amount": 18.5
+      },
+      {
+        "sku": "B11COF0401-DEFAULT",
+        "amount": 29.9
+      },
+      {
+        "sku": "B11COF0402-DEFAULT",
+        "amount": 44.9
+      },
+      {
+        "sku": "B11COF0403-DEFAULT",
+        "amount": 34.5
+      },
+      {
+        "sku": "B11COF0404-DEFAULT",
+        "amount": 49.9
+      },
+      {
+        "sku": "B11COF0405-DEFAULT",
+        "amount": 79.0
+      },
+      {
+        "sku": "B11COF0406-DEFAULT",
+        "amount": 69.9
+      },
+      {
+        "sku": "B11COF0407-DEFAULT",
+        "amount": 54.0
+      },
+      {
+        "sku": "B11COF0408-DEFAULT",
+        "amount": 84.9
+      },
+      {
+        "sku": "B11TAB0501-DEFAULT",
+        "amount": 59.0
+      },
+      {
+        "sku": "B11TAB0502-DEFAULT",
+        "amount": 44.0
+      },
+      {
+        "sku": "B11TAB0503-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B11TAB0504-DEFAULT",
+        "amount": 32.0
+      },
+      {
+        "sku": "B11TAB0505-DEFAULT",
+        "amount": 38.9
+      },
+      {
+        "sku": "B11TAB0506-DEFAULT",
+        "amount": 64.0
+      },
+      {
+        "sku": "B12LAM0601-DEFAULT",
+        "amount": 74.9
+      },
+      {
+        "sku": "B12LAM0602-DEFAULT",
+        "amount": 99.0
+      },
+      {
+        "sku": "B12LAM0603-DEFAULT",
+        "amount": 129.0
+      },
+      {
+        "sku": "B12LAM0604-DEFAULT",
+        "amount": 89.0
+      },
+      {
+        "sku": "B12LAM0605-DEFAULT",
+        "amount": 59.9
+      },
+      {
+        "sku": "B12LAM0606-DEFAULT",
+        "amount": 49.0
+      },
+      {
+        "sku": "B12LAM0607-DEFAULT",
+        "amount": 34.9
+      },
+      {
+        "sku": "B12LAM0608-DEFAULT",
+        "amount": 19.9
+      },
+      {
+        "sku": "B12LAM0609-DEFAULT",
+        "amount": 24.5
+      },
+      {
+        "sku": "B12LAM0610-DEFAULT",
+        "amount": 109.0
+      },
+      {
+        "sku": "B13BAG0701-DEFAULT",
+        "amount": 69.0
+      },
+      {
+        "sku": "B13BAG0702-DEFAULT",
+        "amount": 109.0
+      },
+      {
+        "sku": "B13BAG0703-DEFAULT",
+        "amount": 139.0
+      },
+      {
+        "sku": "B13BAG0704-DEFAULT",
+        "amount": 89.9
+      },
+      {
+        "sku": "B13BAG0705-DEFAULT",
+        "amount": 74.0
+      },
+      {
+        "sku": "B13BAG0706-DEFAULT",
+        "amount": 59.9
+      },
+      {
+        "sku": "B13BAG0707-DEFAULT",
+        "amount": 29.9
+      },
+      {
+        "sku": "B13BAG0708-DEFAULT",
+        "amount": 34.9
+      },
+      {
+        "sku": "B13BAG0709-DEFAULT",
+        "amount": 27.5
+      },
+      {
+        "sku": "B13BAG0710-DEFAULT",
+        "amount": 39.0
+      },
+      {
+        "sku": "B13BAG0711-DEFAULT",
+        "amount": 79.9
+      },
+      {
+        "sku": "B13BAG0712-DEFAULT",
+        "amount": 32.0
+      },
+      {
+        "sku": "B14HOM0801-DEFAULT",
+        "amount": 22.9
+      },
+      {
+        "sku": "B14HOM0802-DEFAULT",
+        "amount": 44.0
+      },
+      {
+        "sku": "B14HOM0803-DEFAULT",
+        "amount": 24.9
+      },
+      {
+        "sku": "B14HOM0804-DEFAULT",
+        "amount": 49.0
+      },
+      {
+        "sku": "B14HOM0805-DEFAULT",
+        "amount": 119.0
+      },
+      {
+        "sku": "B14HOM0806-DEFAULT",
+        "amount": 39.9
+      },
+      {
+        "sku": "B14HOM0807-DEFAULT",
+        "amount": 34.0
+      },
+      {
+        "sku": "B14HOM0808-DEFAULT",
+        "amount": 32.9
+      },
+      {
+        "sku": "B14ORG0901-DEFAULT",
+        "amount": 27.9
+      },
+      {
+        "sku": "B14ORG0902-DEFAULT",
+        "amount": 32.5
+      },
+      {
+        "sku": "B14ORG0903-DEFAULT",
+        "amount": 46.0
+      },
+      {
+        "sku": "B14ORG0904-DEFAULT",
+        "amount": 89.0
+      },
+      {
+        "sku": "B15APP1001-DEFAULT",
+        "amount": 79.0
+      },
+      {
+        "sku": "B15APP1002-DEFAULT",
+        "amount": 99.0
+      },
+      {
+        "sku": "B15APP1003-DEFAULT",
+        "amount": 109.0
+      },
+      {
+        "sku": "B15APP1004-DEFAULT",
+        "amount": 199.0
+      },
+      {
+        "sku": "B15APP1005-DEFAULT",
+        "amount": 84.9
+      },
+      {
+        "sku": "B15APP1006-DEFAULT",
+        "amount": 59.0
+      },
+      {
+        "sku": "B15APP1007-DEFAULT",
+        "amount": 29.9
+      },
+      {
+        "sku": "B15APP1008-DEFAULT",
+        "amount": 27.0
+      },
+      {
+        "sku": "B15SHO1101-DEFAULT",
+        "amount": 64.9
+      },
+      {
+        "sku": "B15SHO1102-DEFAULT",
+        "amount": 159.0
+      },
+      {
+        "sku": "B15SHO1103-DEFAULT",
+        "amount": 99.0
+      },
+      {
+        "sku": "B15SHO1104-DEFAULT",
+        "amount": 36.0
+      },
+      {
+        "sku": "B15KIT1201-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B15KIT1202-DEFAULT",
+        "amount": 22.5
+      },
+      {
+        "sku": "B15KIT1203-DEFAULT",
+        "amount": 24.0
+      },
+      {
+        "sku": "B15KIT1204-DEFAULT",
+        "amount": 39.9
+      }
     ]
   },
   {
@@ -19,9 +413,406 @@
     "currency": "EUR",
     "priority": 10,
     "entries": [
-      { "sku": "B073WXYZ01-DEFAULT", "amount": 71.95 },
-      { "sku": "B08JKLM202-DEFAULT", "amount": 49.40 },
-      { "sku": "B05DEFG606-DEFAULT", "amount": 39.95 }
+      {
+        "sku": "B073WXYZ01-DEFAULT",
+        "amount": 71.95
+      },
+      {
+        "sku": "B08JKLM202-DEFAULT",
+        "amount": 49.4
+      },
+      {
+        "sku": "B05DEFG606-DEFAULT",
+        "amount": 39.95
+      },
+      {
+        "sku": "B09PQRS303-DEFAULT",
+        "amount": 36.0
+      },
+      {
+        "sku": "B07TUVW404-DEFAULT",
+        "amount": 22.05
+      },
+      {
+        "sku": "B06GHIJ505-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B10SHO0101-DEFAULT",
+        "amount": 85.4
+      },
+      {
+        "sku": "B10SHO0102-DEFAULT",
+        "amount": 152.1
+      },
+      {
+        "sku": "B10SHO0103-DEFAULT",
+        "amount": 53.95
+      },
+      {
+        "sku": "B10SHO0104-DEFAULT",
+        "amount": 35.9
+      },
+      {
+        "sku": "B10SHO0105-DEFAULT",
+        "amount": 107.1
+      },
+      {
+        "sku": "B10SHO0106-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B10SHO0107-DEFAULT",
+        "amount": 76.4
+      },
+      {
+        "sku": "B10SHO0108-DEFAULT",
+        "amount": 44.95
+      },
+      {
+        "sku": "B10SHI0201-DEFAULT",
+        "amount": 40.4
+      },
+      {
+        "sku": "B10SHI0202-DEFAULT",
+        "amount": 28.8
+      },
+      {
+        "sku": "B10SHI0203-DEFAULT",
+        "amount": 62.1
+      },
+      {
+        "sku": "B10SHI0204-DEFAULT",
+        "amount": 22.4
+      },
+      {
+        "sku": "B10SHI0205-DEFAULT",
+        "amount": 67.4
+      },
+      {
+        "sku": "B10SHI0206-DEFAULT",
+        "amount": 48.6
+      },
+      {
+        "sku": "B10SHI0207-DEFAULT",
+        "amount": 53.9
+      },
+      {
+        "sku": "B10SHI0208-DEFAULT",
+        "amount": 37.8
+      },
+      {
+        "sku": "B10SHI0209-DEFAULT",
+        "amount": 80.1
+      },
+      {
+        "sku": "B10SHI0210-DEFAULT",
+        "amount": 31.4
+      },
+      {
+        "sku": "B11COO0301-DEFAULT",
+        "amount": 44.9
+      },
+      {
+        "sku": "B11COO0302-DEFAULT",
+        "amount": 62.1
+      },
+      {
+        "sku": "B11COO0303-DEFAULT",
+        "amount": 80.9
+      },
+      {
+        "sku": "B11COO0304-DEFAULT",
+        "amount": 39.6
+      },
+      {
+        "sku": "B11COO0305-DEFAULT",
+        "amount": 24.75
+      },
+      {
+        "sku": "B11COO0306-DEFAULT",
+        "amount": 29.6
+      },
+      {
+        "sku": "B11COO0307-DEFAULT",
+        "amount": 22.4
+      },
+      {
+        "sku": "B11COO0308-DEFAULT",
+        "amount": 17.9
+      },
+      {
+        "sku": "B11COO0309-DEFAULT",
+        "amount": 57.6
+      },
+      {
+        "sku": "B11COO0310-DEFAULT",
+        "amount": 107.1
+      },
+      {
+        "sku": "B11COO0311-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B11COO0312-DEFAULT",
+        "amount": 16.65
+      },
+      {
+        "sku": "B11COF0401-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B11COF0402-DEFAULT",
+        "amount": 40.4
+      },
+      {
+        "sku": "B11COF0403-DEFAULT",
+        "amount": 31.05
+      },
+      {
+        "sku": "B11COF0404-DEFAULT",
+        "amount": 44.9
+      },
+      {
+        "sku": "B11COF0405-DEFAULT",
+        "amount": 71.1
+      },
+      {
+        "sku": "B11COF0406-DEFAULT",
+        "amount": 62.9
+      },
+      {
+        "sku": "B11COF0407-DEFAULT",
+        "amount": 48.6
+      },
+      {
+        "sku": "B11COF0408-DEFAULT",
+        "amount": 76.4
+      },
+      {
+        "sku": "B11TAB0501-DEFAULT",
+        "amount": 53.1
+      },
+      {
+        "sku": "B11TAB0502-DEFAULT",
+        "amount": 39.6
+      },
+      {
+        "sku": "B11TAB0503-DEFAULT",
+        "amount": 24.2
+      },
+      {
+        "sku": "B11TAB0504-DEFAULT",
+        "amount": 28.8
+      },
+      {
+        "sku": "B11TAB0505-DEFAULT",
+        "amount": 35.0
+      },
+      {
+        "sku": "B11TAB0506-DEFAULT",
+        "amount": 57.6
+      },
+      {
+        "sku": "B12LAM0601-DEFAULT",
+        "amount": 67.4
+      },
+      {
+        "sku": "B12LAM0602-DEFAULT",
+        "amount": 89.1
+      },
+      {
+        "sku": "B12LAM0603-DEFAULT",
+        "amount": 116.1
+      },
+      {
+        "sku": "B12LAM0604-DEFAULT",
+        "amount": 80.1
+      },
+      {
+        "sku": "B12LAM0605-DEFAULT",
+        "amount": 53.9
+      },
+      {
+        "sku": "B12LAM0606-DEFAULT",
+        "amount": 44.1
+      },
+      {
+        "sku": "B12LAM0607-DEFAULT",
+        "amount": 31.4
+      },
+      {
+        "sku": "B12LAM0608-DEFAULT",
+        "amount": 17.9
+      },
+      {
+        "sku": "B12LAM0609-DEFAULT",
+        "amount": 22.05
+      },
+      {
+        "sku": "B12LAM0610-DEFAULT",
+        "amount": 98.1
+      },
+      {
+        "sku": "B13BAG0701-DEFAULT",
+        "amount": 62.1
+      },
+      {
+        "sku": "B13BAG0702-DEFAULT",
+        "amount": 98.1
+      },
+      {
+        "sku": "B13BAG0703-DEFAULT",
+        "amount": 125.1
+      },
+      {
+        "sku": "B13BAG0704-DEFAULT",
+        "amount": 80.9
+      },
+      {
+        "sku": "B13BAG0705-DEFAULT",
+        "amount": 66.6
+      },
+      {
+        "sku": "B13BAG0706-DEFAULT",
+        "amount": 53.9
+      },
+      {
+        "sku": "B13BAG0707-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B13BAG0708-DEFAULT",
+        "amount": 31.4
+      },
+      {
+        "sku": "B13BAG0709-DEFAULT",
+        "amount": 24.75
+      },
+      {
+        "sku": "B13BAG0710-DEFAULT",
+        "amount": 35.1
+      },
+      {
+        "sku": "B13BAG0711-DEFAULT",
+        "amount": 71.9
+      },
+      {
+        "sku": "B13BAG0712-DEFAULT",
+        "amount": 28.8
+      },
+      {
+        "sku": "B14HOM0801-DEFAULT",
+        "amount": 20.6
+      },
+      {
+        "sku": "B14HOM0802-DEFAULT",
+        "amount": 39.6
+      },
+      {
+        "sku": "B14HOM0803-DEFAULT",
+        "amount": 22.4
+      },
+      {
+        "sku": "B14HOM0804-DEFAULT",
+        "amount": 44.1
+      },
+      {
+        "sku": "B14HOM0805-DEFAULT",
+        "amount": 107.1
+      },
+      {
+        "sku": "B14HOM0806-DEFAULT",
+        "amount": 35.9
+      },
+      {
+        "sku": "B14HOM0807-DEFAULT",
+        "amount": 30.6
+      },
+      {
+        "sku": "B14HOM0808-DEFAULT",
+        "amount": 29.6
+      },
+      {
+        "sku": "B14ORG0901-DEFAULT",
+        "amount": 25.1
+      },
+      {
+        "sku": "B14ORG0902-DEFAULT",
+        "amount": 29.25
+      },
+      {
+        "sku": "B14ORG0903-DEFAULT",
+        "amount": 41.4
+      },
+      {
+        "sku": "B14ORG0904-DEFAULT",
+        "amount": 80.1
+      },
+      {
+        "sku": "B15APP1001-DEFAULT",
+        "amount": 71.1
+      },
+      {
+        "sku": "B15APP1002-DEFAULT",
+        "amount": 89.1
+      },
+      {
+        "sku": "B15APP1003-DEFAULT",
+        "amount": 98.1
+      },
+      {
+        "sku": "B15APP1004-DEFAULT",
+        "amount": 179.1
+      },
+      {
+        "sku": "B15APP1005-DEFAULT",
+        "amount": 76.4
+      },
+      {
+        "sku": "B15APP1006-DEFAULT",
+        "amount": 53.1
+      },
+      {
+        "sku": "B15APP1007-DEFAULT",
+        "amount": 26.9
+      },
+      {
+        "sku": "B15APP1008-DEFAULT",
+        "amount": 24.3
+      },
+      {
+        "sku": "B15SHO1101-DEFAULT",
+        "amount": 58.4
+      },
+      {
+        "sku": "B15SHO1102-DEFAULT",
+        "amount": 143.1
+      },
+      {
+        "sku": "B15SHO1103-DEFAULT",
+        "amount": 89.1
+      },
+      {
+        "sku": "B15SHO1104-DEFAULT",
+        "amount": 32.4
+      },
+      {
+        "sku": "B15KIT1201-DEFAULT",
+        "amount": 24.2
+      },
+      {
+        "sku": "B15KIT1202-DEFAULT",
+        "amount": 20.25
+      },
+      {
+        "sku": "B15KIT1203-DEFAULT",
+        "amount": 21.6
+      },
+      {
+        "sku": "B15KIT1204-DEFAULT",
+        "amount": 35.9
+      }
     ]
   }
 ]
