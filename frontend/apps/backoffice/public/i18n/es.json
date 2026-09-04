@@ -36,7 +36,9 @@
     "showPayload": "Ver comando",
     "system": "sistema",
     "title": "Auditoría",
-    "trace": "Traza {{id}}"
+    "trace": "Traza {{id}}",
+    "emptyFor": "No hay nada registrado como «{{outcome}}». Que es la buena noticia.",
+    "showEverything": "Ver todo"
   },
   "brand": {
     "area": "Backoffice",

@@ -31,7 +31,19 @@
   } @else if (failed()) {
     <p class="notice notice--danger">{{ t('audit.failed') }}</p>
   } @else if (entries().length === 0) {
-    <p class="muted">{{ t('audit.empty') }}</p>
+    <!--
+      The empty message names the FILTER, because the screen opens on `denied`
+      and a shop that has refused nothing is the normal case. "Nothing recorded
+      yet" over a log with two hundred allowed rows in it is a screen lying about
+      its own data, and it reads as a feature that does not work.
+    -->
+    <p class="muted">{{ t(filter() ? 'audit.emptyFor' : 'audit.empty', { outcome: outcomeLabel(t) }) }}</p>
+
+    @if (filter()) {
+      <button type="button" class="button button--quiet" (click)="use(null)">
+        {{ t('audit.showEverything') }}
+      </button>
+    }
   } @else {
     <table class="table">
       <caption class="sr-only">{{ t('audit.title') }}</caption>

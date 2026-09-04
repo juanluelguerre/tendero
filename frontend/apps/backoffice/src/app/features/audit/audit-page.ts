@@ -58,6 +58,18 @@ export class AuditPage {
     this.load();
   }
 
+  /**
+   * The active filter in the reader's own language, for the empty message.
+   *
+   * The translate function is passed in rather than the service injected,
+   * because the template already has one from `*transloco` and a second source
+   * of the same strings is how a screen ends up half-translated.
+   */
+  protected outcomeLabel(t: (key: string) => string): string {
+    const filter = this.filter();
+    return filter ? t('audit.outcome.' + filter).toLowerCase() : '';
+  }
+
   protected use(filter: Filter): void {
     this.filter.set(filter);
     this.opened.set(null);

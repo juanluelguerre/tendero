@@ -36,7 +36,9 @@
     "showPayload": "Show command",
     "system": "system",
     "title": "Audit",
-    "trace": "Trace {{id}}"
+    "trace": "Trace {{id}}",
+    "emptyFor": "Nothing {{outcome}} has been recorded. That is the good outcome.",
+    "showEverything": "Show everything"
   },
   "brand": {
     "area": "Backoffice",

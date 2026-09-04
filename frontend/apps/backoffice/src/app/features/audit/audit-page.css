@@ -17,9 +17,22 @@
   margin-block: var(--space-5) var(--space-4);
 }
 
+/*
+  **A SEMANTIC token, not a scale one.** This used to be `--stone-100`, which is
+  a step on the light ramp and is never redefined for dark mode — only the
+  semantic tokens above it are. So in the backoffice, which is dark by default,
+  the selected filter was near-white text on a near-white chip: the word
+  "Denied" was invisible, and the screen looked like it had a blank box where a
+  filter should be.
+
+  A raw ramp value in a themed component is the bug, and it is one the hex test
+  cannot see: `--stone-100` is a token, so the rule passes. Reading a ramp
+  directly is what the semantic layer exists to stop.
+*/
 .chip--active {
-  border-color: var(--border-strong);
-  background: var(--stone-100);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--text);
 }
 
 /* A refused row is marked on the LEFT EDGE as well as by its pill, because a
