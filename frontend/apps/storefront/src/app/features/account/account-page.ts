@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { ProductImagePlaceholder } from '../../product-image-placeholder';
 import { RouterLink } from '@angular/router';
 import type { OrderSummary } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
@@ -34,7 +35,7 @@ type PageState =
  */
 @Component({
   selector: 'storefront-account-page',
-  imports: [TranslocoDirective, RouterLink],
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-page.html',
   styleUrl: './account-page.css',

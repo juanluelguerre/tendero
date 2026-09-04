@@ -9,6 +9,7 @@ import type { SearchHit } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
 import { ProductSearchService } from '../../data-access/product-search.service';
+import { ProductImagePlaceholder } from '../../product-image-placeholder';
 import { ShopLinks } from '../../shop-links';
 
 /** Below this, a query matches so much that the answer is noise. */
@@ -42,7 +43,7 @@ type SearchState =
  */
 @Component({
   selector: 'storefront-search-page',
-  imports: [TranslocoDirective, RouterLink],
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
   templateUrl: './search-page.html',
   styleUrl: './search-page.css',
 })

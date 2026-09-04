@@ -53,17 +53,12 @@
 /* A default state, not a gap: a product with no photo has to look deliberate.
    The seed points at a host that does not resolve, so this is the path a fresh
    clone actually sees. */
+/* Layout only: the placeholder brings its own ground, and it is not the white
+   of a product photograph — an empty white square reads as a picture that has
+   not loaded, which is exactly the wrong thing to say. */
 .gallery__main--fallback {
-  display: grid;
-  place-items: center;
+  background: none;
 }
-
-.gallery__initial {
-  font-family: var(--font-display);
-  font-size: var(--text-4xl);
-  color: var(--text-subtle);
-}
-
 .thumbs {
   display: flex;
   gap: var(--space-3);

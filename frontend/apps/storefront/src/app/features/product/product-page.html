@@ -55,10 +55,10 @@
                 (error)="onImageError(images[0].imageId)"
               />
             } @else {
-              <div class="gallery__main gallery__main--fallback" role="img"
-                   [attr.aria-label]="t('product.noImage')">
-                <span class="gallery__initial" aria-hidden="true">{{ item.name.charAt(0) }}</span>
-              </div>
+              <storefront-product-image-placeholder
+                class="gallery__main gallery__main--fallback"
+                [alt]="t('product.noImage')"
+                [label]="t('product.noImage')" />
             }
 
             @if (images.length > 1) {

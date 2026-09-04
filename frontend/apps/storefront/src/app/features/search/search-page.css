@@ -173,19 +173,16 @@
   border-block-end: 1px solid var(--border);
 }
 
+/*
+  Layout only. The placeholder brings its own colour, and it is stone rather
+  than clay on purpose: a grid of terracotta tiles competes with the one accent
+  action the view is allowed (design/DESIGN.md), and a product with no picture
+  should recede, not shout.
+*/
 .card__image--fallback {
   display: grid;
   place-items: center;
-  background: var(--accent-tint);
 }
-
-.card__initial {
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: var(--text-2xl);
-  color: var(--accent);
-}
-
 .card__body {
   display: flex;
   flex-direction: column;

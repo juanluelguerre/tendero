@@ -1,0 +1,37 @@
+<!--
+  The layout lives on this wrapper and NOT on the host, and that is not a
+  preference — it is the only thing that works.
+
+  Every caller puts its own class on the host (`card__image`, `gallery__main`,
+  `order__thumb`) to size and place the box. Angular's emulated encapsulation
+  compiles `:host` to an attribute selector of the same specificity as a class,
+  so a tie is broken by source order and the parent's stylesheet always comes
+  later. The host's `display: grid` was quietly becoming `display: block` and the
+  mark drifted to a corner.
+
+  So the host is the caller's to shape, and everything inside it is ours.
+-->
+<div class="ph">
+  <svg class="ph__mark" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+    <defs>
+      <clipPath [attr.id]="clipId"><path d="M34 30 L92 30 L110 64 L16 64 Z" /></clipPath>
+    </defs>
+
+    <path d="M34 30 L92 30 L110 64 L16 64 Z" fill="currentColor" opacity="0.28" />
+
+    <!-- The stripes are the signature and the only decorative device in the
+         system (design/DESIGN.md). They are what makes this read as Tendero
+         rather than as a broken image glyph. -->
+    <g [attr.clip-path]="'url(#' + clipId + ')'">
+      <rect x="34" y="30" width="16" height="34" fill="currentColor" opacity="0.5" />
+      <rect x="66" y="30" width="16" height="34" fill="currentColor" opacity="0.5" />
+      <rect x="98" y="30" width="16" height="34" fill="currentColor" opacity="0.5" />
+    </g>
+
+    <rect x="48" y="72" width="30" height="34" rx="6" fill="currentColor" opacity="0.28" />
+  </svg>
+
+  @if (label()) {
+    <span class="ph__label">{{ label() }}</span>
+  }
+</div>

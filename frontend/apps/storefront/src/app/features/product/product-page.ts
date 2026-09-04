@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { ProductImagePlaceholder } from '../../product-image-placeholder';
 import { map } from 'rxjs';
 import { CultureStore, DEFAULT_CULTURE } from '@tendero/shared-i18n';
 import type { ProductDetail, VariantView } from '@tendero/shared-api';
@@ -42,7 +43,7 @@ type PageState =
  */
 @Component({
   selector: 'storefront-product-page',
-  imports: [TranslocoDirective, RouterLink],
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
   templateUrl: './product-page.html',
   styleUrl: './product-page.css',
 })

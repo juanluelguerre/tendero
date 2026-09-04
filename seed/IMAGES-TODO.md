@@ -1,8 +1,8 @@
 # Imágenes por generar
 
 Los 100 productos del catálogo de muestra, con el nombre y la descripción de
-cada uno para poder generar su imagen. **14 ya están hechas** y van marcadas;
-faltan 86.
+cada uno para poder generar su imagen. **8 ya están hechas** y van marcadas;
+faltan 92.
 
 ## La especificación, en corto
 
@@ -259,7 +259,7 @@ Tres cubos de malla de tamanos distintos que comprimen la ropa y dejan ver lo qu
 
 ## Bolsas y mochilas > Mochilas
 
-### `B08JKLM202.png` — Mochila urbana impermeable 25L CityPack · **hecha**
+### `B08JKLM202.png` — Mochila urbana impermeable 25L CityPack
 
 Mochila de dia con compartimento acolchado para portatil de 15 pulgadas, tejido ripstop con tratamiento DWR y bolsillo antirrobo en la espalda.
 
@@ -335,7 +335,7 @@ Cubo de 3 x 20 litros con pedal y cubetas extraibles que se lavan por separado.
 
 ## Hogar > Cocina > Cafeteras
 
-### `B09PQRS303.png` — Cafetera de goteo programable Aroma 12 tazas · **hecha**
+### `B09PQRS303.png` — Cafetera de goteo programable Aroma 12 tazas
 
 Cafetera de filtro con jarra de vidrio, temporizador de 24 horas, funcion pausa y sirve, y placa calefactora con apagado automatico.
 
@@ -389,7 +389,7 @@ Afilador manual con una etapa de diamante para reperfilar y otra de ceramica par
 
 ## Hogar > Cocina > Menaje de cocina
 
-### `B05DEFG606.png` — Set de 3 sartenes antiadherentes aptas para induccion · **hecha**
+### `B05DEFG606.png` — Set de 3 sartenes antiadherentes aptas para induccion
 
 Sartenes de 20, 24 y 28 cm con revestimiento antiadherente libre de PFOA, base de acero para induccion y mangos de baquelita.
 
@@ -577,7 +577,7 @@ Termometro digital de lectura instantanea con sonda plegable y rango de -50 a 30
 
 ## Hogar > Iluminación > Flexos y lámparas de escritorio
 
-### `B06GHIJ505.png` — Lampara de escritorio LED regulable con puerto USB · **hecha**
+### `B06GHIJ505.png` — Lampara de escritorio LED regulable con puerto USB
 
 Flexo LED con tres temperaturas de color, brazo articulado y puerto de carga USB-A integrado en la base.
 
@@ -731,7 +731,7 @@ Color: **azul marino**
 
 ## Ropa > Calzado > Zapatillas deportivas
 
-### `B073WXYZ01.png` — Zapatillas de running amortiguadas Pulse Runner · **hecha**
+### `B073WXYZ01.png` — Zapatillas de running amortiguadas Pulse Runner
 
 Zapatillas de running neutras con mediasuela de espuma reactiva, upper de malla transpirable y refuerzo en el talon. Drop de 8 mm.
 
@@ -897,7 +897,7 @@ Color: **gris**
 
 ## Ropa > Ropa deportiva > Camisetas
 
-### `B07TUVW404.png` — Camiseta tecnica de trail manga corta · **hecha**
+### `B07TUVW404.png` — Camiseta tecnica de trail manga corta
 
 Camiseta ligera de secado rapido con costuras planas y tejido con proteccion UV UPF 30.
 

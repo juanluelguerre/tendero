@@ -72,7 +72,9 @@
                                the seed points at images that may not exist, so
                                this is the DEFAULT path on a fresh clone rather
                                than an error state. -->
-                          <span class="order__thumb order__thumb--fallback" aria-hidden="true"></span>
+                          <storefront-product-image-placeholder
+                            class="order__thumb order__thumb--fallback"
+                            [alt]="t('product.noImage')" />
                         }
                       }
                     </span>

@@ -134,10 +134,10 @@
                 } @else {
                   <!-- A default state, not a gap: a card with no photo has to
                        look deliberate. -->
-                  <div class="card__image card__image--fallback" role="img"
-                       [attr.aria-label]="t('product.noImage')">
-                    <span class="card__initial" aria-hidden="true">{{ hit.name.charAt(0) }}</span>
-                  </div>
+                  <storefront-product-image-placeholder
+                    class="card__image card__image--fallback"
+                    [alt]="t('product.noImage')"
+                    [label]="t('product.noImage')" />
                 }
                 <div class="card__body">
                   @if (hit.brand) {

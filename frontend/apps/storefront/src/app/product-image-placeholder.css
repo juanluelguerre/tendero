@@ -1,0 +1,59 @@
+/*
+  The host carries nothing but a promise to fill whatever the caller sized. See
+  the template for why: a `:host` rule and the caller's class have the same
+  specificity, and the caller's stylesheet is always the later one.
+*/
+:host {
+  display: block;
+  overflow: hidden;
+}
+
+.ph {
+  block-size: 100%;
+  inline-size: 100%;
+
+  display: grid;
+  /*
+    Rows sized to content and the block centred, rather than `place-items`,
+    which centres each row inside its own share of the box — in the product page
+    gallery that put the mark near the top and the words near the bottom with a
+    void between them.
+  */
+  grid-auto-rows: max-content;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-3);
+
+  /*
+    Stone rather than clay. It is an absence, and the accent belongs to the one
+    action on the view (design/DESIGN.md) — a grid of terracotta tiles would
+    shout louder than the products that DO have a picture. White is wrong for a
+    related reason: an empty white square reads as a photograph that failed to
+    load, which is exactly the wrong thing to say.
+  */
+  background: var(--bg-raised);
+  color: var(--text-subtle);
+}
+
+.ph__mark {
+  /*
+    A share of the BOX, not of the font size. Sizing it in `em` tied it to
+    whatever text size the surrounding card happened to use, which came out at
+    about fifty pixels inside a tile of two hundred and forty — a stamp in a
+    corner rather than a placeholder.
+
+    A proportion scales with whatever it is dropped into — a result card, the
+    gallery, a 48-pixel thumbnail — without any of them being told a number.
+  */
+  inline-size: 46%;
+  max-inline-size: 200px;
+  block-size: auto;
+  aspect-ratio: 1;
+}
+
+.ph__label {
+  max-inline-size: 22ch;
+  font-size: var(--text-xs);
+  text-align: center;
+  text-wrap: balance;
+}
