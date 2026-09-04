@@ -12,32 +12,19 @@
     }
 
     @case ('signedOut') {
-      @let out = state();
-      @if (out.status === 'signedOut') {
-        <section class="signIn">
-          <h1 class="signIn__title">{{ t('account.title') }}</h1>
-          <!-- The shop works without this, and it says so. Nothing here is a
-               prerequisite for buying anything. -->
-          <p class="signIn__lede muted">{{ t('account.lede') }}</p>
+      <section class="signIn">
+        <h1 class="signIn__title">{{ t('account.title') }}</h1>
+        <!-- The shop works without this, and it says so. Nothing here is a
+             prerequisite for buying anything. -->
+        <p class="signIn__lede muted">{{ t('account.lede') }}</p>
 
-          @if (out.identities.length === 0) {
-            <p class="muted">{{ t('account.noIssuer') }}</p>
-          } @else {
-            <p class="eyebrow">{{ t('account.pick') }}</p>
-            <ul class="identities">
-              @for (identity of out.identities; track identity.subject) {
-                <li>
-                  <button type="button" class="identity" (click)="use(identity)">
-                    <span class="identity__name">{{ identity.name }}</span>
-                    <span class="identity__role">{{ identity.role }}</span>
-                  </button>
-                </li>
-              }
-            </ul>
-            <p class="hint muted">{{ t('account.devIssuer') }}</p>
-          }
-        </section>
-      }
+        <!-- One button, and it leaves. Who may sign in and what they have to
+             type is the issuer's business, which is what stops the shop from
+             ever handling a credential. -->
+        <button type="button" class="button" (click)="signIn()">
+          {{ t('account.signIn') }}
+        </button>
+      </section>
     }
 
     @case ('signedIn') {

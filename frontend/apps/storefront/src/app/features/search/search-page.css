@@ -310,3 +310,22 @@
 }
 
 .card__add:disabled { opacity: 0.6; cursor: default; }
+
+/*
+  The way back to an order, for somebody with no session. Quiet on purpose: the
+  search button is this view's one clay action, and a second accent here would
+  make neither of them primary.
+*/
+.hero__account {
+  margin: var(--space-3) 0 0;
+  color: var(--text-subtle);
+  font-size: var(--text-sm);
+}
+
+.hero__account-link {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.hero__account-link:hover { color: var(--accent); }

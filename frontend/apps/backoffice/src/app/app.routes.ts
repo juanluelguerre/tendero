@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { Route, Router } from '@angular/router';
+import { CanActivateFn, Route, Router } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
 import { Shell } from './layout/shell';
 
@@ -9,9 +9,15 @@ import { Shell } from './layout/shell';
  * going to deny: without it, the review queue would load empty with a 401 in the
  * console and nothing to explain why.
  */
-const signedIn = () => {
+const signedIn: CanActivateFn = (_route, state) => {
   const router = inject(Router);
-  return inject(AuthStore).isSignedIn() ? true : router.createUrlTree(['/sign-in']);
+
+  if (inject(AuthStore).isSignedIn()) return true;
+
+  // Where they were going, so the door can send them back to it. Without this,
+  // signing in from the door returns you to the door: the path travels in the
+  // OAuth `state`, and the path at that moment is `/sign-in`.
+  return router.createUrlTree(['/sign-in'], { queryParams: { returnTo: state.url } });
 };
 
 export const appRoutes: Route[] = [

@@ -3,28 +3,22 @@
     <img class="card__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true"
          width="36" height="36" />
     <h1 class="card__title">{{ t('signIn.title') }}</h1>
-    <p class="muted card__hint">{{ t('signIn.hint') }}</p>
 
-    @if (failed()) {
-      <p class="failed" role="alert">{{ t('signIn.failed') }}</p>
-    }
+    @if (issuer) {
+      <p class="muted card__hint">{{ t('signIn.hint') }}</p>
 
-    @if (identities().length === 0) {
+      <!-- The one clay action on this view, and the only thing it does is leave.
+           Who may sign in, and what they have to type, belongs to the issuer. -->
+      <button type="button" class="button" (click)="signIn()">
+        {{ t('signIn.continue') }}
+      </button>
+
+      <!-- Naming the issuer is not decoration: you are about to be sent to
+           another origin, and a page that hands you off without saying where is
+           a page that has trained you to ignore that. -->
+      <p class="muted card__issuer">{{ t('signIn.via.' + issuer) }}</p>
+    } @else {
       <p class="failed" role="alert">{{ t('signIn.noIssuer') }}</p>
     }
-
-    <ul class="identities">
-      @for (identity of identities(); track identity.subject) {
-        <li>
-          <button type="button" class="identity" [disabled]="busy()" (click)="choose(identity)">
-            <span class="identity__name">{{ identity.name }}</span>
-            <!-- The role, not a decoration: it is what decides whether the
-                 publish button will work, and saying it here saves finding
-                 out by pressing it. -->
-            <span class="tag tag--code">{{ identity.role }}</span>
-          </button>
-        </li>
-      }
-    </ul>
   </section>
 </div>

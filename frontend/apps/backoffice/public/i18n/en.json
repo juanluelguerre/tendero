@@ -181,10 +181,14 @@
   },
   "signIn": {
     "title": "Sign in",
-    "hint": "The development issuer signs for these identities. There are no passwords: when Keycloak arrives, this screen is replaced by its redirect.",
-    "failed": "Could not get a token. Is the API running?",
-    "noIssuer": "The development issuer is not responding. Start the API with dotnet run --project src/AppHost.",
-    "signOut": "Sign out"
+    "hint": "The shop does not ask for your password — the issuer does. You will come straight back.",
+    "noIssuer": "The API is not saying which issuer it trusts. Start it with dotnet run --project src/AppHost.",
+    "signOut": "Sign out",
+    "continue": "Continue to sign in",
+    "via": {
+      "dev-issuer": "Signed by the development issuer.",
+      "keycloak": "Signed by Keycloak."
+    }
   },
   "stock": {
     "allAvailable": "All available",

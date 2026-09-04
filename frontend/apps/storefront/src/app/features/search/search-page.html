@@ -7,6 +7,23 @@
     <h1 class="hero__title">{{ t('search.heading') }}</h1>
     <p class="hero__lede muted">{{ t('search.lede') }}</p>
 
+    <!--
+      A returning guest could not find an order they had already placed. The
+      account page listed them and the header linked to it behind an unlabelled
+      icon, which is a path you have to already know about.
+
+      Shown only when there is no session and no results: on an idle home it is
+      the answer to "where did my order go", and over a result list it would be
+      an advert. It is NOT the clay action — the search button is, and one accent
+      per view is the rule.
+    -->
+    @if (!signedIn() && !hasResults()) {
+      <p class="hero__account">
+        {{ t('search.returning') }}
+        <a class="hero__account-link" [routerLink]="links.account()">{{ t('search.seeOrders') }}</a>
+      </p>
+    }
+
     <form class="search" (submit)="$event.preventDefault(); submit(box.value)">
       <label class="sr-only" for="q">{{ t('search.label') }}</label>
       <div class="search__row">

@@ -83,6 +83,26 @@
         }
       }
     },
+    "/api/auth/config": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "operationId": "AuthConfiguration",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/publish": {
       "post": {
         "tags": [
@@ -1608,6 +1628,25 @@
           "at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "AuthConfiguration": {
+        "required": [
+          "issuer",
+          "authority",
+          "clientId"
+        ],
+        "type": "object",
+        "properties": {
+          "issuer": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
           }
         }
       },
@@ -3486,6 +3525,9 @@
   "tags": [
     {
       "name": "Accounts"
+    },
+    {
+      "name": "Authentication"
     },
     {
       "name": "Cart"

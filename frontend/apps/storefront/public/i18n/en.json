@@ -1,17 +1,15 @@
 {
   "account": {
-    "devIssuer": "Development issuer identities. There are no passwords: it signs tokens for seeded identities and refuses to start outside development.",
-    "failed": "We could not load your account.",
     "failedTitle": "Something went wrong",
-    "lede": "The shop works without an account — you can buy as a guest. Signing in only puts your name on the orders that are already yours.",
+    "lede": "The shop works without an account. Signing in puts a name on the orders you already placed.",
     "lineCount": "{{count}} lines",
     "loading": "Loading your account...",
-    "noIssuer": "The development issuer is not answering, so there is nobody to sign in as.",
+    "noIssuer": "The API is not saying which issuer it trusts, so there is nobody to sign in as.",
     "noOrders": "You have not placed an order yet.",
     "orders": "Your orders",
-    "pick": "Sign in as",
     "signOut": "Sign out",
-    "title": "Your account"
+    "title": "Your account",
+    "signIn": "Sign in"
   },
   "brand": {
     "area": "Shop",
@@ -158,6 +156,8 @@
     ],
     "tooShort": "Two letters at least — one matches almost everything.",
     "took": "{{ms}} ms",
-    "tryLabel": "Try"
+    "tryLabel": "Try",
+    "returning": "Ordered before?",
+    "seeOrders": "See your orders"
   }
 }

@@ -54,6 +54,7 @@ Everything the API exposes today. Each is one vertical slice.
 
 | Endpoint | Slice |
 |---|---|
+| `GET /api/auth/config` | `Api/AuthConfigurationEndpoint` — which issuer this process trusts |
 | `POST /api/catalog/import` | `Catalog/Features/ImportProducts` |
 | `GET /api/catalog/products` | `Catalog/Features/ListProducts` |
 | `GET /api/catalog/products/{code}` | `Catalog/Features/GetProduct` |

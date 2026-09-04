@@ -26,6 +26,13 @@ import { expect, test } from '@playwright/test';
 /** The seeded shopkeeper. Three identities, no passwords — see `src/DevIssuer`. */
 const SHOPKEEPER = 'Juan Luis';
 
+/**
+ * The same subject in both issuers, and they have to agree: a development issuer
+ * seeding one set of identities and a realm seeding another is how every test
+ * fixture in the project forks in two.
+ */
+const SHOPKEEPER_SUBJECT = 'juanlu';
+
 test.describe('the backoffice', () => {
   test('asks who you are before it shows anything', async ({ page }) => {
     await page.goto('/orders');
@@ -33,8 +40,13 @@ test.describe('the backoffice', () => {
     // The guard exists so the interface does not offer what the server is going
     // to deny: without it the page would load empty with a 401 in the console
     // and nothing to explain why.
-    await expect(page).toHaveURL(/\/sign-in$/);
-    await expect(page.getByRole('button', { name: SHOPKEEPER })).toBeVisible();
+    await expect(page).toHaveURL(/\/sign-in(\?|$)/);
+
+    // The door offers ONE thing, and it is a way out to the issuer. It used to
+    // list the three seeded identities, which is the assertion this replaces:
+    // who may sign in stopped being the shop's business the day the flow became
+    // a redirect.
+    await expect(page.getByRole('button', { name: /continue/i })).toBeVisible();
   });
 
   test('signs a shopkeeper in and lands on the review queue', async ({ page }) => {
@@ -67,7 +79,16 @@ test.describe('the backoffice', () => {
     const row = page.getByRole('row').filter({ hasText: 'B073WXYZ01-DEFAULT' }).first();
     const count = row.getByRole('spinbutton');
 
-    await count.fill('7');
+    // **A count DIFFERENT from the one that is there**, computed rather than
+    // typed. The first version filled in a literal 7, which passed once and
+    // then failed on every later run against the same database: the save button
+    // only appears on a row that CHANGED, and by the second run the row already
+    // said 7. A stateful spec with a constant in it is a spec that tests the
+    // database's history.
+    const before = Number((await count.inputValue()) || '0');
+    const after = String(before === 7 ? 4 : 7);
+
+    await count.fill(after);
 
     // The save button only appears on a row that changed — a count is not an
     // increment, and pressing save on an unchanged row would be a write nobody
@@ -78,7 +99,7 @@ test.describe('the backoffice', () => {
     // redraws from the answer rather than from what was typed. A client that
     // subtracted for itself would disagree with the search index the moment a
     // reservation existed.
-    await expect(row).toContainText('7');
+    await expect(row).toContainText(after);
   });
 
   test('the orders table offers only the moves the state machine allows', async ({ page }) => {
@@ -109,12 +130,12 @@ test.describe('the backoffice', () => {
 
     await page.getByRole('button', { name: /Sign out|Cerrar sesión/ }).click();
 
-    await expect(page).toHaveURL(/\/sign-in$/);
+    await expect(page).toHaveURL(/\/sign-in(\?|$)/);
 
     // And the token is gone, not merely hidden: navigating straight back must
     // meet the guard again.
     await page.goto('/orders');
-    await expect(page).toHaveURL(/\/sign-in$/);
+    await expect(page).toHaveURL(/\/sign-in(\?|$)/);
   });
 });
 
@@ -129,6 +150,43 @@ test.describe('the backoffice', () => {
  */
 async function signIn(page: import('@playwright/test').Page): Promise<void> {
   await page.goto('/sign-in');
-  await page.getByRole('button', { name: SHOPKEEPER }).click();
-  await expect(page).not.toHaveURL(/\/sign-in$/);
+
+  // The second step happens on ANOTHER ORIGIN, and that is the whole point of
+  // the change this helper had to follow: the shop no longer knows who exists
+  // and no longer collects a credential, so the identity is established on the
+  // issuer's own page and the browser comes back with a code.
+  await page.getByRole('button', { name: /continue/i }).click();
+
+  // **The same suite runs against both issuers**, which is what makes it a
+  // guarantee rather than a demonstration. Whichever one the API named is
+  // already on screen by now, so the branch is on the URL and not on a flag
+  // this spec would have to be told.
+  if (/\/realms\//.test(page.url())) {
+    // The seeded shopkeeper from `keycloak/realms/tendero-realm.json`. The
+    // password is the username, committed on purpose: a development realm with
+    // a credential worth protecting is a credential that should not be in a
+    // repository. This is the same call `FakePaymentProvider` makes about card
+    // numbers.
+    // By form field NAME rather than by label: `username` and `password` are
+    // what the OIDC login form posts, so they survive a theme and a Keycloak
+    // upgrade — where the visible label is translated and the accessible name
+    // `password` matches two elements, the field and the reveal button.
+    await page.locator('input[name="username"]').fill(SHOPKEEPER_SUBJECT);
+    await page.locator('input[name="password"]').fill(SHOPKEEPER_SUBJECT);
+    await page.locator('input[type="submit"], button[type="submit"]').first().click();
+  } else {
+    await page.getByRole('link', { name: SHOPKEEPER }).click();
+  }
+
+  // **Waits for the application to say you are IN, not for the URL to stop
+  // saying you are out.** `not.toHaveURL(/sign-in/)` was satisfied the instant
+  // the browser left that route — which, with a redirect flow, is while it is
+  // still on the ISSUER's domain and no token exists yet. The next `goto` then
+  // cut the redirect chain, and the test landed back at the door with a page
+  // snapshot that said "Sign in" and no explanation.
+  //
+  // It was intermittent against the development issuer, whose two hops are
+  // fast, and reliable against Keycloak, whose form makes the window wide. The
+  // sign-out button only exists once a token does.
+  await expect(page.getByRole('button', { name: /sign out|cerrar sesión/i })).toBeVisible();
 }

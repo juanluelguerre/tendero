@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { map } from 'rxjs';
+import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { SearchHit } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
@@ -48,6 +49,9 @@ type SearchState =
 export class SearchPage {
   /** Every link carries the language segment (P5-13). */
   protected readonly links = inject(ShopLinks);
+
+  /** Whether to offer the way back to an order somebody already placed. */
+  protected readonly signedIn = inject(AuthStore).isSignedIn;
 
   private readonly search = inject(ProductSearchService);
   private readonly culture = inject(CultureStore);

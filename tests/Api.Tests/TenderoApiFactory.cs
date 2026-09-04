@@ -14,7 +14,8 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// are enough to bring it up and ask it things that need no data — its OpenAPI
 /// document, its policies, its development issuer.
 /// </summary>
-public sealed class TenderoApiFactory : WebApplicationFactory<Program>
+public sealed class TenderoApiFactory(string? externalAuthority = null)
+    : WebApplicationFactory<Program>
 {
     /// <summary>
     /// The test server listens on no port, so the issuer signing the tokens is
@@ -23,6 +24,17 @@ public sealed class TenderoApiFactory : WebApplicationFactory<Program>
     /// </summary>
     private const string TestAuthority = "http://localhost/dev-issuer";
 
+    /// <summary>
+    /// An issuer OUTSIDE this process — Keycloak in a container — or null for the
+    /// development one the API publishes itself.
+    ///
+    /// The distinction decides more than a URL: an in-process issuer is reached
+    /// through the test server's own channel, and an external one over real HTTP.
+    /// Handing the in-memory handler to a token validator that needs to call a
+    /// container would fail with a message about the issuer being invalid.
+    /// </summary>
+    private bool IsExternal => externalAuthority is not null;
+
     protected override IHost CreateHost(IHostBuilder builder)
     {
         builder.ConfigureHostConfiguration(configuration => configuration.AddInMemoryCollection(
@@ -30,7 +42,7 @@ public sealed class TenderoApiFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:tendero-db"] = "Host=localhost;Database=api-tests",
                 ["ConnectionStrings:elasticsearch"] = "http://localhost:9200",
-                ["Authentication:Authority"] = TestAuthority,
+                ["Authentication:Authority"] = externalAuthority ?? TestAuthority,
                 ["Authentication:AllowHttpMetadata"] = "true"
             }));
 
@@ -40,6 +52,12 @@ public sealed class TenderoApiFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        // An external issuer is reached over real HTTP, so the in-memory
+        // backchannel is exactly wrong for it — and installing it anyway is a
+        // 401 that blames the issuer.
+        if (IsExternal)
+            return;
+
         builder.ConfigureTestServices(services =>
         {
             // JwtBearer downloads discovery and the JWKS over HTTP. There is no

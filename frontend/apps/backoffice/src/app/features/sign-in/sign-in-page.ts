@@ -1,16 +1,26 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { AuthStore, TenderoIdentity } from '@tendero/shared-auth';
+import { AuthStore } from '@tendero/shared-auth';
 
 /**
- * An identity picker, not a form: the development issuer signs for seeded
- * identities and there are no passwords to ask for. Asking would be theatre, and
- * the day Keycloak arrives this screen is replaced by its redirect — not adapted.
+ * The door, and it no longer decides who may come through it.
  *
- * The screen lives in the app and not in shared, per ADR 0010: the storefront
- * will ask a shopper for an email and a password, and unifying the two would
- * give a component with a variant matrix worse than two components.
+ * It used to be an identity picker that posted a `password` grant, which put two
+ * things in the wrong place: the shop knew who existed, and the shop handled a
+ * credential. Both are the identity provider's job, and doing them here meant
+ * pointing the API at Keycloak changed the signer while changing nothing a
+ * person could see.
+ *
+ * So this is a button. Pressing it hands the browser to whichever issuer the API
+ * named — Keycloak's login form, or the development issuer's list of three — and
+ * the way back is a redirect the application initializer finishes before the
+ * first route resolves. That is why there is no navigate here: by the time
+ * Angular renders again, the guard already passes.
+ *
+ * The screen lives in the app and not in shared, per ADR 0010: what an
+ * unauthenticated visitor is offered is identity, and the storefront offers
+ * something different — it lets them shop.
  */
 @Component({
   selector: 'backoffice-sign-in',
@@ -21,26 +31,20 @@ import { AuthStore, TenderoIdentity } from '@tendero/shared-auth';
 })
 export class SignInPage {
   private readonly auth = inject(AuthStore);
-  private readonly router = inject(Router);
 
-  protected readonly identities = signal<TenderoIdentity[]>([]);
-  protected readonly busy = signal(false);
-  protected readonly failed = signal(false);
+  /** Named so the screen can say who is about to ask for your password. */
+  protected readonly issuer = this.auth.issuer();
 
-  constructor() {
-    void this.auth.identities().then((found) => this.identities.set(found));
-  }
+  /**
+   * Where the guard was taking them, or the review queue when they came to the
+   * door directly. Never this page: signing in and landing back on the sign-in
+   * screen is the shape of a login loop, and it is what happened before the
+   * guard started saying where it had intercepted somebody.
+   */
+  private readonly returnTo =
+    inject(ActivatedRoute).snapshot.queryParamMap.get('returnTo') ?? '/review';
 
-  protected async choose(identity: TenderoIdentity): Promise<void> {
-    this.busy.set(true);
-    this.failed.set(false);
-    try {
-      await this.auth.signIn(identity);
-      await this.router.navigate(['/review']);
-    } catch {
-      this.failed.set(true);
-    } finally {
-      this.busy.set(false);
-    }
+  protected signIn(): void {
+    this.auth.signIn(this.returnTo);
   }
 }

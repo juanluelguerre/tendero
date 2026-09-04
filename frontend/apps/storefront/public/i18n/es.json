@@ -1,17 +1,15 @@
 {
   "account": {
-    "devIssuer": "Identidades del emisor de desarrollo. No hay contraseñas: firma tokens para identidades sembradas y se niega a arrancar fuera de desarrollo.",
-    "failed": "No hemos podido cargar tu cuenta.",
     "failedTitle": "Algo ha fallado",
-    "lede": "La tienda funciona sin cuenta: puedes comprar como invitado. Entrar solo le pone tu nombre a los pedidos que ya son tuyos.",
+    "lede": "La tienda funciona sin cuenta. Identificarte pone un nombre a los pedidos que ya hiciste.",
     "lineCount": "{{count}} líneas",
     "loading": "Cargando tu cuenta...",
-    "noIssuer": "El emisor de desarrollo no responde, así que no hay con quién entrar.",
+    "noIssuer": "La API no dice en qué emisor confía, así que no hay con quién entrar.",
     "noOrders": "Todavía no has hecho ningún pedido.",
     "orders": "Tus pedidos",
-    "pick": "Entra como",
     "signOut": "Salir",
-    "title": "Tu cuenta"
+    "title": "Tu cuenta",
+    "signIn": "Identifícate"
   },
   "brand": {
     "area": "Tienda",
@@ -158,6 +156,8 @@
     ],
     "tooShort": "Con dos letras al menos — con una encuentro casi todo.",
     "took": "{{ms}} ms",
-    "tryLabel": "Prueba"
+    "tryLabel": "Prueba",
+    "returning": "¿Ya has pedido antes?",
+    "seeOrders": "Consulta tus pedidos"
   }
 }

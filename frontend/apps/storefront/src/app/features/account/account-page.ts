@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { TranslocoDirective } from '@jsverse/transloco';
 import { RouterLink } from '@angular/router';
 import type { OrderSummary } from '@tendero/shared-api';
-import { AuthStore, type TenderoIdentity } from '@tendero/shared-auth';
+import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime, formatPrice } from '@tendero/shared-util';
 import { AccountService } from '../../data-access/account.service';
@@ -10,7 +10,7 @@ import { CartStore } from '../../data-access/cart.service';
 import { ShopLinks } from '../../shop-links';
 
 type PageState =
-  | { status: 'signedOut'; identities: TenderoIdentity[] }
+  | { status: 'signedOut' }
   | { status: 'signingIn' }
   | { status: 'signedIn'; orders: OrderSummary[] }
   | { status: 'failed' };
@@ -27,10 +27,10 @@ type PageState =
  * left a comment saying an order id was the credential "until phase 7 puts an
  * account behind it"; this is that.
  *
- * The identity picker is the development issuer's, and it is the storefront's
- * OWN screen rather than a shared one (ADR 0010): the backoffice picks between
- * three seeded staff in a dense dark bar, and a shopper will one day type an
- * email. Sharing the view would give a component with a variant matrix.
+ * **Signing in is a redirect now**, so this page no longer lists who exists or
+ * handles a password — the issuer does both. What is left here is the half that
+ * is genuinely the shop's: attaching the person to a customer, and attaching the
+ * basket they were already carrying.
  */
 @Component({
   selector: 'storefront-account-page',
@@ -55,50 +55,62 @@ export class AccountPage {
 
   private async start(): Promise<void> {
     if (this.auth.isSignedIn()) {
+      try {
+        await this.attach();
+      } catch {
+        this.state.set({ status: 'failed' });
+        return;
+      }
+
       this.loadOrders();
       return;
     }
 
-    this.state.set({ status: 'signedOut', identities: await this.auth.identities() });
+    this.state.set({ status: 'signedOut' });
+  }
+
+  /** Hands the browser to the issuer. Everything after this happens on the way back. */
+  protected signIn(): void {
+    this.state.set({ status: 'signingIn' });
+    this.auth.signIn();
   }
 
   /**
-   * Signing in is three steps and the order matters.
+   * What the shop still owes after the redirect, and the order matters.
    *
-   * The token first, then the CUSTOMER — because a cart cannot be attached to
-   * somebody who does not exist yet — and only then the basket. The two API
-   * calls are two contexts: `Accounts` says who you are, `Ordering` owns the
-   * cart, and neither imports the other.
+   * The CUSTOMER first — a cart cannot be attached to somebody who does not
+   * exist yet — and only then the basket. The two calls are two contexts:
+   * `Accounts` says who you are, `Ordering` owns the cart, and neither imports
+   * the other.
+   *
+   * It runs on every load of this page while signed in, which is safe because
+   * both operations are idempotent: linking an identity that is already linked
+   * reports `recognised` and writes nothing, and a cart that is already claimed
+   * is the same cart.
    */
-  protected async use(identity: TenderoIdentity): Promise<void> {
-    this.state.set({ status: 'signingIn' });
+  private async attach(): Promise<void> {
+    const name = this.auth.identity()?.name ?? '';
+
+    await this.accounts.link(name, this.culture.active());
+
+    // The basket, if there is one. Best-effort on purpose: a cart that belongs
+    // to another account comes back 409, and refusing to sign somebody in over a
+    // basket they were not carrying would be absurd.
+    const token = this.cart.token;
+    if (!token) return;
 
     try {
-      await this.auth.signIn(identity);
-      await this.accounts.link(identity.name, this.culture.active());
-
-      // The basket, if there is one. It is best-effort on purpose: a cart that
-      // belongs to another account comes back 409, and refusing to sign
-      // somebody in over a basket they were not carrying would be absurd.
-      const token = this.cart.token;
-      if (token) {
-        try {
-          await this.accounts.claimCart(token);
-          await this.cart.load();
-        } catch {
-          // Not this account's basket. Signing in still succeeded.
-        }
-      }
-
-      this.loadOrders();
+      await this.accounts.claimCart(token);
+      await this.cart.load();
     } catch {
-      this.state.set({ status: 'failed' });
+      // Not this account's basket. Signing in still succeeded.
     }
   }
 
-  protected async signOut(): Promise<void> {
+  /** Ends the session at the issuer too, which is what makes it look ended. */
+  protected signOut(): void {
+    this.state.set({ status: 'signedOut' });
     this.auth.signOut();
-    this.state.set({ status: 'signedOut', identities: await this.auth.identities() });
   }
 
   protected price(order: OrderSummary): string {
