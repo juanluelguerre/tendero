@@ -40,13 +40,21 @@ test.describe('the backoffice', () => {
     // The guard exists so the interface does not offer what the server is going
     // to deny: without it the page would load empty with a 401 in the console
     // and nothing to explain why.
-    await expect(page).toHaveURL(/\/sign-in(\?|$)/);
-
-    // The door offers ONE thing, and it is a way out to the issuer. It used to
-    // list the three seeded identities, which is the assertion this replaces:
-    // who may sign in stopped being the shop's business the day the flow became
-    // a redirect.
+    // **The door first, the URL second**, and the order is the fix rather than a
+    // preference. `toHaveURL` was checked immediately after `goto` and gave the
+    // redirect five seconds — which was plenty when the app booted on its own
+    // and is not now: the initializer asks the API which issuer it trusts and
+    // downloads that issuer's discovery document before the first route
+    // resolves. On CI it went past five seconds and the spec read `/orders`,
+    // which is the page BEFORE the guard has run rather than a guard that let
+    // somebody through.
+    //
+    // Waiting for something the door renders waits for the application to have
+    // finished deciding. The URL assertion after it is then instant, and still
+    // catches a guard that sent somebody to the wrong place.
     await expect(page.getByRole('button', { name: /continue/i })).toBeVisible();
+
+    await expect(page).toHaveURL(/\/sign-in(\?|$)/);
   });
 
   test('signs a shopkeeper in and lands on the review queue', async ({ page }) => {

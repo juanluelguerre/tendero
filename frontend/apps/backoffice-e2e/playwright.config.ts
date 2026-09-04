@@ -24,6 +24,21 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
 
+  /**
+   * Sixty seconds, and the reason is the sign-in flow rather than a slow suite.
+   *
+   * Signing in used to be one click on a picker. It is now a redirect: the app
+   * initializer asks the API which issuer it trusts, downloads that issuer's
+   * discovery document and its keys, and only then does the first route resolve
+   * — and every one of those is a network round trip before anything renders.
+   * On a cold CI runner that ran past the default thirty and took a stocktake
+   * with it.
+   *
+   * The number is a budget for a browser doing real work, not a place to hide a
+   * hang: an assertion that is genuinely wrong still fails, five seconds later.
+   */
+  timeout: 60_000,
+
   // Retries in CI only. A green retry locally hides a flake; a red one in CI
   // that passes on the second attempt is still a signal worth keeping in the
   // report rather than in the build's exit code.
