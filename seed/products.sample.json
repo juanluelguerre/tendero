@@ -1588,10 +1588,10 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0703.png"
+      "images/B13BAG0703.webp"
     ],
     "attributes": {
-      "color": "azul marino",
+      "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "40",
       "portatil_max": "16"
@@ -1665,10 +1665,10 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0706.png"
+      "images/B13BAG0706.webp"
     ],
     "attributes": {
-      "color": "negro",
+      "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "35"
     }
@@ -1690,7 +1690,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0707.png"
+      "images/B13BAG0707.webp"
     ],
     "attributes": {
       "color": "crema",
@@ -1715,10 +1715,10 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0708.png"
+      "images/B13BAG0708.webp"
     ],
     "attributes": {
-      "color": "negro",
+      "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "3"
     }
@@ -1740,10 +1740,10 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0709.png"
+      "images/B13BAG0709.webp"
     ],
     "attributes": {
-      "color": "verde bosque",
+      "color": "crema",
       "material": "ripstop reciclado",
       "capacidad_l": "4"
     }
@@ -1765,7 +1765,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0710.png"
+      "images/B13BAG0710.webp"
     ],
     "attributes": {
       "color": "gris",
@@ -1790,10 +1790,10 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0711.png"
+      "images/B13BAG0711.webp"
     ],
     "attributes": {
-      "color": "negro",
+      "color": "oliva",
       "material": "ripstop reciclado",
       "capacidad_l": "20"
     }
@@ -1815,10 +1815,9 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0712.png"
+      "images/B13BAG0712.webp"
     ],
     "attributes": {
-      "color": "gris",
       "material": "ripstop reciclado",
       "piezas": "3"
     }

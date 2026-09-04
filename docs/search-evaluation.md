@@ -114,11 +114,18 @@ identical numbers.
 
 | culture | NDCG@10 | recall@50 | threshold NDCG | threshold recall |
 |---|---:|---:|---:|---:|
-| es | 0.819 | 0.642 | 0.81 | 0.63 |
+| es | 0.813 | 0.633 | 0.80 | 0.62 |
 | en | 0.766 | 0.556 | 0.75 | 0.54 |
 
-Measured against 100 products and 268 judgments; identical across three
-consecutive runs. See the section above for why these replaced 0.943 / 0.937.
+Measured against 100 products and 268 judgments; identical across consecutive
+runs. See the section above for why these replaced 0.943 / 0.937.
+
+**The margin is deliberate and it was nearly lost.** The first thresholds sat
+0.01 under the measurement, and then six product colours changed to match the
+illustrations that arrived for them — colour is indexed, so Spanish moved to
+0.813 and the margin fell to 0.003. That is not a gate any more, it is a coin
+toss on the next harmless edit. They are back at roughly 0.013, which is what
+the original 0.93 / 0.90 pair had.
 
 ### What localized attribute values bought (2026-09-02)
 

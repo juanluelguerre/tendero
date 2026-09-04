@@ -1,8 +1,8 @@
 # Imágenes por generar
 
 Los 100 productos del catálogo de muestra, con el nombre y la descripción de
-cada uno para poder generar su imagen. **Sólo seis existen ya** — las de
-`seed/images/` — y están marcadas.
+cada uno para poder generar su imagen. **14 ya están hechas** y van marcadas;
+faltan 86.
 
 ## La especificación, en corto
 
@@ -173,11 +173,19 @@ sRGB.
 The object is <color>: <descripción en inglés, de la lista de abajo>
 ```
 
-**El color no es opcional.** La ficha muestra el atributo `color` del catálogo,
-así que una mochila naranja en un producto que dice «azul marino» es una
-contradicción visible en pantalla. De las cinco primeras, dos no coincidían. El
-color de cada producto está en `seed/products.sample.json`, en
-`attributes.color`.
+**El color no es opcional**, y va debajo de cada producto en el listado para no
+tener que ir a buscarlo. La ficha muestra el atributo `color`, así que una
+mochila oliva en un producto que dice «azul marino» es una contradicción que se
+ve en pantalla.
+
+Medido sobre las ocho primeras: **seis se desviaron del color declarado**, porque
+la plantilla no lo pedía. Cuando pase, lo barato es **cambiar el catálogo, no
+regenerar la imagen** — el color de un producto inventado es arbitrario y el
+dibujo es lo caro. Lo que no vale es dejarlos en desacuerdo.
+
+Y un caso que enseñó algo: los organizadores de equipaje son tres cubos de tres
+colores distintos. Ahí se **quitó** el atributo en vez de elegir uno, porque una
+faceta que miente es peor que una faceta ausente.
 
 La descripción en inglés de cada producto está en su ficha, en cursiva. Es la
 que conviene usar: describe el objeto sin nombre de marca inventado, que es lo
@@ -185,51 +193,65 @@ que un generador entiende mejor.
 
 ## Bolsas y mochilas > Bolsas y rinoneras
 
-### `B13BAG0707.png` — Bolsa de lona Mercado
+### `B13BAG0707.webp` — Bolsa de lona Mercado · **hecha**
 
 Bolsa de lona de algodon con asas largas y fondo reforzado. Aguanta la compra de la semana.
 
 *Mercado canvas tote* — Cotton canvas tote with long handles and a reinforced base. It takes a week of shopping.
 
-### `B13BAG0708.png` — Rinonera Cinturon 3L
+Color: **crema**
+
+### `B13BAG0708.webp` — Rinonera Cinturon 3L · **hecha**
 
 Rinonera de tres litros con cremallera estanca y correa que se ajusta sin hebilla suelta.
 
 *Cinturon 3L hip pack* — Three-litre hip pack with a water-resistant zip and a strap that adjusts without a loose buckle.
 
-### `B13BAG0710.png` — Funda para portatil de 14 pulgadas
+Color: **oliva**
+
+### `B13BAG0710.webp` — Funda para portatil de 14 pulgadas · **hecha**
 
 Funda acolchada de fieltro de lana con cierre magnetico y bolsillo exterior para el cargador.
 
 *14-inch laptop sleeve* — Padded wool felt sleeve with a magnetic closure and an outer pocket for the charger.
 
-### `B13BAG0711.png` — Alforja de bicicleta impermeable 20L
+Color: **gris**
+
+### `B13BAG0711.webp` — Alforja de bicicleta impermeable 20L · **hecha**
 
 Alforja de cierre enrollable totalmente estanca, con gancho rapido y asa para llevarla en la mano.
 
 *20L waterproof bike pannier* — Roll-top pannier that is fully waterproof, with a quick hook and a handle to carry it by hand.
 
+Color: **oliva**
+
 ## Bolsas y mochilas > Equipaje y viaje
 
-### `B13BAG0703.png` — Mochila de viaje Trayecto 40L
+### `B13BAG0703.webp` — Mochila de viaje Trayecto 40L · **hecha**
 
 Mochila de apertura frontal completa, con correas ocultables y medida de equipaje de mano.
 
 *Trayecto 40L travel backpack* — Front-loading pack with stowable straps, sized to go in the cabin.
 
-### `B13BAG0706.png` — Bolsa de deporte Vestuario 35L
+Color: **oliva**
+
+### `B13BAG0706.webp` — Bolsa de deporte Vestuario 35L · **hecha**
 
 Bolsa de deporte con compartimento separado para el calzado y bandolera acolchada desmontable.
 
 *Vestuario 35L gym duffel* — Gym bag with a separate shoe compartment and a detachable padded shoulder strap.
 
-### `B13BAG0709.png` — Neceser de viaje Aseo
+Color: **oliva**
+
+### `B13BAG0709.webp` — Neceser de viaje Aseo · **hecha**
 
 Neceser con gancho para colgar, interior impermeable y espejo desmontable.
 
 *Aseo travel wash bag* — Wash bag with a hanging hook, a waterproof lining and a removable mirror.
 
-### `B13BAG0712.png` — Organizadores de equipaje, juego de 3
+Color: **crema**
+
+### `B13BAG0712.webp` — Organizadores de equipaje, juego de 3 · **hecha**
 
 Tres cubos de malla de tamanos distintos que comprimen la ropa y dejan ver lo que hay dentro.
 
@@ -237,11 +259,13 @@ Tres cubos de malla de tamanos distintos que comprimen la ropa y dejan ver lo qu
 
 ## Bolsas y mochilas > Mochilas
 
-### `B08JKLM202.png` — Mochila urbana impermeable 25L CityPack · **ya existe**
+### `B08JKLM202.png` — Mochila urbana impermeable 25L CityPack · **hecha**
 
 Mochila de dia con compartimento acolchado para portatil de 15 pulgadas, tejido ripstop con tratamiento DWR y bolsillo antirrobo en la espalda.
 
 *CityPack waterproof urban backpack 25L* — Daypack with padded 15-inch laptop compartment, DWR-treated ripstop fabric and anti-theft back pocket.
+
+Color: **negro**
 
 ### `B13BAG0701.png` — Mochila urbana CityPack 18L
 
@@ -249,11 +273,15 @@ Version compacta de la CityPack, con compartimento acolchado para tablet y espal
 
 *CityPack 18L urban backpack* — The compact CityPack, with a padded tablet sleeve and a ventilated back panel.
 
+Color: **negro**
+
 ### `B13BAG0702.png` — Mochila de senderismo Cumbre 30L
 
 Mochila de montana con cinturon lumbar, salida para bolsa de hidratacion y funda de lluvia integrada.
 
 *Cumbre 30L hiking backpack* — Mountain pack with a hip belt, a hydration port and a rain cover in its own pocket.
+
+Color: **verde bosque**
 
 ### `B13BAG0704.png` — Mochila para portatil Oficina 22L
 
@@ -261,11 +289,15 @@ Mochila de trabajo con compartimento acolchado de 16 pulgadas, bolsillo antirrob
 
 *Oficina 22L laptop backpack* — Work backpack with a padded 16-inch compartment, a hidden pocket and a trolley sleeve.
 
+Color: **gris**
+
 ### `B13BAG0705.png` — Mochila de running Ligera 8L
 
 Chaleco de running con dos bolsillos frontales para botellines blandos y ajuste elastico en el pecho.
 
 *Ligera 8L running vest pack* — Running vest with two front pockets for soft flasks and an elastic chest adjustment.
+
+Color: **negro**
 
 ## Hogar > Almacenaje y orden
 
@@ -274,6 +306,8 @@ Chaleco de running con dos bolsillos frontales para botellines blandos y ajuste 
 Cesta tejida a mano de 40 cm de diametro con asas. Para lena, mantas o juguetes.
 
 *Natural fibre storage basket* — Hand-woven basket, 40 cm across, with handles. For firewood, blankets or toys.
+
+Color: **crema**
 
 ### `B14ORG0901.png` — Estante especiero de bambu de dos alturas
 
@@ -301,11 +335,13 @@ Cubo de 3 x 20 litros con pedal y cubetas extraibles que se lavan por separado.
 
 ## Hogar > Cocina > Cafeteras
 
-### `B09PQRS303.png` — Cafetera de goteo programable Aroma 12 tazas · **ya existe**
+### `B09PQRS303.png` — Cafetera de goteo programable Aroma 12 tazas · **hecha**
 
 Cafetera de filtro con jarra de vidrio, temporizador de 24 horas, funcion pausa y sirve, y placa calefactora con apagado automatico.
 
 *Aroma programmable drip coffee maker, 12 cups* — Filter coffee maker with glass carafe, 24-hour timer, pause-and-serve function and auto shut-off warming plate.
+
+Color: **acero inoxidable**
 
 ### `B11COF0401.png` — Cafetera italiana de 6 tazas
 
@@ -353,7 +389,7 @@ Afilador manual con una etapa de diamante para reperfilar y otra de ceramica par
 
 ## Hogar > Cocina > Menaje de cocina
 
-### `B05DEFG606.png` — Set de 3 sartenes antiadherentes aptas para induccion · **ya existe**
+### `B05DEFG606.png` — Set de 3 sartenes antiadherentes aptas para induccion · **hecha**
 
 Sartenes de 20, 24 y 28 cm con revestimiento antiadherente libre de PFOA, base de acero para induccion y mangos de baquelita.
 
@@ -433,11 +469,15 @@ Cuatro platos de gres esmaltado a mano de 27 cm. Aptos para horno, microondas y 
 
 *Set of 4 stoneware dinner plates* — Four hand-glazed stoneware plates, 27 cm across. Oven, microwave and dishwasher safe.
 
+Color: **crema**
+
 ### `B11TAB0502.png` — Juego de 4 tazones de desayuno
 
 Cuatro tazones de gres de 450 ml con base sin esmaltar para que no resbalen.
 
 *Set of 4 breakfast bowls* — Four 450 ml stoneware bowls with an unglazed base so they do not slide.
+
+Color: **terracota**
 
 ### `B11TAB0503.png` — Jarra de agua de cristal de 1,2 litros
 
@@ -463,11 +503,15 @@ Mantel de lino lavado a la piedra que no necesita plancha. Encoge lo justo en el
 
 *240 cm washed linen tablecloth* — Stone-washed linen tablecloth that needs no ironing. It shrinks a little on the first wash, and no more.
 
+Color: **crema**
+
 ### `B14HOM0801.png` — Juego de 2 panos de cocina de lino
 
 Dos panos de lino de 50 x 70 cm que secan sin dejar pelusa y ganan absorcion con los lavados.
 
 *Set of 2 linen tea towels* — Two 50 by 70 cm linen towels that dry without leaving lint and absorb better with every wash.
+
+Color: **crema**
 
 ### `B14HOM0802.png` — Delantal de lino con peto
 
@@ -475,17 +519,23 @@ Delantal de lino lavado con tirantes cruzados que no aprietan el cuello y dos bo
 
 *Linen bib apron* — Washed linen apron with crossed straps that do not pull on the neck, and two front pockets.
 
+Color: **oliva**
+
 ### `B14HOM0803.png` — Manoplas de horno acolchadas, par
 
 Par de manoplas con relleno de algodon y exterior de lino, resistentes hasta 220 grados.
 
 *Padded oven mitts, pair* — A pair of mitts with cotton wadding and a linen outer, rated to 220 degrees.
 
+Color: **terracota**
+
 ### `B14HOM0808.png` — Juego de 4 servilletas de lino
 
 Cuatro servilletas de 45 cm con dobladillo en inglete. Se lavan con el mantel y a la misma temperatura.
 
 *Set of 4 linen napkins* — Four 45 cm napkins with mitred hems. They wash with the tablecloth, at the same temperature.
+
+Color: **oliva**
 
 ## Hogar > Cocina > Pequeno electrodomestico
 
@@ -527,11 +577,13 @@ Termometro digital de lectura instantanea con sonda plegable y rango de -50 a 30
 
 ## Hogar > Iluminación > Flexos y lámparas de escritorio
 
-### `B06GHIJ505.png` — Lampara de escritorio LED regulable con puerto USB · **ya existe**
+### `B06GHIJ505.png` — Lampara de escritorio LED regulable con puerto USB · **hecha**
 
 Flexo LED con tres temperaturas de color, brazo articulado y puerto de carga USB-A integrado en la base.
 
 *Dimmable LED desk lamp with USB port* — LED desk lamp with three color temperatures, articulated arm and built-in USB-A charging port.
+
+Color: **blanco**
 
 ### `B12LAM0601.png` — Flexo LED articulado Taller
 
@@ -539,11 +591,15 @@ Flexo de brazo doble con pinza de mesa, giro de 350 grados y luz regulable en tr
 
 *Taller articulated LED desk lamp* — Double-arm lamp with a desk clamp, 350 degrees of rotation and dimmable light at three temperatures.
 
+Color: **negro**
+
 ### `B12LAM0602.png` — Lampara de escritorio con carga inalambrica
 
 Lampara de mesa con base de carga inalambrica de 10 W y puerto USB-C adicional en el lateral.
 
 *Desk lamp with wireless charging* — Desk lamp with a 10 W wireless charging base and an extra USB-C port on the side.
+
+Color: **blanco**
 
 ### `B12LAM0603.png` — Lampara de pie de lectura Butaca
 
@@ -551,11 +607,15 @@ Lampara de pie de 150 cm con cabezal orientable y regulador de intensidad en el 
 
 *Butaca reading floor lamp* — A 150 cm floor lamp with an adjustable head and a dimmer on the neck itself.
 
+Color: **negro**
+
 ### `B12LAM0604.png` — Lampara de sobremesa de ceramica Cantaro
 
 Lampara de mesa con base de ceramica torneada y pantalla de lino. Casquillo E27 estandar.
 
 *Cantaro ceramic table lamp* — Table lamp with a thrown ceramic base and a linen shade. Standard E27 fitting.
+
+Color: **terracota**
 
 ### `B12LAM0605.png` — Aplique de pared orientable Rincon
 
@@ -563,11 +623,15 @@ Aplique de pared con brazo plegable, interruptor propio y cable textil de dos me
 
 *Rincon adjustable wall light* — Wall light with a folding arm, its own switch and a two-metre fabric cable.
 
+Color: **negro**
+
 ### `B12LAM0606.png` — Lampara portatil recargable Vela
 
 Lampara sin cable con doce horas de autonomia y tres niveles. Se carga por USB-C.
 
 *Vela rechargeable portable lamp* — Cordless lamp with twelve hours of battery and three levels. Charges over USB-C.
+
+Color: **crema**
 
 ### `B12LAM0607.png` — Tira LED regulable de 3 metros
 
@@ -587,11 +651,15 @@ Luz de paso que se enciende al detectar movimiento en la oscuridad y se apaga so
 
 *Night light with motion sensor* — A corridor light that comes on when it detects movement in the dark and turns itself off after thirty seconds.
 
+Color: **blanco**
+
 ### `B12LAM0610.png` — Lampara de arquitecto con lupa
 
 Flexo de brazo largo con lente de aumento de tres dioptrias y anillo LED alrededor.
 
 *Architect lamp with magnifier* — Long-arm lamp with a three-dioptre magnifying lens and an LED ring around it.
+
+Color: **blanco**
 
 ## Hogar > Textil de hogar
 
@@ -601,17 +669,23 @@ Manta de lana virgen tejida en telar con fleco cosido a mano. Pesa 1,4 kg.
 
 *130 by 180 cm wool blanket* — Loom-woven virgin wool blanket with a hand-sewn fringe. It weighs 1.4 kg.
 
+Color: **oliva**
+
 ### `B14HOM0806.png` — Juego de 2 cojines de lino de 45 cm
 
 Dos fundas de cojin de lino con cierre oculto de cremallera. Relleno no incluido.
 
 *Set of 2 45 cm linen cushion covers* — Two linen cushion covers with a hidden zip. Inner pad not included.
 
+Color: **terracota**
+
 ### `B14HOM0807.png` — Alfombra de bano de algodon
 
 Alfombra de bano de algodon de rizo doble de 50 x 80 cm con base antideslizante.
 
 *Cotton bath mat* — Double-loop cotton bath mat, 50 by 80 cm, with a non-slip backing.
+
+Color: **crema**
 
 ## Ropa > Abrigos y chaquetas
 
@@ -621,11 +695,15 @@ Cortavientos de 140 g que cabe en su propio bolsillo. Costuras selladas en los h
 
 *Racha packable windbreaker* — A 140 g windbreaker that folds into its own pocket. Sealed shoulder seams.
 
+Color: **verde bosque**
+
 ### `B15APP1001.png` — Camisa de lino de manga larga
 
 Camisa de lino lavado con cuello suave y un solo bolsillo. Se arruga, y esa es la idea.
 
 *Long-sleeve linen shirt* — Washed linen shirt with a soft collar and a single pocket. It creases, and that is the point.
+
+Color: **blanco**
 
 ### `B15APP1002.png` — Jersey de lana merino de cuello redondo
 
@@ -633,11 +711,15 @@ Jersey de merino de 250 g con cuello, punos y bajo acanalados. Fino pero abrigad
 
 *Merino wool crew neck jumper* — A 250 g merino jumper with a ribbed collar, cuffs and hem. Thin, and still warm.
 
+Color: **gris**
+
 ### `B15APP1003.png` — Chaleco acolchado Refugio
 
 Chaleco acolchado con relleno reciclado y bolsillos con cremallera. Se pliega al tamano de un libro.
 
 *Refugio padded gilet* — Padded gilet with recycled filling and zipped pockets. It folds to the size of a book.
+
+Color: **verde bosque**
 
 ### `B15APP1004.png` — Chaqueta impermeable Aguacero 3 capas
 
@@ -645,13 +727,17 @@ Chaqueta de tres capas con capucha ajustable, cremalleras de ventilacion y costu
 
 *Aguacero 3-layer waterproof jacket* — Three-layer jacket with an adjustable hood, pit zips and taped seams.
 
+Color: **azul marino**
+
 ## Ropa > Calzado > Zapatillas deportivas
 
-### `B073WXYZ01.png` — Zapatillas de running amortiguadas Pulse Runner · **ya existe**
+### `B073WXYZ01.png` — Zapatillas de running amortiguadas Pulse Runner · **hecha**
 
 Zapatillas de running neutras con mediasuela de espuma reactiva, upper de malla transpirable y refuerzo en el talon. Drop de 8 mm.
 
 *Pulse Runner cushioned running shoes* — Neutral running shoes with responsive foam midsole, breathable mesh upper and reinforced heel counter. 8 mm drop.
+
+Color: **azul marino**
 
 ### `B10SHO0101.png` — Zapatillas de running de trail Pulse Runner Trail
 
@@ -659,11 +745,15 @@ Version de trail de la Pulse Runner: zapatilla de running con taco de 4 mm, plac
 
 *Pulse Runner Trail running shoes* — The trail version of the Pulse Runner: 4 mm lugs, a rock plate under the forefoot and an abrasion-resistant upper. 8 mm drop.
 
+Color: **verde bosque**
+
 ### `B10SHO0102.png` — Zapatillas de running de competicion Pulse Runner Carbon
 
 Zapatilla de running para competir, con placa de carbono y espuma de alto retorno. Pesa 218 g en talla 42. Drop de 6 mm.
 
 *Pulse Runner Carbon racing shoes* — Racing shoe with a carbon plate and high-rebound foam. 218 g in a size 42. 6 mm drop.
+
+Color: **negro**
 
 ### `B10SHO0103.png` — Zapatillas de andar Sendero
 
@@ -671,11 +761,15 @@ Zapatilla de paseo con suela de goma flexible y plantilla extraible. Pensada par
 
 *Sendero everyday walking shoes* — Everyday walking shoe with a flexible rubber sole and a removable insole. Made for a whole day on pavement.
 
+Color: **gris**
+
 ### `B10SHO0104.png` — Zapatillas de lona Puerto
 
 Zapatilla de lona de algodon con suela vulcanizada y ojales metalicos. Un clasico de verano que se lava en frio.
 
 *Puerto canvas trainers* — Cotton canvas trainer with a vulcanised sole and metal eyelets. A summer classic that washes cold.
+
+Color: **blanco**
 
 ### `B10SHO0105.png` — Zapatillas de montana Roca 3
 
@@ -683,11 +777,15 @@ Zapatilla de montana con horma ancha, drenaje lateral y proteccion en la puntera
 
 *Roca 3 mountain shoes* — Mountain shoe with a wide fit, side drainage and a protected toe box. For technical, wet ground.
 
+Color: **gris**
+
 ### `B10SHO0106.png` — Zapatillas de casa Hogar
 
 Zapatilla de estar por casa forrada en lana con suela antideslizante. Se lava a mano.
 
 *Hogar house slippers* — Wool-lined house slipper with a non-slip sole. Hand washable.
+
+Color: **gris**
 
 ### `B10SHO0107.png` — Zapatillas de gimnasio Estable
 
@@ -695,11 +793,15 @@ Zapatilla deportiva de suela plana y firme para levantar peso. Sujecion en el me
 
 *Estable gym trainers* — Flat, firm-soled trainer for lifting. Midfoot hold and a stable heel. 4 mm drop.
 
+Color: **negro**
+
 ### `B10SHO0108.png` — Sandalias de trekking Vado
 
 Sandalia de tres tiras regulables con suela de agarre para rio y roca mojada. Se seca en una hora.
 
 *Vado trekking sandals* — Three-strap adjustable sandal with a grippy sole for rivers and wet rock. Dries in an hour.
+
+Color: **negro**
 
 ### `B15SHO1101.png` — Botas de agua cortas Charco
 
@@ -707,11 +809,15 @@ Botas de agua de caucho natural con forro de algodon y suela con dibujo profundo
 
 *Charco short wellington boots* — Natural rubber boots with a cotton lining and a deep-tread sole.
 
+Color: **verde bosque**
+
 ### `B15SHO1102.png` — Botines de piel Adoquin
 
 Botin de piel curtida al vegetal con suela cosida, que se puede recambiar en un zapatero.
 
 *Adoquin leather ankle boots* — Vegetable-tanned leather boot with a stitched sole that a cobbler can replace.
+
+Color: **negro**
 
 ### `B15SHO1103.png` — Zapatillas de padel Pista
 
@@ -719,11 +825,15 @@ Zapatilla de pista con suela de espiga para tierra batida y refuerzo en el later
 
 *Pista padel shoes* — Court shoe with a herringbone sole for clay and a reinforced drag panel.
 
+Color: **blanco**
+
 ### `B15SHO1104.png` — Alpargatas de esparto Verano
 
 Alpargata de lona con suela de esparto trenzado a mano y puntera reforzada.
 
 *Verano esparto espadrilles* — Canvas espadrille with a hand-braided esparto sole and a reinforced toe.
+
+Color: **crema**
 
 ## Ropa > Complementos
 
@@ -733,11 +843,15 @@ Tres pares de calcetines de merino con puntera sin costura y refuerzo en el talo
 
 *Merino wool socks, pack of 3* — Three pairs of merino socks with a seamless toe and a reinforced heel.
 
+Color: **gris**
+
 ### `B15APP1006.png` — Bufanda de lana de doble cara
 
 Bufanda de 180 x 30 cm tejida en dos colores, uno por cara, sin costura de union.
 
 *Double-faced wool scarf* — A 180 by 30 cm scarf woven in two colours, one per face, with no joining seam.
+
+Color: **terracota**
 
 ### `B15APP1007.png` — Gorro de punto de lana merino
 
@@ -745,11 +859,15 @@ Gorro de punto fino con banda doble en la frente. Abriga sin dar calor de mas.
 
 *Merino wool knitted beanie* — Fine-knit beanie with a doubled band at the forehead. Warm without overheating.
 
+Color: **negro**
+
 ### `B15APP1008.png` — Guantes tecnicos tactiles
 
 Guantes finos con punta conductiva en indice y pulgar y silicona en la palma.
 
 *Touchscreen technical gloves* — Thin gloves with conductive index and thumb tips and silicone on the palm.
+
+Color: **negro**
 
 ## Ropa > Pantalones
 
@@ -759,11 +877,15 @@ Mallas largas con cintura alta, bolsillo lateral para el telefono y reflectantes
 
 *Kilometro running tights* — Full-length tights with a high waist, a side phone pocket and reflective detail at the calf.
 
+Color: **negro**
+
 ### `B10SHI0208.png` — Pantalon corto de running de doble capa
 
 Pantalon corto con malla interior, bolsillo con cremallera y tiro de 13 cm.
 
 *Two-layer running shorts* — Running shorts with an inner brief, a zipped pocket and a 13 cm inseam.
+
+Color: **negro**
 
 ### `B15APP1005.png` — Pantalon de montana desmontable
 
@@ -771,13 +893,17 @@ Pantalon de montana con perneras desmontables por cremallera y tejido elastico e
 
 *Convertible hiking trousers* — Hiking trousers with zip-off legs and four-way stretch fabric.
 
+Color: **gris**
+
 ## Ropa > Ropa deportiva > Camisetas
 
-### `B07TUVW404.png` — Camiseta tecnica de trail manga corta · **ya existe**
+### `B07TUVW404.png` — Camiseta tecnica de trail manga corta · **hecha**
 
 Camiseta ligera de secado rapido con costuras planas y tejido con proteccion UV UPF 30.
 
 *Short-sleeve trail running tech tee* — Lightweight quick-dry tee with flat seams and UPF 30 sun-protective fabric.
+
+Color: **verde bosque**
 
 ### `B10SHI0201.png` — Camiseta tecnica de manga larga Trail
 
@@ -785,11 +911,15 @@ Camiseta de manga larga en tejido reciclado con costuras planas y pulgareras. Se
 
 *Trail long-sleeve technical tee* — Long-sleeve tee in recycled fabric with flat seams and thumb loops. Fast drying, odour controlled.
 
+Color: **azul marino**
+
 ### `B10SHI0202.png` — Camiseta de tirantes Ligera
 
 Camiseta sin mangas de 92 g con espalda perforada. Pensada para correr en verano sin que se pegue.
 
 *Ligera running vest* — 92 g sleeveless vest with a perforated back. Made to run in summer without clinging.
+
+Color: **blanco**
 
 ### `B10SHI0203.png` — Camiseta de lana merino de manga corta
 
@@ -797,11 +927,15 @@ Camiseta de lana merino de 150 g. Regula la temperatura, no coge olor y aguanta 
 
 *Merino wool short-sleeve tee* — 150 g merino wool tee. Regulates temperature, resists odour and lasts several days running.
 
+Color: **gris**
+
 ### `B10SHI0204.png` — Camiseta de algodon organico Diario
 
 Camiseta de algodon organico de 180 g con cuello reforzado. Corte recto que no se deforma al lavar.
 
 *Diario organic cotton tee* — 180 g organic cotton tee with a reinforced collar. A straight cut that holds its shape in the wash.
+
+Color: **blanco**
 
 ### `B10SHI0205.png` — Maillot de ciclismo Cadencia
 
@@ -809,8 +943,12 @@ Maillot con tres bolsillos traseros, cremallera completa y banda siliconada en l
 
 *Cadencia cycling jersey* — Jersey with three rear pockets, a full-length zip and a silicone waist gripper.
 
+Color: **verde bosque**
+
 ### `B10SHI0206.png` — Sudadera de algodon cepillado Taller
 
 Sudadera de interior cepillado con punos elasticos y cuello acanalado. Gramaje de 320 g.
 
 *Taller brushed cotton sweatshirt* — Brushed-inside sweatshirt with elastic cuffs and a ribbed collar. 320 g weight.
+
+Color: **azul marino**
