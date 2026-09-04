@@ -39,6 +39,10 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
 
         builder.Property(entry => entry.Subject).HasMaxLength(200);
 
+        // Snapshotted beside the subject rather than joined on read: a display
+        // name changes and an audit row does not.
+        builder.Property(entry => entry.ActorName).HasMaxLength(200);
+
         // The enum as text, for the reason every other enum here is: a SELECT in
         // production has to be readable, and this is the table a person opens
         // when they are already having a bad day.

@@ -93,7 +93,7 @@ public sealed class AuditStepTests
     public async Task The_row_names_who_acted()
     {
         var principal = new CommercePrincipal(
-            new CustomerId(Guid.CreateVersion7()), new AgentId("claude-desktop"), "ana", ["shopper"]);
+            new CustomerId(Guid.CreateVersion7()), new AgentId("claude-desktop"), "ana", "Ana Ruiz", ["shopper"]);
 
         var (dispatcher, audit) = Pipeline(principal);
 
@@ -103,6 +103,12 @@ public sealed class AuditStepTests
         Assert.Equal(principal.Customer, entry.Customer);
         Assert.Equal(principal.Agent, entry.Agent);
         Assert.Equal("ana", entry.Subject);
+
+        // The name AND the subject, because they answer different questions.
+        // A real issuer signs an opaque subject, so a row carrying only that is
+        // a row a person cannot read; a row carrying only the name is one that
+        // rewrites itself when somebody is renamed.
+        Assert.Equal("Ana Ruiz", entry.ActorName);
     }
 
     /// <summary>

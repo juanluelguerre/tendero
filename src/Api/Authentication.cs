@@ -119,6 +119,13 @@ internal sealed class HttpPrincipalAccessor(
                 : customers.ForSubjectAsync(subject).GetAwaiter().GetResult(),
             Agent: agent is null ? null : new AgentId(agent),
             Subject: subject,
+            // `preferred_username` first because that is what OIDC defines for
+            // it and what Keycloak sends; `name` because that is what the
+            // development issuer sends; the subject last, so a token carrying
+            // neither still names somebody rather than nobody.
+            DisplayName: user.FindFirstValue("preferred_username")
+                ?? user.FindFirstValue(ClaimTypes.Name)
+                ?? subject,
             Roles: [.. user.FindAll(ClaimTypes.Role).Select(claim => claim.Value)]);
     }
 }

@@ -163,7 +163,7 @@ public sealed class LinkIdentityTests
                 _customers, new FixedPrincipal(principal), _unitOfWork, Clock);
 
         public static World WithSubject(string subject) =>
-            new(new CommercePrincipal(null, null, subject, ["shopper"]));
+            new(new CommercePrincipal(null, null, subject, subject, ["shopper"]));
 
         public static World Anonymous() => new(CommercePrincipal.Anonymous);
 

@@ -564,6 +564,7 @@ export interface components {
             customerId: null | string;
             agentId: null | string;
             subject: null | string;
+            actorName: null | string;
             outcome: string;
             reason: null | string;
             traceId: null | string;

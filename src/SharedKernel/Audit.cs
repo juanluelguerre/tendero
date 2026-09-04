@@ -33,7 +33,22 @@ public sealed record AuditEntry(
     string Payload,
     CustomerId? Customer,
     AgentId? Agent,
+
+    /// <summary>The stable identifier. Opaque with a real issuer, and the thing
+    /// two rows are correlated on.</summary>
     string? Subject,
+
+    /// <summary>
+    /// What that subject was CALLED when this happened, snapshotted rather than
+    /// resolved on read.
+    ///
+    /// It is the snapshot rule (ADR 0002) applied a fourth time, and for the
+    /// reason the other three were: a log that joined to the customer table
+    /// would rewrite its own history the day somebody changed their display
+    /// name. An audit row says what was true then.
+    /// </summary>
+    string? ActorName,
+
     AuditOutcome Outcome,
     string? Reason,
     string? TraceId,
@@ -53,6 +68,7 @@ public sealed record AuditEntry(
             principal.Customer,
             principal.Agent,
             principal.Subject,
+            principal.DisplayName,
             outcome,
             reason,
             traceId,

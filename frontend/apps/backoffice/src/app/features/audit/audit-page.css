@@ -93,3 +93,12 @@
   margin-block: var(--space-2) 0;
   font-size: var(--text-3xs);
 }
+
+/* The stable identifier under the name: present because it is what correlates
+   two rows, quiet because it is not what anybody reads first. */
+.who__id {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+  color: var(--text-subtle);
+}

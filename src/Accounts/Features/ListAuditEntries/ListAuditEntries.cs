@@ -34,7 +34,10 @@ public sealed record AuditEntryView(
     string Payload,
     string? CustomerId,
     string? AgentId,
+    /// <summary>The stable identifier, opaque with a real issuer.</summary>
     string? Subject,
+    /// <summary>What that subject was called when this happened.</summary>
+    string? ActorName,
     string Outcome,
     string? Reason,
     string? TraceId,
@@ -116,6 +119,7 @@ public sealed class ListAuditEntriesHandler(IAuditReader audit)
             entry.Customer?.Value.ToString(),
             entry.Agent?.Value,
             entry.Subject,
+            entry.ActorName,
             entry.Outcome.ToString().ToLowerInvariant(),
             entry.Reason,
             entry.TraceId,

@@ -20,11 +20,27 @@ public sealed record CommercePrincipal(
     CustomerId? Customer,
     AgentId? Agent,
     string? Subject,
+
+    /// <summary>
+    /// What to call this person on a screen, which is NOT the subject.
+    ///
+    /// The two issuers disagree about what a subject looks like and both are
+    /// right: the development issuer signs `sub: "juanlu"`, and Keycloak — like
+    /// every real OIDC provider — signs an opaque UUID, because a subject has to
+    /// be stable and a username is not. So an audit log that printed the subject
+    /// read `juanlu` against the fake and
+    /// `681c3d75-9cc6-437d-a9c2-98d1d41ecf36` against the real one.
+    ///
+    /// Both are kept. The subject is what you correlate on and it never changes;
+    /// this is what a person reads.
+    /// </summary>
+    string? DisplayName,
+
     IReadOnlyCollection<string> Roles)
 {
     /// <summary>Nobody authenticated. A value and not null: a guest browsing is
     /// a normal case, not the absence of a case.</summary>
-    public static readonly CommercePrincipal Anonymous = new(null, null, null, []);
+    public static readonly CommercePrincipal Anonymous = new(null, null, null, null, []);
 
     public bool IsAgent => Agent is not null;
 
@@ -52,5 +68,5 @@ public interface IPrincipalAccessor
 /// </summary>
 public sealed class SystemPrincipalAccessor : IPrincipalAccessor
 {
-    public CommercePrincipal Current { get; } = CommercePrincipal.Anonymous with { Subject = "system" };
+    public CommercePrincipal Current { get; } = CommercePrincipal.Anonymous with { Subject = "system", DisplayName = "system" };
 }

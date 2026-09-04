@@ -69,7 +69,31 @@
               @if (entry.agentId) {
                 <span class="agent">{{ entry.agentId }}</span>
               }
-              <span class="subject">{{ entry.subject ?? t('audit.system') }}</span>
+
+              <!--
+                The NAME, with the subject under it and only when the two differ.
+                Keycloak signs an opaque UUID as the subject — as every real OIDC
+                provider does, because a subject must be stable and a username is
+                not — so this column used to read
+                `681c3d75-9cc6-437d-a9c2-98d1d41ecf36` and name nobody.
+
+                The subject stays visible because it is what correlates two rows,
+                and it is shortened for the same reason order ids are: the first
+                segment is enough to match against something you are already
+                looking at, and the whole value is one hover away.
+              -->
+              <span class="subject">{{ entry.actorName ?? entry.subject ?? t('audit.system') }}</span>
+
+              <!--
+                Only when there IS a name and it differs. Rows written before
+                this column existed carry none, so they fall back to printing the
+                subject above — and repeating its first segment underneath was
+                the same value twice, which is exactly the noise this was meant
+                to remove.
+              -->
+              @if (entry.actorName && entry.subject && entry.subject !== entry.actorName) {
+                <span class="who__id" [title]="entry.subject">{{ short(entry.subject) }}</span>
+              }
             </td>
             <td>
               <span

@@ -1576,6 +1576,7 @@
           "customerId",
           "agentId",
           "subject",
+          "actorName",
           "outcome",
           "reason",
           "traceId",
@@ -1605,6 +1606,12 @@
             ]
           },
           "subject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "actorName": {
             "type": [
               "null",
               "string"
