@@ -85,6 +85,14 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
         var cancelled = await scope.OrderAsync(order.Id, ct);
         Assert.Equal(OrderStatus.Cancelled, cancelled!.Status);
 
+        // The reason is on the ORDER, and this assertion is the point of the
+        // test's name. It used to check only the reservation below — which is
+        // true and is not what anybody reads: the shopper opens the order, the
+        // shopkeeper opens the orders table, and both used to find `Cancelled`
+        // with no explanation while this test passed.
+        Assert.Equal(OrderStop.OutOfStock, cancelled.Stop?.Code);
+        Assert.Equal("PANS: 2 asked for, 1 available.", cancelled.Stop?.Detail);
+
         var reservation = await scope.ReservationAsync(order.Id, ct);
         Assert.Equal(ReservationStatus.Released, reservation!.Status);
         Assert.Equal("PANS: 2 asked for, 1 available.", reservation.Reason);

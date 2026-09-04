@@ -101,6 +101,12 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // absence is what tells a return there is nothing to refund.
         builder.ComplexProperty(o => o.Payment, payment => payment.ToJson("payment"));
 
+        // Nullable for the same reason and jsonb for the same one: it is read
+        // with the order that owns it and nothing queries it on its own. The day
+        // a shopkeeper filters "cancelled for stock", ADR 0008's criterion sends
+        // the code to a column of its own — and only the code.
+        builder.ComplexProperty(o => o.Stop, stop => stop.ToJson("stop"));
+
         builder.Ignore(o => o.LinesTotal);
         builder.Ignore(o => o.Total);
         builder.Ignore(o => o.DomainEvents);

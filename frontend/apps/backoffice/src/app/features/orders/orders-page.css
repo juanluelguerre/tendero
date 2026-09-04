@@ -28,3 +28,21 @@
   color: var(--danger);
   font-size: var(--text-xs);
 }
+
+/*
+  Why a row stopped, under its status. The backoffice is dense by design, so
+  this is one size down and subdued — a shopkeeper scanning for refusals finds
+  them by the status colour first and reads this second.
+*/
+.reason {
+  display: block;
+  margin-block-start: var(--space-1);
+  color: var(--text-subtle);
+  font-size: var(--text-xs);
+}
+
+.reason__detail {
+  display: block;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

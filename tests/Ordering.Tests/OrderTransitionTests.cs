@@ -74,7 +74,7 @@ public sealed class OrderTransitionTests
     {
         var order = OrderBuilder.Default().InStatus(OrderStatus.Delivered);
 
-        Assert.Throws<InvalidOperationException>(() => order.Cancel(Clock, "too late"));
+        Assert.Throws<InvalidOperationException>(() => order.Cancel(Clock, OrderStop.ShopCancelled, "too late"));
         Assert.Equal(OrderStatus.Delivered, order.Status);
     }
 
@@ -83,11 +83,58 @@ public sealed class OrderTransitionTests
     {
         var order = OrderBuilder.Default().Build();
 
-        order.Cancel(Clock, "out of stock");
+        order.Cancel(Clock, OrderStop.OutOfStock, "PANS: 2 asked for, 1 available.");
 
         var cancelled = Assert.IsType<OrderCancelled>(
             Assert.Single(order.DomainEvents, domainEvent => domainEvent is OrderCancelled));
-        Assert.Equal("out of stock", cancelled.Reason);
+        Assert.Equal("PANS: 2 asked for, 1 available.", cancelled.Reason);
+    }
+
+    /// <summary>
+    /// The event is not enough, and that was the bug.
+    ///
+    /// `OrderCancelled` carried the reason, the outbox delivered it, the handler
+    /// marked it processed, and the order was left saying `Cancelled` and
+    /// nothing else. A shopper reading the order page had no explanation and a
+    /// shopkeeper had no row to point at. The reason has to survive on the
+    /// aggregate, which is where both of them read it.
+    /// </summary>
+    [Fact]
+    public void The_reason_survives_the_event_that_announced_it()
+    {
+        var order = OrderBuilder.Default().Build();
+
+        order.Cancel(Clock, OrderStop.OutOfStock, "PANS: 2 asked for, 1 available.");
+
+        Assert.Equal(OrderStop.OutOfStock, order.Stop?.Code);
+        Assert.Equal("PANS: 2 asked for, 1 available.", order.Stop?.Detail);
+    }
+
+    /// <summary>A declined card is a refusal too, and it says so the same way.</summary>
+    [Fact]
+    public void A_declined_payment_records_its_own_code()
+    {
+        var order = OrderBuilder.Default().Build();
+
+        order.FailPayment(Clock, "card declined");
+
+        Assert.Equal(OrderStop.PaymentDeclined, order.Stop?.Code);
+        Assert.Equal("card declined", order.Stop?.Detail);
+    }
+
+    /// <summary>
+    /// An order in flight has nothing to explain, and a stale reason left on one
+    /// would be read as current by both screens.
+    /// </summary>
+    [Fact]
+    public void An_order_that_has_not_stopped_carries_no_reason()
+    {
+        var order = OrderBuilder.Default().Build();
+
+        order.AuthorizePayment(Clock);
+        order.Confirm(Clock);
+
+        Assert.Null(order.Stop);
     }
 
     private static void Transition(Order order, OrderStatus target)
@@ -99,7 +146,7 @@ public sealed class OrderTransitionTests
             case OrderStatus.Confirmed: order.Confirm(Clock); break;
             case OrderStatus.Shipped: order.Ship(Clock); break;
             case OrderStatus.Delivered: order.Deliver(Clock); break;
-            case OrderStatus.Cancelled: order.Cancel(Clock, "test"); break;
+            case OrderStatus.Cancelled: order.Cancel(Clock, OrderStop.ShopCancelled); break;
             default: throw new ArgumentOutOfRangeException(nameof(target), target, "Unreachable target.");
         }
     }

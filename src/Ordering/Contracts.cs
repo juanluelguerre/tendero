@@ -41,7 +41,15 @@ public sealed record OrderView(
     decimal DiscountTotal,
     decimal Shipping,
     decimal TaxTotal,
-    decimal Total)
+    decimal Total,
+    /// <summary>
+    /// Why the order stopped, when it did.
+    ///
+    /// A shopper whose order cancelled itself is owed the reason on the page
+    /// that says it cancelled — anywhere else is a support ticket.
+    /// </summary>
+    string? StopCode = null,
+    string? StopDetail = null)
 {
     public static OrderView From(Order order) => new(
         order.Id.ToString(),
@@ -67,7 +75,9 @@ public sealed record OrderView(
         order.Totals.DiscountTotal.Amount,
         order.Totals.Shipping.Amount,
         order.Totals.TaxTotal.Amount,
-        order.Totals.Total.Amount);
+        order.Totals.Total.Amount,
+        order.Stop?.Code,
+        order.Stop?.Detail);
 }
 
 public sealed record ReturnLineView(string Sku, int Quantity, string Reason, string? Comment);

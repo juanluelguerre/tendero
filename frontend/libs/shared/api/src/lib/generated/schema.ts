@@ -699,6 +699,8 @@ export interface components {
             city: string;
             isPaid: boolean;
             isCaptured: boolean;
+            stopCode: null | string;
+            stopDetail: null | string;
             /** Format: date-time */
             createdAt: string;
         };
@@ -733,6 +735,8 @@ export interface components {
             taxTotal: number;
             /** Format: double */
             total: number;
+            stopCode?: null | string;
+            stopDetail?: null | string;
         };
         PlaceOrderRequest: {
             shippingAddress: components["schemas"]["AddressRequest"];

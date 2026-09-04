@@ -173,7 +173,7 @@ internal sealed class OrderBuilder
                 order.Deliver(Clock);
                 break;
             case OrderStatus.Cancelled:
-                order.Cancel(Clock, "customer changed their mind");
+                order.Cancel(Clock, OrderStop.ShopCancelled, "customer changed their mind");
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown order status.");

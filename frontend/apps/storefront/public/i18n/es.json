@@ -110,7 +110,12 @@
     "status.PaymentAuthorized": "Pagado",
     "status.PaymentFailed": "Pago fallido",
     "status.Pending": "Pendiente de pago",
-    "status.Shipped": "Enviado"
+    "status.Shipped": "Enviado",
+    "stop": {
+      "out_of_stock": "No pudimos reservar las existencias de este pedido, así que lo cancelamos y no te hemos cobrado nada.",
+      "shop_cancelled": "La tienda canceló este pedido.",
+      "payment_declined": "El pago fue rechazado, así que el pedido no llegó a hacerse."
+    }
   },
   "product": {
     "addToCart": "Añadir al carrito",

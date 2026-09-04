@@ -40,6 +40,20 @@
                 <span class="status" [class]="'status--' + order.status">
                   {{ t('orders.status.' + order.status) }}
                 </span>
+
+                <!--
+                  Under the status and not in a column of its own: it is only
+                  ever set on two of the seven statuses, and an empty column on
+                  every other row would cost more scanning than it repays.
+                -->
+                @if (order.stopCode) {
+                  <span class="reason" [title]="order.stopDetail ?? ''">
+                    {{ t('orders.stop.' + order.stopCode) }}
+                    @if (order.stopDetail) {
+                      <span class="reason__detail">{{ order.stopDetail }}</span>
+                    }
+                  </span>
+                }
               </td>
               <td>
                 @if (order.isCaptured) {

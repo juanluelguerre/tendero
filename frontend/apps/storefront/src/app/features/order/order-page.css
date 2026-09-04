@@ -174,3 +174,28 @@
   .layout { grid-template-columns: minmax(0, 1fr); }
   .summary { position: static; }
 }
+
+/*
+  The refusal, and it is deliberately not an error banner: the order did not
+  break, the shop declined it. Tokens only — no hex ever leaves tokens.css.
+*/
+.order__stop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-inline-start: 3px solid var(--warning);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  font-size: var(--text-sm);
+}
+
+/* SKU and quantities, so the monospace face is doing its usual job. */
+.order__stop-detail {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle);
+}

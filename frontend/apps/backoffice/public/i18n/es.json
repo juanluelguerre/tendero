@@ -87,7 +87,12 @@
       "Cancelled": "Cancelado"
     },
     "title": "Pedidos",
-    "unpaid": "Sin pagar"
+    "unpaid": "Sin pagar",
+    "stop": {
+      "out_of_stock": "Existencias insuficientes",
+      "shop_cancelled": "Cancelado por la tienda",
+      "payment_declined": "Pago rechazado"
+    }
   },
   "promotions": {
     "title": "Promociones",

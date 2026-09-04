@@ -87,7 +87,12 @@
       "Cancelled": "Cancelled"
     },
     "title": "Orders",
-    "unpaid": "Not paid"
+    "unpaid": "Not paid",
+    "stop": {
+      "out_of_stock": "Not enough stock",
+      "shop_cancelled": "Cancelled by the shop",
+      "payment_declined": "Payment declined"
+    }
   },
   "promotions": {
     "title": "Promotions",

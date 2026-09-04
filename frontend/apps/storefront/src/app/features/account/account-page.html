@@ -68,6 +68,12 @@
                 <span class="order__lines muted">
                   {{ t('account.lineCount', { count: order.lineCount }) }}
                 </span>
+                <!-- The history is where somebody goes looking for the order
+                     that vanished, so the reason belongs here as much as on the
+                     order itself. -->
+                @if (order.stopCode) {
+                  <span class="order__stop muted">{{ t('order.stop.' + order.stopCode) }}</span>
+                }
               </li>
             }
           </ul>

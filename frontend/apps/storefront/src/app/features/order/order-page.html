@@ -8,6 +8,23 @@
       <span class="chip" [class]="'chip--' + order.status">
         {{ t('order.status.' + order.status) }}
       </span>
+
+      <!--
+        A shop that says no has to say why where the no is read. Before this,
+        an order the stock saga cancelled said "Cancelled" and nothing else,
+        and the reason existed only inside a processed outbox message.
+
+        The code is translated and the detail is not: it is a SKU and two
+        numbers, which read the same in both languages.
+      -->
+      @if (order.stopCode) {
+        <p class="order__stop" role="status">
+          <strong>{{ t('order.stop.' + order.stopCode) }}</strong>
+          @if (order.stopDetail) {
+            <span class="order__stop-detail">{{ order.stopDetail }}</span>
+          }
+        </p>
+      }
     </header>
 
     <div class="layout">

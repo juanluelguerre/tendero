@@ -42,6 +42,33 @@ public sealed record OrderPaymentAuthorized(OrderId OrderId, DateTimeOffset Occu
 public sealed record OrderPaymentFailed(OrderId OrderId, string Reason, DateTimeOffset OccurredAt) : IDomainEvent;
 public sealed record OrderConfirmed(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 public sealed record OrderCancelled(OrderId OrderId, string Reason, DateTimeOffset OccurredAt) : IDomainEvent;
+
+/// <summary>
+/// Why an order stopped, in the shape `AppliedDiscount` already established: a
+/// CODE the interface localizes, and a DETAIL carrying the specifics.
+///
+/// **The split is the whole point.** A code alone says "out of stock" and hides
+/// which of the two problems happened; a sentence alone cannot be translated,
+/// and this one is read by a shopper. So the code answers *what kind* and the
+/// detail answers *which SKU and how many* — the second is names and numbers,
+/// which read the same in both languages.
+///
+/// It is stored on the order rather than left in the event, and that is the bug
+/// this fixes: the reason travelled in `OrderCancelled`, the outbox marked the
+/// message processed, and the order was left saying `Cancelled` and nothing
+/// else. A system that refuses has to say so where the refusal is read.
+/// </summary>
+public sealed record OrderStop(string Code, string? Detail)
+{
+    /// <summary>The shelf could not fill it. Raised by the stock saga.</summary>
+    public const string OutOfStock = "out_of_stock";
+
+    /// <summary>A shopkeeper cancelled it from the backoffice.</summary>
+    public const string ShopCancelled = "shop_cancelled";
+
+    /// <summary>The card said no.</summary>
+    public const string PaymentDeclined = "payment_declined";
+}
 public sealed record OrderShipped(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 
 /// <summary>
@@ -128,6 +155,12 @@ public sealed class Order : AggregateRoot
     /// <summary>Null until a provider authorises. It is the only thing that can
     /// be refunded, which is why a return checks it rather than the status.</summary>
     public OrderPayment? Payment { get; private set; }
+
+    /// <summary>
+    /// Set when the order stops — cancelled, or payment failed — and null the
+    /// rest of the time, because an order in flight has nothing to explain.
+    /// </summary>
+    public OrderStop? Stop { get; private set; }
 
     public IReadOnlyList<OrderLine> Lines => _lines;
 
@@ -269,8 +302,11 @@ public sealed class Order : AggregateRoot
         Raise(new OrderPaymentCaptured(Id, Payment.Provider, captureId, UpdatedAt));
     }
 
-    public void FailPayment(TimeProvider clock, string reason) =>
+    public void FailPayment(TimeProvider clock, string reason)
+    {
+        Stop = new OrderStop(OrderStop.PaymentDeclined, reason);
         TransitionTo(clock, OrderStatus.PaymentFailed, now => new OrderPaymentFailed(Id, reason, now));
+    }
 
     public void Confirm(TimeProvider clock) =>
         TransitionTo(clock, OrderStatus.Confirmed, now => new OrderConfirmed(Id, now));
@@ -283,8 +319,15 @@ public sealed class Order : AggregateRoot
 
     // The compensation saga calls here when something fails halfway (payment
     // authorized but no stock, say): it cancels and releases.
-    public void Cancel(TimeProvider clock, string reason) =>
-        TransitionTo(clock, OrderStatus.Cancelled, now => new OrderCancelled(Id, reason, now));
+    //
+    // The code is required and the detail is not, which is deliberate: every
+    // caller knows what KIND of refusal it is, and only some can say more.
+    public void Cancel(TimeProvider clock, string code, string? detail = null)
+    {
+        Stop = new OrderStop(code, detail);
+        TransitionTo(clock, OrderStatus.Cancelled,
+            now => new OrderCancelled(Id, detail ?? code, now));
+    }
 
     // The factory stopped being nullable when Deliver() started emitting its
     // event: the `IDomainEvent?` existed for one mute transition.

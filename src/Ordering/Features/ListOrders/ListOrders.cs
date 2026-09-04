@@ -28,6 +28,11 @@ public sealed record OrderSummary(
     string City,
     bool IsPaid,
     bool IsCaptured,
+    /// <summary>Why it stopped, when it did. Null for an order still in flight.
+    /// The code is localized by the interface; the detail is SKUs and numbers.
+    /// </summary>
+    string? StopCode,
+    string? StopDetail,
     DateTimeOffset CreatedAt)
 {
     /// <summary>
@@ -52,6 +57,8 @@ public sealed record OrderSummary(
         // tell them apart.
         order.Payment is not null,
         order.Payment?.CaptureId is not null,
+        order.Stop?.Code,
+        order.Stop?.Detail,
         order.CreatedAt);
 }
 
@@ -120,7 +127,7 @@ public sealed class MoveOrderHandler(
                     order.Deliver(clock);
                     break;
                 case OrderMove.Cancel:
-                    order.Cancel(clock, command.Reason ?? "The shop cancelled this order.");
+                    order.Cancel(clock, OrderStop.ShopCancelled, command.Reason);
                     break;
             }
         }

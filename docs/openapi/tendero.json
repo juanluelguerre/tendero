@@ -2136,6 +2136,8 @@
           "city",
           "isPaid",
           "isCaptured",
+          "stopCode",
+          "stopDetail",
           "createdAt"
         ],
         "type": "object",
@@ -2168,6 +2170,18 @@
           },
           "isCaptured": {
             "type": "boolean"
+          },
+          "stopCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stopDetail": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -2280,6 +2294,18 @@
           "total": {
             "type": "number",
             "format": "double"
+          },
+          "stopCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "stopDetail": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

@@ -94,7 +94,7 @@ public sealed class ReserveStockOnOrderPlaced(
         // The refusal, in the customer's words rather than a code. It is the
         // most interesting row in the system, and it is why the ledger writes a
         // released reservation instead of failing silently.
-        order.Cancel(clock, outcome.Reason ?? "There was not enough stock.");
+        order.Cancel(clock, OrderStop.OutOfStock, outcome.Reason);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         activity?.SetTag("ordering.cancelled_reason", outcome.Reason);

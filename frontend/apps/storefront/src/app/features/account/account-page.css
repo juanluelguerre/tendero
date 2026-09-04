@@ -120,3 +120,6 @@
   margin-block-start: var(--space-1);
   font-size: var(--text-xs);
 }
+
+/* Why an order in the history stopped. Same weight as the line count beside it. */
+.order__stop { display: block; font-size: var(--text-xs); }
