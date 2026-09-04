@@ -70,6 +70,23 @@
     <!-- Orchestrates both Angular apps alongside the backend: one command brings
          everything up and the API's URL is injected instead of hand-written. MIT. -->
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.5.3" />
+    <!-- Aspire.Hosting.Keycloak 13.5.3-preview.1.26425.3 — MIT, declared in the
+         nuspec (`<license type="expression">MIT</license>`), authored by
+         Microsoft, from github.com/microsoft/aspire. Its only Aspire dependency
+         is `Aspire.Hosting 13.5.3`, which is exactly what the AppHost already
+         resolves, so there is no version conflict.
+
+         Both halves of ADR 0006's check, and this one passes where
+         `Aspire.Hosting.Elasticsearch` failed: that package declared no licence
+         AND pinned a conflicting client, which is why Elasticsearch is a plain
+         container resource in the AppHost to this day.
+
+         The version string is the awkward part and it is worth knowing rather
+         than discovering: EVERY one of this package's 46 published versions is a
+         preview, while `Aspire.Hosting.AppHost` 13.5.3 is not. `dotnet package
+         search Aspire.Hosting.Keycloak` therefore returns "No results found",
+         which reads exactly like a package that does not exist. -->
+    <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.5.3-preview.1.26425.3" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">

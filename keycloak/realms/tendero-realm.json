@@ -1,0 +1,159 @@
+{
+  "realm": "tendero",
+  "enabled": true,
+  "displayName": "Tendero",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 1800,
+  "roles": {
+    "realm": [
+      {
+        "name": "shopper",
+        "description": "Buys things."
+      },
+      {
+        "name": "shopkeeper",
+        "description": "Runs the shop."
+      },
+      {
+        "name": "agent",
+        "description": "An agent acting on somebody's behalf."
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "tendero-app",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:4201/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:4201"
+      ],
+      "protocolMappers": [
+        {
+          "name": "realm roles as the API reads them",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "http://schemas\\.microsoft\\.com/ws/2008/06/identity/claims/role",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "tendero-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "tendero-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "claude-desktop",
+      "name": "Claude Desktop",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "secret": "claude-desktop-development-secret",
+      "protocolMappers": [
+        {
+          "name": "realm roles as the API reads them",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "http://schemas\\.microsoft\\.com/ws/2008/06/identity/claims/role",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "tendero-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "tendero-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "agent_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "config": {
+            "claim.name": "agent_id",
+            "claim.value": "claude-desktop",
+            "jsonType.label": "String",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "ana",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Ana",
+      "lastName": "Ruiz",
+      "email": "ana@tendero.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ana",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "shopper"
+      ]
+    },
+    {
+      "username": "juanlu",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Juan Luis",
+      "lastName": "Guerrero",
+      "email": "juanlu@tendero.dev",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "juanlu",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "shopkeeper"
+      ]
+    },
+    {
+      "username": "service-account-claude-desktop",
+      "enabled": true,
+      "serviceAccountClientId": "claude-desktop",
+      "realmRoles": [
+        "agent"
+      ]
+    }
+  ]
+}
