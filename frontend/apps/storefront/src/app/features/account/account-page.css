@@ -123,3 +123,68 @@
 
 /* Why an order in the history stopped. Same weight as the line count beside it. */
 .order__stop { display: block; font-size: var(--text-xs); }
+
+/* ---------- An order you can recognise ---------- */
+
+/*
+  The row is a grid rather than a stack: thumbnails, then what it was, then what
+  it cost — left to right, in the order somebody reads them. It collapses to two
+  rows on a phone, where the figures go under the names instead of beside them.
+*/
+.order__link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.order__thumbs { display: flex; gap: var(--space-1); }
+
+.order__thumb {
+  inline-size: 48px;
+  block-size: 48px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+}
+
+/* The same labelled-tile idea the search card uses, at thumbnail size: a flat
+   surface rather than a broken-image glyph. */
+.order__thumb--fallback { background: var(--bg-raised); }
+
+.order__body { display: grid; gap: var(--space-1); min-inline-size: 0; }
+
+.order__names {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order__meta { font-size: var(--text-sm); }
+
+.order__figures {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: end;
+  text-align: end;
+}
+
+/* Not the clay action: the view already has one, and a link per row would make
+   four of them (design/DESIGN.md, one accent action per view). */
+.order__return {
+  display: inline-block;
+  margin-block-start: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.order__return:hover { color: var(--accent); }
+
+@media (max-width: 640px) {
+  .order__link { grid-template-columns: auto minmax(0, 1fr); }
+  .order__figures { grid-column: 1 / -1; justify-items: start; text-align: start; }
+}

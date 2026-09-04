@@ -9,7 +9,7 @@ cada uno para poder generar su imagen. **Sólo seis existen ya** — las de
 | | |
 |---|---|
 | **Tamaño** | **1400 × 1400 px**, cuadrado |
-| **Formato** | WebP calidad 80 si es fotográfico · PNG si es ilustración plana |
+| **Formato** | **PNG**, ilustración plana |
 | **Peso** | **≤ 200 KB** por imagen |
 | **Color** | sRGB, 8 bits, **sin canal alfa** — el fondo va pintado |
 | **Fondo** | plano, `#FAF9F7` o `#F3F1ED` (los de `design/tokens.css`) |
@@ -47,18 +47,37 @@ O sea que lo que toque el borde superior o inferior no se verá en el buscador,
 que es donde más se mira. Deja aire: el producto centrado, ocupando como mucho
 tres cuartos de la altura.
 
-### Por qué ≤ 200 KB y por qué WebP
+### Por qué ilustración y no fotografía
 
-Aritmética de repositorio público: 94 imágenes × 200 KB ≈ **19 MB**. Las seis
-PNG de ahora ocupan 148 KB entre todas porque son ilustración plana, que es lo
-que mejor comprime un PNG. Una imagen fotográfica de 1400 px en PNG se va a
-2–4 MB, y cien de esas son un cuarto de giga en un repositorio que la gente
-clona.
+**Es la decisión importante de este fichero**, y de ella salen el formato y el
+peso, así que va primero.
 
-WebP a calidad 80 deja una foto de 1400 px en 120–200 KB sin diferencia visible
-a este tamaño. JPEG también vale. La canalización acepta **PNG, JPEG, WebP y
-AVIF** (`ExternalImageReader`), así que la elección es libre — con una condición
-que se explica abajo.
+Tres razones, en orden de peso:
+
+1. **Ya hay seis y son ilustración.** Cien imágenes con el mismo registro parecen
+   un catálogo; seis ilustraciones y noventa y cuatro fotos parecen un accidente.
+2. **Los productos son inventados**, y `seed/IMAGES.md` ya cerró este argumento:
+   una fotografía que finge ser una «Pulse Runner» que no existe es *menos*
+   honesta que un dibujo que no finge ser nada.
+3. **La consistencia se sostiene sola.** Sobre cien imágenes, una fotografía
+   generada deriva —la luz, el ángulo, la sombra, el punto de vista— y hay que
+   volver a generar la mitad. Una ilustración plana con fondo liso sale igual la
+   primera y la centésima.
+
+De ahí el formato: **PNG**. La ilustración plana es exactamente lo que un PNG
+comprime bien — las seis actuales ocupan entre 16 y 25 KB a 640 px, y a 1400 px
+deberían quedarse holgadamente por debajo de 200 KB. Una *fotografía* de 1400 px
+en PNG se iría a 2–4 MB, y ahí sí haría falta WebP; con ilustración no hace
+falta el compromiso.
+
+La canalización acepta además **JPEG, WebP y AVIF** (`ExternalImageReader`), por
+si algún día cambia el registro. Hoy no.
+
+### Por qué ≤ 200 KB
+
+Aritmética de repositorio público: 94 × 200 KB ≈ **19 MB** en el peor caso, y con
+ilustración plana lo normal será la mitad. Las seis de ahora suman 148 KB entre
+todas.
 
 ### Sin alfa, con el fondo pintado
 
@@ -87,12 +106,10 @@ El producto referencia la ruta **literalmente** en `seed/products.sample.json`:
 "images": ["images/B11COO0301.png"]
 ```
 
-Si generas `B11COO0301.webp`, hay que cambiar también esa línea. La importación
-no adivina la extensión, y una ruta que no existe no rompe nada — simplemente no
-habrá imagen, que es la forma más silenciosa de que esto salga mal.
-
-Si vas a pasar todo el catálogo a WebP, cambia las cien de una vez con un script
-y no una a una.
+Con PNG no hay nada que tocar: las cien rutas ya dicen `.png`. Esto queda
+escrito por si algún día cambia el formato — la importación no adivina la
+extensión, y una ruta que no existe no rompe nada, que es la forma más
+silenciosa posible de que esto salga mal.
 
 ## Cómo se conecta
 
@@ -118,25 +135,28 @@ nada. Las seis que existen son ilustraciones planas con los colores de
 `design/tokens.css`; mantener ese registro hace que las cien se vean como un
 catálogo y no como un collage.
 
-**Elige un registro y no lo mezcles.** Cien imágenes con el mismo encuadre, el
-mismo fondo y la misma luz parecen un catálogo; cincuenta ilustraciones y
-cincuenta fotos parecen un accidente. Da igual cuál de los dos, pero que sea uno.
+**El registro está elegido y no se mezcla**: ilustración plana, como las seis que
+ya hay. Cien imágenes con el mismo encuadre, el mismo fondo y la misma luz
+parecen un catálogo; cincuenta ilustraciones y cincuenta fotos parecen un
+accidente.
 
 ### Plantilla de instrucción
 
 Para pegar en el generador, cambiando sólo la última línea:
 
 ```
-Product photograph for an online shop catalogue.
-Square 1:1 composition, 1400 x 1400 pixels.
-Single product, centred, occupying at most 75% of the frame height,
-with clear empty margin at the top and the bottom.
+Flat vector-style product illustration for an online shop catalogue.
+Square 1:1 composition, 1400 x 1400 pixels, PNG.
+Single object, centred, front three-quarter view, occupying at most 75% of the
+frame height, with clear empty margin at the top and the bottom.
 Flat uniform background, very light warm grey (#FAF9F7). No transparency.
-Soft even studio lighting, one gentle shadow, no harsh reflections.
+Clean even lighting, minimal soft shadow, no gradients on the background.
+Limited warm palette: terracotta #D85A30, canvas #FAECE7, ink #2C2C2A,
+olive #5C7F38, plus the object's own colour.
 No text, no logos, no labels, no watermarks, no packaging, no hands, no props.
-Neutral realistic colour, sRGB.
+sRGB.
 
-The product: <descripción en inglés, de la lista de abajo>
+The object: <descripción en inglés, de la lista de abajo>
 ```
 
 La descripción en inglés de cada producto está en su ficha, en cursiva. Es la

@@ -228,7 +228,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
                 [
                     .. lines.Select(line => new OrderLine(
                         ProductId.New(), VariantId.New(), line.Sku, "A product", null,
-                        new Money(10m, "EUR"), line.Quantity))
+                        ImageId: null, new Money(10m, "EUR"), line.Quantity))
                 ])
                 .Build();
 

@@ -18,6 +18,11 @@ namespace ElGuerre.Tendero.Ordering.Features.ListOrders;
 /// downloads a database to render six columns. The detail page asks for the
 /// detail.
 /// </summary>
+/// <summary>
+/// Enough of a line to recognise an order by. Not the line itself.
+/// </summary>
+public sealed record OrderLinePreview(string Sku, string Name, string? ImageId);
+
 public sealed record OrderSummary(
     string OrderId,
     string Status,
@@ -33,6 +38,20 @@ public sealed record OrderSummary(
     /// </summary>
     string? StopCode,
     string? StopDetail,
+
+    /// <summary>
+    /// The first few things in the order, so a person can tell one from another.
+    ///
+    /// **A preview and not the lines**, which is the distinction this record's
+    /// own docblock already draws: thirty orders each carrying their lines,
+    /// discounts and tax breakdown is a page that downloads a database to render
+    /// six columns. Three names and three image keys is what recognition costs,
+    /// and the detail page still asks for the detail.
+    ///
+    /// "9 lines, 624.48 EUR" describes an order that nobody remembers buying.
+    /// </summary>
+    IReadOnlyList<OrderLinePreview> Preview,
+
     DateTimeOffset CreatedAt)
 {
     /// <summary>
@@ -43,6 +62,10 @@ public sealed record OrderSummary(
     /// the moment a copy becomes a divergence waiting to happen: a column added
     /// to one of them would have been silently missing from the other two.
     /// </summary>
+    /// <summary>Three fits a row at every width the storefront renders. A fourth
+    /// wraps on a phone, and the count beside them already says there are more.</summary>
+    private const int PreviewLines = 3;
+
     public static OrderSummary Of(Order order) => new(
         // Flat. OrderId is a record struct and would serialise as {"value":"…"}.
         order.Id.ToString(),
@@ -59,6 +82,10 @@ public sealed record OrderSummary(
         order.Payment?.CaptureId is not null,
         order.Stop?.Code,
         order.Stop?.Detail,
+        [
+            .. order.Lines.Take(PreviewLines)
+                .Select(line => new OrderLinePreview(line.Sku, line.ProductName, line.ImageId))
+        ],
         order.CreatedAt);
 }
 

@@ -26,7 +26,7 @@ public sealed class ReturnRequestTests
             [
                 .. lines.Select(line => new OrderLine(
                     ProductId.New(), VariantId.New(), line.Sku, "A product", null,
-                    new Money(line.Price, "EUR"), line.Quantity))
+                    ImageId: null, new Money(line.Price, "EUR"), line.Quantity))
             ])
             .Build();
 
@@ -268,7 +268,7 @@ public sealed class ReturnRequestTests
         var order = OrderBuilder.Default()
             .WithLines(
                 new OrderLine(ProductId.New(), VariantId.New(), "SHIRT", "A shirt", null,
-                    new Money(50m, "EUR"), 2))
+                    ImageId: null, new Money(50m, "EUR"), 2))
             .WithShipping(new OrderShipping("standard", "Standard", new Money(4.95m, "EUR"), 3))
             .WithTotals(new OrderTotals(
                 Subtotal: new Money(100m, "EUR"),

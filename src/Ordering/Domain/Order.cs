@@ -31,6 +31,21 @@ public sealed record OrderLine(
     string Sku,
     string ProductName,
     string? VariantLabel,
+
+    /// <summary>
+    /// The picture as it was, snapshotted like the name and the price beside it.
+    ///
+    /// **It is a snapshot and not a lookup**, which is ADR 0002 a fifth time. An
+    /// order that resolved the image through the catalogue would show today's
+    /// photograph of a product somebody bought last year, and the catalogue is
+    /// entitled to change it — that is what a catalogue is for.
+    ///
+    /// Nullable, because an order placed before this existed has none and a
+    /// product may simply have no picture. The interface already draws a
+    /// labelled tile for that, which is its default path on a fresh clone.
+    /// </summary>
+    string? ImageId,
+
     Money UnitPrice,
     int Quantity)
 {

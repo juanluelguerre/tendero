@@ -47,19 +47,67 @@
           <ul class="orders">
             @for (order of session.orders; track order.orderId) {
               <li class="order">
+                <!--
+                  **What is in it, before what it cost.** The row used to say
+                  "9 lines, 624.48 EUR", which describes an order nobody
+                  remembers placing. A person recognises an order by the things
+                  in it, so the pictures and the first names come first and the
+                  arithmetic sits underneath.
+                -->
                 <a class="order__link" [routerLink]="links.order(order.orderId)">
-                  <span class="order__when">{{ when(order) }}</span>
-                  <span class="order__status">{{ t('order.status.' + order.status) }}</span>
-                  <span class="order__total numeric">{{ price(order) }}</span>
+                  <!--
+                    Only when at least one line HAS a picture. Six of the hundred
+                    seed products carry one, so an unconditional strip drew three
+                    empty boxes on almost every row — a container for nothing,
+                    which reads worse than the names alone.
+                  -->
+                  @if (hasImages(order)) {
+                    <span class="order__thumbs">
+                      @for (line of order.preview; track line.sku) {
+                        @if (line.imageId && !broken().has(line.sku)) {
+                          <img class="order__thumb" [src]="imageUrl(line.imageId)" alt=""
+                               loading="lazy" (error)="markBroken(line.sku)" />
+                        } @else {
+                          <!-- The same labelled tile the rest of the shop uses:
+                               the seed points at images that may not exist, so
+                               this is the DEFAULT path on a fresh clone rather
+                               than an error state. -->
+                          <span class="order__thumb order__thumb--fallback" aria-hidden="true"></span>
+                        }
+                      }
+                    </span>
+                  }
+
+                  <span class="order__body">
+                    <span class="order__names">{{ names(order) }}</span>
+                    <span class="order__meta muted">
+                      {{ when(order) }} · {{ t('account.lineCount', { count: order.lineCount }) }}
+                    </span>
+                  </span>
+
+                  <span class="order__figures">
+                    <span class="order__status">{{ t('order.status.' + order.status) }}</span>
+                    <span class="order__total numeric">{{ price(order) }}</span>
+                  </span>
                 </a>
-                <span class="order__lines muted">
-                  {{ t('account.lineCount', { count: order.lineCount }) }}
-                </span>
+
                 <!-- The history is where somebody goes looking for the order
                      that vanished, so the reason belongs here as much as on the
                      order itself. -->
                 @if (order.stopCode) {
                   <span class="order__stop muted">{{ t('order.stop.' + order.stopCode) }}</span>
+                }
+
+                <!--
+                  Returns shipped in phase 5 and were invisible from here: you
+                  had to open an order to discover you could send it back. The
+                  window opens on Delivered, and the screen derives that from the
+                  status the SERVER sent rather than keeping its own copy of the
+                  rule — `Order.AllowedTransitions` stays the only source.
+                -->
+                @if (order.status === 'Delivered') {
+                  <a class="order__return" [routerLink]="links.order(order.orderId)"
+                     [fragment]="'return'">{{ t('account.requestReturn') }}</a>
                 }
               </li>
             }

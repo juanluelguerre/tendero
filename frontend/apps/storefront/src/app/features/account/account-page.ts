@@ -113,6 +113,39 @@ export class AccountPage {
     this.auth.signOut();
   }
 
+  /**
+   * The images that did not load, keyed by SKU.
+   *
+   * The seed points at pictures that may not be there, so a broken image is the
+   * DEFAULT path on a fresh clone rather than an error — the same reason the
+   * search card carries this and swaps in a labelled tile.
+   */
+  protected readonly broken = signal(new Set<string>());
+
+  protected markBroken(sku: string): void {
+    this.broken.update((current) => new Set(current).add(sku));
+  }
+
+  /** Whether this order has anything to show, as opposed to boxes to draw. */
+  protected hasImages(order: OrderSummary): boolean {
+    return order.preview.some((line) => line.imageId && !this.broken().has(line.sku));
+  }
+
+  protected imageUrl(imageId: string): string {
+    return `/api/images/${imageId}`;
+  }
+
+  /**
+   * The first few things in the order, as a sentence.
+   *
+   * It ends in an ellipsis only when there is more, because "Coffee maker…" on
+   * an order of exactly one thing reads like something failed to load.
+   */
+  protected names(order: OrderSummary): string {
+    const shown = order.preview.map((line) => line.name).join(', ');
+    return order.lineCount > order.preview.length ? `${shown}…` : shown;
+  }
+
   protected price(order: OrderSummary): string {
     return formatPrice(order.total, order.currency, this.culture.active());
   }

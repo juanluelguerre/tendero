@@ -700,6 +700,11 @@ export interface components {
             /** Format: double */
             amount: number;
         };
+        OrderLinePreview: {
+            sku: string;
+            name: string;
+            imageId: null | string;
+        };
         OrderLineView: {
             sku: string;
             productName: string;
@@ -723,6 +728,7 @@ export interface components {
             isCaptured: boolean;
             stopCode: null | string;
             stopDetail: null | string;
+            preview: components["schemas"]["OrderLinePreview"][];
             /** Format: date-time */
             createdAt: string;
         };

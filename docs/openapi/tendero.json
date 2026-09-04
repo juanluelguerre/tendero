@@ -2139,6 +2139,28 @@
           }
         }
       },
+      "OrderLinePreview": {
+        "required": [
+          "sku",
+          "name",
+          "imageId"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "imageId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "OrderLineView": {
         "required": [
           "sku",
@@ -2184,6 +2206,7 @@
           "isCaptured",
           "stopCode",
           "stopDetail",
+          "preview",
           "createdAt"
         ],
         "type": "object",
@@ -2228,6 +2251,12 @@
               "null",
               "string"
             ]
+          },
+          "preview": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderLinePreview"
+            }
           },
           "createdAt": {
             "type": "string",

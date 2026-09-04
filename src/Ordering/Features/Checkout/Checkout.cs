@@ -320,6 +320,10 @@ public sealed class PlaceOrderHandler(
                     line.Sku,
                     line.ProductName,
                     line.VariantLabel,
+                    // Carried forward from the cart, which took it from the
+                    // catalogue when the line was added. The order freezes it
+                    // there.
+                    line.ImageId,
                     // The price pricing just quoted, not one the cart carried:
                     // the cart carries none, on purpose.
                     unitPrices[line.Sku],
