@@ -16,7 +16,7 @@ faltan 92.
 | **Fondo** | plano, `#FAF9F7` o `#F3F1ED` (los de `design/tokens.css`) |
 | **Zona segura** | el producto dentro del **75 % central en vertical** |
 | **Texto** | ninguno, en ninguna parte de la imagen |
-| **Nombre** | `<item_id>.<extensión>`, y la extensión ha de coincidir con `seed/products.sample.json` |
+| **Nombre** | **`<item_id>.webp`**, y nada más: el seed ya apunta ahí para los 100 |
 
 Todo lo de abajo es de dónde sale cada número, porque dentro de un año habrá que
 volver a decidirlo y conviene no tener que medirlo otra vez.
@@ -134,6 +134,12 @@ nueva.
 
 Una imagen que falte **no rompe nada**: el producto se importa igual y la ficha
 muestra el tile de reserva. Se pueden ir añadiendo de una en una y reimportando.
+
+**Y no hay que tocar el seed para añadir una** (2026-09-04). Los 100 productos
+declaran ya `images/<item_id>.webp`, exista el fichero o no, así que el trabajo
+de incorporar una foto es dejarla en `seed/images/` con ese nombre y reimportar.
+La referencia colgando es deliberada: es esta lista, escrita en el propio
+catálogo, y el import la registra como aviso en lugar de fallar.
 
 El modelo admite **varias imágenes por producto** — `images` es una lista y la
 principal es la de menor orden — pero hoy todos llevan una. Si generas dos

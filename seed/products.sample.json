@@ -16,7 +16,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B073WXYZ01.png"
+      "images/B073WXYZ01.webp"
     ],
     "attributes": {
       "color": "azul marino",
@@ -44,7 +44,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B08JKLM202.png"
+      "images/B08JKLM202.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -71,7 +71,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B09PQRS303.png"
+      "images/B09PQRS303.webp"
     ],
     "attributes": {
       "capacidad_tazas": "12",
@@ -97,7 +97,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B07TUVW404.png"
+      "images/B07TUVW404.webp"
     ],
     "attributes": {
       "color": "verde bosque",
@@ -124,7 +124,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B06GHIJ505.png"
+      "images/B06GHIJ505.webp"
     ],
     "attributes": {
       "temperatura_color": "3000K-6000K",
@@ -150,7 +150,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B05DEFG606.png"
+      "images/B05DEFG606.webp"
     ],
     "attributes": {
       "piezas": "3",
@@ -176,7 +176,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0101.png"
+      "images/B10SHO0101.webp"
     ],
     "attributes": {
       "color": "verde bosque",
@@ -204,7 +204,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0102.png"
+      "images/B10SHO0102.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -232,7 +232,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0103.png"
+      "images/B10SHO0103.webp"
     ],
     "attributes": {
       "color": "gris",
@@ -259,7 +259,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0104.png"
+      "images/B10SHO0104.webp"
     ],
     "attributes": {
       "color": "blanco",
@@ -286,7 +286,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0105.png"
+      "images/B10SHO0105.webp"
     ],
     "attributes": {
       "color": "gris",
@@ -314,7 +314,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0106.png"
+      "images/B10SHO0106.webp"
     ],
     "attributes": {
       "color": "gris",
@@ -340,7 +340,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0107.png"
+      "images/B10SHO0107.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -368,7 +368,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHO0108.png"
+      "images/B10SHO0108.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -395,7 +395,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0201.png"
+      "images/B10SHI0201.webp"
     ],
     "attributes": {
       "color": "azul marino",
@@ -423,7 +423,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0202.png"
+      "images/B10SHI0202.webp"
     ],
     "attributes": {
       "color": "blanco",
@@ -451,7 +451,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0203.png"
+      "images/B10SHI0203.webp"
     ],
     "attributes": {
       "color": "gris",
@@ -478,7 +478,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0204.png"
+      "images/B10SHI0204.webp"
     ],
     "attributes": {
       "color": "blanco",
@@ -505,7 +505,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0205.png"
+      "images/B10SHI0205.webp"
     ],
     "attributes": {
       "color": "verde bosque",
@@ -532,7 +532,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0206.png"
+      "images/B10SHI0206.webp"
     ],
     "attributes": {
       "color": "azul marino",
@@ -559,7 +559,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0207.png"
+      "images/B10SHI0207.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -586,7 +586,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0208.png"
+      "images/B10SHI0208.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -613,7 +613,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0209.png"
+      "images/B10SHI0209.webp"
     ],
     "attributes": {
       "color": "verde bosque",
@@ -640,7 +640,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B10SHI0210.png"
+      "images/B10SHI0210.webp"
     ],
     "attributes": {
       "color": "gris",
@@ -667,7 +667,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0301.png"
+      "images/B11COO0301.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -694,7 +694,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0302.png"
+      "images/B11COO0302.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -721,7 +721,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0303.png"
+      "images/B11COO0303.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -747,7 +747,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0304.png"
+      "images/B11COO0304.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -774,7 +774,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0305.png"
+      "images/B11COO0305.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -801,7 +801,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0306.png"
+      "images/B11COO0306.webp"
     ],
     "attributes": {
       "material": "ceramica",
@@ -826,7 +826,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0307.png"
+      "images/B11COO0307.webp"
     ],
     "attributes": {
       "material": "bambu",
@@ -851,7 +851,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0308.png"
+      "images/B11COO0308.webp"
     ],
     "attributes": {
       "material": "bambu",
@@ -876,7 +876,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0309.png"
+      "images/B11COO0309.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -901,7 +901,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0310.png"
+      "images/B11COO0310.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -926,7 +926,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0311.png"
+      "images/B11COO0311.webp"
     ],
     "attributes": {
       "material": "ceramica",
@@ -951,7 +951,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COO0312.png"
+      "images/B11COO0312.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -976,7 +976,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0401.png"
+      "images/B11COF0401.webp"
     ],
     "attributes": {
       "material": "aluminio",
@@ -1002,7 +1002,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0402.png"
+      "images/B11COF0402.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -1028,7 +1028,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0403.png"
+      "images/B11COF0403.webp"
     ],
     "attributes": {
       "material": "cristal",
@@ -1054,7 +1054,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0404.png"
+      "images/B11COF0404.webp"
     ],
     "attributes": {
       "capacidad_tazas": "6",
@@ -1080,7 +1080,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0405.png"
+      "images/B11COF0405.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -1105,7 +1105,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0406.png"
+      "images/B11COF0406.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -1131,7 +1131,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0407.png"
+      "images/B11COF0407.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -1157,7 +1157,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11COF0408.png"
+      "images/B11COF0408.webp"
     ],
     "attributes": {
       "material": "cristal",
@@ -1183,7 +1183,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11TAB0501.png"
+      "images/B11TAB0501.webp"
     ],
     "attributes": {
       "material": "ceramica",
@@ -1210,7 +1210,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11TAB0502.png"
+      "images/B11TAB0502.webp"
     ],
     "attributes": {
       "material": "ceramica",
@@ -1237,7 +1237,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11TAB0503.png"
+      "images/B11TAB0503.webp"
     ],
     "attributes": {
       "material": "cristal",
@@ -1262,7 +1262,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11TAB0504.png"
+      "images/B11TAB0504.webp"
     ],
     "attributes": {
       "material": "cristal",
@@ -1288,7 +1288,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11TAB0505.png"
+      "images/B11TAB0505.webp"
     ],
     "attributes": {
       "material": "cristal",
@@ -1313,7 +1313,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B11TAB0506.png"
+      "images/B11TAB0506.webp"
     ],
     "attributes": {
       "material": "lino",
@@ -1338,7 +1338,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0601.png"
+      "images/B12LAM0601.webp"
     ],
     "attributes": {
       "temperatura_color": "2700-5000 K",
@@ -1364,7 +1364,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0602.png"
+      "images/B12LAM0602.webp"
     ],
     "attributes": {
       "temperatura_color": "3000-6000 K",
@@ -1390,7 +1390,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0603.png"
+      "images/B12LAM0603.webp"
     ],
     "attributes": {
       "temperatura_color": "2700 K",
@@ -1416,7 +1416,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0604.png"
+      "images/B12LAM0604.webp"
     ],
     "attributes": {
       "material": "ceramica",
@@ -1442,7 +1442,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0605.png"
+      "images/B12LAM0605.webp"
     ],
     "attributes": {
       "potencia_w": "8",
@@ -1468,7 +1468,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0606.png"
+      "images/B12LAM0606.webp"
     ],
     "attributes": {
       "potencia_w": "3",
@@ -1494,7 +1494,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0607.png"
+      "images/B12LAM0607.webp"
     ],
     "attributes": {
       "potencia_w": "18",
@@ -1519,7 +1519,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0608.png"
+      "images/B12LAM0608.webp"
     ],
     "attributes": {
       "potencia_w": "9",
@@ -1545,7 +1545,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0609.png"
+      "images/B12LAM0609.webp"
     ],
     "attributes": {
       "potencia_w": "2",
@@ -1571,7 +1571,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B12LAM0610.png"
+      "images/B12LAM0610.webp"
     ],
     "attributes": {
       "potencia_w": "10",
@@ -1597,7 +1597,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0701.png"
+      "images/B13BAG0701.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -1624,7 +1624,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0702.png"
+      "images/B13BAG0702.webp"
     ],
     "attributes": {
       "color": "verde bosque",
@@ -1677,7 +1677,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0704.png"
+      "images/B13BAG0704.webp"
     ],
     "attributes": {
       "color": "gris",
@@ -1704,7 +1704,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B13BAG0705.png"
+      "images/B13BAG0705.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -1911,7 +1911,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0801.png"
+      "images/B14HOM0801.webp"
     ],
     "attributes": {
       "material": "lino",
@@ -1937,7 +1937,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0802.png"
+      "images/B14HOM0802.webp"
     ],
     "attributes": {
       "material": "lino",
@@ -1962,7 +1962,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0803.png"
+      "images/B14HOM0803.webp"
     ],
     "attributes": {
       "material": "lino",
@@ -1988,7 +1988,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0804.png"
+      "images/B14HOM0804.webp"
     ],
     "attributes": {
       "material": "bambu",
@@ -2014,7 +2014,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0805.png"
+      "images/B14HOM0805.webp"
     ],
     "attributes": {
       "material": "lana merino",
@@ -2039,7 +2039,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0806.png"
+      "images/B14HOM0806.webp"
     ],
     "attributes": {
       "material": "lino",
@@ -2065,7 +2065,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0807.png"
+      "images/B14HOM0807.webp"
     ],
     "attributes": {
       "material": "algodon",
@@ -2090,7 +2090,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14HOM0808.png"
+      "images/B14HOM0808.webp"
     ],
     "attributes": {
       "material": "lino",
@@ -2116,7 +2116,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14ORG0901.png"
+      "images/B14ORG0901.webp"
     ],
     "attributes": {
       "material": "bambu",
@@ -2141,7 +2141,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14ORG0902.png"
+      "images/B14ORG0902.webp"
     ],
     "attributes": {
       "material": "bambu"
@@ -2165,7 +2165,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14ORG0903.png"
+      "images/B14ORG0903.webp"
     ],
     "attributes": {
       "material": "acero inoxidable"
@@ -2189,7 +2189,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B14ORG0904.png"
+      "images/B14ORG0904.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -2214,7 +2214,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1001.png"
+      "images/B15APP1001.webp"
     ],
     "attributes": {
       "material": "lino",
@@ -2241,7 +2241,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1002.png"
+      "images/B15APP1002.webp"
     ],
     "attributes": {
       "material": "lana merino",
@@ -2268,7 +2268,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1003.png"
+      "images/B15APP1003.webp"
     ],
     "attributes": {
       "material": "ripstop reciclado",
@@ -2295,7 +2295,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1004.png"
+      "images/B15APP1004.webp"
     ],
     "attributes": {
       "material": "ripstop reciclado",
@@ -2322,7 +2322,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1005.png"
+      "images/B15APP1005.webp"
     ],
     "attributes": {
       "material": "ripstop reciclado",
@@ -2349,7 +2349,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1006.png"
+      "images/B15APP1006.webp"
     ],
     "attributes": {
       "material": "lana merino",
@@ -2374,7 +2374,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1007.png"
+      "images/B15APP1007.webp"
     ],
     "attributes": {
       "material": "lana merino",
@@ -2399,7 +2399,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15APP1008.png"
+      "images/B15APP1008.webp"
     ],
     "attributes": {
       "material": "ripstop reciclado",
@@ -2425,7 +2425,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15SHO1101.png"
+      "images/B15SHO1101.webp"
     ],
     "attributes": {
       "color": "verde bosque",
@@ -2450,7 +2450,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15SHO1102.png"
+      "images/B15SHO1102.webp"
     ],
     "attributes": {
       "color": "negro",
@@ -2476,7 +2476,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15SHO1103.png"
+      "images/B15SHO1103.webp"
     ],
     "attributes": {
       "color": "blanco",
@@ -2503,7 +2503,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15SHO1104.png"
+      "images/B15SHO1104.webp"
     ],
     "attributes": {
       "color": "crema",
@@ -2530,7 +2530,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15KIT1201.png"
+      "images/B15KIT1201.webp"
     ],
     "attributes": {
       "material": "cristal"
@@ -2554,7 +2554,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15KIT1202.png"
+      "images/B15KIT1202.webp"
     ],
     "attributes": {
       "material": "acero inoxidable"
@@ -2578,7 +2578,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15KIT1203.png"
+      "images/B15KIT1203.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
@@ -2603,7 +2603,7 @@
       "currency": "EUR"
     },
     "images": [
-      "images/B15KIT1204.png"
+      "images/B15KIT1204.webp"
     ],
     "attributes": {
       "material": "acero inoxidable",
