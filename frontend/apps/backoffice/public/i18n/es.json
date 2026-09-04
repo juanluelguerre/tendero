@@ -179,7 +179,9 @@
     "pending": "{{count}} pendientes",
     "publish": "Publicar",
     "publishing": "Publicando…",
-    "title": "Cola de revisión"
+    "title": "Cola de revisión",
+    "imported": "Importado: {{created}} nuevos, {{updated}} actualizados, en {{seconds}} s.",
+    "importFailed": "{{count}} no se pudieron importar."
   },
   "signIn": {
     "title": "Identifícate",

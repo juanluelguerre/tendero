@@ -10,3 +10,42 @@
 /* The action column stays as narrow as its button and is pinned right, so a
    queue of twenty rows has one straight edge to aim at. */
 .table td:last-child { width: 1%; white-space: nowrap; }
+
+/*
+  The import bar. The awning stripe is the system's one decorative device and
+  the only thing allowed to animate (design/DESIGN.md), and this is the job that
+  file assigned it.
+
+  It slides its own repeating gradient rather than growing a filled portion,
+  because the import reports nothing until it finishes: a bar that filled would
+  be inventing a percentage.
+*/
+.importing {
+  margin-block: var(--space-4) var(--space-5);
+  max-width: 32rem;
+}
+
+.importing__bar {
+  background-size: 28px 100%;
+  animation: awning-slide 900ms linear infinite;
+}
+
+.importing__label {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+}
+
+@keyframes awning-slide {
+  from { background-position: 0 0; }
+  to   { background-position: 28px 0; }
+}
+
+/* What the import did. Not a toast: it stays, because the number is the answer
+   to "did that button work" and a message that vanishes answers it once. */
+.imported {
+  margin-block: var(--space-4) var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.imported--failed { color: var(--text); }

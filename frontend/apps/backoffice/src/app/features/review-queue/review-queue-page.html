@@ -15,6 +15,37 @@
   </header>
   <p class="page-hint">{{ t('reviewQueue.hint') }}</p>
 
+  <!--
+    The awning stripe, finally doing the job design/DESIGN.md assigned it:
+    "the loading bar during import". It is the one decorative device in the
+    system and the only thing allowed to animate, and until now it appeared on
+    exactly one <hr>.
+
+    Indeterminate on purpose — the import is one request and the server counts as
+    it goes, so a percentage would be invented. What this says is "still
+    working", which is the only honest thing to say.
+  -->
+  @if (importing()) {
+    <div class="importing" role="status" aria-live="polite">
+      <div class="awning-rule awning-rule--thin importing__bar"></div>
+      <p class="importing__label muted">{{ t('reviewQueue.importing') }}</p>
+    </div>
+  }
+
+  @if (imported(); as result) {
+    <!-- The numbers, because "it worked" and "it created ninety-four products"
+         are different amounts of information, and the second is what tells you
+         the button did what you meant. -->
+    <p class="imported" [class.imported--failed]="result.failed > 0" role="status">
+      {{ t('reviewQueue.imported', {
+           created: result.created, updated: result.updated, seconds: seconds(result)
+         }) }}
+      @if (result.failed > 0) {
+        <strong>{{ t('reviewQueue.importFailed', { count: result.failed }) }}</strong>
+      }
+    </p>
+  }
+
   @switch (state().status) {
     @case ('loading') {
       <p class="muted" role="status" aria-live="polite">{{ t('reviewQueue.loading') }}</p>

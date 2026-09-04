@@ -179,7 +179,9 @@
     "pending": "{{count}} waiting",
     "publish": "Publish",
     "publishing": "Publishing…",
-    "title": "Review queue"
+    "title": "Review queue",
+    "imported": "Imported: {{created}} new, {{updated}} updated, in {{seconds}} s.",
+    "importFailed": "{{count}} could not be imported."
   },
   "signIn": {
     "title": "Sign in",

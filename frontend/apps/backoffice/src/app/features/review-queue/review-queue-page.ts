@@ -2,7 +2,7 @@ import { Component, computed, effect, inject, signal, untracked } from '@angular
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import type { ProductSummary } from '@tendero/shared-api';
+import type { ImportResult, ProductSummary } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import { CatalogService } from '../../data-access/catalog.service';
 
@@ -40,6 +40,16 @@ export class ReviewQueuePage {
   protected readonly publishing = signal<ReadonlySet<string>>(new Set());
   protected readonly importing = signal(false);
 
+  /**
+   * What the last import did, or null before one has run.
+   *
+   * The handler has always returned created, updated, failed and how long it
+   * took — the screen threw all four away and left you looking at the same empty
+   * state, with no way to tell a successful import of six products from a button
+   * that did nothing.
+   */
+  protected readonly imported = signal<ImportResult | null>(null);
+
   protected readonly pending = computed(() => {
     const current = this.state();
     return current.status === 'ready' ? current.total : 0;
@@ -76,9 +86,12 @@ export class ReviewQueuePage {
 
   protected importSeed(): void {
     this.importing.set(true);
+    this.imported.set(null);
+
     this.catalog.import().subscribe({
-      next: () => {
+      next: (result) => {
         this.importing.set(false);
+        this.imported.set(result);
         this.load();
       },
       error: () => {
@@ -86,6 +99,11 @@ export class ReviewQueuePage {
         this.state.set({ status: 'failed' });
       },
     });
+  }
+
+  /** One decimal. An import that took 1.24 s took a second and a bit. */
+  protected seconds(result: ImportResult): string {
+    return result.elapsedSeconds.toFixed(1);
   }
 
   protected price(item: ProductSummary): string {
