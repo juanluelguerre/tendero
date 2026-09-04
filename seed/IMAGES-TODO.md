@@ -9,9 +9,10 @@ cada uno para poder generar su imagen. **Sólo seis existen ya** — las de
 | | |
 |---|---|
 | **Tamaño** | **1400 × 1400 px**, cuadrado |
-| **Formato** | **PNG**, ilustración plana |
-| **Peso** | **≤ 200 KB** por imagen |
-| **Color** | sRGB, 8 bits, **sin canal alfa** — el fondo va pintado |
+| **Formato** | **WebP**, calidad 82 · ilustración de línea |
+| **Peso** | **≤ 120 KB** por imagen (la media real ronda 45 KB) |
+| **Color** | sRGB, **sin canal alfa** — el fondo va pintado |
+| **Color del producto** | el que diga su atributo en el catálogo, no el que salga |
 | **Fondo** | plano, `#FAF9F7` o `#F3F1ED` (los de `design/tokens.css`) |
 | **Zona segura** | el producto dentro del **75 % central en vertical** |
 | **Texto** | ninguno, en ninguna parte de la imagen |
@@ -64,20 +65,33 @@ Tres razones, en orden de peso:
    volver a generar la mitad. Una ilustración plana con fondo liso sale igual la
    primera y la centésima.
 
-De ahí el formato: **PNG**. La ilustración plana es exactamente lo que un PNG
-comprime bien — las seis actuales ocupan entre 16 y 25 KB a 640 px, y a 1400 px
-deberían quedarse holgadamente por debajo de 200 KB. Una *fotografía* de 1400 px
-en PNG se iría a 2–4 MB, y ahí sí haría falta WebP; con ilustración no hace
-falta el compromiso.
+### Por qué WebP, medido y no supuesto
 
-La canalización acepta además **JPEG, WebP y AVIF** (`ExternalImageReader`), por
-si algún día cambia el registro. Hoy no.
+**Esta sección decía PNG y estaba equivocada.** El razonamiento era que la
+ilustración plana es lo que un PNG comprime bien, y es cierto — para ilustración
+*de verdad* plana, de pocos colores y bordes duros. Las que genera un modelo no
+lo son: llevan textura, sombra suave y un grano fino que PNG tiene que codificar
+píxel a píxel.
 
-### Por qué ≤ 200 KB
+Medido sobre las cinco primeras, convirtiendo la misma imagen a cada formato:
 
-Aritmética de repositorio público: 94 × 200 KB ≈ **19 MB** en el peor caso, y con
-ilustración plana lo normal será la mitad. Las seis de ahora suman 148 KB entre
-todas.
+| | JPEG 1024 (original) | PNG 1024 | PNG 1400 | **WebP 1400 q82** |
+|---|---:|---:|---:|---:|
+| media | 400 KB | 750 KB | 1,3 MB | **43 KB** |
+| peor caso | 519 KB | 1018 KB | 1,8 MB | **84 KB** |
+
+PNG es aquí entre quince y treinta veces más pesado que WebP. Cien imágenes en
+PNG a 1400 px serían **unos 125 MB** en un repositorio público; en WebP son
+**unos 4 MB**, sin diferencia visible a este tamaño.
+
+La canalización acepta **PNG, JPEG, WebP y AVIF** en los dos extremos
+(`ExternalImageReader` y `FileSystemImageStore`), así que no hay nada que tocar
+en el código — sólo la extensión en `seed/products.sample.json`.
+
+**SVG también entra**, comprobado de punta a punta: el almacén lo mapea a
+`image/svg+xml` y el API lo sirve tal cual, en 200 y con su tipo. Para dibujo
+geométrico serían 2 KB por producto en vez de 45. No es el registro elegido,
+pero la puerta está abierta.
 
 ### Sin alfa, con el fondo pintado
 
@@ -106,10 +120,10 @@ El producto referencia la ruta **literalmente** en `seed/products.sample.json`:
 "images": ["images/B11COO0301.png"]
 ```
 
-Con PNG no hay nada que tocar: las cien rutas ya dicen `.png`. Esto queda
-escrito por si algún día cambia el formato — la importación no adivina la
-extensión, y una ruta que no existe no rompe nada, que es la forma más
-silenciosa posible de que esto salga mal.
+Las cien rutas dicen hoy `.png`, así que **pasar a WebP obliga a cambiarlas**.
+La importación no adivina la extensión, y una ruta que no existe no rompe nada
+— que es la forma más silenciosa posible de que esto salga mal. Cámbialas de una
+vez con un script, no una a una.
 
 ## Cómo se conecta
 
@@ -156,8 +170,14 @@ olive #5C7F38, plus the object's own colour.
 No text, no logos, no labels, no watermarks, no packaging, no hands, no props.
 sRGB.
 
-The object: <descripción en inglés, de la lista de abajo>
+The object is <color>: <descripción en inglés, de la lista de abajo>
 ```
+
+**El color no es opcional.** La ficha muestra el atributo `color` del catálogo,
+así que una mochila naranja en un producto que dice «azul marino» es una
+contradicción visible en pantalla. De las cinco primeras, dos no coincidían. El
+color de cada producto está en `seed/products.sample.json`, en
+`attributes.color`.
 
 La descripción en inglés de cada producto está en su ficha, en cursiva. Es la
 que conviene usar: describe el objeto sin nombre de marca inventado, que es lo
