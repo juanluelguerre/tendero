@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
@@ -125,9 +126,55 @@ internal sealed class EfProductRepository(TenderoDbContext context)
     public Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct) =>
         context.Products.AsNoTracking().FirstOrDefaultAsync(product => product.Id == id, ct);
 
-    // Same as above, and additionally untracked for a memory reason: the change
-    // tracker would hold the full catalogue's 147k products for the whole
-    // reindex, which is exactly what AsAsyncEnumerable avoids.
-    public IAsyncEnumerable<Product> StreamAllAsync(CancellationToken ct) =>
-        context.Products.AsNoTracking().OrderBy(product => product.CreatedAt).AsAsyncEnumerable();
+    /// <summary>
+    /// Every product, in batches, for the reindex to walk.
+    ///
+    /// **It reads in chunks rather than streaming, and that is a correctness
+    /// fix and not a tuning one.** `AsAsyncEnumerable` keeps a reader open on
+    /// the connection for the whole walk, and Npgsql has no MARS: the moment
+    /// anything else asks the SAME `DbContext` a question mid-walk it throws
+    /// `A command is already in progress`.
+    ///
+    /// Nothing did, until phase 4 gave the indexer an `IAvailabilityReader` —
+    /// so projecting one product now asks Inventory whether its SKUs are in
+    /// stock, on that same connection. Both halves were right; together they
+    /// made the reindex endpoint a guaranteed 500, and no test saw it because
+    /// the test double's reader is a list.
+    ///
+    /// The ids come back first in one query that finishes before anything is
+    /// projected, and the products follow a chunk at a time. Memory stays
+    /// bounded by the chunk, which is what `AsNoTracking` and the streaming
+    /// were protecting: the change tracker holding 147k products for the whole
+    /// reindex.
+    ///
+    /// At 147k the id list is a few megabytes and the walk is 1,470 queries.
+    /// That is the shape the delivery plan already defers — "reindex as a
+    /// background job", with its number recorded — and it is a different job
+    /// from this one.
+    /// </summary>
+    public async IAsyncEnumerable<Product> StreamAllAsync(
+        [EnumeratorCancellation] CancellationToken ct)
+    {
+        const int BatchSize = 100;
+
+        var ids = await context.Products
+            .AsNoTracking()
+            .OrderBy(product => product.CreatedAt)
+            .ThenBy(product => product.Id)
+            .Select(product => product.Id)
+            .ToListAsync(ct);
+
+        foreach (var chunk in ids.Chunk(BatchSize))
+        {
+            var batch = await context.Products
+                .AsNoTracking()
+                .Where(product => chunk.Contains(product.Id))
+                .OrderBy(product => product.CreatedAt)
+                .ThenBy(product => product.Id)
+                .ToListAsync(ct);
+
+            foreach (var product in batch)
+                yield return product;
+        }
+    }
 }

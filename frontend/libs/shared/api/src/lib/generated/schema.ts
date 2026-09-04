@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/attributes": {
         parameters: {
             query?: never;
@@ -601,6 +617,14 @@ export interface components {
             code: string;
             name: string;
         };
+        CategoryView: {
+            code: string;
+            parent: null | string;
+            name: string;
+            path: string[];
+            /** Format: int32 */
+            depth: number;
+        };
         CountStockRequest: {
             /** Format: int32 */
             onHand: number;
@@ -663,6 +687,9 @@ export interface components {
             entries: components["schemas"]["AuditEntryView"][];
             /** Format: int32 */
             refused: number;
+        };
+        ListCategoriesResult: {
+            items: components["schemas"]["CategoryView"][];
         };
         ListOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
@@ -1210,6 +1237,28 @@ export interface operations {
             };
         };
     };
+    ListCategories: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListCategoriesResult"];
+                };
+            };
+        };
+    };
     ListAttributeDefinitions: {
         parameters: {
             query?: never;
@@ -1658,11 +1707,13 @@ export interface operations {
     };
     SearchProducts: {
         parameters: {
-            query: {
-                q: string;
+            query?: {
+                q?: string;
                 culture?: string;
                 page?: number;
                 pageSize?: number;
+                category?: string;
+                sort?: string;
             };
             header?: never;
             path?: never;
@@ -1683,7 +1734,9 @@ export interface operations {
     };
     ReindexProducts: {
         parameters: {
-            query?: never;
+            query?: {
+                recreate?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

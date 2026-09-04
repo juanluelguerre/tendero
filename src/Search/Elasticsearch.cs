@@ -40,43 +40,64 @@ internal sealed class SearchIndexInitializer(
             var exists = await client.Indices.ExistsAsync(index, cancellationToken);
             if (exists.Exists) continue;
 
-            var response = await client.Indices.CreateAsync(index, c => c
-                .Mappings(m => m.Properties<ProductSearchDocument>(p => p
-                    .Keyword(d => d.Id)
-                    // The collapse field: it has to be a keyword, not text.
-                    .Keyword(d => d.ProductId)
-                    .Keyword(d => d.Sku)
-                    .Keyword(d => d.AxisValues)
-                    .Keyword(d => d.Culture)
-                    .Text(d => d.Name, t => t.Analyzer(analyzer))
-                    .Text(d => d.Description!, t => t.Analyzer(analyzer))
-                    .Text(d => d.Brand!, t => t.Fields(f => f.Keyword("raw")))
-                    .Keyword(d => d.Category!)
-                    // The branch, for filtering a category page. A keyword array
-                    // so a term filter on "KITCHEN" reaches everything below it.
-                    .Keyword(d => d.CategoryCodes)
-                    .Date(d => d.AvailableFrom!)
-                    .Text(d => d.CategoryPathText!, t => t.Analyzer(analyzer))
-                    .Text(d => d.AttributesText!, t => t.Analyzer(analyzer))
-                    .Keyword(d => d.Slug)
-                    .Keyword(d => d.Code)
-                    .Keyword(d => d.ImageId!)
-                    .Boolean(d => d.InStock)
-                    .DoubleNumber(d => d.PriceAmount)
-                    .DoubleNumber(d => d.PriceFrom)
-                    .DoubleNumber(d => d.PriceTo)
-                    .Keyword(d => d.PriceCurrency)
-                    .Keyword(d => d.Status))),
-                cancellationToken);
-
-            if (!response.IsValidResponse)
-                throw new InvalidOperationException($"Could not create index '{index}': {response.DebugInformation}");
-
+            await SearchIndexes.CreateAsync(client, culture, analyzer, cancellationToken);
             logger.LogInformation("Search index {Index} created with analyzer {Analyzer}", index, analyzer);
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+/// <summary>
+/// The index mapping, in one place.
+///
+/// It was inline in the startup initializer, which was fine while creating was
+/// the only thing anybody did. It is not: an index that already exists is never
+/// re-mapped, so adding a field to the document leaves the live index mapping it
+/// dynamically — and a keyword array comes back as `text`, which a term filter
+/// silently fails to match. Recreating has to use the SAME mapping as creating,
+/// and two copies of it would agree right up until somebody edited one.
+/// </summary>
+internal static class SearchIndexes
+{
+    public static async Task CreateAsync(
+        ElasticsearchClient client, string culture, string analyzer, CancellationToken ct)
+    {
+        var index = ProductSearchDocument.IndexNameFor(culture);
+
+        var response = await client.Indices.CreateAsync(index, c => c
+            .Mappings(m => m.Properties<ProductSearchDocument>(p => p
+                .Keyword(d => d.Id)
+                // The collapse field: it has to be a keyword, not text.
+                .Keyword(d => d.ProductId)
+                .Keyword(d => d.Sku)
+                .Keyword(d => d.AxisValues)
+                .Keyword(d => d.Culture)
+                .Text(d => d.Name, t => t.Analyzer(analyzer))
+                .Text(d => d.Description!, t => t.Analyzer(analyzer))
+                .Text(d => d.Brand!, t => t.Fields(f => f.Keyword("raw")))
+                .Keyword(d => d.Category!)
+                // The branch, for filtering a category page. A keyword array so
+                // a term filter on "KITCHEN" reaches everything below it.
+                .Keyword(d => d.CategoryCodes)
+                .Date(d => d.AvailableFrom!)
+                .Text(d => d.CategoryPathText!, t => t.Analyzer(analyzer))
+                .Text(d => d.AttributesText!, t => t.Analyzer(analyzer))
+                .Keyword(d => d.Slug)
+                .Keyword(d => d.Code)
+                .Keyword(d => d.ImageId!)
+                .Boolean(d => d.InStock)
+                .DoubleNumber(d => d.PriceAmount)
+                .DoubleNumber(d => d.PriceFrom)
+                .DoubleNumber(d => d.PriceTo)
+                .Keyword(d => d.PriceCurrency)
+                .Keyword(d => d.Status))),
+            ct);
+
+        if (!response.IsValidResponse)
+            throw new InvalidOperationException(
+                $"Could not create index '{index}': {response.DebugInformation}");
+    }
 }
 
 /// <summary>
@@ -92,6 +113,20 @@ internal sealed class ElasticsearchProductIndexer(
     ICategoryReader categories,
     IAvailabilityReader availability) : IProductIndexer
 {
+    public async Task RecreateAsync(CancellationToken ct = default)
+    {
+        foreach (var (culture, analyzer) in CultureAnalyzers.ByCulture)
+        {
+            var index = ProductSearchDocument.IndexNameFor(culture);
+
+            // Delete then create, and the delete is allowed to find nothing: the
+            // point is to end with an index whose mapping matches the document,
+            // not to prove one was there.
+            await client.Indices.DeleteAsync(index, ct);
+            await SearchIndexes.CreateAsync(client, culture, analyzer, ct);
+        }
+    }
+
     public async Task IndexAsync(Product product, CancellationToken ct = default)
     {
         var definitions = await attributeDefinitions.AllAsync(ct);

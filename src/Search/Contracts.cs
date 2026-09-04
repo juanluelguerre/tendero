@@ -12,6 +12,25 @@ public interface IProductIndexer
 {
     Task IndexAsync(Product product, CancellationToken ct = default);
     Task RemoveAsync(ProductId productId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Drops the indexes and creates them again from the current mapping.
+    ///
+    /// **It exists because "create it if it is missing" is not idempotent, it is
+    /// conditional** — the same distinction ADR 0012 drew about
+    /// `EnsureCreatedAsync`, which does nothing when the schema already exists
+    /// and therefore leaves every developer database silently wrong after the
+    /// first additive change. The search index had the identical hole one
+    /// component over: adding a field to the document does not add it to an
+    /// index that already exists, and Elasticsearch then maps it dynamically —
+    /// `categoryCodes` came out as `text` where the mapping says `keyword`, so a
+    /// term filter matched nothing and the category pages were empty with no
+    /// error anywhere.
+    ///
+    /// The index is a disposable projection (ADR 0012), so throwing it away is
+    /// the cheap and correct answer. What was missing was a way to ASK for it.
+    /// </summary>
+    Task RecreateAsync(CancellationToken ct = default);
 }
 
 /// <summary>

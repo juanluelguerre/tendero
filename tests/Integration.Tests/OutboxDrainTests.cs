@@ -213,6 +213,10 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
     /// </summary>
     private sealed class RecordingIndexer : IProductIndexer
     {
+        /// <summary>Nothing to recreate: this double keeps its documents in a
+        /// list, and a list has no mapping to drift.</summary>
+        public Task RecreateAsync(CancellationToken ct = default) => Task.CompletedTask;
+
         public HashSet<ProductId> Indexed { get; } = [];
         public HashSet<ProductId> Removed { get; } = [];
 

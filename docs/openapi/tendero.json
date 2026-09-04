@@ -875,6 +875,15 @@
           "Search"
         ],
         "operationId": "ReindexProducts",
+        "parameters": [
+          {
+            "name": "recreate",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",

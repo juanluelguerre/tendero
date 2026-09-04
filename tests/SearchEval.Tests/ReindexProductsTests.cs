@@ -108,6 +108,16 @@ public sealed class ReindexProductsTests
         public List<ProductId> Indexed { get; } = [];
         public List<ProductId> Removed { get; } = [];
 
+        /// <summary>Recorded rather than performed: this double has no mapping,
+        /// so the only thing worth asserting is that the command asked.</summary>
+        public bool Recreated { get; private set; }
+
+        public Task RecreateAsync(CancellationToken ct = default)
+        {
+            Recreated = true;
+            return Task.CompletedTask;
+        }
+
         public Task IndexAsync(Product product, CancellationToken ct = default)
         {
             Indexed.Add(product.Id);

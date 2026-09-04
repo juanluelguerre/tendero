@@ -40,7 +40,18 @@ namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 /// rebuilding, and that moves ownership of the mapping; it gets decided when
 /// there is a case that is not a manual reset in development.
 /// </summary>
-public sealed record ReindexProductsCommand : ICommand<ReindexProductsResult>;
+/// <param name="Recreate">
+/// Drop the indexes and rebuild their mapping before replaying, rather than
+/// only rewriting the documents.
+///
+/// **It is off by default because it is destructive and briefly empties the
+/// shop**, and on when the DOCUMENT changed shape. An index that already exists
+/// is never re-mapped, so a new field gets mapped dynamically and comes back
+/// with the wrong type — a keyword array as `text`, which a term filter fails to
+/// match while reporting nothing at all.
+/// </param>
+public sealed record ReindexProductsCommand(bool Recreate = false)
+    : ICommand<ReindexProductsResult>;
 
 public sealed record ReindexProductsResult(int Indexed, int Removed, double ElapsedSeconds);
 
@@ -48,10 +59,13 @@ public sealed class ReindexProductsEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // POST /api/search/reindex
+        // POST /api/search/reindex                — rewrite the documents
+        // POST /api/search/reindex?recreate=true   — and rebuild the mapping first
         app.MapPost("/api/search/reindex",
-            async Task<Ok<ReindexProductsResult>> (ICommandDispatcher dispatcher, CancellationToken ct) =>
-                TypedResults.Ok(await dispatcher.SendAsync(new ReindexProductsCommand(), ct)))
+            async Task<Ok<ReindexProductsResult>> (
+                   bool? recreate, ICommandDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(
+                    new ReindexProductsCommand(recreate ?? false), ct)))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Search")
             .WithName("ReindexProducts");
@@ -69,7 +83,13 @@ public sealed class ReindexProductsHandler(
         ReindexProductsCommand command, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("search.reindex");
+        activity?.SetTag("search.recreate", command.Recreate);
         var stopwatch = Stopwatch.StartNew();
+
+        // Before anything is written, so the documents land in an index whose
+        // mapping matches them.
+        if (command.Recreate)
+            await indexer.RecreateAsync(cancellationToken);
 
         int indexed = 0, removed = 0;
 
