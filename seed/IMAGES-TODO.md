@@ -4,20 +4,109 @@ Los 100 productos del catálogo de muestra, con el nombre y la descripción de
 cada uno para poder generar su imagen. **Sólo seis existen ya** — las de
 `seed/images/` — y están marcadas.
 
+## La especificación, en corto
+
+| | |
+|---|---|
+| **Tamaño** | **1400 × 1400 px**, cuadrado |
+| **Formato** | WebP calidad 80 si es fotográfico · PNG si es ilustración plana |
+| **Peso** | **≤ 200 KB** por imagen |
+| **Color** | sRGB, 8 bits, **sin canal alfa** — el fondo va pintado |
+| **Fondo** | plano, `#FAF9F7` o `#F3F1ED` (los de `design/tokens.css`) |
+| **Zona segura** | el producto dentro del **75 % central en vertical** |
+| **Texto** | ninguno, en ninguna parte de la imagen |
+| **Nombre** | `<item_id>.<extensión>`, y la extensión ha de coincidir con `seed/products.sample.json` |
+
+Todo lo de abajo es de dónde sale cada número, porque dentro de un año habrá que
+volver a decidirlo y conviene no tener que medirlo otra vez.
+
+### Por qué 1400 px
+
+Porque **los derivados están diferidos** (`docs/initial-plan.md`): una tienda de
+verdad genera miniaturas por tamaño y Tendero sirve el original. Así que este
+único fichero se usa en todas partes, y tiene que dar la talla en el sitio más
+exigente, no en el promedio.
+
+Ese sitio es la ficha de producto. El marco de la aplicación mide 1440 px
+(`--container-app`) y la ficha lo parte en dos columnas, así que la imagen
+principal ocupa unos **660 px de CSS**. En una pantalla a 2× eso son **1320
+píxeles reales**. 1400 los cubre con un margen pequeño.
+
+Las seis que ya existen son de **640 × 640**, es decir que en la ficha se están
+escalando hacia arriba. Se ve. No las voy a regenerar por eso —cumplen su papel
+de muestra de arranque— pero las nuevas no deberían nacer con el mismo problema.
+
+### Por qué el 75 % central
+
+**Porque la tarjeta de resultados recorta.** La ficha usa la imagen en 1:1, pero
+la tarjeta la mete en una caja **4:3 con `object-fit: cover`**: se escala al
+ancho y se corta el alto. De una imagen cuadrada desaparece el **25 %** — un
+12,5 % por arriba y otro tanto por abajo.
+
+O sea que lo que toque el borde superior o inferior no se verá en el buscador,
+que es donde más se mira. Deja aire: el producto centrado, ocupando como mucho
+tres cuartos de la altura.
+
+### Por qué ≤ 200 KB y por qué WebP
+
+Aritmética de repositorio público: 94 imágenes × 200 KB ≈ **19 MB**. Las seis
+PNG de ahora ocupan 148 KB entre todas porque son ilustración plana, que es lo
+que mejor comprime un PNG. Una imagen fotográfica de 1400 px en PNG se va a
+2–4 MB, y cien de esas son un cuarto de giga en un repositorio que la gente
+clona.
+
+WebP a calidad 80 deja una foto de 1400 px en 120–200 KB sin diferencia visible
+a este tamaño. JPEG también vale. La canalización acepta **PNG, JPEG, WebP y
+AVIF** (`ExternalImageReader`), así que la elección es libre — con una condición
+que se explica abajo.
+
+### Sin alfa, con el fondo pintado
+
+Las seis actuales son PNG **tipo 2 (RGB), sin canal alfa**: el fondo va dentro
+de la imagen. Conviene seguir igual. Un fondo transparente se vería sobre
+`--bg-surface`, y aunque hoy el storefront es siempre claro, es una dependencia
+entre la imagen y el tema que no hace falta contraer — y los generadores de
+imagen dejan halos en los bordes con frecuencia.
+
+Usa un gris muy claro de la paleta: `#FAF9F7` o `#F3F1ED`. Blanco puro también
+vale, pero la tarjeta ya es blanca y el producto se queda flotando sin borde.
+
+### Nada de texto
+
+La tienda es **es y en**. Una imagen con una palabra dentro es una imagen que
+está mal en uno de los dos idiomas, y no hay forma de traducirla. Tampoco
+logotipos, ni etiquetas, ni marcas de agua: las marcas de este catálogo son
+inventadas y una imagen con un logotipo inventado encima es una falsificación de
+algo que no existe.
+
+### El nombre del fichero manda
+
+El producto referencia la ruta **literalmente** en `seed/products.sample.json`:
+
+```json
+"images": ["images/B11COO0301.png"]
+```
+
+Si generas `B11COO0301.webp`, hay que cambiar también esa línea. La importación
+no adivina la extensión, y una ruta que no existe no rompe nada — simplemente no
+habrá imagen, que es la forma más silenciosa de que esto salga mal.
+
+Si vas a pasar todo el catálogo a WebP, cambia las cien de una vez con un script
+y no una a una.
+
 ## Cómo se conecta
 
-Cada fichero va en `seed/images/` con el nombre `<item_id>.png`, que es lo que
-el producto referencia en `seed/products.sample.json`. No hay nada más que
-tocar: la importación lee esa ruta, guarda la imagen bajo el hash de su
-contenido y el producto se queda con esa clave (ADR 0011).
-
-Formatos aceptados: **PNG, JPEG, WebP y AVIF**. Para ilustración plana, PNG.
-Para algo fotográfico, WebP o JPEG pesan bastante menos, y esto es un
-repositorio público — seis PNG ocupan 148 KB, y cien fotografías en PNG se
-irían a decenas de megas.
+Cada fichero va en `seed/images/`. La importación lee esa ruta, guarda la imagen
+bajo el **hash de su contenido** y el producto se queda con esa clave
+(ADR 0011). Reimportar la misma foto no la duplica; cambiarla crea una clave
+nueva.
 
 Una imagen que falte **no rompe nada**: el producto se importa igual y la ficha
-muestra el tile de reserva. Se pueden ir añadiendo de una en una.
+muestra el tile de reserva. Se pueden ir añadiendo de una en una y reimportando.
+
+El modelo admite **varias imágenes por producto** — `images` es una lista y la
+principal es la de menor orden — pero hoy todos llevan una. Si generas dos
+vistas de algo, añádelas a la lista.
 
 ## Qué han de parecer
 
@@ -28,6 +117,31 @@ por «Pulse Runner» sería *menos* honesta que una ilustración que no finge se
 nada. Las seis que existen son ilustraciones planas con los colores de
 `design/tokens.css`; mantener ese registro hace que las cien se vean como un
 catálogo y no como un collage.
+
+**Elige un registro y no lo mezcles.** Cien imágenes con el mismo encuadre, el
+mismo fondo y la misma luz parecen un catálogo; cincuenta ilustraciones y
+cincuenta fotos parecen un accidente. Da igual cuál de los dos, pero que sea uno.
+
+### Plantilla de instrucción
+
+Para pegar en el generador, cambiando sólo la última línea:
+
+```
+Product photograph for an online shop catalogue.
+Square 1:1 composition, 1400 x 1400 pixels.
+Single product, centred, occupying at most 75% of the frame height,
+with clear empty margin at the top and the bottom.
+Flat uniform background, very light warm grey (#FAF9F7). No transparency.
+Soft even studio lighting, one gentle shadow, no harsh reflections.
+No text, no logos, no labels, no watermarks, no packaging, no hands, no props.
+Neutral realistic colour, sRGB.
+
+The product: <descripción en inglés, de la lista de abajo>
+```
+
+La descripción en inglés de cada producto está en su ficha, en cursiva. Es la
+que conviene usar: describe el objeto sin nombre de marca inventado, que es lo
+que un generador entiende mejor.
 
 ## Bolsas y mochilas > Bolsas y rinoneras
 
