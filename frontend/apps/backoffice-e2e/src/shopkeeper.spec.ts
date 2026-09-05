@@ -70,7 +70,7 @@ test.describe('the backoffice', () => {
   test('every tab reaches the screen it names', async ({ page }) => {
     await signIn(page);
 
-    for (const path of ['/stock', '/orders', '/returns', '/attributes', '/promotions']) {
+    for (const path of ['/stock', '/orders', '/returns', '/attributes', '/promotions', '/audit']) {
       await page.goto(path);
 
       // A heading, not a URL: a route that resolves to a blank component would

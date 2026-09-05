@@ -7,7 +7,7 @@ import { expect, test, type Page } from '@playwright/test';
  * before it existed the only path to the cart was the search card, which works
  * at one variant per product and would not at eight.
  *
- * Everything below this level already runs — 430 tests, five of which drive the
+ * Everything below this level already runs — 503 tests, five of which drive the
  * whole commerce loop against a real Postgres and the real outbox. So this file
  * asserts only what a browser can, and the four things it checks are the four
  * that could not be checked anywhere else:
@@ -105,14 +105,25 @@ test.describe('the storefront', () => {
    * rather than only the ones with a variant.
    *
    * Skipped when the seeded catalogue has no product with a gap in its matrix,
-   * because the fixture is whatever the running stack has.
+   * because the fixture is whatever the running stack has — and on a fresh
+   * import that is NO picker at all: the seed mints one `-DEFAULT` variant per
+   * product and the matrix is declared from the backoffice (`P1-8`). The first
+   * version asserted an option was visible before deciding whether to skip,
+   * which turned a catalogue with no axes into a failure rather than a skip.
    */
   test('disables a combination it does not sell', async ({ page }) => {
     const product = await firstProduct(page);
     await page.goto(product.href);
 
+    // Wait for the buy area, which every product has, before asking about the
+    // picker, which only a product with declared axes has.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(product.name);
+
     const options = page.locator('.option');
-    await expect(options.first()).toBeVisible();
+    test.skip(
+      (await options.count()) === 0,
+      'The first product in the catalogue has no variant axes declared.',
+    );
 
     const disabled = page.locator('.option:disabled');
     test.skip(
