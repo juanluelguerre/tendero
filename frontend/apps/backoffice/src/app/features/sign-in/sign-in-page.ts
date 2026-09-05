@@ -32,6 +32,21 @@ import { AuthStore } from '@tendero/shared-auth';
 export class SignInPage {
   private readonly auth = inject(AuthStore);
 
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * Whether the person is here because their session ENDED.
+   *
+   * Read from the URL and not from the store, so it survives a reload: somebody
+   * who is unexpectedly at the door presses F5 before they read anything, and a
+   * flag in memory would have gone by then. The shell puts it there, and only
+   * when a token was actually discarded (P7-3's development issuer mints its
+   * signing key per process, so every restart of the API ends every session in
+   * every browser).
+   */
+  protected readonly expired =
+    this.route.snapshot.queryParamMap.get('reason') === 'expired';
+
   /** Named so the screen can say who is about to ask for your password. */
   protected readonly issuer = this.auth.issuer();
 
@@ -41,8 +56,7 @@ export class SignInPage {
    * screen is the shape of a login loop, and it is what happened before the
    * guard started saying where it had intercepted somebody.
    */
-  private readonly returnTo =
-    inject(ActivatedRoute).snapshot.queryParamMap.get('returnTo') ?? '/review';
+  private readonly returnTo = this.route.snapshot.queryParamMap.get('returnTo') ?? '/review';
 
   protected signIn(): void {
     this.auth.signIn(this.returnTo);

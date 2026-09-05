@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReservationRow, SkuDescription, StockRow } from '@tendero/shared-api';
+import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { without } from '@tendero/shared-util';
 import type { Subscription } from 'rxjs';
@@ -141,7 +142,9 @@ export class StockPage {
         this.saving.set(null);
         this.saved.set(key);
       },
-      error: () => {
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+
         this.saving.set(null);
         this.saveFailed.set(true);
       },
@@ -178,7 +181,9 @@ export class StockPage {
         this.loading.set(false);
         this.name(result.rows, culture);
       },
-      error: () => {
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+
         this.failed.set(true);
         this.loading.set(false);
       },

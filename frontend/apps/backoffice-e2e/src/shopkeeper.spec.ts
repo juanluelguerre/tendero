@@ -133,6 +133,55 @@ test.describe('the backoffice', () => {
     expect(labels.filter((label) => /Delivered|Entregado/.test(label)).length).toBeLessThanOrEqual(1);
   });
 
+  /**
+   * An expired session is not a server that went quiet, and the interface must
+   * not say it was.
+   *
+   * The development issuer mints its signing key per process, so every restart
+   * of the API ends every session in every browser — which makes this the most
+   * common failure a person meets here, and it used to be rendered as "the
+   * queue did not answer, try again in a moment". A 401 has to reach the door
+   * with the reason attached.
+   *
+   * Only a browser can check it: the status is the server's, the sentence is
+   * the screen's, and nothing below this layer sees both.
+   */
+  test('a session that ended sends you to the door, and the door says why', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/review');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+    // What an expired token looks like from the browser's side.
+    await page.route('**/api/**', (route) => route.fulfill({ status: 401, body: '' }));
+
+    // The interruption happens on a screen that is NOT where signing in lands
+    // by default. On the review queue the return trip would pass without
+    // carrying anything, which is a test that asserts a coincidence.
+    await page.getByRole('link', { name: /orders|pedidos/i }).click();
+
+    await expect(page).toHaveURL(/\/sign-in\?.*reason=expired/);
+    await expect(page.getByText(/session expired|sesión ha caducado/i)).toBeVisible();
+
+    // And NOT the message that blamed the server for it.
+    await expect(page.getByText(/did not answer|no ha respondido/i)).toHaveCount(0);
+
+    // The way back travels in the same parameter the guard uses. The copy on
+    // this screen promises it, so it is asserted rather than assumed.
+    await expect(page).toHaveURL(/returnTo=%2Forders/);
+
+    await page.unroute('**/api/**');
+    await page.getByRole('button', { name: /continue/i }).click();
+    if (/\/realms\//.test(page.url())) {
+      await page.locator('input[name="username"]').fill(SHOPKEEPER_SUBJECT);
+      await page.locator('input[name="password"]').fill(SHOPKEEPER_SUBJECT);
+      await page.locator('input[type="submit"], button[type="submit"]').first().click();
+    } else {
+      await page.getByRole('link', { name: SHOPKEEPER }).click();
+    }
+
+    await expect(page).toHaveURL(/\/orders$/);
+  });
+
   test('signing out sends you back to the door', async ({ page }) => {
     await signIn(page);
 

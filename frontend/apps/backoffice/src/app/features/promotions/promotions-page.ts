@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { PromotionView } from '@tendero/shared-api';
+import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { PricingService } from '../../data-access/pricing.service';
 
@@ -55,7 +56,9 @@ export class PromotionsPage {
         this.items.set(result.items);
         this.loading.set(false);
       },
-      error: () => {
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+
         this.failed.set(true);
         this.loading.set(false);
       },

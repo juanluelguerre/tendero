@@ -60,6 +60,19 @@ export class AuthStore {
    */
   private readonly token = signal<string | null>(null);
 
+  private readonly _expired = signal(false);
+
+  /**
+   * Whether the session ENDED rather than never having started.
+   *
+   * The difference is the whole point: arriving at the door because a token
+   * expired and arriving because you have not signed in yet look identical to a
+   * router, and only one of them owes the person an explanation. It is set when
+   * the interceptor discards a token the API refused, and cleared the moment a
+   * new one is read.
+   */
+  readonly expired = this._expired.asReadonly();
+
   readonly accessToken = this.token.asReadonly();
   readonly isSignedIn = computed(() => this.token() !== null);
 
@@ -205,12 +218,17 @@ export class AuthStore {
   signOut(): void {
     this.token.set(null);
 
+    // Signing out on purpose is not an expiry, and saying so at the door would
+    // tell somebody their session broke when they ended it themselves.
+    this._expired.set(false);
+
     if (this.configuration) this.oauth.logOut();
   }
 
   /** Clears the local session without a redirect. What a 401 needs. */
   discard(): void {
     this.token.set(null);
+    this._expired.set(true);
     this.oauth.logOut(true);
   }
 
@@ -238,7 +256,10 @@ export class AuthStore {
   }
 
   private readToken(): void {
-    this.token.set(this.oauth.getAccessToken() ?? null);
+    const token = this.oauth.getAccessToken() ?? null;
+
+    this.token.set(token);
+    if (token) this._expired.set(false);
   }
 }
 
@@ -247,6 +268,19 @@ export class AuthStore {
  * filter, one day somebody adds a call to a third party and sends them our token
  * along with it.
  */
+/**
+ * Whether a failed call failed because the session is over.
+ *
+ * A screen needs this to keep quiet. The interceptor has already discarded the
+ * token and the shell is already sending the person to the door, so a panel
+ * that announced "the server did not answer" would be blaming a healthy server
+ * for an expired session — which is exactly what `design/DESIGN.md` forbids:
+ * an error says what happened and what to do.
+ */
+export function isSessionExpired(error: unknown): boolean {
+  return error instanceof HttpErrorResponse && error.status === 401;
+}
+
 export const tenderoAuthInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthStore);
   const token = auth.accessToken();

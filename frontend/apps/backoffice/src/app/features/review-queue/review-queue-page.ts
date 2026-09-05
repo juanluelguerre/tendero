@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { ImportResult, ProductSummary } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
@@ -93,7 +94,9 @@ export class ReviewQueuePage {
         // server, and another reviewer may have published something meanwhile.
         this.load();
       },
-      error: () => {
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+
         this.clearPublishing(item.productId);
         this.state.set({ status: 'failed' });
       },
@@ -110,7 +113,9 @@ export class ReviewQueuePage {
         this.imported.set(result);
         this.load();
       },
-      error: () => {
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+
         this.importing.set(false);
         this.state.set({ status: 'failed' });
       },
@@ -132,7 +137,10 @@ export class ReviewQueuePage {
     this.inFlight?.unsubscribe();
     this.inFlight = this.catalog.list('draft', this.culture.active()).subscribe({
       next: (page) => this.state.set({ status: 'ready', items: page.items, total: page.total }),
-      error: () => this.state.set({ status: 'failed' }),
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+        this.state.set({ status: 'failed' });
+      },
     });
   }
 

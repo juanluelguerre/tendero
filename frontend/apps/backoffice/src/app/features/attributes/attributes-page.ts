@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AttributeDefinitionView } from '@tendero/shared-api';
+import { isSessionExpired } from '@tendero/shared-auth';
 import { CatalogService } from '../../data-access/catalog.service';
 
 /**
@@ -50,7 +51,9 @@ export class AttributesPage {
         this.items.set(result.items);
         this.loading.set(false);
       },
-      error: () => {
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+
         this.failed.set(true);
         this.loading.set(false);
       },

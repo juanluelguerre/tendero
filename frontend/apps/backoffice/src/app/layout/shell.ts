@@ -44,8 +44,23 @@ export class Shell {
     effect(() => {
       if (this.signedIn()) return;
 
+      // The reason travels in the URL rather than in a signal, so it survives
+      // the reload somebody presses when a screen surprises them. An arrival
+      // with no reason is somebody who simply has not signed in yet, and
+      // telling them their session expired would be inventing a session.
+      const expired = this.auth.expired();
+
       untracked(() => {
-        if (!this.router.url.startsWith('/sign-in')) void this.router.navigate(['/sign-in']);
+        const from = this.router.url;
+        if (from.startsWith('/sign-in')) return;
+
+        // Where they were, in the same parameter the guard uses. A session that
+        // ends under somebody mid-task and returns them to the home screen makes
+        // them navigate back to work they had already found — and the two ways
+        // of reaching this door should not differ in that.
+        void this.router.navigate(['/sign-in'], {
+          queryParams: expired ? { reason: 'expired', returnTo: from } : { returnTo: from },
+        });
       });
     });
   }
