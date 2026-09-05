@@ -53,7 +53,7 @@ public sealed class Reservation : AggregateRoot
     /// resolved, and a transition outside this table is a bug rather than a new
     /// case.
     /// </summary>
-    private static readonly Dictionary<ReservationStatus, ReservationStatus[]> AllowedTransitions = new()
+    private static readonly TransitionTable<ReservationStatus> AllowedTransitions = new()
     {
         [ReservationStatus.Held] = [ReservationStatus.Committed, ReservationStatus.Released, ReservationStatus.Expired],
         [ReservationStatus.Committed] = [],
@@ -150,8 +150,7 @@ public sealed class Reservation : AggregateRoot
 
     private void TransitionTo(TimeProvider clock, ReservationStatus target, string? reason = null)
     {
-        if (!AllowedTransitions[Status].Contains(target))
-            throw new InvalidOperationException($"A reservation cannot go from {Status} to {target}.");
+        AllowedTransitions.EnsureAllowed(Status, target, $"reservation {Id}");
 
         Status = target;
         Reason = reason;

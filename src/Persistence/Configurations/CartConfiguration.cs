@@ -1,5 +1,4 @@
 using ElGuerre.Tendero.Ordering.Domain;
-using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -27,16 +26,7 @@ internal sealed class CartConfiguration : IEntityTypeConfiguration<Cart>
         builder.ToTable("Carts", "ordering");
 
         builder.HasKey(cart => cart.Id);
-        builder.Property(cart => cart.Id)
-            .HasConversion(id => id.Value, value => new CartId(value))
-            .ValueGeneratedNever();
-
-        // Nullable: guests are first class, and a cart exists before anybody has
-        // said who they are.
-        builder.Property(cart => cart.CustomerId)
-            .HasConversion(
-                id => id!.Value.Value,
-                value => new CustomerId(value));
+        builder.Property(cart => cart.Id).ValueGeneratedNever();
 
         // 32 bytes base64url. Unique because it is a credential: two carts with
         // the same token would be a lookup that returns somebody else's basket.
@@ -62,8 +52,6 @@ internal sealed class CartConfiguration : IEntityTypeConfiguration<Cart>
 
         builder.ComplexCollection<List<CartLine>, CartLine>("_lines", line =>
         {
-            line.Property(l => l.ProductId).HasConversion(id => id.Value, value => new ProductId(value));
-            line.Property(l => l.VariantId).HasConversion(id => id.Value, value => new VariantId(value));
             line.ToJson("lines");
         });
 

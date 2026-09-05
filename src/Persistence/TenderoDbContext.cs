@@ -32,6 +32,13 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     /// </summary>
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
+    /// <summary>
+    /// Pre-convention configuration: what is true of a TYPE wherever it appears.
+    /// Today that is the strongly-typed ids; see <see cref="StronglyTypedIds"/>.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
+        StronglyTypedIds.Configure(configurationBuilder);
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());

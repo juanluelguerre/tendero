@@ -62,7 +62,7 @@ public sealed class ClaimCartEndpoint : ICarterModule
             async Task<Results<Ok<CartView>, NotFound, Conflict<string>>> (
                    HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
-                var token = http.Request.Headers["X-Cart-Token"].ToString();
+                var token = http.Request.Headers[CartHeaders.Token].ToString();
 
                 if (string.IsNullOrWhiteSpace(token))
                     return TypedResults.NotFound();

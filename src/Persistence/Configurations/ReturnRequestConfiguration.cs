@@ -1,5 +1,4 @@
 using ElGuerre.Tendero.Ordering.Domain;
-using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -23,15 +22,7 @@ internal sealed class ReturnRequestConfiguration : IEntityTypeConfiguration<Retu
         builder.ToTable("ReturnRequests", "ordering");
 
         builder.HasKey(request => request.Id);
-        builder.Property(request => request.Id)
-            .HasConversion(id => id.Value, value => new ReturnRequestId(value))
-            .ValueGeneratedNever();
-
-        builder.Property(request => request.OrderId)
-            .HasConversion(id => id.Value, value => new OrderId(value));
-
-        builder.Property(request => request.CustomerId)
-            .HasConversion(id => id.Value, value => new CustomerId(value));
+        builder.Property(request => request.Id).ValueGeneratedNever();
 
         builder.Property(request => request.Status)
             .HasConversion<string>()
@@ -53,7 +44,6 @@ internal sealed class ReturnRequestConfiguration : IEntityTypeConfiguration<Retu
 
         builder.ComplexCollection<List<ReturnLine>, ReturnLine>("_lines", line =>
         {
-            line.Property(l => l.VariantId).HasConversion(id => id.Value, value => new VariantId(value));
             line.Property(l => l.Reason).HasConversion<string>();
             line.ToJson("lines");
         });

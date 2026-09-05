@@ -47,13 +47,6 @@ builder.Services.AddOrdering(builder.Configuration);
 builder.Services.AddLexicalSearch(
     builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
-// WithEmptyValidators: Carter scans for validators and registers them as
-// SINGLETONS, and none is used here — validation lives in the dispatcher's
-// ValidationStep, which resolves them from the scope. That scan was not neutral:
-// it turned `ImportProductsValidator`, which injects the scoped
-// `ICatalogSourceRegistry`, into a captive dependency, and the API stopped
-// starting in Development with "Cannot consume scoped service … from singleton".
-// A mechanism nobody uses should not be able to bring the process down.
 // The development issuer is registered BEFORE authentication and only in
 // Development. Its own AddDevIssuer throws when the environment is not
 // Development, so the guard is on both sides.
@@ -78,6 +71,13 @@ builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
     .AllowAnyHeader()
     .AllowAnyMethod()));
 
+// WithEmptyValidators: Carter scans for validators and registers them as
+// SINGLETONS, and none is used here — validation lives in the dispatcher's
+// ValidationStep, which resolves them from the scope. That scan was not neutral:
+// it turned `ImportProductsValidator`, which injects the scoped
+// `ICatalogSourceRegistry`, into a captive dependency, and the API stopped
+// starting in Development with "Cannot consume scoped service … from singleton".
+// A mechanism nobody uses should not be able to bring the process down.
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 
 // The document is the API's shape, and from it come the frontend's types
