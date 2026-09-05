@@ -51,10 +51,15 @@ export class Shell {
       const expired = this.auth.expired();
 
       untracked(() => {
-        if (this.router.url.startsWith('/sign-in')) return;
+        const from = this.router.url;
+        if (from.startsWith('/sign-in')) return;
 
+        // Where they were, in the same parameter the guard uses. A session that
+        // ends under somebody mid-task and returns them to the home screen makes
+        // them navigate back to work they had already found — and the two ways
+        // of reaching this door should not differ in that.
         void this.router.navigate(['/sign-in'], {
-          queryParams: expired ? { reason: 'expired' } : {},
+          queryParams: expired ? { reason: 'expired', returnTo: from } : { returnTo: from },
         });
       });
     });

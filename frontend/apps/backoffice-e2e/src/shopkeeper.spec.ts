@@ -154,13 +154,32 @@ test.describe('the backoffice', () => {
     // What an expired token looks like from the browser's side.
     await page.route('**/api/**', (route) => route.fulfill({ status: 401, body: '' }));
 
-    await page.getByRole('button', { name: /import/i }).first().click();
+    // The interruption happens on a screen that is NOT where signing in lands
+    // by default. On the review queue the return trip would pass without
+    // carrying anything, which is a test that asserts a coincidence.
+    await page.getByRole('link', { name: /orders|pedidos/i }).click();
 
-    await expect(page).toHaveURL(/\/sign-in\?reason=expired$/);
+    await expect(page).toHaveURL(/\/sign-in\?.*reason=expired/);
     await expect(page.getByText(/session expired|sesión ha caducado/i)).toBeVisible();
 
     // And NOT the message that blamed the server for it.
     await expect(page.getByText(/did not answer|no ha respondido/i)).toHaveCount(0);
+
+    // The way back travels in the same parameter the guard uses. The copy on
+    // this screen promises it, so it is asserted rather than assumed.
+    await expect(page).toHaveURL(/returnTo=%2Forders/);
+
+    await page.unroute('**/api/**');
+    await page.getByRole('button', { name: /continue/i }).click();
+    if (/\/realms\//.test(page.url())) {
+      await page.locator('input[name="username"]').fill(SHOPKEEPER_SUBJECT);
+      await page.locator('input[name="password"]').fill(SHOPKEEPER_SUBJECT);
+      await page.locator('input[type="submit"], button[type="submit"]').first().click();
+    } else {
+      await page.getByRole('link', { name: SHOPKEEPER }).click();
+    }
+
+    await expect(page).toHaveURL(/\/orders$/);
   });
 
   test('signing out sends you back to the door', async ({ page }) => {

@@ -186,7 +186,7 @@
   "signIn": {
     "title": "Identifícate",
     "hint": "La tienda no te pide la contraseña — te la pide el emisor. Volverás aquí directamente.",
-    "expired": "Tu sesión ha caducado. Vuelve a entrar para continuar.",
+    "expired": "Tu sesión ha caducado. Vuelve a entrar para seguir donde estabas.",
     "noIssuer": "La API no dice en qué emisor confía. Arráncala con dotnet run --project src/AppHost.",
     "signOut": "Cerrar sesión",
     "continue": "Continuar para identificarte",
