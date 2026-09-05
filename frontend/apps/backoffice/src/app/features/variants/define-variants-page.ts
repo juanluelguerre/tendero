@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { isSessionExpired } from '@tendero/shared-auth';
 import { CatalogService } from '../../data-access/catalog.service';
 
 interface AxisDraft {
@@ -69,6 +70,11 @@ export class DefineVariantsPage {
       );
       this.created.set(response.created);
     } catch (error: unknown) {
+      // A session that ended is not a refusal from the domain, and the shell is
+      // already sending the person to the door. Saying anything here would put
+      // an error over a screen that is about to be replaced.
+      if (isSessionExpired(error)) return;
+
       // The server's 409 carries the domain's reason; showing it is more useful
       // than a "something went wrong" that forces you to open the console.
       const conflict = error as { error?: string };

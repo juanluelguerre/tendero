@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReturnView } from '@tendero/shared-api';
+import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { OrderingService, type ReturnDecision } from '../../data-access/ordering.service';
@@ -99,7 +100,9 @@ export class ReturnsPage {
         this.requests.set(result);
         this.loading.set(false);
       },
-      error: () => {
+      error: (failure: unknown) => {
+        if (isSessionExpired(failure)) return;
+
         this.failed.set(true);
         this.loading.set(false);
       },

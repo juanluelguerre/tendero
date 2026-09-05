@@ -4,6 +4,13 @@
          width="36" height="36" />
     <h1 class="card__title">{{ t('signIn.title') }}</h1>
 
+    <!-- Why they are here, when the answer is not "they arrived". A session that
+         ended without anybody pressing anything is the one case where the door
+         owes an explanation, and the copy says what happened and what to do. -->
+    @if (expired) {
+      <p class="notice" role="status">{{ t('signIn.expired') }}</p>
+    }
+
     @if (issuer) {
       <p class="muted card__hint">{{ t('signIn.hint') }}</p>
 

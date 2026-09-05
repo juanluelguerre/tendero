@@ -186,6 +186,7 @@
   "signIn": {
     "title": "Sign in",
     "hint": "The shop does not ask for your password — the issuer does. You will come straight back.",
+    "expired": "Your session expired. Sign in again to continue.",
     "noIssuer": "The API is not saying which issuer it trusts. Start it with dotnet run --project src/AppHost.",
     "signOut": "Sign out",
     "continue": "Continue to sign in",
