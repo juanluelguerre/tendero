@@ -58,7 +58,12 @@ export default [
     // Review cannot enforce that, so this does. A tool file may not import
     // HttpClient, and the day it needs one it is telling you the service it
     // should have called does not exist yet.
-    files: ['apps/*/src/app/agent/**/*.ts'],
+    //
+    // The screens are held to the same line. A page that reached the API on
+    // its own — the order page did, for a while — is a URL and an error shape
+    // that exist nowhere a tool or another page can reuse, which is the drift
+    // the rule exists to stop. `data-access/` is where HttpClient lives.
+    files: ['apps/*/src/app/agent/**/*.ts', 'apps/*/src/app/features/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -68,8 +73,9 @@ export default [
               name: '@angular/common/http',
               importNames: ['HttpClient', 'HttpHeaders', 'HttpParams'],
               message:
-                'Agent tools call the same services the UI calls. Use the data-access ' +
-                'service rather than talking to the API directly (P6-3).',
+                'Screens and agent tools call the same data-access services. Add the ' +
+                'call to a service under data-access/ rather than talking to the API ' +
+                'directly (P6-3).',
             },
           ],
         },

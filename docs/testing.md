@@ -2,16 +2,24 @@
 
 Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short.
 
+**What is in the repository today** (2026-09-05): xUnit v3, CsCheck,
+NetArchTest.Rules, Testcontainers.PostgreSql, `WebApplicationFactory`, vitest
+and Playwright — 503 backend tests, 37 frontend, 20 browser specs. NSubstitute,
+Bogus and Verify are still prescribed below and still absent: the deterministic
+fakes and the contract suites have not needed a mock, and nothing snapshots
+yet. Respawn was declined — a fresh database per test is cheaper than a reset.
+Each enters with the first test that needs it (ADR 0006).
+
 ## The pyramid, adapted to this project
 
 | Layer | Framework | Speed | When it runs |
 |---|---|---|---|
-| Unit (domain, slices) | xUnit v3 + NSubstitute | ms | every build |
+| Unit (domain, slices) | xUnit v3 (NSubstitute when a fake will not do — not needed yet) | ms | every build |
 | Property-based | CsCheck | ms | every build |
 | Contract (ports) | xUnit abstract base classes | ms–s | every build |
-| Snapshot / golden | Verify | ms | every build |
+| Snapshot / golden | Verify (planned for the UCP manifest) | ms | every build |
 | Architecture | NetArchTest.Rules | ms | every build |
-| Integration | Testcontainers + Respawn | s | `--filter Category=Integration` |
+| Integration | Testcontainers, a database per test | s | `--filter Category=Integration` |
 | Search relevance | tools/SearchEval (NDCG@10) | s | CI gate on every PR |
 | End-to-end | Playwright | s | its own CI job, after the rest |
 
@@ -42,8 +50,10 @@ Value objects carry the invariants worth generating inputs for:
 Every port ships an abstract xUnit suite; every adapter inherits it:
 
 - `CatalogSourceConnectorContractTests` → Seed, Shopify, Medusa...
-- `PaymentProviderContractTests` → Fake, stripe-mock, Stripe test (last one
-  `[Trait("Category","External")]`, excluded from CI).
+- `PaymentProviderContractTests` → Fake today; stripe-mock and Stripe test when
+  they land (the last one `[Trait("Category","External")]`, excluded from CI).
+- `IdentityProviderContractTests` → the development issuer, and Keycloak — which
+  did not pass unchanged, and that was the finding (`P7-7`).
 
 A new adapter without its contract-test subclass does not merge.
 
@@ -56,9 +66,14 @@ A new adapter without its contract-test subclass does not merge.
 
 ## Integration tests (Testcontainers)
 
-- One collection fixture boots Postgres + Elasticsearch once per test run;
-  **Respawn** (verify license at add time; fallback: our own TRUNCATE helper) resets Postgres between tests (faster than re-creating containers).
-- API tested through `WebApplicationFactory` wired to the containers.
+- One fixture boots Postgres once per test run and hands every test **a fresh
+  database** — a `CREATE DATABASE` on a warm container, which is cheaper than a
+  reset and stops the order of the tests from mattering. Respawn was declined
+  for that reason. Tests skip with a reason when Docker is absent.
+- The API is tested through `WebApplicationFactory` **without** containers
+  (`tests/Api.Tests`): neither the DbContext nor the Elastic client connects on
+  construction, so the OpenAPI document, the endpoint policies, the handler
+  composition and the development issuer are checked in process.
 - Indexing tests: import seed sample → drain outbox → assert documents exist in
   `products_es` and `products_en` with the right analyzer behavior
   (e.g. "zapatilla" matches "zapatillas").
@@ -89,7 +104,7 @@ never weakening the rule inline.
 ## End-to-end, and how little of it there should be
 
 Playwright is the **thinnest** layer here, and deliberately so. Below it there
-are already 395 tests, five of which drive the whole commerce loop against a
+are already 503 tests, five of which drive the whole commerce loop against a
 real Postgres and the real outbox. Repeating any of that in a browser buys a
 slower copy of a test that exists.
 

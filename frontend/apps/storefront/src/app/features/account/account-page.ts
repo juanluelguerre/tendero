@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import type { OrderSummary } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatDateTime, formatPrice } from '@tendero/shared-util';
+import { formatDateTime, formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { AccountService } from '../../data-access/account.service';
 import { CartStore } from '../../data-access/cart.service';
 import { ShopLinks } from '../../shop-links';
@@ -45,6 +45,7 @@ export class AccountPage {
   private readonly accounts = inject(AccountService);
   private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);
+  private readonly images = inject(ProductImageUrls);
 
   protected readonly links = inject(ShopLinks);
   protected readonly identity = this.auth.identity;
@@ -133,7 +134,7 @@ export class AccountPage {
   }
 
   protected imageUrl(imageId: string): string {
-    return `/api/images/${imageId}`;
+    return this.images.of(imageId);
   }
 
   /**

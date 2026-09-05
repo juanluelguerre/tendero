@@ -63,9 +63,7 @@ internal sealed class ReservationConfiguration : IEntityTypeConfiguration<Reserv
         // An OrderId from the SharedKernel, stored as the bare GUID. It is not a
         // foreign key and there is no navigation: Inventory knows an order has
         // this id and nothing else about it.
-        builder.Property(reservation => reservation.OrderId)
-            .HasConversion(id => id.Value, value => new OrderId(value))
-            .IsRequired();
+        builder.Property(reservation => reservation.OrderId).IsRequired();
 
         // One live hold per order. The ledger relies on it to make a retried
         // checkout return the existing reservation instead of holding the stock

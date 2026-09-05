@@ -1,5 +1,4 @@
 using ElGuerre.Tendero.Accounts.Domain;
-using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,9 +11,7 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.ToTable("Customers", "accounts");
 
         builder.HasKey(customer => customer.Id);
-        builder.Property(customer => customer.Id)
-            .HasConversion(id => id.Value, value => new CustomerId(value))
-            .ValueGeneratedNever();
+        builder.Property(customer => customer.Id).ValueGeneratedNever();
 
         // Nullable, because a guest is a Customer with no subject rather than
         // the absence of a customer. UNIQUE where it is present: a subject with
@@ -30,9 +27,6 @@ internal sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.Property(customer => customer.DisplayName).HasMaxLength(200);
         builder.Property(customer => customer.Culture).HasMaxLength(10).IsRequired();
         builder.Property(customer => customer.Segment).HasMaxLength(50).IsRequired();
-
-        builder.Property(customer => customer.SupersededBy)
-            .HasConversion(id => id!.Value.Value, value => new CustomerId(value));
 
         builder.Property(customer => customer.CreatedAt);
         builder.Property(customer => customer.UpdatedAt);

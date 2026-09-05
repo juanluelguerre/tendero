@@ -36,18 +36,22 @@ what the command is.**
 apps/
   storefront/       the shop. Roomy, light, one clay action per view
   backoffice/       dense, dark by default, 36px rows
-  backoffice-e2e/   Playwright. The browser half of the pyramid, kept thin
+  storefront-e2e/   Playwright: the shopper and the browser agent (WebMCP)
+  backoffice-e2e/   Playwright: the shopkeeper. The browser half of the pyramid, kept thin
 libs/shared/
   tokens/           bridge to design/tokens.css plus Tailwind's @theme block
   ui/               primitives with NO identity: inputs, tables, focus ring
-  util/             pipes and helpers (Money, LocalizedText resolution)
+  util/             helpers: the API base URL token, price and date formatting, image URLs
   api/              the API contract's types, generated from the OpenAPI document
-  i18n/             the Transloco wiring (not the translations)
+  i18n/             the Transloco wiring and the culture store (not the translations)
+  auth/             the OIDC redirect sign-in, the token interceptor, the route guard
+  agent/            the WebMCP registration mechanism, feature-detected (the tools stay per app)
 ```
 
 Inside each app: `layout/` (its own shell, which is **not** shared),
-`features/` (one folder per feature, twins of the backend's vertical slices) and
-`data-access/`.
+`features/` (one folder per feature, twins of the backend's vertical slices),
+`data-access/` (the only folder that talks HTTP) and, in the storefront,
+`agent/` (the tools it offers a browser agent).
 
 ## A component is three files
 
@@ -96,6 +100,10 @@ layouts share nothing but the word). Argued in `docs/adr/0010`.
   the same.
 - **Not one backend URL in the code.** The dev server proxies to the address
   Aspire injects; `proxy.conf.mjs` is the only place with a fallback localhost.
+- **Not one `HttpClient` outside `data-access/`.** A screen and an agent tool
+  reach the API through the same service, so a URL, a header and an error shape
+  exist once. An eslint rule refuses the import under `features/**` and
+  `agent/**`; the day a page needs one, the service it should call is missing.
 
 ## Commands
 
@@ -105,5 +113,6 @@ npx nx run-many -t test
 npx nx run-many -t build
 npx nx affected -t build     # only what your change touched
 
-npx nx e2e backoffice-e2e    # needs the stack up: dotnet run --project src/AppHost
+npx nx e2e storefront-e2e    # needs the stack up: dotnet run --project src/AppHost
+npx nx e2e backoffice-e2e
 ```

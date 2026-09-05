@@ -103,7 +103,7 @@ public sealed record OrderPaymentCaptured(
 public sealed class Order : AggregateRoot
 {
     // A declarative state machine: a transition outside this table is a bug.
-    private static readonly Dictionary<OrderStatus, OrderStatus[]> AllowedTransitions = new()
+    private static readonly TransitionTable<OrderStatus> AllowedTransitions = new()
     {
         [OrderStatus.Pending] = [OrderStatus.PaymentAuthorized, OrderStatus.PaymentFailed, OrderStatus.Cancelled],
         [OrderStatus.PaymentAuthorized] = [OrderStatus.Confirmed, OrderStatus.Cancelled],
@@ -349,8 +349,7 @@ public sealed class Order : AggregateRoot
     private void TransitionTo(
         TimeProvider clock, OrderStatus target, Func<DateTimeOffset, IDomainEvent> eventFactory)
     {
-        if (!AllowedTransitions[Status].Contains(target))
-            throw new InvalidOperationException($"Illegal transition {Status} -> {target} for order {Id}.");
+        AllowedTransitions.EnsureAllowed(Status, target, $"order {Id}");
 
         Status = target;
         UpdatedAt = clock.GetUtcNow();

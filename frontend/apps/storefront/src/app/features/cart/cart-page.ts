@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AppliedDiscount, CartLineView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { API_BASE_URL, formatPrice } from '@tendero/shared-util';
+import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
 import { ShopLinks } from '../../shop-links';
 
@@ -34,7 +34,7 @@ export class CartPage {
 
   protected readonly store = inject(CartStore);
   private readonly culture = inject(CultureStore);
-  private readonly baseUrl = inject(API_BASE_URL);
+  private readonly images = inject(ProductImageUrls);
 
   /** Line net, from the quote — never multiplied on the client. */
   private readonly netBySku = computed(() =>
@@ -51,7 +51,7 @@ export class CartPage {
   }
 
   protected imageUrl(line: CartLineView): string | null {
-    return line.imageId ? `${this.baseUrl}/api/images/${line.imageId}` : null;
+    return line.imageId ? this.images.of(line.imageId) : null;
   }
 
   /**

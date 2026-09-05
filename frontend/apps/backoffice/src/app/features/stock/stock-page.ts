@@ -1,8 +1,17 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReservationRow, SkuDescription, StockRow } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { without } from '@tendero/shared-util';
+import type { Subscription } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
 import { InventoryService } from '../../data-access/inventory.service';
 
@@ -139,13 +148,35 @@ export class StockPage {
     });
   }
 
+  /** The requests being answered, so a language switch cancels them rather than racing them. */
+  private inFlight?: Subscription;
+  private naming?: Subscription;
+
   constructor() {
-    this.inventory.stock(this.culture.active()).subscribe({
+    inject(DestroyRef).onDestroy(() => {
+      this.inFlight?.unsubscribe();
+      this.naming?.unsubscribe();
+    });
+
+    // Reloaded when the language changes: the warehouse labels and the product
+    // names come from the server in the requested culture, and a grid that kept
+    // its Spanish names under English headings would be the review queue's bug
+    // repeated one tab over.
+    effect(() => this.load(this.culture.active()));
+  }
+
+  private load(culture: string): void {
+    this.inFlight?.unsubscribe();
+    this.naming?.unsubscribe();
+    this.loading.set(true);
+    this.failed.set(false);
+
+    this.inFlight = this.inventory.stock(culture).subscribe({
       next: (result) => {
         this.rows.set(result.rows);
         this.reservations.set(result.reservations);
         this.loading.set(false);
-        this.name(result.rows);
+        this.name(result.rows, culture);
       },
       error: () => {
         this.failed.set(true);
@@ -166,11 +197,11 @@ export class StockPage {
    * Distinct SKUs, because two warehouses hold the same one and asking twice
    * for the same answer is the N+1 the endpoint takes a set to avoid.
    */
-  private name(rows: readonly StockRow[]): void {
+  private name(rows: readonly StockRow[], culture: string): void {
     const skus = [...new Set(rows.map((row) => row.sku))];
     if (skus.length === 0) return;
 
-    this.catalog.describeSkus(skus, this.culture.active()).subscribe({
+    this.naming = this.catalog.describeSkus(skus, culture).subscribe({
       next: (result) =>
         this.descriptions.set(
           Object.fromEntries(result.items.map((item) => [item.sku, item])),

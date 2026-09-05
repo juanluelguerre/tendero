@@ -26,16 +26,7 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
             .HasColumnType("jsonb")
             .IsRequired();
 
-        builder.Property(entry => entry.Customer)
-            .HasConversion(
-                id => id!.Value.Value,
-                value => new CustomerId(value));
-
-        builder.Property(entry => entry.Agent)
-            .HasConversion(
-                id => id!.Value.Value,
-                value => new AgentId(value))
-            .HasMaxLength(200);
+        builder.Property(entry => entry.Agent).HasMaxLength(200);
 
         builder.Property(entry => entry.Subject).HasMaxLength(200);
 

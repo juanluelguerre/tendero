@@ -7,17 +7,21 @@
    Keyed DI by source name; contract-test suite per adapter; idempotent import
    keyed on `(source, externalId)` via `ExternalReference`.
 2. **Core** — the bounded contexts: `ElGuerre.Tendero.Catalog`,
-   `ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Pricing` and
-   `ElGuerre.Tendero.Inventory`. They share no entities (ADR 0014); `Pricing` and
-   `Inventory` reference SharedKernel alone, which is what makes the promotion
-   engine a function of values and the allocation strategies testable without a
-   database.
+   `ElGuerre.Tendero.Pricing`, `ElGuerre.Tendero.Inventory`,
+   `ElGuerre.Tendero.Ordering` and `ElGuerre.Tendero.Accounts`. They share no
+   entities (ADR 0014); `Pricing` and `Inventory` reference SharedKernel alone,
+   which is what makes the promotion engine a function of values and the
+   allocation strategies testable without a database. `Search` is a projection
+   over them, not a context (ADR 0007), and the `audit` schema belongs to none of
+   them: every context writes to it through the dispatcher, `Accounts` reads it.
    Vertical slices (Carter endpoints + FluentValidation + custom CQRS
    dispatchers). Postgres is the source of truth; every side effect flows
    through domain events → Outbox (same transaction) → workers.
-3. **Exposure** — storefront and backoffice (Angular) over HTTP; UCP + MCP
-   server for AI agents (phase 3), with AP2 mandate handling and an agent
-   activity panel in the backoffice.
+3. **Exposure** — storefront and backoffice (Angular) over HTTP, behind an
+   OIDC issuer the API only ever validates (ADR 0017); WebMCP in the shopper's
+   tab (phase 6, shipped); the read-only MCP server and the UCP manifest (phase
+   9); UCP transactional with AP2 mandate handling and an agent activity panel in
+   the backoffice (phase 11).
 
 ## Canonical model
 
@@ -31,8 +35,14 @@
 - `Order` (Ordering): line snapshots (name resolved in the buyer's culture,
   price frozen), declarative `AllowedTransitions` table, `IdempotencyKey` on
   checkout (agent retries are the normal case), `Culture`.
-- SharedKernel: `Money`, `LocalizedText`, strongly-typed ids, `AggregateRoot`
-  with domain-event collection.
+- `Cart` and `ReturnRequest` (Ordering) and `Reservation` (Inventory): each
+  with its own `TransitionTable`, for the reasons the sections below give.
+- `Customer` (Accounts): a nullable `Subject`, so a guest is a customer with no
+  identity rather than the absence of one; superseded, never deleted, when an
+  account absorbs it.
+- SharedKernel: `Money`, `LocalizedText`, `Address`, strongly-typed ids,
+  `TransitionTable<TStatus>`, `AggregateRoot` with domain-event collection, and
+  the CQRS dispatchers with their two pipeline steps — validation and audit.
 
 ## Search
 
@@ -61,25 +71,36 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/catalog/products/{id}/publish` | `Catalog/Features/PublishProduct` |
 | `GET /api/images/{id}` | `Catalog/Features/GetProductImage` |
 | `GET /api/catalog/attributes` | `Catalog/Features/ListAttributeDefinitions` |
+| `GET /api/catalog/categories` | `Catalog/Features/ListCategories` |
+| `GET /api/catalog/skus` | `Catalog/Features/DescribeSkus` — names for the stock grid, across the Inventory boundary |
 | `POST /api/catalog/products/{id}/variants` | `Catalog/Features/DefineVariants` |
 | `POST /api/pricing/quote` | `Pricing/Features/QuoteCart` |
 | `GET /api/pricing/promotions` | `Pricing/Features/ListPromotions` |
+| `GET /api/pricing/offers` | `Pricing/Features/ListOffers` — what the home page shows |
 | `GET /api/inventory/stock` | `Inventory/Features/ListStock` |
 | `PUT /api/inventory/stock/{sku}/{warehouse}` | `Inventory/Features/ListStock` (CountStock) |
 | `GET /api/cart` | `Ordering/Features/ManageCart` |
 | `POST /api/cart/lines` | `Ordering/Features/ManageCart` (AddToCart) |
 | `PUT`/`DELETE /api/cart/lines/{sku}` | `Ordering/Features/ManageCart` (SetCartLine) |
+| `POST /api/cart/claim` | `Ordering/Features/ManageCart` (ClaimCart) — attaches a guest's basket after sign-in |
 | `POST /api/checkout/shipping-options` | `Ordering/Features/Checkout` (GetShippingOptions) |
 | `POST /api/checkout` | `Ordering/Features/Checkout` (PlaceOrder) |
 | `GET /api/orders` | `Ordering/Features/ListOrders` |
 | `GET /api/orders/{id}` | `Ordering/Features/GetOrder` |
+| `GET /api/orders/mine` | `Ordering/Features/ListOrders` (MyOrders) — a separate slice from the shopkeeper's list on purpose |
 | `POST /api/orders/{id}/move` | `Ordering/Features/ListOrders` (MoveOrder) |
 | `POST /api/orders/{id}/returns` | `Ordering/Features/Returns` (RequestReturn) |
 | `GET /api/returns` | `Ordering/Features/Returns` (ListReturns) |
 | `POST /api/returns/{id}/decide` | `Ordering/Features/Returns` (DecideReturn) |
 | `POST /api/payments/{provider}/webhook` | `Ordering/Features/PaymentWebhook` |
-| `GET /api/search` | `Search/Features/SearchProducts` |
+| `GET /api/search` | `Search/Features/SearchProducts` — also browses: `?category=` and `?sort=newest` with no `q` |
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
+| `POST /api/accounts/me` | `Accounts/Features/LinkIdentity` — the subject comes from the token, never from the body |
+| `GET /api/audit` | `Accounts/Features/ListAuditEntries` — opens on the refusals |
+
+Plus the development issuer's own surface under `/dev-issuer` in Development —
+discovery, JWKS, `/connect/authorize`, `/connect/token`, `/connect/logout` — which
+is protocol, not product, and is exempt from the endpoint-policy test.
 
 Any of them returning localized text resolves culture the same way — explicit
 `?culture=` → `Accept-Language` → `es` — and answers with `Content-Language` and
@@ -298,9 +319,13 @@ flowchart TB
     end
     subgraph Ctx [Contexts and capabilities]
         C[Catalog]
+        P[Pricing]
+        I[Inventory]
         O[Ordering]
+        A[Accounts]
         S[Search]
-        U[Ucp]
+        D[DevIssuer]
+        U[Ucp · phase 9]
     end
     SK[ElGuerre.Tendero.SharedKernel<br/>Money · LocalizedText · ids · CQRS · domain events]
     Exec --> Adapters --> Ctx --> SK
@@ -308,10 +333,14 @@ flowchart TB
 ```
 
 `Persistence` implements the ports the slices declare (`IProductRepository`,
-`IUnitOfWork`, `IProductReader`) and is the only project that knows EF Core
-exists; `Search` is the only one that knows Elasticsearch exists. Both facts are
-architecture tests, not conventions. `Search` referencing `Catalog` is the one
-edge that does not point straight down — see ADR 0007.
+`IUnitOfWork`, `IProductReader`, the stock ledger, the audit writer) and is the
+only project that knows EF Core exists; `Search` is the only one that knows
+Elasticsearch exists. Both facts are architecture tests, not conventions.
+`Search` referencing `Catalog` and `Inventory` — the contexts it projects — is
+the one edge that does not point straight down (ADR 0007), and `Catalog` and
+`Ordering` reference `Inventory`'s ports for availability, never its domain.
+The Docker diagram above is the target: Qdrant, Ollama and the Grafana stack
+are not declared by the AppHost until the phase that reads them (8 and 12).
 
 Architecture tests (`docs/testing.md`) enforce the downward-only rule; the
 `tests/` and `frontend/` trees sit beside these layers without entering them.

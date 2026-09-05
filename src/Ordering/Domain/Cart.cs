@@ -66,7 +66,7 @@ public sealed class Cart : AggregateRoot
     /// like ceremony and it is the reason a fourth state cannot be added by
     /// accident.
     /// </summary>
-    private static readonly Dictionary<CartStatus, CartStatus[]> AllowedTransitions = new()
+    private static readonly TransitionTable<CartStatus> AllowedTransitions = new()
     {
         [CartStatus.Open] = [CartStatus.CheckedOut, CartStatus.Abandoned],
         [CartStatus.CheckedOut] = [],
@@ -303,8 +303,7 @@ public sealed class Cart : AggregateRoot
 
     private void TransitionTo(TimeProvider clock, CartStatus target)
     {
-        if (!AllowedTransitions[Status].Contains(target))
-            throw new InvalidOperationException($"Illegal transition {Status} -> {target} for cart {Id}.");
+        AllowedTransitions.EnsureAllowed(Status, target, $"cart {Id}");
 
         Status = target;
         UpdatedAt = clock.GetUtcNow();

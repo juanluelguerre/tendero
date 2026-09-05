@@ -1,18 +1,16 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type {
   AddressRequest,
-  OrderView,
   PriceChangedResponse,
   ShippingOptionView,
 } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { API_BASE_URL, formatPrice } from '@tendero/shared-util';
-import { firstValueFrom } from 'rxjs';
+import { formatPrice } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
+import { OrderService } from '../../data-access/order.service';
 import { ShopLinks } from '../../shop-links';
 
 /**
@@ -49,8 +47,7 @@ export class CheckoutPage {
 
   protected readonly store = inject(CartStore);
   private readonly culture = inject(CultureStore);
-  private readonly baseUrl = inject(API_BASE_URL);
-  private readonly http = inject(HttpClient);
+  private readonly orders = inject(OrderService);
   private readonly router = inject(Router);
   private readonly transloco = inject(TranslocoService);
 
@@ -156,28 +153,23 @@ export class CheckoutPage {
     this.problem.set(null);
 
     try {
-      const order = await firstValueFrom(
-        this.http.post<OrderView>(
-          `${this.baseUrl}/api/checkout`,
-          {
-            shippingAddress: this.address,
-            shippingOptionCode: option.code,
-            quoteHash: quote.inputHash,
-            instrument: this.instrument(),
-            idempotencyKey: this.idempotencyKey,
-          },
-          {
-            headers: this.store.token ? { 'X-Cart-Token': this.store.token } : {},
-            params: new HttpParams().set('culture', this.culture.active()),
-          },
-        ),
+      const order = await this.orders.place(
+        {
+          shippingAddress: this.address,
+          shippingOptionCode: option.code,
+          quoteHash: quote.inputHash,
+          instrument: this.instrument(),
+          idempotencyKey: this.idempotencyKey,
+        },
+        this.store.token,
+        this.culture.active(),
       );
 
       // The basket became an order. Clearing the token is what stops the next
       // page load asking for a cart that is gone.
       this.store.clear();
 
-      await this.router.navigate(['/orders', order.orderId], { state: { order } });
+      await this.router.navigate(this.links.order(order.orderId), { state: { order } });
     } catch (error) {
       this.problem.set(this.describe(error));
 

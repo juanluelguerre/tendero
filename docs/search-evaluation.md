@@ -3,7 +3,7 @@
 ## Golden set
 
 `tools/SearchEval/golden/{culture}.json` — 50–100 curated queries per culture
-(22 today, against the 6-product seed sample):
+(22 today per culture, 268 judgments between them, against the 100-product seed):
 
 ```json
 {

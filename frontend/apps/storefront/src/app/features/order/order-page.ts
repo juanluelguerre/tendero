@@ -1,13 +1,12 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import type { OrderDetail, OrderLineView, OrderView, ReturnView } from '@tendero/shared-api';
+import type { OrderLineView, OrderView, ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { API_BASE_URL, formatPrice } from '@tendero/shared-util';
-import { firstValueFrom } from 'rxjs';
+import { formatPrice } from '@tendero/shared-util';
+import { OrderService } from '../../data-access/order.service';
 import { ShopLinks } from '../../shop-links';
 
 /**
@@ -32,8 +31,7 @@ export class OrderPage {
   /** Every link carries the language segment (P5-13). */
   protected readonly links = inject(ShopLinks);
 
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = inject(API_BASE_URL);
+  private readonly orders = inject(OrderService);
   private readonly culture = inject(CultureStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -142,19 +140,17 @@ export class OrderPage {
     this.returnMessage.set(null);
 
     try {
-      const opened = await firstValueFrom(
-        this.http.post<ReturnView>(
-          `${this.baseUrl}/api/orders/${order.orderId}/returns`,
-          {
-            lines: [...this.picked().entries()].map(([sku, line]) => ({
-              sku,
-              quantity: line.quantity,
-              reason: line.reason,
-              comment: null,
-            })),
-          },
-          { params: new HttpParams().set('culture', this.culture.active()) },
-        ),
+      const opened = await this.orders.requestReturn(
+        order.orderId,
+        {
+          lines: [...this.picked().entries()].map(([sku, line]) => ({
+            sku,
+            quantity: line.quantity,
+            reason: line.reason,
+            comment: null,
+          })),
+        },
+        this.culture.active(),
       );
 
       this.returns.update((current) => [opened, ...current]);
@@ -186,11 +182,7 @@ export class OrderPage {
     }
 
     try {
-      const detail = await firstValueFrom(
-        this.http.get<OrderDetail>(`${this.baseUrl}/api/orders/${id}`, {
-          params: new HttpParams().set('culture', this.culture.active()),
-        }),
-      );
+      const detail = await this.orders.get(id, this.culture.active());
 
       this.order.set(detail.order);
       this.returns.set(detail.returns);

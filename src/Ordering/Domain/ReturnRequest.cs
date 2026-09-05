@@ -97,7 +97,7 @@ public sealed record ReturnRefunded(
 /// </summary>
 public sealed class ReturnRequest : AggregateRoot
 {
-    private static readonly Dictionary<ReturnStatus, ReturnStatus[]> AllowedTransitions = new()
+    private static readonly TransitionTable<ReturnStatus> AllowedTransitions = new()
     {
         [ReturnStatus.Requested] = [ReturnStatus.Approved, ReturnStatus.Rejected, ReturnStatus.Cancelled],
         [ReturnStatus.Approved] = [ReturnStatus.Received, ReturnStatus.Cancelled],
@@ -284,8 +284,7 @@ public sealed class ReturnRequest : AggregateRoot
     private void TransitionTo(
         TimeProvider clock, ReturnStatus target, Func<DateTimeOffset, IDomainEvent>? eventFactory)
     {
-        if (!AllowedTransitions[Status].Contains(target))
-            throw new InvalidOperationException($"Illegal transition {Status} -> {target} for return {Id}.");
+        AllowedTransitions.EnsureAllowed(Status, target, $"return {Id}");
 
         Status = target;
         UpdatedAt = clock.GetUtcNow();

@@ -1,9 +1,19 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+  untracked,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { ImportResult, ProductSummary } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
+import type { Subscription } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
 
 type QueueState =
@@ -29,6 +39,7 @@ type QueueState =
 @Component({
   selector: 'backoffice-review-queue-page',
   imports: [RouterLink, TranslocoDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-queue-page.html',
   styleUrl: './review-queue-page.css',
 })
@@ -55,7 +66,12 @@ export class ReviewQueuePage {
     return current.status === 'ready' ? current.total : 0;
   });
 
+  /** The list being fetched. A reload cancels it rather than racing it. */
+  private inFlight?: Subscription;
+
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.inFlight?.unsubscribe());
+
     // Product names come from the server resolved into the requested culture, so
     // the queue is reloaded when the language changes. Without it the chrome
     // switches to English and the rows stay Spanish — and "missing cultures",
@@ -113,7 +129,8 @@ export class ReviewQueuePage {
   private load(): void {
     this.state.set({ status: 'loading' });
 
-    this.catalog.list('draft', this.culture.active()).subscribe({
+    this.inFlight?.unsubscribe();
+    this.inFlight = this.catalog.list('draft', this.culture.active()).subscribe({
       next: (page) => this.state.set({ status: 'ready', items: page.items, total: page.total }),
       error: () => this.state.set({ status: 'failed' }),
     });

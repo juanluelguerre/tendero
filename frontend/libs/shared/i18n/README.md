@@ -1,7 +1,8 @@
 # shared-i18n
 
-This library was generated with [Nx](https://nx.dev).
+The Transloco wiring, the culture store and the `provideTenderoI18n` bootstrap —
+not the translations, which belong to each app. It also hosts the repository-wide
+tests that are about neither app: the design-token rule (no hex outside
+`design/tokens.css`), the app icons and the refusal copy.
 
-## Running unit tests
-
-Run `nx test shared-i18n` to execute the unit tests.
+`npx nx test shared-i18n`

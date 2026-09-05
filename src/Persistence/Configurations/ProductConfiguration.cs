@@ -12,9 +12,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.ToTable("Products", "catalog");
 
         builder.HasKey(p => p.Id);
-        builder.Property(p => p.Id)
-            .HasConversion(id => id.Value, value => new ProductId(value))
-            .ValueGeneratedNever();
+        builder.Property(p => p.Id).ValueGeneratedNever();
 
         // Nothing user-facing in flat columns (invariant 6): localized text is
         // stored as {"es": "…", "en": "…"} and reads back in psql.
@@ -80,7 +78,6 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         // stays untouched.
         builder.ComplexCollection<List<ProductImage>, ProductImage>("_images", image =>
         {
-            image.Property(i => i.Id).HasConversion(id => id.Value, value => new ImageId(value));
             // The alternative text is LocalizedText: inside the JSON it travels
             // as the same culture -> text dictionary as the rest of the catalogue.
             image.Property(i => i.Alt)

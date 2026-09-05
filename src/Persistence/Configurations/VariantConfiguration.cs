@@ -21,9 +21,7 @@ internal sealed class VariantConfiguration : IEntityTypeConfiguration<Variant>
         builder.ToTable("Variants", "catalog");
         builder.HasKey(variant => variant.Id);
 
-        builder.Property(variant => variant.Id)
-            .HasConversion(id => id.Value, value => new VariantId(value))
-            .ValueGeneratedNever();
+        builder.Property(variant => variant.Id).ValueGeneratedNever();
 
         builder.Property(variant => variant.Sku).HasMaxLength(100).IsRequired();
 
@@ -41,9 +39,6 @@ internal sealed class VariantConfiguration : IEntityTypeConfiguration<Variant>
         builder.Property(variant => variant.Status).HasConversion<string>().HasMaxLength(20);
 
         builder.Property(variant => variant.Image)
-            .HasConversion(
-                id => id!.Value.Value,
-                value => new ImageId(value))
             .HasColumnName("ImageId")
             .HasMaxLength(64);
 
