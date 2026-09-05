@@ -31,9 +31,25 @@ expression in the package, targets net8.0 and pins the 8.x Elastic client, which
 would fight the 9.x client Search uses. It is a plain container resource in the
 AppHost instead.
 
-Not added, because nothing uses them yet: NSubstitute, Bogus, Verify, CsCheck,
-Testcontainers, Respawn, EF Core Design. Each enters with the first test that
-needs it, and gets its licence checked then.
+Not added at the time, because nothing used them yet: NSubstitute, Bogus, Verify,
+CsCheck, Testcontainers, Respawn, EF Core Design. Each enters with the first test
+that needs it, and gets its licence checked then.
+
+**Added since, each checked at its version** (kept here so the review stays one
+file): `Microsoft.EntityFrameworkCore.Design` and `Testcontainers.PostgreSql`
+4.14.0 (both MIT) with the migrations (phase 0); `Microsoft.AspNetCore.OpenApi`,
+`Microsoft.AspNetCore.Authentication.JwtBearer` and
+`Microsoft.AspNetCore.Mvc.Testing` (MIT, the framework's own line) with the
+contract test and the identity port (phase 0); `CsCheck` 4.8.0 (MIT) with the
+promotion properties (phase 3); `Aspire.Hosting.JavaScript` 13.5.3 (MIT) for the
+two Angular apps and `Aspire.Hosting.Keycloak` 13.5.3-preview.1 (MIT, its only
+Aspire dependency being exactly the 13.5.3 the AppHost resolves — `P7-5`) with
+the issuer swap (phase 7); and on npm, `angular-oauth2-oidc` 22.0.2 (MIT) for the
+redirect sign-in. **Respawn was declined**: a fresh database per test is cheaper
+than a reset. NSubstitute, Bogus and Verify are still not in, for the original
+reason. The CommunityToolkit Ollama hosting package verified above is no longer
+referenced — it left with the flag article 07 is about, and comes back with
+phase 8.
 
 ## Known friction with the preview line
 

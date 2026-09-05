@@ -6,8 +6,10 @@ The AI-native shopkeeper: an ecommerce platform for humans and AI agents.
 code quality and architectural clarity matter more than shipping fast.
 
 Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
-`ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Search`,
-`ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Ucp`). Project file name,
+`ElGuerre.Tendero.Pricing`, `ElGuerre.Tendero.Inventory`,
+`ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Accounts`,
+`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.SharedKernel`; `Ucp` is a
+placeholder README until phase 9). Project file name,
 assembly name and root namespace are the same string; the folders under `src/`
 drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope in
 `frontend/` stays `@tendero/*` — npm scopes and .NET namespaces do not have to
@@ -90,10 +92,11 @@ being stale.
 1. **Bounded contexts share no entities** (ADR 0014 — the principle, not a
    count). A crossing carries values or an event record, never a reference:
    orders snapshot product name/price into `OrderLine`, an applied discount
-   snapshots the promotion's code and label. Today: `Catalog`, `Ordering`,
-   `Pricing`. `Pricing` references SharedKernel and nothing else, and an
-   architecture rule computes that by reflection — that purity is what makes its
-   engine verifiable with properties.
+   snapshots the promotion's code and label. Today: `Catalog`, `Pricing`,
+   `Inventory`, `Ordering`, `Accounts`. `Pricing` and `Inventory` reference
+   SharedKernel and nothing else, and an architecture rule computes that by
+   reflection — that purity is what makes the promotion engine verifiable with
+   properties and the allocation strategies testable without a database.
 2. **Vertical slices**: one folder per feature under `Features/`. Slices never
    reference other slices; shared behavior goes down (SharedKernel) or out (ports).
    Reference pattern: `Catalog/Features/ImportProducts`.
@@ -103,7 +106,9 @@ being stale.
 4. **Domain purity**: `*.Domain` code references SharedKernel only. No EF,
    no HTTP, no Elastic types. Architecture tests enforce this — run them.
 5. **State machines are tables**: `Order.AllowedTransitions` is the single source
-   of truth. Never add a status change outside `TransitionTo`. In Catalog,
+   of truth. Never add a status change outside `TransitionTo`. The table is a
+   `TransitionTable<TStatus>` from the SharedKernel — the edges stay declared
+   beside the aggregate, the guard and its wording live once. In Catalog,
    **importing never publishes**: Draft is the review queue's reason to exist,
    and only `PublishProduct` moves a product to Active (ADR 0012).
 6. **Everything user-facing is `LocalizedText`** (es/en). Never store a bare

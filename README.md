@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml"><img src="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
-  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.943%20es%20%C2%B7%200.937%20en-D85A30" alt="Search quality"></a>
+  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.813%20es%20%C2%B7%200.766%20en-D85A30" alt="Search quality"></a>
   <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-11%20(preview)-512BD4?logo=dotnet" alt=".NET 11"></a>
   <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" alt="Angular 22"></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript 6.0"></a>
@@ -28,8 +28,9 @@ code for a blog series on AI architecture.
 
 ### What runs today
 
-Phases 0–5 of [the board](docs/delivery-plan.md) are in. That means the shop
-works end to end, on a six-product catalogue:
+Phases 0–7 of [the board](docs/delivery-plan.md) are in. That means the shop
+works end to end, on a hundred-product catalogue, and a browser agent can shop
+in it:
 
 > Search it, put two things in a basket, and the cart shows one discount applied
 > and **four suppressed, each with the reason the engine gave**. Pay with the
@@ -39,8 +40,11 @@ works end to end, on a six-product catalogue:
 > 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3 before a
 > euro moves.
 
-**395 tests and 6 browser specs**, with search relevance at **NDCG@10 0.943 es /
-0.937 en** and a CI gate that fails a regression.
+**503 backend tests, 37 frontend tests and 20 browser specs**, with search
+relevance at **NDCG@10 0.813 es / 0.766 en** over the hundred-product corpus
+(re-derived when the catalogue grew from six — the old 0.943 / 0.937 are not
+comparable, and [docs/search-evaluation.md](docs/search-evaluation.md) says
+why) and a CI gate that fails a regression.
 
 The AI half is the part that is designed and not built: embeddings, hybrid
 search and the reranker are phase 8, the MCP server and the UCP manifest phase 9.
@@ -52,8 +56,10 @@ is the order this project argues for.
 
 ```mermaid
 flowchart TB
+    WM[Browser agent · WebMCP] --> SF
     SF[Storefront · Angular] --> API
     BO[Backoffice · Angular] --> API
+    IDP[dev issuer · Keycloak] --- API
     AG[AI agents] -.->|UCP / MCP · phase 9| API
     subgraph Backend [.NET 11 · Aspire]
         API[API · Carter vertical slices]
@@ -74,10 +80,10 @@ arrow. What is solid runs today.
 Key principles:
 
 - **Five bounded contexts that share no entities** — `Catalog`, `Pricing`,
-  `Inventory`, `Ordering` and `Search`. A crossing carries values or an event
-  record, never a reference: an order snapshots the product's name and price,
-  and stock is keyed on a SKU so inventory never learns what a product is
-  (ADR 0014).
+  `Inventory`, `Ordering` and `Accounts`; `Search` is a projection over them,
+  not a context. A crossing carries values or an event record, never a
+  reference: an order snapshots the product's name and price, and stock is keyed
+  on a SKU so inventory never learns what a product is (ADR 0014).
 - **The outbox is the process manager.** Placing an order holds stock, failing
   to hold it cancels the order, and cancelling gives both the stock and the
   payment hold back — every arrow an ordinary event handler, no saga framework
@@ -87,6 +93,15 @@ Key principles:
   calculators, shipping rates, payment providers, identity issuers. The `seed`
   connector, the `fake` payment provider and a development OIDC issuer are the
   defaults — clone and run, no sign-ups.
+- **Three agent surfaces, three trust models.** WebMCP runs in the shopper's
+  tab and inherits their session (shipped, phase 6); the MCP server is external
+  and read-only (phase 9); UCP + AP2 is server to server with its own principal
+  and a signed mandate (phase 11). Not alternatives — each answers a different
+  question.
+- **The identity provider is a port.** The API only ever validates tokens
+  (OIDC discovery, JWKS, signed JWT); a development issuer signs them on a fresh
+  clone and Keycloak does with two environment variables, behind one contract
+  suite (ADR 0017).
 - **Lexical search (BM25) is the permanent fallback.** AI layers degrade
   gracefully; the store never stops searching.
 - **Search quality is a CI gate**: a curated golden set is scored with NDCG@10
@@ -109,7 +124,7 @@ Design system: [design/DESIGN.md](design/DESIGN.md)
 |---|---|
 | **.NET 11 SDK, preview** | `global.json` pins a prerelease floor. `11.0.100` plus `allowPrerelease` resolves *nothing* on a preview-only machine: roll-forward only rolls up, and a preview sorts below its own release. |
 | **Node 24** (`.nvmrc`) | Angular 22 requires `^22.22.3 \|\| ^24.15.0 \|\| >=26.0.0`. Node 22.21 fails. |
-| **Docker** | Postgres and Elasticsearch. Roughly 2.5 GB on the first run. |
+| **Docker** | Postgres and Elasticsearch, roughly 2.5 GB on the first run. Keycloak, pgweb and elasticvue are declared too and start on demand from the dashboard. |
 
 The repository runs on **Linux and Windows**. Nothing in the code assumes a
 platform — every path is built with `Path.Combine` — but the setup commands
@@ -157,12 +172,16 @@ dotnet run --project src/AppHost
 One command brings up Postgres, Elasticsearch, the API, the outbox worker and
 **both Angular apps**, with the Aspire dashboard in front. The frontends get the
 API address injected, so no URL is hardcoded anywhere in application code.
+Every fixed port is deliberately off its default — 5432 and 9200 are somebody's
+work services — and Keycloak, pgweb and elasticvue are declared but only start
+when you press *Start* on the dashboard (`src/AppHost/README.md`).
 
 | | |
 |---|---|
 | Storefront | http://localhost:4200 |
 | Backoffice | http://localhost:4201 |
 | Aspire dashboard | http://localhost:15130 |
+| Postgres · Elasticsearch | 55432 · 59200 |
 
 Then import the sample catalogue and search it — through the storefront's own
 dev-server proxy, which is the same path the browser uses:
@@ -190,7 +209,7 @@ purpose, so recreating its container loses the documents while Postgres keeps
 the catalogue — rebuild it from Postgres instead of reimporting:
 
 ```bash
-curl -X POST http://localhost:4200/api/search/reindex   # {"indexed":6,"removed":0,…}
+curl -X POST http://localhost:4200/api/search/reindex   # {"indexed":100,"removed":0,…}
 ```
 
 ### The search quality gate
@@ -218,7 +237,8 @@ The browser specs need the stack running and Chromium installed once:
 
 ```bash
 cd frontend && npx playwright install chromium
-npx nx e2e backoffice-e2e
+npx nx e2e storefront-e2e     # the shopper, and the browser agent
+npx nx e2e backoffice-e2e     # the shopkeeper
 ```
 
 `npx nx` when you type it, `nx` inside a `package.json` script — Nx is a local
@@ -235,6 +255,7 @@ src/
   Pricing/                 # price lists, promotions, tax — references SharedKernel ONLY
   Inventory/               # warehouses, stock, reservations — SharedKernel only too
   Ordering/                # cart, checkout, orders, payments, returns, the stock saga
+  Accounts/                # customers and guests, the guest claim, the audit log's reader
   Search/                  # indexing and lexical search (hybrid in phase 8)
   Ucp/                     # UCP + MCP server for AI agents (phase 9; a README today)
   DevIssuer/               # OIDC discovery, JWKS and signed tokens, Development only
@@ -242,10 +263,11 @@ src/
   Persistence/             # the only project that knows EF Core exists
   ServiceDefaults/         # OTel, health checks, service discovery
 frontend/                  # Nx workspace
-  apps/storefront/         # light, roomy: search, cart, checkout, orders, returns
-  apps/backoffice/         # dense, dark: review, attributes, promotions, stock, orders
-  apps/backoffice-e2e/     # Playwright — the thinnest layer of the pyramid
-  libs/shared/             # tokens, ui, util, api, i18n — boundaries enforced by lint
+  apps/storefront/         # light, roomy: home, search, product page, cart, checkout, orders, account
+  apps/backoffice/         # dense, dark: review, attributes, promotions, stock, orders, returns, audit
+  apps/*-e2e/              # Playwright — the thinnest layer of the pyramid
+  libs/shared/             # tokens, ui, util, api, i18n, auth, agent — boundaries enforced by lint
+keycloak/                  # the committed realm: users, roles and clients for a fresh clone
 brand/                     # logo, icons, brand guide
 design/                    # tokens.css — the single source of truth for four surfaces
 seed/                      # sample dataset (ABO-style schema, es/en)
@@ -256,10 +278,11 @@ tests/                     # unit, contract, architecture, integration, API
 
 ## Testing strategy
 
-**395 tests and 6 browser specs**, and the table below is what each layer is
-for. Only tools actually in the repository are listed: NSubstitute, Bogus and
-Verify are still prescribed by `docs/testing.md` and still absent, and Respawn
-was declined — a fresh database per test turned out cheaper than a reset.
+**503 backend tests, 37 frontend tests and 20 browser specs**, and the table
+below is what each layer is for. Only tools actually in the repository are
+listed: NSubstitute, Bogus and Verify are still prescribed by `docs/testing.md`
+and still absent, and Respawn was declined — a fresh database per test turned
+out cheaper than a reset.
 
 | Layer | Tools | What it protects |
 |---|---|---|
@@ -268,7 +291,8 @@ was declined — a fresh database per test turned out cheaper than a reset.
 | Contract | xUnit abstract suites | Every connector, allocation strategy, tax calculator, shipping rate, payment provider and identity issuer honours its port |
 | Architecture | NetArchTest.Rules | Domain never references infra; slices stay independent; `Pricing` and `Inventory` see only the SharedKernel |
 | Integration | Testcontainers | A real Postgres: the outbox drain, the migration baseline, and the commerce loop end to end |
-| Design tokens | vitest | Not one hex outside `design/tokens.css`, across every stylesheet in the repo |
+| API in process | `WebApplicationFactory` | The OpenAPI document equals the committed one; every endpoint states who may call it; every handler resolves; the OIDC contract against both issuers |
+| Frontend | vitest | The culture store, the agent tools and their degradation, and not one hex outside `design/tokens.css` across every stylesheet in the repo |
 | Search quality | Golden set + NDCG@10 in CI | Relevance never regresses silently |
 | End-to-end | Playwright | The browser: the route guard, the token interceptor, and a table that never keeps its own copy of a state machine |
 
@@ -276,7 +300,8 @@ was declined — a fresh database per test turned out cheaper than a reset.
 dotnet test                                   # unit, property, contract, architecture
 dotnet test --filter Category=Integration     # spins up containers
 dotnet run --project tools/SearchEval         # relevance report
-cd frontend && npx nx e2e backoffice-e2e      # needs the stack up
+cd frontend && npx nx run-many -t lint test   # boundaries, tokens, unit tests
+npx nx e2e storefront-e2e backoffice-e2e      # needs the stack up
 ```
 
 More: [docs/testing.md](docs/testing.md) · [docs/search-evaluation.md](docs/search-evaluation.md)
@@ -294,9 +319,9 @@ deferred with its measured number — is
 | 2 | Localized attributes and taxonomy | ✅ **es 0.860 → 0.943, en 0.720 → 0.937** |
 | 3 | Price lists, promotions with combination rules, tax | ✅ 73 pricing tests |
 | 4 | Inventory: two warehouses, reservations, the stock saga on the outbox | ✅ |
-| 5 | Cart, checkout, payments, returns | ✅ 11/13 — the PDP and the storefront spec remain |
-| 6 | WebMCP in the storefront | 🔜 the cheapest differentiator |
-| 7 | Accounts, audit, and swapping the dev issuer for Keycloak | 🔜 |
+| 5 | Cart, checkout, payments, returns, the product page | ✅ |
+| 6 | WebMCP in the storefront | ✅ the cheapest differentiator — the agent inherits the shopper's session |
+| 7 | Accounts, audit, and swapping the dev issuer for Keycloak | ✅ the swap was two environment variables; Token Exchange waits for phase 11 |
 | 8 | Embeddings, hybrid search, evals | 🔜 |
 | 9 | Read-only MCP server and the UCP manifest | 🔜 |
 | 10 | Knowledge: product claims with source and confidence | 🔜 |
@@ -315,9 +340,9 @@ Each phase ships with an article — English first, Spanish on
 
 **Nothing is published yet**, and the first date is 2026-09-15.
 [docs/blog/index.md](docs/blog/index.md) owns the publication order, the status of
-each article and what the unfinished ones are waiting on — eight are drafted from
-shipped features and measured numbers, which is roughly four months of publishing
-without writing a new line.
+each article and what the unfinished ones are waiting on — nine are drafted from
+shipped features and measured numbers, plus two outlines writable today, which
+is roughly four and a half months of publishing without writing a new line.
 
 Raw material is collected as it happens in
 [docs/blog/notebook.md](docs/blog/notebook.md), which is where the numbers and the

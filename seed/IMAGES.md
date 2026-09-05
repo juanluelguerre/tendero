@@ -30,18 +30,22 @@ honesta que una marca que no finge ser nada.
 Colores tomados de `design/tokens.css`. Cuando entre el dataset real de ABO,
 estas se quedan como muestra de arranque sin descarga.
 
-**El catálogo son 100 productos desde 2026-09-04 y aquí hay seis imágenes.** No
-es un olvido: una imagen que no se puede leer no aborta nada — el producto se
+**El catálogo son 100 productos desde 2026-09-04 y aquí hay 8 imágenes.**
+No es un olvido: una imagen que no se puede leer no aborta nada — el producto se
 importa igual y la ficha muestra el tile de reserva, que en este repositorio es
-la ruta por defecto desde el primer día. Las noventa y cuatro que faltan están
-listadas, con su nombre y su descripción en los dos idiomas, en
+la ruta por defecto desde el primer día. El seed ya apunta a
+`images/<item_id>.webp` para los cien, así que una foto nueva es un fichero y
+nada más. Las que faltan están listadas, con su nombre y su descripción en los
+dos idiomas y la especificación (1400 × 1400, WebP, ≤ 120 KB), en
 [`IMAGES-TODO.md`](IMAGES-TODO.md).
 
 | fichero | producto |
 |---|---|
-| `B073WXYZ01.png` | Zapatillas de running Pulse Runner |
-| `B08JKLM202.png` | Mochila urbana CityPack 25L |
-| `B09PQRS303.png` | Cafetera de goteo Aroma 12 tazas |
-| `B07TUVW404.png` | Camiseta técnica de trail |
-| `B06GHIJ505.png` | Lámpara de escritorio LED |
-| `B05DEFG606.png` | Set de 3 sartenes antiadherentes |
+| `B13BAG0703.webp` | Mochila de viaje Trayecto 40L |
+| `B13BAG0706.webp` | Bolsa de deporte Vestuario 35L |
+| `B13BAG0707.webp` | Bolsa de lona Mercado |
+| `B13BAG0708.webp` | Rinonera Cinturon 3L |
+| `B13BAG0709.webp` | Neceser de viaje Aseo |
+| `B13BAG0710.webp` | Funda para portatil de 14 pulgadas |
+| `B13BAG0711.webp` | Alforja de bicicleta impermeable 20L |
+| `B13BAG0712.webp` | Organizadores de equipaje, juego de 3 |

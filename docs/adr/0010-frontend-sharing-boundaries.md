@@ -25,8 +25,8 @@ dark, sidebar with the awning stripe) share nothing but the word, and unifying
 them produces a component with a variant matrix that is worse than two
 components.
 
-Shared is split by purpose — `tokens`, `ui`, `util`, `api`, `i18n` — never one
-catch-all, and `shared/` never learns that the apps exist: no imports from
+Shared is split by purpose — `tokens`, `ui`, `util`, `api`, `i18n`, and since
+phase 0 and phase 6 `auth` and `agent` — never one catch-all, and `shared/` never learns that the apps exist: no imports from
 `apps/`, no app-named props, no `if (isBackoffice)`. A primitive that needs to
 know who uses it is not a primitive.
 

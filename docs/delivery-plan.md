@@ -14,9 +14,11 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** the storefront's look, off the board's backlog and ahead of phase 8 — **the home page is a shop now**: departments off the taxonomy phase 2 built, offers off the promotion engine, novedades off `available_from`, and a category page that browses. 495 tests, format gate clean. Merged to `develop` as PR [#1](https://github.com/juanluelguerre/tendero/pull/1) — opened as a pull request, fast-forwarded on the author's say-so, and GitHub recorded it as merged either way.
+- **Current phase:** a review pass for SOLID/DRY across back and front, on `feature/solid-dry-refactor` — uncommitted until the author says so, 503 backend tests, 37 frontend and 20 browser specs green (one honest skip), every `.md` audited against the code (see the notebook). Before that: the storefront's look, off the board's backlog and ahead of phase 8 — **the home page is a shop now**: departments off the taxonomy phase 2 built, offers off the promotion engine, novedades off `available_from`, and a category page that browses. 495 tests, format gate clean. Merged to `develop` as PR [#1](https://github.com/juanluelguerre/tendero/pull/1) — opened as a pull request, fast-forwarded on the author's say-so, and GitHub recorded it as merged either way.
 - **Next task:** the photographs, as they arrive (`seed/IMAGES-TODO.md` — the seed already points at `images/<item_id>.webp` for all hundred, so a photo is a file and nothing else); then the returns promise on the PDP, which `initial-plan.md` §2 already carries the number for. `P7-9`'s Token Exchange still waits for phase 11.
 - **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
+
+**Decisions taken 2026-09-05** — 1 · **the transition table is a type**: `TransitionTable<TStatus>` in the SharedKernel, and `Order`, `Cart`, `ReturnRequest` and `Reservation` declare their edges on it instead of each carrying its own guard and its own wording for the same refusal · 2 · **strongly-typed ids are converted once per type** through EF's pre-convention configuration, not fourteen times per property; the model snapshot did not move and the migration baseline test agreed · 3 · **a test walks every handler the API references and resolves it from the API's container**, because five composition failures in this notebook were all found by a person · 4 · **the screens are held to the agent tools' rule**: no `HttpClient` under `features/**`, so the order page and checkout go through an `OrderService` a tool can share · 5 · a page whose inputs are signals is an `rxResource` (the PDP) or holds its in-flight subscription and cancels it; a subscribe inside an effect lets the LAST answer win rather than the last one asked for · 6 · the home page and the stock grid reload on a language switch, as the review queue already did.
 
 **Decisions taken 2026-09-04** — 1 · **the API declares its issuer** at `GET /api/auth/config`; a build-time flag in each app is two places that can disagree, and they did · 2 · Keycloak is reached over Aspire's own development certificate, which the OS already trusts, so no browser warning stands between a fresh clone and a token · 3 · **a cancelled order carries why it was cancelled**, as a code the interface translates plus a detail carrying the SKU and the numbers — the reason used to exist only inside a processed outbox message · 4 · every fixed port is deliberately off the default (55432, 59200, 58443), because 5432 and 9200 are somebody's work services · 5 · **Keycloak, pgweb and elasticvue are always DECLARED and started on demand** (`WithExplicitStart`), because a resource created only behind an environment variable is invisible to anybody launching from Visual Studio — the flag now decides whether the API TRUSTS Keycloak, not whether it exists · 6 · Elasticsearch's CORS origin names elasticvue instead of `*`: a starred origin on a node bound to 127.0.0.1 lets any page the browser visits delete these indexes, and naming it is only possible because the port is fixed · 7 · **sign-in is a redirect** (Authorization Code + PKCE) for BOTH issuers: the password grant put credentials in the application and made the swap invisible, and the development issuer grew `/connect/authorize` rather than stay the easier half · 8 · `angular-oauth2-oidc` 22.0.2 added after the ADR 0006 check — MIT, peers `>=22.0.0`, one transitive dependency already present · 9 · **every container carries the Compose project label** so Docker Desktop collapses them under one `tendero` group instead of listing eight loose containers among other projects' — the label is applied over the model rather than at each call site, because three of them are created by integrations.
 
@@ -37,8 +39,8 @@ The board. Open this to know what to do next; everything else is reference.
 ## How this is ordered
 
 The sequence optimises for **what it evidences**, not for what is cheap. Nothing
-is cut for being laborious. What *is* constrained is data volume: six products,
-two warehouses, three roles. Scale work is deferred with its measured number
+is cut for being laborious. What *is* constrained is data volume: a hundred
+products, two warehouses, three roles. Scale work is deferred with its measured number
 recorded, which is better material than building it.
 
 Two hard dependencies drive everything: **auth unlocks the agent economy**
@@ -184,10 +186,10 @@ Opens the second half of the series. Write at close, publish 2027-01-19.
 
 `hecha` (2026-09-02) · priority **high** · size **L**
 
-- [ ] `P1-1` `VariantId` in SharedKernel; `Variant` child entity with SKU, price, axis values, tax class — **M**
-- [ ] `P1-2` `Variants` and `VariantExternalReferences` as tables (ADR 0008 amendment) — **M**
-- [ ] `P1-3` Implicit default variant minted at import, so every purchasable thing is a variant — **S**
-- [ ] `P1-4` `OrderLine` grows `VariantId`, `Sku`, `VariantLabel` (snapshot) — **S**
+- [x] `P1-1` `VariantId` in SharedKernel; `Variant` child entity with SKU, price, axis values, tax class — **M**
+- [x] `P1-2` `Variants` as a table (ADR 0008 amendment) — **M** · `VariantExternalReferences` is NOT built: the seed carries no per-variant source ids, and the table waits for the connector that does (the Shopify concern `P1-10` names)
+- [x] `P1-3` Implicit default variant minted at import, so every purchasable thing is a variant — **S**
+- [x] `P1-4` `OrderLine` grows `VariantId`, `Sku`, `VariantLabel` (snapshot) — **S**
 - [x] `P1-5` Index is one document per `(variant, culture)`; `inStock` waits for Inventory (phase 4) — **M**
 - [x] `P1-6` Query collapses on `productId`; the hit carries the winning variant's id, SKU and price — **M** · gate reproduces the baseline exactly, which was the whole argument
 - [x] `P1-7` Product counts via a `cardinality` aggregation, not the hit total — **S**
@@ -449,7 +451,7 @@ this one, and it is the piece that positions everything after it.
 
 ## Phase 7 · Accounts, audit, and swapping the issuer
 
-`no empezada` · priority **critical** · size **L**
+`hecha` (2026-09-04, Token Exchange excepted) · priority **critical** · size **L** · **the swap was two environment variables**
 
 Authentication already works from phase 0 against the fake issuer. This phase
 adds the *domain* half — who the customer is — and then swaps the signer for a

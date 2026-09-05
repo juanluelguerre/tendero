@@ -30,21 +30,24 @@ Verified against a clean build (0 warnings) and 117 passing tests on 2026-09-02.
 | Shipping | **Done** | Closed 2026-09-03. `Address` in the SharedKernel, frozen onto the order; `IShippingRateProvider` with `flat-rate` and `zone-rate` behind a shared contract suite. A country nobody ships to is an empty answer and not an exception, which is what lets checkout say "we do not deliver there yet". |
 | Order state machine | **Done** | Closed 2026-09-03, and finished on 2026-09-04: a stopped order now **carries why**. The reason used to travel in `OrderCancelled` and die in a processed outbox row, so an order the stock saga refused said `Cancelled` and nothing else — on the shopper's page, in the history and in the backoffice. `OrderStop` is a code the interface translates plus a detail carrying the SKU and the numbers, in the shape `AppliedDiscount` established, and a frontend test reads the codes out of `Order.cs` so a fourth one cannot ship untranslated. Closed 2026-09-03. Every transition now has a caller: checkout places and authorises, the saga confirms and cancels, the backoffice ships and delivers, the webhook fails a payment. The screen derives its buttons from the status and shows the server's refusal when it guesses wrong — the table stays the single source of truth. |
 | Returns / RMA | **Done** | Closed 2026-09-03. `ReturnRequest` as its own aggregate because returns are per LINE, with a six-state table, a closed set of five reasons, and the window opening on `OrderDelivered` — cashing a design that event's own comment made in phase 1. Receiving restocks through the ledger, damaged goods do not, and the refund carries the returned lines' share of the discount and tax. |
-| Accounts and guests | **Partial** | `src/Accounts` ships (2026-09-04). **A guest is a `Customer` with no `Subject`, not the absence of one** — an order placed without an account still belongs to a person, and modelling that person as null spreads the special case into every screen. Signing in has three outcomes and the domain tells them apart: registered, a guest LINKED (keeping its id, so yesterday's order stays theirs), or an existing account that ABSORBS the guest — superseded, never deleted, because orders still name that id. It is two requests in two contexts, because Ordering will need Accounts for order history and a dependency the other way would close a cycle. The storefront has an account page with order history — `GET /api/orders/mine`, a separate slice from the shopkeeper's list because that one may return everything and this one must never. Still Partial: the issuer is still the development one (`P7-5`…`P7-8`). |
+| Accounts and guests | **Partial** | `src/Accounts` ships (2026-09-04). **A guest is a `Customer` with no `Subject`, not the absence of one** — an order placed without an account still belongs to a person, and modelling that person as null spreads the special case into every screen. Signing in has three outcomes and the domain tells them apart: registered, a guest LINKED (keeping its id, so yesterday's order stays theirs), or an existing account that ABSORBS the guest — superseded, never deleted, because orders still name that id. It is two requests in two contexts, because Ordering will need Accounts for order history and a dependency the other way would close a cycle. The storefront has an account page with order history — `GET /api/orders/mine`, a separate slice from the shopkeeper's list because that one may return everything and this one must never. The issuer swap is done too (`P7-5`…`P7-8`): Keycloak inherits the same contract suite and `AddJwtBearer` is pointed at it with two environment variables. Still Partial: an agent acting on behalf of a person needs Token Exchange, which belongs beside the mandates in phase 11 (`P7-9`). |
 | Idempotent payments with webhooks | **Done** | Closed 2026-09-03. `IPaymentProvider` with four operations — authorise, capture, refund and **void** — one adapter and the contract suite ADR 0003 described in the present tense. The webhook verifies an HMAC over the raw body with a five-minute tolerance and tells forging, replaying and "none of our business" apart. |
 | Faceted search | **Partial** | BM25 is solid: per-language analysers, `cross_fields` + fuzzy `best_fields`, sensible boosts. But **no aggregations, no filters beyond `status: active`, no sorting, no price range, no facet counts**. Paging is `from`/`size` only. |
-| SEO | **Partial** | Half of `P5-13` closed on 2026-09-03: the query is in the URL, so a result page is shareable, bookmarkable and survives the back button. The **locale is still not**, so one route serves two languages, and the per-culture slugs are still used nowhere because there is no PDP. Nothing else either: no SSR or prerender (`@angular/ssr` is not installed), no meta or Open Graph tags beyond `viewport`, no `hreflang`, no sitemap, no structured data. |
-| Backoffice with roles | **Partial** | Closed on the auth side 2026-09-02 (phase 0): JWT validation, three policies, and every endpoint carrying a policy or an explicit `AllowAnonymous`, enforced in both directions by a test. The backoffice has a login screen, a token interceptor and a route guard. Still Partial because the issuer is the development one and the roles live in claims rather than in a domain — `Accounts` lands in phase 7. |
+| SEO | **Partial** | `P5-13` closed on 2026-09-03: the query AND the locale are in the URL (`/es/…`, `/en/…`), a path with no language gets one, and the product page carries `canonical` plus `hreflang` listing itself among its alternates. Still Partial: no SSR or prerender (`@angular/ssr` is not installed), no Open Graph tags, no sitemap, no structured data. |
+| Backoffice with roles | **Partial** | Closed on the auth side 2026-09-02 (phase 0): JWT validation, three policies, and every endpoint carrying a policy or an explicit `AllowAnonymous`, enforced in both directions by a test. The backoffice has a login screen, a token interceptor and a route guard. Both issuers serve it now — the development one and Keycloak, behind one contract suite. Still Partial only because the roles live in claims mapped to policies rather than in a domain, which is a decision (`P7-1`: a domain storing a role would be a second source of truth for authorisation), and because the third role, `agent`, has no screen of its own until phase 11. |
 | Audit | **Partial** | The WRITER ships (2026-09-03, phase 7). A dispatcher decorator records every command with who acted, on whose behalf, the outcome and the trace id — on its own connection, outside the command's transaction, because a row inside it disappears exactly when the command fails (ADR 0027). `Denied` is its own outcome, separate from `Failed`, because a rule refusing is the system working. Credentials are redacted: the guest claim and checkout both carry a cart token. The backoffice screen ships too, and it **opens on the refusals**: a log whose default view is a thousand successful publishes is a changelog. Still Partial only because the agent activity panel (phase 11) and the copilot (phase 12) are its other two readers. |
 | Observability | **Partial** | Genuinely good instrumentation, no persistence. `ActivitySource` spans with tags in every I/O slice, an outbox-lag histogram, OTel wired from the first slice. But the OTLP exporter only activates if `OTEL_EXPORTER_OTLP_ENDPOINT` is set, and **the AppHost declares no backend** — traces live in the Aspire dashboard's memory and die with it. |
 
-**Floor summary (2026-09-03, mid phase 7): 14 Done, 6 Partial, 0 Missing** — of 20.
+**Floor summary (2026-09-05, phase 7 closed but for Token Exchange): 14 Done, 6 Partial, 0 Missing** — of 20.
 
-Phases 1–5 closed the whole transactional half. The one thing still **Missing**
-is audit; the five **Partial** rows are faceted search (no aggregations), SEO
-(no locale in the URL, no SSR, no PDP), accounts (guests yes, customers no),
-the backoffice's roles (claims, not a domain) and observability (instrumented,
-no persistent backend).
+Phases 1–7 closed the whole transactional half and the identity half. Nothing
+is **Missing** any more; the six **Partial** rows are accounts (the issuer swap
+is done, Token Exchange waits for phase 11), faceted search (no aggregations),
+SEO (the locale and the query are in the URL and the PDP carries `hreflang`,
+but no SSR, no sitemap, no structured data), the backoffice's roles (claims, not
+a domain — by decision), audit (the writer and the screen ship; the agent panel
+and the copilot are its other two readers) and observability (instrumented, no
+persistent backend).
 
 (The pre-phase counts in earlier revisions of this file read "3 Done, 6 Partial,
 15 Missing" against the same twenty rows. They did not add up; these are counted
@@ -55,11 +58,12 @@ is quoted live, pays, and gets an order that holds stock, captures on shipping
 and gives the goods back on a return — every crossing between the five contexts
 running over the outbox that phase 1 built.
 
-What is left in the floor is not transactional. It is **audit**, which nothing
-writes yet and three later features read; **accounts**, which is the other half
-of the guest work; and the parts of SEO and faceted search that need screens
-nobody has built — a product detail page above all, which phase 1 deferred to
-"the cart phase" and the cart phase did not reach.
+What is left in the floor is not transactional. It is the part of SEO that
+needs a server (prerendering, a sitemap, structured data), faceted search's
+aggregations, which arrive with phase 8, and a persistent trace backend, which
+arrives with phase 12. The product detail page phase 1 deferred and the cart
+phase did not reach exists since 2026-09-03 (`P5-15`), and it is what closed the
+locale-in-the-URL half of SEO.
 
 ---
 
