@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AgentTools } from '@tendero/shared-agent';
@@ -18,6 +18,7 @@ import { CartStore } from '../data-access/cart.service';
 @Component({
   selector: 'storefront-shell',
   imports: [RouterOutlet, RouterLink, TranslocoDirective],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
 })

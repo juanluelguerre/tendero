@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
@@ -88,8 +88,14 @@ export class HomeSections {
   }
 
   constructor() {
-    const culture = this.culture.active();
+    // Re-run on a language switch: the category names, the offer labels and the
+    // product names all come from the server in the requested culture, and a
+    // home page that only retranslated its headings would show English bands
+    // over Spanish rows.
+    effect(() => this.load(this.culture.active()));
+  }
 
+  private load(culture: string): void {
     // Three independent requests, and a failure in any one of them takes only
     // its own band away. A home page that renders nothing because the promotions
     // reader is down is a shop that closes over a discount.

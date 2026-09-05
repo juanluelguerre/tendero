@@ -1,8 +1,8 @@
-import { Component, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { map } from 'rxjs';
+import { map, type Subscription } from 'rxjs';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { SearchHit } from '@tendero/shared-api';
@@ -43,6 +43,7 @@ type SearchState =
 @Component({
   selector: 'storefront-search-page',
   imports: [TranslocoDirective, RouterLink, ProductCard, HomeSections],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './search-page.html',
   styleUrl: './search-page.css',
 })
@@ -86,7 +87,16 @@ export class SearchPage {
     { initialValue: '' },
   );
 
+  /**
+   * The search being answered. A new query or a language switch cancels it
+   * rather than racing it: two answers in flight would otherwise be settled by
+   * whichever arrived last, not by whichever was asked for last.
+   */
+  private inFlight?: Subscription;
+
   constructor() {
+    inject(DestroyRef).onDestroy(() => this.inFlight?.unsubscribe());
+
     effect(() => {
       const culture = this.culture.active();
       const query = untracked(() => this.lastQuery());
@@ -109,14 +119,6 @@ export class SearchPage {
   }
 
   protected readonly state = signal<SearchState>({ status: 'idle' });
-
-  /**
-   * Images the browser could not load. A real catalogue loses them constantly —
-   * a CDN down, a deleted asset, a badly migrated URL — and a card showing the
-   * broken-image icon looks worse than one with no photo. The repo's seed points
-   * at cdn.example.com, which deliberately does not resolve, so this path is the
-   * one you see on a fresh clone.
-   */
 
   /**
    * Real queries from the golden set, not ones chosen because they look good.
@@ -151,7 +153,6 @@ export class SearchPage {
     return current.status !== 'idle';
   }
 
-  
   /**
    * Pressing search does not search: it navigates. The URL then carries the
    * query, and the effect above runs it — one path in, so the answer is the
@@ -178,12 +179,14 @@ export class SearchPage {
     // alternative is pressing the button and getting nothing back, which reads
     // as a broken shop rather than as a query that was never sent.
     if (text.length === 0) {
+      this.inFlight?.unsubscribe();
       this.lastQuery.set(null);
       this.state.set({ status: 'idle' });
       return;
     }
 
     if (text.length < MinimumQueryLength) {
+      this.inFlight?.unsubscribe();
       this.lastQuery.set(null);
       this.state.set({ status: 'tooShort' });
       return;
@@ -196,7 +199,8 @@ export class SearchPage {
   private run(text: string, culture: string, origin: { afterLanguageChange: boolean }): void {
     this.state.set({ status: 'searching' });
 
-    this.search.search(text, culture).subscribe({
+    this.inFlight?.unsubscribe();
+    this.inFlight = this.search.search(text, culture).subscribe({
       next: (page) =>
         this.state.set({
           status: 'done',
@@ -210,22 +214,4 @@ export class SearchPage {
     });
   }
 
-  /** The URL is composed here and does not come from the server: the index
-   *  stores the key, so putting a CDN in front touches neither backend nor domain. */
-  
-  /**
-   * Which SKU is in flight. A per-card flag and not a page-wide one: pressing
-   * add on one card must not grey out the rest of the results.
-   */
-
-
-  /**
-   * Adds the matched variant and leaves the shopper where they are.
-   *
-   * No redirect to the cart, deliberately. The header badge changes, which is
-   * the confirmation, and a shop that threw you out of your results after every
-   * add is a shop you buy one thing from.
-   */
-  
-  
 }

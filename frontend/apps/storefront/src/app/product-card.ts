@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from './data-access/cart.service';
 import { ProductImagePlaceholder } from './product-image-placeholder';
 import { ShopLinks } from './shop-links';
@@ -36,6 +36,7 @@ export class ProductCard {
 
   private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);
+  private readonly images = inject(ProductImageUrls);
 
   protected readonly links = inject(ShopLinks);
   protected readonly adding = signal(false);
@@ -46,7 +47,7 @@ export class ProductCard {
 
   protected imageUrl(): string | null {
     const id = this.hit().imageId;
-    return id && !this.broken() ? `/api/images/${id}` : null;
+    return id && !this.broken() ? this.images.of(id) : null;
   }
 
   protected price(): string {

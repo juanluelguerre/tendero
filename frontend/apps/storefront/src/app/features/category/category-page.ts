@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { map } from 'rxjs';
+import { map, type Subscription } from 'rxjs';
 import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { ProductSearchService } from '../../data-access/product-search.service';
@@ -75,19 +75,35 @@ export class CategoryPage {
     { initialValue: '' },
   );
 
+  /**
+   * The request being answered, so a change of code or language cancels it
+   * rather than racing it: without this the answer that arrived LAST won,
+   * whichever had been asked for last.
+   */
+  private inFlight?: Subscription;
+  private appending?: Subscription;
+
   constructor() {
+    inject(DestroyRef).onDestroy(() => {
+      this.inFlight?.unsubscribe();
+      this.appending?.unsubscribe();
+    });
+
     effect(() => {
       const code = this.code();
       const culture = this.culture.active();
 
       if (!code) return;
 
+      this.inFlight?.unsubscribe();
+      this.appending?.unsubscribe();
+      this.loadingMore.set(false);
       this.state.set({ status: 'loading' });
 
       // The taxonomy first, because a code nobody recognises is a 404 rather
       // than an empty grid — "no products here" and "no such category" are
       // different answers and only one of them is the shopper's fault.
-      this.shopFront.categories(culture).subscribe({
+      this.inFlight = this.shopFront.categories(culture).subscribe({
         next: (result) => {
           const found = result.items.find(
             (item) => item.code.toLowerCase() === code.toLowerCase(),
@@ -108,10 +124,12 @@ export class CategoryPage {
 
           this.page.set(1);
 
-          this.search.browse({ culture, category: found.code, pageSize: PageSize }).subscribe({
-            next: (page) => this.state.set({ status: 'ready', hits: page.hits, total: page.total }),
-            error: () => this.state.set({ status: 'failed' }),
-          });
+          this.inFlight = this.search
+            .browse({ culture, category: found.code, pageSize: PageSize })
+            .subscribe({
+              next: (page) => this.state.set({ status: 'ready', hits: page.hits, total: page.total }),
+              error: () => this.state.set({ status: 'failed' }),
+            });
         },
         error: () => this.state.set({ status: 'failed' }),
       });
@@ -133,7 +151,7 @@ export class CategoryPage {
     const next = this.page() + 1;
     this.loadingMore.set(true);
 
-    this.search
+    this.appending = this.search
       .browse({
         culture: this.culture.active(),
         category: category.code,

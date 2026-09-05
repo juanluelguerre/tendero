@@ -23,6 +23,9 @@ export type ShippingOptionView = Schemas['ShippingOptionView'];
 
 export type AddressRequest = Schemas['AddressRequest'];
 
+/** What checkout sends: the address, the chosen rate, the quote's fingerprint and the idempotency key. */
+export type PlaceOrderRequest = Schemas['PlaceOrderRequest'];
+
 /** An order as the confirmation page and the backoffice both read it. */
 export type OrderView = Schemas['OrderView'];
 export type OrderLineView = Schemas['OrderLineView'];
@@ -45,6 +48,9 @@ export type OrderDetail = Schemas['OrderDetail'];
  * a page that downloads a database to render six columns.
  */
 export type OrderSummary = Schemas['OrderSummary'];
+
+export type RequestReturnRequest = Schemas['RequestReturnRequest'];
+export type ReturnLineRequest = Schemas['ReturnLineRequest'];
 
 export type ReturnView = Schemas['ReturnView'];
 export type ReturnLineView = Schemas['ReturnLineView'];
