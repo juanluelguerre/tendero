@@ -254,6 +254,7 @@ updated if conventions changed · user-facing strings exist in es AND en.
 - Design system and copy voice: @design/DESIGN.md
 - Brand usage: @brand/BRAND.md
 - ADR index: @docs/adr/README.md
+- Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): @docs/glossary.md
 - Feature specs in progress: @docs/specs/
 - Blog article workflow: @docs/blog-workflow.md
 - Blog publication order and drafts: @docs/blog/index.md
