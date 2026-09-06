@@ -14,9 +14,11 @@ The board. Open this to know what to do next; everything else is reference.
 
 > Update these three lines at the end of every session. They are the point of the file.
 
-- **Current phase:** a review pass for SOLID/DRY across back and front, **merged** to `develop` as PR [#2](https://github.com/juanluelguerre/tendero/pull/2) — 503 backend tests, 37 frontend and 20 browser specs green (one honest skip), every `.md` audited against the code. Since then, an evening of environment failures on Linux under Rider, none of them in the code and all three in the notebook: two dotnet roots, nvm's PATH, and a failed `docker pull` that deletes the tag it cannot replace. Before that: the storefront's look, off the board's backlog and ahead of phase 8 — **the home page is a shop now**: departments off the taxonomy phase 2 built, offers off the promotion engine, novedades off `available_from`, and a category page that browses. 495 tests, format gate clean. Merged to `develop` as PR [#1](https://github.com/juanluelguerre/tendero/pull/1) — opened as a pull request, fast-forwarded on the author's say-so, and GitHub recorded it as merged either way.
+- **Current phase:** **the blog caught up with the code.** The four diagrams in article 00 were a photograph of 2026-09-02 and had gone quietly wrong: two bounded contexts where there are five, UCP labelled phase 3 when it is 9 and 11, Qdrant labelled phase 2 when it is 8, a shipped agent surface (WebMCP) missing entirely, and **Grafana drawn as if it ran when the AppHost does not declare it** — the exact failure the article condemns two paragraphs above it. All four regenerated from their `.html` sources through `.svg` to 2000px `.png`, the article's own table corrected (6 endpoints → 33 routes, 117 tests → 503 + 37 + 20, 13 ADRs → 21) and the prose rewritten in plainer English. Articles 16 and 17 went from broken links out of `blog/index.md` to finished drafts in the same day — the two pieces the queue had been holding that were blocked on nothing — and then **17 folded into 16 as its closing section**, because both defects were found by building the same product detail page and that is a better piece than two. Outline 09 stopped carrying the pre-100-product baseline it would have published as a "before". Before that: a review pass for SOLID/DRY across back and front, **merged** to `develop` as PR [#2](https://github.com/juanluelguerre/tendero/pull/2) — 503 backend tests, 37 frontend and 20 browser specs green (one honest skip), every `.md` audited against the code. Since then, an evening of environment failures on Linux under Rider, none of them in the code and all three in the notebook: two dotnet roots, nvm's PATH, and a failed `docker pull` that deletes the tag it cannot replace. Before that: the storefront's look, off the board's backlog and ahead of phase 8 — **the home page is a shop now**: departments off the taxonomy phase 2 built, offers off the promotion engine, novedades off `available_from`, and a category page that browses. 495 tests, format gate clean. Merged to `develop` as PR [#1](https://github.com/juanluelguerre/tendero/pull/1) — opened as a pull request, fast-forwarded on the author's say-so, and GitHub recorded it as merged either way.
 - **Next task:** the photographs, as they arrive (`seed/IMAGES-TODO.md` — the seed already points at `images/<item_id>.webp` for all hundred, so a photo is a file and nothing else); then the returns promise on the PDP, which `initial-plan.md` §2 already carries the number for. `P7-9`'s Token Exchange still waits for phase 11.
-- **Next publication:** article 00 on **2026-09-15** — PNGs exported and committed; what remains is uploading them to the WordPress media library and swapping the four relative paths
+- **Next publication:** article 00 on **2026-09-15** — the four PNGs are regenerated and current; what remains is uploading them to the WordPress media library and swapping the four relative paths
+
+**Decisions taken 2026-09-06** — 1 · **a diagram is a claim and it goes stale like any other**, so the four in article 00 are regenerated from source rather than patched, and the `.html` → `.svg` → `.png` chain is reproducible in one command · 2 · **Grafana came out of the stack diagram** because the AppHost does not declare it: the article's own "nothing is declared until code reads it" rule, applied to the article · 3 · `1 hit · score 8.91` came out of the flow diagram — that score was measured over six documents and the corpus is a hundred; the diagram says `the only Active one` now, which needs no measurement and makes the point better · 4 · **article 00 moves to plainer English (B2)**, because the English version exists for reach and the reader it is written for is not a native speaker · 5 · `blog/index.md` credited article 17 with `416 → 434` tests; fourteen of those are article 16's, and the notebook says so · 6 · **article 17 is not a post, it is the last section of 16** — the two defects were found by the same screen on the same week, so continuity beats a second byline, and the merge freed 2027-02-02 for the phase-0 article that was double-booked on 2027-01-19.
 
 **Decisions taken 2026-09-05** — 1 · **the transition table is a type**: `TransitionTable<TStatus>` in the SharedKernel, and `Order`, `Cart`, `ReturnRequest` and `Reservation` declare their edges on it instead of each carrying its own guard and its own wording for the same refusal · 2 · **strongly-typed ids are converted once per type** through EF's pre-convention configuration, not fourteen times per property; the model snapshot did not move and the migration baseline test agreed · 3 · **a test walks every handler the API references and resolves it from the API's container**, because five composition failures in this notebook were all found by a person · 4 · **the screens are held to the agent tools' rule**: no `HttpClient` under `features/**`, so the order page and checkout go through an `OrderService` a tool can share · 5 · a page whose inputs are signals is an `rxResource` (the PDP) or holds its in-flight subscription and cancels it; a subscribe inside an effect lets the LAST answer win rather than the last one asked for · 6 · the home page and the stock grid reload on a language switch, as the review queue already did.
 
@@ -63,8 +65,8 @@ important process decision in the file, because the failure mode of a developer
 blog is not running out of material — it is publishing four things in a week and
 then vanishing for two months.
 
-You start with an unusual advantage: **nine finished drafts, two writable outlines and one half-written**.
-That is roughly four and a half months of publishing without writing a new line,
+You start with an unusual advantage: **ten finished drafts and one half-written**.
+That is roughly five months of publishing without writing a new line,
 during which phases 0–5 refill the queue.
 
 | Date | Article | State |
@@ -78,9 +80,8 @@ during which phases 0–5 refill the queue.
 | 2026-12-08 | 06 · A repository that built on exactly one machine | ready |
 | 2026-12-22 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
 | 2027-01-05 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
-| 2027-01-19 | 16 · The URL that guessed which product you meant | outline — writable now, ADR 0026 carries it |
-| 2027-02-02 | 17 · The slice that could not run | outline — writable now, pairs with 16 |
-| 2027-02-16 | **NEW** · from phase 0 | write when P0 closes |
+| 2027-01-19 | 16 · The URL that guessed which product you meant | ready — carries what was article 17 as its closing section |
+| 2027-02-02 | **NEW** · from phase 0 | write when P0 closes |
 | 2027-03-02 | **NEW** · from phase 2 | write when P2 closes |
 | 2027-03-16 | **NEW** · from phase 3 | write when P3 closes |
 | … | one per closed phase, in order | |
@@ -177,7 +178,7 @@ day one against a fake issuer**.
 
 **Article.** *"The gate that never ran"* — a repo carrying a "tracked in CI"
 badge with no CI, and what it costs to make eight documented guarantees real.
-Opens the second half of the series. Write at close, publish 2027-01-19.
+Opens the second half of the series. Write at close, publish 2027-02-02.
 `#dotnet #CI #testing #ecommerce`
 
 ---

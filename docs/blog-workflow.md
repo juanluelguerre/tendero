@@ -11,10 +11,10 @@ site, not at Tendero content.
 
 What changed on 2026-09-01 is that the drafting started. `docs/blog/` now holds
 an [`index.md`](blog/index.md) with the publication order and one file per
-article — an opening piece about the project itself, eight drafted from shipped
-features and real numbers, one half drafted, and outlines for the rest — two of
-them writable today (16 and 17), the others waiting on work that does not exist
-yet. The table in `blog/index.md` is the count that is maintained. Each drafted file is **nothing
+article — an opening piece about the project itself, nine drafted from shipped
+features and real numbers, one half drafted, and outlines for the rest, all of
+them waiting on work that does not exist yet. The table in `blog/index.md` is the
+count that is maintained. Each drafted file is **nothing
 but the article**, so it can be pasted straight into WordPress; everything else
 (status, slug, excerpt, tags, what a draft is still waiting on) lives in the
 index.

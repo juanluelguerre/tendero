@@ -114,7 +114,9 @@ Key principles:
 Full plan: [docs/initial-plan.md](docs/initial-plan.md) ·
 Architecture: [docs/architecture.md](docs/architecture.md) ·
 ADRs: [docs/adr/](docs/adr/) ·
-Design system: [design/DESIGN.md](design/DESIGN.md)
+Design system: [design/DESIGN.md](design/DESIGN.md) ·
+Glossary: [docs/glossary.md](docs/glossary.md) — NDCG@10, BM25, UCP, the outbox
+and the rest of the terms this README uses without stopping to define them
 
 ## Getting started
 
