@@ -27,13 +27,13 @@ public sealed class StockSagaTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private readonly TestClock _clock = new();
-    private readonly FakeLedger _ledger = new();
-    private readonly FakeOrders _orders = new();
-    private int _saves;
+    private readonly TestClock clock = new();
+    private readonly FakeLedger ledger = new();
+    private readonly FakeOrders orders = new();
+    private int saves;
 
     private ReserveStockOnOrderPlaced OnPlaced() => new(
-        _orders, _ledger, new CountingUnitOfWork(() => _saves++), _clock,
+        this.orders, this.ledger, new CountingUnitOfWork(() => this.saves++), this.clock,
         NullLogger<ReserveStockOnOrderPlaced>.Instance);
 
     private Order Placed(params (string Sku, int Quantity)[] lines)
@@ -48,7 +48,7 @@ public sealed class StockSagaTests
             ])
             .Build();
 
-        _orders.Add(order);
+        this.orders.Add(order);
         return order;
     }
 
@@ -59,11 +59,11 @@ public sealed class StockSagaTests
     {
         var order = Placed(("SHOES", 2), ("PANS", 1));
 
-        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
 
         Assert.Equal(
             [("SHOES", 2), ("PANS", 1)],
-            _ledger.Requested.Select(request => (request.Sku, request.Quantity)));
+            this.ledger.Requested.Select(request => (request.Sku, request.Quantity)));
     }
 
     /// <summary>
@@ -76,9 +76,9 @@ public sealed class StockSagaTests
     {
         var order = Placed(("SHOES", 2), ("SHOES", 3));
 
-        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
 
-        var request = Assert.Single(_ledger.Requested);
+        var request = Assert.Single(this.ledger.Requested);
         Assert.Equal(("SHOES", 5), (request.Sku, request.Quantity));
     }
 
@@ -93,10 +93,10 @@ public sealed class StockSagaTests
     {
         var order = Placed(("SHOES", 1));
 
-        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
 
         Assert.Equal(OrderStatus.Pending, order.Status);
-        Assert.Equal(0, _saves);
+        Assert.Equal(0, this.saves);
     }
 
     // ---------- Refusing, and the compensation it triggers ----------
@@ -105,12 +105,12 @@ public sealed class StockSagaTests
     public async Task An_order_that_cannot_be_filled_is_cancelled_with_the_reason()
     {
         var order = Placed(("PANS", 2));
-        _ledger.Refuse("PANS: 2 asked for, 0 available.");
+        this.ledger.Refuse("PANS: 2 asked for, 0 available.");
 
-        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
 
         Assert.Equal(OrderStatus.Cancelled, order.Status);
-        Assert.Equal(1, _saves);
+        Assert.Equal(1, this.saves);
 
         // The cancellation raises OrderCancelled, which is what the compensation
         // arm listens to. The saga is not a call chain; it is events meeting
@@ -124,10 +124,10 @@ public sealed class StockSagaTests
     {
         var order = Placed(("SHOES", 2));
 
-        await new ReleaseStockOnOrderCancelled(_ledger)
-            .HandleAsync(new OrderCancelled(order.Id, "The customer changed their mind.", _clock.GetUtcNow()), Ct);
+        await new ReleaseStockOnOrderCancelled(this.ledger)
+            .HandleAsync(new OrderCancelled(order.Id, "The customer changed their mind.", this.clock.GetUtcNow()), Ct);
 
-        Assert.Equal([(order.Id, "The customer changed their mind.")], _ledger.Released);
+        Assert.Equal([(order.Id, "The customer changed their mind.")], this.ledger.Released);
     }
 
     /// <summary>
@@ -140,13 +140,13 @@ public sealed class StockSagaTests
     public async Task The_release_runs_for_cancellations_that_have_nothing_to_do_with_stock()
     {
         var order = Placed(("SHOES", 1));
-        order.FailPayment(_clock, "The card was declined.");
-        order.Cancel(_clock, "The card was declined.");
+        order.FailPayment(this.clock, "The card was declined.");
+        order.Cancel(this.clock, "The card was declined.");
 
         var cancelled = order.DomainEvents.OfType<OrderCancelled>().Last();
-        await new ReleaseStockOnOrderCancelled(_ledger).HandleAsync(cancelled, Ct);
+        await new ReleaseStockOnOrderCancelled(this.ledger).HandleAsync(cancelled, Ct);
 
-        Assert.Equal([(order.Id, "The card was declined.")], _ledger.Released);
+        Assert.Equal([(order.Id, "The card was declined.")], this.ledger.Released);
     }
 
     // ---------- Shipping ----------
@@ -156,10 +156,10 @@ public sealed class StockSagaTests
     {
         var order = Placed(("SHOES", 1));
 
-        await new CommitStockOnOrderShipped(_ledger)
-            .HandleAsync(new OrderShipped(order.Id, _clock.GetUtcNow()), Ct);
+        await new CommitStockOnOrderShipped(this.ledger)
+            .HandleAsync(new OrderShipped(order.Id, this.clock.GetUtcNow()), Ct);
 
-        Assert.Equal([order.Id], _ledger.Committed);
+        Assert.Equal([order.Id], this.ledger.Committed);
     }
 
     // ---------- At-least-once delivery ----------
@@ -174,55 +174,56 @@ public sealed class StockSagaTests
     public async Task An_order_that_was_paid_for_at_checkout_still_gets_its_stock()
     {
         var order = Placed(("SHOES", 1));
-        order.AuthorizePayment(_clock);
+        order.AuthorizePayment(this.clock);
 
-        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
 
-        Assert.Single(_ledger.Requested);
+        Assert.Single(this.ledger.Requested);
     }
 
     [Fact]
     public async Task An_order_that_has_moved_on_is_not_reserved_again()
     {
         var order = Placed(("SHOES", 1));
-        order.AuthorizePayment(_clock);
-        order.Confirm(_clock);
+        order.AuthorizePayment(this.clock);
+        order.Confirm(this.clock);
 
-        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, _clock.GetUtcNow()), Ct);
+        await OnPlaced().HandleAsync(new OrderPlaced(order.Id, this.clock.GetUtcNow()), Ct);
 
         // The outbox delivers at least once, and a redelivery must not hold the
         // stock a second time.
-        Assert.Empty(_ledger.Requested);
+        Assert.Empty(this.ledger.Requested);
     }
 
     [Fact]
     public async Task An_order_that_is_no_longer_there_is_not_a_crash()
     {
-        await OnPlaced().HandleAsync(new OrderPlaced(OrderId.New(), _clock.GetUtcNow()), Ct);
+        await OnPlaced().HandleAsync(new OrderPlaced(OrderId.New(), this.clock.GetUtcNow()), Ct);
 
-        Assert.Empty(_ledger.Requested);
+        Assert.Empty(this.ledger.Requested);
     }
 
     // ---------- Doubles ----------
 
     private sealed class FakeLedger : IStockLedger
     {
-        private string? _refusal;
+        private string? refusal;
 
         public List<StockRequest> Requested { get; } = [];
         public List<(OrderId, string)> Released { get; } = [];
         public List<OrderId> Committed { get; } = [];
 
-        public void Refuse(string reason) => _refusal = reason;
+        public void Refuse(string reason) => this.refusal = reason;
 
         public Task<ReservationOutcome> ReserveAsync(
             OrderId orderId, IReadOnlyList<StockRequest> requests, CancellationToken cancellationToken = default)
         {
             Requested.AddRange(requests);
 
-            return Task.FromResult(_refusal is null
-                ? ReservationOutcome.Held
-                : ReservationOutcome.Refused(_refusal));
+            return Task.FromResult(
+                this.refusal is null
+                    ? ReservationOutcome.Held
+                    : ReservationOutcome.Refused(this.refusal));
         }
 
         public Task CommitAsync(OrderId orderId, CancellationToken cancellationToken = default)
@@ -232,7 +233,7 @@ public sealed class StockSagaTests
         }
 
         public Task<bool> IsHeldAsync(OrderId orderId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_refusal is null && Requested.Count > 0);
+            Task.FromResult(this.refusal is null && Requested.Count > 0);
 
         public Task ReleaseAsync(OrderId orderId, string reason, CancellationToken cancellationToken = default)
         {
@@ -251,16 +252,15 @@ public sealed class StockSagaTests
 
     private sealed class FakeOrders : IOrderRepository
     {
-        private readonly List<Order> _orders = [];
+        private readonly List<Order> orders = [];
 
         public Task<Order?> FindByIdAsync(OrderId id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_orders.FirstOrDefault(order => order.Id == id));
+            Task.FromResult(this.orders.FirstOrDefault(order => order.Id == id));
 
-        public Task<Order?> FindByIdempotencyKeyAsync(
-            string key, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_orders.FirstOrDefault(order => order.IdempotencyKey == key));
+        public Task<Order?> FindByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default) =>
+            Task.FromResult(this.orders.FirstOrDefault(order => order.IdempotencyKey == key));
 
-        public void Add(Order order) => _orders.Add(order);
+        public void Add(Order order) => this.orders.Add(order);
     }
 
     private sealed class CountingUnitOfWork(Action onSave) : IUnitOfWork

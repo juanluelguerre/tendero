@@ -155,7 +155,7 @@ internal sealed class EfProductRepository(TenderoDbContext context)
     public async IAsyncEnumerable<Product> StreamAllAsync(
         [EnumeratorCancellation] CancellationToken ct)
     {
-        const int BatchSize = 100;
+        const int batchSize = 100;
 
         var ids = await context.Products
             .AsNoTracking()
@@ -164,7 +164,7 @@ internal sealed class EfProductRepository(TenderoDbContext context)
             .Select(product => product.Id)
             .ToListAsync(ct);
 
-        foreach (var chunk in ids.Chunk(BatchSize))
+        foreach (var chunk in ids.Chunk(batchSize))
         {
             var batch = await context.Products
                 .AsNoTracking()

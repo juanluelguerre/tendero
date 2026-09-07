@@ -143,7 +143,7 @@ internal static class Jsonb
         text => text == null ? null : ParseMoney(text));
 
     private static string FormatMoney(Money money) =>
-        string.Concat(money.Amount.ToString(CultureInfo.InvariantCulture), " ", money.Currency);
+        String.Concat(money.Amount.ToString(CultureInfo.InvariantCulture), " ", money.Currency);
 
     private static Money ParseMoney(string text)
     {
@@ -152,7 +152,7 @@ internal static class Jsonb
             throw new FormatException($"'{text}' is not a stored Money value; expected \"<amount> <currency>\".");
 
         return new Money(
-            decimal.Parse(text[..separator], CultureInfo.InvariantCulture),
+            Decimal.Parse(text[..separator], CultureInfo.InvariantCulture),
             text[(separator + 1)..]);
     }
 

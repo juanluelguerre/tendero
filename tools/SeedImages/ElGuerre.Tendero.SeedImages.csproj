@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ElGuerre.Tendero.SeedImages</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- No ProjectReference, and that is the difference with SearchEval: the
+       evaluation tool leans on Catalog's ports because it indexes through them.
+       This one reads two seed files and writes a picture. It touches no domain
+       type, so giving it one would be inventing a dependency to look consistent. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" />
+    <PackageReference Include="SkiaSharp" />
+  </ItemGroup>
+
+</Project>

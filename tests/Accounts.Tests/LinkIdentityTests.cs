@@ -154,38 +154,38 @@ public sealed class LinkIdentityTests
 
     private sealed class World
     {
-        private readonly InMemoryCustomers _customers = new();
-        private readonly CountingUnitOfWork _unitOfWork = new();
-        private readonly LinkIdentityHandler _handler;
+        private readonly InMemoryCustomers customers = new();
+        private readonly CountingUnitOfWork unitOfWork = new();
+        private readonly LinkIdentityHandler handler;
 
         private World(CommercePrincipal principal) =>
-            _handler = new LinkIdentityHandler(
-                _customers, new FixedPrincipal(principal), _unitOfWork, Clock);
+            this.handler = new LinkIdentityHandler(
+                this.customers, new FixedPrincipal(principal), this.unitOfWork, Clock);
 
         public static World WithSubject(string subject) =>
             new(new CommercePrincipal(null, null, subject, subject, ["shopper"]));
 
         public static World Anonymous() => new(CommercePrincipal.Anonymous);
 
-        public List<Customer> Customers => _customers.All;
-        public int Saves => _unitOfWork.SaveCount;
+        public List<Customer> Customers => this.customers.All;
+        public int Saves => this.unitOfWork.SaveCount;
 
         public Customer AddGuest()
         {
             var guest = Customer.Guest(Clock, "es", Segments.Retail);
-            _customers.Add(guest);
+            this.customers.Add(guest);
             return guest;
         }
 
         public Customer AddIdentified(string subject, string name)
         {
             var customer = Customer.Identified(Clock, subject, name, "es", Segments.Retail);
-            _customers.Add(customer);
+            this.customers.Add(customer);
             return customer;
         }
 
         public Task<LinkedIdentity> Link(LinkIdentityCommand command) =>
-            _handler.HandleAsync(command, TestContext.Current.CancellationToken);
+            this.handler.HandleAsync(command, TestContext.Current.CancellationToken);
     }
 
     /// <summary>A list, not a mock: what matters is what the repository ended up

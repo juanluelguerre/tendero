@@ -23,7 +23,7 @@ public enum VariantStatus
 /// </summary>
 public sealed class Variant
 {
-    private readonly Dictionary<string, string> _axisValues = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> axisValues = new(StringComparer.OrdinalIgnoreCase);
 
     public VariantId Id { get; private set; }
 
@@ -39,7 +39,7 @@ public sealed class Variant
     /// labels: a label is user-facing text and therefore <c>LocalizedText</c>,
     /// which lives on the attribute's definition (phase 2).
     /// </summary>
-    public IReadOnlyDictionary<string, string> AxisValues => _axisValues;
+    public IReadOnlyDictionary<string, string> AxisValues => this.axisValues;
 
     public string? TaxClass { get; private set; }
 
@@ -70,7 +70,7 @@ public sealed class Variant
         };
 
         foreach (var (axis, value) in axisValues)
-            variant._axisValues[axis.Trim()] = value.Trim();
+            variant.axisValues[axis.Trim()] = value.Trim();
 
         return variant;
     }
@@ -93,13 +93,14 @@ public sealed class Variant
     /// dictionary's order is not data.
     /// </summary>
     public string LabelFor(IReadOnlyList<string> axisOrder) =>
-        string.Join(" · ", axisOrder
-            .Where(_axisValues.ContainsKey)
-            .Select(axis => _axisValues[axis]));
+        string.Join(
+            " · ", axisOrder
+                .Where(this.axisValues.ContainsKey)
+                .Select(axis => this.axisValues[axis]));
 
     internal bool Matches(IReadOnlyDictionary<string, string> axisValues) =>
-        _axisValues.Count == axisValues.Count &&
+        this.axisValues.Count == axisValues.Count &&
         axisValues.All(pair =>
-            _axisValues.TryGetValue(pair.Key, out var value) &&
+            this.axisValues.TryGetValue(pair.Key, out var value) &&
             string.Equals(value, pair.Value, StringComparison.OrdinalIgnoreCase));
 }

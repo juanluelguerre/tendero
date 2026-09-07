@@ -17,17 +17,17 @@ namespace ElGuerre.Tendero.Pricing.Tests;
 /// </summary>
 public sealed class QuoteCartHandlerTests
 {
-    private readonly TestClock _clock = new();
-    private readonly FakeCatalogue _catalogue = new();
-    private readonly FakePriceLists _priceLists = new();
-    private readonly FakePromotions _promotions = new();
-    private CommercePrincipal _principal = CommercePrincipal.Anonymous;
+    private readonly TestClock clock = new();
+    private readonly FakeCatalogue catalogue = new();
+    private readonly FakePriceLists priceLists = new();
+    private readonly FakePromotions promotions = new();
+    private CommercePrincipal principal = CommercePrincipal.Anonymous;
 
     private QuoteCartHandler Handler() => new(
-        _catalogue, _priceLists, _promotions,
+        this.catalogue, this.priceLists, this.promotions,
         new PriceListResolver(), new CombiningPromotionEngine(),
-        new FakeTaxRegistry(), new FakePrincipal(() => _principal),
-        Options.Create(new PricingSeedOptions()), _clock);
+        new FakeTaxRegistry(), new FakePrincipal(() => this.principal),
+        Options.Create(new PricingSeedOptions()), this.clock);
 
     private Task<QuoteCartResult> Quote(
         string? segment = null, decimal? shipping = null, string[]? coupons = null,
@@ -63,7 +63,7 @@ public sealed class QuoteCartHandlerTests
     [Fact]
     public async Task Two_currencies_in_one_cart_are_refused()
     {
-        _catalogue.Add("DOLLARS", new Money(10m, "USD"));
+        this.catalogue.Add("DOLLARS", new Money(10m, "USD"));
 
         var result = await Quote(lines: [("SHIRT", 1), ("DOLLARS", 1)]);
 
@@ -81,7 +81,7 @@ public sealed class QuoteCartHandlerTests
     [Fact]
     public async Task A_guest_asking_for_the_vip_tariff_is_quoted_the_retail_one()
     {
-        _priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
+        this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
 
         var result = await Quote(segment: "vip", lines: [("SHIRT", 1)]);
 
@@ -92,8 +92,8 @@ public sealed class QuoteCartHandlerTests
     [Fact]
     public async Task An_authenticated_customer_gets_the_segment_they_ask_for()
     {
-        _priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
-        _principal = CommercePrincipal.Anonymous with { Subject = "ana" };
+        this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
+        this.principal = CommercePrincipal.Anonymous with { Subject = "ana" };
 
         var result = await Quote(segment: "vip", lines: [("SHIRT", 1)]);
 
@@ -107,7 +107,7 @@ public sealed class QuoteCartHandlerTests
     [Fact]
     public async Task A_quote_adds_up_lines_discounts_shipping_and_tax()
     {
-        _promotions.Add(Build.Promotion("TEN", new PercentOffLine(10m)));
+        this.promotions.Add(Build.Promotion("TEN", new PercentOffLine(10m)));
 
         var result = await Quote(shipping: 4.95m, lines: [("SHIRT", 2)]);
         var quote = result.Quote!;
@@ -126,10 +126,14 @@ public sealed class QuoteCartHandlerTests
     [Fact]
     public async Task A_suppressed_promotion_travels_with_the_quote_and_its_reason()
     {
-        _promotions.Add(Build.Promotion("BIG", new PercentOffLine(25m),
-            CombinationPolicy.ExclusiveInGroup, priority: 1, group: "seasonal"));
-        _promotions.Add(Build.Promotion("SMALL", new PercentOffLine(10m),
-            CombinationPolicy.ExclusiveInGroup, priority: 2, group: "seasonal"));
+        this.promotions.Add(
+            Build.Promotion(
+                "BIG", new PercentOffLine(25m),
+                CombinationPolicy.ExclusiveInGroup, priority: 1, group: "seasonal"));
+        this.promotions.Add(
+            Build.Promotion(
+                "SMALL", new PercentOffLine(10m),
+                CombinationPolicy.ExclusiveInGroup, priority: 2, group: "seasonal"));
 
         var quote = (await Quote(lines: [("SHIRT", 1)])).Quote!;
 
@@ -175,7 +179,7 @@ public sealed class QuoteCartHandlerTests
     {
         var before = (await Quote(lines: [("SHIRT", 1)])).Quote!;
 
-        _priceLists.Add("retail", "retail", 100, ("SHIRT", 19.90m));
+        this.priceLists.Add("retail", "retail", 100, ("SHIRT", 19.90m));
 
         var after = (await Quote(lines: [("SHIRT", 1)])).Quote!;
 
@@ -187,7 +191,7 @@ public sealed class QuoteCartHandlerTests
     {
         var before = (await Quote(lines: [("SHIRT", 1)])).Quote!;
 
-        _promotions.Add(Build.Promotion("NEW", new PercentOffLine(5m)));
+        this.promotions.Add(Build.Promotion("NEW", new PercentOffLine(5m)));
 
         var after = (await Quote(lines: [("SHIRT", 1)])).Quote!;
 
@@ -199,10 +203,10 @@ public sealed class QuoteCartHandlerTests
     {
         var quote = (await Quote(lines: [("SHIRT", 1)])).Quote!;
 
-        Assert.Equal(QuoteValidity.Valid, quote.ValidateAt(_clock.GetUtcNow(), quote.InputHash));
-        Assert.Equal(QuoteValidity.InputsChanged, quote.ValidateAt(_clock.GetUtcNow(), "something-else"));
+        Assert.Equal(QuoteValidity.Valid, quote.ValidateAt(this.clock.GetUtcNow(), quote.InputHash));
+        Assert.Equal(QuoteValidity.InputsChanged, quote.ValidateAt(this.clock.GetUtcNow(), "something-else"));
 
-        var later = _clock.Advance(PriceQuote.Lifetime + TimeSpan.FromSeconds(1));
+        var later = this.clock.Advance(PriceQuote.Lifetime + TimeSpan.FromSeconds(1));
         Assert.Equal(QuoteValidity.Expired, quote.ValidateAt(later, quote.InputHash));
     }
 
@@ -210,52 +214,56 @@ public sealed class QuoteCartHandlerTests
 
     private sealed class FakeCatalogue : IPricedItemReader
     {
-        private readonly Dictionary<string, PricedItem> _items = new(StringComparer.OrdinalIgnoreCase)
+        private readonly Dictionary<string, PricedItem> items = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["SHIRT"] = new(VariantId.New(), ProductId.New(), "SHIRT",
+            ["SHIRT"] = new(
+                VariantId.New(), ProductId.New(), "SHIRT",
                 new Money(24.50m, "EUR"), "APPAREL/SPORTSWEAR/SHIRT", null),
-            ["PAN"] = new(VariantId.New(), ProductId.New(), "PAN",
+            ["PAN"] = new(
+                VariantId.New(), ProductId.New(), "PAN",
                 new Money(44.95m, "EUR"), "HOME/KITCHEN/COOKWARE", null)
         };
 
         public void Add(string sku, Money price) =>
-            _items[sku] = new PricedItem(VariantId.New(), ProductId.New(), sku, price, null, null);
+            this.items[sku] = new PricedItem(VariantId.New(), ProductId.New(), sku, price, null, null);
 
         public Task<IReadOnlyList<PricedItem>> BySkusAsync(
             IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<PricedItem>>(
-                [.. skus.Where(_items.ContainsKey).Select(sku => _items[sku])]);
+                [.. skus.Where(this.items.ContainsKey).Select(sku => this.items[sku])]);
     }
 
     private sealed class FakePriceLists : IPriceListReader
     {
-        private readonly List<PriceList> _lists = [];
+        private readonly List<PriceList> lists = [];
 
         public void Add(string code, string segment, int priority, params (string Sku, decimal Amount)[] entries) =>
-            _lists.Add(new PriceList(code, segment, "EUR", priority,
-                [.. entries.Select(entry => new PriceListEntry(entry.Sku, new Money(entry.Amount, "EUR")))]));
+            this.lists.Add(
+                new PriceList(
+                    code, segment, "EUR", priority,
+                    [.. entries.Select(entry => new PriceListEntry(entry.Sku, new Money(entry.Amount, "EUR")))]));
 
         public Task<PriceBook> BookAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(new PriceBook([.. _lists]));
+            Task.FromResult(new PriceBook([.. this.lists]));
     }
 
     private sealed class FakePromotions : IPromotionReader
     {
-        private readonly List<Promotion> _promotions = [];
+        private readonly List<Promotion> promotions = [];
 
-        public void Add(Promotion promotion) => _promotions.Add(promotion);
+        public void Add(Promotion promotion) => this.promotions.Add(promotion);
 
         public Task<IReadOnlyList<Promotion>> AllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Promotion>>([.. _promotions]);
+            Task.FromResult<IReadOnlyList<Promotion>>([.. this.promotions]);
     }
 
     private sealed class FakeTaxRegistry : ITaxCalculatorRegistry
     {
-        private readonly ITaxCalculator _calculator = new FlatVatTaxCalculator(Options.Create(new FlatVatOptions()));
+        private readonly ITaxCalculator calculator = new FlatVatTaxCalculator(Options.Create(new FlatVatOptions()));
 
         public IReadOnlyCollection<string> Keys => [FlatVatTaxCalculator.Key];
 
-        public ITaxCalculator Get(string key) => _calculator;
+        public ITaxCalculator Get(string key) => this.calculator;
     }
 
     private sealed class FakePrincipal(Func<CommercePrincipal> current) : IPrincipalAccessor

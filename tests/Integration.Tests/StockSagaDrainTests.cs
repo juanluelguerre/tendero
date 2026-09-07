@@ -169,13 +169,13 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
     /// </summary>
     private sealed class SagaScope : IAsyncDisposable
     {
-        private readonly ServiceProvider _provider;
-        private readonly TenderoDbContextFactory _factory;
+        private readonly ServiceProvider provider;
+        private readonly TenderoDbContextFactory factory;
 
         private SagaScope(ServiceProvider provider, TenderoDbContextFactory factory)
         {
-            _provider = provider;
-            _factory = factory;
+            this.provider = provider;
+            this.factory = factory;
         }
 
         public static async Task<SagaScope> CreateAsync(PostgresFixture postgres, string name)
@@ -210,7 +210,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
 
         public async Task ReceiveAsync(string sku, string warehouse, int quantity, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             await scope.ServiceProvider.GetRequiredService<IStockLedger>()
                 .ReceiveAsync(sku, warehouse, quantity, ct);
         }
@@ -218,7 +218,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
         public async Task<Order> PlaceAsync(
             IReadOnlyList<(string Sku, int Quantity)> lines, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var orders = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
@@ -240,7 +240,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
 
         public async Task CancelAsync(OrderId id, string reason, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var orders = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
@@ -253,7 +253,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
         /// <summary>The same loop as <c>OutboxProcessor</c>, without the timer.</summary>
         public async Task<int> DrainAsync(CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
             var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
 
@@ -277,7 +277,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
         /// at-least-once actually means in practice.</summary>
         public async Task RedeliverAsync<TEvent>(CancellationToken ct) where TEvent : IDomainEvent
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
             var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
 
@@ -292,7 +292,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
 
         public async Task<int> ReservedAsync(string sku, string warehouse, CancellationToken ct)
         {
-            await using var context = _factory.Create();
+            await using var context = this.factory.Create();
             var row = await context.StockItems.AsNoTracking()
                 .FirstOrDefaultAsync(item => item.Sku == sku && item.WarehouseCode == warehouse, ct);
 
@@ -301,7 +301,7 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
 
         public async Task<int> AvailableAsync(string sku, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var available = await scope.ServiceProvider
                 .GetRequiredService<IAvailabilityReader>().AvailableAsync([sku], ct);
 
@@ -310,17 +310,17 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
 
         public async Task<Reservation?> ReservationAsync(OrderId orderId, CancellationToken ct)
         {
-            await using var context = _factory.Create();
+            await using var context = this.factory.Create();
             return await context.Reservations.AsNoTracking()
                 .FirstOrDefaultAsync(reservation => reservation.OrderId == orderId, ct);
         }
 
         public async Task<Order?> OrderAsync(OrderId id, CancellationToken ct)
         {
-            await using var context = _factory.Create();
+            await using var context = this.factory.Create();
             return await context.Orders.AsNoTracking().FirstOrDefaultAsync(order => order.Id == id, ct);
         }
 
-        public async ValueTask DisposeAsync() => await _provider.DisposeAsync();
+        public async ValueTask DisposeAsync() => await this.provider.DisposeAsync();
     }
 }

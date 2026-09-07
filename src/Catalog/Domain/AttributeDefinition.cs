@@ -47,8 +47,8 @@ public sealed record AttributeDefinitionChanged(string Code, DateTimeOffset Occu
 /// </summary>
 public sealed class AttributeDefinition : AggregateRoot
 {
-    private readonly List<AttributeOption> _options = [];
-    private readonly List<string> _aliases = [];
+    private readonly List<AttributeOption> options = [];
+    private readonly List<string> aliases = [];
 
     /// <summary>Stable and uppercase: it is the key a product refers to this by,
     /// and changing it would rewrite the whole catalogue.</summary>
@@ -78,7 +78,7 @@ public sealed class AttributeDefinition : AggregateRoot
     /// </summary>
     public bool IsDraft { get; private set; }
 
-    public IReadOnlyList<AttributeOption> Options => _options;
+    public IReadOnlyList<AttributeOption> Options => this.options;
 
     /// <summary>
     /// What each source calls this: <c>genero</c>, <c>gender</c>,
@@ -86,7 +86,7 @@ public sealed class AttributeDefinition : AggregateRoot
     /// guessing fails exactly where it hurts — "genero" without the accent does
     /// not match the label "género", and the failure is silent.
     /// </summary>
-    public IReadOnlyList<string> Aliases => _aliases;
+    public IReadOnlyList<string> Aliases => this.aliases;
 
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
@@ -134,18 +134,18 @@ public sealed class AttributeDefinition : AggregateRoot
             throw new InvalidOperationException($"'{Code}' is {Kind}, so it has no options.");
 
         var normalised = Normalise(code);
-        _options.RemoveAll(option => option.Code == normalised);
-        _options.Add(new AttributeOption(normalised, label));
+        this.options.RemoveAll(option => option.Code == normalised);
+        this.options.Add(new AttributeOption(normalised, label));
         Touch(clock);
     }
 
     public void AddAlias(TimeProvider clock, string alias)
     {
         var normalised = Normalise(alias);
-        if (_aliases.Contains(normalised, StringComparer.OrdinalIgnoreCase))
+        if (this.aliases.Contains(normalised, StringComparer.OrdinalIgnoreCase))
             return;
 
-        _aliases.Add(normalised);
+        this.aliases.Add(normalised);
         Touch(clock);
     }
 
@@ -154,7 +154,7 @@ public sealed class AttributeDefinition : AggregateRoot
     {
         var normalised = Normalise(key);
         return string.Equals(Code, normalised, StringComparison.OrdinalIgnoreCase)
-            || _aliases.Contains(normalised, StringComparer.OrdinalIgnoreCase);
+               || this.aliases.Contains(normalised, StringComparer.OrdinalIgnoreCase);
     }
 
     public void Relabel(TimeProvider clock, LocalizedText label)
@@ -180,17 +180,17 @@ public sealed class AttributeDefinition : AggregateRoot
     {
         var trimmed = incoming.Trim();
 
-        return _options.FirstOrDefault(option =>
+        return this.options.FirstOrDefault(option =>
                    string.Equals(option.Code, Normalise(trimmed), StringComparison.OrdinalIgnoreCase))
-            ?? _options.FirstOrDefault(option =>
+               ?? this.options.FirstOrDefault(option =>
                    option.Label.Values.Values.Any(label =>
                        string.Equals(label, trimmed, StringComparison.OrdinalIgnoreCase)));
     }
 
     /// <summary>How this reads in one culture: "azul marino" / "navy blue".</summary>
     public string LabelForOption(string optionCode, string culture) =>
-        _options.FirstOrDefault(option =>
-            string.Equals(option.Code, optionCode, StringComparison.OrdinalIgnoreCase))
+        this.options.FirstOrDefault(option =>
+                string.Equals(option.Code, optionCode, StringComparison.OrdinalIgnoreCase))
             ?.Label.In(culture) ?? optionCode;
 
     private void Touch(TimeProvider clock)

@@ -15,16 +15,16 @@ namespace ElGuerre.Tendero.Inventory.Tests;
 /// </summary>
 public sealed class StockLedgerTests
 {
-    private readonly TestClock _clock = new();
-    private readonly FakeStock _stock = new();
-    private readonly FakeWarehouses _warehouses = new();
-    private int _saves;
+    private readonly TestClock clock = new();
+    private readonly FakeStock stock = new();
+    private readonly FakeWarehouses warehouses = new();
+    private int saves;
 
     private StockLedger Ledger(string strategy = PriorityFirstAllocation.Key) => new(
-        _stock, _warehouses, new FakeStrategies(),
-        new CountingUnitOfWork(() => _saves++),
+        this.stock, this.warehouses, new FakeStrategies(),
+        new CountingUnitOfWork(() => this.saves++),
         Options.Create(new InventoryOptions { AllocationStrategy = strategy }),
-        _clock);
+        this.clock);
 
     private static readonly OrderId Order = OrderId.New();
 
@@ -37,14 +37,14 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Stock_is_taken_from_the_preferred_warehouse_first()
     {
-        _stock.Put("SHOES", "MAD", 4);
-        _stock.Put("SHOES", "BCN", 9);
+        this.stock.Put("SHOES", "MAD", 4);
+        this.stock.Put("SHOES", "BCN", 9);
 
         var outcome = await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 3)], Ct);
 
         Assert.True(outcome.Reserved);
-        Assert.Equal(3, _stock.Row("SHOES", "MAD").Reserved);
-        Assert.Equal(0, _stock.Row("SHOES", "BCN").Reserved);
+        Assert.Equal(3, this.stock.Row("SHOES", "MAD").Reserved);
+        Assert.Equal(0, this.stock.Row("SHOES", "BCN").Reserved);
     }
 
     /// <summary>
@@ -54,25 +54,25 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task An_empty_preferred_warehouse_is_skipped_rather_than_failed()
     {
-        _stock.Put("SHOES", "MAD", 0);
-        _stock.Put("SHOES", "BCN", 3);
+        this.stock.Put("SHOES", "MAD", 0);
+        this.stock.Put("SHOES", "BCN", 3);
 
         Assert.True((await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 3)], Ct)).Reserved);
-        Assert.Equal(3, _stock.Row("SHOES", "BCN").Reserved);
+        Assert.Equal(3, this.stock.Row("SHOES", "BCN").Reserved);
     }
 
     [Fact]
     public async Task Reserving_does_not_move_a_single_box()
     {
-        _stock.Put("SHOES", "MAD", 5);
+        this.stock.Put("SHOES", "MAD", 5);
 
         await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 2)], Ct);
 
         // On hand is what is physically there and a hold does not ship anything.
         // A ledger that decremented here is one that cannot tell a reservation
         // from a shipment, which is how a cancelled order loses its stock.
-        Assert.Equal(5, _stock.Row("SHOES", "MAD").OnHand);
-        Assert.Equal(3, _stock.Row("SHOES", "MAD").Available);
+        Assert.Equal(5, this.stock.Row("SHOES", "MAD").OnHand);
+        Assert.Equal(3, this.stock.Row("SHOES", "MAD").Available);
     }
 
     // ---------- Refusing ----------
@@ -85,15 +85,15 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task A_refusal_is_written_down_with_the_numbers_in_it()
     {
-        _stock.Put("PANS", "MAD", 0);
-        _stock.Put("PANS", "BCN", 0);
+        this.stock.Put("PANS", "MAD", 0);
+        this.stock.Put("PANS", "BCN", 0);
 
         var outcome = await Ledger().ReserveAsync(Order, [new StockRequest("PANS", 2)], Ct);
 
         Assert.False(outcome.Reserved);
         Assert.Equal("PANS: 2 asked for, 0 available.", outcome.Reason);
 
-        var reservation = Assert.Single(_stock.Reservations);
+        var reservation = Assert.Single(this.stock.Reservations);
         Assert.Equal(ReservationStatus.Released, reservation.Status);
         Assert.Equal(outcome.Reason, reservation.Reason);
     }
@@ -115,27 +115,27 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task One_line_that_cannot_be_filled_refuses_the_whole_order()
     {
-        _stock.Put("SHOES", "MAD", 10);
-        _stock.Put("PANS", "MAD", 0);
+        this.stock.Put("SHOES", "MAD", 10);
+        this.stock.Put("PANS", "MAD", 0);
 
         var outcome = await Ledger().ReserveAsync(
             Order, [new StockRequest("SHOES", 1), new StockRequest("PANS", 1)], Ct);
 
         Assert.False(outcome.Reserved);
-        Assert.Equal(0, _stock.Row("SHOES", "MAD").Reserved);
+        Assert.Equal(0, this.stock.Row("SHOES", "MAD").Reserved);
     }
 
     [Fact]
     public async Task A_closed_warehouse_keeps_its_stock_and_sells_none_of_it()
     {
-        _warehouses.Close("BCN");
-        _stock.Put("SHOES", "MAD", 0);
-        _stock.Put("SHOES", "BCN", 9);
+        this.warehouses.Close("BCN");
+        this.stock.Put("SHOES", "MAD", 0);
+        this.stock.Put("SHOES", "BCN", 9);
 
         var outcome = await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 1)], Ct);
 
         Assert.False(outcome.Reserved);
-        Assert.Equal(9, _stock.Row("SHOES", "BCN").OnHand);
+        Assert.Equal(9, this.stock.Row("SHOES", "BCN").OnHand);
     }
 
     /// <summary>
@@ -146,13 +146,13 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Two_lines_of_the_same_sku_do_not_get_allocated_the_same_stock_twice()
     {
-        _stock.Put("SHOES", "MAD", 3);
+        this.stock.Put("SHOES", "MAD", 3);
 
         var outcome = await Ledger().ReserveAsync(
             Order, [new StockRequest("SHOES", 2), new StockRequest("SHOES", 2)], Ct);
 
         Assert.False(outcome.Reserved);
-        Assert.Equal(0, _stock.Row("SHOES", "MAD").Reserved);
+        Assert.Equal(0, this.stock.Row("SHOES", "MAD").Reserved);
     }
 
     // ---------- Idempotence, because the outbox delivers at least once ----------
@@ -160,14 +160,14 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Reserving_twice_for_one_order_holds_the_stock_once()
     {
-        _stock.Put("SHOES", "MAD", 5);
+        this.stock.Put("SHOES", "MAD", 5);
 
         await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 2)], Ct);
         var second = await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 2)], Ct);
 
         Assert.True(second.Reserved);
-        Assert.Equal(2, _stock.Row("SHOES", "MAD").Reserved);
-        Assert.Single(_stock.Reservations);
+        Assert.Equal(2, this.stock.Row("SHOES", "MAD").Reserved);
+        Assert.Single(this.stock.Reservations);
     }
 
     // ---------- Compensation: the arm that never runs on the happy path ----------
@@ -175,15 +175,15 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Releasing_gives_the_hold_back_and_says_why()
     {
-        _stock.Put("SHOES", "MAD", 5);
+        this.stock.Put("SHOES", "MAD", 5);
         await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 2)], Ct);
 
         await Ledger().ReleaseAsync(Order, "The customer changed their mind.", Ct);
 
-        Assert.Equal(0, _stock.Row("SHOES", "MAD").Reserved);
-        Assert.Equal(5, _stock.Row("SHOES", "MAD").Available);
+        Assert.Equal(0, this.stock.Row("SHOES", "MAD").Reserved);
+        Assert.Equal(5, this.stock.Row("SHOES", "MAD").Available);
 
-        var reservation = Assert.Single(_stock.Reservations);
+        var reservation = Assert.Single(this.stock.Reservations);
         Assert.Equal(ReservationStatus.Released, reservation.Status);
         Assert.Equal("The customer changed their mind.", reservation.Reason);
     }
@@ -191,13 +191,13 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Releasing_twice_does_not_manufacture_availability()
     {
-        _stock.Put("SHOES", "MAD", 5);
+        this.stock.Put("SHOES", "MAD", 5);
         await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 2)], Ct);
 
         await Ledger().ReleaseAsync(Order, "once", Ct);
         await Ledger().ReleaseAsync(Order, "twice", Ct);
 
-        Assert.Equal(5, _stock.Row("SHOES", "MAD").Available);
+        Assert.Equal(5, this.stock.Row("SHOES", "MAD").Available);
     }
 
     [Fact]
@@ -205,7 +205,7 @@ public sealed class StockLedgerTests
     {
         await Ledger().ReleaseAsync(OrderId.New(), "nothing to give back", Ct);
 
-        Assert.Empty(_stock.Reservations);
+        Assert.Empty(this.stock.Reservations);
     }
 
     // ---------- Committing ----------
@@ -213,12 +213,12 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Shipping_turns_the_hold_into_a_decrement_without_freeing_anything()
     {
-        _stock.Put("SHOES", "MAD", 5);
+        this.stock.Put("SHOES", "MAD", 5);
         await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 2)], Ct);
 
         await Ledger().CommitAsync(Order, Ct);
 
-        var row = _stock.Row("SHOES", "MAD");
+        var row = this.stock.Row("SHOES", "MAD");
         Assert.Equal(3, row.OnHand);
         Assert.Equal(0, row.Reserved);
 
@@ -231,13 +231,13 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Committing_twice_ships_the_goods_once()
     {
-        _stock.Put("SHOES", "MAD", 5);
+        this.stock.Put("SHOES", "MAD", 5);
         await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 2)], Ct);
 
         await Ledger().CommitAsync(Order, Ct);
         await Ledger().CommitAsync(Order, Ct);
 
-        Assert.Equal(3, _stock.Row("SHOES", "MAD").OnHand);
+        Assert.Equal(3, this.stock.Row("SHOES", "MAD").OnHand);
     }
 
     // ---------- Receiving ----------
@@ -247,7 +247,7 @@ public sealed class StockLedgerTests
     {
         await Ledger().ReceiveAsync("NEW", "MAD", 6, Ct);
 
-        Assert.Equal(6, _stock.Row("NEW", "MAD").OnHand);
+        Assert.Equal(6, this.stock.Row("NEW", "MAD").OnHand);
     }
 
     // ---------- Counting ----------
@@ -260,11 +260,11 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task A_count_replaces_what_the_shelf_held()
     {
-        _stock.Put("SHOES", "MAD", 9);
+        this.stock.Put("SHOES", "MAD", 9);
 
         var shelf = await Ledger().CountAsync("SHOES", "MAD", 4, Ct);
 
-        Assert.Equal(4, _stock.Row("SHOES", "MAD").OnHand);
+        Assert.Equal(4, this.stock.Row("SHOES", "MAD").OnHand);
         Assert.Equal((4, 4), (shelf.OnHand, shelf.Available));
     }
 
@@ -283,7 +283,7 @@ public sealed class StockLedgerTests
     {
         var shelf = await Ledger().CountAsync("PANS", "MAD", 0, Ct);
 
-        Assert.Equal(0, _stock.Row("PANS", "MAD").OnHand);
+        Assert.Equal(0, this.stock.Row("PANS", "MAD").OnHand);
         Assert.Equal(0, shelf.Available);
     }
 
@@ -295,7 +295,7 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task A_count_answers_with_what_is_left_after_the_holds()
     {
-        _stock.Put("SHOES", "MAD", 9);
+        this.stock.Put("SHOES", "MAD", 9);
         await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 3)], Ct);
 
         var shelf = await Ledger().CountAsync("SHOES", "MAD", 5, Ct);
@@ -308,14 +308,14 @@ public sealed class StockLedgerTests
     [Fact]
     public async Task Refusing_to_split_a_parcel_is_a_line_of_configuration()
     {
-        _stock.Put("SHOES", "MAD", 3);
-        _stock.Put("SHOES", "BCN", 2);
+        this.stock.Put("SHOES", "MAD", 3);
+        this.stock.Put("SHOES", "BCN", 2);
 
         Assert.True((await Ledger().ReserveAsync(Order, [new StockRequest("SHOES", 5)], Ct)).Reserved);
 
-        _stock.Reset();
-        _stock.Put("SHOES", "MAD", 3);
-        _stock.Put("SHOES", "BCN", 2);
+        this.stock.Reset();
+        this.stock.Put("SHOES", "MAD", 3);
+        this.stock.Put("SHOES", "BCN", 2);
 
         var single = await Ledger(SingleWarehouseAllocation.Key)
             .ReserveAsync(OrderId.New(), [new StockRequest("SHOES", 5)], Ct);
@@ -327,81 +327,79 @@ public sealed class StockLedgerTests
 
     private sealed class FakeStock : IStockRepository
     {
-        private readonly List<StockItem> _items = [];
-        private readonly List<Reservation> _reservations = [];
+        private readonly List<StockItem> items = [];
+        private readonly List<Reservation> reservations = [];
 
-        public IReadOnlyList<Reservation> Reservations => _reservations;
+        public IReadOnlyList<Reservation> Reservations => this.reservations;
 
         public void Put(string sku, string warehouse, int onHand)
         {
             var item = StockItem.For(sku, warehouse);
             if (onHand > 0) item.Receive(TimeProvider.System, onHand);
-            _items.Add(item);
+            this.items.Add(item);
         }
 
         public void Reset()
         {
-            _items.Clear();
-            _reservations.Clear();
+            this.items.Clear();
+            this.reservations.Clear();
         }
 
         public StockItem Row(string sku, string warehouse) =>
-            _items.Single(item => item.Sku == sku && item.WarehouseCode == warehouse);
+            this.items.Single(item => item.Sku == sku && item.WarehouseCode == warehouse);
 
         public Task<IReadOnlyList<StockItem>> ForSkusAsync(
             IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<StockItem>>(
-                [.. _items.Where(item => skus.Contains(item.Sku, StringComparer.OrdinalIgnoreCase))]);
+                [.. this.items.Where(item => skus.Contains(item.Sku, StringComparer.OrdinalIgnoreCase))]);
 
         public Task<IReadOnlyList<StockItem>> AllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<StockItem>>([.. _items]);
+            Task.FromResult<IReadOnlyList<StockItem>>([.. this.items]);
 
         public Task<StockItem?> FindAsync(
             string sku, string warehouseCode, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_items.FirstOrDefault(
-                item => item.Sku == sku && item.WarehouseCode == warehouseCode));
+            Task.FromResult(this.items.FirstOrDefault(item => item.Sku == sku && item.WarehouseCode == warehouseCode));
 
-        public void Add(StockItem item) => _items.Add(item);
+        public void Add(StockItem item) => this.items.Add(item);
 
         public Task<Reservation?> FindReservationAsync(
             OrderId orderId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(_reservations.FirstOrDefault(
-                reservation => reservation.OrderId == orderId));
+            Task.FromResult(this.reservations.FirstOrDefault(reservation => reservation.OrderId == orderId));
 
         public Task<IReadOnlyList<Reservation>> RecentReservationsAsync(
             int take, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Reservation>>([.. _reservations.Take(take)]);
+            Task.FromResult<IReadOnlyList<Reservation>>([.. this.reservations.Take(take)]);
 
-        public void Add(Reservation reservation) => _reservations.Add(reservation);
+        public void Add(Reservation reservation) => this.reservations.Add(reservation);
     }
 
     private sealed class FakeWarehouses : IWarehouseReader
     {
-        private readonly List<Warehouse> _warehouses =
+        private readonly List<Warehouse> warehouses =
         [
             new("MAD", LocalizedText.From("en", "Madrid"), 10),
             new("BCN", LocalizedText.From("en", "Barcelona"), 20)
         ];
 
         public void Close(string code) =>
-            _warehouses[_warehouses.FindIndex(w => w.Code == code)] =
+            this.warehouses[this.warehouses.FindIndex(w => w.Code == code)] =
                 new Warehouse(code, LocalizedText.From("en", code), 99, isActive: false);
 
         public Task<IReadOnlyList<Warehouse>> AllAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Warehouse>>([.. _warehouses]);
+            Task.FromResult<IReadOnlyList<Warehouse>>([.. this.warehouses]);
     }
 
     private sealed class FakeStrategies : IAllocationStrategyRegistry
     {
-        private readonly Dictionary<string, IAllocationStrategy> _strategies = new()
+        private readonly Dictionary<string, IAllocationStrategy> strategies = new()
         {
             [PriorityFirstAllocation.Key] = new PriorityFirstAllocation(),
             [SingleWarehouseAllocation.Key] = new SingleWarehouseAllocation()
         };
 
-        public IReadOnlyCollection<string> Keys => _strategies.Keys;
+        public IReadOnlyCollection<string> Keys => this.strategies.Keys;
 
-        public IAllocationStrategy Get(string key) => _strategies[key];
+        public IAllocationStrategy Get(string key) => this.strategies[key];
     }
 
     private sealed class CountingUnitOfWork(Action onSave) : IUnitOfWork

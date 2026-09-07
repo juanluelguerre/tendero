@@ -41,15 +41,15 @@ public sealed class DevIssuerOptions
 /// </summary>
 public sealed class DevSigningKey : IDisposable
 {
-    private readonly RSA _rsa = RSA.Create(2048);
+    private readonly RSA rsa = RSA.Create(2048);
 
     public string KeyId { get; } = Guid.NewGuid().ToString("N");
 
-    public RsaSecurityKey SecurityKey => new(_rsa) { KeyId = KeyId };
+    public RsaSecurityKey SecurityKey => new(this.rsa) { KeyId = KeyId };
 
     public JsonWebKey PublicJsonWebKey()
     {
-        var parameters = _rsa.ExportParameters(includePrivateParameters: false);
+        var parameters = this.rsa.ExportParameters(includePrivateParameters: false);
 
         return new JsonWebKey
         {
@@ -62,5 +62,5 @@ public sealed class DevSigningKey : IDisposable
         };
     }
 
-    public void Dispose() => _rsa.Dispose();
+    public void Dispose() => this.rsa.Dispose();
 }

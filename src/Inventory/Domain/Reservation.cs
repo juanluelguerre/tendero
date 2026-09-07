@@ -73,7 +73,7 @@ public sealed class Reservation : AggregateRoot
     /// </summary>
     public static readonly TimeSpan Lifetime = TimeSpan.FromMinutes(15);
 
-    private readonly List<ReservationLine> _lines = [];
+    private readonly List<ReservationLine> lines = [];
 
     private Reservation() { } // EF Core
 
@@ -92,7 +92,7 @@ public sealed class Reservation : AggregateRoot
             ExpiresAt = now + Lifetime
         };
 
-        reservation._lines.AddRange(lines);
+        reservation.lines.AddRange(lines);
         reservation.Raise(new StockReserved(orderId, now));
 
         return reservation;
@@ -136,7 +136,7 @@ public sealed class Reservation : AggregateRoot
     public DateTimeOffset UpdatedAt { get; private set; }
     public DateTimeOffset ExpiresAt { get; private set; }
 
-    public IReadOnlyList<ReservationLine> Lines => _lines;
+    public IReadOnlyList<ReservationLine> Lines => this.lines;
 
     public bool HasExpiredAt(DateTimeOffset at) => Status == ReservationStatus.Held && at >= ExpiresAt;
 

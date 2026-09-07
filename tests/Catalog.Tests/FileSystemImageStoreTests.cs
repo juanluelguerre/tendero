@@ -14,11 +14,11 @@ namespace ElGuerre.Tendero.Catalog.Tests.Adapters;
 /// </summary>
 public sealed class FileSystemImageStoreTests : IDisposable
 {
-    private readonly string _root = Path.Combine(
+    private readonly string root = Path.Combine(
         Path.GetTempPath(), "tendero-image-store-tests", Guid.CreateVersion7().ToString());
 
     private IImageStore Store() => new FileSystemImageStore(
-        Options.Create(new FileSystemImageStoreOptions { RootPath = _root }),
+        Options.Create(new FileSystemImageStoreOptions { RootPath = this.root }),
         NullLogger<FileSystemImageStore>.Instance);
 
     private static Stream Bytes(string content) => new MemoryStream(Encoding.UTF8.GetBytes(content));
@@ -55,7 +55,7 @@ public sealed class FileSystemImageStoreTests : IDisposable
 
         // This is the deduplication that makes a catalogue cheap where half a
         // dozen products share the same family photo.
-        Assert.Single(Directory.EnumerateFiles(_root, "*.*", SearchOption.AllDirectories));
+        Assert.Single(Directory.EnumerateFiles(this.root, "*.*", SearchOption.AllDirectories));
     }
 
     [Fact]
@@ -85,7 +85,7 @@ public sealed class FileSystemImageStoreTests : IDisposable
 
     public void Dispose()
     {
-        if (Directory.Exists(_root))
-            Directory.Delete(_root, recursive: true);
+        if (Directory.Exists(this.root))
+            Directory.Delete(this.root, recursive: true);
     }
 }

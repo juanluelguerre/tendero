@@ -23,8 +23,8 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// </summary>
 public abstract class IdentityProviderContractTests : IDisposable
 {
-    private readonly TenderoApiFactory _factory;
-    private readonly HttpClient? _external;
+    private readonly TenderoApiFactory factory;
+    private readonly HttpClient? external;
 
     /// <summary>The API under test, trusting the issuer under test.</summary>
     protected HttpClient Client { get; }
@@ -60,20 +60,20 @@ public abstract class IdentityProviderContractTests : IDisposable
 
     /// <summary>Whichever client can reach the issuer: the API's own channel for
     /// an in-process one, real HTTP for a container.</summary>
-    private HttpClient IssuerClient => _external ?? Client;
+    private HttpClient IssuerClient => this.external ?? Client;
 
     protected IdentityProviderContractTests()
     {
-        _factory = new TenderoApiFactory(Authority);
-        Client = _factory.CreateClient();
-        _external = Authority is null ? null : new HttpClient();
+        this.factory = new TenderoApiFactory(Authority);
+        Client = this.factory.CreateClient();
+        this.external = Authority is null ? null : new HttpClient();
     }
 
     public void Dispose()
     {
-        _external?.Dispose();
+        this.external?.Dispose();
         Client.Dispose();
-        _factory.Dispose();
+        this.factory.Dispose();
         GC.SuppressFinalize(this);
     }
 

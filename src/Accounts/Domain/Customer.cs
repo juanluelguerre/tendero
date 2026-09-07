@@ -77,7 +77,7 @@ public sealed class Customer : AggregateRoot
         {
             Id = CustomerId.New(),
             Subject = null,
-            Culture = Culture_.Normalise(culture),
+            Culture = Domain.Culture.Normalise(culture),
             Segment = Segments.Normalise(segment),
             CreatedAt = now,
             UpdatedAt = now
@@ -163,7 +163,7 @@ public sealed class Customer : AggregateRoot
 
     public void UseCulture(TimeProvider clock, string culture)
     {
-        var normalised = Culture_.Normalise(culture);
+        var normalised = Domain.Culture.Normalise(culture);
         if (normalised == Culture) return;
 
         Culture = normalised;
@@ -218,7 +218,7 @@ public static class Segments
 
 /// <summary>Aliased so this file can use the SharedKernel's culture rules
 /// without its own `Culture` property shadowing the type.</summary>
-internal static class Culture_
+internal static class Culture
 {
     public static string Normalise(string culture) => SharedKernel.Culture.Normalize(culture);
 }

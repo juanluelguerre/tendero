@@ -83,7 +83,7 @@ public sealed class ProductCodeTests(PostgresFixture postgres)
         var conflict = await Assert.ThrowsAsync<DbUpdateException>(
             () => scope.SaveAsync(clash, ct));
 
-        Assert.Contains("ux_products_code", conflict.InnerException?.Message ?? string.Empty);
+        Assert.Contains("ux_products_code", conflict.InnerException?.Message ?? String.Empty);
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public sealed class ProductCodeTests(PostgresFixture postgres)
 
     private sealed class TestScope : IAsyncDisposable
     {
-        private readonly ServiceProvider _provider;
+        private readonly ServiceProvider provider;
 
         public TestScope(TenderoDbContextFactory factory)
         {
@@ -148,7 +148,7 @@ public sealed class ProductCodeTests(PostgresFixture postgres)
             services.AddLogging();
             services.AddTenderoPersistence(factory.ConnectionString);
 
-            _provider = services.BuildServiceProvider(validateScopes: true);
+            this.provider = services.BuildServiceProvider(validateScopes: true);
         }
 
         /// <summary>
@@ -163,7 +163,7 @@ public sealed class ProductCodeTests(PostgresFixture postgres)
 
         public async Task<Product> SaveAsync(Product product, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
 
             context.Products.Add(product);
@@ -174,7 +174,7 @@ public sealed class ProductCodeTests(PostgresFixture postgres)
 
         public async Task RenameAsync(ProductId id, string name, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
 
             var product = await context.Products.FirstAsync(p => p.Id == id, ct);
@@ -187,12 +187,12 @@ public sealed class ProductCodeTests(PostgresFixture postgres)
 
         public async Task<Product?> FindAsync(string code, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var products = scope.ServiceProvider.GetRequiredService<IProductCatalogReader>();
 
             return await products.FindByCodeAsync(code, ct);
         }
 
-        public async ValueTask DisposeAsync() => await _provider.DisposeAsync();
+        public async ValueTask DisposeAsync() => await this.provider.DisposeAsync();
     }
 }

@@ -16,10 +16,10 @@ public sealed class TestClock(DateTimeOffset? start = null) : TimeProvider
     /// </summary>
     public static readonly DateTimeOffset Default = new(2026, 1, 15, 9, 30, 0, TimeSpan.Zero);
 
-    private DateTimeOffset _now = start ?? Default;
+    private DateTimeOffset now = start ?? Default;
 
-    public override DateTimeOffset GetUtcNow() => _now;
+    public override DateTimeOffset GetUtcNow() => this.now;
 
     /// <summary>Moves the clock and returns the new instant.</summary>
-    public DateTimeOffset Advance(TimeSpan by) => _now = _now.Add(by);
+    public DateTimeOffset Advance(TimeSpan by) => this.now = this.now.Add(by);
 }

@@ -15,16 +15,17 @@ namespace ElGuerre.Tendero.Catalog.Tests;
 /// </summary>
 internal sealed class InMemoryProductRepository(params Product[] products) : IProductRepository
 {
-    private readonly List<Product> _products = [.. products];
+    private readonly List<Product> products = [.. products];
 
     public Task<Product?> FindByIdAsync(ProductId id, CancellationToken ct) =>
-        Task.FromResult(_products.SingleOrDefault(p => p.Id == id));
+        Task.FromResult(this.products.SingleOrDefault(p => p.Id == id));
 
     public Task<Product?> FindByExternalReferenceAsync(string source, string externalId, CancellationToken ct) =>
-        Task.FromResult(_products.SingleOrDefault(
-            p => p.ExternalReferences.Any(r => r.Source == source && r.ExternalId == externalId)));
+        Task.FromResult(
+            this.products.SingleOrDefault(p =>
+                p.ExternalReferences.Any(r => r.Source == source && r.ExternalId == externalId)));
 
-    public void Add(Product product) => _products.Add(product);
+    public void Add(Product product) => this.products.Add(product);
 }
 
 /// <summary>
