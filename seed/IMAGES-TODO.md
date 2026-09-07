@@ -1,8 +1,10 @@
 # Imágenes por generar
 
 Los 100 productos del catálogo de muestra, con el nombre y la descripción de
-cada uno para poder generar su imagen. **8 ya están hechas** y van marcadas;
-faltan 92.
+cada uno para poder generar su imagen. **10 ya están hechas** y van marcadas; faltan 90.
+
+Las diez salen ya de `tools/SeedImages`, no de pegar el prompt en una web:
+mismo proceso, mismo encuadre y el mismo fondo `#FAF9F7` en todas.
 
 ## La especificación, en corto
 
@@ -330,7 +332,7 @@ Tres cubos de malla de tamanos distintos que comprimen la ropa y dejan ver lo qu
 
 ## Bolsas y mochilas > Mochilas
 
-### `B08JKLM202.png` — Mochila urbana impermeable 25L CityPack
+### `B08JKLM202.webp` — Mochila urbana impermeable 25L CityPack · **hecha**
 
 Mochila de dia con compartimento acolchado para portatil de 15 pulgadas, tejido ripstop con tratamiento DWR y bolsillo antirrobo en la espalda.
 
@@ -802,7 +804,7 @@ Color: **azul marino**
 
 ## Ropa > Calzado > Zapatillas deportivas
 
-### `B073WXYZ01.png` — Zapatillas de running amortiguadas Pulse Runner
+### `B073WXYZ01.webp` — Zapatillas de running amortiguadas Pulse Runner · **hecha**
 
 Zapatillas de running neutras con mediasuela de espuma reactiva, upper de malla transpirable y refuerzo en el talon. Drop de 8 mm.
 
