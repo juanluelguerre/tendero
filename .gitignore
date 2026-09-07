@@ -435,3 +435,8 @@ FodyWeavers.xsd
 # project does not have yet (deployment is deferred — see docs/initial-plan.md).
 # Committing them would look like a deployment decision nobody took.
 src/AppHost/*.Dockerfile
+
+# Model weights. Seven gigabytes of SDXL that the developer downloads once and
+# that must never reach the history: tools/SeedImages takes --models and refuses
+# to start without it, saying what to fetch and where to put it.
+models/

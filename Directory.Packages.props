@@ -89,6 +89,33 @@
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.5.3-preview.1.26425.3" />
   </ItemGroup>
 
+  <!-- Seed image generation. A TOOL-ONLY group: nothing here enters a shipped
+       assembly, and no project outside tools/SeedImages may reference it. -->
+  <ItemGroup Label="Seed images (tools only)">
+    <!-- Microsoft.ML.OnnxRuntime.DirectML 1.24.4 - MIT, verified in the nuspec's
+         LICENSE for this exact version, and its native dependency
+         Microsoft.AI.DirectML 1.15.4 is MIT too (checked: that is the one that
+         could have bitten).
+
+         DirectML and NOT the CUDA package, and not by preference. The RTX 50
+         series is Blackwell, compute capability sm_120, and the official
+         onnxruntime-gpu build ships no kernels for it - so the CUDA provider
+         either fails to bind or falls back to CPU while reporting nothing.
+         DirectML accelerates on any DX12 GPU and knows nothing about CUDA
+         architectures. It is slower, and slower beats CPU.
+
+         It is also exactly ONE package: this one carries its own
+         onnxruntime.dll, so referencing Microsoft.ML.OnnxRuntime alongside it
+         puts two native runtimes in the same output folder. -->
+    <PackageVersion Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
+    <!-- SkiaSharp 4.151.2 - MIT. The repository had no image library at all: it
+         moves image BYTES around and never decodes a pixel (ADR 0011). This is
+         the first thing that needs to, because seed/IMAGES-TODO.md asks for
+         1400px WebP at quality 82 with no alpha channel, and SDXL emits a 1024px
+         tensor. Resize, flatten onto an opaque canvas, encode. -->
+    <PackageVersion Include="SkiaSharp" Version="4.151.2" />
+  </ItemGroup>
+
   <ItemGroup Label="Testing">
     <!-- xUnit v3 4.0.0 — Apache-2.0. It brings Microsoft.Testing.Platform with
          it: neither VSTest nor Microsoft.NET.Test.Sdk is needed (see dotnet.config). -->
