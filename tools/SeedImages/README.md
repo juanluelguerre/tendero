@@ -70,6 +70,19 @@ not pay for a from-source build — the scale rule in `CLAUDE.md`, with its
 measured number. If it is ever wanted, `inspect --ep cuda` says in two minutes
 whether it binds.
 
+## One step count, for the whole catalogue
+
+The schedule this export declares uses `leading` spacing, where the top of the
+noise ladder is `(steps - 1) * (1000 / steps) + 1` — which is not 999, and which
+**moves with the step count**. Measured: the starting noise level is 11.07 at
+twenty steps, 11.52 at thirty and 13.16 at fifty.
+
+So `--steps` is not a quality dial. Changing it changes the picture rather than
+its refinement, and a catalogue where six images came from a different ladder
+does not look like a catalogue. **Pick a number, generate all hundred with it,
+and record it** — regenerating one later at a different count is a different
+illustration, not a better one.
+
 ## The prompts
 
 They are built from the catalogue, not from the prose list in
