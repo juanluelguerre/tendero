@@ -90,6 +90,7 @@ Everything the API exposes today. Each is one vertical slice.
 | `GET /api/orders/mine` | `Ordering/Features/ListOrders` (MyOrders) — a separate slice from the shopkeeper's list on purpose |
 | `POST /api/orders/{id}/move` | `Ordering/Features/ListOrders` (MoveOrder) |
 | `POST /api/orders/{id}/returns` | `Ordering/Features/Returns` (RequestReturn) |
+| `GET /api/returns/policy` | `Ordering/Features/Returns` (ReturnPolicy) — the window, so no screen types the number |
 | `GET /api/returns` | `Ordering/Features/Returns` (ListReturns) |
 | `POST /api/returns/{id}/decide` | `Ordering/Features/Returns` (DecideReturn) |
 | `POST /api/payments/{provider}/webhook` | `Ordering/Features/PaymentWebhook` |

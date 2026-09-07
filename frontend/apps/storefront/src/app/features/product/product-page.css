@@ -253,6 +253,36 @@
   color: var(--text-muted);
 }
 
+/* ---------- The returns promise ---------- */
+.promise {
+  margin-block-start: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+.promise__title {
+  font-size: var(--text-md);
+  margin: 0 0 var(--space-2);
+}
+
+/* The number is a figure in a sentence, and figures are mono here. */
+.promise__window {
+  margin: 0 0 var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.promise__detail {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.promise__detail:last-child {
+  margin-block-end: 0;
+}
+
 /* ---------- Loading ---------- */
 .product--loading .skeleton--block {
   block-size: 8rem;

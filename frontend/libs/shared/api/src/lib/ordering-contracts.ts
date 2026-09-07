@@ -52,6 +52,13 @@ export type OrderSummary = Schemas['OrderSummary'];
 export type RequestReturnRequest = Schemas['RequestReturnRequest'];
 export type ReturnLineRequest = Schemas['ReturnLineRequest'];
 
+/**
+ * What the shop promises about sending something back, published so that no
+ * screen has to know the number. It is days from DELIVERY, which is what the
+ * aggregate measures, and not from the purchase.
+ */
+export type ReturnPolicy = Schemas['ReturnPolicy'];
+
 export type ReturnView = Schemas['ReturnView'];
 export type ReturnLineView = Schemas['ReturnLineView'];
 

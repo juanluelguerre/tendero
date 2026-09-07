@@ -9,6 +9,7 @@ import type { ProductDetail, VariantView } from '@tendero/shared-api';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
 import { ProductService } from '../../data-access/product.service';
+import { ReturnsPolicy } from '../../data-access/returns-policy.service';
 import { CanonicalLinks } from '../../seo/canonical-links';
 import { ShopLinks } from '../../shop-links';
 import {
@@ -68,6 +69,19 @@ export class ProductPage {
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(CanonicalLinks);
   private readonly images = inject(ProductImageUrls);
+
+  /**
+   * The returns promise, and it is the SERVER's number.
+   *
+   * Roughly sixty per cent of shoppers look for the return policy on the product
+   * page and forty-four per cent of shops do not put it there; this page was one
+   * of them, while the machinery that honours it had shipped a phase earlier.
+   *
+   * It is null until the call answers, and stays null if it failed — the block
+   * simply does not render. A default of fourteen typed here would be exactly
+   * the copy this store exists to remove.
+   */
+  protected readonly returnWindowDays = inject(ReturnsPolicy).windowDays;
 
   /** Which option is chosen on each axis. */
   protected readonly selection = signal<Selection>({});
