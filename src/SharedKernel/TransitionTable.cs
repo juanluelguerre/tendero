@@ -20,16 +20,16 @@ namespace ElGuerre.Tendero.SharedKernel;
 public sealed class TransitionTable<TStatus>
     where TStatus : struct, Enum
 {
-    private readonly Dictionary<TStatus, TStatus[]> _edges = [];
+    private readonly Dictionary<TStatus, TStatus[]> edges = [];
 
     /// <summary>The states reachable from <paramref name="from"/>. Empty for a terminal state.</summary>
     public IReadOnlyList<TStatus> this[TStatus from]
     {
-        get => _edges.TryGetValue(from, out var targets)
+        get => this.edges.TryGetValue(from, out var targets)
             ? targets
             : throw new InvalidOperationException(
                 $"No transitions are declared from {typeof(TStatus).Name}.{from}.");
-        init => _edges[from] = [.. value];
+        init => this.edges[from] = [.. value];
     }
 
     public bool Allows(TStatus from, TStatus to) => this[from].Contains(to);

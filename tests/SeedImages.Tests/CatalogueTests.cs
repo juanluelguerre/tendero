@@ -27,8 +27,8 @@ public sealed class CatalogueTests
         // object without the invented brand, which is what a generator reads best.
         Assert.All(products, product =>
         {
-            Assert.False(string.IsNullOrWhiteSpace(product.ItemId));
-            Assert.False(string.IsNullOrWhiteSpace(product.EnglishDescription));
+            Assert.False(String.IsNullOrWhiteSpace(product.ItemId));
+            Assert.False(String.IsNullOrWhiteSpace(product.EnglishDescription));
         });
     }
 
@@ -64,7 +64,7 @@ public sealed class CatalogueTests
 
         Assert.True(
             unknown.Length == 0,
-            $"No English label for: {string.Join(", ", unknown)}. Add the option to seed/attributes.sample.json.");
+            $"No English label for: {String.Join(", ", unknown)}. Add the option to seed/attributes.sample.json.");
     }
 
     [Theory]

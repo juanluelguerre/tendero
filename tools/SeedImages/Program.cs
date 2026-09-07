@@ -8,7 +8,7 @@ using Microsoft.ML.OnnxRuntime;
 // a pipeline written against the wrong ones fails as noise rather than as an
 // error. `dry-run` prints the prompts, so all ninety-two can be audited in two
 // seconds instead of after three hours of GPU.
-var command = args.Length > 0 ? args[0] : string.Empty;
+var command = args.Length > 0 ? args[0] : String.Empty;
 
 string? Value(string flag)
 {
@@ -22,7 +22,7 @@ switch (command)
         return Inspect(Value("--models"), Value("--ep") ?? "dml");
 
     case "dry-run":
-        return DryRun(Value("--only"), int.TryParse(Value("--take"), out var take) ? take : int.MaxValue);
+        return DryRun(Value("--only"), Int32.TryParse(Value("--take"), out var take) ? take : Int32.MaxValue);
 
     default:
         Console.Error.WriteLine(
@@ -47,7 +47,7 @@ static int Inspect(string? models, string provider)
         return 2;
     }
 
-    Console.WriteLine($"providers: {string.Join(", ", OrtEnv.Instance().GetAvailableProviders())}");
+    Console.WriteLine($"providers: {String.Join(", ", OrtEnv.Instance().GetAvailableProviders())}");
     Console.WriteLine();
 
     string[] components = ["text_encoder", "text_encoder_2", "unet", "vae_decoder"];
@@ -56,10 +56,16 @@ static int Inspect(string? models, string provider)
     {
         var path = Path.Combine(models, component, "model.onnx");
 
+        // A missing component is reported and stepped over rather than fatal.
+        // This command is a diagnostic, and the moment it is most useful is on a
+        // half-finished download -- where refusing to say anything about the
+        // three files that ARE there would be the least helpful thing it could
+        // do. `generate` is where a missing file is an error.
         if (!File.Exists(path))
         {
-            Console.Error.WriteLine($"{component}: missing {path}");
-            return 2;
+            Console.WriteLine($"--- {component}: not here yet ({path})");
+            Console.WriteLine();
+            continue;
         }
 
         Console.WriteLine($"--- {component} ---");
@@ -77,10 +83,10 @@ static int Inspect(string? models, string provider)
         Console.WriteLine($"  (opened on {provider} in {opened.Elapsed.TotalSeconds:F1}s)");
 
         foreach (var (name, meta) in session.InputMetadata)
-            Console.WriteLine($"  in   {name,-24} {meta.ElementDataType,-10} [{string.Join(",", meta.Dimensions)}]");
+            Console.WriteLine($"  in   {name,-24} {meta.ElementDataType,-10} [{String.Join(",", meta.Dimensions)}]");
 
         foreach (var (name, meta) in session.OutputMetadata)
-            Console.WriteLine($"  out  {name,-24} {meta.ElementDataType,-10} [{string.Join(",", meta.Dimensions)}]");
+            Console.WriteLine($"  out  {name,-24} {meta.ElementDataType,-10} [{String.Join(",", meta.Dimensions)}]");
 
         Console.WriteLine();
     }
@@ -99,7 +105,7 @@ static int DryRun(string? only, int take)
     var images = Path.Combine(root, "seed", "images");
 
     var wanted = products
-        .Where(product => only is null || string.Equals(product.ItemId, only, StringComparison.OrdinalIgnoreCase))
+        .Where(product => only is null || String.Equals(product.ItemId, only, StringComparison.OrdinalIgnoreCase))
         .Where(product => only is not null || !File.Exists(Path.Combine(images, $"{product.ItemId}.webp")))
         .Take(take)
         .ToArray();

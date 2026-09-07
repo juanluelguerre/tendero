@@ -37,9 +37,9 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
 
     // Resolved once and not per image: it is the same path for the whole file.
     private string SeedDirectory =>
-        _seedDirectory ??= Path.GetDirectoryName(Path.GetFullPath(options.Value.FilePath)) ?? ".";
+        this.seedDirectory ??= Path.GetDirectoryName(Path.GetFullPath(options.Value.FilePath)) ?? ".";
 
-    private string? _seedDirectory;
+    private string? seedDirectory;
 
     public async IAsyncEnumerable<ExternalProduct> StreamProductsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -49,7 +49,7 @@ internal sealed class SeedCatalogConnector(IOptions<SeedConnectorOptions> option
         await foreach (var row in JsonSerializer
             .DeserializeAsyncEnumerable<SeedProductRow>(stream, JsonOptions, cancellationToken))
         {
-            if (row is null || string.IsNullOrWhiteSpace(row.ItemId) || row.Name.Count == 0)
+            if (row is null || String.IsNullOrWhiteSpace(row.ItemId) || row.Name.Count == 0)
                 continue;
 
             yield return row.ToExternalProduct(ResolveImage);

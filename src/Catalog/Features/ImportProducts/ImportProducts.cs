@@ -212,8 +212,8 @@ public sealed class ImportProductsHandler(
     /// </summary>
     private sealed class ImportTally
     {
-        private int _createdWhenLastFlushed;
-        private int _updatedWhenLastFlushed;
+        private int createdWhenLastFlushed;
+        private int updatedWhenLastFlushed;
 
         public int Created { get; set; }
         public int Updated { get; set; }
@@ -222,16 +222,16 @@ public sealed class ImportProductsHandler(
 
         public void MarkFlushed()
         {
-            _createdWhenLastFlushed = Created;
-            _updatedWhenLastFlushed = Updated;
+            this.createdWhenLastFlushed = Created;
+            this.updatedWhenLastFlushed = Updated;
             Pending = 0;
         }
 
         public void DiscardPendingBatch()
         {
-            Failed += Created - _createdWhenLastFlushed + (Updated - _updatedWhenLastFlushed);
-            Created = _createdWhenLastFlushed;
-            Updated = _updatedWhenLastFlushed;
+            Failed += Created - this.createdWhenLastFlushed + (Updated - this.updatedWhenLastFlushed);
+            Created = this.createdWhenLastFlushed;
+            Updated = this.updatedWhenLastFlushed;
             Pending = 0;
         }
     }

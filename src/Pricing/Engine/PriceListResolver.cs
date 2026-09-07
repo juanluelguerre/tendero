@@ -24,7 +24,7 @@ public sealed class PriceListResolver : IPriceResolver
             // price, it is incoherent data. Skipped rather than mixed:
             // multi-currency is deferred on purpose, and a cart with two
             // currencies does not add up.
-            if (!string.Equals(price.Currency, request.CatalogPrice.Currency, StringComparison.OrdinalIgnoreCase))
+            if (!String.Equals(price.Currency, request.CatalogPrice.Currency, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             return new ResolvedPrice(price, list.Code);

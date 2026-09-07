@@ -114,9 +114,9 @@ public sealed class Order : AggregateRoot
         [OrderStatus.Cancelled] = []
     };
 
-    private readonly List<OrderLine> _lines = [];
-    private readonly List<OrderDiscount> _discounts = [];
-    private readonly List<OrderTax> _taxes = [];
+    private readonly List<OrderLine> lines = [];
+    private readonly List<OrderDiscount> discounts = [];
+    private readonly List<OrderTax> taxes = [];
 
     public OrderId Id { get; private set; }
     public CustomerId CustomerId { get; private set; }
@@ -163,9 +163,9 @@ public sealed class Order : AggregateRoot
     /// reason the lines are: EF maps a private collection into one JSON column,
     /// and the aggregate keeps the only way to add to it.
     /// </summary>
-    public IReadOnlyList<OrderDiscount> Discounts => _discounts;
+    public IReadOnlyList<OrderDiscount> Discounts => this.discounts;
 
-    public IReadOnlyList<OrderTax> Taxes => _taxes;
+    public IReadOnlyList<OrderTax> Taxes => this.taxes;
 
     /// <summary>Null until a provider authorises. It is the only thing that can
     /// be refunded, which is why a return checks it rather than the status.</summary>
@@ -177,14 +177,14 @@ public sealed class Order : AggregateRoot
     /// </summary>
     public OrderStop? Stop { get; private set; }
 
-    public IReadOnlyList<OrderLine> Lines => _lines;
+    public IReadOnlyList<OrderLine> Lines => this.lines;
 
     /// <summary>
     /// What the lines add up to before anything is applied. It is NOT the order
     /// total, and it used to be — which was harmless while an order had no
     /// discounts, no shipping and no tax, and became wrong the moment it did.
     /// </summary>
-    public Money LinesTotal => _lines.Aggregate(
+    public Money LinesTotal => this.lines.Aggregate(
         Money.Zero(Currency),
         (sum, line) => sum + line.Total);
 
@@ -203,7 +203,7 @@ public sealed class Order : AggregateRoot
     /// </summary>
     public IReadOnlyList<(string Sku, int Quantity)> SkuQuantities() =>
     [
-        .. _lines
+        .. this.lines
             .GroupBy(line => line.Sku, StringComparer.OrdinalIgnoreCase)
             .Select(group => (Sku: group.Key, Quantity: group.Sum(line => line.Quantity)))
     ];
@@ -277,9 +277,9 @@ public sealed class Order : AggregateRoot
             Quote = quote,
             Totals = totals
         };
-        order._lines.AddRange(lines);
-        order._discounts.AddRange(discounts ?? []);
-        order._taxes.AddRange(taxes ?? []);
+        order.lines.AddRange(lines);
+        order.discounts.AddRange(discounts ?? []);
+        order.taxes.AddRange(taxes ?? []);
         order.Raise(new OrderPlaced(order.Id, now));
         return order;
     }

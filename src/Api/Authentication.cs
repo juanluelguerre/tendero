@@ -89,9 +89,9 @@ internal sealed class HttpPrincipalAccessor(
     /// Without this, each read is a database round trip for an answer that
     /// cannot have changed inside one request.
     /// </summary>
-    private CommercePrincipal? _resolved;
+    private CommercePrincipal? resolved;
 
-    public CommercePrincipal Current => _resolved ??= Resolve();
+    public CommercePrincipal Current => this.resolved ??= Resolve();
 
     private CommercePrincipal Resolve()
     {

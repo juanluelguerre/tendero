@@ -21,8 +21,8 @@ catch (ArgumentException exception)
     return 2;
 }
 
-var suite = suites.FirstOrDefault(
-    candidate => string.Equals(candidate.Name, options.Suite, StringComparison.OrdinalIgnoreCase));
+var suite = suites.FirstOrDefault(candidate => String.Equals(
+    candidate.Name, options.Suite, StringComparison.OrdinalIgnoreCase));
 
 if (suite is null)
 {
@@ -30,7 +30,7 @@ if (suite is null)
     // registered sources: an unknown name is a caller's error, and the answer is
     // the list, not a generic failure.
     Console.Error.WriteLine(
-        $"Unknown suite '{options.Suite}'. Available: {string.Join(", ", suites.Select(s => s.Name))}.");
+        $"Unknown suite '{options.Suite}'. Available: {String.Join(", ", suites.Select(s => s.Name))}.");
     return 2;
 }
 

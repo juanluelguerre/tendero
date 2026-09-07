@@ -1,36 +1,38 @@
 # SeedImages
 
-Dibuja las ilustraciones de producto de `seed/images/`. Se ejecuta **en la
-máquina de quien desarrolla**, una vez para las que faltan y ocasionalmente para
-rehacer alguna. No entra en CI: no hay contenedor de servicio con GPU, y esto es
-una herramienta de autor, como `dotnet-ef`.
+Draws the product illustrations in `seed/images/`. It runs **on a developer's
+machine**, once for the ones that are missing and occasionally to redo one. It
+does not enter CI: there is no service container with a GPU, and this is an
+authoring tool, like `dotnet-ef`.
 
-## Estado
+## State
 
-En construcción. Hoy hace dos cosas y ninguna dibuja nada:
+Under construction. Two commands today, and neither draws anything:
 
 ```bash
-# Los prompts de los que faltan, sin cargar ningún modelo. Instantáneo.
+# The prompts for the missing products, loading no model at all. Instant.
 dotnet run --project tools/SeedImages -- dry-run --take 5
 dotnet run --project tools/SeedImages -- dry-run --only B073WXYZ01
 
-# Lo que los grafos ONNX declaran de verdad: nombres de tensores, tipos, formas.
-dotnet run --project tools/SeedImages -- inspect --models <carpeta> --ep dml
+# What the ONNX graphs really declare: tensor names, types, shapes.
+dotnet run --project tools/SeedImages -- inspect --models <dir> --ep dml
 ```
 
-`inspect` existe porque un export de SDXL son cinco grafos cuyos nombres de
-entrada y salida **cambian entre exportadores**, y una tubería escrita contra los
-equivocados no falla: produce ruido. Ejecutarlo contra un modelo nuevo cuesta dos
-minutos y ahorra dos días.
+`inspect` exists because an SDXL export is five graphs whose input and output
+names **differ between exporters**, and a pipeline written against the wrong ones
+does not fail — it produces noise. Running it against a new model costs two
+minutes and saves two days. It reports a missing component and steps over it
+rather than refusing, because the moment it is most useful is on a half-finished
+download.
 
-## El modelo
+## The model
 
-No se descarga solo y no está en el repositorio: son casi 10 GB y `models/` está
-en el `.gitignore`. Hace falta un export ONNX de **SDXL base 1.0 optimizado para
-DirectML**, con la estructura de carpetas de diffusers:
+It is not downloaded for you and it is not in the repository: almost 10 GB, and
+`models/` is in `.gitignore`. What is needed is an ONNX export of **SDXL base 1.0
+optimised for DirectML**, in the diffusers folder layout:
 
 ```
-<carpeta>/
+<dir>/
   scheduler/scheduler_config.json
   tokenizer/{vocab.json, merges.txt, special_tokens_map.json}
   tokenizer_2/{...}
@@ -40,42 +42,49 @@ DirectML**, con la estructura de carpetas de diffusers:
   vae_decoder/model.onnx
 ```
 
-**Comprueba su licencia antes de descargarlo** (ADR 0006). El criterio no es el
-de un paquete: los pesos no se distribuyen —corren una vez aquí— y lo que sí sale
-son las cien imágenes, así que **la licencia se lee mirando qué dice sobre las
-salidas**. `openrail++` renuncia expresamente a derechos sobre ellas y entra;
-un modelo no comercial no, porque esa restricción alcanza a los ficheros que
-acaban en el repositorio.
+**Check its licence before downloading it** (ADR 0006). The test is not the one
+a package gets: the weights are never distributed — they run once, here — and
+what does leave is the hundred images. So **a generator's licence is read by
+looking at what it says about its outputs**. `openrail++` explicitly disclaims
+any rights over them and passes; a non-commercial model does not, because that
+restriction reaches the files that end up in the repository.
 
-## Por qué DirectML y no CUDA
+## Why DirectML and not CUDA
 
-Porque en una GPU Blackwell —la serie RTX 50— **el proveedor CUDA de ONNX Runtime
-no trae kernels compilados**. El issue [26177] de onnxruntime está cerrado y su
-solución es compilar ONNX Runtime desde fuente con
-`CMAKE_CUDA_ARCHITECTURES=120`, parcheando dos cabeceras por el camino. El export
-que publica el equipo de ONNX Runtime para CUDA lo dice además en su propia
-ficha: *"It cannot run in other execution providers like CPU or DirectML"*.
+Because on a Blackwell GPU — the RTX 50 series — **ONNX Runtime's CUDA provider
+ships no compiled kernels**. onnxruntime issue 26177 is closed and its answer is
+to build ONNX Runtime from source with `CMAKE_CUDA_ARCHITECTURES=120`, patching
+two headers along the way. The export the ONNX Runtime team publishes for CUDA
+says as much on its own model card: *"It cannot run in other execution providers
+like CPU or DirectML"* — and it does not: its UNet fails to load on both, on
+`com.microsoft.SkipGroupNorm` and `com.microsoft.NhwcConv`, which are CUDA
+contrib kernels.
 
-DirectML acelera sobre cualquier GPU con DX12, no necesita instalar nada y no
-sabe qué es una arquitectura CUDA. Es entre 1,5 y 2,5 veces más lento, y más
-lento gana a CPU.
+DirectML accelerates on any DX12 GPU, needs nothing installed, and knows nothing
+about CUDA architectures. It is 1.5 to 2.5 times slower, and slower beats CPU.
 
-**CUDA queda apuntado como opcional para el futuro.** La cuenta que lo difiere:
-noventa y dos imágenes son entre hora y media y tres horas desatendidas con
-DirectML, y entre media y una con CUDA. Ahorrar una hora de una tarea que corre
-sola no paga un build desde fuente — es la regla de escala de `CLAUDE.md`, con su
-número apuntado. Si algún día se hace, el mismo `inspect --ep cuda` dice en dos
-minutos si ata.
+**CUDA is recorded as an option for later**, with the number that defers it:
+ninety-two images are an hour and a half to three hours unattended on DirectML,
+and half an hour to one on CUDA. Saving an hour on a job that runs by itself does
+not pay for a from-source build — the scale rule in `CLAUDE.md`, with its
+measured number. If it is ever wanted, `inspect --ep cuda` says in two minutes
+whether it binds.
 
-## Los prompts
+## The prompts
 
-Se construyen desde el catálogo, no desde la lista en prosa de
-`seed/IMAGES-TODO.md`: los dos dicen lo mismo hoy y el JSON es el que importa la
-tienda. El color sale de `attributes["color"]` —una etiqueta en español— y se
-traduce con las opciones de `seed/attributes.sample.json`, que es donde ya vive
-la pareja es/en.
+They are built from the catalogue, not from the prose list in
+`seed/IMAGES-TODO.md`: the two say the same thing today and the JSON is the one
+the shop imports. The colour comes from `attributes["color"]` — a Spanish label —
+and is translated through the options in `seed/attributes.sample.json`, which is
+where the es/en pairing already lives.
 
-**Treinta y cinco productos no declaran color**, y ése es el caso que se olvida:
-producen una línea sin cláusula de color en lugar de un `The object is :` cojo.
-Un test lo comprueba, y otro comprueba que el bloque de estilo del código sigue
-publicado en `IMAGES-TODO.md`.
+**Thirty-five products declare no colour**, and that is the case that gets
+forgotten: they produce a line with no colour clause instead of a limping
+`The object is :`. One test checks that, and another checks that the style block
+in the code is still published in `IMAGES-TODO.md`.
+
+The subject line comes first, which is a change from the template that document
+used to publish. CLIP takes 77 tokens and discards the rest without saying so,
+and its tokenizer splits numbers one digit at a time, so each hex code costs five
+or six. With the subject last — where anybody would naturally put it — the colour
+and the product are exactly what falls off the end.

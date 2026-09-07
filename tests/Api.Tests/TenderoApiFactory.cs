@@ -86,13 +86,13 @@ public sealed class TenderoApiFactory(string? externalAuthority = null)
     /// </summary>
     private sealed class LazyTestServerHandler(TenderoApiFactory factory) : DelegatingHandler
     {
-        private HttpMessageInvoker? _inner;
+        private HttpMessageInvoker? inner;
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            _inner ??= new HttpMessageInvoker(factory.Server.CreateHandler());
-            return _inner.SendAsync(request, cancellationToken);
+            this.inner ??= new HttpMessageInvoker(factory.Server.CreateHandler());
+            return this.inner.SendAsync(request, cancellationToken);
         }
     }
 }

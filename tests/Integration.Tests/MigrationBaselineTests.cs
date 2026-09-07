@@ -49,10 +49,10 @@ public sealed class MigrationBaselineTests(PostgresFixture postgres)
              The initial migration does not reproduce the model's schema.
 
              Only in the model (the migration forgot these):
-             {string.Join(Environment.NewLine, missing.DefaultIfEmpty("  (none)"))}
+             {String.Join(Environment.NewLine, missing.DefaultIfEmpty("  (none)"))}
 
              Only in the migration (it invented these):
-             {string.Join(Environment.NewLine, extra.DefaultIfEmpty("  (none)"))}
+             {String.Join(Environment.NewLine, extra.DefaultIfEmpty("  (none)"))}
              """);
     }
 

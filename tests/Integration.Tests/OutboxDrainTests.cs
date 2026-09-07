@@ -142,7 +142,7 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
     /// </summary>
     private sealed class TestScope : IAsyncDisposable
     {
-        private readonly ServiceProvider _provider;
+        private readonly ServiceProvider provider;
 
         public TenderoDbContextFactory Factory { get; }
         public RecordingIndexer Indexer { get; } = new();
@@ -168,12 +168,12 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
             services.AddCatalog(configuration);
             services.AddSingleton<IProductIndexer>(Indexer);
 
-            _provider = services.BuildServiceProvider(validateScopes: true);
+            this.provider = services.BuildServiceProvider(validateScopes: true);
         }
 
         public async Task<ImportProductsResult> Import()
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var dispatcher = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
             return await dispatcher.SendAsync(new ImportProductsCommand("seed"));
         }
@@ -184,7 +184,7 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         /// </summary>
         public async Task<int> DrainOutboxAsync(CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
             var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
 
@@ -204,7 +204,7 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
             return pending.Count;
         }
 
-        public async ValueTask DisposeAsync() => await _provider.DisposeAsync();
+        public async ValueTask DisposeAsync() => await this.provider.DisposeAsync();
     }
 
     /// <summary>

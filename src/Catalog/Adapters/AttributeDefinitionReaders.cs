@@ -19,12 +19,12 @@ namespace ElGuerre.Tendero.Catalog.Adapters;
 internal sealed class SeedFileAttributeDefinitionReader(
     IOptions<AttributeSeedOptions> options, TimeProvider clock) : IAttributeDefinitionReader
 {
-    private AttributeDefinitions? _cached;
+    private AttributeDefinitions? cached;
 
     public async Task<AttributeDefinitions> AllAsync(CancellationToken cancellationToken = default)
     {
-        if (_cached is not null)
-            return _cached;
+        if (this.cached is not null)
+            return this.cached;
 
         var path = options.Value.FilePath;
 
@@ -32,9 +32,9 @@ internal sealed class SeedFileAttributeDefinitionReader(
         // attributes as plain text, which is the previous behaviour. Failing
         // here would turn missing data into a shop that is down.
         if (!File.Exists(path))
-            return _cached = AttributeDefinitions.Empty;
+            return this.cached = AttributeDefinitions.Empty;
 
-        return _cached = new AttributeDefinitions(
+        return this.cached = new AttributeDefinitions(
             await AttributeDefinitionSeedFile.LoadAsync(path, clock, cancellationToken));
     }
 }

@@ -17,29 +17,30 @@ internal sealed class OrderBuilder
 {
     private static readonly TestClock Clock = new();
 
-    private List<OrderLine> _lines =
+    private List<OrderLine> lines =
     [
-        new(ProductId.New(), VariantId.New(), "B073WXYZ01-38", "Zapatillas de running",
+        new(
+            ProductId.New(), VariantId.New(), "B073WXYZ01-38", "Zapatillas de running",
             "azul marino · 38", ImageId: null, new Money(79.95m, "EUR"), 1)
     ];
 
-    private string _culture = "es";
-    private string _idempotencyKey = "checkout-1";
+    private string culture = "es";
+    private string idempotencyKey = "checkout-1";
 
     /// <summary>
     /// Somewhere to send it. Every default here declares that it is irrelevant
     /// to the behaviour under test — an order needs an address the way it needs
     /// a currency, and no test in this file is about Madrid.
     /// </summary>
-    private Address _shipTo = Address.Create(
+    private Address shipTo = Address.Create(
         "Ana Ruiz", "Calle Mayor 1", null, "Madrid", null, "28013", "ES");
 
-    private OrderShipping _shipping = new(
+    private OrderShipping shipping = new(
         "standard", "Envio estandar", new Money(4.95m, "EUR"), 3);
 
-    private OrderTotals? _totals;
-    private IReadOnlyList<OrderDiscount> _discounts = [];
-    private IReadOnlyList<OrderTax> _taxes = [];
+    private OrderTotals? totals;
+    private IReadOnlyList<OrderDiscount> discounts = [];
+    private IReadOnlyList<OrderTax> taxes = [];
 
     public static OrderBuilder Default() => new();
 
@@ -47,31 +48,31 @@ internal sealed class OrderBuilder
 
     public OrderBuilder WithLines(IEnumerable<OrderLine> lines)
     {
-        _lines = [.. lines];
+        this.lines = [.. lines];
         return this;
     }
 
     public OrderBuilder InCulture(string culture)
     {
-        _culture = culture;
+        this.culture = culture;
         return this;
     }
 
     public OrderBuilder WithIdempotencyKey(string key)
     {
-        _idempotencyKey = key;
+        this.idempotencyKey = key;
         return this;
     }
 
     public OrderBuilder ShippedTo(Address address)
     {
-        _shipTo = address;
+        this.shipTo = address;
         return this;
     }
 
     public OrderBuilder WithShipping(OrderShipping shipping)
     {
-        _shipping = shipping;
+        this.shipping = shipping;
         return this;
     }
 
@@ -83,19 +84,19 @@ internal sealed class OrderBuilder
     /// </summary>
     public OrderBuilder WithTotals(OrderTotals totals)
     {
-        _totals = totals;
+        this.totals = totals;
         return this;
     }
 
     public OrderBuilder WithDiscounts(params OrderDiscount[] discounts)
     {
-        _discounts = [.. discounts];
+        this.discounts = [.. discounts];
         return this;
     }
 
     public OrderBuilder WithTaxes(params OrderTax[] taxes)
     {
-        _taxes = [.. taxes];
+        this.taxes = [.. taxes];
         return this;
     }
 
@@ -104,37 +105,37 @@ internal sealed class OrderBuilder
         // An order with no lines is a rejection the aggregate owns, so the
         // builder has to be able to ASK for one. Falling back to the currency of
         // the shipping keeps this method from throwing first and hiding it.
-        var currency = _lines.Count > 0 ? _lines[0].UnitPrice.Currency : _shipping.Amount.Currency;
+        var currency = this.lines.Count > 0 ? this.lines[0].UnitPrice.Currency : this.shipping.Amount.Currency;
         // Only sum when the lines agree. Mixing currencies is a rejection the
         // AGGREGATE owns, and a builder that added them up first would throw
         // "Currency mismatch" from Money and hide the sentence under test.
-        var mixed = _lines.Any(line =>
+        var mixed = this.lines.Any(line =>
             !string.Equals(line.UnitPrice.Currency, currency, StringComparison.OrdinalIgnoreCase));
 
         var subtotal = mixed
             ? Money.Zero(currency)
-            : _lines.Aggregate(Money.Zero(currency), (sum, line) => sum + line.Total);
+            : this.lines.Aggregate(Money.Zero(currency), (sum, line) => sum + line.Total);
 
-        var totals = _totals ?? new OrderTotals(
+        var totals = this.totals ?? new OrderTotals(
             subtotal,
             Money.Zero(currency),
-            _shipping.Amount,
+            this.shipping.Amount,
             Money.Zero(currency),
-            subtotal + _shipping.Amount);
+            subtotal + this.shipping.Amount);
 
         return Order.Place(
             Clock,
             CustomerId.New(),
-            _idempotencyKey,
-            _lines,
-            _shipTo,
-            _shipTo,
-            _shipping,
+            this.idempotencyKey,
+            this.lines,
+            this.shipTo,
+            this.shipTo,
+            this.shipping,
             new OrderQuote("quote-1", "0123456789abcdef0123456789abcdef", Clock.GetUtcNow()),
             totals,
-            _discounts,
-            _taxes,
-            _culture);
+            this.discounts,
+            this.taxes,
+            this.culture);
     }
 
     /// <summary>

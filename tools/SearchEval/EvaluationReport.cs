@@ -22,9 +22,11 @@ public static class EvaluationReport
             var limit = thresholds.For(score.Culture);
             var passed = Passes(score, limit);
 
-            report.AppendLine(string.Create(CultureInfo.InvariantCulture,
-                $"| {score.Culture} | {score.ScoredQueries} | {score.MeanNdcgAt10:0.000} | {limit.NdcgAt10:0.000} " +
-                $"| {score.MeanRecallAt50:0.000} | {limit.RecallAt50:0.000} | {(passed ? "pass" : "FAIL")} |"));
+            report.AppendLine(
+                String.Create(
+                    CultureInfo.InvariantCulture,
+                    $"| {score.Culture} | {score.ScoredQueries} | {score.MeanNdcgAt10:0.000} | {limit.NdcgAt10:0.000} " +
+                    $"| {score.MeanRecallAt50:0.000} | {limit.RecallAt50:0.000} | {(passed ? "pass" : "FAIL")} |"));
         }
 
         foreach (var score in scores)
@@ -34,10 +36,12 @@ public static class EvaluationReport
             report.AppendLine("|---|---:|---:|---:|");
 
             // Worst first: the report has to start with what needs fixing.
-            foreach (var query in score.Queries.OrderBy(query => query.NdcgAt10 ?? double.MaxValue))
+            foreach (var query in score.Queries.OrderBy(query => query.NdcgAt10 ?? Double.MaxValue))
             {
-                report.AppendLine(string.Create(CultureInfo.InvariantCulture,
-                    $"| {query.Query} | {Format(query.NdcgAt10)} | {Format(query.RecallAt50)} | {query.Returned} |"));
+                report.AppendLine(
+                    String.Create(
+                        CultureInfo.InvariantCulture,
+                        $"| {query.Query} | {Format(query.NdcgAt10)} | {Format(query.RecallAt50)} | {query.Returned} |"));
             }
         }
 

@@ -28,13 +28,13 @@ public sealed class AttributeDefinitions(IReadOnlyList<AttributeDefinition> defi
 {
     public static readonly AttributeDefinitions Empty = new([]);
 
-    private readonly Dictionary<string, AttributeDefinition> _byCode =
+    private readonly Dictionary<string, AttributeDefinition> byCode =
         definitions.ToDictionary(definition => definition.Code, StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyList<AttributeDefinition> All { get; } = definitions;
 
     public AttributeDefinition? ByCode(string code) =>
-        _byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
+        this.byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
 
     /// <summary>The definition that answers to the key a source sends.</summary>
     public AttributeDefinition? ForSourceKey(string key) =>

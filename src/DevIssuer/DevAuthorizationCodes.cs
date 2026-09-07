@@ -45,7 +45,7 @@ public sealed class DevAuthorizationCodes(TimeProvider clock)
     /// </summary>
     private static readonly TimeSpan Lifetime = TimeSpan.FromSeconds(60);
 
-    private readonly ConcurrentDictionary<string, DevAuthorizationCode> _codes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, DevAuthorizationCode> codes = new(StringComparer.Ordinal);
 
     public string Issue(string subject, string redirectUri, string codeChallenge, string? nonce)
     {
@@ -53,7 +53,7 @@ public sealed class DevAuthorizationCodes(TimeProvider clock)
         // as it lives, so it is generated the way one is.
         var code = Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(32));
 
-        _codes[code] = new DevAuthorizationCode(
+        this.codes[code] = new DevAuthorizationCode(
             subject, redirectUri, codeChallenge, nonce, clock.GetUtcNow().Add(Lifetime));
 
         Sweep();
@@ -77,7 +77,7 @@ public sealed class DevAuthorizationCodes(TimeProvider clock)
         // Removed on the first read, so a replay finds nothing. This is the
         // single-use rule, and it is one method call rather than a flag that
         // somebody has to remember to set.
-        if (!_codes.TryRemove(code, out var found))
+        if (!this.codes.TryRemove(code, out var found))
             return false;
 
         if (found.ExpiresAt <= clock.GetUtcNow())
@@ -109,10 +109,10 @@ public sealed class DevAuthorizationCodes(TimeProvider clock)
     {
         var now = clock.GetUtcNow();
 
-        foreach (var (code, issued) in _codes)
+        foreach (var (code, issued) in this.codes)
         {
             if (issued.ExpiresAt <= now)
-                _codes.TryRemove(code, out _);
+                this.codes.TryRemove(code, out _);
         }
     }
 }

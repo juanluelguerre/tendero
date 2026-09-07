@@ -46,36 +46,36 @@ public sealed class PricingSeedOptions
 /// </summary>
 internal sealed class SeedFilePriceListReader(IOptions<PricingSeedOptions> options) : IPriceListReader
 {
-    private PriceBook? _cached;
+    private PriceBook? cached;
 
     public async Task<PriceBook> BookAsync(CancellationToken cancellationToken = default)
     {
-        if (_cached is not null)
-            return _cached;
+        if (this.cached is not null)
+            return this.cached;
 
         var path = options.Value.PriceListsPath;
 
         // With no file, the catalogue price carries on. A shop with no tariffs
         // is a shop selling at list price, not a shop that is down.
         if (!File.Exists(path))
-            return _cached = PriceBook.Empty;
+            return this.cached = PriceBook.Empty;
 
-        return _cached = new PriceBook(await PricingSeedFile.LoadPriceListsAsync(path, cancellationToken));
+        return this.cached = new PriceBook(await PricingSeedFile.LoadPriceListsAsync(path, cancellationToken));
     }
 }
 
 internal sealed class SeedFilePromotionReader(IOptions<PricingSeedOptions> options) : IPromotionReader
 {
-    private IReadOnlyList<Promotion>? _cached;
+    private IReadOnlyList<Promotion>? cached;
 
     public async Task<IReadOnlyList<Promotion>> AllAsync(CancellationToken cancellationToken = default)
     {
-        if (_cached is not null)
-            return _cached;
+        if (this.cached is not null)
+            return this.cached;
 
         var path = options.Value.PromotionsPath;
 
-        return _cached = File.Exists(path)
+        return this.cached = File.Exists(path)
             ? await PricingSeedFile.LoadPromotionsAsync(path, cancellationToken)
             : [];
     }

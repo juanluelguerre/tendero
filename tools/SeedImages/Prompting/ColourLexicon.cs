@@ -18,10 +18,9 @@ public sealed class ColourLexicon
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    private readonly Dictionary<string, string> _englishBySpanish;
+    private readonly Dictionary<string, string> englishBySpanish;
 
-    private ColourLexicon(Dictionary<string, string> englishBySpanish) =>
-        _englishBySpanish = englishBySpanish;
+    private ColourLexicon(Dictionary<string, string> englishBySpanish) => this.englishBySpanish = englishBySpanish;
 
     public static ColourLexicon Read(string path)
     {
@@ -29,8 +28,8 @@ public sealed class ColourLexicon
             ?? throw new InvalidDataException($"'{path}' is empty or not an attribute definition array.");
 
         var colour = definitions.FirstOrDefault(definition =>
-                string.Equals(definition.Code, ColourCode, StringComparison.OrdinalIgnoreCase))
-            ?? throw new InvalidDataException($"'{path}' declares no {ColourCode} attribute.");
+                         String.Equals(definition.Code, ColourCode, StringComparison.OrdinalIgnoreCase))
+                     ?? throw new InvalidDataException($"'{path}' declares no {ColourCode} attribute.");
 
         // Ordinal and not culture-aware: the repository builds with
         // InvariantGlobalization, where a culture-sensitive comparison is a
@@ -52,7 +51,7 @@ public sealed class ColourLexicon
     /// <summary>The English label, or null when the catalogue says a colour this
     /// file has never heard of — which is a seed that drifted, not a prompt to
     /// improvise around.</summary>
-    public string? English(string spanishLabel) => _englishBySpanish.GetValueOrDefault(spanishLabel);
+    public string? English(string spanishLabel) => this.englishBySpanish.GetValueOrDefault(spanishLabel);
 
     private sealed record Definition(string Code, Option[]? Options);
 
