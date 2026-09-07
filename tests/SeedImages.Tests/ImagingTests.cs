@@ -115,6 +115,37 @@ public sealed class ImagingTests
         Assert.Contains("blank", result.Detail, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// **The bug the first real image found.** The probe used to measure distance
+    /// from the declared #FAF9F7, and the model painted a plain grey that was a
+    /// different plain grey — so every pixel counted as ink and a perfectly framed
+    /// backpack was reported as filling the whole frame. The question is where the
+    /// object is, and the background is whatever the picture's corners say it is.
+    /// </summary>
+    [Fact]
+    public void An_object_on_a_background_the_model_chose_is_still_measured_correctly()
+    {
+        var size = 1000;
+        var rgb = new byte[size * size * 3];
+
+        // Not the declared background: a plain mid grey, like the one SDXL
+        // actually produces when asked for "plain light warm grey".
+        Array.Fill(rgb, (byte)0xD0);
+
+        for (var row = 300; row <= 700; row++)
+            for (var column = 0; column < size; column++)
+            {
+                var at = ((row * size) + column) * 3;
+                rgb[at] = rgb[at + 1] = rgb[at + 2] = 20;
+            }
+
+        var result = SafeAreaProbe.Probe(rgb, size);
+
+        Assert.True(result.Passed, result.Detail);
+        Assert.Equal(300, result.FirstRow);
+        Assert.Equal(700, result.LastRow);
+    }
+
     [Fact]
     public void A_single_stray_pixel_near_the_edge_does_not_fail_the_image()
     {

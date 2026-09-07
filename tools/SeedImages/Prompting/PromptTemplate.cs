@@ -37,7 +37,8 @@ public static class PromptTemplate
     [
         "Flat vector illustration of one product, isolated and centred.",
         "Plain light warm grey background, even lighting, soft shadow.",
-        "Three-quarter view, at most 75% of the frame height, clear margin above and below."
+        "Three-quarter view, zoomed out, the whole object small within the frame,",
+        "occupying at most 70% of the height, with wide empty margins above and below."
     ];
 
     /// <summary>

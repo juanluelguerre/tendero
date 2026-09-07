@@ -33,6 +33,9 @@ switch (command)
             args.Contains("--force"),
             UInt64.TryParse(Value("--rng-seed"), out var rng) ? rng : null);
 
+    case "probe":
+        return Probe(Value("--in"));
+
     case "tokens":
         return Tokens(Value("--models"));
 
@@ -52,6 +55,7 @@ switch (command)
                        [--guidance <f>] [--out <dir>] [--ep dml|cpu] [--force]
                        [--rng-seed <n>]
                                                       draw the missing illustrations
+              probe --in <dir|file>                   where the object sits in images that exist
               tokens --models <dir>                   what each line of the prompt costs
               dry-run [--only <id>] [--take <n>] [--models <dir>]
                                                       print the prompts, and their
@@ -228,8 +232,8 @@ static int Tokens(string? models)
     Console.WriteLine();
     Console.WriteLine($"across all {costs.Length} products: shortest {costs[0]}, median {costs[costs.Length / 2]}, longest {costs[^1]}");
     Console.WriteLine(over == 0
-        ? $"  every prompt fits in {room}."
-        : $"  {over} of {costs.Length} are truncated. The longest loses {costs[^1] - room} tokens.");
+        ? $"  {costs.Length} of {costs.Length} fit in one {room}-token window."
+        : $"  {over} of {costs.Length} spill into a second window, which is encoded rather than discarded.");
 
     return 0;
 }
@@ -291,6 +295,66 @@ static int Generate(
         if (!image.SafeArea.Passed)
             failures++;
     }
+
+    return failures == 0 ? 0 : 1;
+}
+
+// Where the object sits in images that already exist. It decodes rather than
+// generates, so it costs milliseconds -- which makes it the way to check a whole
+// folder, including the eight illustrations that were made by hand and have
+// never been measured against the rule they were written for.
+static int Probe(string? input)
+{
+    input ??= Path.Combine(RepositoryRoot.Find(), "seed", "images");
+
+    var files = Directory.Exists(input)
+        ? Directory.EnumerateFiles(input, "*.webp").Order().ToArray()
+        : File.Exists(input) ? [input] : [];
+
+    if (files.Length == 0)
+    {
+        Console.Error.WriteLine($"Nothing to probe at '{input}'.");
+        return 2;
+    }
+
+    var failures = 0;
+
+    foreach (var file in files)
+    {
+        using var bitmap = SkiaSharp.SKBitmap.Decode(file);
+
+        if (bitmap is null)
+        {
+            Console.WriteLine($"{Path.GetFileName(file),-24}  not an image this can read");
+            failures++;
+            continue;
+        }
+
+        var size = Math.Min(bitmap.Width, bitmap.Height);
+        var rgb = new byte[size * size * 3];
+
+        for (var row = 0; row < size; row++)
+            for (var column = 0; column < size; column++)
+            {
+                var pixel = bitmap.GetPixel(column, row);
+                var at = ((row * size) + column) * 3;
+
+                rgb[at] = pixel.Red;
+                rgb[at + 1] = pixel.Green;
+                rgb[at + 2] = pixel.Blue;
+            }
+
+        var result = SafeAreaProbe.Probe(rgb, size);
+        var verdict = result.Passed ? "ok  " : "CROP";
+
+        Console.WriteLine($"{verdict}  {Path.GetFileName(file),-24}  {bitmap.Width}x{bitmap.Height}  {result.Detail}");
+
+        if (!result.Passed)
+            failures++;
+    }
+
+    Console.WriteLine();
+    Console.WriteLine($"{files.Length - failures} of {files.Length} keep the object inside the central {ImageSpec.SafeArea:P0}.");
 
     return failures == 0 ? 0 : 1;
 }

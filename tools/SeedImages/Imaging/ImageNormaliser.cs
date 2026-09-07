@@ -48,14 +48,28 @@ public static class ImageNormaliser
         var info = new SKImageInfo(ImageSpec.Size, ImageSpec.Size, SKColorType.Rgba8888, SKAlphaType.Opaque);
         using var surface = SKSurface.Create(info);
 
-        surface.Canvas.Clear(ImageSpec.Background);
+        // **The safe area is applied here, not asked for in the prompt.** Three
+        // rewrites of "occupying at most 75% of the frame height, with wide empty
+        // margins" produced pictures at 94%; a diffusion model has no notion of
+        // the frame it is filling. The object's extent is measured and the
+        // drawing is scaled to fit inside the band, which is arithmetic and
+        // therefore true every time.
+        //
+        // The canvas is filled with the background the picture ITSELF uses rather
+        // than the declared #FAF9F7, because a scaled drawing on a different grey
+        // would leave a visible border where the two meet.
+        var bounds = SafeAreaProbe.Measure(rgb, size);
+
+        surface.Canvas.Clear(bounds.Empty ? ImageSpec.Background : bounds.Background);
 
         // Mitchell rather than Catmull-Rom: this register is flat colour with
         // hard edges, and the sharper filter rings on exactly those.
         var sampling = new SKSamplingOptions(new SKCubicResampler(1 / 3f, 1 / 3f));
 
+        var placement = Placement(bounds, size);
+
         using (var image = SKImage.FromBitmap(source))
-            surface.Canvas.DrawImage(image, new SKRect(0, 0, ImageSpec.Size, ImageSpec.Size), sampling);
+            surface.Canvas.DrawImage(image, placement, sampling);
 
         using var flattened = surface.Snapshot();
 
@@ -72,6 +86,35 @@ public static class ImageNormaliser
         }
 
         throw new InvalidOperationException("Unreachable: the ladder always returns on its last rung.");
+    }
+
+    /// <summary>
+    /// Where to draw the whole source so that its INK lands centred inside the
+    /// safe band. The scale comes from whichever axis is tighter, and the offset
+    /// puts the ink's middle on the frame's middle — so the picture is not
+    /// cropped, only placed.
+    /// </summary>
+    private static SKRect Placement(SafeAreaProbe.Bounds bounds, int size)
+    {
+        if (bounds.Empty)
+            return new SKRect(0, 0, ImageSpec.Size, ImageSpec.Size);
+
+        var band = ImageSpec.Size * ImageSpec.SafeArea;
+
+        var scale = Math.Min(
+            Math.Min(band / bounds.Height, band / bounds.Width),
+            // Never blow a small object up: a product drawn at a third of the
+            // frame is a decision the model made, and enlarging it invents detail.
+            ImageSpec.Size / (float)size);
+
+        var width = size * scale;
+        var inkCentreX = (bounds.Left + bounds.Right) / 2f * scale;
+        var inkCentreY = (bounds.Top + bounds.Bottom) / 2f * scale;
+
+        var left = (ImageSpec.Size / 2f) - inkCentreX;
+        var top = (ImageSpec.Size / 2f) - inkCentreY;
+
+        return new SKRect(left, top, left + width, top + width);
     }
 
     private static SKBitmap FromRgb(byte[] rgb, int size)
@@ -135,8 +178,75 @@ public static class SafeAreaProbe
 
     public sealed record Result(int FirstRow, int LastRow, int Height, bool Passed, string Detail);
 
+    /// <summary>Where the ink is, in both axes, and what the background is.</summary>
+    public sealed record Bounds(int Top, int Bottom, int Left, int Right, SKColor Background)
+    {
+        public int Height => Bottom - Top + 1;
+
+        public int Width => Right - Left + 1;
+
+        public bool Empty => Bottom < Top;
+    }
+
+    /// <summary>
+    /// The object's extent, used by the normaliser to place it rather than only
+    /// to judge it. Asking a diffusion model to leave a margin is asking it for
+    /// the one thing it is worst at; measuring the margin and applying it is
+    /// arithmetic.
+    /// </summary>
+    public static Bounds Measure(byte[] rgb, int size)
+    {
+        var background = BorderColour(rgb, size);
+        var minimum = (int)(size * RowFloor);
+
+        int top = size, bottom = -1, left = size, right = -1;
+
+        for (var row = 0; row < size; row++)
+        {
+            var ink = 0;
+            int rowLeft = size, rowRight = -1;
+
+            for (var column = 0; column < size; column++)
+            {
+                var at = ((row * size) + column) * 3;
+
+                var distance =
+                    Math.Abs(rgb[at] - background.Red)
+                    + Math.Abs(rgb[at + 1] - background.Green)
+                    + Math.Abs(rgb[at + 2] - background.Blue);
+
+                if (distance <= InkThreshold)
+                    continue;
+
+                ink++;
+                rowLeft = Math.Min(rowLeft, column);
+                rowRight = Math.Max(rowRight, column);
+            }
+
+            if (ink <= minimum)
+                continue;
+
+            top = Math.Min(top, row);
+            bottom = row;
+            left = Math.Min(left, rowLeft);
+            right = Math.Max(right, rowRight);
+        }
+
+        return new Bounds(top, bottom, left, right,
+            new SKColor(background.Red, background.Green, background.Blue));
+    }
+
     public static Result Probe(byte[] rgb, int size)
     {
+        // **The background is whatever the model painted, not the colour the
+        // specification asks for.** The first version measured distance from
+        // #FAF9F7 and reported that a perfectly framed backpack filled the entire
+        // frame -- because the model had produced a plain grey that was simply a
+        // different plain grey. Reading it off the picture makes the probe about
+        // the object's extent, which is the question, instead of about the
+        // palette, which is a separate one.
+        var background = BorderColour(rgb, size);
+
         var minimum = (int)(size * RowFloor);
         int first = -1, last = -1;
 
@@ -149,9 +259,9 @@ public static class SafeAreaProbe
                 var at = ((row * size) + column) * 3;
 
                 var distance =
-                    Math.Abs(rgb[at] - ImageSpec.Background.Red)
-                    + Math.Abs(rgb[at + 1] - ImageSpec.Background.Green)
-                    + Math.Abs(rgb[at + 2] - ImageSpec.Background.Blue);
+                    Math.Abs(rgb[at] - background.Red)
+                    + Math.Abs(rgb[at + 1] - background.Green)
+                    + Math.Abs(rgb[at + 2] - background.Blue);
 
                 if (distance > InkThreshold)
                     ink++;
@@ -178,5 +288,49 @@ public static class SafeAreaProbe
         return new Result(
             first, last, size, passed,
             $"ink spans rows {first}-{last}, {share:F1}% of the height");
+    }
+
+    /// <summary>
+    /// The most common colour around the one-pixel border.
+    ///
+    /// Corners alone are not enough — an object that reaches the top of the frame
+    /// puts itself in two of them, and the probe then measures the picture
+    /// against the product and reports a blank. The whole ring is overwhelmingly
+    /// background unless the object bleeds off all four sides, and an image like
+    /// that fails for other reasons anyway.
+    ///
+    /// Colours are bucketed to five bits a channel first, because a generated
+    /// background is flat to the eye and not to a byte comparison.
+    /// </summary>
+    private static (byte Red, byte Green, byte Blue) BorderColour(byte[] rgb, int size)
+    {
+        var counts = new Dictionary<int, (int Count, byte Red, byte Green, byte Blue)>();
+
+        void Sample(int row, int column)
+        {
+            var at = ((row * size) + column) * 3;
+            byte red = rgb[at], green = rgb[at + 1], blue = rgb[at + 2];
+
+            var bucket = ((red >> 3) << 10) | ((green >> 3) << 5) | (blue >> 3);
+            var seen = counts.GetValueOrDefault(bucket);
+
+            counts[bucket] = (seen.Count + 1, red, green, blue);
+        }
+
+        for (var column = 0; column < size; column++)
+        {
+            Sample(0, column);
+            Sample(size - 1, column);
+        }
+
+        for (var row = 1; row < size - 1; row++)
+        {
+            Sample(row, 0);
+            Sample(row, size - 1);
+        }
+
+        var winner = counts.MaxBy(entry => entry.Value.Count).Value;
+
+        return (winner.Red, winner.Green, winner.Blue);
     }
 }

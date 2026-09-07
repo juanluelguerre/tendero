@@ -98,34 +98,82 @@ public sealed class TokenizerTests
     }
 
     /// <summary>
-    /// **The regression guard on the whole prompt, and it was written from a
-    /// measurement rather than a hunch.**
+    /// **The ceiling is gone, and this is what replaced the guard.**
     ///
-    /// The published template cost 140 to 161 tokens against a budget of 75:
-    /// every one of the hundred products was truncated, losing between 65 and 86
-    /// tokens. Nothing said so — CLIP cuts in silence — and the images would have
-    /// come out plausible and wrong.
+    /// The published template cost 140 to 161 tokens against a window of 75, so
+    /// every one of the hundred products was truncated -- losing 65 to 86 tokens
+    /// each, in silence. Trimming the style block from 123 to 36 fixed it, and
+    /// then putting the product's NAME back into the subject broke it again for
+    /// forty-six of them.
     ///
-    /// Trimming the style block from 123 tokens to 36 fixed it, and this test is
-    /// what stops the next sentence somebody adds from breaking it again.
+    /// Shaving words until a number fits is not a design. Cross-attention does
+    /// not care how long the sequence is, so a long prompt is cut into whole
+    /// windows, each wrapped in its own markers, and laid end to end. What is
+    /// asserted now is not that everything fits in one window but that nothing
+    /// needs more than two: a third would mean a prompt has grown into an essay,
+    /// and every window costs another pass through an encoder.
     /// </summary>
     [Fact]
-    public void Every_prompt_fits_in_the_window_clip_allows()
+    public void No_prompt_needs_more_than_two_windows()
     {
         var tokenizer = Load();
         var root = RepositoryRoot.Find();
         var products = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"));
         var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
-        var room = ClipTokenizer.ContextLength - 2;
 
         var worst = products
-            .Select(product => (product.ItemId, Cost: tokenizer.CountContentTokens(PromptTemplate.Positive(product, colours))))
-            .OrderByDescending(entry => entry.Cost)
+            .Select(product => (product.ItemId, Windows: tokenizer.WindowsNeeded(PromptTemplate.Positive(product, colours))))
+            .OrderByDescending(entry => entry.Windows)
             .First();
 
-        Assert.True(
-            worst.Cost <= room,
-            $"{worst.ItemId} costs {worst.Cost} tokens and CLIP takes {room}. "
-            + "Everything past that is discarded without an error. Shorten the style block.");
+        Assert.True(worst.Windows <= 2, $"{worst.ItemId} needs {worst.Windows} windows.");
+    }
+
+    [Fact]
+    public void A_prompt_that_fits_needs_exactly_one_window()
+    {
+        var tokenizer = Load();
+
+        Assert.Equal(1, tokenizer.WindowsNeeded("an olive backpack"));
+        Assert.Equal(1, tokenizer.WindowsNeeded(string.Empty));
+    }
+
+    [Fact]
+    public void A_long_prompt_is_cut_into_windows_instead_of_being_thrown_away()
+    {
+        var tokenizer = Load();
+
+        // Exactly one window of one word, then a different word, so the tail is
+        // identifiable rather than a repeat of the head.
+        var overflowing = string.Join(" ", Enumerable.Repeat("olive", ClipTokenizer.ContextLength - 2)) + " navy";
+
+        Assert.Equal(2, tokenizer.WindowsNeeded(overflowing));
+
+        var windows = tokenizer.EncodeWindows(overflowing, 2);
+
+        Assert.Equal(2, windows.Length);
+        Assert.All(windows, window => Assert.Equal(ClipTokenizer.ContextLength, window.Length));
+
+        // **The tail survives**, which is the whole point: under truncation the
+        // word after the seventy-fifth was discarded without a word of warning.
+        Assert.Equal(tokenizer.IdOf("olive</w>"), windows[0][1]);
+        Assert.Equal(tokenizer.IdOf("navy</w>"), windows[1][1]);
+    }
+
+    /// <summary>
+    /// Both rows of the guidance batch have to be the same length, so a short
+    /// negative prompt beside a long positive one is padded with a window that
+    /// carries nothing but its markers.
+    /// </summary>
+    [Fact]
+    public void Asking_for_more_windows_than_the_text_needs_pads_with_empty_ones()
+    {
+        var tokenizer = Load();
+
+        var windows = tokenizer.EncodeWindows("an olive backpack", 2);
+
+        Assert.Equal(2, windows.Length);
+        Assert.Equal(tokenizer.IdOf("<|startoftext|>"), windows[1][0]);
+        Assert.Equal(tokenizer.IdOf("<|endoftext|>"), windows[1][1]);
     }
 }

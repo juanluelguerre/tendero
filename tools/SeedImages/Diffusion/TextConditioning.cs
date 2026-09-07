@@ -38,7 +38,7 @@ public sealed record TextConditioning(float[] HiddenStates, float[] PooledEmbeds
     /// `!` in the second — so one set of ids fed to both is wrong for one of
     /// them, silently, in every image.
     /// </summary>
-    public readonly record struct PromptTokens(int[] Negative, int[] Positive);
+    public readonly record struct PromptTokens(int[][] Negative, int[][] Positive);
 
     private const int PooledWidth = 1280;
 
@@ -66,12 +66,12 @@ public sealed record TextConditioning(float[] HiddenStates, float[] PooledEmbeds
     public static TextConditioning Build(
         ITextTower first, PromptTokens firstTokens, ITextTower second, PromptTokens secondTokens)
     {
-        var tokens = firstTokens.Positive.Length;
+        var tokens = firstTokens.Positive.Sum(window => window.Length);
 
-        var lowNegative = first.Encode(firstTokens.Negative);
-        var lowPositive = first.Encode(firstTokens.Positive);
-        var highNegative = second.Encode(secondTokens.Negative);
-        var highPositive = second.Encode(secondTokens.Positive);
+        var lowNegative = EncodeWindows(first, firstTokens.Negative);
+        var lowPositive = EncodeWindows(first, firstTokens.Positive);
+        var highNegative = EncodeWindows(second, secondTokens.Negative);
+        var highPositive = EncodeWindows(second, secondTokens.Positive);
 
         var width = first.Width + second.Width;
         var hidden = new float[2 * tokens * width];
@@ -85,6 +85,27 @@ public sealed record TextConditioning(float[] HiddenStates, float[] PooledEmbeds
         (highPositive.Pooled ?? new float[PooledWidth]).AsSpan(0, PooledWidth).CopyTo(pooled.AsSpan(PooledWidth));
 
         return new TextConditioning(hidden, pooled, tokens);
+    }
+
+    /// <summary>
+    /// Every window through the tower, laid end to end. The pooled embedding is
+    /// the FIRST window's: a sentence embedding of the second half of a prompt is
+    /// not a sentence embedding of the prompt.
+    /// </summary>
+    private static TowerOutput EncodeWindows(ITextTower tower, int[][] windows)
+    {
+        var outputs = windows.Select(tower.Encode).ToArray();
+
+        var hidden = new float[outputs.Sum(output => output.Hidden.Length)];
+        var at = 0;
+
+        foreach (var output in outputs)
+        {
+            output.Hidden.CopyTo(hidden, at);
+            at += output.Hidden.Length;
+        }
+
+        return new TowerOutput(hidden, outputs[0].Pooled);
     }
 
     /// <summary>

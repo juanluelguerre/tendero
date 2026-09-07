@@ -58,13 +58,21 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
             // tokens. One set of ids fed to both is wrong for one of them, in
             // every image, with nothing to say so.
             foreach (var (itemId, prompt) in jobs)
+            {
+                // Both rows of the guidance batch must be the same length, so the
+                // window count is whatever the LONGER of the two prompts needs
+                // and the shorter one is padded with empty windows.
+                var windows = Math.Max(
+                    first.WindowsNeeded(prompt), first.WindowsNeeded(negative));
+
                 conditioning[itemId] = TextConditioning.Build(
                     lowTower,
                     new TextConditioning.PromptTokens(
-                        first.EncodeToLength(negative), first.EncodeToLength(prompt)),
+                        first.EncodeWindows(negative, windows), first.EncodeWindows(prompt, windows)),
                     highTower,
                     new TextConditioning.PromptTokens(
-                        second.EncodeToLength(negative), second.EncodeToLength(prompt)));
+                        second.EncodeWindows(negative, windows), second.EncodeWindows(prompt, windows)));
+            }
         }
 
         // --- Phase B: the walk --------------------------------------------

@@ -130,6 +130,52 @@ public sealed partial class ClipTokenizer
     }
 
     /// <summary>
+    /// How many 77-token windows a prompt needs.
+    ///
+    /// **This is what removes the budget rather than managing it.** CLIP's window
+    /// is 77 and cross-attention does not care how long the sequence is: the
+    /// UNet declares `encoder_hidden_states` as `[-1, -1, 2048]`, so two windows
+    /// encoded separately and laid end to end are a longer conditioning, not an
+    /// error. It is what every serious interface to these models does, and it
+    /// costs one extra pass through a 123M-parameter encoder.
+    /// </summary>
+    public int WindowsNeeded(string text) =>
+        Math.Max(1, (int)Math.Ceiling(Encode(text).Length / (double)(ContextLength - 2)));
+
+    /// <summary>
+    /// The prompt cut into whole windows, each wrapped in its own markers and
+    /// padded. Asking for more windows than the text needs pads with empty ones,
+    /// which is how the positive and the negative are made the same length —
+    /// both rows of the guidance batch have to be.
+    /// </summary>
+    public int[][] EncodeWindows(string text, int windows)
+    {
+        var content = Encode(text);
+        var room = ContextLength - 2;
+
+        var result = new int[windows][];
+
+        for (var window = 0; window < windows; window++)
+        {
+            var from = window * room;
+            var slice = from >= content.Length
+                ? []
+                : content[from..Math.Min(from + room, content.Length)];
+
+            var ids = new int[ContextLength];
+            Array.Fill(ids, PadId);
+
+            ids[0] = _vocab[StartMarker];
+            slice.CopyTo(ids, 1);
+            ids[slice.Length + 1] = _vocab[EndMarker];
+
+            result[window] = ids;
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Lowercase, and one space between words. CLIP's reference cleaner also runs
     /// `ftfy` over the text to repair mojibake; for English product prose written
     /// in this repository there is nothing for it to repair, and pulling a
