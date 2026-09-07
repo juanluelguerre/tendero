@@ -289,7 +289,7 @@ static int Generate(
         var kilobytes = image.Webp.Length / 1024;
         var quality = image.Quality == ImageSpec.Quality ? "" : $" at quality {image.Quality}";
 
-        Console.WriteLine($"{image.ItemId}  {kilobytes} KB{quality}  {image.Took.TotalSeconds:F1}s  -> {path}");
+        Console.WriteLine($"{image.ItemId}  {kilobytes} KB{quality}  {image.Took.TotalSeconds:F1}s  bg {image.Background}  -> {path}");
         Console.WriteLine($"    {image.SafeArea.Detail}{(image.SafeArea.Passed ? "" : "  OUTSIDE THE SAFE AREA")}");
 
         if (!image.SafeArea.Passed)

@@ -4,7 +4,8 @@ namespace ElGuerre.Tendero.SeedImages;
 
 /// <summary>What one product cost to draw.</summary>
 public sealed record GeneratedImage(
-    string ItemId, byte[] Webp, int Quality, SafeAreaProbe.Result SafeArea, TimeSpan Took);
+    string ItemId, byte[] Webp, int Quality, SafeAreaProbe.Result SafeArea,
+    string Background, TimeSpan Took);
 
 /// <summary>
 /// The whole of Stable Diffusion XL, in phases, on one card with eight
@@ -35,7 +36,11 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
         var scheduler = EulerDiscreteScheduler.FromConfig(
             Path.Combine(models, "scheduler", "scheduler_config.json"), steps);
 
-        var clocks = jobs.ToDictionary(job => job.ItemId, _ => Stopwatch.StartNew());
+        // Per image and not per run. The first version started every clock at
+        // once, so a batch of five reported five times "370 seconds" -- which is
+        // how long the BATCH had been going, and made the marginal cost of an
+        // image look five times what it is.
+        var clocks = jobs.ToDictionary(job => job.ItemId, _ => new Stopwatch());
 
         // --- Phase A: the words -------------------------------------------
         say($"encoding {jobs.Count} prompt(s)...");
@@ -97,6 +102,7 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
                     .Normal(Channels * LatentSize * LatentSize);
 
                 say($"  {itemId}");
+                clocks[itemId].Start();
 
                 latents[itemId] = UnetLoop.Run(
                     scheduler, unet, noise, conditioning[itemId], timeIds, guidance,
@@ -116,13 +122,25 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
 
         foreach (var (itemId, _) in jobs)
         {
+            clocks[itemId].Start();
+
             var rgb = decoder.Decode(latents[itemId], out var size);
             var safeArea = SafeAreaProbe.Probe(rgb, size);
+            var bounds = SafeAreaProbe.Measure(rgb, size);
             var webp = ImageNormaliser.ToWebp(rgb, size, out var quality);
 
             clocks[itemId].Stop();
 
-            images.Add(new GeneratedImage(itemId, webp, quality, safeArea, clocks[itemId].Elapsed));
+            // The background the MODEL chose, reported rather than assumed. The
+            // specification asks for #FAF9F7 and a diffusion model paints
+            // whatever "plain light warm grey" means to it; whether a hundred of
+            // those are close enough to look like one catalogue is a question
+            // with an answer, and this is the number that answers it.
+            var background =
+                $"#{bounds.Background.Red:X2}{bounds.Background.Green:X2}{bounds.Background.Blue:X2}";
+
+            images.Add(new GeneratedImage(
+                itemId, webp, quality, safeArea, background, clocks[itemId].Elapsed));
         }
 
         return images;
