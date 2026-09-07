@@ -162,22 +162,49 @@ accidente.
 
 ### Plantilla de instrucción
 
-Para pegar en el generador, cambiando sólo la última línea:
+**El sujeto va primero, y no es una preferencia de estilo.** CLIP acepta 77
+tokens y tira el resto sin decir nada, y su tokenizador parte los números de uno
+en uno, así que cada código hexadecimal cuesta cinco o seis. Con la línea del
+objeto al final —que es donde la pondría cualquiera— lo que se cae por el borde
+es justo el color y el producto: cien ilustraciones impecables de nada en
+concreto.
+
+Dos líneas de la versión anterior se han quitado en vez de moverse.
+`1400 x 1400 pixels, PNG` y `sRGB` describen el FICHERO, y el fichero lo decide
+el postproceso: SDXL genera 1024 cuadrado le digas lo que le digas. Estaban
+gastando tokens en pedir algo que el modelo no puede dar.
 
 ```
 Flat vector-style product illustration for an online shop catalogue.
-Square 1:1 composition, 1400 x 1400 pixels, PNG.
+The object is <color>: <descripción en inglés, de la lista de abajo>
 Single object, centred, front three-quarter view, occupying at most 75% of the
 frame height, with clear empty margin at the top and the bottom.
 Flat uniform background, very light warm grey (#FAF9F7). No transparency.
 Clean even lighting, minimal soft shadow, no gradients on the background.
 Limited warm palette: terracotta #D85A30, canvas #FAECE7, ink #2C2C2A,
 olive #5C7F38, plus the object's own colour.
-No text, no logos, no labels, no watermarks, no packaging, no hands, no props.
-sRGB.
-
-The object is <color>: <descripción en inglés, de la lista de abajo>
 ```
+
+Cuando el producto **no declara color** —treinta y cinco no lo hacen— la línea
+es `The object: <descripción>` y no `The object is : <descripción>`. Dos puntos
+sobre nada son un token gastado en puntuación.
+
+**Y las negaciones se han ido a un prompt negativo**, que es donde funcionan.
+`No text, no logos, no labels` dentro del positivo es casi un no-op: CLIP no sabe
+negar, y "text" y "logo" entran en el embedding como cualquier otra palabra. Lo
+que empuja de verdad al lado contrario es la guía sin clasificador contra un
+segundo prompt, opuesto:
+
+```
+text, letters, words, numbers, logo, watermark, label, signature, packaging,
+box, hands, people, props, photograph, 3d render, gradient background,
+drop shadow, border, frame, blurry, low quality
+```
+
+Las dos plantillas viven en `tools/SeedImages/Prompting/PromptTemplate.cs`, y un
+test comprueba que cada línea de estilo del código sigue estando aquí. Si las dos
+se separan, gana el documento —es lo que lee una persona— mientras está
+equivocado.
 
 **El color no es opcional**, y va debajo de cada producto en el listado para no
 tener que ir a buscarlo. La ficha muestra el atributo `color`, así que una

@@ -24,6 +24,7 @@
     <Project Path="tests/Ordering.Tests/ElGuerre.Tendero.Ordering.Tests.csproj" />
     <Project Path="tests/Pricing.Tests/ElGuerre.Tendero.Pricing.Tests.csproj" />
     <Project Path="tests/SearchEval.Tests/ElGuerre.Tendero.SearchEval.Tests.csproj" />
+    <Project Path="tests/SeedImages.Tests/ElGuerre.Tendero.SeedImages.Tests.csproj" />
     <Project Path="tests/SharedKernel.Tests/ElGuerre.Tendero.SharedKernel.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
