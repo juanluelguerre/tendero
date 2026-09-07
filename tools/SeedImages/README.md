@@ -10,9 +10,21 @@ authoring tool, like `dotnet-ef`.
 Under construction. Two commands today, and neither draws anything:
 
 ```bash
-# The prompts for the missing products, loading no model at all. Instant.
+# Draw the ones that are missing. About 76 seconds each on an RTX 5070 Laptop.
+dotnet run --project tools/SeedImages -- generate --models <dir> --take 5
+dotnet run --project tools/SeedImages -- generate --models <dir> --only B073WXYZ01 --force
+
+# Ask a local vision model what it sees in the finished files.
+dotnet run --project tools/SeedImages -- verify
+
+# Where the object sits, by counting pixels. Milliseconds, no model.
+dotnet run --project tools/SeedImages -- probe
+
+# The prompts, loading no model at all. Instant.
 dotnet run --project tools/SeedImages -- dry-run --take 5
-dotnet run --project tools/SeedImages -- dry-run --only B073WXYZ01
+
+# What each line of the prompt costs against CLIP's window.
+dotnet run --project tools/SeedImages -- tokens --models <dir>
 
 # What the ONNX graphs really declare: tensor names, types, shapes.
 dotnet run --project tools/SeedImages -- inspect --models <dir> --ep dml
@@ -82,6 +94,34 @@ its refinement, and a catalogue where six images came from a different ladder
 does not look like a catalogue. **Pick a number, generate all hundred with it,
 and record it** — regenerating one later at a different count is a different
 illustration, not a better one.
+
+## Two passes, because they cannot share the card
+
+The UNet is about five gigabytes and a vision model is several more, on a card
+that has eight. So `generate` draws a batch and `verify` looks at the batch
+afterwards. Interleaving them would thrash the GPU and turn a two-hour run into
+an afternoon.
+
+**`generate` guarantees what arithmetic can guarantee.** It measures the object
+and insets it to the central 75%, because the result card crops to 4:3 and asking
+SDXL for a margin produced 94% three rewrites running. It repaints the background
+to `#FAF9F7`, because the greys the model chose across one batch were #CACDCE,
+#C4C4C7, #B4B5B7, #99A09F and #A2A3A4 — fifty levels apart, and a hundred of
+those would not look like one catalogue. And when the ink reaches all four edges
+it tries another seed, up to three, because that is a tiled sheet of the product
+rather than one of it.
+
+**`verify` asks the questions pixels cannot answer.** A tiled sheet fills the
+frame and is caught by counting; a lamp standing on a desk leaves a perfectly
+good margin. Three closed questions per image, with a JSON schema and temperature
+zero: is there text, what colour is the object, and is anything drawn besides the
+product. Text or a scene marks the image to be drawn again. **A colour mismatch is
+a note and never a retry** — `seed/IMAGES-TODO.md` already decided the cheap
+repair there is to change the catalogue, and that is a person's call.
+
+It needs Ollama running and a model with vision. `qwen3.5:9b` is the default and
+fits in the card; the image travels on a **chat** message, because
+`/api/generate` accepts an `images` field, answers 200 and ignores it.
 
 ## The prompts
 
