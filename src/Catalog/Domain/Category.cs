@@ -77,13 +77,13 @@ public sealed class CategoryTree(IReadOnlyList<Category> categories)
 {
     public static readonly CategoryTree Empty = new([]);
 
-    private readonly Dictionary<string, Category> _byCode =
+    private readonly Dictionary<string, Category> byCode =
         categories.ToDictionary(category => category.Code, StringComparer.OrdinalIgnoreCase);
 
     public IReadOnlyList<Category> All { get; } = categories;
 
     public Category? ByCode(string? code) =>
-        code is null ? null : _byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
+        code is null ? null : this.byCode.GetValueOrDefault(AttributeDefinition.Normalise(code));
 
     /// <summary>
     /// A category's searchable text in one culture: the names of its whole
@@ -111,8 +111,8 @@ public sealed class CategoryTree(IReadOnlyList<Category> categories)
 
         var names = category.Ancestry
             .Select(ancestor => ByCode(ancestor)?.Name.In(culture))
-            .Where(name => !string.IsNullOrWhiteSpace(name));
+            .Where(name => !String.IsNullOrWhiteSpace(name));
 
-        return string.Join(' ', names);
+        return String.Join(' ', names);
     }
 }

@@ -8,7 +8,7 @@ namespace ElGuerre.Tendero.Pricing.Tests;
 
 public sealed class PriceListResolverTests
 {
-    private readonly PriceListResolver _resolver = new();
+    private readonly PriceListResolver resolver = new();
 
     private static PriceList List(
         string code, string segment, int priority,
@@ -19,7 +19,7 @@ public sealed class PriceListResolverTests
             from, to);
 
     private ResolvedPrice Resolve(PriceBook book, string sku, string segment, decimal catalogPrice = 100m) =>
-        _resolver.Resolve(book, new PriceRequest(sku, Build.Money(catalogPrice), segment, Build.Now));
+        this.resolver.Resolve(book, new PriceRequest(sku, Build.Money(catalogPrice), segment, Build.Now));
 
     /// <summary>
     /// The fallback is not a detail. Without it, a freshly imported product has

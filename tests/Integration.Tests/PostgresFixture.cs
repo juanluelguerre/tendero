@@ -21,7 +21,7 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// </summary>
 public sealed class PostgresFixture : IAsyncLifetime
 {
-    private PostgreSqlContainer? _container;
+    private PostgreSqlContainer? container;
 
     public string ConnectionString { get; private set; } = string.Empty;
 
@@ -38,10 +38,10 @@ public sealed class PostgresFixture : IAsyncLifetime
 
         try
         {
-            _container = new PostgreSqlBuilder("postgres:17-alpine").Build();
+            this.container = new PostgreSqlBuilder("postgres:17-alpine").Build();
 
-            await _container.StartAsync();
-            ConnectionString = _container.GetConnectionString();
+            await this.container.StartAsync();
+            ConnectionString = this.container.GetConnectionString();
         }
         catch (Exception exception)
         {
@@ -54,8 +54,8 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
-        if (_container is not null)
-            await _container.DisposeAsync();
+        if (this.container is not null)
+            await this.container.DisposeAsync();
     }
 
     /// <summary>Call at the start of every test; skips when there is no container.</summary>

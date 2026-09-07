@@ -1,14 +1,36 @@
 # Imágenes por generar
 
 Los 100 productos del catálogo de muestra, con el nombre y la descripción de
-cada uno para poder generar su imagen. **8 ya están hechas** y van marcadas;
-faltan 92.
+cada uno para poder generar su imagen. **18 ya están hechas** y van marcadas;
+faltan 82.
+
+Las ocho primeras las dibujó **nano banana** (Gemini) a mano, y son el registro
+que manda: lo que las ochenta y dos tienen que parecerse es a ellas.
+`tools/SeedImages` llama al mismo modelo por su API, con el mismo prompt, para
+que las cien salgan del mismo sitio — que es la razón de que el generador local
+(SDXL sobre ONNX Runtime, `--provider sdxl`) exista y no sea el que dibuja. Su
+salida al lado de estas ocho es plana, gris y blanda de contorno, y seis
+reescrituras del prompt no cerraron esa diferencia porque la diferencia es el
+modelo. Un catálogo con dos registros visuales no es un catálogo.
+
+Las diez de la segunda tanda salieron a **~6 s y ~$0,03 cada una**, o sea unos
+**$3 las cien**. El adaptador local se queda como el único camino sin clave, sin
+red y sin factura, y como el único que reproduce una imagen a partir de su
+`item_id`.
+
+**Una discrepancia abierta, y la reparación es el catálogo.** El pase de visión
+sobre las dieciocho da 18 utilizables y dos avisos. Uno es un falso positivo
+correcto — la cafetera `B09PQRS303` es *acero inoxidable*, que a un clasificador
+sobre nueve opciones cerradas se le parece a *gris*. El otro es real:
+**`B13BAG0710` declara `gris` en el seed sobre una funda que siempre ha sido
+negra**. Como ya decidió este documento la primera vez que pasó, lo barato y lo
+honesto es cambiar la ficha, no regenerar la imagen.
 
 ## La especificación, en corto
 
 | | |
 |---|---|
-| **Tamaño** | **1400 × 1400 px**, cuadrado |
+| **Tamaño** | **1024 × 1024 px**, cuadrado |
 | **Formato** | **WebP**, calidad 82 · ilustración de línea |
 | **Peso** | **≤ 120 KB** por imagen (la media real ronda 45 KB) |
 | **Color** | sRGB, **sin canal alfa** — el fondo va pintado |
@@ -21,21 +43,24 @@ faltan 92.
 Todo lo de abajo es de dónde sale cada número, porque dentro de un año habrá que
 volver a decidirlo y conviene no tener que medirlo otra vez.
 
-### Por qué 1400 px
+### Por qué 1024 px, y por qué antes decía 1400
 
-Porque **los derivados están diferidos** (`docs/initial-plan.md`): una tienda de
-verdad genera miniaturas por tamaño y Tendero sirve el original. Así que este
-único fichero se usa en todas partes, y tiene que dar la talla en el sitio más
-exigente, no en el promedio.
+**Este número bajó el 2026-09-07, y bajar no es rebajar.**
 
-Ese sitio es la ficha de producto. El marco de la aplicación mide 1440 px
-(`--container-app`) y la ficha lo parte en dos columnas, así que la imagen
-principal ocupa unos **660 px de CSS**. En una pantalla a 2× eso son **1320
-píxeles reales**. 1400 los cubre con un margen pequeño.
+El 1400 salía de la ficha de producto: el marco de la aplicación mide 1440 px
+(`--container-app`), la ficha lo parte en dos columnas, así que la imagen ocupa
+unos 660 px de CSS, que en una pantalla a 2× son 1320 reales. El razonamiento es
+correcto. El problema es que se decidió **antes de que existiera una sola imagen**.
 
-Las seis que ya existen son de **640 × 640**, es decir que en la ficha se están
-escalando hacia arriba. Se ve. No las voy a regenerar por eso —cumplen su papel
-de muestra de arranque— pero las nuevas no deberían nacer con el mismo problema.
+Todas las fuentes que hay producen **1024**: las ocho dibujadas a mano con nano
+banana, y lo que devuelven los generadores. Ampliar 1024 a 1400 no añade un solo
+detalle — añade peso y una pasada de remuestreo, y esa blandura se ve al lado de
+una original que nunca la tuvo.
+
+Así que el número sigue a las fuentes y no al revés. **Vuelve a subir el día que
+una fuente dé más** — Nano Banana Pro genera hasta 2K — y entonces se regeneran.
+El postproceso reduce sin problema y **nunca amplía**: si el objeto sale pequeño
+en el marco, se queda pequeño en vez de estirarse.
 
 ### Por qué el 75 % central
 
@@ -112,6 +137,15 @@ logotipos, ni etiquetas, ni marcas de agua: las marcas de este catálogo son
 inventadas y una imagen con un logotipo inventado encima es una falsificación de
 algo que no existe.
 
+**Y ninguna cifra tampoco, lo cual no se consigue pidiéndolo.** Una cafetera con
+*"temporizador de 24 horas"* en la ficha volvió con `24h` escrito en el display;
+una zapatilla con *"tacos de 4 mm"* volvió tres veces con `4 mm` rotulado en la
+mediasuela — cada vez después de habérselo prohibido al modelo con palabras más
+claras. Una medida al lado de una pieza se lee como la etiqueta de esa pieza. Así
+que `tools/SeedImages` **quita las medidas de la frase antes de que ningún modelo
+la vea**: no aportaban nada a un dibujo, porque 4 mm de taco es una suela
+moldeada a cualquier escala.
+
 ### El nombre del fichero manda
 
 El producto referencia la ruta **literalmente** en `seed/products.sample.json`:
@@ -162,22 +196,94 @@ accidente.
 
 ### Plantilla de instrucción
 
-Para pegar en el generador, cambiando sólo la última línea:
+**Medida, no estimada.** El bloque de estilo que publicaba este fichero costaba
+**123 tokens** y CLIP acepta 75 de contenido. Los cien productos se truncaban:
+el prompt más corto perdía 65 tokens y el más largo 86, sin un solo error en
+ninguna parte, porque CLIP corta en silencio. Los números salen de
+`dotnet run --project tools/SeedImages -- tokens --models <carpeta>`, que
+desglosa lo que cuesta cada línea.
+
+Dos cosas lo arreglaron.
+
+**El sujeto va primero.** Con la línea del objeto al final —que es donde la
+pondría cualquiera— lo que se cae por el borde es justo el color y el producto.
+Puesto delante, lo que se pierde es estilo, que es lo prescindible.
+
+**Y el estilo bajó de 123 tokens a 36.** Lo caro eran los códigos hexadecimales:
+la paleta sola costaba **44 tokens**, más de un tercio del bloque, porque el
+tokenizador de CLIP parte los números de uno en uno y cada `#D85A30` son cinco o
+seis. Y no compraban nada: un modelo de difusión responde al nombre de un color,
+no a su hexadecimal. Los hex siguen mandando donde sí se cumplen —en
+`design/tokens.css` y en el postproceso, que pinta el fondo `#FAF9F7` sobre un
+lienzo opaco— y ahí no dependen de que un modelo los interprete.
+
+También salieron `1400 x 1400 pixels, PNG` y `sRGB`, que describen el FICHERO y
+los decide el postproceso: SDXL genera 1024 cuadrado le digas lo que le digas.
+
+| | antes | después |
+|---|---:|---:|
+| bloque de estilo | 123 | **36** |
+| prompt más largo | 161 | **74** |
+| truncados de 100 | **100** | **0** |
 
 ```
-Flat vector-style product illustration for an online shop catalogue.
-Square 1:1 composition, 1400 x 1400 pixels, PNG.
-Single object, centred, front three-quarter view, occupying at most 75% of the
-frame height, with clear empty margin at the top and the bottom.
-Flat uniform background, very light warm grey (#FAF9F7). No transparency.
-Clean even lighting, minimal soft shadow, no gradients on the background.
-Limited warm palette: terracotta #D85A30, canvas #FAECE7, ink #2C2C2A,
-olive #5C7F38, plus the object's own colour.
-No text, no logos, no labels, no watermarks, no packaging, no hands, no props.
-sRGB.
-
+Flat vector-style product illustration.
+Bold clean outlines, solid saturated colours, flat shading.
+Plain unmarked surfaces with no writing, no labels and no badges.
 The object is <color>: <descripción en inglés, de la lista de abajo>
+Plain light warm grey background, even lighting, minimal soft shadow.
+One single object, isolated and centred, three-quarter view,
+at most 70% of the frame height, with wide empty margins above and below.
 ```
+
+**El color del producto y no el de la marca.** Hubo una versión con
+`Limited warm palette: terracotta, canvas, ink, olive` y el modelo **pintó la
+bolsa de terracota**: le estaba dando los colores de la casa como si fueran del
+objeto. La saturación la sostiene `solid saturated colours`, que era lo que de
+verdad quitaba el gris.
+
+**El nombre va delante de la descripción, y lo aprendió la primera imagen.** La
+mochila de viaje se describe como *"Front-loading pack with stowable straps,
+sized to go in the cabin"*, y el modelo dibujó una maleta de cabina — con toda la
+razón, dado lo que se le dijo. El sustantivo vive en el nombre, y una marca
+inventada es un token de ruido que un modelo de difusión ignora.
+
+**Y el bloque va ordenado por lo que menos puede permitirse perderse.** Como el
+sujeto va primero, lo que se corta es la cola: por eso la línea de composición va
+la última, porque `SafeAreaProbe` la comprueba contando píxeles. El fondo y la luz
+van antes, porque son lo que hace que cien imágenes parezcan un catálogo y no las
+comprueba nada más.
+
+Cuando el producto **no declara color** —treinta y cinco no lo hacen— la línea
+es `The object: <descripción>` y no `The object is : <descripción>`. Dos puntos
+sobre nada son un token gastado en puntuación.
+
+**Y las negaciones se han ido a un prompt negativo**, que es donde funcionan.
+`No text, no logos, no labels` dentro del positivo es casi un no-op: CLIP no sabe
+negar, y "text" y "logo" entran en el embedding como cualquier otra palabra. Lo
+que empuja de verdad al lado contrario es la guía sin clasificador contra un
+segundo prompt, opuesto, que además tiene ventana propia y no gasta de estos 75:
+
+```
+multiple objects, several views, product sheet, contact sheet, collage, grid,
+tiled, repeated, duplicated, variations,
+desk, table, furniture, room, interior, scene, floor, wall, shelf,
+text, letters, words, numbers, logo, watermark, label, signature, packaging,
+box, hands, people, props, photograph, 3d render, gradient background,
+drop shadow, border, frame, blurry, low quality
+```
+
+**Sus dos primeros bloques los compraron imágenes concretas.** El primero salió
+de una lámina de estudio: ocho vistas de la misma mochila llenando el marco. El
+segundo, de una tanda de cinco en la que el flexo llegó **de pie sobre un
+escritorio de madera, con un portátil y dos cuadernos al lado** — el prompt ya
+decía `props` y `photograph`, y una escena no es ninguna de las dos: es una
+habitación, así que había que nombrar la habitación.
+
+Las dos plantillas viven en `tools/SeedImages/Prompting/PromptTemplate.cs`. Un
+test comprueba que cada línea de estilo del código sigue estando aquí, y otro que
+ningún prompt se pasa de los 75 — para que la siguiente frase que alguien añada
+no vuelva a romperlo en silencio.
 
 **El color no es opcional**, y va debajo de cada producto en el listado para no
 tener que ir a buscarlo. La ficha muestra el atributo `color`, así que una
@@ -265,7 +371,7 @@ Tres cubos de malla de tamanos distintos que comprimen la ropa y dejan ver lo qu
 
 ## Bolsas y mochilas > Mochilas
 
-### `B08JKLM202.png` — Mochila urbana impermeable 25L CityPack
+### `B08JKLM202.webp` — Mochila urbana impermeable 25L CityPack · **hecha**
 
 Mochila de dia con compartimento acolchado para portatil de 15 pulgadas, tejido ripstop con tratamiento DWR y bolsillo antirrobo en la espalda.
 
@@ -341,7 +447,7 @@ Cubo de 3 x 20 litros con pedal y cubetas extraibles que se lavan por separado.
 
 ## Hogar > Cocina > Cafeteras
 
-### `B09PQRS303.png` — Cafetera de goteo programable Aroma 12 tazas
+### `B09PQRS303.webp` — Cafetera de goteo programable Aroma 12 tazas · **hecha**
 
 Cafetera de filtro con jarra de vidrio, temporizador de 24 horas, funcion pausa y sirve, y placa calefactora con apagado automatico.
 
@@ -395,13 +501,13 @@ Afilador manual con una etapa de diamante para reperfilar y otra de ceramica par
 
 ## Hogar > Cocina > Menaje de cocina
 
-### `B05DEFG606.png` — Set de 3 sartenes antiadherentes aptas para induccion
+### `B05DEFG606.webp` — Set de 3 sartenes antiadherentes aptas para induccion · **hecha**
 
 Sartenes de 20, 24 y 28 cm con revestimiento antiadherente libre de PFOA, base de acero para induccion y mangos de baquelita.
 
 *Set of 3 induction-ready non-stick frying pans* — 20, 24 and 28 cm pans with PFOA-free non-stick coating, induction steel base and bakelite handles.
 
-### `B11COO0301.png` — Sarten de hierro fundido de 26 cm
+### `B11COO0301.webp` — Sarten de hierro fundido de 26 cm · **hecha**
 
 Sarten de hierro fundido precurada, apta para induccion, horno y fuego directo. Gana antiadherencia con el uso.
 
@@ -583,7 +689,7 @@ Termometro digital de lectura instantanea con sonda plegable y rango de -50 a 30
 
 ## Hogar > Iluminación > Flexos y lámparas de escritorio
 
-### `B06GHIJ505.png` — Lampara de escritorio LED regulable con puerto USB
+### `B06GHIJ505.webp` — Lampara de escritorio LED regulable con puerto USB · **hecha**
 
 Flexo LED con tres temperaturas de color, brazo articulado y puerto de carga USB-A integrado en la base.
 
@@ -615,7 +721,7 @@ Lampara de pie de 150 cm con cabezal orientable y regulador de intensidad en el 
 
 Color: **negro**
 
-### `B12LAM0604.png` — Lampara de sobremesa de ceramica Cantaro
+### `B12LAM0604.webp` — Lampara de sobremesa de ceramica Cantaro · **hecha**
 
 Lampara de mesa con base de ceramica torneada y pantalla de lino. Casquillo E27 estandar.
 
@@ -711,7 +817,7 @@ Camisa de lino lavado con cuello suave y un solo bolsillo. Se arruga, y esa es l
 
 Color: **blanco**
 
-### `B15APP1002.png` — Jersey de lana merino de cuello redondo
+### `B15APP1002.webp` — Jersey de lana merino de cuello redondo · **hecha**
 
 Jersey de merino de 250 g con cuello, punos y bajo acanalados. Fino pero abrigado.
 
@@ -737,7 +843,7 @@ Color: **azul marino**
 
 ## Ropa > Calzado > Zapatillas deportivas
 
-### `B073WXYZ01.png` — Zapatillas de running amortiguadas Pulse Runner
+### `B073WXYZ01.webp` — Zapatillas de running amortiguadas Pulse Runner · **hecha**
 
 Zapatillas de running neutras con mediasuela de espuma reactiva, upper de malla transpirable y refuerzo en el talon. Drop de 8 mm.
 
@@ -745,7 +851,7 @@ Zapatillas de running neutras con mediasuela de espuma reactiva, upper de malla 
 
 Color: **azul marino**
 
-### `B10SHO0101.png` — Zapatillas de running de trail Pulse Runner Trail
+### `B10SHO0101.webp` — Zapatillas de running de trail Pulse Runner Trail · **hecha**
 
 Version de trail de la Pulse Runner: zapatilla de running con taco de 4 mm, placa de roca bajo el antepie y upper con refuerzo antiabrasion. Drop de 8 mm.
 
@@ -903,7 +1009,7 @@ Color: **gris**
 
 ## Ropa > Ropa deportiva > Camisetas
 
-### `B07TUVW404.png` — Camiseta tecnica de trail manga corta
+### `B07TUVW404.webp` — Camiseta tecnica de trail manga corta · **hecha**
 
 Camiseta ligera de secado rapido con costuras planas y tejido con proteccion UV UPF 30.
 

@@ -272,13 +272,13 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
     /// </summary>
     private sealed class Shop : IAsyncDisposable
     {
-        private readonly ServiceProvider _provider;
+        private readonly ServiceProvider provider;
 
         public TenderoDbContextFactory Factory { get; }
 
         private Shop(ServiceProvider provider, TenderoDbContextFactory factory)
         {
-            _provider = provider;
+            this.provider = provider;
             Factory = factory;
         }
 
@@ -331,7 +331,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         /// </summary>
         private async Task ImportAndPublishAsync()
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
 
             await commands.SendAsync(new ImportProductsCommand("seed"));
@@ -344,14 +344,14 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
 
         public async Task StockAsync(string sku, int quantity, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             await scope.ServiceProvider.GetRequiredService<IStockLedger>()
                 .CountAsync(sku, "MAD", quantity, ct);
         }
 
         public async Task<CartView> AddToCartAsync(string? token, string sku, int quantity, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
 
             var outcome = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
                 .SendAsync(new AddToCartCommand(token, sku, quantity, "es"), ct);
@@ -363,7 +363,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
 
         public async Task<ShippingOptionsResult> ShippingOptionsAsync(string token, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
 
             var result = await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>()
                 .SendAsync(new GetShippingOptionsQuery(token, ShipTo, "es"), ct);
@@ -380,7 +380,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         /// </summary>
         public async Task<CartPricing> QuoteAsync(string token, Money shipping, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
 
             var cart = await scope.ServiceProvider.GetRequiredService<ICartRepository>()
                 .FindOpenByTokenAsync(token, ct);
@@ -397,7 +397,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
             string token, string option, string hash, CancellationToken ct,
             string instrument = FakePaymentProvider.CardOk, string key = "checkout-1")
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
 
             return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
                 .SendAsync(new PlaceOrderCommand(
@@ -407,7 +407,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         public async Task<RequestReturnResult> RequestReturnAsync(
             OrderId orderId, string sku, int quantity, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
 
             return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
                 .SendAsync(new RequestReturnCommand(
@@ -417,7 +417,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         public async Task<DecideReturnResult> DecideAsync(
             ReturnRequestId id, ReturnDecision decision, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
 
             return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
                 .SendAsync(new DecideReturnCommand(id, decision, null), ct);
@@ -427,7 +427,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         /// aggregate, so the events it raises reach the outbox.</summary>
         public async Task MoveAsync(OrderId id, Action<Order> move, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             var orders = scope.ServiceProvider.GetRequiredService<IOrderRepository>();
 
             move((await orders.FindByIdAsync(id, ct))!);
@@ -441,7 +441,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         {
             for (var pass = 0; pass < 2; pass++)
             {
-                await using var scope = _provider.CreateAsyncScope();
+                await using var scope = this.provider.CreateAsyncScope();
                 var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
                 var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
 
@@ -466,7 +466,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
 
         public async Task<Cart?> FindCartAsync(string token, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
             return await scope.ServiceProvider.GetRequiredService<ICartRepository>()
                 .FindOpenByTokenAsync(token, ct);
         }
@@ -487,12 +487,12 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
 
         public async Task<int> AvailableAsync(string sku, CancellationToken ct)
         {
-            await using var scope = _provider.CreateAsyncScope();
+            await using var scope = this.provider.CreateAsyncScope();
 
             return (await scope.ServiceProvider.GetRequiredService<IAvailabilityReader>()
                 .AvailableAsync([sku], ct)).GetValueOrDefault(sku, 0);
         }
 
-        public async ValueTask DisposeAsync() => await _provider.DisposeAsync();
+        public async ValueTask DisposeAsync() => await this.provider.DisposeAsync();
     }
 }

@@ -34,22 +34,23 @@ public sealed class DevIssuerCodeFlowTests : IDisposable
     private static string Challenge(string verifier) =>
         Base64UrlEncoder.Encode(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
 
-    private readonly TenderoApiFactory _factory = new();
-    private readonly HttpClient _client;
+    private readonly TenderoApiFactory factory = new();
+    private readonly HttpClient client;
 
     public DevIssuerCodeFlowTests() =>
         // Redirects are NOT followed: the redirect is the thing under test, and a
         // client that chases it turns the assertion into "did localhost:4201
         // answer", which nothing here is serving.
-        _client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false
-        });
+        this.client = this.factory.CreateClient(
+            new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+            {
+                AllowAutoRedirect = false
+            });
 
     public void Dispose()
     {
-        _client.Dispose();
-        _factory.Dispose();
+        this.client.Dispose();
+        this.factory.Dispose();
     }
 
     [Fact]
@@ -130,7 +131,7 @@ public sealed class DevIssuerCodeFlowTests : IDisposable
     {
         var ct = TestContext.Current.CancellationToken;
 
-        var response = await _client.GetAsync(
+        var response = await this.client.GetAsync(
             "/dev-issuer/connect/authorize" +
             $"?response_type=code&client_id={ClientId}" +
             $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}&state=x", ct);
@@ -150,7 +151,7 @@ public sealed class DevIssuerCodeFlowTests : IDisposable
     {
         var ct = TestContext.Current.CancellationToken;
 
-        var response = await _client.GetAsync(
+        var response = await this.client.GetAsync(
             "/dev-issuer/connect/authorize" +
             $"?response_type=code&client_id={ClientId}" +
             $"&redirect_uri={Uri.EscapeDataString("https://example.com/steal")}" +
@@ -171,14 +172,14 @@ public sealed class DevIssuerCodeFlowTests : IDisposable
             $"&scope={Uri.EscapeDataString("openid profile")}" +
             $"&code_challenge={challenge}&code_challenge_method=S256&state=contract";
 
-        var page = await _client.GetAsync($"/dev-issuer/connect/authorize{query}", ct);
+        var page = await this.client.GetAsync($"/dev-issuer/connect/authorize{query}", ct);
         page.EnsureSuccessStatusCode();
 
         // The page really does offer this identity. Following a link the picker
         // does not render would be testing the endpoint and not the flow.
         Assert.Contains(subject, await page.Content.ReadAsStringAsync(ct), StringComparison.Ordinal);
 
-        var pick = await _client.GetAsync(
+        var pick = await this.client.GetAsync(
             $"/dev-issuer/connect/authorize/pick{query}&subject={subject}", ct);
 
         Assert.Equal(HttpStatusCode.Redirect, pick.StatusCode);
@@ -209,7 +210,7 @@ public sealed class DevIssuerCodeFlowTests : IDisposable
             new("client_id", ClientId)
         ]);
 
-        var response = await _client.PostAsync("/dev-issuer/connect/token", form, ct);
+        var response = await this.client.PostAsync("/dev-issuer/connect/token", form, ct);
 
         return response.IsSuccessStatusCode
             ? JsonNode.Parse(await response.Content.ReadAsStringAsync(ct))

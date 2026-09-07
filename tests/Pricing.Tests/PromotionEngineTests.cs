@@ -8,7 +8,7 @@ namespace ElGuerre.Tendero.Pricing.Tests;
 
 public sealed class PromotionEngineTests
 {
-    private readonly CombiningPromotionEngine _engine = new();
+    private readonly CombiningPromotionEngine engine = new();
 
     // ---------- The four effects ----------
 
@@ -19,9 +19,12 @@ public sealed class PromotionEngineTests
             Build.Line("SHIRT", 24.50m, quantity: 2, categoryPath: "APPAREL/SPORTSWEAR/SHIRT"),
             Build.Line("PAN", 44.95m, categoryPath: "HOME/KITCHEN/COOKWARE"));
 
-        var outcome = _engine.Apply(
-            [Build.Promotion("APPAREL10", new PercentOffLine(10m),
-                condition: new PromotionCondition(CategoryCode: "APPAREL"))],
+        var outcome = this.engine.Apply(
+            [
+                Build.Promotion(
+                    "APPAREL10", new PercentOffLine(10m),
+                    condition: new PromotionCondition(CategoryCode: "APPAREL"))
+            ],
             cart, Build.At());
 
         // 49,00 × 10% = 4,90 on the shirts; the pan is untouched.
@@ -40,9 +43,12 @@ public sealed class PromotionEngineTests
         var cart = Build.Cart(0m, "retail",
             Build.Line("PAN", 40m, categoryPath: "HOME/KITCHEN/COOKWARE"));
 
-        var outcome = _engine.Apply(
-            [Build.Promotion("K", new PercentOffLine(50m),
-                condition: new PromotionCondition(CategoryCode: "KITCHEN"))],
+        var outcome = this.engine.Apply(
+            [
+                Build.Promotion(
+                    "K", new PercentOffLine(50m),
+                    condition: new PromotionCondition(CategoryCode: "KITCHEN"))
+            ],
             cart, Build.At());
 
         Assert.Equal(20m, Applied(outcome, "K").Amount.Amount);
@@ -54,7 +60,7 @@ public sealed class PromotionEngineTests
         var cart = Build.Cart(0m, "retail",
             Build.Line("A", 10m), Build.Line("B", 10m), Build.Line("C", 10m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("TEN", new AmountOffOrder(Build.Money(10m)))], cart, Build.At());
 
         Assert.Equal(10m, Applied(outcome, "TEN").Amount.Amount);
@@ -72,7 +78,7 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 8m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("HUGE", new AmountOffOrder(Build.Money(50m)))], cart, Build.At());
 
         Assert.Equal(8m, Applied(outcome, "HUGE").Amount.Amount);
@@ -84,7 +90,7 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("SHIRT", 24.50m, quantity: 7));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("3X2", new BuyXGetY(2, 1))], cart, Build.At());
 
         // Seven units are two complete groups of three plus one loose: two free.
@@ -96,7 +102,7 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(4.95m, "retail", Build.Line("A", 60m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("SHIP0", new FreeShipping())], cart, Build.At());
 
         Assert.Equal(4.95m, Applied(outcome, "SHIP0").Amount.Amount);
@@ -109,7 +115,7 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 60m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("SHIP0", new FreeShipping())], cart, Build.At());
 
         Assert.Equal(RuleReasons.NothingToDiscountCode, Suppressed(outcome, "SHIP0").Reason!.Code);
@@ -127,11 +133,13 @@ public sealed class PromotionEngineTests
         var cart = Build.Cart(0m, "retail",
             Build.Line("SHIRT", 100m, categoryPath: "APPAREL/SPORTSWEAR/SHIRT"));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
-            Build.Promotion("SUMMER25", new PercentOffLine(25m),
+            Build.Promotion(
+                "SUMMER25", new PercentOffLine(25m),
                 CombinationPolicy.ExclusiveInGroup, priority: 10, group: "seasonal"),
-            Build.Promotion("APPAREL10", new PercentOffLine(10m),
+            Build.Promotion(
+                "APPAREL10", new PercentOffLine(10m),
                 CombinationPolicy.ExclusiveInGroup, priority: 20, group: "seasonal")
         ], cart, Build.At());
 
@@ -149,13 +157,16 @@ public sealed class PromotionEngineTests
         var cart = Build.Cart(0m, "retail",
             Build.Line("SHIRT", 100m, categoryPath: "APPAREL/SPORTSWEAR/SHIRT"));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
-            Build.Promotion("SUMMER25", new PercentOffLine(25m),
+            Build.Promotion(
+                "SUMMER25", new PercentOffLine(25m),
                 CombinationPolicy.ExclusiveInGroup, priority: 10, group: "seasonal"),
-            Build.Promotion("APPAREL10", new PercentOffLine(10m),
+            Build.Promotion(
+                "APPAREL10", new PercentOffLine(10m),
                 CombinationPolicy.ExclusiveInGroup, priority: 20, group: "seasonal"),
-            Build.Promotion("EXTRA5", new AmountOffOrder(Build.Money(5m)),
+            Build.Promotion(
+                "EXTRA5", new AmountOffOrder(Build.Money(5m)),
                 CombinationPolicy.Stackable, priority: 30)
         ], cart, Build.At());
 
@@ -172,10 +183,11 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 100m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
             Build.Promotion("BF", new PercentOffLine(30m), CombinationPolicy.ExclusiveGlobal, priority: 5),
-            Build.Promotion("TEN", new AmountOffOrder(Build.Money(10m)),
+            Build.Promotion(
+                "TEN", new AmountOffOrder(Build.Money(10m)),
                 CombinationPolicy.Stackable, priority: 10)
         ], cart, Build.At());
 
@@ -195,9 +207,10 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 100m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
-            Build.Promotion("FIRST", new AmountOffOrder(Build.Money(10m)),
+            Build.Promotion(
+                "FIRST", new AmountOffOrder(Build.Money(10m)),
                 CombinationPolicy.Stackable, priority: 1),
             Build.Promotion("BF", new PercentOffLine(30m), CombinationPolicy.ExclusiveGlobal, priority: 5)
         ], cart, Build.At());
@@ -213,9 +226,10 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 10m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
-            Build.Promotion("BIG", new PercentOffLine(10m),
+            Build.Promotion(
+                "BIG", new PercentOffLine(10m),
                 condition: new PromotionCondition(MinimumSubtotal: Build.Money(50m)))
         ], cart, Build.At());
 
@@ -234,10 +248,11 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 65m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
             Build.Promotion("FIRST", new AmountOffOrder(Build.Money(10m)), priority: 1),
-            Build.Promotion("SECOND", new PercentOffLine(10m), priority: 2,
+            Build.Promotion(
+                "SECOND", new PercentOffLine(10m), priority: 2,
                 condition: new PromotionCondition(MinimumSubtotal: Build.Money(60m)))
         ], cart, Build.At());
 
@@ -253,9 +268,10 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 100m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
-            Build.Promotion("BF", new PercentOffLine(30m), priority: 5,
+            Build.Promotion(
+                "BF", new PercentOffLine(30m), priority: 5,
                 validFrom: DateTimeOffset.Parse("2026-11-27T00:00:00Z"),
                 validTo: DateTimeOffset.Parse("2026-11-30T00:00:00Z"))
         ], cart, Build.At(DateTimeOffset.Parse(instant)));
@@ -273,7 +289,7 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 100m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
         [
             Build.Promotion("VIPONLY", new PercentOffLine(10m), segment: "vip"),
             Build.Promotion("SECRET", new PercentOffLine(10m), coupon: "BF2026")
@@ -287,7 +303,7 @@ public sealed class PromotionEngineTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("A", 100m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("SECRET", new PercentOffLine(10m), coupon: "BF2026")],
             cart, Build.At(Build.Now, "bf2026"));
 
@@ -315,8 +331,8 @@ public sealed class PromotionEngineTests
                 priority: 10, group: "g")
         ];
 
-        var forwards = _engine.Apply(promotions, cart, Build.At());
-        var backwards = _engine.Apply([.. promotions.Reverse()], cart, Build.At());
+        var forwards = this.engine.Apply(promotions, cart, Build.At());
+        var backwards = this.engine.Apply([.. promotions.Reverse()], cart, Build.At());
 
         Assert.Equal(50m, Applied(forwards, "AAA").Amount.Amount);
         Assert.Equal(forwards.Cart.Net.Amount, backwards.Cart.Net.Amount);
@@ -393,14 +409,14 @@ public sealed class CombinationTableTests
 /// </summary>
 public sealed class DuplicateSkuTests
 {
-    private readonly CombiningPromotionEngine _engine = new();
+    private readonly CombiningPromotionEngine engine = new();
 
     [Fact]
     public void Two_lines_carrying_one_sku_are_two_lines()
     {
         var cart = Build.Cart(0m, "retail", Build.Line("SAME", 10m), Build.Line("SAME", 10m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("TEN", new AmountOffOrder(Build.Money(10m)))], cart, Build.At());
 
         Assert.Equal(10m, outcome.Discounts.Single().Amount.Amount);
@@ -413,7 +429,7 @@ public sealed class DuplicateSkuTests
     {
         var cart = Build.Cart(0m, "retail", Build.Line("SAME", 10m), Build.Line("SAME", 30m));
 
-        var outcome = _engine.Apply(
+        var outcome = this.engine.Apply(
             [Build.Promotion("TEN", new PercentOffLine(10m))], cart, Build.At());
 
         Assert.Equal(4m, outcome.Discounts.Single().Amount.Amount);

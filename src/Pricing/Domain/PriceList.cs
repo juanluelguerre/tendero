@@ -44,11 +44,11 @@ public sealed class PriceList
         ValidFrom = validFrom;
         ValidTo = validTo;
 
-        _entries = entries.ToDictionary(entry => entry.Sku, StringComparer.OrdinalIgnoreCase);
+        this.entries = entries.ToDictionary(entry => entry.Sku, StringComparer.OrdinalIgnoreCase);
         Entries = entries;
     }
 
-    private readonly Dictionary<string, PriceListEntry> _entries;
+    private readonly Dictionary<string, PriceListEntry> entries;
 
     public string Code { get; }
 
@@ -75,7 +75,7 @@ public sealed class PriceList
         string.Equals(Segment, segment, StringComparison.OrdinalIgnoreCase);
 
     public Money? PriceFor(string sku) =>
-        _entries.TryGetValue(sku, out var entry) ? entry.Price : null;
+        this.entries.TryGetValue(sku, out var entry) ? entry.Price : null;
 }
 
 /// <summary>

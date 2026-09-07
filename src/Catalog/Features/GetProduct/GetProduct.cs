@@ -367,7 +367,7 @@ public sealed class GetProductHandler(
 
     private static string Label(
         Variant variant, Product product, AttributeDefinitions definitions, string culture) =>
-        string.Join(" · ", product.VariantAxes
+        String.Join(" · ", product.VariantAxes
             .Where(variant.AxisValues.ContainsKey)
             .Select(axis => definitions.ByCode(axis)?.LabelForOption(variant.AxisValues[axis], culture)
                             ?? variant.AxisValues[axis]));

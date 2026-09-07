@@ -272,10 +272,10 @@ public sealed class FakePaymentProviderContractTests : PaymentProviderContractTe
 {
     private static readonly TestClock Clock = new();
 
-    private readonly FakePaymentProvider _provider =
+    private readonly FakePaymentProvider provider =
         new(Options.Create(new FakePaymentOptions()), Clock);
 
-    protected override IPaymentProvider Provider => _provider;
+    protected override IPaymentProvider Provider => this.provider;
 
     protected override string WorkingInstrument => FakePaymentProvider.CardOk;
 
@@ -287,7 +287,7 @@ public sealed class FakePaymentProviderContractTests : PaymentProviderContractTe
         string body, DateTimeOffset at) =>
         (body, new Dictionary<string, string>
         {
-            [FakePaymentProvider.SignatureHeader] = _provider.SignPayload(body, at)
+            [FakePaymentProvider.SignatureHeader] = this.provider.SignPayload(body, at)
         });
 
     /// <summary>

@@ -234,14 +234,43 @@ jobs:
       - name: Bring up the stack
         run: |
           dotnet run --project src/AppHost > "$RUNNER_TEMP/aspire.log" 2>&1 &
+
+          # **Not port 4201.** The dev server answers within seconds of starting
+          # and says nothing whatsoever about the API: the AppHost references the
+          # backend without waiting for it, on purpose, because a page that calls
+          # it afterwards has nothing to ask it at boot. So this gate used to
+          # open while the API was still waiting for Elasticsearch, and the first
+          # spec loaded an application whose bootstrap could not reach
+          # /api/auth/config. That is not a slow page — AuthStore swallows the
+          # failure and SignInPage reads the issuer once, so the door renders
+          # with no button on it for the life of that load, however long the spec
+          # waits for one.
+          #
+          # /api/catalog/products through the backoffice's own proxy is the
+          # request a browser makes, and answering it proves the whole chain in
+          # one line: the dev server serves, its proxy resolves, the API listens,
+          # Postgres answers, and the schema the workers migrate exists. The
+          # stock seed is the hosted service registered immediately after that
+          # migration, so the one spec that needs data is seconds behind this
+          # line rather than the minute it timed out on.
           for _ in $(seq 1 120); do
-            if curl -sf -o /dev/null http://localhost:4201; then
-              echo "the backoffice is up"
+            if curl -sf -o /dev/null http://localhost:4201/api/catalog/products; then
+              echo "the stack is up and the API answers through the backoffice"
               exit 0
             fi
             sleep 5
           done
+
           echo "the stack did not come up"
+
+          # Which half is missing, because "it did not come up" sends whoever
+          # reads this to the wrong log otherwise.
+          if curl -sf -o /dev/null http://localhost:4201; then
+            echo "the backoffice serves, but the API never answered through it"
+          else
+            echo "the backoffice never came up"
+          fi
+
           tail -100 "$RUNNER_TEMP/aspire.log"
           exit 1
 

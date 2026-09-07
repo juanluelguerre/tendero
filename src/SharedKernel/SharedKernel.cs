@@ -253,32 +253,32 @@ public static class Culture
 /// </summary>
 public sealed class LocalizedText
 {
-    private readonly Dictionary<string, string> _values;
+    private readonly Dictionary<string, string> values;
 
     public LocalizedText(IReadOnlyDictionary<string, string> values)
     {
         if (values.Count == 0)
             throw new ArgumentException("At least one translation is required.");
-        _values = values.ToDictionary(kv => Normalize(kv.Key), kv => kv.Value);
+        this.values = values.ToDictionary(kv => Normalize(kv.Key), kv => kv.Value);
     }
 
     public static LocalizedText From(string culture, string value) =>
         new(new Dictionary<string, string> { [culture] = value });
 
-    public IReadOnlyDictionary<string, string> Values => _values;
-    public IReadOnlyCollection<string> Cultures => _values.Keys;
+    public IReadOnlyDictionary<string, string> Values => this.values;
+    public IReadOnlyCollection<string> Cultures => this.values.Keys;
 
     /// <summary>The resolution chain: requested culture -> fallback -> first available.</summary>
     public string In(string culture, string fallback = "en") =>
-        _values.TryGetValue(Normalize(culture), out var value) ? value
-        : _values.TryGetValue(Normalize(fallback), out var fb) ? fb
-        : _values.Values.First();
+        this.values.TryGetValue(Normalize(culture), out var value) ? value
+        : this.values.TryGetValue(Normalize(fallback), out var fb) ? fb
+        : this.values.Values.First();
 
     /// <summary>Returns a copy with the translation added or replaced (the AI
     /// enrichment slice will use it).</summary>
     public LocalizedText With(string culture, string value)
     {
-        var copy = new Dictionary<string, string>(_values) { [Normalize(culture)] = value };
+        var copy = new Dictionary<string, string>(this.values) { [Normalize(culture)] = value };
         return new LocalizedText(copy);
     }
 
@@ -293,12 +293,12 @@ public interface IDomainEvent
 
 public abstract class AggregateRoot
 {
-    private readonly List<IDomainEvent> _events = [];
+    private readonly List<IDomainEvent> events = [];
 
-    public IReadOnlyList<IDomainEvent> DomainEvents => _events;
+    public IReadOnlyList<IDomainEvent> DomainEvents => this.events;
 
-    protected void Raise(IDomainEvent domainEvent) => _events.Add(domainEvent);
+    protected void Raise(IDomainEvent domainEvent) => this.events.Add(domainEvent);
 
     // The persistence pipeline drains them into the Outbox table and clears them.
-    public void ClearDomainEvents() => _events.Clear();
+    public void ClearDomainEvents() => this.events.Clear();
 }

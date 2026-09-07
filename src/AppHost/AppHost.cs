@@ -39,14 +39,14 @@ var tools = string.Equals(builder.Configuration["Tendero:Tools"], "true",
 // the ones already taken on a developer's machine by the Postgres and
 // Elasticsearch they use for work. That collision is the reason `docs/` warns
 // never to point SearchEval at localhost:9200.
-const int PostgresPort = 55432;
-const int ElasticsearchPort = 59200;
-const int PgWebPort = 55433;
-const int ElasticvuePort = 59201;
-const int KeycloakPort = 58443;
+const int postgresPort = 55432;
+const int elasticsearchPort = 59200;
+const int pgWebPort = 55433;
+const int elasticvuePort = 59201;
+const int keycloakPort = 58443;
 
-var postgres = builder.AddPostgres("postgres", port: PostgresPort)
-    .WithDataVolume();          // the imported catalogue survives a restart
+var postgres = builder.AddPostgres("postgres", port: postgresPort)
+    .WithDataVolume(); // the imported catalogue survives a restart
 
 // Aspire's own helper — no new package, it ships with Aspire.Hosting.PostgreSQL,
 // which the AppHost already references. It wires the connection for you, so
@@ -57,7 +57,7 @@ var postgres = builder.AddPostgres("postgres", port: PostgresPort)
 // of. `Tendero:Tools=true` starts it with everything else.
 postgres.WithPgWeb(pgWeb =>
 {
-    pgWeb.WithHttpEndpoint(port: PgWebPort, targetPort: 8081, name: "http");
+    pgWeb.WithHttpEndpoint(port: pgWebPort, targetPort: 8081, name: "http");
     if (!tools) pgWeb.WithExplicitStart();
 });
 
@@ -70,7 +70,7 @@ var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/ela
     .WithEnvironment("discovery.type", "single-node")
     .WithEnvironment("xpack.security.enabled", "false")
     .WithEnvironment("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
-    .WithHttpEndpoint(targetPort: 9200, port: ElasticsearchPort, name: "http")
+    .WithHttpEndpoint(targetPort: 9200, port: elasticsearchPort, name: "http")
     // Without a health check, WaitFor(elasticsearch) has nothing to wait for.
     .WithHttpHealthCheck("/_cluster/health", endpointName: "http")
     .WithLifetime(ContainerLifetime.Persistent);
@@ -95,7 +95,7 @@ var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/ela
 // Built as a variable and not interpolated in place: `WithEnvironment` has an
 // overload taking a ReferenceExpression, and an interpolated string binds to
 // that one, where an `int` is not a value provider.
-var elasticvueOrigin = "http://localhost:" + ElasticvuePort.ToString(CultureInfo.InvariantCulture);
+var elasticvueOrigin = "http://localhost:" + elasticvuePort.ToString(CultureInfo.InvariantCulture);
 
 elasticsearch
     .WithEnvironment("http.cors.enabled", "true")
@@ -107,7 +107,7 @@ var elasticsearchEndpoint = elasticsearch.GetEndpoint("http");
 // for it, and ADR 0006 already established that a container resource is the
 // honest answer when there is no package worth trusting.
 var elasticvue = builder.AddContainer("elasticvue", "cars10/elasticvue", "1.6.2")
-    .WithHttpEndpoint(targetPort: 8080, port: ElasticvuePort, name: "http")
+    .WithHttpEndpoint(targetPort: 8080, port: elasticvuePort, name: "http")
     .WithExternalHttpEndpoints()
     .WaitFor(elasticsearch);
 
@@ -174,7 +174,7 @@ var useKeycloak = string.Equals(issuer, "keycloak", StringComparison.OrdinalIgno
 // not a security claim.
 var keycloakPassword = builder.AddParameter("keycloak-password", "admin", secret: true);
 
-var keycloak = builder.AddKeycloak("keycloak", port: KeycloakPort, adminPassword: keycloakPassword)
+var keycloak = builder.AddKeycloak("keycloak", port: keycloakPort, adminPassword: keycloakPassword)
     .WithDataVolume()
     .WithRealmImport("../../keycloak/realms")
     // Aspire issues Keycloak a certificate from its own development authority
@@ -313,13 +313,13 @@ builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
 // containers are created by integrations (postgres, pgweb, keycloak) and adding
 // it by hand would be a list to keep in step — the same argument
 // `SeedFileEnvironment` below makes about the seed files.
-const string DockerDesktopGroup = "tendero";
+const string dockerDesktopGroup = "tendero";
 
 foreach (var container in builder.Resources.OfType<ContainerResource>().ToArray())
 {
     builder.CreateResourceBuilder(container)
         .WithContainerRuntimeArgs(
-            "--label", $"com.docker.compose.project={DockerDesktopGroup}",
+            "--label", $"com.docker.compose.project={dockerDesktopGroup}",
             "--label", $"com.docker.compose.service={container.Name}");
 }
 

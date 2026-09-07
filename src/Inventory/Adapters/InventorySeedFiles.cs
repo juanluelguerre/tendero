@@ -25,12 +25,12 @@ public sealed class WarehouseSeedOptions
 internal sealed class SeedFileWarehouseReader(
     IOptions<WarehouseSeedOptions> options) : IWarehouseReader
 {
-    private IReadOnlyList<Warehouse>? _cached;
+    private IReadOnlyList<Warehouse>? cached;
 
     public async Task<IReadOnlyList<Warehouse>> AllAsync(CancellationToken cancellationToken = default)
     {
-        if (_cached is not null)
-            return _cached;
+        if (this.cached is not null)
+            return this.cached;
 
         var path = options.Value.FilePath;
 
@@ -40,13 +40,13 @@ internal sealed class SeedFileWarehouseReader(
         // right one: silently selling from a warehouse that does not exist is
         // worse than refusing.
         if (!File.Exists(path))
-            return _cached = [];
+            return this.cached = [];
 
         await using var file = File.OpenRead(path);
         var raw = await JsonSerializer.DeserializeAsync<List<SeedWarehouse>>(
             file, Json, cancellationToken) ?? [];
 
-        return _cached =
+        return this.cached =
         [
             .. raw.Select(entry => new Warehouse(
                 entry.Code, new LocalizedText(entry.Name), entry.Priority, entry.IsActive))

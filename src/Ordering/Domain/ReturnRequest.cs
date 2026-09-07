@@ -120,7 +120,7 @@ public sealed class ReturnRequest : AggregateRoot
     /// </summary>
     public static readonly TimeSpan Window = TimeSpan.FromDays(14);
 
-    private readonly List<ReturnLine> _lines = [];
+    private readonly List<ReturnLine> lines = [];
 
     public ReturnRequestId Id { get; private set; }
     public OrderId OrderId { get; private set; }
@@ -137,7 +137,7 @@ public sealed class ReturnRequest : AggregateRoot
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public IReadOnlyList<ReturnLine> Lines => _lines;
+    public IReadOnlyList<ReturnLine> Lines => this.lines;
 
     private ReturnRequest() { } // EF Core
 
@@ -191,7 +191,7 @@ public sealed class ReturnRequest : AggregateRoot
             UpdatedAt = now
         };
 
-        request._lines.AddRange(lines);
+        request.lines.AddRange(lines);
         request.Raise(new ReturnRequested(request.Id, order.Id, now));
 
         return request;
@@ -259,13 +259,14 @@ public sealed class ReturnRequest : AggregateRoot
     {
         var currency = order.Currency;
 
-        var returned = _lines.Aggregate(Money.Zero(currency), (sum, line) =>
-        {
-            var ordered = order.Lines.FirstOrDefault(candidate =>
-                string.Equals(candidate.Sku, line.Sku, StringComparison.OrdinalIgnoreCase));
+        var returned = this.lines.Aggregate(
+            Money.Zero(currency), (sum, line) =>
+            {
+                var ordered = order.Lines.FirstOrDefault(candidate =>
+                    string.Equals(candidate.Sku, line.Sku, StringComparison.OrdinalIgnoreCase));
 
-            return ordered is null ? sum : sum + ordered.UnitPrice * line.Quantity;
-        });
+                return ordered is null ? sum : sum + ordered.UnitPrice * line.Quantity;
+            });
 
         if (returned.IsZero || order.Totals.Subtotal.IsZero)
             return returned.Round(Rounding.AwayFromZero);

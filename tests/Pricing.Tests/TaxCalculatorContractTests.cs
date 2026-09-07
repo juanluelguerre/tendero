@@ -27,7 +27,7 @@ public abstract class TaxCalculatorContractTests
     [Fact]
     public void The_key_is_a_stable_lowercase_identifier()
     {
-        Assert.False(string.IsNullOrWhiteSpace(Calculator.Key));
+        Assert.False(String.IsNullOrWhiteSpace(Calculator.Key));
         Assert.Equal(Calculator.Key.ToLowerInvariant(), Calculator.Key);
         Assert.DoesNotContain(' ', Calculator.Key);
     }
@@ -109,12 +109,12 @@ public sealed class ZeroTaxCalculatorContractTests : TaxCalculatorContractTests
 /// <summary>What is specific to Spanish VAT, and therefore not in the contract.</summary>
 public sealed class FlatVatTaxCalculatorTests
 {
-    private readonly FlatVatTaxCalculator _calculator = new(Options.Create(new FlatVatOptions()));
+    private readonly FlatVatTaxCalculator calculator = new(Options.Create(new FlatVatOptions()));
 
     [Fact]
     public void The_standard_rate_is_twenty_one_per_cent()
     {
-        var assessment = _calculator.Assess(
+        var assessment = this.calculator.Assess(
             new TaxRequest(Build.Eur, [new TaxableAmount("standard", Build.Money(100m))]));
 
         Assert.Equal(21m, assessment.Total.Amount);
@@ -128,12 +128,14 @@ public sealed class FlatVatTaxCalculatorTests
     [Fact]
     public void The_breakdown_carries_one_line_per_rate()
     {
-        var assessment = _calculator.Assess(new TaxRequest(Build.Eur,
-        [
-            new TaxableAmount("standard", Build.Money(10m)),
-            new TaxableAmount("standard", Build.Money(10m)),
-            new TaxableAmount("reduced", Build.Money(10m))
-        ]));
+        var assessment = this.calculator.Assess(
+            new TaxRequest(
+                Build.Eur,
+                [
+                    new TaxableAmount("standard", Build.Money(10m)),
+                    new TaxableAmount("standard", Build.Money(10m)),
+                    new TaxableAmount("reduced", Build.Money(10m))
+                ]));
 
         Assert.Equal(2, assessment.Lines.Count);
         Assert.Equal(20m, assessment.Lines.Single(line => line.TaxClass == "standard").Base.Amount);
@@ -144,7 +146,7 @@ public sealed class FlatVatTaxCalculatorTests
     [Fact]
     public void An_unknown_tax_class_is_charged_nothing_rather_than_guessed_at()
     {
-        var assessment = _calculator.Assess(
+        var assessment = this.calculator.Assess(
             new TaxRequest(Build.Eur, [new TaxableAmount("made-up", Build.Money(100m))]));
 
         Assert.True(assessment.Total.IsZero);

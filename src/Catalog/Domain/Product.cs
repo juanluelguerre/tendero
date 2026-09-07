@@ -27,11 +27,11 @@ public sealed record ProductArchived(ProductId ProductId, DateTimeOffset Occurre
 
 public sealed class Product : AggregateRoot
 {
-    private readonly List<ProductImage> _images = [];
-    private readonly List<AttributeValue> _attributes = [];
-    private readonly List<ExternalReference> _externalReferences = [];
-    private readonly List<Variant> _variants = [];
-    private readonly List<string> _variantAxes = [];
+    private readonly List<ProductImage> images = [];
+    private readonly List<AttributeValue> attributes = [];
+    private readonly List<ExternalReference> externalReferences = [];
+    private readonly List<Variant> variants = [];
+    private readonly List<string> variantAxes = [];
 
     public ProductId Id { get; private set; }
 
@@ -64,7 +64,7 @@ public sealed class Product : AggregateRoot
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public IReadOnlyList<ProductImage> Images => _images;
+    public IReadOnlyList<ProductImage> Images => this.images;
 
     /// <summary>
     /// The cover photo: the one with the lowest <see cref="ProductImage.SortOrder"/>.
@@ -74,18 +74,19 @@ public sealed class Product : AggregateRoot
     /// show a different image depending on where you looked.
     /// </summary>
     public ProductImage? PrimaryImage =>
-        _images.Count == 0 ? null : _images.MinBy(image => image.SortOrder);
-    public IReadOnlyList<AttributeValue> Attributes => _attributes;
-    public IReadOnlyList<ExternalReference> ExternalReferences => _externalReferences;
+        this.images.Count == 0 ? null : this.images.MinBy(image => image.SortOrder);
 
-    public IReadOnlyList<Variant> Variants => _variants;
+    public IReadOnlyList<AttributeValue> Attributes => this.attributes;
+    public IReadOnlyList<ExternalReference> ExternalReferences => this.externalReferences;
+
+    public IReadOnlyList<Variant> Variants => this.variants;
 
     /// <summary>
     /// The axes that tell the variants apart, IN ORDER. The order is catalogue
     /// data — "azul marino · 38" and not "38 · azul marino" — and a dictionary
     /// cannot supply it.
     /// </summary>
-    public IReadOnlyList<string> VariantAxes => _variantAxes;
+    public IReadOnlyList<string> VariantAxes => this.variantAxes;
 
     /// <summary>
     /// The lowest and highest price among the available variants. It is what a
@@ -96,7 +97,7 @@ public sealed class Product : AggregateRoot
     {
         get
         {
-            var available = _variants
+            var available = this.variants
                 .Where(variant => variant.Status == VariantStatus.Available)
                 .ToArray();
 
@@ -111,7 +112,7 @@ public sealed class Product : AggregateRoot
     }
 
     public Variant? VariantBySku(string sku) =>
-        _variants.FirstOrDefault(variant =>
+        this.variants.FirstOrDefault(variant =>
             string.Equals(variant.Sku, sku, StringComparison.OrdinalIgnoreCase));
 
     private Product() { } // EF Core
@@ -210,22 +211,22 @@ public sealed class Product : AggregateRoot
     /// </summary>
     public void SetAttribute(TimeProvider clock, AttributeValue value)
     {
-        _attributes.RemoveAll(existing =>
+        this.attributes.RemoveAll(existing =>
             string.Equals(existing.Code, value.Code, StringComparison.OrdinalIgnoreCase));
-        _attributes.Add(value);
+        this.attributes.Add(value);
         Touch(clock);
     }
 
     public AttributeValue? AttributeFor(string code) =>
-        _attributes.FirstOrDefault(value =>
+        this.attributes.FirstOrDefault(value =>
             string.Equals(value.Code, code, StringComparison.OrdinalIgnoreCase));
 
     // Idempotent by content identity: re-importing the same photo does not
     // duplicate it, because the content hash IS the key.
     public void AddImage(TimeProvider clock, ImageId id, LocalizedText? alt = null)
     {
-        if (_images.Any(i => i.Id == id)) return;
-        _images.Add(new ProductImage(id, alt, _images.Count));
+        if (this.images.Any(i => i.Id == id)) return;
+        this.images.Add(new ProductImage(id, alt, this.images.Count));
         Touch(clock);
     }
 
@@ -236,9 +237,9 @@ public sealed class Product : AggregateRoot
         ArgumentException.ThrowIfNullOrWhiteSpace(externalId);
 
         var reference = new ExternalReference(source.ToLowerInvariant(), externalId);
-        if (!_externalReferences.Contains(reference))
+        if (!this.externalReferences.Contains(reference))
         {
-            _externalReferences.Add(reference);
+            this.externalReferences.Add(reference);
             Touch(clock);
         }
     }
@@ -261,9 +262,9 @@ public sealed class Product : AggregateRoot
         // coordinated ones made this method unreachable for the entire shipped
         // catalogue — the slice existed, was tested, and could not run on a
         // single real product.
-        var coordinated = _variants.Where(variant => variant.AxisValues.Count > 0).ToArray();
+        var coordinated = this.variants.Where(variant => variant.AxisValues.Count > 0).ToArray();
 
-        if (coordinated.Length > 0 && !normalised.SequenceEqual(_variantAxes, StringComparer.OrdinalIgnoreCase))
+        if (coordinated.Length > 0 && !normalised.SequenceEqual(this.variantAxes, StringComparer.OrdinalIgnoreCase))
         {
             // Changing the axes with live variants would leave each of them
             // described by coordinates that no longer mean the same thing.
@@ -271,8 +272,8 @@ public sealed class Product : AggregateRoot
                 "Variant axes cannot change while variants exist. Discontinue them first.");
         }
 
-        _variantAxes.Clear();
-        _variantAxes.AddRange(normalised);
+        this.variantAxes.Clear();
+        this.variantAxes.AddRange(normalised);
 
         // The default variant is superseded by the matrix about to be generated:
         // "this product has exactly one purchasable thing" stops being true the
@@ -281,7 +282,7 @@ public sealed class Product : AggregateRoot
         // VariantStatus.Discontinued exists for.
         if (normalised.Length > 0)
         {
-            foreach (var placeholder in _variants.Where(variant => variant.AxisValues.Count == 0))
+            foreach (var placeholder in this.variants.Where(variant => variant.AxisValues.Count == 0))
                 placeholder.Discontinue();
         }
 
@@ -306,26 +307,26 @@ public sealed class Product : AggregateRoot
         var values = axisValues ?? new Dictionary<string, string>();
 
         var unknown = values.Keys
-            .Where(axis => !_variantAxes.Contains(axis, StringComparer.OrdinalIgnoreCase))
+            .Where(axis => !this.variantAxes.Contains(axis, StringComparer.OrdinalIgnoreCase))
             .ToArray();
 
         if (unknown.Length > 0)
         {
             throw new InvalidOperationException(
                 $"Unknown variant axes: {string.Join(", ", unknown)}. Declared: " +
-                $"{(_variantAxes.Count == 0 ? "(none)" : string.Join(", ", _variantAxes))}.");
+                $"{(this.variantAxes.Count == 0 ? "(none)" : string.Join(", ", this.variantAxes))}.");
         }
 
         // Two variants with the same coordinates are one variant with two SKUs,
         // and that turns the PDP's picker into a lottery.
-        if (values.Count > 0 && _variants.Any(variant => variant.Matches(values)))
+        if (values.Count > 0 && this.variants.Any(variant => variant.Matches(values)))
         {
             throw new InvalidOperationException(
                 $"A variant already exists for {string.Join(", ", values.Select(v => $"{v.Key}={v.Value}"))}.");
         }
 
         var variant = Variant.Create(sku, price, values, taxClass, image);
-        _variants.Add(variant);
+        this.variants.Add(variant);
         Touch(clock);
         return variant;
     }

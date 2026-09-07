@@ -21,16 +21,16 @@ public sealed class CategorySeedOptions
 internal sealed class SeedFileCategoryReader(
     IOptions<CategorySeedOptions> options, TimeProvider clock) : ICategoryReader
 {
-    private CategoryTree? _cached;
+    private CategoryTree? cached;
 
     public async Task<CategoryTree> AllAsync(CancellationToken cancellationToken = default)
     {
-        if (_cached is not null)
-            return _cached;
+        if (this.cached is not null)
+            return this.cached;
 
         var path = options.Value.FilePath;
         if (!File.Exists(path))
-            return _cached = CategoryTree.Empty;
+            return this.cached = CategoryTree.Empty;
 
         await using var file = File.OpenRead(path);
         var raw = await JsonSerializer.DeserializeAsync<List<SeedCategory>>(
@@ -47,7 +47,7 @@ internal sealed class SeedFileCategoryReader(
             built[category.Code] = category;
         }
 
-        return _cached = new CategoryTree([.. built.Values]);
+        return this.cached = new CategoryTree([.. built.Values]);
     }
 
     private sealed record SeedCategory(string Code, Dictionary<string, string> Name, string? Parent = null);

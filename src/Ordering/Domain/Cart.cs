@@ -92,7 +92,7 @@ public sealed class Cart : AggregateRoot
     /// and the number that stops a typo is the same number that stops abuse.</summary>
     public const int MaximumQuantity = 99;
 
-    private readonly List<CartLine> _lines = [];
+    private readonly List<CartLine> lines = [];
 
     public CartId Id { get; private set; }
 
@@ -125,11 +125,11 @@ public sealed class Cart : AggregateRoot
     public DateTimeOffset UpdatedAt { get; private set; }
     public DateTimeOffset ExpiresAt { get; private set; }
 
-    public IReadOnlyList<CartLine> Lines => _lines;
+    public IReadOnlyList<CartLine> Lines => this.lines;
 
-    public int ItemCount => _lines.Sum(line => line.Quantity);
+    public int ItemCount => this.lines.Sum(line => line.Quantity);
 
-    public bool IsEmpty => _lines.Count == 0;
+    public bool IsEmpty => this.lines.Count == 0;
 
     private Cart() { } // EF Core
 
@@ -168,22 +168,22 @@ public sealed class Cart : AggregateRoot
         if (line.Quantity <= 0)
             throw new InvalidOperationException("A line needs a positive quantity.");
 
-        var existing = _lines.FindIndex(candidate => Same(candidate.Sku, line.Sku));
+        var existing = this.lines.FindIndex(candidate => Same(candidate.Sku, line.Sku));
 
         if (existing >= 0)
         {
-            SetQuantityAt(existing, _lines[existing].Quantity + line.Quantity);
+            SetQuantityAt(existing, this.lines[existing].Quantity + line.Quantity);
         }
         else
         {
-            if (_lines.Count >= MaximumLines)
+            if (this.lines.Count >= MaximumLines)
                 throw new InvalidOperationException($"A cart takes at most {MaximumLines} lines.");
 
             if (line.Quantity > MaximumQuantity)
                 throw new InvalidOperationException(
                     $"A line takes at most {MaximumQuantity} units; {line.Sku} asked for {line.Quantity}.");
 
-            _lines.Add(line);
+            this.lines.Add(line);
         }
 
         Touch(clock);
@@ -198,7 +198,7 @@ public sealed class Cart : AggregateRoot
     {
         EnsureOpen();
 
-        var index = _lines.FindIndex(line => Same(line.Sku, sku));
+        var index = this.lines.FindIndex(line => Same(line.Sku, sku));
 
         if (index < 0)
             throw new InvalidOperationException($"There is no line for {sku} in this cart.");
@@ -264,7 +264,7 @@ public sealed class Cart : AggregateRoot
     /// </summary>
     public IReadOnlyList<(string Sku, int Quantity)> PricingLines() =>
     [
-        .. _lines
+        .. this.lines
             .OrderBy(line => line.Sku, StringComparer.Ordinal)
             .Select(line => (line.Sku, line.Quantity))
     ];
@@ -276,15 +276,15 @@ public sealed class Cart : AggregateRoot
 
         if (quantity == 0)
         {
-            _lines.RemoveAt(index);
+            this.lines.RemoveAt(index);
             return;
         }
 
         if (quantity > MaximumQuantity)
             throw new InvalidOperationException(
-                $"A line takes at most {MaximumQuantity} units; {_lines[index].Sku} asked for {quantity}.");
+                $"A line takes at most {MaximumQuantity} units; {this.lines[index].Sku} asked for {quantity}.");
 
-        _lines[index] = _lines[index].WithQuantity(quantity);
+        this.lines[index] = this.lines[index].WithQuantity(quantity);
     }
 
     private void Touch(TimeProvider clock)
