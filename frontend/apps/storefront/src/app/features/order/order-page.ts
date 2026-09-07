@@ -7,6 +7,7 @@ import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import { OrderService } from '../../data-access/order.service';
+import { ReturnsPolicy } from '../../data-access/returns-policy.service';
 import { ShopLinks } from '../../shop-links';
 
 /**
@@ -38,6 +39,10 @@ export class OrderPage {
   private readonly transloco = inject(TranslocoService);
 
   protected readonly reasons = RETURN_REASONS;
+
+  /** Days from delivery, published by the API so this page cannot disagree
+      with the rule that refuses a late return. */
+  protected readonly returnWindowDays = inject(ReturnsPolicy).windowDays;
 
   protected readonly order = signal<OrderView | null>(null);
   protected readonly returns = signal<ReturnView[]>([]);

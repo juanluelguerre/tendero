@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Contracts;
@@ -300,6 +300,24 @@ public sealed class ListReturnsHandler(IReturnRequestRepository returns)
         [.. (await returns.OpenAsync(cancellationToken)).Select(ReturnView.From)];
 }
 
+/// <summary>
+/// What the shop promises before anybody has bought anything.
+///
+/// The window is enforced in one place — <see cref="ReturnRequest.CanOpenAt"/>
+/// measures it from delivery — and said out loud in two: the product page, which
+/// is where roughly sixty per cent of shoppers look for it and where forty-four
+/// per cent of shops do not put it, and the order page afterwards. Publishing it
+/// is what stops those two from becoming copies: the order page used to write
+/// the number into its own template, and shortening the window would have left
+/// it promising the old one with nothing red anywhere.
+///
+/// Same decision as <c>/api/auth/config</c>, one value to the left.
+/// </summary>
+public sealed record ReturnPolicy(
+    /// <summary>Days from DELIVERY, not from purchase — which is the half a
+    /// promise usually gets wrong.</summary>
+    int WindowDays);
+
 public sealed class ReturnEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
@@ -331,6 +349,22 @@ public sealed class ReturnEndpoints : ICarterModule
             .AllowAnonymous()
             .WithTags("Returns")
             .WithName("RequestReturn");
+
+        // Outside the group below on purpose: that one requires the
+        // shopkeeper, and this is read by somebody who has not signed in and may
+        // never sign in. Anonymous by an explicit decision, which is what the
+        // endpoint-policy test asks for.
+        //
+        // It answers from the aggregate's own constant and holds no handler: no
+        // input to validate, no data to read, nothing to audit. The same reason
+        // `/api/auth/config` has none — a dispatcher round trip here would be
+        // ceremony around a field read.
+        app.MapGet("/api/returns/policy",
+            Ok<ReturnPolicy> () =>
+                TypedResults.Ok(new ReturnPolicy((int)ReturnRequest.Window.TotalDays)))
+            .AllowAnonymous()
+            .WithTags("Returns")
+            .WithName("ReturnPolicy");
 
         var queue = app.MapGroup("/api/returns")
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)

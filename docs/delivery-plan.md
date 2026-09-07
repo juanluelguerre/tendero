@@ -701,7 +701,7 @@ oversight, and each is a paragraph in some future article.
 | A slug table with uniqueness and redirects | **settled, not deferred** — ADR 0026 makes the slug decorative and the URL carries a code, so there is nothing to make unique and no history to keep | Never, unless the code leaves the URL |
 | Spec Kit experiment | ADR 0009 reserves it for the UCP work | Phase 11 |
 | `.claude/` skills and plugin | none exist; article 14 is blocked on it | After enough repetition to have opinions |
-| **A storefront that looks like a shop** | the home page IS the search box; no landing, no browsable taxonomy, no editorial imagery, no returns or delivery promise on the PDP | Deliberately after the floor. See below — it is the largest single item here and the only one that is not deferred for scale |
+| **A storefront that looks like a shop** | the home page and the taxonomy landed 2026-09-04 and the returns promise 2026-09-07; what is left is the editorial imagery, and a delivery promise the code cannot make yet — a rate needs an address | Deliberately after the floor. See below — it is the largest single item here and the only one that is not deferred for scale |
 
 ### A real account, and the menu it earns
 
@@ -745,7 +745,7 @@ transactional spine and nothing around it:
 | **No home** | `/es` renders the search page. A shop's front door is the one screen that says what kind of shop it is, and there is nothing between the header and an empty result grid |
 | **The taxonomy is invisible** | phase 2 built categories with a localized name, a parent and a materialized path, and the ONLY consumer is the search index. Nothing browses them, so "Hogar › Cocina › Menaje" exists as data and as a breadcrumb and never as a way in |
 | **No imagery beyond the product shot** | and the seed's point at `cdn.example.com` on purpose, so a fresh clone is a grid of fallback tiles. The design has an editorial device — the awning stripe — used on exactly one `<hr>` |
-| **No promise on the PDP** | `initial-plan.md` §2 already carries the number: **44% of sites do not show the return policy on the product page while ~60% of shoppers look for it there.** The returns machinery shipped in phase 5 and the page says nothing about it |
+| ~~**No promise on the PDP**~~ | **Closed 2026-09-07.** `initial-plan.md` §2 carried the number: **44% of sites do not show the return policy on the product page while ~60% of shoppers look for it there.** The page says it now, and it says only what the code honours — the window runs from DELIVERY because that is what `CanOpenAt` measures, and the shipping is not in the refund because `RefundableFrom` does not put it there. The number is published at `GET /api/returns/policy` rather than typed into a template: it was already written twice, in `ReturnRequest.Window` and in the order page's `{ days: 14 }`, with nothing comparing them |
 | **The empty states are the honest minimum** | "Nothing here yet" is correct and is not a reason to stay |
 
 **What it is NOT.** Not a rewrite of `design/tokens.css`, and not a change to

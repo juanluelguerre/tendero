@@ -51,7 +51,15 @@
         @if (canReturn()) {
           <section class="panel">
             <h2 class="panel__title">{{ t('order.returnTitle') }}</h2>
-            <p class="panel__hint">{{ t('order.returnHint', { days: 14 }) }}</p>
+            <!-- The window is the SERVER's number (`ReturnRequest.Window`),
+                 not a literal typed here. It used to be one, and shortening the
+                 window would have left this line promising the old one. When it
+                 is unknown the sentence is missing rather than wrong; the form
+                 stays, because the server is what enforces the window anyway. -->
+            @let returnDays = returnWindowDays();
+            @if (returnDays !== null) {
+              <p class="panel__hint">{{ t('order.returnHint', { days: returnDays }) }}</p>
+            }
 
             @if (returnMessage(); as message) {
               <p class="notice" [class.notice--bad]="!returnOpened()"

@@ -244,6 +244,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/returns/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReturnPolicy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/payments/{provider}/webhook": {
         parameters: {
             query?: never;
@@ -1009,6 +1025,10 @@ export interface components {
             reason: string;
             comment: null | string;
         };
+        ReturnPolicy: {
+            /** Format: int32 */
+            windowDays: number;
+        };
         ReturnView: {
             returnId: string;
             orderId: string;
@@ -1556,6 +1576,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    ReturnPolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnPolicy"];
                 };
             };
         };

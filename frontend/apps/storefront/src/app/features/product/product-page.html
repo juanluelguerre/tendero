@@ -157,6 +157,24 @@
               }
             </div>
 
+            <!-- The promise, and only the part the code will honour.
+                 The window runs from DELIVERY because that is what
+                 `ReturnRequest.CanOpenAt` measures, and the refund is the
+                 returned lines with their share of the discount and the tax —
+                 the shipping is not in it, so the page does not say it is.
+
+                 No clay: the one accent action of this view is the button
+                 above (design/DESIGN.md). -->
+            @let returnDays = returnWindowDays();
+            @if (returnDays !== null) {
+              <section class="promise">
+                <h2 class="promise__title">{{ t('product.returnsTitle') }}</h2>
+                <p class="promise__window">{{ t('product.returnsWindow', { days: returnDays }) }}</p>
+                <p class="promise__detail">{{ t('product.returnsHow') }}</p>
+                <p class="promise__detail">{{ t('product.returnsRefund') }}</p>
+              </section>
+            }
+
             @if (item.attributes.length > 0) {
               <section class="specs">
                 <h2 class="specs__title">{{ t('product.specs') }}</h2>

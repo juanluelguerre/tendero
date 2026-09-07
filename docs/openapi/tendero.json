@@ -600,6 +600,26 @@
         }
       }
     },
+    "/api/returns/policy": {
+      "get": {
+        "tags": [
+          "Returns"
+        ],
+        "operationId": "ReturnPolicy",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnPolicy"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/payments/{provider}/webhook": {
       "post": {
         "tags": [
@@ -3304,6 +3324,18 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ReturnPolicy": {
+        "required": [
+          "windowDays"
+        ],
+        "type": "object",
+        "properties": {
+          "windowDays": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
