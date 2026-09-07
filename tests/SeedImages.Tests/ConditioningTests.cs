@@ -42,7 +42,9 @@ public sealed class ConditioningTests
     }
 
     private static TextConditioning Build(FlatTower first, FlatTower second) =>
-        TextConditioning.Build(first, second, negative: [1, 2, 3], positive: [4, 5, 6]);
+        TextConditioning.Build(
+            first, new TextConditioning.PromptTokens([1, 2, 3], [4, 5, 6]),
+            second, new TextConditioning.PromptTokens([1, 2, 3], [4, 5, 6]));
 
     [Fact]
     public void The_two_towers_are_concatenated_into_the_width_the_unet_expects()
@@ -96,7 +98,8 @@ public sealed class ConditioningTests
     {
         var first = new FlatTower(768, 10f, 100f);
         var conditioning = TextConditioning.Build(
-            first, new FlatTower(1280, 20f, 200f), negative: [1, 2, 3], positive: [4, 5, 6]);
+            first, new TextConditioning.PromptTokens([1, 2, 3], [4, 5, 6]),
+            new FlatTower(1280, 20f, 200f), new TextConditioning.PromptTokens([1, 2, 3], [4, 5, 6]));
 
         // The fake counts its calls, so the first row carries a smaller number
         // than the second exactly when the negative was encoded first.

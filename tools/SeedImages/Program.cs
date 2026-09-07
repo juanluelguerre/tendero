@@ -21,6 +21,18 @@ switch (command)
     case "inspect":
         return Inspect(Value("--models"), Value("--ep") ?? "dml");
 
+    case "generate":
+        return Generate(
+            Value("--models"),
+            Value("--only"),
+            Int32.TryParse(Value("--take"), out var many) ? many : 1,
+            Int32.TryParse(Value("--steps"), out var steps) ? steps : 30,
+            Single.TryParse(Value("--guidance"), out var guidance) ? guidance : 7f,
+            Value("--out"),
+            Value("--ep") ?? "dml",
+            args.Contains("--force"),
+            UInt64.TryParse(Value("--rng-seed"), out var rng) ? rng : null);
+
     case "tokens":
         return Tokens(Value("--models"));
 
@@ -36,6 +48,10 @@ switch (command)
             Usage: dotnet run --project tools/SeedImages -- <command> [options]
 
               inspect --models <dir> [--ep dml|cpu]   print what the ONNX graphs declare
+              generate --models <dir> [--only <id>] [--take <n>] [--steps <n>]
+                       [--guidance <f>] [--out <dir>] [--ep dml|cpu] [--force]
+                       [--rng-seed <n>]
+                                                      draw the missing illustrations
               tokens --models <dir>                   what each line of the prompt costs
               dry-run [--only <id>] [--take <n>] [--models <dir>]
                                                       print the prompts, and their
@@ -216,4 +232,65 @@ static int Tokens(string? models)
         : $"  {over} of {costs.Length} are truncated. The longest loses {costs[^1] - room} tokens.");
 
     return 0;
+}
+
+// The one that draws. Everything above exists so that by the time this runs, the
+// only thing left to be wrong is the picture itself.
+static int Generate(
+    string? models, string? only, int take, int steps, float guidance,
+    string? outDirectory, string provider, bool force, ulong? rngSeed)
+{
+    if (models is null || !Directory.Exists(models))
+    {
+        Console.Error.WriteLine($"No model directory at '{models}'. Pass --models <dir>.");
+        return 2;
+    }
+
+    var root = RepositoryRoot.Find();
+    var products = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"));
+    var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
+
+    var destination = outDirectory ?? Path.Combine(root, "seed", "images");
+    Directory.CreateDirectory(destination);
+
+    var wanted = products
+        .Where(product => only is null || String.Equals(product.ItemId, only, StringComparison.OrdinalIgnoreCase))
+        .Where(product => force || only is not null
+            || !File.Exists(Path.Combine(destination, $"{product.ItemId}.webp")))
+        .Take(take)
+        .ToArray();
+
+    if (wanted.Length == 0)
+    {
+        Console.WriteLine("Nothing to draw.");
+        return 0;
+    }
+
+    var jobs = wanted
+        .Select(product => (product.ItemId, Prompt: PromptTemplate.Positive(product, colours)))
+        .ToArray();
+
+    var pipeline = new SdxlPipeline(models, provider, steps, guidance, rngSeed);
+    var images = pipeline.Generate(jobs, PromptTemplate.Negative, Console.WriteLine);
+
+    var failures = 0;
+
+    Console.WriteLine();
+
+    foreach (var image in images)
+    {
+        var path = Path.Combine(destination, $"{image.ItemId}.webp");
+        File.WriteAllBytes(path, image.Webp);
+
+        var kilobytes = image.Webp.Length / 1024;
+        var quality = image.Quality == ImageSpec.Quality ? "" : $" at quality {image.Quality}";
+
+        Console.WriteLine($"{image.ItemId}  {kilobytes} KB{quality}  {image.Took.TotalSeconds:F1}s  -> {path}");
+        Console.WriteLine($"    {image.SafeArea.Detail}{(image.SafeArea.Passed ? "" : "  OUTSIDE THE SAFE AREA")}");
+
+        if (!image.SafeArea.Passed)
+            failures++;
+    }
+
+    return failures == 0 ? 0 : 1;
 }

@@ -193,11 +193,23 @@ los decide el postproceso: SDXL genera 1024 cuadrado le digas lo que le digas.
 | truncados de 100 | **100** | **0** |
 
 ```
-Flat vector product illustration, online shop catalogue.
-The object is <color>: <descripción en inglés, de la lista de abajo>
-Single centred object, three-quarter view, clear margin above and below.
+Flat vector illustration of one product, isolated and centred.
+The object is <color>: <nombre en inglés>. <descripción en inglés>
 Plain light warm grey background, even lighting, soft shadow.
+Three-quarter view, at most 75% of the frame height, clear margin above and below.
 ```
+
+**El nombre va delante de la descripción, y lo aprendió la primera imagen.** La
+mochila de viaje se describe como *"Front-loading pack with stowable straps,
+sized to go in the cabin"*, y el modelo dibujó una maleta de cabina — con toda la
+razón, dado lo que se le dijo. El sustantivo vive en el nombre, y una marca
+inventada es un token de ruido que un modelo de difusión ignora.
+
+**Y el bloque va ordenado por lo que menos puede permitirse perderse.** Como el
+sujeto va primero, lo que se corta es la cola: por eso la línea de composición va
+la última, porque `SafeAreaProbe` la comprueba contando píxeles. El fondo y la luz
+van antes, porque son lo que hace que cien imágenes parezcan un catálogo y no las
+comprueba nada más.
 
 Cuando el producto **no declara color** —treinta y cinco no lo hacen— la línea
 es `The object: <descripción>` y no `The object is : <descripción>`. Dos puntos

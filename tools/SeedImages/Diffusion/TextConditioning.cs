@@ -32,6 +32,14 @@ public interface ITextTower : IDisposable
 /// <param name="Tokens">How many tokens each row carries.</param>
 public sealed record TextConditioning(float[] HiddenStates, float[] PooledEmbeds, int Tokens)
 {
+    /// <summary>
+    /// The two prompts as one tower sees them. **Per tower and not shared**: the
+    /// two tokenizers pad with different tokens — the end marker in the first,
+    /// `!` in the second — so one set of ids fed to both is wrong for one of
+    /// them, silently, in every image.
+    /// </summary>
+    public readonly record struct PromptTokens(int[] Negative, int[] Positive);
+
     private const int PooledWidth = 1280;
 
     /// <summary>
@@ -56,14 +64,14 @@ public sealed record TextConditioning(float[] HiddenStates, float[] PooledEmbeds
     /// the negative prompt existed to keep out.
     /// </summary>
     public static TextConditioning Build(
-        ITextTower first, ITextTower second, int[] negative, int[] positive)
+        ITextTower first, PromptTokens firstTokens, ITextTower second, PromptTokens secondTokens)
     {
-        var tokens = positive.Length;
+        var tokens = firstTokens.Positive.Length;
 
-        var lowNegative = first.Encode(negative);
-        var lowPositive = first.Encode(positive);
-        var highNegative = second.Encode(negative);
-        var highPositive = second.Encode(positive);
+        var lowNegative = first.Encode(firstTokens.Negative);
+        var lowPositive = first.Encode(firstTokens.Positive);
+        var highNegative = second.Encode(secondTokens.Negative);
+        var highPositive = second.Encode(secondTokens.Positive);
 
         var width = first.Width + second.Width;
         var hidden = new float[2 * tokens * width];
