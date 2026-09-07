@@ -5,14 +5,48 @@ machine**, once for the ones that are missing and occasionally to redo one. It
 does not enter CI: there is no service container with a GPU, and this is an
 authoring tool, like `dotnet-ef`.
 
+## Two generators, one port
+
+`IIllustrationGenerator` is a port with keyed adapters, which is ADR 0003 applied
+to one more external system: text goes in, pixels come out, and everything after
+that — the safe area, the repainted background, the WebP, the vision pass — is
+shared.
+
+| `--provider` | what it is | per image | cost | reproducible |
+|---|---|---|---|---|
+| `gemini` (default) | one HTTPS call to `gemini-2.5-flash-image`, the model known as nano banana | ~6 s | ~$0.03, so **~$3 for the hundred** | no — there is no seed, so a redraw is a new roll |
+| `sdxl` | Stable Diffusion XL inside this process, on ONNX Runtime with DirectML | ~76 s | nothing | yes — the noise is seeded from the `item_id` |
+
+**The hosted one drew the catalogue, and the reason is quality rather than
+speed.** The first eight illustrations were made by hand with nano banana, and
+SDXL base 1.0 beside them is flat, grey and soft at the edges; a white product
+disappears against the background entirely. Six prompt rewrites did not close the
+gap, because the gap is the model. A catalogue with two visual registers is not a
+catalogue, so the hundred were drawn where the eight came from.
+
+**The local one stays, and not out of sentiment.** It is the only path that needs
+no key, no network and no bill, and the only one that reproduces an image from
+its `item_id`. The port declares that difference as `IsDeterministic` rather than
+leaving a person to discover it after relying on it.
+
+The key is read from `GEMINI_API_KEY` and from nowhere else — never a file, never
+a commit — and it travels in a header rather than the query string, where every
+proxy between here and there would log it. The free tier grants **zero** image
+generation (the quota panels read `0/0`, which looks exactly like a quota you
+have exhausted), so `gemini` needs prepaid credit on the project the key belongs
+to.
+
 ## State
 
-Under construction. Two commands today, and neither draws anything:
+Working. Both generators draw, and the vision pass reviews:
 
 ```bash
-# Draw the ones that are missing. About 76 seconds each on an RTX 5070 Laptop.
-dotnet run --project tools/SeedImages -- generate --models <dir> --take 5
-dotnet run --project tools/SeedImages -- generate --models <dir> --only B073WXYZ01 --force
+# Draw the ones that are missing, hosted. About 6 seconds each.
+dotnet run --project tools/SeedImages -- generate --take 5
+dotnet run --project tools/SeedImages -- generate --only B073WXYZ01 --force
+
+# The same, locally. About 76 seconds each on an RTX 5070 Laptop.
+dotnet run --project tools/SeedImages -- generate --provider sdxl --models <dir> --take 5
 
 # Ask a local vision model what it sees in the finished files.
 dotnet run --project tools/SeedImages -- verify
@@ -37,10 +71,12 @@ minutes and saves two days. It reports a missing component and steps over it
 rather than refusing, because the moment it is most useful is on a half-finished
 download.
 
-## The model
+## The model, for `--provider sdxl` only
 
 It is not downloaded for you and it is not in the repository: almost 10 GB, and
-`models/` is in `.gitignore`. What is needed is an ONNX export of **SDXL base 1.0
+`models/` is in `.gitignore`. `--models` is required by that provider and ignored
+by the hosted one, which needs a key instead. What is needed is an ONNX export of
+**SDXL base 1.0
 optimised for DirectML**, in the diffusers folder layout:
 
 ```
@@ -102,8 +138,9 @@ that has eight. So `generate` draws a batch and `verify` looks at the batch
 afterwards. Interleaving them would thrash the GPU and turn a two-hour run into
 an afternoon.
 
-**`generate` guarantees what arithmetic can guarantee.** It measures the object
-and insets it to the central 75%, because the result card crops to 4:3 and asking
+**`generate` guarantees what arithmetic can guarantee.** It writes 1024px WebP
+— the size every source actually produces, so nothing is ever enlarged — and it
+measures the object and insets it to the central 75%, because the result card crops to 4:3 and asking
 SDXL for a margin produced 94% three rewrites running. It repaints the background
 to `#FAF9F7`, because the greys the model chose across one batch were #CACDCE,
 #C4C4C7, #B4B5B7, #99A09F and #A2A3A4 — fifty levels apart, and a hundred of
@@ -141,3 +178,14 @@ used to publish. CLIP takes 77 tokens and discards the rest without saying so,
 and its tokenizer splits numbers one digit at a time, so each hex code costs five
 or six. With the subject last — where anybody would naturally put it — the colour
 and the product are exactly what falls off the end.
+
+**Every measurement is stripped before any model sees the sentence.** A coffee
+maker described as having a *"24-hour timer"* came back with `24h` on its
+display, and a trail shoe with *"4 mm lugs"* came back three times with `4 mm`
+lettered on its midsole — each time after the instruction had been told, in
+plainer words, not to write numbers on the product. A figure sitting beside a
+part reads as that part's label, and asking harder does not change that. It is
+also a figure that was never earning its place: 4 mm of lug is a moulded sole at
+any scale. Counts survive, because "set of 3 pans" is three pans; a run of
+figures sharing one unit goes out together, because `20, 24 and 28 cm pans`
+carries the unit only on the last one.
