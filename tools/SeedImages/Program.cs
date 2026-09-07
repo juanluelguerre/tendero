@@ -33,6 +33,14 @@ switch (command)
             args.Contains("--force"),
             UInt64.TryParse(Value("--rng-seed"), out var rng) ? rng : null);
 
+    case "verify":
+        return Verify(
+            Value("--in"),
+            Value("--ollama") ?? "http://localhost:11434",
+            Value("--model") ?? "qwen3.5:9b",
+            args.Contains("--ci"),
+            args.Contains("--describe"));
+
     case "probe":
         return Probe(Value("--in"));
 
@@ -55,6 +63,8 @@ switch (command)
                        [--guidance <f>] [--out <dir>] [--ep dml|cpu] [--force]
                        [--rng-seed <n>]
                                                       draw the missing illustrations
+              verify --in <dir> [--ollama <url>] [--model <name>] [--ci]
+                                                      ask a vision model what it sees
               probe --in <dir|file>                   where the object sits in images that exist
               tokens --models <dir>                   what each line of the prompt costs
               dry-run [--only <id>] [--take <n>] [--models <dir>]
@@ -357,4 +367,99 @@ static int Probe(string? input)
     Console.WriteLine($"{files.Length - failures} of {files.Length} keep the object inside the central {ImageSpec.SafeArea:P0}.");
 
     return failures == 0 ? 0 : 1;
+}
+
+// The half of the job Ollama is actually for. It looks at finished pictures and
+// answers closed questions about them: is there text, what colour is the object,
+// and is anything drawn besides the product.
+//
+// That last one is why this exists. A tiled sheet of products fills the frame and
+// the pixel probe catches it; a lamp standing on a desk leaves a perfectly good
+// margin and no amount of counting will say so.
+static int Verify(string? input, string ollama, string model, bool ci, bool describe)
+{
+    var root = RepositoryRoot.Find();
+    input ??= Path.Combine(root, "seed", "images");
+
+    var files = Directory.Exists(input)
+        ? Directory.EnumerateFiles(input, "*.webp").Order().ToArray()
+        : File.Exists(input) ? [input] : [];
+
+    if (files.Length == 0)
+    {
+        Console.Error.WriteLine($"Nothing to verify at '{input}'.");
+        return 2;
+    }
+
+    var products = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"))
+        .ToDictionary(product => product.ItemId, StringComparer.OrdinalIgnoreCase);
+
+    var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
+    var vocabulary = colours.EnglishLabels;
+
+    var vision = new OllamaVisionClient(ollama, model);
+
+    try
+    {
+        vision.EnsureReachable();
+    }
+    catch (InvalidOperationException failure)
+    {
+        Console.Error.WriteLine(failure.Message);
+        return 2;
+    }
+
+    Console.WriteLine($"asking {model} about {files.Length} image(s)...");
+    Console.WriteLine();
+
+    var flagged = 0;
+
+    foreach (var file in files)
+    {
+        var itemId = Path.GetFileNameWithoutExtension(file);
+
+        if (describe)
+        {
+            Console.WriteLine($"--- {itemId}");
+            Console.WriteLine(vision.Describe(File.ReadAllBytes(file), Path.ChangeExtension(file, ".sent.png")));
+            Console.WriteLine();
+            continue;
+        }
+
+        var verdict = vision.Ask(File.ReadAllBytes(file), vocabulary);
+
+        List<string> faults = [];
+
+        if (verdict.HasScene)
+            faults.Add("something else is drawn beside the product");
+
+        if (verdict.HasText)
+            faults.Add("there is text in it");
+
+        // A colour mismatch is reported and NOT treated the same way. The
+        // catalogue's colour for an invented product is arbitrary and the drawing
+        // is the expensive part, so seed/IMAGES-TODO.md says the cheap repair is
+        // to change the catalogue -- which is a person's call, not a retry.
+        if (products.GetValueOrDefault(itemId)?.SpanishColour is { } spanish
+            && colours.English(spanish) is { } declared
+            && !string.Equals(declared, verdict.Colour, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(verdict.Colour, "other", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"note  {itemId,-14}  catalogue says {declared}, the picture looks {verdict.Colour}");
+        }
+
+        if (faults.Count == 0)
+        {
+            Console.WriteLine($"ok    {itemId,-14}  {verdict.Colour}");
+            continue;
+        }
+
+        flagged++;
+        Console.WriteLine($"REDO  {itemId,-14}  {string.Join("; ", faults)}");
+    }
+
+    Console.WriteLine();
+    Console.WriteLine($"{files.Length - flagged} of {files.Length} are usable as they are.");
+
+    return flagged == 0 || !ci ? 0 : 1;
 }

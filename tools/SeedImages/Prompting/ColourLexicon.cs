@@ -53,6 +53,13 @@ public sealed class ColourLexicon
     /// improvise around.</summary>
     public string? English(string spanishLabel) => this.englishBySpanish.GetValueOrDefault(spanishLabel);
 
+    /// <summary>
+    /// Every English colour the catalogue knows, which is the closed set a vision
+    /// model is asked to choose from. Generated from the definitions rather than
+    /// listed, so the question cannot drift from the catalogue it is checking.
+    /// </summary>
+    public IReadOnlyList<string> EnglishLabels => [.. this.englishBySpanish.Values.Distinct().Order()];
+
     private sealed record Definition(string Code, Option[]? Options);
 
     private sealed record Option(string Code, Dictionary<string, string>? Label);
