@@ -43,7 +43,9 @@ public static class ImageNormaliser
 
     public static byte[] ToWebp(byte[] rgb, int size, out int quality)
     {
-        using var source = FromRgb(rgb, size);
+        var bounds = SafeAreaProbe.Measure(rgb, size);
+
+        using var source = FromRgb(Recolour(rgb, bounds.Background), size);
 
         var info = new SKImageInfo(ImageSpec.Size, ImageSpec.Size, SKColorType.Rgba8888, SKAlphaType.Opaque);
         using var surface = SKSurface.Create(info);
@@ -55,12 +57,12 @@ public static class ImageNormaliser
         // drawing is scaled to fit inside the band, which is arithmetic and
         // therefore true every time.
         //
-        // The canvas is filled with the background the picture ITSELF uses rather
-        // than the declared #FAF9F7, because a scaled drawing on a different grey
-        // would leave a visible border where the two meet.
-        var bounds = SafeAreaProbe.Measure(rgb, size);
-
-        surface.Canvas.Clear(bounds.Empty ? ImageSpec.Background : bounds.Background);
+        // **The background is forced to the declared colour.** Measured over the
+        // first batch, the greys the model chose were #CACDCE, #C4C4C7, #B4B5B7,
+        // #99A09F and #A2A3A4 -- all darker than #FAF9F7 and fifty levels apart
+        // from each other, so a hundred of them would not look like one
+        // catalogue. Leaving it to the model was worth measuring once.
+        surface.Canvas.Clear(ImageSpec.Background);
 
         // Mitchell rather than Catmull-Rom: this register is flat colour with
         // hard edges, and the sharper filter rings on exactly those.
@@ -87,6 +89,44 @@ public static class ImageNormaliser
 
         throw new InvalidOperationException("Unreachable: the ladder always returns on its last rung.");
     }
+
+    /// <summary>
+    /// Repaints the model's background as the declared one.
+    ///
+    /// A hard threshold would leave a halo: the boundary between object and
+    /// background is antialiased, so the pixels either side of it are neither.
+    /// The replacement fades in over a band instead — fully the new colour where
+    /// the pixel matched the old one, untouched where it clearly did not, and a
+    /// blend across the edge.
+    /// </summary>
+    private static byte[] Recolour(byte[] rgb, SKColor from)
+    {
+        const int inner = 24;
+        const int outer = 80;
+
+        var recoloured = new byte[rgb.Length];
+
+        for (var at = 0; at < rgb.Length; at += 3)
+        {
+            var distance =
+                Math.Abs(rgb[at] - from.Red)
+                + Math.Abs(rgb[at + 1] - from.Green)
+                + Math.Abs(rgb[at + 2] - from.Blue);
+
+            var weight = distance <= inner ? 1f
+                : distance >= outer ? 0f
+                : (outer - distance) / (float)(outer - inner);
+
+            recoloured[at] = Blend(rgb[at], ImageSpec.Background.Red, weight);
+            recoloured[at + 1] = Blend(rgb[at + 1], ImageSpec.Background.Green, weight);
+            recoloured[at + 2] = Blend(rgb[at + 2], ImageSpec.Background.Blue, weight);
+        }
+
+        return recoloured;
+    }
+
+    private static byte Blend(byte original, byte target, float weight) =>
+        (byte)Math.Clamp((original * (1f - weight)) + (target * weight), 0f, 255f);
 
     /// <summary>
     /// Where to draw the whole source so that its INK lands centred inside the
@@ -186,6 +226,20 @@ public static class SafeAreaProbe
         public int Width => Right - Left + 1;
 
         public bool Empty => Bottom < Top;
+
+        /// <summary>
+        /// **Ink to all four edges is not a product, it is a pattern.**
+        ///
+        /// Asked for "one product, isolated", SDXL sometimes answers with a tiled
+        /// sheet of the thing — twenty shoes, corner to corner. Measured over the
+        /// first batch of five, the two that did this filled 100.0% of the frame
+        /// while the two that behaved filled 70.8% and 77.1%. A picture of one
+        /// object leaves a border and a pattern cannot, so the difference is a
+        /// number rather than an opinion, and the tool can try another seed
+        /// instead of a person having to look.
+        /// </summary>
+        public bool LooksTiled(int size) =>
+            !Empty && Height >= size * 0.9f && Width >= size * 0.9f;
     }
 
     /// <summary>

@@ -35,7 +35,8 @@ public static class PromptTemplate
     /// </summary>
     public static readonly string[] StyleLines =
     [
-        "Flat vector illustration of one product, isolated and centred.",
+        "Flat vector illustration of one product, drawn in simple shapes and solid colours,",
+        "isolated and centred.",
         "Plain light warm grey background, even lighting, soft shadow.",
         "Three-quarter view, zoomed out, the whole object small within the frame,",
         "occupying at most 70% of the height, with wide empty margins above and below."
@@ -50,6 +51,12 @@ public static class PromptTemplate
     /// mechanism that actually pushes away from a concept is classifier-free
     /// guidance against a second, opposite prompt — this one.
     ///
+    /// **Two of its blocks were bought with images.** The first came from a
+    /// studio sheet; the second from a batch of five in which the desk lamp
+    /// arrived standing on a wooden desk beside a laptop and two notebooks. The
+    /// prompt already said "props" and "photograph", and a scene is neither — it
+    /// is a room, so the room had to be named.
+    ///
     /// **The first block of it was bought with the first image.** Trimming the
     /// style block to fit 75 tokens took out "occupying at most 75% of the frame
     /// height, with clear empty margin at the top and the bottom", and the model
@@ -61,6 +68,7 @@ public static class PromptTemplate
     public const string Negative =
         "multiple objects, several views, product sheet, contact sheet, collage, grid, " +
         "tiled, repeated, duplicated, variations, " +
+        "desk, table, furniture, room, interior, scene, floor, wall, shelf, " +
         "text, letters, words, numbers, logo, watermark, label, signature, packaging, box, " +
         "hands, people, props, photograph, 3d render, gradient background, drop shadow, " +
         "border, frame, blurry, low quality";

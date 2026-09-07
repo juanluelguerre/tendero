@@ -27,6 +27,11 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
 
     private const int Channels = 4;
 
+    /// <summary>How many seeds to try before accepting whatever came out. Three,
+    /// because each one costs a walk and the point is to spare a person the
+    /// looking, not to search until perfect.</summary>
+    private const int MaxAttempts = 3;
+
     private static string Component(string models, string name) =>
         Path.Combine(models, name, "model.onnx");
 
@@ -80,8 +85,15 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
             }
         }
 
-        // --- Phase B: the walk --------------------------------------------
-        var latents = new Dictionary<string, float[]>();
+        // --- Phase B: the walk, and the decode that judges it -------------
+        //
+        // The decoder is opened alongside the UNet, which the arithmetic allows:
+        // five gigabytes and two tenths, and their activations peak at different
+        // moments. It has to be, because whether a walk produced a product or a
+        // tiled sheet of products cannot be known until it is decoded -- and
+        // knowing is what lets the tool try another seed instead of a person
+        // having to look at ninety-two pictures.
+        List<GeneratedImage> images = [];
 
         {
             say($"opening the UNet ({steps} steps, guidance {guidance})...");
@@ -89,58 +101,55 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
             using var unet = new OnnxUnet(
                 OnnxSession.Open(Component(models, "unet"), provider), LatentSize);
 
+            using var decoder = new OnnxVaeDecoder(
+                OnnxSession.Open(Component(models, "vae_decoder"), provider), LatentSize);
+
             var timeIds = TimeIds.For(1024, batch: 2);
 
             foreach (var (itemId, _) in jobs)
             {
-                // The seed is the product's own unless one is given, so
-                // regenerating a product reproduces it. An override exists
-                // because the COMPOSITION lives in the noise more than in the
-                // words: three prompt rewrites gave the same layout three times,
-                // and a different seed gave a different one immediately.
-                var noise = new LatentNoise(rngSeed ?? LatentNoise.SeedFor(itemId))
-                    .Normal(Channels * LatentSize * LatentSize);
-
-                say($"  {itemId}");
                 clocks[itemId].Start();
 
-                latents[itemId] = UnetLoop.Run(
-                    scheduler, unet, noise, conditioning[itemId], timeIds, guidance,
-                    onStep: (done, total) => Console.Write($"\r    step {done}/{total}   "));
+                byte[] rgb = [];
+                var size = 0;
+                var attempt = 0;
 
-                Console.WriteLine();
+                while (true)
+                {
+                    // A different seed per attempt. The first is the product's
+                    // own, so a run that needs no retry reproduces exactly.
+                    var seed = rngSeed ?? LatentNoise.SeedFor(itemId);
+                    var noise = new LatentNoise(seed + (ulong)attempt)
+                        .Normal(Channels * LatentSize * LatentSize);
+
+                    say($"  {itemId}{(attempt > 0 ? $"  (seed {attempt + 1})" : string.Empty)}");
+
+                    var latents = UnetLoop.Run(
+                        scheduler, unet, noise, conditioning[itemId], timeIds, guidance,
+                        onStep: (done, total) => Console.Write($"\r    step {done}/{total}   "));
+
+                    Console.WriteLine();
+
+                    rgb = decoder.Decode(latents, out size);
+
+                    if (!SafeAreaProbe.Measure(rgb, size).LooksTiled(size) || ++attempt >= MaxAttempts)
+                        break;
+
+                    say("    ink reaches every edge, which is a pattern and not a product. Trying another seed.");
+                }
+
+                var safeArea = SafeAreaProbe.Probe(rgb, size);
+                var bounds = SafeAreaProbe.Measure(rgb, size);
+                var webp = ImageNormaliser.ToWebp(rgb, size, out var quality);
+
+                clocks[itemId].Stop();
+
+                var background =
+                    $"#{bounds.Background.Red:X2}{bounds.Background.Green:X2}{bounds.Background.Blue:X2}";
+
+                images.Add(new GeneratedImage(
+                    itemId, webp, quality, safeArea, background, clocks[itemId].Elapsed));
             }
-        }
-
-        // --- Phase C: the picture ------------------------------------------
-        say("decoding...");
-
-        using var decoder = new OnnxVaeDecoder(
-            OnnxSession.Open(Component(models, "vae_decoder"), provider), LatentSize);
-
-        List<GeneratedImage> images = [];
-
-        foreach (var (itemId, _) in jobs)
-        {
-            clocks[itemId].Start();
-
-            var rgb = decoder.Decode(latents[itemId], out var size);
-            var safeArea = SafeAreaProbe.Probe(rgb, size);
-            var bounds = SafeAreaProbe.Measure(rgb, size);
-            var webp = ImageNormaliser.ToWebp(rgb, size, out var quality);
-
-            clocks[itemId].Stop();
-
-            // The background the MODEL chose, reported rather than assumed. The
-            // specification asks for #FAF9F7 and a diffusion model paints
-            // whatever "plain light warm grey" means to it; whether a hundred of
-            // those are close enough to look like one catalogue is a question
-            // with an answer, and this is the number that answers it.
-            var background =
-                $"#{bounds.Background.Red:X2}{bounds.Background.Green:X2}{bounds.Background.Blue:X2}";
-
-            images.Add(new GeneratedImage(
-                itemId, webp, quality, safeArea, background, clocks[itemId].Elapsed));
         }
 
         return images;

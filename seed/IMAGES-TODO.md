@@ -193,7 +193,8 @@ los decide el postproceso: SDXL genera 1024 cuadrado le digas lo que le digas.
 | truncados de 100 | **100** | **0** |
 
 ```
-Flat vector illustration of one product, isolated and centred.
+Flat vector illustration of one product, drawn in simple shapes and solid colours,
+isolated and centred.
 The object is <color>: <nombre en inglés>. <descripción en inglés>
 Plain light warm grey background, even lighting, soft shadow.
 Three-quarter view, zoomed out, the whole object small within the frame,
@@ -223,10 +224,20 @@ que empuja de verdad al lado contrario es la guía sin clasificador contra un
 segundo prompt, opuesto, que además tiene ventana propia y no gasta de estos 75:
 
 ```
+multiple objects, several views, product sheet, contact sheet, collage, grid,
+tiled, repeated, duplicated, variations,
+desk, table, furniture, room, interior, scene, floor, wall, shelf,
 text, letters, words, numbers, logo, watermark, label, signature, packaging,
 box, hands, people, props, photograph, 3d render, gradient background,
 drop shadow, border, frame, blurry, low quality
 ```
+
+**Sus dos primeros bloques los compraron imágenes concretas.** El primero salió
+de una lámina de estudio: ocho vistas de la misma mochila llenando el marco. El
+segundo, de una tanda de cinco en la que el flexo llegó **de pie sobre un
+escritorio de madera, con un portátil y dos cuadernos al lado** — el prompt ya
+decía `props` y `photograph`, y una escena no es ninguna de las dos: es una
+habitación, así que había que nombrar la habitación.
 
 Las dos plantillas viven en `tools/SeedImages/Prompting/PromptTemplate.cs`. Un
 test comprueba que cada línea de estilo del código sigue estando aquí, y otro que
