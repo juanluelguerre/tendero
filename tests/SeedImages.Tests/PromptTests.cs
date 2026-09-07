@@ -36,7 +36,7 @@ public sealed class PromptTests
         var prompt = PromptTemplate.Positive(Shoes, Lexicon);
 
         var subject = prompt.IndexOf("running shoes", StringComparison.Ordinal);
-        var style = prompt.IndexOf("#FAF9F7", StringComparison.Ordinal);
+        var style = prompt.IndexOf("three-quarter view", StringComparison.Ordinal);
 
         Assert.True(subject >= 0 && style >= 0, prompt);
         Assert.True(subject < style, $"The subject must precede the style block.\n\n{prompt}");

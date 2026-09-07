@@ -21,8 +21,14 @@ switch (command)
     case "inspect":
         return Inspect(Value("--models"), Value("--ep") ?? "dml");
 
+    case "tokens":
+        return Tokens(Value("--models"));
+
     case "dry-run":
-        return DryRun(Value("--only"), Int32.TryParse(Value("--take"), out var take) ? take : Int32.MaxValue);
+        return DryRun(
+            Value("--only"),
+            Int32.TryParse(Value("--take"), out var take) ? take : Int32.MaxValue,
+            Value("--models"));
 
     default:
         Console.Error.WriteLine(
@@ -30,7 +36,10 @@ switch (command)
             Usage: dotnet run --project tools/SeedImages -- <command> [options]
 
               inspect --models <dir> [--ep dml|cpu]   print what the ONNX graphs declare
-              dry-run [--only <item_id>] [--take <n>] print the prompts and the plan
+              tokens --models <dir>                   what each line of the prompt costs
+              dry-run [--only <id>] [--take <n>] [--models <dir>]
+                                                      print the prompts, and their
+                                                      token cost when --models is given
             """);
         return 2;
 }
@@ -97,7 +106,7 @@ static int Inspect(string? models, string provider)
 // Everything the generator would do except the three hours of arithmetic. It
 // loads no model, so it answers instantly and it is the cheapest possible way to
 // read ninety-two prompts before spending a GPU on them.
-static int DryRun(string? only, int take)
+static int DryRun(string? only, int take, string? models)
 {
     var root = RepositoryRoot.Find();
     var products = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"));
@@ -118,6 +127,14 @@ static int DryRun(string? only, int take)
         return 0;
     }
 
+    // Optional, because the point of dry-run is that it answers with no model
+    // loaded. The tokenizer is two text files, though -- no GPU, no weights --
+    // so when the export is at hand the cost of each prompt comes for free, and
+    // that number is the one that decides whether the prompt survives at all.
+    var tokenizer = models is not null
+        ? ClipTokenizer.Load(Path.Combine(models, "tokenizer"))
+        : null;
+
     var missing = products.Count(product => !File.Exists(Path.Combine(images, $"{product.ItemId}.webp")));
     Console.WriteLine($"{missing} of {products.Count} products have no picture. Showing {wanted.Length}.");
     Console.WriteLine();
@@ -129,6 +146,14 @@ static int DryRun(string? only, int take)
         Console.WriteLine($"=== {product.ItemId} -> seed/images/{product.ItemId}.webp");
         Console.WriteLine($"    {product.EnglishName}");
         Console.WriteLine($"    colour: {product.SpanishColour ?? "(none declared)"}");
+
+        if (tokenizer is not null)
+        {
+            var cost = tokenizer.CountContentTokens(prompt);
+            var room = ClipTokenizer.ContextLength - 2;
+
+            Console.WriteLine($"    tokens: {cost} of {room}{(cost > room ? $"  TRUNCATED, {cost - room} lost" : string.Empty)}");
+        }
         Console.WriteLine();
         Console.WriteLine(prompt);
         Console.WriteLine();
@@ -136,6 +161,59 @@ static int DryRun(string? only, int take)
 
     Console.WriteLine("negative:");
     Console.WriteLine(PromptTemplate.Negative);
+
+    return 0;
+}
+
+// Where the 77 tokens go, line by line. Tuning a prompt down to a budget by
+// deleting whatever looks long is guesswork; this says which line is expensive
+// and why, and it needs no GPU -- a tokenizer is two text files.
+static int Tokens(string? models)
+{
+    if (models is null || !Directory.Exists(models))
+    {
+        Console.Error.WriteLine($"No model directory at '{models}'. Pass --models <dir>.");
+        return 2;
+    }
+
+    var tokenizer = ClipTokenizer.Load(Path.Combine(models, "tokenizer"));
+    var room = ClipTokenizer.ContextLength - 2;
+
+    Console.WriteLine($"budget: {room} content tokens (CLIP takes {ClipTokenizer.ContextLength}, two go to the markers)");
+    Console.WriteLine();
+
+    var style = 0;
+
+    foreach (var line in PromptTemplate.StyleLines)
+    {
+        var cost = tokenizer.CountContentTokens(line);
+        style += cost;
+        Console.WriteLine($"  {cost,4}  {line}");
+    }
+
+    Console.WriteLine();
+    Console.WriteLine($"  {style,4}  ALL STYLE LINES");
+    Console.WriteLine($"  {tokenizer.CountContentTokens(PromptTemplate.Negative),4}  the negative prompt (its own window, not this budget)");
+
+    // The style block is fixed; the subject is not, and the worst case is what
+    // the budget has to survive. A template that fits the average product is a
+    // template that quietly truncates the long ones.
+    var root = RepositoryRoot.Find();
+    var products = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"));
+    var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
+
+    var costs = products
+        .Select(product => tokenizer.CountContentTokens(PromptTemplate.Positive(product, colours)))
+        .Order()
+        .ToArray();
+
+    var over = costs.Count(cost => cost > room);
+
+    Console.WriteLine();
+    Console.WriteLine($"across all {costs.Length} products: shortest {costs[0]}, median {costs[costs.Length / 2]}, longest {costs[^1]}");
+    Console.WriteLine(over == 0
+        ? $"  every prompt fits in {room}."
+        : $"  {over} of {costs.Length} are truncated. The longest loses {costs[^1] - room} tokens.");
 
     return 0;
 }

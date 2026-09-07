@@ -28,13 +28,9 @@ public static class PromptTemplate
     /// </summary>
     public static readonly string[] StyleLines =
     [
-        "Flat vector-style product illustration for an online shop catalogue.",
-        "Single object, centred, front three-quarter view, occupying at most 75% of the",
-        "frame height, with clear empty margin at the top and the bottom.",
-        "Flat uniform background, very light warm grey (#FAF9F7). No transparency.",
-        "Clean even lighting, minimal soft shadow, no gradients on the background.",
-        "Limited warm palette: terracotta #D85A30, canvas #FAECE7, ink #2C2C2A,",
-        "olive #5C7F38, plus the object's own colour."
+        "Flat vector product illustration, online shop catalogue.",
+        "Single centred object, three-quarter view, clear margin above and below.",
+        "Plain light warm grey background, even lighting, soft shadow."
     ];
 
     /// <summary>
