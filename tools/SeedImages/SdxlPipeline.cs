@@ -20,10 +20,32 @@ public sealed record GeneratedImage(
 /// per batch rather than once per image, and what is held in between is 256 KB of
 /// latent per product in ordinary memory.
 /// </summary>
-public sealed class SdxlPipeline(string models, string provider, int steps, float guidance, ulong? rngSeed = null)
+public sealed class SdxlPipeline(
+    string models, string provider, int steps, float guidance, ulong? rngSeed = null, int size = 1024)
+    : IIllustrationGenerator
 {
-    /// <summary>SDXL works on a grid eight times smaller than the picture.</summary>
-    private const int LatentSize = 1024 / 8;
+    /// <summary>What drew it, for the report.</summary>
+    public string Name => $"sdxl · {size}px · {steps} steps";
+
+    /// <summary>**True, and it is the local adapter's advantage.** The noise is
+    /// seeded from the item id, so redrawing a product reproduces it exactly
+    /// while the prompt is unchanged.</summary>
+    public bool IsDeterministic => true;
+
+    public void Dispose() { }
+
+    /// <summary>
+    /// **The resolution is a sharpness decision, not a size one.**
+    ///
+    /// The file is 1024, which is where SDXL is trained, so the default costs
+    /// nothing and enlarges nothing. Generating ABOVE it buys detail the
+    /// post-processing then throws away when it insets the object, and it costs
+    /// roughly four times the wall clock at 1280 — so it is a flag and not a
+    /// default. SDXL also starts duplicating handles and limbs well above its
+    /// training resolution, which is a risk the tiling detector already watches
+    /// for.
+    /// </summary>
+    private int LatentSize => size / 8;
 
     private const int Channels = 4;
 
@@ -35,7 +57,7 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
     private static string Component(string models, string name) =>
         Path.Combine(models, name, "model.onnx");
 
-    public IReadOnlyList<GeneratedImage> Generate(
+    public IReadOnlyList<GeneratedImage> Draw(
         IReadOnlyList<(string ItemId, string Prompt)> jobs, string negative, Action<string> say)
     {
         var scheduler = EulerDiscreteScheduler.FromConfig(
@@ -104,14 +126,14 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
             using var decoder = new OnnxVaeDecoder(
                 OnnxSession.Open(Component(models, "vae_decoder"), provider), LatentSize);
 
-            var timeIds = TimeIds.For(1024, batch: 2);
+            var timeIds = TimeIds.For(size, batch: 2);
 
             foreach (var (itemId, _) in jobs)
             {
                 clocks[itemId].Start();
 
                 byte[] rgb = [];
-                var size = 0;
+                var drawn = 0;
                 var attempt = 0;
 
                 while (true)
@@ -130,25 +152,17 @@ public sealed class SdxlPipeline(string models, string provider, int steps, floa
 
                     Console.WriteLine();
 
-                    rgb = decoder.Decode(latents, out size);
+                    rgb = decoder.Decode(latents, out drawn);
 
-                    if (!SafeAreaProbe.Measure(rgb, size).LooksTiled(size) || ++attempt >= MaxAttempts)
+                    if (!SafeAreaProbe.Measure(rgb, drawn).LooksTiled(drawn) || ++attempt >= MaxAttempts)
                         break;
 
                     say("    ink reaches every edge, which is a pattern and not a product. Trying another seed.");
                 }
 
-                var safeArea = SafeAreaProbe.Probe(rgb, size);
-                var bounds = SafeAreaProbe.Measure(rgb, size);
-                var webp = ImageNormaliser.ToWebp(rgb, size, out var quality);
-
                 clocks[itemId].Stop();
 
-                var background =
-                    $"#{bounds.Background.Red:X2}{bounds.Background.Green:X2}{bounds.Background.Blue:X2}";
-
-                images.Add(new GeneratedImage(
-                    itemId, webp, quality, safeArea, background, clocks[itemId].Elapsed));
+                images.Add(Finished.From(itemId, rgb, drawn, clocks[itemId].Elapsed));
             }
         }
 

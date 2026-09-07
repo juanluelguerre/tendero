@@ -26,12 +26,17 @@ switch (command)
             Value("--models"),
             Value("--only"),
             Int32.TryParse(Value("--take"), out var many) ? many : 1,
-            Int32.TryParse(Value("--steps"), out var steps) ? steps : 30,
+            Int32.TryParse(Value("--steps"), out var steps) ? steps : 40,
             Single.TryParse(Value("--guidance"), out var guidance) ? guidance : 7f,
             Value("--out"),
             Value("--ep") ?? "dml",
             args.Contains("--force"),
-            UInt64.TryParse(Value("--rng-seed"), out var rng) ? rng : null);
+            UInt64.TryParse(Value("--rng-seed"), out var rng) ? rng : null,
+            Int32.TryParse(Value("--size"), out var size) ? size : 1024,
+            // gemini by default, because it is what drew the catalogue. The
+            // local one is the offline path and asks to be named.
+            Value("--provider") ?? "gemini",
+            Value("--model"));
 
     case "verify":
         return Verify(
@@ -59,10 +64,13 @@ switch (command)
             Usage: dotnet run --project tools/SeedImages -- <command> [options]
 
               inspect --models <dir> [--ep dml|cpu]   print what the ONNX graphs declare
-              generate --models <dir> [--only <id>] [--take <n>] [--steps <n>]
-                       [--guidance <f>] [--out <dir>] [--ep dml|cpu] [--force]
-                       [--rng-seed <n>]
-                                                      draw the missing illustrations
+              generate [--provider gemini|sdxl] [--only <id>] [--take <n>]
+                       [--out <dir>] [--force] [--size <px>] [--model <hosted id>]
+                       [--models <dir>] [--steps <n>] [--guidance <f>]
+                       [--ep dml|cpu] [--rng-seed <n>]
+                                                      draw the missing illustrations.
+                                                      gemini by default and needs
+                                                      GEMINI_API_KEY; sdxl needs --models
               verify --in <dir> [--ollama <url>] [--model <name>] [--ci]
                                                       ask a vision model what it sees
               probe --in <dir|file>                   where the object sits in images that exist
@@ -252,9 +260,12 @@ static int Tokens(string? models)
 // only thing left to be wrong is the picture itself.
 static int Generate(
     string? models, string? only, int take, int steps, float guidance,
-    string? outDirectory, string provider, bool force, ulong? rngSeed)
+    string? outDirectory, string provider, bool force, ulong? rngSeed, int size,
+    string illustrator, string? hostedModel)
 {
-    if (models is null || !Directory.Exists(models))
+    // Only the local generator needs a model folder. The hosted one needs a key,
+    // and it says so itself when it does not find one.
+    if (illustrator == "sdxl" && (models is null || !Directory.Exists(models)))
     {
         Console.Error.WriteLine($"No model directory at '{models}'. Pass --models <dir>.");
         return 2;
@@ -284,8 +295,28 @@ static int Generate(
         .Select(product => (product.ItemId, Prompt: PromptTemplate.Positive(product, colours)))
         .ToArray();
 
-    var pipeline = new SdxlPipeline(models, provider, steps, guidance, rngSeed);
-    var images = pipeline.Generate(jobs, PromptTemplate.Negative, Console.WriteLine);
+    using IIllustrationGenerator generator = illustrator switch
+    {
+        "gemini" => new GeminiIllustrator(hostedModel ?? "gemini-2.5-flash-image", size),
+        "sdxl" => new SdxlPipeline(models!, provider, steps, guidance, rngSeed, size),
+        _ => throw new InvalidOperationException($"No illustrator called '{illustrator}'. Try sdxl or gemini.")
+    };
+
+    Console.WriteLine($"drawing with {generator.Name}"
+        + (generator.IsDeterministic ? " · redrawing a product reproduces it" : " · no seed, so redrawing is a new roll"));
+
+    IReadOnlyList<GeneratedImage> images;
+
+    try
+    {
+        images = generator.Draw(jobs, PromptTemplate.Negative, Console.WriteLine);
+    }
+    catch (InvalidOperationException refusal)
+    {
+        Console.Error.WriteLine();
+        Console.Error.WriteLine(refusal.Message);
+        return 2;
+    }
 
     var failures = 0;
 

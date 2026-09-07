@@ -132,10 +132,10 @@ public sealed record TextConditioning(float[] HiddenStates, float[] PooledEmbeds
 /// SDXL's micro-conditioning: six numbers saying what size the source image was,
 /// what crop it came from, and what size is being asked for.
 ///
-/// **All of them are the size the model actually produces, not the size we want
-/// the file to be.** SDXL was trained conditioned on its source resolution, so
-/// telling it 1400 asks for something it never saw; the 1400 is a resize that
-/// happens after the picture exists, and it is SkiaSharp's business.
+/// **All of them are the size the model actually produces.** SDXL was trained
+/// conditioned on its source resolution, so naming any other number asks for
+/// something it never saw. What the file ends up being is the post-processing's
+/// business and never the model's.
 ///
 /// Inside the UNet each value becomes a 256-wide embedding, giving 1536, which is
 /// concatenated with the 1280 pooled text embedding to make the 2816 the model's

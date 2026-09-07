@@ -5,11 +5,21 @@ namespace ElGuerre.Tendero.SeedImages;
 /// <summary>The numbers `seed/IMAGES-TODO.md` measured, in one place.</summary>
 public static class ImageSpec
 {
-    /// <summary>1400 because the product page is the most demanding consumer:
-    /// the image column is about 660 CSS pixels in a 1440 frame, which is 1320
-    /// real ones on a 2× display. Derivatives are deferred, so this single file
-    /// is used everywhere.</summary>
-    public const int Size = 1400;
+    /// <summary>
+    /// **1024, and it used to say 1400.**
+    ///
+    /// The 1400 was reasoned from the product page — the image column is about
+    /// 660 CSS pixels in a 1440 frame, so 1320 real ones on a 2× display — and it
+    /// was decided before a single image of any size existed. Every source there
+    /// is produces 1024: the eight drawn by hand, and what the generators return.
+    ///
+    /// Enlarging 1024 to 1400 adds no detail. It adds weight and a resampling
+    /// pass, and the softness that costs is visible next to an original that
+    /// never had one. So the number follows the sources rather than the other way
+    /// round, and it goes back up the day a source produces more — the tool
+    /// scales down happily and will never scale up.
+    /// </summary>
+    public const int Size = 1024;
 
     public const int Quality = 82;
 
