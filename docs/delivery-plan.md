@@ -73,18 +73,31 @@ during which phases 0–5 refill the queue.
 |---|---|---|
 | 2026-09-15 | 00 · From CocktailDev to Tendero | ready — PNGs exported; upload and swap the four paths |
 | 2026-09-29 | 01 · One port, N catalogs | ready — needs a repo tag |
-| 2026-10-13 | 02 · Search with regression tests: NDCG as a CI gate | ready |
-| 2026-10-27 | 03 · The catalogue nobody could find | ready |
-| 2026-11-10 | 04 · Your build is green and nothing works | ready |
-| 2026-11-24 | 05 · The parameter and the header are not alternatives | ready |
-| 2026-12-08 | 06 · A repository that built on exactly one machine | ready |
-| 2026-12-22 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
-| 2027-01-05 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
-| 2027-01-19 | 16 · The URL that guessed which product you meant | ready — carries what was article 17 as its closing section |
-| 2027-02-02 | **NEW** · from phase 0 | write when P0 closes |
-| 2027-03-02 | **NEW** · from phase 2 | write when P2 closes |
-| 2027-03-16 | **NEW** · from phase 3 | write when P3 closes |
+| 2026-10-13 | **17 · A hundred pictures, and not a line of Python** | outline — blocked on the hundred images existing |
+| 2026-10-27 | **18 · Every screen was correct and none of them was a shop** | outline — needs writing; the screenshots need 17 to have happened |
+| 2026-11-10 | 02 · Search with regression tests: NDCG as a CI gate | ready |
+| 2026-11-24 | 03 · The catalogue nobody could find | ready |
+| 2026-12-08 | 04 · Your build is green and nothing works | ready |
+| 2026-12-22 | 05 · The parameter and the header are not alternatives | ready |
+| 2027-01-05 | 06 · A repository that built on exactly one machine | ready |
+| 2027-01-19 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
+| 2027-02-02 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
+| 2027-02-16 | 16 · The URL that guessed which product you meant | ready — carries what was article 17 as its closing section |
+| 2027-03-02 | **NEW** · from phase 0 | write when P0 closes |
+| 2027-03-16 | **NEW** · from phase 2 | write when P2 closes |
+| 2027-03-30 | **NEW** · from phase 3 | write when P3 closes |
 | … | one per closed phase, in order | |
+
+**Two articles were inserted at 2026-10-13 and 2026-10-27 (decided 2026-09-07),
+and everything after them moved a month.** The reason is an arc rather than a
+preference: 01 ends with a catalogue full of products nobody can look at, 17
+fills it with a hundred illustrations, and 18 finally shows the shop — with
+photographs in it, which is what makes its screenshots worth taking. It also puts
+the **only visual piece in the queue** early, in a series whose first ten
+articles are failures and numbers without a single image.
+
+The old table skipped 2027-02-16, which fortnightly publishing does not; the
+dates above are recomputed rather than shifted, so that gap is gone.
 
 One standing blocker before 2026-09-29: cut a repo tag so article 01's snippets
 compile against something. The diagram PNGs are done — exported and committed on
