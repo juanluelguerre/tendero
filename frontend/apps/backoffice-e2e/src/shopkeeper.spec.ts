@@ -52,7 +52,22 @@ test.describe('the backoffice', () => {
     // Waiting for something the door renders waits for the application to have
     // finished deciding. The URL assertion after it is then instant, and still
     // catches a guard that sent somebody to the wrong place.
-    await expect(page.getByRole('button', { name: /continue/i })).toBeVisible();
+    //
+    // **The button only exists if the API answered**, and making sure of that is
+    // the workflow's job rather than this one's: `AuthStore.bootstrap()`
+    // swallows a failed `/api/auth/config` and `SignInPage` reads the issuer
+    // once, so a page loaded while the API was still starting renders the
+    // no-issuer notice and never a button, at any timeout at all. CI waits for
+    // the API through the backoffice's own proxy before it runs anything now.
+    //
+    // What is left for this line to absorb is the FIRST page load of the run —
+    // a cold Vite dev server compiling on demand — which is the same cost the
+    // sixty-second test budget in `playwright.config.ts` was raised for. Five
+    // seconds is the default for a warm application, and this is the one
+    // assertion in the suite that never meets one.
+    await expect(page.getByRole('button', { name: /continue/i })).toBeVisible({
+      timeout: 30_000,
+    });
 
     await expect(page).toHaveURL(/\/sign-in(\?|$)/);
   });
