@@ -204,6 +204,39 @@ public sealed class McpTransportTests
             StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// The header reaches the tool, which is the half of P9-4 that could not be
+    /// assumed. The tools read `Accept-Language` through `IHttpContextAccessor`,
+    /// and whether that flows into a tool invocation is a property of the SDK's
+    /// transport rather than of our code — so it is asked rather than trusted.
+    ///
+    /// `list_categories` is the tool used because it needs no database: the
+    /// answer may be an empty list here, and what is being read is the culture
+    /// the envelope reports, not the rows.
+    /// </summary>
+    [Theory]
+    [InlineData("en-GB,en;q=0.9", "en")]
+    [InlineData("fr-FR", "es")]
+    public async Task The_accept_language_header_reaches_the_tools(string header, string expected)
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+        client.DefaultRequestHeaders.Add("Accept-Language", header);
+
+        var answer = await Call(client, new
+        {
+            jsonrpc = "2.0",
+            id = 5,
+            method = "tools/call",
+            @params = new { name = "list_categories", arguments = new { } }
+        });
+
+        var content = answer.GetProperty("result").GetProperty("content")[0].GetProperty("text").GetString();
+        using var payload = JsonDocument.Parse(content!);
+
+        Assert.Equal(expected, payload.RootElement.GetProperty("culture").GetString());
+    }
+
     private static async Task<JsonElement> Call(HttpClient client, object request)
     {
         var response = await client.PostAsJsonAsync("/mcp", request, TestContext.Current.CancellationToken);

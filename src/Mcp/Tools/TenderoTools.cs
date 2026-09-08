@@ -6,6 +6,7 @@ using ElGuerre.Tendero.Pricing.Features.ListOffers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.SharedKernel;
+using Microsoft.AspNetCore.Http;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 
@@ -36,29 +37,31 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 public sealed class TenderoTools
 {
     /// <summary>
-    /// The default when a tool is not told which language to answer in. It is
-    /// the last link of ADR 0013's chain, and it is written here as a literal
-    /// only because a parameter default has to be a compile-time constant;
-    /// <see cref="Resolve"/> is what actually applies the chain.
-    /// </summary>
-    private const string DefaultCulture = CultureNegotiation.Default;
-
-    /// <summary>
-    /// The same chain every HTTP endpoint runs, minus the link this transport
-    /// does not have: there is no <c>Accept-Language</c> over JSON-RPC. The
-    /// middle link — the language a session declares when it says hello — is
-    /// P9-4, and it goes in here.
+    /// **The same chain as HTTP, and it is the same chain rather than an
+    /// analogue of one.**
     ///
-    /// It is not decoration. The first version of these tools handed the
+    /// The roadmap assumed this transport had no <c>Accept-Language</c>, and
+    /// prescribed a session default captured at <c>initialize</c> to stand in
+    /// for it. That was written with stdio in mind. Streamable HTTP is HTTP: the
+    /// client's POST carries whatever headers it sets, so the middle link of
+    /// ADR 0013's chain is not missing and does not have to be invented.
+    /// <c>CultureNegotiation.Resolve</c> is called with both arguments, exactly
+    /// as an endpoint calls it — tool parameter, then the header, then <c>es</c>.
+    ///
+    /// A client that sends no header, or a future stdio deployment where there
+    /// is no request at all, falls to the default. That is the chain working,
+    /// not a gap in it.
+    ///
+    /// It is not decoration either. The first version of these tools handed the
     /// caller's raw string to the query, so <c>EN-GB</c> — which every HTTP
     /// endpoint normalises to <c>en</c> before dispatching — would have arrived
-    /// at the query as <c>EN-GB</c>, and a language the shop does not speak
-    /// would have reached a handler instead of falling back. Two transports over
-    /// one query must not disagree about what the shop speaks, and the way to
-    /// guarantee that is to call the same function rather than to write the same
-    /// rule twice.
+    /// at the query as <c>EN-GB</c>. Two transports over one query must not
+    /// disagree about what the shop speaks, and the way to guarantee that is to
+    /// call the same function rather than to write the same rule twice.
     /// </summary>
-    private static string Resolve(string? culture) => CultureNegotiation.Resolve(culture);
+    private static string Resolve(string? culture, IHttpContextAccessor requests) =>
+        CultureNegotiation.Resolve(
+            culture, requests.HttpContext?.Request.Headers.AcceptLanguage);
 
     [McpServerTool(Name = "search_products")]
     [Description("""
@@ -66,12 +69,13 @@ public sealed class TenderoTools
         matched with its SKU, price and whether it can be bought right now.
         Leave the query empty to browse a category instead of searching.
         """)]
-    public static Task<SearchResultPage> SearchProductsAsync(
+    public static Task<Answered<SearchResultPage>> SearchProductsAsync(
         IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
         [Description("What to search for. Empty browses; one character is refused.")]
         string query = "",
         [Description("Answer in this language: es or en. Anything else falls back to es.")]
-        string culture = DefaultCulture,
+        string? culture = null,
         [Description("Category code to browse or narrow to, e.g. KITCHEN.")]
         string? category = null,
         [Description("Order by 'newest', or leave unset for relevance.")]
@@ -81,8 +85,8 @@ public sealed class TenderoTools
         [Description("Results per page, 1 to 50.")]
         int pageSize = 20,
         CancellationToken cancellationToken = default) =>
-        Refusals.Readable(() => dispatcher.SendAsync(
-            new SearchProductsQuery(query, Resolve(culture), page, pageSize, category, sort), cancellationToken));
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+            new SearchProductsQuery(query, answered, page, pageSize, category, sort), cancellationToken)));
 
     [McpServerTool(Name = "get_product")]
     [Description("""
@@ -90,22 +94,25 @@ public sealed class TenderoTools
         variant it sells including the ones that are out of stock, each with its SKU.
         This is what says which SKUs exist.
         """)]
-    public static async Task<ProductDetail> GetProductAsync(
+    public static async Task<Answered<ProductDetail>> GetProductAsync(
         IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
         [Description("The product's public code, as it appears in search results.")]
         string code,
         [Description("Answer in this language: es or en. Anything else falls back to es.")]
-        string culture = DefaultCulture,
+        string? culture = null,
         CancellationToken cancellationToken = default)
     {
+        var answered = Resolve(culture, requests);
+
         var product = await Refusals.Readable(() => dispatcher.SendAsync(
-            new GetProductQuery(code, Resolve(culture)), cancellationToken));
+            new GetProductQuery(code, answered), cancellationToken));
 
         // A code nobody owns is a refusal with the code in it, not an empty
         // answer. An agent that gets null guesses; one that gets told will look
         // the product up again.
-        return product
-            ?? throw new McpException($"There is no product with code '{code}'.");
+        return new Answered<ProductDetail>(answered, product
+            ?? throw new McpException($"There is no product with code '{code}'."));
     }
 
     [McpServerTool(Name = "list_categories")]
@@ -113,13 +120,14 @@ public sealed class TenderoTools
         The shop's category tree, each entry naming its parent and its full path,
         in the requested language. Use a code from here to browse with search_products.
         """)]
-    public static Task<ListCategoriesResult> ListCategoriesAsync(
+    public static Task<Answered<ListCategoriesResult>> ListCategoriesAsync(
         IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
         [Description("Answer in this language: es or en. Anything else falls back to es.")]
-        string culture = DefaultCulture,
+        string? culture = null,
         CancellationToken cancellationToken = default) =>
-        Refusals.Readable(() => dispatcher.SendAsync(
-            new ListCategoriesQuery(Resolve(culture)), cancellationToken));
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+            new ListCategoriesQuery(answered), cancellationToken)));
 
     [McpServerTool(Name = "list_offers")]
     [Description("""
@@ -127,13 +135,14 @@ public sealed class TenderoTools
         its kind and the date it ends. What actually applies to a basket, and what is
         suppressed and why, is decided when the basket is priced.
         """)]
-    public static Task<ListOffersResult> ListOffersAsync(
+    public static Task<Answered<ListOffersResult>> ListOffersAsync(
         IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
         [Description("Answer in this language: es or en. Anything else falls back to es.")]
-        string culture = DefaultCulture,
+        string? culture = null,
         CancellationToken cancellationToken = default) =>
-        Refusals.Readable(() => dispatcher.SendAsync(
-            new ListOffersQuery(Resolve(culture)), cancellationToken));
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+            new ListOffersQuery(answered), cancellationToken)));
 
     [McpServerTool(Name = "get_return_policy")]
     [Description("""

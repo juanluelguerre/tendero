@@ -37,6 +37,10 @@ public static class TenderoMcpServer
 
     public static IServiceCollection AddTenderoMcp(this IServiceCollection services) =>
         services
+            // The tools read `Accept-Language` off the request the JSON-RPC call
+            // arrived on, which is what lets ADR 0013's chain be the same chain
+            // here as over HTTP rather than an analogue of it.
+            .AddHttpContextAccessor()
             .AddMcpServer(options => options.ServerInfo = new Implementation
             {
                 // What an agent shows a person when it lists what it is
