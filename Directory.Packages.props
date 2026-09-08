@@ -29,6 +29,27 @@
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="11.0.0-preview.7.26381.103" />
   </ItemGroup>
 
+  <ItemGroup Label="Agent surfaces">
+    <!-- ModelContextProtocol.AspNetCore 2.2.0 - Apache-2.0, declared as a licence
+         EXPRESSION in the nuspec rather than as a URL, which is what ADR 0006
+         asks for after Aspire.Hosting.Elasticsearch declared none at all. Its
+         two transitive packages, ModelContextProtocol and
+         ModelContextProtocol.Core, carry the same expression.
+
+         It targets net8.0, net9.0 and net10.0 and NOT net11.0, which is fine and
+         is worth writing down rather than rediscovering: a net11.0 project
+         consumes net10.0 lib assets. What was checked, because the Elasticsearch
+         integration failed on exactly this, is that it pins nothing of ours -
+         its only hard version is on its own two packages.
+
+         It does bring Microsoft.Extensions.AI.Abstractions transitively, which
+         is not an accident of packaging: MCP describes a tool the same way MEAI
+         does, and ADR 0005 already names MEAI as the AI abstraction. The AI
+         layer arriving through the door marked "agent surface" is the right
+         door. -->
+    <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+  </ItemGroup>
+
   <ItemGroup Label="Persistence">
     <!-- EF Core 11.0.0-preview.6 — MIT. Pinned one preview behind the SDK on
          purpose: the Npgsql provider takes an EXACT dependency on the EF version,

@@ -98,6 +98,7 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 | `POST /api/accounts/me` | `Accounts/Features/LinkIdentity` — the subject comes from the token, never from the body |
 | `GET /api/audit` | `Accounts/Features/ListAuditEntries` — opens on the refusals |
+| `POST /mcp` | `Mcp/TenderoMcpServer` — **not a Carter slice**: JSON-RPC over one route, anonymous by explicit decision and out of the OpenAPI document |
 
 Plus the development issuer's own surface under `/dev-issuer` in Development —
 discovery, JWKS, `/connect/authorize`, `/connect/token`, `/connect/logout` — which
@@ -228,7 +229,7 @@ implementations of one.
 | Surface | The agent is | Authorization | Phase |
 |---|---|---|---|
 | **WebMCP** | code inside the user's own browser session | **inherits** it — no second principal, no token, no mandate | 6 (done) |
-| **MCP server** | an external process | `AllowAnonymous` by explicit decision; read-only | 9 |
+| **MCP server** | an external process | `AllowAnonymous` by explicit decision; read-only | 9 (transport mounted; tools next) |
 | **UCP + AP2** | its own principal, server to server | bearer token plus a signed mandate | 11 |
 
 **WebMCP ships.** `libs/shared/agent` holds the registration mechanism — the

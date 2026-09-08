@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A transport, not a bounded context: it owns no state and no handler. Five
+       read tools that build a query record, hand it to IQueryDispatcher and map
+       the answer, which is why the only project references here are the
+       SharedKernel that declares the dispatcher and the contexts whose query
+       CONTRACTS it names.
+
+       It is a separate assembly and the same process on purpose. The process is
+       shared so tool reuse is free — the container is already built and every
+       handler is already registered. The assembly is separate so an architecture
+       rule can say what this project may not do, and a rule needs something to
+       point at. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Mcp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

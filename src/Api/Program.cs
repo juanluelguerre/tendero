@@ -7,6 +7,7 @@ using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Features.ListStock;
+using ElGuerre.Tendero.Mcp;
 using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.Checkout;
 using ElGuerre.Tendero.Persistence;
@@ -87,6 +88,12 @@ builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators())
 builder.Services.AddOpenApi(options =>
     options.AddSchemaTransformer<NumbersAreNumbersTransformer>());
 
+// The read-only MCP server, in this process and in its own assembly. Same
+// process so the tools reuse the container that is already built; separate
+// assembly so an architecture rule has something to point at when it says this
+// project implements no handler of its own.
+builder.Services.AddTenderoMcp();
+
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<SearchUnavailableExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -104,6 +111,10 @@ app.MapDefaultEndpoints();
 app.MapOpenApi();
 
 app.MapCarter();
+
+// After MapCarter and outside it: Carter mounts the slices, and MCP is not a
+// slice. It is a second transport over the queries those slices already answer.
+app.MapTenderoMcp();
 
 app.Run();
 
