@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ElGuerre.Tendero.Ordering.Domain;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -118,6 +119,100 @@ public sealed class McpTransportTests
         Assert.NotEmpty(mcp);
         Assert.All(mcp, endpoint =>
             Assert.NotNull(endpoint.Metadata.GetMetadata<IExcludeFromDescriptionMetadata>()));
+    }
+
+    /// <summary>
+    /// The exact set, so a sixth tool is a deliberate act rather than a drift.
+    /// The storefront's WebMCP tools are held to the same assertion, for the
+    /// same reason: the tool list IS the contract an agent reads, and it is the
+    /// one part of this surface that no compiler checks.
+    /// </summary>
+    [Fact]
+    public async Task It_offers_exactly_these_five_tools()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var tools = await Call(client, new { jsonrpc = "2.0", id = 2, method = "tools/list" });
+
+        Assert.Equal(
+            ["get_product", "get_return_policy", "list_categories", "list_offers", "search_products"],
+            tools.GetProperty("result").GetProperty("tools").EnumerateArray()
+                .Select(tool => tool.GetProperty("name").GetString())
+                .Order(StringComparer.Ordinal)
+                .ToArray());
+    }
+
+    /// <summary>
+    /// One tool, end to end, with no database and no Elasticsearch: the returns
+    /// window is a constant read through a handler, so this exercises the whole
+    /// path — JSON-RPC in, dispatcher, handler, answer out — on infrastructure
+    /// that is not running. The number is compared against the aggregate rather
+    /// than typed here, which is the same reason the endpoint exists at all.
+    /// </summary>
+    [Fact]
+    public async Task Calling_a_tool_reaches_the_dispatcher_and_answers()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var answer = await Call(client, new
+        {
+            jsonrpc = "2.0",
+            id = 3,
+            method = "tools/call",
+            @params = new { name = "get_return_policy", arguments = new { } }
+        });
+
+        var content = answer.GetProperty("result").GetProperty("content")[0].GetProperty("text").GetString();
+        using var policy = JsonDocument.Parse(content!);
+
+        Assert.Equal(
+            (int)ReturnRequest.Window.TotalDays,
+            policy.RootElement.GetProperty("windowDays").GetInt32());
+    }
+
+    /// <summary>
+    /// And a refusal, which is the half worth having. The validation step throws
+    /// the same exception whoever asked; over HTTP it becomes a ProblemDetails
+    /// and here a JSON-RPC error carrying the same sentence. Without that
+    /// mapping the agent gets an unhandled exception and learns nothing about
+    /// how to ask again.
+    /// </summary>
+    [Fact]
+    public async Task A_query_the_shop_refuses_comes_back_as_a_readable_error()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var answer = await Call(client, new
+        {
+            jsonrpc = "2.0",
+            id = 4,
+            method = "tools/call",
+            // One character: allowed to be empty (that is a browse), refused at
+            // one, because a single letter matches so much the answer is noise.
+            @params = new { name = "search_products", arguments = new { query = "z" } }
+        });
+
+        var result = answer.GetProperty("result");
+
+        Assert.True(result.GetProperty("isError").GetBoolean());
+        Assert.Contains(
+            "at least 2 characters",
+            result.GetProperty("content")[0].GetProperty("text").GetString(),
+            StringComparison.Ordinal);
+    }
+
+    private static async Task<JsonElement> Call(HttpClient client, object request)
+    {
+        var response = await client.PostAsJsonAsync("/mcp", request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        return JsonDocument.Parse(JsonRpcPayload(body)).RootElement.Clone();
     }
 
     /// <summary>

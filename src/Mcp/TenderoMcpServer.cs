@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Mcp.Tools;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -48,6 +49,9 @@ public static class TenderoMcpServer
             // process, and a process that already answers HTTP should not also
             // be launched as a child process to be talked to.
             .WithHttpTransport()
+            // The tool set is declared in one type, so what the shop offers an
+            // agent is one file to read and one file to change.
+            .WithTools<TenderoTools>()
             .Services;
 
     public static IEndpointConventionBuilder MapTenderoMcp(this IEndpointRouteBuilder endpoints) =>
