@@ -27,6 +27,7 @@
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../../src/ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../../src/Ucp/ElGuerre.Tendero.Ucp.csproj" />
     <ProjectReference Include="../../src/Workers/ElGuerre.Tendero.Workers.csproj" />
     <!-- The evaluation tool is subject to the rules: a tool is exactly where
          somebody would shortcut to the Elastic client past the ports. -->

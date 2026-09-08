@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A transport, like src/Mcp, and held to the same two architecture rules:
+       no handler of its own, and no `*.Domain` namespace. It owns no state.
+
+       What it owns is the SHAPE of a document somebody else specified, which is
+       why this project exists at all rather than the manifest being assembled
+       inline in an endpoint: the day the spec's field names move, exactly one
+       file changes and the compiler finds the rest. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Ucp</RootNamespace>
+  </PropertyGroup>
+
+</Project>

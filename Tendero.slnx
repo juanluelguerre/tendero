@@ -13,6 +13,7 @@
     <Project Path="src/Search/ElGuerre.Tendero.Search.csproj" />
     <Project Path="src/ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
     <Project Path="src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+    <Project Path="src/Ucp/ElGuerre.Tendero.Ucp.csproj" />
     <Project Path="src/Workers/ElGuerre.Tendero.Workers.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -28,6 +29,7 @@
     <Project Path="tests/SearchEval.Tests/ElGuerre.Tendero.SearchEval.Tests.csproj" />
     <Project Path="tests/SeedImages.Tests/ElGuerre.Tendero.SeedImages.Tests.csproj" />
     <Project Path="tests/SharedKernel.Tests/ElGuerre.Tendero.SharedKernel.Tests.csproj" />
+    <Project Path="tests/Ucp.Tests/ElGuerre.Tendero.Ucp.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/SearchEval/ElGuerre.Tendero.SearchEval.csproj" />
