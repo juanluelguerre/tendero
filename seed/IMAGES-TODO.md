@@ -18,13 +18,22 @@ Las diez de la segunda tanda salieron a **~6 s y ~$0,03 cada una**, o sea unos
 red y sin factura, y como el único que reproduce una imagen a partir de su
 `item_id`.
 
-**Una discrepancia abierta, y la reparación es el catálogo.** El pase de visión
-sobre las dieciocho da 18 utilizables y dos avisos. Uno es un falso positivo
-correcto — la cafetera `B09PQRS303` es *acero inoxidable*, que a un clasificador
-sobre nueve opciones cerradas se le parece a *gris*. El otro es real:
-**`B13BAG0710` declara `gris` en el seed sobre una funda que siempre ha sido
-negra**. Como ya decidió este documento la primera vez que pasó, lo barato y lo
-honesto es cambiar la ficha, no regenerar la imagen.
+**La discrepancia que quedaba abierta, cerrada el 2026-09-08 en el catálogo.**
+El pase de visión sobre las dieciocho da 18 utilizables y dos avisos. Uno es un
+falso positivo correcto — la cafetera `B09PQRS303` es *acero inoxidable*, que a
+un clasificador sobre nueve opciones cerradas se le parece a *gris*. El otro era
+real: `B13BAG0710` declaraba `gris` sobre una funda que no lo es. **La ficha dice
+`negro`**, y la imagen no se ha tocado.
+
+Y conviene decir cómo se decidió, porque «siempre ha sido negra» era un vistazo.
+El fieltro de la funda mide **RGB (68, 66, 62)** en el cuerpo de la pieza — un
+carbón cálido, ni negro puro ni el gris medio que la palabra sugiere. Entre las
+dos únicas opciones que el catálogo cierra, `BLACK` y `GREY`, la primera está
+mucho más cerca: a L\* ≈ 28 la pieza está a un cuarto del camino desde el negro,
+y el gris de la lista es el de una camiseta jaspeada. **Una opción cerrada no
+describe un color, elige el más próximo**, y ésa es la elección — no una
+afirmación de que la funda sea negro tinta. El día que el catálogo necesite
+`antracita` como novena y media, esta ficha es la primera que cambia.
 
 ## La especificación, en corto
 
@@ -327,7 +336,7 @@ Funda acolchada de fieltro de lana con cierre magnetico y bolsillo exterior para
 
 *14-inch laptop sleeve* — Padded wool felt sleeve with a magnetic closure and an outer pocket for the charger.
 
-Color: **gris**
+Color: **negro**
 
 ### `B13BAG0711.webp` — Alforja de bicicleta impermeable 20L · **hecha**
 
