@@ -44,7 +44,7 @@ internal sealed class VariantConfiguration : IEntityTypeConfiguration<Variant>
 
         // The axes are a dictionary, which has no complex equivalent in EF: the
         // same jsonb converter as the product's attributes.
-        builder.Property<Dictionary<string, string>>("_axisValues")
+        builder.Property<Dictionary<string, string>>("axisValues")
             .HasColumnName("AxisValues")
             .HasColumnType("jsonb")
             .HasConversion(Jsonb.AttributesConverter, Jsonb.AttributesComparer)

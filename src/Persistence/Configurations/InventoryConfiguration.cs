@@ -83,7 +83,7 @@ internal sealed class ReservationConfiguration : IEntityTypeConfiguration<Reserv
 
         // No HasMaxLength inside a complex collection: the values live in a JSON
         // column, so there is no column to size. Same shape as OrderLine.
-        builder.ComplexCollection<List<ReservationLine>, ReservationLine>("_lines", line =>
+        builder.ComplexCollection<List<ReservationLine>, ReservationLine>("lines", line =>
         {
             line.Property(l => l.Sku);
             line.Property(l => l.WarehouseCode);

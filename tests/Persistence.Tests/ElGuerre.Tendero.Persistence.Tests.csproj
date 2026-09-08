@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Persistence.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- No Testcontainers, and that is the whole point of this project existing
+       beside tests/Integration.Tests: building the model needs no database, so
+       these run on a machine with no Docker and in the first seconds of CI. The
+       defect that caused them was invisible for two days precisely because the
+       only tests that could see it needed a container. -->
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

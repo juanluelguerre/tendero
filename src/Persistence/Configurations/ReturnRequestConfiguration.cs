@@ -42,7 +42,7 @@ internal sealed class ReturnRequestConfiguration : IEntityTypeConfiguration<Retu
         builder.HasIndex(request => request.OrderId);
         builder.HasIndex(request => request.Status);
 
-        builder.ComplexCollection<List<ReturnLine>, ReturnLine>("_lines", line =>
+        builder.ComplexCollection<List<ReturnLine>, ReturnLine>("lines", line =>
         {
             line.Property(l => l.Reason).HasConversion<string>();
             line.ToJson("lines");

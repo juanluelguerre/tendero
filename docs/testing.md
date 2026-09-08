@@ -2,9 +2,9 @@
 
 Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short.
 
-**What is in the repository today** (2026-09-05): xUnit v3, CsCheck,
+**What is in the repository today** (2026-09-08): xUnit v3, CsCheck,
 NetArchTest.Rules, Testcontainers.PostgreSql, `WebApplicationFactory`, vitest
-and Playwright — 503 backend tests, 37 frontend, 20 browser specs. NSubstitute,
+and Playwright — 547 backend tests, 37 frontend, 20 browser specs. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
 fakes and the contract suites have not needed a mock, and nothing snapshots
 yet. Respawn was declined — a fresh database per test is cheaper than a reset.
@@ -70,6 +70,12 @@ A new adapter without its contract-test subclass does not merge.
   database** — a `CREATE DATABASE` on a warm container, which is cheaper than a
   reset and stops the order of the tests from mattering. Respawn was declined
   for that reason. Tests skip with a reason when Docker is absent.
+- **`tests/Persistence.Tests` needs no container at all**, which is the reason
+  it is a project of its own rather than a class in here. Building the model is
+  pure reflection over the configurations, so it runs on a machine with no
+  Docker and in the first seconds of CI. It exists because seven EF member names
+  went stale in a rename and the only tests that could see it were these ones —
+  a defect is not caught by the suite that cannot run.
 - The API is tested through `WebApplicationFactory` **without** containers
   (`tests/Api.Tests`): neither the DbContext nor the Elastic client connects on
   construction, so the OpenAPI document, the endpoint policies, the handler

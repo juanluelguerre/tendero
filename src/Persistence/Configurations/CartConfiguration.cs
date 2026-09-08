@@ -50,7 +50,7 @@ internal sealed class CartConfiguration : IEntityTypeConfiguration<Cart>
         // migration later.
         builder.HasIndex(cart => new { cart.Status, cart.ExpiresAt });
 
-        builder.ComplexCollection<List<CartLine>, CartLine>("_lines", line =>
+        builder.ComplexCollection<List<CartLine>, CartLine>("lines", line =>
         {
             line.ToJson("lines");
         });

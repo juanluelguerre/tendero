@@ -13,6 +13,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" />
     <PackageReference Include="SkiaSharp" />
+    <!-- The Linux binaries, which SkiaSharp does not carry: Windows and macOS
+         arrive with the wrapper and this one has to be asked for. Unconditional
+         on purpose - the package is nothing but .so files under runtimes/linux-*,
+         so a Windows build copies none of them, and a reference behind an OS
+         condition is a restore that differs per machine. -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
   </ItemGroup>
 
 </Project>

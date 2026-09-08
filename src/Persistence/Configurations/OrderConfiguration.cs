@@ -32,7 +32,7 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // the buyer's culture and the price frozen (ADR 0002). They are never
         // queried on their own from the domain, so they travel with the order in
         // a JSON column.
-        builder.ComplexCollection<List<OrderLine>, OrderLine>("_lines", line =>
+        builder.ComplexCollection<List<OrderLine>, OrderLine>("lines", line =>
         {
             // The variant travels on the line because what gets bought is a
             // variant (ADR 0015): without it the order does not know which size
@@ -73,13 +73,13 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             totals.ToJson("totals");
         });
 
-        builder.ComplexCollection<List<OrderDiscount>, OrderDiscount>("_discounts", discount =>
+        builder.ComplexCollection<List<OrderDiscount>, OrderDiscount>("discounts", discount =>
         {
             discount.Property(d => d.Amount).HasConversion(Jsonb.MoneyAsTextConverter);
             discount.ToJson("discounts");
         });
 
-        builder.ComplexCollection<List<OrderTax>, OrderTax>("_taxes", tax =>
+        builder.ComplexCollection<List<OrderTax>, OrderTax>("taxes", tax =>
         {
             tax.Property(t => t.Base).HasConversion(Jsonb.MoneyAsTextConverter);
             tax.Property(t => t.Amount).HasConversion(Jsonb.MoneyAsTextConverter);
