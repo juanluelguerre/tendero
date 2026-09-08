@@ -11,4 +11,17 @@
     <RootNamespace>ElGuerre.Tendero.Ucp</RootNamespace>
   </PropertyGroup>
 
+  <!-- The contexts whose slices the capabilities NAME. A capability class holds
+       `typeof(SearchProductsQuery)`, so deleting that slice breaks this project's
+       build rather than rotting the manifest quietly — which is the whole reason
+       the document is derived instead of written by hand.
+
+       It is the same direction src/Mcp points in, and the same rules apply: no
+       handler here, and no `*.Domain` namespace. -->
+  <ItemGroup>
+    <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
 </Project>
