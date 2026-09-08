@@ -76,7 +76,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         // The field is mapped, not the property: EF requires IList<T> for a
         // complex collection and the aggregate exposes IReadOnlyList<T>, which
         // stays untouched.
-        builder.ComplexCollection<List<ProductImage>, ProductImage>("_images", image =>
+        builder.ComplexCollection<List<ProductImage>, ProductImage>("images", image =>
         {
             // The alternative text is LocalizedText: inside the JSON it travels
             // as the same culture -> text dictionary as the rest of the catalogue.
@@ -90,7 +90,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         // Attribute values went from Dictionary<string,string> to a typed list.
         // They stay in jsonb because they are always read with their product;
         // what does get queried are the DEFINITIONS, and those go to a table.
-        builder.Property<List<AttributeValue>>("_attributes")
+        builder.Property<List<AttributeValue>>("attributes")
             .HasColumnName("Attributes")
             .HasColumnType("jsonb")
             .HasConversion(Jsonb.AttributeValuesConverter, Jsonb.AttributeValuesComparer)
@@ -135,7 +135,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         // The order of the axes IS data (ADR 0015): "azul marino · 38" and not
         // the other way round. As a list of strings it fits in jsonb without
         // ceremony.
-        builder.Property<List<string>>("_variantAxes")
+        builder.Property<List<string>>("variantAxes")
             .HasColumnName("VariantAxes")
             .HasColumnType("jsonb")
             .HasConversion(Jsonb.StringListConverter, Jsonb.StringListComparer)
