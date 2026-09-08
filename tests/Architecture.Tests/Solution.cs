@@ -3,6 +3,7 @@ using System.Reflection;
 using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
+using ElGuerre.Tendero.Mcp;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Pricing.Domain;
@@ -32,12 +33,22 @@ internal static class Solution
     public static readonly Assembly Workers = typeof(Workers.OutboxProcessor).Assembly;
     public static readonly Assembly SearchEval = typeof(SearchEval.RelevanceMetrics).Assembly;
 
+    public static readonly Assembly Mcp = typeof(TenderoMcpServer).Assembly;
+
     /// <summary>Contexts and capabilities: where the domain and the slices live.</summary>
     public static readonly Assembly[] Contexts = [Accounts, Catalog, Inventory, Ordering, Pricing, Search];
+
+    /// <summary>
+    /// Transports, which are deliberately NOT in <see cref="Contexts"/>: they own
+    /// no state, declare no domain and answer no query of their own. What they do
+    /// is carry an existing slice over a second protocol, and the rules below are
+    /// what keep them at that. `Ucp` joins this array in P9-5.
+    /// </summary>
+    public static readonly Assembly[] Transports = [Mcp];
 
     public static readonly Assembly[] All =
     [
         SharedKernel, Accounts, Catalog, Inventory, Ordering, Pricing, Search,
-        Persistence, ServiceDefaults, Api, Workers, SearchEval
+        Mcp, Persistence, ServiceDefaults, Api, Workers, SearchEval
     ];
 }

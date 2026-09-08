@@ -404,6 +404,91 @@ public sealed class ArchitectureRules
         return end < 0 ? @namespace : @namespace[..end];
     }
 
+    /// <summary>
+    /// A transport implements no handler. It is the rule the MCP tools were
+    /// written against, and until now nothing enforced it.
+    ///
+    /// Why it matters more than it looks: the tools are six lines each precisely
+    /// because the answer already exists somewhere else. The moment one of them
+    /// grows a handler, the shop has two implementations of the same question —
+    /// one reached over HTTP and one over JSON-RPC — and only one of them has the
+    /// validator, the audit decorator and the tests. That is not a style
+    /// preference; it is how a second surface quietly becomes a second system.
+    ///
+    /// Verified by mutation: an IQueryHandler declared inside src/Mcp turns this
+    /// red and names the type.
+    /// </summary>
+    [Fact]
+    public void A_transport_implements_no_handler_of_its_own()
+    {
+        Type[] handlerContracts =
+        [
+            typeof(IQueryHandler<,>), typeof(ICommandHandler<,>), typeof(IDomainEventHandler<>)
+        ];
+
+        foreach (var transport in Solution.Transports)
+        {
+            var handlers = transport.GetTypes()
+                .Where(type => type.GetInterfaces().Any(contract =>
+                    contract.IsGenericType
+                    && handlerContracts.Contains(contract.GetGenericTypeDefinition())))
+                .Select(type => type.FullName)
+                .OfType<string>()
+                .Order()
+                .ToArray();
+
+            Assert.True(handlers.Length == 0,
+                $"""
+                 {transport.GetName().Name} implements handlers:
+
+                 {string.Join(Environment.NewLine, handlers.Select(name => "  " + name))}
+
+                 A transport carries an existing slice over a second protocol. If the
+                 question has no handler yet, it needs a slice in the context that owns
+                 it — not one here, where the validator and the audit decorator are not.
+                 """);
+        }
+    }
+
+    /// <summary>
+    /// And a transport never reaches a domain.
+    ///
+    /// What it may name is a query record and a result record; what it may not
+    /// name is an aggregate. The distinction is what keeps the wire flat — a
+    /// tool that can see a <c>Product</c> is one refactor away from serialising
+    /// a <c>ProductId</c> as <c>{"value":"…"}</c>, which CLAUDE.md warns about
+    /// precisely because no unit test catches it.
+    ///
+    /// The forbidden list is computed from the contexts rather than written
+    /// here, like every other rule in this file: a seventh context is inside the
+    /// rule the day it exists, and the non-empty assertion is what stops the
+    /// whole thing passing vacuously if the discovery ever breaks.
+    /// </summary>
+    [Fact]
+    public void A_transport_never_reaches_a_domain()
+    {
+        var domains = Solution.Contexts
+            .SelectMany(assembly => assembly.GetTypes())
+            .Select(type => type.Namespace)
+            .OfType<string>()
+            .Where(@namespace => @namespace.EndsWith(DomainSuffix, StringComparison.Ordinal)
+                                 || @namespace.Contains(DomainSuffix + ".", StringComparison.Ordinal))
+            .Distinct()
+            .Order()
+            .ToArray();
+
+        Assert.NotEmpty(domains);
+
+        foreach (var transport in Solution.Transports)
+        {
+            var result = Types.InAssembly(transport)
+                .ShouldNot().HaveDependencyOnAny(domains)
+                .GetResult();
+
+            Assert.True(result.IsSuccessful, Describe(transport, result));
+        }
+    }
+
     private static string Describe(Assembly assembly, TestResult result) =>
         result.IsSuccessful
             ? string.Empty

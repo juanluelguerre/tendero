@@ -94,6 +94,16 @@ Executable rules, one test each:
 3. Connector adapters are internal; only ports are public.
 4. Nothing outside `Search.Elasticsearch` references `Elastic.Clients.*`.
 5. Domain types never reference `Microsoft.EntityFrameworkCore`.
+6. A **transport** — `Mcp` today, `Ucp` from P9-5 — implements no handler and
+   reaches no `*.Domain` namespace. It is the rule that keeps a second protocol
+   from quietly becoming a second system: a tool is six lines precisely because
+   the answer already exists in a slice, and a handler declared beside the tool
+   would be the same question answered twice with the validator and the audit
+   decorator on only one of them.
+
+The list is not the count. Sixteen tests run these five ideas across every
+assembly, because most of them are a loop over the contexts rather than one
+assertion.
 
 When a rule blocks you, the answer is a design conversation (maybe an ADR),
 never weakening the rule inline.
