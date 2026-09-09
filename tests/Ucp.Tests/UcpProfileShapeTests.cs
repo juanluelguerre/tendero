@@ -30,36 +30,12 @@ public sealed class UcpProfileShapeTests
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    private static UcpProfile Sample => new()
-    {
-        Ucp = new UcpDocument
-        {
-            Version = UcpSpecification.Version,
-            Services = new Dictionary<string, IReadOnlyList<UcpService>>
-            {
-                [UcpSpecification.ShoppingService] =
-                [
-                    new UcpService
-                    {
-                        Version = UcpSpecification.Version,
-                        Spec = UcpSpecification.BaseUrl,
-                        Transport = "mcp",
-                        Endpoint = "https://shop.example/mcp",
-                        Schema = "https://shop.example/openapi/tendero.json"
-                    }
-                ]
-            },
-            Capabilities = new Dictionary<string, UcpCapabilityDeclaration>
-            {
-                ["dev.ucp.shopping.catalog.search"] = new()
-                {
-                    Version = UcpSpecification.Version,
-                    Spec = $"{UcpSpecification.BaseUrl}/catalog/",
-                    Schema = "https://shop.example/openapi/tendero.json"
-                }
-            }
-        }
-    };
+    /// <summary>
+    /// The profile the endpoint actually composes, rather than one built by
+    /// hand here. A fixture that agrees with a test and not with the shop is a
+    /// fixture testing itself.
+    /// </summary>
+    private static UcpProfile Sample => UcpProfileEndpoint.Compose("https://shop.example");
 
     [Fact]
     public void It_serialises_with_the_specifications_own_field_names()
@@ -74,6 +50,7 @@ public sealed class UcpProfileShapeTests
         Assert.Contains("\"endpoint\":", json, StringComparison.Ordinal);
         Assert.Contains("\"schema\":", json, StringComparison.Ordinal);
         Assert.Contains("\"dev.ucp.shopping.catalog.search\":", json, StringComparison.Ordinal);
+        Assert.Contains("\"payment_handlers\":", json, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -104,6 +81,7 @@ public sealed class UcpProfileShapeTests
         Assert.Equal(UcpSpecification.Version, back.Ucp.Version);
         Assert.Equal("mcp", back.Ucp.Services[UcpSpecification.ShoppingService][0].Transport);
         Assert.True(back.Ucp.Capabilities.ContainsKey("dev.ucp.shopping.catalog.search"));
+        Assert.Empty(back.Ucp.PaymentHandlers);
     }
 
     /// <summary>

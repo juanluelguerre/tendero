@@ -17,6 +17,7 @@ using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Ucp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -115,6 +116,11 @@ app.MapCarter();
 // After MapCarter and outside it: Carter mounts the slices, and MCP is not a
 // slice. It is a second transport over the queries those slices already answer.
 app.MapTenderoMcp();
+
+// And the discovery profile the MCP binding is reached through. It is composed
+// from the capability registry on every request, so it cannot describe a shop
+// this process is not.
+app.MapTenderoUcp();
 
 app.Run();
 

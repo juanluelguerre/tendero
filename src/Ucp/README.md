@@ -14,14 +14,20 @@ rather than from whenever somebody remembers.
 
 | | |
 |---|---|
-| **Here** | `UcpSpecification` (the pinned version and the fixed path) and `UcpProfile` (the document's shape) |
-| **`P9-6`** | `IUcpCapability` and a registry discovered by assembly scanning, each capability naming its slices by referencing their query types |
-| **`P9-7`** | `GET /.well-known/ucp`, derived from that registry, with a snapshot test |
-| **Phase 11** | the transactional capabilities, `payment_handlers` and `signing_keys` |
+| **Here** | the document's shape, the capability registry, the catalogue MCP binding's own contracts, and `GET /.well-known/ucp` composed from the registry |
+| **Phase 11** | the transactional capabilities, real `payment_handlers`, and `keys` once something is signed |
 
-The two absent sections are absent rather than empty **on purpose**. A shop
-publishing an empty payment-handler map is advertising a checkout it cannot
-honour, which is worse than saying nothing at all.
+**One claim this file used to make was wrong, and the specification's own JSON
+Schema said so.** It read: *the two absent sections are absent rather than empty
+on purpose — a shop publishing an empty payment-handler map is advertising a
+checkout it cannot honour.* Neither half survives. The signing-key field is
+`keys`, a JWK Set, not `signing_keys`; and a **business** profile is *required*
+to carry `payment_handlers`, so omitting it makes the document invalid rather
+than modest. An empty map does not advertise a checkout — it says this shop
+settles no payments over UCP, which is exactly true until phase 11.
+
+`keys` stays absent, because that one really is optional and there is nothing to
+publish until something is signed.
 
 ## The version is pinned, and no conformance is claimed
 
@@ -33,6 +39,12 @@ string is a deliberate act with a diff.
 What is asserted is that the profile has the shape the specification describes
 for the capabilities Tendero actually serves. Nothing is claimed about passing a
 certification, which does not exist to pass.
+
+Two more corrections the schemas made to what had been assumed here: a
+capability's value in the registry is an **array**, the same shape as a service's,
+and a business profile's capability requires its `schema` — the canonical URL a
+platform fetches to compose it, which is the protocol's document and not one of
+ours.
 
 One correction the specification made to this repository's own notes:
 `docs/analysis/roadmap.md` wrote the identity capability as `dev.ucp.identity`,

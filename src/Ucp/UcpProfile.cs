@@ -14,11 +14,17 @@ namespace ElGuerre.Tendero.Ucp;
 /// the process. A property name is a fact about somebody else's protocol here,
 /// not a style choice about ours.
 ///
-/// Two of the four sections the specification defines are absent rather than
-/// empty, and that is a statement: <c>payment_handlers</c> and
-/// <c>signing_keys</c> belong to the transactional half in phase 11. A shop
-/// that published an empty payment handler map would be advertising a checkout
-/// it cannot honour, which is worse than saying nothing.
+/// **Corrected 2026-09-08 against the specification's own JSON Schema**, which
+/// is the second time this phase that reading beat reasoning. Two things this
+/// file used to claim were wrong. The signing-key field is <c>keys</c>, a JWK
+/// Set, and not <c>signing_keys</c>. And a business profile REQUIRES
+/// <c>payment_handlers</c>: the argument written here — that an empty map
+/// "advertises a checkout it cannot honour" — was simply not true. An empty map
+/// advertises no payment handlers, which is exactly the case, and omitting the
+/// key makes the document invalid rather than modest.
+///
+/// <c>keys</c> stays absent, because it is genuinely optional and there is
+/// nothing to publish until phase 11 signs something.
 /// </summary>
 public sealed record UcpProfile
 {
@@ -49,9 +55,23 @@ public sealed record UcpDocument
     /// Capabilities keyed by their own reverse-DNS id —
     /// <c>dev.ucp.shopping.catalog.search</c>. The verbs of the protocol, and
     /// the half an agent actually branches on.
+    ///
+    /// A LIST per key, exactly like <see cref="Services"/>, and this file had it
+    /// as a single object until the schema said otherwise. The two registries
+    /// have the same shape.
     /// </summary>
     [JsonPropertyName("capabilities")]
-    public required IReadOnlyDictionary<string, UcpCapabilityDeclaration> Capabilities { get; init; }
+    public required IReadOnlyDictionary<string, IReadOnlyList<UcpCapabilityDeclaration>> Capabilities { get; init; }
+
+    /// <summary>
+    /// Required of a business profile, and empty here.
+    ///
+    /// Empty is not the same as absent and it is not the same as a promise: an
+    /// empty registry says this shop settles no payments over UCP, which is true
+    /// until phase 11 and is what the schema asks a merchant to say.
+    /// </summary>
+    [JsonPropertyName("payment_handlers")]
+    public required IReadOnlyDictionary<string, IReadOnlyList<object>> PaymentHandlers { get; init; }
 }
 
 /// <summary>One transport binding of one service: how to reach it and what it speaks.</summary>
@@ -60,9 +80,15 @@ public sealed record UcpService
     [JsonPropertyName("version")]
     public required string Version { get; init; }
 
-    /// <summary>Where a human reads the definition.</summary>
+    /// <summary>
+    /// Where a human reads the definition. Optional in a BUSINESS profile — the
+    /// platform schema requires it, the merchant schema does not — and sent
+    /// anyway, because a reader who lands on this document should be one click
+    /// from what it means.
+    /// </summary>
     [JsonPropertyName("spec")]
-    public required string Spec { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Spec { get; init; }
 
     /// <summary><c>rest</c>, <c>mcp</c>, <c>a2a</c> or <c>embedded</c>.</summary>
     [JsonPropertyName("transport")]
@@ -77,8 +103,14 @@ public sealed record UcpService
     /// committed OpenAPI document, which is the whole reason that document is
     /// generated from the running API and contract-tested: a schema URL is a
     /// promise, and this one is kept by a test rather than by attention.
+    ///
+    /// Optional for a business profile's MCP binding, and omitted rather than
+    /// written as null — the first generated profile carried
+    /// <c>"schema": null</c>, which is the very thing this file argues against
+    /// two records above: agents branch on a key existing.
     /// </summary>
     [JsonPropertyName("schema")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Schema { get; init; }
 }
 
@@ -92,10 +124,17 @@ public sealed record UcpCapabilityDeclaration
     [JsonPropertyName("version")]
     public required string Version { get; init; }
 
+    /// <summary>Optional in a business profile, and sent anyway.</summary>
     [JsonPropertyName("spec")]
-    public required string Spec { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Spec { get; init; }
 
-    /// <summary>Required for every capability, per the specification.</summary>
+    /// <summary>
+    /// **Required of a business profile**, because it is what a platform fetches
+    /// to compose the capability during negotiation. It is the specification's
+    /// canonical schema for this capability, not a document of ours: we are
+    /// declaring which contract we speak, not inventing one.
+    /// </summary>
     [JsonPropertyName("schema")]
     public required string Schema { get; init; }
 

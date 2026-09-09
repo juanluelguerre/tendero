@@ -98,6 +98,7 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 | `POST /api/accounts/me` | `Accounts/Features/LinkIdentity` — the subject comes from the token, never from the body |
 | `GET /api/audit` | `Accounts/Features/ListAuditEntries` — opens on the refusals |
+| `GET /.well-known/ucp` | `Ucp/UcpProfileEndpoint` — the UCP business profile, composed from the capability registry on every request. Anonymous because the specification requires it, and out of the OpenAPI document |
 | `POST /mcp` | `Mcp/TenderoMcpServer` — **not a Carter slice**: JSON-RPC over one route, anonymous by explicit decision and out of the OpenAPI document. **Eight** read tools. Three are UCP's catalogue MCP binding with the shapes the specification fixes — `search_catalog`, `lookup_catalog`, `get_product` — and five are the shop's own: `search_products`, `get_product_detail`, `list_categories`, `list_offers`, `get_return_policy`. Ours yielded the name `get_product` to the protocol, because two tools cannot share one on a server and `MapMcp` offers one server per process |
 
 Plus the development issuer's own surface under `/dev-issuer` in Development —
@@ -229,7 +230,7 @@ implementations of one.
 | Surface | The agent is | Authorization | Phase |
 |---|---|---|---|
 | **WebMCP** | code inside the user's own browser session | **inherits** it — no second principal, no token, no mandate | 6 (done) |
-| **MCP server** | an external process | `AllowAnonymous` by explicit decision; read-only | 9 (five read tools; manifest next) |
+| **MCP server** | an external process | `AllowAnonymous` by explicit decision; read-only | 9 · **done**: eight tools, three of them UCP's catalogue binding, and `/.well-known/ucp` |
 | **UCP + AP2** | its own principal, server to server | bearer token plus a signed mandate | 11 |
 
 **WebMCP ships.** `libs/shared/agent` holds the registration mechanism — the

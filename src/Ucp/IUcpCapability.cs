@@ -34,6 +34,17 @@ public interface IUcpCapability
     string Spec { get; }
 
     /// <summary>
+    /// The specification's canonical JSON Schema for this capability, which a
+    /// business profile is REQUIRED to publish: it is what a platform fetches to
+    /// compose the capability during negotiation.
+    ///
+    /// It is the protocol's URL and not one of ours. Declaring a schema of our
+    /// own here would be saying "I speak a contract I wrote", which is the
+    /// opposite of what a manifest is for.
+    /// </summary>
+    string Schema { get; }
+
+    /// <summary>
     /// The query and command types that serve it.
     ///
     /// Types rather than names, so the compiler is what keeps the manifest

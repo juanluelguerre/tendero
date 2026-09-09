@@ -24,6 +24,13 @@ public static class UcpSpecification
     public const string BaseUrl = $"https://ucp.dev/{Version}/specification";
 
     /// <summary>
+    /// Where the protocol's own JSON Schemas live. Unversioned in the URL,
+    /// which is the specification's choice and not ours: the schema documents
+    /// carry the version inside them.
+    /// </summary>
+    public const string SchemaBaseUrl = "https://ucp.dev/schemas";
+
+    /// <summary>
     /// The path the specification fixes. It is not configurable and must not
     /// require authentication: discovery that needs a credential is not
     /// discovery.

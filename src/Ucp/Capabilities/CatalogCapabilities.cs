@@ -18,6 +18,8 @@ public sealed class CatalogSearchCapability : IUcpCapability
 
     public string Spec => $"{UcpSpecification.BaseUrl}/catalog/";
 
+    public string Schema => $"{UcpSpecification.SchemaBaseUrl}/shopping/catalog_search.json";
+
     public IReadOnlyList<Type> Slices => [typeof(SearchProductsQuery)];
 }
 
@@ -37,6 +39,8 @@ public sealed class CatalogLookupCapability : IUcpCapability
     public string Version => UcpSpecification.Version;
 
     public string Spec => $"{UcpSpecification.BaseUrl}/catalog/";
+
+    public string Schema => $"{UcpSpecification.SchemaBaseUrl}/shopping/catalog_lookup.json";
 
     public IReadOnlyList<Type> Slices => [typeof(GetProductQuery)];
 }

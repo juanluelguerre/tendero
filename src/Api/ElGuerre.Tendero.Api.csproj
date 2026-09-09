@@ -25,6 +25,7 @@
     <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../Ucp/ElGuerre.Tendero.Ucp.csproj" />
   </ItemGroup>
 
 </Project>
