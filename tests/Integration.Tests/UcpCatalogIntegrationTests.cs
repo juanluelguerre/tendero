@@ -85,7 +85,10 @@ public sealed class UcpCatalogIntegrationTests(PostgresFixture postgres)
         await using var scope = await ArrangeAsync("ucp_catalogue_en", ct);
         var codes = await scope.ImportAndPublishAsync(ct);
 
-        foreach (var code in codes.Take(25))
+        // All of them, not a sample. English is where a missing translation
+        // turns a required string empty, and the products that have one are
+        // exactly the ones a sample would skip.
+        foreach (var code in codes)
         {
             var detail = await scope.DetailAsync(code, "en", ct);
             Assert.NotNull(detail);
