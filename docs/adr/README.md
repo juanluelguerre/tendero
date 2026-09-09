@@ -19,6 +19,8 @@
 | [0015](0015-variant-is-the-indexed-unit.md) | The variant is the indexed unit; the product is the returned unit | accepted |
 | [0016](0016-quoted-live-frozen-at-order.md) | Prices are quoted live and frozen at order time | accepted |
 | [0017](0017-the-identity-provider-is-a-port.md) | The identity provider is a port; the first adapter was a development issuer | accepted |
+| [0020](0020-transports-over-the-dispatcher.md) | MCP and UCP are transports over the dispatcher | accepted |
+| [0021](0021-the-manifest-is-derived.md) | The UCP manifest is derived from a capability registry | accepted |
 | [0024](0024-the-outbox-is-the-process-manager.md) | The outbox is the process manager, orchestrated from Ordering | accepted |
 | [0025](0025-authorise-before-placing.md) | Checkout authorises the payment before it places the order | accepted |
 | [0026](0026-the-url-carries-a-code.md) | The URL carries a code; the slug is decoration | accepted |
@@ -26,8 +28,11 @@
 
 Format: context → decision → consequences. Keep each under a page.
 
-The gap between 0017 and 0024 is deliberate: `roadmap.md` reserves 0018-0023 for
-decisions later phases are already committed to making (claims, the copilot,
-MCP/UCP transports, the capability registry, agent principals, feature flags).
-Renumbering them as they land would break the references the roadmap and the code
-already carry. 0017 was the first of those reservations to be cashed, in phase 7.
+The gaps are deliberate: `roadmap.md` reserves 0018-0023 for decisions later
+phases are already committed to making, and renumbering them as they land would
+break the references the roadmap and the code already carry. 0017 was the first
+of those reservations to be cashed, in phase 7; 0020 and 0021 followed in phase
+9. What is still reserved and still unwritten: **0018** (the AI writes claims,
+not products), **0019** (the copilot proposes commands, never prose), **0022**
+(an agent is a principal, not a customer) and **0023** (five feature flags, each
+with a removal condition).
