@@ -1,8 +1,5 @@
 using System.ComponentModel;
-using System.Globalization;
 using System.Text.Json;
-using ElGuerre.Tendero.Catalog.Features.GetProduct;
-using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Ucp.Catalog;
 using Microsoft.AspNetCore.Http;
@@ -34,9 +31,6 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 [McpServerToolType]
 public sealed class UcpCatalogTools
 {
-    /// <summary>How many identifiers one lookup may carry.</summary>
-    private const int MaxBatch = 50;
-
     [McpServerTool(Name = "search_catalog", UseStructuredContent = true)]
     [Description("""
         UCP catalog search. Free-text product discovery, answering with UCP Product
@@ -55,25 +49,18 @@ public sealed class UcpCatalogTools
         IReadOnlyDictionary<string, JsonElement>? meta = null,
         CancellationToken cancellationToken = default)
     {
-        Refusals.Guard(() => UcpAgentMetadata.ProfileOf(meta));
+        Refuse(UcpCatalogOperations.Check(meta));
 
-        var limit = Math.Clamp(pagination?.Limit ?? UcpCatalogAnswers.DefaultPageSize, 1, UcpCatalogAnswers.MaxPageSize);
-        var offset = Offset(pagination?.Cursor);
-        var culture = Culture(requests);
+        var request = new UcpSearchRequest
+        {
+            Query = query,
+            Filters = filters,
+            Pagination = pagination,
+            Meta = meta?.ToDictionary(pair => pair.Key, pair => pair.Value)
+        };
 
-        var categoryCode = filters is not null && filters.TryGetValue("category", out var value)
-            ? value
-            : null;
-
-        var page = await Refusals.Readable(() => dispatcher.SendAsync(
-            new SearchProductsQuery(
-                query ?? string.Empty, culture,
-                Page: (offset / limit) + 1, PageSize: limit, Category: categoryCode),
-            cancellationToken));
-
-        var details = await Details(dispatcher, page.Hits.Select(hit => hit.Code), culture, cancellationToken);
-
-        return UcpCatalogAnswers.Search(details, BaseUrl(requests), limit, offset, page.Total);
+        return await Refusals.Readable(() => UcpCatalogOperations.SearchAsync(
+            dispatcher, request, Culture(requests), BaseUrl(requests), cancellationToken));
     }
 
     [McpServerTool(Name = "lookup_catalog", UseStructuredContent = true)]
@@ -90,18 +77,16 @@ public sealed class UcpCatalogTools
         IReadOnlyDictionary<string, JsonElement>? meta = null,
         CancellationToken cancellationToken = default)
     {
-        Refusals.Guard(() => UcpAgentMetadata.ProfileOf(meta));
+        Refuse(UcpCatalogOperations.Check(meta, ids.Count));
 
-        if (ids.Count > MaxBatch)
+        var request = new UcpLookupRequest
         {
-            throw new McpException(
-                $"A lookup carries at most {MaxBatch} identifiers; this one carried {ids.Count}.");
-        }
+            Ids = ids,
+            Meta = meta?.ToDictionary(pair => pair.Key, pair => pair.Value)
+        };
 
-        var culture = Culture(requests);
-        var found = await Details(dispatcher, ids, culture, cancellationToken);
-
-        return UcpCatalogAnswers.Lookup(found, ids, BaseUrl(requests));
+        return await Refusals.Readable(() => UcpCatalogOperations.LookupAsync(
+            dispatcher, request, Culture(requests), BaseUrl(requests), cancellationToken));
     }
 
     [McpServerTool(Name = "get_product", UseStructuredContent = true)]
@@ -118,49 +103,31 @@ public sealed class UcpCatalogTools
         IReadOnlyDictionary<string, JsonElement>? meta = null,
         CancellationToken cancellationToken = default)
     {
-        Refusals.Guard(() => UcpAgentMetadata.ProfileOf(meta));
+        Refuse(UcpCatalogOperations.Check(meta));
 
-        var detail = await Refusals.Readable(() => dispatcher.SendAsync(
-            new GetProductQuery(id, Culture(requests)), cancellationToken))
+        var request = new UcpGetProductRequest
+        {
+            Id = id,
+            Meta = meta?.ToDictionary(pair => pair.Key, pair => pair.Value)
+        };
+
+        // Over REST a miss is a 404; over JSON-RPC there is no status line, so
+        // it is an error carrying the id. Same operation, two spellings, which
+        // is the only thing a transport is allowed to decide.
+        return await Refusals.Readable(() => UcpCatalogOperations.GetProductAsync(
+            dispatcher, request, Culture(requests), BaseUrl(requests), cancellationToken))
             ?? throw new McpException($"There is no product with id '{id}'.");
-
-        return UcpCatalogAnswers.Product(detail, BaseUrl(requests));
     }
 
     /// <summary>
-    /// The cursor this shop hands out is the next offset. Opaque by contract,
-    /// legible by accident, and anything unparseable starts at the beginning
-    /// rather than failing — a cursor is the agent quoting us back to ourselves,
-    /// and a shop should not error because it changed its own paging.
+    /// The binding's own refusals, in this transport's words. What is refused is
+    /// decided once in <see cref="UcpCatalogOperations.Check"/>, so a REST 400
+    /// and a JSON-RPC error say the same sentence about the same request.
     /// </summary>
-    private static int Offset(string? cursor) =>
-        int.TryParse(cursor, NumberStyles.Integer, CultureInfo.InvariantCulture, out var offset) && offset > 0
-            ? offset
-            : 0;
-
-    /// <summary>
-    /// The lookups behind a search, bounded by the page size — ten by default,
-    /// fifty at most. UCP requires a description on every Product and a search
-    /// hit does not carry one, so the alternative was widening this shop's own
-    /// search contract to satisfy somebody else's protocol.
-    /// </summary>
-    private static async Task<IReadOnlyList<ProductDetail>> Details(
-        IQueryDispatcher dispatcher,
-        IEnumerable<string> codes,
-        string culture,
-        CancellationToken cancellationToken)
+    private static void Refuse(UcpCatalogOperations.Refusal? refusal)
     {
-        List<ProductDetail> found = [];
-
-        foreach (var code in codes)
-        {
-            var detail = await dispatcher.SendAsync(new GetProductQuery(code, culture), cancellationToken);
-
-            if (detail is not null)
-                found.Add(detail);
-        }
-
-        return found;
+        if (refusal is not null)
+            throw new McpException(refusal.Reason);
     }
 
     private static string Culture(IHttpContextAccessor requests) =>
@@ -174,8 +141,3 @@ public sealed class UcpCatalogTools
     }
 }
 
-/// <summary>
-/// Pagination as the specification asks for it in a REQUEST: an opaque cursor
-/// and a requested page size.
-/// </summary>
-public sealed record UcpPageRequest(int? Limit, string? Cursor);

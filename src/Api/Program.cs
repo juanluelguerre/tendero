@@ -18,6 +18,7 @@ using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Ucp;
+using ElGuerre.Tendero.Ucp.Catalog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -121,6 +122,10 @@ app.MapTenderoMcp();
 // from the capability registry on every request, so it cannot describe a shop
 // this process is not.
 app.MapTenderoUcp();
+
+// And UCP's REST binding, the second transport of the same capability. Its paths
+// are the specification's; only the `/ucp` prefix is ours.
+app.MapUcpCatalogRest();
 
 app.Run();
 

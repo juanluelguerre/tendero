@@ -28,6 +28,47 @@ public sealed class UcpDiscoveryReachesTheBindingTests
     /// <summary>The three tool names the catalogue's MCP binding fixes.</summary>
     private static readonly string[] BindingTools = ["get_product", "lookup_catalog", "search_catalog"];
 
+    /// <summary>
+    /// Both bindings, walked from the profile that advertises them. The service
+    /// is a LIST for exactly this reason: one capability, two ways in, and each
+    /// one has to actually be there.
+    /// </summary>
+    [Fact]
+    public async Task Every_binding_the_profile_advertises_is_really_served()
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        using var factory = new TenderoApiFactory();
+        using var client = factory.CreateClient();
+
+        var profile = JsonDocument.Parse(
+            await client.GetStringAsync("/.well-known/ucp", ct)).RootElement;
+
+        var bindings = profile
+            .GetProperty("ucp").GetProperty("services")
+            .GetProperty("dev.ucp.shopping")
+            .EnumerateArray()
+            .Select(binding => (
+                Transport: binding.GetProperty("transport").GetString()!,
+                Endpoint: new Uri(binding.GetProperty("endpoint").GetString()!)))
+            .ToArray();
+
+        Assert.Equal(["mcp", "rest"], bindings.Select(b => b.Transport).Order(StringComparer.Ordinal));
+
+        var rest = bindings.Single(binding => binding.Transport == "rest");
+
+        // The REST binding's own paths hang off the endpoint the profile names.
+        var response = await client.PostAsJsonAsync(
+            $"{rest.Endpoint.AbsolutePath}/catalog/lookup",
+            new { ids = Array.Empty<string>() },
+            ct);
+
+        response.EnsureSuccessStatusCode();
+
+        var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct)).RootElement;
+        Assert.Equal("2026-04-08", body.GetProperty("ucp").GetProperty("version").GetString());
+    }
+
     [Fact]
     public async Task The_endpoint_the_profile_advertises_serves_the_binding_it_claims()
     {
@@ -42,9 +83,9 @@ public sealed class UcpDiscoveryReachesTheBindingTests
 
         var binding = profile
             .GetProperty("ucp").GetProperty("services")
-            .GetProperty("dev.ucp.shopping")[0];
-
-        Assert.Equal("mcp", binding.GetProperty("transport").GetString());
+            .GetProperty("dev.ucp.shopping")
+            .EnumerateArray()
+            .Single(entry => entry.GetProperty("transport").GetString() == "mcp");
 
         // 2 — follow it. The profile hands out an absolute URL built from the
         // request's own host; the test server answers on the path.

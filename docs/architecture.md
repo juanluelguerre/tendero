@@ -98,7 +98,8 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 | `POST /api/accounts/me` | `Accounts/Features/LinkIdentity` — the subject comes from the token, never from the body |
 | `GET /api/audit` | `Accounts/Features/ListAuditEntries` — opens on the refusals |
-| `GET /.well-known/ucp` | `Ucp/UcpProfileEndpoint` — the UCP business profile, composed from the capability registry on every request. Anonymous because the specification requires it, and out of the OpenAPI document |
+| `GET /.well-known/ucp` | `Ucp/UcpProfileEndpoint` — the UCP business profile, composed from the capability registry on every request. Anonymous because the specification requires it, and out of the OpenAPI document (ADR 0029) |
+| `POST /ucp/catalog/search`, `/lookup`, `/product` | `Ucp/Catalog/UcpCatalogRestBinding` — UCP's REST binding of the catalogue capability. The three paths are the specification's; only the `/ucp` prefix is ours. A lookup that finds nothing answers **200** with a `messages` entry, because an unknown identifier is a business outcome; `product` is the exception and answers 404, because its response schema requires a `product` |
 | `POST /mcp` | `Mcp/TenderoMcpServer` — **not a Carter slice**: JSON-RPC over one route, anonymous by explicit decision and out of the OpenAPI document. **Eight** read tools. Three are UCP's catalogue MCP binding with the shapes the specification fixes — `search_catalog`, `lookup_catalog`, `get_product` — and five are the shop's own: `search_products`, `get_product_detail`, `list_categories`, `list_offers`, `get_return_policy`. Ours yielded the name `get_product` to the protocol, because two tools cannot share one on a server and `MapMcp` offers one server per process |
 
 Plus the development issuer's own surface under `/dev-issuer` in Development —
@@ -230,7 +231,8 @@ implementations of one.
 | Surface | The agent is | Authorization | Phase |
 |---|---|---|---|
 | **WebMCP** | code inside the user's own browser session | **inherits** it — no second principal, no token, no mandate | 6 (done) |
-| **MCP server** | an external process | `AllowAnonymous` by explicit decision; read-only | 9 · **done**: eight tools, three of them UCP's catalogue binding, and `/.well-known/ucp` |
+| **MCP server** | an external process | `AllowAnonymous` by explicit decision; read-only | 9 · **done**: eight tools, three of them UCP's catalogue binding |
+| **UCP read half** | an agent following `/.well-known/ucp` | anonymous; the specification requires the profile to be public | 9 · **done**: the catalogue capability over **two** bindings, `mcp` and `rest`, both declared in the profile and both validated against UCP's schemas |
 | **UCP + AP2** | its own principal, server to server | bearer token plus a signed mandate | 11 |
 
 **WebMCP ships.** `libs/shared/agent` holds the registration mechanism — the

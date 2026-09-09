@@ -64,6 +64,18 @@ public static class UcpProfileEndpoint
                             // here has built.
                             Transport = "mcp",
                             Endpoint = $"{host}/mcp"
+                        },
+                        new UcpService
+                        {
+                            Version = UcpSpecification.Version,
+                            Spec = $"{UcpSpecification.BaseUrl}/catalog/rest/",
+
+                            // The second binding, and the reason a service is a
+                            // LIST rather than an object: one capability, two
+                            // ways in. Both were implemented before either was
+                            // declared here.
+                            Transport = "rest",
+                            Endpoint = $"{host}{Catalog.UcpCatalogRestBinding.BasePath}"
                         }
                     ]
                 },

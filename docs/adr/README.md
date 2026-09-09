@@ -26,6 +26,7 @@
 | [0026](0026-the-url-carries-a-code.md) | The URL carries a code; the slug is decoration | accepted |
 | [0027](0027-audit-writes-outside-the-transaction.md) | The audit log writes outside the command's transaction | accepted |
 | [0028](0028-jsonschema-net-pinned-to-its-last-mit-release.md) | JsonSchema.Net is pinned to 8.0.5, its last MIT release | accepted |
+| [0029](0029-protocol-routes-are-not-in-the-openapi-document.md) | A route whose protocol publishes its own discovery is not in the OpenAPI document | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

@@ -100,9 +100,28 @@ and there is one MCP server per process. A test follows the profile's own
 one seam neither protocol's tests can see: each half can be perfectly correct
 about itself while the manifest points at nothing.
 
-**What this shop does not serve is UCP's REST binding.** An agent that wants UCP
-over REST cannot use it, and the profile says so by declaring only the `mcp`
-entry — the honest way to say "not that one" is to not list it.
+**Both of UCP's main bindings are served.** The profile declares two entries for
+`dev.ucp.shopping` — `mcp` at `/mcp` and `rest` at `/ucp` — and an agent picks.
+Over REST the three operations are the specification's own paths:
+
+```
+POST /ucp/catalog/search     body: catalog_search.json#/$defs/search_request
+POST /ucp/catalog/lookup     body: catalog_lookup.json#/$defs/lookup_request
+POST /ucp/catalog/product    body: catalog_lookup.json#/$defs/get_product_request
+```
+
+One thing about them goes against the reflex, and it is the specification's
+choice rather than ours: **a lookup that finds nothing answers 200**, with a
+`messages` entry naming the identifier. An unknown id is a business outcome, and
+a 404 would tell a caller their request was malformed when it was not.
+`POST /ucp/catalog/product` is the exception and does answer 404 — its response
+schema requires a `product`, so there is no valid 200 shape for a miss.
+
+**None of the UCP routes appear in `docs/openapi/tendero.json`**, and that is a
+rule rather than an oversight (ADR 0029): a route whose own protocol publishes a
+machine-readable description is described there, not a second time by us. The
+same applies to `/mcp` and to the development issuer. It does not make them
+private — they are public and callable either way.
 
 ## What the server offers
 
