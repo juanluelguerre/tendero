@@ -25,6 +25,7 @@
 | [0025](0025-authorise-before-placing.md) | Checkout authorises the payment before it places the order | accepted |
 | [0026](0026-the-url-carries-a-code.md) | The URL carries a code; the slug is decoration | accepted |
 | [0027](0027-audit-writes-outside-the-transaction.md) | The audit log writes outside the command's transaction | accepted |
+| [0028](0028-jsonschema-net-pinned-to-its-last-mit-release.md) | JsonSchema.Net is pinned to 8.0.5, its last MIT release | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

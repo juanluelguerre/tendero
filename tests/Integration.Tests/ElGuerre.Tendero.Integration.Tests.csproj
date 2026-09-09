@@ -18,6 +18,7 @@
     <ProjectReference Include="../../src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
     <ProjectReference Include="../../src/Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
+    <ProjectReference Include="../../src/Ucp/ElGuerre.Tendero.Ucp.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
     <ProjectReference Include="../../src/Workers/ElGuerre.Tendero.Workers.csproj" />
   </ItemGroup>
@@ -51,6 +52,21 @@
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
     <Compile Include="../OrderBuilder.cs" Link="OrderBuilder.cs" />
+  </ItemGroup>
+
+
+  <!-- The UCP schemas and the loader that resolves them, shared from
+       tests/Ucp.Tests rather than copied: one vendored set, one pinned commit,
+       one place to update. -->
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../Ucp.Tests/UcpSchemas.cs" Link="UcpSchemas.cs" />
+    <Content Include="../Ucp.Tests/ucp-schemas/**/*.json" LinkBase="ucp-schemas">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

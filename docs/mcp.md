@@ -78,15 +78,29 @@ Eight tools, and they are two different contracts on one server.
 
 ### UCP's catalogue binding
 
-The shapes the specification fixes, for an agent that speaks UCP. `meta` must
-carry `ucp-agent.profile` on every call; money is in **minor units** (39,00 € is
-`3900`); a search that finds nothing is a `messages` entry, not an error.
+The shapes the specification fixes, for an agent that speaks UCP. Money is in
+**minor units** (39,00 € is `3900`); a search that finds nothing is a `messages`
+entry, not an error; the payload arrives in `result.structuredContent`.
 
 | Tool | What it does |
 |---|---|
-| `search_catalog` | Free-text discovery, with `filters.category` and `pagination` |
+| `search_catalog` | Free-text discovery, with `filters.category` and cursor `pagination` |
 | `lookup_catalog` | Resolve up to 50 identifiers at once |
 | `get_product` | One product, with every option and every variant |
+
+**`meta` is optional**, and when it is sent, `ucp-agent` is a nested object:
+
+```json
+{"meta": {"ucp-agent": {"profile": "https://your-platform.example/profile"}}}
+```
+
+Absent is fine. Malformed — a `ucp-agent` with no `profile` — is refused, and
+says which member is missing.
+
+Every one of these answers is validated in the test suite against the
+specification's own JSON Schemas, vendored at a pinned commit under
+`tests/Ucp.Tests/ucp-schemas`. That includes every product in the shipped
+catalogue, in both languages, against a real database.
 
 ### Tendero's own
 
@@ -116,13 +130,18 @@ curl -sS -X POST http://localhost:5130/mcp \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call",
        "params":{"name":"search_products","arguments":{"query":"z"}}}'
 
-# A UCP call with no agent profile is refused by name.
+# Agent metadata that is present but malformed is refused by member name.
 curl -sS -X POST http://localhost:5130/mcp \
   -H 'Content-Type: application/json' \
   -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
-       "params":{"name":"search_catalog","arguments":{"query":"mochila","meta":{}}}}'
+       "params":{"name":"lookup_catalog",
+                 "arguments":{"ids":[],"meta":{"ucp-agent":{}}}}}'
+
 ```
+
+A batch beyond fifty identifiers is refused by name and number too; that one is
+easier to try from a script than from a shell.
 
 Both come back as `isError` with the sentence in them, rather than a stack trace.
 That is the transport's job: over HTTP the same refusal is a ProblemDetails.

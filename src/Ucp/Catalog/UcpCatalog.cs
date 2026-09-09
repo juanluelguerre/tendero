@@ -48,13 +48,28 @@ public sealed record UcpDescription
     public required string Text { get; init; }
 }
 
+/// <summary>
+/// A category, which is a PATH and not a node.
+///
+/// This record read <c>{ id, name }</c> until the schema was run against it, and
+/// the schema requires <c>value</c> — *"Category value or path (e.g. 'Apparel &gt;
+/// Shirts', '1604')"*. That is a better fit for what Tendero has than the shape
+/// that was guessed: the catalogue's branch is `Hogar &gt; Cocina &gt; Menaje de
+/// cocina`, and emitting its three steps as three categories would claim three
+/// unrelated ones rather than one path.
+///
+/// <c>taxonomy</c> is <c>merchant</c>, which is one of the specification's
+/// well-known values and is the truthful one: this is the shop's own taxonomy,
+/// not Google's.
+/// </summary>
 public sealed record UcpCategory
 {
-    [JsonPropertyName("id")]
-    public required string Id { get; init; }
+    [JsonPropertyName("value")]
+    public required string Value { get; init; }
 
-    [JsonPropertyName("name")]
-    public required string Name { get; init; }
+    [JsonPropertyName("taxonomy")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Taxonomy { get; init; }
 }
 
 public sealed record UcpMedia
@@ -142,6 +157,42 @@ public sealed record UcpVariant
     [JsonPropertyName("media")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<UcpMedia>? Media { get; init; }
+
+    /// <summary>
+    /// Which requested identifier resolved to this variant, and how.
+    ///
+    /// **Required in a `lookup_catalog` answer and absent everywhere else**,
+    /// which is a distinction worth having rather than resenting: a lookup is
+    /// the one operation where the caller named things, so it is the one place
+    /// a shop owes an answer to "which of my ids is this?". A search or a
+    /// product detail has nothing to correlate against.
+    ///
+    /// Found by validation. The lookup response `$ref`s a `lookup_variant` that
+    /// adds `inputs` to the ordinary variant, and nothing in the prose mentions
+    /// it.
+    /// </summary>
+    [JsonPropertyName("inputs")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<UcpInputCorrelation>? Inputs { get; init; }
+}
+
+/// <summary>
+/// One requested identifier, and how it resolved.
+///
+/// <c>exact</c> means the caller named this variant — its SKU. <c>featured</c>
+/// means the server chose it as representative, which is what happens when a
+/// caller names a PRODUCT and gets its variants back. Tendero's lookup takes
+/// product codes, so every correlation it emits is <c>featured</c>, and saying
+/// that is more useful than claiming a precision the operation does not have.
+/// </summary>
+public sealed record UcpInputCorrelation
+{
+    [JsonPropertyName("id")]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("match")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Match { get; init; }
 }
 
 public sealed record UcpProduct
@@ -211,29 +262,45 @@ public sealed record UcpMessage
     public string? Path { get; init; }
 }
 
+/// <summary>
+/// Pagination in a RESPONSE, which is cursor-shaped and not the
+/// <c>limit/offset/total</c> this record carried until the schema was run
+/// against it. Only <c>has_next_page</c> is required, and the specification says
+/// a cursor MUST be present when it is true.
+///
+/// Tendero's own search is offset-paged, so the cursor it hands back is the next
+/// offset, opaque to the caller by contract even though it is legible. That is
+/// the honest translation: the protocol asks for a token to get the next page,
+/// and this is one.
+/// </summary>
 public sealed record UcpPagination
 {
-    [JsonPropertyName("limit")]
-    public required int Limit { get; init; }
+    [JsonPropertyName("has_next_page")]
+    public required bool HasNextPage { get; init; }
 
-    [JsonPropertyName("offset")]
-    public required int Offset { get; init; }
+    [JsonPropertyName("cursor")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Cursor { get; init; }
 
-    [JsonPropertyName("total")]
-    public required long Total { get; init; }
+    [JsonPropertyName("total_count")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public long? TotalCount { get; init; }
 }
 
-/// <summary>Every catalogue answer opens with this.</summary>
+/// <summary>
+/// Every catalogue answer opens with this, and it carries the version and
+/// nothing else.
+///
+/// It had a <c>request_id</c> and a <c>timestamp</c>, taken from a
+/// documentation page's prose. **Neither exists anywhere in the schemas.** They
+/// would have been tolerated — the envelope allows additional properties — and
+/// that is exactly why they had to go: a document whose whole claim is "this is
+/// the protocol" should not carry fields the protocol never defined.
+/// </summary>
 public sealed record UcpEnvelope
 {
     [JsonPropertyName("version")]
     public required string Version { get; init; }
-
-    [JsonPropertyName("request_id")]
-    public required string RequestId { get; init; }
-
-    [JsonPropertyName("timestamp")]
-    public required DateTimeOffset Timestamp { get; init; }
 }
 
 public sealed record UcpCatalogPage

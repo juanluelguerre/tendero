@@ -17,6 +17,22 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 /// </summary>
 internal static class Refusals
 {
+    /// <summary>
+    /// The same for a synchronous check on the way in. A malformed argument is
+    /// the caller's mistake and it should read like one.
+    /// </summary>
+    public static void Guard(Action check)
+    {
+        try
+        {
+            check();
+        }
+        catch (ArgumentException exception)
+        {
+            throw new McpException(exception.Message);
+        }
+    }
+
     public static async Task<T> Readable<T>(Func<Task<T>> dispatch)
     {
         try

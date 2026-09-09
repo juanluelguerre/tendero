@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
+using ElGuerre.Tendero.Tests.Ucp;
 using ElGuerre.Tendero.Ucp.Catalog;
 using Xunit;
 
@@ -130,6 +131,19 @@ public sealed class UcpCatalogMapperTests
         Assert.Equal("negro", selected.Label);
     }
 
+    /// <summary>
+    /// The branch as one path, which is what a UCP category is. This record used
+    /// to emit `{ id, name }` per step, and the schema said `value`.
+    /// </summary>
+    [Fact]
+    public void The_category_is_the_whole_branch_as_one_path()
+    {
+        var category = Assert.Single(UcpCatalogMapper.From(Sleeve, BaseUrl).Categories!);
+
+        Assert.Equal("Bolsas > Bolsas y mochilas", category.Value);
+        Assert.Equal("merchant", category.Taxonomy);
+    }
+
     [Fact]
     public void Media_urls_are_absolute()
     {
@@ -145,6 +159,53 @@ public sealed class UcpCatalogMapperTests
     /// <c>priceRange</c> if the attributes were not there. Here the naming is
     /// load-bearing rather than incidental, which it was not in the profile.
     /// </summary>
+    /// <summary>
+    /// **The product this shop produces, checked against UCP's own Product
+    /// schema.** Everything else in this file asserts what the mapper does; this
+    /// asserts that what it does is the protocol.
+    ///
+    /// It is validated as JSON rather than as objects, with the camelCase policy
+    /// switched on, because the wire is what an agent reads.
+    /// </summary>
+    [Fact]
+    public void The_mapped_product_validates_against_ucps_product_schema()
+    {
+        var json = JsonSerializer.Serialize(
+            UcpCatalogMapper.From(Sleeve, BaseUrl),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        UcpSchemas.Validate(
+            "https://ucp.dev/schemas/shopping/types/product.json",
+            JsonDocument.Parse(json).RootElement,
+            "The product Tendero maps");
+    }
+
+    /// <summary>
+    /// And the control: a product missing what the schema requires must fail, or
+    /// the assertion above is empty. `variants` is the interesting one — a
+    /// catalogue answer with no purchasable thing in it.
+    /// </summary>
+    [Theory]
+    [InlineData("id")]
+    [InlineData("title")]
+    [InlineData("price_range")]
+    [InlineData("variants")]
+    public void A_product_missing_something_required_is_rejected(string member)
+    {
+        var json = JsonSerializer.Serialize(
+            UcpCatalogMapper.From(Sleeve, BaseUrl),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
+        var node = System.Text.Json.Nodes.JsonNode.Parse(json)!.AsObject();
+        node.Remove(member);
+
+        var results = UcpSchemas
+            .Get("https://ucp.dev/schemas/shopping/types/product.json")
+            .Evaluate(JsonDocument.Parse(node.ToJsonString()).RootElement);
+
+        Assert.False(results.IsValid, $"A product with no `{member}` must not validate.");
+    }
+
     [Fact]
     public void It_serialises_with_the_specifications_field_names()
     {

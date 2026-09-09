@@ -11,7 +11,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <!-- The specification's own schemas, vendored at a pinned commit. Copied to
+       the output so the validator loads them from disk with no network: a test
+       that downloads what it validates against is not a gate. -->
+  <ItemGroup>
+    <Content Include="ucp-schemas/**/*.json" LinkBase="ucp-schemas">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

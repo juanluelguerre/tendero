@@ -44,9 +44,19 @@ public static class UcpCatalogMapper
         Handle = product.Slug,
         Title = product.Name,
         Description = new UcpDescription { Text = product.Description ?? string.Empty },
+        // One entry carrying the whole branch, because a UCP category IS a path
+        // — "Apparel > Shirts" in the schema's own example. Three steps as three
+        // categories would claim three unrelated ones.
         Categories = product.Category.Count == 0
             ? null
-            : [.. product.Category.Select(step => new UcpCategory { Id = step.Code, Name = step.Name })],
+            :
+            [
+                new UcpCategory
+                {
+                    Value = string.Join(" > ", product.Category.Select(step => step.Name)),
+                    Taxonomy = "merchant"
+                }
+            ],
         PriceRange = new UcpPriceRange
         {
             Min = Money(product.PriceFrom, product.PriceCurrency),

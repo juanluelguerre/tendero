@@ -147,6 +147,21 @@
   </ItemGroup>
 
   <ItemGroup Label="Testing">
+    <!-- JsonSchema.Net 8.0.5 - MIT, and the version matters more than usual.
+         **9.0.0 is not MIT.** The source stayed MIT, but the NuGet binary
+         release from 9.0.0 onward carries an Open Source Maintenance Fee EULA
+         (OSMFEULA.txt) requiring a monthly fee from revenue-generating users
+         over US$10,000 a year. That is the same dual-licensing move CLAUDE.md
+         bans MediatR, AutoMapper and FluentAssertions v8+ for, and it was found
+         by reading the nuspec of the version that was about to be added - which
+         is the entire reason ADR 0006 says to check the EXACT version.
+         8.0.5 is the last MIT release, so it is pinned here per CLAUDE.md's own
+         fallback ("pin the last free version and open an ADR"): see ADR 0028.
+         Its chain is MIT throughout - JsonPointer.Net 6.0.1, Json.More.Net 2.2.0
+         and Humanizer.Core 2.14.1, each checked.
+         It is in the Testing group because it is a test-only dependency: the
+         product does not validate its own manifest at runtime, a test does. -->
+    <PackageVersion Include="JsonSchema.Net" Version="8.0.5" />
     <!-- xUnit v3 4.0.0 — Apache-2.0. It brings Microsoft.Testing.Platform with
          it: neither VSTest nor Microsoft.NET.Test.Sdk is needed (see dotnet.config). -->
     <PackageVersion Include="xunit.v3" Version="4.0.0" />
