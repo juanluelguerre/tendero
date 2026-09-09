@@ -128,7 +128,7 @@ public sealed class McpTransportTests
     /// one part of this surface that no compiler checks.
     /// </summary>
     [Fact]
-    public async Task It_offers_exactly_these_five_tools()
+    public async Task It_offers_exactly_these_tools()
     {
         using var factory = new TenderoApiFactory();
         using var client = Connect(factory);
@@ -136,7 +136,16 @@ public sealed class McpTransportTests
         var tools = await Call(client, new { jsonrpc = "2.0", id = 2, method = "tools/list" });
 
         Assert.Equal(
-            ["get_product", "get_return_policy", "list_categories", "list_offers", "search_products"],
+            // Sorted, so the assertion reads as a set. Three of these are the UCP
+            // catalogue binding, whose names the specification fixes —
+            // `search_catalog`, `lookup_catalog` and `get_product`. The rest are
+            // this shop's own, including `get_product_detail`, which used to be
+            // `get_product` and gave the name up to the protocol.
+            [
+                "get_product", "get_product_detail", "get_return_policy",
+                "list_categories", "list_offers", "lookup_catalog",
+                "search_catalog", "search_products"
+            ],
             tools.GetProperty("result").GetProperty("tools").EnumerateArray()
                 .Select(tool => tool.GetProperty("name").GetString())
                 .Order(StringComparer.Ordinal)

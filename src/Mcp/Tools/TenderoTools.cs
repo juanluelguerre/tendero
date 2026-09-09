@@ -88,11 +88,18 @@ public sealed class TenderoTools
         Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
             new SearchProductsQuery(query, answered, page, pageSize, category, sort), cancellationToken)));
 
-    [McpServerTool(Name = "get_product")]
+    /// <summary>
+    /// Named <c>get_product</c> until the UCP binding arrived and took that name.
+    /// Two tools cannot share one on a single server, and <c>MapMcp</c> offers one
+    /// server per process, so the name we chose yields to the name the
+    /// specification gave us. This one answers in Tendero's own shape, which is
+    /// richer than UCP's Product for a shopper and narrower for an agent.
+    /// </summary>
+    [McpServerTool(Name = "get_product_detail")]
     [Description("""
-        Everything about one product: its structured attributes, its images, and every
-        variant it sells including the ones that are out of stock, each with its SKU.
-        This is what says which SKUs exist.
+        This shop's own view of one product: its structured attributes, its images, and
+        every variant including the ones that are out of stock, each with its SKU.
+        Agents speaking UCP should use `get_product` instead.
         """)]
     public static async Task<Answered<ProductDetail>> GetProductAsync(
         IQueryDispatcher dispatcher,

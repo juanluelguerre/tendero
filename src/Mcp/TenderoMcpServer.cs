@@ -56,6 +56,10 @@ public static class TenderoMcpServer
             // The tool set is declared in one type, so what the shop offers an
             // agent is one file to read and one file to change.
             .WithTools<TenderoTools>()
+            // And the UCP catalogue binding, which is a different contract with
+            // different shapes under names the specification fixes. Both on one
+            // server because MapMcp offers one server per process.
+            .WithTools<UcpCatalogTools>()
             .Services;
 
     public static IEndpointConventionBuilder MapTenderoMcp(this IEndpointRouteBuilder endpoints) =>

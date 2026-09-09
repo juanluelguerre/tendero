@@ -98,7 +98,7 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 | `POST /api/accounts/me` | `Accounts/Features/LinkIdentity` — the subject comes from the token, never from the body |
 | `GET /api/audit` | `Accounts/Features/ListAuditEntries` — opens on the refusals |
-| `POST /mcp` | `Mcp/TenderoMcpServer` — **not a Carter slice**: JSON-RPC over one route, anonymous by explicit decision and out of the OpenAPI document. Five read tools (`search_products`, `get_product`, `list_categories`, `list_offers`, `get_return_policy`), each a query record and a dispatch |
+| `POST /mcp` | `Mcp/TenderoMcpServer` — **not a Carter slice**: JSON-RPC over one route, anonymous by explicit decision and out of the OpenAPI document. **Eight** read tools. Three are UCP's catalogue MCP binding with the shapes the specification fixes — `search_catalog`, `lookup_catalog`, `get_product` — and five are the shop's own: `search_products`, `get_product_detail`, `list_categories`, `list_offers`, `get_return_policy`. Ours yielded the name `get_product` to the protocol, because two tools cannot share one on a server and `MapMcp` offers one server per process |
 
 Plus the development issuer's own surface under `/dev-issuer` in Development —
 discovery, JWKS, `/connect/authorize`, `/connect/token`, `/connect/logout` — which

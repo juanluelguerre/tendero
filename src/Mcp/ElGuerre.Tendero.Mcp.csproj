@@ -40,6 +40,7 @@
     <ProjectReference Include="../Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../Ucp/ElGuerre.Tendero.Ucp.csproj" />
   </ItemGroup>
 
 </Project>
