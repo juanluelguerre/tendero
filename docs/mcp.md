@@ -72,6 +72,38 @@ uses for local servers. Neither path has been exercised on the machine this was
 written on — what *has* been is `curl` against Kestrel, which is why the
 `curl` above is the check that matters.
 
+## Two protocols, one endpoint — and why that is correct
+
+This confuses people, reasonably, so it is worth being explicit.
+
+**MCP and UCP are not alternatives.** They sit at different layers. MCP is how a
+model is handed tools: JSON-RPC, `initialize`, `tools/list`, `tools/call`. UCP is
+a commerce protocol — it defines what a catalogue search *is*, what a Product
+looks like, what money is in — and then names the transports it can be carried
+over: REST, **MCP**, A2A, embedded.
+
+So "UCP over MCP" is not a compromise. It is a binding the specification defines,
+and it is the one this shop implements. What that means in practice is two
+different ways in, and they discover the shop differently:
+
+| | A plain MCP client | A UCP agent |
+|---|---|---|
+| **Starts at** | the endpoint you configured | `GET /.well-known/ucp` |
+| **Then** | `initialize` → `tools/list` | reads `services["dev.ucp.shopping"]`, finds `transport: mcp` and its `endpoint` |
+| **Calls** | any of the eight tools | the three the binding fixes |
+| **Gets back** | this shop's own shapes, in `result.content` | the UCP envelope, in `result.structuredContent` |
+| **Needs** | nothing | nothing yet — the read half is anonymous |
+
+The same `/mcp` route serves both, because the binding says the transport is MCP
+and there is one MCP server per process. A test follows the profile's own
+`endpoint` and checks the binding's three tools are actually there, which is the
+one seam neither protocol's tests can see: each half can be perfectly correct
+about itself while the manifest points at nothing.
+
+**What this shop does not serve is UCP's REST binding.** An agent that wants UCP
+over REST cannot use it, and the profile says so by declaring only the `mcp`
+entry — the honest way to say "not that one" is to not list it.
+
 ## What the server offers
 
 Eight tools, and they are two different contracts on one server.
