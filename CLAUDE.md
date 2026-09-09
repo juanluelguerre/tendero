@@ -255,6 +255,7 @@ updated if conventions changed · user-facing strings exist in es AND en.
 - Brand usage: @brand/BRAND.md
 - ADR index: @docs/adr/README.md
 - Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): @docs/glossary.md
+- Pointing an agent at the MCP server and the UCP profile: @docs/mcp.md
 - Feature specs in progress: @docs/specs/
 - Blog article workflow: @docs/blog-workflow.md
 - Blog publication order and drafts: @docs/blog/index.md
