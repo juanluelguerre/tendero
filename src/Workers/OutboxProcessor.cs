@@ -62,7 +62,16 @@ public sealed class OutboxProcessor(
         }
     }
 
-    private async Task ProcessBatchAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// One pass of the loop, without the timer.
+    ///
+    /// Public so the loop that runs in production is the loop under test. The
+    /// integration tests used to carry their own copy of it — "the same loop as
+    /// OutboxProcessor, without the timer" — and a copy cannot notice the
+    /// original losing its retry cap or letting one poisoned message block the
+    /// rest.
+    /// </summary>
+    public async Task ProcessBatchAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
