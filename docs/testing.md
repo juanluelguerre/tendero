@@ -4,7 +4,7 @@ Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short
 
 **What is in the repository today** (2026-09-08): xUnit v3, CsCheck,
 NetArchTest.Rules, Testcontainers.PostgreSql, `WebApplicationFactory`, vitest
-and Playwright — 547 backend tests, 37 frontend, 20 browser specs. NSubstitute,
+and Playwright — 547 backend tests, 39 frontend, 20 browser specs. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
 fakes and the contract suites have not needed a mock, and nothing snapshots
 yet. Respawn was declined — a fresh database per test is cheaper than a reset.
