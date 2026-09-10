@@ -11,7 +11,6 @@ using ElGuerre.Tendero.Ordering.Features.ManageCart;
 using ElGuerre.Tendero.Ordering.Features.Returns;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Persistence;
-using ElGuerre.Tendero.Persistence.Outbox;
 using ElGuerre.Tendero.Pricing;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -435,32 +434,14 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
         }
 
-        /// <summary>The same loop as <c>OutboxProcessor</c>, without the timer —
-        /// and twice, because a handler's own changes raise the next message.</summary>
+        /// <summary>Up to two passes of the real worker (<see cref="WorkerOutbox"/>),
+        /// because a handler's own changes raise the next message.</summary>
         public async Task DrainAsync(CancellationToken ct)
         {
             for (var pass = 0; pass < 2; pass++)
             {
-                await using var scope = this.provider.CreateAsyncScope();
-                var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
-                var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
-
-                var pending = await context.OutboxMessages
-                    .Where(message => message.ProcessedAt == null)
-                    .OrderBy(message => message.OccurredAt)
-                    .ToListAsync(ct);
-
-                if (pending.Count == 0)
+                if (await WorkerOutbox.PassAsync(this.provider, ct) == 0)
                     return;
-
-                foreach (var message in pending)
-                {
-                    await dispatcher.PublishAsync(
-                        DomainEventSerializer.Deserialize(message.Type, message.Payload), ct);
-                    message.MarkProcessed();
-                }
-
-                await context.SaveChangesAsync(ct);
             }
         }
 
