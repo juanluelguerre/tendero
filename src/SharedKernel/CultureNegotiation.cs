@@ -46,12 +46,17 @@ public static class CultureNegotiation
     /// <c>Accept-Language: en-GB;q=0.9, es;q=0.8</c> -> <c>en</c>. Ordered by
     /// quality, first one the shop speaks wins; with no <c>q</c>, the
     /// specification says it counts as 1.
+    ///
+    /// And <c>q=0</c> is a refusal, not a low preference (RFC 9110 §12.4.2).
+    /// Until 2026-09-10 it was sorted last and chosen anyway, so
+    /// <c>en;q=0, fr</c> — "not English" — was answered in English.
     /// </summary>
     private static string? FromAcceptLanguage(string? header) =>
         string.IsNullOrWhiteSpace(header)
             ? null
             : header.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(Parse)
+                .Where(entry => entry.Quality > 0)
                 .OrderByDescending(entry => entry.Quality)
                 .Select(entry => entry.Culture)
                 .FirstOrDefault(Supports);
