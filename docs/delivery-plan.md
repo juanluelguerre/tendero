@@ -75,8 +75,8 @@ during which phases 0–5 refill the queue.
 
 | Date | Article | State |
 |---|---|---|
-| 2026-09-15 | 00 · From CocktailDev to Tendero | ready — PNGs exported; upload and swap the four paths |
-| 2026-09-29 | 01 · One port, N catalogs | ready — needs a repo tag |
+| 2026-09-15 | 00 · From CocktailDev to Tendero | ready — tag `blog/00-from-cocktaildev-to-tendero`; upload the four PNGs and swap the paths |
+| 2026-09-29 | 01 · One port, N catalogs | ready — tag `blog/01-one-port-n-catalogs` |
 | 2026-10-13 | **17 · A hundred pictures, and not a line of Python** | outline — blocked on the hundred images existing |
 | 2026-10-27 | **18 · Every screen was correct and none of them was a shop** | outline — needs writing; the screenshots need 17 to have happened |
 | 2026-11-10 | 02 · Search with regression tests: NDCG as a CI gate | ready |
@@ -103,10 +103,12 @@ articles are failures and numbers without a single image.
 The old table skipped 2027-02-16, which fortnightly publishing does not; the
 dates above are recomputed rather than shifted, so that gap is gone.
 
-One standing blocker before 2026-09-29: cut a repo tag so article 01's snippets
-compile against something. The diagram PNGs are done — exported and committed on
-2026-09-02 — leaving only the WordPress upload, which is part of publishing
-rather than a prerequisite for it.
+**Every article links a tag named after its file**, `blog/NN-slug`, cut once its
+snippets and numbers have been checked against the code. 00 and 01 were cut on
+2026-09-10, and checking them was not a formality: article 01's snippets predated
+`TimeProvider` and variants, and diagram 02 drew data flow as dependencies and
+left three of them out — redrawn the same day. What remains for both is the
+WordPress upload, which is part of publishing rather than a prerequisite for it.
 
 ---
 
