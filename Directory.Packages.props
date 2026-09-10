@@ -114,6 +114,15 @@
          1400px WebP at quality 82 with no alpha channel, and SDXL emits a 1024px
          tensor. Resize, flatten onto an opaque canvas, encode. -->
     <PackageVersion Include="SkiaSharp" Version="4.151.2" />
+    <!-- SkiaSharp.NativeAssets.Linux 4.151.2 - MIT, verified in the nuspec, and
+         it declares no dependency of its own. It is not an optional extra: the
+         SkiaSharp package ships the managed wrapper and pulls the Windows and
+         macOS binaries transitively, while the Linux one is opt-in. Without it
+         `libSkiaSharp.so` is simply absent, every call into Skia throws
+         DllNotFoundException, and the four imaging tests fail on any Linux -
+         which is what CI runs on. Same exact version as the wrapper, because a
+         native binary and its bindings are one artefact split in two. -->
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.151.2" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">
