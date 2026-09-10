@@ -31,7 +31,6 @@ namespace ElGuerre.Tendero.Pricing.Features.QuoteCart;
 /// </summary>
 public sealed record QuoteCartQuery(
     string Culture,
-    string? Segment,
     IReadOnlyList<QuoteLineInput> Lines,
     decimal? Shipping,
     IReadOnlyList<string> Coupons) : IQuery<QuoteCartResult>;
@@ -87,7 +86,6 @@ public sealed class QuoteCartValidator : AbstractValidator<QuoteCartQuery>
 
 public sealed record QuoteCartRequest(
     IReadOnlyList<QuoteLineRequest> Lines,
-    string? Segment = null,
     decimal? Shipping = null,
     IReadOnlyList<string>? Coupons = null);
 
@@ -149,7 +147,6 @@ public sealed class QuoteCartEndpoint : ICarterModule
                 var result = await dispatcher.SendAsync(
                     new QuoteCartQuery(
                         resolved,
-                        request.Segment,
                         [.. request.Lines.Select(line => new QuoteLineInput(line.Sku, line.Quantity))],
                         request.Shipping,
                         request.Coupons ?? []),
@@ -225,7 +222,7 @@ public sealed class QuoteCartHandler(
         activity?.SetTag("pricing.line_count", query.Lines.Count);
 
         var settings = options.Value;
-        var segment = Segments.For(principal.Current, query.Segment, settings.DefaultSegment);
+        var segment = Segments.For(principal.Current, settings.DefaultSegment);
         var at = clock.GetUtcNow();
 
         activity?.SetTag("pricing.segment", segment);

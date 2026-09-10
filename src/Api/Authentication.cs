@@ -102,21 +102,23 @@ internal sealed class HttpPrincipalAccessor(
         var subject = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub");
         var agent = user.FindFirstValue("agent_id");
 
+        // Null until `LinkIdentity` has run, and deliberately so: this is a
+        // READ. An accessor that created a customer on first sight would turn
+        // every GET into a write — a page view would register an account, and
+        // the row would appear with no audit entry, because queries are not
+        // audited. Registration is a command the storefront calls once after
+        // login.
+        //
+        // Blocking on the lookup is the honest shape here: the property is
+        // synchronous because it must work over MCP and inside the outbox
+        // worker, where there is no request to await on. One indexed two-column
+        // read, once per request, is the price of that.
+        var known = subject is null
+            ? null
+            : customers.ForSubjectAsync(subject).GetAwaiter().GetResult();
+
         return new CommercePrincipal(
-            // Null until `LinkIdentity` has run, and deliberately so: this is a
-            // READ. An accessor that created a customer on first sight would
-            // turn every GET into a write — a page view would register an
-            // account, and the row would appear with no audit entry, because
-            // queries are not audited. Registration is a command the storefront
-            // calls once after login.
-            //
-            // Blocking on the lookup is the honest shape here: the property is
-            // synchronous because it must work over MCP and inside the outbox
-            // worker, where there is no request to await on. One indexed
-            // single-column read, once per request, is the price of that.
-            Customer: subject is null
-                ? null
-                : customers.ForSubjectAsync(subject).GetAwaiter().GetResult(),
+            Customer: known?.Id,
             Agent: agent is null ? null : new AgentId(agent),
             Subject: subject,
             // `preferred_username` first because that is what OIDC defines for
@@ -126,6 +128,11 @@ internal sealed class HttpPrincipalAccessor(
             DisplayName: user.FindFirstValue("preferred_username")
                 ?? user.FindFirstValue(ClaimTypes.Name)
                 ?? subject,
-            Roles: [.. user.FindAll(ClaimTypes.Role).Select(claim => claim.Value)]);
+            Roles: [.. user.FindAll(ClaimTypes.Role).Select(claim => claim.Value)])
+        {
+            // The tariff is a fact the shop holds about the customer, so it is
+            // read here and nowhere else — never from a request body.
+            Segment = known?.Segment
+        };
     }
 }
