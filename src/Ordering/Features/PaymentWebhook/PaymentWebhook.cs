@@ -76,72 +76,98 @@ public sealed class PaymentWebhookHandler(
         // an order that does not exist, and 200 is the right answer to that or
         // the provider retries forever.
         if (paymentEvent.OrderId is not { } orderId)
-            return new PaymentWebhookResult(WebhookVerdict.Ignored, "The payload names no order.");
+            return Ignored("The payload names no order.");
 
         var order = await orders.FindByIdAsync(orderId, cancellationToken);
 
         if (order is null)
-            return new PaymentWebhookResult(WebhookVerdict.Ignored, $"There is no order {orderId}.");
+            return Ignored($"There is no order {orderId}.");
 
-        switch (paymentEvent.Kind)
+        var result = paymentEvent.Kind switch
         {
-            case Captured:
-                // Idempotent inside the aggregate: a redelivery finds it already
-                // captured and raises nothing. That check lives on the order and
-                // not here because the shipping handler reaches the same method.
-                order.CapturePayment(clock, paymentEvent.Reference);
-                break;
+            Captured => ApplyCapture(order, paymentEvent),
+            Failed => ApplyFailure(order, paymentEvent, command.Provider),
+            // A kind this shop does not act on: answered and dropped, quietly.
+            _ => Ignored(paymentEvent.Kind)
+        };
 
-            // Before the money moved, a failure CANCELS: OrderCancelled is what
-            // the compensation already listens to, so the stock goes back and
-            // the hold is voided. It used to call FailPayment, whose transition
-            // the table only allows from Pending — and no saved order is ever
-            // Pending, because checkout authorises before it places (ADR 0025).
-            // Every real failure threw, answered 500, and was retried forever.
-            case Failed when order.Payment?.CaptureId is null
-                             && order.Status is OrderStatus.PaymentAuthorized or OrderStatus.Confirmed:
-                order.Cancel(clock, OrderStop.PaymentDeclined,
-                    paymentEvent.Reason ?? "The provider reported a failure.");
-                break;
+        // Only a message that changed the order has anything to save.
+        if (result.Verdict == WebhookVerdict.Accepted)
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            // After the capture, a failure contradicts a fact the order holds —
-            // almost always an earlier attempt's failure delivered after a later
-            // one's success — so the order is not touched. It is still reported:
-            // money that really went back after a capture is a refund or a
-            // chargeback, and somebody has to be able to find the hint.
-            case Failed when order.Payment?.CaptureId is { } captureId:
-                logger.LogWarning(
-                    "A {Provider} webhook says the payment failed for order {OrderId}, which was already " +
-                    "captured as {CaptureId}. Nothing changed; if the money went back, it is a refund or a " +
-                    "chargeback. Reason: {Reason}",
-                    command.Provider, order.Id, captureId, paymentEvent.Reason);
-                return new PaymentWebhookResult(WebhookVerdict.Ignored, "The payment was already captured.");
+        return result;
+    }
 
-            // The one the shop cannot fix on its own: the goods left and the
-            // money did not (a capture that fails on shipping is left
-            // uncaptured, ADR 0025). It cannot be cancelled, and a return is not
-            // the system's to start — it is the customer's, per line, and its
-            // refund needs a capture that never happened. It needs a person, who
-            // will usually ask for the payment again before asking for the goods
-            // back; the backoffice already shows shipped-and-uncaptured apart.
-            case Failed when order.Status is OrderStatus.Shipped or OrderStatus.Delivered:
-                logger.LogWarning(
-                    "A {Provider} webhook says the payment failed for order {OrderId}, which is {Status} and " +
-                    "was never captured: the goods left and the money did not. It needs a person. Reason: {Reason}",
-                    command.Provider, order.Id, order.Status, paymentEvent.Reason);
-                return new PaymentWebhookResult(WebhookVerdict.Ignored, "The order already left uncaptured.");
+    /// <summary>
+    /// Idempotent inside the aggregate: a redelivery finds it already captured
+    /// and raises nothing. That check lives on the order and not here because
+    /// the shipping handler reaches the same method.
+    /// </summary>
+    private PaymentWebhookResult ApplyCapture(Order order, PaymentEvent paymentEvent)
+    {
+        order.CapturePayment(clock, paymentEvent.Reference);
+        return Accepted(paymentEvent);
+    }
 
-            // Everything else is answered and dropped, quietly — a kind this shop
-            // does not act on, or a failure for an order already cancelled,
-            // whose stock and hold went back when it was cancelled.
-            default:
-                return new PaymentWebhookResult(WebhookVerdict.Ignored, paymentEvent.Kind);
+    /// <summary>
+    /// What a failed payment does depends on where the money and the goods are,
+    /// and only one of the four answers touches the order.
+    /// </summary>
+    private PaymentWebhookResult ApplyFailure(Order order, PaymentEvent paymentEvent, string provider)
+    {
+        // After the capture, a failure contradicts a fact the order holds —
+        // almost always an earlier attempt's failure delivered after a later
+        // one's success — so the order is not touched. It is still reported:
+        // money that really went back after a capture is a refund or a
+        // chargeback, and somebody has to be able to find the hint.
+        if (order.Payment?.CaptureId is { } captureId)
+        {
+            logger.LogWarning(
+                "A {Provider} webhook says the payment failed for order {OrderId}, which was already " +
+                "captured as {CaptureId}. Nothing changed; if the money went back, it is a refund or a " +
+                "chargeback. Reason: {Reason}",
+                provider, order.Id, captureId, paymentEvent.Reason);
+            return Ignored("The payment was already captured.");
         }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        // Before the money moved, a failure CANCELS: OrderCancelled is what the
+        // compensation already listens to, so the stock goes back and the hold
+        // is voided. It used to call FailPayment, whose transition the table
+        // only allows from Pending — and no saved order is ever Pending, because
+        // checkout authorises before it places (ADR 0025). Every real failure
+        // threw, answered 500, and was retried forever.
+        if (order.Status is OrderStatus.PaymentAuthorized or OrderStatus.Confirmed)
+        {
+            order.Cancel(clock, OrderStop.PaymentDeclined, paymentEvent.Reason ?? "The provider reported a failure.");
+            return Accepted(paymentEvent);
+        }
 
-        return new PaymentWebhookResult(WebhookVerdict.Accepted, paymentEvent.Kind);
+        // The one the shop cannot fix on its own: the goods left and the money
+        // did not (a capture that fails on shipping is left uncaptured, ADR
+        // 0025). It cannot be cancelled, and a return is not the system's to
+        // start — it is the customer's, per line, and its refund needs a capture
+        // that never happened. It needs a person, who will usually ask for the
+        // payment again before asking for the goods back; the backoffice already
+        // shows shipped-and-uncaptured apart.
+        if (order.Status is OrderStatus.Shipped or OrderStatus.Delivered)
+        {
+            logger.LogWarning(
+                "A {Provider} webhook says the payment failed for order {OrderId}, which is {Status} and " +
+                "was never captured: the goods left and the money did not. It needs a person. Reason: {Reason}",
+                provider, order.Id, order.Status, paymentEvent.Reason);
+            return Ignored("The order already left uncaptured.");
+        }
+
+        // Already cancelled: its stock and hold went back when it was, so there
+        // is nothing left to stop and nobody to tell.
+        return Ignored(paymentEvent.Kind);
     }
+
+    private static PaymentWebhookResult Accepted(PaymentEvent paymentEvent) =>
+        new(WebhookVerdict.Accepted, paymentEvent.Kind);
+
+    private static PaymentWebhookResult Ignored(string detail) =>
+        new(WebhookVerdict.Ignored, detail);
 }
 
 public sealed class PaymentWebhookEndpoint : ICarterModule

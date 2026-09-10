@@ -213,9 +213,9 @@ public sealed class OutboxProcessorTests(PostgresFixture postgres)
 }
 
 /// <summary>An event that exists only to be delivered — or to refuse.</summary>
-public sealed record ProbeEvent(string Label, bool Fail, DateTimeOffset OccurredAt) : IDomainEvent;
+internal sealed record ProbeEvent(string Label, bool Fail, DateTimeOffset OccurredAt) : IDomainEvent;
 
-public sealed class ProbeHandler : IDomainEventHandler<ProbeEvent>
+internal sealed class ProbeHandler : IDomainEventHandler<ProbeEvent>
 {
     public List<string> Attempted { get; } = [];
 

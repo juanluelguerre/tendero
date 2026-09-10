@@ -88,10 +88,12 @@ internal sealed class HttpPrincipalAccessor(
     /// the pricing engine asks for the segment, the audit step asks who acted.
     /// Without this, each read is a database round trip for an answer that
     /// cannot have changed inside one request.
+    ///
+    /// The C# 14 <c>field</c> keyword holds the memo: the getter is
+    /// null-resilient, so the compiler treats the backing field as nullable and
+    /// the property stays non-nullable, with no hand-declared field beside it.
     /// </summary>
-    private CommercePrincipal? resolved;
-
-    public CommercePrincipal Current => this.resolved ??= Resolve();
+    public CommercePrincipal Current => field ??= Resolve();
 
     private CommercePrincipal Resolve()
     {
