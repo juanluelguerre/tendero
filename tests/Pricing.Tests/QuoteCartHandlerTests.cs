@@ -30,10 +30,10 @@ public sealed class QuoteCartHandlerTests
         Options.Create(new PricingSeedOptions()), this.clock);
 
     private Task<QuoteCartResult> Quote(
-        string? segment = null, decimal? shipping = null, string[]? coupons = null,
+        decimal? shipping = null, string[]? coupons = null,
         params (string Sku, int Quantity)[] lines) =>
         Handler().HandleAsync(
-            new QuoteCartQuery("es", segment,
+            new QuoteCartQuery("es",
                 [.. lines.Select(line => new QuoteLineInput(line.Sku, line.Quantity))],
                 shipping, coupons ?? []),
             CancellationToken.None);
@@ -75,27 +75,50 @@ public sealed class QuoteCartHandlerTests
 
     /// <summary>
     /// The security-shaped detail of the slice: if the segment came from the
-    /// request body, anybody would ask for the VIP tariff. A guest gets the
-    /// default no matter what they send.
+    /// request, anybody would ask for the VIP tariff. So the request carries
+    /// none, and a guest — who has no segment the shop could hold — is quoted
+    /// the default.
     /// </summary>
     [Fact]
-    public async Task A_guest_asking_for_the_vip_tariff_is_quoted_the_retail_one()
+    public async Task A_guest_is_quoted_the_default_tariff()
     {
         this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
 
-        var result = await Quote(segment: "vip", lines: [("SHIRT", 1)]);
+        var result = await Quote(lines: [("SHIRT", 1)]);
 
         Assert.Equal("retail", result.Quote!.Segment);
         Assert.Equal(24.50m, result.Quote.Lines.Single().UnitPrice.Amount);
     }
 
+    /// <summary>
+    /// Signing in is not the same as being on a tariff. A shopper the shop holds
+    /// no segment for is quoted the default: this is the case that used to hand
+    /// "vip" to anybody signed in who asked for it.
+    /// </summary>
     [Fact]
-    public async Task An_authenticated_customer_gets_the_segment_they_ask_for()
+    public async Task A_signed_in_shopper_with_no_segment_is_quoted_the_default_tariff()
     {
         this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
         this.principal = CommercePrincipal.Anonymous with { Subject = "ana" };
 
-        var result = await Quote(segment: "vip", lines: [("SHIRT", 1)]);
+        var result = await Quote(lines: [("SHIRT", 1)]);
+
+        Assert.Equal("retail", result.Quote!.Segment);
+        Assert.Equal(24.50m, result.Quote.Lines.Single().UnitPrice.Amount);
+    }
+
+    /// <summary>
+    /// The other half of the same rule: a customer the shop has put on the VIP
+    /// tariff is quoted it without asking, because the segment travels with who
+    /// they are.
+    /// </summary>
+    [Fact]
+    public async Task A_vip_customer_is_quoted_the_vip_tariff_without_asking_for_it()
+    {
+        this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
+        this.principal = CommercePrincipal.Anonymous with { Subject = "marta", Segment = "vip" };
+
+        var result = await Quote(lines: [("SHIRT", 1)]);
 
         Assert.Equal("vip", result.Quote!.Segment);
         Assert.Equal(10m, result.Quote.Lines.Single().UnitPrice.Amount);

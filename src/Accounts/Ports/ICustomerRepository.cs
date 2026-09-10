@@ -21,10 +21,18 @@ public interface ICustomerRepository
 }
 
 /// <summary>
-/// Subject to customer id, and nothing else.
+/// What the principal needs to know about a customer: who they are, and which
+/// tariff the shop has them on. Two columns, because the accessor that asks runs
+/// on every authenticated request.
+/// </summary>
+public sealed record KnownCustomer(CustomerId Id, string Segment);
+
+/// <summary>
+/// Subject to customer, and nothing else.
 ///
 /// It exists for ONE caller: the API's principal accessor, which runs on every
-/// authenticated request and has to fill <c>CommercePrincipal.Customer</c>. That
+/// authenticated request and has to fill <c>CommercePrincipal.Customer</c> and
+/// <c>CommercePrincipal.Segment</c>. That
 /// caller cannot use <see cref="ICustomerRepository"/>, and the reason is worth
 /// stating — an accessor that loaded an aggregate would be materialising a
 /// customer to answer a question about a token, on every request including the
@@ -37,5 +45,5 @@ public interface ICustomerRepository
 /// </summary>
 public interface ICustomerDirectory
 {
-    Task<CustomerId?> ForSubjectAsync(string subject, CancellationToken ct = default);
+    Task<KnownCustomer?> ForSubjectAsync(string subject, CancellationToken ct = default);
 }

@@ -42,6 +42,13 @@ public sealed record CommercePrincipal(
     /// a normal case, not the absence of a case.</summary>
     public static readonly CommercePrincipal Anonymous = new(null, null, null, null, []);
 
+    /// <summary>
+    /// The tariff the shop has this customer on, as Accounts holds it. Null for
+    /// a guest, an agent, or somebody who signed in and has not been registered
+    /// yet — all three are quoted the default.
+    /// </summary>
+    public string? Segment { get; init; }
+
     public bool IsAgent => Agent is not null;
 
     public bool IsInRole(string role) =>

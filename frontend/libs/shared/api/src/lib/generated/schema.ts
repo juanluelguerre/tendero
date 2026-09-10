@@ -943,7 +943,6 @@ export interface components {
         };
         QuoteCartRequest: {
             lines: components["schemas"]["QuoteLineRequest"][];
-            segment?: null | string;
             /** Format: double */
             shipping?: null | number;
             coupons?: null | string[];
