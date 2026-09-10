@@ -34,30 +34,15 @@ internal sealed class EfCustomerRepository(TenderoDbContext context)
     /// A principal accessor that registered an account as a side effect of
     /// answering "who is this" would make a GET a write.
     ///
-    /// A SUPERSEDED customer answers with the one that survived it, id and
-    /// segment both, so a person who shopped as a guest before signing in keeps
-    /// working through whichever id their session happens to hold.
+    /// No superseded customer can answer here, and the aggregate is why: only a
+    /// guest — a customer with no subject — can be superseded, and a superseded
+    /// customer can never link one. This used to follow <c>SupersededBy</c> to
+    /// a survivor anyway, in a branch no row could ever reach.
     /// </summary>
-    public async Task<KnownCustomer?> ForSubjectAsync(string subject, CancellationToken ct = default)
-    {
-        var found = await context.Customers
+    public Task<KnownCustomer?> ForSubjectAsync(string subject, CancellationToken ct = default) =>
+        context.Customers
             .AsNoTracking()
             .Where(customer => customer.Subject == subject)
-            .Select(customer => new { customer.Id, customer.Segment, customer.SupersededBy })
+            .Select(customer => new KnownCustomer(customer.Id, customer.Segment))
             .FirstOrDefaultAsync(ct);
-
-        if (found is null)
-            return null;
-
-        if (found.SupersededBy is not { } survivor)
-            return new KnownCustomer(found.Id, found.Segment);
-
-        var segment = await context.Customers
-            .AsNoTracking()
-            .Where(customer => customer.Id == survivor)
-            .Select(customer => customer.Segment)
-            .FirstAsync(ct);
-
-        return new KnownCustomer(survivor, segment);
-    }
 }
