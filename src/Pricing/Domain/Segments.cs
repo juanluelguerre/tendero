@@ -11,10 +11,11 @@ namespace ElGuerre.Tendero.Pricing.Domain;
 /// field that decides the price cannot come from the same place as the question.
 ///
 /// Today's rule is deliberately small: whoever is not authenticated gets the
-/// default segment, whatever they send. When <c>Accounts</c> exists (phase 7)
-/// the segment becomes a fact about the customer and this shrinks to reading it
-/// off the principal — but the hole is closed already, which is what matters in
-/// the meantime.
+/// default segment, whatever they send. <c>Accounts</c> exists since phase 7
+/// and <c>Customer</c> already carries a segment, but nothing puts it on the
+/// principal yet; the day something does, this shrinks to reading it from
+/// there — and the hole is closed already, which is what matters in the
+/// meantime.
 /// </summary>
 public static class Segments
 {

@@ -183,8 +183,8 @@ public sealed class ImportProductsHandler(
 
     /// <summary>
     /// Ingests the images instead of storing the source's URL: the catalogue
-    /// stops depending on Shopify or whoever keeping their CDN alive, and phase 4
-    /// will be able to compute embeddings over bytes we control
+    /// stops depending on Shopify or whoever keeping their CDN alive, and phase
+    /// 13's image embeddings will be computed over bytes we control
     /// (docs/adr/0011-product-images.md).
     ///
     /// An image that cannot be read aborts nothing: the product goes in without

@@ -71,7 +71,7 @@ public abstract class CatalogSourceConnectorContractTests
     public async Task Image_locations_are_absolute_and_readable()
     {
         // A source may serve its images over HTTP (Shopify from its CDN) or have
-        // them on disk (the seed connector, and phase 4's PDF scanning). What the
+        // them on disk (the seed connector, and a later PDF ingestion step). What the
         // contract demands is that the location be RESOLVABLE without ambient
         // context: the reader does not know what directory anybody launched from.
         await foreach (var product in CreateConnector().StreamProductsAsync(TestContext.Current.CancellationToken))

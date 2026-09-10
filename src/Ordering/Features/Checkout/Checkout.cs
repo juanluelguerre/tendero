@@ -299,8 +299,8 @@ public sealed class PlaceOrderHandler(
         // signed in — an order always has a buyer, even an anonymous one, and a
         // nullable CustomerId would spread null through every order query for a
         // case the domain does not actually have. It is written back onto the
-        // cart so the two agree, which is what phase 7's ClaimGuestAccount will
-        // link an account to.
+        // cart so the two agree, which is what phase 7's LinkIdentity links an
+        // account to.
         var customer = principal.Current.Customer ?? cart.CustomerId ?? CustomerId.New();
 
         if (cart.CustomerId is null)
@@ -392,7 +392,7 @@ public sealed class CheckoutEndpoints : ICarterModule
     {
         var checkout = app.MapGroup("/api/checkout")
             // Anonymous, like the cart it closes: a guest has to be able to buy.
-            // The cart token is the credential, and phase 7 puts an account
+            // The cart token is the credential, and phase 7 put an account
             // behind it without changing this line.
             .AllowAnonymous()
             .WithTags("Checkout");
