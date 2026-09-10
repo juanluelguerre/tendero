@@ -58,10 +58,13 @@ public sealed record PriceQuote(
     public bool HasExpiredAt(DateTimeOffset at) => at >= ExpiresAt;
 
     /// <summary>
-    /// Whether this quote still holds for a set of inputs. It is the check
-    /// <c>PlaceOrder</c> will make in phase 5, and it returns why it failed
-    /// rather than a boolean: "it expired" and "the cart changed" are told to a
-    /// shopper in different words.
+    /// Whether this quote still holds for a set of inputs. It returns why it
+    /// failed rather than a boolean: "it expired" and "the cart changed" are
+    /// told to a shopper in different words.
+    ///
+    /// It was written as the check <c>PlaceOrder</c> would make in phase 5, and
+    /// checkout went another way: it re-runs the engine and compares the
+    /// fingerprints (ADR 0025). Only the tests call this today.
     /// </summary>
     public QuoteValidity ValidateAt(DateTimeOffset at, string inputHash) =>
         HasExpiredAt(at) ? QuoteValidity.Expired

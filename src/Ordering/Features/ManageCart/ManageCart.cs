@@ -274,7 +274,7 @@ public sealed class CartEndpoints : ICarterModule
             // Anonymous by explicit decision, and it is the only shape a shop
             // can have: a basket exists before anybody says who they are, and
             // requiring a login to add to it is how a storefront loses the sale.
-            // The token is the credential; phase 7 adds the account behind it.
+            // The token is the credential; phase 7 added the account behind it.
             .AllowAnonymous()
             .WithTags("Cart");
 

@@ -49,8 +49,9 @@ const shopRoutes: Route[] = [
   },
   {
     // The confirmation page, and the one a shopper comes back to in order to
-    // send something back. The id is the credential until phase 7 puts an
-    // account behind it — a GUID v7 nobody can enumerate.
+    // send something back. For a guest the id is the credential — a GUID v7
+    // nobody can enumerate; a signed-in shopper also reaches it from their
+    // account (phase 7).
     path: 'orders/:id',
     loadComponent: () => import('./features/order/order-page').then((m) => m.OrderPage),
   },

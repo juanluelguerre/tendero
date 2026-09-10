@@ -428,7 +428,7 @@
         {
           "externalId": "B06GHIJ505",
           "relevance": 3,
-          "why": "a desk lamp with a USB port is what someone means here; lexical search cannot bridge 'reading light' to 'desk lamp' and this query exists to measure that gap until phase 2"
+          "why": "a desk lamp with a USB port is what someone means here; lexical search cannot bridge 'reading light' to 'desk lamp' and this query exists to measure that gap until hybrid search (phase 8)"
         },
         {
           "externalId": "B12LAM0602",

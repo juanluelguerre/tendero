@@ -147,8 +147,9 @@ public sealed class OrderTests
     public void Delivering_an_order_records_that_it_happened()
     {
         // It was the state machine's only mute transition, and it turns out to be
-        // the one that opens the returns window: phase 4's return-reason loop has
-        // no other fact to hang from.
+        // the one that opens the returns window: returns (phase 5), and the
+        // return-reason analysis a later phase promises, have no other fact to
+        // hang from.
         var order = OrderBuilder.Default().Build();
         order.AuthorizePayment(Clock);
         order.Confirm(Clock);

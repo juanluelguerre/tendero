@@ -342,9 +342,9 @@ public sealed class ReturnEndpoints : ICarterModule
                     _ => TypedResults.Ok(ReturnView.From(result.Return!))
                 };
             })
-            // A shopper opens their own return, and until phase 7 there is no
-            // account to check it against — the order id is the credential, and
-            // it is a GUID v7 nobody can enumerate. Said in code rather than
+            // A shopper opens their own return, and a guest has no account to
+            // check it against — the order id is the credential, and it is a
+            // GUID v7 nobody can enumerate. Said in code rather than
             // omitted, which is what the endpoint-policy test enforces.
             .AllowAnonymous()
             .WithTags("Returns")

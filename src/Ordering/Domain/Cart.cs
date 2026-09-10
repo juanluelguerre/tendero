@@ -54,7 +54,7 @@ public sealed record CartLine(
 /// it expires, and it never touches `Order.AllowedTransitions`.
 ///
 /// **Guests are first class.** `CustomerId` is nullable and a `Token` addresses
-/// the cart instead — which is what lets the shop work before phase 7 exists,
+/// the cart instead — which is what let the shop work before phase 7 existed,
 /// and what an agent surface needs anyway: WebMCP inherits whatever session the
 /// browser already had, guest included.
 /// </summary>
@@ -97,9 +97,9 @@ public sealed class Cart : AggregateRoot
     public CartId Id { get; private set; }
 
     /// <summary>
-    /// Null until somebody signs in. Phase 7's `ClaimGuestAccount` is the other
-    /// half of this: linking or merging the account is an `Accounts` operation,
-    /// and <see cref="Claim"/> is all `Ordering` owns of it.
+    /// Null until somebody signs in. Phase 7's `LinkIdentity` is the other half
+    /// of this: linking or merging the account is an `Accounts` operation, and
+    /// <see cref="Claim"/> is all `Ordering` owns of it.
     /// </summary>
     public CustomerId? CustomerId { get; private set; }
 

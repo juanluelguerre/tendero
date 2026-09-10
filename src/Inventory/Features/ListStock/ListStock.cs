@@ -77,7 +77,7 @@ public sealed class ListStockHandler(
 
     /// <summary>
     /// Enough to see what just happened without turning the screen into a log.
-    /// The full history is what the audit table is for, in phase 7.
+    /// The full history is what the audit table is for (phase 7).
     /// </summary>
     private const int RecentReservations = 20;
 

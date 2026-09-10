@@ -88,8 +88,9 @@ public sealed record OrderShipped(OrderId OrderId, DateTimeOffset OccurredAt) : 
 
 /// <summary>
 /// Delivery is a fact too. It was the only transition that emitted nothing, and
-/// it turns out to be exactly the one that opens the returns window: phase 4's
-/// return-reason loop has nothing else to hang from.
+/// it turns out to be exactly the one that opens the returns window: returns
+/// (phase 5), and the return-reason analysis a later phase promises, have
+/// nothing else to hang from.
 /// </summary>
 public sealed record OrderDelivered(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 
