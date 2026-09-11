@@ -230,6 +230,62 @@ public sealed class Product : AggregateRoot
         Touch(clock);
     }
 
+    /// <summary>
+    /// The gallery becomes exactly this one, in this order — so the first image
+    /// is the cover. What the source no longer lists leaves the product; the
+    /// bytes stay in the content-addressed store, where an order that
+    /// snapshotted one still finds it.
+    ///
+    /// It exists because <see cref="AddImage"/> only ever appends, and the cover
+    /// is the lowest sort order: when the seed replaced six placeholders with
+    /// illustrations, a re-import put each illustration BEHIND its placeholder
+    /// and the placeholder stayed on the cover for good (UI review, 2026-09-11).
+    ///
+    /// The same gallery again is not a change — no timestamp, no event — or every
+    /// import would reindex the whole catalogue for nothing.
+    /// </summary>
+    public void ReplaceImages(TimeProvider clock, IReadOnlyList<(ImageId Id, LocalizedText? Alt)> gallery)
+    {
+        ArgumentNullException.ThrowIfNull(gallery);
+
+        var replacement = gallery
+            .DistinctBy(image => image.Id)
+            .Select((image, index) => new ProductImage(image.Id, image.Alt, index))
+            .ToList();
+
+        if (replacement.SequenceEqual(this.images.OrderBy(image => image.SortOrder), SameImage.Instance))
+            return;
+
+        this.images.Clear();
+        this.images.AddRange(replacement);
+        Touch(clock);
+    }
+
+    /// <summary>
+    /// Two gallery entries are the same when their id, position and alt text
+    /// match. The alt is compared by its WORDS: <see cref="LocalizedText"/> has
+    /// reference equality, and every import builds a new one, so comparing the
+    /// records as they are would call an untouched gallery a change.
+    /// </summary>
+    private sealed class SameImage : IEqualityComparer<ProductImage>
+    {
+        public static readonly SameImage Instance = new();
+
+        public bool Equals(ProductImage? a, ProductImage? b) =>
+            a is not null && b is not null &&
+            a.Id == b.Id &&
+            a.SortOrder == b.SortOrder &&
+            SameWords(a.Alt, b.Alt);
+
+        public int GetHashCode(ProductImage image) => HashCode.Combine(image.Id, image.SortOrder);
+
+        private static bool SameWords(LocalizedText? a, LocalizedText? b) =>
+            a is null || b is null
+                ? a is null && b is null
+                : a.Values.Count == b.Values.Count &&
+                  a.Values.All(pair => b.Values.TryGetValue(pair.Key, out var other) && other == pair.Value);
+    }
+
     // Idempotent: re-importing from the same source does not duplicate references.
     public void LinkExternal(TimeProvider clock, string source, string externalId)
     {
