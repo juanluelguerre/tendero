@@ -8,7 +8,7 @@
     </div>
   } @else {
     @if (problem(); as message) {
-      <p class="notice notice--bad" role="alert">{{ message }}</p>
+      <p #notice class="notice notice--bad" role="alert" tabindex="-1">{{ message }}</p>
     }
 
     <div class="layout">
@@ -20,7 +20,7 @@
           <div class="grid">
             <label class="row row--wide">
               <span class="row__label">{{ t('checkout.recipientName') }}</span>
-              <input class="field" name="recipientName" [(ngModel)]="address.recipientName" autocomplete="name" />
+              <input class="field" name="recipientName" [(ngModel)]="address.recipientName" (change)="nameEntered()" autocomplete="name" required />
             </label>
 
             <label class="row row--wide">
@@ -160,7 +160,7 @@
           <button
             class="button button--block"
             type="button"
-            [disabled]="paying() || !chosen()"
+            [disabled]="paying() || !chosen() || !address.recipientName.trim()"
             (click)="pay()"
           >
             {{ paying() ? t('checkout.paying') : t('checkout.pay', { total: money(quote.total) }) }}
