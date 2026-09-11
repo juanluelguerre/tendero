@@ -95,6 +95,13 @@ export const appRoutes: Route[] = [
         loadComponent: () => import('./features/returns/returns-page').then((m) => m.ReturnsPage),
       },
       {
+        path: 'catalogue',
+        title: 'catalogue.title',
+        canActivate: [shopkeeper],
+        loadComponent: () =>
+          import('./features/catalogue/catalogue-page').then((m) => m.CataloguePage),
+      },
+      {
         path: 'review',
         title: 'reviewQueue.title',
         canActivate: [shopkeeper],

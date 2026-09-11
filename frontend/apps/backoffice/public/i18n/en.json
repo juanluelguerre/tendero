@@ -45,10 +45,23 @@
     "name": "Tendero",
     "title": "Tendero Backoffice"
   },
+  "catalogue": {
+    "empty": "Nothing is published yet. Products are published from the review queue.",
+    "failed": "Could not load the catalogue.",
+    "hint": "Everything the shop sells today. Variants are a catalogue decision, made one product at a time.",
+    "loading": "Loading the catalogue...",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{pages}}",
+    "pages": "Pages",
+    "previous": "Previous",
+    "published": "{{count}} published",
+    "title": "Catalogue"
+  },
   "nav": {
     "agents": "Agent activity",
     "attributes": "Attributes",
     "audit": "Audit",
+    "catalogue": "Catalogue",
     "language": "Language",
     "orders": "Orders",
     "promotions": "Promotions",
@@ -170,7 +183,7 @@
       "product": "Product"
     },
     "complete": "es · en",
-    "empty": "Nothing here yet — import a catalog to get started.",
+    "empty": "Nothing is waiting for review. Import a catalog to add products.",
     "failed": "The queue did not answer. Try again in a moment.",
     "hint": "Importing never publishes: Draft is why this queue exists, and only publishing makes a product findable.",
     "import": "Import the sample catalog",
@@ -182,7 +195,8 @@
     "publishing": "Publishing…",
     "title": "Review queue",
     "imported": "Imported: {{created}} new, {{updated}} updated, in {{seconds}} s.",
-    "importFailed": "{{count}} could not be imported."
+    "importFailed": "{{count}} could not be imported.",
+    "seeCatalogue": "See what is already published"
   },
   "signIn": {
     "title": "Sign in",
