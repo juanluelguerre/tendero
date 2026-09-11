@@ -15,7 +15,8 @@
   "brand": {
     "area": "Tienda",
     "name": "Tendero",
-    "tagline": "comercio para personas y agentes"
+    "tagline": "comercio para personas y agentes",
+    "title": "Tendero"
   },
   "cart": {
     "checkout": "Ir a pagar",
@@ -116,7 +117,8 @@
       "out_of_stock": "No pudimos reservar las existencias de este pedido, así que lo cancelamos y no te hemos cobrado nada.",
       "shop_cancelled": "La tienda canceló este pedido.",
       "payment_declined": "El pago fue rechazado, así que el pedido no llegó a hacerse."
-    }
+    },
+    "title": "Tu pedido"
   },
   "product": {
     "addToCart": "Añadir al carrito",
@@ -139,7 +141,8 @@
     "sku": "Referencia {{sku}}",
     "soldOut": "Agotado",
     "specs": "Detalles",
-    "yes": "Sí"
+    "yes": "Sí",
+    "title": "Producto"
   },
   "search": {
     "empty": "Nada para «{{query}}». Prueba con menos palabras.",
@@ -183,6 +186,7 @@
     "empty": "Aquí no hay nada todavía.",
     "count": "{{count}} productos",
     "more": "Ver más productos",
-    "loadingMore": "Cargando…"
+    "loadingMore": "Cargando…",
+    "title": "Sección"
   }
 }

@@ -42,7 +42,8 @@
   },
   "brand": {
     "area": "Backoffice",
-    "name": "Tendero"
+    "name": "Tendero",
+    "title": "Tendero Backoffice"
   },
   "nav": {
     "agents": "Actividad de agentes",

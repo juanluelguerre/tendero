@@ -8,7 +8,7 @@ import {
 import { provideRouter } from '@angular/router';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { AuthStore, tenderoAuthInterceptor } from '@tendero/shared-auth';
-import { provideTenderoI18n } from '@tendero/shared-i18n';
+import { provideTenderoI18n, provideTranslatedTitles } from '@tendero/shared-i18n';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
@@ -27,5 +27,6 @@ export const appConfig: ApplicationConfig = {
 
     provideHttpClient(withFetch(), withInterceptors([tenderoAuthInterceptor])),
     provideTenderoI18n(),
+    provideTranslatedTitles(),
   ],
 };

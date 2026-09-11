@@ -44,50 +44,59 @@ export const appRoutes: Route[] = [
       { path: '', pathMatch: 'full', redirectTo: 'review' },
       {
         path: 'sign-in',
+        title: 'signIn.title',
         loadComponent: () =>
           import('./features/sign-in/sign-in-page').then((m) => m.SignInPage),
       },
       {
         path: 'products/:id/variants',
+        title: 'variants.title',
         canActivate: [shopkeeper],
         loadComponent: () =>
           import('./features/variants/define-variants-page').then((m) => m.DefineVariantsPage),
       },
       {
         path: 'audit',
+        title: 'audit.title',
         canActivate: [shopkeeper],
         loadComponent: () => import('./features/audit/audit-page').then((m) => m.AuditPage),
       },
       {
         path: 'attributes',
+        title: 'attributes.title',
         canActivate: [shopkeeper],
         loadComponent: () =>
           import('./features/attributes/attributes-page').then((m) => m.AttributesPage),
       },
       {
         path: 'promotions',
+        title: 'promotions.title',
         canActivate: [shopkeeper],
         loadComponent: () =>
           import('./features/promotions/promotions-page').then((m) => m.PromotionsPage),
       },
       {
         path: 'stock',
+        title: 'stock.title',
         canActivate: [shopkeeper],
         loadComponent: () =>
           import('./features/stock/stock-page').then((m) => m.StockPage),
       },
       {
         path: 'orders',
+        title: 'orders.title',
         canActivate: [shopkeeper],
         loadComponent: () => import('./features/orders/orders-page').then((m) => m.OrdersPage),
       },
       {
         path: 'returns',
+        title: 'returns.title',
         canActivate: [shopkeeper],
         loadComponent: () => import('./features/returns/returns-page').then((m) => m.ReturnsPage),
       },
       {
         path: 'review',
+        title: 'reviewQueue.title',
         canActivate: [shopkeeper],
         loadComponent: () =>
           import('./features/review-queue/review-queue-page').then((m) => m.ReviewQueuePage),

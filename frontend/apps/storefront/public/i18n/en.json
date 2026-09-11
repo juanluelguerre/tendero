@@ -15,7 +15,8 @@
   "brand": {
     "area": "Shop",
     "name": "Tendero",
-    "tagline": "commerce for humans and agents"
+    "tagline": "commerce for humans and agents",
+    "title": "Tendero"
   },
   "cart": {
     "checkout": "Checkout",
@@ -116,7 +117,8 @@
       "out_of_stock": "We could not hold the stock for this order, so we cancelled it and charged you nothing.",
       "shop_cancelled": "The shop cancelled this order.",
       "payment_declined": "The payment was declined, so the order was not placed."
-    }
+    },
+    "title": "Your order"
   },
   "product": {
     "addToCart": "Add to cart",
@@ -139,7 +141,8 @@
     "sku": "Reference {{sku}}",
     "soldOut": "Sold out",
     "specs": "Details",
-    "yes": "Yes"
+    "yes": "Yes",
+    "title": "Product"
   },
   "search": {
     "empty": "Nothing for “{{query}}”. Try fewer words.",
@@ -183,6 +186,7 @@
     "empty": "Nothing here yet.",
     "count": "{{count}} products",
     "more": "Show more products",
-    "loadingMore": "Loading…"
+    "loadingMore": "Loading…",
+    "title": "Section"
   }
 }

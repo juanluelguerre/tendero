@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { map, type Subscription } from 'rxjs';
 import type { SearchHit } from '@tendero/shared-api';
-import { CultureStore } from '@tendero/shared-i18n';
+import { CultureStore, PageTitles } from '@tendero/shared-i18n';
 import { ProductSearchService } from '../../data-access/product-search.service';
 import { ShopFrontService, type Category } from '../../data-access/shop-front.service';
 import { ProductCard } from '../../product-card';
@@ -44,6 +44,7 @@ export class CategoryPage {
   private readonly search = inject(ProductSearchService);
   private readonly shopFront = inject(ShopFrontService);
   private readonly culture = inject(CultureStore);
+  private readonly titles = inject(PageTitles);
 
   protected readonly links = inject(ShopLinks);
   protected readonly state = signal<PageState>({ status: 'loading' });
@@ -110,6 +111,8 @@ export class CategoryPage {
           );
 
           this.category.set(found ?? null);
+          // The tab names the section, not "Section".
+          if (found) this.titles.name(found.name);
           this.children.set(
             found ? result.items.filter((item) => item.parent === found.code) : [],
           );
