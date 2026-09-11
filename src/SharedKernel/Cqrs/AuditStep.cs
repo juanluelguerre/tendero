@@ -77,16 +77,20 @@ internal static class AuditStep
         {
             var result = await handle();
 
+            // Most refusals here are RETURNED — a declined card, a return
+            // outside its window — so a result that can be one says which it
+            // was. Assuming "it returned, so it was allowed" is what filed the
+            // demo's declined card under Allowed until 2026-09-11.
+            var (outcome, reason) = result is IAuditedResult audited
+                ? (audited.AuditOutcome, audited.AuditReason)
+                : (AuditOutcome.Allowed, null);
+
             await SafelyWriteAsync(writer, AuditEntry.For(
                 typeof(TCommand).Name,
                 Payload(command),
                 principal,
-                // A command that returned normally was allowed. A handler that
-                // wants to record a REFUSAL — "the mandate does not cover this"
-                // — throws, or phase 11's policy decorator denies before it ever
-                // reaches here. Neither case is a success returning quietly.
-                AuditOutcome.Allowed,
-                reason: null,
+                outcome,
+                reason,
                 traceId,
                 clock.GetUtcNow()), ct);
 

@@ -124,7 +124,17 @@ public sealed record MoveOrderCommand(OrderId OrderId, OrderMove Move, string? R
 
 public enum MoveOrderOutcome { Moved, UnknownOrder, IllegalTransition }
 
-public sealed record MoveOrderResult(MoveOrderOutcome Outcome, Order? Order, string? Detail);
+public sealed record MoveOrderResult(MoveOrderOutcome Outcome, Order? Order, string? Detail) : IAuditedResult
+{
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        MoveOrderOutcome.Moved => AuditOutcome.Allowed,
+        MoveOrderOutcome.UnknownOrder or MoveOrderOutcome.IllegalTransition => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome == MoveOrderOutcome.Moved ? null : Detail ?? Outcome.ToString();
+}
 
 public sealed class MoveOrderHandler(
     IOrderRepository orders, IUnitOfWork unitOfWork, TimeProvider clock)

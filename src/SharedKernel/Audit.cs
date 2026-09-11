@@ -115,6 +115,29 @@ public interface IAuditReader
 }
 
 /// <summary>
+/// A command result that can be a refusal, saying which it was.
+///
+/// This repository returns its expected refusals rather than throwing them — a
+/// declined card, a return outside its window, a move the transition table
+/// forbids — because an endpoint has to turn each into a different 4xx with the
+/// server's own words. The audit decorator could not see inside a result, so
+/// every one of them was filed as <see cref="AuditOutcome.Allowed"/>, and the
+/// audit screen that opens on the refusals opened empty (UI review, 2026-09-11).
+///
+/// Implemented with a switch over the result's own outcome enum and no default
+/// arm, so that adding an outcome is a compile error until somebody decides
+/// whether it is a refusal. An architecture rule makes every command result
+/// with an <c>Outcome</c> implement it.
+/// </summary>
+public interface IAuditedResult
+{
+    AuditOutcome AuditOutcome { get; }
+
+    /// <summary>Why, in the server's words, when it was not allowed.</summary>
+    string? AuditReason { get; }
+}
+
+/// <summary>
 /// Marks a property that must never reach the audit log.
 ///
 /// Not speculative: `ClaimGuestAccount` and checkout both carry a CART TOKEN,

@@ -40,7 +40,18 @@ public enum RequestReturnOutcome
 }
 
 public sealed record RequestReturnResult(
-    RequestReturnOutcome Outcome, ReturnRequest? Return, string? Detail);
+    RequestReturnOutcome Outcome, ReturnRequest? Return, string? Detail) : IAuditedResult
+{
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        RequestReturnOutcome.Opened => AuditOutcome.Allowed,
+        RequestReturnOutcome.UnknownOrder or RequestReturnOutcome.WindowClosed or
+            RequestReturnOutcome.Refused => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome == RequestReturnOutcome.Opened ? null : Detail ?? Outcome.ToString();
+}
 
 public sealed class RequestReturnValidator : AbstractValidator<RequestReturnCommand>
 {
@@ -142,7 +153,21 @@ public sealed record DecideReturnCommand(ReturnRequestId ReturnId, ReturnDecisio
 public enum DecideReturnOutcome { Decided, UnknownReturn, IllegalTransition, NothingToRefund, RefundFailed }
 
 public sealed record DecideReturnResult(
-    DecideReturnOutcome Outcome, ReturnRequest? Return, string? Detail);
+    DecideReturnOutcome Outcome, ReturnRequest? Return, string? Detail) : IAuditedResult
+{
+    /// <summary>A refund the provider refused is a fault; everything else that
+    /// is not a decision is a rule saying no.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        DecideReturnOutcome.Decided => AuditOutcome.Allowed,
+        DecideReturnOutcome.RefundFailed => AuditOutcome.Failed,
+        DecideReturnOutcome.UnknownReturn or DecideReturnOutcome.IllegalTransition or
+            DecideReturnOutcome.NothingToRefund => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome == DecideReturnOutcome.Decided ? null : Detail ?? Outcome.ToString();
+}
 
 public sealed class DecideReturnHandler(
     IReturnRequestRepository returns,

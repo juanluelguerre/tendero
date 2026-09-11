@@ -56,7 +56,15 @@ public sealed record LinkedIdentity(
     string? DisplayName,
     string Segment,
     string Culture,
-    string Outcome);
+    string Outcome) : IAuditedResult
+{
+    /// <summary>Every way signing in can end is allowed — registered, linked or
+    /// recognised are three facts, not three verdicts. Said explicitly, and
+    /// explicitly implemented, so it never reaches the JSON this record is.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => AuditOutcome.Allowed;
+
+    string? IAuditedResult.AuditReason => null;
+}
 
 /// <summary>
 /// What signing in did. Three cases, because they are three different facts and

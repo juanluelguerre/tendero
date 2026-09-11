@@ -192,7 +192,23 @@ public sealed record PlaceOrderResult(
     PlaceOrderOutcome Outcome,
     Order? Order,
     CartPricing? Pricing,
-    string? Detail);
+    string? Detail) : IAuditedResult
+{
+    /// <summary>A declined card is the shop saying no, which is a denial; a
+    /// provider that did not answer is a fault. Each refusal carries its words,
+    /// or its name when it has none.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced => AuditOutcome.Allowed,
+        PlaceOrderOutcome.PaymentUnavailable => AuditOutcome.Failed,
+        PlaceOrderOutcome.NothingToShip or PlaceOrderOutcome.UnknownShippingOption or
+            PlaceOrderOutcome.UnknownSkus or PlaceOrderOutcome.PriceChanged or
+            PlaceOrderOutcome.PaymentDeclined => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome is PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced ? null : Detail ?? Outcome.ToString();
+}
 
 public sealed class PlaceOrderValidator : AbstractValidator<PlaceOrderCommand>
 {
