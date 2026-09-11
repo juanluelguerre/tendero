@@ -1,12 +1,12 @@
 {
   "attributes": {
     "title": "Atributos",
-    "hint": "Una etiqueta sin traducir no es cosmetica: una opcion sin ingles es exactamente lo que hacia que «navy blue shoes» no encontrara nada.",
+    "hint": "Una etiqueta sin traducir no es cosmética: una opción sin inglés es exactamente lo que hacía que «navy blue shoes» no encontrara nada.",
     "loading": "Cargando...",
     "failed": "No se pudieron cargar las definiciones.",
     "incomplete": "{{count}} sin completar",
     "column": {
-      "code": "Codigo",
+      "code": "Código",
       "kind": "Tipo",
       "options": "Opciones"
     }
@@ -34,7 +34,7 @@
     },
     "refused": "{{count}} rechazados",
     "showPayload": "Ver comando",
-    "system": "sistema",
+    "guest": "invitado",
     "title": "Auditoría",
     "trace": "Traza {{id}}",
     "emptyFor": "No hay nada registrado como «{{outcome}}». Que es la buena noticia.",
@@ -95,7 +95,7 @@
     "paid": "Autorizado",
     "status": {
       "Pending": "Pendiente de pago",
-      "PaymentAuthorized": "Pagado",
+      "PaymentAuthorized": "Autorizado",
       "PaymentFailed": "Pago fallido",
       "Confirmed": "Confirmado",
       "Shipped": "Enviado",

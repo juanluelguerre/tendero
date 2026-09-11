@@ -17,7 +17,10 @@
 
 .status--Pending { color: var(--text-subtle); }
 .status--PaymentAuthorized, .status--Confirmed { color: var(--warning); }
-.status--Shipped { color: var(--accent); }
+/* Not clay: design/DESIGN.md keeps the accent for what an AGENT did, so that
+   scanning the table shows it at a glance. A shipped order is in transit —
+   neither done nor waiting on anybody — and reads in the neutral text colour. */
+.status--Shipped { color: var(--text); }
 .status--Delivered { color: var(--positive); }
 .status--PaymentFailed, .status--Cancelled { color: var(--danger); }
 

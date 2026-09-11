@@ -109,9 +109,12 @@
                     </a>
                   </td>
                   <td class="right">
+                    <!-- Quiet: one per row would be many clay buttons in one
+                         view (design/DESIGN.md). The empty state's import is
+                         this screen's one clay action. -->
                     <button
                       type="button"
-                      class="button"
+                      class="button button--quiet"
                       [disabled]="publishing().has(item.productId)"
                       (click)="publish(item)"
                     >

@@ -34,7 +34,7 @@
     },
     "refused": "{{count}} refused",
     "showPayload": "Show command",
-    "system": "system",
+    "guest": "guest",
     "title": "Audit",
     "trace": "Trace {{id}}",
     "emptyFor": "Nothing {{outcome}} has been recorded. That is the good outcome.",
@@ -95,7 +95,7 @@
     "paid": "Authorised",
     "status": {
       "Pending": "Awaiting payment",
-      "PaymentAuthorized": "Paid",
+      "PaymentAuthorized": "Authorised",
       "PaymentFailed": "Payment failed",
       "Confirmed": "Confirmed",
       "Shipped": "Shipped",
