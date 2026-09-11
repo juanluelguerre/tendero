@@ -293,9 +293,9 @@ public sealed class QuoteCartHandler(
         var cart = outcome.Cart;
         var currency = cart.Currency;
 
-        // Shipping is taxed. It goes in as one more base, at the standard
-        // class: carriage with its own rate exists in some jurisdictions and
-        // would be another adapter, not an `if` here.
+        // Shipping carries VAT too. It goes in as one more amount, at the
+        // standard class: carriage with its own rate exists in some
+        // jurisdictions and would be another adapter, not an `if` here.
         var calculator = taxes.Get(settings.TaxCalculator);
         var assessment = calculator.Assess(new TaxRequest(
             currency,
@@ -305,7 +305,11 @@ public sealed class QuoteCartHandler(
                 new TaxableAmount(TaxableAmount.Standard, cart.Shipping)
             ]));
 
-        var total = cart.Net + cart.Shipping + assessment.Total;
+        // Prices include VAT (ADR 0028), so the total is what the lines and the
+        // shipping add up to — the figure the shopper can check against the
+        // lines they were shown — and the assessment says how much of it is
+        // tax. Adding the assessment here is the defect this line replaced.
+        var total = cart.Net + cart.Shipping;
 
         var inputHash = Fingerprint(query, segment, book, promotionSet);
 

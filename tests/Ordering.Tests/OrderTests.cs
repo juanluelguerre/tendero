@@ -49,12 +49,39 @@ public sealed class OrderTests
                 Subtotal: new Money(30m, "EUR"),
                 DiscountTotal: new Money(3m, "EUR"),
                 Shipping: new Money(4.95m, "EUR"),
-                TaxTotal: new Money(6.71m, "EUR"),
-                Total: new Money(38.66m, "EUR")))
+                TaxTotal: new Money(5.55m, "EUR"),
+                Total: new Money(31.95m, "EUR")))
             .Build();
 
         Assert.Equal(new Money(30m, "EUR"), order.LinesTotal);
-        Assert.Equal(new Money(38.66m, "EUR"), order.Total);
+        Assert.Equal(new Money(31.95m, "EUR"), order.Total);
+    }
+
+    /// <summary>
+    /// Prices include VAT (ADR 0028), so a total is the subtotal less the
+    /// discounts plus the shipping — and the tax is a part of it, not an extra.
+    /// The order does not recompute anything; it refuses to freeze totals that
+    /// contradict themselves. These are the totals the shop used to produce:
+    /// 30 − 3 + 4,95 with 21 % added on top, charged as 38,66 under a line
+    /// saying "VAT included". Had this check existed, no such order could have
+    /// been saved.
+    /// </summary>
+    [Fact]
+    public void Totals_that_add_the_tax_on_top_of_prices_that_include_it_are_refused()
+    {
+        var builder = OrderBuilder.Default()
+            .WithLines(OrderBuilder.Line(10m, "EUR", quantity: 3))
+            .WithShipping(new OrderShipping("standard", "Standard", new Money(4.95m, "EUR"), 3))
+            .WithTotals(new OrderTotals(
+                Subtotal: new Money(30m, "EUR"),
+                DiscountTotal: new Money(3m, "EUR"),
+                Shipping: new Money(4.95m, "EUR"),
+                TaxTotal: new Money(6.71m, "EUR"),
+                Total: new Money(38.66m, "EUR")));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => builder.Build());
+
+        Assert.Contains("do not add up", exception.Message);
     }
 
     /// <summary>

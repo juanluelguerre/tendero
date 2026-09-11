@@ -127,8 +127,18 @@ public sealed class QuoteCartHandlerTests
 
     // ---------- The whole sum ----------
 
+    /// <summary>
+    /// Catalogue prices include VAT (ADR 0028), so the total is what the lines
+    /// and the shipping add up to, and the tax is a part of it rather than an
+    /// addition to it.
+    ///
+    /// It used to be an addition: the same cart came to 59,35 while its lines
+    /// and shipping said 49,05, under a line that read "VAT included". The UI
+    /// review of 2026-09-11 found it with a pair of shoes shown at 59,96 and
+    /// charged 72,55.
+    /// </summary>
     [Fact]
-    public async Task A_quote_adds_up_lines_discounts_shipping_and_tax()
+    public async Task A_quote_adds_up_lines_discounts_and_shipping_with_the_tax_inside()
     {
         this.promotions.Add(Build.Promotion("TEN", new PercentOffLine(10m)));
 
@@ -138,12 +148,31 @@ public sealed class QuoteCartHandlerTests
         Assert.Equal(49.00m, quote.Subtotal.Amount);
         Assert.Equal(4.90m, quote.DiscountTotal.Amount);
         Assert.Equal(4.95m, quote.Shipping.Amount);
+        Assert.Equal(49.05m, quote.Total.Amount);
 
-        // Shipping is taxed as a base like any other: (49,00 - 4,90 + 4,95) is
-        // 49,05, and 21 % of that is 10,3005 — 10,30 once rounded, one single
-        // time, at the end.
-        Assert.Equal(10.30m, quote.TaxTotal.Amount);
-        Assert.Equal(59.35m, quote.Total.Amount);
+        // Shipping carries VAT like any other base. 49,05 paid at 21 % is a base
+        // of 40,54 (49,05 / 1,21 = 40,5372…) and 8,51 of tax — base and tax
+        // adding up to what was paid, to the cent, because the tax is what is
+        // left once the base is rounded.
+        Assert.Equal(8.51m, quote.TaxTotal.Amount);
+        Assert.Equal(40.54m, quote.Taxes.Single().Base.Amount);
+    }
+
+    /// <summary>
+    /// The invariant the shopper can check with a pencil: the lines they are
+    /// shown, plus the shipping, are what they pay. Stated apart from the
+    /// arithmetic above because it is the one the screen made visible.
+    /// </summary>
+    [Fact]
+    public async Task The_total_is_what_the_lines_show_plus_the_shipping()
+    {
+        this.promotions.Add(Build.Promotion("TEN", new PercentOffLine(10m)));
+
+        var quote = (await Quote(shipping: 4.95m, lines: [("SHIRT", 3)])).Quote!;
+
+        var shown = quote.Lines.Aggregate(Money.Zero("EUR"), (sum, line) => sum + line.Net) + quote.Shipping;
+
+        Assert.Equal(shown, quote.Total);
     }
 
     [Fact]

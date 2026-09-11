@@ -115,6 +115,12 @@ return values out, with the instant passed as an argument rather than read from
 a clock. That is what lets the combination rules be verified with property tests
 over thousands of generated carts.
 
+**Every amount includes VAT** (ADR 0028) — catalogue prices, tariffs, promotion
+thresholds and shipping rates alike, because that is what a consumer is shown and
+pays. A tax calculator **extracts** the VAT an amount contains and never adds
+any, so a total is `subtotal − discounts + shipping` and the tax is a breakdown
+of it. `Order.Place` refuses totals that do not satisfy that equation.
+
 Combination is a declarative table in the `AllowedTransitions` idiom —
 `ExclusiveGlobal` stops evaluation, `ExclusiveInGroup` closes its group,
 `Stackable` continues — evaluated in the total order `(Priority, Code)`. A

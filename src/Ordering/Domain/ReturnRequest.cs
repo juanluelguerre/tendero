@@ -254,6 +254,10 @@ public sealed class ReturnRequest : AggregateRoot
     /// order's own discount total is apportioned across the returned lines by
     /// their share of the subtotal, which is the same largest-remainder problem
     /// `Money.Allocate` already solves for order-level discounts.
+    ///
+    /// No tax is added: prices include VAT (ADR 0028), so the tax went back
+    /// with the price. Adding a share of the order's tax, as this did until
+    /// 2026-09-11, refunded VAT twice — and VAT on the shipping as well.
     /// </summary>
     public Money RefundableFrom(Order order)
     {
@@ -271,15 +275,14 @@ public sealed class ReturnRequest : AggregateRoot
         if (returned.IsZero || order.Totals.Subtotal.IsZero)
             return returned.Round(Rounding.AwayFromZero);
 
-        // The share of the order-level discount and of the tax that these lines
-        // carried. Proportional to the subtotal, because that is what the
-        // promotion engine allocated against in the first place.
+        // The share of the order-level discount these lines carried.
+        // Proportional to the subtotal, because that is what the promotion
+        // engine allocated against in the first place.
         var share = returned.Amount / order.Totals.Subtotal.Amount;
 
         var discount = order.Totals.DiscountTotal * share;
-        var tax = order.Totals.TaxTotal * share;
 
-        return (returned - discount + tax).Round(Rounding.AwayFromZero);
+        return (returned - discount).Round(Rounding.AwayFromZero);
     }
 
     private void TransitionTo(

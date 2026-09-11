@@ -261,9 +261,14 @@ public sealed class ReturnRequestTests
     /// A returned line gives back its share of the order-level discount too. A
     /// shop that refunded the list price on a discounted order would pay out
     /// more than it took.
+    ///
+    /// And no tax is added to it: prices include VAT (ADR 0028), so what the
+    /// line cost already carried its tax. The refund used to add a share of the
+    /// order's tax on top — which, on an order whose tax included the
+    /// shipping's, also handed back VAT on a delivery that is not refunded.
     /// </summary>
     [Fact]
-    public void A_returned_line_carries_its_share_of_the_discount_and_the_tax()
+    public void A_returned_line_carries_its_share_of_the_discount_with_the_tax_already_inside()
     {
         var order = OrderBuilder.Default()
             .WithLines(
@@ -274,14 +279,15 @@ public sealed class ReturnRequestTests
                 Subtotal: new Money(100m, "EUR"),
                 DiscountTotal: new Money(10m, "EUR"),
                 Shipping: new Money(4.95m, "EUR"),
-                TaxTotal: new Money(18.90m, "EUR"),
-                Total: new Money(113.85m, "EUR")))
+                TaxTotal: new Money(16.48m, "EUR"),
+                Total: new Money(94.95m, "EUR")))
             .InStatus(OrderStatus.Delivered);
 
         var request = ReturnRequest.Open(Clock, order, [Line("SHIRT")]);
 
-        // One of two: 50 of a 100 subtotal is half. 50 − 5 discount + 9.45 tax.
-        Assert.Equal(new Money(54.45m, "EUR"), request.RefundableFrom(order));
+        // One of two: 50 of a 100 subtotal is half. 50 − 5 of discount, and the
+        // tax is inside the 45 already.
+        Assert.Equal(new Money(45m, "EUR"), request.RefundableFrom(order));
     }
 
     /// <summary>
