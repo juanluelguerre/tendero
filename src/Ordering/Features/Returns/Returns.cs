@@ -77,7 +77,8 @@ public sealed class RequestReturnHandler(
     IOrderRepository orders,
     IReturnRequestRepository returns,
     IUnitOfWork unitOfWork,
-    TimeProvider clock)
+    TimeProvider clock,
+    OrderAccess access)
     : ICommandHandler<RequestReturnCommand, RequestReturnResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -90,7 +91,9 @@ public sealed class RequestReturnHandler(
 
         var order = await orders.FindByIdAsync(command.OrderId, cancellationToken);
 
-        if (order is null)
+        // An account holder's order is theirs to return, and to a stranger it
+        // does not exist — the same answer the order page gives (OrderAccess).
+        if (order is null || !await access.CanReadAsync(order, cancellationToken))
             return new RequestReturnResult(RequestReturnOutcome.UnknownOrder, null, null);
 
         if (!ReturnRequest.WindowIsOpen(order, clock.GetUtcNow()))
@@ -367,10 +370,10 @@ public sealed class ReturnEndpoints : ICarterModule
                     _ => TypedResults.Ok(ReturnView.From(result.Return!))
                 };
             })
-            // A shopper opens their own return, and a guest has no account to
-            // check it against — the order id is the credential, and it is a
-            // GUID v7 nobody can enumerate. Said in code rather than
-            // omitted, which is what the endpoint-policy test enforces.
+            // Anonymous at the door because a guest has no account to show: for
+            // a guest's order the id is the credential, a GUID v7 nobody can
+            // enumerate. An account holder's order is checked inside, by
+            // OrderAccess — which is where "whose order is this" can be asked.
             .AllowAnonymous()
             .WithTags("Returns")
             .WithName("RequestReturn");
