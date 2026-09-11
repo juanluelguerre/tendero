@@ -5,6 +5,7 @@ using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
+using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -92,6 +93,12 @@ public static class WorkerServices
             // ordering constraint here.
             builder.Services.AddHostedService<StockSeeder>();
         }
+
+        // After the migrator, for the same ordering reason as the seeder: it
+        // reads the catalogue, and in development the schema is created a line
+        // above. Before the outbox, so the first projections land in an index
+        // that already holds the catalogue.
+        builder.Services.AddHostedService<RebuildEmptySearchIndex>();
 
         builder.Services.AddHostedService<OutboxProcessor>();
 

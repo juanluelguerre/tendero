@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 
@@ -17,9 +20,10 @@ namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 /// It is genuinely needed, not needed in theory: Elasticsearch is declared with
 /// ContainerLifetime.Persistent but WITHOUT a volume, so its documents live in
 /// the container's write layer. The moment Aspire recreates it, the index is
-/// empty with the whole catalogue in Active — and nothing restores it, because
-/// the outbox already delivered those events and republishing an already-active
-/// product changes nothing (by design).
+/// empty with the whole catalogue in Active — and the outbox cannot restore it,
+/// because it already delivered those events and republishing an already-active
+/// product changes nothing (by design). Until 2026-09-11 nothing else did
+/// either; <see cref="RebuildEmptySearchIndex"/> now does, at worker startup.
 ///
 /// It applies the SAME rule as the outbox projection, and literally the same
 /// code: <see cref="ProductIndexProjection"/>. Active is indexed, the rest is
@@ -70,6 +74,64 @@ public sealed class ReindexProductsEndpoint : ICarterModule
             .WithTags("Search")
             .WithName("ReindexProducts");
     }
+}
+
+/// <summary>
+/// The "nothing restores it" above, closed: when the worker starts and an index
+/// is empty, the catalogue is replayed into it.
+///
+/// Found by the UI review of 2026-09-11, after Docker Desktop restarted and
+/// Aspire recreated the container: a hundred Active products, an empty index,
+/// and a storefront answering its own suggested query with "Nothing matched —
+/// try fewer words". The rebuild existed; nothing asked for it.
+///
+/// It goes through the dispatcher and not straight to the handler, so the
+/// rebuild is audited like the button would be — as the system, which is who
+/// asked. It is empty-or-nothing on purpose: a populated index is left alone,
+/// because rebuilding on every start would make a restart cost a walk of the
+/// catalogue for nothing, and an index that is merely STALE is what the outbox
+/// keeps current.
+///
+/// A search engine that does not answer is logged and not thrown. The same
+/// process drains the outbox that holds stock and captures payments, and a shop
+/// that cannot take orders because its index is down has made lexical search
+/// the thing everything depends on — the reverse of invariant 8.
+///
+/// It runs inside <c>StartAsync</c>, so the worker is not up until the rebuild
+/// is done: nine seconds at a hundred products, measured. At the full ABO set
+/// that is the wrong shape, and it is the standing backlog's "reindex as a
+/// background job" row, which already names its trigger.
+/// </summary>
+public sealed class RebuildEmptySearchIndex(
+    IServiceScopeFactory scopes,
+    ILogger<RebuildEmptySearchIndex> logger) : IHostedService
+{
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+
+        try
+        {
+            if (!await scope.ServiceProvider.GetRequiredService<IProductIndexer>().IsEmptyAsync(cancellationToken))
+                return;
+        }
+        catch (SearchUnavailableException exception)
+        {
+            logger.LogWarning(exception,
+                "The search index could not be checked at startup; it is left as it is. " +
+                "POST /api/search/reindex rebuilds it once the engine answers");
+            return;
+        }
+
+        var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+            .SendAsync(new ReindexProductsCommand(), cancellationToken);
+
+        logger.LogInformation(
+            "The search index was empty at startup and was rebuilt: {Indexed} indexed, {Removed} removed, {Elapsed:F1}s",
+            result.Indexed, result.Removed, result.ElapsedSeconds);
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
 public sealed class ReindexProductsHandler(

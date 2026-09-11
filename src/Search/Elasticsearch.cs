@@ -127,6 +127,28 @@ internal sealed class ElasticsearchProductIndexer(
         }
     }
 
+    public async Task<bool> IsEmptyAsync(CancellationToken ct = default)
+    {
+        foreach (var culture in CultureAnalyzers.ByCulture.Keys)
+        {
+            var index = ProductSearchDocument.IndexNameFor(culture);
+            var response = await client.CountAsync(c => c.Indices(index), ct);
+
+            // A missing index is as empty as an index can be, and Elasticsearch
+            // answers 404 for it rather than a count of zero.
+            if (response.ApiCallDetails.HttpStatusCode == 404)
+                return true;
+
+            if (!response.IsValidResponse)
+                throw new SearchUnavailableException("count", response.DebugInformation);
+
+            if (response.Count == 0)
+                return true;
+        }
+
+        return false;
+    }
+
     public async Task IndexAsync(Product product, CancellationToken ct = default)
     {
         var definitions = await attributeDefinitions.AllAsync(ct);

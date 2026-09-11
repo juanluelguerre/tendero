@@ -118,6 +118,8 @@ public sealed class ReindexProductsTests
             return Task.CompletedTask;
         }
 
+        public Task<bool> IsEmptyAsync(CancellationToken ct = default) => Task.FromResult(false);
+
         public Task IndexAsync(Product product, CancellationToken ct = default)
         {
             Indexed.Add(product.Id);

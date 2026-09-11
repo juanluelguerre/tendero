@@ -193,6 +193,8 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         /// list, and a list has no mapping to drift.</summary>
         public Task RecreateAsync(CancellationToken ct = default) => Task.CompletedTask;
 
+        public Task<bool> IsEmptyAsync(CancellationToken ct = default) => Task.FromResult(false);
+
         public HashSet<ProductId> Indexed { get; } = [];
         public HashSet<ProductId> Removed { get; } = [];
 
