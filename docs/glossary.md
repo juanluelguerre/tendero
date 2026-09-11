@@ -110,18 +110,19 @@ items in the first place. They are two different faults and both are published,
 because the fix is different: **NDCG down means badly ordered, recall down means
 not found.**
 
-Recall is where this catalogue's honest weakness shows. It sits at 0.633 (es)
-and 0.556 (en) because the golden set now annotates products a shopper would
+Recall was where this catalogue's weakness showed. It sat at 0.633 (es)
+and 0.556 (en) because the golden set annotates products a shopper would
 happily accept — a gym trainer under "running shoes", a duffel under
-"backpack" — that a lexical query cannot retrieve, since they do not contain the
-query's words.
+"backpack" — that a query demanding every word could not retrieve. It was the
+query's `AND`, not the words: an OR fallback beside it took recall to 0.939 /
+0.955 on 2026-09-11, with full matches still ranked first.
 
 ### Golden set
 
 **The annotated answer key: queries, and the products a human says are the right
 answers to them.**
 
-22 queries per culture, 268 judgments between them, against a hundred products.
+22 queries per culture, 450 judgments between them, against a hundred products.
 Each judgment carries a `why` field, and that field is the point — an annotation
 without a stated reason cannot be reviewed in a pull request, and the notebook
 records one that was written from assumption rather than from the catalogue.
@@ -145,11 +146,13 @@ Elasticsearch's once-a-second refresh landed before the query (0.860 then 0.769)
 
 | culture | NDCG@10 | recall@50 | threshold |
 |---|---:|---:|---|
-| es | 0.813 | 0.633 | 0.80 / 0.62 |
-| en | 0.766 | 0.556 | 0.75 / 0.54 |
+| es | 0.927 | 0.939 | 0.91 / 0.92 |
+| en | 0.935 | 0.955 | 0.92 / 0.94 |
 
-**A quality number means nothing without the corpus it was taken on.** These
-replaced 0.943 / 0.937, measured over six products. NDCG@10 over six documents
+**A quality number means nothing without the corpus it was taken on — or the
+judgments it was scored against.** These replaced 0.813 / 0.766, scored before
+the golden set was completed and the OR fallback added, which had replaced
+0.943 / 0.937, measured over six products. NDCG@10 over six documents
 and over a hundred are different measurements — with six, nearly everything
 retrieved is annotated and the metric only asks about ordering. Lowering the
 threshold there was not a regression waved through; it was the ruler changing.
