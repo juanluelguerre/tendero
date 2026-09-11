@@ -43,6 +43,12 @@ export type PriceChangedResponse = Schemas['PriceChangedResponse'];
 export type OrderDetail = Schemas['OrderDetail'];
 
 /**
+ * How many of a SKU may still be sent back: the domain's own answer, so the page
+ * never keeps a second copy of which returns count.
+ */
+export type ReturnableLineView = Schemas['ReturnableLineView'];
+
+/**
  * One row of the backoffice's orders table. A summary and not an `OrderView`:
  * thirty orders each carrying their lines, discounts and tax breakdown would be
  * a page that downloads a database to render six columns.

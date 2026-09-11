@@ -37,9 +37,15 @@ internal sealed class ReturnRequestConfiguration : IEntityTypeConfiguration<Retu
         builder.Property(request => request.CreatedAt);
         builder.Property(request => request.UpdatedAt);
 
-        // The order page lists the returns against it, and the backoffice queue
-        // filters by status.
-        builder.HasIndex(request => request.OrderId);
+        // UNIQUE, and it is the concurrency guard: two requests for the last
+        // unit read the same earlier returns, both claim the same number, and
+        // this lets exactly one in (ReturnRequest.Number). It also serves the
+        // order page's "the returns against this order", which the single-column
+        // index on OrderId did before — a composite starting with it covers the
+        // same lookup.
+        builder.HasIndex(request => new { request.OrderId, request.Number })
+            .IsUnique()
+            .HasDatabaseName("ux_return_requests_order_id_number");
         builder.HasIndex(request => request.Status);
 
         builder.ComplexCollection<List<ReturnLine>, ReturnLine>("lines", line =>

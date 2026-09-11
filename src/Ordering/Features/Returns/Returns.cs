@@ -103,6 +103,10 @@ public sealed class RequestReturnHandler(
                     ? $"The {ReturnRequest.Window.TotalDays:F0}-day return window has closed."
                     : $"This order is {order.Status} and has not been delivered yet.");
 
+        // Every return already opened against this order: what a shopper may
+        // still send back depends on them, and the aggregate refuses to guess.
+        var earlier = await returns.ForOrderAsync(order.Id, cancellationToken);
+
         try
         {
             var request = ReturnRequest.Open(clock, order,
@@ -117,7 +121,7 @@ public sealed class RequestReturnHandler(
                     line.Quantity,
                     Enum.Parse<ReturnReason>(line.Reason, ignoreCase: true),
                     line.Comment))
-            ]);
+            ], earlier);
 
             returns.Add(request);
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -132,6 +136,16 @@ public sealed class RequestReturnHandler(
             // UCP — cannot forget them. Turning the refusal into an answer is
             // this handler's job.
             return new RequestReturnResult(RequestReturnOutcome.Refused, null, exception.Message);
+        }
+        catch (ConcurrentWriteException)
+        {
+            // Another return of this order was opened between reading the earlier
+            // ones and saving this one, and the unique (order, number) index let
+            // that one in (ReturnRequest.Number). What is left to return has
+            // changed, so the only honest answer is to look again.
+            return new RequestReturnResult(
+                RequestReturnOutcome.Refused, null,
+                "Another return for this order was opened at the same moment. Reload the order and try again.");
         }
     }
 }

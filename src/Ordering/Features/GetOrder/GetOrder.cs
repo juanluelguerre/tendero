@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Ordering.Contracts;
+using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
@@ -19,7 +20,10 @@ namespace ElGuerre.Tendero.Ordering.Features.GetOrder;
 /// </summary>
 public sealed record GetOrderQuery(OrderId OrderId) : IQuery<OrderDetail?>;
 
-public sealed record OrderDetail(OrderView Order, IReadOnlyList<ReturnView> Returns);
+public sealed record OrderDetail(
+    OrderView Order,
+    IReadOnlyList<ReturnView> Returns,
+    IReadOnlyList<ReturnableLineView> Returnable);
 
 public sealed class GetOrderHandler(
     IOrderRepository orders, IReturnRequestRepository returns, OrderAccess access)
@@ -37,9 +41,14 @@ public sealed class GetOrderHandler(
         if (order is null || !await access.CanReadAsync(order, cancellationToken))
             return null;
 
+        var opened = await returns.ForOrderAsync(order.Id, cancellationToken);
+
         return new OrderDetail(
             OrderView.From(order),
-            [.. (await returns.ForOrderAsync(order.Id, cancellationToken)).Select(ReturnView.From)]);
+            [.. opened.Select(ReturnView.From)],
+            // The same question the return command asks before it accepts
+            // anything, so the page cannot offer what the command would refuse.
+            [.. ReturnRequest.Returnable(order, opened).Select(pair => new ReturnableLineView(pair.Key, pair.Value))]);
     }
 }
 

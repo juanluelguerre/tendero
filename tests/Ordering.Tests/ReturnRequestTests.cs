@@ -53,7 +53,7 @@ public sealed class ReturnRequestTests
     {
         var order = Delivered(("SHIRT", 20m, 3), ("PANS", 44.95m, 1));
 
-        var request = ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)]);
+        var request = ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)], earlier: []);
 
         Assert.Equal(ReturnStatus.Requested, request.Status);
         Assert.Equal(("SHIRT", 2), (request.Lines.Single().Sku, request.Lines.Single().Quantity));
@@ -71,7 +71,7 @@ public sealed class ReturnRequestTests
         var order = OrderBuilder.Default().InStatus(status);
 
         Assert.Throws<InvalidOperationException>(
-            () => ReturnRequest.Open(Clock, order, [Line(order.Lines[0].Sku)]));
+            () => ReturnRequest.Open(Clock, order, [Line(order.Lines[0].Sku)], earlier: []));
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class ReturnRequestTests
         var order = Delivered(("SHIRT", 20m, 2));
 
         var exception = Assert.Throws<InvalidOperationException>(
-            () => ReturnRequest.Open(Clock, order, [Line("SHIRT", 3)]));
+            () => ReturnRequest.Open(Clock, order, [Line("SHIRT", 3)], earlier: []));
 
         Assert.Contains("3 asked to return, 2 bought", exception.Message);
     }
@@ -96,7 +96,108 @@ public sealed class ReturnRequestTests
         var order = Delivered(("SHIRT", 20m, 2));
 
         Assert.Throws<InvalidOperationException>(
-            () => ReturnRequest.Open(Clock, order, [Line("SHIRT"), Line("SHIRT"), Line("SHIRT")]));
+            () => ReturnRequest.Open(Clock, order, [Line("SHIRT"), Line("SHIRT"), Line("SHIRT")], earlier: []));
+    }
+
+    // ---------- Across returns ----------
+
+    /// <summary>
+    /// The defect the UI review found on 2026-09-11: one shirt bought, two
+    /// returns opened for it, both refunded and both restocked. Every check above
+    /// held — each request, on its own, asked for no more than was bought — and
+    /// that is exactly the gap: the quantity a shopper may still send back is a
+    /// fact about the ORDER and every return already opened against it, not
+    /// about one request.
+    /// </summary>
+    [Fact]
+    public void A_second_return_cannot_claim_what_an_open_one_already_claims()
+    {
+        var order = Delivered(("SHIRT", 20m, 1));
+        var first = ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: []);
+
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: [first]));
+
+        Assert.Contains("1 asked to return, 0 left", exception.Message);
+    }
+
+    /// <summary>
+    /// Two of three are coming back, so one is still the shopper's to return —
+    /// and two more are not.
+    /// </summary>
+    [Fact]
+    public void What_is_left_to_return_is_what_was_bought_minus_what_is_already_coming_back()
+    {
+        var order = Delivered(("SHIRT", 20m, 3), ("PANS", 44.95m, 1));
+        var first = ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)], earlier: []);
+
+        Assert.Equal(1, ReturnRequest.Returnable(order, [first])["SHIRT"]);
+        Assert.Equal(1, ReturnRequest.Returnable(order, [first])["PANS"]);
+
+        ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: [first]);
+        Assert.Throws<InvalidOperationException>(
+            () => ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)], earlier: [first]));
+    }
+
+    /// <summary>
+    /// A return the shop refused, or one the shopper withdrew, is not coming
+    /// back — so its quantity is the shopper's to ask for again. Everything
+    /// else, refunded included, still holds its units: a refunded shirt cannot
+    /// be refunded twice.
+    /// </summary>
+    [Theory]
+    [InlineData(ReturnStatus.Requested, 0)]
+    [InlineData(ReturnStatus.Approved, 0)]
+    [InlineData(ReturnStatus.Received, 0)]
+    [InlineData(ReturnStatus.Refunded, 0)]
+    [InlineData(ReturnStatus.Rejected, 1)]
+    [InlineData(ReturnStatus.Cancelled, 1)]
+    public void Only_a_return_that_is_not_coming_back_gives_its_quantity_back(
+        ReturnStatus status, int left)
+    {
+        var order = Delivered(("SHIRT", 20m, 1));
+        var first = ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: []);
+
+        MoveTo(first, status);
+
+        Assert.Equal(left, ReturnRequest.Returnable(order, [first])["SHIRT"]);
+    }
+
+    /// <summary>
+    /// Each return is numbered within its order, counting every one opened
+    /// before it — refused and withdrawn ones included, because the number is
+    /// what two requests racing for the same order collide on (a unique index
+    /// on order and number), and a number handed out twice would let both in.
+    /// It is also what tells two returns of one order apart on a screen, where
+    /// the first segment of a GUID v7 is identical for everything opened in the
+    /// same second.
+    /// </summary>
+    [Fact]
+    public void Each_return_of_an_order_is_numbered_in_the_order_it_was_opened()
+    {
+        var order = Delivered(("SHIRT", 20m, 3));
+
+        var first = ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: []);
+        first.Reject(Clock, "no");
+        var second = ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: [first]);
+
+        Assert.Equal(1, first.Number);
+        Assert.Equal(2, second.Number);
+    }
+
+    /// <summary>
+    /// A return from a DIFFERENT order passed in as "earlier" is a caller bug,
+    /// and a quiet one: counted, it would refuse a legitimate return; ignored, it
+    /// would hide that the caller is reading the wrong rows.
+    /// </summary>
+    [Fact]
+    public void Returns_of_another_order_are_refused_as_the_earlier_ones()
+    {
+        var order = Delivered(("SHIRT", 20m, 1));
+        var stranger = ReturnRequest.Open(Clock, Delivered(("SHIRT", 20m, 1)), [Line("SHIRT")], earlier: []);
+
+        Assert.Throws<ArgumentException>(
+            () => ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: [stranger]));
     }
 
     [Fact]
@@ -105,7 +206,7 @@ public sealed class ReturnRequestTests
         var order = Delivered(("SHIRT", 20m, 1));
 
         Assert.Throws<InvalidOperationException>(
-            () => ReturnRequest.Open(Clock, order, [Line("PANS")]));
+            () => ReturnRequest.Open(Clock, order, [Line("PANS")], earlier: []));
     }
 
     [Fact]
@@ -113,9 +214,9 @@ public sealed class ReturnRequestTests
     {
         var order = Delivered(("SHIRT", 20m, 1));
 
-        Assert.Throws<InvalidOperationException>(() => ReturnRequest.Open(Clock, order, []));
+        Assert.Throws<InvalidOperationException>(() => ReturnRequest.Open(Clock, order, [], earlier: []));
         Assert.Throws<InvalidOperationException>(
-            () => ReturnRequest.Open(Clock, order, [Line("SHIRT", 0)]));
+            () => ReturnRequest.Open(Clock, order, [Line("SHIRT", 0)], earlier: []));
     }
 
     // ---------- The window ----------
@@ -250,7 +351,7 @@ public sealed class ReturnRequestTests
     {
         var order = Delivered(("SHIRT", 20m, 3));
 
-        var request = ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)]);
+        var request = ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)], earlier: []);
 
         // Two of three at 20, with no order-level discount and no tax in the
         // builder's derived totals: 40 flat.
@@ -283,7 +384,7 @@ public sealed class ReturnRequestTests
                 Total: new Money(94.95m, "EUR")))
             .InStatus(OrderStatus.Delivered);
 
-        var request = ReturnRequest.Open(Clock, order, [Line("SHIRT")]);
+        var request = ReturnRequest.Open(Clock, order, [Line("SHIRT")], earlier: []);
 
         // One of two: 50 of a 100 subtotal is half. 50 − 5 of discount, and the
         // tax is inside the 45 already.
@@ -302,7 +403,7 @@ public sealed class ReturnRequestTests
         var order = Delivered(("SHIRT", 20m, 1));
 
         Assert.Equal(new Money(20m, "EUR"), ReturnRequest
-            .Open(Clock, order, [Line("SHIRT")])
+            .Open(Clock, order, [Line("SHIRT")], earlier: [])
             .RefundableFrom(order));
 
         Assert.Equal(new Money(4.95m, "EUR"), order.Totals.Shipping);
@@ -337,6 +438,33 @@ public sealed class ReturnRequestTests
     private static ReturnRequest Fresh()
     {
         var order = Delivered(("SHIRT", 20m, 3));
-        return ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)]);
+        return ReturnRequest.Open(Clock, order, [Line("SHIRT", 2)], earlier: []);
+    }
+
+    private static void MoveTo(ReturnRequest request, ReturnStatus status)
+    {
+        switch (status)
+        {
+            case ReturnStatus.Requested:
+                break;
+            case ReturnStatus.Approved:
+                request.Approve(Clock);
+                break;
+            case ReturnStatus.Received:
+                request.Approve(Clock);
+                request.Receive(Clock);
+                break;
+            case ReturnStatus.Refunded:
+                request.Approve(Clock);
+                request.Receive(Clock);
+                request.Refund(Clock, new Money(20m, "EUR"), "ref_1");
+                break;
+            case ReturnStatus.Rejected:
+                request.Reject(Clock, "no");
+                break;
+            case ReturnStatus.Cancelled:
+                request.Cancel(Clock);
+                break;
+        }
     }
 }

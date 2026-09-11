@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260904152100_ProductAvailableFrom";
+    public override string LastMigrationId => "20260911104416_ReturnNumberWithinOrder";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -134,14 +134,14 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("updated_at");
 
-                b.Property<string>("_attributes")
+                b.Property<string>("attributes")
                     .IsRequired()
                     .ValueGeneratedOnAdd()
                     .HasColumnType("jsonb")
                     .HasColumnName("attributes")
                     .HasDefaultValueSql("'[]'::jsonb");
 
-                b.Property<string>("_variantAxes")
+                b.Property<string>("variantAxes")
                     .IsRequired()
                     .ValueGeneratedOnAdd()
                     .HasColumnType("jsonb")
@@ -164,7 +164,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnName("price_currency");
                     });
 
-                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_images", "ElGuerre.Tendero.Catalog.Domain.Product._images#ProductImage", b1 =>
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "images", "ElGuerre.Tendero.Catalog.Domain.Product.images#ProductImage", b1 =>
                     {
                         b1.IsRequired();
 
@@ -225,7 +225,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("character varying(50)")
                     .HasColumnName("tax_class");
 
-                b.Property<string>("_axisValues")
+                b.Property<string>("axisValues")
                     .IsRequired()
                     .HasColumnType("jsonb")
                     .HasColumnName("axis_values");
@@ -292,7 +292,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("updated_at");
 
-                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Inventory.Domain.Reservation._lines#ReservationLine", b1 =>
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "lines", "ElGuerre.Tendero.Inventory.Domain.Reservation.lines#ReservationLine", b1 =>
                     {
                         b1.IsRequired();
 
@@ -401,7 +401,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("updated_at");
 
-                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Ordering.Domain.Cart._lines#CartLine", b1 =>
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "lines", "ElGuerre.Tendero.Ordering.Domain.Cart.lines#CartLine", b1 =>
                     {
                         b1.IsRequired();
 
@@ -669,7 +669,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnType("jsonb");
                     });
 
-                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_discounts", "ElGuerre.Tendero.Ordering.Domain.Order._discounts#OrderDiscount", b1 =>
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "discounts", "ElGuerre.Tendero.Ordering.Domain.Order.discounts#OrderDiscount", b1 =>
                     {
                         b1.IsRequired();
 
@@ -690,7 +690,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnType("jsonb");
                     });
 
-                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Ordering.Domain.Order._lines#OrderLine", b1 =>
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "lines", "ElGuerre.Tendero.Ordering.Domain.Order.lines#OrderLine", b1 =>
                     {
                         b1.IsRequired();
 
@@ -726,7 +726,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                             .HasColumnType("jsonb");
                     });
 
-                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_taxes", "ElGuerre.Tendero.Ordering.Domain.Order._taxes#OrderTax", b1 =>
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "taxes", "ElGuerre.Tendero.Ordering.Domain.Order.taxes#OrderTax", b1 =>
                     {
                         b1.IsRequired();
 
@@ -774,6 +774,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("uuid")
                     .HasColumnName("customer_id");
 
+                b.Property<int>("Number")
+                    .HasColumnType("integer")
+                    .HasColumnName("number");
+
                 b.Property<Guid>("OrderId")
                     .HasColumnType("uuid")
                     .HasColumnName("order_id");
@@ -802,7 +806,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("timestamp with time zone")
                     .HasColumnName("updated_at");
 
-                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "_lines", "ElGuerre.Tendero.Ordering.Domain.ReturnRequest._lines#ReturnLine", b1 =>
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "lines", "ElGuerre.Tendero.Ordering.Domain.ReturnRequest.lines#ReturnLine", b1 =>
                     {
                         b1.IsRequired();
 
@@ -831,11 +835,12 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id")
                     .HasName("pk_return_requests");
 
-                b.HasIndex("OrderId")
-                    .HasDatabaseName("ix_return_requests_order_id");
-
                 b.HasIndex("Status")
                     .HasDatabaseName("ix_return_requests_status");
+
+                b.HasIndex("OrderId", "Number")
+                    .IsUnique()
+                    .HasDatabaseName("ux_return_requests_order_id_number");
 
                 b.ToTable("return_requests", "ordering");
             });
