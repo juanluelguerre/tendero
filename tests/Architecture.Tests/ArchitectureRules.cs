@@ -153,6 +153,44 @@ public sealed class ArchitectureRules
         }
     }
 
+    /// <summary>
+    /// A command result that carries an <c>Outcome</c> can be a refusal, and the
+    /// audit log can only say so if the result tells it. Until 2026-09-11 none
+    /// did, and a declined card, a refused return and an illegal transition were
+    /// all recorded as Allowed — the audit screen opened on "the refusals" and
+    /// showed none. This keeps the next slice from being the one that forgets.
+    /// </summary>
+    [Fact]
+    public void A_command_result_that_can_be_a_refusal_tells_the_audit_log()
+    {
+        var results = Solution.Contexts
+            .SelectMany(assembly => assembly.GetTypes())
+            .SelectMany(type => type.GetInterfaces())
+            .Where(contract => contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(ICommand<>))
+            .Select(contract => contract.GetGenericArguments()[0])
+            .Distinct()
+            .Where(result => result.GetProperty("Outcome") is not null)
+            .ToArray();
+
+        // Not vacuous: checkout, returns and publishing all return outcomes.
+        Assert.NotEmpty(results);
+
+        var silent = results
+            .Where(result => !typeof(IAuditedResult).IsAssignableFrom(result))
+            .Select(result => $"  {result.FullName}")
+            .ToArray();
+
+        Assert.True(silent.Length == 0,
+            $"""
+             These command results carry an Outcome and do not say which ones are refusals:
+
+             {string.Join(Environment.NewLine, silent)}
+
+             Implement IAuditedResult with a switch over the outcome and no default
+             arm, so a new outcome cannot ship without that decision.
+             """);
+    }
+
     [Fact]
     public void Domain_types_never_reference_entity_framework()
     {

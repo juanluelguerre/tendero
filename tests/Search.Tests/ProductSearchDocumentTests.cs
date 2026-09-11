@@ -344,5 +344,7 @@ public sealed class ProductSearchDocumentTests
         }
 
         public Task RecreateAsync(CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task<bool> IsEmptyAsync(CancellationToken ct = default) => Task.FromResult(false);
     }
 }

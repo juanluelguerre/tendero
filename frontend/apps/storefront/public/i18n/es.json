@@ -15,7 +15,8 @@
   "brand": {
     "area": "Tienda",
     "name": "Tendero",
-    "tagline": "comercio para personas y agentes"
+    "tagline": "comercio para personas y agentes",
+    "title": "Tendero"
   },
   "cart": {
     "checkout": "Ir a pagar",
@@ -47,7 +48,7 @@
     "cardUnreachable": "Un proveedor caído",
     "city": "Ciudad",
     "country": "País",
-    "declined": "La tarjeta ha sido rechazada: {{reason}}",
+    "declined": "El banco ha rechazado la tarjeta. Prueba con otra.",
     "delivery": "¿Cómo quieres recibirlo?",
     "deliveryDays": "{{days}} días",
     "deliveryOneDay": "mañana",
@@ -79,6 +80,7 @@
     "lines": "Lo que has comprado",
     "loading": "Cargando el pedido...",
     "notFound": "Ese pedido no existe.",
+    "nothingLeftToReturn": "Todo lo de este pedido ya está de vuelta o en camino.",
     "placed": "Gracias. Tu pedido está hecho.",
     "reason.ChangedMind": "He cambiado de opinión",
     "reason.Damaged": "Ha llegado dañado",
@@ -90,7 +92,7 @@
     "returnFailed": "No se ha podido abrir la devolución: {{reason}}",
     "returnHint": "Tienes {{days}} días desde la entrega. Elige qué vuelve y por qué.",
     "returnNotDelivered": "Podrás devolver algo cuando esté entregado.",
-    "returnOpened": "Devolución abierta. Te avisaremos cuando la aprobemos.",
+    "returnOpened": "Devolución abierta. En esta página verás cómo va.",
     "returnQuantity": "Cuántos",
     "returnReason": "Motivo",
     "returnStatus.Approved": "Aprobada",
@@ -107,7 +109,7 @@
     "status.Cancelled": "Cancelado",
     "status.Confirmed": "Confirmado",
     "status.Delivered": "Entregado",
-    "status.PaymentAuthorized": "Pagado",
+    "status.PaymentAuthorized": "Pago autorizado",
     "status.PaymentFailed": "Pago fallido",
     "status.Pending": "Pendiente de pago",
     "status.Shipped": "Enviado",
@@ -115,7 +117,8 @@
       "out_of_stock": "No pudimos reservar las existencias de este pedido, así que lo cancelamos y no te hemos cobrado nada.",
       "shop_cancelled": "La tienda canceló este pedido.",
       "payment_declined": "El pago fue rechazado, así que el pedido no llegó a hacerse."
-    }
+    },
+    "title": "Tu pedido"
   },
   "product": {
     "addToCart": "Añadir al carrito",
@@ -138,7 +141,8 @@
     "sku": "Referencia {{sku}}",
     "soldOut": "Agotado",
     "specs": "Detalles",
-    "yes": "Sí"
+    "yes": "Sí",
+    "title": "Producto"
   },
   "search": {
     "empty": "Nada para «{{query}}». Prueba con menos palabras.",
@@ -182,6 +186,7 @@
     "empty": "Aquí no hay nada todavía.",
     "count": "{{count}} productos",
     "more": "Ver más productos",
-    "loadingMore": "Cargando…"
+    "loadingMore": "Cargando…",
+    "title": "Sección"
   }
 }

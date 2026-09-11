@@ -55,6 +55,10 @@ public static class OrderingServiceCollectionExtensions
         // it delegates to resolves scoped handlers.
         services.AddScoped<ICartPricer, PricingCartPricer>();
 
+        // Who may reach an order through its id. Scoped, because the principal
+        // it asks about is the request's.
+        services.AddScoped<OrderAccess>();
+
         // The fake is resolvable unkeyed too, because the webhook demo has to be
         // able to SIGN a payload and only the concrete type can do that. A real
         // adapter would not need it.

@@ -40,7 +40,18 @@ public enum RequestReturnOutcome
 }
 
 public sealed record RequestReturnResult(
-    RequestReturnOutcome Outcome, ReturnRequest? Return, string? Detail);
+    RequestReturnOutcome Outcome, ReturnRequest? Return, string? Detail) : IAuditedResult
+{
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        RequestReturnOutcome.Opened => AuditOutcome.Allowed,
+        RequestReturnOutcome.UnknownOrder or RequestReturnOutcome.WindowClosed or
+            RequestReturnOutcome.Refused => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome == RequestReturnOutcome.Opened ? null : Detail ?? Outcome.ToString();
+}
 
 public sealed class RequestReturnValidator : AbstractValidator<RequestReturnCommand>
 {
@@ -66,7 +77,8 @@ public sealed class RequestReturnHandler(
     IOrderRepository orders,
     IReturnRequestRepository returns,
     IUnitOfWork unitOfWork,
-    TimeProvider clock)
+    TimeProvider clock,
+    OrderAccess access)
     : ICommandHandler<RequestReturnCommand, RequestReturnResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -79,7 +91,9 @@ public sealed class RequestReturnHandler(
 
         var order = await orders.FindByIdAsync(command.OrderId, cancellationToken);
 
-        if (order is null)
+        // An account holder's order is theirs to return, and to a stranger it
+        // does not exist — the same answer the order page gives (OrderAccess).
+        if (order is null || !await access.CanReadAsync(order, cancellationToken))
             return new RequestReturnResult(RequestReturnOutcome.UnknownOrder, null, null);
 
         if (!ReturnRequest.WindowIsOpen(order, clock.GetUtcNow()))
@@ -88,6 +102,10 @@ public sealed class RequestReturnHandler(
                 order.Status == OrderStatus.Delivered
                     ? $"The {ReturnRequest.Window.TotalDays:F0}-day return window has closed."
                     : $"This order is {order.Status} and has not been delivered yet.");
+
+        // Every return already opened against this order: what a shopper may
+        // still send back depends on them, and the aggregate refuses to guess.
+        var earlier = await returns.ForOrderAsync(order.Id, cancellationToken);
 
         try
         {
@@ -103,7 +121,7 @@ public sealed class RequestReturnHandler(
                     line.Quantity,
                     Enum.Parse<ReturnReason>(line.Reason, ignoreCase: true),
                     line.Comment))
-            ]);
+            ], earlier);
 
             returns.Add(request);
             await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -118,6 +136,16 @@ public sealed class RequestReturnHandler(
             // UCP — cannot forget them. Turning the refusal into an answer is
             // this handler's job.
             return new RequestReturnResult(RequestReturnOutcome.Refused, null, exception.Message);
+        }
+        catch (ConcurrentWriteException)
+        {
+            // Another return of this order was opened between reading the earlier
+            // ones and saving this one, and the unique (order, number) index let
+            // that one in (ReturnRequest.Number). What is left to return has
+            // changed, so the only honest answer is to look again.
+            return new RequestReturnResult(
+                RequestReturnOutcome.Refused, null,
+                "Another return for this order was opened at the same moment. Reload the order and try again.");
         }
     }
 }
@@ -142,7 +170,21 @@ public sealed record DecideReturnCommand(ReturnRequestId ReturnId, ReturnDecisio
 public enum DecideReturnOutcome { Decided, UnknownReturn, IllegalTransition, NothingToRefund, RefundFailed }
 
 public sealed record DecideReturnResult(
-    DecideReturnOutcome Outcome, ReturnRequest? Return, string? Detail);
+    DecideReturnOutcome Outcome, ReturnRequest? Return, string? Detail) : IAuditedResult
+{
+    /// <summary>A refund the provider refused is a fault; everything else that
+    /// is not a decision is a rule saying no.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        DecideReturnOutcome.Decided => AuditOutcome.Allowed,
+        DecideReturnOutcome.RefundFailed => AuditOutcome.Failed,
+        DecideReturnOutcome.UnknownReturn or DecideReturnOutcome.IllegalTransition or
+            DecideReturnOutcome.NothingToRefund => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome == DecideReturnOutcome.Decided ? null : Detail ?? Outcome.ToString();
+}
 
 public sealed class DecideReturnHandler(
     IReturnRequestRepository returns,
@@ -342,10 +384,10 @@ public sealed class ReturnEndpoints : ICarterModule
                     _ => TypedResults.Ok(ReturnView.From(result.Return!))
                 };
             })
-            // A shopper opens their own return, and a guest has no account to
-            // check it against — the order id is the credential, and it is a
-            // GUID v7 nobody can enumerate. Said in code rather than
-            // omitted, which is what the endpoint-policy test enforces.
+            // Anonymous at the door because a guest has no account to show: for
+            // a guest's order the id is the credential, a GUID v7 nobody can
+            // enumerate. An account holder's order is checked inside, by
+            // OrderAccess — which is where "whose order is this" can be asked.
             .AllowAnonymous()
             .WithTags("Returns")
             .WithName("RequestReturn");

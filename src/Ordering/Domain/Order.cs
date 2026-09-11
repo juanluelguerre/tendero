@@ -261,6 +261,18 @@ public sealed class Order : AggregateRoot
             !string.Equals(shipping.Amount.Currency, currency, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException($"The order is in {currency} and its totals are not.");
 
+        // Prices include VAT (ADR 0028): a total is the subtotal less the
+        // discounts plus the shipping, and the tax is a part of it. This is not
+        // a recomputation — the order still freezes what Pricing decided — it is
+        // a refusal to freeze totals that contradict themselves. The ones this
+        // check would have refused are the ones the shop charged until
+        // 2026-09-11, with the tax added on top of prices that already had it.
+        var expected = totals.Subtotal - totals.DiscountTotal + totals.Shipping;
+        if (totals.Total.Amount != expected.Amount)
+            throw new InvalidOperationException(
+                $"The order's totals do not add up: {totals.Subtotal} − {totals.DiscountTotal} + " +
+                $"{totals.Shipping} is {expected}, not {totals.Total}.");
+
         var now = clock.GetUtcNow();
         var order = new Order
         {

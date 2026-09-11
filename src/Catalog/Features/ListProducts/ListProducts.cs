@@ -103,7 +103,13 @@ public sealed class ListProductsEndpoint : ICarterModule
 
                 return TypedResults.Ok(result);
             })
-            .AllowAnonymous()   // the catalogue is public, and this says so in code
+            // The shopkeeper's, because it reads the TABLE and drafts with it: it
+            // is the review queue's reader. It was anonymous under "the catalogue
+            // is public" until 2026-09-11, when a stranger could list every
+            // unreviewed product with ?status=draft. The public catalogue is what
+            // is Active, and search and the product page already serve exactly
+            // that and nothing else.
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Catalog")
             .WithName("ListProducts");
     }

@@ -36,13 +36,21 @@ async function firstProduct(page: Page): Promise<{ href: string; name: string }>
   await page.getByRole('searchbox').fill('zapatillas');
   await page.getByRole('button', { name: /buscar|search/i }).click();
 
-  const link = page.locator('a.card__link').first();
+  // **The RESULTS' first card, not the page's.** The home page grew cards of its
+  // own (new arrivals, 2026-09-04) with the same link class, and this used to
+  // take `a.card__link` from whatever was rendered: the href of a home card and
+  // the name of a result card, read in two calls on either side of the
+  // re-render — a product page for one product checked against another's name.
+  // It waits for the results' own status line, and reads both values at once.
+  await expect(page.getByRole('status').filter({ hasText: /zapatillas/i })).toBeVisible();
+
+  const link = page.locator('.results-meta + .grid a.card__link').first();
   await expect(link).toBeVisible();
 
-  return {
-    href: (await link.getAttribute('href')) ?? '',
-    name: (await link.innerText()).trim(),
-  };
+  return link.evaluate((anchor) => ({
+    href: anchor.getAttribute('href') ?? '',
+    name: (anchor.textContent ?? '').trim(),
+  }));
 }
 
 test.describe('the storefront', () => {

@@ -1,14 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import type { OrderLineView, OrderView, ReturnView } from '@tendero/shared-api';
+import type { OrderView, ReturnableLineView, ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import { OrderService } from '../../data-access/order.service';
 import { ReturnsPolicy } from '../../data-access/returns-policy.service';
 import { ShopLinks } from '../../shop-links';
+import { type ReturnableLine, returnableLines } from './returnable';
 
 /**
  * The order, and the way back.
@@ -46,6 +47,15 @@ export class OrderPage {
 
   protected readonly order = signal<OrderView | null>(null);
   protected readonly returns = signal<ReturnView[]>([]);
+
+  /** How many of each SKU the server says may still come back. */
+  private readonly returnable = signal<ReturnableLineView[]>([]);
+
+  /** The lines the form offers: only what is left, never the whole order. */
+  protected readonly returnableLines = computed(() => {
+    const order = this.order();
+    return order ? returnableLines(order, this.returnable()) : [];
+  });
   protected readonly loading = signal(true);
   protected readonly sending = signal(false);
   protected readonly returnMessage = signal<string | null>(null);
@@ -100,7 +110,7 @@ export class OrderPage {
     return this.picked().get(sku)?.reason ?? RETURN_REASONS[0];
   }
 
-  protected toggle(line: OrderLineView): void {
+  protected toggle(line: ReturnableLine): void {
     this.picked.update((current) => {
       const next = new Map(current);
 
@@ -112,11 +122,13 @@ export class OrderPage {
   }
 
   protected setQuantity(sku: string, quantity: number): void {
+    const left = this.returnableLines().find((line) => line.sku === sku)?.left ?? 1;
+
     this.picked.update((current) => {
       const next = new Map(current);
       const line = next.get(sku);
 
-      if (line) next.set(sku, { ...line, quantity: Math.max(1, Number(quantity) || 1) });
+      if (line) next.set(sku, { ...line, quantity: Math.min(left, Math.max(1, Number(quantity) || 1)) });
 
       return next;
     });
@@ -160,6 +172,9 @@ export class OrderPage {
 
       this.returns.update((current) => [opened, ...current]);
       this.picked.set(new Map());
+
+      // What is left to return changed, and only the server knows by how much.
+      void this.load();
       this.returnOpened.set(true);
       this.returnMessage.set(this.transloco.translate('order.returnOpened'));
     } catch (error) {
@@ -191,6 +206,7 @@ export class OrderPage {
 
       this.order.set(detail.order);
       this.returns.set(detail.returns);
+      this.returnable.set(detail.returnable);
     } catch {
       // A 404 is the honest answer to a URL somebody typed wrong, and the
       // template says so. Only the freshly-placed case has an order to keep.

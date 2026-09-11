@@ -144,8 +144,13 @@ That is the whole brief.
 
 Three rules keep it honest:
 
-1. **Assert the browser, not the arithmetic.** That a refund is 72.55 € is
-   `CheckoutLoopTests`'s job. The spec asserts that an amount appears.
+1. **Assert the browser, not the arithmetic.** What a refund comes to is
+   `ReturnRequestTests`'s job, and that a total is what its lines show plus the
+   shipping is `QuoteCartHandlerTests`'. The spec asserts that an amount
+   appears. The rule is right and it has a cost worth remembering: on
+   2026-09-11 a person with a pencil noticed that a cart's lines added up to
+   78,33 € and its total said 94,78 € (ADR 0028), because the invariant a
+   browser spec was told not to check had been checked by nobody at all.
 2. **Web-first assertions, never a sleep.** Half of this system is asynchronous
    by design — an order ships and the capture arrives through the outbox — so
    `expect(...).toPass()` and auto-retrying locators are the only correct tool.

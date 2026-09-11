@@ -40,8 +40,15 @@ public sealed class TenderoApiFactory(string? externalAuthority = null)
         builder.ConfigureHostConfiguration(configuration => configuration.AddInMemoryCollection(
             new Dictionary<string, string?>
             {
-                ["ConnectionStrings:tendero-db"] = "Host=localhost;Database=api-tests",
-                ["ConnectionStrings:elasticsearch"] = "http://localhost:9200",
+                // Port 1, where nothing listens, and not the defaults. Nothing
+                // here connects on construction, so these only have to parse —
+                // and the defaults were somebody's real services: on the
+                // author's machine 5432 and 9200 are the day job's Postgres and
+                // Elasticsearch, and a request that did reach a handler (the
+                // anonymous draft listing, 2026-09-11) tried to log into one of
+                // them. Refused on a dead port is the honest failure.
+                ["ConnectionStrings:tendero-db"] = "Host=127.0.0.1;Port=1;Database=api-tests;Timeout=1",
+                ["ConnectionStrings:elasticsearch"] = "http://127.0.0.1:1",
                 ["Authentication:Authority"] = externalAuthority ?? TestAuthority,
                 ["Authentication:AllowHttpMetadata"] = "true"
             }));

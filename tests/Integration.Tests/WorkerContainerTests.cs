@@ -74,11 +74,13 @@ public sealed class WorkerContainerTests
         var builder = Host.CreateApplicationBuilder();
 
         // The two strings the worker demands at startup. Neither is used: neither
-        // the DbContext nor the Elastic client connects on construction.
+        // the DbContext nor the Elastic client connects on construction. Port 1,
+        // where nothing listens — the defaults are somebody's real services
+        // (see TenderoApiFactory).
         builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:tendero-db"] = "Host=localhost;Database=worker-container-test",
-            ["ConnectionStrings:elasticsearch"] = "http://localhost:9200"
+            ["ConnectionStrings:tendero-db"] = "Host=127.0.0.1;Port=1;Database=worker-container-test;Timeout=1",
+            ["ConnectionStrings:elasticsearch"] = "http://127.0.0.1:1"
         });
 
         builder.AddTenderoWorker();

@@ -66,8 +66,14 @@
                  [class.notice--good]="returnOpened()" role="status">{{ message }}</p>
             }
 
+            <!-- Only what is left to return, as the server counts it
+                 (`ReturnRequest.Returnable`). Listing every line of the order
+                 is how one shirt was returned twice through this page. -->
+            @if (returnableLines().length === 0) {
+              <p class="panel__hint">{{ t('order.nothingLeftToReturn') }}</p>
+            } @else {
             <ul class="returnables">
-              @for (line of order.lines; track line.sku) {
+              @for (line of returnableLines(); track line.sku) {
                 <li class="returnable">
                   <label class="returnable__pick">
                     <input
@@ -86,7 +92,7 @@
                           class="field field--tiny numeric"
                           type="number"
                           min="1"
-                          [max]="line.quantity"
+                          [max]="line.left"
                           [ngModel]="quantityOf(line.sku)"
                           (ngModelChange)="setQuantity(line.sku, $event)"
                           [name]="'quantity-' + line.sku"
@@ -120,6 +126,7 @@
             >
               {{ t('order.returnSubmit') }}
             </button>
+            }
           </section>
         } @else if (order.status !== 'Cancelled') {
           <p class="muted">{{ t('order.returnNotDelivered') }}</p>
@@ -131,6 +138,7 @@
             <ul class="returns">
               @for (request of returns(); track request.returnId) {
                 <li class="return">
+                  <span class="return__number numeric">#{{ request.number }}</span>
                   <span class="chip chip--{{ request.status }}">
                     {{ t('order.returnStatus.' + request.status) }}
                   </span>

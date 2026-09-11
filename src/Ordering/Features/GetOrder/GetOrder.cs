@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Ordering.Contracts;
+using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
@@ -19,9 +20,13 @@ namespace ElGuerre.Tendero.Ordering.Features.GetOrder;
 /// </summary>
 public sealed record GetOrderQuery(OrderId OrderId) : IQuery<OrderDetail?>;
 
-public sealed record OrderDetail(OrderView Order, IReadOnlyList<ReturnView> Returns);
+public sealed record OrderDetail(
+    OrderView Order,
+    IReadOnlyList<ReturnView> Returns,
+    IReadOnlyList<ReturnableLineView> Returnable);
 
-public sealed class GetOrderHandler(IOrderRepository orders, IReturnRequestRepository returns)
+public sealed class GetOrderHandler(
+    IOrderRepository orders, IReturnRequestRepository returns, OrderAccess access)
     : IQueryHandler<GetOrderQuery, OrderDetail?>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -33,12 +38,17 @@ public sealed class GetOrderHandler(IOrderRepository orders, IReturnRequestRepos
 
         var order = await orders.FindByIdAsync(query.OrderId, cancellationToken);
 
-        if (order is null)
+        if (order is null || !await access.CanReadAsync(order, cancellationToken))
             return null;
+
+        var opened = await returns.ForOrderAsync(order.Id, cancellationToken);
 
         return new OrderDetail(
             OrderView.From(order),
-            [.. (await returns.ForOrderAsync(order.Id, cancellationToken)).Select(ReturnView.From)]);
+            [.. opened.Select(ReturnView.From)],
+            // The same question the return command asks before it accepts
+            // anything, so the page cannot offer what the command would refuse.
+            [.. ReturnRequest.Returnable(order, opened).Select(pair => new ReturnableLineView(pair.Key, pair.Value))]);
     }
 }
 
@@ -62,15 +72,17 @@ public sealed class GetOrderEndpoint : ICarterModule
                     ? TypedResults.NotFound($"There is no order {orderId}.")
                     : TypedResults.Ok(detail);
             })
-            // **The id is the credential**, and that is a decision rather than an
-            // omission. A guest has to be able to reload their confirmation page
-            // and come back a week later to send something back, and until phase
-            // 7 there is no account to scope it to. `OrderId` is a GUID v7:
-            // sortable, which means the timestamp half is guessable, and 74 bits
-            // of it are not — a number nobody enumerates.
+            // Anonymous at the door, and not for everybody inside it. For a
+            // GUEST's order **the id is the credential**: a guest has to reload
+            // their confirmation page and come back a week later to send
+            // something back, with no account to scope it to. `OrderId` is a
+            // GUID v7 — the timestamp half is guessable, the 74 random bits are
+            // not.
             //
-            // It is also the weakest thing on this endpoint, and it stops being
-            // true the moment `Accounts` exists. The line to change is this one.
+            // An account holder's order is theirs and the shopkeeper's, and to
+            // anybody else it is a 404 (OrderAccess, in the handler). This
+            // comment used to say the line would change "the moment Accounts
+            // exists"; it changed on 2026-09-11, a week after Accounts did.
             .AllowAnonymous()
             .WithTags("Orders")
             .WithName("GetOrder");

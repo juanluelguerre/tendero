@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml"><img src="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
-  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.813%20es%20%C2%B7%200.766%20en-D85A30" alt="Search quality"></a>
+  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.927%20es%20%C2%B7%200.935%20en-D85A30" alt="Search quality"></a>
   <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-11%20(preview)-512BD4?logo=dotnet" alt=".NET 11"></a>
   <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" alt="Angular 22"></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript 6.0"></a>
@@ -41,7 +41,7 @@ in it:
 > euro moves.
 
 **625 backend tests, 39 frontend tests and 20 browser specs**, with search
-relevance at **NDCG@10 0.813 es / 0.766 en** over the hundred-product corpus
+relevance at **NDCG@10 0.927 es / 0.935 en** over the hundred-product corpus
 (re-derived when the catalogue grew from six — the old 0.943 / 0.937 are not
 comparable, and [docs/search-evaluation.md](docs/search-evaluation.md) says
 why) and a CI gate that fails a regression.

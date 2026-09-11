@@ -124,6 +124,22 @@ public sealed class ReturnRequest : AggregateRoot
 
     public ReturnRequestId Id { get; private set; }
     public OrderId OrderId { get; private set; }
+
+    /// <summary>
+    /// Which return of its order this is — 1, 2, 3 — counting every one opened
+    /// before it, refused and withdrawn ones included.
+    ///
+    /// **It is the concurrency guard.** <see cref="Returnable"/> reads the
+    /// earlier returns and <see cref="Open"/> decides against them, and two
+    /// requests arriving at the same moment both read the same past. Both then
+    /// claim the same number, and a unique index on (order, number) lets exactly
+    /// one of them in — the other is refused and asked to look again. Found as
+    /// the one gap left after the double refund of 2026-09-11 was closed.
+    ///
+    /// It is also how a person tells two returns of one order apart: a GUID v7's
+    /// first segment is the same for everything opened in the same second.
+    /// </summary>
+    public int Number { get; private set; }
     public CustomerId CustomerId { get; private set; }
     public ReturnStatus Status { get; private set; }
 
@@ -139,7 +155,52 @@ public sealed class ReturnRequest : AggregateRoot
 
     public IReadOnlyList<ReturnLine> Lines => this.lines;
 
+    /// <summary>Whether its lines are still spoken for: everything but a return
+    /// the shop refused or the shopper withdrew.</summary>
+    private bool HoldsItsLines => Status is not (ReturnStatus.Rejected or ReturnStatus.Cancelled);
+
     private ReturnRequest() { } // EF Core
+
+    /// <summary>
+    /// How many of each SKU the shopper may still send back: what was bought,
+    /// minus what every earlier return of this order still holds.
+    ///
+    /// **The invariant spans aggregates**, which is why it is a static question
+    /// taking both rather than a method on one of them. The order knows what was
+    /// bought; only the earlier returns know what is already coming back. The
+    /// first version checked each request alone — no request could ask for more
+    /// than was bought, and two requests for the one shirt were both refunded and
+    /// both restocked (found by the UI review of 2026-09-11).
+    ///
+    /// A return the shop rejected or the shopper cancelled is not coming back, so
+    /// it gives its quantity back. A refunded one keeps it: that is the case the
+    /// rule exists for.
+    ///
+    /// It is public because the order page asks it too. The screen that offers a
+    /// line for return and the rule that accepts it are one answer, not two
+    /// copies of a filter.
+    /// </summary>
+    public static IReadOnlyDictionary<string, int> Returnable(
+        Order order, IReadOnlyList<ReturnRequest> earlier)
+    {
+        ArgumentNullException.ThrowIfNull(order);
+        ArgumentNullException.ThrowIfNull(earlier);
+
+        if (earlier.FirstOrDefault(request => request.OrderId != order.Id) is { } stranger)
+            throw new ArgumentException(
+                $"Return {stranger.Id} belongs to order {stranger.OrderId}, not {order.Id}.", nameof(earlier));
+
+        var left = order.SkuQuantities().ToDictionary(
+            pair => pair.Sku, pair => pair.Quantity, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var line in earlier.Where(request => request.HoldsItsLines).SelectMany(request => request.lines))
+        {
+            if (left.TryGetValue(line.Sku, out var quantity))
+                left[line.Sku] = quantity - line.Quantity;
+        }
+
+        return left;
+    }
 
     /// <summary>
     /// Opens a return against a delivered order.
@@ -148,9 +209,15 @@ public sealed class ReturnRequest : AggregateRoot
     /// delivered order can be returned, only within the window, and only for
     /// lines and quantities it actually contained. Passing an id and trusting
     /// the caller would let a shopper return three of a shirt they bought one of.
+    ///
+    /// And it takes every return already opened against that order, required
+    /// rather than optional, for the same reason one step further out: the
+    /// quantities on one request prove nothing about the one before it (see
+    /// <see cref="Returnable"/>). A parameter a caller cannot omit is a check an
+    /// agent over UCP cannot forget.
     /// </summary>
     public static ReturnRequest Open(
-        TimeProvider clock, Order order, IReadOnlyList<ReturnLine> lines)
+        TimeProvider clock, Order order, IReadOnlyList<ReturnLine> lines, IReadOnlyList<ReturnRequest> earlier)
     {
         ArgumentNullException.ThrowIfNull(order);
 
@@ -167,6 +234,8 @@ public sealed class ReturnRequest : AggregateRoot
         var bought = order.SkuQuantities().ToDictionary(
             pair => pair.Sku, pair => pair.Quantity, StringComparer.OrdinalIgnoreCase);
 
+        var left = Returnable(order, earlier);
+
         foreach (var group in lines.GroupBy(line => line.Sku, StringComparer.OrdinalIgnoreCase))
         {
             if (!bought.TryGetValue(group.Key, out var ordered))
@@ -177,6 +246,10 @@ public sealed class ReturnRequest : AggregateRoot
             if (asked > ordered)
                 throw new InvalidOperationException(
                     $"{group.Key}: {asked} asked to return, {ordered} bought.");
+
+            if (asked > left[group.Key])
+                throw new InvalidOperationException(
+                    $"{group.Key}: {asked} asked to return, {left[group.Key]} left — the rest is already coming back.");
         }
 
         var now = clock.GetUtcNow();
@@ -185,6 +258,7 @@ public sealed class ReturnRequest : AggregateRoot
         {
             Id = ReturnRequestId.New(),
             OrderId = order.Id,
+            Number = earlier.Count + 1,
             CustomerId = order.CustomerId,
             Status = ReturnStatus.Requested,
             CreatedAt = now,
@@ -254,6 +328,10 @@ public sealed class ReturnRequest : AggregateRoot
     /// order's own discount total is apportioned across the returned lines by
     /// their share of the subtotal, which is the same largest-remainder problem
     /// `Money.Allocate` already solves for order-level discounts.
+    ///
+    /// No tax is added: prices include VAT (ADR 0028), so the tax went back
+    /// with the price. Adding a share of the order's tax, as this did until
+    /// 2026-09-11, refunded VAT twice — and VAT on the shipping as well.
     /// </summary>
     public Money RefundableFrom(Order order)
     {
@@ -271,15 +349,14 @@ public sealed class ReturnRequest : AggregateRoot
         if (returned.IsZero || order.Totals.Subtotal.IsZero)
             return returned.Round(Rounding.AwayFromZero);
 
-        // The share of the order-level discount and of the tax that these lines
-        // carried. Proportional to the subtotal, because that is what the
-        // promotion engine allocated against in the first place.
+        // The share of the order-level discount these lines carried.
+        // Proportional to the subtotal, because that is what the promotion
+        // engine allocated against in the first place.
         var share = returned.Amount / order.Totals.Subtotal.Amount;
 
         var discount = order.Totals.DiscountTotal * share;
-        var tax = order.Totals.TaxTotal * share;
 
-        return (returned - discount + tax).Round(Rounding.AwayFromZero);
+        return (returned - discount).Round(Rounding.AwayFromZero);
     }
 
     private void TransitionTo(

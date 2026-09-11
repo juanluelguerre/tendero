@@ -2,8 +2,13 @@
   @let item = hit();
   @let source = imageUrl();
 
-  @if (source) {
-    <a [routerLink]="links.product(item.slug, item.code)" tabindex="-1" aria-hidden="true">
+  <!-- The picture goes to the product too — and so does the placeholder,
+       which used to sit outside the link: on 82 of 100 cards the biggest thing
+       on them went nowhere (UI review, 2026-09-11). Hidden from the keyboard
+       and from screen readers, because the name below is the one link they
+       need. -->
+  <a class="card__media" [routerLink]="links.product(item.slug, item.code)" tabindex="-1" aria-hidden="true">
+    @if (source) {
       <img
         class="card__image"
         [src]="source"
@@ -11,15 +16,15 @@
         loading="lazy"
         (error)="broken.set(true)"
       />
-    </a>
-  } @else {
-    <!-- A default state, not a gap: a card with no picture has to look
-         deliberate. -->
-    <storefront-product-image-placeholder
-      class="card__image card__image--fallback"
-      [alt]="t('product.noImage')"
-      [label]="t('product.noImage')" />
-  }
+    } @else {
+      <!-- A default state, not a gap: a card with no picture has to look
+           deliberate. -->
+      <storefront-product-image-placeholder
+        class="card__image card__image--fallback"
+        [alt]="t('product.noImage')"
+        [label]="t('product.noImage')" />
+    }
+  </a>
 
   <div class="card__body">
     @if (item.brand) {

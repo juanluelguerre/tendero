@@ -189,10 +189,21 @@ public sealed class ImportProductsHandler(
     ///
     /// An image that cannot be read aborts nothing: the product goes in without
     /// it and the next import retries.
+    ///
+    /// **The source's gallery replaces the product's, in the source's order**,
+    /// so its first image is the cover. It used to be appended, and the cover is
+    /// the lowest sort order: when the seed swapped six placeholders for
+    /// illustrations, every re-import put the illustration behind the
+    /// placeholder and the storefront showed the placeholder for good (UI
+    /// review, 2026-09-11). Replacing happens only when EVERY image the source
+    /// lists arrived; a partial read only adds, because a CDN that times out
+    /// once must not strip the photos off a live product.
     /// </summary>
     private async Task IngestImagesAsync(
         Product product, ExternalProduct external, CancellationToken cancellationToken)
     {
+        var ingested = new List<(ImageId Id, LocalizedText? Alt)>(external.Images.Count);
+
         foreach (var image in external.Images)
         {
             var content = await imageReader.OpenAsync(image, cancellationToken);
@@ -200,9 +211,17 @@ public sealed class ImportProductsHandler(
                 continue;
 
             await using var stream = content.Content;
-            var id = await imageStore.SaveAsync(stream, content.ContentType, cancellationToken);
-            product.AddImage(clock, id, image.LocalizedAlt);
+            ingested.Add((await imageStore.SaveAsync(stream, content.ContentType, cancellationToken), image.LocalizedAlt));
         }
+
+        if (ingested.Count == external.Images.Count)
+        {
+            product.ReplaceImages(clock, ingested);
+            return;
+        }
+
+        foreach (var (id, alt) in ingested)
+            product.AddImage(clock, id, alt);
     }
 
     /// <summary>

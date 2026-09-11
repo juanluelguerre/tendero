@@ -5,6 +5,7 @@ import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime } from '@tendero/shared-util';
 import { CatalogService } from '../../data-access/catalog.service';
+import { actorOf } from './audit-actor';
 
 /** What the filter can be set to. `null` is everything. */
 type Filter = 'denied' | 'failed' | 'allowed' | null;
@@ -54,6 +55,9 @@ export class AuditPage {
   );
 
   protected readonly filters: readonly Filter[] = ['denied', 'failed', 'allowed', null];
+
+  /** Who acted — or a guest, which is not the system. */
+  protected readonly actorOf = actorOf;
 
   constructor() {
     this.load();

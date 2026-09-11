@@ -29,6 +29,12 @@ public sealed class FlatVatOptions
 /// <summary>
 /// VAT by tax class, with no destination: one country.
 ///
+/// **It extracts the VAT a price already contains; it never adds any** (ADR
+/// 0028). Catalogue prices are what a shopper in Spain is shown and pays, and
+/// by law those include VAT. Until 2026-09-11 this calculator treated them as
+/// net and the quote added 21 % on top, so a pair of shoes shown at 59,96 was
+/// charged 72,55 under a total that said "VAT included".
+///
 /// The absence of destination rules is a declared simplification and not an
 /// oversight — the destination already travels in <see cref="TaxRequest"/>, so
 /// the adapter that uses it is a new class and a line of registration, and not
@@ -54,10 +60,15 @@ internal sealed class FlatVatTaxCalculator(IOptions<FlatVatOptions> options) : I
             .Select(group =>
             {
                 var rate = settings.Rates.GetValueOrDefault(group.Key, 0m);
-                var basis = group.Aggregate(
-                    Money.Zero(request.Currency), (total, amount) => total + amount.Net);
+                var paid = group.Aggregate(
+                    Money.Zero(request.Currency), (total, amount) => total + amount.Inclusive);
 
-                return new TaxLine(group.Key, rate, basis, basis.Percent(rate).Round(Rounding.AwayFromZero));
+                // The base is rounded once and the tax is whatever is left, so
+                // base plus tax is what was paid to the cent. Rounding both would
+                // be two roundings of one amount, and a receipt a cent adrift.
+                var basis = (paid / (1m + rate / 100m)).Round(Rounding.AwayFromZero);
+
+                return new TaxLine(group.Key, rate, basis, paid - basis);
             })
             .ToArray();
 

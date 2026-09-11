@@ -44,6 +44,26 @@
           "externalId": "B10SHI0207",
           "relevance": 1,
           "why": "running tights: same sport, different category"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 1,
+          "why": "running vest pack: same sport, different category"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 1,
+          "why": "running vest: same sport, different category"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 1,
+          "why": "a shoe, but for walking"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 1,
+          "why": "running shorts: same sport, different category"
         }
       ]
     },
@@ -69,6 +89,46 @@
           "externalId": "B10SHO0102",
           "relevance": 1,
           "why": "running, but a men's shoe"
+        },
+        {
+          "externalId": "B15SHO1102",
+          "relevance": 0,
+          "why": "leather boots"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 0,
+          "why": "running tights: not footwear"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 0,
+          "why": "running vest: not footwear"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 1,
+          "why": "a women's shoe, but a canvas everyday one"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 1,
+          "why": "a women's shoe, but for walking"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 0,
+          "why": "running shorts: not footwear"
+        },
+        {
+          "externalId": "B10SHO0108",
+          "relevance": 0,
+          "why": "trekking sandals"
+        },
+        {
+          "externalId": "B15SHO1104",
+          "relevance": 0,
+          "why": "espadrilles"
         }
       ]
     },
@@ -99,6 +159,31 @@
           "externalId": "B10SHO0107",
           "relevance": 1,
           "why": "gym trainer"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 0,
+          "why": "house slippers"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 1,
+          "why": "a sports shoe, for another sport"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 0,
+          "why": "canvas everyday trainer, not for running"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 1,
+          "why": "a shoe, but for walking"
+        },
+        {
+          "externalId": "B10SHO0108",
+          "relevance": 0,
+          "why": "trekking sandals"
         }
       ]
     },
@@ -119,6 +204,41 @@
           "externalId": "B10SHI0201",
           "relevance": 1,
           "why": "navy, but a tee rather than a shoe"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 1,
+          "why": "navy, but a jacket"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 1,
+          "why": "white, not navy: retrieved on 'shoes' alone"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 1,
+          "why": "white, not navy: retrieved on 'shoes' alone"
+        },
+        {
+          "externalId": "B10SHO0101",
+          "relevance": 1,
+          "why": "green, not navy: retrieved on 'shoes' alone"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 1,
+          "why": "grey, not navy: retrieved on 'shoes' alone"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 1,
+          "why": "grey, not navy: retrieved on 'shoes' alone"
+        },
+        {
+          "externalId": "B10SHI0206",
+          "relevance": 1,
+          "why": "navy, but a sweatshirt"
         }
       ]
     },
@@ -164,6 +284,21 @@
           "externalId": "B13BAG0706",
           "relevance": 1,
           "why": "duffel, not a backpack"
+        },
+        {
+          "externalId": "B13BAG0709",
+          "relevance": 0,
+          "why": "wash bag"
+        },
+        {
+          "externalId": "B13BAG0707",
+          "relevance": 1,
+          "why": "tote: carried on a shoulder, not on the back"
+        },
+        {
+          "externalId": "B13BAG0712",
+          "relevance": 0,
+          "why": "packing cubes"
         }
       ]
     },
@@ -189,6 +324,36 @@
           "externalId": "B13BAG0703",
           "relevance": 1,
           "why": "travel pack, no waterproofing claimed"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 0,
+          "why": "waterproof, but a jacket"
+        },
+        {
+          "externalId": "B13BAG0709",
+          "relevance": 0,
+          "why": "wash bag with a waterproof lining: not a backpack"
+        },
+        {
+          "externalId": "B13BAG0701",
+          "relevance": 2,
+          "why": "the compact CityPack, the backpack with a DWR finish"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 1,
+          "why": "running pack; nothing says waterproof"
+        },
+        {
+          "externalId": "B13BAG0704",
+          "relevance": 1,
+          "why": "a backpack; nothing says waterproof"
+        },
+        {
+          "externalId": "B13BAG0706",
+          "relevance": 0,
+          "why": "gym duffel: neither a backpack nor waterproof"
         }
       ]
     },
@@ -219,6 +384,31 @@
           "externalId": "B13BAG0710",
           "relevance": 1,
           "why": "laptop sleeve, not a backpack"
+        },
+        {
+          "externalId": "B13BAG0709",
+          "relevance": 0,
+          "why": "wash bag"
+        },
+        {
+          "externalId": "B13BAG0702",
+          "relevance": 1,
+          "why": "hiking backpack with no laptop sleeve"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 0,
+          "why": "a lamp: shares words only"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 0,
+          "why": "8 L running pack: no laptop fits"
+        },
+        {
+          "externalId": "B13BAG0706",
+          "relevance": 0,
+          "why": "gym duffel"
         }
       ]
     },
@@ -274,6 +464,26 @@
           "externalId": "B11COF0403",
           "relevance": 1,
           "why": "eight-cup press"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 1,
+          "why": "coffee maker, but a 4-cup moka pot"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 1,
+          "why": "coffee maker, but a 6-cup moka pot"
+        },
+        {
+          "externalId": "B11COF0405",
+          "relevance": 0,
+          "why": "grinder"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 0,
+          "why": "desk lamp: shares numbers only"
         }
       ]
     },
@@ -289,6 +499,36 @@
           "externalId": "B11COF0404",
           "relevance": 2,
           "why": "same range without the timer"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 1,
+          "why": "coffee maker, neither programmable nor drip"
+        },
+        {
+          "externalId": "B11TAB0503",
+          "relevance": 0,
+          "why": "water jug"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 1,
+          "why": "coffee maker, not programmable"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 1,
+          "why": "coffee maker, not programmable"
+        },
+        {
+          "externalId": "B11COF0405",
+          "relevance": 0,
+          "why": "grinder"
+        },
+        {
+          "externalId": "B14ORG0903",
+          "relevance": 0,
+          "why": "dish rack: shares 'drip' only"
         }
       ]
     },
@@ -319,6 +559,11 @@
           "externalId": "B10SHI0203",
           "relevance": 1,
           "why": "merino tee, technical by fabric rather than by use"
+        },
+        {
+          "externalId": "B10SHI0204",
+          "relevance": 1,
+          "why": "a tee, but cotton rather than technical"
         }
       ]
     },
@@ -349,6 +594,31 @@
           "externalId": "B10SHO0101",
           "relevance": 1,
           "why": "trail running shoe, not a shirt"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 1,
+          "why": "running tights, not a shirt"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 1,
+          "why": "running pack, not a shirt"
+        },
+        {
+          "externalId": "B15APP1001",
+          "relevance": 0,
+          "why": "linen shirt, not for running"
+        },
+        {
+          "externalId": "B10SHI0203",
+          "relevance": 1,
+          "why": "merino tee: wearable on a trail, not made for running"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 1,
+          "why": "running shorts, not a shirt"
         }
       ]
     },
@@ -389,6 +659,21 @@
           "externalId": "B12LAM0605",
           "relevance": 1,
           "why": "wall light"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 0,
+          "why": "LED strip"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 2,
+          "why": "cordless table lamp: works on a desk"
+        },
+        {
+          "externalId": "B12LAM0608",
+          "relevance": 0,
+          "why": "bulbs"
         }
       ]
     },
@@ -419,6 +704,31 @@
           "externalId": "B12LAM0603",
           "relevance": 2,
           "why": "floor lamp with a dimmer on the neck"
+        },
+        {
+          "externalId": "B12LAM0610",
+          "relevance": 1,
+          "why": "lamp with an LED ring; nothing says dimmable"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "E27 table lamp, neither LED nor dimmable"
+        },
+        {
+          "externalId": "B12LAM0605",
+          "relevance": 0,
+          "why": "wall light, neither LED nor dimmable"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 2,
+          "why": "lamp with three brightness levels"
+        },
+        {
+          "externalId": "B12LAM0608",
+          "relevance": 1,
+          "why": "LED, but bulbs and not dimmable"
         }
       ]
     },
@@ -444,6 +754,36 @@
           "externalId": "B12LAM0606",
           "relevance": 1,
           "why": "portable lamp charged over USB-C, which is not the same thing"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 0,
+          "why": "LED strip"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 1,
+          "why": "table lamp to read by, no USB"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 0,
+          "why": "motion-sensor night light"
+        },
+        {
+          "externalId": "B12LAM0605",
+          "relevance": 1,
+          "why": "wall light to read by, no USB"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 1,
+          "why": "desk lamp to read by, no USB"
+        },
+        {
+          "externalId": "B12LAM0608",
+          "relevance": 0,
+          "why": "bulbs"
         }
       ]
     },
@@ -509,6 +849,21 @@
           "externalId": "B11COF0402",
           "relevance": 2,
           "why": "stovetop coffee maker for induction, not cookware"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 0,
+          "why": "chopping board"
+        },
+        {
+          "externalId": "B11COO0306",
+          "relevance": 0,
+          "why": "oven dish, not for the hob"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 1,
+          "why": "utensils for cookware, not cookware"
         }
       ]
     },
@@ -529,6 +884,41 @@
           "externalId": "B11COO0308",
           "relevance": 1,
           "why": "utensils that will not scratch a non-stick coating"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 1,
+          "why": "a single pan, not a set, not stated non-stick"
+        },
+        {
+          "externalId": "B13BAG0712",
+          "relevance": 0,
+          "why": "packing cubes"
+        },
+        {
+          "externalId": "B11COO0310",
+          "relevance": 0,
+          "why": "knife set"
+        },
+        {
+          "externalId": "B11TAB0502",
+          "relevance": 0,
+          "why": "bowls"
+        },
+        {
+          "externalId": "B14HOM0808",
+          "relevance": 0,
+          "why": "napkins"
+        },
+        {
+          "externalId": "B11TAB0501",
+          "relevance": 0,
+          "why": "plates"
+        },
+        {
+          "externalId": "B11TAB0504",
+          "relevance": 0,
+          "why": "tumblers"
         }
       ]
     },
@@ -594,6 +984,21 @@
           "externalId": "B15APP1004",
           "relevance": 3,
           "why": "Vertex brand"
+        },
+        {
+          "externalId": "B15APP1005",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B15APP1008",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 3,
+          "why": "exactly the brand"
         }
       ]
     },
@@ -659,6 +1064,61 @@
           "externalId": "B11COF0406",
           "relevance": 3,
           "why": "Kuisina brand"
+        },
+        {
+          "externalId": "B11COO0306",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B11COO0312",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B11COF0405",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B11COF0407",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B11COF0408",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B15KIT1201",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B15KIT1202",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B15KIT1203",
+          "relevance": 3,
+          "why": "exactly the brand"
+        },
+        {
+          "externalId": "B15KIT1204",
+          "relevance": 3,
+          "why": "exactly the brand"
         }
       ]
     },
@@ -709,6 +1169,21 @@
           "externalId": "B10SHO0101",
           "relevance": 2,
           "why": "sports footwear rather than clothing"
+        },
+        {
+          "externalId": "B10SHI0204",
+          "relevance": 1,
+          "why": "everyday cotton tee, not sportswear"
+        },
+        {
+          "externalId": "B10SHI0203",
+          "relevance": 2,
+          "why": "merino tee: a mountain base layer"
+        },
+        {
+          "externalId": "B10SHI0206",
+          "relevance": 1,
+          "why": "everyday cotton sweatshirt"
         }
       ]
     },
@@ -744,6 +1219,46 @@
           "externalId": "B11COF0403",
           "relevance": 1,
           "why": "french press"
+        },
+        {
+          "externalId": "B11COO0305",
+          "relevance": 1,
+          "why": "milk pan: works as a kitchen gift"
+        },
+        {
+          "externalId": "B11COO0302",
+          "relevance": 1,
+          "why": "casserole: works as a kitchen gift"
+        },
+        {
+          "externalId": "B11COO0301",
+          "relevance": 1,
+          "why": "cast iron pan: works as a kitchen gift"
+        },
+        {
+          "externalId": "B11COO0304",
+          "relevance": 1,
+          "why": "wok: works as a kitchen gift"
+        },
+        {
+          "externalId": "B15KIT1201",
+          "relevance": 2,
+          "why": "kitchen scale: a typical kitchen gift"
+        },
+        {
+          "externalId": "B11COO0303",
+          "relevance": 1,
+          "why": "pressure cooker: works as a kitchen gift"
+        },
+        {
+          "externalId": "B11TAB0505",
+          "relevance": 2,
+          "why": "airtight jars: a typical kitchen gift"
+        },
+        {
+          "externalId": "B15KIT1202",
+          "relevance": 2,
+          "why": "probe thermometer: a typical kitchen gift"
         }
       ]
     }

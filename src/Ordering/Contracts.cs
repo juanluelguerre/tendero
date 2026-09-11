@@ -82,6 +82,14 @@ public sealed record OrderView(
 
 public sealed record ReturnLineView(string Sku, int Quantity, string Reason, string? Comment);
 
+/// <summary>
+/// How many of a SKU the shopper may still send back. It is the answer
+/// <c>ReturnRequest.Returnable</c> gives, published so the order page offers
+/// exactly what the command will accept rather than keeping its own copy of
+/// which returns count.
+/// </summary>
+public sealed record ReturnableLineView(string Sku, int Quantity);
+
 public sealed record ReturnView(
     string ReturnId,
     string OrderId,
@@ -89,7 +97,14 @@ public sealed record ReturnView(
     string? Resolution,
     decimal? RefundAmount,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<ReturnLineView> Lines)
+    IReadOnlyList<ReturnLineView> Lines,
+    /// <summary>
+    /// Which return of its order this is. What a screen shows to tell two
+    /// returns of one order apart: the first segment of a GUID v7 is the same
+    /// for everything opened in the same second, and two rows reading
+    /// "01a08f7b" were the review's evidence of that.
+    /// </summary>
+    int Number)
 {
     public static ReturnView From(ReturnRequest request) => new(
         request.Id.ToString(),
@@ -101,5 +116,6 @@ public sealed record ReturnView(
         [
             .. request.Lines.Select(line => new ReturnLineView(
                 line.Sku, line.Quantity, line.Reason.ToString(), line.Comment))
-        ]);
+        ],
+        request.Number);
 }

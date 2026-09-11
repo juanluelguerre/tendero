@@ -275,8 +275,10 @@ public abstract class IdentityProviderContractTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
 
         // The catalogue is public by a written decision, not by an oversight. If
-        // somebody put a policy here, this would say so before a user did.
-        var response = await Client.GetAsync("/api/catalog/products", ct);
+        // somebody put a policy here, this would say so before a user did. (The
+        // product LIST used to be the example; it reads drafts and belongs to
+        // the shopkeeper since 2026-09-11.)
+        var response = await Client.GetAsync("/api/catalog/categories", ct);
 
         Assert.NotEqual(HttpStatusCode.Unauthorized, response.StatusCode);
     }

@@ -36,7 +36,17 @@ public sealed record VariantAxis(string Code, IReadOnlyList<string> Options);
 public enum DefineVariantsOutcome { Defined, NotFound, Rejected }
 
 public sealed record DefineVariantsResult(
-    DefineVariantsOutcome Outcome, int Created, int Existing, string? Reason);
+    DefineVariantsOutcome Outcome, int Created, int Existing, string? Reason) : IAuditedResult
+{
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        DefineVariantsOutcome.Defined => AuditOutcome.Allowed,
+        DefineVariantsOutcome.NotFound or DefineVariantsOutcome.Rejected => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome == DefineVariantsOutcome.Defined ? null : Reason ?? Outcome.ToString();
+}
 
 public sealed record DefineVariantsResponse(int Created, int Existing);
 

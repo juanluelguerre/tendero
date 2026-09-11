@@ -6,14 +6,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace ElGuerre.Tendero.Api;
 
-/// <summary>The laboratory's three roles, in one place.</summary>
-public static class TenderoRoles
-{
-    public const string Shopper = "shopper";
-    public const string Shopkeeper = "shopkeeper";
-    public const string Agent = "agent";
-}
-
 public static class AuthenticationExtensions
 {
     /// <summary>

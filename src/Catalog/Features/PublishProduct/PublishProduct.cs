@@ -32,7 +32,20 @@ public enum PublishOutcome
     NotFound
 }
 
-public sealed record PublishProductResult(PublishOutcome Outcome, ProductId ProductId, string Status);
+public sealed record PublishProductResult(PublishOutcome Outcome, ProductId ProductId, string Status)
+    : IAuditedResult
+{
+    /// <summary>Publishing what is already published is not a refusal — it is
+    /// idempotence (ADR 0012). An archived product is.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        PublishOutcome.Published or PublishOutcome.AlreadyActive => AuditOutcome.Allowed,
+        PublishOutcome.Archived or PublishOutcome.NotFound => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome is PublishOutcome.Published or PublishOutcome.AlreadyActive ? null : Outcome.ToString();
+}
 
 /// <summary>
 /// The shape that goes out over the wire. It exists apart from the handler's

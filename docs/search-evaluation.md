@@ -3,7 +3,7 @@
 ## Golden set
 
 `tools/SearchEval/golden/{culture}.json` — 50–100 curated queries per culture
-(22 today per culture, 268 judgments between them, against the 100-product seed):
+(22 today per culture, 450 judgments between them, against the 100-product seed):
 
 ```json
 {
@@ -67,6 +67,51 @@ Two things make the run reproducible, and both were learned the hard way:
   query: 0.860 and then 0.769. Polling until *some* query returns a hit is not
   enough — it only proves one document is visible, not all six.
 
+## The lexical fallback, and a golden set with nothing left unjudged (2026-09-11)
+
+**The recall this file blamed on vocabulary was mostly the query's `AND`.** A UI
+review asked why the numbers below looked low, and the answer was in the hits
+column: every clause of the query demanded every word, so "tech tee" returned
+the one product carrying both and missed the four others a shopper would take;
+"running shoes" returned 2 of 8. That is not a gap only embeddings can bridge —
+it is one clause. A third `should`, `cross_fields` with `operator: or`, retrieves
+what the AND drops, and the AND clause is boosted ×2 so a product carrying every
+word still ranks first.
+
+Measuring that honestly needed the golden set first. Loosening a query surfaces
+products nobody had annotated, and an unjudged product counts as irrelevant, so
+the looser query would have been punished for finding things. **The pool was
+completed**: the top ten of three query variants (the AND query, AND plus a 75 %
+minimum-should-match, AND plus the OR fallback), for every query in both
+cultures, was annotated until nothing in any of them was unjudged — 182 new
+judgments, 268 → 450. The two brand queries had a hole of their own: "Kuisina"
+annotated 12 of the brand's 23 products and "Vertex" 12 of 15, which is why
+"Kuisina" scored 0.801 with the engine ranking nothing but Kuisina on top.
+
+| on the completed golden set | es NDCG@10 | es recall@50 | en NDCG@10 | en recall@50 |
+|---|---:|---:|---:|---:|
+| AND only (what shipped) | 0.800 | 0.564 | 0.739 | 0.457 |
+| AND + 75 % minimum should match | 0.832 | 0.654 | 0.812 | 0.618 |
+| **AND ×2 + OR fallback** | **0.927** | **0.939** | **0.935** | **0.955** |
+
+The first row is lower than the 0.813 / 0.766 committed before, and that is the
+ruler becoming fairer rather than the engine becoming worse: the same results,
+judged against more of what was relevant. `gift for the kitchen` — the query
+this file kept for hybrid search to earn — went from 0.000 to 0.867 lexically,
+because "kitchen" alone now reaches the kitchen.
+
+**What it costs**, stated rather than discovered: result lists are longer ("running
+shoes" returns 20 products instead of 2), which is what a shop's search is
+expected to do and what the ranking has to keep in order. **What it means for
+phase 8**: hybrid search is measured against 0.927 / 0.935 now, not against an
+`AND`. Earning the difference is harder, and it is the difference that was
+honest all along.
+
+The Spanish catalogue gained its accents the same day — the seed had been
+written without a single tilde or eñe in 200 fields — and the gate did not move
+by a thousandth: the `spanish` analyzer's light stemmer folds accented vowels,
+so "lampara escritorio" still finds "Lámpara de escritorio".
+
 ## The baseline was re-derived when the catalogue reached 100 products (2026-09-04)
 
 **The old numbers are not comparable, and lowering the thresholds is not a
@@ -114,18 +159,21 @@ identical numbers.
 
 | culture | NDCG@10 | recall@50 | threshold NDCG | threshold recall |
 |---|---:|---:|---:|---:|
-| es | 0.813 | 0.633 | 0.80 | 0.62 |
-| en | 0.766 | 0.556 | 0.75 | 0.54 |
+| es | 0.927 | 0.939 | 0.91 | 0.92 |
+| en | 0.935 | 0.955 | 0.92 | 0.94 |
 
-Measured against 100 products and 268 judgments; identical across consecutive
-runs. See the section above for why these replaced 0.943 / 0.937.
+Measured against 100 products and 450 judgments with the OR fallback (2026-09-11);
+identical across consecutive runs. They replaced 0.813 / 0.766 — see the first
+section for why, and for why the two are not comparable — which had replaced
+0.943 / 0.937 when the corpus grew.
 
 **The margin is deliberate and it was nearly lost.** The first thresholds sat
 0.01 under the measurement, and then six product colours changed to match the
 illustrations that arrived for them — colour is indexed, so Spanish moved to
 0.813 and the margin fell to 0.003. That is not a gate any more, it is a coin
 toss on the next harmless edit. They are back at roughly 0.013, which is what
-the original 0.93 / 0.90 pair had.
+the original 0.93 / 0.90 pair had — and the 2026-09-11 thresholds keep 0.015
+to 0.019.
 
 ### What localized attribute values bought (2026-09-02)
 
@@ -228,11 +276,14 @@ The queries scoring 0.000 are diagnosis, not noise:
    categories carry a localized name and the index carries the whole branch as
    analysed text. It took `induction cookware`, `menaje de cocina`, `ropa
    deportiva`, `sportswear` and `reading light with usb` off this list.
-3. **Vocabulary gaps lexical search cannot bridge** — down to one query per
-   culture: `gift for the kitchen` and `regalo para casa`. Nothing in the
-   catalogue contains the word "gift", so no taxonomy reaches them. This is the
-   semantic-intent gap, and it is the before/after number hybrid search has to
-   earn.
+3. **Vocabulary gaps lexical search cannot bridge** — narrower than this said.
+   `gift for the kitchen` reaches 0.867 since the OR fallback (2026-09-11):
+   "gift" still matches nothing, and "kitchen" alone reaches the kitchen.
+   **`regalo para casa` is the one left, at 0.305**: the catalogue files home
+   goods under "Hogar", nobody writes "casa" in a product, and the only hit is
+   a pair of house slippers. That is the semantic-intent gap, and it is the
+   number hybrid search has to earn — against a lexical baseline of 0.927 /
+   0.935 rather than the 0.813 / 0.766 an `AND` produced.
 
 A cautionary note on annotating: "flexo con usb" was originally annotated as a
 synonym gap lexical search could not solve. It scores 1.000, and always did —

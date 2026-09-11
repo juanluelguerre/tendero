@@ -30,7 +30,9 @@
         <tbody>
           @for (request of requests(); track request.returnId) {
             <tr>
-              <td class="numeric code" [title]="request.returnId">{{ shortId(request.returnId) }}</td>
+              <!-- Which return of the order, not the first segment of its GUID:
+                   two returns opened in the same second read the same there. -->
+              <td class="numeric code" [title]="request.returnId">#{{ request.number }}</td>
               <td class="numeric" [title]="request.orderId">{{ shortId(request.orderId) }}</td>
               <td>
                 <ul class="what">
@@ -54,9 +56,10 @@
               </td>
               <td class="actions">
                 @for (decision of decisions(request); track decision) {
+                  <!-- Quiet for the reason the orders table gives: one clay
+                       action per view, and a queue of rows has many. -->
                   <button
-                    class="button button--small"
-                    [class.button--quiet]="decision !== decisions(request)[0]"
+                    class="button button--small button--quiet"
                     type="button"
                     [disabled]="busy() === request.returnId"
                     (click)="decide(request, decision)"

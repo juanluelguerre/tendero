@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
@@ -47,6 +47,17 @@ export class SignInPage {
   protected readonly expired =
     this.route.snapshot.queryParamMap.get('reason') === 'expired';
 
+  /**
+   * Somebody who IS signed in, as somebody the backoffice is not for — a
+   * shopper, or an agent. The guard sends them here instead of letting them in
+   * to be refused screen by screen, and the door owes them the reason and the
+   * one thing they can do about it: sign out and come back as somebody else.
+   * Only while that identity is still signed in; after signing out this is an
+   * ordinary door.
+   */
+  protected readonly wrongRole = computed(() =>
+    this.route.snapshot.queryParamMap.get('reason') === 'role' ? this.auth.identity() : null);
+
   /** Named so the screen can say who is about to ask for your password. */
   protected readonly issuer = this.auth.issuer();
 
@@ -60,5 +71,9 @@ export class SignInPage {
 
   protected signIn(): void {
     this.auth.signIn(this.returnTo);
+  }
+
+  protected signOut(): void {
+    this.auth.signOut();
   }
 }

@@ -46,7 +46,19 @@ public enum ClaimCartOutcome
     BelongsToSomebodyElse
 }
 
-public sealed record ClaimCartResult(ClaimCartOutcome Outcome, CartView? Cart);
+public sealed record ClaimCartResult(ClaimCartOutcome Outcome, CartView? Cart) : IAuditedResult
+{
+    /// <summary>Somebody else's basket is the refusal worth a row: it is what an
+    /// attempt to take a cart over looks like.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        ClaimCartOutcome.Claimed or ClaimCartOutcome.AlreadyTheirs => AuditOutcome.Allowed,
+        ClaimCartOutcome.NotFound or ClaimCartOutcome.BelongsToSomebodyElse => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome is ClaimCartOutcome.Claimed or ClaimCartOutcome.AlreadyTheirs ? null : Outcome.ToString();
+}
 
 public sealed class ClaimCartValidator : AbstractValidator<ClaimCartCommand>
 {

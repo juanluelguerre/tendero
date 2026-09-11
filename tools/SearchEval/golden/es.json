@@ -44,6 +44,31 @@
           "externalId": "B10SHI0207",
           "relevance": 1,
           "why": "mallas de running: mismo deporte, categoria distinta"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 1,
+          "why": "chaleco-mochila de running: mismo deporte, categoría distinta"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 1,
+          "why": "pantalón corto de running: mismo deporte, categoría distinta"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 1,
+          "why": "zapatilla, pero de caminar, no de correr"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 0,
+          "why": "zapatilla de estar por casa"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 0,
+          "why": "zapatilla de lona de diario, no para correr"
         }
       ]
     },
@@ -69,6 +94,46 @@
           "externalId": "B10SHO0102",
           "relevance": 1,
           "why": "running, pero de hombre"
+        },
+        {
+          "externalId": "B15SHO1104",
+          "relevance": 0,
+          "why": "alpargata: ni running ni zapatilla deportiva"
+        },
+        {
+          "externalId": "B15SHO1102",
+          "relevance": 0,
+          "why": "botín de piel"
+        },
+        {
+          "externalId": "B10SHI0207",
+          "relevance": 0,
+          "why": "mallas de running: no es calzado"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 0,
+          "why": "chaleco-mochila de running: no es calzado"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 0,
+          "why": "pantalón corto de running: no es calzado"
+        },
+        {
+          "externalId": "B10SHO0108",
+          "relevance": 0,
+          "why": "sandalia de trekking"
+        },
+        {
+          "externalId": "B10SHO0103",
+          "relevance": 1,
+          "why": "zapatilla de mujer, pero de caminar"
+        },
+        {
+          "externalId": "B10SHO0104",
+          "relevance": 1,
+          "why": "zapatilla de mujer, pero de lona y de diario"
         }
       ]
     },
@@ -119,6 +184,11 @@
           "externalId": "B15SHO1103",
           "relevance": 3,
           "why": "zapatilla de padel"
+        },
+        {
+          "externalId": "B10SHO0108",
+          "relevance": 1,
+          "why": "sandalia de trekking: calzado, no zapatilla"
         }
       ]
     },
@@ -194,6 +264,16 @@
           "externalId": "B13BAG0706",
           "relevance": 1,
           "why": "bolsa de deporte, no mochila"
+        },
+        {
+          "externalId": "B13BAG0707",
+          "relevance": 1,
+          "why": "bolsa de lona: se lleva al hombro, no a la espalda"
+        },
+        {
+          "externalId": "B13BAG0709",
+          "relevance": 0,
+          "why": "neceser"
         }
       ]
     },
@@ -219,6 +299,36 @@
           "externalId": "B13BAG0703",
           "relevance": 1,
           "why": "mochila de viaje, sin impermeabilidad declarada"
+        },
+        {
+          "externalId": "B13BAG0706",
+          "relevance": 0,
+          "why": "bolsa de deporte: ni mochila ni impermeable"
+        },
+        {
+          "externalId": "B15APP1004",
+          "relevance": 0,
+          "why": "impermeable, pero es una chaqueta"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 1,
+          "why": "mochila de running; no dice que sea impermeable"
+        },
+        {
+          "externalId": "B13BAG0704",
+          "relevance": 1,
+          "why": "mochila; no dice que sea impermeable"
+        },
+        {
+          "externalId": "B13BAG0701",
+          "relevance": 2,
+          "why": "versión compacta de la CityPack, la mochila con tratamiento DWR"
+        },
+        {
+          "externalId": "B13BAG0709",
+          "relevance": 0,
+          "why": "neceser con interior impermeable: no es una mochila"
         }
       ]
     },
@@ -249,6 +359,31 @@
           "externalId": "B13BAG0710",
           "relevance": 1,
           "why": "funda de portatil, no mochila"
+        },
+        {
+          "externalId": "B13BAG0706",
+          "relevance": 0,
+          "why": "bolsa de deporte"
+        },
+        {
+          "externalId": "B12LAM0602",
+          "relevance": 0,
+          "why": "lámpara: sólo comparte palabras"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 0,
+          "why": "«portátil» en el otro sentido: una lámpara sin cable"
+        },
+        {
+          "externalId": "B13BAG0705",
+          "relevance": 0,
+          "why": "mochila de running de 8 L: no cabe un portátil"
+        },
+        {
+          "externalId": "B13BAG0702",
+          "relevance": 1,
+          "why": "mochila de senderismo, sin funda para portátil"
         }
       ]
     },
@@ -304,6 +439,21 @@
           "externalId": "B11COF0403",
           "relevance": 1,
           "why": "prensa de 8 tazas"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 1,
+          "why": "cafetera, pero italiana de 6 tazas"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 1,
+          "why": "cafetera, pero italiana de 4 tazas"
+        },
+        {
+          "externalId": "B12LAM0601",
+          "relevance": 0,
+          "why": "flexo: sólo comparte números"
         }
       ]
     },
@@ -319,6 +469,21 @@
           "externalId": "B11COF0404",
           "relevance": 2,
           "why": "misma gama sin temporizador"
+        },
+        {
+          "externalId": "B11COF0401",
+          "relevance": 1,
+          "why": "cafetera, no programable"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 1,
+          "why": "cafetera, no programable"
+        },
+        {
+          "externalId": "B11COF0403",
+          "relevance": 1,
+          "why": "cafetera de émbolo, no programable"
         }
       ]
     },
@@ -349,6 +514,26 @@
           "externalId": "B10SHI0203",
           "relevance": 1,
           "why": "camiseta de merino, tecnica por material y no por uso"
+        },
+        {
+          "externalId": "B10SHI0204",
+          "relevance": 1,
+          "why": "camiseta, pero de algodón, no técnica"
+        },
+        {
+          "externalId": "B15APP1008",
+          "relevance": 0,
+          "why": "guantes técnicos"
+        },
+        {
+          "externalId": "B10SHI0206",
+          "relevance": 0,
+          "why": "sudadera de algodón"
+        },
+        {
+          "externalId": "B10SHO0105",
+          "relevance": 0,
+          "why": "zapatilla para terreno técnico"
         }
       ]
     },
@@ -379,6 +564,31 @@
           "externalId": "B10SHI0201",
           "relevance": 1,
           "why": "camiseta tecnica, pero de mujer"
+        },
+        {
+          "externalId": "B15APP1001",
+          "relevance": 1,
+          "why": "camisa de lino, no camiseta"
+        },
+        {
+          "externalId": "B10SHI0202",
+          "relevance": 2,
+          "why": "camiseta sin mangas de running"
+        },
+        {
+          "externalId": "B10SHI0208",
+          "relevance": 0,
+          "why": "pantalón corto"
+        },
+        {
+          "externalId": "B15APP1005",
+          "relevance": 0,
+          "why": "pantalón de montaña"
+        },
+        {
+          "externalId": "B10SHI0206",
+          "relevance": 1,
+          "why": "sudadera, no camiseta"
         }
       ]
     },
@@ -419,6 +629,21 @@
           "externalId": "B12LAM0605",
           "relevance": 1,
           "why": "aplique de pared"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 1,
+          "why": "lámpara de noche, no de escritorio"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 2,
+          "why": "lámpara de mesa sin cable: sirve en un escritorio"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 0,
+          "why": "tira LED"
         }
       ]
     },
@@ -449,6 +674,31 @@
           "externalId": "B12LAM0603",
           "relevance": 2,
           "why": "lampara de pie con regulador en el cuello"
+        },
+        {
+          "externalId": "B12LAM0608",
+          "relevance": 1,
+          "why": "LED, pero bombillas y no regulables"
+        },
+        {
+          "externalId": "B12LAM0610",
+          "relevance": 1,
+          "why": "lámpara con anillo LED, no dice que sea regulable"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 0,
+          "why": "luz de paso con sensor, no regulable"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "lámpara de casquillo E27, ni LED ni regulable"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 2,
+          "why": "lámpara con tres niveles de intensidad"
         }
       ]
     },
@@ -469,6 +719,41 @@
           "externalId": "B12LAM0601",
           "relevance": 1,
           "why": "flexo de escritorio sin USB"
+        },
+        {
+          "externalId": "B12LAM0605",
+          "relevance": 0,
+          "why": "aplique de pared"
+        },
+        {
+          "externalId": "B12LAM0608",
+          "relevance": 0,
+          "why": "bombillas"
+        },
+        {
+          "externalId": "B12LAM0609",
+          "relevance": 0,
+          "why": "luz de paso"
+        },
+        {
+          "externalId": "B12LAM0603",
+          "relevance": 0,
+          "why": "lámpara de pie"
+        },
+        {
+          "externalId": "B12LAM0604",
+          "relevance": 0,
+          "why": "lámpara de sobremesa sin USB"
+        },
+        {
+          "externalId": "B12LAM0606",
+          "relevance": 1,
+          "why": "se carga por USB, pero no es un flexo"
+        },
+        {
+          "externalId": "B12LAM0607",
+          "relevance": 0,
+          "why": "tira LED"
         }
       ]
     },
@@ -499,6 +784,16 @@
           "externalId": "B11COO0305",
           "relevance": 1,
           "why": "cazo de induccion, no sarten"
+        },
+        {
+          "externalId": "B11COF0402",
+          "relevance": 0,
+          "why": "de inducción, pero es una cafetera"
+        },
+        {
+          "externalId": "B11COO0303",
+          "relevance": 1,
+          "why": "menaje, pero olla a presión y no sartén"
         }
       ]
     },
@@ -519,6 +814,11 @@
           "externalId": "B11COO0308",
           "relevance": 1,
           "why": "utensilios que no rayan el antiadherente"
+        },
+        {
+          "externalId": "B15KIT1203",
+          "relevance": 0,
+          "why": "molde de horno antiadherente"
         }
       ]
     },
@@ -659,6 +959,21 @@
           "externalId": "B15APP1004",
           "relevance": 3,
           "why": "marca Vertex"
+        },
+        {
+          "externalId": "B15APP1005",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B15APP1008",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B15SHO1103",
+          "relevance": 3,
+          "why": "es exactamente la marca"
         }
       ]
     },
@@ -724,6 +1039,61 @@
           "externalId": "B11COF0406",
           "relevance": 3,
           "why": "marca Kuisina"
+        },
+        {
+          "externalId": "B11COO0306",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B11COO0307",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B11COO0308",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B11COO0312",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B11COF0405",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B11COF0407",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B11COF0408",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B15KIT1201",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B15KIT1202",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B15KIT1203",
+          "relevance": 3,
+          "why": "es exactamente la marca"
+        },
+        {
+          "externalId": "B15KIT1204",
+          "relevance": 3,
+          "why": "es exactamente la marca"
         }
       ]
     },
@@ -774,6 +1144,26 @@
           "externalId": "B10SHO0101",
           "relevance": 2,
           "why": "calzado deportivo, no ropa"
+        },
+        {
+          "externalId": "B10SHI0204",
+          "relevance": 1,
+          "why": "camiseta de diario, no deportiva"
+        },
+        {
+          "externalId": "B10SHI0203",
+          "relevance": 2,
+          "why": "camiseta de merino: capa base de montaña"
+        },
+        {
+          "externalId": "B10SHI0206",
+          "relevance": 1,
+          "why": "sudadera de algodón de diario"
+        },
+        {
+          "externalId": "B10SHO0102",
+          "relevance": 2,
+          "why": "calzado deportivo, no ropa"
         }
       ]
     },
@@ -814,6 +1204,11 @@
           "externalId": "B12LAM0604",
           "relevance": 2,
           "why": "lampara de ceramica"
+        },
+        {
+          "externalId": "B10SHO0106",
+          "relevance": 2,
+          "why": "zapatillas de estar por casa: regalo típico de hogar"
         }
       ]
     }
