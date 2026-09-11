@@ -11,7 +11,15 @@
       <p class="notice" role="status">{{ t('signIn.expired') }}</p>
     }
 
-    @if (issuer) {
+    @if (wrongRole(); as who) {
+      <!-- Signed in, and not as somebody this backoffice is for. Offering
+           "continue to sign in" here would send them to the issuer as the same
+           person and straight back to this page. -->
+      <p class="notice" role="status">{{ t('signIn.wrongRole', { name: who.name, role: who.role }) }}</p>
+      <button type="button" class="button" (click)="signOut()">
+        {{ t('signIn.signOut') }}
+      </button>
+    } @else if (issuer) {
       <p class="muted card__hint">{{ t('signIn.hint') }}</p>
 
       <!-- The one clay action on this view, and the only thing it does is leave.

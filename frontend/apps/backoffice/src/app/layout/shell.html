@@ -44,7 +44,7 @@
     </div>
   </header>
 
-  @if (signedIn()) {
+  @if (canUseBackoffice()) {
     <nav class="tabs" [attr.aria-label]="t('brand.area')">
       <div class="page-frame tabs__inner">
         <a class="tab" routerLink="/review" routerLinkActive="tab--active">

@@ -193,7 +193,8 @@
     "via": {
       "dev-issuer": "Signed by the development issuer.",
       "keycloak": "Signed by Keycloak."
-    }
+    },
+    "wrongRole": "You are signed in as {{name}} ({{role}}). The backoffice is for the people who run the shop — sign out to use another account."
   },
   "stock": {
     "allAvailable": "All available",

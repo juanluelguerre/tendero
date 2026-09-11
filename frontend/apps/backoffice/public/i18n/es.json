@@ -193,7 +193,8 @@
     "via": {
       "dev-issuer": "Firma el emisor de desarrollo.",
       "keycloak": "Firma Keycloak."
-    }
+    },
+    "wrongRole": "Has entrado como {{name}} ({{role}}). El backoffice es para quien lleva la tienda: cierra la sesión para usar otra cuenta."
   },
   "stock": {
     "allAvailable": "Todo disponible",

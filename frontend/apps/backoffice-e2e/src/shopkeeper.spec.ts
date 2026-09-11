@@ -33,6 +33,9 @@ const SHOPKEEPER = 'Juan Luis';
  */
 const SHOPKEEPER_SUBJECT = 'juanlu';
 
+/** The seeded shopper: signed in, and not somebody the backoffice is for. */
+const SHOPPER = { name: 'Ana Ruiz', subject: 'ana' };
+
 test.describe('the backoffice', () => {
   test('asks who you are before it shows anything', async ({ page }) => {
     await page.goto('/orders');
@@ -197,6 +200,28 @@ test.describe('the backoffice', () => {
     await expect(page).toHaveURL(/\/orders$/);
   });
 
+  /**
+   * The guard asks about the ROLE, not only about a session. The first version
+   * asked whether anybody was signed in, and the UI review of 2026-09-11 walked
+   * in as a shopper: every tab, an import button the API refuses, and each 403
+   * rendered as "could not be loaded". Only a browser sees a guard, so this is
+   * the one layer that can hold it.
+   */
+  test('turns a shopper away at the door instead of letting them in to be refused', async ({ page }) => {
+    await signIn(page, SHOPPER);
+
+    await expect(page).toHaveURL(/\/sign-in\?.*reason=role/);
+    await expect(page.getByRole('status')).toContainText(/shopper/);
+
+    // No tabs: a bar offering seven screens to somebody every one of them turns
+    // away is the door this closed.
+    await expect(page.getByRole('link', { name: /review queue|cola de revisión/i })).toHaveCount(0);
+
+    // Typing a screen's address meets the same door.
+    await page.goto('/orders');
+    await expect(page).toHaveURL(/\/sign-in\?.*reason=role/);
+  });
+
   test('signing out sends you back to the door', async ({ page }) => {
     await signIn(page);
 
@@ -220,7 +245,10 @@ test.describe('the backoffice', () => {
  * takes one click, and a fixture that failed mysteriously after every restart
  * would cost far more than it saved.
  */
-async function signIn(page: import('@playwright/test').Page): Promise<void> {
+async function signIn(
+  page: import('@playwright/test').Page,
+  who: { name: string; subject: string } = { name: SHOPKEEPER, subject: SHOPKEEPER_SUBJECT },
+): Promise<void> {
   await page.goto('/sign-in');
 
   // The second step happens on ANOTHER ORIGIN, and that is the whole point of
@@ -243,11 +271,11 @@ async function signIn(page: import('@playwright/test').Page): Promise<void> {
     // what the OIDC login form posts, so they survive a theme and a Keycloak
     // upgrade — where the visible label is translated and the accessible name
     // `password` matches two elements, the field and the reveal button.
-    await page.locator('input[name="username"]').fill(SHOPKEEPER_SUBJECT);
-    await page.locator('input[name="password"]').fill(SHOPKEEPER_SUBJECT);
+    await page.locator('input[name="username"]').fill(who.subject);
+    await page.locator('input[name="password"]').fill(who.subject);
     await page.locator('input[type="submit"], button[type="submit"]').first().click();
   } else {
-    await page.getByRole('link', { name: SHOPKEEPER }).click();
+    await page.getByRole('link', { name: who.name }).click();
   }
 
   // **Waits for the application to say you are IN, not for the URL to stop
@@ -259,6 +287,7 @@ async function signIn(page: import('@playwright/test').Page): Promise<void> {
   //
   // It was intermittent against the development issuer, whose two hops are
   // fast, and reliable against Keycloak, whose form makes the window wide. The
-  // sign-out button only exists once a token does.
-  await expect(page.getByRole('button', { name: /sign out|cerrar sesión/i })).toBeVisible();
+  // sign-out button only exists once a token does — the BAR's, because the door
+  // that turns a shopper away offers one of its own.
+  await expect(page.getByRole('banner').getByRole('button', { name: /sign out|cerrar sesión/i })).toBeVisible();
 }

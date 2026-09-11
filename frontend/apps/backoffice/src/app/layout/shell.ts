@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { backofficeAccess } from '../access';
 
 /**
  * The backoffice shell: dense and dark. None of this is shared with the
@@ -34,6 +35,11 @@ export class Shell {
 
   protected readonly signedIn = this.auth.isSignedIn;
   protected readonly identity = this.auth.identity;
+
+  /** The tabs are the shopkeeper's, the same answer the route guard gives:
+      a bar offering seven screens to somebody every one of them turns away is
+      the door the guard was fixed to close. */
+  protected readonly canUseBackoffice = computed(() => backofficeAccess(this.identity()) === 'allowed');
 
   constructor() {
     // The token can stop being valid without anybody pressing anything: the
