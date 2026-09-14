@@ -225,6 +225,25 @@ That holds only while three rules do:
 And one habit follows from them: **cite a tag or a commit subject in a file,
 never a hash.** The two repositories have different hashes for the same commit.
 
+**When they converge, the articles do not come with the history** — the filter
+that makes the hashes match is the one that removes `docs/blog/`. Before the
+filter runs, `docs/blog/` moves with its history to a private `tendero-blog`
+repository. From then on, decided 2026-09-15:
+
+- **A published article enters the public repository as an ordinary commit on
+  the day it is published**, under `docs/articles/`, and the first commit after
+  converging brings in every article already published. Drafts and the notebook
+  stay private.
+- **The `.md` in the repository is the source.** The HTML pasted into WordPress
+  is generated from it at publication and not kept; a correction made in
+  WordPress is made in the `.md` too.
+- **Articles are written and published in English only**, on elguerre.com and in
+  the repository. Spanish is for the social posts, as the delivery plan's
+  editorial rules already say.
+- **An article's diagrams travel with it**, as `.svg` and `.png` under
+  `docs/articles/assets/`. Their `.html` sources are deleted once the article is
+  published, so a published diagram is what was published.
+
 ## Licensing policy (hard rule)
 
 Every dependency (NuGet and npm) must be free for commercial use under a

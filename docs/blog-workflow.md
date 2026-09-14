@@ -1,7 +1,7 @@
 # Blog workflow
 
-Every completed phase ships an article. English is the primary version
-(audience reach); Spanish publishes on elguerre.com.
+Every completed phase ships an article, written and published **in English only**,
+on elguerre.com. Spanish is for the social posts.
 
 ## Status (2026-09-01): drafts exist, nothing is published
 
@@ -53,7 +53,7 @@ exists to protect.
 4. One diagram max, recreated in the article's own style. The single
    exception is article 00, whose subject is the architecture itself and
    which carries four; diagram sources live in `docs/blog/assets/`.
-5. Translate to Spanish; both versions link the repo tag.
+5. Link the repo tag from the article.
 6. **Publish the tag to the public repository before the post goes live**, with
    `docs/blog/publish-public.ps1 -Tag blog/NN-slug` from `tendero-workshop` (see
    *The public repository* in `CLAUDE.md`). The article links that tag, so the
@@ -63,3 +63,6 @@ exists to protect.
 8. Update the row in `docs/blog/index.md` to published, with the URL.
 9. Move whatever the notebook entry did not use back into it, or delete it if the
    article superseded it.
+10. **Delete the HTML once the article is live**: the article HTML generated for
+    WordPress was never kept, and the article's diagram `.html` sources go too,
+    leaving their `.svg` and `.png`. A published diagram is what was published.
