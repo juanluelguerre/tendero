@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProductImagePlaceholder } from '../../product-image-placeholder';
-import { map } from 'rxjs';
-import { CultureStore, DEFAULT_CULTURE } from '@tendero/shared-i18n';
+import { filter, map } from 'rxjs';
+import { CultureStore, DEFAULT_CULTURE, PageTitles } from '@tendero/shared-i18n';
 import type { ProductDetail, VariantView } from '@tendero/shared-api';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
@@ -68,6 +68,7 @@ export class ProductPage {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(CanonicalLinks);
+  private readonly titles = inject(PageTitles);
   private readonly images = inject(ProductImageUrls);
 
   /**
@@ -139,7 +140,25 @@ export class ProductPage {
     }
   });
 
+  /** Every finished navigation, so the tab can be renamed after the router
+      names it — see the second effect in the constructor. */
+  private readonly navigated = toSignal(
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)),
+  );
+
   constructor() {
+    // The tab says which product, not "Product". After EVERY finished
+    // navigation and not once per answer, because the canonical correction
+    // below is a navigation of its own: the router names the page from its
+    // route when it ends, and a name set before that is overwritten. Found
+    // live — the first version titled every product page "Producto".
+    effect(() => {
+      this.navigated();
+      const current = this.state();
+
+      if (current.status === 'done') untracked(() => this.titles.name(current.product.name));
+    });
+
     // What the page does with an answer, once per answer: pick the initial
     // variant, put the address bar on the canonical URL and declare it to
     // crawlers. Kept out of the resource so that reading the product never has

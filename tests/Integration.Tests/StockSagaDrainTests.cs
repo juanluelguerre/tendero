@@ -250,28 +250,9 @@ public sealed class StockSagaDrainTests(PostgresFixture postgres)
             await unitOfWork.SaveChangesAsync(ct);
         }
 
-        /// <summary>The same loop as <c>OutboxProcessor</c>, without the timer.</summary>
-        public async Task<int> DrainAsync(CancellationToken ct)
-        {
-            await using var scope = this.provider.CreateAsyncScope();
-            var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
-            var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
-
-            var pending = await context.OutboxMessages
-                .Where(message => message.ProcessedAt == null)
-                .OrderBy(message => message.OccurredAt)
-                .ToListAsync(ct);
-
-            foreach (var message in pending)
-            {
-                await dispatcher.PublishAsync(
-                    DomainEventSerializer.Deserialize(message.Type, message.Payload), ct);
-                message.MarkProcessed();
-            }
-
-            await context.SaveChangesAsync(ct);
-            return pending.Count;
-        }
+        /// <summary>One pass of the real worker (<see cref="WorkerOutbox"/>) — one,
+        /// because the compensation this suite checks arrives on the NEXT.</summary>
+        public Task<int> DrainAsync(CancellationToken ct) => WorkerOutbox.PassAsync(this.provider, ct);
 
         /// <summary>Delivers an already-processed message again, which is what
         /// at-least-once actually means in practice.</summary>

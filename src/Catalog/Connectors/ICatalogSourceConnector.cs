@@ -61,8 +61,8 @@ public sealed record ExternalProduct(
 /// <summary>
 /// An image as the source offers it. <see cref="Location"/> is a Uri on purpose:
 /// it covers <c>https</c> (Shopify serves from its CDN) and <c>file</c> (the seed
-/// connector reads from disk, and phase 4's PDF scanning will write to a temp
-/// file). One type for both cases, with no hierarchy.
+/// connector reads from disk, and a later PDF ingestion step will write to a
+/// temp file). One type for both cases, with no hierarchy.
 ///
 /// Importing does NOT keep this reference: it downloads the content and stores
 /// it in our own store. The source may delete its copy whenever it likes (see

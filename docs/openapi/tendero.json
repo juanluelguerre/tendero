@@ -2301,7 +2301,8 @@
       "OrderDetail": {
         "required": [
           "order",
-          "returns"
+          "returns",
+          "returnable"
         ],
         "type": "object",
         "properties": {
@@ -2312,6 +2313,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ReturnView"
+            }
+          },
+          "returnable": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReturnableLineView"
             }
           }
         }
@@ -3036,12 +3043,6 @@
               "$ref": "#/components/schemas/QuoteLineRequest"
             }
           },
-          "segment": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "shipping": {
             "type": [
               "null",
@@ -3347,7 +3348,8 @@
           "resolution",
           "refundAmount",
           "createdAt",
-          "lines"
+          "lines",
+          "number"
         ],
         "type": "object",
         "properties": {
@@ -3382,6 +3384,26 @@
             "items": {
               "$ref": "#/components/schemas/ReturnLineView"
             }
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ReturnableLineView": {
+        "required": [
+          "sku",
+          "quantity"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

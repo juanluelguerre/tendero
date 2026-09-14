@@ -21,6 +21,16 @@
 
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+
+    <!-- A switch over an enum names every value and has NO default arm where a
+         new value must be a decision rather than a fallthrough (IAuditedResult
+         is the first: a new command outcome cannot ship until somebody says
+         whether it is a refusal). CS8509 — a NAMED value is missing — stays an
+         error and is the point. CS8524 only complains that a number cast into
+         the enum is not covered, and satisfying it means a discard arm, which
+         would silence CS8509 too and turn the missed decision into a runtime
+         exception. -->
+    <NoWarn>$(NoWarn);CS8524</NoWarn>
   </PropertyGroup>
 
   <!-- CLAUDE.md: warnings are errors — enforced in CI, not on the laptop. An

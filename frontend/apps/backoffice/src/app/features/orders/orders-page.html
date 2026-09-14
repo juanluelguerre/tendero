@@ -68,9 +68,12 @@
               <td class="numeric total">{{ money(order) }}</td>
               <td class="actions">
                 @for (move of moves(order); track move) {
+                  <!-- Quiet, every one of them: a row's likely move in clay made
+                       one clay button per ROW, and design/DESIGN.md allows one
+                       per VIEW — "if two things are clay, neither is primary".
+                       The likely move still comes first. -->
                   <button
-                    class="button button--small"
-                    [class.button--quiet]="move !== primary(order)"
+                    class="button button--small button--quiet"
                     type="button"
                     [disabled]="busy() === order.orderId"
                     (click)="apply(order, move)"

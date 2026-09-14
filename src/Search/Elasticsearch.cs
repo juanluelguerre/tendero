@@ -127,6 +127,28 @@ internal sealed class ElasticsearchProductIndexer(
         }
     }
 
+    public async Task<bool> IsEmptyAsync(CancellationToken ct = default)
+    {
+        foreach (var culture in CultureAnalyzers.ByCulture.Keys)
+        {
+            var index = ProductSearchDocument.IndexNameFor(culture);
+            var response = await client.CountAsync(c => c.Indices(index), ct);
+
+            // A missing index is as empty as an index can be, and Elasticsearch
+            // answers 404 for it rather than a count of zero.
+            if (response.ApiCallDetails.HttpStatusCode == 404)
+                return true;
+
+            if (!response.IsValidResponse)
+                throw new SearchUnavailableException("count", response.DebugInformation);
+
+            if (response.Count == 0)
+                return true;
+        }
+
+        return false;
+    }
+
     public async Task IndexAsync(Product product, CancellationToken ct = default)
     {
         var definitions = await attributeDefinitions.AllAsync(ct);
@@ -303,12 +325,14 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
                             // "zapatillas running mujer" has the first two in name
                             // and the third in attributesText; with best_fields
                             // none matched, because it demanded all of them in ONE
-                            // field.
+                            // field. Boosted, so a product carrying EVERY word
+                            // still outranks one carrying some.
                             should => should.MultiMatch(mm => mm
                                 .Query(query.Text)
                                 .Fields(SearchableFields)
                                 .Type(TextQueryType.CrossFields)
-                                .Operator(Operator.And)),
+                                .Operator(Operator.And)
+                                .Boost(2)),
                             // best_fields with fuzziness: it tolerates typos
                             // ("zapatilas"). Kept apart because cross_fields does
                             // NOT support fuzziness.
@@ -316,7 +340,24 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
                                 .Query(query.Text)
                                 .Fields(SearchableFields)
                                 .Fuzziness(new Fuzziness("AUTO"))
-                                .Operator(Operator.And)))
+                                .Operator(Operator.And)),
+                            // **The fallback, and most of what recall was
+                            // missing.** With only AND clauses a query of three
+                            // words returned the one product carrying all three:
+                            // "tech tee" found 1 of 5 relevant products, "running
+                            // shoes" 2 of 8. The docs blamed a vocabulary gap for
+                            // hybrid search to earn; measured on 2026-09-11 over a
+                            // golden set re-pooled so nothing in anybody's top ten
+                            // was unjudged, this one clause took recall@50 from
+                            // 0.564 to 0.939 (es) and 0.457 to 0.955 (en), and
+                            // NDCG@10 from 0.800 to 0.927 and 0.739 to 0.935. The
+                            // AND clause's boost keeps full matches first; this
+                            // only decides what comes after them.
+                            should => should.MultiMatch(mm => mm
+                                .Query(query.Text)
+                                .Fields(SearchableFields)
+                                .Type(TextQueryType.CrossFields)
+                                .Operator(Operator.Or)))
                         .MinimumShouldMatch(1));
                 })
                 .Filter(filters =>

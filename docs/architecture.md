@@ -98,7 +98,7 @@ Everything the API exposes today. Each is one vertical slice.
 | `POST /api/search/reindex` | `Search/Features/ReindexProducts` |
 | `POST /api/accounts/me` | `Accounts/Features/LinkIdentity` — the subject comes from the token, never from the body |
 | `GET /api/audit` | `Accounts/Features/ListAuditEntries` — opens on the refusals |
-| `GET /.well-known/ucp` | `Ucp/UcpProfileEndpoint` — the UCP business profile, composed from the capability registry on every request. Anonymous because the specification requires it, and out of the OpenAPI document (ADR 0029) |
+| `GET /.well-known/ucp` | `Ucp/UcpProfileEndpoint` — the UCP business profile, composed from the capability registry on every request. Anonymous because the specification requires it, and out of the OpenAPI document (ADR 0030) |
 | `POST /ucp/catalog/search`, `/lookup`, `/product` | `Ucp/Catalog/UcpCatalogRestBinding` — UCP's REST binding of the catalogue capability. The three paths are the specification's; only the `/ucp` prefix is ours. A lookup that finds nothing answers **200** with a `messages` entry, because an unknown identifier is a business outcome; `product` is the exception and answers 404, because its response schema requires a `product` |
 | `POST /mcp` | `Mcp/TenderoMcpServer` — **not a Carter slice**: JSON-RPC over one route, anonymous by explicit decision and out of the OpenAPI document. **Eight** read tools. Three are UCP's catalogue MCP binding with the shapes the specification fixes — `search_catalog`, `lookup_catalog`, `get_product` — and five are the shop's own: `search_products`, `get_product_detail`, `list_categories`, `list_offers`, `get_return_policy`. Ours yielded the name `get_product` to the protocol, because two tools cannot share one on a server and `MapMcp` offers one server per process |
 
@@ -117,6 +117,12 @@ pure context: price lists, promotions and tax calculation take values in and
 return values out, with the instant passed as an argument rather than read from
 a clock. That is what lets the combination rules be verified with property tests
 over thousands of generated carts.
+
+**Every amount includes VAT** (ADR 0028) — catalogue prices, tariffs, promotion
+thresholds and shipping rates alike, because that is what a consumer is shown and
+pays. A tax calculator **extracts** the VAT an amount contains and never adds
+any, so a total is `subtotal − discounts + shipping` and the tax is a breakdown
+of it. `Order.Place` refuses totals that do not satisfy that equation.
 
 Combination is a declarative table in the `AllowedTransitions` idiom —
 `ExclusiveGlobal` stops evaluation, `ExclusiveInGroup` closes its group,

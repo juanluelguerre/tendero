@@ -156,7 +156,7 @@
          by reading the nuspec of the version that was about to be added - which
          is the entire reason ADR 0006 says to check the EXACT version.
          8.0.5 is the last MIT release, so it is pinned here per CLAUDE.md's own
-         fallback ("pin the last free version and open an ADR"): see ADR 0028.
+         fallback ("pin the last free version and open an ADR"): see ADR 0029.
          Its chain is MIT throughout - JsonPointer.Net 6.0.1, Json.More.Net 2.2.0
          and Humanizer.Core 2.14.1, each checked.
          It is in the Testing group because it is a test-only dependency: the

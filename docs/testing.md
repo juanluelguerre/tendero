@@ -2,9 +2,9 @@
 
 Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short.
 
-**What is in the repository today** (2026-09-08): xUnit v3, CsCheck,
+**What is in the repository today** (2026-09-14): xUnit v3, CsCheck,
 NetArchTest.Rules, Testcontainers.PostgreSql, `WebApplicationFactory`, vitest
-and Playwright — 547 backend tests, 37 frontend, 20 browser specs. NSubstitute,
+and Playwright — 766 backend tests, 61 frontend, 20 browser specs. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
 fakes and the contract suites have not needed a mock, and nothing snapshots
 yet. Respawn was declined — a fresh database per test is cheaper than a reset.
@@ -34,6 +34,29 @@ Each enters with the first test that needs it (ADR 0006).
   FluentAssertions v8+ (commercial license).
 - Mock only at ports, with **NSubstitute** (never Moq). Prefer deterministic in-memory fakes
   for anything with behavior (e.g. `InMemoryProductRepository` used across tests).
+
+## A test that passed first time has proved nothing yet
+
+A test written for code that already exists passes the first time it runs, and
+that is exactly the moment it has shown nothing: it might assert the wrong
+thing, or nothing at all. So a test added to cover existing code **earns its
+place by failing on purpose** — the production code is mutated one rule at a
+time (a guard inverted, a filter dropped, a fallback changed, a culture fixed),
+the test class is run against each mutation, and every one of them has to turn
+at least one test red. Then the file is restored byte for byte.
+
+A mutation nobody notices is a finding, not a formality: either a test is
+missing, or the code carries a branch nothing needs.
+
+It is done by hand today, with a small script and a list of mutations written
+per class — the lists live in the commit messages that added the tests. The
+first sweep, on 2026-09-10, put 80 mutations through five classes that had no
+tests of their own (the principal accessor, culture negotiation, the payment
+webhook handler, the search document and the outbox worker) and none survived.
+Two of those tests found real defects on their first run rather than on a
+mutation — which is the other reason to write them. A tool (Stryker.NET,
+Apache-2.0) would make it repeatable; it is a dependency decision and has not
+been taken.
 
 ## Property-based (CsCheck)
 
@@ -131,8 +154,13 @@ That is the whole brief.
 
 Three rules keep it honest:
 
-1. **Assert the browser, not the arithmetic.** That a refund is 72.55 € is
-   `CheckoutLoopTests`'s job. The spec asserts that an amount appears.
+1. **Assert the browser, not the arithmetic.** What a refund comes to is
+   `ReturnRequestTests`'s job, and that a total is what its lines show plus the
+   shipping is `QuoteCartHandlerTests`'. The spec asserts that an amount
+   appears. The rule is right and it has a cost worth remembering: on
+   2026-09-11 a person with a pencil noticed that a cart's lines added up to
+   78,33 € and its total said 94,78 € (ADR 0028), because the invariant a
+   browser spec was told not to check had been checked by nobody at all.
 2. **Web-first assertions, never a sleep.** Half of this system is asynchronous
    by design — an order ships and the capture arrives through the outbox — so
    `expect(...).toPass()` and auto-retrying locators are the only correct tool.

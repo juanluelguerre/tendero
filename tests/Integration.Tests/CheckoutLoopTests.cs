@@ -7,11 +7,11 @@ using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Adapters;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Features.Checkout;
+using ElGuerre.Tendero.Ordering.Features.GetOrder;
 using ElGuerre.Tendero.Ordering.Features.ManageCart;
 using ElGuerre.Tendero.Ordering.Features.Returns;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Persistence;
-using ElGuerre.Tendero.Persistence.Outbox;
 using ElGuerre.Tendero.Pricing;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -264,6 +264,94 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         Assert.True(refunded.Return.RefundAmount!.Value.Amount > 0m);
     }
 
+    /// <summary>
+    /// The defect the UI review of 2026-09-11 found through the storefront: one
+    /// unit bought, two returns opened for it, both refunded and both restocked —
+    /// one refund of money never owed and one phantom unit on the shelf. The
+    /// aggregate had the check; the handler handed it no earlier returns to
+    /// check against.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task One_unit_bought_is_one_unit_returned_however_many_times_it_is_asked_for()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+
+        await using var shop = await Shop.OpenAsync(postgres, nameof(
+            One_unit_bought_is_one_unit_returned_however_many_times_it_is_asked_for));
+
+        await shop.StockAsync(Sku, 5, ct);
+
+        var cart = await shop.AddToCartAsync(null, Sku, 1, ct);
+        var options = await shop.ShippingOptionsAsync(cart.Token, ct);
+        var quote = await shop.QuoteAsync(cart.Token, options.Options[0].Amount, ct);
+
+        var order = (await shop.PlaceOrderAsync(
+            cart.Token, options.Options[0].Code, quote.InputHash, ct)).Order!;
+
+        await shop.DrainAsync(ct);
+        await shop.MoveAsync(order.Id, moved => moved.Ship(TimeProvider.System), ct);
+        await shop.DrainAsync(ct);
+        await shop.MoveAsync(order.Id, moved => moved.Deliver(TimeProvider.System), ct);
+        await shop.DrainAsync(ct);
+
+        Assert.Equal(1, (await shop.GetOrderAsync(order.Id, ct)).Returnable.Single(line => line.Sku == Sku).Quantity);
+
+        Assert.Equal(RequestReturnOutcome.Opened, (await shop.RequestReturnAsync(order.Id, Sku, 1, ct)).Outcome);
+
+        // The page asks the same rule the command enforces, so it stops
+        // offering what the command would refuse.
+        Assert.Equal(0, (await shop.GetOrderAsync(order.Id, ct)).Returnable.Single(line => line.Sku == Sku).Quantity);
+
+        var second = await shop.RequestReturnAsync(order.Id, Sku, 1, ct);
+
+        Assert.Equal(RequestReturnOutcome.Refused, second.Outcome);
+        Assert.Contains("0 left", second.Detail);
+    }
+
+    /// <summary>
+    /// The race the fix above left open: two requests for the last unit, both
+    /// reading the same earlier returns before either saves. Each one alone is
+    /// valid, so only the database can refuse the second — both claim return
+    /// number 1 of the order, and the unique index on (order, number) lets one
+    /// in. Played deterministically with two scopes rather than with timing.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task Two_returns_racing_for_the_last_unit_let_only_one_in()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+
+        await using var shop = await Shop.OpenAsync(postgres, nameof(
+            Two_returns_racing_for_the_last_unit_let_only_one_in));
+
+        await shop.StockAsync(Sku, 5, ct);
+
+        var cart = await shop.AddToCartAsync(null, Sku, 1, ct);
+        var options = await shop.ShippingOptionsAsync(cart.Token, ct);
+        var quote = await shop.QuoteAsync(cart.Token, options.Options[0].Amount, ct);
+        var order = (await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, quote.InputHash, ct)).Order!;
+
+        await shop.DrainAsync(ct);
+        await shop.MoveAsync(order.Id, moved => moved.Ship(TimeProvider.System), ct);
+        await shop.DrainAsync(ct);
+        await shop.MoveAsync(order.Id, moved => moved.Deliver(TimeProvider.System), ct);
+        await shop.DrainAsync(ct);
+
+        // Both read the past — no returns yet — before either writes.
+        var first = await shop.PrepareReturnAsync(order.Id, Sku, ct);
+        var second = await shop.PrepareReturnAsync(order.Id, Sku, ct);
+
+        await first.SaveAsync(ct);
+
+        await Assert.ThrowsAsync<ConcurrentWriteException>(() => second.SaveAsync(ct));
+
+        await using var context = shop.Factory.Create();
+        Assert.Single(await context.ReturnRequests.Where(request => request.OrderId == order.Id).ToListAsync(ct));
+    }
+
     // ---------- The shop ----------
 
     /// <summary>
@@ -414,6 +502,40 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
                     orderId, [new ReturnLineRequest(sku, quantity, nameof(ReturnReason.WrongSize), null)], "es"), ct);
         }
 
+        /// <summary>A return opened against what its own scope read, and not yet
+        /// saved — half of a race, to be finished by the caller.</summary>
+        public async Task<PendingReturn> PrepareReturnAsync(OrderId orderId, string sku, CancellationToken ct)
+        {
+            var scope = this.provider.CreateAsyncScope();
+            var order = (await scope.ServiceProvider.GetRequiredService<IOrderRepository>().FindByIdAsync(orderId, ct))!;
+            var returns = scope.ServiceProvider.GetRequiredService<IReturnRequestRepository>();
+            var earlier = await returns.ForOrderAsync(orderId, ct);
+
+            returns.Add(ReturnRequest.Open(
+                TimeProvider.System, order,
+                [new ReturnLine(order.Lines[0].VariantId, sku, 1, ReturnReason.WrongSize, null)],
+                earlier));
+
+            return new PendingReturn(scope);
+        }
+
+        public sealed class PendingReturn(AsyncServiceScope scope)
+        {
+            public async Task SaveAsync(CancellationToken ct)
+            {
+                await using (scope)
+                    await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
+            }
+        }
+
+        public async Task<OrderDetail> GetOrderAsync(OrderId orderId, CancellationToken ct)
+        {
+            await using var scope = this.provider.CreateAsyncScope();
+
+            return (await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>()
+                .SendAsync(new GetOrderQuery(orderId), ct))!;
+        }
+
         public async Task<DecideReturnResult> DecideAsync(
             ReturnRequestId id, ReturnDecision decision, CancellationToken ct)
         {
@@ -435,32 +557,14 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct);
         }
 
-        /// <summary>The same loop as <c>OutboxProcessor</c>, without the timer —
-        /// and twice, because a handler's own changes raise the next message.</summary>
+        /// <summary>Up to two passes of the real worker (<see cref="WorkerOutbox"/>),
+        /// because a handler's own changes raise the next message.</summary>
         public async Task DrainAsync(CancellationToken ct)
         {
             for (var pass = 0; pass < 2; pass++)
             {
-                await using var scope = this.provider.CreateAsyncScope();
-                var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
-                var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
-
-                var pending = await context.OutboxMessages
-                    .Where(message => message.ProcessedAt == null)
-                    .OrderBy(message => message.OccurredAt)
-                    .ToListAsync(ct);
-
-                if (pending.Count == 0)
+                if (await WorkerOutbox.PassAsync(this.provider, ct) == 0)
                     return;
-
-                foreach (var message in pending)
-                {
-                    await dispatcher.PublishAsync(
-                        DomainEventSerializer.Deserialize(message.Type, message.Payload), ct);
-                    message.MarkProcessed();
-                }
-
-                await context.SaveChangesAsync(ct);
             }
         }
 

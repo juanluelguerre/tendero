@@ -1,12 +1,12 @@
 {
   "attributes": {
     "title": "Atributos",
-    "hint": "Una etiqueta sin traducir no es cosmetica: una opcion sin ingles es exactamente lo que hacia que «navy blue shoes» no encontrara nada.",
+    "hint": "Una etiqueta sin traducir no es cosmética: una opción sin inglés es exactamente lo que hacía que «navy blue shoes» no encontrara nada.",
     "loading": "Cargando...",
     "failed": "No se pudieron cargar las definiciones.",
     "incomplete": "{{count}} sin completar",
     "column": {
-      "code": "Codigo",
+      "code": "Código",
       "kind": "Tipo",
       "options": "Opciones"
     }
@@ -34,7 +34,7 @@
     },
     "refused": "{{count}} rechazados",
     "showPayload": "Ver comando",
-    "system": "sistema",
+    "guest": "invitado",
     "title": "Auditoría",
     "trace": "Traza {{id}}",
     "emptyFor": "No hay nada registrado como «{{outcome}}». Que es la buena noticia.",
@@ -42,12 +42,26 @@
   },
   "brand": {
     "area": "Backoffice",
-    "name": "Tendero"
+    "name": "Tendero",
+    "title": "Tendero Backoffice"
+  },
+  "catalogue": {
+    "empty": "Todavía no hay nada publicado. Los productos se publican desde la cola de revisión.",
+    "failed": "No se ha podido cargar el catálogo.",
+    "hint": "Todo lo que la tienda vende hoy. Las variantes son una decisión de catálogo, producto a producto.",
+    "loading": "Cargando el catálogo...",
+    "next": "Siguiente",
+    "pageOf": "Página {{page}} de {{pages}}",
+    "pages": "Páginas",
+    "previous": "Anterior",
+    "published": "{{count}} publicados",
+    "title": "Catálogo"
   },
   "nav": {
     "agents": "Actividad de agentes",
     "attributes": "Atributos",
     "audit": "Auditoría",
+    "catalogue": "Catálogo",
     "language": "Idioma",
     "orders": "Pedidos",
     "promotions": "Promociones",
@@ -81,7 +95,7 @@
     "paid": "Autorizado",
     "status": {
       "Pending": "Pendiente de pago",
-      "PaymentAuthorized": "Pagado",
+      "PaymentAuthorized": "Autorizado",
       "PaymentFailed": "Pago fallido",
       "Confirmed": "Confirmado",
       "Shipped": "Enviado",
@@ -169,7 +183,7 @@
       "product": "Producto"
     },
     "complete": "es · en",
-    "empty": "Aquí no hay nada todavía — importa un catálogo para empezar.",
+    "empty": "No hay nada pendiente de revisión. Importa un catálogo para añadir productos.",
     "failed": "La cola no respondió. Vuelve a intentarlo en un momento.",
     "hint": "Importar nunca publica: Draft es la razón de ser de esta cola, y sólo publicar hace encontrable un producto.",
     "import": "Importar catálogo de ejemplo",
@@ -181,7 +195,8 @@
     "publishing": "Publicando…",
     "title": "Cola de revisión",
     "imported": "Importado: {{created}} nuevos, {{updated}} actualizados, en {{seconds}} s.",
-    "importFailed": "{{count}} no se pudieron importar."
+    "importFailed": "{{count}} no se pudieron importar.",
+    "seeCatalogue": "Ver lo que ya está publicado"
   },
   "signIn": {
     "title": "Identifícate",
@@ -193,7 +208,8 @@
     "via": {
       "dev-issuer": "Firma el emisor de desarrollo.",
       "keycloak": "Firma Keycloak."
-    }
+    },
+    "wrongRole": "Has entrado como {{name}} ({{role}}). El backoffice es para quien lleva la tienda: cierra la sesión para usar otra cuenta."
   },
   "stock": {
     "allAvailable": "Todo disponible",

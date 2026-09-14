@@ -72,6 +72,8 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/catalog/import")]
     [InlineData("/api/catalog/products/{id:guid}/publish")]
     [InlineData("/api/search/reindex")]
+    // Not a write, and here for the same reason: it reads drafts.
+    [InlineData("/api/catalog/products")]
     public void Writes_to_the_catalogue_require_the_shopkeeper(string route)
     {
         using var factory = new TenderoApiFactory();
@@ -90,5 +92,26 @@ public sealed class EndpointAuthorizationTests
             .ToArray();
 
         Assert.Contains(SharedKernel.TenderoPolicyNames.Shopkeeper, policies);
+    }
+
+    /// <summary>
+    /// The catalogue list reads the TABLE, drafts included — it is the review
+    /// queue's reader — and it was anonymous under a comment saying "the
+    /// catalogue is public". The public catalogue is what is Active, and it is
+    /// served by search and by the product page, both of which only ever return
+    /// Active. A draft is an imported or AI-proposed product nobody has approved
+    /// yet (ADR 0012), and the UI review of 2026-09-11 found any stranger could
+    /// list them with <c>?status=draft</c>.
+    /// </summary>
+    [Fact]
+    public async Task A_stranger_cannot_read_the_catalogue_under_review()
+    {
+        using var factory = new TenderoApiFactory();
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync(
+            "/api/catalog/products?status=draft", TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

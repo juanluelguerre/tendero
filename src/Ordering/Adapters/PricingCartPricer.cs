@@ -31,13 +31,11 @@ internal sealed class PricingCartPricer(IQueryDispatcher dispatcher) : ICartPric
         CancellationToken cancellationToken = default)
     {
         var result = await dispatcher.SendAsync(
+            // No segment travels: `QuoteCart` reads it off the principal, which
+            // is the same one the cart was quoted for — so checkout charges the
+            // tariff the shopper was shown, VIP included.
             new QuoteCartQuery(
                 culture,
-                // The segment is deliberately NOT passed: `QuoteCart` resolves it
-                // from the principal, so a guest asking for `vip` is quoted
-                // `retail`. Forwarding it from here would be a back door into
-                // the tariff.
-                Segment: null,
                 [.. lines.Select(line => new QuoteLineInput(line.Sku, line.Quantity))],
                 shipping.Amount,
                 coupons),

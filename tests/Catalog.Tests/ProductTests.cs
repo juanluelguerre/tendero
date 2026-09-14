@@ -59,6 +59,58 @@ public sealed class ProductTests
     public void A_product_with_no_images_has_no_cover_photo() =>
         Assert.Null(AProduct().PrimaryImage);
 
+    /// <summary>
+    /// The defect the UI review of 2026-09-11 found on the six original
+    /// products: the seed gained an illustration for each, a re-import ADDED it
+    /// behind the old placeholder, and the placeholder stayed the cover forever,
+    /// because the cover is the lowest sort order and appending never takes it.
+    /// A gallery that comes from a source is the source's, in the source's order.
+    /// </summary>
+    [Fact]
+    public void A_gallery_that_replaces_another_puts_its_first_image_on_the_cover()
+    {
+        var product = AProduct();
+        product.AddImage(Clock, new ImageId("placeholder"));
+
+        product.ReplaceImages(Clock, [(new ImageId("illustration"), null), (new ImageId("placeholder"), null)]);
+
+        Assert.Equal(new ImageId("illustration"), product.PrimaryImage?.Id);
+        Assert.Equal(["illustration", "placeholder"], product.Images.OrderBy(i => i.SortOrder).Select(i => i.Id.Value));
+    }
+
+    [Fact]
+    public void An_image_the_source_no_longer_lists_leaves_the_gallery()
+    {
+        var product = AProduct();
+        product.AddImage(Clock, new ImageId("aaa"));
+        product.AddImage(Clock, new ImageId("bbb"));
+
+        product.ReplaceImages(Clock, [(new ImageId("bbb"), null)]);
+
+        Assert.Equal(new ImageId("bbb"), Assert.Single(product.Images).Id);
+    }
+
+    /// <summary>Re-importing a product whose gallery did not change is not a
+    /// change: no new timestamp and no event, or every import would reindex the
+    /// whole catalogue for nothing.</summary>
+    [Fact]
+    public void Replacing_a_gallery_with_the_same_one_changes_nothing()
+    {
+        var clock = new TestClock();
+        var product = Product.Create(clock, LocalizedText.From("es", "Cafetera"), new Money(29.90m, "EUR"));
+        product.AddImage(clock, new ImageId("aaa"), LocalizedText.From("es", "Cafetera de goteo"));
+        var events = product.DomainEvents.Count;
+        var updated = product.UpdatedAt;
+
+        // A NEW LocalizedText with the same words, which is what every import
+        // builds: comparing the alt by reference would call it a change.
+        clock.Advance(TimeSpan.FromHours(1));
+        product.ReplaceImages(clock, [(new ImageId("aaa"), LocalizedText.From("es", "Cafetera de goteo"))]);
+
+        Assert.Equal(updated, product.UpdatedAt);
+        Assert.Equal(events, product.DomainEvents.Count);
+    }
+
     [Fact]
     public void Adding_the_same_image_twice_does_not_duplicate_it()
     {

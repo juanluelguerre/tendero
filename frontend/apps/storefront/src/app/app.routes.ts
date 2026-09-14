@@ -25,6 +25,7 @@ const shopRoutes: Route[] = [
     // with the canonical one when they disagree. Slug first because it puts the
     // words a search engine reads earlier in the path — eBay's shape.
     path: 'p/:slug/:code',
+    title: 'product.title',
     loadComponent: () => import('./features/product/product-page').then((m) => m.ProductPage),
   },
   {
@@ -33,25 +34,31 @@ const shopRoutes: Route[] = [
     // argument ADR 0026 makes about products — except that a category has no
     // slug to decorate the URL with, so there is nothing to put in front of it.
     path: 'c/:code',
+    title: 'category.title',
     loadComponent: () => import('./features/category/category-page').then((m) => m.CategoryPage),
   },
   {
     path: 'account',
+    title: 'account.title',
     loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),
   },
   {
     path: 'cart',
+    title: 'cart.title',
     loadComponent: () => import('./features/cart/cart-page').then((m) => m.CartPage),
   },
   {
     path: 'checkout',
+    title: 'checkout.title',
     loadComponent: () => import('./features/checkout/checkout-page').then((m) => m.CheckoutPage),
   },
   {
     // The confirmation page, and the one a shopper comes back to in order to
-    // send something back. The id is the credential until phase 7 puts an
-    // account behind it — a GUID v7 nobody can enumerate.
+    // send something back. For a guest the id is the credential — a GUID v7
+    // nobody can enumerate; a signed-in shopper also reaches it from their
+    // account (phase 7).
     path: 'orders/:id',
+    title: 'order.title',
     loadComponent: () => import('./features/order/order-page').then((m) => m.OrderPage),
   },
 ];

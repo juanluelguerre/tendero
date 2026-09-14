@@ -31,6 +31,16 @@ public interface IProductIndexer
     /// the cheap and correct answer. What was missing was a way to ASK for it.
     /// </summary>
     Task RecreateAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Whether any culture's index holds no documents at all.
+    ///
+    /// It is the question a restarted worker asks before deciding to rebuild:
+    /// Elasticsearch keeps no volume (ADR 0012) and Postgres does, so a recreated
+    /// container is a full catalogue behind an empty index — and nothing else
+    /// notices, because the outbox delivered those events long ago.
+    /// </summary>
+    Task<bool> IsEmptyAsync(CancellationToken ct = default);
 }
 
 /// <summary>

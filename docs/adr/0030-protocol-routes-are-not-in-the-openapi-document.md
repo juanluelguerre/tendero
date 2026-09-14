@@ -1,4 +1,4 @@
-# ADR 0029 — A route whose protocol publishes its own discovery is not in the OpenAPI document
+# ADR 0030 — A route whose protocol publishes its own discovery is not in the OpenAPI document
 
 **Status:** accepted · 2026-09-09
 

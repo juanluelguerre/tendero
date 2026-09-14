@@ -1,4 +1,4 @@
-# ADR 0028 — JsonSchema.Net is pinned to 8.0.5, its last MIT release
+# ADR 0029 — JsonSchema.Net is pinned to 8.0.5, its last MIT release
 
 **Status:** accepted · 2026-09-09
 

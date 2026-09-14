@@ -8,8 +8,8 @@ code quality and architectural clarity matter more than shipping fast.
 Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
 `ElGuerre.Tendero.Pricing`, `ElGuerre.Tendero.Inventory`,
 `ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Accounts`,
-`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`;
-`Ucp` is a placeholder README until phase 9). Project file name,
+`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`,
+`ElGuerre.Tendero.Ucp`). Project file name,
 assembly name and root namespace are the same string; the folders under `src/`
 drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope in
 `frontend/` stays `@tendero/*` — npm scopes and .NET namespaces do not have to

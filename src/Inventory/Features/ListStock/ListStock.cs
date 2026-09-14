@@ -77,7 +77,7 @@ public sealed class ListStockHandler(
 
     /// <summary>
     /// Enough to see what just happened without turning the screen into a log.
-    /// The full history is what the audit table is for, in phase 7.
+    /// The full history is what the audit table is for (phase 7).
     /// </summary>
     private const int RecentReservations = 20;
 
@@ -138,7 +138,17 @@ public sealed record CountStockCommand(string Sku, string WarehouseCode, int OnH
 
 public enum CountStockOutcome { Counted, UnknownWarehouse }
 
-public sealed record CountStockResult(CountStockOutcome Outcome, int OnHand, int Available);
+public sealed record CountStockResult(CountStockOutcome Outcome, int OnHand, int Available) : IAuditedResult
+{
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        CountStockOutcome.Counted => AuditOutcome.Allowed,
+        CountStockOutcome.UnknownWarehouse => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome == CountStockOutcome.Counted ? null : Outcome.ToString();
+}
 
 public sealed record CountStockRequest(int OnHand);
 

@@ -64,11 +64,6 @@ export class OrdersPage {
     }
   }
 
-  /** The one clay button in the row. If two are clay, neither is primary. */
-  protected primary(order: OrderSummary): OrderMove | null {
-    return this.moves(order)[0] ?? null;
-  }
-
   protected shortId(id: string): string {
     return id.split('-')[0];
   }

@@ -31,7 +31,6 @@ namespace ElGuerre.Tendero.Pricing.Features.QuoteCart;
 /// </summary>
 public sealed record QuoteCartQuery(
     string Culture,
-    string? Segment,
     IReadOnlyList<QuoteLineInput> Lines,
     decimal? Shipping,
     IReadOnlyList<string> Coupons) : IQuery<QuoteCartResult>;
@@ -87,7 +86,6 @@ public sealed class QuoteCartValidator : AbstractValidator<QuoteCartQuery>
 
 public sealed record QuoteCartRequest(
     IReadOnlyList<QuoteLineRequest> Lines,
-    string? Segment = null,
     decimal? Shipping = null,
     IReadOnlyList<string>? Coupons = null);
 
@@ -149,7 +147,6 @@ public sealed class QuoteCartEndpoint : ICarterModule
                 var result = await dispatcher.SendAsync(
                     new QuoteCartQuery(
                         resolved,
-                        request.Segment,
                         [.. request.Lines.Select(line => new QuoteLineInput(line.Sku, line.Quantity))],
                         request.Shipping,
                         request.Coupons ?? []),
@@ -225,7 +222,7 @@ public sealed class QuoteCartHandler(
         activity?.SetTag("pricing.line_count", query.Lines.Count);
 
         var settings = options.Value;
-        var segment = Segments.For(principal.Current, query.Segment, settings.DefaultSegment);
+        var segment = Segments.For(principal.Current, settings.DefaultSegment);
         var at = clock.GetUtcNow();
 
         activity?.SetTag("pricing.segment", segment);
@@ -296,9 +293,9 @@ public sealed class QuoteCartHandler(
         var cart = outcome.Cart;
         var currency = cart.Currency;
 
-        // Shipping is taxed. It goes in as one more base, at the standard
-        // class: carriage with its own rate exists in some jurisdictions and
-        // would be another adapter, not an `if` here.
+        // Shipping carries VAT too. It goes in as one more amount, at the
+        // standard class: carriage with its own rate exists in some
+        // jurisdictions and would be another adapter, not an `if` here.
         var calculator = taxes.Get(settings.TaxCalculator);
         var assessment = calculator.Assess(new TaxRequest(
             currency,
@@ -308,7 +305,11 @@ public sealed class QuoteCartHandler(
                 new TaxableAmount(TaxableAmount.Standard, cart.Shipping)
             ]));
 
-        var total = cart.Net + cart.Shipping + assessment.Total;
+        // Prices include VAT (ADR 0028), so the total is what the lines and the
+        // shipping add up to — the figure the shopper can check against the
+        // lines they were shown — and the assessment says how much of it is
+        // tax. Adding the assessment here is the defect this line replaced.
+        var total = cart.Net + cart.Shipping;
 
         var inputHash = Fingerprint(query, segment, book, promotionSet);
 

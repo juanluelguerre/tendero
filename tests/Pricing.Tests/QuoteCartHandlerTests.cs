@@ -30,10 +30,10 @@ public sealed class QuoteCartHandlerTests
         Options.Create(new PricingSeedOptions()), this.clock);
 
     private Task<QuoteCartResult> Quote(
-        string? segment = null, decimal? shipping = null, string[]? coupons = null,
+        decimal? shipping = null, string[]? coupons = null,
         params (string Sku, int Quantity)[] lines) =>
         Handler().HandleAsync(
-            new QuoteCartQuery("es", segment,
+            new QuoteCartQuery("es",
                 [.. lines.Select(line => new QuoteLineInput(line.Sku, line.Quantity))],
                 shipping, coupons ?? []),
             CancellationToken.None);
@@ -75,27 +75,50 @@ public sealed class QuoteCartHandlerTests
 
     /// <summary>
     /// The security-shaped detail of the slice: if the segment came from the
-    /// request body, anybody would ask for the VIP tariff. A guest gets the
-    /// default no matter what they send.
+    /// request, anybody would ask for the VIP tariff. So the request carries
+    /// none, and a guest — who has no segment the shop could hold — is quoted
+    /// the default.
     /// </summary>
     [Fact]
-    public async Task A_guest_asking_for_the_vip_tariff_is_quoted_the_retail_one()
+    public async Task A_guest_is_quoted_the_default_tariff()
     {
         this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
 
-        var result = await Quote(segment: "vip", lines: [("SHIRT", 1)]);
+        var result = await Quote(lines: [("SHIRT", 1)]);
 
         Assert.Equal("retail", result.Quote!.Segment);
         Assert.Equal(24.50m, result.Quote.Lines.Single().UnitPrice.Amount);
     }
 
+    /// <summary>
+    /// Signing in is not the same as being on a tariff. A shopper the shop holds
+    /// no segment for is quoted the default: this is the case that used to hand
+    /// "vip" to anybody signed in who asked for it.
+    /// </summary>
     [Fact]
-    public async Task An_authenticated_customer_gets_the_segment_they_ask_for()
+    public async Task A_signed_in_shopper_with_no_segment_is_quoted_the_default_tariff()
     {
         this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
         this.principal = CommercePrincipal.Anonymous with { Subject = "ana" };
 
-        var result = await Quote(segment: "vip", lines: [("SHIRT", 1)]);
+        var result = await Quote(lines: [("SHIRT", 1)]);
+
+        Assert.Equal("retail", result.Quote!.Segment);
+        Assert.Equal(24.50m, result.Quote.Lines.Single().UnitPrice.Amount);
+    }
+
+    /// <summary>
+    /// The other half of the same rule: a customer the shop has put on the VIP
+    /// tariff is quoted it without asking, because the segment travels with who
+    /// they are.
+    /// </summary>
+    [Fact]
+    public async Task A_vip_customer_is_quoted_the_vip_tariff_without_asking_for_it()
+    {
+        this.priceLists.Add("vip", "vip", 10, ("SHIRT", 10m));
+        this.principal = CommercePrincipal.Anonymous with { Subject = "marta", Segment = "vip" };
+
+        var result = await Quote(lines: [("SHIRT", 1)]);
 
         Assert.Equal("vip", result.Quote!.Segment);
         Assert.Equal(10m, result.Quote.Lines.Single().UnitPrice.Amount);
@@ -104,8 +127,18 @@ public sealed class QuoteCartHandlerTests
 
     // ---------- The whole sum ----------
 
+    /// <summary>
+    /// Catalogue prices include VAT (ADR 0028), so the total is what the lines
+    /// and the shipping add up to, and the tax is a part of it rather than an
+    /// addition to it.
+    ///
+    /// It used to be an addition: the same cart came to 59,35 while its lines
+    /// and shipping said 49,05, under a line that read "VAT included". The UI
+    /// review of 2026-09-11 found it with a pair of shoes shown at 59,96 and
+    /// charged 72,55.
+    /// </summary>
     [Fact]
-    public async Task A_quote_adds_up_lines_discounts_shipping_and_tax()
+    public async Task A_quote_adds_up_lines_discounts_and_shipping_with_the_tax_inside()
     {
         this.promotions.Add(Build.Promotion("TEN", new PercentOffLine(10m)));
 
@@ -115,12 +148,31 @@ public sealed class QuoteCartHandlerTests
         Assert.Equal(49.00m, quote.Subtotal.Amount);
         Assert.Equal(4.90m, quote.DiscountTotal.Amount);
         Assert.Equal(4.95m, quote.Shipping.Amount);
+        Assert.Equal(49.05m, quote.Total.Amount);
 
-        // Shipping is taxed as a base like any other: (49,00 - 4,90 + 4,95) is
-        // 49,05, and 21 % of that is 10,3005 — 10,30 once rounded, one single
-        // time, at the end.
-        Assert.Equal(10.30m, quote.TaxTotal.Amount);
-        Assert.Equal(59.35m, quote.Total.Amount);
+        // Shipping carries VAT like any other base. 49,05 paid at 21 % is a base
+        // of 40,54 (49,05 / 1,21 = 40,5372…) and 8,51 of tax — base and tax
+        // adding up to what was paid, to the cent, because the tax is what is
+        // left once the base is rounded.
+        Assert.Equal(8.51m, quote.TaxTotal.Amount);
+        Assert.Equal(40.54m, quote.Taxes.Single().Base.Amount);
+    }
+
+    /// <summary>
+    /// The invariant the shopper can check with a pencil: the lines they are
+    /// shown, plus the shipping, are what they pay. Stated apart from the
+    /// arithmetic above because it is the one the screen made visible.
+    /// </summary>
+    [Fact]
+    public async Task The_total_is_what_the_lines_show_plus_the_shipping()
+    {
+        this.promotions.Add(Build.Promotion("TEN", new PercentOffLine(10m)));
+
+        var quote = (await Quote(shipping: 4.95m, lines: [("SHIRT", 3)])).Quote!;
+
+        var shown = quote.Lines.Aggregate(Money.Zero("EUR"), (sum, line) => sum + line.Net) + quote.Shipping;
+
+        Assert.Equal(shown, quote.Total);
     }
 
     [Fact]

@@ -118,7 +118,7 @@ a 404 would tell a caller their request was malformed when it was not.
 schema requires a `product`, so there is no valid 200 shape for a miss.
 
 **None of the UCP routes appear in `docs/openapi/tendero.json`**, and that is a
-rule rather than an oversight (ADR 0029): a route whose own protocol publishes a
+rule rather than an oversight (ADR 0030): a route whose own protocol publishes a
 machine-readable description is described there, not a second time by us. The
 same applies to `/mcp` and to the development issuer. It does not make them
 private — they are public and callable either way.

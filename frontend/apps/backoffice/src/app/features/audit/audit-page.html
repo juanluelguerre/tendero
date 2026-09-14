@@ -82,7 +82,8 @@
                 segment is enough to match against something you are already
                 looking at, and the whole value is one hover away.
               -->
-              <span class="subject">{{ entry.actorName ?? entry.subject ?? t('audit.system') }}</span>
+              @let actor = actorOf(entry);
+              <span class="subject">{{ 'guest' in actor ? t('audit.guest') : actor.label }}</span>
 
               <!--
                 Only when there IS a name and it differs. Rows written before

@@ -8,7 +8,7 @@ namespace ElGuerre.Tendero.Ordering.Ports;
 ///
 /// It arrives with the stock saga, which is the first thing in the repository
 /// that loads an order it did not create: the handler for <c>OrderPlaced</c>
-/// gets an id and needs the lines. Checkout will use the same port in phase 5.
+/// gets an id and needs the lines. Checkout used the same port in phase 5.
 ///
 /// Tracking, always. Everything that loads an order here does so to move it
 /// through its state machine and commit — there is no read side yet, and when

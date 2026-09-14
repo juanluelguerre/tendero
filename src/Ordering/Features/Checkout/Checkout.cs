@@ -192,7 +192,23 @@ public sealed record PlaceOrderResult(
     PlaceOrderOutcome Outcome,
     Order? Order,
     CartPricing? Pricing,
-    string? Detail);
+    string? Detail) : IAuditedResult
+{
+    /// <summary>A declined card is the shop saying no, which is a denial; a
+    /// provider that did not answer is a fault. Each refusal carries its words,
+    /// or its name when it has none.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced => AuditOutcome.Allowed,
+        PlaceOrderOutcome.PaymentUnavailable => AuditOutcome.Failed,
+        PlaceOrderOutcome.NothingToShip or PlaceOrderOutcome.UnknownShippingOption or
+            PlaceOrderOutcome.UnknownSkus or PlaceOrderOutcome.PriceChanged or
+            PlaceOrderOutcome.PaymentDeclined => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome is PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced ? null : Detail ?? Outcome.ToString();
+}
 
 public sealed class PlaceOrderValidator : AbstractValidator<PlaceOrderCommand>
 {
@@ -299,8 +315,8 @@ public sealed class PlaceOrderHandler(
         // signed in — an order always has a buyer, even an anonymous one, and a
         // nullable CustomerId would spread null through every order query for a
         // case the domain does not actually have. It is written back onto the
-        // cart so the two agree, which is what phase 7's ClaimGuestAccount will
-        // link an account to.
+        // cart so the two agree, which is what phase 7's LinkIdentity links an
+        // account to.
         var customer = principal.Current.Customer ?? cart.CustomerId ?? CustomerId.New();
 
         if (cart.CustomerId is null)
@@ -392,7 +408,7 @@ public sealed class CheckoutEndpoints : ICarterModule
     {
         var checkout = app.MapGroup("/api/checkout")
             // Anonymous, like the cart it closes: a guest has to be able to buy.
-            // The cart token is the credential, and phase 7 puts an account
+            // The cart token is the credential, and phase 7 put an account
             // behind it without changing this line.
             .AllowAnonymous()
             .WithTags("Checkout");

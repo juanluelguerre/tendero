@@ -764,6 +764,7 @@ export interface components {
         OrderDetail: {
             order: components["schemas"]["OrderView"];
             returns: components["schemas"]["ReturnView"][];
+            returnable: components["schemas"]["ReturnableLineView"][];
         };
         OrderDiscountView: {
             promotionCode: string;
@@ -943,7 +944,6 @@ export interface components {
         };
         QuoteCartRequest: {
             lines: components["schemas"]["QuoteLineRequest"][];
-            segment?: null | string;
             /** Format: double */
             shipping?: null | number;
             coupons?: null | string[];
@@ -1039,6 +1039,13 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             lines: components["schemas"]["ReturnLineView"][];
+            /** Format: int32 */
+            number: number;
+        };
+        ReturnableLineView: {
+            sku: string;
+            /** Format: int32 */
+            quantity: number;
         };
         SearchHit: {
             productId: string;

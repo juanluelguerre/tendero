@@ -3,7 +3,6 @@ using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Persistence;
-using ElGuerre.Tendero.Persistence.Outbox;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
@@ -178,31 +177,8 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
             return await dispatcher.SendAsync(new ImportProductsCommand("seed"));
         }
 
-        /// <summary>
-        /// The same loop as <c>OutboxProcessor</c>, without the timer: read what
-        /// is pending, deserialise, dispatch, mark.
-        /// </summary>
-        public async Task<int> DrainOutboxAsync(CancellationToken ct)
-        {
-            await using var scope = this.provider.CreateAsyncScope();
-            var context = scope.ServiceProvider.GetRequiredService<TenderoDbContext>();
-            var dispatcher = scope.ServiceProvider.GetRequiredService<IDomainEventDispatcher>();
-
-            var pending = await context.OutboxMessages
-                .Where(message => message.ProcessedAt == null)
-                .OrderBy(message => message.OccurredAt)
-                .ToListAsync(ct);
-
-            foreach (var message in pending)
-            {
-                await dispatcher.PublishAsync(
-                    DomainEventSerializer.Deserialize(message.Type, message.Payload), ct);
-                message.MarkProcessed();
-            }
-
-            await context.SaveChangesAsync(ct);
-            return pending.Count;
-        }
+        /// <summary>One pass of the real worker (<see cref="WorkerOutbox"/>).</summary>
+        public Task<int> DrainOutboxAsync(CancellationToken ct) => WorkerOutbox.PassAsync(this.provider, ct);
 
         public async ValueTask DisposeAsync() => await this.provider.DisposeAsync();
     }
@@ -216,6 +192,8 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
         /// <summary>Nothing to recreate: this double keeps its documents in a
         /// list, and a list has no mapping to drift.</summary>
         public Task RecreateAsync(CancellationToken ct = default) => Task.CompletedTask;
+
+        public Task<bool> IsEmptyAsync(CancellationToken ct = default) => Task.FromResult(false);
 
         public HashSet<ProductId> Indexed { get; } = [];
         public HashSet<ProductId> Removed { get; } = [];

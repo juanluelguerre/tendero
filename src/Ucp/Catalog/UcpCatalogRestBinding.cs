@@ -49,7 +49,7 @@ public static class UcpCatalogRestBinding
             // their payloads are defined by UCP's published JSON Schemas.
             // Describing them again here would be a second, non-authoritative
             // copy — and `docs/openapi/tendero.json` generates the storefront's
-            // TypeScript, which has no use for a UcpProduct. See ADR 0029.
+            // TypeScript, which has no use for a UcpProduct. See ADR 0030.
             .WithMetadata(new ExcludeFromDescriptionAttribute());
 
         group.MapPost("/catalog/search",

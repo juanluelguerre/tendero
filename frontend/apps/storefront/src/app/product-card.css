@@ -59,6 +59,8 @@
   line-height: var(--leading-snug);
 }
 
+.card__media { display: block; }
+
 .card__link {
   color: inherit;
   text-decoration: none;

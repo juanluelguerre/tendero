@@ -54,6 +54,49 @@ public sealed class AuditStepTests
         Assert.Equal("Cannot publish an archived product.", entry.Reason);
     }
 
+    /// <summary>
+    /// Most refusals in this repository are RETURNED, not thrown: a declined
+    /// card, a return outside its window, a transition the table forbids — each
+    /// comes back as an outcome the endpoint turns into a 4xx. The decorator only
+    /// looked at exceptions, so the UI review of 2026-09-11 found the declined
+    /// card of the demo recorded as <c>PlaceOrderCommand · Allowed</c>, and the
+    /// screen that "opens on the refusals" empty of the one refusal the demo
+    /// exists to show. A result that can be a refusal says so.
+    /// </summary>
+    [Fact]
+    public async Task A_refusal_the_handler_returns_is_recorded_as_DENIED()
+    {
+        var (dispatcher, audit) = Pipeline();
+
+        await dispatcher.SendAsync(new Pay("card-declined"), TestContext.Current.CancellationToken);
+
+        var entry = Assert.Single(audit.Entries);
+        Assert.Equal(AuditOutcome.Denied, entry.Outcome);
+        Assert.Equal("The card was declined by the issuer.", entry.Reason);
+    }
+
+    /// <summary>A provider that did not answer is a fault, not a rule saying no,
+    /// and a result can say that too.</summary>
+    [Fact]
+    public async Task A_fault_the_handler_returns_is_recorded_as_FAILED()
+    {
+        var (dispatcher, audit) = Pipeline();
+
+        await dispatcher.SendAsync(new Pay("card-unreachable"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(AuditOutcome.Failed, Assert.Single(audit.Entries).Outcome);
+    }
+
+    [Fact]
+    public async Task A_result_that_says_it_went_through_is_ALLOWED()
+    {
+        var (dispatcher, audit) = Pipeline();
+
+        await dispatcher.SendAsync(new Pay("card-ok"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(AuditOutcome.Allowed, Assert.Single(audit.Entries).Outcome);
+    }
+
     /// <summary>And a real fault is NOT a denial. The two look identical in a
     /// stack trace and mean opposite things to whoever reads the table.</summary>
     [Fact]
@@ -214,6 +257,24 @@ public sealed class AuditStepTests
     private sealed record Claim([property: AuditRedacted] string CartToken, string Subject)
         : ICommand<bool>;
     private sealed record Look : IQuery<bool>;
+    private sealed record Pay(string Card) : ICommand<Paid>;
+
+    /// <summary>A result the way checkout's is: an outcome, and the words.</summary>
+    private sealed record Paid(AuditOutcome Verdict, string? Detail) : IAuditedResult
+    {
+        public AuditOutcome AuditOutcome => Verdict;
+        public string? AuditReason => Detail;
+    }
+
+    private sealed class PayHandler : ICommandHandler<Pay, Paid>
+    {
+        public Task<Paid> HandleAsync(Pay command, CancellationToken ct) => Task.FromResult(command.Card switch
+        {
+            "card-declined" => new Paid(AuditOutcome.Denied, "The card was declined by the issuer."),
+            "card-unreachable" => new Paid(AuditOutcome.Failed, "The provider did not answer."),
+            _ => new Paid(AuditOutcome.Allowed, null)
+        });
+    }
 
     private sealed class PublishValidator : AbstractValidator<Publish>
     {

@@ -1,0 +1,80 @@
+<ng-container *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('catalogue.title') }}</h1>
+    @let ready = state();
+    @if (ready.status === 'ready') {
+      <span class="tag tag--ok">{{ t('catalogue.published', { count: ready.total }) }}</span>
+    }
+  </header>
+  <p class="page-hint">{{ t('catalogue.hint') }}</p>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="muted" role="status" aria-live="polite">{{ t('catalogue.loading') }}</p>
+    }
+    @case ('failed') {
+      <p class="failed" role="alert">{{ t('catalogue.failed') }}</p>
+    }
+    @case ('ready') {
+      @let list = state();
+      @if (list.status === 'ready') {
+        @if (list.items.length === 0) {
+          <p class="empty__text">{{ t('catalogue.empty') }}</p>
+        } @else {
+          <div class="table-wrap">
+            <table class="table">
+              <caption class="sr-only">{{ t('catalogue.title') }}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{{ t('reviewQueue.column.product') }}</th>
+                  <th scope="col">{{ t('reviewQueue.column.brand') }}</th>
+                  <th scope="col" class="right">{{ t('reviewQueue.column.price') }}</th>
+                  <th scope="col">{{ t('reviewQueue.column.languages') }}</th>
+                  <th scope="col"><span class="sr-only">{{ t('variants.title') }}</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of list.items; track item.productId) {
+                  <tr>
+                    <td>
+                      <span class="name">{{ item.name }}</span>
+                      <span class="code numeric">{{ item.code }}</span>
+                    </td>
+                    <td>{{ item.brand ?? '—' }}</td>
+                    <td class="right numeric">{{ price(item) }}</td>
+                    <td>
+                      @if (item.missingCultures.length === 0) {
+                        <span class="tag tag--ok">{{ t('reviewQueue.complete') }}</span>
+                      } @else {
+                        <span class="tag tag--warn">{{
+                          t('reviewQueue.missing', { cultures: item.missingCultures.join(', ') })
+                        }}</span>
+                      }
+                    </td>
+                    <td class="right">
+                      <a class="quiet-link" [routerLink]="['/products', item.productId, 'variants']">
+                        {{ t('variants.title') }}
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (pages() > 1) {
+            <nav class="pager" [attr.aria-label]="t('catalogue.pages')">
+              <button type="button" class="button button--quiet" [disabled]="page() === 1" (click)="go(page() - 1)">
+                {{ t('catalogue.previous') }}
+              </button>
+              <span class="pager__at numeric">{{ t('catalogue.pageOf', { page: page(), pages: pages() }) }}</span>
+              <button type="button" class="button button--quiet" [disabled]="page() === pages()" (click)="go(page() + 1)">
+                {{ t('catalogue.next') }}
+              </button>
+            </nav>
+          }
+        }
+      }
+    }
+  }
+</ng-container>

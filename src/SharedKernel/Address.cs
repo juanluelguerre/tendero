@@ -5,10 +5,10 @@ namespace ElGuerre.Tendero.SharedKernel;
 ///
 /// It lives in the SharedKernel and not in `Ordering` because three contexts
 /// need the same shape and none of them owns it: an order is shipped to one,
-/// `Accounts` will keep a customer's book of them (phase 7), and a shipping
-/// rate is a function of one. Putting it in `Ordering` would make `Accounts`
-/// reference `Ordering` to store an address, which is the wrong direction and
-/// exactly the crossing ADR 0014 forbids.
+/// `Accounts` will keep a customer's book of them (still on the backlog), and
+/// a shipping rate is a function of one. Putting it in `Ordering` would make
+/// `Accounts` reference `Ordering` to store an address, which is the wrong
+/// direction and exactly the crossing ADR 0014 forbids.
 ///
 /// It is a **value**, not an entity: two identical addresses are the same
 /// address, and an order freezes the one it was shipped to (ADR 0002) rather

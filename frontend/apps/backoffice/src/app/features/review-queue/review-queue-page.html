@@ -58,7 +58,11 @@
       @if (ready.status === 'ready') {
         @if (ready.items.length === 0) {
           <div class="empty">
+            <!-- Nothing waiting is not an empty shop: everything may simply be
+                 published. The copy used to say "import a catalog to get
+                 started" over a hundred published products. -->
             <p class="empty__text">{{ t('reviewQueue.empty') }}</p>
+            <a class="quiet-link" routerLink="/catalogue">{{ t('reviewQueue.seeCatalogue') }}</a>
             <!-- The view's only clay action (design/DESIGN.md). -->
             <button type="button" class="button" [disabled]="importing()" (click)="importSeed()">
               {{ importing() ? t('reviewQueue.importing') : t('reviewQueue.import') }}
@@ -105,9 +109,12 @@
                     </a>
                   </td>
                   <td class="right">
+                    <!-- Quiet: one per row would be many clay buttons in one
+                         view (design/DESIGN.md). The empty state's import is
+                         this screen's one clay action. -->
                     <button
                       type="button"
-                      class="button"
+                      class="button button--quiet"
                       [disabled]="publishing().has(item.productId)"
                       (click)="publish(item)"
                     >
