@@ -340,15 +340,14 @@ rather than by what is cheap, and the board is the one that is maintained.
 Each phase ships with an article — English first, Spanish on
 [elguerre.com](https://elguerre.com).
 
-**Nothing is published yet**, and the first date is 2026-09-15.
-[docs/blog/index.md](docs/blog/index.md) owns the publication order, the status of
-each article and what the unfinished ones are waiting on — nine are drafted from
-shipped features and measured numbers, plus two outlines writable today, which
-is roughly four and a half months of publishing without writing a new line.
+Every article links a tag of this repository named after it, `blog/NN-slug`,
+cut once its snippets and numbers had been checked against the code. Clone that
+tag and you have the tree the article describes, not whatever the project has
+become since.
 
-Raw material is collected as it happens in
-[docs/blog/notebook.md](docs/blog/notebook.md), which is where the numbers and the
-mistakes live — including the ones that cost an afternoon.
+The drafts, and the notebook they are written from, are not published here. An
+article reaches this repository when it reaches the blog, together with the code
+it talks about.
 
 ## License
 
