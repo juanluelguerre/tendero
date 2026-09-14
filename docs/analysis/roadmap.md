@@ -436,12 +436,17 @@ counter, because a silent fallback is indistinguishable from bad relevance.
 
 **Where** `src/Search/Features/ProjectProductToVectors`, the same shape as the
 existing `ProjectProductToIndex`, consuming the same `ProductUpserted` from the
-same outbox. Ollama is reached through `Microsoft.Extensions.AI`'s
+same outbox. The model server is reached through `Microsoft.Extensions.AI`'s
 `IEmbeddingGenerator` **directly** — per ADR 0005, the MEAI abstraction *is* the
 port, and wrapping it would add a layer that restates it.
 
-**Model**: `bge-m3` — Apache-2.0, 100+ languages, one vector space serving both
-cultures, dense and sparse from one model. Reranking: `bge-reranker-v2-m3`.
+**Model**: `bge-m3` — MIT at revision `5617a9f`, 100+ languages, one vector space
+serving both cultures, dense and sparse from one model. Reranking:
+`bge-reranker-v2-m3`, Apache-2.0 at revision `953dc6f`. **Corrected 2026-09-14
+(ADR 0031):** this paragraph said Ollama and called `bge-m3` Apache-2.0. The
+licence is MIT, and both models are served by Text Embeddings Inference pinned to
+those revisions — Ollama's copy of `bge-m3` names no source revision, and it has
+no official copy of the reranker and no rerank endpoint.
 
 **Vectors live only in Qdrant.** Postgres is untouched; the vector index is a
 disposable projection exactly like the Elasticsearch one, and

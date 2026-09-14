@@ -18,7 +18,8 @@
 customer, recommends what actually fits, and remembers what you bought last
 time. This project builds that shopkeeper as software — an AI-native ecommerce
 platform in **.NET 11 + Aspire** and **Angular 22**, with a fully self-hosted AI
-stack (Ollama, Qdrant, Elasticsearch) that runs on Docker at zero cost.
+stack (Text Embeddings Inference, Qdrant, Elasticsearch, and Ollama once a
+generative model arrives) that runs on Docker at zero cost.
 
 Most AI demos are Python notebooks. Tendero explores what **production-grade AI
 engineering looks like in .NET**: hybrid search with regression tests, an
@@ -68,7 +69,7 @@ flowchart TB
     API --> PG[(Postgres)]
     WK --> ES[(Elasticsearch)]
     WK -.->|phase 8| QD[(Qdrant)]
-    WK -.->|phase 8| OL[Ollama]
+    WK -.->|phase 8| OL[TEI · bge-m3 + reranker]
     Backend -.->|OTel · phase 12| OBS[Grafana · Langfuse]
     EXT[Catalog connectors: seed · Shopify...] --> API
     PAY[Payments: fake · stripe-mock · Stripe test] --- API

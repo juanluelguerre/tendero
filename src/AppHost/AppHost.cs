@@ -2,10 +2,10 @@ using System.Globalization;
 // Orchestrating Tendero locally: nothing here requires signing up anywhere or
 // paying for anything (initial-plan §1).
 //
-// Only what the code consumes TODAY is declared. Qdrant, Ollama and Redis are in
-// the target architecture (docs/architecture.md) and arrive in the same PR that
-// brings the embeddings worker: declaring them earlier is five gigabytes of
-// download on first start and resources nobody reads.
+// Only what the code consumes TODAY is declared. Qdrant, Text Embeddings Inference
+// (ADR 0031) and Redis are in the target architecture (docs/architecture.md) and
+// arrive in the same PR that brings the embeddings worker: declaring them earlier
+// is gigabytes of download on first start and resources nobody reads.
 
 var builder = DistributedApplication.CreateBuilder(args);
 

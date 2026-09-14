@@ -54,8 +54,8 @@
   safe (ADR 0012).
 - Lexical (BM25) is the permanent fallback; hybrid (Qdrant + RRF + rerank) and
   every AI layer sit behind feature flags and degrade to lexical.
-- Multilingual embeddings (bge-m3 via Ollama) → one vector space serves both
-  cultures.
+- Multilingual embeddings (`bge-m3`, served by Text Embeddings Inference at a
+  pinned revision — ADR 0031) → one vector space serves both cultures.
 - Quality is tested: golden set per culture, NDCG@10 + recall@50 in CI.
 
 ## HTTP surface
@@ -289,7 +289,7 @@ flowchart TB
         ES[(Elasticsearch)]
         QD[(Qdrant)]
         RD[(Redis)]
-        OL[Ollama]
+        OL[TEI · embeddings + rerank]
         OBS[Grafana · Langfuse]
     end
     API --> PG
@@ -350,8 +350,9 @@ Elasticsearch exists. Both facts are architecture tests, not conventions.
 `Search` referencing `Catalog` and `Inventory` — the contexts it projects — is
 the one edge that does not point straight down (ADR 0007), and `Catalog` and
 `Ordering` reference `Inventory`'s ports for availability, never its domain.
-The Docker diagram above is the target: Qdrant, Ollama and the Grafana stack
-are not declared by the AppHost until the phase that reads them (8 and 12).
+The Docker diagram above is the target: Qdrant, Text Embeddings Inference and
+the Grafana stack are not declared by the AppHost until the phase that reads
+them (8 and 12).
 
 Architecture tests (`docs/testing.md`) enforce the downward-only rule; the
 `tests/` and `frontend/` trees sit beside these layers without entering them.
