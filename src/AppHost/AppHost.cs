@@ -167,22 +167,50 @@ var qdrant = builder.AddQdrant("qdrant", apiKey: qdrantKey, grpcPort: qdrantGrpc
 // loaded from its info endpoint, and that is what the startup check compares
 // against the configured descriptor (P8-3).
 //
-// The CPU image, deliberately. The GPU one could not reach CUDA inside Docker on
-// WSL2 and fell back to the CPU without failing (see the board's backlog), so
-// choosing it here would buy an 8 GB download and the same CPU. The reranker is
-// not declared: it is a GPU feature and arrives with P8-6.
+// ON THE GPU WHEN THIS MACHINE HAS ONE, on the CPU when it does not, decided here
+// at start-up rather than written into a file somebody forgets to change.
+//
+//   Tendero__Inference__Device=auto|cpu|gpu   (auto when unset)
+//
+// The numbers are why it matters (bge-m3 on TEI commit 4150561, 2026-09-15,
+// RTX 5070 Laptop): twenty product texts in 0.375 s and a query in 17 ms on the
+// GPU, with 1.3 GB of VRAM and 1.1 GiB of RAM — against 9.7 s and ~100 ms on the
+// CPU. And the CPU's memory depends on sizing the batch to this catalogue: TEI's
+// defaults (16,384 batch tokens, 15 tokenisation workers) held 12.6 GiB of RAM,
+// where the arguments below hold 3.7 GiB at the same speed.
+//
+// TEI is PINNED TO A COMMIT, not to its latest release, and the reason is a bug:
+// the 1.9.3 images read the driver's CUDA version by matching "CUDA Version" in
+// nvidia-smi's header, NVIDIA drivers 6xx print "CUDA UMD Version", the match
+// comes back empty, the entrypoint prepends CUDA's forward-compatibility library
+// — which cannot drive the device on these drivers — and TEI runs on the CPU with
+// a warning and nothing else. Upstream fixed it (huggingface/text-embeddings-
+// inference#870, merged 2026-07-08) after the last release; `sha-4150561` is the
+// commit that carries the fix, and it moves to a release tag when one exists.
 //
 // The model cache IS a volume, unlike Qdrant: it holds downloaded weights, not a
-// projection, and losing it costs 2.2 GB and four minutes on the next start.
+// projection, and losing it costs 2.2 GB and four minutes on the next start. The
+// reranker is not declared yet: it arrives with P8-6.
 const string embeddingModel = "BAAI/bge-m3";
 const string embeddingModelRevision = "5617a9f61b028005a4858fdac845db406aefb181";
+const string textEmbeddingsInferenceCommit = "sha-4150561";
 
-var embeddings = builder.AddContainer("embeddings", "ghcr.io/huggingface/text-embeddings-inference", "cpu-1.9.3")
+var inference = InferenceHardware.Detect(builder.Configuration["Tendero:Inference:Device"]);
+
+var embeddings = builder.AddContainer("embeddings", "ghcr.io/huggingface/text-embeddings-inference",
+        inference.ImagePrefix + textEmbeddingsInferenceCommit)
     .WithArgs("--model-id", embeddingModel, "--revision", embeddingModelRevision)
+    .WithArgs(InferenceHardware.ServerArguments)
     .WithHttpEndpoint(targetPort: 80, port: embeddingsPort, name: "http")
     .WithHttpHealthCheck("/health", endpointName: "http")
     .WithVolume("tendero-tei-models", "/data")
+    // What was chosen and why, visible in the dashboard's environment list —
+    // TEI ignores it, a person reading the resource does not.
+    .WithEnvironment("TENDERO_INFERENCE_DEVICE", inference.Description)
     .WithLifetime(ContainerLifetime.Persistent);
+
+if (inference.UsesGpu)
+    embeddings.WithContainerRuntimeArgs("--gpus", "all");
 
 if (!vectors)
 {
@@ -415,6 +443,108 @@ foreach (var container in builder.Resources.OfType<ContainerResource>().ToArray(
 }
 
 builder.Build().Run();
+
+/// <summary>
+/// Which Text Embeddings Inference image this machine can run, chosen at start-up.
+///
+/// TEI publishes one GPU image per NVIDIA architecture — a binary built for one
+/// compute capability does not run on another — plus a CPU image. So the choice
+/// needs two facts about THIS machine: whether a GPU is there (nvidia-smi answers
+/// with its compute capability) and whether containers can reach it (Docker has
+/// the nvidia runtime; a Linux box without the container toolkit has the GPU and
+/// not the runtime). Either missing is the CPU image, never a container that
+/// fails to start.
+///
+/// A GPU whose architecture TEI publishes no image for is also the CPU, with the
+/// reason in the description, rather than a guess at the nearest image.
+/// </summary>
+internal sealed record InferenceHardware(string ImagePrefix, bool UsesGpu, string Description)
+{
+    /// <summary>
+    /// Sized to this catalogue rather than to TEI's defaults: product texts are a
+    /// few hundred tokens, and a 16,384-token batch reserved 12.6 GiB of RAM on the
+    /// CPU for inputs that never arrive. Truncation is explicit so a text longer
+    /// than a batch is cut, not refused.
+    /// </summary>
+    public static readonly string[] ServerArguments =
+        ["--max-batch-tokens", "4096", "--auto-truncate", "--tokenization-workers", "2"];
+
+    private static readonly InferenceHardware Cpu = new("cpu-", false, "cpu");
+
+    public static InferenceHardware Detect(string? preference)
+    {
+        var wanted = string.IsNullOrWhiteSpace(preference) ? "auto" : preference.Trim().ToLowerInvariant();
+
+        if (wanted == "cpu")
+            return Cpu with { Description = "cpu (forced by Tendero:Inference:Device)" };
+
+        if (wanted is not ("auto" or "gpu"))
+            throw new InvalidOperationException(
+                $"Tendero:Inference:Device is '{preference}'; it accepts auto, cpu or gpu.");
+
+        var capability = Run("nvidia-smi", "--query-gpu=compute_cap --format=csv,noheader")?
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault();
+
+        var refusal = capability is null
+            ? "no NVIDIA GPU answered nvidia-smi"
+            : ImagePrefixFor(capability) is null
+                ? $"TEI publishes no image for compute capability {capability}"
+                // Quoted, and the quotes are load-bearing: unquoted, the space
+                // inside the template splits it in two, docker answers "'docker
+                // info' accepts no arguments", and a machine with a working GPU
+                // would have been sent to the CPU in silence.
+                : Run("docker", "info --format \"{{json .Runtimes}}\"") is not { } runtimes || !runtimes.Contains("nvidia", StringComparison.Ordinal)
+                    ? "Docker has no nvidia runtime, so containers cannot reach the GPU"
+                    : null;
+
+        if (refusal is null)
+            return new InferenceHardware(ImagePrefixFor(capability!)!, true, $"gpu (compute capability {capability})");
+
+        if (wanted == "gpu")
+            throw new InvalidOperationException($"Tendero:Inference:Device is gpu, but {refusal}.");
+
+        return Cpu with { Description = $"cpu ({refusal})" };
+    }
+
+    /// <summary>TEI's image prefix per compute capability, from its build matrix.</summary>
+    internal static string? ImagePrefixFor(string computeCapability) => computeCapability switch
+    {
+        "7.5" => "turing-",
+        "8.0" => "",
+        "8.6" => "86-",
+        "8.9" => "89-",
+        "9.0" => "hopper-",
+        "10.0" => "100-",
+        "12.0" => "120-",
+        _ => null
+    };
+
+    private static string? Run(string fileName, string arguments)
+    {
+        try
+        {
+            using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(fileName, arguments)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+
+            if (process is null)
+                return null;
+
+            var output = process.StandardOutput.ReadToEnd();
+            return process.WaitForExit(TimeSpan.FromSeconds(10)) && process.ExitCode == 0 ? output : null;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // The tool is not installed: that is an answer, not a failure.
+            return null;
+        }
+    }
+}
 
 /// <summary>
 /// Every committed data file, resolved against the repository root.

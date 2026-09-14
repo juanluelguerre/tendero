@@ -108,7 +108,7 @@ A new adapter without its contract-test subclass does not merge.
   (e.g. "zapatilla" matches "zapatillas").
 - Qdrant joins the fixture when hybrid search lands.
 - **The model server is opt-in**, and the reason is a measurement: on a CPU the
-  embeddings container downloads 2.2 GB and holds 12.7 GiB of RAM (ADR 0031),
+  embeddings container downloads 2.2 GB and holds 3.7 GiB of RAM sized to the catalogue — 12.6 GiB with TEI's defaults (ADR 0031),
   more than a CI runner has to spare. `EmbeddingModelServerTests` runs only with
   `TENDERO_MODEL_TESTS=1` and skips with that reason otherwise. What can be
   proven without the model — the request the SDK sends, the descriptor, the
