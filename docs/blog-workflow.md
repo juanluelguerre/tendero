@@ -54,7 +54,12 @@ exists to protect.
    exception is article 00, whose subject is the architecture itself and
    which carries four; diagram sources live in `docs/blog/assets/`.
 5. Translate to Spanish; both versions link the repo tag.
-6. Add the article link to README's blog section.
-7. Update the row in `docs/blog/index.md` to published, with the URL.
-8. Move whatever the notebook entry did not use back into it, or delete it if the
+6. **Publish the tag to the public repository before the post goes live**, with
+   `docs/blog/publish-public.ps1 -Tag blog/NN-slug` from `tendero-workshop` (see
+   *The public repository* in `CLAUDE.md`). The article links that tag, so the
+   other order leaves a link that answers 404 until somebody notices. Only the
+   tag's code travels: the article itself is never in the public repository.
+7. Add the article link to README's blog section.
+8. Update the row in `docs/blog/index.md` to published, with the URL.
+9. Move whatever the notebook entry did not use back into it, or delete it if the
    article superseded it.

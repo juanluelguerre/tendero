@@ -346,9 +346,9 @@ cut once its snippets and numbers had been checked against the code. Clone that
 tag and you have the tree the article describes, not whatever the project has
 become since.
 
-The drafts, and the notebook they are written from, are not published here. An
-article reaches this repository when it reaches the blog, together with the code
-it talks about.
+The drafts, and the notebook they are written from, are not published here, and
+neither are the articles: those live on the blog. What reaches this repository
+on the day an article goes out is the code it describes, under its tag.
 
 ## License
 
