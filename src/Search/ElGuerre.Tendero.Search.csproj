@@ -18,6 +18,12 @@
     <PackageReference Include="Carter" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" />
     <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Search.Tests" />
   </ItemGroup>
 
   <ItemGroup>

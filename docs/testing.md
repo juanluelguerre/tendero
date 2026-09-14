@@ -2,9 +2,9 @@
 
 Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short.
 
-**What is in the repository today** (2026-09-14): xUnit v3, CsCheck,
+**What is in the repository today** (2026-09-14, after P8-2): xUnit v3, CsCheck,
 NetArchTest.Rules, Testcontainers.PostgreSql, `WebApplicationFactory`, vitest
-and Playwright — 766 backend tests, 61 frontend, 20 browser specs. NSubstitute,
+and Playwright — 783 backend tests, 61 frontend, 20 browser specs. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
 fakes and the contract suites have not needed a mock, and nothing snapshots
 yet. Respawn was declined — a fresh database per test is cheaper than a reset.
@@ -107,6 +107,12 @@ A new adapter without its contract-test subclass does not merge.
   `products_es` and `products_en` with the right analyzer behavior
   (e.g. "zapatilla" matches "zapatillas").
 - Qdrant joins the fixture when hybrid search lands.
+- **The model server is opt-in**, and the reason is a measurement: on a CPU the
+  embeddings container downloads 2.2 GB and holds 12.7 GiB of RAM (ADR 0031),
+  more than a CI runner has to spare. `EmbeddingModelServerTests` runs only with
+  `TENDERO_MODEL_TESTS=1` and skips with that reason otherwise. What can be
+  proven without the model — the request the SDK sends, the descriptor, the
+  registration — is proven in `tests/Search.Tests` on every build.
 
 ## Architecture tests (NetArchTest.Rules)
 

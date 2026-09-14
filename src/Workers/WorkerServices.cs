@@ -4,6 +4,7 @@ using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search.Elasticsearch;
+using ElGuerre.Tendero.Search.Embeddings;
 using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.ServiceDefaults;
@@ -80,6 +81,11 @@ public static class WorkerServices
 
         builder.Services.AddLexicalSearch(
             builder.Configuration.GetRequiredConnectionString("elasticsearch"));
+
+        // Optional, unlike the line above (invariant 8): registered only when
+        // the AppHost started a model server. The vector projection (P8-4) is
+        // what reads it.
+        builder.Services.AddProductEmbeddingsIfConfigured(builder.Configuration);
 
         // One single place creates products_es/products_en, and this is it.
         builder.Services.AddSearchIndexInitializer();

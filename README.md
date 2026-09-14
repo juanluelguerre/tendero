@@ -41,7 +41,7 @@ in it:
 > 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3 before a
 > euro moves.
 
-**766 backend tests, 61 frontend tests and 20 browser specs**, with search
+**783 backend tests, 61 frontend tests and 20 browser specs**, with search
 relevance at **NDCG@10 0.927 es / 0.935 en** over the hundred-product corpus
 (re-derived when the catalogue grew from six — the old 0.943 / 0.937 are not
 comparable, and [docs/search-evaluation.md](docs/search-evaluation.md) says
@@ -281,7 +281,7 @@ tests/                     # unit, contract, architecture, integration, API
 
 ## Testing strategy
 
-**766 backend tests, 61 frontend tests and 20 browser specs**, and the table
+**783 backend tests, 61 frontend tests and 20 browser specs**, and the table
 below is what each layer is for. Only tools actually in the repository are
 listed: NSubstitute, Bogus and Verify are still prescribed by `docs/testing.md`
 and still absent, and Respawn was declined — a fresh database per test turned

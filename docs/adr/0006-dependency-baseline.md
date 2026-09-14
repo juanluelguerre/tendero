@@ -61,6 +61,15 @@ a higher version in a project the AppHost references would surface as a NuGet
 downgrade under `-warnaserror`. The plain-container alternative, which avoided
 the pin, was weighed and not taken.
 
+`Microsoft.Extensions.AI` and `Microsoft.Extensions.AI.OpenAI` 10.10.0 (MIT)
+with the embedding generator (phase 8), bringing the OpenAI SDK 2.13.0 and
+`System.ClientModel` 1.14.0, both MIT. They raise the
+`Microsoft.Extensions.AI.Abstractions` the MCP server already brought from
+10.8.3 to 10.10.0 — an upgrade, which NuGet resolves without complaint. The
+alternative was a hand-written `IEmbeddingGenerator` over `HttpClient` with no
+package at all; what decided it was `UseOpenTelemetry`, because the GenAI
+conventions `CLAUDE.md` asks for would otherwise have been written by hand.
+
 **Model weights are checked here too**, by the procedure ADR 0031 sets out:
 `BAAI/bge-m3` at revision `5617a9f` (MIT) and `BAAI/bge-reranker-v2-m3` at
 revision `953dc6f` (Apache-2.0), both read on 2026-09-14.

@@ -67,6 +67,16 @@
   <ItemGroup Label="Search">
     <!-- Elastic.Clients.Elasticsearch 9.5.1 — Apache-2.0 -->
     <PackageVersion Include="Elastic.Clients.Elasticsearch" Version="9.5.1" />
+    <!-- Microsoft.Extensions.AI 10.10.0 and Microsoft.Extensions.AI.OpenAI
+         10.10.0 — both MIT, stable. The adapter brings the OpenAI SDK 2.13.0
+         (MIT) and System.ClientModel 1.14.0 (MIT); all four checked at these
+         versions (P8-2). The first is here for the pipeline and its
+         UseOpenTelemetry, which is what makes an embedding call a GenAI span
+         rather than an HTTP request. They raise the
+         Microsoft.Extensions.AI.Abstractions the MCP server already brought
+         from 10.8.3 to 10.10.0: an upgrade, not a downgrade. -->
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.10.0" />
   </ItemGroup>
 
   <ItemGroup Label="Observability">
