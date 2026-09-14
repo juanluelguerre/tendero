@@ -203,6 +203,27 @@ they did: *what changed, and why*. Attribution belongs where it is a claim
 somebody makes on purpose — the README, an article, a talk — not stamped
 automatically on four hundred commits.
 
+## The public repository
+
+Work happens in **`tendero-workshop`**, which is private. **`tendero`** is public:
+this history with `docs/blog/` filtered out, advanced one article at a time by
+`docs/blog/publish-public.ps1`, so a reader gets the code an article describes
+when the article comes out and never the drafts. The filter is deterministic, so
+every publication is a fast-forward — and the day the articles catch up with the
+code, running the same filter here makes the two histories one.
+
+That holds only while three rules do:
+
+1. **The filter never changes.** Anything that must stay private lives under
+   `docs/blog/`. A second path would give every commit a different hash.
+2. **Merged history is never rewritten** — no rebase, no force-push on
+   `develop`. A tag may move only before its article is published.
+3. **Only a tag merged into `develop` is published**, and the script refuses any
+   other.
+
+And one habit follows from them: **cite a tag or a commit subject in a file,
+never a hash.** The two repositories have different hashes for the same commit.
+
 ## Licensing policy (hard rule)
 
 Every dependency (NuGet and npm) must be free for commercial use under a
