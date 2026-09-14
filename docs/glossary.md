@@ -44,7 +44,8 @@ amount of tuning reaches a word that is not there. That gap is the number hybrid
 search has to earn in phase 8.
 
 It never leaves, either. **Lexical search is the permanent fallback**
-(CLAUDE.md invariant 8): if Ollama or Qdrant are down, the shop still searches.
+(CLAUDE.md invariant 8): if the model server or Qdrant are down, the shop still
+searches.
 
 → `src/Search/Elasticsearch.cs` — two `multi_match` clauses under a `should`,
 because `cross_fields` lets terms spread across fields and `best_fields` carries
@@ -172,7 +173,8 @@ Named here because the README and the board use them.
 things which mean similar things sit close together in that space. It is what
 lets `gift for the kitchen` reach a saucepan that never contains the word
 "gift". Tendero's model is `bge-m3` — one multilingual vector space serving both
-cultures — served locally by Ollama, with the vectors in Qdrant.
+cultures — served locally by Text Embeddings Inference at a pinned revision (ADR
+0031), with the vectors in Qdrant.
 
 ### Hybrid search, and RRF
 

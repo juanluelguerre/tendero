@@ -124,17 +124,39 @@ public sealed class ArchitectureRules
     /// could, somebody would end up injecting ElasticsearchLexicalSearch instead
     /// of the port.
     /// </summary>
-    [Fact]
-    public void Search_adapters_are_internal_so_only_the_port_is_public()
+    [Theory]
+    [InlineData("ElGuerre.Tendero.Search.Elasticsearch")]
+    [InlineData("ElGuerre.Tendero.Search.Embeddings")]
+    public void Search_adapters_are_internal_so_only_the_port_is_public(string adapterNamespace)
     {
         var result = Types.InAssembly(Solution.Search)
-            .That().ResideInNamespace("ElGuerre.Tendero.Search.Elasticsearch")
+            .That().ResideInNamespace(adapterNamespace)
             .And().AreClasses()
             .And().DoNotHaveNameEndingWith("Extensions")
             .Should().NotBePublic()
             .GetResult();
 
         Assert.True(result.IsSuccessful, Describe(Solution.Search, result));
+    }
+
+    /// <summary>
+    /// The model server is a detail behind <c>IEmbeddingGenerator</c>, exactly
+    /// as Elasticsearch is behind the search ports. The OpenAI SDK is how TEI
+    /// happens to be reached today (P8-2), and the day it is reached some other
+    /// way — a second adapter, a hand-written client — only a folder changes.
+    /// </summary>
+    [Fact]
+    public void The_openai_client_stays_inside_the_embeddings_adapter()
+    {
+        foreach (var assembly in Solution.All)
+        {
+            var result = Types.InAssembly(assembly)
+                .That().DoNotResideInNamespace("ElGuerre.Tendero.Search.Embeddings")
+                .ShouldNot().HaveDependencyOn("OpenAI")
+                .GetResult();
+
+            Assert.True(result.IsSuccessful, Describe(assembly, result));
+        }
     }
 
     [Fact]

@@ -28,6 +28,7 @@
 | [0028](0028-prices-include-vat.md) | Catalogue prices include VAT; tax is extracted, never added | accepted |
 | [0029](0029-jsonschema-net-pinned-to-its-last-mit-release.md) | JsonSchema.Net is pinned to 8.0.5, its last MIT release | accepted |
 | [0030](0030-protocol-routes-are-not-in-the-openapi-document.md) | A route whose protocol publishes its own discovery is not in the OpenAPI document | accepted |
+| [0031](0031-model-weights-are-dependencies.md) | Model weights are dependencies, served from a pinned revision | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

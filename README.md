@@ -18,7 +18,8 @@
 customer, recommends what actually fits, and remembers what you bought last
 time. This project builds that shopkeeper as software — an AI-native ecommerce
 platform in **.NET 11 + Aspire** and **Angular 22**, with a fully self-hosted AI
-stack (Ollama, Qdrant, Elasticsearch) that runs on Docker at zero cost.
+stack (Text Embeddings Inference, Qdrant, Elasticsearch, and Ollama once a
+generative model arrives) that runs on Docker at zero cost.
 
 Most AI demos are Python notebooks. Tendero explores what **production-grade AI
 engineering looks like in .NET**: hybrid search with regression tests, an
@@ -40,7 +41,7 @@ in it:
 > 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3 before a
 > euro moves.
 
-**766 backend tests, 61 frontend tests and 20 browser specs**, with search
+**783 backend tests, 61 frontend tests and 20 browser specs**, with search
 relevance at **NDCG@10 0.927 es / 0.935 en** over the hundred-product corpus
 (re-derived when the catalogue grew from six — the old 0.943 / 0.937 are not
 comparable, and [docs/search-evaluation.md](docs/search-evaluation.md) says
@@ -68,7 +69,7 @@ flowchart TB
     API --> PG[(Postgres)]
     WK --> ES[(Elasticsearch)]
     WK -.->|phase 8| QD[(Qdrant)]
-    WK -.->|phase 8| OL[Ollama]
+    WK -.->|phase 8| OL[TEI · bge-m3 + reranker]
     Backend -.->|OTel · phase 12| OBS[Grafana · Langfuse]
     EXT[Catalog connectors: seed · Shopify...] --> API
     PAY[Payments: fake · stripe-mock · Stripe test] --- API
@@ -126,7 +127,7 @@ and the rest of the terms this README uses without stopping to define them
 |---|---|
 | **.NET 11 SDK, preview** | `global.json` pins a prerelease floor. `11.0.100` plus `allowPrerelease` resolves *nothing* on a preview-only machine: roll-forward only rolls up, and a preview sorts below its own release. |
 | **Node 24** (`.nvmrc`) | Angular 22 requires `^22.22.3 \|\| ^24.15.0 \|\| >=26.0.0`. Node 22.21 fails. |
-| **Docker** | Postgres and Elasticsearch, roughly 2.5 GB on the first run. Keycloak, pgweb and elasticvue are declared too and start on demand from the dashboard. |
+| **Docker** | Postgres and Elasticsearch, roughly 2.5 GB on the first run. Keycloak, pgweb and elasticvue are declared too and start on demand from the dashboard, and so is the vector layer: Qdrant, and Text Embeddings Inference serving `bge-m3` — 2.2 GB of weights on its first start; it runs on your NVIDIA GPU when Docker can reach one (about 1.3 GB of VRAM) and on the CPU otherwise (about 3.7 GiB of RAM). `Tendero__Vectors=true` starts it with everything else; without it, search stays lexical. |
 
 The repository runs on **Linux and Windows**. Nothing in the code assumes a
 platform — every path is built with `Path.Combine` — but the setup commands
@@ -280,7 +281,7 @@ tests/                     # unit, contract, architecture, integration, API
 
 ## Testing strategy
 
-**766 backend tests, 61 frontend tests and 20 browser specs**, and the table
+**783 backend tests, 61 frontend tests and 20 browser specs**, and the table
 below is what each layer is for. Only tools actually in the repository are
 listed: NSubstitute, Bogus and Verify are still prescribed by `docs/testing.md`
 and still absent, and Respawn was declined — a fresh database per test turned

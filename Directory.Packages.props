@@ -67,6 +67,16 @@
   <ItemGroup Label="Search">
     <!-- Elastic.Clients.Elasticsearch 9.5.1 — Apache-2.0 -->
     <PackageVersion Include="Elastic.Clients.Elasticsearch" Version="9.5.1" />
+    <!-- Microsoft.Extensions.AI 10.10.0 and Microsoft.Extensions.AI.OpenAI
+         10.10.0 — both MIT, stable. The adapter brings the OpenAI SDK 2.13.0
+         (MIT) and System.ClientModel 1.14.0 (MIT); all four checked at these
+         versions (P8-2). The first is here for the pipeline and its
+         UseOpenTelemetry, which is what makes an embedding call a GenAI span
+         rather than an HTTP request. They raise the
+         Microsoft.Extensions.AI.Abstractions the MCP server already brought
+         from 10.8.3 to 10.10.0: an upgrade, not a downgrade. -->
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.10.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.10.0" />
   </ItemGroup>
 
   <ItemGroup Label="Observability">
@@ -84,10 +94,18 @@
   <ItemGroup Label="Aspire (AppHost only)">
     <!-- Aspire 13.5.3 — MIT -->
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.5.3" />
-    <!-- Only what the AppHost declares today. Qdrant, Redis and the Ollama
-         CommunityToolkit package return with the phase-3 embeddings worker;
-         Elasticsearch is a plain container resource (see ADR 0006). -->
+    <!-- Only what the AppHost declares today. Redis arrives when something reads
+         it; the Ollama CommunityToolkit package does not come back for phase 8,
+         because Text Embeddings Inference serves those models (ADR 0031) as a
+         plain container. Elasticsearch is a plain container resource too
+         (see ADR 0006). -->
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.5.3" />
+    <!-- MIT; its only Aspire dependency is exactly Aspire.Hosting 13.5.3. It
+         pins the server image to qdrant/qdrant:v1.18.0 and Qdrant.Client to
+         1.18.1, so Search takes that client version rather than 1.19.0: a newer
+         one in a project the AppHost references would be a downgrade NuGet
+         reports and -warnaserror turns into a failure. -->
+    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="13.5.3" />
     <!-- Orchestrates both Angular apps alongside the backend: one command brings
          everything up and the API's URL is injected instead of hand-written. MIT. -->
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.5.3" />

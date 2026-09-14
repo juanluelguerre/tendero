@@ -48,8 +48,31 @@ the issuer swap (phase 7); and on npm, `angular-oauth2-oidc` 22.0.2 (MIT) for th
 redirect sign-in. **Respawn was declined**: a fresh database per test is cheaper
 than a reset. NSubstitute, Bogus and Verify are still not in, for the original
 reason. The CommunityToolkit Ollama hosting package verified above is no longer
-referenced — it left with the flag article 07 is about, and comes back with
-phase 8.
+referenced — it left with the flag article 07 is about, and **it does not come
+back with phase 8** after all: the two phase-8 models are served by Text
+Embeddings Inference 1.9.3 (Apache-2.0, a Tier-2 container) pinned to checked
+revisions, and Ollama waits for a generative model (ADR 0031).
+
+`Aspire.Hosting.Qdrant` 13.5.3 (MIT, its only Aspire dependency being exactly the
+13.5.3 the AppHost resolves) with the vector layer (phase 8). **It pins more than
+it says**: the server image to `qdrant/qdrant:v1.18.0` and `Qdrant.Client` to
+1.18.1 (Apache-2.0), so `Search` uses that client rather than the newer 1.19.0 —
+a higher version in a project the AppHost references would surface as a NuGet
+downgrade under `-warnaserror`. The plain-container alternative, which avoided
+the pin, was weighed and not taken.
+
+`Microsoft.Extensions.AI` and `Microsoft.Extensions.AI.OpenAI` 10.10.0 (MIT)
+with the embedding generator (phase 8), bringing the OpenAI SDK 2.13.0 and
+`System.ClientModel` 1.14.0, both MIT. They raise the
+`Microsoft.Extensions.AI.Abstractions` the MCP server already brought from
+10.8.3 to 10.10.0 — an upgrade, which NuGet resolves without complaint. The
+alternative was a hand-written `IEmbeddingGenerator` over `HttpClient` with no
+package at all; what decided it was `UseOpenTelemetry`, because the GenAI
+conventions `CLAUDE.md` asks for would otherwise have been written by hand.
+
+**Model weights are checked here too**, by the procedure ADR 0031 sets out:
+`BAAI/bge-m3` at revision `5617a9f` (MIT) and `BAAI/bge-reranker-v2-m3` at
+revision `953dc6f` (Apache-2.0), both read on 2026-09-14.
 
 ## Known friction with the preview line
 

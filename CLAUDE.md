@@ -2,7 +2,8 @@
 
 The AI-native shopkeeper: an ecommerce platform for humans and AI agents.
 .NET 11 (preview) + Aspire backend, Angular 22 frontends, self-hosted AI stack
-(Ollama, Qdrant, Elasticsearch) via Docker. Companion repo for a blog series —
+(Text Embeddings Inference, Qdrant, Elasticsearch; Ollama once a generative
+model arrives) via Docker. Companion repo for a blog series —
 code quality and architectural clarity matter more than shipping fast.
 
 Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
@@ -119,8 +120,8 @@ being stale.
 7. **Domain events → Outbox → workers.** Handlers never index/email/call LLMs
    inline in a request. Raise the event; the worker projects.
 8. **Lexical search is the permanent fallback.** AI features must degrade
-   gracefully; never make BM25 depend on Ollama/Qdrant being up. Generalised:
-   **every AI feature has a non-AI path, and the degradation is tested** — not
+   gracefully; never make BM25 depend on the model server or Qdrant being up.
+   Generalised: **every AI feature has a non-AI path, and the degradation is tested** — not
    asserted in a comment. In the browser this means feature-detecting
    `navigator.modelContext`; without it the shop is unchanged.
 9. **AI layering**: Microsoft.Extensions.AI for pipelines, Microsoft Agent
