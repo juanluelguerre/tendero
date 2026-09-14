@@ -360,6 +360,24 @@ public sealed record ReturnPolicy(
     /// promise usually gets wrong.</summary>
     int WindowDays);
 
+/// <summary>
+/// The promise, through the dispatcher.
+///
+/// This carried no query until phase 9, and the comment on the endpoint said
+/// why: a round trip around a field read is ceremony. That was true while there
+/// was one caller. There are two transports now — HTTP and the MCP server — and
+/// MCP may not touch a <c>*.Domain</c> namespace, so the alternative is not "no
+/// ceremony", it is the same constant read in two places with nothing comparing
+/// them. Which is the defect this endpoint was built to remove, one level up.
+/// </summary>
+public sealed record ReturnPolicyQuery : IQuery<ReturnPolicy>;
+
+public sealed class ReturnPolicyHandler : IQueryHandler<ReturnPolicyQuery, ReturnPolicy>
+{
+    public Task<ReturnPolicy> HandleAsync(ReturnPolicyQuery query, CancellationToken cancellationToken) =>
+        Task.FromResult(new ReturnPolicy((int)ReturnRequest.Window.TotalDays));
+}
+
 public sealed class ReturnEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
@@ -397,13 +415,17 @@ public sealed class ReturnEndpoints : ICarterModule
         // never sign in. Anonymous by an explicit decision, which is what the
         // endpoint-policy test asks for.
         //
-        // It answers from the aggregate's own constant and holds no handler: no
-        // input to validate, no data to read, nothing to audit. The same reason
-        // `/api/auth/config` has none — a dispatcher round trip here would be
-        // ceremony around a field read.
+        // It went through the dispatcher in phase 9, and the comment that used to
+        // sit here said the opposite: no input to validate, no data to read,
+        // nothing to audit, so a round trip would be ceremony around a field
+        // read. That held while HTTP was the only way in. The MCP server is a
+        // second transport and may not reach a `*.Domain` namespace, so the
+        // choice stopped being "one line or a round trip" and became "one source
+        // or two copies of a constant" — and this endpoint exists precisely
+        // because the window was written down twice.
         app.MapGet("/api/returns/policy",
-            Ok<ReturnPolicy> () =>
-                TypedResults.Ok(new ReturnPolicy((int)ReturnRequest.Window.TotalDays)))
+            async Task<Ok<ReturnPolicy>> (IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new ReturnPolicyQuery(), ct)))
             .AllowAnonymous()
             .WithTags("Returns")
             .WithName("ReturnPolicy");

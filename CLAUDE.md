@@ -8,8 +8,8 @@ code quality and architectural clarity matter more than shipping fast.
 Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
 `ElGuerre.Tendero.Pricing`, `ElGuerre.Tendero.Inventory`,
 `ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Accounts`,
-`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.SharedKernel`; `Ucp` is a
-placeholder README until phase 9). Project file name,
+`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`,
+`ElGuerre.Tendero.Ucp`). Project file name,
 assembly name and root namespace are the same string; the folders under `src/`
 drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope in
 `frontend/` stays `@tendero/*` — npm scopes and .NET namespaces do not have to
@@ -255,6 +255,7 @@ updated if conventions changed · user-facing strings exist in es AND en.
 - Brand usage: @brand/BRAND.md
 - ADR index: @docs/adr/README.md
 - Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): @docs/glossary.md
+- Pointing an agent at the MCP server and the UCP profile: @docs/mcp.md
 - Feature specs in progress: @docs/specs/
 - Blog article workflow: @docs/blog-workflow.md
 - Blog publication order and drafts: @docs/blog/index.md

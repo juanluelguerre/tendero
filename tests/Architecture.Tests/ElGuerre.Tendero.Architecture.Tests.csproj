@@ -20,12 +20,14 @@
     <ProjectReference Include="../../src/Accounts/ElGuerre.Tendero.Accounts.csproj" />
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
+    <ProjectReference Include="../../src/Mcp/ElGuerre.Tendero.Mcp.csproj" />
     <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <ProjectReference Include="../../src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
     <ProjectReference Include="../../src/Pricing/ElGuerre.Tendero.Pricing.csproj" />
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../../src/ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+    <ProjectReference Include="../../src/Ucp/ElGuerre.Tendero.Ucp.csproj" />
     <ProjectReference Include="../../src/Workers/ElGuerre.Tendero.Workers.csproj" />
     <!-- The evaluation tool is subject to the rules: a tool is exactly where
          somebody would shortcut to the Elastic client past the ports. -->

@@ -68,11 +68,52 @@ shareability and no indexing at all. Both, plus `hreflang`, land with the produc
 detail page — see `P5-13` on the board. The per-culture slugs the catalogue
 already generates and stores are waiting for exactly that.
 
+**Amended 2026-09-08 — the third caller, and it did not need a new rule.**
+
+The MCP server is the first non-HTML, non-browser client, and the roadmap
+assumed it would need a variant of this chain: *"There is no `Accept-Language`,
+so the chain becomes explicit tool parameter → session default captured at
+`initialize` → `es`."* That was written with stdio in mind, and the transport
+actually chosen is **streamable HTTP**. The client's POST carries whatever
+headers it sets, so the middle link is not missing and does not have to be
+invented. The tools call `CultureNegotiation.Resolve` with the same two
+arguments an endpoint passes it — **the same chain, not an analogue of one**. A
+client that sends no header, or a future stdio deployment where there is no
+request at all, falls to `es`, which is the chain working rather than a gap in
+it.
+
+Two things do change, and both follow from JSON-RPC having no headers:
+
+- **`Content-Language` becomes a field.** Every localized tool answers inside
+  `Answered<T>`, which carries the negotiated culture beside the payload. The
+  payload itself stays the query's own result, unmapped: this is one header
+  becoming data, not the transport minting a contract of its own. It matters
+  most exactly when it is least expected — an agent asking for `fr` is answered
+  in Spanish, and without the field it would have to guess the language from the
+  words.
+- **`Vary` has no analogue and is not needed.** It exists so a shared cache
+  cannot serve the wrong language; a JSON-RPC POST is not cached by anything in
+  between.
+
+Per-item truth needed nothing new: `ProductDetail.MissingCultures` already
+travels, so `get_product` can answer *in* English and name English among the
+languages that product has not been translated into.
+
+One consequence worth writing down because it is invisible until it bites: **a
+tool's `culture` parameter defaults to `null`, not to `"es"`.** A default of
+`"es"` makes "the caller said nothing" and "the caller asked for Spanish" the
+same value at the point of decision, and the rest of the chain can never run.
+The first version of these tools had exactly that, and the header link would
+have been dead code.
+
 ## Consequences
 Every new endpoint returning localized text owes three things: the precedence
 chain, `Content-Language`, and `Vary`. Forgetting the last two is invisible in
 development and shows up as a cache serving the wrong language.
 
-The chain is currently **copied** in two endpoints. Two cases is not a pattern
-and an abstraction built on two is a guess; it moves to a shared model binder
-when a third endpoint needs it. Until then the duplication is the signal.
+The chain was **copied** in two endpoints when this was written, on the grounds
+that two cases is not a pattern and an abstraction built on two is a guess. The
+third endpoint arrived and it moved: `CultureNegotiation` in the SharedKernel is
+where it lives now, and it is what made the MCP tools free — a second transport
+that agrees with the first by calling the same function rather than by restating
+the same rule.

@@ -21,4 +21,19 @@
     <ProjectReference Include="../../src/Api/ElGuerre.Tendero.Api.csproj" />
   </ItemGroup>
 
+
+  <!-- The UCP schemas and the loader that resolves them, shared from
+       tests/Ucp.Tests rather than copied: one vendored set, one pinned commit,
+       one place to update. -->
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../Ucp.Tests/UcpSchemas.cs" Link="UcpSchemas.cs" />
+    <Content Include="../Ucp.Tests/ucp-schemas/**/*.json" LinkBase="ucp-schemas">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

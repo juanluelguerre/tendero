@@ -679,7 +679,7 @@ slice breaks the manifest at compile time.
 | `dev.ucp.shopping.fulfillment` | `Ordering/GetShippingOptions` |
 | `dev.ucp.shopping.checkout` | `Ordering/PlaceOrder` |
 | `dev.ucp.shopping.orders` | `Ordering/GetOrder`, `ListOrders`, `RequestReturn` |
-| `dev.ucp.identity` | `Accounts/LinkIdentity` |
+| `dev.ucp.common.identity_linking` | `Accounts/LinkIdentity` — **corrected 2026-09-08**: this table said `dev.ucp.identity`, and the specification calls it `dev.ucp.common.identity_linking`. The two catalogue ids at the top of this table were guessed and turned out exact, which is the more useful half of checking |
 | `com.elguerre.tendero.knowledge` | `Knowledge/CompareProducts` — the reverse-DNS extension mechanism, carrying the project's own differentiator |
 
 **This is what forces OpenAPI.** Capability schema URIs are `$ref`s into a
