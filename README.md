@@ -127,7 +127,7 @@ and the rest of the terms this README uses without stopping to define them
 |---|---|
 | **.NET 11 SDK, preview** | `global.json` pins a prerelease floor. `11.0.100` plus `allowPrerelease` resolves *nothing* on a preview-only machine: roll-forward only rolls up, and a preview sorts below its own release. |
 | **Node 24** (`.nvmrc`) | Angular 22 requires `^22.22.3 \|\| ^24.15.0 \|\| >=26.0.0`. Node 22.21 fails. |
-| **Docker** | Postgres and Elasticsearch, roughly 2.5 GB on the first run. Keycloak, pgweb and elasticvue are declared too and start on demand from the dashboard. |
+| **Docker** | Postgres and Elasticsearch, roughly 2.5 GB on the first run. Keycloak, pgweb and elasticvue are declared too and start on demand from the dashboard, and so is the vector layer: Qdrant, and Text Embeddings Inference serving `bge-m3` — 2.2 GB of weights on its first start and about 13 GiB of RAM on a CPU. `Tendero__Vectors=true` starts it with everything else; without it, search stays lexical. |
 
 The repository runs on **Linux and Windows**. Nothing in the code assumes a
 platform — every path is built with `Path.Combine` — but the setup commands

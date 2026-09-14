@@ -84,11 +84,18 @@
   <ItemGroup Label="Aspire (AppHost only)">
     <!-- Aspire 13.5.3 — MIT -->
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="13.5.3" />
-    <!-- Only what the AppHost declares today. Qdrant and Redis arrive with the
-         phase-8 embeddings worker; the Ollama CommunityToolkit package does not,
-         because Text Embeddings Inference serves the phase-8 models (ADR 0031).
-         Elasticsearch is a plain container resource (see ADR 0006). -->
+    <!-- Only what the AppHost declares today. Redis arrives when something reads
+         it; the Ollama CommunityToolkit package does not come back for phase 8,
+         because Text Embeddings Inference serves those models (ADR 0031) as a
+         plain container. Elasticsearch is a plain container resource too
+         (see ADR 0006). -->
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.5.3" />
+    <!-- MIT; its only Aspire dependency is exactly Aspire.Hosting 13.5.3. It
+         pins the server image to qdrant/qdrant:v1.18.0 and Qdrant.Client to
+         1.18.1, so Search takes that client version rather than 1.19.0: a newer
+         one in a project the AppHost references would be a downgrade NuGet
+         reports and -warnaserror turns into a failure. -->
+    <PackageVersion Include="Aspire.Hosting.Qdrant" Version="13.5.3" />
     <!-- Orchestrates both Angular apps alongside the backend: one command brings
          everything up and the API's URL is injected instead of hand-written. MIT. -->
     <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.5.3" />

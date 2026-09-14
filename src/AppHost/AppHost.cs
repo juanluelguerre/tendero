@@ -2,10 +2,10 @@ using System.Globalization;
 // Orchestrating Tendero locally: nothing here requires signing up anywhere or
 // paying for anything (initial-plan §1).
 //
-// Only what the code consumes TODAY is declared. Qdrant, Text Embeddings Inference
-// (ADR 0031) and Redis are in the target architecture (docs/architecture.md) and
-// arrive in the same PR that brings the embeddings worker: declaring them earlier
-// is gigabytes of download on first start and resources nobody reads.
+// Only what the code consumes is declared. Qdrant and Text Embeddings Inference
+// (ADR 0031) are declared for phase 8's vector layer and START ON DEMAND, because
+// on a CPU the embeddings container alone holds 12.7 GiB; Redis is still only in
+// the target architecture (docs/architecture.md).
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -44,9 +44,21 @@ const int elasticsearchPort = 59200;
 const int pgWebPort = 55433;
 const int elasticvuePort = 59201;
 const int keycloakPort = 58443;
+const int qdrantGrpcPort = 56334;
+const int qdrantHttpPort = 56333;
+const int embeddingsPort = 58081;
 
+// NAMED VOLUMES, and the name is the fix.
+//
+// `WithDataVolume()` with no argument names the volume after a hash of the
+// AppHost's PATH — `elguerre.tendero.apphost-4c82261971-postgres-data`. Renaming
+// the folder on 2026-09-14 changed the hash, and the next start created an empty
+// database beside the old one: the imported catalogue, the orders and the
+// customers were all still on disk, attached to nothing. Nothing failed; the shop
+// simply had no products. A fixed name survives a rename, a second clone and a
+// move to another drive, which is what `tendero-tei-models` below already does.
 var postgres = builder.AddPostgres("postgres", port: postgresPort)
-    .WithDataVolume(); // the imported catalogue survives a restart
+    .WithDataVolume("tendero-postgres-data"); // the imported catalogue survives a restart
 
 // Aspire's own helper — no new package, it ships with Aspire.Hosting.PostgreSQL,
 // which the AppHost already references. It wires the connection for you, so
@@ -113,6 +125,73 @@ var elasticvue = builder.AddContainer("elasticvue", "cars10/elasticvue", "1.6.2"
 
 if (!tools) elasticvue.WithExplicitStart();
 
+// THE VECTOR LAYER, declared always and started on demand (phase 8, ADR 0031).
+//
+//   Tendero__Vectors=true dotnet run --project src/AppHost
+//
+// Off by default for the measurement, not for tidiness: on a CPU the embeddings
+// container held 12.7 GiB of RAM in the spike that chose it, and a first start
+// downloads 2.2 GB of weights. Pressing F5 to look at a product page should not
+// cost either. Visible in the dashboard either way, one click from running — the
+// argument Keycloak already made.
+//
+// **Nothing waits for it, and that is invariant 8 rather than an omission.**
+// Lexical search is the permanent fallback: the API and the worker are handed
+// both references and no `WaitFor`, so a stopped vector layer is a search that
+// degrades to lexical, never a service that refuses to start.
+var vectors = string.Equals(builder.Configuration["Tendero:Vectors"], "true",
+    StringComparison.OrdinalIgnoreCase);
+
+// Qdrant through its Aspire integration: MIT, and its only Aspire dependency is
+// exactly the Aspire.Hosting 13.5.3 the AppHost resolves — the check Keycloak
+// passed and Elasticsearch did not (ADR 0006). It pins the server image to
+// v1.18.0 and brings Qdrant.Client 1.18.1 with it, which is the version Search
+// has to use too.
+//
+// The API key is committed for the reason the Keycloak password is: a generated
+// one lives in this machine's user secrets and nowhere a person looks, and the
+// Qdrant dashboard asks for it. `secret: true` masks it on screen; it protects
+// nothing, and a development collection has nothing to protect.
+//
+// **No data volume**, on purpose and like Elasticsearch: vectors are a disposable
+// projection rebuilt from Postgres (ADR 0012), and a volume would only keep
+// vectors from a model revision that may no longer be the configured one.
+var qdrantKey = builder.AddParameter("qdrant-key", "tendero-dev", secret: true);
+
+var qdrant = builder.AddQdrant("qdrant", apiKey: qdrantKey, grpcPort: qdrantGrpcPort, httpPort: qdrantHttpPort)
+    .WithLifetime(ContainerLifetime.Persistent);
+
+// The embedding model, served by Hugging Face Text Embeddings Inference and
+// pinned to the revision whose licence was checked (ADR 0031). A tag or `main`
+// would name something nobody checked. The container reports the revision it
+// loaded from its info endpoint, and that is what the startup check compares
+// against the configured descriptor (P8-3).
+//
+// The CPU image, deliberately. The GPU one could not reach CUDA inside Docker on
+// WSL2 and fell back to the CPU without failing (see the board's backlog), so
+// choosing it here would buy an 8 GB download and the same CPU. The reranker is
+// not declared: it is a GPU feature and arrives with P8-6.
+//
+// The model cache IS a volume, unlike Qdrant: it holds downloaded weights, not a
+// projection, and losing it costs 2.2 GB and four minutes on the next start.
+const string embeddingModel = "BAAI/bge-m3";
+const string embeddingModelRevision = "5617a9f61b028005a4858fdac845db406aefb181";
+
+var embeddings = builder.AddContainer("embeddings", "ghcr.io/huggingface/text-embeddings-inference", "cpu-1.9.3")
+    .WithArgs("--model-id", embeddingModel, "--revision", embeddingModelRevision)
+    .WithHttpEndpoint(targetPort: 80, port: embeddingsPort, name: "http")
+    .WithHttpHealthCheck("/health", endpointName: "http")
+    .WithVolume("tendero-tei-models", "/data")
+    .WithLifetime(ContainerLifetime.Persistent);
+
+if (!vectors)
+{
+    qdrant.WithExplicitStart();
+    embeddings.WithExplicitStart();
+}
+
+var embeddingsEndpoint = embeddings.GetEndpoint("http");
+
 // WHICH ISSUER SIGNS THE TOKENS, and the default is the development one.
 //
 // `Tendero:Issuer=keycloak` (or `Tendero__Issuer` in the environment) starts
@@ -175,7 +254,9 @@ var useKeycloak = string.Equals(issuer, "keycloak", StringComparison.OrdinalIgno
 var keycloakPassword = builder.AddParameter("keycloak-password", "admin", secret: true);
 
 var keycloak = builder.AddKeycloak("keycloak", port: keycloakPort, adminPassword: keycloakPassword)
-    .WithDataVolume()
+    // Named for the reason the Postgres volume is: an unnamed one is keyed on
+    // this project's path and is left behind by a folder rename.
+    .WithDataVolume("tendero-keycloak-data")
     .WithRealmImport("../../keycloak/realms")
     // Aspire issues Keycloak a certificate from its own development authority
     // and publishes 8443, so the browser reaches it over HTTPS without a
@@ -225,6 +306,11 @@ var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
     // on a laptop. It is tied to the environment and not to a constant, exactly
     // as it was for the development issuer.
     .WithSeedFiles(repositoryRoot)
+    // The vector layer, referenced and never waited for (see its declaration):
+    // the API embeds a query and asks Qdrant, and falls back to lexical when
+    // either is not running.
+    .WithReference(qdrant)
+    .WithReference(embeddingsEndpoint)
     .WithExternalHttpEndpoints();
 
 if (useKeycloak)
@@ -283,6 +369,11 @@ builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     // if Elasticsearch is not ready the hosted service throws and the process
     // dies without retrying.
     .WithSeedFiles(repositoryRoot)
+    // The worker writes the vectors (P8-4). Referenced, not waited for: a
+    // stopped vector layer must not hold the outbox — and the lexical index
+    // behind it — hostage.
+    .WithReference(qdrant)
+    .WithReference(embeddingsEndpoint)
     .WaitFor(elasticsearch);
 
 // The worker does NOT wait for the API: it does not depend on it. That was there

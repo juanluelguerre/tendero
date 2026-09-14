@@ -53,6 +53,14 @@ back with phase 8** after all: the two phase-8 models are served by Text
 Embeddings Inference 1.9.3 (Apache-2.0, a Tier-2 container) pinned to checked
 revisions, and Ollama waits for a generative model (ADR 0031).
 
+`Aspire.Hosting.Qdrant` 13.5.3 (MIT, its only Aspire dependency being exactly the
+13.5.3 the AppHost resolves) with the vector layer (phase 8). **It pins more than
+it says**: the server image to `qdrant/qdrant:v1.18.0` and `Qdrant.Client` to
+1.18.1 (Apache-2.0), so `Search` uses that client rather than the newer 1.19.0 —
+a higher version in a project the AppHost references would surface as a NuGet
+downgrade under `-warnaserror`. The plain-container alternative, which avoided
+the pin, was weighed and not taken.
+
 **Model weights are checked here too**, by the procedure ADR 0031 sets out:
 `BAAI/bge-m3` at revision `5617a9f` (MIT) and `BAAI/bge-reranker-v2-m3` at
 revision `953dc6f` (Apache-2.0), both read on 2026-09-14.
