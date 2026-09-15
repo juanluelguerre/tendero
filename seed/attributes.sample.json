@@ -240,6 +240,13 @@
           "es": "acero inoxidable",
           "en": "stainless steel"
         }
+      },
+      {
+        "code": "CAST_IRON",
+        "label": {
+          "es": "hierro fundido",
+          "en": "cast iron"
+        }
       }
     ]
   },
