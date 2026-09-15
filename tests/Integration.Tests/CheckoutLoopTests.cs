@@ -98,6 +98,47 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// The basket speaks the language it is read in, and the order the language it
+    /// is placed in — not the one the first line happened to be added in.
+    ///
+    /// Found in a browser on 2026-09-15: the cart line froze one string, so a
+    /// basket begun in Spanish kept Spanish names for a shopper browsing in
+    /// English, and checkout copied them onto the order along with the cart's
+    /// original culture. It needs a real Postgres because the names now travel as
+    /// LocalizedText inside the cart's jsonb, and only a round trip proves that.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_basket_filled_in_Spanish_reads_in_English_and_is_ordered_in_English()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+
+        await using var shop = await Shop.OpenAsync(postgres, nameof(
+            A_basket_filled_in_Spanish_reads_in_English_and_is_ordered_in_English));
+
+        await shop.StockAsync(Sku, 5, ct);
+
+        var filled = await shop.AddToCartAsync(null, Sku, 1, ct);
+        var spanish = Assert.Single(filled.Lines).ProductName;
+
+        var english = Assert.Single((await shop.CartAsync(filled.Token, "en", ct)).Lines).ProductName;
+
+        Assert.NotEqual(spanish, english);
+        Assert.Equal(spanish, Assert.Single((await shop.CartAsync(filled.Token, "es", ct)).Lines).ProductName);
+
+        var options = await shop.ShippingOptionsAsync(filled.Token, ct);
+        var quote = await shop.QuoteAsync(filled.Token, options.Options[0].Amount, ct, culture: "en");
+
+        var placed = await shop.PlaceOrderAsync(
+            filled.Token, options.Options[0].Code, quote.InputHash, ct, culture: "en");
+
+        Assert.Equal(PlaceOrderOutcome.Placed, placed.Outcome);
+        Assert.Equal("en", placed.Order!.Culture);
+        Assert.Equal(english, Assert.Single(placed.Order.Lines).ProductName);
+    }
+
+    /// <summary>
     /// The refusal. A declined card costs nothing: no order, no reservation, and
     /// a cart the shopper can still pay for with another card.
     /// </summary>
@@ -449,6 +490,14 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
             return outcome.Cart!;
         }
 
+        public async Task<CartView> CartAsync(string token, string culture, CancellationToken ct)
+        {
+            await using var scope = this.provider.CreateAsyncScope();
+
+            return await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>()
+                .SendAsync(new GetCartQuery(token, culture), ct);
+        }
+
         public async Task<ShippingOptionsResult> ShippingOptionsAsync(string token, CancellationToken ct)
         {
             await using var scope = this.provider.CreateAsyncScope();
@@ -466,7 +515,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         /// revalidates with. Using a different call here would make the
         /// fingerprint comparison prove nothing.
         /// </summary>
-        public async Task<CartPricing> QuoteAsync(string token, Money shipping, CancellationToken ct)
+        public async Task<CartPricing> QuoteAsync(string token, Money shipping, CancellationToken ct, string culture = "es")
         {
             await using var scope = this.provider.CreateAsyncScope();
 
@@ -474,7 +523,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
                 .FindOpenByTokenAsync(token, ct);
 
             var pricing = await scope.ServiceProvider.GetRequiredService<ICartPricer>()
-                .QuoteAsync(cart!.PricingLines(), "es", shipping, [], ct);
+                .QuoteAsync(cart!.PricingLines(), culture, shipping, [], ct);
 
             Assert.Equal(PricingOutcome.Quoted, pricing.Outcome);
 
@@ -483,13 +532,13 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
 
         public async Task<PlaceOrderResult> PlaceOrderAsync(
             string token, string option, string hash, CancellationToken ct,
-            string instrument = FakePaymentProvider.CardOk, string key = "checkout-1")
+            string instrument = FakePaymentProvider.CardOk, string key = "checkout-1", string culture = "es")
         {
             await using var scope = this.provider.CreateAsyncScope();
 
             return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
                 .SendAsync(new PlaceOrderCommand(
-                    token, ShipTo, null, option, hash, instrument, key, [], "es"), ct);
+                    token, ShipTo, null, option, hash, instrument, key, [], culture), ct);
         }
 
         public async Task<RequestReturnResult> RequestReturnAsync(

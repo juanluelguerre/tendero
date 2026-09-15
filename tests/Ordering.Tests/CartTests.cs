@@ -20,7 +20,7 @@ public sealed class CartTests
     private static Cart Open() => Cart.Start(Clock, "es", "EUR");
 
     private static CartLine Line(string sku, int quantity = 1) =>
-        new(ProductId.New(), VariantId.New(), sku, "A product", null, null, quantity);
+        new(ProductId.New(), VariantId.New(), sku, LocalizedText.From("es", "Un producto"), null, null, quantity);
 
     // ---------- Adding ----------
 

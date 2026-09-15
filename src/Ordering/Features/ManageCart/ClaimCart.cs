@@ -28,7 +28,9 @@ namespace ElGuerre.Tendero.Ordering.Features.ManageCart;
 /// account — which is the same reason `LinkIdentity` takes its subject from the
 /// token.
 /// </summary>
-public sealed record ClaimCartCommand(string Token) : ICommand<ClaimCartResult>;
+/// <param name="Culture">The language the basket comes back in — negotiated like
+/// every other cart endpoint, because the answer carries product names.</param>
+public sealed record ClaimCartCommand(string Token, string Culture) : ICommand<ClaimCartResult>;
 
 public enum ClaimCartOutcome
 {
@@ -72,14 +74,19 @@ public sealed class ClaimCartEndpoint : ICarterModule
         // POST /api/cart/claim
         app.MapPost("/api/cart/claim",
             async Task<Results<Ok<CartView>, NotFound, Conflict<string>>> (
-                   HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
+                   string? culture, HttpContext http, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
                 var token = http.Request.Headers[CartHeaders.Token].ToString();
 
                 if (string.IsNullOrWhiteSpace(token))
                     return TypedResults.NotFound();
 
-                var result = await dispatcher.SendAsync(new ClaimCartCommand(token), ct);
+                var resolved = CultureNegotiation.Resolve(culture, http.Request.Headers.AcceptLanguage);
+
+                http.Response.Headers.ContentLanguage = resolved;
+                http.Response.Headers.Vary = "Accept-Language";
+
+                var result = await dispatcher.SendAsync(new ClaimCartCommand(token, resolved), ct);
 
                 return result.Outcome switch
                 {
@@ -126,7 +133,7 @@ public sealed class ClaimCartHandler(
             // with the cart rather than with a refusal, because from the
             // caller's side nothing is wrong.
             activity?.SetTag("ordering.outcome", nameof(ClaimCartOutcome.AlreadyTheirs));
-            return new ClaimCartResult(ClaimCartOutcome.AlreadyTheirs, GetCartHandler.View(cart));
+            return new ClaimCartResult(ClaimCartOutcome.AlreadyTheirs, GetCartHandler.View(cart, command.Culture));
         }
 
         if (cart.CustomerId is not null)
@@ -140,6 +147,6 @@ public sealed class ClaimCartHandler(
 
         activity?.SetTag("ordering.outcome", nameof(ClaimCartOutcome.Claimed));
 
-        return new ClaimCartResult(ClaimCartOutcome.Claimed, GetCartHandler.View(cart));
+        return new ClaimCartResult(ClaimCartOutcome.Claimed, GetCartHandler.View(cart, command.Culture));
     }
 }

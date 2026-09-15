@@ -83,10 +83,16 @@ public sealed class GetCartHandler(ICartRepository carts) : IQueryHandler<GetCar
         // A token whose cart was checked out yesterday is not an error: it is a
         // browser holding a stale string, and the answer is an empty basket
         // rather than the old order's contents.
-        return cart is null ? CartView.Empty(query.Culture, "EUR") : View(cart);
+        return cart is null ? CartView.Empty(query.Culture, "EUR") : View(cart, query.Culture);
     }
 
-    internal static CartView View(Cart cart) => new(
+    /// <summary>
+    /// The cart in the language it is being read in. The lines keep every
+    /// translation, so a basket filled in Spanish reads in English the moment
+    /// the shopper asks in English — the same chain `LocalizedText.In` applies
+    /// everywhere else: that culture, then English, then whatever there is.
+    /// </summary>
+    internal static CartView View(Cart cart, string culture) => new(
         cart.Id.ToString(),
         cart.Token,
         cart.Culture,
@@ -101,8 +107,8 @@ public sealed class GetCartHandler(ICartRepository carts) : IQueryHandler<GetCar
                 line.ProductId.ToString(),
                 line.VariantId.ToString(),
                 line.Sku,
-                line.ProductName,
-                line.VariantLabel,
+                line.ProductName.In(culture),
+                line.VariantLabel?.In(culture),
                 line.ImageId,
                 line.Quantity))
         ]);
@@ -157,7 +163,7 @@ public sealed class AddToCartHandler(
         using var activity = Telemetry.StartActivity("cart.add");
         activity?.SetTag("cart.sku", command.Sku);
 
-        var purchasable = (await purchasables.FindBySkusAsync([command.Sku], command.Culture, cancellationToken))
+        var purchasable = (await purchasables.FindBySkusAsync([command.Sku], cancellationToken))
             .GetValueOrDefault(command.Sku);
 
         if (purchasable is null)
@@ -178,7 +184,7 @@ public sealed class AddToCartHandler(
         else if (!string.Equals(cart.Currency, purchasable.Currency, StringComparison.OrdinalIgnoreCase))
         {
             return new CartOutcome(
-                CartResult.MixedCurrencies, GetCartHandler.View(cart),
+                CartResult.MixedCurrencies, GetCartHandler.View(cart, command.Culture),
                 $"{cart.Currency} and {purchasable.Currency}");
         }
 
@@ -198,12 +204,12 @@ public sealed class AddToCartHandler(
             // The caps live on the aggregate so a second caller — an agent over
             // UCP — cannot forget them. Turning the refusal into an answer is
             // this handler's job.
-            return new CartOutcome(CartResult.Refused, GetCartHandler.View(cart), exception.Message);
+            return new CartOutcome(CartResult.Refused, GetCartHandler.View(cart, command.Culture), exception.Message);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CartOutcome(CartResult.Changed, GetCartHandler.View(cart), null);
+        return new CartOutcome(CartResult.Changed, GetCartHandler.View(cart, command.Culture), null);
     }
 }
 
@@ -251,12 +257,12 @@ public sealed class SetCartLineHandler(
         }
         catch (InvalidOperationException exception)
         {
-            return new CartOutcome(CartResult.UnknownLine, GetCartHandler.View(cart), exception.Message);
+            return new CartOutcome(CartResult.UnknownLine, GetCartHandler.View(cart, command.Culture), exception.Message);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new CartOutcome(CartResult.Changed, GetCartHandler.View(cart), null);
+        return new CartOutcome(CartResult.Changed, GetCartHandler.View(cart, command.Culture), null);
     }
 }
 

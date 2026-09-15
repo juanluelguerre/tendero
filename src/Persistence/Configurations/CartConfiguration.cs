@@ -52,6 +52,14 @@ internal sealed class CartConfiguration : IEntityTypeConfiguration<Cart>
 
         builder.ComplexCollection<List<CartLine>, CartLine>("lines", line =>
         {
+            // The name and the variant label are LocalizedText, and inside the
+            // JSON they travel as the same culture -> text dictionary the product
+            // images' alternative text does. The label is null for a product
+            // without axes, so it takes the null-tolerant converter.
+            line.Property(l => l.ProductName)
+                .HasConversion(Jsonb.LocalizedTextConverter, Jsonb.LocalizedTextComparer);
+            line.Property(l => l.VariantLabel)
+                .HasConversion(Jsonb.NullableLocalizedTextConverter, Jsonb.NullableLocalizedTextComparer);
             line.ToJson("lines");
         });
 

@@ -32,16 +32,17 @@ public interface ICartRepository
 /// What a product looks like to `Ordering` when a line is being added.
 ///
 /// It is a VALUE, and `Ordering` never sees a `Product` or a `Variant`. The
-/// crossing carries the SKU, the ids, and the two strings that get frozen onto
-/// the line — which is ADR 0002's snapshot rule stated as a type rather than as
-/// a convention.
+/// crossing carries the SKU, the ids, and the two texts that get frozen onto the
+/// line — which is ADR 0002's snapshot rule stated as a type rather than as a
+/// convention. Both texts come in every culture the shop speaks (invariant 6):
+/// what is frozen is the catalogue's wording, not one language of it.
 /// </summary>
 public sealed record PurchasableVariant(
     ProductId ProductId,
     VariantId VariantId,
     string Sku,
-    string ProductName,
-    string? VariantLabel,
+    LocalizedText ProductName,
+    LocalizedText? VariantLabel,
     string? ImageId,
     string Currency);
 
@@ -53,7 +54,11 @@ public sealed record PurchasableVariant(
 /// Persistence implements it, which is the same division `Pricing` already makes
 /// with its own catalogue reader.
 ///
-/// It takes a culture because the name it freezes is the name the shopper saw.
+/// **It takes no culture, and it used to.** It resolved the name in the language
+/// of the request that added the line and froze that one string, so a basket
+/// filled in Spanish kept answering in Spanish to the same shopper browsing in
+/// English — found in a browser on 2026-09-15, with every test green. The line
+/// keeps every translation now, and whoever reads the cart picks one.
 /// </summary>
 public interface IPurchasableReader
 {
@@ -63,5 +68,5 @@ public interface IPurchasableReader
     /// same shape `IAvailabilityReader` uses, and for the same reason.
     /// </summary>
     Task<IReadOnlyDictionary<string, PurchasableVariant>> FindBySkusAsync(
-        IReadOnlyCollection<string> skus, string culture, CancellationToken cancellationToken = default);
+        IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default);
 }

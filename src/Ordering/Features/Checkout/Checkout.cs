@@ -325,6 +325,12 @@ public sealed class PlaceOrderHandler(
         var unitPrices = pricing.Lines.ToDictionary(
             line => line.Sku, line => line.UnitPrice, StringComparer.OrdinalIgnoreCase);
 
+        // The order speaks the language the shopper checked out in, not the one
+        // the cart happened to be started in. `UseCulture` existed for exactly
+        // this and nothing called it, so an order placed in English from a basket
+        // begun in Spanish froze Spanish names and a Spanish shipping label.
+        cart.UseCulture(clock, command.Culture);
+
         var order = Order.Place(
             clock,
             customer,
@@ -334,8 +340,10 @@ public sealed class PlaceOrderHandler(
                     line.ProductId,
                     line.VariantId,
                     line.Sku,
-                    line.ProductName,
-                    line.VariantLabel,
+                    // Resolved once, here, and frozen: the order keeps one
+                    // language because it is a record of one purchase.
+                    line.ProductName.In(cart.Culture),
+                    line.VariantLabel?.In(cart.Culture),
                     // Carried forward from the cart, which took it from the
                     // catalogue when the line was added. The order freezes it
                     // there.

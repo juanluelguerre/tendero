@@ -32,9 +32,10 @@ internal sealed class EfCartRepository(TenderoDbContext context) : ICartReposito
 /// same reason: `Ordering` must not reference `Catalog`, somebody has to bridge
 /// the two, and this project is where every outbound adapter already lives.
 ///
-/// The crossing carries **values** — ids, a SKU, and the two strings that get
-/// frozen onto the line. That is ADR 0002's snapshot rule made into a type: what
-/// comes back cannot be held onto, edited, or accidentally saved.
+/// The crossing carries **values** — ids, a SKU, and the two texts that get
+/// frozen onto the line, in every culture. That is ADR 0002's snapshot rule made
+/// into a type: what comes back cannot be held onto, edited, or accidentally
+/// saved.
 ///
 /// Only Active products are purchasable. A draft is something nobody has
 /// approved for sale, and letting one into a cart would be buying through the
@@ -45,7 +46,7 @@ internal sealed class EfPurchasableReader(
     TenderoDbContext context, IAttributeDefinitionReader definitions) : IPurchasableReader
 {
     public async Task<IReadOnlyDictionary<string, PurchasableVariant>> FindBySkusAsync(
-        IReadOnlyCollection<string> skus, string culture, CancellationToken cancellationToken = default)
+        IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default)
     {
         if (skus.Count == 0)
             return new Dictionary<string, PurchasableVariant>(StringComparer.OrdinalIgnoreCase);
@@ -67,28 +68,39 @@ internal sealed class EfPurchasableReader(
                 product.Id,
                 variant.Id,
                 variant.Sku,
-                // Resolved HERE and frozen by the caller: the line keeps the name
-                // the shopper saw, so retranslating the catalogue does not
-                // rewrite somebody's basket.
-                product.Name.In(culture),
-                Label(variant, attributes, culture),
+                // Frozen by the caller in every culture, so retranslating the
+                // catalogue does not rewrite somebody's basket — and switching
+                // language does not leave it in the one it was filled in.
+                product.Name,
+                Label(variant, attributes),
                 (variant.Image ?? product.PrimaryImage?.Id)?.ToString(),
                 variant.Price.Currency)
         ).ToDictionary(item => item.Sku, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
-    /// "Azul marino · 38" — the axis values in the product's own axis order,
-    /// resolved into the shopper's language.
+    /// "Azul marino · 38" / "Navy blue · 38" — the axis values in the product's
+    /// own axis order, in every culture the shop speaks.
     ///
     /// Null when there is nothing to say. Every product has at least one variant
     /// (the implicit `{externalId}-DEFAULT` minted at import), and printing an
     /// empty label under every single-variant product is noise.
     /// </summary>
-    private static string? Label(Variant variant, AttributeDefinitions attributes, string culture)
+    private static LocalizedText? Label(Variant variant, AttributeDefinitions attributes)
     {
         if (variant.AxisValues.Count == 0)
             return null;
+
+        var labels = CultureNegotiation.Supported
+            .Select(culture => (Culture: culture, Label: Label(variant, attributes, culture)))
+            .Where(candidate => candidate.Label is not null)
+            .ToDictionary(candidate => candidate.Culture, candidate => candidate.Label!);
+
+        return labels.Count == 0 ? null : new LocalizedText(labels);
+    }
+
+    private static string? Label(Variant variant, AttributeDefinitions attributes, string culture)
+    {
 
         // The axis values are CODES — {"COLOR": "NAVY_BLUE", "SIZE": "38"} — and
         // the definitions are what turn them into words. The same resolution the
