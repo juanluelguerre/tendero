@@ -150,6 +150,13 @@ reference implementation of UCP"* is the single most distinctive claim available
 to this project. It belongs in the README, in a CV, and in a conference talk
 proposal — not only in one article on one Tuesday.
 
+**8 · Every article ends with *How we know it works*** (decided 2026-09-15, announced
+in article 00). Three lines: the test that failed first or the deliberate breakage
+that proves the claim, the gate that holds it on every pull request, and — from the
+first article whose tag contains Stryker.NET — the mutation score of the code the
+article is about. Only what the article's own tag contains: an older tag says
+"not yet" rather than borrowing today's number.
+
 ---
 
 ## Phase 0 · Make the gates real
