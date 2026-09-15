@@ -1,0 +1,2037 @@
+{
+  "generated": "2026-09-15",
+  "source": "SearchEval --strategy hybrid --pool: every strategy's unjudged first ten, judged blind",
+  "status": "reviewed on 2026-09-15: criteria and doubts decided by the author, applied to the golden set",
+  "proposals": [
+    {
+      "culture": "en",
+      "query": "12 cup coffee maker",
+      "externalId": "B11COO0305",
+      "relevance": 0,
+      "why": "milk pan: not a coffee maker"
+    },
+    {
+      "culture": "en",
+      "query": "12 cup coffee maker",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "pasta colander"
+    },
+    {
+      "culture": "en",
+      "query": "12 cup coffee maker",
+      "externalId": "B11TAB0503",
+      "relevance": 0,
+      "why": "water jug"
+    },
+    {
+      "culture": "en",
+      "query": "12 cup coffee maker",
+      "externalId": "B11TAB0504",
+      "relevance": 0,
+      "why": "glass tumblers"
+    },
+    {
+      "culture": "en",
+      "query": "12 cup coffee maker",
+      "externalId": "B14HOM0801",
+      "relevance": 0,
+      "why": "tea towels"
+    },
+    {
+      "culture": "en",
+      "query": "12 cup coffee maker",
+      "externalId": "B15KIT1201",
+      "relevance": 0,
+      "why": "kitchen scale"
+    },
+    {
+      "culture": "en",
+      "query": "backpack",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "trail running tee"
+    },
+    {
+      "culture": "en",
+      "query": "backpack",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "long-sleeve tee"
+    },
+    {
+      "culture": "en",
+      "query": "backpack",
+      "externalId": "B10SHI0208",
+      "relevance": 0,
+      "why": "running shorts"
+    },
+    {
+      "culture": "en",
+      "query": "backpack",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "laptop sleeve: goes inside another bag, not worn on the back"
+    },
+    {
+      "culture": "en",
+      "query": "backpack",
+      "externalId": "B14HOM0802",
+      "relevance": 0,
+      "why": "kitchen apron"
+    },
+    {
+      "culture": "en",
+      "query": "backpack",
+      "externalId": "B14ORG0901",
+      "relevance": 0,
+      "why": "spice rack"
+    },
+    {
+      "culture": "en",
+      "query": "coffee maker",
+      "externalId": "B11COO0304",
+      "relevance": 0,
+      "why": "wok"
+    },
+    {
+      "culture": "en",
+      "query": "coffee maker",
+      "externalId": "B11COO0305",
+      "relevance": 0,
+      "why": "milk pan for sauces and milk, does not make coffee"
+    },
+    {
+      "culture": "en",
+      "query": "coffee maker",
+      "externalId": "B11COO0311",
+      "relevance": 0,
+      "why": "knife sharpener"
+    },
+    {
+      "culture": "en",
+      "query": "coffee maker",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "pasta colander"
+    },
+    {
+      "culture": "en",
+      "query": "coffee maker",
+      "externalId": "B14HOM0801",
+      "relevance": 0,
+      "why": "tea towels"
+    },
+    {
+      "culture": "en",
+      "query": "coffee maker",
+      "externalId": "B15KIT1201",
+      "relevance": 0,
+      "why": "kitchen scale"
+    },
+    {
+      "culture": "en",
+      "query": "coffee maker",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "desk lamp",
+      "externalId": "B11TAB0503",
+      "relevance": 0,
+      "why": "water jug"
+    },
+    {
+      "culture": "en",
+      "query": "desk lamp",
+      "externalId": "B12LAM0609",
+      "relevance": 1,
+      "why": "motion-sensor night light, not a desk lamp"
+    },
+    {
+      "culture": "en",
+      "query": "desk lamp",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "laptop sleeve"
+    },
+    {
+      "culture": "en",
+      "query": "desk lamp",
+      "externalId": "B14HOM0808",
+      "relevance": 0,
+      "why": "linen napkins"
+    },
+    {
+      "culture": "en",
+      "query": "desk lamp",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "touchscreen gloves"
+    },
+    {
+      "culture": "en",
+      "query": "desk lamp",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "dimmable led lamp",
+      "externalId": "B09PQRS303",
+      "relevance": 0,
+      "why": "coffee maker"
+    },
+    {
+      "culture": "en",
+      "query": "dimmable led lamp",
+      "externalId": "B11TAB0504",
+      "relevance": 0,
+      "why": "glass tumblers"
+    },
+    {
+      "culture": "en",
+      "query": "dimmable led lamp",
+      "externalId": "B12LAM0609",
+      "relevance": 0,
+      "why": "motion-sensor corridor light, not dimmable"
+    },
+    {
+      "culture": "en",
+      "query": "dimmable led lamp",
+      "externalId": "B14HOM0808",
+      "relevance": 0,
+      "why": "linen napkins"
+    },
+    {
+      "culture": "en",
+      "query": "dimmable led lamp",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "touchscreen gloves"
+    },
+    {
+      "culture": "en",
+      "query": "dimmable led lamp",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B11COF0403",
+      "relevance": 0,
+      "why": "french press"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B11COO0306",
+      "relevance": 0,
+      "why": "ceramic oven dish, not for the hob"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B11COO0308",
+      "relevance": 0,
+      "why": "bamboo utensils: an accessory for pans, not a pan"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "pasta colander"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B14HOM0803",
+      "relevance": 0,
+      "why": "oven mitts"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B14ORG0903",
+      "relevance": 0,
+      "why": "dish rack"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "frying pans",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "mixing bowls"
+    },
+    {
+      "culture": "en",
+      "query": "gift for the kitchen",
+      "externalId": "B11COO0306",
+      "relevance": 1,
+      "why": "ceramic oven dish: works as a kitchen gift"
+    },
+    {
+      "culture": "en",
+      "query": "gift for the kitchen",
+      "externalId": "B11COO0309",
+      "relevance": 2,
+      "why": "forged chef knife: a typical kitchen gift"
+    },
+    {
+      "culture": "en",
+      "query": "gift for the kitchen",
+      "externalId": "B11COO0312",
+      "relevance": 1,
+      "why": "plain colander: kitchen item, hardly a gift"
+    },
+    {
+      "culture": "en",
+      "query": "gift for the kitchen",
+      "externalId": "B14HOM0803",
+      "relevance": 2,
+      "why": "linen oven mitts: a typical kitchen gift"
+    },
+    {
+      "culture": "en",
+      "query": "gift for the kitchen",
+      "externalId": "B14ORG0903",
+      "relevance": 1,
+      "why": "dish rack: useful in a kitchen, rarely a gift"
+    },
+    {
+      "culture": "en",
+      "query": "gift for the kitchen",
+      "externalId": "B15KIT1204",
+      "relevance": 2,
+      "why": "nesting mixing bowls: a typical baking gift, like the scale"
+    },
+    {
+      "culture": "en",
+      "query": "induction cookware",
+      "externalId": "B11COF0401",
+      "relevance": 0,
+      "why": "aluminium moka pot, induction=no: neither induction nor cookware"
+    },
+    {
+      "culture": "en",
+      "query": "induction cookware",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "colander, never goes on the hob"
+    },
+    {
+      "culture": "en",
+      "query": "induction cookware",
+      "externalId": "B14HOM0803",
+      "relevance": 0,
+      "why": "oven mitts"
+    },
+    {
+      "culture": "en",
+      "query": "induction cookware",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "induction cookware",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "mixing bowls, not for the hob"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "long-sleeve tee"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B11COF0403",
+      "relevance": 0,
+      "why": "french press"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B12LAM0606",
+      "relevance": 0,
+      "why": "a portable lamp: shares words only"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B13BAG0707",
+      "relevance": 0,
+      "why": "shopping tote with no laptop compartment"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B13BAG0708",
+      "relevance": 0,
+      "why": "3 L hip pack: no laptop fits"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "packing cubes"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B14HOM0807",
+      "relevance": 0,
+      "why": "bath mat"
+    },
+    {
+      "culture": "en",
+      "query": "laptop backpack 15 inch",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "touchscreen gloves"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "green tee: neither navy nor a shoe"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B10SHI0208",
+      "relevance": 0,
+      "why": "black shorts: neither navy nor a shoe"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "grey socks: neither navy nor a shoe"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B10SHO0106",
+      "relevance": 1,
+      "why": "hogar house slippers: footwear, but not navy blue"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B10SHO0108",
+      "relevance": 1,
+      "why": "vado trekking sandals: footwear, but not navy blue"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "black laptop sleeve"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "packing cubes"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "black gloves"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B15SHO1101",
+      "relevance": 1,
+      "why": "charco short wellington boots: footwear, but not navy blue"
+    },
+    {
+      "culture": "en",
+      "query": "navy blue shoes",
+      "externalId": "B15SHO1104",
+      "relevance": 1,
+      "why": "cream, not navy: an espadrille, retrieved on 'shoes' alone"
+    },
+    {
+      "culture": "en",
+      "query": "non-stick pan set",
+      "externalId": "B11COF0402",
+      "relevance": 0,
+      "why": "stovetop coffee maker"
+    },
+    {
+      "culture": "en",
+      "query": "non-stick pan set",
+      "externalId": "B11COO0304",
+      "relevance": 1,
+      "why": "a single wok, not a set, not stated non-stick"
+    },
+    {
+      "culture": "en",
+      "query": "non-stick pan set",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "colander"
+    },
+    {
+      "culture": "en",
+      "query": "non-stick pan set",
+      "externalId": "B14HOM0803",
+      "relevance": 0,
+      "why": "oven mitts"
+    },
+    {
+      "culture": "en",
+      "query": "non-stick pan set",
+      "externalId": "B14ORG0903",
+      "relevance": 0,
+      "why": "dish rack"
+    },
+    {
+      "culture": "en",
+      "query": "non-stick pan set",
+      "externalId": "B15KIT1203",
+      "relevance": 0,
+      "why": "non-stick cake tin, not a pan"
+    },
+    {
+      "culture": "en",
+      "query": "non-stick pan set",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "mixing bowl set"
+    },
+    {
+      "culture": "en",
+      "query": "programmable drip coffee maker",
+      "externalId": "B11COO0311",
+      "relevance": 0,
+      "why": "knife sharpener"
+    },
+    {
+      "culture": "en",
+      "query": "programmable drip coffee maker",
+      "externalId": "B11TAB0504",
+      "relevance": 0,
+      "why": "glass tumblers"
+    },
+    {
+      "culture": "en",
+      "query": "programmable drip coffee maker",
+      "externalId": "B15KIT1201",
+      "relevance": 0,
+      "why": "digital kitchen scale, makes no coffee"
+    },
+    {
+      "culture": "en",
+      "query": "programmable drip coffee maker",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "programmable drip coffee maker",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "mixing bowls"
+    },
+    {
+      "culture": "en",
+      "query": "reading light with usb",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "running tee"
+    },
+    {
+      "culture": "en",
+      "query": "reading light with usb",
+      "externalId": "B11COO0307",
+      "relevance": 0,
+      "why": "chopping board"
+    },
+    {
+      "culture": "en",
+      "query": "reading light with usb",
+      "externalId": "B12LAM0610",
+      "relevance": 1,
+      "why": "long-arm desk lamp to read by, no USB"
+    },
+    {
+      "culture": "en",
+      "query": "reading light with usb",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "laptop sleeve: a charger pocket is not a light"
+    },
+    {
+      "culture": "en",
+      "query": "reading light with usb",
+      "externalId": "B15KIT1201",
+      "relevance": 0,
+      "why": "kitchen scale"
+    },
+    {
+      "culture": "en",
+      "query": "reading light with usb",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B07TUVW404",
+      "relevance": 1,
+      "why": "trail running tee: same sport, different category"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B10SHI0201",
+      "relevance": 1,
+      "why": "trail technical tee: same sport, different category"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B10SHI0202",
+      "relevance": 1,
+      "why": "running vest: same sport, different category"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B10SHI0208",
+      "relevance": 1,
+      "why": "running shorts: same sport, different category"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "merino socks, not made for running"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "packing cubes"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "touchscreen gloves"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B15SHO1101",
+      "relevance": 0,
+      "why": "wellington boots"
+    },
+    {
+      "culture": "en",
+      "query": "runing shoes",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "espadrilles, not for running"
+    },
+    {
+      "culture": "en",
+      "query": "running shoes",
+      "externalId": "B10SHI0201",
+      "relevance": 1,
+      "why": "trail technical tee: same sport, different category"
+    },
+    {
+      "culture": "en",
+      "query": "running shoes",
+      "externalId": "B10SHI0204",
+      "relevance": 0,
+      "why": "everyday cotton tee"
+    },
+    {
+      "culture": "en",
+      "query": "running shoes",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "merino socks, not made for running"
+    },
+    {
+      "culture": "en",
+      "query": "running shoes",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "canvas everyday trainer, not for running"
+    },
+    {
+      "culture": "en",
+      "query": "running shoes",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "house slippers"
+    },
+    {
+      "culture": "en",
+      "query": "running shoes",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "touchscreen gloves"
+    },
+    {
+      "culture": "en",
+      "query": "running shoes",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "espadrilles, not for running"
+    },
+    {
+      "culture": "en",
+      "query": "sportswear",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "canvas everyday trainer: neither sports nor wear"
+    },
+    {
+      "culture": "en",
+      "query": "sportswear",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "house slippers"
+    },
+    {
+      "culture": "en",
+      "query": "sportswear",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "laptop sleeve"
+    },
+    {
+      "culture": "en",
+      "query": "sportswear",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "packing cubes"
+    },
+    {
+      "culture": "en",
+      "query": "sportswear",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "summer esparto espadrilles"
+    },
+    {
+      "culture": "en",
+      "query": "tech tee",
+      "externalId": "B09PQRS303",
+      "relevance": 0,
+      "why": "drip coffee maker"
+    },
+    {
+      "culture": "en",
+      "query": "tech tee",
+      "externalId": "B11COF0401",
+      "relevance": 0,
+      "why": "stovetop coffee maker"
+    },
+    {
+      "culture": "en",
+      "query": "tech tee",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "laptop sleeve"
+    },
+    {
+      "culture": "en",
+      "query": "tech tee",
+      "externalId": "B14HOM0801",
+      "relevance": 0,
+      "why": "tea towels"
+    },
+    {
+      "culture": "en",
+      "query": "tech tee",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "technical gloves, not a tee"
+    },
+    {
+      "culture": "en",
+      "query": "tech tee",
+      "externalId": "B15KIT1201",
+      "relevance": 0,
+      "why": "kitchen scale"
+    },
+    {
+      "culture": "en",
+      "query": "tech tee",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "kitchen thermometer"
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B10SHI0204",
+      "relevance": 1,
+      "why": "a tee, but everyday cotton rather than for running"
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B10SHI0205",
+      "relevance": 1,
+      "why": "cycling jersey: a technical top, for another sport"
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "canvas trainers"
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "house slippers"
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B13BAG0708",
+      "relevance": 0,
+      "why": "hip pack, nothing says running"
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "laptop sleeve"
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "espadrilles"
+    },
+    {
+      "culture": "en",
+      "query": "Vertex",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "different brand: Caminante canvas trainer"
+    },
+    {
+      "culture": "en",
+      "query": "Vertex",
+      "externalId": "B12LAM0606",
+      "relevance": 0,
+      "why": "different brand: Lumen&Co lamp"
+    },
+    {
+      "culture": "en",
+      "query": "Vertex",
+      "externalId": "B12LAM0607",
+      "relevance": 0,
+      "why": "different brand: Lumen&Co LED strip"
+    },
+    {
+      "culture": "en",
+      "query": "Vertex",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "different brand: Nordwind packing cubes"
+    },
+    {
+      "culture": "en",
+      "query": "Vertex",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "different brand: Caminante espadrilles"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "trail running tee"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "long-sleeve tee"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "running vest"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "canvas trainers"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B13BAG0707",
+      "relevance": 0,
+      "why": "cotton canvas tote: neither a backpack nor waterproof"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B13BAG0708",
+      "relevance": 1,
+      "why": "hip pack with a water-resistant zip: a bag, but not a backpack"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "wool felt laptop sleeve: neither a backpack nor waterproof"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "mesh packing cubes"
+    },
+    {
+      "culture": "en",
+      "query": "waterproof backpack",
+      "externalId": "B14HOM0807",
+      "relevance": 0,
+      "why": "bath mat"
+    },
+    {
+      "culture": "en",
+      "query": "womens running shoes",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "women's tee: not footwear"
+    },
+    {
+      "culture": "en",
+      "query": "womens running shoes",
+      "externalId": "B10SHI0204",
+      "relevance": 0,
+      "why": "men's cotton tee: not footwear"
+    },
+    {
+      "culture": "en",
+      "query": "womens running shoes",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "merino socks: not footwear"
+    },
+    {
+      "culture": "en",
+      "query": "womens running shoes",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "house slippers"
+    },
+    {
+      "culture": "en",
+      "query": "womens running shoes",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "touchscreen gloves"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta blanca, no azul marino"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B10SHI0204",
+      "relevance": 0,
+      "why": "camiseta blanca, no azul marino"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "calcetines grises"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "zapatilla blanca"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B11TAB0502",
+      "relevance": 0,
+      "why": "tazones color terracota"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B14HOM0806",
+      "relevance": 0,
+      "why": "cojines color terracota"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B14HOM0807",
+      "relevance": 0,
+      "why": "alfombra de bano color crema"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "boles de acero, sin color azul"
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "alpargata color crema"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "camiseta tecnica de trail"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "camiseta de manga larga"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "calcetines de merino"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera",
+      "externalId": "B11COO0305",
+      "relevance": 0,
+      "why": "cazo para leche y salsas, no hace cafe"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "colador de pasta"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera 12 tazas",
+      "externalId": "B11COO0305",
+      "relevance": 0,
+      "why": "cazo lechero: no es cafetera"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera 12 tazas",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "colador de pasta"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera 12 tazas",
+      "externalId": "B11TAB0502",
+      "relevance": 0,
+      "why": "tazones de desayuno: solo comparte la palabra taza"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera 12 tazas",
+      "externalId": "B11TAB0503",
+      "relevance": 0,
+      "why": "jarra de agua"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera 12 tazas",
+      "externalId": "B11TAB0504",
+      "relevance": 0,
+      "why": "vasos de cristal"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera 12 tazas",
+      "externalId": "B11TAB0505",
+      "relevance": 0,
+      "why": "botes hermeticos"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "camiseta tecnica de trail"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "camiseta de manga larga"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B11COO0305",
+      "relevance": 0,
+      "why": "cazo lechero"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B11COO0312",
+      "relevance": 0,
+      "why": "colador de pasta"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B12LAM0606",
+      "relevance": 0,
+      "why": "lampara portatil recargable"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "termometro digital de cocina, no hace cafe"
+    },
+    {
+      "culture": "es",
+      "query": "cafetera programable",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "boles para mezclar"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta hombre",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "calcetines"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta hombre",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "zapatilla de estar por casa"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta hombre",
+      "externalId": "B15APP1007",
+      "relevance": 0,
+      "why": "gorro de punto"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta hombre",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta hombre",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "alpargata de mujer"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta tecnica",
+      "externalId": "B10SHI0208",
+      "relevance": 0,
+      "why": "pantalon corto de running: prenda tecnica, pero no camiseta"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta tecnica",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "calcetines de merino"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta tecnica",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "zapatilla de lona"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta tecnica",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "zapatilla de estar por casa"
+    },
+    {
+      "culture": "es",
+      "query": "camiseta tecnica",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "alpargata"
+    },
+    {
+      "culture": "es",
+      "query": "flexo con usb",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "flexo con usb",
+      "externalId": "B11COO0305",
+      "relevance": 0,
+      "why": "cazo lechero"
+    },
+    {
+      "culture": "es",
+      "query": "flexo con usb",
+      "externalId": "B12LAM0610",
+      "relevance": 1,
+      "why": "flexo de brazo largo con lupa, sin USB"
+    },
+    {
+      "culture": "es",
+      "query": "flexo con usb",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "funda de portatil: el bolsillo del cargador no es un flexo"
+    },
+    {
+      "culture": "es",
+      "query": "flexo con usb",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "organizadores de equipaje"
+    },
+    {
+      "culture": "es",
+      "query": "flexo con usb",
+      "externalId": "B14ORG0903",
+      "relevance": 0,
+      "why": "escurreplatos"
+    },
+    {
+      "culture": "es",
+      "query": "flexo con usb",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes tactiles"
+    },
+    {
+      "culture": "es",
+      "query": "lampara escritorio",
+      "externalId": "B11TAB0503",
+      "relevance": 0,
+      "why": "jarra de agua"
+    },
+    {
+      "culture": "es",
+      "query": "lampara escritorio",
+      "externalId": "B12LAM0608",
+      "relevance": 0,
+      "why": "bombillas sueltas, no una lampara"
+    },
+    {
+      "culture": "es",
+      "query": "lampara escritorio",
+      "externalId": "B14HOM0801",
+      "relevance": 0,
+      "why": "panos de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "lampara escritorio",
+      "externalId": "B14HOM0802",
+      "relevance": 0,
+      "why": "delantal de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "lampara escritorio",
+      "externalId": "B14HOM0803",
+      "relevance": 0,
+      "why": "manoplas de horno"
+    },
+    {
+      "culture": "es",
+      "query": "lampara escritorio",
+      "externalId": "B14HOM0808",
+      "relevance": 0,
+      "why": "servilletas de lino"
+    },
+    {
+      "culture": "es",
+      "query": "lampara led regulable",
+      "externalId": "B11COO0305",
+      "relevance": 0,
+      "why": "cazo lechero"
+    },
+    {
+      "culture": "es",
+      "query": "lampara led regulable",
+      "externalId": "B11TAB0503",
+      "relevance": 0,
+      "why": "jarra de agua"
+    },
+    {
+      "culture": "es",
+      "query": "lampara led regulable",
+      "externalId": "B14HOM0802",
+      "relevance": 0,
+      "why": "delantal de lino"
+    },
+    {
+      "culture": "es",
+      "query": "lampara led regulable",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes tactiles"
+    },
+    {
+      "culture": "es",
+      "query": "lampara led regulable",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "termometro de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "menaje de cocina",
+      "externalId": "B14HOM0801",
+      "relevance": 0,
+      "why": "panos de cocina: textil, no menaje"
+    },
+    {
+      "culture": "es",
+      "query": "menaje de cocina",
+      "externalId": "B14HOM0802",
+      "relevance": 0,
+      "why": "delantal: textil, no menaje"
+    },
+    {
+      "culture": "es",
+      "query": "menaje de cocina",
+      "externalId": "B14HOM0803",
+      "relevance": 0,
+      "why": "manoplas de horno: textil, no menaje"
+    },
+    {
+      "culture": "es",
+      "query": "menaje de cocina",
+      "externalId": "B14HOM0806",
+      "relevance": 0,
+      "why": "fundas de cojin: textil del salon, no de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "menaje de cocina",
+      "externalId": "B14HOM0808",
+      "relevance": 0,
+      "why": "servilletas: textil de mesa, no menaje"
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "camiseta de trail"
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "camiseta de manga larga"
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "funda de portatil: va dentro de otra bolsa, no se lleva a la espalda"
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "organizadores de equipaje"
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B14HOM0806",
+      "relevance": 0,
+      "why": "fundas de cojin"
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "boles de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "camiseta de trail"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "camiseta de manga larga"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B13BAG0707",
+      "relevance": 0,
+      "why": "bolsa de lona de algodon: ni mochila ni impermeable"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B13BAG0708",
+      "relevance": 1,
+      "why": "rinonera con cremallera estanca: resiste el agua, pero no es mochila"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "funda de portatil de fieltro: ni mochila ni impermeable"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "organizadores de equipaje de malla"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes"
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "boles de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B07TUVW404",
+      "relevance": 0,
+      "why": "camiseta de trail"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "camiseta de manga larga"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B13BAG0707",
+      "relevance": 0,
+      "why": "bolsa de lona para la compra, sin compartimento de portatil"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B13BAG0708",
+      "relevance": 0,
+      "why": "rinonera de 3 l: no cabe un portatil"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B13BAG0709",
+      "relevance": 0,
+      "why": "neceser"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "organizadores de equipaje"
+    },
+    {
+      "culture": "es",
+      "query": "mochila para portatil 15 pulgadas",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes tactiles"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B11TAB0502",
+      "relevance": 2,
+      "why": "tazones de gres: vajilla que se regala, como los platos"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B11TAB0504",
+      "relevance": 2,
+      "why": "vasos soplados de cristal reciclado: detalle de hogar que se regala"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B11TAB0505",
+      "relevance": 2,
+      "why": "botes de cristal con tapa de bambu: regalo tipico de hogar"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B12LAM0606",
+      "relevance": 2,
+      "why": "lampara sin cable de luz calida: objeto decorativo que se regala"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B12LAM0609",
+      "relevance": 1,
+      "why": "luz de paso con sensor: util para la casa, poco de regalo"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B14HOM0801",
+      "relevance": 2,
+      "why": "juego de panos de lino: detalle para la casa que se regala"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B14HOM0802",
+      "relevance": 2,
+      "why": "delantal de lino: regalo tipico para quien cocina en casa"
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B14HOM0808",
+      "relevance": 2,
+      "why": "juego de servilletas de lino: textil de mesa que se regala"
+    },
+    {
+      "culture": "es",
+      "query": "ropa deportiva",
+      "externalId": "B10SHO0104",
+      "relevance": 0,
+      "why": "zapatilla de lona de diario: ni ropa ni deportiva"
+    },
+    {
+      "culture": "es",
+      "query": "ropa deportiva",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "zapatilla de estar por casa"
+    },
+    {
+      "culture": "es",
+      "query": "ropa deportiva",
+      "externalId": "B13BAG0712",
+      "relevance": 0,
+      "why": "organizadores de equipaje"
+    },
+    {
+      "culture": "es",
+      "query": "ropa deportiva",
+      "externalId": "B15APP1008",
+      "relevance": 2,
+      "why": "guantes tecnicos de ripstop: complemento deportivo, no prenda principal"
+    },
+    {
+      "culture": "es",
+      "query": "ropa deportiva",
+      "externalId": "B15SHO1103",
+      "relevance": 2,
+      "why": "calzado deportivo de padel, no ropa"
+    },
+    {
+      "culture": "es",
+      "query": "ropa deportiva",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "alpargata de esparto de verano"
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "calcetines de merino"
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B11COO0308",
+      "relevance": 0,
+      "why": "utensilios de bambu: accesorio para sartenes, no son sartenes"
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B12LAM0607",
+      "relevance": 0,
+      "why": "tira LED"
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B13BAG0710",
+      "relevance": 0,
+      "why": "funda de portatil"
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes tactiles"
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B15KIT1202",
+      "relevance": 0,
+      "why": "termometro de cocina, no va al fuego"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "pack de calcetines"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B11TAB0502",
+      "relevance": 0,
+      "why": "juego de tazones"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B11TAB0505",
+      "relevance": 0,
+      "why": "juego de botes hermeticos"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B14HOM0801",
+      "relevance": 0,
+      "why": "juego de panos de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B14HOM0803",
+      "relevance": 0,
+      "why": "manoplas de horno"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B14HOM0808",
+      "relevance": 0,
+      "why": "juego de servilletas"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes tactiles"
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B15KIT1204",
+      "relevance": 0,
+      "why": "juego de boles de mezclar, no sartenes"
+    },
+    {
+      "culture": "es",
+      "query": "Vertex",
+      "externalId": "B06GHIJ505",
+      "relevance": 0,
+      "why": "otra marca: flexo de Lumen&Co"
+    },
+    {
+      "culture": "es",
+      "query": "Vertex",
+      "externalId": "B12LAM0606",
+      "relevance": 0,
+      "why": "otra marca: lampara de Lumen&Co"
+    },
+    {
+      "culture": "es",
+      "query": "Vertex",
+      "externalId": "B12LAM0607",
+      "relevance": 0,
+      "why": "otra marca: tira led de Lumen&Co"
+    },
+    {
+      "culture": "es",
+      "query": "Vertex",
+      "externalId": "B12LAM0609",
+      "relevance": 0,
+      "why": "otra marca: luz de noche de Lumen&Co"
+    },
+    {
+      "culture": "es",
+      "query": "Vertex",
+      "externalId": "B14ORG0902",
+      "relevance": 0,
+      "why": "otra marca: organizador de Barro"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B10SHI0208",
+      "relevance": 0,
+      "why": "pantalon corto"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B11COO0308",
+      "relevance": 0,
+      "why": "utensilios de cocina"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B11TAB0504",
+      "relevance": 0,
+      "why": "vasos de cristal"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B12LAM0608",
+      "relevance": 0,
+      "why": "bombillas led"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B14HOM0803",
+      "relevance": 0,
+      "why": "manoplas de horno"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B15SHO1102",
+      "relevance": 1,
+      "why": "botin de piel: calzado, no zapatilla"
+    },
+    {
+      "culture": "es",
+      "query": "zapatilas",
+      "externalId": "B15SHO1104",
+      "relevance": 1,
+      "why": "alpargata de esparto: calzado, no zapatilla"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running",
+      "externalId": "B10SHI0201",
+      "relevance": 1,
+      "why": "camiseta tecnica de trail: mismo deporte, categoria distinta"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running",
+      "externalId": "B10SHI0202",
+      "relevance": 1,
+      "why": "camiseta de tirantes para correr: mismo deporte, categoria distinta"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running",
+      "externalId": "B10SHI0204",
+      "relevance": 0,
+      "why": "camiseta de algodon de diario"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "calcetines de merino, no especificos de correr"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes tactiles"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running",
+      "externalId": "B15SHO1104",
+      "relevance": 0,
+      "why": "alpargata de esparto, no para correr"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running mujer",
+      "externalId": "B10SHI0201",
+      "relevance": 0,
+      "why": "camiseta de mujer: no es calzado"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running mujer",
+      "externalId": "B10SHI0202",
+      "relevance": 0,
+      "why": "camiseta de tirantes de mujer: no es calzado"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running mujer",
+      "externalId": "B10SHI0204",
+      "relevance": 0,
+      "why": "camiseta de algodon de hombre"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running mujer",
+      "externalId": "B10SHI0210",
+      "relevance": 0,
+      "why": "calcetines de merino: no es calzado"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running mujer",
+      "externalId": "B10SHO0106",
+      "relevance": 0,
+      "why": "zapatilla de estar por casa"
+    },
+    {
+      "culture": "es",
+      "query": "zapatillas running mujer",
+      "externalId": "B15APP1008",
+      "relevance": 0,
+      "why": "guantes tactiles"
+    }
+  ],
+  "doubts": [
+    {
+      "culture": "es",
+      "query": "camiseta hombre",
+      "externalId": "B10SHI0202",
+      "note": "graded 2 as 'camiseta sin mangas de running', but its attribute is genero=mujer; B10SHI0201 (also genero=mujer) is graded 1 'pero de mujer' for the same query. By that rule this should probably be 1."
+    },
+    {
+      "culture": "es",
+      "query": "azul marino",
+      "externalId": "B073WXYZ01",
+      "note": "relevance 3 is right, but the why 'unico producto con atributo color=azul marino' is stale: four other navy products are judged 3 in the same query."
+    },
+    {
+      "culture": "es",
+      "query": "mochila",
+      "externalId": "B08JKLM202",
+      "note": "relevance 3 is right, but the why 'unico resultado posible' is stale: five other backpacks are judged for this query. Same for en 'backpack' ('only possible result')."
+    },
+    {
+      "culture": "es",
+      "query": "mochila impermeable",
+      "externalId": "B13BAG0711",
+      "note": "a bike pannier graded 3 for 'mochila impermeable' (and en 'waterproof backpack'): fully waterproof, but a pannier is not a backpack. 2 might be more honest; left unchanged."
+    },
+    {
+      "culture": "en",
+      "query": "trail running shirt",
+      "externalId": "B15APP1001",
+      "note": "the linen shirt is 0 while I graded the everyday cotton tee (B10SHI0204) 1 as 'a tee, not for running', following es 'camiseta tecnica' where the cotton tee is 1. Either the linen shirt deserves 1 or the cotton tee 0; the reviewer should pick one rule."
+    },
+    {
+      "culture": "es",
+      "query": "regalo para casa",
+      "externalId": "B06GHIJ505",
+      "note": "graded 1 'la lampara encaja tanto como el resto', while the ceramic table lamp and other home items are 2. Same for B05DEFG606 and B09PQRS303 at 1 with 'valen igual'. The why says 'equally good' but the grade is lower than cushions/plates; either the why or the grade is off. New lamp B12LAM0606 was graded 2 following the ceramic lamp."
+    },
+    {
+      "culture": "es",
+      "query": "set de sartenes antiadherentes",
+      "externalId": "B15KIT1203",
+      "note": "non-stick springform tin at 0 while bamboo utensils are 1 for merely not scratching non-stick. The tin is itself non-stick bakeware in the same family; 1 seems more consistent. I followed the existing 0 for its en counterpart B15KIT1203 under 'non-stick pan set'."
+    },
+    {
+      "culture": "es",
+      "query": "sartenes induccion",
+      "externalId": "B11COF0402",
+      "note": "induction moka pot is 0 here but 2 under 'induction cookware'. Defensible (sartenes is narrower than cookware), but 2 for a coffee maker under 'cookware' looks generous next to the colander/oven dish at 0."
+    },
+    {
+      "culture": "en",
+      "query": "gift for the kitchen",
+      "externalId": "B11COF0403",
+      "note": "french press at 1 while tumblers, jars, scale and thermometer are 2. A glass french press is at least as giftable as a probe thermometer; 2 may be more consistent."
+    }
+  ]
+}
