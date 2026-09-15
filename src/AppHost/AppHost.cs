@@ -47,6 +47,7 @@ const int keycloakPort = 58443;
 const int qdrantGrpcPort = 56334;
 const int qdrantHttpPort = 56333;
 const int embeddingsPort = 58081;
+const int rerankerPort = 58082;
 
 // NAMED VOLUMES, and the name is the fix.
 //
@@ -190,7 +191,7 @@ var qdrant = builder.AddQdrant("qdrant", apiKey: qdrantKey, grpcPort: qdrantGrpc
 //
 // The model cache IS a volume, unlike Qdrant: it holds downloaded weights, not a
 // projection, and losing it costs 2.2 GB and four minutes on the next start. The
-// reranker is not declared yet: it arrives with P8-6.
+// reranker below shares it.
 const string embeddingModel = "BAAI/bge-m3";
 const string embeddingModelRevision = "5617a9f61b028005a4858fdac845db406aefb181";
 const string textEmbeddingsInferenceCommit = "sha-4150561";
@@ -219,6 +220,42 @@ if (!vectors)
 }
 
 var embeddingsEndpoint = embeddings.GetEndpoint("http");
+
+// THE RERANKER (P8-6), same server, same pinning, and it starts on its own only
+// where it can keep its budget.
+//
+// bge-reranker-v2-m3 has no ONNX export at the pinned revision, so TEI runs it on
+// candle, and on this laptop's CPU that measured 9.8 to 12.3 seconds for twenty
+// pairs — against a search budget of 800 ms. On a CPU it would fail every single
+// time, and a stage that always degrades is a cost with no benefit. So it starts
+// with the vector layer when the machine has a GPU, and otherwise sits in the
+// dashboard unstarted, with the rerank flag off.
+//
+// The flag and the container are decided together, below, because they are one
+// decision: a flag on with no reranker degrades every search, and a reranker
+// running with the flag off is 1.3 GB of VRAM doing nothing.
+const string rerankerModel = "BAAI/bge-reranker-v2-m3";
+const string rerankerModelRevision = "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e";
+
+var rerank = vectors && inference.UsesGpu;
+
+var reranker = builder.AddContainer("reranker", "ghcr.io/huggingface/text-embeddings-inference",
+        inference.ImagePrefix + textEmbeddingsInferenceCommit)
+    .WithArgs("--model-id", rerankerModel, "--revision", rerankerModelRevision)
+    .WithArgs(InferenceHardware.ServerArguments)
+    .WithHttpEndpoint(targetPort: 80, port: rerankerPort, name: "http")
+    .WithHttpHealthCheck("/health", endpointName: "http")
+    .WithVolume("tendero-tei-models", "/data")
+    .WithEnvironment("TENDERO_INFERENCE_DEVICE", inference.Description)
+    .WithLifetime(ContainerLifetime.Persistent);
+
+if (inference.UsesGpu)
+    reranker.WithContainerRuntimeArgs("--gpus", "all");
+
+if (!rerank)
+    reranker.WithExplicitStart();
+
+var rerankerEndpoint = reranker.GetEndpoint("http");
 
 // WHICH ISSUER SIGNS THE TOKENS, and the default is the development one.
 //
@@ -339,6 +376,12 @@ var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
     // either is not running.
     .WithReference(qdrant)
     .WithReference(embeddingsEndpoint)
+    .WithReference(rerankerEndpoint)
+    // THE FLAGS (ADR 0023), written by the same switch that starts what they
+    // guard, so the two cannot disagree. Only the API searches; the worker only
+    // projects, and reads neither.
+    .WithEnvironment("Features__SearchVector", vectors ? "true" : "false")
+    .WithEnvironment("Features__SearchRerank", rerank ? "true" : "false")
     .WithExternalHttpEndpoints();
 
 if (useKeycloak)

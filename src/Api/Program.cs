@@ -51,10 +51,11 @@ builder.Services.AddOrdering(builder.Configuration);
 builder.Services.AddLexicalSearch(
     builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
-// The vector layer, only when the AppHost handed over Qdrant and a model server
-// (Tendero__Vectors), and a named stand-in otherwise. Lexical search above is
-// required; this is not.
-builder.Services.AddVectorLayer(builder.Configuration);
+// Hybrid search: the vector layer and the reranker when the AppHost handed them
+// over (Tendero__Vectors), named stand-ins otherwise, and both strategies. Which
+// one answers is the SearchVector flag's decision. Lexical search above is
+// required; none of this is.
+builder.Services.AddHybridSearch(builder.Configuration);
 
 // The development issuer is registered BEFORE authentication and only in
 // Development. Its own AddDevIssuer throws when the environment is not

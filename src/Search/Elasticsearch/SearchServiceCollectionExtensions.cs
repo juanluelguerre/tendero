@@ -21,6 +21,10 @@ public static class SearchServiceCollectionExtensions
         services.AddScoped<ILexicalProductSearch, ElasticsearchLexicalSearch>();
         services.AddScoped<IProductIndexer, ElasticsearchProductIndexer>();
 
+        // Hybrid search builds every card from here, so it is part of the lexical
+        // layer rather than of the AI one: it answers whether or not Qdrant does.
+        services.AddScoped<ISearchHitReader, ElasticsearchHitReader>();
+
         return services;
     }
 

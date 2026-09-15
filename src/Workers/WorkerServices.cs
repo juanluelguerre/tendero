@@ -86,7 +86,7 @@ public static class WorkerServices
         // when the AppHost handed over Qdrant and a model server, and a named
         // stand-in when it did not, so the vector projection (P8-4) resolves
         // either way and writes nothing in the second.
-        builder.Services.AddVectorLayer(builder.Configuration);
+        builder.Services.AddHybridSearch(builder.Configuration);
 
         // One single place creates products_es/products_en, and this is it.
         builder.Services.AddSearchIndexInitializer();

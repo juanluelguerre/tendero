@@ -128,6 +128,7 @@ public sealed class ArchitectureRules
     [InlineData("ElGuerre.Tendero.Search.Elasticsearch")]
     [InlineData("ElGuerre.Tendero.Search.Embeddings")]
     [InlineData("ElGuerre.Tendero.Search.Qdrant")]
+    [InlineData("ElGuerre.Tendero.Search.Reranking")]
     public void Search_adapters_are_internal_so_only_the_port_is_public(string adapterNamespace)
     {
         var result = Types.InAssembly(Solution.Search)

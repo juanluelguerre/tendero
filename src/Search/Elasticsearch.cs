@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Clients.Elasticsearch.Mapping;
 using Elastic.Clients.Elasticsearch.QueryDsl;
 using ElGuerre.Tendero.Catalog.Domain;
@@ -374,22 +375,7 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
         if (!response.IsValidResponse)
             throw new SearchUnavailableException("query", response.DebugInformation);
 
-        var hits = response.Hits.Select(h => new SearchHit(
-            h.Source!.ProductId,
-            h.Source.Code,
-            h.Source.Name,
-            h.Source.Slug,
-            h.Source.Brand,
-            h.Source.Category,
-            h.Source.Id,
-            h.Source.Sku,
-            h.Source.PriceAmount,
-            h.Source.PriceFrom,
-            h.Source.PriceTo,
-            h.Source.PriceCurrency,
-            h.Source.ImageId,
-            h.Source.InStock,
-            h.Score ?? 0d)).ToList();
+        var hits = response.Hits.Select(SearchHits.From).ToList();
 
         var products = response.Aggregations?.GetCardinality("products")?.Value is { } value
             ? (long)value
@@ -401,4 +387,73 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
 
         return new SearchResultPage(hits, products, query.Page, query.PageSize, response.Took);
     }
+}
+
+/// <summary>
+/// The cards for products the vector side found (P8-5), from the same documents
+/// the lexical search reads — so a meaning-only hit shows the same price, image
+/// and stock a lexical hit for that product would.
+/// </summary>
+internal sealed class ElasticsearchHitReader(ElasticsearchClient client) : ISearchHitReader
+{
+    public async Task<IReadOnlyList<SearchHit>> FindAsync(
+        IReadOnlyCollection<string> productIds, string culture, string? category, CancellationToken ct = default)
+    {
+        if (productIds.Count == 0)
+            return [];
+
+        var response = await client.SearchAsync<ProductSearchDocument>(s => s
+            .Indices(ProductSearchDocument.IndexNameFor(culture))
+            .Size(productIds.Count)
+            .Collapse(c => c.Field(d => d.ProductId))
+            // No words chose a variant, so the card shows the one somebody can buy,
+            // cheapest first — the choice a person browsing would make.
+            .Sort(
+                sort => sort.Field(d => d.InStock, f => f.Order(SortOrder.Desc)),
+                sort => sort.Field(d => d.PriceAmount, f => f.Order(SortOrder.Asc)))
+            .Query(q => q.Bool(b => b
+                .Filter(filters =>
+                {
+                    filters.Terms(t => t
+                        .Field(d => d.ProductId)
+                        .Terms(new TermsQueryField([.. productIds.Select(id => FieldValue.String(id))])));
+                })
+                .Filter(filters => filters.Term(t => t.Field(d => d.Status).Value("active")))
+                .Filter(filters =>
+                {
+                    // The same branch filter the lexical query applies, so a vector
+                    // that disagrees with the index about the category loses.
+                    if (!string.IsNullOrWhiteSpace(category))
+                        filters.Term(t => t.Field(d => d.CategoryCodes).Value(category));
+                    else
+                        filters.MatchAll(_ => { });
+                }))),
+            ct);
+
+        if (!response.IsValidResponse)
+            throw new SearchUnavailableException("reading cards for vector hits", response.DebugInformation);
+
+        return [.. response.Hits.Select(SearchHits.From)];
+    }
+}
+
+/// <summary>A document hit as the search contract's <see cref="SearchHit"/>, in one place for both readers.</summary>
+internal static class SearchHits
+{
+    public static SearchHit From(Hit<ProductSearchDocument> hit) => new(
+        hit.Source!.ProductId,
+        hit.Source.Code,
+        hit.Source.Name,
+        hit.Source.Slug,
+        hit.Source.Brand,
+        hit.Source.Category,
+        hit.Source.Id,
+        hit.Source.Sku,
+        hit.Source.PriceAmount,
+        hit.Source.PriceFrom,
+        hit.Source.PriceTo,
+        hit.Source.PriceCurrency,
+        hit.Source.ImageId,
+        hit.Source.InStock,
+        hit.Score ?? 0d);
 }

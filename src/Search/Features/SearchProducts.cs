@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ElGuerre.Tendero.Search.Features.SearchProducts;
 
@@ -76,15 +77,18 @@ public sealed class SearchProductsEndpoint : ICarterModule
     }
 }
 
-public sealed class SearchProductsHandler(ILexicalProductSearch search)
+public sealed class SearchProductsHandler(
+    [FromKeyedServices(SearchStrategies.Lexical)] ISearchStrategy lexical,
+    [FromKeyedServices(SearchStrategies.Hybrid)] ISearchStrategy hybrid,
+    IFeatureGate features)
     : IQueryHandler<SearchProductsQuery, SearchResultPage>
 {
-    // Today it delegates to the lexical one. When hybrid search exists, this
-    // handler will choose between lexical and hybrid by feature flag, and the
-    // endpoint does not change: the storefront's public contract has been stable
-    // since day one.
+    // The choice this comment promised since the first slice, and the endpoint
+    // did not change for it: the storefront's contract has been stable since day
+    // one, and so have the MCP and UCP tools that dispatch this query. The flag's
+    // only reader is this line (ADR 0023). With it off, hybrid is never asked.
     public Task<SearchResultPage> HandleAsync(SearchProductsQuery query, CancellationToken ct) =>
-        search.SearchAsync(
+        (features.IsEnabled(FeatureId.SearchVector) ? hybrid : lexical).SearchAsync(
             new ProductSearchQuery(
                 query.Q, query.Culture, query.Page, query.PageSize, query.Category, query.Sort), ct);
 }
