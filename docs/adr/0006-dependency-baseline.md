@@ -70,6 +70,19 @@ alternative was a hand-written `IEmbeddingGenerator` over `HttpClient` with no
 package at all; what decided it was `UseOpenTelemetry`, because the GenAI
 conventions `CLAUDE.md` asks for would otherwise have been written by hand.
 
+`dotnet-stryker` 5.0.0 (Apache-2.0, the licence file at its tag, no EULA) in
+`.config/dotnet-tools.json` on 2026-09-16, **a tool that is run, not a library
+that is linked**, for the mutation run every phase closes with (`docs/testing.md`).
+Three things about it are deliberate. `rollForward` is `true`, unlike `dotnet-ef`:
+the tool targets the .NET 10 runtime and the CI image installs only 11, and nothing
+of it reaches the product. Every documented command passes `--skip-version-check`,
+because its one outbound call is a NuGet version check and this repository audits
+tooling for those. And it is not in any pull-request job: its runner for
+Microsoft.Testing.Platform is labelled preview and 5.0.0 under-reports kills above
+concurrency 1 (stryker-net#3832), so it runs at concurrency 1, at phase close,
+where two runs were measured identical. Its embedded Roslyn predates C# 15, which
+is the default from .NET 11 RC1 — the version to revisit when the SDK moves.
+
 **Model weights are checked here too**, by the procedure ADR 0031 sets out:
 `BAAI/bge-m3` at revision `5617a9f` (MIT) and `BAAI/bge-reranker-v2-m3` at
 revision `953dc6f` (Apache-2.0), both read on 2026-09-14.
