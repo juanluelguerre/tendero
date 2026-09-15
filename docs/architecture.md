@@ -53,7 +53,17 @@
   Elasticsearch runs without a volume on purpose; the rebuild is what makes that
   safe (ADR 0012).
 - Lexical (BM25) is the permanent fallback; hybrid (Qdrant + RRF + rerank) and
-  every AI layer sit behind feature flags and degrade to lexical.
+  every AI layer sit behind feature flags and degrade to lexical. Two flags
+  exist, `SearchVector` and `SearchRerank`, each with one reader and a removal
+  condition (ADR 0023). Both are off by default. Measured on 2026-09-15, once
+  a card-reader defect was fixed, hybrid beats lexical in both cultures and
+  the reranker beats hybrid; what keeps them off is that hybrid answers
+  queries the shop has nothing for with ten products, and that the reranker
+  needs a GPU (`search-evaluation.md`).
+- A vector side that fails or runs past its budget returns lexical's own answer
+  byte for byte, and tags the span `search.degraded`; a reranker that fails keeps
+  the fused order. The backoffice's search evaluation panel scores both
+  strategies against the running shop.
 - Multilingual embeddings (`bge-m3`, served by Text Embeddings Inference at a
   pinned revision — ADR 0031) → one vector space serves both cultures.
 - Quality is tested: golden set per culture, NDCG@10 + recall@50 in CI.
@@ -350,9 +360,9 @@ Elasticsearch exists. Both facts are architecture tests, not conventions.
 `Search` referencing `Catalog` and `Inventory` — the contexts it projects — is
 the one edge that does not point straight down (ADR 0007), and `Catalog` and
 `Ordering` reference `Inventory`'s ports for availability, never its domain.
-The Docker diagram above is the target: Qdrant, Text Embeddings Inference and
-the Grafana stack are not declared by the AppHost until the phase that reads
-them (8 and 12).
+The Docker diagram above is the target. Qdrant and Text Embeddings Inference
+are declared since phase 8 and start on demand (`Tendero__Vectors=true`); Redis
+and the Grafana stack are not declared until the phase that reads them (12).
 
 Architecture tests (`docs/testing.md`) enforce the downward-only rule; the
 `tests/` and `frontend/` trees sit beside these layers without entering them.

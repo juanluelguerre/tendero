@@ -71,19 +71,19 @@ locale-in-the-URL half of SEO.
 
 | Capability | Verdict | Evidence |
 |---|---|---|
-| Hybrid search (lexical + vector) | **Missing** | No embedding, vector, Qdrant, RRF or rerank code. A repo-wide grep for `Qdrant\|dense_vector\|knn\|embedding\|rrf` returns only prose comments and two golden-set annotations. |
+| Hybrid search (lexical + vector) | **Partial** | Built end to end in phase 8 (2026-09-15): `bge-m3` behind `Microsoft.Extensions.AI`, served by Text Embeddings Inference at a pinned revision, vectors in Qdrant projected on the outbox, fusion by Reciprocal Rank Fusion and an optional reranker — and a vector side that fails returns lexical's answer byte for byte, which a test holds. **Partial because it is not the default yet**, and no longer because it has not earned it. Measured on 2026-09-15 against 52 queries per culture covering Baymard's eight query types, with every strategy's first ten judged (1053 / 1075 judgments) and after fixing a card reader that had been dropping meaning's products: hybrid en 0.810 and es 0.783 against lexical's 0.748 and 0.692, the vector side alone 0.812 / 0.773, and hybrid with the reranker **0.843 / 0.831** — 0.837 / 0.856 on the held-out half nothing was tuned on. What stops it being the default: on queries the shop has no answer for it shows ten products where lexical shows one or two, and the reranker is a GPU-only feature (ADR 0031). `SearchVector` and `SearchRerank` stay off until their removal conditions are met (ADR 0023). |
 | Visual search | **Missing** | No image model, no ONNX runtime, no image embedding. |
 | Multimodal product ingestion | **Missing** | Images *are* ingested as bytes and content-addressed (ADR 0011), which is the prerequisite — the deciding argument in that ADR was that "multimodal search cannot be built on images we do not control". Nothing consumes them beyond serving. |
 | Conversational assistant | **Missing** | No chat, no agent, no tool calling. |
 | Personalization | **Missing** | No user, no session, no event stream, no signal of any kind. |
 
-**Zero AI code exists.** Not `Microsoft.Extensions.AI`, not an `IChatClient`, not
-an `IEmbeddingGenerator`; no Ollama, no model, no prompt, no Python sidecar.
-ADR 0005 decides the AI layering policy in full and has no corresponding line of
-code.
+**The first AI code is retrieval, and nothing generates.** Phase 8 brought an
+`IEmbeddingGenerator` through `Microsoft.Extensions.AI` and a reranker, both
+served locally at pinned revisions (ADR 0031). There is still no `IChatClient`,
+no prompt and no Python sidecar, and no model writes anything.
 
-What *does* exist is the set of seams the AI layer will attach to, and they are
-well placed: `Product.Localize` and `LocalizedText.With` for enrichment and
+Written before phase 8, and still true of the rest of this table: the seams the
+AI layer attaches to are well placed: `Product.Localize` and `LocalizedText.With` for enrichment and
 translation; `IProductIndexer` and `ProductIndexProjection` for a second
 projection; the outbox for driving any of it off a domain event.
 
@@ -98,7 +98,7 @@ projection; the outbox for driving any of it off a domain event.
 | **3 · Know Your Agent** — signatures, AP2 mandates, agent-aware anti-fraud | **Missing** | No agent principal, no mandate, no signature verification, no policy. There is no authentication to build on. |
 | **4 · Backoffice copilot** — natural language over own data and traces, with approvable actions | **Missing** | No copilot. Also missing is what it would read: there is no persistent trace store and no audit table. The `nav.agents` translation key exists in both languages and routes nowhere. |
 | **5 · Explainable, constrained recommendations** | **Missing** | No recommender, no solver, no constraint model. |
-| **6 · AI observability and evals as a feature** | **Partial** | This is the differentiator Tendero is furthest along on, and it does not look like it. `tools/SearchEval` is a real offline gate — NDCG@10 and recall@50 per culture, thresholds committed in `eval.thresholds.json`, non-zero exit under threshold, and two hard-won reproducibility fixes (drop the indexes; refresh explicitly). What is missing is everything about *AI* specifically: no cost, no token count, no latency per operation, no per-decision trace, no eval for anything but lexical relevance. And **nothing runs the gate automatically**, because there is no CI. |
+| **6 · AI observability and evals as a feature** | **Partial** | This is the differentiator Tendero is furthest along on, and it does not look like it. `tools/SearchEval` is a real offline gate — NDCG@10 and recall@50 per culture, thresholds committed in `eval.thresholds.json`, non-zero exit under threshold, and two hard-won reproducibility fixes (drop the indexes; refresh explicitly). What is missing is everything about *AI* specifically: no cost, no token count, no per-decision trace. **Updated 2026-09-15:** the gate runs in CI since phase 0, it scores hybrid beside lexical against per-strategy thresholds, a degraded search is a span tag and a counter, and the backoffice has a panel that asks both strategies the golden queries against the running shop — with the queries hybrid lost on listed first. |
 
 **Differentiator summary: 0 Done, 2 Partial, 4 Missing.**
 
