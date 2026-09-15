@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Persistence;
+using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
@@ -165,6 +166,14 @@ public sealed class OutboxDrainTests(PostgresFixture postgres)
                 typeof(ProductIndexProjection).Assembly);
             services.AddTenderoPersistence(factory.ConnectionString);
             services.AddCatalog(configuration);
+
+            // What the worker registers for search (WorkerServices), with no vector
+            // layer configured — so the vector projection the Search assembly scan
+            // brings in resolves to NoVectorLayer, as it does on a fresh clone.
+            // Without it every ProductUpserted failed in the worker on a missing
+            // IProductVectorIndexer, which is exactly the composition failure a
+            // container built only in tests would hide.
+            services.AddHybridSearch(configuration);
             services.AddSingleton<IProductIndexer>(Indexer);
 
             this.provider = services.BuildServiceProvider(validateScopes: true);

@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Search.Evaluation;
 using Xunit;
 
 namespace ElGuerre.Tendero.SearchEval.Tests;
@@ -84,6 +85,27 @@ public sealed class RelevanceMetricsTests
         // null and not 0: punishing the engine for an incomplete annotation would skew the mean.
         Assert.Null(RelevanceMetrics.NdcgAt(10, ["noise"], onlyNoise));
         Assert.Null(RelevanceMetrics.RecallAt(50, ["noise"], onlyNoise));
+    }
+
+    [Fact]
+    public void Judged_counts_what_the_golden_set_has_an_opinion_on_including_a_zero()
+    {
+        // "a" and "noise" are judged — relevance 0 is still a judgment — and "x"
+        // and "y" are nobody's: 2 of 4.
+        Assert.Equal(0.5, RelevanceMetrics.JudgedAt(10, ["a", "x", "noise", "y"], Judgments)!.Value);
+    }
+
+    [Fact]
+    public void Judged_looks_only_as_far_as_the_cutoff()
+    {
+        // The unjudged "x" is third, past a cutoff of two.
+        Assert.Equal(1.0, RelevanceMetrics.JudgedAt(2, ["a", "b", "x"], Judgments)!.Value);
+    }
+
+    [Fact]
+    public void Nothing_returned_has_nothing_to_be_judged()
+    {
+        Assert.Null(RelevanceMetrics.JudgedAt(10, [], Judgments));
     }
 
     [Fact]

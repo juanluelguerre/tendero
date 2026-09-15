@@ -1,0 +1,23 @@
+{
+  "stryker-config": {
+    "project": "ElGuerre.Tendero.Search.csproj",
+    "test-projects": [
+      "../../tests/Search.Tests/ElGuerre.Tendero.Search.Tests.csproj",
+      "../../tests/SearchEval.Tests/ElGuerre.Tendero.SearchEval.Tests.csproj"
+    ],
+    "test-runner": "mtp",
+    "concurrency": 1,
+    "reporters": [ "html", "json", "cleartext" ],
+    "ignore-methods": [
+      "*Log",
+      "Log*",
+      "*.LogInformation",
+      "*.LogWarning",
+      "*.LogError",
+      "*.LogDebug",
+      "*.SetTag",
+      "*.StartActivity",
+      "*.AddTag"
+    ]
+  }
+}

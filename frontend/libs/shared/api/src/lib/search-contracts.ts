@@ -17,3 +17,12 @@ type Schemas = components['schemas'];
 
 export type SearchHit = Schemas['SearchHit'];
 export type SearchResultPage = Schemas['SearchResultPage'];
+
+/**
+ * `GET /api/search/evaluation`: the committed golden sets asked of both
+ * strategies against the running shop (P8-11).
+ */
+export type SearchEvaluation = Schemas['SearchEvaluation'];
+export type CultureEvaluation = Schemas['CultureEvaluation'];
+export type StrategyScore = Schemas['StrategyScore'];
+export type QueryEvaluation = Schemas['QueryEvaluation'];

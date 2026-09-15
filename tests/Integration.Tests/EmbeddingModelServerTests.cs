@@ -44,6 +44,8 @@ public sealed class EmbeddingModelServerTests
         try
         {
             container = new ContainerBuilder(Image)
+                .WithLabel(DockerDesktopGroup.ProjectLabel, DockerDesktopGroup.Project)
+                .WithLabel(DockerDesktopGroup.ServiceLabel, "test-embeddings")
                 .WithCommand("--model-id", model.ModelId, "--revision", model.Revision)
                 .WithPortBinding(80, assignRandomHostPort: true)
                 .WithVolumeMount("tendero-tei-models", "/data")

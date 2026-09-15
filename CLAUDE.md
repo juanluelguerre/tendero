@@ -74,8 +74,9 @@ dotnet run --project src/AppHost              # full stack via Aspire
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
 dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
-dotnet tool restore                           # EF tools, pinned to the runtime
+dotnet tool restore                           # EF tools and Stryker, pinned
 dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
+dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-check  # from src/<Project>, at phase close
 dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
 
@@ -275,12 +276,23 @@ name.
 - Any change touching search relevance MUST keep NDCG@10 ≥ the committed
   threshold (`tools/SearchEval`). If a regression is intentional, update the
   golden set in the same PR and explain why in the description.
+- **Mutation testing, two levels** (`docs/testing.md`): a test written for code
+  that already exists earns its place by failing against a hand-made mutation,
+  listed in the commit message. **At every phase close**, Stryker.NET runs over
+  each project the phase touched, with every test project that exercises it: its
+  `of covered` score may not fall below that project's recorded baseline, and
+  every survivor is classified — a real gap is closed with a test or written
+  down, an equivalent mutant or noise is said to be one. Never per pull request
+  while its Microsoft.Testing.Platform runner is in preview.
 
 ## Definition of done
 
 Build clean with `-warnaserror` · tests green including architecture tests ·
 new decisions recorded as ADR if they constrain the future · CLAUDE.md/docs
 updated if conventions changed · user-facing strings exist in es AND en.
+**A phase is closed** when, on top of that, Stryker has run over the projects it
+touched, no `of covered` score fell below its baseline, and the survivors are
+classified in `docs/testing.md`.
 
 ## Reference docs (read when relevant, not preloaded)
 

@@ -2,6 +2,7 @@ using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,10 @@ public static class HostingExtensions
             .AddCheck("self", () => HealthCheckResult.Healthy(), [LiveTag]);
 
         builder.Services.AddServiceDiscovery();
+
+        // Every process reads its flags the same way (ADR 0023), so the gate is
+        // registered where every process is composed rather than by each one.
+        builder.Services.TryAddSingleton<IFeatureGate, ConfigurationFeatureGate>();
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {

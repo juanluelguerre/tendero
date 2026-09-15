@@ -13,8 +13,8 @@ using ElGuerre.Tendero.Ordering.Features.Checkout;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Pricing;
 using ElGuerre.Tendero.Pricing.Features.QuoteCart;
+using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Elasticsearch;
-using ElGuerre.Tendero.Search.Embeddings;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
@@ -51,9 +51,11 @@ builder.Services.AddOrdering(builder.Configuration);
 builder.Services.AddLexicalSearch(
     builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
-// The vector layer's embedding generator, only when the AppHost started a model
-// server (Tendero__Vectors). Lexical search above is required; this is not.
-builder.Services.AddProductEmbeddingsIfConfigured(builder.Configuration);
+// Hybrid search: the vector layer and the reranker when the AppHost handed them
+// over (Tendero__Vectors), named stand-ins otherwise, and both strategies. Which
+// one answers is the SearchVector flag's decision. Lexical search above is
+// required; none of this is.
+builder.Services.AddHybridSearch(builder.Configuration);
 
 // The development issuer is registered BEFORE authentication and only in
 // Development. Its own AddDevIssuer throws when the environment is not

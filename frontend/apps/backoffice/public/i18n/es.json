@@ -198,6 +198,49 @@
     "importFailed": "{{count}} no se pudieron importar.",
     "seeCatalogue": "Ver lo que ya está publicado"
   },
+  "searchEvaluation": {
+    "better": "{{count}} mejor",
+    "column": {
+      "delta": "Híbrida − léxica",
+      "hybrid": "Híbrida",
+      "lexical": "Léxica",
+      "measure": "Medida",
+      "query": "Consulta"
+    },
+    "culture": {
+      "en": "Inglés",
+      "es": "Español"
+    },
+    "degraded": "La búsqueda híbrida está respondiendo con la léxica, así que su columna repite la de la léxica. Es la degradación funcionando, no un resultado. La capa vectorial dice:",
+    "failed": "La evaluación no respondió. Vuelve a intentarlo en un momento.",
+    "hint": "Los golden sets que el gate de CI tiene commiteados, preguntados a la búsqueda léxica y a la híbrida contra esta tienda tal como está ahora. El gate demuestra que un cambio no empeoró la búsqueda; esto muestra si la tienda en marcha obtiene lo que el gate midió.",
+    "idle": "Todavía no se ha medido nada. Ejecutarlo hace cada consulta del golden set dos veces, una por estrategia, y tarda segundos, no milisegundos.",
+    "judged": "{{count}} productos juzgados en el catálogo",
+    "measure": {
+      "gate": "Gate",
+      "latency": "Media por consulta",
+      "ndcg": "NDCG@10",
+      "recall": "recall@50"
+    },
+    "meets": "Cumple su umbral",
+    "misses": "Por debajo de su umbral",
+    "ms": "{{value}} ms",
+    "noJudged": "Ninguno de los productos que juzgan los golden sets está en este catálogo, así que todas las puntuaciones son cero. Importa y publica antes el catálogo de ejemplo.",
+    "notConfigured": "Este proceso arrancó sin Qdrant ni servidor de modelos, así que la híbrida cae a la léxica y las dos columnas coinciden. Tendero__Vectors=true los arranca.",
+    "order": "Primero las consultas en las que la híbrida perdió: una media que sube puede esconder una que baja.",
+    "rerun": "Volver a ejecutar",
+    "run": "Ejecutar la evaluación",
+    "running": "Haciendo cada consulta del golden set a las dos estrategias…",
+    "threshold": "umbral {{value}}",
+    "title": "Evaluación de búsqueda",
+    "took": "{{queries}} consultas, hechas dos veces, en {{seconds}} s",
+    "vector": {
+      "available": "Capa vectorial activa",
+      "notConfigured": "Sin capa vectorial",
+      "unavailable": "Capa vectorial caída"
+    },
+    "worse": "{{count}} peor"
+  },
   "signIn": {
     "title": "Identifícate",
     "hint": "La tienda no te pide la contraseña — te la pide el emisor. Volverás aquí directamente.",

@@ -38,7 +38,10 @@ public sealed class PostgresFixture : IAsyncLifetime
 
         try
         {
-            this.container = new PostgreSqlBuilder("postgres:17-alpine").Build();
+            this.container = new PostgreSqlBuilder("postgres:17-alpine")
+                .WithLabel(DockerDesktopGroup.ProjectLabel, DockerDesktopGroup.Project)
+                .WithLabel(DockerDesktopGroup.ServiceLabel, "test-postgres")
+                .Build();
 
             await this.container.StartAsync();
             ConnectionString = this.container.GetConnectionString();

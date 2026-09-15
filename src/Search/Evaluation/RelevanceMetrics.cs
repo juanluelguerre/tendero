@@ -1,9 +1,13 @@
-namespace ElGuerre.Tendero.SearchEval;
+namespace ElGuerre.Tendero.Search.Evaluation;
 
 /// <summary>
 /// NDCG@k and recall@k, pure functions over (ranking, judgments). They are kept
 /// away from Elasticsearch on purpose: a badly implemented metric invalidates the
 /// CI gate in silence, so it is tested against values worked out by hand.
+///
+/// They live in Search and not in the gate's tool since the backoffice grew a
+/// panel that scores the running shop (P8-11): two copies of a metric are two
+/// definitions of "better", and the panel and the gate would be free to disagree.
 /// </summary>
 public static class RelevanceMetrics
 {
@@ -68,6 +72,27 @@ public static class RelevanceMetrics
         var found = rankedIds.Take(k).Count(relevant.Contains);
 
         return (double)found / relevant.Count;
+    }
+
+    /// <summary>
+    /// The share of the first k results that carry a judgment at all, relevant or
+    /// not.
+    ///
+    /// It measures the RULER rather than the engine. NDCG and recall count an
+    /// unjudged result as irrelevant, so a strategy that surfaces products nobody
+    /// annotated is scored down for finding them — and a golden set pooled from one
+    /// strategy's results will always cover that strategy best. Below 1.0, the NDCG
+    /// beside it is a lower bound, not a verdict.
+    /// </summary>
+    /// <returns>null when nothing came back: there is nothing to have judged.</returns>
+    public static double? JudgedAt(
+        int k, IReadOnlyList<string> rankedIds, IReadOnlyDictionary<string, int> judgments)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
+
+        var top = rankedIds.Take(k).ToList();
+
+        return top.Count == 0 ? null : (double)top.Count(judgments.ContainsKey) / top.Count;
     }
 
     private static double Gain(int relevance) => Math.Pow(2, relevance) - 1;

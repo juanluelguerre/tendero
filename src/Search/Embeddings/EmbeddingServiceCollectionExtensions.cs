@@ -60,6 +60,15 @@ public static class EmbeddingServiceCollectionExtensions
         services.AddEmbeddingGenerator(_ => TextEmbeddingsInference.CreateGenerator(endpoint, descriptor))
             .UseOpenTelemetry(sourceName: TelemetrySources.Search);
 
+        // Its own HttpClient and not one from the factory: the defaults add a
+        // resilience handler that retries for thirty seconds, and a probe that
+        // asks "are you there" should hear "no" in three.
+        services.AddSingleton(new ModelServerInfo(new HttpClient
+        {
+            BaseAddress = new Uri(endpoint, "/"),
+            Timeout = TimeSpan.FromSeconds(3)
+        }));
+
         return services;
     }
 }

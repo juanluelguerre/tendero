@@ -32,6 +32,14 @@ public sealed class EmbeddingModelDescriptorTests
     }
 
     [Fact]
+    public void Anything_in_a_model_name_that_is_not_a_letter_or_a_digit_becomes_a_dash()
+    {
+        var model = new EmbeddingModelDescriptor("Some-Org/Multi_Lingual.E5", EmbeddingModelDescriptor.BgeM3.Revision, 768);
+
+        Assert.Equal("products_multi-lingual-e5_5617a9f_768", model.CollectionName);
+    }
+
+    [Fact]
     public void Another_revision_of_the_same_model_writes_to_another_collection()
     {
         var bumped = new EmbeddingModelDescriptor("BAAI/bge-m3", "0123456789abcdef0123456789abcdef01234567", 1024);

@@ -69,6 +69,15 @@ export const appRoutes: Route[] = [
           import('./features/attributes/attributes-page').then((m) => m.AttributesPage),
       },
       {
+        path: 'search',
+        title: 'searchEvaluation.title',
+        canActivate: [shopkeeper],
+        loadComponent: () =>
+          import('./features/search-evaluation/search-evaluation-page').then(
+            (m) => m.SearchEvaluationPage,
+          ),
+      },
+      {
         path: 'promotions',
         title: 'promotions.title',
         canActivate: [shopkeeper],

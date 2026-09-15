@@ -127,6 +127,8 @@ public sealed class ArchitectureRules
     [Theory]
     [InlineData("ElGuerre.Tendero.Search.Elasticsearch")]
     [InlineData("ElGuerre.Tendero.Search.Embeddings")]
+    [InlineData("ElGuerre.Tendero.Search.Qdrant")]
+    [InlineData("ElGuerre.Tendero.Search.Reranking")]
     public void Search_adapters_are_internal_so_only_the_port_is_public(string adapterNamespace)
     {
         var result = Types.InAssembly(Solution.Search)
@@ -153,6 +155,26 @@ public sealed class ArchitectureRules
             var result = Types.InAssembly(assembly)
                 .That().DoNotResideInNamespace("ElGuerre.Tendero.Search.Embeddings")
                 .ShouldNot().HaveDependencyOn("OpenAI")
+                .GetResult();
+
+            Assert.True(result.IsSuccessful, Describe(assembly, result));
+        }
+    }
+
+    /// <summary>
+    /// The vector store is a detail behind <c>IProductVectorIndexer</c> and
+    /// <c>IVectorProductSearch</c>, the way Elasticsearch is behind the lexical
+    /// ports (P8-4). A strategy that could name a <c>QdrantClient</c> would end up
+    /// asking it for something the port does not offer.
+    /// </summary>
+    [Fact]
+    public void The_qdrant_client_stays_inside_its_adapter()
+    {
+        foreach (var assembly in Solution.All)
+        {
+            var result = Types.InAssembly(assembly)
+                .That().DoNotResideInNamespace("ElGuerre.Tendero.Search.Qdrant")
+                .ShouldNot().HaveDependencyOn("Qdrant.Client")
                 .GetResult();
 
             Assert.True(result.IsSuccessful, Describe(assembly, result));

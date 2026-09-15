@@ -123,10 +123,19 @@ query's `AND`, not the words: an OR fallback beside it took recall to 0.939 /
 **The annotated answer key: queries, and the products a human says are the right
 answers to them.**
 
-22 queries per culture, 450 judgments between them, against a hundred products.
+60 queries per culture — 52 scored and 8 with nothing to find — against a hundred
+products. Each query carries its Baymard query type, its split (`tune` or
+`holdout`) and its counterpart in the other culture; the format and the reasons
+are in [`search-evaluation.md`](search-evaluation.md).
 Each judgment carries a `why` field, and that field is the point — an annotation
 without a stated reason cannot be reviewed in a pull request, and the notebook
 records one that was written from assumption rather than from the catalogue.
+
+**Who built the pool matters as much as who wrote the grades.** Until 2026-09-15
+it was completed from lexical search's own results, so anything only another
+strategy found was unjudged and scored as irrelevant. It is now pooled from every
+strategy's first ten, and `judged@10` in the report says how much of a strategy's
+results the golden set can see at all.
 
 Judgments are keyed on the **source id** (`externalId`), never on the internal
 `ProductId`: that one is a GUID v7 minted on every import, so a golden set keyed
@@ -147,13 +156,19 @@ Elasticsearch's once-a-second refresh landed before the query (0.860 then 0.769)
 
 | culture | NDCG@10 | recall@50 | threshold |
 |---|---:|---:|---|
-| es | 0.927 | 0.939 | 0.91 / 0.92 |
-| en | 0.935 | 0.955 | 0.92 / 0.94 |
+| es | 0.692 | 0.738 | 0.67 / 0.72 |
+| en | 0.748 | 0.795 | 0.73 / 0.78 |
 
 **A quality number means nothing without the corpus it was taken on — or the
-judgments it was scored against.** These replaced 0.813 / 0.766, scored before
-the golden set was completed and the OR fallback added, which had replaced
-0.943 / 0.937, measured over six products. NDCG@10 over six documents
+judgments it was scored against.** These replaced 0.921 / 0.921 later on
+2026-09-15, when the golden set grew from 22 queries covering the question types
+word matching answers to 52 covering eight types; the 22 still score 0.921. Those
+replaced 0.927 / 0.935 the same day,
+when the golden set stopped being pooled from lexical search alone: the same
+engine scored lower because relevant products it never found started to count.
+Those had replaced 0.813 / 0.766, scored before the golden set was completed and
+the OR fallback added, which had replaced 0.943 / 0.937, measured over six
+products. NDCG@10 over six documents
 and over a hundred are different measurements — with six, nearly everything
 retrieved is annotated and the metric only asks about ordering. Lowering the
 threshold there was not a regression waved through; it was the ruler changing.

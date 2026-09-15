@@ -32,7 +32,7 @@ internal static class Solution
     public static readonly Assembly ServiceDefaults = typeof(HostingExtensions).Assembly;
     public static readonly Assembly Api = typeof(TenderoApi::Program).Assembly;
     public static readonly Assembly Workers = typeof(Workers.OutboxProcessor).Assembly;
-    public static readonly Assembly SearchEval = typeof(SearchEval.RelevanceMetrics).Assembly;
+    public static readonly Assembly SearchEval = typeof(SearchEval.EvaluationReport).Assembly;
 
     public static readonly Assembly Mcp = typeof(TenderoMcpServer).Assembly;
     public static readonly Assembly Ucp = typeof(UcpProfile).Assembly;

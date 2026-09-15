@@ -47,12 +47,16 @@ public static class IndexAdmin
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
+            // A throwaway node on its own port, labelled into the `tendero` group in
+            // Docker Desktop like every container the AppHost starts — the gate drops
+            // indexes, so it must never share an engine with anything else.
             throw new InvalidOperationException(
-                $"No Elasticsearch answering at {elasticsearch}. Start one with:{Environment.NewLine}" +
-                "  docker run -d --name tendero-es -p 9200:9200 \\" + Environment.NewLine +
+                $"No Elasticsearch answering at {elasticsearch}. Start a throwaway one with:{Environment.NewLine}" +
+                "  docker run -d --name tendero-eval-es -p 59210:9200 \\" + Environment.NewLine +
+                "    --label com.docker.compose.project=tendero --label com.docker.compose.service=eval-es \\" + Environment.NewLine +
                 "    -e discovery.type=single-node -e xpack.security.enabled=false \\" + Environment.NewLine +
                 "    docker.elastic.co/elasticsearch/elasticsearch:9.5.0" + Environment.NewLine +
-                "or point the tool elsewhere with --elasticsearch <url>.", exception);
+                "and pass --elasticsearch http://localhost:59210.", exception);
         }
     }
 

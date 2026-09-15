@@ -28,16 +28,23 @@ public enum CartStatus
 /// `POST /api/pricing/quote`, recomputed on every change.
 ///
 /// What it does carry is a **display snapshot**: the product name and variant
-/// label as the shopper saw them when they added it. Those are text, not money,
-/// and re-resolving them on every render would mean a catalogue edit silently
-/// rewriting what somebody put in their basket.
+/// label as the catalogue had them when the line was added. Those are text, not
+/// money, and re-resolving them on every render would mean a catalogue edit
+/// silently rewriting what somebody put in their basket.
+///
+/// **The snapshot is every culture, and the language is chosen on reading.** It
+/// was one string, resolved in the language of the request that added the line,
+/// so a basket filled in Spanish kept its Spanish names for a shopper who had
+/// since switched to English — and the order froze whichever language that was.
+/// Invariant 6 had already said a name is never a bare string; the cart was the
+/// one place it was.
 /// </summary>
 public sealed record CartLine(
     ProductId ProductId,
     VariantId VariantId,
     string Sku,
-    string ProductName,
-    string? VariantLabel,
+    LocalizedText ProductName,
+    LocalizedText? VariantLabel,
     string? ImageId,
     int Quantity)
 {
@@ -227,7 +234,8 @@ public sealed class Cart : AggregateRoot
     }
 
     /// <summary>The shopper's language changed. It is stored because a cart
-    /// converted into an order freezes the culture the order keeps.</summary>
+    /// converted into an order freezes the culture the order keeps — which is
+    /// why checkout calls this with the language it was asked in.</summary>
     public void UseCulture(TimeProvider clock, string culture)
     {
         EnsureOpen();

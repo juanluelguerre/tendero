@@ -2,6 +2,7 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Workers;
 using Microsoft.Extensions.Configuration;
@@ -31,10 +32,17 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// </summary>
 public sealed class WorkerContainerTests
 {
-    [Fact]
-    public void The_worker_container_builds()
+    /// <summary>
+    /// Both shapes the worker starts in: without a vector layer, which is every
+    /// fresh clone, and with one, which is <c>Tendero__Vectors=true</c>. The
+    /// projection handlers resolve in both or the process does not start.
+    /// </summary>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void The_worker_container_builds(bool withVectorLayer)
     {
-        using var provider = BuildWorkerServices();
+        using var provider = BuildWorkerServices(withVectorLayer);
 
         // ValidateOnBuild walks EVERY descriptor instead of waiting for somebody
         // to resolve the one that is missing, which is what turns this into a
@@ -54,6 +62,7 @@ public sealed class WorkerContainerTests
     /// </summary>
     [Theory]
     [InlineData(typeof(IProductIndexer))]
+    [InlineData(typeof(IProductVectorIndexer))]
     [InlineData(typeof(IDomainEventHandler<ProductUpserted>))]
     [InlineData(typeof(IDomainEventHandler<ProductArchived>))]
     [InlineData(typeof(IDomainEventHandler<StockLevelChanged>))]
@@ -69,7 +78,7 @@ public sealed class WorkerContainerTests
         Assert.NotNull(scope.ServiceProvider.GetService(service));
     }
 
-    private static ServiceProvider BuildWorkerServices()
+    private static ServiceProvider BuildWorkerServices(bool withVectorLayer = false)
     {
         var builder = Host.CreateApplicationBuilder();
 
@@ -77,12 +86,28 @@ public sealed class WorkerContainerTests
         // the DbContext nor the Elastic client connects on construction. Port 1,
         // where nothing listens — the defaults are somebody's real services
         // (see TenderoApiFactory).
-        builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+        var configuration = new Dictionary<string, string?>
         {
             ["ConnectionStrings:tendero-db"] = "Host=127.0.0.1;Port=1;Database=worker-container-test;Timeout=1",
             ["ConnectionStrings:elasticsearch"] = "http://127.0.0.1:1"
-        });
+        };
 
+        // The two the AppHost adds for the vector layer, in the shapes it writes
+        // them. Nothing connects on construction here either.
+        if (withVectorLayer)
+        {
+            configuration["ConnectionStrings:qdrant"] = "Endpoint=http://127.0.0.1:1;Key=worker-container-test";
+            configuration["services:embeddings:http:0"] = "http://127.0.0.1:1";
+        }
+
+        builder.Configuration.AddInMemoryCollection(configuration);
+
+        // Exactly what Workers/Program.cs does, in its order. Building the worker
+        // WITHOUT the service defaults checked a container no process runs: a
+        // registration that lives there — the feature gate is one — would have
+        // been missing here and present in production, and the test would have
+        // failed for a reason that is not a defect.
+        builder.AddServiceDefaults();
         builder.AddTenderoWorker();
 
         return builder.Services.BuildServiceProvider(

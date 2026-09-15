@@ -198,6 +198,49 @@
     "importFailed": "{{count}} could not be imported.",
     "seeCatalogue": "See what is already published"
   },
+  "searchEvaluation": {
+    "better": "{{count}} better",
+    "column": {
+      "delta": "Hybrid − lexical",
+      "hybrid": "Hybrid",
+      "lexical": "Lexical",
+      "measure": "Measure",
+      "query": "Query"
+    },
+    "culture": {
+      "en": "English",
+      "es": "Spanish"
+    },
+    "degraded": "Hybrid search is answering with lexical search, so its column repeats lexical's. That is the degradation working, not a result. The vector layer says:",
+    "failed": "The evaluation did not answer. Try again in a moment.",
+    "hint": "The golden sets the CI gate commits, asked of lexical and of hybrid search against this shop as it is right now. The gate proves a change did not make search worse; this shows whether the running shop gets what the gate measured.",
+    "idle": "Nothing measured yet. Running it asks every golden query twice, once per strategy, and takes seconds rather than milliseconds.",
+    "judged": "{{count}} judged products in the catalogue",
+    "measure": {
+      "gate": "Gate",
+      "latency": "Mean per query",
+      "ndcg": "NDCG@10",
+      "recall": "recall@50"
+    },
+    "meets": "Meets its threshold",
+    "misses": "Below its threshold",
+    "ms": "{{value}} ms",
+    "noJudged": "None of the products the golden sets judge are in this catalogue, so every score is zero. Import and publish the sample catalogue first.",
+    "notConfigured": "This process started without Qdrant and a model server, so hybrid falls back to lexical and both columns match. Tendero__Vectors=true starts them.",
+    "order": "Queries hybrid lost on come first: an average that went up can hide one that went down.",
+    "rerun": "Run again",
+    "run": "Run the evaluation",
+    "running": "Asking every golden query of both strategies…",
+    "threshold": "threshold {{value}}",
+    "title": "Search evaluation",
+    "took": "{{queries}} queries, asked twice, in {{seconds}} s",
+    "vector": {
+      "available": "Vector layer up",
+      "notConfigured": "No vector layer",
+      "unavailable": "Vector layer down"
+    },
+    "worse": "{{count}} worse"
+  },
   "signIn": {
     "title": "Sign in",
     "hint": "The shop does not ask for your password — the issuer does. You will come straight back.",
