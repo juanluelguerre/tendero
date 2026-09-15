@@ -217,6 +217,8 @@ public sealed class QdrantVectorLayerTests(QdrantVectorLayerTests.QdrantContaine
         public async ValueTask InitializeAsync()
         {
             this.container = new ContainerBuilder("qdrant/qdrant:v1.18.0")
+                .WithLabel(DockerDesktopGroup.ProjectLabel, DockerDesktopGroup.Project)
+                .WithLabel(DockerDesktopGroup.ServiceLabel, "test-qdrant")
                 .WithPortBinding(6334, assignRandomHostPort: true)
                 .WithPortBinding(6333, assignRandomHostPort: true)
                 .WithEnvironment("QDRANT__SERVICE__API_KEY", "integration")
