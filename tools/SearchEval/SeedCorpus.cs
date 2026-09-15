@@ -21,10 +21,14 @@ public sealed class SeedCorpus(IServiceProvider services)
     /// <summary>Returns the internal id -> source id map. The index stores GUIDs;
     /// the golden set annotates source ids, and this map reconciles them.</summary>
     public async Task<IReadOnlyDictionary<string, string>> IndexAsync(
-        string source, CancellationToken cancellationToken)
+        string source, bool withVectors, CancellationToken cancellationToken)
     {
         var connector = services.GetRequiredKeyedService<ICatalogSourceConnector>(source);
         var indexer = services.GetRequiredService<IProductIndexer>();
+
+        // The vector projection the worker runs, through its port: the same text,
+        // the same point ids, the same refusal of a model nobody pinned.
+        var vectors = withVectors ? services.GetRequiredService<IProductVectorIndexer>() : null;
 
         // The SAME definitions the import uses. Without them the corpus would
         // store "azul marino" as plain text and the gate would be measuring a
@@ -39,6 +43,10 @@ public sealed class SeedCorpus(IServiceProvider services)
         {
             var product = BuildProduct(external, connector.Source, definitions);
             await indexer.IndexAsync(product, cancellationToken);
+
+            if (vectors is not null)
+                await vectors.IndexAsync(product, cancellationToken);
+
             byInternalId[product.Id.ToString()] = external.ExternalId;
         }
 

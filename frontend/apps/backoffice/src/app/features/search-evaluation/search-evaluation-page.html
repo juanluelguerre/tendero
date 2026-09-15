@@ -1,0 +1,168 @@
+<ng-container *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('searchEvaluation.title') }}</h1>
+    @if (result(); as measured) {
+      <!-- Colour never alone: every state of the vector layer is a word. -->
+      @if (measured.vectorLayer.isAvailable) {
+        <span class="tag tag--ok">{{ t('searchEvaluation.vector.available') }}</span>
+      } @else if (measured.vectorLayer.isConfigured) {
+        <span class="tag tag--warn">{{ t('searchEvaluation.vector.unavailable') }}</span>
+      } @else {
+        <span class="tag tag--code">{{ t('searchEvaluation.vector.notConfigured') }}</span>
+      }
+      <div class="page-actions">
+        <button type="button" class="button button--quiet" (click)="run()">
+          {{ t('searchEvaluation.rerun') }}
+        </button>
+      </div>
+    }
+  </header>
+  <p class="page-hint">{{ t('searchEvaluation.hint') }}</p>
+
+  @if (state().status === 'idle') {
+    <div class="empty">
+      <p class="empty__text">{{ t('searchEvaluation.idle') }}</p>
+      <!-- The view's only clay action (design/DESIGN.md). -->
+      <button type="button" class="button" (click)="run()">{{ t('searchEvaluation.run') }}</button>
+    </div>
+  } @else if (state().status === 'running') {
+    <!-- Indeterminate, like the import bar: the endpoint reports nothing until it
+         has asked every query, so a percentage would be invented. -->
+    <div class="running" role="status" aria-live="polite">
+      <div class="awning-rule awning-rule--thin running__bar"></div>
+      <p class="running__label muted">{{ t('searchEvaluation.running') }}</p>
+    </div>
+  } @else if (state().status === 'failed') {
+    <div class="empty">
+      <p class="failed" role="alert">{{ t('searchEvaluation.failed') }}</p>
+      <button type="button" class="button" (click)="run()">{{ t('searchEvaluation.run') }}</button>
+    </div>
+  }
+
+  @if (result(); as measured) {
+    <p class="took muted" role="status">
+      {{ t('searchEvaluation.took', { queries: queryCount(measured), seconds: seconds(measured) }) }}
+      · {{ t('searchEvaluation.judged', { count: measured.judgedProductsInCatalogue }) }}
+    </p>
+
+    @if (measured.judgedProductsInCatalogue === 0) {
+      <p class="notice notice--warn" role="alert">{{ t('searchEvaluation.noJudged') }}</p>
+    }
+
+    @if (!measured.vectorLayer.isConfigured) {
+      <p class="notice">{{ t('searchEvaluation.notConfigured') }}</p>
+    } @else if (!measured.vectorLayer.isAvailable) {
+      <!-- The server's own words for why, as the orders screen shows a refusal. -->
+      <p class="notice notice--warn">
+        {{ t('searchEvaluation.degraded') }}
+        <code class="reason">{{ measured.vectorLayer.reason }}</code>
+      </p>
+    }
+
+    @for (view of cultures(); track view.culture) {
+      <section class="culture" [attr.aria-labelledby]="'culture-' + view.culture">
+        <h2 class="culture__title" [id]="'culture-' + view.culture">
+          {{ t('searchEvaluation.culture.' + view.culture) }}
+        </h2>
+
+        <div class="table-wrap summary">
+          <table class="table">
+            <caption class="sr-only">{{ t('searchEvaluation.culture.' + view.culture) }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ t('searchEvaluation.column.measure') }}</th>
+                <th scope="col" class="right">{{ t('searchEvaluation.column.lexical') }}</th>
+                <th scope="col" class="right">{{ t('searchEvaluation.column.hybrid') }}</th>
+                <th scope="col" class="right">{{ t('searchEvaluation.column.delta') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">{{ t('searchEvaluation.measure.ndcg') }}</th>
+                <td class="right">
+                  <span class="numeric value">{{ score(view.lexical.ndcgAt10) }}</span>
+                  <span class="numeric threshold">{{ t('searchEvaluation.threshold', { value: score(view.lexical.thresholdNdcgAt10) }) }}</span>
+                </td>
+                <td class="right">
+                  <span class="numeric value">{{ score(view.hybrid.ndcgAt10) }}</span>
+                  <span class="numeric threshold">{{ t('searchEvaluation.threshold', { value: score(view.hybrid.thresholdNdcgAt10) }) }}</span>
+                </td>
+                <td class="right numeric delta" [class]="'delta--' + view.ndcg.trend">{{ difference(view.ndcg.delta) }}</td>
+              </tr>
+              <tr>
+                <th scope="row">{{ t('searchEvaluation.measure.recall') }}</th>
+                <td class="right">
+                  <span class="numeric value">{{ score(view.lexical.recallAt50) }}</span>
+                  <span class="numeric threshold">{{ t('searchEvaluation.threshold', { value: score(view.lexical.thresholdRecallAt50) }) }}</span>
+                </td>
+                <td class="right">
+                  <span class="numeric value">{{ score(view.hybrid.recallAt50) }}</span>
+                  <span class="numeric threshold">{{ t('searchEvaluation.threshold', { value: score(view.hybrid.thresholdRecallAt50) }) }}</span>
+                </td>
+                <td class="right numeric delta" [class]="'delta--' + view.recall.trend">{{ difference(view.recall.delta) }}</td>
+              </tr>
+              <!-- Latency has no colour: slower is a cost, not a regression, and
+                   the budgets that bound it live in the strategy, not here. -->
+              <tr>
+                <th scope="row">{{ t('searchEvaluation.measure.latency') }}</th>
+                <td class="right numeric">{{ t('searchEvaluation.ms', { value: milliseconds(view.lexical.meanMilliseconds) }) }}</td>
+                <td class="right numeric">{{ t('searchEvaluation.ms', { value: milliseconds(view.hybrid.meanMilliseconds) }) }}</td>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row">{{ t('searchEvaluation.measure.gate') }}</th>
+                <td class="right">
+                  <span class="tag" [class]="view.lexical.meetsThresholds ? 'tag--ok' : 'tag--danger'">
+                    {{ t(view.lexical.meetsThresholds ? 'searchEvaluation.meets' : 'searchEvaluation.misses') }}
+                  </span>
+                </td>
+                <td class="right">
+                  <span class="tag" [class]="view.hybrid.meetsThresholds ? 'tag--ok' : 'tag--danger'">
+                    {{ t(view.hybrid.meetsThresholds ? 'searchEvaluation.meets' : 'searchEvaluation.misses') }}
+                  </span>
+                </td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="tally">
+          <!-- Green only when something improved: a green "0 better" is colour
+               promising a result that the word beside it denies. -->
+          <span class="tag" [class]="view.better > 0 ? 'tag--ok' : 'tag--code'">
+            {{ t('searchEvaluation.better', { count: view.better }) }}
+          </span>
+          <span class="tag" [class]="view.worse > 0 ? 'tag--danger' : 'tag--code'">
+            {{ t('searchEvaluation.worse', { count: view.worse }) }}
+          </span>
+          <span class="muted">{{ t('searchEvaluation.order') }}</span>
+        </p>
+
+        <div class="table-wrap">
+          <table class="table queries">
+            <caption class="sr-only">{{ t('searchEvaluation.culture.' + view.culture) }} · {{ t('searchEvaluation.column.query') }}</caption>
+            <thead>
+              <tr>
+                <th scope="col">{{ t('searchEvaluation.column.query') }}</th>
+                <th scope="col" class="right">{{ t('searchEvaluation.column.lexical') }}</th>
+                <th scope="col" class="right">{{ t('searchEvaluation.column.hybrid') }}</th>
+                <th scope="col" class="right">{{ t('searchEvaluation.column.delta') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of view.rows; track row.query) {
+                <tr>
+                  <td class="query">{{ row.query }}</td>
+                  <td class="right numeric">{{ score(row.lexical) }}</td>
+                  <td class="right numeric">{{ score(row.hybrid) }}</td>
+                  <td class="right numeric delta" [class]="'delta--' + row.trend">{{ difference(row.delta) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+  }
+</ng-container>

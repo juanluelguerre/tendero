@@ -659,6 +659,15 @@
           "Ordering"
         ],
         "operationId": "ClaimCart",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -947,6 +956,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReindexProductsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/evaluation": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "operationId": "EvaluateSearch",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchEvaluation"
                 }
               }
             }
@@ -1929,6 +1958,32 @@
           "available": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "CultureEvaluation": {
+        "required": [
+          "culture",
+          "lexical",
+          "hybrid",
+          "queries"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "lexical": {
+            "$ref": "#/components/schemas/StrategyScore"
+          },
+          "hybrid": {
+            "$ref": "#/components/schemas/StrategyScore"
+          },
+          "queries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueryEvaluation"
+            }
           }
         }
       },
@@ -3038,6 +3093,49 @@
           }
         }
       },
+      "QueryEvaluation": {
+        "required": [
+          "query",
+          "lexicalNdcgAt10",
+          "hybridNdcgAt10",
+          "lexicalRecallAt50",
+          "hybridRecallAt50"
+        ],
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "lexicalNdcgAt10": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "hybridNdcgAt10": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "lexicalRecallAt50": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "hybridRecallAt50": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "QuoteCartRequest": {
         "required": [
           "lines"
@@ -3414,6 +3512,34 @@
           }
         }
       },
+      "SearchEvaluation": {
+        "required": [
+          "vectorLayer",
+          "judgedProductsInCatalogue",
+          "cultures",
+          "elapsedSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "vectorLayer": {
+            "$ref": "#/components/schemas/VectorLayerReport"
+          },
+          "judgedProductsInCatalogue": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cultures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CultureEvaluation"
+            }
+          },
+          "elapsedSeconds": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "SearchHit": {
         "required": [
           "productId",
@@ -3655,6 +3781,42 @@
           }
         }
       },
+      "StrategyScore": {
+        "required": [
+          "ndcgAt10",
+          "recallAt50",
+          "thresholdNdcgAt10",
+          "thresholdRecallAt50",
+          "meetsThresholds",
+          "meanMilliseconds"
+        ],
+        "type": "object",
+        "properties": {
+          "ndcgAt10": {
+            "type": "number",
+            "format": "double"
+          },
+          "recallAt50": {
+            "type": "number",
+            "format": "double"
+          },
+          "thresholdNdcgAt10": {
+            "type": "number",
+            "format": "double"
+          },
+          "thresholdRecallAt50": {
+            "type": "number",
+            "format": "double"
+          },
+          "meetsThresholds": {
+            "type": "boolean"
+          },
+          "meanMilliseconds": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "TaxLineResponse": {
         "required": [
           "taxClass",
@@ -3791,6 +3953,25 @@
               "integer"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "VectorLayerReport": {
+        "required": [
+          "isConfigured",
+          "isAvailable",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "isConfigured": {
+            "type": "boolean"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       }

@@ -404,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/evaluation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EvaluateSearch"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/returns": {
         parameters: {
             query?: never;
@@ -668,6 +684,12 @@ export interface components {
             onHand: number;
             /** Format: int32 */
             available: number;
+        };
+        CultureEvaluation: {
+            culture: string;
+            lexical: components["schemas"]["StrategyScore"];
+            hybrid: components["schemas"]["StrategyScore"];
+            queries: components["schemas"]["QueryEvaluation"][];
         };
         DecideReturnRequest: {
             decision: string;
@@ -942,6 +964,17 @@ export interface components {
             outcome: string;
             status: string;
         };
+        QueryEvaluation: {
+            query: string;
+            /** Format: double */
+            lexicalNdcgAt10: null | number;
+            /** Format: double */
+            hybridNdcgAt10: null | number;
+            /** Format: double */
+            lexicalRecallAt50: null | number;
+            /** Format: double */
+            hybridRecallAt50: null | number;
+        };
         QuoteCartRequest: {
             lines: components["schemas"]["QuoteLineRequest"][];
             /** Format: double */
@@ -1047,6 +1080,14 @@ export interface components {
             /** Format: int32 */
             quantity: number;
         };
+        SearchEvaluation: {
+            vectorLayer: components["schemas"]["VectorLayerReport"];
+            /** Format: int32 */
+            judgedProductsInCatalogue: number;
+            cultures: components["schemas"]["CultureEvaluation"][];
+            /** Format: double */
+            elapsedSeconds: number;
+        };
         SearchHit: {
             productId: string;
             code: string;
@@ -1115,6 +1156,19 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        StrategyScore: {
+            /** Format: double */
+            ndcgAt10: number;
+            /** Format: double */
+            recallAt50: number;
+            /** Format: double */
+            thresholdNdcgAt10: number;
+            /** Format: double */
+            thresholdRecallAt50: number;
+            meetsThresholds: boolean;
+            /** Format: double */
+            meanMilliseconds: number;
+        };
         TaxLineResponse: {
             taxClass: string;
             /** Format: double */
@@ -1152,6 +1206,11 @@ export interface components {
             inStock: boolean;
             /** Format: int32 */
             remaining: null | number;
+        };
+        VectorLayerReport: {
+            isConfigured: boolean;
+            isAvailable: boolean;
+            reason: string;
         };
     };
     responses: never;
@@ -1638,7 +1697,9 @@ export interface operations {
     };
     ClaimCart: {
         parameters: {
-            query?: never;
+            query?: {
+                culture?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1848,6 +1909,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReindexProductsResult"];
+                };
+            };
+        };
+    };
+    EvaluateSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchEvaluation"];
                 };
             };
         };

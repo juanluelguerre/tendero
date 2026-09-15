@@ -23,6 +23,17 @@
     <PackageReference Include="Qdrant.Client" />
   </ItemGroup>
 
+  <!-- The golden sets and thresholds the gate commits, compiled in for the
+       backoffice's search-evaluation panel (P8-11). Referenced where they live
+       rather than copied: one golden set, reviewed in one place, scored by the CI
+       gate and by the panel alike. -->
+  <ItemGroup>
+    <EmbeddedResource Include="../../tools/SearchEval/golden/*.json"
+                      LogicalName="ElGuerre.Tendero.Search.Evaluation.golden.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../../tools/SearchEval/eval.thresholds.json"
+                      LogicalName="ElGuerre.Tendero.Search.Evaluation.eval.thresholds.json" />
+  </ItemGroup>
+
   <!-- The adapters stay internal (an architecture rule), so the tests that drive
        them — in memory, and against a real Qdrant — are named here. -->
   <ItemGroup>
