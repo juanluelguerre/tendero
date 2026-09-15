@@ -47,6 +47,18 @@ public sealed class TextEmbeddingsInferenceRerankerTests
         Assert.Equal(["Cafetera italiana"], body.GetProperty("texts").EnumerateArray().Select(text => text.GetString()));
         Assert.True(body.GetProperty("truncate").GetBoolean());
         Assert.False(body.GetProperty("raw_scores").GetBoolean());
+        Assert.False(body.GetProperty("return_text").GetBoolean());
+    }
+
+    /// <summary>A score for an index outside what was sent — a negative one, or one past the last text — is not a score for anything.</summary>
+    [Fact]
+    public async Task A_score_for_a_text_that_was_never_sent_is_ignored()
+    {
+        var server = new ModelServer(Revision, """[{"index":2,"score":0.77},{"index":-1,"score":0.66},{"index":1,"score":0.20},{"index":0,"score":0.90}]""");
+
+        var scores = await Reranker(server).ScoreAsync("a", ["x", "y"], Ct);
+
+        Assert.Equal([0.90, 0.20], scores);
     }
 
     [Fact]

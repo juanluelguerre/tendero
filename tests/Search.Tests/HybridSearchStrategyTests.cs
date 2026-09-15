@@ -157,6 +157,42 @@ public sealed class HybridSearchStrategyTests
     }
 
     /// <summary>
+    /// No product carries every word, so the lexical list is loose matches: asked
+    /// to, meaning's order goes first and the words follow. With a full match, or
+    /// switched off, the fusion stands — and switched off nobody is asked.
+    /// </summary>
+    [Theory]
+    [InlineData(true, false, new[] { "meant", "near", "loose" }, 1)]
+    [InlineData(true, true, new[] { "meant", "loose", "near" }, 1)]
+    [InlineData(false, false, new[] { "meant", "loose", "near" }, 0)]
+    public async Task Without_a_full_match_meaning_can_go_first(bool meaningFirst, bool anyFullMatch, string[] expected, int asked)
+    {
+        var fullMatch = new FullMatch(anyFullMatch);
+
+        var result = await Hybrid(new Lexical("loose", "meant"), new Vectors(("meant", 0.7), ("near", 0.6)), new Cards("near"),
+                options: new HybridSearchOptions { MeaningFirstWithoutFullMatch = meaningFirst }, fullMatch: fullMatch)
+            .SearchAsync(new ProductSearchQuery("poner la mesa", "es"), Ct);
+
+        Assert.Equal(expected, result.Hits.Select(hit => hit.ProductId));
+        Assert.Equal(asked, fullMatch.Asked);
+    }
+
+    /// <summary>First in words and first in meaning tie, and a tie goes to the words — unless meaning is weighted up.</summary>
+    [Fact]
+    public async Task A_heavier_vector_weight_lets_meaning_outrank_the_words()
+    {
+        var equal = await Hybrid(new Lexical("typed"), new Vectors(("meant", 0.8)), new Cards("meant"))
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
+
+        var weighted = await Hybrid(new Lexical("typed"), new Vectors(("meant", 0.8)), new Cards("meant"),
+                options: new HybridSearchOptions { VectorWeight = 1.5 })
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
+
+        Assert.Equal(["typed", "meant"], equal.Hits.Select(hit => hit.ProductId));
+        Assert.Equal(["meant", "typed"], weighted.Hits.Select(hit => hit.ProductId));
+    }
+
+    /// <summary>
     /// A browse has no words to mean anything, and "newest first" is an order the
     /// shopper chose: neither goes near the vector side, so neither can degrade.
     /// </summary>
@@ -188,7 +224,29 @@ public sealed class HybridSearchStrategyTests
         Assert.Equal(4, lexical.Asked.Single().PageSize);
         Assert.Equal(1, lexical.Asked.Single().Page);
         Assert.Equal((2, 2), (page.Page, page.PageSize));
-        Assert.Equal(2, page.Hits.Count);
+
+        // Fused a, b, c, d (e has no card and is dropped): page two is the second pair,
+        // not the first pair counted twice.
+        Assert.Equal(["c", "d"], page.Hits.Select(hit => hit.ProductId));
+    }
+
+    [Fact]
+    public async Task Without_a_cut_the_total_is_what_the_engine_matched_not_what_it_returned()
+    {
+        var result = await Hybrid(new Lexical("a", "b") { Total = 40 }, new Vectors(("b", 0.9)))
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
+
+        Assert.Equal(40, result.Total);
+    }
+
+    [Fact]
+    public async Task A_match_exactly_at_the_minimum_similarity_is_a_match()
+    {
+        var result = await Hybrid(new Lexical("a"), new Vectors(("edge", 0.5)), new Cards("edge"),
+                options: new HybridSearchOptions { MinimumSimilarity = 0.5 })
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
+
+        Assert.Equal(["a", "edge"], result.Hits.Select(hit => hit.ProductId));
     }
 
     // ---------- P8-6: the reranker ----------
@@ -219,6 +277,27 @@ public sealed class HybridSearchStrategyTests
     }
 
     [Fact]
+    public async Task Results_the_reranker_scores_alike_keep_the_order_fusion_gave_them()
+    {
+        var result = await Hybrid(new Lexical("a", "c"), new Vectors(("b", 0.9)), new Cards("b"), new Reranker(_ => 0.5), rerank: true)
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
+
+        Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
+    }
+
+    [Fact]
+    public async Task A_product_with_no_embedded_text_is_reranked_by_its_name()
+    {
+        var vectors = new Vectors { Texts = new() { ["a"] = "", ["b"] = "text of b" } };
+        var reranker = new Reranker(text => text == "Product a" ? 0.99 : 0.10);
+
+        var result = await Hybrid(new Lexical("b", "a"), vectors, reranker: reranker, rerank: true)
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
+
+        Assert.Equal(["a", "b"], result.Hits.Select(hit => hit.ProductId));
+    }
+
+    [Fact]
     public async Task A_reranker_past_its_budget_leaves_the_fused_order_standing()
     {
         var options = new HybridSearchOptions { RerankBudget = TimeSpan.FromMilliseconds(50) };
@@ -242,5 +321,80 @@ public sealed class HybridSearchStrategyTests
 
         Assert.Equal(0, reranker.Calls);
         Assert.Equal(["b", "a"], result.Hits.Select(hit => hit.ProductId));
+    }
+
+    // ---------- H4: the reranker can say "this is not an answer" ----------
+
+    [Fact]
+    public async Task A_result_the_reranker_turns_away_is_not_shown_and_neither_is_the_unread_rest()
+    {
+        var reranker = new Reranker(text => text == "text of a" ? 0.8 : 0.02);
+
+        // The engine claims forty matches it did not return: once the reranker has
+        // turned results away, the total is what is left, not the engine's claim.
+        var result = await Reranked(reranker, minimum: 0.1, lexicalTotal: 40);
+
+        // Head [a, b]: b scores 0.02 and is turned away, so c — below the head and
+        // never read by the reranker — goes too.
+        Assert.Equal(["a"], result.Hits.Select(hit => hit.ProductId));
+        Assert.Equal(1, result.Total);
+    }
+
+    [Fact]
+    public async Task When_the_whole_head_clears_the_minimum_the_rest_follows_it()
+    {
+        var reranker = new Reranker(text => text == "text of a" ? 0.8 : 0.4);
+
+        var result = await Reranked(reranker, minimum: 0.1);
+
+        Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
+        Assert.Equal(3, result.Total);
+    }
+
+    [Fact]
+    public async Task A_score_exactly_at_the_minimum_is_still_an_answer()
+    {
+        var result = await Reranked(new Reranker(_ => 0.1), minimum: 0.1);
+
+        Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
+    }
+
+    [Fact]
+    public async Task When_the_reranker_turns_everything_away_the_answer_is_empty()
+    {
+        var result = await Reranked(new Reranker(_ => 0.001), minimum: 0.1);
+
+        Assert.Empty(result.Hits);
+        Assert.Equal(0, result.Total);
+    }
+
+    // ---------- H5: a query whose best result reads as unrelated has no answer ----------
+
+    [Fact]
+    public async Task When_even_the_best_result_scores_under_the_bar_the_query_has_no_answer()
+    {
+        var result = await Reranked(new Reranker(text => text == "text of a" ? 0.04 : 0.01), minimum: 0, noAnswerBelow: 0.05, lexicalTotal: 40);
+
+        Assert.Empty(result.Hits);
+        Assert.Equal(0, result.Total);
+    }
+
+    [Fact]
+    public async Task One_result_at_the_bar_is_enough_and_nothing_is_cut()
+    {
+        // b scores far below the bar and stays: the decision is about the query, not each result.
+        var result = await Reranked(new Reranker(text => text == "text of a" ? 0.05 : 0.001), minimum: 0, noAnswerBelow: 0.05);
+
+        Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
+    }
+
+    /// <summary>Lexical [a, c], meaning [b]; fused a, b, c and a head of two for the reranker.</summary>
+    private static Task<SearchResultPage> Reranked(Reranker reranker, double minimum, long? lexicalTotal = null, double noAnswerBelow = 0)
+    {
+        var vectors = new Vectors(("b", 0.9)) { Texts = new() { ["a"] = "text of a", ["b"] = "text of b" } };
+        var options = new HybridSearchOptions { RerankDepth = 2, MinimumRerankScore = minimum, NoAnswerBelowRerankScore = noAnswerBelow };
+
+        return Hybrid(new Lexical("a", "c") { Total = lexicalTotal }, vectors, new Cards("b"), reranker, rerank: true, options: options)
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
     }
 }

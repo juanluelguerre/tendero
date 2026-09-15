@@ -23,6 +23,20 @@ public static class SearchStrategies
 }
 
 /// <summary>
+/// Whether any Active product carries every word of a query.
+///
+/// Lexical search keeps a fallback that accepts any one of the words, so a query
+/// no product fully matches still comes back with a full list — "poner la mesa
+/// para una cena" finds "mesa" in a desk lamp. This port tells a list of full
+/// matches from a list of loose ones, which is what hybrid search needs to know
+/// before it trusts the lexical ranking as much as the meaning one.
+/// </summary>
+public interface ILexicalFullMatch
+{
+    Task<bool> AnyAsync(ProductSearchQuery query, CancellationToken ct = default);
+}
+
+/// <summary>
 /// The cards for products that meaning found and words did not.
 ///
 /// A vector search answers with ids, and a card needs a name, a price, an image

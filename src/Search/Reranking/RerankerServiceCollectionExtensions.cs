@@ -22,7 +22,35 @@ public static class RerankerServiceCollectionExtensions
             : services;
     }
 
-    public static IServiceCollection AddReranker(this IServiceCollection services, Uri endpoint)
+    public static IServiceCollection AddReranker(this IServiceCollection services, Uri endpoint) =>
+        services.AddReranker(endpoint, RerankerModel.BgeRerankerV2M3);
+
+    /// <summary>
+    /// A reranker other than the shop's — for measuring a candidate with the search
+    /// evaluation before anything in the shop is allowed to use it. Pinned by a full
+    /// commit SHA, or, for a model served from a local folder, by the SHA-256 of its
+    /// model file (<c>sha256:…</c>): a folder has no commit, and TEI reports none. The
+    /// served model is still checked before the first score.
+    /// </summary>
+    public static IServiceCollection AddCandidateReranker(this IServiceCollection services, Uri endpoint, string modelId, string revision)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(modelId);
+        ArgumentNullException.ThrowIfNull(revision);
+
+        // The same rule the embedding descriptor holds: a tag or `main` names
+        // whatever was pushed last, and a measurement has to name what it measured.
+        var commit = revision is { Length: 40 } && revision.All(char.IsAsciiHexDigitLower);
+        var fileHash = revision.StartsWith(RerankerModel.FileHashPrefix, StringComparison.Ordinal)
+            && revision[RerankerModel.FileHashPrefix.Length..] is { Length: 64 } hash
+            && hash.All(char.IsAsciiHexDigitLower);
+
+        return commit || fileHash
+            ? services.AddReranker(endpoint, new RerankerModel(modelId, revision))
+            : throw new ArgumentException(
+                $"A reranker is pinned by a full lowercase commit SHA or by sha256:<file hash>, and '{revision}' is neither.", nameof(revision));
+    }
+
+    private static IServiceCollection AddReranker(this IServiceCollection services, Uri endpoint, RerankerModel model)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
 
@@ -31,7 +59,7 @@ public static class RerankerServiceCollectionExtensions
         // rerank is under one.
         services.AddSingleton<IReranker>(new TextEmbeddingsInferenceReranker(
             new HttpClient { BaseAddress = new Uri(endpoint, "/"), Timeout = TimeSpan.FromSeconds(10) },
-            RerankerModel.BgeRerankerV2M3));
+            model));
 
         return services;
     }
@@ -45,7 +73,15 @@ public static class RerankerServiceCollectionExtensions
 /// </summary>
 internal sealed record RerankerModel(string ModelId, string Revision)
 {
+    public const string FileHashPrefix = "sha256:";
+
     public static readonly RerankerModel BgeRerankerV2M3 = new("BAAI/bge-reranker-v2-m3", "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e");
+
+    /// <summary>
+    /// What TEI reports as the served revision: the commit, or nothing for a model
+    /// loaded from a local folder, whose file hash is recorded by whoever measured it.
+    /// </summary>
+    public string ServedRevision => Revision.StartsWith(FileHashPrefix, StringComparison.Ordinal) ? "" : Revision;
 }
 
 /// <summary>
@@ -98,7 +134,7 @@ internal sealed class TextEmbeddingsInferenceReranker(HttpClient http, RerankerM
         var served = await this.info.ReadAsync(ct);
 
         if (!string.Equals(served.ModelId, model.ModelId, StringComparison.OrdinalIgnoreCase)
-            || !string.Equals(served.Revision, model.Revision, StringComparison.OrdinalIgnoreCase))
+            || !string.Equals(served.Revision, model.ServedRevision, StringComparison.OrdinalIgnoreCase))
         {
             throw new SearchUnavailableException(
                 "reranking",

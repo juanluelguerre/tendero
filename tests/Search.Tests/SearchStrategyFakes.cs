@@ -23,14 +23,30 @@ internal static class Strategies
         ISearchHitReader? cards = null,
         IReranker? reranker = null,
         bool rerank = false,
-        HybridSearchOptions? options = null) =>
-        new(lexical, vectors, cards ?? new Cards(), reranker ?? new NoReranker(), new Gate(rerank),
+        HybridSearchOptions? options = null,
+        ILexicalFullMatch? fullMatch = null) =>
+        new(lexical, fullMatch ?? new FullMatch(true), vectors, cards ?? new Cards(), reranker ?? new NoReranker(), new Gate(rerank),
             Options.Create(options ?? new HybridSearchOptions()), NullLogger<HybridSearchStrategy>.Instance);
+
+    /// <summary>Whether some product carries every word, as the test decides, and how often it was asked.</summary>
+    public sealed class FullMatch(bool any) : ILexicalFullMatch
+    {
+        public int Asked { get; private set; }
+
+        public Task<bool> AnyAsync(ProductSearchQuery query, CancellationToken ct = default)
+        {
+            Asked++;
+            return Task.FromResult(any);
+        }
+    }
 
     /// <summary>A lexical engine that "matched" these products, in this order.</summary>
     public sealed class Lexical(params string[] matched) : ILexicalProductSearch
     {
         public List<ProductSearchQuery> Asked { get; } = [];
+
+        /// <summary>What the engine claims it matched, when that is more than it returned.</summary>
+        public long? Total { get; init; }
 
         public Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
         {
@@ -42,7 +58,7 @@ internal static class Strategies
                 .Select(id => Hit(id))
                 .ToList();
 
-            return Task.FromResult(new SearchResultPage(hits, matched.Length, query.Page, query.PageSize, TookMs: 7));
+            return Task.FromResult(new SearchResultPage(hits, Total ?? matched.Length, query.Page, query.PageSize, TookMs: 7));
         }
     }
 

@@ -29,8 +29,35 @@ public sealed record HybridSearchOptions
 
     public int RrfK { get; init; } = ReciprocalRankFusion.DefaultK;
 
+    /// <summary>How much the vector ranking counts in the fusion, against lexical's 1. Equal votes unless measured otherwise.</summary>
+    public double VectorWeight { get; init; } = 1d;
+
+    /// <summary>
+    /// When no product carries every word, answer in meaning's order with the
+    /// lexical matches after it, instead of fusing loose word matches as a ranking.
+    /// Off until measured; off, the extra count is never asked.
+    /// </summary>
+    public bool MeaningFirstWithoutFullMatch { get; init; }
+
     /// <summary>How many fused results the reranker re-sorts.</summary>
     public int RerankDepth { get; init; } = 20;
+
+    /// <summary>
+    /// A reranker score, from 0 to 1, below which a reranked result is not an answer.
+    /// Once the reranker rejects any of the head, nothing past the head is shown
+    /// either: it ranked below what was just rejected, and the reranker never read it.
+    /// 0 keeps everything, which is the default until measured.
+    /// </summary>
+    public double MinimumRerankScore { get; init; }
+
+    /// <summary>
+    /// A reranker score, from 0 to 1, that at least ONE result of the head has to
+    /// reach for the query to have an answer at all. Decided per query rather than
+    /// per result: below it, the shop has nothing for what was asked and says so with
+    /// an empty page; at or above it, nothing is cut. 0 keeps everything, which is
+    /// the default until measured.
+    /// </summary>
+    public double NoAnswerBelowRerankScore { get; init; }
 
     /// <summary>Embedding the query and asking Qdrant, together. Past it, the answer is lexical.</summary>
     public TimeSpan VectorBudget { get; init; } = TimeSpan.FromMilliseconds(1500);
@@ -64,6 +91,7 @@ public sealed record HybridSearchOptions
 /// </summary>
 internal sealed class HybridSearchStrategy(
     ILexicalProductSearch lexical,
+    ILexicalFullMatch fullMatch,
     IVectorProductSearch vectors,
     ISearchHitReader cards,
     IReranker reranker,
@@ -107,8 +135,16 @@ internal sealed class HybridSearchStrategy(
             .Select(match => match.ProductId)
             .ToList();
 
-        var fused = ReciprocalRankFusion.Fuse(
-            [candidates.Hits.Select(hit => hit.ProductId).ToList(), nearest], settings.RrfK);
+        var words = candidates.Hits.Select(hit => hit.ProductId).ToList();
+
+        // Loose word matches are not a ranking worth fusing: when nothing carries
+        // every word, "mesa" in a desk lamp would otherwise outvote meaning.
+        var meaningFirst = settings.MeaningFirstWithoutFullMatch && !await fullMatch.AnyAsync(query, ct);
+        activity?.SetTag("search.hybrid.meaning_first", meaningFirst);
+
+        var fused = meaningFirst
+            ? ReciprocalRankFusion.Fuse([[.. nearest, .. words]], settings.RrfK)
+            : ReciprocalRankFusion.Fuse([words, nearest], settings.RrfK, [1d, settings.VectorWeight]);
 
         var byProduct = new Dictionary<string, SearchHit>(StringComparer.Ordinal);
         foreach (var hit in candidates.Hits)
@@ -132,15 +168,18 @@ internal sealed class HybridSearchStrategy(
         activity?.SetTag("search.hybrid.vector", nearest.Count);
         activity?.SetTag("search.hybrid.meaning_only", ranked.Count(hit => foundByMeaningOnly.Contains(hit.ProductId)));
 
+        var fusedCount = ranked.Count;
+
         if (features.IsEnabled(FeatureId.SearchRerank))
             ranked = await RerankAsync(query, ranked, settings, activity, ct);
 
         // Exact when lexical returned everything it matched, which is the case at
         // a hundred products; otherwise the lexical count, raised if meaning
-        // found more than it did.
-        var total = candidates.Total > candidates.Hits.Count
-            ? Math.Max(candidates.Total, ranked.Count)
-            : ranked.Count;
+        // found more than it did. When the reranker turned results away, the count
+        // is what is left: a total promising pages that do not exist is a lie.
+        var total = ranked.Count < fusedCount || candidates.Total <= candidates.Hits.Count
+            ? ranked.Count
+            : Math.Max(candidates.Total, ranked.Count);
 
         var page = ranked.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
 
@@ -176,15 +215,31 @@ internal sealed class HybridSearchStrategy(
 
             activity?.SetTag("search.reranked", head.Count);
 
-            return
-            [
-                .. head
-                    .Select((hit, position) => (Hit: hit, Score: scores[position], Position: position))
-                    .OrderByDescending(candidate => candidate.Score)
-                    .ThenBy(candidate => candidate.Position)
-                    .Select(candidate => candidate.Hit with { Score = candidate.Score }),
-                .. ranked.Skip(head.Count)
-            ];
+            // The whole head reads as unrelated to the query: "móvil para mi madre de
+            // 70 años" in a shop with no phones. An empty page is the honest answer,
+            // and a page of the nearest slippers is not.
+            if (scores.Max() < settings.NoAnswerBelowRerankScore)
+            {
+                activity?.SetTag("search.rerank.no_answer", true);
+                return [];
+            }
+
+            var answers = head
+                .Select((hit, position) => (Hit: hit, Score: scores[position], Position: position))
+                .Where(candidate => candidate.Score >= settings.MinimumRerankScore)
+                .OrderByDescending(candidate => candidate.Score)
+                .ThenBy(candidate => candidate.Position)
+                .ToList();
+
+            activity?.SetTag("search.rerank.rejected", head.Count - answers.Count);
+
+            // What follows the head ranked below it before reranking, so once the
+            // reranker has turned part of the head away, the unread rest is not an
+            // answer either — which is what lets "móvil para mi madre de 70 años"
+            // come back empty in a shop with no phones.
+            IEnumerable<SearchHit> unread = answers.Count == head.Count ? ranked.Skip(head.Count) : [];
+
+            return [.. answers.Select(candidate => candidate.Hit with { Score = candidate.Score }), .. unread];
         }
         catch (Exception exception) when (!ct.IsCancellationRequested)
         {

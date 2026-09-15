@@ -322,26 +322,8 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
 
                     m.Bool(alternatives => alternatives
                         .Should(
-                            // cross_fields: the terms may spread across fields.
-                            // "zapatillas running mujer" has the first two in name
-                            // and the third in attributesText; with best_fields
-                            // none matched, because it demanded all of them in ONE
-                            // field. Boosted, so a product carrying EVERY word
-                            // still outranks one carrying some.
-                            should => should.MultiMatch(mm => mm
-                                .Query(query.Text)
-                                .Fields(SearchableFields)
-                                .Type(TextQueryType.CrossFields)
-                                .Operator(Operator.And)
-                                .Boost(2)),
-                            // best_fields with fuzziness: it tolerates typos
-                            // ("zapatilas"). Kept apart because cross_fields does
-                            // NOT support fuzziness.
-                            should => should.MultiMatch(mm => mm
-                                .Query(query.Text)
-                                .Fields(SearchableFields)
-                                .Fuzziness(new Fuzziness("AUTO"))
-                                .Operator(Operator.And)),
+                            AllWordsAcrossFields(query.Text),
+                            AllWordsForgivingTypos(query.Text),
                             // **The fallback, and most of what recall was
                             // missing.** With only AND clauses a query of three
                             // words returned the one product carrying all three:
@@ -361,15 +343,7 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
                                 .Operator(Operator.Or)))
                         .MinimumShouldMatch(1));
                 })
-                .Filter(filters =>
-                {
-                    filters.Term(t => t.Field(d => d.Status).Value("active"));
-
-                    // The branch, not the leaf: `CategoryCodes` holds the whole
-                    // ancestry, so one term reaches everything under it.
-                    if (!string.IsNullOrWhiteSpace(query.Category))
-                        filters.Term(t => t.Field(d => d.CategoryCodes).Value(query.Category));
-                }))),
+                .Filter(ActiveInBranch(query.Category)))),
             ct);
 
         if (!response.IsValidResponse)
@@ -386,6 +360,84 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
         activity?.SetTag("search.took_ms", response.Took);
 
         return new SearchResultPage(hits, products, query.Page, query.PageSize, response.Took);
+    }
+
+    /// <summary>
+    /// cross_fields with every word required: the terms may spread across fields.
+    /// "zapatillas running mujer" has the first two in name and the third in
+    /// attributesText; with best_fields none matched, because it demanded all of
+    /// them in ONE field. Boosted, so a product carrying EVERY word still outranks
+    /// one carrying some.
+    /// </summary>
+    internal static Action<QueryDescriptor<ProductSearchDocument>> AllWordsAcrossFields(string text) =>
+        should => should.MultiMatch(mm => mm
+            .Query(text)
+            .Fields(SearchableFields)
+            .Type(TextQueryType.CrossFields)
+            .Operator(Operator.And)
+            .Boost(2));
+
+    /// <summary>
+    /// best_fields with fuzziness and every word required: it tolerates typos
+    /// ("zapatilas"). Kept apart because cross_fields does NOT support fuzziness.
+    /// </summary>
+    internal static Action<QueryDescriptor<ProductSearchDocument>> AllWordsForgivingTypos(string text) =>
+        should => should.MultiMatch(mm => mm
+            .Query(text)
+            .Fields(SearchableFields)
+            .Fuzziness(new Fuzziness("AUTO"))
+            .Operator(Operator.And));
+
+    /// <summary>
+    /// Active, and inside the branch when there is one — as separate filters, passed
+    /// to ONE <c>.Filter(...)</c> call.
+    ///
+    /// **In this client a second <c>.Filter(...)</c> on a bool query, or a second
+    /// <c>.Term(...)</c> on one query descriptor, replaces the first instead of
+    /// adding to it.** It compiles and says nothing. Until 2026-09-15 this method
+    /// called <c>.Term</c> twice, so a category browse sent only the category and
+    /// showed products that were not Active; <c>ElasticsearchRequestBodyTests</c>
+    /// reads the body the client really writes.
+    /// </summary>
+    internal static Action<QueryDescriptor<ProductSearchDocument>>[] ActiveInBranch(string? category) =>
+        string.IsNullOrWhiteSpace(category)
+            ? [Active]
+            // The branch, not the leaf: `CategoryCodes` holds the whole ancestry, so
+            // one term reaches everything under it.
+            : [Active, filter => filter.Term(t => t.Field(d => d.CategoryCodes).Value(category))];
+
+    private static readonly Action<QueryDescriptor<ProductSearchDocument>> Active =
+        filter => filter.Term(t => t.Field(d => d.Status).Value("active"));
+}
+
+/// <summary>
+/// Whether a query has a full match, asked with the SAME two every-word clauses
+/// the lexical query uses — shared rather than copied, so the question hybrid
+/// search asks cannot drift from the answer lexical search gives. A count, not a
+/// search: nothing is scored or fetched.
+/// </summary>
+internal sealed class ElasticsearchFullMatch(ElasticsearchClient client) : ILexicalFullMatch
+{
+    public async Task<bool> AnyAsync(ProductSearchQuery query, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(query.Text))
+            return false;
+
+        var response = await client.CountAsync<ProductSearchDocument>(c => c
+            .Indices(ProductSearchDocument.IndexNameFor(query.Culture))
+            .Query(q => q.Bool(b => b
+                .Must(m => m.Bool(words => words
+                    .Should(
+                        ElasticsearchLexicalSearch.AllWordsAcrossFields(query.Text),
+                        ElasticsearchLexicalSearch.AllWordsForgivingTypos(query.Text))
+                    .MinimumShouldMatch(1)))
+                .Filter(ElasticsearchLexicalSearch.ActiveInBranch(query.Category)))),
+            ct);
+
+        if (!response.IsValidResponse)
+            throw new SearchUnavailableException("counting full matches", response.DebugInformation);
+
+        return response.Count > 0;
     }
 }
 
@@ -411,23 +463,21 @@ internal sealed class ElasticsearchHitReader(ElasticsearchClient client) : ISear
             .Sort(
                 sort => sort.Field(d => d.InStock, f => f.Order(SortOrder.Desc)),
                 sort => sort.Field(d => d.PriceAmount, f => f.Order(SortOrder.Asc)))
+            // Every filter in ONE `.Filter(...)` call: a second call replaces the
+            // first. Until 2026-09-15 this query lost its id filter to the two after
+            // it and answered with the cheapest Active products, so hybrid search
+            // kept only the meaning-found products that turned up by luck.
+            //
+            // The branch filter is the one the lexical query applies, so a vector
+            // that disagrees with the index about the category loses.
             .Query(q => q.Bool(b => b
-                .Filter(filters =>
-                {
-                    filters.Terms(t => t
+                .Filter(
+                [
+                    filter => filter.Terms(t => t
                         .Field(d => d.ProductId)
-                        .Terms(new TermsQueryField([.. productIds.Select(id => FieldValue.String(id))])));
-                })
-                .Filter(filters => filters.Term(t => t.Field(d => d.Status).Value("active")))
-                .Filter(filters =>
-                {
-                    // The same branch filter the lexical query applies, so a vector
-                    // that disagrees with the index about the category loses.
-                    if (!string.IsNullOrWhiteSpace(category))
-                        filters.Term(t => t.Field(d => d.CategoryCodes).Value(category));
-                    else
-                        filters.MatchAll(_ => { });
-                }))),
+                        .Terms(new TermsQueryField([.. productIds.Select(id => FieldValue.String(id))]))),
+                    .. ElasticsearchLexicalSearch.ActiveInBranch(category)
+                ]))),
             ct);
 
         if (!response.IsValidResponse)

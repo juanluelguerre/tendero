@@ -178,6 +178,17 @@ public sealed class ProductSearchDocumentTests
         Assert.Null(Documents(bare, "en").Single().AttributesText);
     }
 
+    /// <summary>A true flag renders no value of its own, so its name stands alone — not followed by a stray space.</summary>
+    [Fact]
+    public void A_flag_on_its_own_is_its_name_and_nothing_after_it()
+    {
+        var mug = Product.Create(Clock, Text("Taza", "Mug"), new Money(9.90m, "EUR"));
+        mug.SetAttribute(Clock, AttributeValue.Boolean("IRONABLE", true));
+        mug.AddVariant(Clock, "MUG-DEFAULT", new Money(9.90m, "EUR"));
+
+        Assert.Equal("Ironable", Documents(mug, "en").Single().AttributesText);
+    }
+
     // ---------- The category, twice ----------
 
     [Fact]
@@ -190,6 +201,17 @@ public sealed class ProductSearchDocumentTests
         Assert.Equal(["HOME", "CLOTHING"], es.CategoryCodes);
         Assert.Equal("Hogar Ropa", es.CategoryPathText);
         Assert.Equal("Home Clothing", en.CategoryPathText);
+    }
+
+    /// <summary>A term filter over a missing field matches nothing; an empty branch is what "no category" has to mean.</summary>
+    [Fact]
+    public void Without_a_category_tree_the_branch_is_empty_rather_than_missing()
+    {
+        var document = ProductSearchDocument.ForVariants(AShirt(), "es").First();
+
+        Assert.NotNull(document.CategoryCodes);
+        Assert.Empty(document.CategoryCodes);
+        Assert.Null(document.CategoryPathText);
     }
 
     // ---------- The rest of the card ----------

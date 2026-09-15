@@ -22,15 +22,30 @@ public sealed record FusedItem(string Id, double Score);
 /// equal scores go to the better best position, then to the earlier ranking —
 /// lexical is passed first, so a tie goes to the words somebody typed — and then
 /// to the id, so the same inputs never produce two answers.
+///
+/// **A ranking can carry a weight**, which multiplies its every contribution
+/// (<c>w / (k + position)</c>) — still by position, never by score. With no
+/// weights every ranking counts once, which is the paper's fusion and the
+/// default. A weight is a measured decision about how much one engine's order is
+/// trusted against the other's, not a value to reach for.
 /// </summary>
 public static class ReciprocalRankFusion
 {
     public const int DefaultK = 60;
 
-    public static IReadOnlyList<FusedItem> Fuse(IReadOnlyList<IReadOnlyList<string>> rankings, int k = DefaultK)
+    public static IReadOnlyList<FusedItem> Fuse(
+        IReadOnlyList<IReadOnlyList<string>> rankings,
+        int k = DefaultK,
+        IReadOnlyList<double>? weights = null)
     {
         ArgumentNullException.ThrowIfNull(rankings);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(k);
+
+        if (weights is not null && weights.Count != rankings.Count)
+            throw new ArgumentException($"One weight per ranking: {rankings.Count} rankings and {weights.Count} weights.", nameof(weights));
+
+        if (weights is not null && weights.Any(weight => !double.IsFinite(weight) || weight <= 0))
+            throw new ArgumentOutOfRangeException(nameof(weights), "A ranking's weight has to be a positive number; leave a ranking out instead of weighting it to nothing.");
 
         var fused = new Dictionary<string, (double Score, int BestPosition, int FirstRanking)>(StringComparer.Ordinal);
 
@@ -47,7 +62,7 @@ public static class ReciprocalRankFusion
                 if (!seen.Add(id))
                     continue;
 
-                var contribution = 1d / (k + position + 1);
+                var contribution = (weights?[ranking] ?? 1d) / (k + position + 1);
 
                 fused[id] = fused.TryGetValue(id, out var existing)
                     ? (existing.Score + contribution, Math.Min(existing.BestPosition, position), existing.FirstRanking)
