@@ -20,10 +20,14 @@
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Qdrant.Client" />
   </ItemGroup>
 
+  <!-- The adapters stay internal (an architecture rule), so the tests that drive
+       them — in memory, and against a real Qdrant — are named here. -->
   <ItemGroup>
     <InternalsVisibleTo Include="ElGuerre.Tendero.Search.Tests" />
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Integration.Tests" />
   </ItemGroup>
 
   <ItemGroup>

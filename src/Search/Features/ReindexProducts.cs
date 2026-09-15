@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -54,22 +55,53 @@ namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 /// with the wrong type — a keyword array as `text`, which a term filter fails to
 /// match while reporting nothing at all.
 /// </param>
-public sealed record ReindexProductsCommand(bool Recreate = false)
+/// <param name="Target">
+/// Which projection to rebuild: <c>lexical</c> (the default, and what the
+/// endpoint always did), <c>vector</c> or <c>all</c> (P8-4).
+///
+/// Separate because they cost different things: the lexical index rebuilds a
+/// hundred products in seconds, while embedding them takes as long as the model
+/// server needs — a few seconds on a GPU and a couple of minutes on a CPU. A
+/// mapping change should not wait for a model, and a model change has nothing to
+/// ask of the lexical index.
+/// </param>
+public sealed record ReindexProductsCommand(bool Recreate = false, string Target = ReindexTargets.Lexical)
     : ICommand<ReindexProductsResult>;
 
+public static class ReindexTargets
+{
+    public const string Lexical = "lexical";
+    public const string Vector = "vector";
+    public const string All = "all";
+}
+
 public sealed record ReindexProductsResult(int Indexed, int Removed, double ElapsedSeconds);
+
+public sealed class ReindexProductsValidator : AbstractValidator<ReindexProductsCommand>
+{
+    public ReindexProductsValidator()
+    {
+        // A closed set, answered at the door: a target nobody implements would
+        // otherwise rebuild nothing and report success.
+        RuleFor(command => command.Target)
+            .Must(target => target is ReindexTargets.Lexical or ReindexTargets.Vector or ReindexTargets.All)
+            .WithMessage("Supported targets: lexical, vector, all.");
+    }
+}
 
 public sealed class ReindexProductsEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // POST /api/search/reindex                — rewrite the documents
-        // POST /api/search/reindex?recreate=true   — and rebuild the mapping first
+        // POST /api/search/reindex                        — rewrite the lexical documents
+        // POST /api/search/reindex?recreate=true           — and rebuild the mapping first
+        // POST /api/search/reindex?target=vector           — embed the catalogue again
+        // POST /api/search/reindex?target=all&recreate=true — both, from scratch
         app.MapPost("/api/search/reindex",
             async Task<Ok<ReindexProductsResult>> (
-                   bool? recreate, ICommandDispatcher dispatcher, CancellationToken ct) =>
+                   bool? recreate, string? target, ICommandDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(
-                    new ReindexProductsCommand(recreate ?? false), ct)))
+                    new ReindexProductsCommand(recreate ?? false, target ?? ReindexTargets.Lexical), ct)))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Search")
             .WithName("ReindexProducts");
@@ -134,9 +166,83 @@ public sealed class RebuildEmptySearchIndex(
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
+/// <summary>
+/// The same repair for the vectors, and it cannot be the same shape.
+///
+/// Qdrant keeps no volume either (ADR 0012), so a recreated container is an empty
+/// collection behind a full catalogue. But nothing waits for the vector layer
+/// (invariant 8), and on a first start the model server spends minutes
+/// downloading its weights — so a check inside <c>StartAsync</c> would either hold
+/// the worker, and the outbox with it, hostage to a download, or look once, find
+/// nothing and give up. This one runs in the background: it asks every fifteen
+/// seconds until the layer answers, rebuilds if the collection is empty, and
+/// stops. A process started without a vector layer stops at once.
+///
+/// Whatever the outbox tried to project while it waited was logged and skipped
+/// (<c>ProjectProductToVectors</c>), and this rebuild is what catches it up.
+/// </summary>
+public sealed class RebuildEmptyVectorIndex(
+    IServiceScopeFactory scopes,
+    TimeProvider clock,
+    ILogger<RebuildEmptyVectorIndex> logger) : BackgroundService
+{
+    internal TimeSpan RetryEvery { get; init; } = TimeSpan.FromSeconds(15);
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var told = false;
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                await using var scope = scopes.CreateAsyncScope();
+                var status = await scope.ServiceProvider.GetRequiredService<IVectorLayer>().CheckAsync(stoppingToken);
+
+                if (!status.IsConfigured)
+                    return;
+
+                if (status.IsAvailable)
+                {
+                    if (await scope.ServiceProvider.GetRequiredService<IProductVectorIndexer>().IsEmptyAsync(stoppingToken))
+                    {
+                        var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+                            .SendAsync(new ReindexProductsCommand(Target: ReindexTargets.Vector), stoppingToken);
+
+                        logger.LogInformation(
+                            "The vector collection was empty and was rebuilt: {Indexed} embedded, {Removed} removed, {Elapsed:F1}s",
+                            result.Indexed, result.Removed, result.ElapsedSeconds);
+                    }
+
+                    return;
+                }
+
+                if (!told)
+                {
+                    logger.LogInformation(
+                        "Waiting for the vector layer before checking its collection: {Reason}", status.Reason);
+                    told = true;
+                }
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                // An exception out of a BackgroundService stops the host, and this
+                // host drains the outbox that takes the money. A rebuild that fails
+                // is a warning and one more try, never a worker that is gone.
+                logger.LogWarning(exception,
+                    "The vector collection could not be checked or rebuilt; trying again in {RetryEvery}", RetryEvery);
+            }
+
+            await Task.Delay(RetryEvery, clock, stoppingToken);
+        }
+    }
+}
+
 public sealed class ReindexProductsHandler(
     IProductReader products,
-    IProductIndexer indexer)
+    IProductIndexer indexer,
+    IProductVectorIndexer vectors,
+    IVectorLayer vectorLayer)
     : ICommandHandler<ReindexProductsCommand, ReindexProductsResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
@@ -146,12 +252,33 @@ public sealed class ReindexProductsHandler(
     {
         using var activity = Telemetry.StartActivity("search.reindex");
         activity?.SetTag("search.recreate", command.Recreate);
+        activity?.SetTag("search.reindex.target", command.Target);
         var stopwatch = Stopwatch.StartNew();
+
+        IProductIndexer[] targets = command.Target switch
+        {
+            ReindexTargets.Lexical => [indexer],
+            ReindexTargets.Vector => [vectors],
+            ReindexTargets.All => [indexer, vectors],
+            _ => throw new ArgumentOutOfRangeException(nameof(command), command.Target, "Supported targets: lexical, vector, all.")
+        };
+
+        // Asked before anything is touched. The vector projection's own failures
+        // are swallowed on the outbox path, on purpose; a person who pressed
+        // "rebuild the vectors" is owed the reason it cannot, not a count of
+        // products that were silently skipped.
+        if (command.Target is not ReindexTargets.Lexical)
+        {
+            var status = await vectorLayer.CheckAsync(cancellationToken);
+            if (!status.IsAvailable && !(command.Recreate && status.IsConfigured))
+                throw new SearchUnavailableException("reindexing the vectors", status.Reason);
+        }
 
         // Before anything is written, so the documents land in an index whose
         // mapping matches them.
         if (command.Recreate)
-            await indexer.RecreateAsync(cancellationToken);
+            foreach (var target in targets)
+                await target.RecreateAsync(cancellationToken);
 
         int indexed = 0, removed = 0;
 
@@ -160,7 +287,12 @@ public sealed class ReindexProductsHandler(
         // the reader already hands it over lazily.
         await foreach (var product in products.StreamAllAsync(cancellationToken))
         {
-            if (await ProductIndexProjection.ApplyAsync(indexer, product, cancellationToken))
+            var isIndexed = false;
+
+            foreach (var target in targets)
+                isIndexed = await ProductIndexProjection.ApplyAsync(target, product, cancellationToken);
+
+            if (isIndexed)
                 indexed++;
             else
                 removed++;

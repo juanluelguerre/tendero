@@ -931,6 +931,13 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

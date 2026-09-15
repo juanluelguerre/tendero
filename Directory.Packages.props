@@ -77,6 +77,13 @@
          from 10.8.3 to 10.10.0: an upgrade, not a downgrade. -->
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.10.0" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.10.0" />
+    <!-- Qdrant.Client 1.18.1 — Apache-2.0, a licence EXPRESSION in the nuspec.
+         The version is not a choice: Aspire.Hosting.Qdrant 13.5.3 pins it, and a
+         newer client in a project the AppHost references is a downgrade NuGet
+         reports and -warnaserror fails on. Its chain, each checked at the version
+         it resolves: Grpc.Net.Client, Grpc.Net.Common and Grpc.Core.Api 2.71.0
+         (Apache-2.0) and Google.Protobuf 3.31.0 (BSD-3-Clause) (P8-4). -->
+    <PackageVersion Include="Qdrant.Client" Version="1.18.1" />
   </ItemGroup>
 
   <ItemGroup Label="Observability">

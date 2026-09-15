@@ -3,8 +3,8 @@ using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
+using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Elasticsearch;
-using ElGuerre.Tendero.Search.Embeddings;
 using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.ServiceDefaults;
@@ -82,10 +82,11 @@ public static class WorkerServices
         builder.Services.AddLexicalSearch(
             builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
-        // Optional, unlike the line above (invariant 8): registered only when
-        // the AppHost started a model server. The vector projection (P8-4) is
-        // what reads it.
-        builder.Services.AddProductEmbeddingsIfConfigured(builder.Configuration);
+        // Optional, unlike the line above (invariant 8): the real vector layer
+        // when the AppHost handed over Qdrant and a model server, and a named
+        // stand-in when it did not, so the vector projection (P8-4) resolves
+        // either way and writes nothing in the second.
+        builder.Services.AddVectorLayer(builder.Configuration);
 
         // One single place creates products_es/products_en, and this is it.
         builder.Services.AddSearchIndexInitializer();
@@ -105,6 +106,10 @@ public static class WorkerServices
         // above. Before the outbox, so the first projections land in an index
         // that already holds the catalogue.
         builder.Services.AddHostedService<RebuildEmptySearchIndex>();
+
+        // In the background rather than in the start-up path: it waits for a
+        // layer that may be downloading its model, and nothing waits for it.
+        builder.Services.AddHostedService<RebuildEmptyVectorIndex>();
 
         builder.Services.AddHostedService<OutboxProcessor>();
 
