@@ -247,9 +247,17 @@ if (useKeycloak)
 // an environment.ts. The dev server's proxy reads it from there.
 var frontend = Path.Combine("..", "..", "frontend");
 
-// NOT `.WithNpm()`, and the numbers are the argument.
+// `.WithNpm(install: false)`, and the numbers are the argument.
 //
-// It reinstalls on every start, and with two apps over ONE `node_modules` — this
+// Leaving `.WithNpm()` out is NOT enough: in Aspire.Hosting.JavaScript 13.5.3
+// `AddViteApp` adds an installer resource by default, one per app. This line used
+// to say "NOT `.WithNpm()`" and a fresh clone of the public repository still got
+// `storefront-installer` and `backoffice-installer` running npm over the same
+// folder at the same time — one finished, its dev server started, and the other
+// was still rewriting `node_modules`, so `nx` was not there:
+// `'nx' is not recognized as an internal or external command`.
+//
+// An installer reinstalls on every start, and with two apps over ONE `node_modules` — this
 // is a single-package Nx workspace — they contend for the same lock. Measured on
 // a warm cache with Keycloak off: the API was healthy at 8s, the storefront
 // answered at 77s and the backoffice at **312s**. The same two dev servers
@@ -262,6 +270,7 @@ var frontend = Path.Combine("..", "..", "frontend");
 // making, and it is why the frontends "often did not load" — they did, several
 // minutes after anybody had stopped waiting.
 builder.AddViteApp("storefront", frontend, "serve:storefront")
+    .WithNpm(install: false)
     .WithHttpEndpoint(targetPort: 4200, port: 4200, name: "http", isProxied: false)
     // Referenced but NOT waited on. The dev server has nothing to ask the API at
     // boot — it serves a page that calls it afterwards — so waiting only couples
@@ -271,6 +280,7 @@ builder.AddViteApp("storefront", frontend, "serve:storefront")
     .WithExternalHttpEndpoints();
 
 builder.AddViteApp("backoffice", frontend, "serve:backoffice")
+    .WithNpm(install: false)
     .WithHttpEndpoint(targetPort: 4201, port: 4201, name: "http", isProxied: false)
     .WithReference(api)
     .WithExternalHttpEndpoints();
