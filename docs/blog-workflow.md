@@ -1,7 +1,7 @@
 # Blog workflow
 
 Every completed phase ships an article, written and published **in English only**,
-on elguerre.com. Spanish is for the social posts.
+on elguerre.com. The social posts on LinkedIn and X are in English too.
 
 ## Status (2026-09-01): drafts exist, nothing is published
 

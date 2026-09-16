@@ -143,7 +143,7 @@ series recruits readers; standalone posts do not.
 **6 · The social post is not the article.** First line is the number or the
 failure. Then the visual. Then three lines of context. Link last. `#ecommerce`
 plus two or three specific ones (`#dotnet`, `#AIEngineering`, `#MCP`,
-`#agenticcommerce`). Spanish on LinkedIn, English on X.
+`#agenticcommerce`). **English on both LinkedIn and X**, in the same plain B2 English as the articles (decided 2026-09-16; it used to be Spanish on LinkedIn). LinkedIn allows bullets and a few emoji; a post on X stays under 280 characters, or becomes a short thread.
 
 **7 · Treat the UCP article as a launch, not a post.** *"There is no .NET
 reference implementation of UCP"* is the single most distinctive claim available
@@ -156,6 +156,24 @@ that proves the claim, the gate that holds it on every pull request, and — fro
 first article whose tag contains Stryker.NET — the mutation score of the code the
 article is about. Only what the article's own tag contains: an older tag says
 "not yet" rather than borrowing today's number.
+
+**9 · Every article opens with a TL;DR, and is found by what it is about** (decided
+2026-09-16, first applied to article 00). Right under the title — after the hero
+image when there is one — three to five bullets a reader can stop at, each a claim
+the article itself makes. And search is not an afterthought, as long as it never
+overrides rule 1: a meta description of at most 160 characters, a slug and a title
+carrying the words people search for (the project, .NET, ecommerce, AI, agents —
+only where true of the article), and a heading or two that says the same. The story
+still leads; the keywords make it findable.
+
+**10 · Plain English, at B2 level, and a short TL;DR** (decided 2026-09-16; the
+first move towards it was article 00's on 2026-09-06). The articles are read by
+people for whom English is a second language, so they are written for an upper-
+intermediate reader: short sentences, common words, one idea per sentence, and no
+idiom a non-native reader would have to look up — technical terms stay, and the
+glossary explains them. The TL;DR has **at most three bullets, one short sentence
+each**; if it needs more, the article is not clear yet. Tendero's pre-flight
+refuses a TL;DR with more than three.
 
 ---
 
