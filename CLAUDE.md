@@ -226,6 +226,20 @@ That holds only while three rules do:
 And one habit follows from them: **cite a tag or a commit subject in a file,
 never a hash.** The two repositories have different hashes for the same commit.
 
+**A fix for the public repository does not wait for the next article** (decided
+2026-09-16, after a fresh public clone could not start its frontends). Never
+commit to the public repository by hand: the next publication would stop being a
+fast-forward. Instead:
+
+1. Cut a `fix/...` branch from the commit of the **last published article tag**,
+   carrying only the fix — nothing the workshop has built since.
+2. Merge it `--no-ff` into `develop` (rule 3).
+3. Tag its commit with a **temporary** `blog/*` tag, because the script publishes
+   only those, and run `publish-public.ps1 -DryRun` first: the public commit count
+   must grow by exactly the fix's commits.
+4. Publish, then **delete the temporary tag** on both remotes and locally. The
+   public repository keeps only article tags; the fix lives on its `develop`.
+
 **When they converge, the articles do not come with the history** — the filter
 that makes the hashes match is the one that removes `docs/blog/`. Before the
 filter runs, `docs/blog/` moves with its history to a private `tendero-blog`
