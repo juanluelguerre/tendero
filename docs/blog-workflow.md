@@ -3,11 +3,12 @@
 Every completed phase ships an article, written and published **in English only**,
 on elguerre.com. The social posts on LinkedIn and X are in English too.
 
-## Status (2026-09-01): drafts exist, nothing is published
+## Status (2026-09-16): the first article is published
 
-**No Tendero article has been published anywhere.** Not on elguerre.com, not
-scheduled, nothing. The blog badge in the README points at the author's existing
-site, not at Tendero content.
+**Article 00 is live** on elguerre.com since 2026-09-16
+([From CocktailDev to Tendero](https://elguerre.com/2026/09/16/tendero-ai-native-ecommerce-dotnet/)),
+with its tag in the public repository. Every other article is still a draft or an
+outline; `blog/index.md` keeps the count.
 
 What changed on 2026-09-01 is that the drafting started. `docs/blog/` now holds
 an [`index.md`](blog/index.md) with the publication order and one file per
