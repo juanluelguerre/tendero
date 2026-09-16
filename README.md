@@ -337,8 +337,12 @@ rather than by what is cheap, and the board is the one that is maintained.
 
 ## Blog series
 
-Each phase ships with an article — English first, Spanish on
+Each phase ships with an article, in English, on
 [elguerre.com](https://elguerre.com).
+
+| # | Article | Tag |
+|---|---|---|
+| 00 | [From CocktailDev to Tendero: an AI-native ecommerce platform in .NET](https://elguerre.com/2026/09/16/tendero-ai-native-ecommerce-dotnet/) | `blog/00-from-cocktaildev-to-tendero` |
 
 Every article links a tag of this repository named after it, `blog/NN-slug`,
 cut once its snippets and numbers had been checked against the code. Clone that
