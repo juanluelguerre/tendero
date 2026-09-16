@@ -231,8 +231,9 @@ never a hash.** The two repositories have different hashes for the same commit.
 commit to the public repository by hand: the next publication would stop being a
 fast-forward. Instead:
 
-1. Cut a `fix/...` branch from the commit of the **last published article tag**,
-   carrying only the fix — nothing the workshop has built since.
+1. Cut a `fix/...` branch from the **last commit already public** — the last
+   article tag, or the last fix published after it — carrying only the fix and
+   nothing the workshop has built since. Any other base is not a fast-forward.
 2. Merge it `--no-ff` into `develop` (rule 3).
 3. Tag its commit with a **temporary** `blog/*` tag, because the script publishes
    only those, and run `publish-public.ps1 -DryRun` first: the public commit count
