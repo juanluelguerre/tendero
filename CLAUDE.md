@@ -239,8 +239,8 @@ repository. From then on, decided 2026-09-15:
   is generated from it at publication and not kept; a correction made in
   WordPress is made in the `.md` too.
 - **Articles are written and published in English only**, on elguerre.com and in
-  the repository. Spanish is for the social posts, as the delivery plan's
-  editorial rules already say.
+  the repository. The social posts are in English too (LinkedIn and X, decided
+  2026-09-16), as the delivery plan's editorial rules say.
 - **An article's diagrams travel with it**, as `.svg` and `.png` under
   `docs/articles/assets/`. Their `.html` sources are deleted once the article is
   published, so a published diagram is what was published.

@@ -12,7 +12,7 @@ it go and why*; that one answers *what do I do next*.
 **Architectural completeness is total. Data volume is laboratory scale.** These
 are different axes and conflating them produces bad design. If a promotions
 engine needs real combination rules, it gets them. If checkout needs a saga with
-compensation, it gets one. But the catalogue stays at six products, the warehouse
+compensation, it gets one. But the catalogue stays at a hundred products (six until 2026-09-04), the warehouse
 count stays at two, and the roles stay at three. Work that only exists because of
 scale — outbox coalescing, bulk indexing, background reindex jobs, image
 derivatives — is **deferred with its measured number recorded**, which is better
@@ -97,13 +97,13 @@ one.
 
 *Collapse gets both.* Matching and filtering happen per variant, so facets are
 exact. Results come back as products, so the golden set keyed on the product
-`externalId` stays valid and the committed 0.860/0.720 baseline stays comparable.
+`externalId` stays valid and the committed baseline stays comparable.
 `inner_hits` carries the winning variant, so the storefront card can render with
 the matching colour already selected. And an agent chooses: collapsed to browse,
 uncollapsed to add an exact SKU.
 
 **The costs, stated plainly.** Facet counts count *documents*, not groups, so an
-accurate product count needs a `cardinality` aggregation — exact at six products,
+accurate product count needs a `cardinality` aggregation — exact at a hundred products,
 approximate at scale. `collapse` has rough edges with deep pagination. The index
 multiplies by the variant count. And it is more complex than either extreme,
 which is a real objection; it earns the complexity by being the only option that
@@ -430,7 +430,7 @@ counter, because a silent fallback is indistinguishable from bad relevance.
 
 1. A `SearchStrategyContractTests` abstract suite every strategy inherits.
 2. `HybridDegradesToLexical`: a hybrid strategy built with a throwing vector fake must return **byte-identical** results to the lexical strategy and must set `search.degraded`. This is the ADR made executable.
-3. The gate: `--strategy lexical` must still clear 0.860/0.720 after hybrid ships, and hybrid gets its own higher thresholds. If hybrid ever scores below lexical, CI fails — which is the honest version of "AI improved search".
+3. The gate: `--strategy lexical` must still clear its own committed thresholds after hybrid ships, and hybrid gets its own higher thresholds. If hybrid ever scores below lexical, CI fails — which is the honest version of "AI improved search".
 
 ### B2 · Embeddings
 

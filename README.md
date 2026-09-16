@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml"><img src="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
-  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.927%20es%20%C2%B7%200.935%20en-D85A30" alt="Search quality"></a>
+  <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.692%20es%20%C2%B7%200.748%20en-D85A30" alt="Search quality"></a>
   <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-11%20(preview)-512BD4?logo=dotnet" alt=".NET 11"></a>
   <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" alt="Angular 22"></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript 6.0"></a>
@@ -29,9 +29,9 @@ code for a blog series on AI architecture.
 
 ### What runs today
 
-Phases 0–7 of [the board](docs/delivery-plan.md) are in. That means the shop
-works end to end, on a hundred-product catalogue, and a browser agent can shop
-in it:
+Phases 0–9 of [the board](docs/delivery-plan.md) are in. That means the shop
+works end to end, on a hundred-product catalogue; a browser agent can shop in
+it, and an external agent can read its catalogue over MCP or UCP:
 
 > Search it, put two things in a basket, and the cart shows one discount applied
 > and **four suppressed, each with the reason the engine gave**. Pay with the
@@ -41,17 +41,20 @@ in it:
 > 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3 before a
 > euro moves.
 
-**783 backend tests, 61 frontend tests and 20 browser specs**, with search
-relevance at **NDCG@10 0.927 es / 0.935 en** over the hundred-product corpus
-(re-derived when the catalogue grew from six — the old 0.943 / 0.937 are not
-comparable, and [docs/search-evaluation.md](docs/search-evaluation.md) says
-why) and a CI gate that fails a regression.
+**950 backend tests (929 green, 21 skipped with a reason), 65 frontend tests and
+20 browser specs**, with lexical search relevance at **NDCG@10 0.692 es / 0.748
+en** on a golden set of 52 queries per culture across eight query types, and a
+CI gate that fails a regression. Earlier figures — 0.927 / 0.935, and 0.943 /
+0.937 over six products — were measured on smaller golden sets and are not
+comparable; [docs/search-evaluation.md](docs/search-evaluation.md) says why.
 
-The AI half is the part that is designed and not built: embeddings, hybrid
-search and the reranker are phase 8, the MCP server and the UCP manifest phase 9.
-Everything they attach to — the outbox, a second projection target, a rebuildable
-index, an evaluation harness with a committed baseline — is already here, which
-is the order this project argues for.
+The first half of the AI work is built. **Hybrid search** — `bge-m3` embeddings
+in Qdrant, fused with BM25 and reranked — degrades to lexical search byte for
+byte, and with the reranker scores 0.831 es / 0.843 en; it stays off by default,
+because it still shows ten products for queries the shop has nothing for, and the
+reranker needs a GPU. The **MCP server** and **UCP's catalogue capability** ship
+too, read-only. What is left is the half that needs trust: product claims with a
+source, UCP checkout with signed mandates, and the backoffice copilot.
 
 ## Architecture at a glance
 
@@ -61,15 +64,16 @@ flowchart TB
     SF[Storefront · Angular] --> API
     BO[Backoffice · Angular] --> API
     IDP[dev issuer · Keycloak] --- API
-    AG[AI agents] -.->|UCP / MCP · phase 9| API
+    AG[AI agents] -->|MCP · UCP catalogue| API
+    AG -.->|UCP checkout · phase 11| API
     subgraph Backend [.NET 11 · Aspire]
         API[API · Carter vertical slices]
         WK[Workers · outbox, indexing, saga]
     end
     API --> PG[(Postgres)]
     WK --> ES[(Elasticsearch)]
-    WK -.->|phase 8| QD[(Qdrant)]
-    WK -.->|phase 8| OL[TEI · bge-m3 + reranker]
+    WK -->|on demand| QD[(Qdrant)]
+    WK -->|on demand| OL[TEI · bge-m3 + reranker]
     Backend -.->|OTel · phase 12| OBS[Grafana · Langfuse]
     EXT[Catalog connectors: seed · Shopify...] --> API
     PAY[Payments: fake · stripe-mock · Stripe test] --- API
@@ -96,7 +100,7 @@ Key principles:
   defaults — clone and run, no sign-ups.
 - **Three agent surfaces, three trust models.** WebMCP runs in the shopper's
   tab and inherits their session (shipped, phase 6); the MCP server is external
-  and read-only (phase 9); UCP + AP2 is server to server with its own principal
+  and read-only (shipped, phase 9); UCP + AP2 is server to server with its own principal
   and a signed mandate (phase 11). Not alternatives — each answers a different
   question.
 - **The identity provider is a port.** The API only ever validates tokens
@@ -319,14 +323,14 @@ deferred with its measured number — is
 |---|---|---|
 | 0 | CI, OpenAPI contract, migrations, Testcontainers, the identity port | ✅ |
 | 1 | Variants: the indexed unit is the variant, the returned one the product | ✅ |
-| 2 | Localized attributes and taxonomy | ✅ **es 0.860 → 0.943, en 0.720 → 0.937** |
+| 2 | Localized attributes and taxonomy | ✅ **es 0.860 → 0.943, en 0.720 → 0.937**, measured over the first six products |
 | 3 | Price lists, promotions with combination rules, tax | ✅ 73 pricing tests |
 | 4 | Inventory: two warehouses, reservations, the stock saga on the outbox | ✅ |
 | 5 | Cart, checkout, payments, returns, the product page | ✅ |
 | 6 | WebMCP in the storefront | ✅ the cheapest differentiator — the agent inherits the shopper's session |
 | 7 | Accounts, audit, and swapping the dev issuer for Keycloak | ✅ the swap was two environment variables; Token Exchange waits for phase 11 |
-| 8 | Embeddings, hybrid search, evals | 🔜 |
-| 9 | Read-only MCP server and the UCP manifest | 🔜 |
+| 8 | Embeddings, hybrid search, evals | ✅ built and degradable; hybrid + reranker beats lexical, and stays off by default |
+| 9 | Read-only MCP server and the UCP manifest | ✅ eight MCP tools; UCP's catalogue over MCP and REST, validated against UCP's own schemas |
 | 10 | Knowledge: product claims with source and confidence | 🔜 |
 | 11 | UCP transactional, AP2 and Know Your Agent | 🔜 **the headline** |
 | 12 | Backoffice copilot and AI observability | 🔜 |

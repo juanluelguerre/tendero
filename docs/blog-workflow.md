@@ -1,7 +1,7 @@
 # Blog workflow
 
 Every completed phase ships an article, written and published **in English only**,
-on elguerre.com. Spanish is for the social posts.
+on elguerre.com. The social posts on LinkedIn and X are in English too.
 
 ## Status (2026-09-01): drafts exist, nothing is published
 
@@ -59,10 +59,13 @@ exists to protect.
    *The public repository* in `CLAUDE.md`). The article links that tag, so the
    other order leaves a link that answers 404 until somebody notices. Only the
    tag's code travels: the article itself is never in the public repository.
-7. Add the article link to README's blog section.
-8. Update the row in `docs/blog/index.md` to published, with the URL.
-9. Move whatever the notebook entry did not use back into it, or delete it if the
-   article superseded it.
-10. **Delete the HTML once the article is live**: the article HTML generated for
+7. **Send it to WordPress as a draft**, with the private tooling under
+   `docs/blog/`. It never publishes: the author reviews the draft and presses
+   Publish.
+8. Add the article link to README's blog section.
+9. Update the row in `docs/blog/index.md` to published, with the URL.
+10. Move whatever the notebook entry did not use back into it, or delete it if the
+    article superseded it.
+11. **Delete the HTML once the article is live**: the article HTML generated for
     WordPress was never kept, and the article's diagram `.html` sources go too,
     leaving their `.svg` and `.png`. A published diagram is what was published.
