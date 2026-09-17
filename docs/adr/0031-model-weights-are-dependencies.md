@@ -162,3 +162,27 @@ already takes on this GPU, and it stays the fallback if TEI cannot reach CUDA.
 It is not first because the reranker has no ONNX export at the checked revision —
 producing one is a Python step outside the sidecar's scope — and DirectML is
 Windows-only while CI runs on Linux.
+
+## Amended 2026-09-17 — reranking is a GPU capability, not a flag
+
+**Reranking happens where a GPU can keep its budget, and nowhere else.** Two CPU
+measurements on 2026-09-16 settled it (`docs/search-evaluation.md`, *The filter the
+client swallowed*):
+
+| reranker on a CPU | result |
+|---|---|
+| `Alibaba-NLP/gte-multilingual-reranker-base` on TEI's candle backend | twenty pairs in **35 s** at the median, against an 800 ms budget; quality not measured |
+| the same model's INT8 ONNX export on TEI's ORT backend, head of ten, the real 800 ms budget | hybrid **0.809 (en) / 0.788 (es)** against 0.810 / 0.783 without a reranker — not better in both cultures |
+
+The GPU reranker, `bge-reranker-v2-m3`, takes hybrid from 0.810 / 0.783 to
+0.843 / 0.831. So the decision is where the hardware is, and it is made once: the
+AppHost starts the reranker only on a GPU and hands its address to the API only
+then. The `SearchRerank` flag that repeated that decision is deleted (ADR 0023,
+amended the same day); on a CPU a named `NoReranker` stands in, and a search there
+is not counted as degraded, because nothing that was configured failed.
+
+**A second limit found on the way**: TEI accepts at most 32 texts per request
+(`max_client_batch_size`, its default), for embeddings and for `/rerank` alike. The
+anchor build in ADR 0032 hit it and now sends batches of 32. The reranker's depth
+setting has no upper bound yet, so a depth above 32 would be refused by the model
+server — recorded on the board's backlog.

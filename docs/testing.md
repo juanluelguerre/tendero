@@ -2,10 +2,10 @@
 
 Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short.
 
-**What is in the repository today** (2026-09-15, after P8-11): xUnit v3, CsCheck,
-NetArchTest.Rules, Testcontainers.PostgreSql, `WebApplicationFactory`, vitest
-and Playwright — 950 backend tests (929 green, 21 skipped with a reason), 65
-frontend, 20 browser specs. NSubstitute,
+**What is in the repository today** (2026-09-17, at the close of the search-answers
+work): xUnit v3, CsCheck, NetArchTest.Rules, Testcontainers.PostgreSql,
+`WebApplicationFactory`, vitest and Playwright — 1035 backend tests (1014 green,
+21 skipped with a reason), 70 frontend, 20 browser specs. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
 fakes and the contract suites have not needed a mock, and nothing snapshots
 yet. Respawn was declined — a fresh database per test is cheaper than a reset.
@@ -86,7 +86,20 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 
 | project | mutated with | of covered | of total | set |
 |---|---|---:|---:|---|
-| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 75.97 % | 48.84 % | 2026-09-16 |
+| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 76.23 % | 54.65 % | 2026-09-17 |
+| `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 69.34 % | 61.29 % | 2026-09-17 |
+
+**What a survivor may be that the runner makes it.** A mutant inside a `static
+readonly` field or a static property initializer — a phrase list, an analyser
+name, an index's field list — is reported *Survived* even when a test kills it:
+the initializer runs once per test process, before the mutant is switched on, so
+the MTP runner never sees it. Four of them were killed by hand on 2026-09-17 (a
+help topic's phrase, its destination, the full-match fields, the vector layer's
+not-configured status). Classify these as runner artefacts, prove one by hand
+when a new kind appears, and do not rewrite production code into instance
+members to please a preview runner. **A literal inside a lambda stored in a
+static field is not one of them**: the lambda runs on every call, so its mutant
+is live, and a survivor there is a real survivor (the `Active` filter below).
 
 **How it got here.** Evaluated on 2026-09-15 without installing it: Apache-2.0 at
 its tag, the hosted dashboard never contacted unless asked, one outbound version
@@ -101,7 +114,68 @@ all 171 survivors found about 80 that were logging, telemetry and configuration
 strings, and 37 that were **false**: evaluation code whose tests live in
 `SearchEval.Tests`, which the trial had not run. After 17 new test cases and two
 strengthened assertions, a third run with both test projects and logging ignored
-gave `of covered` **75.97 %**, survivors 93 — the baseline above.
+gave `of covered` **75.97 %**, survivors 93 — the Search baseline until 2026-09-17.
+
+**2026-09-17 — the phase close of the search answers (ADR 0032).** Two projects
+touched, both run. Reports in `docs/blog/reports/2026-09-17-no-answer-research/stryker/`.
+
+- **`src/Search`, first run: `of covered` 70.75 %**, under the 75.97 % baseline
+  (1251 mutants, 160 survivors). The ratchet did its job: the new code had arrived
+  with holes. Two groups were real and are closed, 30 mutations for 30 kills at
+  level 1: the report's new shares and the threshold rule in `CultureScore`
+  (`Admitted` and `NoticeRate` could be multiplied instead of divided, a threshold
+  met by either metric instead of both — `CultureScoreTests`, a `JudgedAt10`
+  assertion), and every line of `AddHybridSearch`/`AddSearchStrategies`, which the
+  API's and the worker's composition tests see from projects Stryker does not run
+  (`HybridSearchCompositionTests`, one more `VectorLayerRegistrationTests` case);
+  plus `QueryScopeProtocol.Accepts` with one side empty. **Second run: 76.23 %**
+  (130 survivors, 216 without coverage), the new baseline; identical to the first
+  in every mutant the new tests did not target.
+- **The 130 survivors, classified** (the score stands as measured in run 2;
+  Stryker was not re-run after the fix below). 46 **runner artefacts** in static
+  initializers (above). 1 **real gap, closed after run 2**: the lexical `Active`
+  filter (`"active"` → `""` in `Elasticsearch.cs`), first misread as an artefact —
+  the literal lives in the lambda body, and `ElasticsearchRequestBodyTests`
+  asserted the key `status` but never its value; the value is asserted now, and
+  the hand mutation turns four of its tests red. 22 **equivalent**: accent folding for letters no help
+  phrase depends on (`í` proven by hand — every phrase carrying *política* also
+  carries *devolución*), an empty-word filter, hybrid's `total` branches
+  (`ranked.Count ≥ Hits.Count ≥ Total` always), a card lookup with no ids, RRF's
+  best-position `Min`/`Max` and its tie order (equal fused scores imply equal
+  positions at the depths the shop uses), `Any`/`All` over the one golden source,
+  a fingerprint's sort direction and a tolerance boundary with no committed
+  calibration, `AddQueryScope` while none is embedded, a retry flag's initial
+  value, the empty-golden-set guard. 14 **argument guards** another guard one call
+  down already throws for, 10 **message wordings** and 11 **logging, timing and
+  telemetry** calls: noise. 12 **adapter plumbing** (HTTP clients, base
+  addresses, `EnsureSuccessStatusCode`, the Qdrant registration) that the
+  container and model-server tests prove against the real thing. **Written down,
+  waiting**: 3 in the candidate reranker's revision check (an evaluation-only path
+  from 2026-09-16), and 11 in layer B (`AnchorQueryScope` normalisation, `Max`
+  over inside anchors, the culture filter, the English fingerprint fields, the
+  anchors file's bytes, its `TimeProvider`) — refuted and kept off by the author's
+  decision; they are tests to write the day it is revived, not before.
+- **`Ucp.Tests` stays out of Search's config**: the only Search code it reaches is
+  `HelpTopicDestinations`, a static dictionary whose mutants are runner artefacts
+  `HelpTopicsTests` already kills by hand.
+- **`src/Ucp`, first baseline.** Mutated with `Ucp.Tests` and `Api.Tests`, which
+  both exercise it; `Integration.Tests` also does (every product against a real
+  Postgres) and is left out, because a container per mutant is not a phase-close
+  cost. First run 58.39 %; the survivors in this phase's own code were real — the
+  notices could all have been written in Spanish, lost their `type` and `path`, or
+  been dropped from a page with products — and are closed (`UcpSearchNoticesTests`
+  strengthened, three `UcpCatalogConformanceTests`), 15 mutations for 15 kills.
+  **Second run: 69.34 %**, 42 survivors, the baseline. One is noise (the
+  no-results wording); the other 41 are in phase 9's code and **written down**:
+  the mapper's optional fields (tags, media, options, title fallback — the schema
+  accepts both shapes, and `UcpCatalogIntegrationTests` validates the real
+  catalogue outside Stryker), the search operation's defaults, category filter,
+  paging arithmetic and cursor parsing and the lookup's 50-identifier boundary
+  (verified live on the Aspire stack in `P9-12`, unit-tested by nothing), the REST
+  binding's empty-`id` refusal, its request default and its base URL, the lookup's
+  `not_found` messages and `featured` correlation, and the agent metadata's
+  profile check. They are the next
+  Ucp work's first tests, not this phase's.
 
 ## Property-based (CsCheck)
 
@@ -163,6 +237,12 @@ A new adapter without its contract-test subclass does not merge.
   `TENDERO_MODEL_TESTS=1` and skips with that reason otherwise. What can be
   proven without the model — the request the SDK sends, the descriptor, the
   registration — is proven in `tests/Search.Tests` on every build.
+- **A fake has to refuse what the real server refuses.** On 2026-09-17 the first
+  real run of the scope classifier (ADR 0032) failed before any verdict: Text
+  Embeddings Inference accepts 32 texts per request and one culture's anchors are
+  133. Every unit test was green, because the fake generator accepted any batch.
+  The fake now throws above 32 like the server does, and a test proves the anchors
+  are sent in batches it accepts.
 
 ## Architecture tests (NetArchTest.Rules)
 

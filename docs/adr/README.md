@@ -30,6 +30,7 @@
 | [0029](0029-jsonschema-net-pinned-to-its-last-mit-release.md) | JsonSchema.Net is pinned to 8.0.5, its last MIT release | accepted |
 | [0030](0030-protocol-routes-are-not-in-the-openapi-document.md) | A route whose protocol publishes its own discovery is not in the OpenAPI document | accepted |
 | [0031](0031-model-weights-are-dependencies.md) | Model weights are dependencies, served from a pinned revision | accepted |
+| [0032](0032-knowing-what-the-shop-does-not-sell.md) | Knowing that the shop does not sell something is a query-understanding decision, not a threshold on a retrieval score | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 
@@ -38,7 +39,8 @@ phases are already committed to making, and renumbering them as they land would
 break the references the roadmap and the code already carry. 0017 was the first
 of those reservations to be cashed, in phase 7; 0020 and 0021 followed in phase
 9, and 0023 in phase 8 — with two flags rather than the five its title
-reserved, because a flag guards behaviour that exists. What is still reserved
+reserved, because a flag guards behaviour that exists, and none since 2026-09-17,
+when one became a capability and the other met its removal condition. What is still reserved
 and still unwritten: **0018** (the AI writes claims, not products), **0019**
 (the copilot proposes commands, never prose) and **0022** (an agent is a
 principal, not a customer).
