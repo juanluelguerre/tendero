@@ -1,0 +1,125 @@
+<svg viewBox="0 0 1200 627" role="img" aria-labelledby="t d" xmlns="http://www.w3.org/2000/svg">
+  <title id="t">An order in Tendero, end to end</title>
+  <desc id="d">Six steps: a cart that holds no money and is priced by a live quote; a checkout that authorises the payment first and carries an idempotency key; the order placed with its event written to the outbox in the same transaction; a stock saga that reserves stock and confirms the order, or compensates by cancelling it, voiding the authorisation and releasing the stock; shipping, which captures the payment and commits the stock; and delivery, which opens a 14-day return window. A return is its own aggregate per line: requested, approved, received, refunded; receiving restocks, and damaged goods never do. Patterns: outbox, saga with compensation, transition tables, idempotency, quote frozen at order.</desc>
+
+  <defs>
+    <pattern id="awning" width="28" height="10" patternUnits="userSpaceOnUse">
+      <rect width="14" height="10" fill="#D85A30"></rect>
+      <rect x="14" width="14" height="10" fill="#F5D3C4"></rect>
+    </pattern>
+    <marker id="m" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#6B655F"></polygon>
+    </marker>
+    <marker id="mc" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+      <polygon points="0 0, 9 3.5, 0 7" fill="#D85A30"></polygon>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="627" fill="#F3F1ED"></rect>
+  <rect width="1200" height="10" fill="url(#awning)"></rect>
+
+  <!-- title -->
+  <text x="60" y="80" fill="#201D1B" font-size="44" font-weight="800" font-family="'Bricolage Grotesque',sans-serif" letter-spacing="-1">An order, end to end</text>
+  <text x="60" y="116" fill="#6B655F" font-size="19" font-family="'Instrument Sans',sans-serif">Six steps, and the pattern that keeps each one honest.</text>
+  <text x="1140" y="80" fill="#938C84" font-size="14" font-family="'JetBrains Mono',monospace" text-anchor="end" letter-spacing="2">TENDERO</text>
+
+  <!-- stations: x = 60, 244, 428, 612, 796, 980 · w 160 -->
+  <g font-family="'Instrument Sans',sans-serif">
+    <!-- 1 cart -->
+    <rect x="60" y="160" width="160" height="170" rx="10" fill="#F3F1ED" stroke="#201D1B" stroke-width="2"></rect>
+    <text x="76" y="188" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace">01</text>
+    <text x="76" y="216" fill="#201D1B" font-size="22" font-weight="600">Cart</text>
+    <text x="76" y="252" fill="#201D1B" font-size="15" font-weight="600">holds no money</text>
+    <text x="76" y="276" fill="#6B655F" font-size="15">priced by a live</text>
+    <text x="76" y="296" fill="#6B655F" font-size="15">quote, frozen at</text>
+    <text x="76" y="316" fill="#6B655F" font-size="15">order time</text>
+
+    <line x1="220" y1="245" x2="240" y2="245" stroke="#6B655F" stroke-width="2" marker-end="url(#m)"></line>
+
+    <!-- 2 checkout -->
+    <rect x="244" y="160" width="160" height="170" rx="10" fill="#F3F1ED" stroke="#201D1B" stroke-width="2"></rect>
+    <text x="260" y="188" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace">02</text>
+    <text x="260" y="216" fill="#201D1B" font-size="22" font-weight="600">Checkout</text>
+    <text x="260" y="252" fill="#201D1B" font-size="15" font-weight="600">authorises first,</text>
+    <text x="260" y="272" fill="#201D1B" font-size="15" font-weight="600">then places</text>
+    <text x="260" y="296" fill="#6B655F" font-size="15">idempotency key:</text>
+    <text x="260" y="316" fill="#6B655F" font-size="15">a retry buys once</text>
+
+    <line x1="404" y1="245" x2="424" y2="245" stroke="#6B655F" stroke-width="2" marker-end="url(#m)"></line>
+
+    <!-- 3 placed -->
+    <rect x="428" y="160" width="160" height="170" rx="10" fill="#F3F1ED" stroke="#201D1B" stroke-width="2"></rect>
+    <text x="444" y="188" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace">03</text>
+    <text x="444" y="216" fill="#201D1B" font-size="22" font-weight="600">Placed</text>
+    <text x="444" y="252" fill="#201D1B" font-size="15" font-weight="600">event → outbox</text>
+    <text x="444" y="276" fill="#6B655F" font-size="15">in the same</text>
+    <text x="444" y="296" fill="#6B655F" font-size="15">transaction as</text>
+    <text x="444" y="316" fill="#6B655F" font-size="15">the order</text>
+
+    <line x1="588" y1="245" x2="608" y2="245" stroke="#6B655F" stroke-width="2" marker-end="url(#m)"></line>
+
+    <!-- 4 stock saga -->
+    <rect x="612" y="160" width="160" height="170" rx="10" fill="#F3F1ED" stroke="#201D1B" stroke-width="2"></rect>
+    <text x="628" y="188" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace">04</text>
+    <text x="628" y="216" fill="#201D1B" font-size="22" font-weight="600">Stock saga</text>
+    <text x="628" y="252" fill="#201D1B" font-size="15" font-weight="600">reserve stock,</text>
+    <text x="628" y="272" fill="#201D1B" font-size="15" font-weight="600">then confirm</text>
+    <text x="628" y="296" fill="#6B655F" font-size="15">orchestrated from</text>
+    <text x="628" y="316" fill="#6B655F" font-size="15">Ordering</text>
+
+    <line x1="772" y1="245" x2="792" y2="245" stroke="#6B655F" stroke-width="2" marker-end="url(#m)"></line>
+
+    <!-- 5 shipped -->
+    <rect x="796" y="160" width="160" height="170" rx="10" fill="#F3F1ED" stroke="#201D1B" stroke-width="2"></rect>
+    <text x="812" y="188" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace">05</text>
+    <text x="812" y="216" fill="#201D1B" font-size="22" font-weight="600">Shipped</text>
+    <text x="812" y="252" fill="#201D1B" font-size="15" font-weight="600">capture payment,</text>
+    <text x="812" y="272" fill="#201D1B" font-size="15" font-weight="600">commit stock</text>
+    <text x="812" y="296" fill="#6B655F" font-size="15">confirming is a</text>
+    <text x="812" y="316" fill="#6B655F" font-size="15">promise; this, a fact</text>
+
+    <line x1="956" y1="245" x2="976" y2="245" stroke="#6B655F" stroke-width="2" marker-end="url(#m)"></line>
+
+    <!-- 6 delivered -->
+    <rect x="980" y="160" width="160" height="170" rx="10" fill="#F3F1ED" stroke="#201D1B" stroke-width="2"></rect>
+    <text x="996" y="188" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace">06</text>
+    <text x="996" y="216" fill="#201D1B" font-size="22" font-weight="600">Delivered</text>
+    <text x="996" y="252" fill="#201D1B" font-size="15" font-weight="600">14-day return</text>
+    <text x="996" y="272" fill="#201D1B" font-size="15" font-weight="600">window opens</text>
+    <text x="996" y="296" fill="#6B655F" font-size="15">counted from</text>
+    <text x="996" y="316" fill="#6B655F" font-size="15">delivery</text>
+
+    <!-- compensation, under 04 -->
+    <path d="M 692 330 L 692 370" stroke="#D85A30" stroke-width="2" fill="none" marker-end="url(#mc)"></path>
+    <rect x="428" y="378" width="344" height="96" rx="10" fill="#FBEEE8" stroke="#D85A30" stroke-width="2"></rect>
+    <text x="446" y="408" fill="#D85A30" font-size="18" font-weight="600">Stock refused → compensate</text>
+    <text x="446" y="436" fill="#201D1B" font-size="15">cancel the order · void the authorisation</text>
+    <text x="446" y="458" fill="#201D1B" font-size="15">release the stock · nothing is charged</text>
+
+    <!-- returns, under 06 -->
+    <path d="M 1060 330 L 1060 370" stroke="#6B655F" stroke-width="2" fill="none" marker-end="url(#m)"></path>
+    <rect x="796" y="378" width="344" height="96" rx="10" fill="#F3F1ED" stroke="#201D1B" stroke-width="2"></rect>
+    <text x="814" y="408" fill="#201D1B" font-size="18" font-weight="600">Return, per line</text>
+    <text x="814" y="436" fill="#201D1B" font-size="14">requested → approved → received → refunded</text>
+    <text x="814" y="458" fill="#6B655F" font-size="15">receiving restocks; damaged goods never do</text>
+  </g>
+
+  <!-- patterns -->
+  <line x1="60" y1="512" x2="1140" y2="512" stroke="rgba(32,29,27,0.12)" stroke-width="1"></line>
+  <text x="60" y="552" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace" letter-spacing="2">UNDER IT</text>
+  <g font-family="'JetBrains Mono',monospace" font-size="14" fill="#201D1B">
+    <rect x="160" y="530" width="92" height="32" rx="16" fill="none" stroke="#201D1B" stroke-width="1.4"></rect>
+    <text x="206" y="551" text-anchor="middle">outbox</text>
+    <rect x="264" y="530" width="224" height="32" rx="16" fill="none" stroke="#201D1B" stroke-width="1.4"></rect>
+    <text x="376" y="551" text-anchor="middle">saga + compensation</text>
+    <rect x="500" y="530" width="196" height="32" rx="16" fill="none" stroke="#201D1B" stroke-width="1.4"></rect>
+    <text x="598" y="551" text-anchor="middle">transition tables</text>
+    <rect x="708" y="530" width="136" height="32" rx="16" fill="none" stroke="#201D1B" stroke-width="1.4"></rect>
+    <text x="776" y="551" text-anchor="middle">idempotency</text>
+    <rect x="856" y="530" width="284" height="32" rx="16" fill="none" stroke="#201D1B" stroke-width="1.4"></rect>
+    <text x="998" y="551" text-anchor="middle">quote frozen at order time</text>
+  </g>
+
+  <text x="60" y="604" fill="#938C84" font-size="13" font-family="'JetBrains Mono',monospace">github.com/juanluelguerre/tendero · .NET 11 · Aspire · Angular</text>
+  <text x="1140" y="604" fill="#D85A30" font-size="13" font-family="'JetBrains Mono',monospace" text-anchor="end">clay: what the shop refuses or undoes</text>
+</svg>
