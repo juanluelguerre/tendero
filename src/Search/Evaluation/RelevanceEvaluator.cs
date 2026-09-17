@@ -63,7 +63,9 @@ public sealed record QueryScore(
     IReadOnlyList<UnjudgedHit> Unjudged,
     string? Kind = null,
     string? Split = null,
-    string? FirstResult = null);
+    string? FirstResult = null,
+    SearchMatch? Match = null,
+    string? HelpTopic = null);
 
 public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Queries)
 {
@@ -78,6 +80,30 @@ public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Quer
     public int ScoredQueries => Queries.Count(query => query.NdcgAt10 is not null);
     public double MeanMilliseconds => Queries.Count == 0 ? 0 : Queries.Average(query => query.Milliseconds);
 
+    /// <summary>
+    /// For queries with nothing to find: the share whose page admits it — the closest
+    /// things, not the shop's, or help for a question about the shop. Null when no
+    /// answerer was asked, so a run without one claims nothing.
+    /// </summary>
+    public double? Admitted
+    {
+        get
+        {
+            var noAnswer = Queries.Where(query => QueryKinds.IsNoAnswer(query.Kind)).ToList();
+            if (noAnswer.Count == 0 || noAnswer.All(query => query.Match is null))
+                return null;
+
+            return noAnswer.Count(query =>
+                    query.Match is SearchMatch.Related
+                    || (query.Kind == QueryKinds.NonProduct && query.HelpTopic is not null))
+                / (double)noAnswer.Count;
+        }
+    }
+
+    /// <summary>For scored queries: how often one with real answers is told nothing matches exactly. Reported, not gated.</summary>
+    public double NoticeRate =>
+        ScoredQueries == 0 ? 0 : Queries.Count(query => query.NdcgAt10 is not null && query.Match == SearchMatch.Related) / (double)ScoredQueries;
+
     private static double Mean(IEnumerable<double?> values)
     {
         var scored = values.OfType<double>().ToList();
@@ -88,8 +114,12 @@ public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Quer
 /// <summary>
 /// Runs a golden set through a strategy and scores what came back. The same code
 /// for the CI gate and for the backoffice panel, which is the reason it is here.
+///
+/// <paramref name="answerer"/> is optional so a caller that never built layer A —
+/// or a test that does not care about it — claims nothing: <see cref="CultureScore.Admitted"/>
+/// stays null rather than reading as "the shop admits everything".
 /// </summary>
-public sealed class RelevanceEvaluator(ISearchStrategy strategy)
+public sealed class RelevanceEvaluator(ISearchStrategy strategy, ISearchAnswerer? answerer = null)
 {
     public const int NdcgCutoff = 10;
     public const int RecallCutoff = 50;
@@ -103,11 +133,15 @@ public sealed class RelevanceEvaluator(ISearchStrategy strategy)
 
         foreach (var goldenQuery in golden.Queries)
         {
+            var searchQuery = new ProductSearchQuery(goldenQuery.Query, golden.Culture, Page: 1, PageSize: RecallCutoff);
+
             var stopwatch = Stopwatch.StartNew();
-            var page = await strategy.SearchAsync(
-                new ProductSearchQuery(goldenQuery.Query, golden.Culture, Page: 1, PageSize: RecallCutoff),
-                cancellationToken);
+            var page = await strategy.SearchAsync(searchQuery, cancellationToken);
             stopwatch.Stop();
+
+            // The answer is not search latency, so it is asked after the stopwatch
+            // stops: layer A's own cost must never be blamed on the strategy.
+            var answer = answerer is null ? null : await answerer.AnswerAsync(searchQuery, cancellationToken);
 
             // The index returns internal ids; the golden set annotates source ids.
             // A hit from no known source cannot be judged either way and is left out.
@@ -144,7 +178,9 @@ public sealed class RelevanceEvaluator(ISearchStrategy strategy)
                 unjudged,
                 goldenQuery.Kind,
                 goldenQuery.Split,
-                sourced.FirstOrDefault().Hit?.Name));
+                sourced.FirstOrDefault().Hit?.Name,
+                answer?.Match,
+                answer?.HelpTopic));
         }
 
         return new CultureScore(golden.Culture, scores);

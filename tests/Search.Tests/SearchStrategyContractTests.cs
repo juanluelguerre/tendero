@@ -59,38 +59,50 @@ public sealed class LexicalSearchStrategyContractTests : SearchStrategyContractT
 public sealed class HybridSearchStrategyContractTests : SearchStrategyContractTests
 {
     protected override ISearchStrategy Over(ILexicalProductSearch lexical) =>
-        Hybrid(lexical, new Vectors(("c", 0.9), ("z", 0.8), ("a", 0.7)), new Cards("z"), new Reranker(text => text.Length), rerank: true);
+        Hybrid(lexical, new Vectors(("c", 0.9), ("z", 0.8), ("a", 0.7)), new Cards("z"), new Reranker(text => text.Length));
 }
 
 /// <summary>
-/// The one reader of <see cref="FeatureId.SearchVector"/> (ADR 0023): the storefront, the
-/// MCP tools and UCP all dispatch this query, so this line is where all of them go hybrid.
+/// Where the storefront, the MCP tools and UCP all go hybrid, since
+/// <c>SearchVector</c> met its removal condition (ADR 0023, amended 2026-09-17).
+/// Lexical is not asked here any more: it is what hybrid degrades to, byte for
+/// byte, and that is <c>HybridDegradesToLexical</c>'s claim, not this handler's.
 /// </summary>
 public sealed class SearchProductsHandlerTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    [Theory]
-    [InlineData(false, "lexical")]
-    [InlineData(true, "hybrid")]
-    public async Task The_vector_flag_decides_which_strategy_answers(bool vectorFlag, string expected)
+    /// <summary>
+    /// Asserts only that hybrid answers every search since it became the
+    /// default (ADR 0023, amended 2026-09-17). The degradation to lexical byte
+    /// for byte is <c>HybridDegradesToLexical</c>'s claim, not this one's.
+    /// </summary>
+    [Fact]
+    public async Task Hybrid_answers_every_search()
     {
-        var lexical = new Recording("lexical");
         var hybrid = new Recording("hybrid");
 
-        await new SearchProductsHandler(lexical, hybrid, new VectorFlag(vectorFlag))
+        await new SearchProductsHandler(hybrid, new FixedAnswer(null))
             .HandleAsync(new SearchProductsQuery("cafetera", "en", Page: 3, PageSize: 7, Category: "KITCHEN", Sort: "newest"), Ct);
 
-        var asked = expected == "lexical" ? lexical : hybrid;
-        var other = expected == "lexical" ? hybrid : lexical;
-
-        Assert.Equal(new ProductSearchQuery("cafetera", "en", 3, 7, "KITCHEN", "newest"), Assert.Single(asked.Asked));
-        Assert.Empty(other.Asked);
+        Assert.Equal(new ProductSearchQuery("cafetera", "en", 3, 7, "KITCHEN", "newest"), Assert.Single(hybrid.Asked));
     }
 
-    private sealed class VectorFlag(bool on) : IFeatureGate
+    [Fact]
+    public async Task The_handler_attaches_the_answer_to_the_page_hybrid_returned()
     {
-        public bool IsEnabled(FeatureId feature) => feature == FeatureId.SearchVector && on;
+        var expected = new SearchAnswer(SearchMatch.Related);
+
+        var page = await new SearchProductsHandler(new Recording("hybrid"), new FixedAnswer(expected))
+            .HandleAsync(new SearchProductsQuery("regalo abuela", "es", 1, 20), Ct);
+
+        Assert.Equal(expected, page.Answer);
+        Assert.Equal("hybrid", Assert.Single(page.Hits).ProductId);
+    }
+
+    private sealed class FixedAnswer(SearchAnswer? answer) : ISearchAnswerer
+    {
+        public Task<SearchAnswer?> AnswerAsync(ProductSearchQuery query, CancellationToken ct = default) => Task.FromResult(answer);
     }
 
     private sealed class Recording(string name) : ISearchStrategy

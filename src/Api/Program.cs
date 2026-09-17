@@ -52,9 +52,9 @@ builder.Services.AddLexicalSearch(
     builder.Configuration.GetRequiredConnectionString("elasticsearch"));
 
 // Hybrid search: the vector layer and the reranker when the AppHost handed them
-// over (Tendero__Vectors), named stand-ins otherwise, and both strategies. Which
-// one answers is the SearchVector flag's decision. Lexical search above is
-// required; none of this is.
+// over (Tendero__Vectors), named stand-ins otherwise, and both strategies. Hybrid
+// answers every search, and degrades to lexical by itself when a stage is missing
+// or failing. Lexical search above is required; none of this is.
 builder.Services.AddHybridSearch(builder.Configuration);
 
 // The development issuer is registered BEFORE authentication and only in

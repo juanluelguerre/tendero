@@ -39,8 +39,12 @@ public sealed class NoAnswerQueriesTests
         var score = await new RelevanceEvaluator(new Answering(Hit("p1", "Riñonera Cinturón 3L"), Hit("p2", "Neceser de viaje Aseo")))
             .RunAsync(golden, new Dictionary<string, string> { ["p1"] = "B13BAG0708", ["p2"] = "B13BAG0709" }, Ct);
 
-        var unjudged = Assert.Single(Assert.Single(score.Queries).Unjudged);
+        var query = Assert.Single(score.Queries);
+        var unjudged = Assert.Single(query.Unjudged);
         Assert.Equal((2, "B13BAG0709"), (unjudged.Position, unjudged.ExternalId));
+
+        // An ordinary query reports how much of its first ten the ruler can see.
+        Assert.Equal(0.5, query.JudgedAt10);
     }
 
     [Fact]
@@ -65,12 +69,68 @@ public sealed class NoAnswerQueriesTests
 
         Assert.Contains("## es: queries with nothing to find", report);
 
-        // Two results shown by lexical, ten by hybrid (the first page caps at ten).
-        Assert.Contains("| ambientador casa | not-sold | 2 | 10 | Zapatillas de casa Hogar | Cesta de almacenaje |", report);
+        // Two results shown by lexical, ten by hybrid (the first page caps at ten);
+        // neither strategy was asked, so both admitted columns read "—".
+        Assert.Contains("| ambientador casa | not-sold | 2 | 10 | — | — | Zapatillas de casa Hogar | Cesta de almacenaje |", report);
 
         // Not a row of the comparison, and not a kind with an NDCG.
         Assert.DoesNotContain("| ambientador casa | n/a", report);
         Assert.DoesNotContain("| not-sold | 1 |", report);
+    }
+
+    [Fact]
+    public async Task A_no_answer_query_is_admitted_when_the_page_says_nothing_matches_exactly()
+    {
+        var golden = new GoldenSet("es", "seed",
+        [
+            new GoldenQuery("móvil para mi madre de 70 años", [], QueryKinds.NotSold, "holdout", "X06"),
+            new GoldenQuery("cafetera italiana", [new Judgment("B07COOK01", 3, "italian coffee maker")], QueryKinds.Feature, "holdout", "X07")
+        ]);
+
+        var answerer = new AnswerByQuery(new()
+        {
+            ["móvil para mi madre de 70 años"] = new SearchAnswer(SearchMatch.Related),
+            ["cafetera italiana"] = new SearchAnswer(SearchMatch.Exact)
+        });
+
+        var score = await new RelevanceEvaluator(new Answering(Hit("p1", "Lámpara")), answerer)
+            .RunAsync(golden, new Dictionary<string, string> { ["p1"] = "B12LAM0609" }, Ct);
+
+        Assert.Equal(1d, score.Admitted);
+        Assert.Equal(0d, score.NoticeRate);
+    }
+
+    [Fact]
+    public async Task A_non_product_query_is_admitted_by_its_help_topic()
+    {
+        var golden = new GoldenSet("es", "seed",
+            [new GoldenQuery("devoluciones", [], QueryKinds.NonProduct, "holdout", "X08")]);
+
+        var answerer = new AnswerByQuery(new()
+        {
+            ["devoluciones"] = new SearchAnswer(SearchMatch.Exact, HelpTopic: "returns")
+        });
+
+        var score = await new RelevanceEvaluator(new Answering(Hit("p1", "Cafetera")), answerer)
+            .RunAsync(golden, new Dictionary<string, string> { ["p1"] = "B07COOK01" }, Ct);
+
+        Assert.Equal(1d, score.Admitted);
+    }
+
+    [Fact]
+    public async Task Without_an_answerer_nothing_is_claimed()
+    {
+        var golden = new GoldenSet("es", "seed",
+        [
+            new GoldenQuery("móvil para mi madre de 70 años", [], QueryKinds.NotSold, "holdout", "X06"),
+            new GoldenQuery("cafetera italiana", [new Judgment("B07COOK01", 3, "italian coffee maker")], QueryKinds.Feature, "holdout", "X07")
+        ]);
+
+        var score = await new RelevanceEvaluator(new Answering(Hit("p1", "Lámpara")))
+            .RunAsync(golden, new Dictionary<string, string> { ["p1"] = "B12LAM0609" }, Ct);
+
+        Assert.Null(score.Admitted);
+        Assert.Equal(0d, score.NoticeRate);
     }
 
     private static SearchHit Hit(string productId, string name) =>
@@ -80,5 +140,12 @@ public sealed class NoAnswerQueriesTests
     {
         public Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default) =>
             Task.FromResult(new SearchResultPage(hits, hits.Length, query.Page, query.PageSize, 1));
+    }
+
+    /// <summary>Layer A's fake: what the page told the shopper about a query, decided by the test.</summary>
+    private sealed class AnswerByQuery(Dictionary<string, SearchAnswer?> answers) : ISearchAnswerer
+    {
+        public Task<SearchAnswer?> AnswerAsync(ProductSearchQuery query, CancellationToken ct = default) =>
+            Task.FromResult(answers.GetValueOrDefault(query.Text));
     }
 }

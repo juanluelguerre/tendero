@@ -133,13 +133,16 @@ if (!tools) elasticvue.WithExplicitStart();
 // Off by default for the measurement, not for tidiness: on a CPU the embeddings
 // container held 12.7 GiB of RAM in the spike that chose it, and a first start
 // downloads 2.2 GB of weights. Pressing F5 to look at a product page should not
-// cost either. Visible in the dashboard either way, one click from running — the
-// argument Keycloak already made.
+// cost either. Visible in the dashboard either way — the argument Keycloak
+// already made — but starting the containers from there does NOT wire them to
+// search: the API and the worker are handed the vector layer only when the
+// switch is on at AppHost start, so restart with it to search by meaning.
 //
 // **Nothing waits for it, and that is invariant 8 rather than an omission.**
-// Lexical search is the permanent fallback: the API and the worker are handed
-// both references and no `WaitFor`, so a stopped vector layer is a search that
-// degrades to lexical, never a service that refuses to start.
+// Lexical search is the permanent fallback: with the switch off the API and the
+// worker are not handed the vector layer at all, and with it on they get both
+// references and no `WaitFor` — so a missing or stopped vector layer is a search
+// that degrades to lexical, never a service that refuses to start.
 var vectors = string.Equals(builder.Configuration["Tendero:Vectors"], "true",
     StringComparison.OrdinalIgnoreCase);
 
@@ -229,11 +232,17 @@ var embeddingsEndpoint = embeddings.GetEndpoint("http");
 // pairs — against a search budget of 800 ms. On a CPU it would fail every single
 // time, and a stage that always degrades is a cost with no benefit. So it starts
 // with the vector layer when the machine has a GPU, and otherwise sits in the
-// dashboard unstarted, with the rerank flag off.
+// dashboard unstarted.
 //
-// The flag and the container are decided together, below, because they are one
-// decision: a flag on with no reranker degrades every search, and a reranker
-// running with the flag off is 1.3 GB of VRAM doing nothing.
+// It is one decision now, not two (ADR 0023 amendment): `rerank`, below, decides
+// both whether the container starts AND whether the API is ever handed its
+// address — `WithReference(rerankerEndpoint)` is conditional on it too, beside
+// the API's own declaration. Reranking has no flag of its own any more, so this
+// is the only place that decides it. Handing the API an address nothing answers
+// would register a real `IReranker` that fails every call, and every search
+// would pay a failed connection and count as degraded; leaving the reference out
+// entirely gives the API `NoReranker` (`IsConfigured => false`), which
+// `HybridSearchStrategy` skips without asking and without counting.
 const string rerankerModel = "BAAI/bge-reranker-v2-m3";
 const string rerankerModelRevision = "953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e";
 
@@ -371,18 +380,33 @@ var api = builder.AddProject<Projects.ElGuerre_Tendero_Api>("api")
     // on a laptop. It is tied to the environment and not to a constant, exactly
     // as it was for the development issuer.
     .WithSeedFiles(repositoryRoot)
-    // The vector layer, referenced and never waited for (see its declaration):
-    // the API embeds a query and asks Qdrant, and falls back to lexical when
-    // either is not running.
-    .WithReference(qdrant)
-    .WithReference(embeddingsEndpoint)
-    .WithReference(rerankerEndpoint)
-    // THE FLAGS (ADR 0023), written by the same switch that starts what they
-    // guard, so the two cannot disagree. Only the API searches; the worker only
-    // projects, and reads neither.
-    .WithEnvironment("Features__SearchVector", vectors ? "true" : "false")
-    .WithEnvironment("Features__SearchRerank", rerank ? "true" : "false")
     .WithExternalHttpEndpoints();
+
+// THE AI STAGES REACH THE API ONLY WHERE THEIR CONTAINERS RUN, and there is no
+// flag any more to say otherwise (ADR 0023, amended 2026-09-17): SearchVector met
+// its removal condition and hybrid answers every search. What decides whether the
+// vector side exists is whether the API is handed its addresses at all — the same
+// `vectors` the containers' own start decision reads, so the two cannot disagree.
+//
+// Handed an address nothing answers, the API would register the real vector
+// layer against containers that were never started, and every search would pay a
+// failed call and count as degraded. Left out, the API gets `NoVectorLayer`,
+// which hybrid skips as "not configured" (`SearchStageNotConfiguredException`)
+// and answers with lexical, byte for byte — the path with no AI in it, which is
+// exactly what a default F5 should be.
+//
+// Referenced and never waited for, where they are referenced: a vector layer that
+// is started but slow is still a search that degrades to lexical, never a service
+// that refuses to start (invariant 8).
+if (vectors)
+    api.WithReference(qdrant).WithReference(embeddingsEndpoint);
+
+// The reranker by the same rule, one step narrower: `rerank` is `vectors` on a
+// GPU. It has no equivalent of the vector layer's read-time check before its
+// first call, which is one more reason never to hand over an address nothing
+// answers.
+if (rerank)
+    api.WithReference(rerankerEndpoint);
 
 if (useKeycloak)
 {
@@ -442,7 +466,7 @@ builder.AddViteApp("backoffice", frontend, "serve:backoffice")
     .WithReference(api)
     .WithExternalHttpEndpoints();
 
-builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
+var workers = builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     .WithReference(database).WaitFor(database)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
     // THIS one is a real dependency, and it was the one missing:
@@ -450,12 +474,15 @@ builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     // if Elasticsearch is not ready the hosted service throws and the process
     // dies without retrying.
     .WithSeedFiles(repositoryRoot)
-    // The worker writes the vectors (P8-4). Referenced, not waited for: a
-    // stopped vector layer must not hold the outbox — and the lexical index
-    // behind it — hostage.
-    .WithReference(qdrant)
-    .WithReference(embeddingsEndpoint)
     .WaitFor(elasticsearch);
+
+// The worker writes the vectors (P8-4), and only where the vector layer was
+// started — the API's rule above, for the same reason: an address nothing answers
+// would fail the vector projection on every product. Referenced, not waited for:
+// a slow vector layer must not hold the outbox — and the lexical index behind it
+// — hostage.
+if (vectors)
+    workers.WithReference(qdrant).WithReference(embeddingsEndpoint);
 
 // The worker does NOT wait for the API: it does not depend on it. That was there
 // to tidy the dashboard, and the invented dependency left it blocked on

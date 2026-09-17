@@ -1,0 +1,244 @@
+{
+  "categories": [
+    {
+      "code": "MOBILE_PHONES",
+      "label": { "es": "teléfonos móviles", "en": "mobile phones" },
+      "texts": {
+        "es": ["teléfonos móviles y smartphones", "móvil para llamar y enviar mensajes", "smartphones Android y iPhone"],
+        "en": ["mobile phones and smartphones", "a phone to call and text", "Android phones and iPhones"]
+      }
+    },
+    {
+      "code": "TOYS",
+      "label": { "es": "juguetes", "en": "toys" },
+      "texts": {
+        "es": ["juguetes para niños", "muñecos y juegos de construcción", "juguetes educativos"],
+        "en": ["toys for children", "dolls and building sets", "educational toys"]
+      }
+    },
+    {
+      "code": "BOOKS",
+      "label": { "es": "libros", "en": "books" },
+      "texts": {
+        "es": ["libros y novelas", "libros de texto y manuales", "cómics y libros ilustrados"],
+        "en": ["books and novels", "textbooks and manuals", "comics and picture books"]
+      }
+    },
+    {
+      "code": "PLANTS",
+      "label": { "es": "plantas", "en": "plants" },
+      "texts": {
+        "es": ["plantas de interior y de exterior", "macetas con la planta incluida", "semillas y bulbos"],
+        "en": ["indoor and outdoor plants", "potted plants", "seeds and bulbs"]
+      }
+    },
+    {
+      "code": "CAR_ACCESSORIES",
+      "label": { "es": "accesorios para el coche", "en": "car accessories" },
+      "texts": {
+        "es": ["soporte de móvil para el coche", "fundas de asiento para el coche", "ambientador para el coche"],
+        "en": ["car phone mounts", "car seat covers", "air freshener for the car"]
+      }
+    },
+    {
+      "code": "GROCERIES",
+      "label": { "es": "alimentos", "en": "groceries" },
+      "texts": {
+        "es": ["comida y bebida para el día a día", "conservas, pasta y arroz", "carne, pescado y lácteos"],
+        "en": ["everyday food and drink", "canned food, pasta and rice", "meat, fish and dairy"]
+      }
+    },
+    {
+      "code": "COSMETICS",
+      "label": { "es": "cosmética", "en": "cosmetics" },
+      "texts": {
+        "es": ["maquillaje y cosmética", "cremas faciales y corporales", "productos de belleza"],
+        "en": ["makeup and cosmetics", "face and body creams", "beauty products"]
+      }
+    },
+    {
+      "code": "PET_SUPPLIES",
+      "label": { "es": "productos para mascotas", "en": "pet supplies" },
+      "texts": {
+        "es": ["comida para perros y gatos", "juguetes y correas para mascotas", "arena y accesorios para mascotas"],
+        "en": ["dog and cat food", "pet toys and leashes", "pet litter and supplies"]
+      }
+    },
+    {
+      "code": "FURNITURE",
+      "label": { "es": "muebles", "en": "furniture" },
+      "texts": {
+        "es": ["sofás y sillones", "mesas de comedor y sillas", "camas y mesitas de noche"],
+        "en": ["sofas and armchairs", "dining tables and chairs", "beds and bedside tables"]
+      }
+    },
+    {
+      "code": "COMPUTERS",
+      "label": { "es": "ordenadores", "en": "computers" },
+      "texts": {
+        "es": ["ordenadores portátiles y de sobremesa", "teclados y ratones", "monitores para ordenador"],
+        "en": ["laptops and desktop computers", "keyboards and mice", "computer monitors"]
+      }
+    },
+    {
+      "code": "TELEVISIONS",
+      "label": { "es": "televisores", "en": "televisions" },
+      "texts": {
+        "es": ["televisores y pantallas", "un televisor para el salón", "soportes de pared para televisor"],
+        "en": ["televisions and screens", "a TV for the living room", "TV wall mounts"]
+      }
+    },
+    {
+      "code": "VIDEO_GAMES",
+      "label": { "es": "videojuegos", "en": "video games" },
+      "texts": {
+        "es": ["videojuegos y consolas", "mandos y accesorios de consola", "juegos para PC"],
+        "en": ["video games and consoles", "game controllers and console accessories", "PC games"]
+      }
+    },
+    {
+      "code": "MEDICINES",
+      "label": { "es": "medicamentos", "en": "medicines" },
+      "texts": {
+        "es": ["medicamentos y fármacos", "analgésicos y antibióticos", "productos de parafarmacia"],
+        "en": ["medicines and drugs", "painkillers and antibiotics", "over-the-counter pharmacy products"]
+      }
+    },
+    {
+      "code": "JEWELLERY",
+      "label": { "es": "joyería", "en": "jewellery" },
+      "texts": {
+        "es": ["anillos, pendientes y collares", "joyas de oro y plata", "pulseras y colgantes"],
+        "en": ["rings, earrings and necklaces", "gold and silver jewellery", "bracelets and pendants"]
+      }
+    },
+    {
+      "code": "BABY_PRODUCTS",
+      "label": { "es": "productos para bebés", "en": "baby products" },
+      "texts": {
+        "es": ["pañales y toallitas", "carritos y sillas de bebé", "biberones y chupetes"],
+        "en": ["nappies and wipes", "prams and baby car seats", "baby bottles and dummies"]
+      }
+    },
+    {
+      "code": "SPORTS_EQUIPMENT",
+      "label": { "es": "equipamiento deportivo", "en": "sports equipment" },
+      "texts": {
+        "es": ["balones y raquetas", "esquís y tablas de surf", "pesas y mancuernas"],
+        "en": ["balls and rackets", "skis and surfboards", "weights and dumbbells"]
+      }
+    },
+    {
+      "code": "TOOLS_HARDWARE",
+      "label": { "es": "herramientas y ferretería", "en": "tools and hardware" },
+      "texts": {
+        "es": ["taladros y destornilladores", "tornillos y tuercas", "herramientas de bricolaje"],
+        "en": ["drills and screwdrivers", "screws and bolts", "DIY hand tools"]
+      }
+    },
+    {
+      "code": "GARDEN",
+      "label": { "es": "artículos de jardín", "en": "garden supplies" },
+      "texts": {
+        "es": ["muebles de jardín y terraza", "cortacésped y herramientas de jardín", "riego y mangueras"],
+        "en": ["garden and patio furniture", "lawnmowers and garden tools", "hoses and watering equipment"]
+      }
+    },
+    {
+      "code": "MUSIC_INSTRUMENTS",
+      "label": { "es": "instrumentos musicales", "en": "musical instruments" },
+      "texts": {
+        "es": ["guitarras y teclados musicales", "instrumentos de percusión", "instrumentos de viento"],
+        "en": ["guitars and musical keyboards", "percussion instruments", "wind instruments"]
+      }
+    },
+    {
+      "code": "STATIONERY",
+      "label": { "es": "artículos de papelería", "en": "stationery" },
+      "texts": {
+        "es": ["cuadernos y bolígrafos", "material de oficina", "papel y sobres"],
+        "en": ["notebooks and pens", "office supplies", "paper and envelopes"]
+      }
+    },
+    {
+      "code": "ALCOHOL",
+      "label": { "es": "bebidas alcohólicas", "en": "alcohol" },
+      "texts": {
+        "es": ["vino y cerveza", "licores y destilados", "champán y cava"],
+        "en": ["wine and beer", "spirits and liquor", "champagne and sparkling wine"]
+      }
+    },
+    {
+      "code": "TOBACCO",
+      "label": { "es": "tabaco", "en": "tobacco" },
+      "texts": {
+        "es": ["cigarrillos y tabaco de liar", "puros", "cigarrillos electrónicos"],
+        "en": ["cigarettes and rolling tobacco", "cigars", "e-cigarettes"]
+      }
+    },
+    {
+      "code": "TICKETS_TRAVEL",
+      "label": { "es": "entradas y viajes", "en": "tickets or travel bookings" },
+      "texts": {
+        "es": ["billetes de avión y de tren", "reservas de hotel", "entradas para conciertos y espectáculos"],
+        "en": ["flight and train tickets", "hotel bookings", "concert and event tickets"]
+      }
+    },
+    {
+      "code": "CAMERAS",
+      "label": { "es": "cámaras fotográficas", "en": "cameras" },
+      "texts": {
+        "es": ["cámaras de fotos y de vídeo", "objetivos fotográficos", "trípodes para cámara"],
+        "en": ["photo and video cameras", "camera lenses", "camera tripods"]
+      }
+    },
+    {
+      "code": "HOUSEHOLD_CLEANING",
+      "label": { "es": "limpieza del hogar", "en": "household cleaning" },
+      "texts": {
+        "es": ["detergente y lejía", "fregonas y escobas", "productos de limpieza del hogar"],
+        "en": ["laundry detergent and bleach", "mops and brooms", "household cleaning products"]
+      }
+    },
+    {
+      "code": "PERFUME",
+      "label": { "es": "perfumes", "en": "perfume" },
+      "texts": {
+        "es": ["perfumes y colonias", "fragancias para hombre y mujer", "eau de parfum"],
+        "en": ["perfumes and colognes", "fragrances for men and women", "eau de parfum"]
+      }
+    },
+    {
+      "code": "WATCHES",
+      "label": { "es": "relojes", "en": "watches" },
+      "texts": {
+        "es": ["relojes de pulsera", "relojes inteligentes", "relojes de cuarzo y mecánicos"],
+        "en": ["wristwatches", "smartwatches", "quartz and mechanical watches"]
+      }
+    },
+    {
+      "code": "MATTRESSES",
+      "label": { "es": "colchones", "en": "mattresses" },
+      "texts": {
+        "es": ["colchones y somieres", "colchones de muelles y de espuma viscoelástica", "bases y canapés para la cama"],
+        "en": ["mattresses and bed frames", "spring and memory-foam mattresses", "bed bases and divans"]
+      }
+    },
+    {
+      "code": "LARGE_APPLIANCES",
+      "label": { "es": "grandes electrodomésticos", "en": "large appliances" },
+      "texts": {
+        "es": ["lavadoras y frigoríficos", "lavavajillas", "secadoras y congeladores"],
+        "en": ["washing machines and fridges", "dishwashers", "tumble dryers and freezers"]
+      }
+    },
+    {
+      "code": "CAR_PARTS",
+      "label": { "es": "piezas de coche", "en": "car parts" },
+      "texts": {
+        "es": ["piezas de recambio para el coche", "neumáticos y frenos", "aceite de motor y filtros"],
+        "en": ["car spare parts", "tyres and brakes", "engine oil and filters"]
+      }
+    }
+  ]
+}

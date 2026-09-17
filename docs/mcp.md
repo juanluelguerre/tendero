@@ -148,6 +148,21 @@ entry, not an error; the payload arrives in `result.structuredContent`.
 Absent is fine. Malformed — a `ucp-agent` with no `profile` — is refused, and
 says which member is missing.
 
+**A search says what kind of answer it is**, as informational `messages` (ADR
+0032), over both the MCP and the REST binding:
+
+| `code` | When |
+|---|---|
+| `no_exact_match` | no product carries every word of the query; the products are the closest things, not matches |
+| `help_available` | the query asks about something with a page of its own — today returns, pointing at `/api/returns/policy` |
+
+There were three. `not_sold` — "the shop does not sell that at all" — belonged to
+a scope classifier that was measured and refuted, so it was never sent; the
+classifier is evaluation tooling now and the message is gone (ADR 0032, amended).
+
+Each is `type: info` with `path: $.query` and a sentence in the answered language,
+and the products still come back beside it.
+
 Every one of these answers is validated in the test suite against the
 specification's own JSON Schemas, vendored at a pinned commit under
 `tests/Ucp.Tests/ucp-schemas`. That includes every product in the shipped
@@ -159,7 +174,7 @@ Answers UCP has no capability for, in this shop's own shapes.
 
 | Tool | What it does |
 |---|---|
-| `search_products` | The shop's search, returning its own result page |
+| `search_products` | The shop's search, returning its own result page — with `answer`: `match` (`Exact` or `Related`) and `helpTopic` |
 | `get_product_detail` | The shop's product view — richer than UCP's for a person |
 | `list_categories` | The category tree, named in the answered language |
 | `list_offers` | The promotions running right now |

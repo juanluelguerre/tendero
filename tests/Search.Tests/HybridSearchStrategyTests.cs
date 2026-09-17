@@ -64,27 +64,98 @@ public sealed class HybridSearchStrategyTests
     [InlineData(SearchDegradation.RerankStage)]
     public async Task A_degradation_is_tagged_on_the_span_and_counted_by_stage(string stage)
     {
-        var text = $"degraded at {stage} {Guid.NewGuid():N}";
+        var (spans, counted) = Listen(out var text);
+
+        var failure = new SearchUnavailableException(stage, "down");
+        var strategy = stage == SearchDegradation.VectorStage
+            ? Hybrid(new Lexical("a", "b"), new Vectors(("a", 0.9)) { Failure = failure })
+            : Hybrid(new Lexical("a", "b"), new Vectors(("b", 0.9)), reranker: new Reranker(_ => 1) { Failure = failure });
+
+        await strategy.SearchAsync(new ProductSearchQuery(text, "en"), Ct);
+
+        Assert.Equal(stage, Assert.Single(spans).GetTagItem(SearchDegradation.Tag));
+        Assert.Contains(stage, counted);
+    }
+
+    /// <summary>Never configured is not the same fact as failing right now (see <c>SearchStageNotConfiguredException</c>): nothing is asked, nothing is counted, and the span says which stage was missing.</summary>
+    [Fact]
+    public async Task Without_a_reranker_in_this_process_the_fused_order_stands_and_nothing_is_counted()
+    {
+        var (spans, counted) = Listen(out var text);
+
+        var result = await Hybrid(new Lexical("a", "b"), new Vectors(("b", 0.9)), reranker: new NoReranker())
+            .SearchAsync(new ProductSearchQuery(text, "es"), Ct);
+
+        Assert.Equal(["b", "a"], result.Hits.Select(hit => hit.ProductId));
+        var span = Assert.Single(spans);
+        Assert.Null(span.GetTagItem(SearchDegradation.Tag));
+        Assert.Equal(SearchDegradation.RerankStage, span.GetTagItem(SearchDegradation.NotConfiguredTag));
+        Assert.Empty(counted);
+    }
+
+    [Fact]
+    public async Task A_configured_reranker_is_always_asked()
+    {
+        var reranker = new Reranker(_ => 1);
+
+        await Hybrid(new Lexical("a", "b"), new Vectors(("b", 0.9)), reranker: reranker)
+            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
+
+        Assert.Equal(1, reranker.Calls);
+    }
+
+    [Fact]
+    public async Task Without_a_vector_layer_in_this_process_the_answer_is_lexical_and_nothing_is_counted()
+    {
+        var (spans, counted) = Listen(out var text);
+        var query = new ProductSearchQuery(text, "es", Page: 1, PageSize: 2);
+        var lexical = new Lexical("a", "b", "c");
+
+        var answer = await Hybrid(lexical, new Vectors { Failure = new SearchStageNotConfiguredException(SearchDegradation.VectorStage) })
+            .SearchAsync(query, Ct);
+
+        Assert.Equal(
+            JsonSerializer.Serialize(await new LexicalSearchStrategy(lexical).SearchAsync(query, Ct)),
+            JsonSerializer.Serialize(answer));
+        Assert.Equal(SearchDegradation.VectorStage, Assert.Single(spans).GetTagItem(SearchDegradation.NotConfiguredTag));
+        Assert.Empty(counted);
+    }
+
+    /// <summary>
+    /// The listeners for <c>search.hybrid</c>'s span and the <c>tendero.search.degraded</c>
+    /// counter, filtered to one call by a text unique to it. Neither is disposed: both
+    /// register with static state the runtime already keeps alive (<see cref="ActivitySource"/>'s
+    /// own listener list, the started <see cref="MeterListener"/>), which is what lets
+    /// the lists it fills keep filling for the whole of an async test method that never
+    /// captures anything with <c>using</c>.
+    /// </summary>
+    private static (List<Activity> Spans, List<string> Counted) Listen(out string text)
+    {
+        var probeText = $"telemetry probe {Guid.NewGuid():N}";
+        text = probeText;
+
         var spans = new List<Activity>();
         var counted = new List<string>();
 
-        using var activities = new ActivityListener
+        var activities = new ActivityListener
         {
             ShouldListenTo = source => source.Name == TelemetrySources.Search,
             Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
             ActivityStopped = activity =>
             {
-                if (activity.OperationName == "search.hybrid" && (string?)activity.GetTagItem("search.text") == text)
+                if (activity.OperationName == "search.hybrid" && (string?)activity.GetTagItem("search.text") == probeText)
                     lock (spans) spans.Add(activity);
             }
         };
         ActivitySource.AddActivityListener(activities);
 
-        using var meters = new MeterListener();
-        meters.InstrumentPublished = (instrument, listener) =>
+        var meters = new MeterListener
         {
-            if (instrument.Meter.Name == TelemetrySources.Search && instrument.Name == SearchDegradation.CounterName)
-                listener.EnableMeasurementEvents(instrument);
+            InstrumentPublished = (instrument, listener) =>
+            {
+                if (instrument.Meter.Name == TelemetrySources.Search && instrument.Name == SearchDegradation.CounterName)
+                    listener.EnableMeasurementEvents(instrument);
+            }
         };
         meters.SetMeasurementEventCallback<long>((_, _, tags, _) =>
         {
@@ -94,15 +165,7 @@ public sealed class HybridSearchStrategyTests
         });
         meters.Start();
 
-        var failure = new SearchUnavailableException(stage, "down");
-        var strategy = stage == SearchDegradation.VectorStage
-            ? Hybrid(new Lexical("a", "b"), new Vectors(("a", 0.9)) { Failure = failure })
-            : Hybrid(new Lexical("a", "b"), new Vectors(("b", 0.9)), reranker: new Reranker(_ => 1) { Failure = failure }, rerank: true);
-
-        await strategy.SearchAsync(new ProductSearchQuery(text, "en"), Ct);
-
-        Assert.Equal(stage, Assert.Single(spans).GetTagItem(SearchDegradation.Tag));
-        Assert.Contains(stage, counted);
+        return (spans, counted);
     }
 
     /// <summary>The caller giving up is not the vector layer failing: it is not counted and not answered.</summary>
@@ -143,53 +206,6 @@ public sealed class HybridSearchStrategyTests
 
         Assert.Equal(["a"], result.Hits.Select(hit => hit.ProductId));
         Assert.Equal(1, result.Total);
-    }
-
-    [Fact]
-    public async Task A_match_below_the_minimum_similarity_is_not_a_match()
-    {
-        var options = new HybridSearchOptions { MinimumSimilarity = 0.5 };
-
-        var result = await Hybrid(new Lexical("a"), new Vectors(("near", 0.62), ("far", 0.31)), new Cards("near", "far"), options: options)
-            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
-
-        Assert.Equal(["a", "near"], result.Hits.Select(hit => hit.ProductId));
-    }
-
-    /// <summary>
-    /// No product carries every word, so the lexical list is loose matches: asked
-    /// to, meaning's order goes first and the words follow. With a full match, or
-    /// switched off, the fusion stands — and switched off nobody is asked.
-    /// </summary>
-    [Theory]
-    [InlineData(true, false, new[] { "meant", "near", "loose" }, 1)]
-    [InlineData(true, true, new[] { "meant", "loose", "near" }, 1)]
-    [InlineData(false, false, new[] { "meant", "loose", "near" }, 0)]
-    public async Task Without_a_full_match_meaning_can_go_first(bool meaningFirst, bool anyFullMatch, string[] expected, int asked)
-    {
-        var fullMatch = new FullMatch(anyFullMatch);
-
-        var result = await Hybrid(new Lexical("loose", "meant"), new Vectors(("meant", 0.7), ("near", 0.6)), new Cards("near"),
-                options: new HybridSearchOptions { MeaningFirstWithoutFullMatch = meaningFirst }, fullMatch: fullMatch)
-            .SearchAsync(new ProductSearchQuery("poner la mesa", "es"), Ct);
-
-        Assert.Equal(expected, result.Hits.Select(hit => hit.ProductId));
-        Assert.Equal(asked, fullMatch.Asked);
-    }
-
-    /// <summary>First in words and first in meaning tie, and a tie goes to the words — unless meaning is weighted up.</summary>
-    [Fact]
-    public async Task A_heavier_vector_weight_lets_meaning_outrank_the_words()
-    {
-        var equal = await Hybrid(new Lexical("typed"), new Vectors(("meant", 0.8)), new Cards("meant"))
-            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
-
-        var weighted = await Hybrid(new Lexical("typed"), new Vectors(("meant", 0.8)), new Cards("meant"),
-                options: new HybridSearchOptions { VectorWeight = 1.5 })
-            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
-
-        Assert.Equal(["typed", "meant"], equal.Hits.Select(hit => hit.ProductId));
-        Assert.Equal(["meant", "typed"], weighted.Hits.Select(hit => hit.ProductId));
     }
 
     /// <summary>
@@ -239,16 +255,6 @@ public sealed class HybridSearchStrategyTests
         Assert.Equal(40, result.Total);
     }
 
-    [Fact]
-    public async Task A_match_exactly_at_the_minimum_similarity_is_a_match()
-    {
-        var result = await Hybrid(new Lexical("a"), new Vectors(("edge", 0.5)), new Cards("edge"),
-                options: new HybridSearchOptions { MinimumSimilarity = 0.5 })
-            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
-
-        Assert.Equal(["a", "edge"], result.Hits.Select(hit => hit.ProductId));
-    }
-
     // ---------- P8-6: the reranker ----------
 
     [Fact]
@@ -261,7 +267,7 @@ public sealed class HybridSearchStrategyTests
         var reranker = new Reranker(text => text == "text of a" ? 0.99 : text == "text of b" ? 0.10 : 0.5);
         var options = new HybridSearchOptions { RerankDepth = 2 };
 
-        var result = await Hybrid(new Lexical("a", "c"), vectors, new Cards("b"), reranker, rerank: true, options: options)
+        var result = await Hybrid(new Lexical("a", "c"), vectors, new Cards("b"), reranker, options: options)
             .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
 
         // Fused: a (1/61), b (1/61, from the later ranking), c (1/62). The head
@@ -270,7 +276,7 @@ public sealed class HybridSearchStrategyTests
         Assert.Equal(0.99, result.Hits[0].Score);
 
         var reversed = new Reranker(text => text == "text of b" ? 0.99 : 0.10);
-        var swapped = await Hybrid(new Lexical("a", "c"), vectors, new Cards("b"), reversed, rerank: true, options: options)
+        var swapped = await Hybrid(new Lexical("a", "c"), vectors, new Cards("b"), reversed, options: options)
             .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
 
         Assert.Equal(["b", "a", "c"], swapped.Hits.Select(hit => hit.ProductId));
@@ -279,7 +285,7 @@ public sealed class HybridSearchStrategyTests
     [Fact]
     public async Task Results_the_reranker_scores_alike_keep_the_order_fusion_gave_them()
     {
-        var result = await Hybrid(new Lexical("a", "c"), new Vectors(("b", 0.9)), new Cards("b"), new Reranker(_ => 0.5), rerank: true)
+        var result = await Hybrid(new Lexical("a", "c"), new Vectors(("b", 0.9)), new Cards("b"), new Reranker(_ => 0.5))
             .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
 
         Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
@@ -291,7 +297,7 @@ public sealed class HybridSearchStrategyTests
         var vectors = new Vectors { Texts = new() { ["a"] = "", ["b"] = "text of b" } };
         var reranker = new Reranker(text => text == "Product a" ? 0.99 : 0.10);
 
-        var result = await Hybrid(new Lexical("b", "a"), vectors, reranker: reranker, rerank: true)
+        var result = await Hybrid(new Lexical("b", "a"), vectors, reranker: reranker)
             .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
 
         Assert.Equal(["a", "b"], result.Hits.Select(hit => hit.ProductId));
@@ -303,98 +309,11 @@ public sealed class HybridSearchStrategyTests
         var options = new HybridSearchOptions { RerankBudget = TimeSpan.FromMilliseconds(50) };
         var reranker = new Reranker(_ => 1) { Hangs = true };
 
-        var result = await Hybrid(new Lexical("a", "b", "c"), new Vectors(("c", 0.9)), reranker: reranker, rerank: true, options: options)
+        var result = await Hybrid(new Lexical("a", "b", "c"), new Vectors(("c", 0.9)), reranker: reranker, options: options)
             .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
 
         // Fused: c is in both rankings (1/63 + 1/61), then a (1/61), then b (1/62).
         Assert.Equal(["c", "a", "b"], result.Hits.Select(hit => hit.ProductId));
         Assert.Equal(1, reranker.Calls);
-    }
-
-    [Fact]
-    public async Task With_the_rerank_flag_off_the_reranker_is_never_asked()
-    {
-        var reranker = new Reranker(_ => 1) { Failure = new InvalidOperationException("must not be asked") };
-
-        var result = await Hybrid(new Lexical("a", "b"), new Vectors(("b", 0.9)), reranker: reranker, rerank: false)
-            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
-
-        Assert.Equal(0, reranker.Calls);
-        Assert.Equal(["b", "a"], result.Hits.Select(hit => hit.ProductId));
-    }
-
-    // ---------- H4: the reranker can say "this is not an answer" ----------
-
-    [Fact]
-    public async Task A_result_the_reranker_turns_away_is_not_shown_and_neither_is_the_unread_rest()
-    {
-        var reranker = new Reranker(text => text == "text of a" ? 0.8 : 0.02);
-
-        // The engine claims forty matches it did not return: once the reranker has
-        // turned results away, the total is what is left, not the engine's claim.
-        var result = await Reranked(reranker, minimum: 0.1, lexicalTotal: 40);
-
-        // Head [a, b]: b scores 0.02 and is turned away, so c — below the head and
-        // never read by the reranker — goes too.
-        Assert.Equal(["a"], result.Hits.Select(hit => hit.ProductId));
-        Assert.Equal(1, result.Total);
-    }
-
-    [Fact]
-    public async Task When_the_whole_head_clears_the_minimum_the_rest_follows_it()
-    {
-        var reranker = new Reranker(text => text == "text of a" ? 0.8 : 0.4);
-
-        var result = await Reranked(reranker, minimum: 0.1);
-
-        Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
-        Assert.Equal(3, result.Total);
-    }
-
-    [Fact]
-    public async Task A_score_exactly_at_the_minimum_is_still_an_answer()
-    {
-        var result = await Reranked(new Reranker(_ => 0.1), minimum: 0.1);
-
-        Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
-    }
-
-    [Fact]
-    public async Task When_the_reranker_turns_everything_away_the_answer_is_empty()
-    {
-        var result = await Reranked(new Reranker(_ => 0.001), minimum: 0.1);
-
-        Assert.Empty(result.Hits);
-        Assert.Equal(0, result.Total);
-    }
-
-    // ---------- H5: a query whose best result reads as unrelated has no answer ----------
-
-    [Fact]
-    public async Task When_even_the_best_result_scores_under_the_bar_the_query_has_no_answer()
-    {
-        var result = await Reranked(new Reranker(text => text == "text of a" ? 0.04 : 0.01), minimum: 0, noAnswerBelow: 0.05, lexicalTotal: 40);
-
-        Assert.Empty(result.Hits);
-        Assert.Equal(0, result.Total);
-    }
-
-    [Fact]
-    public async Task One_result_at_the_bar_is_enough_and_nothing_is_cut()
-    {
-        // b scores far below the bar and stays: the decision is about the query, not each result.
-        var result = await Reranked(new Reranker(text => text == "text of a" ? 0.05 : 0.001), minimum: 0, noAnswerBelow: 0.05);
-
-        Assert.Equal(["a", "b", "c"], result.Hits.Select(hit => hit.ProductId));
-    }
-
-    /// <summary>Lexical [a, c], meaning [b]; fused a, b, c and a head of two for the reranker.</summary>
-    private static Task<SearchResultPage> Reranked(Reranker reranker, double minimum, long? lexicalTotal = null, double noAnswerBelow = 0)
-    {
-        var vectors = new Vectors(("b", 0.9)) { Texts = new() { ["a"] = "text of a", ["b"] = "text of b" } };
-        var options = new HybridSearchOptions { RerankDepth = 2, MinimumRerankScore = minimum, NoAnswerBelowRerankScore = noAnswerBelow };
-
-        return Hybrid(new Lexical("a", "c") { Total = lexicalTotal }, vectors, new Cards("b"), reranker, rerank: true, options: options)
-            .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
     }
 }

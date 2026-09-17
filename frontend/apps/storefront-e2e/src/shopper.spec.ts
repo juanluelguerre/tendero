@@ -74,6 +74,19 @@ test.describe('the storefront', () => {
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
 
+  /**
+   * Layer A (ADR 0032): when nothing sold matches a query exactly, the page
+   * says so above the results rather than presenting the closest neighbours as
+   * if they were the answer.
+   */
+  test('a query nothing matches exactly says so above the closest products', async ({ page }) => {
+    await page.goto('/es?q=regalo%20abuela');
+    await expect(
+      page.getByRole('heading', { name: 'No tenemos nada que coincida exactamente con «regalo abuela»' }),
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Lo más parecido que vendemos' })).toBeVisible();
+  });
+
   test('reaches a product page from a search result', async ({ page }) => {
     const product = await firstProduct(page);
 

@@ -56,10 +56,12 @@ judgment by construction — `juguetes para niños de 6 años` in a shop that se
 no toys, `devoluciones` in a search over products. They are never scored with
 NDCG, because an NDCG over nothing relevant does not exist and a 0 or a 1 would
 be invented; they never count as unjudged and never enter a judgment pool. The
-report gives them their own section instead: `shown@10`, how many results a
-strategy put on the first page anyway, and the first result a shopper would
-read. Lower is better. The proposal that added them, with the reasoning per
-query, is `tools/SearchEval/proposals/2026-09-15-queries.md`.
+report gives them their own section instead. Its headline since 2026-09-17 is
+`admitted`, whether the page says nothing matches (see *Metrics*). `shown@10` —
+how many results a strategy put on the first page anyway, lower is better — and
+the first result a shopper would read stay beside it as diagnostics. The proposal
+that added them, with the reasoning per query, is
+`tools/SearchEval/proposals/2026-09-15-queries.md`.
 
 ## Metrics
 
@@ -67,6 +69,20 @@ query, is `tools/SearchEval/proposals/2026-09-15-queries.md`.
   log of position, normalized to 0–1).
 - **recall@50** — did the relevant items appear at all (guards the retrieval
   stage independently of ranking).
+
+Two more since 2026-09-17 measure what the page **says**, not what it ranks
+(ADR 0032). They are reported and never gated:
+
+- **admitted** — for the queries with nothing to find: the share whose page admits
+  it — answered `Related`, or, for a `non-product` query, given a help topic.
+  Higher is better.
+- **notice rate** — for the 52 scored queries per culture, which do have answers:
+  the share told that nothing matches exactly (`Related`).
+
+There were three. **false out-of-scope** counted the scored queries told the shop
+does not sell them at all, and it had to be zero; only layer B could answer
+`OutOfScope`, so it was zero by construction while layer B was off, and it left
+the report with the classifier (ADR 0032, amended).
 
 ## CI gate
 
@@ -96,6 +112,122 @@ Two things make the run reproducible, and both were learned the hard way:
   so otherwise the score depends on whether the refresh landed before or after a
   query: 0.860 and then 0.769. Polling until *some* query returns a hit is not
   enough — it only proves one document is visible, not all six.
+
+## What the shop says when it has nothing (2026-09-17)
+
+**The queries with nothing to find are no longer a threshold question.** H1, H4 and
+H5 below each tried a floor on a retrieval score and each was refuted. Research
+into how shops really do it pointed somewhere else: say plainly that nothing
+matches, and decide "we don't sell that" in a query-understanding step beside
+retrieval. ADR 0032 records the decision; this section records the measurements.
+
+**The knobs are gone.** `MinimumSimilarity` (H1), the vector weight in the fusion
+(H2), `MeaningFirstWithoutFullMatch` (H3), `MinimumRerankScore` (H4) and
+`NoAnswerBelowRerankScore` (H5) were deleted with their tests. Each was refuted
+where it is recorded: H1–H3 in *The filter the client swallowed*, H4 and H5 in the
+paragraphs after its three-hypothesis table. No ranking changed, so no NDCG threshold moved.
+
+**Layer A — the page says what kind of answer it is, with no model.** Every search
+with text gets `Exact` when at least one active product carries every word of the
+query in `name`, `brand`, `attributesText` or `categoryPathText` — no description,
+no fuzziness — and `Related` when none does. The count is one `best_fields` clause
+per word, because `brand` has its own analyser and a single `cross_fields` clause
+split the fields into groups: against Elasticsearch 9.5.0, "Kuisina cafetera"
+counted 0 with the old request body and 1 with the new one. A typo query is
+`Related` by design. A query naming a help topic that has a destination
+(`returns`, today the only one) also gets a help card.
+
+**Layer B — scope by anchors, refuted on `scope-dev`.** The classifier compares a
+query's best cosine to the 23 catalogue categories with its best cosine to 30
+categories the shop does not sell, and calls it out of scope when the outside side
+wins by a margin. The protocol was declared in the notebook before anything ran:
+40 new queries per culture (`tools/SearchEval/scope/`, reasons in
+`tools/SearchEval/proposals/2026-09-17-scope-queries.md`), a margin chosen on
+`scope-dev` from 0.02, 0.05, 0.08 and 0.12 — the most `out` queries recognised
+among margins that mark **no** `in` query out of scope — and one acceptance run.
+`bge-m3@5617a9f` on the GPU, both cultures summed per margin:
+
+| margin | `out` recognised | `in` marked out of scope |
+|---:|---:|---:|
+| 0.02 | 15 / 20 | 9 |
+| 0.05 | 14 / 20 | 5 |
+| 0.08 | 12 / 20 | 1 |
+| 0.12 | 8 / 20 | 1 |
+
+**No margin qualified, so none was chosen**, and there was no `scope-test` or golden
+acceptance run. The query no margin saved was "gift for someone who works from
+home", told the shop does not sell stationery — in a shop that sells desk lamps and
+laptop sleeves. Its Spanish pair, "regalo para alguien que teletrabaja", fell the
+same way up to 0.05.
+
+- **A first attempt gave no verdict.** Text Embeddings Inference accepts 32 texts per
+  request, and one culture's anchors are 133; the build was refused, so layer B could
+  never have started in production either. Batches of 32 fixed it, test-first, and
+  the rerun gave the verdict. Anchors, queries, grid and rule were not touched.
+- **Latency**, which closes a deviation from the design (layer B embeds the query
+  itself, because the vector port returns ids, not vectors): a query embedding
+  costs p50 11.1 ms and p95 13.6 ms; the anchors take 324–446 ms per culture cold.
+- **Layer B is evaluation tooling now**, decided the same day (ADR 0032, amended).
+  Keeping it off in `src/Search` bought nothing — with no calibration file it could
+  never register — and cost unreachable code, an `OutOfScope` on the wire nothing
+  could send, and eleven mutation survivors no test could kill. The classifier, the
+  anchor file, the protocol's rules and the 40 scope query pairs per culture are
+  `tools/SearchEval/QueryScope`, and `--suite scope` still runs the protocol whole:
+  everything above is reproducible, and it is the exam a trained classifier has to
+  sit. The shipped answer has two values.
+
+**What the gate says now.** The third gate run is recorded below, in *The third gate
+run, and hybrid becomes the default*. On what the page says: every query with
+nothing to find is admitted (1.00, both cultures, every strategy) and the notice
+rate is 0.481 (en) and 0.462 (es). No scored query was told it is out of scope —
+trivially, since layer B was already off, and since it moved out of the shipped
+code no page can say it at all.
+
+### Where the notice lands, read by query kind (2026-09-17)
+
+The overall rate says how often the notice fires and nothing about whether it was
+deserved, so the report breaks it down by Baymard query kind. Lexical only, since
+the notice is decided beside retrieval and no strategy has a say in it; both
+cultures cleared their thresholds on the run
+(`docs/blog/reports/2026-09-17-no-answer-research/notice-by-kind.md`, read in
+`notice-by-kind-reading.md`).
+
+| kind | queries (en \| es) | notice rate en | notice rate es |
+|---|---|---:|---:|
+| exact | 3 \| 3 | 0.000 → 0.000 | 0.000 → 0.000 |
+| compatibility | 3 \| 3 | 0.000 → 0.000 | 0.000 → 0.000 |
+| product-type | 13 \| 12 | 0.385 → 0.385 | 0.250 → 0.250 |
+| feature | 15 \| 16 | 0.400 → **0.333** | 0.375 → **0.313** |
+| abbreviation | 3 \| 3 | 0.667 → **0.000** | 1.000 → **0.333** |
+| symptom | 3 \| 3 | 1.000 → 1.000 | 1.000 → 1.000 |
+| use-case | 12 \| 12 | 1.000 → 1.000 | 1.000 → 1.000 |
+
+**Every use-case and symptom query gets the notice, and there it is the most honest
+sentence on the page**: "gift" and "regalo" appear in none of the hundred products,
+so a page of kitchen linen is a guess a shopper deserves to be told about. 30 of the
+55 notices were that case. The other 25 sat on pages a shopper would call correct —
+13 of them answered at 0.90 or better — and reading them found three mechanical
+causes: a bare measurement, a typo, and a word that lives only in the description.
+
+**Only the first was fixed.** A query word that is a number with at most a short
+unit glued to it is dropped from the full-match check (ADR 0032; the search still
+ranks with the whole query). Measured on the same corpus, after
+(`notice-by-kind-after.md`): **0.538 → 0.481 (en), 0.519 → 0.462 (es)**, NDCG@10 and
+recall@50 identical in both cultures — 0.748 / 0.795 and 0.692 / 0.738 — because no
+ranking changed. Six notices went, all on pages answered at 0.634 or better:
+`24cm frying pan`, `6l pressure cooker`, `laptop backpack 15 inch`, `sarten 24cm`,
+`olla 6l`, `mochila para portatil 15 pulgadas`. Nothing honest was silenced.
+
+Three narrower signals were measured on the same run and not taken: counting the
+description too (0.481 / 0.481, but it silences `slip-on shoes` at 0.335 and
+contradicts ADR 0032), fuzziness per word (0.500 / 0.462, and it wrongly silences
+`bambas para correr` at 0.000), and reading only `name` and `categoryPathText`,
+which goes the wrong way and *adds* nine notices on queries scoring 1.000.
+
+**The notice rate is an open decision for the author.** About half of the queries
+that have real answers are told nothing matches exactly. It is true of the words —
+those queries name no product word for word — and it may still be too often for a
+shop to say.
 
 ## Hybrid search, measured: it does not beat lexical in Spanish (2026-09-15)
 
@@ -425,6 +557,32 @@ model is the limit as much as the CPU: unconstrained it adds 0.005 / 0.009 again
 the GPU reranker's 0.033 / 0.048. **Reranking stays a GPU feature**, now on two
 measurements rather than one.
 
+### The third gate run, and hybrid becomes the default (2026-09-17)
+
+**`SearchVector`'s removal condition is met, and the flag is deleted.** The
+condition read: hybrid clears its own committed thresholds and beats lexical on
+NDCG@10 in both cultures in three consecutive gate runs. Runs one and two are the
+identical 2026-09-15 runs above. Run three went once, on the GPU, against
+throwaway engines — Elasticsearch 9.5.0, Qdrant v1.18.0, and TEI `sha-4150561`
+serving `bge-m3@5617a9f` and `bge-reranker-v2-m3@953dc6f` — and hybrid was
+reranked, because reranking is a capability now and a GPU gate has a reranker:
+
+| NDCG@10 / recall@50 | lexical | hybrid (reranked) | thresholds, hybrid |
+|---|---:|---:|---:|
+| en | 0.748 / 0.795 | **0.843 / 0.934** | 0.79 / 0.92 |
+| es | 0.692 / 0.738 | **0.831 / 0.928** | 0.77 / 0.91 |
+
+Every figure equals its 2026-09-15 counterpart. Hybrid clears its bars and beats
+lexical with or without the reranker (0.810 / 0.783 without it), so the condition
+holds either way. No scored query was told it is out of scope (false out-of-scope
+0 for every strategy and culture — trivially, since layer B was off, and the column
+left the report with the classifier the same day); the notice rate was 0.538 (en) and 0.519 (es) — measured before the
+measurement-token rule, which took it to 0.481 / 0.462 — the same for all strategies; and every query with nothing to find was admitted
+(1.00), while hybrid still shows ten products on those pages. Hybrid answers every
+search now; lexical is what it degrades to, and CI still gates lexical on its own
+thresholds. The report is private, under
+`docs/blog/reports/2026-09-17-no-answer-research/gate-run-3.md`.
+
 ## The lexical fallback, and a golden set with nothing left unjudged (2026-09-11)
 
 **The recall this file blamed on vocabulary was mostly the query's `AND`.** A UI
@@ -524,7 +682,8 @@ Measured against 100 products and 52 scored queries per culture — 1053 (es) an
 1075 (en) judgments, every strategy's first ten judged after the card-reader fix —
 on 2026-09-15, identical across two runs. Hybrid's own thresholds, from the same
 two runs (0.810 / 0.934 en, 0.783 / 0.928 es): **es 0.77 / 0.91, en 0.79 / 0.92**,
-above lexical's in both cultures for the first time. The 942 / 985-judgment
+above lexical's in both cultures for the first time. The third gate run, on
+2026-09-17, reproduced every lexical figure exactly, so nothing here moved. The 942 / 985-judgment
 figures of the section *The exam grew* were taken before the fix. They replaced 0.921 / 0.921, measured over the 22 queries that
 covered only the query types word matching answers, and still what those 22
 score. Those had replaced 0.927 / 0.935, measured

@@ -49,7 +49,9 @@ public static class UcpCatalogOperations
         var details = await DetailsAsync(
             dispatcher, page.Hits.Select(hit => hit.Code), culture, cancellationToken);
 
-        return UcpCatalogAnswers.Search(details, baseUrl, limit, offset, page.Total);
+        return UcpCatalogAnswers.Search(
+            details, baseUrl, limit, offset, page.Total,
+            UcpSearchNotices.For(page.Answer, request.Query ?? string.Empty, culture));
     }
 
     public static async Task<UcpCatalogPage> LookupAsync(

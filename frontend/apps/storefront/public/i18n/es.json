@@ -151,10 +151,19 @@
     "failed": "La búsqueda no respondió. Vuelve a intentarlo en un momento.",
     "failedTitle": "La búsqueda no ha respondido",
     "heading": "¿Qué estás buscando?",
+    "help": {
+      "returnsTitle": "¿Buscas devoluciones?",
+      "returnsBody": "Tienes {{days}} días desde la entrega para devolver algo. Empieza la devolución desde tus pedidos.",
+      "returnsLink": "Ir a mis pedidos"
+    },
     "idle": "Escribe algo y te lo busco.",
     "label": "Buscar productos",
     "lede": "Cien productos, dos idiomas y una búsqueda que se mide en cada pull request.",
     "placeholder": "Zapatillas, cafetera, mochila…",
+    "related": {
+      "title": "No tenemos nada que coincida exactamente con «{{query}}»",
+      "heading": "Lo más parecido que vendemos"
+    },
     "results": "{{total}} resultados para «{{query}}»",
     "searching": "Buscando…",
     "submit": "Buscar",

@@ -72,33 +72,6 @@ public sealed class ReciprocalRankFusionTests
         Assert.Empty(ReciprocalRankFusion.Fuse([[], []]));
     }
 
-    [Fact]
-    public void A_weight_multiplies_every_contribution_of_its_ranking()
-    {
-        var fused = ReciprocalRankFusion.Fuse([["a", "b"], ["b", "c"]], weights: [1, 2]);
-
-        Assert.Equal(["b", "c", "a"], fused.Select(item => item.Id));
-        Assert.Equal(1d / 62 + 2d / 61, fused[0].Score, precision: 12);
-        Assert.Equal(2d / 62, fused[1].Score, precision: 12);
-        Assert.Equal(1d / 61, fused[2].Score, precision: 12);
-    }
-
-    /// <summary>Weighted up, meaning's first place outvotes the words' first place; with equal weights the words win the tie.</summary>
-    [Fact]
-    public void A_heavier_ranking_wins_what_equal_weights_would_give_the_words()
-    {
-        Assert.Equal("typed", ReciprocalRankFusion.Fuse([["typed"], ["meant"]], weights: [1, 1])[0].Id);
-        Assert.Equal("meant", ReciprocalRankFusion.Fuse([["typed"], ["meant"]], weights: [1, 1.5])[0].Id);
-    }
-
-    [Fact]
-    public void Weights_are_one_per_ranking_and_positive()
-    {
-        Assert.Throws<ArgumentException>(() => ReciprocalRankFusion.Fuse([["a"], ["b"]], weights: [1]));
-        Assert.Throws<ArgumentOutOfRangeException>(() => ReciprocalRankFusion.Fuse([["a"], ["b"]], weights: [1, 0]));
-        Assert.Throws<ArgumentOutOfRangeException>(() => ReciprocalRankFusion.Fuse([["a"], ["b"]], weights: [1, double.NaN]));
-    }
-
     /// <summary>
     /// Whatever the rankings: every id they mention comes out exactly once,
     /// nothing else does, the scores never rise down the list, and asking twice

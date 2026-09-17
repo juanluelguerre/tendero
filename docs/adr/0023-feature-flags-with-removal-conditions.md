@@ -77,3 +77,54 @@ phase 12. Each arrives with its own condition.
   what happens when it cannot be had.
 - Roadmap D's "five flags" is superseded by this table. The rule that a test
   asserts every value has exactly one production call site is kept as written.
+
+## Amended 2026-09-17 — two flags became none
+
+**Both flags left, each for its own written reason, and `FeatureId` is empty on
+purpose.** The rules above did their job: one flag became configuration, and the
+other met the condition it carried.
+
+**`SearchRerank` became a capability, because its condition could never be met.**
+It asked for a reranker that raises NDCG@10 and keeps its budget on a CPU, and two
+measurements said none does (ADR 0031, amended the same day). A flag whose
+condition cannot be met is not a switch that will one day be removed; it is
+configuration. And it duplicated a decision already made once: the AppHost starts
+the reranker only on a GPU. So the flag is gone, and **reranking happens exactly
+when a real reranker is registered** — the AppHost hands the reranker's address to
+the API only on a GPU, and everywhere else a named `NoReranker` stands in.
+
+**"Not configured" is not "degraded".** A stand-in (`NoReranker`, `NoVectorLayer`)
+is skipped with the span tag `search.stage.unavailable` and no counter; only a
+stage that is configured and fails counts in `tendero.search.degraded`. Before this,
+a machine without the vector layer would have counted every search.
+
+**`SearchVector` met its removal condition and was deleted.** Hybrid cleared its own
+thresholds and beat lexical on NDCG@10 in both cultures in three consecutive gate
+runs:
+
+| run | hybrid en / es | lexical en / es |
+|---|---:|---:|
+| 2026-09-15, first | 0.810 / 0.783 (reranked 0.843 / 0.831) | 0.748 / 0.692 |
+| 2026-09-15, second, identical | 0.810 / 0.783 (reranked 0.843 / 0.831) | 0.748 / 0.692 |
+| 2026-09-17, GPU, reranked | 0.843 / 0.831 | 0.748 / 0.692 |
+
+The third run measured hybrid with the reranker, because reranking is a capability
+now and a GPU gate has one; hybrid clears its bars and beats lexical with or
+without it, so the condition holds either way. Its recall@50 was 0.934 (en) and
+0.928 (es) against thresholds of 0.92 and 0.91. `SearchProductsHandler` asks the
+hybrid strategy for every search, and lexical is what hybrid degrades to, byte for
+byte; CI still gates lexical on its own thresholds. The AppHost stopped writing the
+flag, and hands Qdrant and the embeddings endpoint to the API and the worker **only
+when `Tendero__Vectors` is on** — an unconditional reference would register the real
+vector layer against containers that never started. The consequence worth knowing:
+starting those containers by hand from the dashboard does not wire them to search;
+the AppHost has to start with the switch.
+
+**An empty enum is allowed, and the rule cannot pass vacuously because of it.** The
+architecture rule used to assert that `FeatureId` has members, so a broken
+discovery could not pass. With no members that assertion would fail for the right
+reason, so it was not deleted but replaced: the rule counts the enum's members by
+reflection and compares that with the number of `[RemovalCondition(` occurrences in
+`Features.cs`. A member added without the attribute turns the rule red — checked by
+adding one. `IFeatureGate` and its implementation stay, unused until a flag returns
+with phase 11, 12 or 13.

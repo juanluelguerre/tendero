@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
+using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Tests.Ucp;
 using ElGuerre.Tendero.Ucp.Catalog;
 using Xunit;
@@ -64,7 +65,7 @@ public sealed class UcpCatalogConformanceTests
     public void A_search_answer_validates() =>
         UcpSchemas.Validate(
             SearchResponse,
-            Json(UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 10, offset: 0, total: 1)),
+            Json(UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 10, offset: 0, total: 1, notices: [])),
             "A search_catalog answer");
 
     /// <summary>
@@ -74,7 +75,7 @@ public sealed class UcpCatalogConformanceTests
     [Fact]
     public void A_search_that_found_nothing_validates_too()
     {
-        var answer = UcpCatalogAnswers.Search([], BaseUrl, limit: 10, offset: 0, total: 0);
+        var answer = UcpCatalogAnswers.Search([], BaseUrl, limit: 10, offset: 0, total: 0, notices: []);
 
         UcpSchemas.Validate(SearchResponse, Json(answer), "An empty search_catalog answer");
 
@@ -90,8 +91,8 @@ public sealed class UcpCatalogConformanceTests
     [Fact]
     public void A_page_with_more_behind_it_carries_a_cursor()
     {
-        var more = UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 1, offset: 0, total: 5);
-        var last = UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 1, offset: 4, total: 5);
+        var more = UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 1, offset: 0, total: 5, notices: []);
+        var last = UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 1, offset: 4, total: 5, notices: []);
 
         UcpSchemas.Validate(SearchResponse, Json(more), "A search_catalog answer with a next page");
 
@@ -100,6 +101,99 @@ public sealed class UcpCatalogConformanceTests
 
         Assert.False(last.Pagination!.HasNextPage);
         Assert.Null(last.Pagination.Cursor);
+    }
+
+    /// <summary>
+    /// The notices `UcpSearchNotices` builds from a <see cref="SearchAnswer"/> —
+    /// an information message and a help-topic message together — validated
+    /// against the same schema every other `messages` entry answers to. Nothing
+    /// about them is special-cased in the schema, and this is what proves it.
+    /// </summary>
+    [Fact]
+    public void A_search_with_notices_validates()
+    {
+        var notices = UcpSearchNotices.For(
+            new SearchAnswer(SearchMatch.Related, HelpTopic: "returns"), "devoluciones", "es");
+
+        Assert.Equal(2, notices.Count);
+
+        UcpSchemas.Validate(
+            SearchResponse,
+            Json(UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 10, offset: 0, total: 1, notices)),
+            "A search_catalog answer carrying notices");
+    }
+
+    /// <summary>
+    /// Where notices go, which the schema cannot say: an absent <c>messages</c>
+    /// and an empty one are both valid, and so is a page whose notices were
+    /// dropped. Added at the 2026-09-17 phase close, where each of those three
+    /// mutations survived.
+    /// </summary>
+    [Fact]
+    public void A_page_with_products_and_nothing_to_say_carries_no_messages() =>
+        Assert.Null(UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 10, offset: 0, total: 1, notices: []).Messages);
+
+    [Fact]
+    public void A_page_with_products_carries_its_notices_and_only_them()
+    {
+        var notices = UcpSearchNotices.For(new SearchAnswer(SearchMatch.Related), "regalo abuela", "es");
+
+        var answer = UcpCatalogAnswers.Search([Product("B13BAG0710")], BaseUrl, limit: 10, offset: 0, total: 1, notices);
+
+        Assert.Equal(["no_exact_match"], answer.Messages!.Select(message => message.Code));
+    }
+
+    /// <summary>
+    /// A notice that is still true of an empty page travels with it, and
+    /// "no_results" comes after it. Only "no_exact_match" is dropped — see the
+    /// test below for why.
+    /// </summary>
+    [Fact]
+    public void An_empty_page_says_so_after_its_notices()
+    {
+        var notices = UcpSearchNotices.For(new SearchAnswer(SearchMatch.Related, HelpTopic: "returns"), "devoluciones", "es");
+
+        var answer = UcpCatalogAnswers.Search([], BaseUrl, limit: 10, offset: 0, total: 0, notices);
+
+        Assert.Equal(["help_available", "no_results"], answer.Messages!.Select(message => message.Code));
+        Assert.Equal("$.query", answer.Messages![^1].Path);
+    }
+
+    /// <summary>
+    /// The defect this guards against: a `Related` answer's "here are the
+    /// closest matches" notice survived onto a page with nothing on it — an
+    /// offset past the end, or a query with no relevant products at all — and
+    /// contradicted the "no_results" message right beside it. Found in review,
+    /// 2026-09-17.
+    /// </summary>
+    [Fact]
+    public void An_empty_related_page_says_only_no_results()
+    {
+        var notices = UcpSearchNotices.For(new SearchAnswer(SearchMatch.Related), "regalo abuela", "es");
+
+        var answer = UcpCatalogAnswers.Search([], BaseUrl, limit: 10, offset: 0, total: 0, notices);
+
+        UcpSchemas.Validate(SearchResponse, Json(answer), "An empty related search_catalog answer");
+
+        Assert.Equal(["no_results"], answer.Messages!.Select(message => message.Code));
+    }
+
+    /// <summary>
+    /// A help topic says something true whether or not the page is empty, so it
+    /// is not the contradiction "no_exact_match" is, and it survives beside
+    /// "no_results".
+    /// </summary>
+    [Fact]
+    public void An_empty_related_page_with_a_help_topic_keeps_it_alongside_no_results()
+    {
+        var notices = UcpSearchNotices.For(
+            new SearchAnswer(SearchMatch.Related, HelpTopic: "returns"), "devoluciones", "es");
+
+        var answer = UcpCatalogAnswers.Search([], BaseUrl, limit: 10, offset: 0, total: 0, notices);
+
+        UcpSchemas.Validate(SearchResponse, Json(answer), "An empty related search_catalog answer with a help topic");
+
+        Assert.Equal(["help_available", "no_results"], answer.Messages!.Select(message => message.Code));
     }
 
     [Fact]

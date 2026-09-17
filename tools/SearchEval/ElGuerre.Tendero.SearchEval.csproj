@@ -9,6 +9,15 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <!-- Layer B's outside anchors (ADR 0032, amended 2026-09-17) — written by us,
+       before any measurement, so there is no third-party taxonomy to license.
+       They travel with the harness rather than with the shop: the classifier was
+       refuted, and what stays reusable is the exam, not the answer. -->
+  <ItemGroup>
+    <EmbeddedResource Include="QueryScope\out-of-scope-anchors.json"
+                      LogicalName="ElGuerre.Tendero.SearchEval.Scope.out-of-scope-anchors.json" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />

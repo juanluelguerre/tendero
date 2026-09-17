@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Search.Strategies;
 
 namespace ElGuerre.Tendero.Search.Contracts;
 
@@ -23,8 +24,12 @@ public interface IProductVectorIndexer : IProductIndexer;
 /// else: a card is built from the lexical index, which is the one that knows
 /// prices and stock, so the two can never disagree about either.
 ///
-/// Every failure is a <see cref="SearchUnavailableException"/>, and the caller is
-/// expected to survive it (invariant 8).
+/// A real failure — the model server down, a mismatch — is a
+/// <see cref="SearchUnavailableException"/>. A process started with no vector
+/// layer at all throws <see cref="SearchStageNotConfiguredException"/> instead
+/// (<see cref="NoVectorLayer"/>): a different fact, so the hybrid strategy can
+/// tell "never had one" from "has one and it is down" without guessing from a
+/// message. Either way the caller is expected to survive it (invariant 8).
 /// </summary>
 public interface IVectorProductSearch
 {
@@ -75,8 +80,9 @@ public sealed record VectorLayerStatus(bool IsConfigured, bool IsAvailable, stri
 ///
 /// The projection handlers are scanned by the API and by the worker, so they have
 /// to resolve in both whether or not anybody started Qdrant. Writing is a no-op —
-/// there is nothing to keep in step — and reading refuses, which is the refusal
-/// the hybrid strategy already knows how to survive.
+/// there is nothing to keep in step — and reading throws
+/// <see cref="SearchStageNotConfiguredException"/>, which the hybrid strategy
+/// treats as a stage to skip rather than a degradation to count.
 /// </summary>
 internal sealed class NoVectorLayer : IVectorLayer, IProductVectorIndexer, IVectorProductSearch
 {
@@ -94,11 +100,11 @@ internal sealed class NoVectorLayer : IVectorLayer, IProductVectorIndexer, IVect
 
     public Task<IReadOnlyList<VectorMatch>> SearchAsync(
         string text, string culture, string? category, int limit, CancellationToken ct = default) =>
-        throw Refusal("vector search");
+        throw new SearchStageNotConfiguredException(SearchDegradation.VectorStage);
 
     public Task<IReadOnlyDictionary<string, string>> TextsAsync(
         IReadOnlyCollection<string> productIds, string culture, CancellationToken ct = default) =>
-        throw Refusal("reading embedded texts");
+        throw new SearchStageNotConfiguredException(SearchDegradation.VectorStage);
 
     private static SearchUnavailableException Refusal(string operation) =>
         new(operation, VectorLayerStatus.NotConfigured.Reason);

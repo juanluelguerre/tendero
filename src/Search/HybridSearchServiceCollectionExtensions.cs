@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Reranking;
 using ElGuerre.Tendero.Search.Strategies;
@@ -27,13 +28,15 @@ public static class HybridSearchServiceCollectionExtensions
     }
 
     /// <summary>
-    /// The two strategies, keyed. Both are always registered: which one answers is
-    /// the flag's decision (ADR 0023), and the search evaluation asks both on purpose.
+    /// The two strategies, keyed. Both are always registered: the one that answers is
+    /// hybrid (ADR 0023, amended), lexical is what it degrades to, and the search
+    /// evaluation asks both on purpose.
     /// </summary>
     public static IServiceCollection AddSearchStrategies(this IServiceCollection services)
     {
         services.AddOptions<HybridSearchOptions>();
         services.TryAddSingleton<IReranker, NoReranker>();
+        services.TryAddScoped<ISearchAnswerer, SearchAnswerer>();
 
         services.TryAddKeyedScoped<ISearchStrategy, LexicalSearchStrategy>(SearchStrategies.Lexical);
         services.TryAddKeyedScoped<ISearchStrategy, HybridSearchStrategy>(SearchStrategies.Hybrid);

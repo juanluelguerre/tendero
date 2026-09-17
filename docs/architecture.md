@@ -52,21 +52,47 @@
   is indexed, everything else removed — so it converges rather than merely adds.
   Elasticsearch runs without a volume on purpose; the rebuild is what makes that
   safe (ADR 0012).
-- Lexical (BM25) is the permanent fallback; hybrid (Qdrant + RRF + rerank) and
-  every AI layer sit behind feature flags and degrade to lexical. Two flags
-  exist, `SearchVector` and `SearchRerank`, each with one reader and a removal
-  condition (ADR 0023). Both are off by default. Measured on 2026-09-15, once
-  a card-reader defect was fixed, hybrid beats lexical in both cultures and
-  the reranker beats hybrid; what keeps them off is that hybrid answers
-  queries the shop has nothing for with ten products, and that the reranker
-  needs a GPU (`search-evaluation.md`).
-- A vector side that fails or runs past its budget returns lexical's own answer
-  byte for byte, and tags the span `search.degraded`; a reranker that fails keeps
-  the fused order. The backoffice's search evaluation panel scores both
-  strategies against the running shop.
+- **Every search asks the hybrid strategy** (Qdrant + RRF + rerank), and lexical
+  (BM25) is the permanent fallback it degrades to. There are no search flags any
+  more (ADR 0023, amended 2026-09-17): `SearchVector` met its removal condition —
+  hybrid beat lexical in both cultures in three consecutive gate runs, 0.843 /
+  0.831 reranked against 0.748 / 0.692 (en / es) — and `SearchRerank` became a
+  capability.
+- **What runs is what the deployment has.** The AppHost hands the vector layer to
+  the API and the worker only when `Tendero__Vectors` is on, and the reranker only
+  on a GPU (ADR 0031). Where one is missing a named stand-in (`NoVectorLayer`,
+  `NoReranker`) is skipped and tagged `search.stage.unavailable` — not configured
+  is not degraded. A stage that is configured and fails, or runs past its budget,
+  is: a vector side returns lexical's own answer byte for byte, a reranker keeps
+  the fused order, and both tag the span `search.degraded` and count it. The
+  backoffice's search evaluation panel scores both strategies against the running
+  shop.
+- **Every page says what kind of answer it is** (ADR 0032). `SearchAnswerer` runs
+  after whichever strategy answered, so lexical is as honest as hybrid: `Exact`
+  when a product carries every word of the query in what it is (name, brand,
+  attributes, category path; no fuzziness), `Related` when none does, and a help
+  topic when the query asks about something with a page of its own (returns). A
+  third value, `OutOfScope`, belongs to a scope classifier by anchors that was
+  measured and refuted; its code is kept off, pending the author's decision. The
+  storefront shows a notice, MCP returns `answer`, UCP adds `messages`.
 - Multilingual embeddings (`bge-m3`, served by Text Embeddings Inference at a
   pinned revision — ADR 0031) → one vector space serves both cultures.
 - Quality is tested: golden set per culture, NDCG@10 + recall@50 in CI.
+
+```mermaid
+flowchart LR
+    Q[Query] --> L[Lexical · BM25<br/>Elasticsearch]
+    Q --> S[Semantic · bge-m3<br/>Qdrant]
+    L --> F[Fusion · RRF]
+    S --> F
+    F --> R[Reranker · cross-encoder<br/>GPU only]
+    R --> P[Page]
+    Q --> U[Query understanding<br/>full match · help topics]
+    U --> A[Answer<br/>Exact · Related]
+    L -.full match on what a product is.-> A
+    A --> P
+    S -.not configured or failing.-> L
+```
 
 ## HTTP surface
 

@@ -21,6 +21,21 @@ public sealed class EvaluationSettingsTests
         Assert.Null(options.Reranker);
     }
 
+    /// <summary>The scope protocol writes a calibration only when asked, and reads its queries and taxonomy from the committed files by default.</summary>
+    [Fact]
+    public void The_scope_suite_writes_a_calibration_only_when_asked()
+    {
+        var plain = EvaluationOptions.Parse(["--suite", "scope", "--embeddings", "http://localhost:58080"]);
+        var writing = EvaluationOptions.Parse(["--suite", "scope", "--write-calibration", "--calibration", "out.json"]);
+
+        Assert.False(plain.WriteCalibration);
+        Assert.Equal(
+            (Path.Combine("tools", "SearchEval", "scope"), Path.Combine("seed", "categories.sample.json"), Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json")),
+            (plain.ScopeDirectory, plain.CategoriesPath, plain.CalibrationPath));
+        Assert.True(writing.WriteCalibration);
+        Assert.Equal("out.json", writing.CalibrationPath);
+    }
+
     [Fact]
     public void Hybrid_names_the_three_services_it_needs()
     {

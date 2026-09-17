@@ -38,10 +38,10 @@ The name carries no meaning worth guessing at: **BM** is *Best Matching*, and
 Okapi experiments of the 1990s.
 
 **The limitation is the important half:** BM25 does not understand anything. It
-counts words. `gift for the kitchen` and `regalo para casa` both score **0.000**
-against this catalogue, because no product contains the word "gift" — and no
-amount of tuning reaches a word that is not there. That gap is the number hybrid
-search has to earn in phase 8.
+counts words. `regalo para casa` scored **0.305** against this catalogue on
+2026-09-11, because no product contains the word "casa" — and no amount of tuning
+reaches a word that is not there. Meaning is what reaches it — see *Semantic
+search* below.
 
 It never leaves, either. **Lexical search is the permanent fallback**
 (CLAUDE.md invariant 8): if the model server or Qdrant are down, the shop still
@@ -178,9 +178,26 @@ threshold there was not a regression waved through; it was the ruler changing.
 
 ---
 
-## Search that has not landed yet (phase 8)
+## Search by meaning (phase 8)
 
-Named here because the README and the board use them.
+Built in phase 8, and the default since 2026-09-17: every search asks the hybrid
+strategy.
+
+### Semantic search
+
+**Finding things by what they mean rather than by the words they use.** It is the
+umbrella for the next three entries: an *embedding* turns a query and a product
+into points in one space, *vector search* finds the products nearest the query,
+and a *reranker* re-reads the best few. Lexical search (BM25) is the other kind,
+which counts words. **Hybrid search is semantic plus lexical**, merged into one
+list — which is what Tendero runs.
+
+It is here because words fail exactly where shoppers are vaguest: "regalo abuela"
+names no product, and in Spanish the use-case queries went from 0.263 with
+lexical search to 0.619 once meaning was added (`search-evaluation.md`).
+
+→ `src/Search/Qdrant` (the vectors) · `src/Search/Strategies` (fusion and the
+reranking stage)
 
 ### Embedding
 
@@ -203,17 +220,83 @@ comparable scale.
 
 **A slower, better model that re-sorts the top few results** after retrieval has
 narrowed the field. Too expensive to run over a whole catalogue, cheap over
-twenty candidates. Ours will be `bge-reranker-v2-m3`, behind a timeout budget.
+twenty candidates. Ours is `bge-reranker-v2-m3`, a cross-encoder, over the first
+twenty results with an 800 ms budget — and **only on a GPU**: on a CPU no reranker
+tried could keep the budget and still help (ADR 0031). On the GPU it takes hybrid
+from 0.810 / 0.783 to 0.843 / 0.831 (en / es).
+
+→ `src/Search/Reranking` · the stage in `src/Search/Strategies/HybridSearchStrategy.cs`
+
+### Cross-encoder
+
+**A model that reads the query and a product together and scores the pair.** An
+embedding model is the other kind, a *bi-encoder*: it turns the query and each
+product into vectors separately, and only compares the vectors. Reading both at
+once lets a cross-encoder see how the words of one relate to the words of the
+other, so it judges better — and it has to run once per pair, so it is slow.
+
+That is why it only sees the first twenty results: retrieval narrows a hundred
+products (or a million) to a few, and the cross-encoder orders those. It is also
+why its score is not an answer to "does the shop sell this": it measures how
+close a product's text is to the query, and H5 showed it scores the right answer
+to "regalo abuela" as low as a lamp for a phone.
+
+→ `bge-reranker-v2-m3`, GPU only · `src/Search/Reranking`
+
+### Query understanding
+
+**Deciding what a query is about, before or beside retrieving anything.** Is it a
+product type the shop sells, a product type it does not, or a question about the
+shop itself? Retrieval cannot answer that — it always returns its nearest things —
+so real shops answer it in a separate step. At scale the industry trains a
+classifier from queries to product types: Amazon calls it Q2PT, and Instacart
+describes a similar pipeline.
+
+**Tendero ships the half that needs no model.** Whether any product carries every
+word of the query in what it is — `Exact` against `Related` — and whether the
+query asks about a help topic with a page of its own (returns). That is the whole
+answer a page carries today.
+
+A second layer was designed, built and measured: **scope by anchors**, comparing
+the query with the shop's categories and with a committed list of categories it
+does not sell. It was refuted by its own declared protocol — "gift for someone
+who works from home" was told the shop does not sell stationery at every margin
+tried — so it is **evaluation tooling rather than shipped code**: the classifier
+and the exam that refuted it live with the measurement tool, and the trained
+classifier the backlog names will be judged on the same queries by the same rules.
+
+→ `src/Search/Answers` · the refuted classifier and its harness:
+`tools/SearchEval/QueryScope`, run with `--suite scope`
+
+### RAG — Retrieval-Augmented Generation
+
+**A generative model answers from context that retrieval found for it**, instead
+of from what it remembers. The retrieval half picks the passages; the generation
+half writes the answer from them.
+
+**Tendero has the retrieval and not the generation.** Nothing in the repository
+generates text today: there is no `IChatClient` and no prompt. So calling
+today's search "RAG" would be wrong — it is semantic search. Generation arrives
+with product claims (phase 10) and the backoffice copilot (phase 12), and when it
+does, the retrieval it stands on is the one already measured in
+`search-evaluation.md`.
 
 ### Graceful degradation
 
 **Every AI feature has a non-AI path, and the degradation is tested** — not
 asserted in a comment (CLAUDE.md invariant 8). Reranker times out, keep the
-fusion; vector store down, drop that ranking and keep lexical. The planned test
-is the invariant made executable: a hybrid strategy built with a *throwing*
-vector fake must return byte-identical results to the lexical one, and must tag
-the span `search.degraded` — because a silent fallback is indistinguishable from
-bad relevance.
+fusion; vector store down, drop that ranking and keep lexical. The test is the
+invariant made executable: a hybrid strategy built with a *throwing* vector fake
+returns byte-identical results to the lexical one, compared serialised on page
+two, and tags the span `search.degraded` — because a silent fallback is
+indistinguishable from bad relevance.
+
+**Not configured is not degraded.** A machine without the vector layer or without
+a GPU gets a named stand-in (`NoVectorLayer`, `NoReranker`), and the stage is
+skipped with the tag `search.stage.unavailable` and no counter. Only a stage that
+was configured and failed counts.
+
+→ `tests/Search.Tests/HybridSearchStrategyTests.cs`
 
 ---
 

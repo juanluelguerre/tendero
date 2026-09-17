@@ -9,7 +9,6 @@ using ElGuerre.Tendero.Search.Qdrant;
 using ElGuerre.Tendero.Search.Reranking;
 using ElGuerre.Tendero.Search.Strategies;
 using ElGuerre.Tendero.SearchEval.Diagnostics;
-using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -85,7 +84,6 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         // it tunes the API.
         builder.Services.AddOptions<HybridSearchOptions>().Bind(builder.Configuration.GetSection(HybridSearchOptions.Section));
         builder.Services.AddSearchStrategies();
-        builder.Services.AddSingleton<IFeatureGate>(new EvaluationFeatures(rerank: options.Reranker is not null));
 
         if (options.IsHybrid)
         {
@@ -154,7 +152,9 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
 
         foreach (var strategy in strategies)
         {
-            var evaluator = new RelevanceEvaluator(host.Services.GetRequiredKeyedService<ISearchStrategy>(strategy.Name));
+            var evaluator = new RelevanceEvaluator(
+                host.Services.GetRequiredKeyedService<ISearchStrategy>(strategy.Name),
+                host.Services.GetRequiredService<ISearchAnswerer>());
             var cultures = new List<CultureScore>();
 
             foreach (var golden in goldenSets)
@@ -205,14 +205,4 @@ internal sealed class SearchRelevanceSuite : IEvaluationSuite
         // Without --ci the report still prints but breaks nobody's session.
         return options.FailUnderThresholds ? 1 : 0;
     }
-}
-
-/// <summary>
-/// The flags of an evaluation run are its arguments, not configuration: reranking
-/// is on exactly when a reranker was given. The vector flag is never read here —
-/// the suite asks each strategy by name.
-/// </summary>
-internal sealed class EvaluationFeatures(bool rerank) : IFeatureGate
-{
-    public bool IsEnabled(FeatureId feature) => feature == FeatureId.SearchRerank && rerank;
 }

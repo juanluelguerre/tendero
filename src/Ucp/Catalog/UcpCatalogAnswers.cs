@@ -26,7 +26,8 @@ public static class UcpCatalogAnswers
         string baseUrl,
         int limit,
         int offset,
-        long total)
+        long total,
+        IReadOnlyList<UcpMessage> notices)
     {
         var mapped = products.Select(product => UcpCatalogMapper.From(product, baseUrl)).ToArray();
         var next = offset + limit;
@@ -48,11 +49,17 @@ public static class UcpCatalogAnswers
 
             // A search that found nothing is a business outcome. The
             // specification draws that line itself: JSON-RPC errors are for "I
-            // could not process this".
+            // could not process this". Notices (no exact match, a help topic)
+            // travel alongside products when there are any; when there are none,
+            // "no_exact_match" is dropped — "here are the closest matches"
+            // beside a page with nothing on it contradicts the "no_results"
+            // message that follows it — while "help_available" still says
+            // something true and travels with it.
             Messages = mapped.Length > 0
-                ? null
+                ? (notices.Count > 0 ? notices : null)
                 :
                 [
+                    .. notices.Where(notice => notice.Code != "no_exact_match"),
                     new UcpMessage
                     {
                         Type = "info",

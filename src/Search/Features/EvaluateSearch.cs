@@ -22,8 +22,8 @@ namespace ElGuerre.Tendero.Search.Features.EvaluateSearch;
 /// actually gets what the gate measured. Both use <see cref="RelevanceEvaluator"/>
 /// and the same embedded golden sets, so they cannot disagree about the metric.
 ///
-/// It asks BOTH strategies whatever the SearchVector flag says: the panel exists to
-/// compare them, and the flag decides what the storefront gets, not what a
+/// It asks BOTH strategies, although the storefront only ever asks hybrid: the
+/// panel exists to compare them, and what the storefront gets is not what a
 /// shopkeeper may measure. With the vector layer down, hybrid's column equals
 /// lexical's — the degradation working — and the answer says why beside it.
 /// </summary>
@@ -77,7 +77,8 @@ public sealed class EvaluateSearchHandler(
     IProductReader products,
     [FromKeyedServices(SearchStrategies.Lexical)] ISearchStrategy lexical,
     [FromKeyedServices(SearchStrategies.Hybrid)] ISearchStrategy hybrid,
-    IVectorLayer vectorLayer) : IQueryHandler<EvaluateSearchQuery, SearchEvaluation>
+    IVectorLayer vectorLayer,
+    ISearchAnswerer answerer) : IQueryHandler<EvaluateSearchQuery, SearchEvaluation>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
@@ -116,8 +117,8 @@ public sealed class EvaluateSearchHandler(
 
         foreach (var golden in goldenSets)
         {
-            var lexicalScore = await new RelevanceEvaluator(lexical).RunAsync(golden, externalIds, ct);
-            var hybridScore = await new RelevanceEvaluator(hybrid).RunAsync(golden, externalIds, ct);
+            var lexicalScore = await new RelevanceEvaluator(lexical, answerer).RunAsync(golden, externalIds, ct);
+            var hybridScore = await new RelevanceEvaluator(hybrid, answerer).RunAsync(golden, externalIds, ct);
 
             cultures.Add(new CultureEvaluation(
                 golden.Culture,

@@ -130,6 +130,35 @@
             }
           </div>
         } @else {
+          @if (done.answer?.helpTopic === 'returns') {
+            <!-- Above the products, on purpose: a question about returns is not
+                 answered by ranking the catalogue better. -->
+            @let returnDays = returnsWindowDays();
+            @if (returnDays !== null) {
+              <!-- Rendered only once the real window is known: `windowDays`
+                   is null until the request resolves and stays null if it
+                   fails, and a fallback number here is the promise the order
+                   and product pages refuse to make with the very same guard
+                   (`order-page.html`, `product-page.html`). -->
+              <aside class="help-card" aria-labelledby="help-returns-title">
+                <h2 id="help-returns-title" class="help-card__title">{{ t('search.help.returnsTitle') }}</h2>
+                <p>{{ t('search.help.returnsBody', { days: returnDays }) }}</p>
+                <a class="help-card__link" [routerLink]="links.account()">{{ t('search.help.returnsLink') }}</a>
+              </aside>
+            }
+          }
+
+          <!-- No `role="status"` here: `.results-meta` below is already the
+               one polite live region for this branch, and two concurrent
+               ones race a screen reader against itself. Matches the
+               empty-state notice above, which carries none either. -->
+          @if (done.answer?.match === 'Related') {
+            <div class="notice">
+              <h2 class="notice__title">{{ t('search.related.title', { query: done.query }) }}</h2>
+            </div>
+            <h2 class="results-heading">{{ t('search.related.heading') }}</h2>
+          }
+
           <div class="results-meta">
             <p role="status" aria-live="polite">
               {{ t('search.results', { total: done.total, query: done.query }) }}

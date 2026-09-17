@@ -32,6 +32,7 @@ public sealed class ElasticsearchRequestBodyTests
         Assert.Contains("\"productId\"", body);
         Assert.Contains("\"p2\"", body);
         Assert.Contains("\"status\"", body);
+        Assert.Contains("\"active\"", body);
         Assert.Contains("\"categoryCodes\"", body);
     }
 
@@ -45,11 +46,30 @@ public sealed class ElasticsearchRequestBodyTests
 
         var body = Assert.Single(bodies);
         Assert.Contains("\"status\"", body);
+        Assert.Contains("\"active\"", body);
         Assert.Contains("\"categoryCodes\"", body);
     }
 
+    /// <summary>
+    /// The notice's question is "does the shop sell this", so it reads what a product IS —
+    /// name, brand, attributes, category — and never its description, and forgives no
+    /// typos. At a million products some description contains the words of almost any
+    /// query, and a fuzzy match turns "movil" into "mobil"; either would make the notice
+    /// vanish exactly where it is needed (spec D5).
+    ///
+    /// **One clause per WORD, not one clause for the whole query (fix round 1).**
+    /// `brand` carries no analyser (it keeps a `raw` keyword subfield instead), while
+    /// `name`, `attributesText` and `categoryPathText` use the culture analyser —
+    /// and `cross_fields` only blends fields that share one. A single cross_fields/AND
+    /// clause over the whole text silently split into two groups, `{name,
+    /// attributesText, categoryPathText}` and `{brand}`, so "Kuisina cafetera" needed
+    /// "Kuisina" AND "cafetera" from a group with no brand field — impossible. Three
+    /// words means three `best_fields` clauses here, each across every identity field.
+    /// `zero_terms_query: all` is what lets "la" — a stopword the Spanish analyser
+    /// empties — pass its own clause instead of making the whole AND impossible.
+    /// </summary>
     [Fact]
-    public async Task The_full_match_count_filters_like_the_search_it_stands_for()
+    public async Task The_full_match_count_reads_what_a_product_is_and_forgives_nothing()
     {
         var (client, bodies) = Capturing();
 
@@ -58,9 +78,92 @@ public sealed class ElasticsearchRequestBodyTests
 
         var body = Assert.Single(bodies);
         Assert.Contains("\"status\"", body);
+        Assert.Contains("\"active\"", body);
         Assert.Contains("\"categoryCodes\"", body);
-        Assert.Contains("\"cross_fields\"", body);
-        Assert.Contains("\"fuzziness\"", body);
+        Assert.Equal(3, Occurrences(body, "\"multi_match\""));
+        Assert.Equal(3, Occurrences(body, "\"best_fields\""));
+        Assert.Equal(3, Occurrences(body, "\"zero_terms_query\":\"all\""));
+        Assert.Contains("\"operator\":\"and\"", body);
+        Assert.Contains("\"name\"", body);
+        Assert.Contains("\"categoryPathText\"", body);
+        Assert.DoesNotContain("\"cross_fields\"", body);
+        Assert.DoesNotContain("\"fuzziness\"", body);
+        Assert.DoesNotContain("description", body);
+    }
+
+    /// <summary>
+    /// The catalogue writes "6 litros" and "24 cm"; shoppers write "6l" and "24cm".
+    /// A bare measurement is one token here and two there, so it can never full-match
+    /// and the notice fired above the right pan. The full-match check skips it
+    /// (ADR 0032, fix round 2) — the question is whether the shop carries this KIND of
+    /// thing, not whether it carries that size.
+    /// </summary>
+    [Theory]
+    [InlineData("olla 6l", "es", 1)]
+    [InlineData("sartén 24cm", "es", 1)]
+    [InlineData("laptop backpack 15 inch", "en", 3)]
+    [InlineData("olla 1,5l", "es", 1)]
+    [InlineData("camiseta xl", "es", 2)]
+    public async Task The_full_match_count_skips_a_bare_measurement(string text, string culture, int clauses)
+    {
+        var (client, bodies) = Capturing();
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            new ElasticsearchFullMatch(client).AnyAsync(new ProductSearchQuery(text, culture), Ct));
+
+        var body = Assert.Single(bodies);
+        Assert.Equal(clauses, Occurrences(body, "\"multi_match\""));
+        Assert.Contains("\"status\"", body);
+        Assert.Contains("\"active\"", body);
+        Assert.DoesNotContain("\"fuzziness\"", body);
+        Assert.DoesNotContain("description", body);
+    }
+
+    /// <summary>
+    /// A query that is nothing but a measurement still has to ask something: skipping
+    /// every word would leave an empty <c>must</c>, which matches everything and would
+    /// silence the notice on every such query. When every word would be skipped, none
+    /// is.
+    /// </summary>
+    [Theory]
+    [InlineData("24cm", 1)]
+    [InlineData("6l 24cm", 2)]
+    public async Task A_query_that_is_only_a_measurement_still_asks_for_it(string text, int clauses)
+    {
+        var (client, bodies) = Capturing();
+
+        await Assert.ThrowsAnyAsync<Exception>(() =>
+            new ElasticsearchFullMatch(client).AnyAsync(new ProductSearchQuery(text, "es"), Ct));
+
+        var body = Assert.Single(bodies);
+        Assert.Equal(clauses, Occurrences(body, "\"multi_match\""));
+        Assert.Equal(clauses, Occurrences(body, "\"zero_terms_query\":\"all\""));
+    }
+
+    /// <summary>
+    /// Ranking is untouched: the search itself still asks for every word the shopper
+    /// typed, measurement included, because dropping it there would rank a 24 cm pan
+    /// level with a 28 cm one.
+    /// </summary>
+    [Fact]
+    public async Task The_search_itself_still_carries_the_measurement()
+    {
+        var body = await LexicalBody(new ProductSearchQuery("sartén 24cm", "es"));
+
+        Assert.Contains("24cm", body);
+    }
+
+    private static int Occurrences(string haystack, string needle)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = haystack.IndexOf(needle, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += needle.Length;
+        }
+
+        return count;
     }
 
     [Fact]
@@ -97,6 +200,7 @@ public sealed class ElasticsearchRequestBodyTests
         var body = await LexicalBody(new ProductSearchQuery("cafetera", "es"));
 
         Assert.Contains("\"status\"", body);
+        Assert.Contains("\"active\"", body);
         Assert.DoesNotContain("\"categoryCodes\"", body);
     }
 

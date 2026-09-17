@@ -193,12 +193,16 @@ public sealed record SearchHit(
     bool InStock,
     double Score);
 
+/// <param name="Answer">
+/// What kind of answer this page is. Null for a browse or a date order.
+/// </param>
 public sealed record SearchResultPage(
     IReadOnlyList<SearchHit> Hits,
     long Total,
     int Page,
     int PageSize,
-    double TookMs);
+    double TookMs,
+    SearchAnswer? Answer = null);
 
 /// <summary>
 /// A flat document per (VARIANT, culture), collapsed to a product at query time.

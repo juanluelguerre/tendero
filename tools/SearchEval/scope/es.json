@@ -1,0 +1,325 @@
+{
+  "culture": "es",
+  "queries": [
+    {
+      "query": "regalo para un padre cocinillas",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S01",
+      "kind": "gift",
+      "why": "cookware, knives and aprons are sold: a cook has plenty to choose from"
+    },
+    {
+      "query": "regalo para alguien que viaja mucho",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S02",
+      "kind": "gift",
+      "why": "a cabin-sized travel backpack, packing cubes and a travel wash bag are sold"
+    },
+    {
+      "query": "regalo para alguien que teletrabaja",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S03",
+      "kind": "gift",
+      "why": "desk lamps, a lamp with wireless charging and laptop backpacks and sleeves are sold"
+    },
+    {
+      "query": "regalo para una casa nueva",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S04",
+      "kind": "gift",
+      "why": "tableware, glass tumblers, a wool blanket and linen cushion covers are sold"
+    },
+    {
+      "query": "detalle para mi suegra que adora el café",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S05",
+      "kind": "gift",
+      "why": "moka pots, a french press, a drip coffee maker and a burr grinder are sold"
+    },
+    {
+      "query": "no tengo sitio para las especias",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S06",
+      "kind": "symptom",
+      "why": "a two-tier bamboo spice rack that fits inside a cupboard is sold"
+    },
+    {
+      "query": "me duelen los pies de andar todo el día",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S07",
+      "kind": "symptom",
+      "why": "everyday walking shoes with a removable insole are sold"
+    },
+    {
+      "query": "no veo bien para coser por la noche",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S08",
+      "kind": "symptom",
+      "why": "an architect lamp with a magnifier and dimmable desk lamps are sold"
+    },
+    {
+      "query": "se me mojan los pies cuando llueve",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S09",
+      "kind": "symptom",
+      "why": "short wellington boots and waterproof mountain shoes are sold"
+    },
+    {
+      "query": "algo para llevar la ropa al gimnasio",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S10",
+      "kind": "use-case",
+      "why": "a gym duffel with a shoe compartment is sold, and gym trainers too"
+    },
+    {
+      "query": "para una ruta por la montaña",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S11",
+      "kind": "use-case",
+      "why": "a hiking backpack, convertible hiking trousers, mountain shoes and a waterproof jacket are sold"
+    },
+    {
+      "query": "para ir en bici al trabajo",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S12",
+      "kind": "use-case",
+      "why": "a waterproof bike pannier, a cycling jersey and a packable windbreaker are sold"
+    },
+    {
+      "query": "desayuno en familia",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S13",
+      "kind": "use-case",
+      "why": "a set of breakfast bowls, a wide-slot toaster, moka pots and a drip coffee maker are sold"
+    },
+    {
+      "query": "cafetera sin cápsulas",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S14",
+      "kind": "negation",
+      "why": "no capsule machine is sold, and every coffee maker that is answers the query: moka pots, french press, drip"
+    },
+    {
+      "query": "sartén sin teflón",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S15",
+      "kind": "negation",
+      "why": "the cast iron pan and the carbon steel wok have no non-stick coating"
+    },
+    {
+      "query": "chaqueta sin mangas",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S16",
+      "kind": "negation",
+      "why": "a padded gilet is sold; the query names a jacket and wants the sleeveless kind"
+    },
+    {
+      "query": "cazuela acero inoxidabe",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S17",
+      "kind": "typo",
+      "why": "a 24 cm stainless steel casserole with lid is sold; the typo is in the product words"
+    },
+    {
+      "query": "molinilo de cafe",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S18",
+      "kind": "typo",
+      "why": "a conical burr coffee grinder is sold"
+    },
+    {
+      "query": "tostadroa",
+      "scope": "in",
+      "split": "scope-dev",
+      "pair": "S19",
+      "kind": "typo",
+      "why": "a two wide-slot toaster is sold"
+    },
+    {
+      "query": "delantal de cocna",
+      "scope": "in",
+      "split": "scope-test",
+      "pair": "S20",
+      "kind": "typo",
+      "why": "a linen bib apron is sold"
+    },
+    {
+      "query": "balón de baloncesto talla 7",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S21",
+      "kind": "edge",
+      "why": "sportswear and sports shoes are sold; balls are sports equipment, and no equipment is"
+    },
+    {
+      "query": "lavavajillas integrable 60 cm",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S22",
+      "kind": "edge",
+      "why": "small kitchen appliances are sold (kettle, toaster, blender); large appliances are not, even though \"dishwasher safe\" appears in descriptions"
+    },
+    {
+      "query": "colchón viscoelástico 150",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S23",
+      "kind": "edge",
+      "why": "home textiles are sold (blanket, cushion covers, bath mat, napkins); bedding and mattresses are not"
+    },
+    {
+      "query": "funda para iphone",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S24",
+      "kind": "edge",
+      "why": "bags, a laptop sleeve and a wash bag are sold; phone cases are not"
+    },
+    {
+      "query": "raqueta de pádel",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S25",
+      "kind": "edge",
+      "why": "padel shoes are sold; rackets are sports equipment, which is not"
+    },
+    {
+      "query": "sofá de dos plazas",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S26",
+      "kind": "edge",
+      "why": "linen cushion covers and a storage basket are sold; furniture is not"
+    },
+    {
+      "query": "maleta rígida con ruedas",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S27",
+      "kind": "edge",
+      "why": "the luggage category holds a cabin-sized travel backpack, packing cubes and a wash bag; no wheeled suitcase is sold"
+    },
+    {
+      "query": "bicicleta de montaña",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S28",
+      "kind": "edge",
+      "why": "a bike pannier and a cycling jersey are sold; bicycles are not"
+    },
+    {
+      "query": "freidora de aire",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S29",
+      "kind": "edge",
+      "why": "small appliances are sold, but only a kettle, a toaster and a blender; no air fryer is"
+    },
+    {
+      "query": "gafas de sol para correr",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S30",
+      "kind": "edge",
+      "why": "running apparel and accessories (gloves, beanie, scarf) are sold; eyewear is not"
+    },
+    {
+      "query": "cortinas opacas",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S31",
+      "kind": "edge",
+      "why": "home textiles are sold, but curtains are not among them"
+    },
+    {
+      "query": "portátil para estudiantes",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S32",
+      "kind": "edge",
+      "why": "laptop backpacks and a laptop sleeve are sold; computers are not"
+    },
+    {
+      "query": "pienso para perro",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S33",
+      "kind": "not-sold",
+      "why": "no pet products of any kind are sold"
+    },
+    {
+      "query": "crema solar factor 50",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S34",
+      "kind": "not-sold",
+      "why": "no cosmetics or personal care products are sold (a tee with UPF fabric is clothing, not sunscreen)"
+    },
+    {
+      "query": "neumáticos de coche",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S35",
+      "kind": "not-sold",
+      "why": "no automotive products are sold"
+    },
+    {
+      "query": "cámara de fotos instantánea",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S36",
+      "kind": "not-sold",
+      "why": "no cameras or photography products are sold; the only lens in the catalogue is the magnifier on an architect lamp"
+    },
+    {
+      "query": "taladro percutor",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S37",
+      "kind": "not-sold",
+      "why": "no tools or DIY products are sold"
+    },
+    {
+      "query": "perfume de mujer",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S38",
+      "kind": "not-sold",
+      "why": "no fragrances are sold"
+    },
+    {
+      "query": "auriculares inalámbricos",
+      "scope": "out",
+      "split": "scope-dev",
+      "pair": "S39",
+      "kind": "not-sold",
+      "why": "no consumer electronics are sold (the lamps with USB and wireless charging are lighting)"
+    },
+    {
+      "query": "vitaminas para el cansancio",
+      "scope": "out",
+      "split": "scope-test",
+      "pair": "S40",
+      "kind": "not-sold",
+      "why": "no health or supplement products are sold"
+    }
+  ]
+}

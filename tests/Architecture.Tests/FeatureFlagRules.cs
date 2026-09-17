@@ -21,8 +21,14 @@ public sealed partial class FeatureFlagRules
     {
         var flags = typeof(FeatureId).GetFields(BindingFlags.Public | BindingFlags.Static);
 
-        // Not vacuous: the set is closed and small, and it is not empty.
-        Assert.NotEmpty(flags);
+        // Empty on purpose since 2026-09-17: SearchRerank became a capability and
+        // SearchVector met its removal condition (ADR 0023, amended). The rule still
+        // runs over every member the day phase 11 or 12 adds one; what it must never do
+        // is pass because reflection found nothing where members exist, so the count is
+        // checked against the source.
+        Assert.Equal(
+            Regex.Matches(File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "SharedKernel", "Features.cs")), @"\[RemovalCondition\(").Count,
+            flags.Length);
 
         var silent = flags
             .Where(flag => flag.GetCustomAttribute<RemovalConditionAttribute>() is not { Condition.Length: > 40 })
