@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Search.Evaluation;
+using ElGuerre.Tendero.SearchEval.Scope;
 using Xunit;
 
 namespace ElGuerre.Tendero.SearchEval.Tests;

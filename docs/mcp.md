@@ -155,7 +155,10 @@ says which member is missing.
 |---|---|
 | `no_exact_match` | no product carries every word of the query; the products are the closest things, not matches |
 | `help_available` | the query asks about something with a page of its own — today returns, pointing at `/api/returns/policy` |
-| `not_sold` | the shop does not sell what was asked for at all. It belongs to a scope classifier that was measured and refuted, and is kept off, so today it is never sent |
+
+There were three. `not_sold` — "the shop does not sell that at all" — belonged to
+a scope classifier that was measured and refuted, so it was never sent; the
+classifier is evaluation tooling now and the message is gone (ADR 0032, amended).
 
 Each is `type: info` with `path: $.query` and a sentence in the answered language,
 and the products still come back beside it.
@@ -171,7 +174,7 @@ Answers UCP has no capability for, in this shop's own shapes.
 
 | Tool | What it does |
 |---|---|
-| `search_products` | The shop's search, returning its own result page — with `answer`: `match` (`Exact`, `Related` or `OutOfScope` — never sent while layer B is off), `helpTopic`, and `outOfScopeLabel` |
+| `search_products` | The shop's search, returning its own result page — with `answer`: `match` (`Exact` or `Related`) and `helpTopic` |
 | `get_product_detail` | The shop's product view — richer than UCP's for a person |
 | `list_categories` | The category tree, named in the answered language |
 | `list_offers` | The promotions running right now |

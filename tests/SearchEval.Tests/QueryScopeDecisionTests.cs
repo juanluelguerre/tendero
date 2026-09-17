@@ -1,7 +1,7 @@
-using ElGuerre.Tendero.Search.Answers;
+using ElGuerre.Tendero.SearchEval.Scope;
 using Xunit;
 
-namespace ElGuerre.Tendero.Search.Tests;
+namespace ElGuerre.Tendero.SearchEval.Tests;
 
 public sealed class QueryScopeDecisionTests
 {

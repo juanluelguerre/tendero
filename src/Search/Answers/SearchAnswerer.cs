@@ -3,14 +3,23 @@ using ElGuerre.Tendero.Search.Contracts;
 namespace ElGuerre.Tendero.Search.Answers;
 
 /// <summary>
-/// What kind of answer a page is (ADR 0032): layer B's verdict when it is sure the
-/// shop does not sell this, and layer A's — decided with no model — otherwise.
+/// What kind of answer a page is (ADR 0032): whether some product carries every
+/// word of the query, decided with no model at all, plus the help topic a
+/// non-product question matched.
 ///
 /// It runs after whichever strategy answered, not inside one, so lexical search —
 /// the permanent fallback — is exactly as honest as hybrid, and hybrid's
 /// byte-for-byte degradation to lexical (P8-8) is untouched by it.
+///
+/// <para>
+/// <b>There is no second layer here</b> (ADR 0032, amended 2026-09-17). A scope
+/// classifier that would have added "we don't sell that at all" was measured
+/// once by its declared protocol and refuted; it lives with the harness that
+/// measured it, in <c>tools/SearchEval/QueryScope</c>, and no shipped code reads
+/// it. So the answer has two values and neither needs a model server.
+/// </para>
 /// </summary>
-internal sealed class SearchAnswerer(ILexicalFullMatch fullMatch, IQueryScope scope) : ISearchAnswerer
+internal sealed class SearchAnswerer(ILexicalFullMatch fullMatch) : ISearchAnswerer
 {
     public async Task<SearchAnswer?> AnswerAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
@@ -18,13 +27,6 @@ internal sealed class SearchAnswerer(ILexicalFullMatch fullMatch, IQueryScope sc
             return null;
 
         var help = HelpTopics.Match(query.Text, query.Culture);
-
-        // Layer B first: when the shop clearly does not sell this, the full-match
-        // count has nothing to add. Anything else — in scope, ambiguous, or no
-        // verdict at all — leaves the decision to layer A (ADR 0032).
-        var verdict = await scope.ClassifyAsync(query.Text, query.Culture, ct);
-        if (verdict.Outcome == ScopeOutcome.OutOfScope)
-            return new SearchAnswer(SearchMatch.OutOfScope, help, verdict.Label);
 
         return await fullMatch.AnyAsync(query, ct)
             ? new SearchAnswer(SearchMatch.Exact, help)

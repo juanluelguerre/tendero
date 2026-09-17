@@ -83,7 +83,7 @@ describe('the search page, when the answer is not an exact match', () => {
     searchResult = page(
       [hit('a'), hit('b')],
       2,
-      { match: 'Related', helpTopic: null, outOfScopeLabel: null },
+      { match: 'Related', helpTopic: null },
     );
 
     const element = await open('regalo abuela');
@@ -93,25 +93,11 @@ describe('the search page, when the answer is not an exact match', () => {
     expect(element.querySelectorAll('storefront-product-card')).toHaveLength(2);
   });
 
-  it('says what is not sold and shows at most four other products', async () => {
-    searchResult = page(
-      [hit('a'), hit('b'), hit('c'), hit('d'), hit('e'), hit('f')],
-      6,
-      { match: 'OutOfScope', helpTopic: null, outOfScopeLabel: 'mobile phones' },
-    );
-
-    const element = await open('mobile for my 70 year old mother');
-
-    expect(element.textContent).toContain('We don’t sell mobile phones');
-    expect(element.textContent).toContain('Other things we do sell');
-    expect(element.querySelectorAll('storefront-product-card')).toHaveLength(4);
-  });
-
   it('shows the returns card above the products for a question about returns', async () => {
     searchResult = page(
       [hit('a')],
       1,
-      { match: 'Related', helpTopic: 'returns', outOfScopeLabel: null },
+      { match: 'Related', helpTopic: 'returns' },
     );
 
     const element = await open('how do returns work');
@@ -138,7 +124,7 @@ describe('the search page, when the answer is not an exact match', () => {
     searchResult = page(
       [hit('a')],
       1,
-      { match: 'Related', helpTopic: 'returns', outOfScopeLabel: null },
+      { match: 'Related', helpTopic: 'returns' },
     );
 
     const element = await open('how do returns work');
@@ -152,14 +138,13 @@ describe('the search page, when the answer is not an exact match', () => {
     searchResult = page(
       [hit('a'), hit('b')],
       2,
-      { match: 'Exact', helpTopic: null, outOfScopeLabel: null },
+      { match: 'Exact', helpTopic: null },
     );
 
     const element = await open('zapatillas running mujer');
 
     expect(element.textContent).not.toContain('Looking for returns?');
     expect(element.textContent).not.toContain('exactly');
-    expect(element.textContent).not.toContain('We don’t sell');
   });
 });
 
@@ -174,11 +159,6 @@ const TRANSLATIONS = {
       returnsBody:
         'You have {{days}} days from delivery to send something back. Start a return from your orders.',
       returnsLink: 'Go to my orders',
-    },
-    outOfScope: {
-      title: 'We don’t sell {{label}}',
-      others: 'Other things we do sell',
-      departments: 'Browse the departments',
     },
     related: {
       title: 'Nothing matches “{{query}}” exactly',

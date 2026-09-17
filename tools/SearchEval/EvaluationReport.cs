@@ -55,8 +55,8 @@ public static class EvaluationReport
 
     private static void RenderSummary(StringBuilder report, IReadOnlyList<StrategyScores> results, EvaluationThresholds thresholds)
     {
-        report.AppendLine("| strategy | culture | queries | NDCG@10 | threshold | recall@50 | threshold | judged@10 | notice rate | false out-of-scope | mean ms | |");
-        report.AppendLine("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|");
+        report.AppendLine("| strategy | culture | queries | NDCG@10 | threshold | recall@50 | threshold | judged@10 | notice rate | mean ms | |");
+        report.AppendLine("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---|");
 
         foreach (var result in results)
         {
@@ -71,15 +71,14 @@ public static class EvaluationReport
                         CultureInfo.InvariantCulture,
                         $"| {result.Strategy} | {score.Culture} | {score.ScoredQueries} | {score.MeanNdcgAt10:0.000} | {ndcgLimit} " +
                         $"| {score.MeanRecallAt50:0.000} | {recallLimit} | {score.MeanJudgedAt10:0.000} | {score.NoticeRate:0.000} " +
-                        $"| {score.FalseOutOfScope} | {score.MeanMilliseconds:0} | {verdict} |"));
+                        $"| {score.MeanMilliseconds:0} | {verdict} |"));
             }
         }
 
         report.AppendLine().AppendLine(
             "`judged@10` is how much of a strategy's first ten the golden set has any judgment for. " +
             "An unjudged result scores as irrelevant, so below 1.000 the NDCG beside it is a lower bound. " +
-            "`notice rate` is how often a scored query — one with a real answer — was told nothing matches exactly; " +
-            "`false out-of-scope` is how many were told the shop does not sell them at all. Both are reported, not gated.");
+            "`notice rate` is how often a scored query — one with a real answer — was told nothing matches exactly. Reported, not gated.");
     }
 
     /// <summary>
@@ -382,13 +381,12 @@ public static class EvaluationReport
 
     /// <summary>
     /// What a query with nothing to find was told, in the report's own words —
-    /// <c>Related</c> or <c>OutOfScope</c> for the closest-things answer, a help
-    /// topic for a non-product question, and an em dash when nothing admitted it.
+    /// <c>Related</c> for the closest-things answer, a help topic for a
+    /// non-product question, and an em dash when nothing admitted it.
     /// </summary>
     private static string AdmittedAnswer(QueryScore query) => query switch
     {
         { Match: SearchMatch.Related } => "Related",
-        { Match: SearchMatch.OutOfScope } => "OutOfScope",
         { Kind: QueryKinds.NonProduct, HelpTopic: not null } => $"help: {query.HelpTopic}",
         _ => "—"
     };

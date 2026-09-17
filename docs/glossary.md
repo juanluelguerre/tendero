@@ -252,15 +252,21 @@ so real shops answer it in a separate step. At scale the industry trains a
 classifier from queries to product types: Amazon calls it Q2PT, and Instacart
 describes a similar pipeline.
 
-Tendero does it in two layers (ADR 0032). **Layer A**, with no model: whether any
-product carries every word of the query in what it is, and whether the query asks
-about a help topic with a page of its own (returns). **Layer B**, scope by
-anchors: compare the query with the shop's categories and with categories it does
-not sell. Layer B was measured and refuted — "gift for someone who works from
-home" was told the shop does not sell stationery at every margin tried — and its
-code is kept off, pending the author's decision.
+**Tendero ships the half that needs no model.** Whether any product carries every
+word of the query in what it is — `Exact` against `Related` — and whether the
+query asks about a help topic with a page of its own (returns). That is the whole
+answer a page carries today.
 
-→ `src/Search/Answers`
+A second layer was designed, built and measured: **scope by anchors**, comparing
+the query with the shop's categories and with a committed list of categories it
+does not sell. It was refuted by its own declared protocol — "gift for someone
+who works from home" was told the shop does not sell stationery at every margin
+tried — so it is **evaluation tooling rather than shipped code**: the classifier
+and the exam that refuted it live with the measurement tool, and the trained
+classifier the backlog names will be judged on the same queries by the same rules.
+
+→ `src/Search/Answers` · the refuted classifier and its harness:
+`tools/SearchEval/QueryScope`, run with `--suite scope`
 
 ### RAG — Retrieval-Augmented Generation
 

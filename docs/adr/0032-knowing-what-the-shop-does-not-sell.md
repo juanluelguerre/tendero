@@ -23,6 +23,9 @@ and "we don't sell that" is decided by classifying the query into a product type
 
 ## Decision
 
+> Layer B below was **amended the same day** — it is evaluation tooling now, and
+> `SearchAnswer` has two values. See *Amendment, 2026-09-17*.
+
 **Every search page carries an answer, decided beside retrieval and never by a
 threshold on its scores.** `SearchAnswer` is `Exact`, `Related` or `OutOfScope`,
 with an optional help topic; it is null for a browse or a date sort, and it runs
@@ -71,6 +74,36 @@ ranking changes.
 - MCP returns `answer`; UCP search adds `no_exact_match` and `help_available`
   messages (`not_sold` is never sent while layer B is off).
 - The five knobs behind H1–H5, including H2's fusion weight, are deleted.
+
+## Amendment, 2026-09-17 — the classifier is evaluation tooling, the harness is the part that stays
+
+Layer B stayed in `src/Search`, off, for one evening. It is out of the shipped
+code now, and out of the API's shape: `SearchAnswer` is **`Exact` or `Related`**,
+`outOfScopeLabel` is gone from the wire, and UCP's `not_sold` message with it.
+
+The reason is that "kept off" could not become "kept on" by anything short of a
+new measurement, and meanwhile it cost three things. **It could never
+register**: the registration wanted a calibration file, no protocol run had
+produced one, and none would without a better signal — so `AnchorQueryScope`,
+`NoQueryScope` and the registration branch were unreachable code. **The contract
+carried a value nothing could produce**: `OutOfScope` was in the OpenAPI
+document, in the generated TypeScript, in a storefront branch and in a UCP
+notice, and every one of them was dead. And **the mutation survivors could not be
+closed**, because a test cannot kill a mutant in a path no shipped code takes.
+
+What survives is the exam, not the answer. `AnchorQueryScope`, the decision rule,
+the anchor file, the protocol's selection and acceptance rules and `ScopeSet` are
+in `tools/SearchEval/QueryScope`, and `dotnet run --project tools/SearchEval --
+--suite scope` still runs the whole protocol against a model server. The trained
+classifier the exit condition names will be measured on the same 40 scope query
+pairs per culture, by the same rules — which is what makes layer B a baseline
+rather than a memory.
+
+The experiment itself is in the history, in the commit *"feat(search): say what
+kind of answer a page is, and make hybrid the default"*, and its evidence is in
+`docs/blog/reports/2026-09-17-no-answer-research/layer-b-evidence.md`. Nothing
+about the refutation changes: the numbers above stand, and the article on this
+research is written from them.
 
 ## What was rejected
 

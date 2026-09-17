@@ -38,18 +38,6 @@ public sealed class UcpSearchNoticesTests
         Assert.Contains("closest", message.Content);
     }
 
-    [Theory]
-    [InlineData("en", "does not sell")]
-    [InlineData("es", "no vende")]
-    public void An_out_of_scope_answer_names_what_is_not_sold(string culture, string words)
-    {
-        var message = Assert.Single(UcpSearchNotices.For(new SearchAnswer(SearchMatch.OutOfScope, OutOfScopeLabel: "mobile phones"), "phone for my mum", culture));
-
-        Assert.Equal(("info", "not_sold", "$.query"), (message.Type, message.Code, message.Path));
-        Assert.Contains("mobile phones", message.Content);
-        Assert.Contains(words, message.Content);
-    }
-
     [Fact]
     public void A_help_topic_adds_its_own_message()
     {

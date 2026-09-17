@@ -1,4 +1,4 @@
-namespace ElGuerre.Tendero.Search.Answers;
+namespace ElGuerre.Tendero.SearchEval.Scope;
 
 /// <summary>
 /// What one run of layer B counted over a set of scope queries at one margin.
@@ -10,11 +10,6 @@ namespace ElGuerre.Tendero.Search.Answers;
 /// Queries the shop CAN answer that were told it sells nothing for them — the
 /// failure the protocol does not negotiate on.
 /// </param>
-/// <remarks>
-/// Public rather than internal because the measurement tool counts with it through
-/// <c>QueryScopeEvaluation</c>; it is a plain record of four numbers, and exposing
-/// it exposes nothing of how layer B decides.
-/// </remarks>
 public sealed record MarginResult(double Margin, int OutRecognised, int OutTotal, int InMarkedOut);
 
 /// <summary>
@@ -22,7 +17,7 @@ public sealed record MarginResult(double Margin, int OutRecognised, int OutTotal
 /// notebook on 2026-09-17 BEFORE anything was measured, and kept pure so the
 /// rules a run is judged by are proven before the run exists.
 /// </summary>
-internal static class QueryScopeProtocol
+public static class QueryScopeProtocol
 {
     /// <summary>The grid declared in advance. It is not tuned after a run.</summary>
     public static readonly double[] Grid = [0.02, 0.05, 0.08, 0.12];

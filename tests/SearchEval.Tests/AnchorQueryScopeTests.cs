@@ -1,14 +1,15 @@
 using System.Diagnostics;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
-using ElGuerre.Tendero.Search.Answers;
+using ElGuerre.Tendero.SearchEval.Scope;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace ElGuerre.Tendero.Search.Tests;
+namespace ElGuerre.Tendero.SearchEval.Tests;
 
 /// <summary>
 /// Layer B's classifier (ADR 0032), driven with a generator whose vectors the
@@ -183,6 +184,39 @@ public sealed class AnchorQueryScopeTests
         // One batch per culture carries the anchors; every other call is a query.
         Assert.All(verdicts, verdict => Assert.Equal(ScopeOutcome.OutOfScope, verdict.Outcome));
         Assert.Equal((2, 2), (generator.AnchorBatches, generator.Calls.Count(batch => batch is [PhoneQuery])));
+    }
+
+    /// <summary>
+    /// The door the measurement goes through: it computes the calibration from
+    /// the taxonomy it is looking at, so the margin under test is never refused
+    /// by its own fingerprint check — which, before layer B moved here, was the
+    /// one thing standing between the classifier and a run that measured nothing.
+    /// </summary>
+    [Fact]
+    public async Task A_classifier_built_for_a_margin_is_calibrated_to_the_taxonomy_it_will_judge()
+    {
+        var categories = new Categories(Tree);
+
+        var scope = await AnchorQueryScope.MeasuringAsync(
+            new Vectors(new() { [PhoneQuery] = PhoneLike }), categories, margin: 0.05, NullLoggerFactory.Instance, Ct);
+
+        Assert.Equal(new ScopeVerdict(ScopeOutcome.OutOfScope, "teléfonos móviles"), await scope.ClassifyAsync(PhoneQuery, "es", Ct));
+        Assert.Equal(Calibration(), await AnchorQueryScope.CalibrationForAsync(categories, 0.05, Ct));
+    }
+
+    /// <summary>Both cultures' anchors are counted, and each culture's count is the texts its build embeds.</summary>
+    [Fact]
+    public async Task The_anchor_text_count_is_reported_per_culture()
+    {
+        var counts = await AnchorQueryScope.AnchorTextCountsAsync(new Categories(Tree), Ct);
+        var outside = OutOfScopeAnchors.Load();
+
+        Assert.Equal(["es", "en"], counts.Select(count => count.Culture));
+        Assert.All(counts, count =>
+        {
+            var (inside, notSold) = AnchorQueryScope.AnchorTextsFor(Tree, outside, count.Culture);
+            Assert.Equal(inside.Count + notSold.Count, count.Texts);
+        });
     }
 
     private static AnchorQueryScope Scope(

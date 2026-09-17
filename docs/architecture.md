@@ -87,8 +87,8 @@ flowchart LR
     S --> F
     F --> R[Reranker · cross-encoder<br/>GPU only]
     R --> P[Page]
-    Q --> U[Query understanding<br/>help topics · scope by anchors: off, refuted]
-    U --> A[Answer<br/>Exact · Related · OutOfScope]
+    Q --> U[Query understanding<br/>full match · help topics]
+    U --> A[Answer<br/>Exact · Related]
     L -.full match on what a product is.-> A
     A --> P
     S -.not configured or failing.-> L

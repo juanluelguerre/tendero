@@ -94,7 +94,7 @@ public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Quer
                 return null;
 
             return noAnswer.Count(query =>
-                    query.Match is SearchMatch.Related or SearchMatch.OutOfScope
+                    query.Match is SearchMatch.Related
                     || (query.Kind == QueryKinds.NonProduct && query.HelpTopic is not null))
                 / (double)noAnswer.Count;
         }
@@ -103,9 +103,6 @@ public sealed record CultureScore(string Culture, IReadOnlyList<QueryScore> Quer
     /// <summary>For scored queries: how often one with real answers is told nothing matches exactly. Reported, not gated.</summary>
     public double NoticeRate =>
         ScoredQueries == 0 ? 0 : Queries.Count(query => query.NdcgAt10 is not null && query.Match == SearchMatch.Related) / (double)ScoredQueries;
-
-    /// <summary>For scored queries: how many were told the shop does not sell them. Layer B's acceptance needs zero.</summary>
-    public int FalseOutOfScope => Queries.Count(query => query.NdcgAt10 is not null && query.Match == SearchMatch.OutOfScope);
 
     private static double Mean(IEnumerable<double?> values)
     {

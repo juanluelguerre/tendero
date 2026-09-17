@@ -1083,7 +1083,6 @@ export interface components {
         SearchAnswer: {
             match: components["schemas"]["SearchMatch"];
             helpTopic?: null | string;
-            outOfScopeLabel?: null | string;
         };
         SearchEvaluation: {
             vectorLayer: components["schemas"]["VectorLayerReport"];
@@ -1115,7 +1114,7 @@ export interface components {
             score: number;
         };
         /** @enum {unknown} */
-        SearchMatch: "Exact" | "Related" | "OutOfScope";
+        SearchMatch: "Exact" | "Related";
         SearchResultPage: {
             hits: components["schemas"]["SearchHit"][];
             /** Format: int64 */

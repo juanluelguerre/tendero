@@ -3,17 +3,21 @@ using ElGuerre.Tendero.Search.Contracts;
 namespace ElGuerre.Tendero.Ucp.Catalog;
 
 /// <summary>
-/// The shop's own verdict about a query — <see cref="SearchAnswer"/>, layer A/B
-/// of ADR 0032 — translated into UCP's <c>messages</c>.
+/// The shop's own verdict about a query — <see cref="SearchAnswer"/>, ADR 0032 —
+/// translated into UCP's <c>messages</c>.
 ///
 /// **Why this is a translation and not a reuse of the storefront's own copy.**
 /// The storefront renders a help card and a "closest match" banner; an agent
 /// reading `search_catalog` has no banner, only `messages`, so the same fact
 /// has to become a sentence in the field the protocol reserves for exactly
 /// this: "I processed your request, and here is something you should know"
-/// (see <see cref="UcpMessage"/>). No new decision is made here — the model
-/// never enters this class — only the same three facts (exact, related, out
-/// of scope, plus a help topic) said in the protocol's shape.
+/// (see <see cref="UcpMessage"/>). No new decision is made here — no model
+/// enters this class — only the same facts (exact, related, plus a help topic)
+/// said in the protocol's shape.
+///
+/// There was a third, <c>not_sold</c>: the shop does not sell what was asked for
+/// at all. It belonged to a scope classifier that was measured and refuted, so it
+/// was never sent and is gone (ADR 0032, amended 2026-09-17).
 ///
 /// Content is chosen by culture with the same fallback the rest of the shop
 /// uses: the answered language, falling back to <c>es</c>.
@@ -27,33 +31,18 @@ internal static class UcpSearchNotices
 
         List<UcpMessage> notices = [];
 
-        switch (answer)
+        if (answer.Match == SearchMatch.Related)
         {
-            case { Match: SearchMatch.Related }:
-                notices.Add(new UcpMessage
-                {
-                    Type = "info",
-                    Code = "no_exact_match",
-                    Content = Text(
-                        culture,
-                        es: $"Ningún producto coincide exactamente con «{query}»; estos son los más parecidos.",
-                        en: $"No product matches “{query}” exactly; these are the closest."),
-                    Path = "$.query"
-                });
-                break;
-
-            case { Match: SearchMatch.OutOfScope, OutOfScopeLabel: { } label }:
-                notices.Add(new UcpMessage
-                {
-                    Type = "info",
-                    Code = "not_sold",
-                    Content = Text(
-                        culture,
-                        es: $"Esta tienda no vende {label}.",
-                        en: $"This shop does not sell {label}."),
-                    Path = "$.query"
-                });
-                break;
+            notices.Add(new UcpMessage
+            {
+                Type = "info",
+                Code = "no_exact_match",
+                Content = Text(
+                    culture,
+                    es: $"Ningún producto coincide exactamente con «{query}»; estos son los más parecidos.",
+                    en: $"No product matches “{query}” exactly; these are the closest."),
+                Path = "$.query"
+            });
         }
 
         if (answer.HelpTopic is { } topic && HelpTopicDestinations.For(topic) is { } destination)

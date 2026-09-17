@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace ElGuerre.Tendero.Search.Answers;
+namespace ElGuerre.Tendero.SearchEval.Scope;
 
 /// <summary>
 /// Layer B's verdict on one comparison between a query's embedding and the two
@@ -14,13 +14,12 @@ namespace ElGuerre.Tendero.Search.Answers;
 /// has nothing" apart from "the shop has something unusual".
 /// </summary>
 /// <remarks>
-/// Public rather than <c>internal</c> like the rest of this file: a
-/// <c>[Theory]</c> test method must be public for xUnit to discover it
-/// (analyzer rule xUnit1000), and a public method cannot take a less-visible
-/// type as a parameter (CS0051) — <c>QueryScopeDecisionTests</c> takes this
-/// enum directly from <c>InlineData</c>. Everything else layer B exposes today
-/// (<see cref="ScopeVerdict"/>, <see cref="IQueryScope"/>, the anchor types)
-/// stays internal, since nothing outside <c>Search</c> reads them yet.
+/// <b>This whole file is evaluation tooling, not shipped code</b> (ADR 0032,
+/// amended 2026-09-17). Layer B was measured once by the protocol below and
+/// refuted, so the classifier left <c>src/Search</c> and lives here with the
+/// harness that measures it — which is the half a trained successor will reuse.
+/// The shop's own answer has two values, <c>Exact</c> and <c>Related</c>, and
+/// nothing in <c>src/</c> reads anything in this folder.
 /// </remarks>
 public enum ScopeOutcome
 {
@@ -40,29 +39,31 @@ public enum ScopeOutcome
     Ambiguous,
 
     /// <summary>The nearest thing the shop does NOT sell is closer, by at least the
-    /// margin. Only this outcome changes what the shopper sees.</summary>
+    /// margin. The only outcome the protocol counts as a refusal — and, when it
+    /// lands on a query the shop CAN answer, the failure it does not negotiate on.</summary>
     OutOfScope
 }
 
 /// <param name="Outcome">What the comparison decided.</param>
 /// <param name="Label">
 /// The outside anchor's label, when <see cref="Outcome"/> is
-/// <see cref="ScopeOutcome.OutOfScope"/> — what the shop tells the shopper it
-/// does not sell ("teléfonos móviles" / "mobile phones"). The model picked
-/// which anchor was nearest from a closed, committed set; it never phrases the
-/// sentence itself (invariant 12).
+/// <see cref="ScopeOutcome.OutOfScope"/> — the category the query landed
+/// nearest ("teléfonos móviles" / "mobile phones"), reported so a refutation
+/// names what the classifier thought it had found. The model picked which
+/// anchor was nearest from a closed, committed set; it never phrases a sentence
+/// itself (invariant 12).
 /// </param>
-internal sealed record ScopeVerdict(ScopeOutcome Outcome, string? Label = null)
+public sealed record ScopeVerdict(ScopeOutcome Outcome, string? Label = null)
 {
     public static readonly ScopeVerdict Unknown = new(ScopeOutcome.Unknown);
 }
 
 /// <summary>
-/// The port Task 10 wires to a real embedding comparison. <see cref="NoQueryScope"/>
-/// is the stand-in until then, and remains the stand-in on any machine with no
-/// model server — never registered as failing, per <see cref="ScopeOutcome.Unknown"/>.
+/// What the measurement asks a classifier. <see cref="AnchorQueryScope"/> is the
+/// one implementation the protocol has measured; a trained successor would be a
+/// second, judged on the same scope queries by the same rules.
 /// </summary>
-internal interface IQueryScope
+public interface IQueryScope
 {
     Task<ScopeVerdict> ClassifyAsync(string text, string culture, CancellationToken ct = default);
 }
@@ -72,15 +73,15 @@ internal interface IQueryScope
 /// (its localized name or its localized path, "Hogar › Cocina › Menaje de
 /// cocina") or an outside one (one of the committed descriptive texts below).
 /// </summary>
-internal sealed record Anchor(string Code, string Culture, string Text, string Label);
+public sealed record Anchor(string Code, string Culture, string Text, string Label);
 
 /// <summary>The whole committed file, deserialized as-is.</summary>
-internal sealed record OutOfScopeAnchorFile(IReadOnlyList<OutOfScopeCategory> Categories);
+public sealed record OutOfScopeAnchorFile(IReadOnlyList<OutOfScopeCategory> Categories);
 
 /// <param name="Code">A stable identifier, never shown to a shopper (<c>MOBILE_PHONES</c>).</param>
-/// <param name="Label">What a shopper reads after "No vendemos …" / "We don't sell …", per culture.</param>
+/// <param name="Label">How the run names this category in its report, per culture — the wording a shop would have used ("teléfonos móviles" / "mobile phones").</param>
 /// <param name="Texts">Two or three short descriptive phrases per culture, embedded and compared.</param>
-internal sealed record OutOfScopeCategory(
+public sealed record OutOfScopeCategory(
     string Code,
     IReadOnlyDictionary<string, string> Label,
     IReadOnlyDictionary<string, string[]> Texts);
@@ -95,34 +96,16 @@ internal sealed record OutOfScopeCategory(
 /// </param>
 /// <remarks>
 /// A margin chosen for 23 categories cannot silently judge a taxonomy of four
-/// hundred (D5): when the running taxonomy or file no longer matches this
-/// calibration, layer B turns itself off and the shop keeps layer A.
+/// hundred (D5): when the taxonomy or file no longer matches this calibration,
+/// the classifier turns itself off and gives no verdict at all.
 /// </remarks>
-internal sealed record QueryScopeCalibration(double Margin, int InsideAnchors, string CategoriesHash, string OutsideAnchorsHash)
-{
-    private const string ResourceName = "ElGuerre.Tendero.Search.Answers.query-scope.calibration.json";
-
-    /// <summary>
-    /// The calibration compiled into this assembly, or <c>null</c> when none was
-    /// committed — which is what keeps layer B off until a margin has been
-    /// measured by the declared protocol. Absent is a decision, not an error.
-    /// </summary>
-    public static QueryScopeCalibration? LoadEmbedded()
-    {
-        using var stream = typeof(QueryScopeCalibration).Assembly.GetManifestResourceStream(ResourceName);
-        if (stream is null)
-            return null;
-
-        return JsonSerializer.Deserialize<QueryScopeCalibration>(stream, new JsonSerializerOptions(JsonSerializerDefaults.Web))
-            ?? throw new InvalidDataException($"'{ResourceName}' is empty or not a query-scope calibration.");
-    }
-}
+public sealed record QueryScopeCalibration(double Margin, int InsideAnchors, string CategoriesHash, string OutsideAnchorsHash);
 
 /// <summary>
 /// The pure comparison at the centre of layer B — no embeddings, no I/O, so it
 /// is exhaustively testable on its own (ADR 0032, "Decision rule").
 /// </summary>
-internal static class ScopeDecision
+public static class ScopeDecision
 {
     /// <summary>
     /// Larger than any rounding error a cosine-similarity subtraction can
@@ -160,7 +143,7 @@ internal static class ScopeDecision
 /// can tell when it no longer applies (D5) rather than silently misjudging a
 /// taxonomy or an anchor file it was never measured against.
 /// </summary>
-internal static class ScopeFingerprint
+public static class ScopeFingerprint
 {
     /// <summary>
     /// Field and row separators are control characters that cannot appear in a
@@ -187,7 +170,7 @@ internal static class ScopeFingerprint
 
 /// <summary>
 /// The categories the shop does NOT sell (ADR 0032, layer B), embedded from
-/// <c>Answers/out-of-scope-anchors.json</c> — written by us, before any
+/// <c>QueryScope/out-of-scope-anchors.json</c> — written by us, before any
 /// measurement, so there is no third-party taxonomy to license (CLAUDE.md's
 /// licensing policy) and no chance of the anchors being tuned to the eval
 /// queries they will later be judged against.
@@ -233,9 +216,9 @@ internal static class ScopeFingerprint
 /// a word without sharing a product.</item>
 /// </list>
 /// </summary>
-internal static class OutOfScopeAnchors
+public static class OutOfScopeAnchors
 {
-    private const string ResourceName = "ElGuerre.Tendero.Search.Answers.out-of-scope-anchors.json";
+    private const string ResourceName = "ElGuerre.Tendero.SearchEval.Scope.out-of-scope-anchors.json";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -263,18 +246,5 @@ internal static class OutOfScopeAnchors
 
     private static Stream OpenResource() =>
         typeof(OutOfScopeAnchors).Assembly.GetManifestResourceStream(ResourceName)
-        ?? throw new InvalidDataException($"'{ResourceName}' was not compiled into the Search assembly.");
-}
-
-/// <summary>
-/// The stand-in for <see cref="IQueryScope"/> until Task 10 wires a real
-/// classifier, and the permanent stand-in on any process with no embedding
-/// generator configured. Always <see cref="ScopeVerdict.Unknown"/>, and never
-/// counted as a degradation: an unconfigured layer is not a failing one — the
-/// same distinction <c>NoVectorLayer</c> already draws for the vector layer.
-/// </summary>
-internal sealed class NoQueryScope : IQueryScope
-{
-    public Task<ScopeVerdict> ClassifyAsync(string text, string culture, CancellationToken ct = default) =>
-        Task.FromResult(ScopeVerdict.Unknown);
+        ?? throw new InvalidDataException($"'{ResourceName}' was not compiled into the SearchEval assembly.");
 }

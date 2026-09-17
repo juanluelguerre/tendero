@@ -152,38 +152,22 @@
                one polite live region for this branch, and two concurrent
                ones race a screen reader against itself. Matches the
                empty-state notice above, which carries none either. -->
-          @switch (done.answer?.match) {
-            @case ('Related') {
-              <div class="notice">
-                <h2 class="notice__title">{{ t('search.related.title', { query: done.query }) }}</h2>
-              </div>
-              <h2 class="results-heading">{{ t('search.related.heading') }}</h2>
-            }
-            @case ('OutOfScope') {
-              <div class="notice">
-                <h2 class="notice__title">
-                  {{ t('search.outOfScope.title', { label: done.answer.outOfScopeLabel }) }}
-                </h2>
-                <a [routerLink]="links.home()">{{ t('search.outOfScope.departments') }}</a>
-              </div>
-              <h2 class="results-heading">{{ t('search.outOfScope.others') }}</h2>
-            }
+          @if (done.answer?.match === 'Related') {
+            <div class="notice">
+              <h2 class="notice__title">{{ t('search.related.title', { query: done.query }) }}</h2>
+            </div>
+            <h2 class="results-heading">{{ t('search.related.heading') }}</h2>
           }
 
-          @if (done.answer?.match !== 'OutOfScope') {
-            <!-- The total would promise products that are not the answer when
-                 the shop does not sell the thing at all, so this line is the one
-                 part of the page `OutOfScope` does not get. -->
-            <div class="results-meta">
-              <p role="status" aria-live="polite">
-                {{ t('search.results', { total: done.total, query: done.query }) }}
-              </p>
-              <span class="numeric took">{{ t('search.took', { ms: done.tookMs }) }}</span>
-            </div>
-          }
+          <div class="results-meta">
+            <p role="status" aria-live="polite">
+              {{ t('search.results', { total: done.total, query: done.query }) }}
+            </p>
+            <span class="numeric took">{{ t('search.took', { ms: done.tookMs }) }}</span>
+          </div>
 
           <ul class="grid">
-            @for (hit of visibleHits(done); track hit.productId) {
+            @for (hit of done.hits; track hit.productId) {
               <li>
                 <storefront-product-card class="card" [hit]="hit" />
               </li>

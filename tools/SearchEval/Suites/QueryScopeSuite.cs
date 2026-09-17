@@ -5,12 +5,10 @@ using System.Text;
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Ports;
-using ElGuerre.Tendero.Search;
-using ElGuerre.Tendero.Search.Answers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Embeddings;
 using ElGuerre.Tendero.Search.Evaluation;
-using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.SearchEval.Scope;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -127,7 +125,7 @@ internal sealed class QueryScopeSuite : IEvaluationSuite
             var devOutcomes = new Dictionary<double, List<QueryOutcome>>();
             var warmUps = new List<(double Margin, IReadOnlyList<GenerationCall> Calls)>();
 
-            foreach (var margin in QueryScopeEvaluation.Grid)
+            foreach (var margin in QueryScopeProtocol.Grid)
             {
                 var (classifier, warm) = await CreateAsync(margin, ct);
                 warmUps.Add((margin, warm));
@@ -145,8 +143,8 @@ internal sealed class QueryScopeSuite : IEvaluationSuite
                 }
             }
 
-            var combined = QueryScopeEvaluation.Combine(devPerCulture);
-            var chosen = QueryScopeEvaluation.Choose(combined);
+            var combined = QueryScopeProtocol.Combine(devPerCulture);
+            var chosen = QueryScopeProtocol.Choose(combined);
 
             report.AppendLine("## scope-dev — the declared grid");
             report.AppendLine();
@@ -164,7 +162,7 @@ internal sealed class QueryScopeSuite : IEvaluationSuite
                 : "**No margin chosen: every margin on the grid told an in-scope dev query the shop sells nothing for it.**");
             report.AppendLine();
 
-            foreach (var margin in QueryScopeEvaluation.Grid)
+            foreach (var margin in QueryScopeProtocol.Grid)
                 AppendOutcomes(report, $"scope-dev at margin {F(margin)}", devOutcomes[margin], onlyWrong: margin != chosen);
 
             var accepted = false;
@@ -199,7 +197,7 @@ internal sealed class QueryScopeSuite : IEvaluationSuite
                         set.Queries.Where(query => QueryKinds.IsNoAnswer(query.Kind)).Select(query => (query.Query, "out", query.Kind ?? "")), ct));
                 }
 
-                accepted = QueryScopeEvaluation.Accepts(
+                accepted = QueryScopeProtocol.Accepts(
                     [.. testPerCulture.Select(row => row.Result)],
                     [.. goldenPerCulture.Select(row => row.InMarkedOut)]);
 
@@ -226,7 +224,7 @@ internal sealed class QueryScopeSuite : IEvaluationSuite
                 AppendOutcomes(report, "golden (no answer)", noAnswerOutcomes, onlyWrong: false);
             }
 
-            AppendLatency(report, warmUps, timing.Calls, await QueryScopeEvaluation.AnchorTextCountsAsync(categories, ct));
+            AppendLatency(report, warmUps, timing.Calls, await AnchorQueryScope.AnchorTextCountsAsync(categories, ct));
 
             report.AppendLine("## Verdict");
             report.AppendLine();
@@ -245,8 +243,11 @@ internal sealed class QueryScopeSuite : IEvaluationSuite
 
             if (accepted && options.WriteCalibration && chosen is { } calibrated)
             {
-                var record = await QueryScopeEvaluation.FingerprintAsync(categories, calibrated, ct);
-                var path = options.CalibrationPath ?? Path.Combine("src", "Search", "Answers", "query-scope.calibration.json");
+                // A record of what was measured, not something a process reads:
+                // since ADR 0032 was amended nothing in src/ knows this file
+                // exists, and a successor classifier would write its own.
+                var record = await AnchorQueryScope.CalibrationForAsync(categories, calibrated, ct);
+                var path = options.CalibrationPath ?? Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json");
 
                 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
                 await File.WriteAllTextAsync(path,
@@ -257,15 +258,15 @@ internal sealed class QueryScopeSuite : IEvaluationSuite
             return accepted ? 0 : options.FailUnderThresholds ? 1 : 0;
         }
 
-        private async Task<(ScopeClassifier Classifier, IReadOnlyList<GenerationCall> WarmUp)> CreateAsync(double margin, CancellationToken ct)
+        private async Task<(AnchorQueryScope Classifier, IReadOnlyList<GenerationCall> WarmUp)> CreateAsync(double margin, CancellationToken ct)
         {
             var before = timing.Calls.Count;
-            var classifier = await QueryScopeEvaluation.CreateAsync(timing, categories, margin, loggers, ct);
+            var classifier = await AnchorQueryScope.MeasuringAsync(timing, categories, margin, loggers, ct);
             return (classifier, [.. timing.Calls.Skip(before)]);
         }
 
         private static async Task<List<QueryOutcome>> ClassifyAsync(
-            ScopeClassifier classifier, string culture, IEnumerable<(string Query, string Scope, string Kind)> queries, CancellationToken ct)
+            AnchorQueryScope classifier, string culture, IEnumerable<(string Query, string Scope, string Kind)> queries, CancellationToken ct)
         {
             var outcomes = new List<QueryOutcome>();
 

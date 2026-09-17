@@ -3,8 +3,16 @@ using System.Text.Json.Serialization;
 namespace ElGuerre.Tendero.Search.Contracts;
 
 /// <summary>
-/// What kind of answer a search page is (ADR 0032, layer A). No model decides
-/// this: every value is a plain fact about the query and the index.
+/// What kind of answer a search page is (ADR 0032). No model decides this: both
+/// values are a plain fact about the query and the index.
+///
+/// <para>
+/// There were three (ADR 0032, amended 2026-09-17). <c>OutOfScope</c> belonged to
+/// a scope classifier that was measured by its declared protocol and refuted, and
+/// it could never be sent: with no calibration the classifier never registered,
+/// so the wire carried a value nothing could produce. The classifier and its
+/// harness are evaluation tooling now (<c>tools/SearchEval/QueryScope</c>).
+/// </para>
 /// </summary>
 [JsonConverter(typeof(JsonStringEnumConverter<SearchMatch>))]
 public enum SearchMatch
@@ -21,13 +29,7 @@ public enum SearchMatch
     /// closest things the shop sells, not matches — and the page has to say so
     /// rather than let them pass as an exact answer.
     /// </summary>
-    Related,
-
-    /// <summary>
-    /// Layer B decided the query names something the shop does not sell at all.
-    /// Set only by the query-scope classifier, never by layer A.
-    /// </summary>
-    OutOfScope
+    Related
 }
 
 /// <param name="Match">What kind of answer this is.</param>
@@ -36,15 +38,11 @@ public enum SearchMatch
 /// A help card above the products, never a redirect: the word still finds
 /// products too.
 /// </param>
-/// <param name="OutOfScopeLabel">
-/// The outside anchor's label, when <see cref="Contracts.SearchMatch.OutOfScope"/>
-/// — what the shop tells the shopper it does not sell.
-/// </param>
-public sealed record SearchAnswer(SearchMatch Match, string? HelpTopic = null, string? OutOfScopeLabel = null);
+public sealed record SearchAnswer(SearchMatch Match, string? HelpTopic = null);
 
 /// <summary>
-/// Layer A / B's port: what kind of answer a page is. See
-/// <see cref="ElGuerre.Tendero.Search.Answers.SearchAnswerer"/> for layer A's
+/// The port: what kind of answer a page is. See
+/// <see cref="ElGuerre.Tendero.Search.Answers.SearchAnswerer"/> for the
 /// implementation, decided with no model.
 /// </summary>
 public interface ISearchAnswerer

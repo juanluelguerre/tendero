@@ -69,10 +69,6 @@ export class SearchPage {
    *  page's own copy of this number (`ReturnsPolicy`). */
   protected readonly returnsWindowDays = this.returns.windowDays;
 
-  /** `OutOfScope` never promises more than this — the total would still count
-   *  every irrelevant neighbour the vector side found. */
-  protected readonly outOfScopeLimit = 4;
-
   /**
    * The last query that was actually sent, so switching language can re-run it.
    *
@@ -230,15 +226,5 @@ export class SearchPage {
         }),
       error: () => this.state.set({ status: 'failed' }),
     });
-  }
-
-  /**
-   * The cards to actually show. `OutOfScope` caps at `outOfScopeLimit`: the
-   * vector side always finds ten neighbours even for a phone in a shop that
-   * sells none, and showing all of them would read as an answer rather than as
-   * "here is what we do sell instead".
-   */
-  protected visibleHits(done: { hits: SearchHit[]; answer: SearchAnswer | null }): SearchHit[] {
-    return done.answer?.match === 'OutOfScope' ? done.hits.slice(0, this.outOfScopeLimit) : done.hits;
   }
 }

@@ -54,7 +54,7 @@ public sealed record EvaluationOptions(
           --scope <dir>           Scope query directory (default tools/SearchEval/scope)
           --categories <file>     Category seed         (default seed/categories.sample.json)
           --write-calibration     When the protocol ACCEPTS, write the chosen margin and its fingerprint
-          --calibration <file>    Where to write it     (default src/Search/Answers/query-scope.calibration.json)
+          --calibration <file>    Where to write it     (default tools/SearchEval/scope/query-scope.calibration.json)
           --ci                    With scope: exit 1 when the protocol refutes layer B
         """;
 
@@ -128,6 +128,6 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("scope", Path.Combine("tools", "SearchEval", "scope")),
             values.GetValueOrDefault("categories", Path.Combine("seed", "categories.sample.json")),
             writeCalibration,
-            values.GetValueOrDefault("calibration", Path.Combine("src", "Search", "Answers", "query-scope.calibration.json")));
+            values.GetValueOrDefault("calibration", Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json")));
     }
 }

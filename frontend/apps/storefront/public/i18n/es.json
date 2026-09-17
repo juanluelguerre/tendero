@@ -159,11 +159,6 @@
     "idle": "Escribe algo y te lo busco.",
     "label": "Buscar productos",
     "lede": "Cien productos, dos idiomas y una búsqueda que se mide en cada pull request.",
-    "outOfScope": {
-      "title": "No vendemos {{label}}",
-      "others": "Otras cosas que sí vendemos",
-      "departments": "Ver los departamentos"
-    },
     "placeholder": "Zapatillas, cafetera, mochila…",
     "related": {
       "title": "No tenemos nada que coincida exactamente con «{{query}}»",

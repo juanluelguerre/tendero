@@ -3526,12 +3526,6 @@
               "null",
               "string"
             ]
-          },
-          "outOfScopeLabel": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         }
       },
@@ -3646,8 +3640,7 @@
       "SearchMatch": {
         "enum": [
           "Exact",
-          "Related",
-          "OutOfScope"
+          "Related"
         ]
       },
       "SearchResultPage": {

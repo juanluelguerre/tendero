@@ -143,14 +143,19 @@ public sealed class UcpCatalogConformanceTests
         Assert.Equal(["no_exact_match"], answer.Messages!.Select(message => message.Code));
     }
 
+    /// <summary>
+    /// A notice that is still true of an empty page travels with it, and
+    /// "no_results" comes after it. Only "no_exact_match" is dropped — see the
+    /// test below for why.
+    /// </summary>
     [Fact]
     public void An_empty_page_says_so_after_its_notices()
     {
-        var notices = UcpSearchNotices.For(new SearchAnswer(SearchMatch.OutOfScope, OutOfScopeLabel: "móviles"), "móvil", "es");
+        var notices = UcpSearchNotices.For(new SearchAnswer(SearchMatch.Related, HelpTopic: "returns"), "devoluciones", "es");
 
         var answer = UcpCatalogAnswers.Search([], BaseUrl, limit: 10, offset: 0, total: 0, notices);
 
-        Assert.Equal(["not_sold", "no_results"], answer.Messages!.Select(message => message.Code));
+        Assert.Equal(["help_available", "no_results"], answer.Messages!.Select(message => message.Code));
         Assert.Equal("$.query", answer.Messages![^1].Path);
     }
 

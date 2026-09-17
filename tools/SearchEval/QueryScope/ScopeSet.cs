@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace ElGuerre.Tendero.Search.Evaluation;
+namespace ElGuerre.Tendero.SearchEval.Scope;
 
 /// <summary>
 /// One culture's scope queries: whether the shop sells anything that answers a

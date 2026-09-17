@@ -30,7 +30,7 @@ public sealed class EvaluationSettingsTests
 
         Assert.False(plain.WriteCalibration);
         Assert.Equal(
-            (Path.Combine("tools", "SearchEval", "scope"), Path.Combine("seed", "categories.sample.json"), Path.Combine("src", "Search", "Answers", "query-scope.calibration.json")),
+            (Path.Combine("tools", "SearchEval", "scope"), Path.Combine("seed", "categories.sample.json"), Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json")),
             (plain.ScopeDirectory, plain.CategoriesPath, plain.CalibrationPath));
         Assert.True(writing.WriteCalibration);
         Assert.Equal("out.json", writing.CalibrationPath);

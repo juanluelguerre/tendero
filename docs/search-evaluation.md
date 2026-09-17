@@ -70,17 +70,19 @@ that added them, with the reasoning per query, is
 - **recall@50** — did the relevant items appear at all (guards the retrieval
   stage independently of ranking).
 
-Three more since 2026-09-17 measure what the page **says**, not what it ranks
+Two more since 2026-09-17 measure what the page **says**, not what it ranks
 (ADR 0032). They are reported and never gated:
 
 - **admitted** — for the queries with nothing to find: the share whose page admits
-  it — answered `Related` or `OutOfScope`, or, for a `non-product` query, given a
-  help topic. Higher is better.
+  it — answered `Related`, or, for a `non-product` query, given a help topic.
+  Higher is better.
 - **notice rate** — for the 52 scored queries per culture, which do have answers:
   the share told that nothing matches exactly (`Related`).
-- **false out-of-scope** — for the scored queries: how many were told the shop does
-  not sell them at all. It has to be zero. Only layer B can answer `OutOfScope`, so
-  while it is off this is zero by construction.
+
+There were three. **false out-of-scope** counted the scored queries told the shop
+does not sell them at all, and it had to be zero; only layer B could answer
+`OutOfScope`, so it was zero by construction while layer B was off, and it left
+the report with the classifier (ADR 0032, amended).
 
 ## CI gate
 
@@ -165,14 +167,21 @@ same way up to 0.05.
 - **Latency**, which closes a deviation from the design (layer B embeds the query
   itself, because the vector port returns ids, not vectors): a query embedding
   costs p50 11.1 ms and p95 13.6 ms; the anchors take 324–446 ms per culture cold.
-- **Layer B's code stays in the tree, off**, pending the author's decision: with no
-  calibration file it never registers.
+- **Layer B is evaluation tooling now**, decided the same day (ADR 0032, amended).
+  Keeping it off in `src/Search` bought nothing — with no calibration file it could
+  never register — and cost unreachable code, an `OutOfScope` on the wire nothing
+  could send, and eleven mutation survivors no test could kill. The classifier, the
+  anchor file, the protocol's rules and the 40 scope query pairs per culture are
+  `tools/SearchEval/QueryScope`, and `--suite scope` still runs the protocol whole:
+  everything above is reproducible, and it is the exam a trained classifier has to
+  sit. The shipped answer has two values.
 
 **What the gate says now.** The third gate run is recorded below, in *The third gate
 run, and hybrid becomes the default*. On what the page says: every query with
-nothing to find is admitted (1.00, both cultures, every strategy), no scored query
-is told it is out of scope (0 — trivially, while layer B is off), and the notice
-rate is 0.481 (en) and 0.462 (es).
+nothing to find is admitted (1.00, both cultures, every strategy) and the notice
+rate is 0.481 (en) and 0.462 (es). No scored query was told it is out of scope —
+trivially, since layer B was already off, and since it moved out of the shipped
+code no page can say it at all.
 
 ### Where the notice lands, read by query kind (2026-09-17)
 
@@ -566,7 +575,8 @@ reranked, because reranking is a capability now and a GPU gate has a reranker:
 Every figure equals its 2026-09-15 counterpart. Hybrid clears its bars and beats
 lexical with or without the reranker (0.810 / 0.783 without it), so the condition
 holds either way. No scored query was told it is out of scope (false out-of-scope
-0 for every strategy and culture — trivially, while layer B is off); the notice rate was 0.538 (en) and 0.519 (es) — measured before the
+0 for every strategy and culture — trivially, since layer B was off, and the column
+left the report with the classifier the same day); the notice rate was 0.538 (en) and 0.519 (es) — measured before the
 measurement-token rule, which took it to 0.481 / 0.462 — the same for all strategies; and every query with nothing to find was admitted
 (1.00), while hybrid still shows ten products on those pages. Hybrid answers every
 search now; lexical is what it degrades to, and CI still gates lexical on its own

@@ -19,11 +19,11 @@ export type SearchHit = Schemas['SearchHit'];
 export type SearchResultPage = Schemas['SearchResultPage'];
 
 /**
- * Layer A (ADR 0032): what kind of answer a page is, decided with no model.
- * `Answer` is absent for a browse or a date order — there is nothing to judge.
+ * What kind of answer a page is (ADR 0032), decided with no model: `Exact` when
+ * some product carries every word, `Related` when the results are only the
+ * closest things. Absent for a browse or a date order — there is nothing to judge.
  */
 export type SearchAnswer = Schemas['SearchAnswer'];
-export type SearchMatch = SearchAnswer['match'];
 
 /**
  * `GET /api/search/evaluation`: the committed golden sets asked of both

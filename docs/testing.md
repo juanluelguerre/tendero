@@ -2,10 +2,12 @@
 
 Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short.
 
-**What is in the repository today** (2026-09-17, at the close of the search-answers
-work): xUnit v3, CsCheck, NetArchTest.Rules, Testcontainers.PostgreSql,
+**What is in the repository today** (2026-09-17, after layer B moved to the
+evaluation tool): xUnit v3, CsCheck, NetArchTest.Rules, Testcontainers.PostgreSql,
 `WebApplicationFactory`, vitest and Playwright — 1035 backend tests (1014 green,
-21 skipped with a reason), 70 frontend, 20 browser specs. NSubstitute,
+21 skipped with a reason), 69 frontend, 20 browser specs. Layer B's 37 cases went
+from `Search.Tests` to `SearchEval.Tests` with the code they drive, and 13 more
+went with the production wiring that no longer exists. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
 fakes and the contract suites have not needed a mock, and nothing snapshots
 yet. Respawn was declined — a fresh database per test is cheaper than a reset.
@@ -86,8 +88,18 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 
 | project | mutated with | of covered | of total | set |
 |---|---|---:|---:|---|
-| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 76.23 % | 54.65 % | 2026-09-17 |
+| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 76.23 % | 54.65 % | 2026-09-17 · **stale, see below** |
 | `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 69.34 % | 61.29 % | 2026-09-17 |
+
+**Search's baseline was measured with layer B inside `src/Search`, and layer B
+left the same day** (ADR 0032, amended): the classifier, its anchors, its
+protocol and `ScopeSet` are in `tools/SearchEval/QueryScope` now, and
+`SearchAnswerer` lost a dependency with them. The mutants that produced 76.23 %
+are therefore no longer the mutants of this project, so **the next phase close
+re-derives it rather than ratcheting against it** — a first run after the move
+sets the number again, the way the first run of a project always does. The
+survivors below are kept as they were classified, minus layer B's, because they
+are still the notes for the code that stayed.
 
 **What a survivor may be that the runner makes it.** A mutant inside a `static
 readonly` field or a static property initializer — a phrase list, an analyser
@@ -137,24 +149,35 @@ touched, both run. Reports in `docs/blog/reports/2026-09-17-no-answer-research/s
   filter (`"active"` → `""` in `Elasticsearch.cs`), first misread as an artefact —
   the literal lives in the lambda body, and `ElasticsearchRequestBodyTests`
   asserted the key `status` but never its value; the value is asserted now, and
-  the hand mutation turns four of its tests red. 22 **equivalent**: accent folding for letters no help
+  the hand mutation turns four of its tests red. 19 **equivalent**: accent folding
+  for letters no help
   phrase depends on (`í` proven by hand — every phrase carrying *política* also
   carries *devolución*), an empty-word filter, hybrid's `total` branches
   (`ranked.Count ≥ Hits.Count ≥ Total` always), a card lookup with no ids, RRF's
   best-position `Min`/`Max` and its tie order (equal fused scores imply equal
   positions at the depths the shop uses), `Any`/`All` over the one golden source,
-  a fingerprint's sort direction and a tolerance boundary with no committed
-  calibration, `AddQueryScope` while none is embedded, a retry flag's initial
+  a retry flag's initial
   value, the empty-golden-set guard. 14 **argument guards** another guard one call
   down already throws for, 10 **message wordings** and 11 **logging, timing and
   telemetry** calls: noise. 12 **adapter plumbing** (HTTP clients, base
   addresses, `EnsureSuccessStatusCode`, the Qdrant registration) that the
   container and model-server tests prove against the real thing. **Written down,
   waiting**: 3 in the candidate reranker's revision check (an evaluation-only path
-  from 2026-09-16), and 11 in layer B (`AnchorQueryScope` normalisation, `Max`
-  over inside anchors, the culture filter, the English fingerprint fields, the
-  anchors file's bytes, its `TimeProvider`) — refuted and kept off by the author's
-  decision; they are tests to write the day it is revived, not before.
+  from 2026-09-16).
+- **Fourteen of those 130 left `src/Search` later the same day, with layer B.**
+  Eleven were the classifier's own — `AnchorQueryScope`'s normalisation, its `Max`
+  over the inside anchors, the culture filter, the English fingerprint fields, the
+  anchors file's bytes, its `TimeProvider` — and three sat in the equivalent group
+  above and have been taken out of it: `AddQueryScope` while no calibration is
+  embedded, the fingerprint's sort direction, and the tolerance boundary with no
+  committed calibration. That is why equivalent reads 19 rather than the 22 the
+  run reported, and why the classified groups now sum to **116** rather than 130:
+  `46 + 1 + 19 + 14 + 10 + 11 + 12 + 3`. The run's own report still says 130 —
+  it measured a project that no longer exists in that shape, which is the other
+  reason the next phase close re-derives the baseline rather than ratcheting.
+  Worth keeping as the lesson: every one of the fourteen was unreachable from any
+  shipped call, and **a test cannot kill a mutant in code nothing runs** — a
+  ratchet was never going to close them.
 - **`Ucp.Tests` stays out of Search's config**: the only Search code it reaches is
   `HelpTopicDestinations`, a static dictionary whose mutants are runner artefacts
   `HelpTopicsTests` already kills by hand.

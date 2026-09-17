@@ -34,20 +34,6 @@
                       LogicalName="ElGuerre.Tendero.Search.Evaluation.eval.thresholds.json" />
   </ItemGroup>
 
-  <!-- Layer B's outside anchors (ADR 0032) — written by us, before any
-       measurement, so there is no third-party taxonomy to license. -->
-  <ItemGroup>
-    <EmbeddedResource Include="Answers\out-of-scope-anchors.json"
-                      LogicalName="ElGuerre.Tendero.Search.Answers.out-of-scope-anchors.json" />
-  </ItemGroup>
-
-  <!-- Layer B's calibrated margin, compiled in only once it has been measured
-       (ADR 0032). Its absence is what keeps layer B off in every process. -->
-  <ItemGroup Condition="Exists('Answers\query-scope.calibration.json')">
-    <EmbeddedResource Include="Answers\query-scope.calibration.json"
-                      LogicalName="ElGuerre.Tendero.Search.Answers.query-scope.calibration.json" />
-  </ItemGroup>
-
   <!-- The adapters stay internal (an architecture rule), so the tests that drive
        them — in memory, and against a real Qdrant — are named here. -->
   <ItemGroup>

@@ -159,11 +159,6 @@
     "idle": "Type something and I will look it up.",
     "label": "Search products",
     "lede": "A hundred products, two languages and a search that is measured on every pull request.",
-    "outOfScope": {
-      "title": "We don’t sell {{label}}",
-      "others": "Other things we do sell",
-      "departments": "Browse the departments"
-    },
     "placeholder": "Running shoes, coffee maker, backpack…",
     "related": {
       "title": "Nothing matches “{{query}}” exactly",

@@ -98,28 +98,6 @@ public sealed class NoAnswerQueriesTests
 
         Assert.Equal(1d, score.Admitted);
         Assert.Equal(0d, score.NoticeRate);
-        Assert.Equal(0, score.FalseOutOfScope);
-    }
-
-    [Fact]
-    public async Task A_scored_query_told_the_shop_does_not_sell_it_is_a_false_out_of_scope()
-    {
-        var golden = new GoldenSet("es", "seed",
-        [
-            new GoldenQuery("móvil para mi madre de 70 años", [], QueryKinds.NotSold, "holdout", "X06"),
-            new GoldenQuery("cafetera italiana", [new Judgment("B07COOK01", 3, "italian coffee maker")], QueryKinds.Feature, "holdout", "X07")
-        ]);
-
-        var answerer = new AnswerByQuery(new()
-        {
-            ["móvil para mi madre de 70 años"] = new SearchAnswer(SearchMatch.Related),
-            ["cafetera italiana"] = new SearchAnswer(SearchMatch.OutOfScope, OutOfScopeLabel: "coffee makers")
-        });
-
-        var score = await new RelevanceEvaluator(new Answering(Hit("p1", "Lámpara")), answerer)
-            .RunAsync(golden, new Dictionary<string, string> { ["p1"] = "B12LAM0609" }, Ct);
-
-        Assert.Equal(1, score.FalseOutOfScope);
     }
 
     [Fact]
@@ -153,7 +131,6 @@ public sealed class NoAnswerQueriesTests
 
         Assert.Null(score.Admitted);
         Assert.Equal(0d, score.NoticeRate);
-        Assert.Equal(0, score.FalseOutOfScope);
     }
 
     private static SearchHit Hit(string productId, string name) =>

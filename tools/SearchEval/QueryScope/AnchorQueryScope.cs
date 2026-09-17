@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
-namespace ElGuerre.Tendero.Search.Answers;
+namespace ElGuerre.Tendero.SearchEval.Scope;
 
 /// <summary>
 /// Layer B (ADR 0032): whether a query names something the shop does not sell,
@@ -13,25 +14,32 @@ namespace ElGuerre.Tendero.Search.Answers;
 /// comparison and a calibrated margin deciding how clear the win must be.
 ///
 /// <para>
-/// <b>Every failure is "no verdict"</b> (invariant 8). A model server that is
-/// down, slow or answering nonsense leaves the page to layer A, which needs no
-/// model; nothing here ever throws past the caller, except the caller's own
-/// cancellation.
+/// <b>It is measured, not shipped</b> (ADR 0032, amended 2026-09-17). It was the
+/// one candidate the protocol has run, and the protocol refuted it; it lives
+/// here so the next candidate is measured against the same anchors, the same
+/// rules and the same queries rather than against a memory of them.
 /// </para>
 ///
 /// <para>
-/// <b>It switches itself off</b> when the running taxonomy or the committed
-/// anchor file is not the one its margin was measured against (D5), and says
-/// so once. A margin chosen for 23 categories has no authority over 400.
+/// <b>Every failure is "no verdict"</b>, which the protocol treats as "did not
+/// run" rather than as an answer. A model server that is down, slow or answering
+/// nonsense leaves the run with nothing to count; nothing here ever throws past
+/// the caller, except the caller's own cancellation.
+/// </para>
+///
+/// <para>
+/// <b>It switches itself off</b> when the taxonomy or the committed anchor file
+/// is not the one its margin was measured against (D5), and says so once. A
+/// margin chosen for 23 categories has no authority over 400.
 /// </para>
 ///
 /// <para>
 /// The query is embedded here rather than reused from the vector side: the
-/// vector port answers product ids, not the query's vector (a recorded
-/// deviation from the design; Task 12 measures what it costs).
+/// vector port answers product ids, not the query's vector (a recorded deviation
+/// from the design, and the reason the run reports its own latency).
 /// </para>
 /// </summary>
-internal sealed class AnchorQueryScope(
+public sealed class AnchorQueryScope(
     IEmbeddingGenerator<string, Embedding<float>> generator,
     ICategoryReader categories,
     QueryScopeCalibration calibration,
@@ -39,24 +47,24 @@ internal sealed class AnchorQueryScope(
     ILogger<AnchorQueryScope> logger) : IQueryScope
 {
     /// <summary>The joiner a shopper reads in a breadcrumb, "Hogar › Cocina › Menaje de cocina".</summary>
-    internal const string PathSeparator = " › ";
+    public const string PathSeparator = " › ";
 
-    /// <summary>The same budget the vector side has (P8-7): past it, the page is layer A's.</summary>
-    internal static readonly TimeSpan QueryBudget = TimeSpan.FromSeconds(1.5);
+    /// <summary>The same budget the vector side has (P8-7), so a measurement says what a shop would have paid.</summary>
+    public static readonly TimeSpan QueryBudget = TimeSpan.FromSeconds(1.5);
 
     /// <summary>
     /// How long one culture's anchors may take to embed — a few dozen texts,
     /// which a CPU needs longer for than one query. The build runs in the
     /// background, so this bounds a shared build, never a shopper's request.
     /// </summary>
-    internal static readonly TimeSpan AnchorBudget = TimeSpan.FromSeconds(10);
+    public static readonly TimeSpan AnchorBudget = TimeSpan.FromSeconds(10);
 
     /// <summary>
     /// After a failed build, how long before another is tried: the same rhythm
     /// <c>QdrantVectorLayer</c> remembers a "no" for, so a model server that is
     /// down is asked every ten seconds rather than on every query.
     /// </summary>
-    internal static readonly TimeSpan RetryAfterFailure = TimeSpan.FromSeconds(10);
+    public static readonly TimeSpan RetryAfterFailure = TimeSpan.FromSeconds(10);
 
     /// <summary>
     /// Text Embeddings Inference's default <c>max_client_batch_size</c>: a request
@@ -64,9 +72,13 @@ internal sealed class AnchorQueryScope(
     /// texts against the seed taxonomy, so they go in batches of this size — found
     /// by the protocol run of 2026-09-17, which could not build them in one.
     /// </summary>
-    internal const int MaxBatchSize = 32;
+    public const int MaxBatchSize = 32;
 
-    private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
+    // Its own source, named after the tool it now lives in: this classifier ran
+    // inside the shop until 2026-09-17, and borrowing the shop's telemetry source
+    // from a command-line tool would file its spans under an assembly that no
+    // longer contains it.
+    private static readonly ActivitySource Telemetry = new("ElGuerre.Tendero.SearchEval");
 
     // Null until a build finishes; then either Off (for good) or the anchors (for good).
     private volatile Prepared? prepared;
@@ -82,7 +94,8 @@ internal sealed class AnchorQueryScope(
     /// <b>A query never waits for the anchors.</b> Until they exist, it starts
     /// the background build (once, and not inside the back-off after a failure)
     /// and is answered "no verdict" at once — so a model server that hangs costs
-    /// a shopper nothing, instead of queueing every request behind the build.
+    /// a caller nothing, instead of queueing every request behind the build. The
+    /// measurement calls <see cref="WarmAsync"/> first for exactly that reason.
     /// </summary>
     public async Task<ScopeVerdict> ClassifyAsync(string text, string culture, CancellationToken ct = default)
     {
@@ -117,7 +130,7 @@ internal sealed class AnchorQueryScope(
         {
             activity?.SetTag("search.scope.unavailable", exception.GetType().Name);
             activity?.SetTag("search.scope.outcome", ScopeOutcome.Unknown.ToString());
-            logger.LogDebug(exception, "Query scope gave no verdict for this query; layer A decides the page.");
+            logger.LogDebug(exception, "Query scope gave no verdict for this query.");
             return ScopeVerdict.Unknown;
         }
     }
@@ -126,9 +139,10 @@ internal sealed class AnchorQueryScope(
     /// Starts the anchor build if nothing is built, nothing is building and the
     /// back-off has passed, and returns the build in flight — or a completed task
     /// when there is nothing to do. Never faults: a failed build is logged and
-    /// remembered. Internal so a test can wait for the build instead of sleeping.
+    /// remembered. Public so the measurement — and a test — can wait for the build
+    /// instead of sleeping.
     /// </summary>
-    internal Task WarmAsync()
+    public Task WarmAsync()
     {
         if (this.prepared is not null)
             return Task.CompletedTask;
@@ -160,12 +174,74 @@ internal sealed class AnchorQueryScope(
     }
 
     /// <summary>
+    /// The classifier one margin's run uses, with an in-memory calibration for
+    /// that margin and its anchors already built.
+    ///
+    /// <para>
+    /// The calibration is computed here rather than read from a file: a run
+    /// measures the taxonomy and the anchor file it is looking at, so the margin
+    /// under test is never refused by its own fingerprint check. A classifier
+    /// whose build failed answers every query <see cref="ScopeOutcome.Unknown"/>,
+    /// which the caller must treat as "could not run" rather than as a verdict.
+    /// </para>
+    /// </summary>
+    public static async Task<AnchorQueryScope> MeasuringAsync(
+        IEmbeddingGenerator<string, Embedding<float>> generator,
+        ICategoryReader categories,
+        double margin,
+        ILoggerFactory loggers,
+        CancellationToken ct)
+    {
+        var scope = new AnchorQueryScope(
+            generator,
+            categories,
+            await CalibrationForAsync(categories, margin, ct),
+            TimeProvider.System,
+            loggers.CreateLogger<AnchorQueryScope>());
+
+        await scope.WarmAsync();
+        return scope;
+    }
+
+    /// <summary>
+    /// What a calibration measured today would be pinned to: the inside anchors
+    /// counted and hashed the way <see cref="BuildAsync"/> checks them, and the
+    /// committed outside-anchor file's hash. One source, so a file a run writes
+    /// cannot disagree with the check that reads it.
+    /// </summary>
+    public static async Task<QueryScopeCalibration> CalibrationForAsync(
+        ICategoryReader categories, double margin, CancellationToken ct)
+    {
+        var tree = await categories.AllAsync(ct);
+        var (count, categoriesHash) = FingerprintOf(tree);
+
+        return new QueryScopeCalibration(margin, count, categoriesHash, ScopeFingerprint.OfBytes(OutOfScopeAnchors.Bytes()));
+    }
+
+    /// <summary>How many texts each culture's anchor build embeds, in the order the build embeds the cultures.</summary>
+    public static async Task<IReadOnlyList<(string Culture, int Texts)>> AnchorTextCountsAsync(
+        ICategoryReader categories, CancellationToken ct)
+    {
+        var tree = await categories.AllAsync(ct);
+        var outside = OutOfScopeAnchors.Load();
+
+        return
+        [
+            .. CultureNegotiation.Supported.Select(culture =>
+            {
+                var (inside, notSold) = AnchorTextsFor(tree, outside, culture);
+                return (culture, inside.Count + notSold.Count);
+            })
+        ];
+    }
+
+    /// <summary>
     /// The inside anchors' identity, as the calibration stores it: one row per
     /// category, with its name and its breadcrumb path in both cultures. Shared
-    /// with the measurement that writes the calibration, so the two cannot
-    /// disagree about what was measured.
+    /// with <see cref="CalibrationForAsync"/>, so a calibration a run writes and
+    /// the check that reads it cannot disagree about what was measured.
     /// </summary>
-    internal static (int Count, string Hash) FingerprintOf(CategoryTree tree) =>
+    public static (int Count, string Hash) FingerprintOf(CategoryTree tree) =>
         (tree.All.Count,
          ScopeFingerprint.OfCategories(tree.All.Select(category => (
              category.Code,
@@ -179,7 +255,7 @@ internal sealed class AnchorQueryScope(
     /// joins the same names with spaces, which is right for matching words and
     /// wrong for an anchor: "Hogar Cocina" embeds as a phrase, "Hogar › Cocina" as a place.
     /// </summary>
-    internal static string PathIn(CategoryTree tree, Category category, string culture) =>
+    public static string PathIn(CategoryTree tree, Category category, string culture) =>
         string.Join(PathSeparator, category.Ancestry
             .Select(code => tree.ByCode(code)?.Name.In(culture))
             .Where(name => !string.IsNullOrWhiteSpace(name)));
@@ -228,17 +304,17 @@ internal sealed class AnchorQueryScope(
             // seconds, never one per query. No query text: the build has none.
             Interlocked.Exchange(ref this.retryAfterTicks, clock.GetUtcNow().Add(RetryAfterFailure).UtcTicks);
             logger.LogWarning(exception,
-                "Query scope anchors could not be embedded; layer A decides every page until a retry in {RetryAfter}.",
+                "Query scope anchors could not be embedded; no query gets a verdict until a retry in {RetryAfter}.",
                 RetryAfterFailure);
         }
     }
 
     /// <summary>
     /// One culture's anchor texts: the shop's categories (name and breadcrumb path,
-    /// once each) and the committed texts of what it does not sell. Shared with the
-    /// measurement, which reports the anchor build's cost per culture.
+    /// once each) and the committed texts of what it does not sell. Shared with
+    /// <see cref="AnchorTextCountsAsync"/>, which reports the build's cost per culture.
     /// </summary>
-    internal static (IReadOnlyList<string> Inside, IReadOnlyList<Anchor> Outside) AnchorTextsFor(
+    public static (IReadOnlyList<string> Inside, IReadOnlyList<Anchor> Outside) AnchorTextsFor(
         CategoryTree tree, OutOfScopeAnchorFile outside, string culture)
     {
         // A root category's name and its path are the same text; embedding it twice buys nothing.
