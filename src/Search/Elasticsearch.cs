@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Clients.Elasticsearch.Core.Search;
 using Elastic.Clients.Elasticsearch.Mapping;
@@ -254,7 +255,7 @@ internal sealed class ElasticsearchProductIndexer(
     }
 }
 
-internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILexicalProductSearch
+internal sealed partial class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILexicalProductSearch
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
@@ -269,6 +270,96 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
     /// </summary>
     private static readonly string[] SearchableFields =
         ["name^3", "brand^2", "attributesText^2", "categoryPathText^2", "description"];
+
+    /// <summary>
+    /// The fields that say what a product IS, without boosts: the full-match count
+    /// scores nothing. The description is left out on purpose (ADR 0032).
+    /// </summary>
+    internal static readonly string[] IdentityFields = ["name", "brand", "attributesText", "categoryPathText"];
+
+    /// <summary>
+    /// One <c>best_fields</c> clause per WORD of the query, every word required
+    /// (ADR 0032, fix round 1) — not one <c>cross_fields</c> clause over the whole
+    /// query text.
+    ///
+    /// <c>brand</c> is mapped with no analyser (it keeps a <c>raw</c> keyword
+    /// subfield for exact filtering, in <c>SearchIndexes.CreateAsync</c>), while
+    /// <c>name</c>, <c>attributesText</c> and <c>categoryPathText</c> use the
+    /// culture analyser. <c>cross_fields</c> only blends fields that share an
+    /// analyser, so a single cross_fields/AND clause over
+    /// <see cref="IdentityFields"/> silently splits into two independent groups —
+    /// <c>{name, attributesText, categoryPathText}</c> and <c>{brand}</c> — and
+    /// each group then has to hold every word alone. "Kuisina cafetera" needs
+    /// "Kuisina" in the group that has no brand field and "cafetera" in the group
+    /// that has no brand field, so it could never pass. Asking "does EVERY WORD
+    /// appear in AT LEAST ONE identity field" sidesteps the grouping: each word
+    /// gets its own <c>best_fields</c> clause across every field, analysed its own
+    /// way, and the clauses are ANDed by putting them all in one
+    /// <c>.Must(...)</c> call.
+    ///
+    /// <see cref="ZeroTermsQuery.All"/> matters for the same reason: with one
+    /// clause per word, a word the culture analyser reduces to nothing — a
+    /// stopword such as "para", "de" or "for" — would otherwise make ITS clause
+    /// match nothing (the default is <see cref="ZeroTermsQuery.None"/>), and one
+    /// impossible clause fails the whole AND. "cafetera para la cocina" should not
+    /// be refused because "para" and "la" analyse away; <c>All</c> treats a word
+    /// with nothing left after analysis as satisfied by anything, which is what a
+    /// stopword deserves.
+    /// </summary>
+    internal static Action<QueryDescriptor<ProductSearchDocument>>[] AllWordsInWhatItIs(string text)
+    {
+        var words = Words(text);
+        var asked = words.Where(word => !IsBareMeasurement(word)).ToArray();
+
+        // Every word was a measurement, so there is nothing left to ask. An empty
+        // `must` matches everything, which would silence the notice on exactly those
+        // queries, so the whole query is asked instead.
+        return [.. (asked.Length > 0 ? asked : words).Select(WordInAnyIdentityField)];
+    }
+
+    /// <summary>
+    /// A number with at most a short unit glued to it — "6l", "24cm", "1,5l", "15" —
+    /// and nothing else. Measured on 2026-09-17 (ADR 0032, fix round 2): the catalogue
+    /// writes the unit apart ("6 litros", "sartén de 24 cm") and shoppers write it
+    /// joined, so the token matches nothing and the notice said "nothing matches
+    /// exactly" above the right pan. Six of the fifty-five notices were this, every one
+    /// on a page answered at 0.634 or better, and skipping them silenced nothing honest.
+    ///
+    /// It is skipped in the full-match check ONLY. The check asks whether the shop
+    /// carries this KIND of thing; the size is the search's business, and
+    /// <see cref="SearchAsync"/> still ranks with the whole query.
+    ///
+    /// What it costs: the notice goes blind to a SIZE mismatch — a shop holding only a
+    /// 4 L pot, asked for a 6 L one, no longer admits it on the litres. At a hundred
+    /// products, where sizes are a closed attribute, that is the cheaper error. The
+    /// version that does not pay it normalises "24cm" into "24 cm" at index and query
+    /// time, which is an analyser change and a full reindex.
+    ///
+    /// The same shape also swallows a feature written as digits plus a short suffix —
+    /// "4k", "1080p", "3d", "5g" — and a bare year. Nothing in this catalogue is sold
+    /// by any of those, so the false skip costs a size or spec mismatch going
+    /// unnoticed, never a wrong answer.
+    /// </summary>
+    private static bool IsBareMeasurement(string word) => BareMeasurement().IsMatch(word);
+
+    // Both cases spelled out rather than asking for IgnoreCase: `RegexOptions` is
+    // ambiguous in this file, since Elasticsearch has one of its own.
+    [GeneratedRegex(@"^\d+([.,]\d+)?[A-Za-z]{0,3}$")]
+    private static partial Regex BareMeasurement();
+
+    private static Action<QueryDescriptor<ProductSearchDocument>> WordInAnyIdentityField(string word) =>
+        must => must.MultiMatch(mm => mm
+            .Query(word)
+            .Fields(IdentityFields)
+            .Type(TextQueryType.BestFields)
+            .Operator(Operator.And)
+            .ZeroTermsQuery(ZeroTermsQuery.All));
+
+    /// <summary>Splits on whitespace, trimmed, empties dropped — a null separator
+    /// is <see cref="string.Split(char[]?, StringSplitOptions)"/>'s own way of
+    /// asking for "any whitespace".</summary>
+    private static string[] Words(string text) =>
+        text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
 
     public async Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
@@ -411,10 +502,17 @@ internal sealed class ElasticsearchLexicalSearch(ElasticsearchClient client) : I
 }
 
 /// <summary>
-/// Whether a query has a full match, asked with the SAME two every-word clauses
-/// the lexical query uses — shared rather than copied, so the question hybrid
-/// search asks cannot drift from the answer lexical search gives. A count, not a
-/// search: nothing is scored or fetched.
+/// Whether a query has a full match — whether the shop carries something described
+/// by every word, not whether a lexical search would find something for it.
+///
+/// It no longer mirrors the search query. At a hundred products, scoring every
+/// word across every field including the description is harmless; at a million,
+/// some description contains the words of almost any query
+/// ("ideal para regalar a tu madre"), and a fuzzy match turns "movil" into "mobil"
+/// — either would make the notice vanish exactly where it is needed (spec D5). The
+/// count reads only the fields that say what a product IS
+/// (<see cref="ElasticsearchLexicalSearch.IdentityFields"/>) and forgives no typos.
+/// A count, not a search: nothing is scored or fetched.
 /// </summary>
 internal sealed class ElasticsearchFullMatch(ElasticsearchClient client) : ILexicalFullMatch
 {
@@ -426,11 +524,7 @@ internal sealed class ElasticsearchFullMatch(ElasticsearchClient client) : ILexi
         var response = await client.CountAsync<ProductSearchDocument>(c => c
             .Indices(ProductSearchDocument.IndexNameFor(query.Culture))
             .Query(q => q.Bool(b => b
-                .Must(m => m.Bool(words => words
-                    .Should(
-                        ElasticsearchLexicalSearch.AllWordsAcrossFields(query.Text),
-                        ElasticsearchLexicalSearch.AllWordsForgivingTypos(query.Text))
-                    .MinimumShouldMatch(1)))
+                .Must(ElasticsearchLexicalSearch.AllWordsInWhatItIs(query.Text))
                 .Filter(ElasticsearchLexicalSearch.ActiveInBranch(query.Category)))),
             ct);
 

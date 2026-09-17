@@ -1,3 +1,5 @@
+using ElGuerre.Tendero.Search.Strategies;
+
 namespace ElGuerre.Tendero.Search.Contracts;
 
 /// <summary>
@@ -23,13 +25,17 @@ public static class SearchStrategies
 }
 
 /// <summary>
-/// Whether any Active product carries every word of a query.
+/// Whether the shop carries something described by every word of a query — a
+/// narrower question than whether a lexical search would find something for it
+/// (ADR 0032, spec D5).
 ///
 /// Lexical search keeps a fallback that accepts any one of the words, so a query
 /// no product fully matches still comes back with a full list — "poner la mesa
-/// para una cena" finds "mesa" in a desk lamp. This port tells a list of full
-/// matches from a list of loose ones, which is what hybrid search needs to know
-/// before it trusts the lexical ranking as much as the meaning one.
+/// para una cena" finds "mesa" in a desk lamp. This port is what layer A's
+/// <c>SearchAnswerer</c> asks before deciding whether a page is an exact answer
+/// or the closest things the shop sells: it reads only the fields that say what a
+/// product IS, and forgives no typos, so it stays honest at catalogue sizes where
+/// a description would contain almost any query's words by coincidence.
 /// </summary>
 public interface ILexicalFullMatch
 {
@@ -59,18 +65,25 @@ public interface ISearchHitReader
 /// <summary>
 /// A slower, better model that re-sorts the first results after retrieval
 /// narrowed the field (P8-6). Too expensive over a catalogue, affordable over
-/// twenty candidates — on a GPU. Every failure is a
-/// <see cref="SearchUnavailableException"/>, and a timeout is its most common one.
+/// twenty candidates — on a GPU. A configured reranker's failures are a
+/// <see cref="SearchUnavailableException"/>, and a timeout is its most common
+/// one; a process started without one gets <see cref="NoReranker"/> instead,
+/// whose <see cref="IsConfigured"/> is false, which is why it is never asked.
 /// </summary>
 public interface IReranker
 {
+    /// <summary>False for the stand-in of a process started without a reranker, which is then never asked.</summary>
+    bool IsConfigured => true;
+
     /// <summary>One relevance score per text, in the order the texts were given.</summary>
     Task<IReadOnlyList<double>> ScoreAsync(string query, IReadOnlyList<string> texts, CancellationToken ct = default);
 }
 
-/// <summary>The reranker of a process started without one: it refuses, and the fused order stands.</summary>
+/// <summary>The reranker of a process started without one — which today means a machine with no GPU (ADR 0031).</summary>
 internal sealed class NoReranker : IReranker
 {
+    public bool IsConfigured => false;
+
     public Task<IReadOnlyList<double>> ScoreAsync(string query, IReadOnlyList<string> texts, CancellationToken ct = default) =>
-        throw new SearchUnavailableException("reranking", "this process was started without a reranker");
+        throw new SearchStageNotConfiguredException(SearchDegradation.RerankStage);
 }

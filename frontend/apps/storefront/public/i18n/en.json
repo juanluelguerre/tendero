@@ -151,10 +151,24 @@
     "failed": "Search did not answer. Try again in a moment.",
     "failedTitle": "The search did not answer",
     "heading": "What are you looking for?",
+    "help": {
+      "returnsTitle": "Looking for returns?",
+      "returnsBody": "You have {{days}} days from delivery to send something back. Start a return from your orders.",
+      "returnsLink": "Go to my orders"
+    },
     "idle": "Type something and I will look it up.",
     "label": "Search products",
     "lede": "A hundred products, two languages and a search that is measured on every pull request.",
+    "outOfScope": {
+      "title": "We don’t sell {{label}}",
+      "others": "Other things we do sell",
+      "departments": "Browse the departments"
+    },
     "placeholder": "Running shoes, coffee maker, backpack…",
+    "related": {
+      "title": "Nothing matches “{{query}}” exactly",
+      "heading": "The closest things we sell"
+    },
     "results": "{{total}} results for “{{query}}”",
     "searching": "Searching…",
     "submit": "Search",

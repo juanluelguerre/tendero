@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Evaluation;
 
 namespace ElGuerre.Tendero.SearchEval;
@@ -31,6 +32,7 @@ public static class EvaluationReport
         RenderSummary(report, results, thresholds);
         RenderBreakdown(report, results, "kind", query => query.Kind);
         RenderBreakdown(report, results, "split", query => query.Split);
+        RenderNoticeByKind(report, results);
 
         var lexical = results.FirstOrDefault(result => result.Strategy == Lexical);
         var hybrid = results.FirstOrDefault(result => result.Strategy == Hybrid);
@@ -53,8 +55,8 @@ public static class EvaluationReport
 
     private static void RenderSummary(StringBuilder report, IReadOnlyList<StrategyScores> results, EvaluationThresholds thresholds)
     {
-        report.AppendLine("| strategy | culture | queries | NDCG@10 | threshold | recall@50 | threshold | judged@10 | mean ms | |");
-        report.AppendLine("|---|---|---:|---:|---:|---:|---:|---:|---:|---|");
+        report.AppendLine("| strategy | culture | queries | NDCG@10 | threshold | recall@50 | threshold | judged@10 | notice rate | false out-of-scope | mean ms | |");
+        report.AppendLine("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|");
 
         foreach (var result in results)
         {
@@ -68,13 +70,16 @@ public static class EvaluationReport
                     string.Create(
                         CultureInfo.InvariantCulture,
                         $"| {result.Strategy} | {score.Culture} | {score.ScoredQueries} | {score.MeanNdcgAt10:0.000} | {ndcgLimit} " +
-                        $"| {score.MeanRecallAt50:0.000} | {recallLimit} | {score.MeanJudgedAt10:0.000} | {score.MeanMilliseconds:0} | {verdict} |"));
+                        $"| {score.MeanRecallAt50:0.000} | {recallLimit} | {score.MeanJudgedAt10:0.000} | {score.NoticeRate:0.000} " +
+                        $"| {score.FalseOutOfScope} | {score.MeanMilliseconds:0} | {verdict} |"));
             }
         }
 
         report.AppendLine().AppendLine(
             "`judged@10` is how much of a strategy's first ten the golden set has any judgment for. " +
-            "An unjudged result scores as irrelevant, so below 1.000 the NDCG beside it is a lower bound.");
+            "An unjudged result scores as irrelevant, so below 1.000 the NDCG beside it is a lower bound. " +
+            "`notice rate` is how often a scored query — one with a real answer — was told nothing matches exactly; " +
+            "`false out-of-scope` is how many were told the shop does not sell them at all. Both are reported, not gated.");
     }
 
     /// <summary>
@@ -113,6 +118,83 @@ public static class EvaluationReport
                         .Select(query => query.NdcgAt10))));
 
                 report.AppendLine(CultureInfo.InvariantCulture, $"| {group.Key} | {group.Count()} | {string.Join(" | ", cells)} |");
+            }
+        }
+    }
+
+    /// <summary>
+    /// How often the "nothing matches exactly" notice lands on a query that HAS a
+    /// real answer, grouped by what kind of query it is. The overall rate in the
+    /// summary cannot tell the two cases apart: on a vague query nobody writes the
+    /// words of, the notice is honest; on a product type the shop answers well it
+    /// is pedantic. Only the breakdown says which of the two the shop is doing —
+    /// which is why the queries themselves are printed beside the rate.
+    ///
+    /// Report only. Nothing here gates a run.
+    /// </summary>
+    private static void RenderNoticeByKind(StringBuilder report, IReadOnlyList<StrategyScores> results)
+    {
+        const int Sample = 5;
+
+        // No answerer was asked, so the run claims nothing about the notice.
+        if (!results.SelectMany(result => result.Cultures).SelectMany(culture => culture.Queries).Any(query => query.Match is not null))
+            return;
+
+        foreach (var culture in results[0].Cultures.Select(score => score.Culture))
+        {
+            var byStrategy = results.ToDictionary(
+                result => result.Strategy,
+                result => result.Cultures.Single(score => score.Culture == culture).Queries
+                    .Where(query => query.NdcgAt10 is not null && !QueryKinds.IsNoAnswer(query.Kind))
+                    .ToDictionary(query => query.Query, StringComparer.Ordinal),
+                StringComparer.Ordinal);
+
+            var groups = byStrategy[results[0].Strategy].Values
+                .GroupBy(query => query.Kind ?? "unclassified", StringComparer.Ordinal)
+                .OrderBy(group => group.Key, StringComparer.Ordinal)
+                .ToList();
+
+            if (groups.Count == 0)
+                continue;
+
+            report.AppendLine().AppendLine(CultureInfo.InvariantCulture, $"## {culture}: notice rate by kind").AppendLine();
+            report.AppendLine(
+                "The share of SCORED queries — the ones with a real answer — whose page was told nothing matches " +
+                $"exactly. Reported, not gated. The last column names the queries that got it (at most {Sample} per kind).")
+                .AppendLine();
+
+            report.AppendLine(
+                "| kind | queries | " + string.Join(" | ", results.Select(result => $"{result.Strategy} notice rate")) +
+                " | queries with the notice |");
+            report.AppendLine("|---|---:|" + string.Concat(Enumerable.Repeat("---:|", results.Count)) + "---|");
+
+            foreach (var group in groups)
+            {
+                var members = group.Select(query => query.Query).ToHashSet(StringComparer.Ordinal);
+
+                var rates = results.Select(result =>
+                {
+                    var queries = byStrategy[result.Strategy].Values.Where(query => members.Contains(query.Query)).ToList();
+
+                    return queries.Count == 0
+                        ? "n/a"
+                        : (queries.Count(query => query.Match == SearchMatch.Related) / (double)queries.Count)
+                            .ToString("0.000", CultureInfo.InvariantCulture);
+                });
+
+                // The notice is decided after the strategy answered and does not
+                // depend on which one did, so the queries are listed once, from the
+                // first — a second identical column would be noise.
+                var noticed = group.Where(query => query.Match == SearchMatch.Related).Select(query => query.Query).ToList();
+
+                var sample = noticed.Count == 0
+                    ? "—"
+                    : string.Join("; ", noticed.Take(Sample)) +
+                      (noticed.Count > Sample ? $" (+{noticed.Count - Sample} more)" : "");
+
+                report.AppendLine(
+                    CultureInfo.InvariantCulture,
+                    $"| {group.Key} | {group.Count()} | {string.Join(" | ", rates)} | {sample} |");
             }
         }
     }
@@ -233,10 +315,11 @@ public static class EvaluationReport
     /// <summary>
     /// The queries nothing in the catalogue answers — a product the shop does not
     /// sell, or a question that is not about a product. There is no NDCG to give
-    /// them. What a shopper sees instead is the measure: how many results a strategy
-    /// put on the first page, and what the first one was. Lexical search with an OR
-    /// fallback can match "casa" in house slippers; a vector side always returns
-    /// its nearest neighbours, however far away they are.
+    /// them. `admitted` — whether the page says so — is the headline now (ADR
+    /// 0032); `shown@10` is a diagnostic kept beside it: how many results a
+    /// strategy put on the first page anyway, and what the first one was. Lexical
+    /// search with an OR fallback can match "casa" in house slippers; a vector
+    /// side always returns its nearest neighbours, however far away they are.
     /// </summary>
     private static void RenderNoAnswer(StringBuilder report, IReadOnlyList<StrategyScores> results)
     {
@@ -257,28 +340,58 @@ public static class EvaluationReport
 
             report.AppendLine().AppendLine(CultureInfo.InvariantCulture, $"## {culture}: queries with nothing to find").AppendLine();
             report.AppendLine(
-                "Nothing in the catalogue answers these. `shown@10` is how many results a strategy put on the first page anyway " +
-                "(lower is better), and the first result is what a shopper would read first.").AppendLine();
+                "Nothing in the catalogue answers these. `admitted` is whether the page says so — the closest things, " +
+                "not the shop's, or help for a question about the shop — and it is the headline now. `shown@10` is a " +
+                "diagnostic: how many results a strategy put on the first page anyway (lower is better), and the first " +
+                "result is what a shopper would read first.").AppendLine();
 
             report.AppendLine(
                 "| query | kind | " + string.Join(" | ", results.Select(result => $"{result.Strategy} shown@10")) + " | " +
+                string.Join(" | ", results.Select(result => $"{result.Strategy} admitted")) + " | " +
                 string.Join(" | ", results.Select(result => $"{result.Strategy} first result")) + " |");
-            report.AppendLine("|---|---|" + string.Concat(Enumerable.Repeat("---:|", results.Count)) + string.Concat(Enumerable.Repeat("---|", results.Count)));
+            report.AppendLine(
+                "|---|---|" + string.Concat(Enumerable.Repeat("---:|", results.Count)) +
+                string.Concat(Enumerable.Repeat("---|", results.Count)) +
+                string.Concat(Enumerable.Repeat("---|", results.Count)));
 
             foreach (var query in queries)
             {
                 var shown = string.Join(" | ", results.Select(result => ShownAt10(byStrategy[result.Strategy][query.Query]).ToString(CultureInfo.InvariantCulture)));
+                var admitted = string.Join(" | ", results.Select(result => AdmittedAnswer(byStrategy[result.Strategy][query.Query])));
                 var first = string.Join(" | ", results.Select(result => byStrategy[result.Strategy][query.Query].FirstResult ?? "—"));
 
-                report.AppendLine(CultureInfo.InvariantCulture, $"| {query.Query} | {query.Kind} | {shown} | {first} |");
+                report.AppendLine(CultureInfo.InvariantCulture, $"| {query.Query} | {query.Kind} | {shown} | {admitted} | {first} |");
             }
 
             var means = string.Join(" | ", results.Select(result =>
                 queries.Average(query => ShownAt10(byStrategy[result.Strategy][query.Query])).ToString("0.0", CultureInfo.InvariantCulture)));
 
-            report.AppendLine(CultureInfo.InvariantCulture, $"| **mean** | | {means} |{string.Concat(Enumerable.Repeat(" |", results.Count))}");
+            report.AppendLine(
+                CultureInfo.InvariantCulture,
+                $"| **mean** | | {means} |{string.Concat(Enumerable.Repeat(" |", results.Count))}{string.Concat(Enumerable.Repeat(" |", results.Count))}");
+
+            var admittedRatios = string.Join(" · ", results.Select(result =>
+            {
+                var score = result.Cultures.Single(cultureScore => cultureScore.Culture == culture).Admitted;
+                return $"{result.Strategy} {(score is { } value ? value.ToString("0.00", CultureInfo.InvariantCulture) : "n/a")}";
+            }));
+
+            report.AppendLine().AppendLine(CultureInfo.InvariantCulture, $"**admitted**: {admittedRatios}");
         }
     }
+
+    /// <summary>
+    /// What a query with nothing to find was told, in the report's own words —
+    /// <c>Related</c> or <c>OutOfScope</c> for the closest-things answer, a help
+    /// topic for a non-product question, and an em dash when nothing admitted it.
+    /// </summary>
+    private static string AdmittedAnswer(QueryScore query) => query switch
+    {
+        { Match: SearchMatch.Related } => "Related",
+        { Match: SearchMatch.OutOfScope } => "OutOfScope",
+        { Kind: QueryKinds.NonProduct, HelpTopic: not null } => $"help: {query.HelpTopic}",
+        _ => "—"
+    };
 
     private static int ShownAt10(QueryScore query) => Math.Min(RelevanceEvaluator.NdcgCutoff, query.Returned);
 

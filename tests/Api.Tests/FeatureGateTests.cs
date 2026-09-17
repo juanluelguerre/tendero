@@ -10,52 +10,29 @@ namespace ElGuerre.Tendero.Api.Tests;
 /// <summary>
 /// The flags as every process reads them: from <c>Features:*</c>, through the
 /// gate the service defaults register (ADR 0023).
+///
+/// The set is empty since 2026-09-17 — <c>SearchRerank</c> became a capability
+/// and <c>SearchVector</c> met its removal condition — so the tests that parsed
+/// a value went with the last member they could parse it for. The gate stays,
+/// because phases 11 and 12 bring flags of their own, and what it must still do
+/// with nothing configured is answer off.
 /// </summary>
 public sealed class FeatureGateTests
 {
     [Fact]
-    public void A_flag_is_on_only_when_its_value_says_true()
-    {
-        var gate = GateOver(new Dictionary<string, string?>
-        {
-            ["Features:SearchVector"] = "True",
-            ["Features:SearchRerank"] = "yes"
-        }, out _);
-
-        Assert.True(gate.IsEnabled(FeatureId.SearchVector));
-
-        // Anything that is not a boolean is off: the default is the path with no AI in it.
-        Assert.False(gate.IsEnabled(FeatureId.SearchRerank));
-    }
-
-    [Fact]
     public void An_unset_flag_is_off()
     {
-        var gate = GateOver(new Dictionary<string, string?>(), out _);
+        var gate = GateOver(new Dictionary<string, string?>());
 
         Assert.All(Enum.GetValues<FeatureId>(), flag => Assert.False(gate.IsEnabled(flag)));
     }
 
-    /// <summary>Read per call, so a reloaded configuration takes effect without a restart.</summary>
-    [Fact]
-    public void A_changed_value_is_read_on_the_next_call()
-    {
-        var gate = GateOver(new Dictionary<string, string?> { ["Features:SearchVector"] = "true" }, out var configuration);
-        Assert.True(gate.IsEnabled(FeatureId.SearchVector));
-
-        configuration["Features:SearchVector"] = "false";
-
-        Assert.False(gate.IsEnabled(FeatureId.SearchVector));
-    }
-
-    private static IFeatureGate GateOver(Dictionary<string, string?> settings, out IConfiguration configuration)
+    private static IFeatureGate GateOver(Dictionary<string, string?> settings)
     {
         var builder = Host.CreateApplicationBuilder();
         builder.Configuration.AddInMemoryCollection(settings);
         builder.AddServiceDefaults();
 
-        var provider = builder.Services.BuildServiceProvider();
-        configuration = provider.GetRequiredService<IConfiguration>();
-        return provider.GetRequiredService<IFeatureGate>();
+        return builder.Services.BuildServiceProvider().GetRequiredService<IFeatureGate>();
     }
 }

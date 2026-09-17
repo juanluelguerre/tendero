@@ -6,7 +6,7 @@ using ElGuerre.Tendero.SearchEval.Suites;
 // hybrid one would be measured against a baseline that can no longer be compared
 // with the committed one.
 
-IEvaluationSuite[] suites = [new SearchRelevanceSuite()];
+IEvaluationSuite[] suites = [new SearchRelevanceSuite(), new QueryScopeSuite()];
 
 EvaluationOptions options;
 try

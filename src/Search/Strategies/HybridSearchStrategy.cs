@@ -24,40 +24,10 @@ public sealed record HybridSearchOptions
     /// <summary>How many nearest products the vector side contributes.</summary>
     public int VectorDepth { get; init; } = 20;
 
-    /// <summary>A cosine similarity below which a vector match is not a match. Nearest-neighbour search always answers.</summary>
-    public double MinimumSimilarity { get; init; }
-
     public int RrfK { get; init; } = ReciprocalRankFusion.DefaultK;
-
-    /// <summary>How much the vector ranking counts in the fusion, against lexical's 1. Equal votes unless measured otherwise.</summary>
-    public double VectorWeight { get; init; } = 1d;
-
-    /// <summary>
-    /// When no product carries every word, answer in meaning's order with the
-    /// lexical matches after it, instead of fusing loose word matches as a ranking.
-    /// Off until measured; off, the extra count is never asked.
-    /// </summary>
-    public bool MeaningFirstWithoutFullMatch { get; init; }
 
     /// <summary>How many fused results the reranker re-sorts.</summary>
     public int RerankDepth { get; init; } = 20;
-
-    /// <summary>
-    /// A reranker score, from 0 to 1, below which a reranked result is not an answer.
-    /// Once the reranker rejects any of the head, nothing past the head is shown
-    /// either: it ranked below what was just rejected, and the reranker never read it.
-    /// 0 keeps everything, which is the default until measured.
-    /// </summary>
-    public double MinimumRerankScore { get; init; }
-
-    /// <summary>
-    /// A reranker score, from 0 to 1, that at least ONE result of the head has to
-    /// reach for the query to have an answer at all. Decided per query rather than
-    /// per result: below it, the shop has nothing for what was asked and says so with
-    /// an empty page; at or above it, nothing is cut. 0 keeps everything, which is
-    /// the default until measured.
-    /// </summary>
-    public double NoAnswerBelowRerankScore { get; init; }
 
     /// <summary>Embedding the query and asking Qdrant, together. Past it, the answer is lexical.</summary>
     public TimeSpan VectorBudget { get; init; } = TimeSpan.FromMilliseconds(1500);
@@ -85,17 +55,25 @@ public sealed record HybridSearchOptions
 /// <c>tendero.search.degraded</c> counter, because a silent fallback is
 /// indistinguishable from bad relevance (P8-7).
 ///
+/// **Not configured is a third thing, and it is not a degradation.** A process
+/// this deployment never gave a vector layer or a reranker
+/// (<see cref="SearchStageNotConfiguredException"/>) skips the stage and tags the
+/// span <c>search.stage.unavailable</c> with which one — but is never counted and
+/// never logged, because a deployment that never carried the stage is not the
+/// day the stage went down (ADR 0023 amendment). Reranking in particular is no
+/// longer a flag: it runs whenever <c>reranker.IsConfigured</c> says a real one
+/// was registered, which mirrors the AppHost's own decision to start the
+/// reranker container only where it can keep its budget — a GPU today.
+///
 /// A browse — no words — and a date order are answered by lexical alone: there is
 /// no meaning to add to "everything in the kitchen", and fusing relevance into
 /// "newest first" would break the order the shopper asked for.
 /// </summary>
 internal sealed class HybridSearchStrategy(
     ILexicalProductSearch lexical,
-    ILexicalFullMatch fullMatch,
     IVectorProductSearch vectors,
     ISearchHitReader cards,
     IReranker reranker,
-    IFeatureGate features,
     IOptions<HybridSearchOptions> options,
     ILogger<HybridSearchStrategy> logger) : ISearchStrategy
 {
@@ -121,6 +99,11 @@ internal sealed class HybridSearchStrategy(
 
             matches = await vectors.SearchAsync(query.Text, query.Culture, query.Category, settings.VectorDepth, budget.Token);
         }
+        catch (SearchStageNotConfiguredException missing)
+        {
+            activity?.SetTag(SearchDegradation.NotConfiguredTag, missing.Stage);
+            return await lexical.SearchAsync(query, ct);
+        }
         catch (Exception exception) when (!ct.IsCancellationRequested)
         {
             SearchDegradation.Record(activity, SearchDegradation.VectorStage, exception, logger);
@@ -130,21 +113,10 @@ internal sealed class HybridSearchStrategy(
         var depth = Math.Max(settings.LexicalDepth, query.Page * query.PageSize);
         var candidates = await lexical.SearchAsync(query with { Page = 1, PageSize = depth }, ct);
 
-        var nearest = matches
-            .Where(match => match.Similarity >= settings.MinimumSimilarity)
-            .Select(match => match.ProductId)
-            .ToList();
-
+        var nearest = matches.Select(match => match.ProductId).ToList();
         var words = candidates.Hits.Select(hit => hit.ProductId).ToList();
 
-        // Loose word matches are not a ranking worth fusing: when nothing carries
-        // every word, "mesa" in a desk lamp would otherwise outvote meaning.
-        var meaningFirst = settings.MeaningFirstWithoutFullMatch && !await fullMatch.AnyAsync(query, ct);
-        activity?.SetTag("search.hybrid.meaning_first", meaningFirst);
-
-        var fused = meaningFirst
-            ? ReciprocalRankFusion.Fuse([[.. nearest, .. words]], settings.RrfK)
-            : ReciprocalRankFusion.Fuse([words, nearest], settings.RrfK, [1d, settings.VectorWeight]);
+        var fused = ReciprocalRankFusion.Fuse([words, nearest], settings.RrfK);
 
         var byProduct = new Dictionary<string, SearchHit>(StringComparer.Ordinal);
         foreach (var hit in candidates.Hits)
@@ -168,16 +140,15 @@ internal sealed class HybridSearchStrategy(
         activity?.SetTag("search.hybrid.vector", nearest.Count);
         activity?.SetTag("search.hybrid.meaning_only", ranked.Count(hit => foundByMeaningOnly.Contains(hit.ProductId)));
 
-        var fusedCount = ranked.Count;
-
-        if (features.IsEnabled(FeatureId.SearchRerank))
+        if (reranker.IsConfigured)
             ranked = await RerankAsync(query, ranked, settings, activity, ct);
+        else
+            activity?.SetTag(SearchDegradation.NotConfiguredTag, SearchDegradation.RerankStage);
 
         // Exact when lexical returned everything it matched, which is the case at
         // a hundred products; otherwise the lexical count, raised if meaning
-        // found more than it did. When the reranker turned results away, the count
-        // is what is left: a total promising pages that do not exist is a lie.
-        var total = ranked.Count < fusedCount || candidates.Total <= candidates.Hits.Count
+        // found more than it did.
+        var total = candidates.Total <= candidates.Hits.Count
             ? ranked.Count
             : Math.Max(candidates.Total, ranked.Count);
 
@@ -215,31 +186,13 @@ internal sealed class HybridSearchStrategy(
 
             activity?.SetTag("search.reranked", head.Count);
 
-            // The whole head reads as unrelated to the query: "móvil para mi madre de
-            // 70 años" in a shop with no phones. An empty page is the honest answer,
-            // and a page of the nearest slippers is not.
-            if (scores.Max() < settings.NoAnswerBelowRerankScore)
-            {
-                activity?.SetTag("search.rerank.no_answer", true);
-                return [];
-            }
-
-            var answers = head
+            var reordered = head
                 .Select((hit, position) => (Hit: hit, Score: scores[position], Position: position))
-                .Where(candidate => candidate.Score >= settings.MinimumRerankScore)
                 .OrderByDescending(candidate => candidate.Score)
                 .ThenBy(candidate => candidate.Position)
-                .ToList();
+                .Select(candidate => candidate.Hit with { Score = candidate.Score });
 
-            activity?.SetTag("search.rerank.rejected", head.Count - answers.Count);
-
-            // What follows the head ranked below it before reranking, so once the
-            // reranker has turned part of the head away, the unread rest is not an
-            // answer either — which is what lets "móvil para mi madre de 70 años"
-            // come back empty in a shop with no phones.
-            IEnumerable<SearchHit> unread = answers.Count == head.Count ? ranked.Skip(head.Count) : [];
-
-            return [.. answers.Select(candidate => candidate.Hit with { Score = candidate.Score }), .. unread];
+            return [.. reordered, .. ranked.Skip(head.Count)];
         }
         catch (Exception exception) when (!ct.IsCancellationRequested)
         {
@@ -258,6 +211,12 @@ internal static class SearchDegradation
     public const string RerankStage = "rerank";
     public const string Tag = "search.degraded";
     public const string CounterName = "tendero.search.degraded";
+
+    /// <summary>
+    /// A stage this process was never given, tagged on the span and never counted:
+    /// a machine with no GPU and no reranker is not a reranker that is failing.
+    /// </summary>
+    public const string NotConfiguredTag = "search.stage.unavailable";
 
     private static readonly Meter Meter = new(TelemetrySources.Search);
 

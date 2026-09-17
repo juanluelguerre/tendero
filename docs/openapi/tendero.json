@@ -3512,6 +3512,29 @@
           }
         }
       },
+      "SearchAnswer": {
+        "required": [
+          "match"
+        ],
+        "type": "object",
+        "properties": {
+          "match": {
+            "$ref": "#/components/schemas/SearchMatch"
+          },
+          "helpTopic": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "outOfScopeLabel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SearchEvaluation": {
         "required": [
           "vectorLayer",
@@ -3620,6 +3643,13 @@
           }
         }
       },
+      "SearchMatch": {
+        "enum": [
+          "Exact",
+          "Related",
+          "OutOfScope"
+        ]
+      },
       "SearchResultPage": {
         "required": [
           "hits",
@@ -3651,6 +3681,16 @@
           "tookMs": {
             "type": "number",
             "format": "double"
+          },
+          "answer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SearchAnswer"
+              }
+            ]
           }
         }
       },

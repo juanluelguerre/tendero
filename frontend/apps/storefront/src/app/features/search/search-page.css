@@ -229,6 +229,41 @@
   background: var(--red-50);
 }
 
+/* ---------- The heading above a non-exact answer ----------
+   Not a .notice: it introduces the grid rather than replacing it, so it reads
+   as a section title and not as a message. */
+.results-heading {
+  margin-block: var(--space-5) var(--space-3);
+  font-size: var(--text-lg);
+}
+
+/* ---------- The returns help card ----------
+   Quiet on purpose: no clay here. The search button stays the view's one
+   accent action (design/DESIGN.md), and this is an answer, not an invitation. */
+.help-card {
+  margin-block-start: var(--space-5);
+  padding: var(--space-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.help-card__title {
+  font-size: var(--text-md);
+  margin-block-end: var(--space-2);
+}
+
+.help-card__link {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* No accent on hover, unlike `.hero__account-link` above: this is an answer
+   rather than an invitation, and the search button stays the view's one
+   accent action (design/DESIGN.md). A neutral shift is enough feedback. */
+.help-card__link:hover { color: var(--text-muted); }
+
 @media (max-width: 640px) {
   .hero { padding-block: var(--space-5) var(--space-4); }
   .hero__title { font-size: var(--text-2xl); }

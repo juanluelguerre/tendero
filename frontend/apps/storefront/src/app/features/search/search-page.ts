@@ -5,8 +5,9 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { map, type Subscription } from 'rxjs';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
-import type { SearchHit } from '@tendero/shared-api';
+import type { SearchAnswer, SearchHit } from '@tendero/shared-api';
 import { ProductSearchService } from '../../data-access/product-search.service';
+import { ReturnsPolicy } from '../../data-access/returns-policy.service';
 import { HomeSections } from '../home/home-sections';
 import { ProductCard } from '../../product-card';
 import { ShopLinks } from '../../shop-links';
@@ -32,6 +33,11 @@ type SearchState =
        * English" is worse than saying nothing.
        */
       afterLanguageChange: boolean;
+      /**
+       * What kind of answer this is, decided with no model (ADR 0032, layer A).
+       * `null` for a browse or a date order — there is nothing to judge there.
+       */
+      answer: SearchAnswer | null;
     }
   | { status: 'failed' };
 
@@ -57,6 +63,15 @@ export class SearchPage {
   private readonly search = inject(ProductSearchService);
   private readonly culture = inject(CultureStore);
   private readonly transloco = inject(TranslocoService);
+  private readonly returns = inject(ReturnsPolicy);
+
+  /** The window the shop actually honours, read once and shared with the order
+   *  page's own copy of this number (`ReturnsPolicy`). */
+  protected readonly returnsWindowDays = this.returns.windowDays;
+
+  /** `OutOfScope` never promises more than this — the total would still count
+   *  every irrelevant neighbour the vector side found. */
+  protected readonly outOfScopeLimit = 4;
 
   /**
    * The last query that was actually sent, so switching language can re-run it.
@@ -209,9 +224,21 @@ export class SearchPage {
           tookMs: page.tookMs,
           query: text,
           afterLanguageChange: origin.afterLanguageChange,
+          // The schema marks it optional as well as nullable — a browse
+          // request answers with neither field at all.
+          answer: page.answer ?? null,
         }),
       error: () => this.state.set({ status: 'failed' }),
     });
   }
 
+  /**
+   * The cards to actually show. `OutOfScope` caps at `outOfScopeLimit`: the
+   * vector side always finds ten neighbours even for a phone in a shop that
+   * sells none, and showing all of them would read as an answer rather than as
+   * "here is what we do sell instead".
+   */
+  protected visibleHits(done: { hits: SearchHit[]; answer: SearchAnswer | null }): SearchHit[] {
+    return done.answer?.match === 'OutOfScope' ? done.hits.slice(0, this.outOfScopeLimit) : done.hits;
+  }
 }

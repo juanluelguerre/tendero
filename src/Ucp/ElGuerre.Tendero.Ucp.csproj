@@ -28,4 +28,12 @@
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
+  <!-- UcpSearchNotices stays internal: it is a translation of the shop's own
+       answer into UCP's messages, not a shape any other project should build
+       on. Its own tests are the exception, same pattern as Inventory, Pricing
+       and Search grant their test projects. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Ucp.Tests" />
+  </ItemGroup>
+
 </Project>

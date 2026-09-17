@@ -1080,6 +1080,11 @@ export interface components {
             /** Format: int32 */
             quantity: number;
         };
+        SearchAnswer: {
+            match: components["schemas"]["SearchMatch"];
+            helpTopic?: null | string;
+            outOfScopeLabel?: null | string;
+        };
         SearchEvaluation: {
             vectorLayer: components["schemas"]["VectorLayerReport"];
             /** Format: int32 */
@@ -1109,6 +1114,8 @@ export interface components {
             /** Format: double */
             score: number;
         };
+        /** @enum {unknown} */
+        SearchMatch: "Exact" | "Related" | "OutOfScope";
         SearchResultPage: {
             hits: components["schemas"]["SearchHit"][];
             /** Format: int64 */
@@ -1119,6 +1126,7 @@ export interface components {
             pageSize: number;
             /** Format: double */
             tookMs: number;
+            answer?: null | components["schemas"]["SearchAnswer"];
         };
         SetCartLineRequest: {
             /** Format: int32 */

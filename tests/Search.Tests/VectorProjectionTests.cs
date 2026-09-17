@@ -154,7 +154,7 @@ public sealed class VectorProjectionTests
 
         Assert.False(status.IsConfigured);
         await scope.ServiceProvider.GetRequiredService<IProductVectorIndexer>().IndexAsync(AProduct(publish: true), Ct);
-        await Assert.ThrowsAsync<SearchUnavailableException>(() =>
+        await Assert.ThrowsAsync<SearchStageNotConfiguredException>(() =>
             scope.ServiceProvider.GetRequiredService<IVectorProductSearch>().SearchAsync("cafetera", "es", null, 10, Ct));
     }
 

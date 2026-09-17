@@ -78,17 +78,23 @@ public sealed class SearchProductsEndpoint : ICarterModule
 }
 
 public sealed class SearchProductsHandler(
-    [FromKeyedServices(SearchStrategies.Lexical)] ISearchStrategy lexical,
     [FromKeyedServices(SearchStrategies.Hybrid)] ISearchStrategy hybrid,
-    IFeatureGate features)
+    ISearchAnswerer answerer)
     : IQueryHandler<SearchProductsQuery, SearchResultPage>
 {
-    // The choice this comment promised since the first slice, and the endpoint
-    // did not change for it: the storefront's contract has been stable since day
-    // one, and so have the MCP and UCP tools that dispatch this query. The flag's
-    // only reader is this line (ADR 0023). With it off, hybrid is never asked.
-    public Task<SearchResultPage> HandleAsync(SearchProductsQuery query, CancellationToken ct) =>
-        (features.IsEnabled(FeatureId.SearchVector) ? hybrid : lexical).SearchAsync(
-            new ProductSearchQuery(
-                query.Q, query.Culture, query.Page, query.PageSize, query.Category, query.Sort), ct);
+    // Hybrid answers every search since 2026-09-17: SearchVector met its removal
+    // condition in three gate runs (ADR 0023, amended) and was deleted. Lexical is
+    // not gone, it is underneath — what hybrid degrades to, byte for byte, when
+    // the vector layer is down, slow or was never started — and CI still gates
+    // lexical on its own thresholds. The storefront, the MCP tools and UCP all
+    // dispatch this query, so this line is where all of them went hybrid.
+    public async Task<SearchResultPage> HandleAsync(SearchProductsQuery query, CancellationToken ct)
+    {
+        var search = new ProductSearchQuery(query.Q, query.Culture, query.Page, query.PageSize, query.Category, query.Sort);
+
+        var page = await hybrid.SearchAsync(search, ct);
+
+        // What kind of answer it is, once (ADR 0032).
+        return page with { Answer = await answerer.AnswerAsync(search, ct) };
+    }
 }

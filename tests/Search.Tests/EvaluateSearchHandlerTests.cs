@@ -26,7 +26,7 @@ public sealed class EvaluateSearchHandlerTests
         var hybrid = new Answering(_ => []);
         var layer = VectorLayerStatus.Unavailable("the model server is downloading its weights");
 
-        var result = await new EvaluateSearchHandler(new Catalogue(), lexical, hybrid, new Layer(layer))
+        var result = await new EvaluateSearchHandler(new Catalogue(), lexical, hybrid, new Layer(layer), new NoAnswers())
             .HandleAsync(new EvaluateSearchQuery(), Ct);
 
         var goldenSets = await EmbeddedEvaluation.GoldenSetsAsync(Ct);
@@ -70,7 +70,7 @@ public sealed class EvaluateSearchHandlerTests
         var words = new Answering(asked => asked.Text == query.Query && asked.Culture == "es" ? [product.Id.ToString(), stranger.Id.ToString()] : []);
         var meaning = new Answering(_ => [stranger.Id.ToString()]);
 
-        var result = await new EvaluateSearchHandler(new Catalogue(product, stranger), words, meaning, new Layer(VectorLayerStatus.NotConfigured))
+        var result = await new EvaluateSearchHandler(new Catalogue(product, stranger), words, meaning, new Layer(VectorLayerStatus.NotConfigured), new NoAnswers())
             .HandleAsync(new EvaluateSearchQuery(), Ct);
 
         var row = result.Cultures.Single(culture => culture.Culture == "es").Queries.First(candidate => candidate.Query == query.Query);
@@ -112,5 +112,12 @@ public sealed class EvaluateSearchHandlerTests
     private sealed class Layer(VectorLayerStatus status) : IVectorLayer
     {
         public Task<VectorLayerStatus> CheckAsync(CancellationToken ct = default) => Task.FromResult(status);
+    }
+
+    /// <summary>Layer A never asked: these tests are about the golden sets and the catalogue, not the answer.</summary>
+    private sealed class NoAnswers : ISearchAnswerer
+    {
+        public Task<SearchAnswer?> AnswerAsync(ProductSearchQuery query, CancellationToken ct = default) =>
+            Task.FromResult<SearchAnswer?>(null);
     }
 }

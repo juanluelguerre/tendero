@@ -116,7 +116,7 @@ public sealed class UcpCatalogIntegrationTests(PostgresFixture postgres)
 
         UcpSchemas.Validate(
             SearchResponse,
-            Json(UcpCatalogAnswers.Search(page, BaseUrl, limit: 10, offset: 0, total: codes.Count)),
+            Json(UcpCatalogAnswers.Search(page, BaseUrl, limit: 10, offset: 0, total: codes.Count, notices: [])),
             "A search_catalog answer over the shipped catalogue");
 
         UcpSchemas.Validate(

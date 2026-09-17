@@ -1,6 +1,5 @@
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Strategies;
-using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -22,23 +21,9 @@ internal static class Strategies
         IVectorProductSearch vectors,
         ISearchHitReader? cards = null,
         IReranker? reranker = null,
-        bool rerank = false,
-        HybridSearchOptions? options = null,
-        ILexicalFullMatch? fullMatch = null) =>
-        new(lexical, fullMatch ?? new FullMatch(true), vectors, cards ?? new Cards(), reranker ?? new NoReranker(), new Gate(rerank),
+        HybridSearchOptions? options = null) =>
+        new(lexical, vectors, cards ?? new Cards(), reranker ?? new NoReranker(),
             Options.Create(options ?? new HybridSearchOptions()), NullLogger<HybridSearchStrategy>.Instance);
-
-    /// <summary>Whether some product carries every word, as the test decides, and how often it was asked.</summary>
-    public sealed class FullMatch(bool any) : ILexicalFullMatch
-    {
-        public int Asked { get; private set; }
-
-        public Task<bool> AnyAsync(ProductSearchQuery query, CancellationToken ct = default)
-        {
-            Asked++;
-            return Task.FromResult(any);
-        }
-    }
 
     /// <summary>A lexical engine that "matched" these products, in this order.</summary>
     public sealed class Lexical(params string[] matched) : ILexicalProductSearch
@@ -117,10 +102,5 @@ internal static class Strategies
 
             return [.. texts.Select(score)];
         }
-    }
-
-    public sealed class Gate(bool rerank) : IFeatureGate
-    {
-        public bool IsEnabled(FeatureId feature) => feature == FeatureId.SearchRerank && rerank;
     }
 }
