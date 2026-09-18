@@ -102,12 +102,40 @@ describe('the mockups', () => {
   });
 
   it('put every colour in a variable, so a fill can never be a literal', () => {
+    // Properties only, never text. The first version of this rule matched a hex
+    // anywhere in the stringified subtree, and the design-system sheet failed it
+    // 21 times - every one of them a swatch printing the value it documents,
+    // beside a fill that was a proper `$variable`:
+    //
+    //   {"ZFb9X": {"fill": "$clay-500"}, "qlchJ": {"content": "--clay-500"},
+    //    "K3sL3V": {"content": "#D85A30"}}
+    //
+    // A sheet whose job is to document colours cannot be forbidden the `#`
+    // character. So the walk skips `content` and flags a literal under any other
+    // key, wherever it nests - a fill, a stroke, a gradient stop, or a property
+    // override inside a component instance's `descendants` map.
+    const literals = (value: unknown, key?: string): string[] => {
+      if (typeof value === 'string') {
+        // A fresh non-global matcher: `HEX` carries the `g` flag, and `.test()`
+        // on a global regex advances `lastIndex`, so it would answer true and
+        // false alternately for the same input.
+        return key !== 'content' && /#[0-9a-f]{3,8}\b/i.test(value) ? [`${key}: ${value}`] : [];
+      }
+
+      if (Array.isArray(value)) return value.flatMap((entry) => literals(entry, key));
+
+      if (value && typeof value === 'object') {
+        return Object.entries(value).flatMap(([name, entry]) => literals(entry, name));
+      }
+
+      return [];
+    };
+
     const offenders = mockups().flatMap((path) => {
       const document = JSON.parse(readFileSync(path, 'utf8')) as { children?: unknown };
-      const nodes = JSON.stringify(document.children ?? []);
 
-      return [...(nodes.match(HEX) ?? [])].map(
-        (hex) => `${relative(repository, path).replaceAll('\\', '/')}: literal ${hex}`,
+      return literals(document.children ?? []).map(
+        (hit) => `${relative(repository, path).replaceAll('\\', '/')}: literal ${hit}`,
       );
     });
 
