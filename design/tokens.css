@@ -125,6 +125,17 @@
   --accent-hover:  #F59570;
   --accent-tint:   #3A2115;
   --positive:      #8FB463;
+
+  /* Added 2026-09-19. The dark theme redefined --positive and left --danger and
+     --warning at their light values, so `.tag--danger { color: var(--danger) }`
+     shipped as text at 2.56:1 on --bg-surface, against WCAG AA's 4.5:1 for body
+     text. Found by laying the system out on a canvas, which needed a colour for a
+     losing row, found the palette had none that worked, and refused to invent a
+     hex — proposed with its measurement, approved, applied. Same hue and
+     saturation as the light value, lifted in lightness only, which is the move
+     --positive and --accent already make above. */
+  --danger:        #E4655D;   /* 5.04:1 on --bg-surface, 5.48:1 on --bg-page */
+  --warning:       #DE8E16;   /* 6.37:1 on --bg-surface, 6.93:1 on --bg-page */
 }
 
 /* ============================================================
