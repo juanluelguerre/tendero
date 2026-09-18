@@ -86,6 +86,24 @@ if the verdict is accepted and designing before coding becomes a practice rather
 than a trial, the artefacts move to a permanent home under `design/`, beside the
 system they are drawn against, and this record is amended to say so.
 
+> **Amended 2026-09-18, after the run: the experiment was accepted.** Criterion 1
+> held (589 nodes, 0 literal colours), criterion 2 reached 3 of 3, criterion 3
+> yielded two decisions the author keeps, and the cost was 12 min 20 s with no
+> human intervention during the run. The full scoring is `verdict.md` in the
+> dossier. So the permanent home is now owed, under the two constraints below —
+> and **the artefact it holds is a mockup, not a sketch**: static, medium
+> fidelity, in colour, built on the real tokens, which is the mockup rung by the
+> definition this project is using as its baseline. `design/sketches/` is misnamed.
+>
+> Three things the accepted run found that this record did not anticipate, each
+> written up in `verdict.md`: the shipped panel covers **six states to the blind
+> pass's four**; **a written specification rots** and a design drawn from it
+> inherits the rot (the one rejected candidate was faithful to a brief frozen from
+> a document that had gone stale the day before); and the pass surfaced a
+> **shipped accessibility defect** — `[data-theme='dark']` redefines `--positive`
+> but neither `--danger` nor `--warning`, so `.tag--danger` ships at about 2.6:1
+> on the dark backoffice.
+
 Two constraints on that home, both learned rather than assumed:
 
 - **It is named for what it is, never for the tool.** `design/sketches/`, not `design/pen/`. A folder named after a product outlives the product — the objection article 07 is entirely about — and the thesis of this whole experiment is that the surviving rung is the *sketch*, which is a role and not a vendor.
