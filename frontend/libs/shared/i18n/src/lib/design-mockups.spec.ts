@@ -114,6 +114,31 @@ describe('the mockups', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('export nothing the design system does not own either', () => {
+    // The gap the blind pass pointed at, closed. A mockup is committed twice -
+    // the `.pen` a reader inspects and the HTML a reader can open without
+    // installing anything (ADR 0033) - and the export is where the variables
+    // have already been flattened back into literals. Checking only the `.pen`
+    // would leave the readable half unchecked, which is this repository's
+    // recurring shape of defect: the rule holds for one format and the artefact
+    // is in another.
+    const allowed = proposed();
+    const directory = join(repository, MOCKUPS);
+    const exports = existsSync(directory)
+      ? readdirSync(directory)
+          .map((entry) => join(directory, entry))
+          .filter((path) => !statSync(path).isDirectory() && path.endsWith('.html'))
+      : [];
+
+    const offenders = exports.flatMap((path) =>
+      [...new Set((readFileSync(path, 'utf8').match(HEX) ?? []).map((hex) => hex.toLowerCase()))]
+        .filter((hex) => !palette.has(hex) && !(hex in allowed))
+        .map((hex) => `${relative(repository, path).replaceAll('\\', '/')}: ${hex}`),
+    );
+
+    expect(offenders).toEqual([]);
+  });
+
   it('are actually there, so the rule is not passing over nothing', () => {
     // The same guard every architecture rule in this repository carries: a scan
     // that walks an empty directory finds no offenders and reports success.
