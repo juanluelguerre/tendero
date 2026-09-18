@@ -208,7 +208,7 @@ automatically on four hundred commits.
 ## The public repository
 
 Work happens in **`tendero-workshop`**, which is private. **`tendero`** is public:
-this history with `docs/blog/` and `docs/book/` filtered out, advanced one article at a time by
+this history with `docs/blog/`, `docs/book/` and `design/unpublished/` filtered out, advanced one article at a time by
 `docs/blog/publish-public.ps1`, so a reader gets the code an article describes
 when the article comes out and never the drafts. The filter is deterministic, so
 every publication is a fast-forward — and the day the articles catch up with the
@@ -218,7 +218,11 @@ That holds only while three rules do:
 
 1. **The filter only ever gains a path that has never existed in the history**,
    and only after a comparison run proves that no hash moves. What must stay
-   private lives under one of its paths: `docs/blog/` and `docs/book/`. Removing
+   private lives under one of its paths: `docs/blog/`, `docs/book/` and
+   `design/unpublished/` — the last added on 2026-09-19, where a design artefact
+   waits for the article that publishes it, measured the same way: develop
+   `660da7de` and both article tags `0955af5a` with two paths and with three,
+   287 commits both times, rev-list identical commit for commit. Removing
    a path that appears in no commit yields the same tree, the same parents and
    therefore the same commit — measured on 2026-09-18, when `docs/book/` was
    added and all 273 filtered commits stayed where they were. A path that

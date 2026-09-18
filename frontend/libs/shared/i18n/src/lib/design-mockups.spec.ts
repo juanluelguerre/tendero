@@ -12,10 +12,12 @@ import { describe, expect, it } from 'vitest';
  * carrying **575 hand-written hexadecimal colours**, describing a different
  * product, referenced by nothing, and no test could see them (ADR 0033).
  *
- * So this is the same rule, one format further out. It reads the `.pen`
- * documents under `design/mockups/` — documented JSON, so no application, no
- * account and no container are needed — and holds every colour they declare to
- * the palette `tokens.css` owns.
+ * So this is the same rule, one format further out. It reads every `.pen` and
+ * every `.html` under both halves of the rung — `design/mockups/`, which is
+ * published, and `design/unpublished/mockups/`, which waits for its article —
+ * documented JSON and plain text, so no application, no account and no container
+ * are needed, and holds every colour they declare to the palette `tokens.css`
+ * owns. An artefact does not become exempt by being early.
  *
  * **A new colour is allowed; a new colour smuggled in is not.** A mockup is
  * where the design system gets improved, which already happened once: the blind
@@ -24,13 +26,21 @@ import { describe, expect, it } from 'vitest';
  * hex rather than break the rule. That is the flow this test protects —
  * `.pen` proposes, a person approves, `tokens.css` changes — which is invariant
  * 12 applied to design instead of to the catalogue. A value that is not in
- * `tokens.css` must therefore be declared in `design/mockups/proposals.json`
+ * `tokens.css` must therefore be declared in `proposals.json` beside the artefact
  * with a reason, exactly as a `ProductClaim` carries its provenance.
  */
 describe('the mockups', () => {
   const TOKENS = 'design/tokens.css';
-  const MOCKUPS = 'design/mockups';
-  const PROPOSALS = 'design/mockups/proposals.json';
+  /**
+   * Both halves of the ladder's second rung. `design/mockups/` is what has been
+   * published; `design/unpublished/mockups/` is what waits for the article that
+   * publishes it, and the publication filter removes it (rule 1 of *The public
+   * repository*, measured on 2026-09-19: adding the path moved no hash, because
+   * it had never existed). The rule holds on both sides, because an artefact does
+   * not become exempt by being early.
+   */
+  const ROOTS = ['design/mockups', 'design/unpublished/mockups'];
+  const PROPOSALS = 'design/unpublished/mockups/proposals.json';
 
   /** `#fff`, `#ffffff`, `#ffffffff`. */
   const HEX = /#[0-9a-f]{3,8}\b/gi;
@@ -61,14 +71,18 @@ describe('the mockups', () => {
     return existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : {};
   };
 
-  function mockups(): string[] {
-    const directory = join(repository, MOCKUPS);
-    if (!existsSync(directory)) return [];
+  function artefacts(extension: string): string[] {
+    return ROOTS.flatMap((root) => {
+      const directory = join(repository, root);
+      if (!existsSync(directory)) return [];
 
-    return readdirSync(directory)
-      .map((entry) => join(directory, entry))
-      .filter((path) => !statSync(path).isDirectory() && path.endsWith('.pen'));
+      return readdirSync(directory)
+        .map((entry) => join(directory, entry))
+        .filter((path) => !statSync(path).isDirectory() && path.endsWith(extension));
+    });
   }
+
+  const mockups = () => artefacts('.pen');
 
   /** Colour variables are the only place a `.pen` may name a colour. */
   function colours(path: string): string[] {
@@ -151,14 +165,8 @@ describe('the mockups', () => {
     // recurring shape of defect: the rule holds for one format and the artefact
     // is in another.
     const allowed = proposed();
-    const directory = join(repository, MOCKUPS);
-    const exports = existsSync(directory)
-      ? readdirSync(directory)
-          .map((entry) => join(directory, entry))
-          .filter((path) => !statSync(path).isDirectory() && path.endsWith('.html'))
-      : [];
 
-    const offenders = exports.flatMap((path) =>
+    const offenders = artefacts('.html').flatMap((path) =>
       [...new Set((readFileSync(path, 'utf8').match(HEX) ?? []).map((hex) => hex.toLowerCase()))]
         .filter((hex) => !palette.has(hex) && !(hex in allowed))
         .map((hex) => `${relative(repository, path).replaceAll('\\', '/')}: ${hex}`),
@@ -169,10 +177,18 @@ describe('the mockups', () => {
 
   it('are actually there, so the rule is not passing over nothing', () => {
     // The same guard every architecture rule in this repository carries: a scan
-    // that walks an empty directory finds no offenders and reports success.
+    // that walks a directory which is not there finds no offenders and reports
+    // success. What it asserts is that the scan FOUND its ground, not that the
+    // ground had files on it - a public clone taken before the first mockup is
+    // promoted has an empty `design/mockups/` and must still go green.
     expect(palette.size).toBeGreaterThan(20);
-    expect(mockups().length).toBeGreaterThan(0);
-    expect(mockups().flatMap(colours).length).toBeGreaterThan(0);
+    expect(ROOTS.some((root) => existsSync(join(repository, root)))).toBe(true);
+
+    // And where there are artefacts, the parser reached inside them: a `.pen`
+    // that yielded no colour at all would mean the shape changed under us.
+    for (const path of mockups()) {
+      expect(colours(path).length).toBeGreaterThan(0);
+    }
   });
 
   it('declare a reason for any colour the design system does not own yet', () => {

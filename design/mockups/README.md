@@ -8,18 +8,20 @@ The second rung. It decides **hierarchy and the visual system**. Static, in colo
 and — the part that matters here — built on the real tokens rather than on invented
 ones.
 
-## What is in here
+## What is in here, and what is not yet
 
-| file | what it is |
-|---|---|
-| `search-evaluation-panel.pen` | the backoffice search-evaluation panel, designed blind against the shipped component as a measured experiment (ADR 0033). 589 nodes, 0 literal colours |
-| `design-system.pen` | the system itself laid out for the first time: palette in both themes, type scale, spacing, the awning stripe, components, density |
-| `*.html` | the exports. Open one in a browser and you see the screen without installing anything |
-| `proposals.json` | colours the system does **not** have yet, each with the reason it exists and its measured contrast ratio |
+This folder holds mockups **whose article has published**. It is empty today,
+because the two that exist belong to article 22 and are waiting in
+[`../unpublished/mockups/`](../unpublished/README.md), which the publication filter
+removes. They are promoted with one `git mv` on the day the article goes live — the
+rule the project already applies to the articles themselves.
 
-Both formats are committed on purpose (ADR 0033). The `.pen` is documented JSON, so
-a reader opens it in any text editor and sees what a mockup is made of; the HTML is
-for a reader who just wants to look at the screen.
+Each mockup is committed in two formats, on purpose (ADR 0033): the `.pen` is
+documented JSON, so a reader opens it in any text editor and sees what a mockup is
+made of, and the `.html` export is for a reader who just wants to look at the
+screen without installing anything. Beside them, `proposals.json` carries colours
+the system does **not** have yet, each with its reason and its measured contrast
+ratio.
 
 ## The rule, and it is executable
 
@@ -31,8 +33,10 @@ could see them, because the rule that forbids a hex outside `tokens.css` reads
 
 So the same rule now runs one format further out.
 [`design-mockups.spec.ts`](../../frontend/libs/shared/i18n/src/lib/design-mockups.spec.ts)
-reads every `.pen` and every `.html` here and holds their colours to the palette
-`tokens.css` owns. It needs no application, no account and no container.
+reads every `.pen` and every `.html` in **both** halves — here and in
+`../unpublished/mockups/` — and holds their colours to the palette `tokens.css`
+owns. It needs no application, no account and no container, and an artefact does
+not become exempt by being early.
 
 ## A mockup may propose a colour — declared, never smuggled
 
