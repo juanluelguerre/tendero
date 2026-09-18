@@ -93,7 +93,7 @@ system they are drawn against, and this record is amended to say so.
 > dossier. So the permanent home is now owed, under the two constraints below —
 > and **the artefact it holds is a mockup, not a sketch**: static, medium
 > fidelity, in colour, built on the real tokens, which is the mockup rung by the
-> definition this project is using as its baseline. `design/sketches/` is misnamed.
+> definition this project is using as its baseline. `design/sketches/` was misnamed, and was renamed to `design/mockups/` the same day.
 >
 > Three things the accepted run found that this record did not anticipate, each
 > written up in `verdict.md`: the shipped panel covers **six states to the blind
@@ -106,12 +106,13 @@ system they are drawn against, and this record is amended to say so.
 
 Two constraints on that home, both learned rather than assumed:
 
-- **It is named for what it is, never for the tool.** `design/sketches/`, not `design/pen/`. A folder named after a product outlives the product — the objection article 07 is entirely about — and the thesis of this whole experiment is that the surviving rung is the *sketch*, which is a role and not a vendor.
+- **It is named for what it is, never for the tool.** `design/mockups/`, not `design/pen/`. A folder named after a product outlives the product — the objection article 07 is entirely about — and a folder is named after the artefact it holds, which the accepted run settled: what a canvas produces is a mockup, not a sketch.
 - **What lives there is the exported HTML, not the editable `.pen`.** `design/` is public and is not touched by the publication filter, and a fresh clone must be able to open what it finds — article 06's thesis. A proprietary file that needs an account to read fails that; a one-click HTML export does not. The `.pen` stays with the evidence, in the private half.
 
-Until the verdict exists, none of that is built. Creating the permanent home before
-knowing whether the practice earns one is the mistake this repository already
-wrote an article about.
+The verdict exists now and it is accepted, so the home exists: `design/mockups/`.
+What was right about the original wording survives as the reason it was not built
+earlier — creating the permanent home before knowing whether the practice earns
+one is the mistake this repository already wrote an article about.
 
 **5 · Not in phase 11.** ADR 0009 reserves the Spec Kit experiment for the UCP
 transactional work. Two new methods inside one phase make the result attributable
