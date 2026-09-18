@@ -40,10 +40,14 @@ point. The record holds five to eight such moments against 85 entries, and a boo
 may not promise what would have to be reconstructed · 5 · **a phase close files
 its material into the book chapters it feeds**, which is what makes the skeleton
 fill itself instead of depending on somebody remembering · 6 · **a design artefact
-is disposable and does not enter the public repository** (ADR 0033). It lives
-under `docs/blog/reports/` with the material it is material for, and is deleted
-when the article and the chapter that use it are written — the rule this
-repository already applies to diagram sources. That is the opposite of what an
+never becomes a source of truth and never enters the public repository** (ADR 0033). It lives
+under `docs/blog/reports/` with the material it is material for, and is **kept
+there as evidence** — amended the same day by the author: the first draft said it
+was deleted once the article and chapter using it were written, by analogy with
+diagram sources, and that analogy was wrong. A diagram source is deleted because
+its export replaces it; a `.pen` is replaced by nothing, and this repository keeps
+every other measurement's evidence. Deleting one is a decision, never a schedule.
+Staying out of the public repository is the opposite of what an
 agentic canvas is sold on, and the reason is the artefact's job rather than the
 tool's quality: a sketch earns its keep by being cheap to throw away, and a file
 kept in a public repository is a file somebody maintains, in a format whose owner

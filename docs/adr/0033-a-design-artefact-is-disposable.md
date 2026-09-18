@@ -31,11 +31,26 @@ reserves the right to make breaking changes.
 
 ## Decision
 
-**1 · A design artefact is disposable, and it is not committed to the public
-repository.** It lives under `docs/blog/reports/`, with the material it is
-material for, which the publication filter already removes. When the article and
-the book chapter that use it are written, it is deleted — the rule this repository
-already applies to diagram sources: *a published artefact is what was published*.
+**1 · A design artefact does not enter the public repository, and it is kept as
+evidence.** It lives under `docs/blog/reports/`, with the material it is material
+for, which the publication filter already removes.
+
+> **Amended the same day, by the author: it is not deleted.** The first draft of
+> this record said the artefact was deleted once the article and the chapter using
+> it were written, by analogy with diagram sources — *a published diagram is what
+> was published*. That analogy was the wrong one, and it contradicted this
+> repository's own practice. A diagram source is deleted because its **export
+> replaces it**; a `.pen` is replaced by nothing. It is evidence of a measurement,
+> and evidence here is kept: `docs/blog/reports/2026-09-16-hybrid-search/` still
+> holds its Stryker reports and evaluation logs, and that article is not even
+> published. **Deleting one is a decision somebody takes, never an automatic
+> consequence.**
+
+What survives from the original argument is the half that was never about
+deletion: a design artefact **is** disposable in the sense that matters — it may
+be thrown away without anything breaking, nothing in `src/` or `frontend/` may
+depend on it, and it is never a source of truth. Keeping a copy of it costs
+nothing and answers questions later.
 
 This is the opposite of the tool's own pitch, that design files belong in git, and
 the reason is the artefact's job rather than the tool's quality. A wireframe earns
@@ -64,6 +79,22 @@ beforehand — tokens, structure out of three, one kept decision, cost.
 the tool goes and the measurement stays. Nothing in `src/` or `frontend/` may come
 to depend on a `.pen` file existing.
 
+**4b · And what acceptance looks like, which the first draft of this record left
+out.** A dossier under `docs/blog/reports/` is the right home for the *evidence of
+one experiment*, and the wrong home for *a step of the lifecycle that repeats*. So
+if the verdict is accepted and designing before coding becomes a practice rather
+than a trial, the artefacts move to a permanent home under `design/`, beside the
+system they are drawn against, and this record is amended to say so.
+
+Two constraints on that home, both learned rather than assumed:
+
+- **It is named for what it is, never for the tool.** `design/sketches/`, not `design/pen/`. A folder named after a product outlives the product — the objection article 07 is entirely about — and the thesis of this whole experiment is that the surviving rung is the *sketch*, which is a role and not a vendor.
+- **What lives there is the exported HTML, not the editable `.pen`.** `design/` is public and is not touched by the publication filter, and a fresh clone must be able to open what it finds — article 06's thesis. A proprietary file that needs an account to read fails that; a one-click HTML export does not. The `.pen` stays with the evidence, in the private half.
+
+Until the verdict exists, none of that is built. Creating the permanent home before
+knowing whether the practice earns one is the mistake this repository already
+wrote an article about.
+
 **5 · Not in phase 11.** ADR 0009 reserves the Spec Kit experiment for the UCP
 transactional work. Two new methods inside one phase make the result attributable
 to neither.
@@ -72,7 +103,7 @@ to neither.
 
 - `docs/design/` no longer exists. Its two files are evidence under `docs/blog/reports/2026-09-18-design-before-code/`, and the public repository loses two documents that rendered incompletely and that no page linked.
 - The design-token test is unchanged and still reads `.css` only. Widening it to `.html` would fail the diagram sources, which copy the palette for a stated reason: they must render standing alone before being exported to PNG. The gap is recorded here rather than closed.
-- A screen may now be designed before it is coded, and the artefact that records it has a defined end of life. Nothing obliges a screen to be designed that way.
+- A screen may now be designed before it is coded, and the artefact that records it is kept as evidence in the private half rather than published. Nothing obliges a screen to be designed that way.
 - If the experiment is accepted, what enters the repository is the Angular component, as always — never the canvas file.
 
 ## What was rejected
