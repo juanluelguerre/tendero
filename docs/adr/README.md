@@ -31,6 +31,7 @@
 | [0030](0030-protocol-routes-are-not-in-the-openapi-document.md) | A route whose protocol publishes its own discovery is not in the OpenAPI document | accepted |
 | [0031](0031-model-weights-are-dependencies.md) | Model weights are dependencies, served from a pinned revision | accepted |
 | [0032](0032-knowing-what-the-shop-does-not-sell.md) | Knowing that the shop does not sell something is a query-understanding decision, not a threshold on a retrieval score | accepted |
+| [0033](0033-a-design-artefact-is-disposable.md) | A design artefact is disposable, and the design tool is an experiment with a removal condition | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 
