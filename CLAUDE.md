@@ -208,7 +208,7 @@ automatically on four hundred commits.
 ## The public repository
 
 Work happens in **`tendero-workshop`**, which is private. **`tendero`** is public:
-this history with `docs/blog/` filtered out, advanced one article at a time by
+this history with `docs/blog/` and `docs/book/` filtered out, advanced one article at a time by
 `docs/blog/publish-public.ps1`, so a reader gets the code an article describes
 when the article comes out and never the drafts. The filter is deterministic, so
 every publication is a fast-forward — and the day the articles catch up with the
@@ -216,8 +216,14 @@ code, running the same filter here makes the two histories one.
 
 That holds only while three rules do:
 
-1. **The filter never changes.** Anything that must stay private lives under
-   `docs/blog/`. A second path would give every commit a different hash.
+1. **The filter only ever gains a path that has never existed in the history**,
+   and only after a comparison run proves that no hash moves. What must stay
+   private lives under one of its paths: `docs/blog/` and `docs/book/`. Removing
+   a path that appears in no commit yields the same tree, the same parents and
+   therefore the same commit — measured on 2026-09-18, when `docs/book/` was
+   added and all 273 filtered commits stayed where they were. A path that
+   **already** appears in history is a different matter and would rewrite
+   everything after it.
 2. **Merged history is never rewritten** — no rebase, no force-push on
    `develop`. A tag may move only before its article is published.
 3. **Only a tag merged into `develop` is published**, and the script refuses any
@@ -242,9 +248,10 @@ fast-forward. Instead:
    public repository keeps only article tags; the fix lives on its `develop`.
 
 **When they converge, the articles do not come with the history** — the filter
-that makes the hashes match is the one that removes `docs/blog/`. Before the
-filter runs, `docs/blog/` moves with its history to a private `tendero-blog`
-repository. From then on, decided 2026-09-15:
+that makes the hashes match is the one that removes `docs/blog/` and
+`docs/book/`. Before the filter runs, `docs/blog/` moves with its history to a
+private `tendero-blog` repository, and `docs/book/` to one of its own. From then
+on, decided 2026-09-15:
 
 - **A published article enters the public repository as an ordinary commit on
   the day it is published**, under `docs/articles/`, and the first commit after
@@ -306,8 +313,11 @@ Build clean with `-warnaserror` · tests green including architecture tests ·
 new decisions recorded as ADR if they constrain the future · CLAUDE.md/docs
 updated if conventions changed · user-facing strings exist in es AND en.
 **A phase is closed** when, on top of that, Stryker has run over the projects it
-touched, no `of covered` score fell below its baseline, and the survivors are
-classified in `docs/testing.md`.
+touched, no `of covered` score fell below its baseline, the survivors are
+classified in `docs/testing.md`, and **the phase's material is filed into the
+book chapters it feeds** (`docs/book/material-map.md`). Filing is pointers and
+numbers, not prose: a chapter nobody filed into is material that will be lost,
+and reconstructing it later is exactly what the notebook exists to prevent.
 
 ## Reference docs (read when relevant, not preloaded)
 
@@ -327,6 +337,7 @@ classified in `docs/testing.md`.
 - Feature specs in progress: @docs/specs/
 - Blog article workflow: @docs/blog-workflow.md
 - Blog publication order and drafts: @docs/blog/index.md
+- The book's outline, conventions and material map: @docs/book/README.md
 
 ## Do NOT
 
