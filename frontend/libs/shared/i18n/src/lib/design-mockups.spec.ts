@@ -39,7 +39,7 @@ describe('the mockups', () => {
    * it had never existed). The rule holds on both sides, because an artefact does
    * not become exempt by being early.
    */
-  const ROOTS = ['design/mockups', 'design/unpublished/mockups'];
+  const ROOTS = ['design'];
   const PROPOSALS = 'design/unpublished/mockups/proposals.json';
 
   /** `#fff`, `#ffffff`, `#ffffffff`. */
@@ -72,14 +72,27 @@ describe('the mockups', () => {
   };
 
   function artefacts(extension: string): string[] {
-    return ROOTS.flatMap((root) => {
-      const directory = join(repository, root);
-      if (!existsSync(directory)) return [];
+    // Walked, not listed. The first version named the folders it knew about, and
+    // the first sketch landed in `design/unpublished/sketches/` - outside the
+    // scan, where a file full of hand-written hexes would have gone green. That
+    // is the third time in one day that a rule held for one location while the
+    // artefact was in another, so the rule now walks `design/` whole: a rung
+    // added later is inside it the day the folder exists, not the day somebody
+    // remembers.
+    const walk = (directory: string): string[] =>
+      existsSync(directory)
+        ? readdirSync(directory).flatMap((entry) => {
+            const path = join(directory, entry);
 
-      return readdirSync(directory)
-        .map((entry) => join(directory, entry))
-        .filter((path) => !statSync(path).isDirectory() && path.endsWith(extension));
-    });
+            return statSync(path).isDirectory()
+              ? walk(path)
+              : path.endsWith(extension)
+                ? [path]
+                : [];
+          })
+        : [];
+
+    return ROOTS.flatMap((root) => walk(join(repository, root)));
   }
 
   const mockups = () => artefacts('.pen');
@@ -184,10 +197,14 @@ describe('the mockups', () => {
     expect(palette.size).toBeGreaterThan(20);
     expect(ROOTS.some((root) => existsSync(join(repository, root)))).toBe(true);
 
-    // And where there are artefacts, the parser reached inside them: a `.pen`
-    // that yielded no colour at all would mean the shape changed under us.
+    // And where a document has been drawn into, the parser reached inside it: a
+    // `.pen` with nodes but no colour at all would mean the format changed under
+    // us. An empty document is exempt, because a file created and not yet drawn
+    // into is an ordinary state and not a broken parser - pen.dev writes the stub
+    // first and the content when somebody saves.
     for (const path of mockups()) {
-      expect(colours(path).length).toBeGreaterThan(0);
+      const drawn = (JSON.parse(readFileSync(path, 'utf8')) as { children?: unknown[] }).children;
+      if (drawn && drawn.length > 0) expect(colours(path).length).toBeGreaterThan(0);
     }
   });
 
