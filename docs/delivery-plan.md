@@ -119,18 +119,34 @@ during which phases 0–5 refill the queue.
 | 2026-09-29 | 01 · One port, N catalogs | ready — tag `blog/01-one-port-n-catalogs` |
 | 2026-10-13 | **17 · A hundred pictures, and not a line of Python** | outline — blocked on the hundred images existing |
 | 2026-10-27 | **18 · Every screen was correct and none of them was a shop** | outline — needs writing; the screenshots need 17 to have happened |
-| 2026-11-10 | 02 · Search with regression tests: NDCG as a CI gate | ready |
-| 2026-11-24 | 03 · The catalogue nobody could find | ready |
-| 2026-12-08 | 04 · Your build is green and nothing works | ready |
-| 2026-12-22 | 05 · The parameter and the header are not alternatives | ready |
-| 2027-01-05 | 06 · A repository that built on exactly one machine | ready |
-| 2027-01-19 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
-| 2027-02-02 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
-| 2027-02-16 | 16 · The URL that guessed which product you meant | ready — carries what was article 17 as its closing section |
-| 2027-03-02 | **NEW** · from phase 0 | write when P0 closes |
-| 2027-03-16 | **NEW** · from phase 2 | write when P2 closes |
-| 2027-03-30 | **NEW** · from phase 3 | write when P3 closes |
+| 2026-11-10 | **22 · The wireframes designed a different shop** | outline — material complete but for the A-B, which ran and was accepted |
+| 2026-11-24 | 02 · Search with regression tests: NDCG as a CI gate | ready |
+| 2026-12-08 | 03 · The catalogue nobody could find | ready |
+| 2026-12-22 | 04 · Your build is green and nothing works | ready |
+| 2027-01-05 | 05 · The parameter and the header are not alternatives | ready |
+| 2027-01-19 | 06 · A repository that built on exactly one machine | ready |
+| 2027-02-02 | 07 · The feature flag you did not need | ready — short on purpose, do not pad |
+| 2027-02-16 | 15 · The bot you did need, and the two you didn't | ready — pairs with 07, publish it right after |
+| 2027-03-02 | 16 · The URL that guessed which product you meant | ready — carries what was article 17 as its closing section |
+| 2027-03-16 | **NEW** · from phase 0 | write when P0 closes |
+| 2027-03-30 | **NEW** · from phase 2 | write when P2 closes |
+| 2027-04-13 | **NEW** · from phase 3 | write when P3 closes |
 | … | one per closed phase, in order | |
+
+**Article 22 was inserted at 2026-11-10 (decided 2026-09-19), and everything after
+it moved a fortnight.** It goes *after* 18 rather than before it, and the reason is
+the chain rather than urgency: 18 says every screen was correct and none of them
+was a shop, and 22 says the artefact that exists to catch exactly that was in the
+repository, drawn the day before, backwards. Reading it straight after 18 is where
+it lands hardest.
+
+The first proposal was to put it ahead of 17, on the argument that 17 was blocked
+on 82 illustrations and 22 was not. **The author pointed out that the illustrations
+are one command and about nine minutes**, so 17 is not blocked and that argument
+was withdrawn rather than defended. What survives is that 22's material is complete
+and that a piece about agentic design canvases is the fastest-ageing thing in the
+queue — which argues for sooner than the free `NEW` slot in March, and not for
+jumping the narrative order.
 
 **Two articles were inserted at 2026-10-13 and 2026-10-27 (decided 2026-09-07),
 and everything after them moved a month.** The reason is an arc rather than a
