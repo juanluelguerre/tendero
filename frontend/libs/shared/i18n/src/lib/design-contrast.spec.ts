@@ -149,6 +149,52 @@ describe('the design tokens, read on the surfaces they sit on', () => {
   });
 
   /**
+   * The brand primary is not the interface's accent, and something has to say so.
+   *
+   * ADR 0034 moved `--accent` to `--clay-600` and left `--clay-500` alone, and the
+   * first version of that claim was wrong in a way no test could see: the
+   * storefront's wordmark was set in `--accent`, so the brand's own name in the
+   * header went darker with the button. It is set in `--clay-500` again, and it
+   * can be, because it is LARGE text (20px at 800), which WCAG holds to 3:1
+   * rather than 4.5:1.
+   *
+   * This pins the number that makes that legitimate. If somebody lightens the
+   * brand colour, the wordmark stops being legible on the page before any
+   * contrast audit of the shipped screens would run, and this is where it turns
+   * red instead. Three surfaces, because the header sits on the page and a card
+   * would sit on the surface.
+   */
+  it('keeps the brand primary legible as large text, because the wordmark is set in it', () => {
+    const light = themes.light;
+    const brand = resolve(light, '--clay-500');
+
+    expect(brand).toBe('#D85A30');
+    expect(
+      failures(
+        INDICATOR_BAR,
+        SURFACES.map((surface) => ['light', '--clay-500', surface] as const),
+      ),
+    ).toEqual([]);
+  });
+
+  /**
+   * And the wordmark has to actually be set in it. The number above says the brand
+   * colour COULD carry the wordmark; this says it does, because the way it was
+   * lost was a one-word alias (`--accent`) that looked equivalent and was not —
+   * the action colour moved and the brand's name moved with it.
+   */
+  it('sets the storefront wordmark in the brand primary, never in the action alias', () => {
+    const shell = readFileSync(
+      join(repository, 'frontend/apps/storefront/src/app/layout/shell.css'),
+      'utf8',
+    );
+    const rule = shell.match(/\.brand__wordmark\s*\{([^}]*)\}/)?.[1] ?? '';
+
+    expect(rule).toContain('color: var(--clay-500)');
+    expect(rule).not.toContain('var(--accent)');
+  });
+
+  /**
    * The guard every rule in this repository carries: a scan that found nothing
    * reports no offenders and passes. Two of the three assertions below would
    * have caught the shape of this test's own first draft, which parsed the dark

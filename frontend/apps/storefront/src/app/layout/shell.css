@@ -45,11 +45,19 @@
 }
 .brand__mark { width: 40px; height: 40px; }
 .brand__text { display: flex; flex-direction: column; line-height: var(--leading-tight); }
+/*
+  The wordmark is BRAND, not action: brand/BRAND.md sets it in Terracotta
+  #D85A30, so it names --clay-500 and not the --accent alias, which is the
+  interface's action colour and moved to --clay-600 in ADR 0034. It is also LARGE
+  text (20px at 800), which WCAG holds to 3:1, and #D85A30 clears that on every
+  light surface (3.43:1 on the page). design-contrast.spec.ts pins that number, so
+  lightening the brand colour turns a test red instead of a wordmark illegible.
+*/
 .brand__wordmark {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--text-lg);
-  color: var(--accent);
+  color: var(--clay-500);
 }
 .brand__tagline { font-size: var(--text-2xs); color: var(--text-muted); }
 
