@@ -5,7 +5,7 @@ Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short
 **What is in the repository today** (2026-09-17, after layer B moved to the
 evaluation tool): xUnit v3, CsCheck, NetArchTest.Rules, Testcontainers.PostgreSql,
 `WebApplicationFactory`, vitest and Playwright — 1035 backend tests (1014 green,
-21 skipped with a reason), 80 frontend, 20 browser specs. Layer B's 37 cases went
+21 skipped with a reason), 84 frontend, 20 browser specs. Layer B's 37 cases went
 from `Search.Tests` to `SearchEval.Tests` with the code they drive, and 13 more
 went with the production wiring that no longer exists. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
@@ -270,7 +270,7 @@ A new adapter without its contract-test subclass does not merge.
 
 ## The design system's rules, made executable
 
-Three vitest suites in `shared-i18n`, which is simply the library that already has
+Four vitest suites in `shared-i18n`, which is simply the library that already has
 vitest configured. They need no browser and no container, and they read the
 repository rather than the apps, because `design/DESIGN.md` governs four surfaces
 and only two of them are Angular.
@@ -278,6 +278,30 @@ and only two of them are Angular.
 - `design-tokens.spec.ts` — a colour is written down in `design/tokens.css` and nowhere else. It walks every `.css` in the repository.
 - `design-mockups.spec.ts` — a `.pen` or its `.html` export anywhere under `design/` names only colours the system owns, unless a person declared the exception in `proposals.json` with a reason (ADR 0033). It walks the folder whole rather than naming rungs, because the first sketch landed outside the folder the rule named.
 - `design-contrast.spec.ts` — every text token clears 4.5:1 against every surface it can sit on, every fill pairing clears 4.5:1, and the focus ring clears 3:1, **in both themes** (ADR 0034). It resolves `var()` chains the way the browser does, so an alias like `--focus-ring: var(--accent)` is measured against the accent that actually wins under `[data-theme='dark']`.
+- `design-css-integrity.spec.ts` — a `var()` with **no fallback** names a property that exists, every `var()` opens on a property reference, and parentheses balance. A `var(--x, fallback)` whose property is undefined is fine and stays: it degrades on purpose.
+
+The fourth was written the same day and for a humbler reason than the third: a
+script migrating 51 declarations spliced two of them wrong, and **a browser drops
+a malformed declaration in silence**. The build was clean, eslint has no opinion
+about CSS, and `design-tokens.spec.ts` looks for hex literals, of which a mangled
+`var()` has none. The three gates that existed all passed on a language switch
+that had stopped painting its own background.
+
+It is also the clearest case in this repository of a test that had to be
+disproved before it could be trusted. The first draft killed one of the three
+mutations it was written for and was green — its regex demanded a `,` or `)`
+after the property name, and the corruption leaves a `:` there. The attribution,
+run one spec at a time, is in the file:
+
+| mutation | integrity | contrast |
+|---|---|---|
+| `.lang--active` corrupted | **red** | green |
+| cart badge corrupted | **red** | green |
+| `--on-accent` out of `:root` | green | **red** |
+
+Neither is enough alone, and the integrity spec's blindness — `defined` is
+theme-blind, so a token declared only in the dark block satisfies it — is written
+into the file rather than papered over with a second set of rules there.
 
 The third one exists because the first two could both pass on a palette nobody can
 read: keeping every colour in one file says nothing about whether those colours
