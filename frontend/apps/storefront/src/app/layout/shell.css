@@ -144,7 +144,7 @@ color: var(--on-accent)0);
 }
 
 .account:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
