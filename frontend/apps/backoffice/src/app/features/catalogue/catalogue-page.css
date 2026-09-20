@@ -1,7 +1,7 @@
 /* Only what this page adds; the header, table, tags and buttons are the
    primitives in styles.css, as they are for the review queue. */
 .name { display: block; color: var(--text); font-weight: 600; }
-.code { display: block; margin-block-start: 2px; font-size: var(--text-3xs); color: var(--text-subtle); }
+.code { display: block; margin-block-start: 2px; font-size: var(--text-3xs); color: var(--text-muted); }
 
 .quiet-link { font-size: var(--text-xs); color: var(--text-muted); }
 .quiet-link:hover { color: var(--accent); }

@@ -37,7 +37,7 @@
   cursor: pointer;
 }
 .lang:hover { color: var(--text); }
-.lang--active { background: var(--accent); color: var(--ink-900); }
+.lang--active { background: var(--accent); color: var(--on-accent); }
 
 /* Who is acting, and under which role. */
 .who {

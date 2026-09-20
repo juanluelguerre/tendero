@@ -20,10 +20,12 @@
   --color-clay-100: var(--clay-100);
   --color-clay-500: var(--clay-500);
   --color-clay-600: var(--clay-600);
+  --color-clay-700: var(--clay-700);
   --color-clay-800: var(--clay-800);
 
   --color-olive-50: var(--olive-50);
   --color-olive-500: var(--olive-500);
+  --color-olive-600: var(--olive-600);
   --color-olive-700: var(--olive-700);
 
   --color-stone-0: var(--stone-0);
@@ -46,10 +48,10 @@
   --color-hairline-strong: var(--border-strong);
   --color-body: var(--text);
   --color-muted: var(--text-muted);
-  --color-subtle: var(--text-subtle);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-tint: var(--accent-tint);
+  --color-on-accent: var(--on-accent);
   --color-positive: var(--positive);
   --color-warning: var(--warning);
   --color-danger: var(--danger);

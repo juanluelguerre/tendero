@@ -17,7 +17,7 @@
    whole column read as an alert, which is the failure the design rules
    already name: colour that is always on carries no information. */
 .held { color: var(--warning); }
-.held--none { color: var(--text-subtle); }
+.held--none { color: var(--text-muted); }
 .available { color: var(--text); font-weight: 500; }
 .row--empty .available { color: var(--danger); }
 
@@ -62,9 +62,9 @@
 .hold__status--Held { color: var(--warning); }
 .hold__status--Committed { color: var(--positive); }
 .hold__status--Released { color: var(--danger); }
-.hold__status--Expired { color: var(--text-subtle); }
+.hold__status--Expired { color: var(--text-muted); }
 
-.hold__order { font-family: var(--font-mono); font-size: var(--text-3xs); color: var(--text-subtle); }
+.hold__order { font-family: var(--font-mono); font-size: var(--text-3xs); color: var(--text-muted); }
 
 .hold__lines { margin: var(--space-2) 0 0; padding: 0; list-style: none; }
 .hold__line { font-family: var(--font-mono); font-size: var(--text-3xs); color: var(--text-muted); }

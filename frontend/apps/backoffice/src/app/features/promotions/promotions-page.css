@@ -26,5 +26,5 @@
   margin-inline-start: var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--text-3xs);
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }

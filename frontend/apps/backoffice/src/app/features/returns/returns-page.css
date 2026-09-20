@@ -27,7 +27,7 @@
   white-space: nowrap;
 }
 
-.status--Requested { color: var(--text-subtle); }
+.status--Requested { color: var(--text-muted); }
 .status--Approved { color: var(--warning); }
 .status--Received { color: var(--accent); }
 .status--Refunded { color: var(--positive); }

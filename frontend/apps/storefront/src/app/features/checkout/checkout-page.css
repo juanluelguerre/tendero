@@ -124,7 +124,7 @@
   font-weight: 700;
 }
 
-.totals__tax { margin: 0; color: var(--text-subtle); font-size: var(--text-xs); }
+.totals__tax { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: minmax(0, 1fr); }

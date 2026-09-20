@@ -14,7 +14,7 @@
   z-index: 20;
   padding: var(--space-2) var(--space-4);
   background: var(--accent);
-  color: var(--stone-0);
+  color: var(--on-accent);
   border-radius: var(--radius-md);
   text-decoration: none;
   transition: inset-block-start var(--dur-fast) var(--ease);
@@ -84,7 +84,7 @@
   place-items: center;
   border-radius: 9px;
   background: var(--accent);
-  color: var(--stone-0);
+color: var(--on-accent)0);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -109,7 +109,7 @@
   cursor: pointer;
 }
 .lang:hover { color: var(--text); }
-.lang--active { background: var(--accent); color: var(--stone-0); }
+.lang--active { background: var(--accencolor: var(--on-accent)e-0); }
 
 .main { flex: 1; padding-block: var(--space-6) var(--space-8); }
 

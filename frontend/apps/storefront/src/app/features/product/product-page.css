@@ -20,7 +20,7 @@
 .crumbs__item + .crumbs__item::before {
   content: '›';
   margin-inline-end: var(--space-2);
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 /* ---------- The two columns ---------- */
@@ -172,7 +172,7 @@
 /* Not sold at all: disabled, and still rendered. An option that disappears
    makes the picker jump and makes the shopper think the shop lost something. */
 .option:disabled {
-  color: var(--text-subtle);
+  color: var(--text-muted);
   border-style: dashed;
   cursor: not-allowed;
 }
