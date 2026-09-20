@@ -78,9 +78,13 @@ Scanning the orders table, you can see at a glance what an agent bought.
 - Never write a hex outside `tokens.css`. If a component needs a colour that does
   not exist, that is a design decision, not a CSS fix.
 - **A ramp's middle step is a fill; only its dark step carries text** (ADR 0034).
-  `--clay-500` is the brand — the logo and the awning — and nothing readable sits
-  on it: no text colour clears AA against it, in either direction. The interface's
-  accent is `--clay-600`, and `--positive` and `--warning` take the same step down.
+  `--clay-500` is the brand — the logo, the awning and the wordmark — and nothing
+  readable sits *on* it: no text colour clears AA against it, in either direction.
+  The interface's accent is `--clay-600`, and `--positive` and `--warning` take the
+  same step down. **One exception, by name**: the storefront wordmark is set *in*
+  `--clay-500`, because it is brand and it is large text (20px at 800, 3:1, and
+  the brand clears 3.43:1 on the page). Brand text names `--clay-500`, never the
+  `--accent` alias, which is the action colour and moves independently.
 - **Text on an accent fill is `--on-accent`, never a hand-picked colour.** The
   right answer differs per theme, which is why it is a token: white on the light
   accent, ink on the dark one. Writing either one by hand is right in one theme

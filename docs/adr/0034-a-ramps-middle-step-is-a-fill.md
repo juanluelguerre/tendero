@@ -59,8 +59,26 @@ names it *Terracotta (primary)*. What changes is the **interface's** accent:
 The brand colour and the action colour stop being the same value, and that is the
 decision rather than a side effect. It is defensible because their jobs differ: the
 awning is decoration with nothing on top of it, and a button is a surface somebody
-has to read. Outside `tokens.css` the only consumer of `--clay-500` in either app
-is the awning utility, so the split cost nothing to make.
+has to read.
+
+> **Corrected the same day, and the first version of this paragraph was wrong.** It
+> ended *"Outside `tokens.css` the only consumer of `--clay-500` in either app is
+> the awning utility, so the split cost nothing to make"* — true of the token and
+> false of the brand, because it counted who names `--clay-500` and not who names
+> the alias that used to equal it. The storefront's **wordmark** was set in
+> `--accent`, so the brand's own name in the header went darker with the button,
+> against `brand/BRAND.md` (*Terracotta (primary): icon background, wordmark*) and
+> against the author's explicit instruction that the primary and the logos stay
+> as they are. It passed no test and failed no audit: a 20px/800 wordmark is
+> **large text**, held to 3:1, and `#D85A30` on the page is 3.43:1, so it had never
+> been a defect and did not need fixing. It was found by reviewing the running
+> application in the author's own browser, where the auditor's lowest passing
+> element was the wordmark at `#b8451f`. It is set in `--clay-500` again, and two
+> assertions in `design-contrast.spec.ts` hold it: the number that makes it
+> legitimate (the brand primary clears 3:1 on every light surface, and is exactly
+> `#D85A30`) and the binding itself (`.brand__wordmark` names `--clay-500` and
+> never `--accent`). Four mutations, including the one-word alias that caused it,
+> each turn them red.
 
 **3 · `--on-accent` is a token, because the answer differs per theme.** White
 reads on the light accent (5.37:1) and not on the dark one (2.76:1); ink reads on
@@ -100,6 +118,7 @@ silence exactly the way the two orphaned mockups did.
 - Six focus rings that painted nothing now paint. This is the one repair in the pass that a contrast measurement could never have found, because the colour was always correct — it was the style that was `none`.
 - `--ink-400`, `--olive-500` and `--amber-500` keep their place in the palette and lose their consumers. A ramp is a vocabulary and is allowed steps nothing spends today; `--amber-50` and `--red-600` already had none. `--ink-400`'s comment no longer claims it is for hints and placeholders, because it is too light for text on any surface this system has.
 - The two mockups under `design/unpublished/mockups/` named `#7c746c`, the deleted dark `--text-subtle`, in 103 places. `design-mockups.spec.ts` went red on them, which is the gate ADR 0033 built doing its job on the first token change after it existed. They name the dark `--text-muted` now.
+- **What the corrected rule costs**: text set in a ramp's middle step is allowed when it is *large* and *brand*. The wordmark is the only case, and it is enforced by name rather than by a general exemption, so the rule above — a ramp's middle step is a fill — stays true for everything else. The offer headline on the home page (`--text-2xl`, in `--accent`) is large text that also darkened with the accent; it is an accent by design (*"an offer band is where an accent earns its keep"*), not a brand mark, and it stays on the alias.
 - A dark `--danger` at 4.52:1 on `--bg-raised` is the thinnest margin left in the system. It passes, it was approved a week ago on a different pair, and it is written down here rather than moved again.
 - **The migration itself shipped a defect, and it is the most useful thing the pass produced.** The script that moved 51 declarations spliced two of them wrong — it collected its matches against the original text and then mutated the string it was indexing into, so every replacement after the first in a file landed two characters off. `shell.css` was the only file with three. A browser drops a malformed declaration in silence, so the language switch lost its background and the cart badge its colour with a clean build, green tests and a passing contrast audit: the text fell back to an inherited colour that happened to be legible. It was found by driving the real application in a browser, not by any gate. `design-css-integrity.spec.ts` is that gate now — a `var()` with no fallback must name a property that exists, and every `var()` must open on a property reference at all, because `var(--accencolor:` balances its parentheses perfectly. Its first draft killed one of the three mutations and was green, which is recorded in the file beside what it still cannot see.
 

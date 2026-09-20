@@ -5,7 +5,7 @@ Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short
 **What is in the repository today** (2026-09-17, after layer B moved to the
 evaluation tool): xUnit v3, CsCheck, NetArchTest.Rules, Testcontainers.PostgreSql,
 `WebApplicationFactory`, vitest and Playwright — 1035 backend tests (1014 green,
-21 skipped with a reason), 84 frontend, 20 browser specs. Layer B's 37 cases went
+21 skipped with a reason), 86 frontend, 20 browser specs. Layer B's 37 cases went
 from `Search.Tests` to `SearchEval.Tests` with the code they drive, and 13 more
 went with the production wiring that no longer exists. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
