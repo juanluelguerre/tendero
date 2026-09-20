@@ -5,7 +5,7 @@ Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short
 **What is in the repository today** (2026-09-17, after layer B moved to the
 evaluation tool): xUnit v3, CsCheck, NetArchTest.Rules, Testcontainers.PostgreSql,
 `WebApplicationFactory`, vitest and Playwright — 1035 backend tests (1014 green,
-21 skipped with a reason), 69 frontend, 20 browser specs. Layer B's 37 cases went
+21 skipped with a reason), 80 frontend, 20 browser specs. Layer B's 37 cases went
 from `Search.Tests` to `SearchEval.Tests` with the code they drive, and 13 more
 went with the production wiring that no longer exists. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
@@ -22,6 +22,7 @@ Each enters with the first test that needs it (ADR 0006).
 | Contract (ports) | xUnit abstract base classes | ms–s | every build |
 | Snapshot / golden | Verify (planned for the UCP manifest) | ms | every build |
 | Architecture | NetArchTest.Rules | ms | every build |
+| Design system | vitest over `design/tokens.css` and `design/` | ms | every build |
 | Integration | Testcontainers, a database per test | s | `--filter Category=Integration` |
 | Search relevance | tools/SearchEval (NDCG@10) | s | CI gate on every PR |
 | End-to-end | Playwright | s | its own CI job, after the rest |
@@ -266,6 +267,25 @@ A new adapter without its contract-test subclass does not merge.
   133. Every unit test was green, because the fake generator accepted any batch.
   The fake now throws above 32 like the server does, and a test proves the anchors
   are sent in batches it accepts.
+
+## The design system's rules, made executable
+
+Three vitest suites in `shared-i18n`, which is simply the library that already has
+vitest configured. They need no browser and no container, and they read the
+repository rather than the apps, because `design/DESIGN.md` governs four surfaces
+and only two of them are Angular.
+
+- `design-tokens.spec.ts` — a colour is written down in `design/tokens.css` and nowhere else. It walks every `.css` in the repository.
+- `design-mockups.spec.ts` — a `.pen` or its `.html` export anywhere under `design/` names only colours the system owns, unless a person declared the exception in `proposals.json` with a reason (ADR 0033). It walks the folder whole rather than naming rungs, because the first sketch landed outside the folder the rule named.
+- `design-contrast.spec.ts` — every text token clears 4.5:1 against every surface it can sit on, every fill pairing clears 4.5:1, and the focus ring clears 3:1, **in both themes** (ADR 0034). It resolves `var()` chains the way the browser does, so an alias like `--focus-ring: var(--accent)` is measured against the accent that actually wins under `[data-theme='dark']`.
+
+The third one exists because the first two could both pass on a palette nobody can
+read: keeping every colour in one file says nothing about whether those colours
+work against each other. It was added with the accessibility pass that found white
+on the accent at 3.87:1 on the storefront's one clay action, and a `--on-accent`
+that was referenced by a component and defined nowhere — 2.45:1, and invisible to
+every gate the repository owned, because an undefined custom property is not a
+hex literal anywhere.
 
 ## Architecture tests (NetArchTest.Rules)
 

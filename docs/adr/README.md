@@ -32,6 +32,7 @@
 | [0031](0031-model-weights-are-dependencies.md) | Model weights are dependencies, served from a pinned revision | accepted |
 | [0032](0032-knowing-what-the-shop-does-not-sell.md) | Knowing that the shop does not sell something is a query-understanding decision, not a threshold on a retrieval score | accepted |
 | [0033](0033-a-design-artefact-is-disposable.md) | A design artefact is disposable, and the design tool is an experiment with a removal condition | accepted |
+| [0034](0034-a-ramps-middle-step-is-a-fill.md) | A ramp's middle step is a fill; only its dark step carries text | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

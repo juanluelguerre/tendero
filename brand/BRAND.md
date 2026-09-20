@@ -50,7 +50,7 @@ coherence than the problem is worth today.
 
 | Token | Hex | Use |
 |---|---|---|
-| Terracotta (primary) | `#D85A30` | Icon background, wordmark |
+| Terracotta (primary) | `#D85A30` | Icon background, wordmark, the awning stripe |
 | Canvas | `#FAECE7` | Awning and stem on terracotta |
 | Deep terracotta | `#993C1D` | Hover, text on light terracotta tints |
 | Ink | `#2C2C2A` | Mono icon background, body text |

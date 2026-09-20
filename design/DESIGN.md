@@ -77,10 +77,23 @@ Scanning the orders table, you can see at a glance what an agent bought.
 
 - Never write a hex outside `tokens.css`. If a component needs a colour that does
   not exist, that is a design decision, not a CSS fix.
+- **A ramp's middle step is a fill; only its dark step carries text** (ADR 0034).
+  `--clay-500` is the brand — the logo and the awning — and nothing readable sits
+  on it: no text colour clears AA against it, in either direction. The interface's
+  accent is `--clay-600`, and `--positive` and `--warning` take the same step down.
+- **Text on an accent fill is `--on-accent`, never a hand-picked colour.** The
+  right answer differs per theme, which is why it is a token: white on the light
+  accent, ink on the dark one. Writing either one by hand is right in one theme
+  and wrong in the other.
 - One accent action per view. If two things are clay, neither is primary.
 - Shadows only on things that genuinely float (menus, modals, toasts).
 - Colour never carries meaning alone — always pair with text or an icon.
-- Every interactive element has a visible `:focus-visible` ring. No exceptions.
+- Every interactive element has a visible `:focus-visible` ring. No exceptions —
+  and `outline: var(--focus-ring)` is **not** one: the shorthand resets
+  `outline-style` to `none`, so it paints nothing and overrides the ring the
+  system already draws. Always `outline: 2px solid var(--focus-ring)`.
+- Contrast is a gate, not an intention: `design-contrast.spec.ts` holds every text
+  token against every surface at 4.5:1, and the focus ring at 3:1, in both themes.
 - Respect `prefers-reduced-motion`; the awning bar is the only thing that animates.
 
 ## Copy voice
