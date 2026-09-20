@@ -166,13 +166,14 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    */
   it('keeps the brand primary legible as large text, because the wordmark is set in it', () => {
     const light = themes.light;
-    const brand = resolve(light, '--clay-500');
+    const brand = resolve(light, '--brand');
 
     expect(brand).toBe('#D85A30');
+    expect(resolve(themes.dark, '--brand')).toBe('#D85A30');
     expect(
       failures(
         INDICATOR_BAR,
-        SURFACES.map((surface) => ['light', '--clay-500', surface] as const),
+        SURFACES.map((surface) => ['light', '--brand', surface] as const),
       ),
     ).toEqual([]);
   });
@@ -190,7 +191,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
     );
     const rule = shell.match(/\.brand__wordmark\s*\{([^}]*)\}/)?.[1] ?? '';
 
-    expect(rule).toContain('color: var(--clay-500)');
+    expect(rule).toContain('color: var(--brand)');
     expect(rule).not.toContain('var(--accent)');
   });
 

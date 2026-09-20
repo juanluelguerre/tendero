@@ -83,7 +83,7 @@ Scanning the orders table, you can see at a glance what an agent bought.
   The interface's accent is `--clay-600`, and `--positive` and `--warning` take the
   same step down. **One exception, by name**: the storefront wordmark is set *in*
   `--clay-500`, because it is brand and it is large text (20px at 800, 3:1, and
-  the brand clears 3.43:1 on the page). Brand text names `--clay-500`, never the
+  the brand clears 3.43:1 on the page). Brand text names `--brand` (an alias of `--clay-500`), never the
   `--accent` alias, which is the action colour and moves independently.
 - **Text on an accent fill is `--on-accent`, never a hand-picked colour.** The
   right answer differs per theme, which is why it is a token: white on the light

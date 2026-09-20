@@ -47,6 +47,7 @@
   --border-strong:  var(--stone-300);
   --text:           var(--ink-900);
   --text-muted:     var(--ink-500);
+  --brand:          var(--clay-500);  /* the logo's colour; text set in it must be large (3:1) */
   --accent:         var(--clay-600);
   --accent-hover:   var(--clay-700);
   --accent-tint:    var(--clay-50);
