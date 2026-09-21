@@ -1,0 +1,1259 @@
+{
+  "version": "2.17",
+  "children": [
+    {
+      "type": "frame",
+      "id": "WLfKJ",
+      "x": 0,
+      "y": 0,
+      "name": "Sketch · Storefront home",
+      "clip": true,
+      "width": 1280,
+      "height": 1060,
+      "fill": "$stone-50",
+      "layout": "none",
+      "children": [
+        {
+          "type": "path",
+          "id": "T6Imv3",
+          "x": 40,
+          "y": 40,
+          "name": "Header outline",
+          "geometry": "M-1.6 1.3l60.9-2.2 61.4 1 58.8 0.7 61.3-0.7 59.8 0.3 60.4-1.2 58.6 1.5 61-2.1 60 1.3 60.8 1.1 57.4-1 62.6 0.6 59.1-0.4 60.8 1.1 58.3-1.8 61.5 0 57.8-0.1 60.9-0.1 61.6 0.9 59.3 1-2.1-1.9 1.6 39.7-0.5 38 1.6-0.4-61.7 0.9-59.1 1.9-60.5-2.5-60.3 0.4-60.1 0.5-60.1 0.3-59.1-1-59.1 0.8-60.1 0.5-60.8-0.3-60.4 0.5-58.6-0.9-60.7-0.5-60.4 0.3-60.8 0.2-58.6 1.5-62.1-0.2-60.2-1.3-59.7-1.1-57.3 0.5-1.2-0.2-0.5-37.6-1.1-38z",
+          "viewBox": [
+            -3,
+            -3,
+            1206,
+            84
+          ],
+          "width": 1206,
+          "height": 84,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "Uk9wh",
+          "x": 62,
+          "y": 56,
+          "name": "Logo",
+          "geometry": "M1.2 1.2l24 0.1 23.6-2-2.4-0.1 0.2 23.2 1.8 24.7 0.4 0.9-24.2-0.8-23.4 0-1.6 2.1-0.8-25.3-0.4-22.7z",
+          "viewBox": [
+            -3,
+            -3,
+            54,
+            54
+          ],
+          "width": 54,
+          "height": 54,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "CGLl2",
+          "x": 65,
+          "y": 59,
+          "name": "Logo X",
+          "geometry": "M0.82159 2.5327l44.30439 47.86762m1.00282-47.5879l-45.73711 46.26383",
+          "viewBox": [
+            0,
+            0,
+            48,
+            48
+          ],
+          "width": 48,
+          "height": 48,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "Wa6v9",
+          "x": 124,
+          "y": 58,
+          "name": "Wordmark",
+          "fill": "$ink-900",
+          "content": "Tendero",
+          "fontFamily": "Caveat",
+          "fontSize": 34,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "i3DWY",
+          "x": 300,
+          "y": 58,
+          "name": "Search box",
+          "geometry": "M-0.6-0.7l62.1 0.9 61.9 0.4 63.7-0.1 61.8-1.6 61.3 2.1 62.2-0.5 64.1-1.6 62.2 2 62.5 0.2-0.6-1.3-1.2 21.7 1.5 20.3-1.5 0-60.7 0.3-63.5 0.2-61.3-0.7-62.2 0.2-63.5-0.3-60.4 1.7-63-0.3-61.6-1.6-62.9-0.2-0.3 1 0.7-20-0.7-22.9z",
+          "viewBox": [
+            -3,
+            -3,
+            566,
+            48
+          ],
+          "width": 566,
+          "height": 48,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "niPyT",
+          "x": 316,
+          "y": 62,
+          "name": "Search placeholder",
+          "fill": "$ink-500",
+          "content": "search the shop…",
+          "fontFamily": "Caveat",
+          "fontSize": 24,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "TZi2i",
+          "x": 900,
+          "y": 62,
+          "name": "Languages",
+          "fill": "$ink-500",
+          "content": "ES | EN",
+          "fontFamily": "Caveat",
+          "fontSize": 24,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "R3ZtK",
+          "x": 1150,
+          "y": 58,
+          "name": "Cart",
+          "geometry": "M-0.2-1.1l31.7 1.2 30.7-0.1 0.6-0.4 0 19.9-1.4 22.6-0.4 0.6-30.7-1.5-29.8 0.6-1.9 1.1 2.4-20.6 0.3-21.7z",
+          "viewBox": [
+            -3,
+            -3,
+            68,
+            48
+          ],
+          "width": 68,
+          "height": 48,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "N3FRl",
+          "x": 1160,
+          "y": 62,
+          "name": "Cart label",
+          "fill": "$ink-500",
+          "content": "cart",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "ouQGA",
+          "x": 44,
+          "y": 150,
+          "name": "Departments title",
+          "fill": "$ink-900",
+          "content": "Departments",
+          "fontFamily": "Caveat",
+          "fontSize": 34,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "JQN0b",
+          "x": 44,
+          "y": 200,
+          "name": "Clothing art",
+          "geometry": "M-1.6-1.4l55.4 0.5 54.3 1.8 53.8-2.4 52.7 3 56.6-2.8-0.4-0.1-0.3 51.1 0.5 49.5 0.2 49.4 0.2 0.7-56.2 1.8-54.1-1.6-52-0.2-53.8 1.5-56.2-0.4-0.3-0.5 2.2-50.9-0.6-49.2 0.3-50.4z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            156
+          ],
+          "width": 276,
+          "height": 156,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "NZq0n",
+          "x": 47,
+          "y": 203,
+          "name": "Clothing art X",
+          "geometry": "M0.94923-0.24565l268.4656 149.36984m-1.23238-150.60462l-267.69839 151.03596",
+          "viewBox": [
+            0,
+            0,
+            270,
+            150
+          ],
+          "width": 270,
+          "height": 150,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "U3JWp",
+          "x": 48,
+          "y": 358,
+          "name": "Clothing name",
+          "fill": "$ink-900",
+          "content": "Clothing",
+          "fontFamily": "Caveat",
+          "fontSize": 28,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "slolN",
+          "x": 50,
+          "y": 398,
+          "name": "Clothing sections",
+          "geometry": "M0 3.81604l14 0.35648 14 1.39551 14 0.29008 14-2.63207 14 0.90663 14-2.30938 14 0.14705 14-0.47811 14 4.47184 14-3.85136 14 4.15225 14-4.99948 14 3.57578",
+          "viewBox": [
+            0,
+            0,
+            180,
+            8
+          ],
+          "width": 180,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "ijL9e",
+          "x": 344,
+          "y": 200,
+          "name": "Home art",
+          "geometry": "M-1.6 1.2l55.9-1.8 52.9 1.6 54.4-1.7 54.5 2 54.2-1.8-0.5 0.2-0.9 50.5 1.4 51 0.2 50-0.5-1.7-52.7 0.6-54.3-0.1-53.5 0.1-56.4-0.1-51.9 1.3-1.8-2.2 1.5-50.4-1.4-47.5 1-51.2z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            156
+          ],
+          "width": 276,
+          "height": 156,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "AzfUq",
+          "x": 347,
+          "y": 203,
+          "name": "Home art X",
+          "geometry": "M2.4215 0.16895l269.17042 151.15884m0.65555-154.17979l-271.8398 152.5693",
+          "viewBox": [
+            0,
+            0,
+            270,
+            150
+          ],
+          "width": 270,
+          "height": 150,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "W3CODX",
+          "x": 348,
+          "y": 358,
+          "name": "Home name",
+          "fill": "$ink-900",
+          "content": "Home",
+          "fontFamily": "Caveat",
+          "fontSize": 28,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "zGXl0",
+          "x": 350,
+          "y": 398,
+          "name": "Home sections",
+          "geometry": "M0 4.46473l14-2.2823 14-0.02983 14 2.52457 14-1.4552 14-1.6026 14 5.09739 14-2.14498 14-2.63573 14-0.67658 14 4.66473 14-1.8508 14-2.51547 14 4.50062",
+          "viewBox": [
+            0,
+            0,
+            180,
+            8
+          ],
+          "width": 180,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "kUgYJ",
+          "x": 644,
+          "y": 200,
+          "name": "Sport art",
+          "geometry": "M1.1-1.6l51.5 1.4 55.7 1.3 53.7-2 54.5-0.3 55-0.3-1.5 1.7-1 48.9 0.3 51.3-0.1 49.9 0.7 0.2-54.2-0.5-52.7-1.1-55.4 2-52.3-1.9-54 1 0.1-1-2.1-47.7 1.3-50.4-2-51.5z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            156
+          ],
+          "width": 276,
+          "height": 156,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "bF6Ut",
+          "x": 647,
+          "y": 203,
+          "name": "Sport art X",
+          "geometry": "M2.27778 2.71127l266.05074 146.70464m0.90402-148.09769l-271.83147 148.41238",
+          "viewBox": [
+            0,
+            0,
+            270,
+            150
+          ],
+          "width": 270,
+          "height": 150,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "u9e74w",
+          "x": 648,
+          "y": 358,
+          "name": "Sport name",
+          "fill": "$ink-900",
+          "content": "Sport",
+          "fontFamily": "Caveat",
+          "fontSize": 28,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "JT3pU",
+          "x": 650,
+          "y": 398,
+          "name": "Sport sections",
+          "geometry": "M0 5.42953l14-4.2606 14 1.04889 14 0.73524 14 3.11561 14-3.93833 14 0.53615 14-0.97934 14 4.32434 14-4.88366 14 0.33586 14 4.82775 14-4.08527 14 2.83003",
+          "viewBox": [
+            0,
+            0,
+            180,
+            8
+          ],
+          "width": 180,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "ehNzR",
+          "x": 944,
+          "y": 200,
+          "name": "Tech art",
+          "geometry": "M-1.4-1l56.2 1.6 53.5 0 54.1-1.1 53.4 0 54.2 0.9 0.4-0.2-0.9 50.7 0.8 49.4-0.7 51.2 0.9-0.1-55.4-0.3-51.9-2.1-54.7 1.4-53.1-1.4-54.4 2.3 0.6-1-1.7-51-0.3-50.8-0.8-49.6z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            156
+          ],
+          "width": 276,
+          "height": 156,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "P92qn",
+          "x": 947,
+          "y": 203,
+          "name": "Tech art X",
+          "geometry": "M1.18831-2.13886l266.92887 151.63276m3.937-148.95043l-269.87979 148.3468",
+          "viewBox": [
+            0,
+            0,
+            270,
+            150
+          ],
+          "width": 270,
+          "height": 150,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "UhTsr",
+          "x": 948,
+          "y": 358,
+          "name": "Tech name",
+          "fill": "$ink-900",
+          "content": "Tech",
+          "fontFamily": "Caveat",
+          "fontSize": 28,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "e6IqXS",
+          "x": 950,
+          "y": 398,
+          "name": "Tech sections",
+          "geometry": "M0 5.84308l14-0.82166 14 0.06753 14 0.87141 14-0.23413 14 1.00043 14-3.76689 14 1.82918 14-0.82804 14-2.92403 14 1.88252 14 1.42313 14 2.49317 14-1.26527",
+          "viewBox": [
+            0,
+            0,
+            180,
+            8
+          ],
+          "width": 180,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "SCkCL",
+          "x": 44,
+          "y": 440,
+          "name": "Offers title",
+          "fill": "$ink-900",
+          "content": "Offers",
+          "fontFamily": "Caveat",
+          "fontSize": 34,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "Ltodc",
+          "x": 150,
+          "y": 450,
+          "name": "Offers lede",
+          "fill": "$ink-500",
+          "content": "what the till will really apply",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "i5xk7",
+          "x": 44,
+          "y": 490,
+          "name": "Offer 0",
+          "geometry": "M0.1-1.3l52.4-0.2 57 1.7 53.8 1.2 51.6-2.7 54.7 2.7 1.9-0.8-0.1 54.5-0.8 55-0.2 0.3-54.4-1.8-53.9 1-55.4-0.1-52.8 1.5-55.2-1.6 0 1.4-0.3-56.3 3-54.6z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            116
+          ],
+          "width": 276,
+          "height": 116,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "EwJAp",
+          "x": 62,
+          "y": 500,
+          "name": "Offer 0 figure",
+          "fill": "$ink-900",
+          "content": "25%",
+          "fontFamily": "Caveat",
+          "fontSize": 48,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "RQshl",
+          "x": 62,
+          "y": 560,
+          "name": "Offer 0 name",
+          "fill": "$ink-500",
+          "content": "Summer shoes",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "WmQwg",
+          "x": 344,
+          "y": 490,
+          "name": "Offer 1",
+          "geometry": "M0.2-0.3l52.9-0.2 55.3 0.4 54.2 1.3 53.8 0.3 52.8-2.6 1.8 1.7-0.8 54.8 0.1 54.1 0.5 0.9-54-0.3-56.3 1.1-51.9-0.8-54.2-1-55.5-0.3 0.2 1.8 0.7-57.5-1.3-52.9z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            116
+          ],
+          "width": 276,
+          "height": 116,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "AAX0R",
+          "x": 362,
+          "y": 500,
+          "name": "Offer 1 figure",
+          "fill": "$ink-900",
+          "content": "−10 €",
+          "fontFamily": "Caveat",
+          "fontSize": 48,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "jF4LM",
+          "x": 362,
+          "y": 560,
+          "name": "Offer 1 name",
+          "fill": "$ink-500",
+          "content": "Orders over 60 €",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "vxZCR",
+          "x": 644,
+          "y": 490,
+          "name": "Offer 2",
+          "geometry": "M-0.9-0.8l56.2 1.7 51.7-1.3 55.4-0.5 52.2 0.4 53.9 0.4 0.5 1.2 1.8 52.4-0.3 56.3-0.6 1.4-52.9 0.3-53.6-1.2-55.9-1-54.2-0.4-51.8 0.4-3 0.7 1.4-54.1 0.4-55.4z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            116
+          ],
+          "width": 276,
+          "height": 116,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "VjSAS",
+          "x": 662,
+          "y": 500,
+          "name": "Offer 2 figure",
+          "fill": "$ink-900",
+          "content": "2+1",
+          "fontFamily": "Caveat",
+          "fontSize": 48,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "X9pFS",
+          "x": 662,
+          "y": 560,
+          "name": "Offer 2 name",
+          "fill": "$ink-500",
+          "content": "Socks",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "No6VR",
+          "x": 944,
+          "y": 490,
+          "name": "Offer 3",
+          "geometry": "M0.9 0.5l54-1.4 53.8 0.8 53.3 1.5 55.4-1.5 51.8-1.3 1.3 0.3-0.5 54.9-0.5 56.8 2 0.7-54.1-1.2-56.8-0.7-51.8 0.8-54.3-0.6-55.1-0.8 0.2 1.1-1-56.5 0.7-54.5z",
+          "viewBox": [
+            -3,
+            -3,
+            276,
+            116
+          ],
+          "width": 276,
+          "height": 116,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "U2WJQ",
+          "x": 962,
+          "y": 500,
+          "name": "Offer 3 figure",
+          "fill": "$ink-900",
+          "content": "free shipping",
+          "fontFamily": "Caveat",
+          "fontSize": 34,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "YtCjt",
+          "x": 962,
+          "y": 560,
+          "name": "Offer 3 name",
+          "fill": "$ink-500",
+          "content": "over 40 €",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "gI00n",
+          "x": 44,
+          "y": 630,
+          "name": "New in title",
+          "fill": "$ink-900",
+          "content": "New in",
+          "fontFamily": "Caveat",
+          "fontSize": 34,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "ZbPBX",
+          "x": 44,
+          "y": 680,
+          "name": "Card 0 photo",
+          "geometry": "M0.1-1l51.2-0.4 52.3 2.6 52.6-0.6 55.3-0.8-1.7 1.8 0.8 55.7-1.3 56.1 0 57 0-1.3-52.9-0.5-50.3 2.1-54.6 0.8-51.7-2.4 0.4 1.9-1.2-58.9 2.1-54.9 0.1-56.1z",
+          "viewBox": [
+            -3,
+            -3,
+            216,
+            176
+          ],
+          "width": 216,
+          "height": 176,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "disnk",
+          "x": 47,
+          "y": 683,
+          "name": "Card 0 photo X",
+          "geometry": "M0.38856 2.46634l207.30803 166.1322m3.99381-168.0383l-209.80527 166.74804",
+          "viewBox": [
+            0,
+            0,
+            210,
+            170
+          ],
+          "width": 210,
+          "height": 170,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "tE8Tb",
+          "x": 48,
+          "y": 866,
+          "name": "Card 0 name",
+          "geometry": "M0 4.16788l14 2.29224 14-1.23574 14-3.14916 14 4.09295 14 0.27815 14-5.09053 14 3.38983 14-3.12631 14 4.16697 14-3.74213 14 3.97515",
+          "viewBox": [
+            0,
+            0,
+            150,
+            8
+          ],
+          "width": 150,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "qqb9e",
+          "x": 48,
+          "y": 884,
+          "name": "Card 0 name 2",
+          "geometry": "M0 5.56352l14-4.33617 14 4.78838 14 0.40777 14-4.59114 14 2.61694 14-3.06125 14 5.49885",
+          "viewBox": [
+            0,
+            0,
+            100,
+            8
+          ],
+          "width": 100,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "EAkz6",
+          "x": 48,
+          "y": 896,
+          "name": "Card 0 price",
+          "fill": "$ink-900",
+          "content": "39,00 €",
+          "fontFamily": "Caveat",
+          "fontSize": 24,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "HMPSD",
+          "x": 284,
+          "y": 680,
+          "name": "Card 1 photo",
+          "geometry": "M-1-1.5l54.5 0.4 50.6 2.2 53.7-0.8 52.3-1.9-1.1 2 1.4 56.3-0.3 58.1-1.1 55.1 1.3-0.3-52.6-0.2-52.3 2-51.8-2.4-52.3 1-1.9 1.1 2.1-57-2.6-56.3 1.1-58.7z",
+          "viewBox": [
+            -3,
+            -3,
+            216,
+            176
+          ],
+          "width": 216,
+          "height": 176,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "V1t7n",
+          "x": 287,
+          "y": 683,
+          "name": "Card 1 photo X",
+          "geometry": "M1.97405-2.21016l207.7852 169.97454m-1.87288-165.53426l-208.24239 166.15756",
+          "viewBox": [
+            0,
+            0,
+            210,
+            170
+          ],
+          "width": 210,
+          "height": 170,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "vZ2fA",
+          "x": 288,
+          "y": 866,
+          "name": "Card 1 name",
+          "geometry": "M0 2.45969l14 1.63294 14 2.72039 14-4.3464 14-0.00646 14-0.59764 14-0.45913 14 5.31154 14-2.85415 14 0.27001 14 2.10896 14-2.69652",
+          "viewBox": [
+            0,
+            0,
+            150,
+            8
+          ],
+          "width": 150,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "Rh5P2",
+          "x": 288,
+          "y": 884,
+          "name": "Card 1 name 2",
+          "geometry": "M0 2.03838l14 0.47611 14 0.49416 14 1.32903 14-0.93819 14-0.13137 14 0.09613 14 1.62291",
+          "viewBox": [
+            0,
+            0,
+            100,
+            8
+          ],
+          "width": 100,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "V5Nl1x",
+          "x": 288,
+          "y": 896,
+          "name": "Card 1 price",
+          "fill": "$ink-900",
+          "content": "39,00 €",
+          "fontFamily": "Caveat",
+          "fontSize": 24,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "NvkeT",
+          "x": 524,
+          "y": 680,
+          "name": "Card 2 photo",
+          "geometry": "M0.6-1.3l53.3-0.2 51.8 0.8 51.8-0.3 53.5-0.5-1.4 0.9 0.6 56.1 1.1 59.1-2.3 56.5 0.4 0.4-53.3-2.3-52.4 0.6-52.4-0.9-52.5 2.3-0.3-1.2 2.9-56-2.8-55.8 2.3-59.1z",
+          "viewBox": [
+            -3,
+            -3,
+            216,
+            176
+          ],
+          "width": 216,
+          "height": 176,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "lGDkE",
+          "x": 527,
+          "y": 683,
+          "name": "Card 2 photo X",
+          "geometry": "M1.34787-2.35654l208.36688 172.07847m0.73919-172.3083l-209.59127 175.48293",
+          "viewBox": [
+            0,
+            0,
+            210,
+            170
+          ],
+          "width": 210,
+          "height": 170,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "vgOtw",
+          "x": 528,
+          "y": 866,
+          "name": "Card 2 name",
+          "geometry": "M0 3.01617l14 2.23165 14 0.92765 14-3.0718 14 2.29692 14 0.23696 14-1.29999 14-2.98657 14 0.69031 14 4.1635 14-2.13777 14-1.55115",
+          "viewBox": [
+            0,
+            0,
+            150,
+            8
+          ],
+          "width": 150,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "pj525",
+          "x": 528,
+          "y": 884,
+          "name": "Card 2 name 2",
+          "geometry": "M0 2.87551l14 2.06008 14-2.54578 14-0.78926 14 0.89761 14 2.13396 14-2.54658 14 3.66386",
+          "viewBox": [
+            0,
+            0,
+            100,
+            8
+          ],
+          "width": 100,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "ctZQ7",
+          "x": 528,
+          "y": 896,
+          "name": "Card 2 price",
+          "fill": "$ink-900",
+          "content": "39,00 €",
+          "fontFamily": "Caveat",
+          "fontSize": 24,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "bFVze",
+          "x": 764,
+          "y": 680,
+          "name": "Card 3 photo",
+          "geometry": "M1.2-1.1l51.8 0.5 51.4 1.5 54.6 0 49.6 0.1 1.7 0.2-0.2 54.5 1.1 57.9-1.5 55.7 1.1 1.6-52-2.2-52.8 2.4-54-0.3-51.4 0.5-1.1-2.5-0.9-54.7 0.5-58.4 1-55.5z",
+          "viewBox": [
+            -3,
+            -3,
+            216,
+            176
+          ],
+          "width": 216,
+          "height": 176,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "CNgFS",
+          "x": 767,
+          "y": 683,
+          "name": "Card 3 photo X",
+          "geometry": "M1.18086-1.23367l210.49971 168.60289m-3.25903-164.4844l-209.33122 166.15059",
+          "viewBox": [
+            0,
+            0,
+            210,
+            170
+          ],
+          "width": 210,
+          "height": 170,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "QVoK3",
+          "x": 768,
+          "y": 866,
+          "name": "Card 3 name",
+          "geometry": "M0 4.03849l14-1.73682 14-0.13514 14 2.62773 14-1.69924 14 0.97106 14 0.57632 14 2.2028 14-3.64651 14 3.15896 14-1.39909 14-0.35794",
+          "viewBox": [
+            0,
+            0,
+            150,
+            8
+          ],
+          "width": 150,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "yN0EA",
+          "x": 768,
+          "y": 884,
+          "name": "Card 3 name 2",
+          "geometry": "M0 5.70223l14 0.2491 14-1.88943 14 2.27424 14-2.85243 14-0.81805 14 3.05978 14-0.18343",
+          "viewBox": [
+            0,
+            0,
+            100,
+            8
+          ],
+          "width": 100,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "cGNim",
+          "x": 768,
+          "y": 896,
+          "name": "Card 3 price",
+          "fill": "$ink-900",
+          "content": "39,00 €",
+          "fontFamily": "Caveat",
+          "fontSize": 24,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "aRhHN",
+          "x": 1004,
+          "y": 680,
+          "name": "Card 4 photo",
+          "geometry": "M1.4-0.6l51 1.6 51.9-0.5 52.9 1.1 51.5-1 1-0.4-1.2 57.8 2.6 55.8-0.4 57.6 0.3-0.7-54.9-1.1-50.9 1.6-51.8-2.3-54.4 2.1 0.8-0.6-1-57.4 0.5-55.7 1.7-57.8z",
+          "viewBox": [
+            -3,
+            -3,
+            216,
+            176
+          ],
+          "width": 216,
+          "height": 176,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "Jo4I5",
+          "x": 1007,
+          "y": 683,
+          "name": "Card 4 photo X",
+          "geometry": "M1.11035 1.61361l208.86757 169.29099m-0.34434-173.30799l-211.34162 169.4274",
+          "viewBox": [
+            0,
+            0,
+            210,
+            170
+          ],
+          "width": 210,
+          "height": 170,
+          "stroke": "$stone-300",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "QsEc6",
+          "x": 1008,
+          "y": 866,
+          "name": "Card 4 name",
+          "geometry": "M0 3.03833l14 2.79268 14-2.0063 14 0.02077 14 1.08634 14 0.13935 14-3.94872 14-0.0575 14 5.53226 14-1.35564 14-2.14826 14 2.22106",
+          "viewBox": [
+            0,
+            0,
+            150,
+            8
+          ],
+          "width": 150,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "JxB6S",
+          "x": 1008,
+          "y": 884,
+          "name": "Card 4 name 2",
+          "geometry": "M0 3.02212l14 2.06214 14 0.04208 14-0.70324 14 0.61057 14 1.85445 14-2.28741 14-2.49691",
+          "viewBox": [
+            0,
+            0,
+            100,
+            8
+          ],
+          "width": 100,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "PpvIp",
+          "x": 1008,
+          "y": 896,
+          "name": "Card 4 price",
+          "fill": "$ink-900",
+          "content": "39,00 €",
+          "fontFamily": "Caveat",
+          "fontSize": 24,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "ko0BS",
+          "x": 150,
+          "y": 616,
+          "name": "Scroll hint",
+          "fill": "$ink-500",
+          "content": "→",
+          "fontFamily": "Caveat",
+          "fontSize": 40,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "path",
+          "id": "q9bjo",
+          "x": 40,
+          "y": 960,
+          "name": "Footer",
+          "geometry": "M1.1-1l59.1 0.6 60.7-0.5 59.1 2 61.2-0.1 59.8-2 58.2 1.3 61.1-1.3 60.6-0.1 59.2 1.3 60.6 0.2 60-0.5 58.3-0.4 61.8 0.6 58.7 0 59.6-0.2 60.5-0.8 60.3 1.8 60.8-1.6 58.5-0.5 60.9 1.5 0.3-0.2 0.1 30.6 0.5 30-0.9-1.1-59.5-0.6-60.2 1.4-61.1-0.4-59.3-0.6-59.5 1.2-61.6-1.1-58.8-0.2-59.4 0.1-61 1.7-60.8 0-58.2-0.8-60.7 0.4-60.3-1.5-59 0.1-60.6 1.6-60.7-0.1-59.4 0.3-59.1-1.6-60.3 1.6-59.6-1.8-0.5 0.9 0.6-30.9-2.1-30.1z",
+          "viewBox": [
+            -3,
+            -3,
+            1206,
+            66
+          ],
+          "width": 1206,
+          "height": 66,
+          "stroke": "$ink-500",
+          "strokeWidth": 2,
+          "strokeLinejoin": "round",
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "ONEik",
+          "x": 70,
+          "y": 988,
+          "name": "Footer links",
+          "geometry": "M0 3.18311l14-1.36701 14-0.68902 14 5.72735 14-4.51345 14 0.48486 14 1.05791 14 2.37229 14-5.0346 14 1.49758 14-0.19492 14 0.02954 14-1.47251 14 1.42401 14-0.66057 14 3.86811 14 1.23874 14-0.4273 14 0.41159 14-0.44284 14-2.84711 14-1.41905 14 0.11696 14 3.75731 14-0.95278 14 0.60526 14-3.36865 14-0.90126 14 2.54758 14 1.18099",
+          "viewBox": [
+            0,
+            0,
+            400,
+            8
+          ],
+          "width": 400,
+          "height": 8,
+          "stroke": "$ink-500",
+          "strokeWidth": 1.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "text",
+          "id": "vCs2f",
+          "x": 300,
+          "y": 4,
+          "name": "Question",
+          "fill": "$ink-900",
+          "textGrowth": "fixed-width",
+          "width": 940,
+          "content": "What must a shopper be able to do here? → find something without knowing its name",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "MjDfP",
+          "x": 930,
+          "y": 146,
+          "name": "Note departments",
+          "rotation": -3.0000000000000004,
+          "fill": "$ink-500",
+          "textGrowth": "fixed-width",
+          "width": 300,
+          "content": "the taxonomy, browsable at last — not a banner",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "aKxKx",
+          "x": 760,
+          "y": 444,
+          "name": "Note offers",
+          "rotation": 2,
+          "fill": "$ink-500",
+          "textGrowth": "fixed-width",
+          "width": 300,
+          "content": "no discount the reader cannot have",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "obosH",
+          "x": 210,
+          "y": 634,
+          "name": "Note new in",
+          "rotation": -1,
+          "fill": "$ink-500",
+          "textGrowth": "fixed-width",
+          "width": 300,
+          "content": "a row you scroll, never a carousel",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "uUWQG",
+          "x": 790,
+          "y": 606,
+          "name": "Note no buy",
+          "rotation": -2,
+          "fill": "$ink-500",
+          "textGrowth": "fixed-width",
+          "width": 450,
+          "content": "no clay button on this page: browsing is not buying",
+          "fontFamily": "Caveat",
+          "fontSize": 22,
+          "fontWeight": "normal"
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "stone-50": {
+      "type": "color",
+      "value": "#FAF9F7"
+    },
+    "stone-300": {
+      "type": "color",
+      "value": "#CBC5BA"
+    },
+    "ink-500": {
+      "type": "color",
+      "value": "#6B655F"
+    },
+    "ink-900": {
+      "type": "color",
+      "value": "#201D1B"
+    }
+  },
+  "fileToken": "ccbfd5be-dd0a-4ba5-ae9f-20473d189529"
+}

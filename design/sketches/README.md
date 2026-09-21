@@ -1,14 +1,31 @@
 # Sketches
 
-> *"Un simple dibujo en papel de una idea general resumida de manera sencilla y sin
-> muchos detalles."*
-> — *De 0 a N con Task[in]*, chapter 3, 2013
+> *"A simple drawing on paper of a general idea, kept short and simple, without
+> many details."*
+> — *De 0 a N con Task[in]* ("From 0 to N with Task[in]"), chapter 3, 2013,
+> translated from the Spanish
 
 The first rung. It decides **what a screen must let a person do**, and nothing
 else. It is the cheapest artefact in the ladder, and that is its whole value: a
 sketch earns its keep by being thrown away.
 
-## This folder is empty, and that is the finding
+## What is in here
+
+Three sketches, drawn with Claude Code on pen.dev in grey, hand-drawn lines and
+nothing else. Article 01 (*Design before code*) is about them.
+
+- `claim-review-queue.pen` — **drawn before any of its code existed** (phase 10,
+  2026-09-19), and it found three contradictions in the rules for that screen
+  that no test could have found, because there was no code to test.
+- `storefront-home.pen` and `backoffice-review-queue.pen` — drawn on 2026-09-21,
+  **after** the screens they show, to put the first rung next to something a
+  reader can compare it with. Each carries its question at the top: what must a
+  person be able to do here.
+
+Every colour in them is a design token variable, and `design-mockups.spec.ts`
+holds them to that.
+
+## Until 2026-09-21 this folder was empty, and that was the finding
 
 Tendero never drew one. The sketch's job here was done by **prose** — `P8-11` in
 [`../../docs/delivery-plan.md`](../../docs/delivery-plan.md) states what the search
