@@ -7,7 +7,7 @@ namespace ElGuerre.Tendero.Architecture.Tests;
 
 /// <summary>
 /// The two rules that let this repository have feature flags without becoming
-/// the codebase article 07 warns about (ADR 0023).
+/// the codebase the article *The feature flag you did not need* warns about (ADR 0023).
 ///
 /// A flag that nobody reads is configuration promising a feature, and a flag read
 /// in two places is two decisions that can disagree — the storefront hybrid and

@@ -13,7 +13,7 @@ public partial class _20260902181139_DropUnusedAttributeDefinitionsTable : Migra
     /// The table was created yesterday and nobody reads it: the definitions are
     /// served from the repository's file, which is where they get reviewed in a
     /// diff and translated. A table with no reader is speculative infrastructure,
-    /// which is exactly what article 07 argues against keeping — and this one was
+    /// which is exactly what the article *The feature flag you did not need* argues against keeping — and this one was
     /// mine. It comes back the day the backoffice lets them be edited, together
     /// with the adapter that reads them.
     /// </summary>

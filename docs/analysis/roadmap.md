@@ -769,7 +769,7 @@ of those can be stated about a model that picks products.
 targeting and variants that nothing here needs, and the dependency budget is
 deliberately small.
 
-This does not contradict article 07's argument against speculative flags: **ADR
+This does not contradict the argument in *The feature flag you did not need* against speculative flags: **ADR
 0004 already mandates them**, and the degradation test in B1 cannot be written
 without one. The discipline that keeps the rule intact is that the enum stays
 closed and small (five: `SearchVector`, `SearchRerank`, `SearchMultimodal`,

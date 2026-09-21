@@ -236,7 +236,7 @@ export class StorefrontTools {
    * `apply_filter` from the roadmap is the same question deferred rather than
    * refused: it lands when the shop has facets to filter on, which is phase 8's
    * aggregations. Adding it now would be a tool over a filter that does not
-   * exist — the speculative configuration article 07 argues against, one layer
-   * up.
+   * exist — the speculative configuration the article *The feature flag you did not need*
+   * argues against, one layer up.
    */
 }

@@ -11,7 +11,7 @@ decides, for the storefront, the MCP tools and UCP at once, whether a query is
 answered by words or by words and meaning — and `HybridDegradesToLexical`
 cannot be written without one.
 
-Article 07 argues the other side, and this repository agreed with it: **a flag
+The article *The feature flag you did not need* argues the other side, and this repository agreed with it: **a flag
 guards behaviour that exists and can be turned on**. A flag over code nobody
 wrote is configuration promising a feature. The roadmap planned five —
 `SearchVector`, `SearchRerank`, `SearchMultimodal`, `UcpTransactional` and
