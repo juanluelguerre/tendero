@@ -26,15 +26,23 @@ import { describe, expect, it } from 'vitest';
  *
  * The threshold is WCAG 2.1 AA: 4.5:1 for body text, and 3:1 for a non-text
  * indicator like the focus ring (1.4.11). Large text gets a lower bar and is
- * deliberately not modelled — this system puts `--text-3xs` (11px) on almost
- * every one of these tokens, so the body bar is the honest one.
+ * deliberately not modelled for the semantic tokens — this system puts
+ * `--text-3xs` (11px) on almost every one of them, so the body bar is the honest
+ * one. The single exception is the brand: the two wordmarks are set in
+ * `--brand`, and they are held to the large-text bar only because a test below
+ * also holds their size.
  */
 describe('the design tokens, read on the surfaces they sit on', () => {
   const SOURCE = 'design/tokens.css';
 
-  /** AA for body text, and AA for a non-text indicator. */
+  /** AA for body text, for large text (1.4.3), and for a non-text indicator (1.4.11). */
   const TEXT_BAR = 4.5;
+  const LARGE_TEXT_BAR = 3;
   const INDICATOR_BAR = 3;
+
+  /** WCAG's large text: 18pt, or 14pt bold — 24px, or 18.66px at 700 and above. */
+  const LARGE_BOLD_MIN_PX = 18.66;
+  const ROOT_FONT_PX = 16;
 
   const repository = (() => {
     let directory = __dirname;
@@ -154,45 +162,62 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    * ADR 0034 moved `--accent` to `--clay-600` and left `--clay-500` alone, and the
    * first version of that claim was wrong in a way no test could see: the
    * storefront's wordmark was set in `--accent`, so the brand's own name in the
-   * header went darker with the button. It is set in `--clay-500` again, and it
-   * can be, because it is LARGE text (20px at 800), which WCAG holds to 3:1
-   * rather than 4.5:1.
+   * header went darker with the button. Both wordmarks are set in `--brand` (an
+   * alias of `--clay-500`) now, and they can be, because they are LARGE text
+   * (20px at 800), which WCAG holds to 3:1 rather than 4.5:1.
    *
-   * This pins the number that makes that legitimate. If somebody lightens the
-   * brand colour, the wordmark stops being legible on the page before any
-   * contrast audit of the shipped screens would run, and this is where it turns
-   * red instead. Three surfaces, because the header sits on the page and a card
-   * would sit on the surface.
+   * This pins the number that makes that legitimate, in both themes: the
+   * storefront is light and the backoffice is dark, and `#D85A30` clears 3:1 on
+   * every surface of each (3.43:1 on the light page, 3.88:1 on the dark raised
+   * surface). If somebody lightens or darkens the brand colour, this is where it
+   * turns red instead of a wordmark going illegible.
    */
-  it('keeps the brand primary legible as large text, because the wordmark is set in it', () => {
-    const light = themes.light;
-    const brand = resolve(light, '--brand');
-
-    expect(brand).toBe('#D85A30');
-    expect(resolve(themes.dark, '--brand')).toBe('#D85A30');
+  it.each(themeNames)('keeps the brand primary legible as large text in the %s theme', (theme) => {
+    expect(resolve(themes[theme], '--brand')).toBe('#D85A30');
     expect(
       failures(
-        INDICATOR_BAR,
-        SURFACES.map((surface) => ['light', '--brand', surface] as const),
+        LARGE_TEXT_BAR,
+        SURFACES.map((surface) => [theme, '--brand', surface] as const),
       ),
     ).toEqual([]);
   });
 
   /**
-   * And the wordmark has to actually be set in it. The number above says the brand
-   * colour COULD carry the wordmark; this says it does, because the way it was
-   * lost was a one-word alias (`--accent`) that looked equivalent and was not —
-   * the action colour moved and the brand's name moved with it.
+   * And each wordmark has to actually be set in it, at a size that makes the
+   * lower bar legitimate. The colour alone is not enough: at the backoffice's
+   * 14px body size `#D85A30` is body text, held to 4.5:1, and it misses that on
+   * the dark bar (4.33:1). The way the storefront's was lost was a one-word alias
+   * (`--accent`) that looked equivalent and was not; the way the backoffice's
+   * would be lost is a size nobody thought was load-bearing.
    */
-  it('sets the storefront wordmark in the brand primary, never in the action alias', () => {
-    const shell = readFileSync(
-      join(repository, 'frontend/apps/storefront/src/app/layout/shell.css'),
-      'utf8',
-    );
-    const rule = shell.match(/\.brand__wordmark\s*\{([^}]*)\}/)?.[1] ?? '';
+  const WORDMARKS = [
+    ['storefront', 'frontend/apps/storefront/src/app/layout/shell.css', 'brand__wordmark'],
+    ['backoffice', 'frontend/apps/backoffice/src/app/layout/shell.css', 'bar__brand'],
+  ] as const;
 
-    expect(rule).toContain('color: var(--brand)');
-    expect(rule).not.toContain('var(--accent)');
+  it.each(WORDMARKS)(
+    'sets the %s wordmark in the brand primary, as large text, never in the action alias',
+    (_app, file, className) => {
+      const shell = readFileSync(join(repository, file), 'utf8');
+      const rule = shell.match(new RegExp(`\\.${className}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
+
+      expect(rule).not.toBe('');
+      expect(rule).toContain('color: var(--brand)');
+      expect(rule).not.toContain('var(--accent)');
+      expect(rule).toContain('font-weight: 800');
+      expect(rule).toContain('font-size: var(--text-lg)');
+    },
+  );
+
+  /**
+   * `--text-lg` is what makes both wordmarks large text, so its value is part of
+   * the contrast argument, not only of the type scale.
+   */
+  it('keeps --text-lg at a size WCAG counts as large bold text', () => {
+    const rem = root['--text-lg']?.match(/^([\d.]+)rem$/)?.[1];
+
+    expect(rem).toBeDefined();
+    expect(Number(rem) * ROOT_FONT_PX).toBeGreaterThanOrEqual(LARGE_BOLD_MIN_PX);
   });
 
   /**

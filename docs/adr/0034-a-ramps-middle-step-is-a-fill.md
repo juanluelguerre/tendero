@@ -79,6 +79,18 @@ has to read.
 > `#D85A30`) and the binding itself (`.brand__wordmark` names `--clay-500` and
 > never `--accent`). Four mutations, including the one-word alias that caused it,
 > each turn them red.
+>
+> **And then the backoffice, reviewed before merging.** The brand got a name of
+> its own, `--brand`, an alias of `--clay-500`, so brand text says what it is
+> rather than which step it happens to be. That review found the backoffice
+> wordmark in `--accent` too, the same defect in the other app, and it could not
+> simply follow: at the backoffice's 14px body size `#D85A30` is body text,
+> 4.33:1 on the dark bar against a bar of 4.5:1. It is set at `--text-lg` and 800
+> now, which makes it large text, and the brand clears 3:1 on every dark surface
+> (3.88:1 at the lowest). The spec holds both wordmarks by name, colour, weight
+> and size, measures `--brand` in both themes against the large-text bar rather
+> than the focus ring's, and holds `--text-lg` itself at or above 18.66px,
+> because that value is part of the contrast argument.
 
 **3 · `--on-accent` is a token, because the answer differs per theme.** White
 reads on the light accent (5.37:1) and not on the dark one (2.76:1); ink reads on

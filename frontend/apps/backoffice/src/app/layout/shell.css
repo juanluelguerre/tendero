@@ -14,7 +14,21 @@
   min-height: 48px;
 }
 .bar__mark { display: block; width: 26px; height: 26px; }
-.bar__brand { font-family: var(--font-display); font-weight: 800; color: var(--accent); }
+/*
+  The wordmark is BRAND, like the storefront's: it names --brand and never the
+  --accent alias, which is the action colour and moves on its own. The size is
+  not decoration. The backoffice body is 14px, and at 14px #D85A30 is body text,
+  held to 4.5:1, which it misses on the dark bar (4.33:1). At --text-lg and 800
+  it is LARGE text, held to 3:1, and it clears that on every dark surface
+  (3.88:1 at the lowest). design-contrast.spec.ts pins both the size and the
+  colour, because either one alone is not legible.
+*/
+.bar__brand {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: var(--brand);
+}
 
 /* Pushed to the right by margin-inline-start:auto, so the language, the
    identity and sign-out read as one group at the end of the bar. */

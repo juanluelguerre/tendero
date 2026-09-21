@@ -5,7 +5,7 @@ Reference doc — imported on demand from CLAUDE.md. Keep CLAUDE.md itself short
 **What is in the repository today** (2026-09-17, after layer B moved to the
 evaluation tool): xUnit v3, CsCheck, NetArchTest.Rules, Testcontainers.PostgreSql,
 `WebApplicationFactory`, vitest and Playwright — 1035 backend tests (1014 green,
-21 skipped with a reason), 86 frontend, 20 browser specs. Layer B's 37 cases went
+21 skipped with a reason), 89 frontend, 20 browser specs. Layer B's 37 cases went
 from `Search.Tests` to `SearchEval.Tests` with the code they drive, and 13 more
 went with the production wiring that no longer exists. NSubstitute,
 Bogus and Verify are still prescribed below and still absent: the deterministic
@@ -277,7 +277,7 @@ and only two of them are Angular.
 
 - `design-tokens.spec.ts` — a colour is written down in `design/tokens.css` and nowhere else. It walks every `.css` in the repository.
 - `design-mockups.spec.ts` — a `.pen` or its `.html` export anywhere under `design/` names only colours the system owns, unless a person declared the exception in `proposals.json` with a reason (ADR 0033). It walks the folder whole rather than naming rungs, because the first sketch landed outside the folder the rule named.
-- `design-contrast.spec.ts` — every text token clears 4.5:1 against every surface it can sit on, every fill pairing clears 4.5:1, and the focus ring clears 3:1, **in both themes** (ADR 0034). It resolves `var()` chains the way the browser does, so an alias like `--focus-ring: var(--accent)` is measured against the accent that actually wins under `[data-theme='dark']`.
+- `design-contrast.spec.ts` — every text token clears 4.5:1 against every surface it can sit on, every fill pairing clears 4.5:1, and the focus ring clears 3:1, **in both themes** (ADR 0034). It resolves `var()` chains the way the browser does, so an alias like `--focus-ring: var(--accent)` is measured against the accent that actually wins under `[data-theme='dark']`. The one text allowed on a ramp's middle step is the brand's two wordmarks, held to the large-text bar only because the same spec holds their colour, their weight, their size and `--text-lg` itself.
 - `design-css-integrity.spec.ts` — a `var()` with **no fallback** names a property that exists, every `var()` opens on a property reference, and parentheses balance. A `var(--x, fallback)` whose property is undefined is fine and stays: it degrades on purpose.
 
 The fourth was written the same day and for a humbler reason than the third: a

@@ -81,10 +81,13 @@ Scanning the orders table, you can see at a glance what an agent bought.
   `--clay-500` is the brand — the logo, the awning and the wordmark — and nothing
   readable sits *on* it: no text colour clears AA against it, in either direction.
   The interface's accent is `--clay-600`, and `--positive` and `--warning` take the
-  same step down. **One exception, by name**: the storefront wordmark is set *in*
-  `--clay-500`, because it is brand and it is large text (20px at 800, 3:1, and
-  the brand clears 3.43:1 on the page). Brand text names `--brand` (an alias of `--clay-500`), never the
-  `--accent` alias, which is the action colour and moves independently.
+  same step down. **One exception, by name**: the two wordmarks, storefront and
+  backoffice, are set *in* `--clay-500`, because they are brand and they are
+  large text (20px at 800, held to 3:1; the brand clears 3.43:1 on the light page
+  and 3.88:1 on the darkest backoffice surface). Brand text names `--brand` (an
+  alias of `--clay-500`), never the `--accent` alias, which is the action colour
+  and moves independently — and it is large, because at body size the brand
+  misses 4.5:1 on the dark surfaces.
 - **Text on an accent fill is `--on-accent`, never a hand-picked colour.** The
   right answer differs per theme, which is why it is a token: white on the light
   accent, ink on the dark one. Writing either one by hand is right in one theme
