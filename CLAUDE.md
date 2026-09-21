@@ -325,7 +325,7 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 
 ## Reference docs (read when relevant, not preloaded)
 
-- **What to do next — the living board: @docs/delivery-plan.md**
+- **What to do next — the living board: docs/delivery-plan.md**
 - Review of what exists today (2026-09-02): @docs/analysis/current-state.md
 - Capability gap analysis: @docs/analysis/gap-analysis.md
 - Where each future capability fits architecturally: @docs/analysis/roadmap.md
