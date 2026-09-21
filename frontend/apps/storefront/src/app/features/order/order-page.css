@@ -81,7 +81,7 @@
 .line__body { display: grid; gap: 2px; min-width: 0; }
 .line__name { font-weight: 500; }
 .line__variant { color: var(--text-muted); font-size: var(--text-sm); }
-.line__sku { color: var(--text-subtle); font-size: var(--text-xs); }
+.line__sku { color: var(--text-muted); font-size: var(--text-xs); }
 .line__quantity { color: var(--text-muted); }
 .line__price { font-weight: 600; min-width: 5rem; text-align: end; }
 
@@ -127,7 +127,7 @@
 }
 
 .return__lines { color: var(--text-muted); font-size: var(--text-xs); }
-.return__number { color: var(--text-subtle); font-size: var(--text-xs); }
+.return__number { color: var(--text-muted); font-size: var(--text-xs); }
 .return__refund { font-weight: 600; color: var(--positive); }
 
 .return__resolution {
@@ -161,14 +161,14 @@
   font-weight: 700;
 }
 
-.totals__tax { margin: 0; color: var(--text-subtle); font-size: var(--text-xs); }
+.totals__tax { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
 
 .ship {
   padding-block-start: var(--space-3);
   border-block-start: 1px solid var(--border);
 }
 
-.ship__label { margin: 0 0 var(--space-1); color: var(--text-subtle); }
+.ship__label { margin: 0 0 var(--space-1); color: var(--text-muted); }
 .ship__value { margin: 0; font-size: var(--text-sm); }
 
 @media (max-width: 900px) {
@@ -198,5 +198,5 @@
 .order__stop-detail {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }

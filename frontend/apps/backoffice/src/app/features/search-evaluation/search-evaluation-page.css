@@ -49,7 +49,7 @@
   margin-block-start: var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--text-3xs);
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 .culture { margin-block-start: var(--space-6); }
@@ -66,7 +66,7 @@
 .summary tbody th { font-weight: 600; white-space: nowrap; }
 
 .value { display: block; color: var(--text); font-weight: 600; }
-.threshold { display: block; font-size: var(--text-3xs); color: var(--text-subtle); }
+.threshold { display: block; font-size: var(--text-3xs); color: var(--text-muted); }
 
 .tally {
   display: flex;
@@ -84,4 +84,4 @@
 .delta { white-space: nowrap; }
 .delta--better { color: var(--positive); }
 .delta--worse { color: var(--danger); font-weight: 600; }
-.delta--same { color: var(--text-subtle); }
+.delta--same { color: var(--text-muted); }

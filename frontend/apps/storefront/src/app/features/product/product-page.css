@@ -20,7 +20,7 @@
 .crumbs__item + .crumbs__item::before {
   content: '›';
   margin-inline-end: var(--space-2);
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 /* ---------- The two columns ---------- */
@@ -88,7 +88,7 @@
 }
 
 .thumb:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -153,7 +153,7 @@
 }
 
 .option:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -172,7 +172,7 @@
 /* Not sold at all: disabled, and still rendered. An option that disappears
    makes the picker jump and makes the shopper think the shop lost something. */
 .option:disabled {
-  color: var(--text-subtle);
+  color: var(--text-muted);
   border-style: dashed;
   cursor: not-allowed;
 }

@@ -100,5 +100,5 @@
   display: block;
   font-family: var(--font-mono);
   font-size: var(--text-3xs);
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }

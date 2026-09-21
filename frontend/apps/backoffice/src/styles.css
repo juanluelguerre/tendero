@@ -112,7 +112,7 @@ p {
 }
 
 .muted { color: var(--text-muted); }
-.subtle { color: var(--text-subtle); }
+.subtle { color: var(--text-muted); }
 .failed { color: var(--danger); }
 
 .numeric {
@@ -131,7 +131,7 @@ p {
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: var(--accent);
-  color: var(--ink-900);
+  color: var(--on-accent);
   font: inherit;
   font-size: var(--text-xs);
   font-weight: 600;
@@ -248,7 +248,7 @@ p {
 .tag--ok { color: var(--positive); }
 .tag--warn { color: var(--warning); }
 .tag--danger { color: var(--danger); }
-.tag--code { color: var(--text-subtle); font-family: var(--font-mono); }
+.tag--code { color: var(--text-muted); font-family: var(--font-mono); }
 
 /* ---------- Empty state ----------
    "Nothing here yet — import a catalog to get started", never "No records
@@ -281,7 +281,7 @@ p {
   font-size: var(--text-xs);
 }
 
-.field::placeholder { color: var(--text-subtle); }
+.field::placeholder { color: var(--text-muted); }
 
 @media (prefers-reduced-motion: reduce) {
   *,

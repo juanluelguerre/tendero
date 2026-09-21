@@ -67,7 +67,7 @@
   place-items: center;
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 .line__body { min-width: 0; }
@@ -76,7 +76,7 @@
 
 .line__sku {
   margin: 2px 0 0;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
@@ -88,7 +88,7 @@
   border: 1px solid transparent;
   border-radius: var(--radius-md);
   background: none;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   font-size: var(--text-lg);
   line-height: 1;
   cursor: pointer;
@@ -160,7 +160,7 @@
 
 .totals__tax {
   margin: 0;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
@@ -190,7 +190,7 @@
 .promo--off .promo__label { color: var(--text-muted); text-decoration: line-through; }
 
 .promo--off .promo__amount {
-  color: var(--text-subtle);
+  color: var(--text-muted);
   font-family: inherit;
   font-size: var(--text-xs);
 }

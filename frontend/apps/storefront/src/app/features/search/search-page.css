@@ -97,7 +97,7 @@
   translate: 0 -50%;
   width: 20px;
   height: 20px;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   pointer-events: none;
 }
 
@@ -163,7 +163,7 @@
   font-size: var(--text-sm);
 }
 
-.took { color: var(--text-subtle); font-size: var(--text-2xs); }
+.took { color: var(--text-muted); font-size: var(--text-2xs); }
 
 /* ---------- The grid ----------
    auto-fill with a minimum, not a fixed column count: the shelf fills whatever

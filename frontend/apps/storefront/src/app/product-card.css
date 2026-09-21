@@ -71,7 +71,7 @@
 }
 
 .card__link:focus-visible {
-  outline: var(--focus-ring);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
@@ -89,7 +89,7 @@
 }
 
 :host(.card--soldOut) .card__price {
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 .card__soldOut {
@@ -120,7 +120,7 @@
 .card__add:hover:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--stone-0);
+  color: var(--on-accent);
 }
 
 .card__add:disabled { opacity: 0.6; cursor: default; }
@@ -132,6 +132,6 @@
 */
 .hero__account {
   margin: var(--space-3) 0 0;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   font-size: var(--text-sm);
 }

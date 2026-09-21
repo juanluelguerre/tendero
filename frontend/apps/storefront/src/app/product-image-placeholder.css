@@ -32,7 +32,7 @@
     load, which is exactly the wrong thing to say.
   */
   background: var(--bg-raised);
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 .ph__mark {
