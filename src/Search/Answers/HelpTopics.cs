@@ -9,8 +9,8 @@ internal sealed record HelpTopic(string Code, string Destination, IReadOnlyDicti
 /// Questions about the shop rather than about a product (ADR 0032). 34 % of
 /// Baymard's test users searched for one, and it is the query type shops fail most.
 ///
-/// **A topic exists only where its destination exists** — article 07's rule applied
-/// to content. Returns has one (<c>GET /api/returns/policy</c>); shipping and contact
+/// **A topic exists only where its destination exists** — the rule of the article
+/// *The feature flag you did not need*, applied to content. Returns has one (<c>GET /api/returns/policy</c>); shipping and contact
 /// do not yet, so they are not here, and a search for them is answered like any other.
 ///
 /// Matched as whole words after lower-casing and folding accents with an explicit

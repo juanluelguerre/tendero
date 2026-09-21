@@ -4,8 +4,8 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// Every feature flag the system has, as a closed set (ADR 0023) — and today the
 /// set is EMPTY, on purpose.
 ///
-/// **A flag guards behaviour that exists and can be turned on** — article 07's
-/// rule, and the reason this enum never held the five the roadmap listed.
+/// **A flag guards behaviour that exists and can be turned on** — the rule of the
+/// article *The feature flag you did not need*, and the reason this enum never held the five the roadmap listed.
 /// <c>SearchMultimodal</c>, <c>UcpTransactional</c> and <c>Copilot</c> would each
 /// guard code that is not written yet, and a flag over nothing is configuration
 /// that promises a feature. Each enters with the phase that builds what it guards.

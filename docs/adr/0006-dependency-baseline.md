@@ -48,7 +48,7 @@ the issuer swap (phase 7); and on npm, `angular-oauth2-oidc` 22.0.2 (MIT) for th
 redirect sign-in. **Respawn was declined**: a fresh database per test is cheaper
 than a reset. NSubstitute, Bogus and Verify are still not in, for the original
 reason. The CommunityToolkit Ollama hosting package verified above is no longer
-referenced — it left with the flag article 07 is about, and **it does not come
+referenced — it left with the flag the article *The feature flag you did not need* is about, and **it does not come
 back with phase 8** after all: the two phase-8 models are served by Text
 Embeddings Inference 1.9.3 (Apache-2.0, a Tier-2 container) pinned to checked
 revisions, and Ollama waits for a generative model (ADR 0031).

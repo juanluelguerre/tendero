@@ -15,7 +15,8 @@ nothing referenced, that pointed at three files which do not exist, and that sta
 in their own text what they are: round one *"eran de otro producto (reparto de
 barrio)"* and round two *"Reconstruido desde el código"*. One designed a different
 shop; the other was drawn after the screens. The day after, PR #1 shipped the
-screens article 18 calls correct and not a shop.
+screens the article *Every screen was correct and none of them was a shop*
+calls correct and not a shop.
 
 Between them they carry **575 hand-written hexadecimal colours**, against the
 design system's only hard rule. The test that enforces that rule walks the whole
@@ -106,8 +107,8 @@ system they are drawn against, and this record is amended to say so.
 
 Two constraints on that home, both learned rather than assumed:
 
-- **It is named for what it is, never for the tool.** `design/mockups/`, not `design/pen/`. A folder named after a product outlives the product — the objection article 07 is entirely about — and a folder is named after the artefact it holds, which the accepted run settled: what a canvas produces is a mockup, not a sketch.
-- **Both the `.pen` and its exported HTML live there** — amended 2026-09-18 by the author, against this record's first draft, which said the editable file stayed private. The objection was article 06's: a fresh clone must be able to open what it finds, and a proprietary format that needs an account does not qualify. **The export answers that objection without removing the `.pen`**, and the author's reason is better than the objection: the `.pen` is documented JSON, so a reader opens it in any text editor and sees *what a mockup is made of*. The public repository exists to accompany the articles, and one of those articles is about this ladder. The HTML is exported with `Export([...], "html-css", …)`, one call, and both are committed. Measured on the first one: the export names 15 colours and **all 15 are in `tokens.css`**.
+- **It is named for what it is, never for the tool.** `design/mockups/`, not `design/pen/`. A folder named after a product outlives the product — the objection the article *The feature flag you did not need* is entirely about — and a folder is named after the artefact it holds, which the accepted run settled: what a canvas produces is a mockup, not a sketch.
+- **Both the `.pen` and its exported HTML live there** — amended 2026-09-18 by the author, against this record's first draft, which said the editable file stayed private. The objection was the one in *A repository that built on exactly one machine*: a fresh clone must be able to open what it finds, and a proprietary format that needs an account does not qualify. **The export answers that objection without removing the `.pen`**, and the author's reason is better than the objection: the `.pen` is documented JSON, so a reader opens it in any text editor and sees *what a mockup is made of*. The public repository exists to accompany the articles, and one of those articles is about this ladder. The HTML is exported with `Export([...], "html-css", …)`, one call, and both are committed. Measured on the first one: the export names 15 colours and **all 15 are in `tokens.css`**.
 
 **2b · A mockup may propose a colour the system does not have — declared, never smuggled.** The first draft of rule 2 said a canvas mirrors token values and may not mint one, and that is still the direction of authority: `.pen` proposes, a person approves, `tokens.css` changes. Invariant 12 applied to design instead of to the catalogue. What the first draft got wrong is that it left no path for the proposal at all, and the accepted run produced one on its first evening: the blind pass needed a colour for a losing row, found `[data-theme='dark']` redefines `--positive` and neither `--danger` nor `--warning`, and **refused to invent a hex**.
 
