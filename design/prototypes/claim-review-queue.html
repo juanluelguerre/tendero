@@ -1,0 +1,362 @@
+<title>Claim review queue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Every value below comes from design/tokens.css. The light block is :root,
+     the dark block is the backoffice's own [data-theme='dark']. */
+  :root {
+    --bg-page: #F3F1ED; --bg-surface: #FFFFFF; --bg-raised: #FAF9F7;
+    --border: #E4E0D9; --border-strong: #CBC5BA;
+    --text: #201D1B; --text-muted: #6B655F;
+    --accent: #B8451F; --accent-hover: #9A3717; --accent-tint: #FBEEE8; --on-accent: #FFFFFF;
+    --on-tint: #7A2C11;
+    --positive: #4E6B2F; --warning: #8F5C0E; --danger: #B3261E;
+    --brand: #D85A30; --awning-light: #F5D3C4;
+    --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+    --font-body: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg-page: #171513; --bg-surface: #201D1B; --bg-raised: #2A2622;
+      --border: #3A342F; --border-strong: #4C453E;
+      --text: #F3F1ED; --text-muted: #A9A199;
+      --accent: #F07A50; --accent-hover: #F59570; --accent-tint: #3A2115; --on-accent: #201D1B;
+      --on-tint: #F3F1ED;
+      --positive: #8FB463; --warning: #DE8E16; --danger: #E4655D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg-page: #171513; --bg-surface: #201D1B; --bg-raised: #2A2622;
+    --border: #3A342F; --border-strong: #4C453E;
+    --text: #F3F1ED; --text-muted: #A9A199;
+    --accent: #F07A50; --accent-hover: #F59570; --accent-tint: #3A2115; --on-accent: #201D1B;
+    --on-tint: #F3F1ED;
+    --positive: #8FB463; --warning: #DE8E16; --danger: #E4655D;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; padding-inline: 16px; padding-block: 0 32px;
+    background: var(--bg-page); color: var(--text);
+    font: 400 0.875rem/1.5 var(--font-body);
+  }
+  .numeric { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .eyebrow { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+  .muted { color: var(--text-muted); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: 0.5; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .frame { max-width: 1280px; margin-inline: auto; }
+  .bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+    padding-block: 12px; border-bottom: 1px solid var(--border);
+  }
+  .bar__brand { font: 800 1.25rem/1 var(--font-display); color: var(--brand); }
+  .bar__nav { display: flex; flex-wrap: wrap; gap: 16px; }
+  .bar__nav span { color: var(--text-muted); }
+  .bar__nav .current { color: var(--text); font-weight: 600; border-bottom: 2px solid var(--accent); }
+  .awning { height: 4px; border-radius: 999px; margin-top: -1px;
+    background: repeating-linear-gradient(90deg, var(--brand) 0 14px, var(--awning-light) 14px 28px); }
+
+  .note {
+    margin-block: 16px; padding: 10px 14px; border: 1px solid var(--border-strong);
+    border-radius: 6px; background: var(--bg-raised); color: var(--text-muted); max-width: 90ch;
+  }
+  .note strong { color: var(--warning); }
+
+  .page-head h1 { font: 800 1.75rem/1.15 var(--font-display); letter-spacing: -0.02em; margin: 8px 0 4px; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-block: 16px; }
+  .sort { padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-surface); }
+  .sort b { font-weight: 600; }
+
+  .layout { display: grid; grid-template-columns: minmax(240px, 300px) 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+
+  .queue { display: grid; gap: 6px; padding: 0; margin: 0; list-style: none; }
+  .queue button {
+    width: 100%; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; text-align: left;
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-surface);
+  }
+  .queue button[aria-current="true"] { border-color: var(--text); background: var(--bg-raised); }
+  .queue .id { grid-column: 1; font-size: 0.75rem; }
+  .queue .weakest { grid-row: 1 / span 2; grid-column: 2; align-self: center; text-align: right; }
+  .queue .weakest small { display: block; font-family: var(--font-body); font-size: 0.6875rem; color: var(--text-muted); }
+
+  .panel { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .product-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .product-head h2 { font: 800 1.35rem/1.2 var(--font-display); margin: 0; }
+  .dropped { margin: 12px 0 0; }
+
+  .claims { display: grid; gap: 12px; margin-top: 16px; }
+  .claim { display: grid; grid-template-columns: minmax(180px, 1.1fr) 1.6fr auto; gap: 12px 20px; padding: 14px; border: 1px solid var(--border); border-radius: 6px; }
+  .claim.active { border-color: var(--accent); }
+  @media (max-width: 1000px) { .claim { grid-template-columns: 1fr; } }
+  .claim h3 { font-size: 1rem; font-weight: 600; margin: 0 0 6px; }
+  .chip { display: inline-block; padding: 1px 8px; border: 1px solid var(--border-strong); border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; }
+  .first { display: inline-block; margin-bottom: 6px; padding: 1px 8px; border-radius: 4px; background: var(--accent-tint); color: var(--on-tint); font-size: 0.75rem; font-weight: 600; }
+  blockquote { margin: 0; padding: 8px 12px; border-left: 3px solid var(--border-strong); background: var(--bg-raised); font-style: italic; }
+  .source { margin-top: 4px; font-size: 0.75rem; }
+  .conflict { margin-top: 6px; color: var(--warning); font-weight: 600; }
+  .scores { display: grid; gap: 2px; justify-items: end; text-align: right; min-width: 150px; }
+  .scores .support { font-size: 1.25rem; }
+  .scores small { font-size: 0.6875rem; color: var(--text-muted); }
+  .actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+
+  .button { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--bg-surface); font-weight: 600; }
+  .button:hover:not(:disabled) { border-color: var(--text); }
+  .button--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .button--primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .button--quiet { border-color: transparent; background: transparent; color: var(--text-muted); }
+
+  .reject { grid-column: 1 / -1; display: grid; gap: 8px; padding: 12px; border-radius: 6px; background: var(--bg-raised); border: 1px solid var(--border-strong); }
+  .reject fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 4px; }
+  .reject legend { font-weight: 600; margin-bottom: 4px; }
+  .reject textarea { font: inherit; color: inherit; background: var(--bg-surface); border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 8px; min-height: 52px; }
+
+  .judged { margin-top: 20px; }
+  .judged h3 { margin: 0 0 8px; }
+  .judged ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .judged li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-raised); }
+  .verdict { font-weight: 600; }
+  .verdict.approved { color: var(--positive); }
+  .verdict.rejected { color: var(--danger); }
+
+  .move-on { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .empty { padding: 16px; border: 1px dashed var(--border-strong); border-radius: 6px; }
+</style>
+
+<div class="frame">
+  <header class="bar">
+    <span class="bar__brand">Tendero</span>
+    <span class="eyebrow">Backoffice</span>
+    <nav class="bar__nav" aria-label="Sections">
+      <span>Review queue</span><span>Catalogue</span><span>Stock</span><span>Orders</span>
+      <span>Returns</span><span class="current" aria-current="page">Claims</span><span>Audit</span>
+    </nav>
+  </header>
+  <div class="awning" aria-hidden="true"></div>
+
+  <p class="note"><strong>Prototype.</strong> Product names, descriptions and every quote are the real seed catalogue. The claims, the scores and the run are examples: the extractor that would propose them does not exist yet, and neither does this screen's API.</p>
+
+  <div class="page-head">
+    <h1>Claim review queue</h1>
+    <p class="muted" id="summary"></p>
+  </div>
+
+  <div class="toolbar">
+    <span class="sort">Sorted by <b>weakest evidence first</b></span>
+    <span class="muted">not by confidence — a model's confidence is not a probability</span>
+  </div>
+
+  <div class="layout">
+    <section aria-labelledby="queue-title">
+      <h2 class="eyebrow" id="queue-title">Products waiting</h2>
+      <ul class="queue" id="queue"></ul>
+      <p class="muted" style="margin-top:10px">A product leaves the queue when every claim on it is judged. There is no bulk action, in either direction.</p>
+    </section>
+    <section class="panel" id="panel" aria-live="polite"></section>
+  </div>
+</div>
+
+<script>
+  const RUN = 'claims-extractor v4 · bge-m3@5617a9f · prompt v4 · run 2026-09-18T09:12Z (example)';
+  const REASONS = [
+    'The quote does not support the statement',
+    'True of the category, not of this product',
+    'The statement is right, the typed value is wrong',
+    'The source document should not be trusted',
+    'Something else — see my note',
+  ];
+
+  // Real seed data: ids, names, descriptions, current attributes.
+  // Example data: statements, typed values, support and confidence.
+  const products = [
+    { id: 'B11COO0301', name: '26 cm cast iron frying pan', path: 'Home › Kitchen › Cookware', dropped: 2,
+      description: 'Sartén de hierro fundido precurada, apta para inducción, horno y fuego directo. Gana antiadherencia con el uso.',
+      claims: [
+        { statement: 'Non-stick.', value: 'NON_STICK = true', quote: 'Gana antiadherencia con el uso.', support: 0.41, confidence: 0.81,
+          hint: 'The quote says it becomes non-stick with use — not that it is non-stick. This is what the sort order is for.' },
+        { statement: 'Works on open flame.', value: 'OPEN_FLAME = true', quote: 'fuego directo', support: 0.85, confidence: 0.90 },
+        { statement: 'Oven safe.', value: 'OVEN_SAFE = true', quote: 'horno', support: 0.88, confidence: 0.94 },
+        { statement: 'Comes pre-seasoned.', value: 'PRE_SEASONED = true', quote: 'precurada', support: 0.90, confidence: 0.92 },
+        { statement: 'Works on induction hobs.', value: 'INDUCTION = true', quote: 'apta para inducción', support: 0.92, confidence: 0.97,
+          already: 'The product already says induction: yes.' },
+      ] },
+    { id: 'B11COO0302', name: '24 cm stainless steel casserole with lid', path: 'Home › Kitchen › Cookware', dropped: 0,
+      description: 'Cazuela de fondo triple difusor que reparte el calor sin puntos calientes. Tapa de cristal templado con salida de vapor.',
+      claims: [
+        { statement: 'Heats evenly, with no hot spots.', value: 'words only', quote: 'reparte el calor sin puntos calientes', support: 0.62, confidence: 0.88,
+          hint: 'A marketing phrase from the supplier: true or not, nothing here measures it.' },
+        { statement: 'Glass lid with a steam vent.', value: 'LID = GLASS_VENTED', quote: 'Tapa de cristal templado con salida de vapor', support: 0.91, confidence: 0.95 },
+      ] },
+    { id: 'B11COO0304', name: '30 cm carbon steel wok', path: 'Home › Kitchen › Cookware', dropped: 0,
+      description: 'Wok de acero al carbono con fondo plano para inducción y mango de madera que no se calienta.',
+      claims: [
+        { statement: 'The handle stays cool.', value: 'words only', quote: 'mango de madera que no se calienta', support: 0.70, confidence: 0.86 },
+        { statement: 'Works on induction hobs.', value: 'INDUCTION = true', quote: 'fondo plano para inducción', support: 0.88, confidence: 0.93 },
+        { statement: 'Made of carbon steel.', value: 'MATERIAL = CARBON_STEEL', quote: 'Wok de acero al carbono', support: 0.95, confidence: 0.93,
+          conflict: 'The catalogue says stainless steel. One of the two is wrong, and a person decides which.' },
+      ] },
+    { id: 'B11COO0303', name: '6 litre pressure cooker', path: 'Home › Kitchen › Cookware', dropped: 1,
+      description: 'Olla a presión con dos niveles de cocción, válvula de seguridad y cierre que no abre bajo presión.',
+      claims: [
+        { statement: 'Cannot be opened under pressure.', value: 'PRESSURE_LOCK = true', quote: 'cierre que no abre bajo presión', support: 0.87, confidence: 0.91 },
+        { statement: 'Two cooking levels.', value: 'PRESSURE_LEVELS = 2', quote: 'dos niveles de cocción', support: 0.90, confidence: 0.94 },
+        { statement: 'Has a safety valve.', value: 'SAFETY_VALVE = true', quote: 'válvula de seguridad', support: 0.93, confidence: 0.96 },
+      ] },
+    { id: 'B13BAG0711', name: '20L waterproof bike pannier', path: 'Sport › Cycling › Bags', dropped: 0,
+      description: 'Alforja de cierre enrollable totalmente estanca, con gancho rápido y asa para llevarla en la mano.',
+      claims: [
+        { statement: 'Fully waterproof.', value: 'WATERPROOF = true', quote: 'totalmente estanca', support: 0.89, confidence: 0.92 },
+        { statement: 'Roll-top closure.', value: 'CLOSURE = ROLL_TOP', quote: 'cierre enrollable', support: 0.93, confidence: 0.95 },
+      ] },
+    { id: 'B11COO0309', name: '20 cm chef knife', path: 'Home › Kitchen › Knives', dropped: 0,
+      description: 'Cuchillo de chef en acero forjado con mango remachado y filo de 15 grados por lado.',
+      claims: [
+        { statement: 'Forged steel blade.', value: 'CONSTRUCTION = FORGED', quote: 'acero forjado', support: 0.90, confidence: 0.93 },
+        { statement: 'A 15° edge on each side.', value: 'EDGE_ANGLE_DEG = 15', quote: 'filo de 15 grados por lado', support: 0.94, confidence: 0.97 },
+      ] },
+  ];
+
+  const state = { selected: products[0].id, verdicts: {}, rejecting: null };
+  const key = (p, i) => `${p.id}#${i}`;
+  const fmt = n => n.toFixed(2);
+  const weakest = p => Math.min(...p.claims.map(c => c.support));
+  const open = p => p.claims.filter((_, i) => !state.verdicts[key(p, i)]);
+
+  function span(p, quote) {
+    const at = p.description.indexOf(quote);
+    return at < 0 ? 'quote not found in the description' : `characters ${at + 1}–${at + quote.length}`;
+  }
+
+  function renderQueue() {
+    const queue = document.getElementById('queue');
+    const waiting = products.filter(p => open(p).length > 0 || p.id === state.selected)
+      .sort((a, b) => weakest(a) - weakest(b));
+    queue.innerHTML = waiting.map(p => `
+      <li><button type="button" data-product="${p.id}" aria-current="${p.id === state.selected}">
+        <span>${p.name}</span>
+        <span class="weakest numeric">${fmt(weakest(p))}<small>weakest</small></span>
+        <span class="id numeric muted">${p.id} · ${open(p).length} to judge</span>
+      </button></li>`).join('');
+    const claims = products.reduce((n, p) => n + p.claims.length, 0);
+    const judged = Object.keys(state.verdicts).length;
+    document.getElementById('summary').textContent =
+      `${products.length} products with proposed claims · ${claims} claims · ${judged} judged in this visit · nothing is applied to the catalogue until it is approved`;
+  }
+
+  function renderPanel() {
+    const p = products.find(x => x.id === state.selected);
+    const order = p.claims.map((c, i) => ({ c, i })).sort((a, b) => a.c.support - b.c.support);
+    const pending = order.filter(({ i }) => !state.verdicts[key(p, i)]);
+    const activeIndex = pending.length ? pending[0].i : -1;
+    const judged = order.filter(({ i }) => state.verdicts[key(p, i)]);
+    const next = products.filter(x => x.id !== p.id && open(x).length).sort((a, b) => weakest(a) - weakest(b))[0];
+
+    document.getElementById('panel').innerHTML = `
+      <div class="product-head">
+        <div>
+          <h2>${p.name}</h2>
+          <div class="muted numeric" style="font-size:0.75rem">${p.id} · ${p.path} · 1 source document (its own description, es)</div>
+          <div class="muted" style="font-size:0.75rem">${RUN}</div>
+        </div>
+        <div class="numeric">${p.claims.length} claims · ${judged.length} judged</div>
+      </div>
+      ${p.dropped ? `<p class="dropped muted">${p.dropped} more ${p.dropped === 1 ? 'proposal had' : 'proposals had'} no quote at all. The extractor dropped and counted ${p.dropped === 1 ? 'it' : 'them'}; ${p.dropped === 1 ? 'it is' : 'they are'} not shown here.</p>` : ''}
+      <div class="claims">
+        ${pending.length ? pending.map(({ c, i }) => claimCard(p, c, i, i === activeIndex)).join('') :
+          `<div class="empty">Every claim on this product is judged. It leaves the queue now.</div>`}
+      </div>
+      ${judged.length ? `
+      <div class="judged">
+        <h3 class="eyebrow">Judged in this visit — ${judged.length}</h3>
+        <ul>${judged.map(({ c, i }) => {
+          const v = state.verdicts[key(p, i)];
+          return `<li><span>${c.statement} <span class="chip">${c.value}</span></span>
+            <span><span class="verdict ${v.kind}">${v.kind === 'approved' ? 'Approved' : 'Rejected'}</span>
+            ${v.reason ? `<span class="muted"> · ${v.reason}</span>` : ''}
+            <button type="button" class="button button--quiet" data-undo="${i}">Undo</button></span></li>`;
+        }).join('')}</ul>
+      </div>` : ''}
+      <div class="move-on">
+        <span class="numeric">${pending.length} of ${p.claims.length} claims on this product still to judge</span>
+        <button type="button" class="button" data-next="${next ? next.id : ''}" ${pending.length || !next ? 'disabled' : ''}>
+          ${next ? `Next product — ${next.name} →` : 'Queue empty'}</button>
+      </div>`;
+  }
+
+  function claimCard(p, c, i, active) {
+    const rejecting = state.rejecting === i;
+    return `
+      <article class="claim${active ? ' active' : ''}" aria-label="${c.statement}">
+        <div>
+          ${active ? '<span class="first">First — weakest evidence</span>' : ''}
+          <h3>${c.statement}</h3>
+          <span class="chip">${c.value}</span>
+        </div>
+        <div>
+          <blockquote lang="es">“${c.quote}”</blockquote>
+          <div class="source muted">source: product description (es) · ${span(p, c.quote)}</div>
+          ${c.hint ? `<div class="source muted">${c.hint}</div>` : ''}
+          ${c.conflict ? `<div class="conflict">${c.conflict}</div>` : ''}
+          ${c.already ? `<div class="source muted">${c.already}</div>` : ''}
+        </div>
+        <div class="scores">
+          <span class="support numeric">${fmt(c.support)}</span><small>support of the quote</small>
+          <span class="numeric muted">${fmt(c.confidence)}</span><small>the model's own confidence, not a probability</small>
+        </div>
+        ${rejecting ? rejectForm(i) : `
+        <div class="actions">
+          <button type="button" class="button" data-reject="${i}">Reject…</button>
+          <button type="button" class="button ${active ? 'button--primary' : ''}" data-approve="${i}">Approve this claim</button>
+        </div>`}
+      </article>`;
+  }
+
+  function rejectForm(i) {
+    return `
+      <form class="reject" data-form="${i}">
+        <fieldset>
+          <legend>Why is this claim wrong?</legend>
+          ${REASONS.map((r, n) => `<label><input type="radio" name="reason-${i}" id="reason-${i}-${n}" value="${r}" ${n === 0 ? 'checked' : ''}> ${r}</label>`).join('')}
+        </fieldset>
+        <label for="note-${i}" class="muted">A note for the audit row (optional) — it is kept with the rejection, not with the model.</label>
+        <textarea id="note-${i}"></textarea>
+        <div class="actions">
+          <button type="button" class="button button--quiet" data-cancel="${i}">Cancel</button>
+          <button type="submit" class="button button--primary">Reject this claim</button>
+        </div>
+        <span class="muted">Nothing is written to the product. The claim stays on file as rejected, with this reason.</span>
+      </form>`;
+  }
+
+  function render() { renderQueue(); renderPanel(); }
+
+  document.addEventListener('click', e => {
+    const t = e.target.closest('button'); if (!t) return;
+    const p = products.find(x => x.id === state.selected);
+    if (t.dataset.product) { state.selected = t.dataset.product; state.rejecting = null; }
+    else if (t.dataset.approve) { state.verdicts[key(p, +t.dataset.approve)] = { kind: 'approved' }; state.rejecting = null; }
+    else if (t.dataset.reject) { state.rejecting = +t.dataset.reject; }
+    else if (t.dataset.cancel) { state.rejecting = null; }
+    else if (t.dataset.undo) { delete state.verdicts[key(p, +t.dataset.undo)]; }
+    else if (t.dataset.next) { state.selected = t.dataset.next; state.rejecting = null; }
+    else return;
+    render();
+  });
+
+  document.addEventListener('submit', e => {
+    e.preventDefault();
+    const i = +e.target.dataset.form;
+    const p = products.find(x => x.id === state.selected);
+    const reason = e.target.querySelector('input[type=radio]:checked').value;
+    state.verdicts[key(p, i)] = { kind: 'rejected', reason };
+    state.rejecting = null;
+    render();
+  });
+
+  render();
+</script>

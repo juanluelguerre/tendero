@@ -28,11 +28,22 @@ For the search-evaluation panel that means one real body from
 `GET /api/search/evaluation`, as a fixture — not a live call, which would make the
 artefact need a running stack. It is the first rung that cannot lie.
 
-## This folder is empty
+## What is in here
 
-Nothing has needed the rung yet. It fills when a screen is designed before it is
-built and somebody wants to click it — phase 10's claim review queue is the first
-candidate.
+`claim-review-queue.html` — phase 10's claim review queue, **clickable, before any
+of its code exists** (2026-09-21). It was built by Claude Code from
+`../sketches/claim-review-queue.pen` and `../tokens.css`, and published as a
+private Claude artifact for review. Its HTML lives here so the design tests read
+it like any other design file.
+
+It bends the rule above, and says so on the page: this screen has no API yet, so
+there is no recorded response to feed it. What it uses instead is the next most
+real thing — the seed catalogue's product names, descriptions and every quote,
+with each quote's position computed from the real text. The claims, scores and
+run are examples. That was enough to find two things the sketch could not: the
+sketch had invented its quotes and a measurement ("24 cm" for a 26 cm pan), and
+the real catalogue has a wok whose description says carbon steel while its
+attribute says stainless steel.
 
 ## The ladder, in this repository
 
