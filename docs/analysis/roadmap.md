@@ -300,7 +300,7 @@ address, and dragging `Address` into `Pricing` would ruin the purity that makes
 input for `FreeShipping`. Both directions are values, so the loop is fine.
 
 **Returns are a separate aggregate.** The existing transition table has 7 states
-and 12 edges and is readable at a glance; that legibility is a feature the repo
+and 10 edges and is readable at a glance; that legibility is a feature the repo
 has already paid for. Adding `Returned`, `PartiallyReturned`, `RefundPending`,
 `Refunded` and `RefundFailed` roughly doubles it — and worse, **returns are
 per line**, which an order-level state machine cannot express without a

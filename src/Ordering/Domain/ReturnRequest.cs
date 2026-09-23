@@ -83,7 +83,7 @@ public sealed record ReturnRefunded(
 /// Goods coming back, as its own aggregate.
 ///
 /// **Returns are not a state of the order**, and that is the phase's load-bearing
-/// modelling decision. `Order.AllowedTransitions` has seven states and twelve
+/// modelling decision. `Order.AllowedTransitions` has seven states and ten
 /// edges and is readable at a glance — legibility this repository has already
 /// paid for. Adding `Returned`, `PartiallyReturned`, `RefundPending`, `Refunded`
 /// and `RefundFailed` roughly doubles it, and then does not work anyway: returns

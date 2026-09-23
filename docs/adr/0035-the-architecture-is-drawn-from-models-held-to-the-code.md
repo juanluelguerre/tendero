@@ -13,9 +13,11 @@ told you.
 
 A diagram drawn by hand is a second source of truth, and this repository already
 has the record of what that costs: the mockups nobody read (ADR 0033), and a
-figure that was wrong for three weeks — `Order` has seven states and **ten**
-edges, and `current-state.md`, `roadmap.md` and a comment in `ReturnRequest.cs`
-said twelve. It was found the first time the table was drawn from the code.
+figure that was never true — `Order` has had seven states and **ten** edges since
+its first commit, and `current-state.md`, `roadmap.md`, a comment in
+`ReturnRequest.cs` and the book's outline said twelve, from a count made once on
+2026-09-02 and copied. It was found the first time the table was drawn from the
+code.
 
 Two tools were weighed for C4, on 2026-09-23:
 

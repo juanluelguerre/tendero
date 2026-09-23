@@ -51,10 +51,14 @@ normalisation, because the repo builds with `InvariantGlobalization=true`, where
 
 `src/Ordering/Domain/Order.cs` is also a real aggregate, and its declarative
 `AllowedTransitions` table is the single best idea in the codebase: seven states,
-twelve edges, readable at a glance, every transition funnelled through one
+~~twelve~~ **ten** edges, readable at a glance, every transition funnelled through one
 private `TransitionTo` that raises the matching event. Currency is owned by the
 order rather than by each line, which is what lets `Total` exist when no lines
 remain.
+
+> **Corrected 2026-09-23.** This said twelve edges, and the table has had ten
+> since its first commit: the number was miscounted here and copied to four other
+> places. The generated `docs/domain-model.md` (ADR 0035) is what counted it.
 
 `src/SharedKernel/SharedKernel.cs` carries strongly-typed ids (record structs
 over GUID v7), `Money`, `Culture.Normalize`, `LocalizedText` with its
