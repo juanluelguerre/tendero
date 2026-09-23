@@ -326,22 +326,22 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 ## Reference docs (read when relevant, not preloaded)
 
 - **What to do next — the living board: docs/delivery-plan.md**
-- Review of what exists today (2026-09-02): @docs/analysis/current-state.md
-- Capability gap analysis: @docs/analysis/gap-analysis.md
-- Where each future capability fits architecturally: @docs/analysis/roadmap.md
-- Full project plan and phase breakdown: @docs/initial-plan.md
-- Architecture deep-dive: @docs/architecture.md
-- Testing strategy detail: @docs/testing.md
-- Search evaluation / golden set format: @docs/search-evaluation.md
-- Design system and copy voice: @design/DESIGN.md
-- Brand usage: @brand/BRAND.md
-- ADR index: @docs/adr/README.md
-- Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): @docs/glossary.md
-- Pointing an agent at the MCP server and the UCP profile: @docs/mcp.md
-- Feature specs in progress: @docs/specs/
-- Blog article workflow: @docs/blog-workflow.md
-- Blog publication order and drafts: @docs/blog/index.md
-- The book's outline, conventions and material map: @docs/book/README.md
+- Review of what exists today (2026-09-02): `docs/analysis/current-state.md`
+- Capability gap analysis: `docs/analysis/gap-analysis.md`
+- Where each future capability fits architecturally: `docs/analysis/roadmap.md`
+- Full project plan and phase breakdown: `docs/initial-plan.md`
+- Architecture deep-dive: `docs/architecture.md`
+- Testing strategy detail: `docs/testing.md`
+- Search evaluation / golden set format: `docs/search-evaluation.md`
+- Design system and copy voice: `design/DESIGN.md`
+- Brand usage: `brand/BRAND.md`
+- ADR index: `docs/adr/README.md`
+- Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): `docs/glossary.md`
+- Pointing an agent at the MCP server and the UCP profile: `docs/mcp.md`
+- Feature specs in progress: `docs/specs/`
+- Blog article workflow: `docs/blog-workflow.md`
+- Blog publication order and drafts: `docs/blog/index.md`
+- The book's outline, conventions and material map: `docs/book/README.md`
 
 ## Do NOT
 
