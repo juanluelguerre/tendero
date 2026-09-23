@@ -247,6 +247,13 @@
           "es": "hierro fundido",
           "en": "cast iron"
         }
+      },
+      {
+        "code": "CARBON_STEEL",
+        "label": {
+          "es": "acero al carbono",
+          "en": "carbon steel"
+        }
       }
     ]
   },
