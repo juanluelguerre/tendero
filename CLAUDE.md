@@ -80,6 +80,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
 UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
+node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
 
 UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
 npm run generate:api-types                    # from frontend/, reads that document
@@ -357,6 +358,7 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 - Full project plan and phase breakdown: `docs/initial-plan.md`
 - Architecture deep-dive: `docs/architecture.md`
 - Domain model, generated from the code (class diagrams, events, state machines): `docs/domain-model.md`
+- C4 levels 1 and 2 (system context, containers), a LikeC4 model held to the AppHost: `docs/c4/`
 - Testing strategy detail: `docs/testing.md`
 - Search evaluation / golden set format: `docs/search-evaluation.md`
 - Design system and copy voice: `design/DESIGN.md`

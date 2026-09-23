@@ -199,6 +199,14 @@ jobs:
           npm run generate:api-types
           git diff --exit-code -- libs/shared/api/src/lib/generated/
 
+      # The C4 model (ADR 0035): LikeC4 validates it, the script holds its
+      # containers to the AppHost's resources, and the diff holds the committed
+      # diagrams to the model. Node is already here, and LikeC4 runs through npx
+      # at an exact version rather than as a dependency.
+      - name: The C4 model matches the AppHost and draws the committed diagrams
+        run: |
+          node ../tools/c4.mjs
+          git diff --exit-code -- ../docs/c4/
 
   end-to-end:
     name: End-to-end (browser)

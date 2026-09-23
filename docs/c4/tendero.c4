@@ -1,0 +1,119 @@
+// Tendero at C4 levels 1 and 2: who uses it, and the processes and stores it
+// runs on. Level 4 is generated from the code (docs/domain-model.md); level 3 is
+// the slice layout, which docs/architecture.md describes once for every slice.
+//
+// A container's id IS its Aspire resource name, and tools/c4.mjs fails when the
+// two lists disagree: this model cannot quietly keep a container the AppHost
+// dropped, or miss one it added. Regenerate the diagrams with node tools/c4.mjs.
+specification {
+  element person { style { shape person } }
+  element agent { style { shape person; color amber } }
+  element system
+  element external { style { color muted } }
+  element app { style { shape browser } }
+  element service
+  element store { style { shape storage } }
+  tag planned
+  tag optional
+}
+
+model {
+  shopper = person 'Shopper' {
+    description 'Browses, fills a basket and pays, as a guest or signed in'
+  }
+  shopkeeper = person 'Shopkeeper' {
+    description 'Reviews the catalogue, prices, stock, orders and returns'
+  }
+  browserAgent = agent 'Agent in the shopper\'s tab' {
+    description 'WebMCP: inherits the shopper\'s session, no principal of its own'
+  }
+  mcpClient = agent 'External MCP client' {
+    description 'Reads the public catalogue; anonymous by explicit decision'
+  }
+  ucpAgent = agent 'UCP agent' {
+    #planned
+    description 'Its own principal and a signed AP2 mandate (phase 11)'
+  }
+
+  tendero = system 'Tendero' {
+    storefront = app 'storefront' {
+      technology 'Angular 22'
+      description 'The shop, and the WebMCP tools registered on navigator.modelContext'
+    }
+    backoffice = app 'backoffice' {
+      technology 'Angular 22'
+      description 'Review queue, orders, returns, stock, audit, search evaluation'
+    }
+    api = service 'api' {
+      technology '.NET 11, Carter slices, MCP and UCP transports'
+      description 'Every command and query, the /mcp server and /.well-known/ucp'
+    }
+    workers = service 'workers' {
+      technology '.NET 11'
+      description 'Drains the outbox: projections and the order saga'
+    }
+    postgres = store 'postgres' {
+      technology 'PostgreSQL'
+      description 'Source of truth, outbox and audit'
+    }
+    elasticsearch = store 'elasticsearch' {
+      technology 'Elasticsearch 9.5'
+      description 'Lexical index per language; the permanent fallback'
+    }
+    qdrant = store 'qdrant' {
+      #optional
+      technology 'Qdrant'
+      description 'Product vectors; only with Tendero__Vectors'
+    }
+    embeddings = service 'embeddings' {
+      #optional
+      technology 'Text Embeddings Inference'
+      description 'bge-m3 at a pinned revision'
+    }
+    reranker = service 'reranker' {
+      #optional
+      technology 'Text Embeddings Inference'
+      description 'bge-reranker-v2-m3; GPU only'
+    }
+  }
+
+  // Keycloak is an Aspire container in development (Tendero__Issuer=keycloak),
+  // and it is drawn here as what it is in production: somebody else's system
+  // the API only ever validates tokens from (ADR 0017). Decided 2026-09-23.
+  identity = external 'Identity provider' {
+    description 'OIDC: the development issuer in the API process, or Keycloak'
+  }
+  payments = external 'Payment provider' {
+    description 'Behind IPaymentProvider; the fake adapter today'
+  }
+
+  shopper -> tendero.storefront 'shops with'
+  shopkeeper -> tendero.backoffice 'runs the shop with'
+  browserAgent -> tendero.storefront 'calls tools in'
+  mcpClient -> tendero.api 'reads the catalogue over /mcp'
+  ucpAgent -> tendero.api 'will check out over UCP'
+  tendero.storefront -> tendero.api 'HTTP'
+  tendero.backoffice -> tendero.api 'HTTP'
+  tendero.api -> tendero.postgres 'reads and writes'
+  tendero.api -> tendero.elasticsearch 'searches'
+  tendero.api -> tendero.qdrant 'nearest neighbours'
+  tendero.api -> tendero.embeddings 'embeds the query'
+  tendero.api -> tendero.reranker 'reranks the head'
+  tendero.workers -> tendero.postgres 'drains the outbox'
+  tendero.workers -> tendero.elasticsearch 'projects products'
+  tendero.workers -> tendero.qdrant 'projects vectors'
+  tendero.workers -> tendero.embeddings 'embeds products'
+  tendero.api -> identity 'validates tokens (JWKS)'
+  tendero.api -> payments 'authorises, captures, refunds'
+}
+
+views {
+  view index {
+    title 'Tendero · system context'
+    include *
+  }
+  view containers of tendero {
+    title 'Tendero · containers'
+    include *
+  }
+}
