@@ -74,6 +74,11 @@ jobs:
       - name: The committed OpenAPI document is unchanged
         run: git diff --exit-code -- docs/openapi/tendero.json
 
+      # The same belt and braces for the generated domain model: a run with
+      # UPDATE_DOMAIN_MODEL left set would rewrite it and pass.
+      - name: The committed domain model is unchanged
+        run: git diff --exit-code -- docs/domain-model.md
+
   search-quality:
     name: Search relevance gate (NDCG@10)
     runs-on: ubuntu-latest
@@ -193,6 +198,15 @@ jobs:
         run: |
           npm run generate:api-types
           git diff --exit-code -- libs/shared/api/src/lib/generated/
+
+      # The C4 model (ADR 0035): LikeC4 validates it, the script holds its
+      # containers to the AppHost's resources, and the diff holds the committed
+      # diagrams to the model. Node is already here, and LikeC4 runs through npx
+      # at an exact version rather than as a dependency.
+      - name: The C4 model matches the AppHost and draws the committed diagrams
+        run: |
+          node ../tools/c4.mjs
+          git diff --exit-code -- ../docs/c4/
 
   end-to-end:
     name: End-to-end (browser)

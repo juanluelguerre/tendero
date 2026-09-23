@@ -79,6 +79,8 @@ dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
 dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-check  # from src/<Project>, at phase close
 dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
+UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
+node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
 
 UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
 npm run generate:api-types                    # from frontend/, reads that document
@@ -88,6 +90,30 @@ The last two go together, in that order: the contract test regenerates the
 document from the running API, and the frontend types are generated from the
 document. Run both after changing anything a response returns; CI fails on either
 being stale.
+
+### Asking the API's shape
+
+**Ask the document before opening code.** A question about what an endpoint
+takes or returns — for a slice, a test, or a frontend service in either app — is
+answered by `docs/openapi/tendero.json`, through the map rather than whole:
+
+```bash
+node tools/api-map.mjs                 # one line per operation (~4 KB, the document is ~89 KB)
+node tools/api-map.mjs cart            # filtered by path, tag or operation id
+node tools/api-map.mjs --schema CartView
+```
+
+- **Backend**: read the slice only to change its behaviour, not to learn its
+  contract. The map is the contract the API actually serves, because the contract
+  test holds the document to it.
+- **Frontends**: a type comes from `libs/shared/api` (which derives it from
+  `generated/schema.ts`), never from reading the .NET records, and never by
+  reading the 63 KB `schema.ts` whole — the map names the schema, `--schema`
+  shows it.
+- The map is only as fresh as the document: after changing a response,
+  regenerate it first (the two commands above).
+- It does not carry authorization — the document declares none. Policies are in
+  the Carter module, and the endpoint-policy test holds them.
 
 ## Architecture invariants (never break these)
 
@@ -326,22 +352,24 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 ## Reference docs (read when relevant, not preloaded)
 
 - **What to do next — the living board: docs/delivery-plan.md**
-- Review of what exists today (2026-09-02): @docs/analysis/current-state.md
-- Capability gap analysis: @docs/analysis/gap-analysis.md
-- Where each future capability fits architecturally: @docs/analysis/roadmap.md
-- Full project plan and phase breakdown: @docs/initial-plan.md
-- Architecture deep-dive: @docs/architecture.md
-- Testing strategy detail: @docs/testing.md
-- Search evaluation / golden set format: @docs/search-evaluation.md
-- Design system and copy voice: @design/DESIGN.md
-- Brand usage: @brand/BRAND.md
-- ADR index: @docs/adr/README.md
-- Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): @docs/glossary.md
-- Pointing an agent at the MCP server and the UCP profile: @docs/mcp.md
-- Feature specs in progress: @docs/specs/
-- Blog article workflow: @docs/blog-workflow.md
-- Blog publication order and drafts: @docs/blog/index.md
-- The book's outline, conventions and material map: @docs/book/README.md
+- Review of what exists today (2026-09-02): `docs/analysis/current-state.md`
+- Capability gap analysis: `docs/analysis/gap-analysis.md`
+- Where each future capability fits architecturally: `docs/analysis/roadmap.md`
+- Full project plan and phase breakdown: `docs/initial-plan.md`
+- Architecture deep-dive: `docs/architecture.md`
+- Domain model, generated from the code (class diagrams, events, state machines): `docs/domain-model.md`
+- C4 levels 1 and 2 (system context, containers), a LikeC4 model held to the AppHost: `docs/c4/`
+- Testing strategy detail: `docs/testing.md`
+- Search evaluation / golden set format: `docs/search-evaluation.md`
+- Design system and copy voice: `design/DESIGN.md`
+- Brand usage: `brand/BRAND.md`
+- ADR index: `docs/adr/README.md`
+- Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): `docs/glossary.md`
+- Pointing an agent at the MCP server and the UCP profile: `docs/mcp.md`
+- Feature specs in progress: `docs/specs/`
+- Blog article workflow: `docs/blog-workflow.md`
+- Blog publication order and drafts: `docs/blog/index.md`
+- The book's outline, conventions and material map: `docs/book/README.md`
 
 ## Do NOT
 

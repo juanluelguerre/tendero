@@ -306,6 +306,11 @@ persistent view. Outbox lag is a first-class metric.
 
 ## Diagrams
 
+The system context and the container view are drawn from a model in
+[`c4/`](c4/README.md), which a check holds to the AppHost's resources, and the
+domain model is generated from the code in [`domain-model.md`](domain-model.md)
+(ADR 0035). The diagrams below are drawn by hand and predate both.
+
 ### General architecture (containers)
 
 ```mermaid
