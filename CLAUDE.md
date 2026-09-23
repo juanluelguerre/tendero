@@ -89,6 +89,30 @@ document from the running API, and the frontend types are generated from the
 document. Run both after changing anything a response returns; CI fails on either
 being stale.
 
+### Asking the API's shape
+
+**Ask the document before opening code.** A question about what an endpoint
+takes or returns — for a slice, a test, or a frontend service in either app — is
+answered by `docs/openapi/tendero.json`, through the map rather than whole:
+
+```bash
+node tools/api-map.mjs                 # one line per operation (~4 KB, the document is ~89 KB)
+node tools/api-map.mjs cart            # filtered by path, tag or operation id
+node tools/api-map.mjs --schema CartView
+```
+
+- **Backend**: read the slice only to change its behaviour, not to learn its
+  contract. The map is the contract the API actually serves, because the contract
+  test holds the document to it.
+- **Frontends**: a type comes from `libs/shared/api` (which derives it from
+  `generated/schema.ts`), never from reading the .NET records, and never by
+  reading the 63 KB `schema.ts` whole — the map names the schema, `--schema`
+  shows it.
+- The map is only as fresh as the document: after changing a response,
+  regenerate it first (the two commands above).
+- It does not carry authorization — the document declares none. Policies are in
+  the Carter module, and the endpoint-policy test holds them.
+
 ## Architecture invariants (never break these)
 
 1. **Bounded contexts share no entities** (ADR 0014 — the principle, not a
