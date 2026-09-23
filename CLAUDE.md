@@ -79,6 +79,7 @@ dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
 dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-check  # from src/<Project>, at phase close
 dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
+UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
 
 UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
 npm run generate:api-types                    # from frontend/, reads that document
@@ -355,6 +356,7 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 - Where each future capability fits architecturally: `docs/analysis/roadmap.md`
 - Full project plan and phase breakdown: `docs/initial-plan.md`
 - Architecture deep-dive: `docs/architecture.md`
+- Domain model, generated from the code (class diagrams, events, state machines): `docs/domain-model.md`
 - Testing strategy detail: `docs/testing.md`
 - Search evaluation / golden set format: `docs/search-evaluation.md`
 - Design system and copy voice: `design/DESIGN.md`
