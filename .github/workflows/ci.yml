@@ -74,6 +74,11 @@ jobs:
       - name: The committed OpenAPI document is unchanged
         run: git diff --exit-code -- docs/openapi/tendero.json
 
+      # The same belt and braces for the generated domain model: a run with
+      # UPDATE_DOMAIN_MODEL left set would rewrite it and pass.
+      - name: The committed domain model is unchanged
+        run: git diff --exit-code -- docs/domain-model.md
+
   search-quality:
     name: Search relevance gate (NDCG@10)
     runs-on: ubuntu-latest
@@ -193,6 +198,7 @@ jobs:
         run: |
           npm run generate:api-types
           git diff --exit-code -- libs/shared/api/src/lib/generated/
+
 
   end-to-end:
     name: End-to-end (browser)
