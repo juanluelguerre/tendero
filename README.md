@@ -283,7 +283,7 @@ frontend/                  # Nx workspace
   apps/storefront/         # light, roomy: home, search, product page, cart, checkout, orders, account
   apps/backoffice/         # dense, dark: review, attributes, promotions, stock, orders, returns, audit
   apps/*-e2e/              # Playwright — the thinnest layer of the pyramid
-  libs/shared/             # tokens, ui, util, api, i18n, auth, agent — boundaries enforced by lint
+  libs/shared/             # tokens, ui, util, api, i18n, auth, agent, telemetry — boundaries enforced by lint
 keycloak/                  # the committed realm: users, roles and clients for a fresh clone
 brand/                     # logo, icons, brand guide
 design/                    # tokens.css — the single source of truth for four surfaces

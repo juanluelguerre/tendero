@@ -29,6 +29,9 @@
       "@tendero/shared-i18n": [
         "./libs/shared/i18n/src/index.ts"
       ],
+      "@tendero/shared-telemetry": [
+        "./libs/shared/telemetry/src/index.ts"
+      ],
       "@tendero/shared-ui": [
         "./libs/shared/ui/src/index.ts"
       ],

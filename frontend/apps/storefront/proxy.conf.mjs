@@ -10,6 +10,37 @@ const api =
   process.env['services__api__https__0'] ??
   'http://localhost:5130';
 
+/**
+ * /otlp: the browser's telemetry (ADR 0036), posted to the page's own origin and
+ * forwarded from here. Aspire gives this dev server the same OTLP address and key
+ * it gives every resource — the dashboard by default, the collector of the full
+ * observability mode when Tendero__Observability is on — so the browser never
+ * learns either: no CORS, nothing for an ad blocker to match, and no dashboard
+ * key in the page. Started without Aspire there is no address, no route, and the
+ * exporter's requests fail quietly.
+ */
+const otlp = process.env['OTEL_EXPORTER_OTLP_ENDPOINT'];
+const otlpHeaders = Object.fromEntries(
+  (process.env['OTEL_EXPORTER_OTLP_HEADERS'] ?? '')
+    .split(',')
+    .filter((header) => header.includes('='))
+    .map((header) => [header.slice(0, header.indexOf('=')).trim(), header.slice(header.indexOf('=') + 1).trim()])
+    .filter(([name, value]) => name && value),
+);
+
+const telemetry = otlp
+  ? [
+      {
+        context: ['/otlp'],
+        target: otlp,
+        secure: false,
+        changeOrigin: true,
+        headers: otlpHeaders,
+        pathRewrite: { '^/otlp': '' },
+      },
+    ]
+  : [];
+
 export default [
   {
     context: ['/api'],
@@ -17,4 +48,5 @@ export default [
     secure: false,
     changeOrigin: true,
   },
+  ...telemetry,
 ];
