@@ -75,6 +75,11 @@ model {
       technology 'Text Embeddings Inference'
       description 'bge-reranker-v2-m3; GPU only'
     }
+    observability = service 'observability' {
+      #optional
+      technology 'grafana/otel-lgtm: OTel Collector, Prometheus, Tempo, Loki, Grafana'
+      description 'Only with Tendero__Observability; forwards everything to the Aspire dashboard too'
+    }
   }
 
   // Keycloak is an Aspire container in development (Tendero__Issuer=keycloak),
@@ -105,6 +110,8 @@ model {
   tendero.workers -> tendero.embeddings 'embeds products'
   tendero.api -> identity 'validates tokens (JWKS)'
   tendero.api -> payments 'authorises, captures, refunds'
+  tendero.api -> tendero.observability 'traces, metrics, logs (OTLP)'
+  tendero.workers -> tendero.observability 'traces, metrics, logs (OTLP)'
 }
 
 views {

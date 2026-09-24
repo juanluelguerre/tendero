@@ -52,6 +52,7 @@ graph TB
     Tendero.Qdrant@{ shape: disk, label: "qdrant" }
     Tendero.Embeddings@{ shape: rectangle, label: "embeddings" }
     Tendero.Reranker@{ shape: rectangle, label: "reranker" }
+    Tendero.Observability@{ shape: rectangle, label: "observability" }
   end
   Identity@{ shape: rectangle, label: "Identity provider" }
   Payments@{ shape: rectangle, label: "Payment provider" }
@@ -67,10 +68,12 @@ graph TB
   Tendero.Api -. "`nearest neighbours`" .-> Tendero.Qdrant
   Tendero.Api -. "`embeds the query`" .-> Tendero.Embeddings
   Tendero.Api -. "`reranks the head`" .-> Tendero.Reranker
+  Tendero.Api -. "`traces, metrics, logs (OTLP)`" .-> Tendero.Observability
   Tendero.Workers -. "`drains the outbox`" .-> Tendero.Postgres
   Tendero.Workers -. "`projects products`" .-> Tendero.Elasticsearch
   Tendero.Workers -. "`projects vectors`" .-> Tendero.Qdrant
   Tendero.Workers -. "`embeds products`" .-> Tendero.Embeddings
+  Tendero.Workers -. "`traces, metrics, logs (OTLP)`" .-> Tendero.Observability
   Tendero.Api -. "`validates tokens (JWKS)`" .-> Identity
   Tendero.Api -. "`authorises, captures, refunds`" .-> Payments
 ```

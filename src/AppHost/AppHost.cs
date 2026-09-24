@@ -48,6 +48,10 @@ const int qdrantGrpcPort = 56334;
 const int qdrantHttpPort = 56333;
 const int embeddingsPort = 58081;
 const int rerankerPort = 58082;
+const int grafanaPort = 53000;
+const int collectorGrpcPort = 54317;
+const int collectorHttpPort = 54318;
+const int faroPort = 58027;
 
 // NAMED VOLUMES, and the name is the fix.
 //
@@ -265,6 +269,58 @@ if (!rerank)
     reranker.WithExplicitStart();
 
 var rerankerEndpoint = reranker.GetEndpoint("http");
+
+// THE GRAFANA STACK, declared always and started on demand (phase 9b, ADR 0036).
+//
+//   Tendero__Observability=true dotnet run --project src/AppHost
+//
+// or the `https-observability` launch profile, which is the same switch as a
+// choice in Visual Studio's drop-down. Two modes, and the Aspire dashboard is in
+// both: by default every service exports to it, as always; with the switch on
+// they export to this container's collector instead, which fans the telemetry
+// out to Tempo, Prometheus and Loki AND back to the dashboard. The full mode
+// adds a persistent view with exemplars and dashboards of its own; it never takes
+// away the one a developer already has open.
+//
+// **A start-time switch, not a button**, for the reason the vector layer gave
+// (ADR 0023): each service's OTLP endpoint is fixed when the AppHost starts it,
+// so starting this container by hand from the dashboard redirects nothing. It
+// shows Grafana over whatever reaches it, which with the switch off is nothing.
+//
+// One container, `grafana/otel-lgtm`, rather than five: the image is meant for
+// development, its Prometheus already stores exemplars and native histograms,
+// and its Grafana ships with the datasources linked — exemplar to trace, trace to
+// logs, logs back to the trace. Its own code is Apache-2.0 and what runs inside
+// it is AGPLv3 and unmodified: tier 2 (CLAUDE.md, *Licensing policy*). Pinned to
+// the release the P9b-2 spike ran, whose collector is contrib 0.160.0.
+//
+// The data is a named volume, unlike Elasticsearch: the point of this mode is a
+// view that outlives a restart, which the dashboard's memory does not.
+var observability = string.Equals(builder.Configuration["Tendero:Observability"], "true",
+    StringComparison.OrdinalIgnoreCase);
+
+var grafanaStack = builder.AddContainer("observability", "grafana/otel-lgtm", "0.33.1")
+    .WithBindMount(Path.Combine(builder.AppHostDirectory, "observability", "otelcol-config.yaml"),
+        "/otel-lgtm/otelcol-config.yaml", isReadOnly: true)
+    .WithVolume("tendero-observability-data", "/data")
+    .WithHttpEndpoint(targetPort: 3000, port: grafanaPort, name: "grafana")
+    .WithEndpoint(targetPort: 4317, port: collectorGrpcPort, name: "otlp-grpc", scheme: "http")
+    .WithHttpEndpoint(targetPort: 4318, port: collectorHttpPort, name: "otlp-http")
+    .WithHttpEndpoint(targetPort: 8027, port: faroPort, name: "faro")
+    .WithHttpHealthCheck("/api/health", endpointName: "grafana")
+    // Nobody signs in to a laptop's Grafana: anonymous, and an admin, like the
+    // committed Keycloak password — a development stack with a secret worth
+    // keeping is a secret that should not be here.
+    .WithEnvironment("GF_AUTH_ANONYMOUS_ENABLED", "true")
+    .WithEnvironment("GF_AUTH_ANONYMOUS_ORG_ROLE", "Admin")
+    // The dashboard's OTLP address and key, as Aspire hands them to anything it
+    // exports for, then renamed for the collector's configuration: it reads
+    // single values, and the key arrives as a `name=value` header list.
+    .WithOtlpExporter()
+    .WithEnvironment(AspireDashboardForCollector.Copy);
+
+if (!observability)
+    grafanaStack.WithExplicitStart();
 
 // WHICH ISSUER SIGNS THE TOKENS, and the default is the development one.
 //
@@ -484,6 +540,22 @@ var workers = builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
 if (vectors)
     workers.WithReference(qdrant).WithReference(embeddingsEndpoint);
 
+// The full observability mode points both services at the collector, and only
+// then — the vector layer's rule: an address is handed over exactly when the
+// switch that starts its container is on. Aspire has already written the
+// dashboard's address into these variables; this writes over it, and the
+// collector sends everything on to the dashboard itself.
+//
+// **Not waited for**, on purpose: telemetry never holds the shop hostage. A
+// collector that is slow to start costs the first few seconds of spans, which the
+// OTLP exporter drops and retries, never a service that refuses to start.
+if (observability)
+{
+    var collector = grafanaStack.GetEndpoint("otlp-http");
+    api.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
+    workers.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
+}
+
 // The worker does NOT wait for the API: it does not depend on it. That was there
 // to tidy the dashboard, and the invented dependency left it blocked on
 // "Waiting" with the outbox undrained. A declared dependency that does not exist
@@ -667,4 +739,48 @@ internal static class SeedFileEnvironment
 
         return project;
     }
+}
+
+/// <summary>
+/// Hands the collector in the Grafana stack the Aspire dashboard's OTLP address
+/// and API key, under names its configuration can read.
+///
+/// Aspire writes both for anything it exports for — `WithOtlpExporter()` on the
+/// container — as `OTEL_EXPORTER_OTLP_ENDPOINT` and `OTEL_EXPORTER_OTLP_HEADERS`.
+/// The collector's configuration reads one value per variable, and the key
+/// arrives inside a `name=value` header list, so it is taken out of the list here
+/// rather than parsed in YAML. The key changes on every AppHost run, which is why
+/// it cannot be written into the file. The standard variables are then removed
+/// from the container, so that nothing else inside it exports to the dashboard.
+/// </summary>
+internal static class AspireDashboardForCollector
+{
+    private const string ApiKeyHeader = "x-otlp-api-key";
+
+    public static void Copy(EnvironmentCallbackContext context)
+    {
+        var environment = context.EnvironmentVariables;
+
+        if (environment.TryGetValue("OTEL_EXPORTER_OTLP_ENDPOINT", out var endpoint))
+            environment["ASPIRE_DASHBOARD_OTLP_ENDPOINT"] = endpoint;
+
+        if (environment.TryGetValue("OTEL_EXPORTER_OTLP_HEADERS", out var headers) && headers is string list)
+            environment["ASPIRE_DASHBOARD_OTLP_API_KEY"] = ApiKeyFrom(list);
+
+        // And then every OTEL_ variable goes, because the container is not one
+        // process. Grafana, Tempo, Loki, Prometheus and Pyroscope run beside the
+        // collector and read the same standard variables: left in place, each of
+        // them exported its own telemetry straight at the dashboard, which
+        // rejected hundreds of requests a minute with "invalid wire type". Only
+        // the collector talks to the dashboard, through the two names above.
+        foreach (var name in environment.Keys.Where(key => key.StartsWith("OTEL_", StringComparison.Ordinal)).ToArray())
+            environment.Remove(name);
+    }
+
+    internal static string ApiKeyFrom(string headerList) =>
+        headerList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(header => header.Split('=', 2, StringSplitOptions.TrimEntries))
+            .Where(pair => pair.Length == 2 && string.Equals(pair[0], ApiKeyHeader, StringComparison.OrdinalIgnoreCase))
+            .Select(pair => pair[1])
+            .FirstOrDefault() ?? "";
 }

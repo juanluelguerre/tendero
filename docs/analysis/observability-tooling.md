@@ -56,8 +56,8 @@ Sources: [collector releases](https://github.com/open-telemetry/opentelemetry-co
 
 v0.33.x, Apache-2.0 for the image's own code; Grafana, Loki, Tempo and Pyroscope
 inside it are AGPLv3 (tier 2). Its Dockerfile pins Grafana 13.2.2, Prometheus
-3.14.0, Tempo 3.0.3, Loki 3.7.8 and **OTel Collector contrib v0.161.0 — not
-Alloy**. The Faro receiver is therefore already in the binary; the default
+3.14.0, Tempo 3.0.3, Loki 3.7.8 and **OTel Collector contrib — not
+Alloy** (the released 0.33.1 ships contrib 0.160.0, measured; `main` already pins 0.161.0). The Faro receiver is therefore already in the binary; the default
 `otelcol-config.yaml` simply does not enable it, and the README documents mounting
 your own. Prometheus already runs with the OTLP receiver, exemplar storage and
 native histograms. The README calls the image "intended for development, demo,
@@ -510,8 +510,9 @@ as ADR 0033 did for the design experiment.
 - The AEPD guide's own text; the CNIL replay recommendation's final status.
 - A formal stability label for Alloy's `faro.receiver`; exemplars through
   VictoriaMetrics' OTLP path; whether Prometheus still needs `exemplar-storage`.
-- The Faro receiver end to end against the Faro Web SDK inside `otel-lgtm` —
-  **the first thing the spike proves**, because the second adapter depends on it.
+- ~~The Faro receiver end to end against the Faro Web SDK inside `otel-lgtm`~~ —
+  **proved on 2026-09-24** (`P9b-2`): accepted unchanged once CORS lists
+  `content-type`, `x-faro-session-id` and `idempotency-key`.
 - Grafana's claim of Angular "router detection" in Faro (no code found).
 - Secondary-only: Cloudflare Radar's bot share, Shopify's stricter limits for
   unsigned agents, Google's statement on identifiable Gemini agent sessions.

@@ -50,6 +50,11 @@ public static class HostingExtensions
 
         builder.Services.AddOpenTelemetry()
             .WithMetrics(metrics => metrics
+                // An exemplar is a link from a point on a histogram to one trace
+                // that produced it: the jump from "p95 rose at 10:42" to a request
+                // from 10:42 (ADR 0036). Only measurements taken inside a sampled
+                // trace carry one, which is exactly the set worth linking to.
+                .SetExemplarFilter(ExemplarFilterType.TraceBased)
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddRuntimeInstrumentation()

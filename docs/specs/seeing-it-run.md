@@ -137,8 +137,20 @@ instrument first, and whether a feature with no answer stays.
 
 ## Open questions
 
-- Does the contrib Faro receiver in `otel-lgtm` accept the Faro Web SDK's payload
-  unchanged? (The spike answers it; Alloy is the fallback, by amendment.)
+- ~~Does the contrib Faro receiver in `otel-lgtm` accept the Faro Web SDK's payload
+  unchanged?~~ **Yes** (`P9b-2`, 2026-09-24), once CORS allows the three headers
+  Faro sends. The receiver block that worked:
+
+  ```yaml
+  faro:
+    endpoint: 0.0.0.0:8027
+    cors:
+      allowed_origins: [http://localhost:4200, http://localhost:4201]
+      allowed_headers: [content-type, x-faro-session-id, idempotency-key]
+  ```
+
+  `allowed_headers` replaces the defaults rather than adding to them, which is why
+  `content-type` is there.
 - Tracking plan as Markdown held by a test, or YAML that generates both the types
   and the documentation?
 - Where the same-origin `/otlp` proxy lives: the API, or a small YARP route in

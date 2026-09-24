@@ -1,0 +1,110 @@
+# The collector inside grafana/otel-lgtm, mounted over the image's own
+# (ADR 0036). It is the image's default configuration with three changes, and
+# each one is marked:
+#
+#   1. CORS names the two apps instead of the image's `http://*`, which lets any
+#      page a browser visits post telemetry here.
+#   2. A `faro` receiver, so the second browser adapter reaches the same Loki and
+#      Tempo as the first (proved in P9b-2).
+#   3. An exporter back to the Aspire dashboard in every pipeline: the full mode
+#      ADDS the Grafana stack, it never takes the dashboard away.
+#
+# The AppHost hands this container the dashboard's address and API key through
+# `ASPIRE_DASHBOARD_OTLP_ENDPOINT` and `ASPIRE_DASHBOARD_OTLP_API_KEY`.
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+        cors:
+          # (1) the storefront and the backoffice, and nothing else.
+          allowed_origins:
+            - http://localhost:4200
+            - http://localhost:4201
+  # (2) Faro's own payload. `allowed_headers` REPLACES the defaults rather than
+  # adding to them, so `content-type` has to be listed; Faro 2.12 sends the other
+  # two. Neither fact is in the receiver's documentation — both cost a failed run.
+  faro:
+    endpoint: 0.0.0.0:8027
+    cors:
+      allowed_origins:
+        - http://localhost:4200
+        - http://localhost:4201
+      allowed_headers:
+        - content-type
+        - x-faro-session-id
+        - idempotency-key
+  prometheus/collector:
+    config:
+      scrape_configs:
+        - job_name: "opentelemetry-collector"
+          scrape_interval: 1s
+          static_configs:
+            - targets: ["127.0.0.1:8888"]
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+    path: "/ready"
+
+processors:
+  batch:
+
+exporters:
+  otlp_http/metrics:
+    endpoint: http://127.0.0.1:9090/api/v1/otlp
+    tls:
+      insecure: true
+  otlp_http/traces:
+    endpoint: http://127.0.0.1:4418
+    tls:
+      insecure: true
+  otlp_http/logs:
+    endpoint: http://127.0.0.1:3100/otlp
+    tls:
+      insecure: true
+  otlp_grpc/profiles:
+    endpoint: http://127.0.0.1:4040
+    tls:
+      insecure: true
+  # (3) the Aspire dashboard, reached from inside the container. Its certificate
+  # is the development one issued for localhost, not for the name a container
+  # uses to reach the host, so it is not verified — acceptable for a developer
+  # machine, and the only place in the repository that does it.
+  otlp_http/aspire:
+    endpoint: ${env:ASPIRE_DASHBOARD_OTLP_ENDPOINT}
+    # The collector gzips by default and the dashboard reads the body as plain
+    # protobuf: left on, every export fails with "invalid wire type".
+    compression: none
+    headers:
+      x-otlp-api-key: ${env:ASPIRE_DASHBOARD_OTLP_API_KEY}
+    tls:
+      insecure_skip_verify: true
+
+service:
+  extensions: [health_check]
+  pipelines:
+    traces:
+      receivers: [otlp, faro]
+      processors: [batch]
+      exporters: [otlp_http/traces, otlp_http/aspire]
+    metrics:
+      # The collector's own metrics stay in Prometheus; the dashboard is for the
+      # services.
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp_http/metrics, otlp_http/aspire]
+    metrics/collector:
+      receivers: [prometheus/collector]
+      processors: [batch]
+      exporters: [otlp_http/metrics]
+    logs:
+      receivers: [otlp, faro]
+      processors: [batch]
+      exporters: [otlp_http/logs, otlp_http/aspire]
+    profiles:
+      receivers: [otlp]
+      exporters: [otlp_grpc/profiles]

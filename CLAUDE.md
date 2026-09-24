@@ -71,6 +71,7 @@ laborious.
 
 ```bash
 dotnet run --project src/AppHost              # full stack via Aspire
+Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana stack (or profile https-observability)
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
 dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
