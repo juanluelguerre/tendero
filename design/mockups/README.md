@@ -11,7 +11,7 @@ ones.
 ## What is in here, and what is not yet
 
 This folder holds mockups **whose article has published**. It is empty today,
-because the two that exist belong to article 22 and are waiting in
+because the two that exist belong to the article *The wireframes designed a different shop* and are waiting in
 [`../unpublished/mockups/`](../unpublished/README.md), which the publication filter
 removes. They are promoted with one `git mv` on the day the article goes live — the
 rule the project already applies to the articles themselves.
