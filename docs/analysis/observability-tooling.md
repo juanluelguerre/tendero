@@ -381,7 +381,7 @@ the first draft chose Node Playwright to reuse the e2e suites.)*
   Humans in Node and agents in .NET would be two processes and two seeds to keep
   in step, and reproducibility is the first thing that breaks.
 - **Human personas**: `Microsoft.Playwright` (MIT, 1.63.0 — a **new NuGet
-  dependency, pending the author's approval**), headless. The e2e suites today
+  dependency, approved by the author on 2026-09-24**), headless. The e2e suites today
   cover search, product page, variants, add to cart, WebMCP, the backoffice
   queue, stocktake and order transitions; **checkout and payment, returns, cart
   abandonment and publishing a product** are missing and become the simulator's
@@ -477,7 +477,7 @@ be the right one for the day it is not.
 | Browser, adapter 3 | Noop | ours |
 | Product analytics | First-party: outbox + client endpoint → Postgres → Grafana | ours |
 | Flags (next phase) | `IFeatureGate` (ours) → `OpenFeatureGate` → flagd, Microsoft.FeatureManagement, Unleash, GrowthBook, compared | 1/2 · Apache-2.0, MIT, AGPLv3 |
-| Traffic, people | `Microsoft.Playwright` in `tools/TrafficSim` | 1 · MIT, **new, pending approval** |
+| Traffic, people | `Microsoft.Playwright` in `tools/TrafficSim` | 1 · MIT, **new, approved 2026-09-24** |
 | Traffic, agents | the same process, `ModelContextProtocol` client + HTTP | 1 · Apache-2.0, already present |
 | Replay | none | — |
 

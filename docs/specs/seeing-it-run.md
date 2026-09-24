@@ -127,6 +127,14 @@ comes first so that they are born observed instead of instrumented afterwards.
   simulated browser session, and the audit's count of features with and without
   an answer to the question.
 
+## Evidence of use
+
+The phase is the machinery the question runs on, so its evidence is the question
+answered for everything else: the audit's count of features with and without an
+event, and — once the simulator runs — the *Shop pulse* showing a non-empty funnel
+split by `actor.kind`. The decision it changes: which features phases 10 and 11
+instrument first, and whether a feature with no answer stays.
+
 ## Open questions
 
 - Does the contrib Faro receiver in `otel-lgtm` accept the Faro Web SDK's payload

@@ -1,6 +1,6 @@
 # ADR 0037 — Traffic is simulated from a declared model, seeded, and labelled as synthetic
 
-Status: proposed · 2026-09-24 · Related: [ADR 0036](0036-observability-is-a-second-stack-behind-a-switch.md), [ADR 0022 (reserved)](README.md) · Analysis: [`observability-tooling.md`](../analysis/observability-tooling.md) §5–6
+Status: accepted · 2026-09-24 · Related: [ADR 0036](0036-observability-is-a-second-stack-behind-a-switch.md), [ADR 0022 (reserved)](README.md) · Analysis: [`observability-tooling.md`](../analysis/observability-tooling.md) §5–6
 
 ## Context
 
@@ -51,8 +51,9 @@ measured and recorded when it first runs, per the scale rule.
 
 ## Consequences
 
-- `Microsoft.Playwright` (MIT, 1.63.0) is a new NuGet dependency, **pending the
-  author's approval**, and downloads its browsers on first use.
+- `Microsoft.Playwright` (MIT, 1.63.0) is a new NuGet dependency, tier 1, **approved
+  by the author on 2026-09-24** (its licence is checked again at the exact version
+  added), and downloads its browsers on first use.
 - The simulator needs journeys the e2e suites do not have — checkout and payment,
   returns, cart abandonment, publishing a product — which is a reason to add them
   as e2e tests too.
