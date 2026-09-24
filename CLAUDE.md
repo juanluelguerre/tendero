@@ -82,6 +82,7 @@ dotnet run --project tools/SearchEval         # golden set NDCG report
 npx nx serve storefront|backoffice            # from frontend/
 UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
 node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
+node landing-page/tools/prepare.mjs           # the landing into landing-page/dist (Netlify); film: landing-page/README.md
 
 UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
 npm run generate:api-types                    # from frontend/, reads that document

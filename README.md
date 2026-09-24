@@ -289,6 +289,7 @@ brand/                     # logo, icons, brand guide
 design/                    # tokens.css — the single source of truth for four surfaces
 seed/                      # sample dataset (ABO-style schema, es/en)
 tools/SearchEval/          # golden set runner (NDCG@10, recall)
+landing-page/              # the landing and its film, a static site for Netlify
 docs/                      # plan, architecture, ADRs, analysis, testing, blog
 tests/                     # unit, contract, architecture, integration, API
 ```
