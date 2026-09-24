@@ -58,8 +58,10 @@ function landingDisagreements(model) {
   const relationsJson = /<script type="application\/json" id="arch-relations">([\s\S]*?)<\/script>/.exec(page)?.[1];
   const elements = Object.keys(model.elements);
   const endpoint = (end) => (typeof end === 'object' ? end.model : end);
-  const modelled = Object.values(model.relations).map((r) => `${endpoint(r.source)} -> ${endpoint(r.target)}`);
-  const pageRelations = relationsJson ? JSON.parse(relationsJson).map(([from, to]) => `${from} -> ${to}`) : [];
+  // Titles included: the page tells a reader what each connection does, in the
+  // model's words, so those words are held to the model too.
+  const modelled = Object.values(model.relations).map((r) => `${endpoint(r.source)} -> ${endpoint(r.target)} (${r.title})`);
+  const pageRelations = relationsJson ? JSON.parse(relationsJson).map(([from, to, title]) => `${from} -> ${to} (${title})`) : [];
 
   // Nothing read means nothing compared: a renamed attribute must not pass.
   if (!drawn.includes('tendero.api') || pageRelations.length === 0) {
