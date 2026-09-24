@@ -74,7 +74,9 @@ flowchart TB
     WK --> ES[(Elasticsearch)]
     WK -->|on demand| QD[(Qdrant)]
     WK -->|on demand| OL[TEI · bge-m3 + reranker]
-    Backend -.->|OTel · phase 12| OBS[Grafana · Langfuse]
+    Backend -.->|OTel · phase 9b| OBS[Grafana · Tempo · Prometheus · Loki]
+    SF -.->|RUM · phase 9b| OBS
+    Backend -.->|GenAI traces · phase 12| LF[Langfuse]
     EXT[Catalog connectors: seed · Shopify...] --> API
     PAY[Payments: fake · stripe-mock · Stripe test] --- API
 ```
@@ -331,9 +333,10 @@ deferred with its measured number — is
 | 7 | Accounts, audit, and swapping the dev issuer for Keycloak | ✅ the swap was two environment variables; Token Exchange waits for phase 11 |
 | 8 | Embeddings, hybrid search, evals | ✅ built and degradable; hybrid + reranker beats lexical, and stays off by default |
 | 9 | Read-only MCP server and the UCP manifest | ✅ eight MCP tools; UCP's catalogue over MCP and REST, validated against UCP's own schemas |
+| 9b | Seeing it run: the Grafana stack behind a switch (Aspire kept), browser telemetry, a seeded traffic simulator | 🔜 **next** — inserted before 10 so that claims and the agent checkout are born observed |
 | 10 | Knowledge: product claims with source and confidence | 🔜 |
 | 11 | UCP transactional, AP2 and Know Your Agent | 🔜 **the headline** |
-| 12 | Backoffice copilot and AI observability | 🔜 |
+| 12 | Backoffice copilot and the AI observability panel | 🔜 |
 | 13 | Multimodal search and the kit solver | 🔜 |
 
 The numbering changed on 2026-09-02: `initial-plan.md` §7 had four phases, the

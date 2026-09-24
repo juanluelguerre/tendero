@@ -301,8 +301,30 @@ by a reader later.
 
 OpenTelemetry from slice 1: every I/O slice opens an `ActivitySource` span with
 tags (source, counts, took, tokens). GenAI semantic conventions for LLM calls.
-Aspire dashboard in dev; Grafana stack + Langfuse (self-hosted) as the
-persistent view. Outbox lag is a first-class metric.
+Outbox lag is a first-class metric.
+
+**Two modes, and the Aspire dashboard is in both** (ADR 0036, proposed; built in
+phase 9b). By default, services and browsers export to the Aspire dashboard.
+`Tendero__Observability=true` adds the Grafana stack (`grafana/otel-lgtm`: OTel
+Collector contrib, Prometheus, Tempo, Loki, Grafana), and the collector fans out to
+**both** — the persistent view with exemplars and provisioned dashboards, and the
+dashboard a developer already has open. It is a start-time switch, for the reason
+ADR 0023 gave for the vector layer: an exporter's endpoint is fixed when the
+service starts. Langfuse joins in phase 12 for the LLM-specific view.
+
+**The browser reports through a port.** `libs/shared/telemetry` exposes what our
+code emits — typed events from the tracking plan, errors, the actor kind, explicit
+spans — and an adapter (OpenTelemetry JS, Grafana Faro, or Noop) owns the automatic
+instrumentation and the transport, one per page load, sent to a same-origin
+`/otlp` path. A failed adapter is Noop; telemetry never breaks the shop.
+
+**Who acted is decided on the server.** `actor.kind` (human / agent) and the
+surface (web / webmcp / mcp / ucp) come from the authenticated principal and ride
+on every metric, span and event; no id is ever a Prometheus label.
+
+**Traffic in the laboratory is simulated** (ADR 0037): `tools/TrafficSim`, seeded,
+people in headless browsers and agents over MCP and UCP, every request labelled
+synthetic. Tools weighed: [`analysis/observability-tooling.md`](analysis/observability-tooling.md).
 
 ## Diagrams
 
@@ -392,8 +414,9 @@ Elasticsearch exists. Both facts are architecture tests, not conventions.
 the one edge that does not point straight down (ADR 0007), and `Catalog` and
 `Ordering` reference `Inventory`'s ports for availability, never its domain.
 The Docker diagram above is the target. Qdrant and Text Embeddings Inference
-are declared since phase 8 and start on demand (`Tendero__Vectors=true`); Redis
-and the Grafana stack are not declared until the phase that reads them (12).
+are declared since phase 8 and start on demand (`Tendero__Vectors=true`); Redis is
+not declared until the phase that reads it, and the Grafana stack arrives in
+phase 9b behind `Tendero__Observability` (ADR 0036).
 
 Architecture tests (`docs/testing.md`) enforce the downward-only rule; the
 `tests/` and `frontend/` trees sit beside these layers without entering them.

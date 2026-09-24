@@ -498,6 +498,104 @@ phase 10 inherits a proven screen instead of inventing one.
 
 ---
 
+## Seeing it run (phase 9b)
+
+Terms from observability, product analytics and traffic simulation. The tools
+behind them are weighed in [`analysis/observability-tooling.md`](analysis/observability-tooling.md).
+
+### RUM — Real User Monitoring
+
+**Telemetry from the browser of the person using the shop**, as opposed to from
+the servers: how long pages take to appear and respond, which JavaScript errors
+they hit, and the trace of a click joined to the backend spans it caused. In
+Tendero it goes through a port with two adapters (OpenTelemetry JS, Grafana Faro)
+and a Noop (ADR 0036).
+
+### Core Web Vitals — LCP, INP, CLS
+
+**Google's three measures of what a page feels like**: LCP (*Largest Contentful
+Paint*, when the main content appears), INP (*Interaction to Next Paint*, how long
+the page takes to react to a tap or a key) and CLS (*Cumulative Layout Shift*, how
+much the layout jumps). Reported at the 75th percentile, per route.
+
+### Exemplar
+
+**A link from a point on a metric to one trace that produced it.** A latency panel
+says p95 jumped at 10:42; its exemplar opens a request from that moment in Tempo,
+and the trace opens its logs. It is what turns "a dashboard at a glance" into
+"detail when I want it" without a search.
+
+### Cardinality
+
+**How many distinct values a label can take.** A metric labelled by `actor.kind`
+has two series; labelled by order id it has one per order, and the metrics store
+falls over. Ids belong in traces and analytics rows, never in Prometheus labels.
+
+### SLO and burn rate
+
+**A service-level objective** is the promise ("99.5 % of searches answer in under
+300 ms"); the **error budget** is what the promise allows to fail; the **burn
+rate** is how fast that budget is being spent. Alerting on burn rate rather than on
+a raw threshold is current SRE practice, and the *Shop pulse* dashboard shows it.
+
+### Product analytics, and the tracking plan
+
+**Measuring what people and agents do and whether it makes money**: funnels,
+conversion, abandonment, retention. Unlike observability it is never sampled —
+every conversion counts. Its source of truth is domain events, not clicks. The
+**tracking plan** is the versioned list of every event, with its schema, the
+question it answers and the decision its value would change; the question every
+feature answers is *which event proves it is used, and that it is worth it?*
+
+### Synthetic monitoring, load testing, traffic simulation
+
+Three activities often confused. **Synthetic monitoring** runs a few scripted
+checks continuously: is it up and correct? **Load testing** drives volume: where
+does it break? **Traffic simulation** runs a population of personas following a
+behavioural model over realistic time: what would the data look like if people
+used it? Tendero needs the third, because a laboratory has no customers
+(ADR 0037).
+
+### Markov chain
+
+**A set of states and the probability of moving from each to each**, where the
+next step depends only on where you are, not on how you got there. A shopper on a
+product page goes to the cart with some probability, back to search with another,
+and leaves with the rest; simulating a visit is rolling a die at every state.
+
+### CBMG — Customer Behavior Model Graph
+
+**Daniel Menascé's model of an online shop's visitors**: one Markov chain per kind
+of customer (browser, searcher, buyer, abandoner), over page types, with
+transition probabilities and think times. It underlies TPC-W, the ecommerce
+benchmark of its day, and it is the shape of Tendero's simulator.
+
+### Non-homogeneous Poisson arrivals
+
+**Random arrivals whose average rate changes over the day**: few at night, a rise
+at midday, a peak in the evening. The rate is described per hour; chance decides
+the exact instants. Compressed — a day in an hour — it makes a dashboard show
+valleys and peaks instead of a flat line.
+
+### Seed
+
+**The number a pseudo-random generator starts from.** The same seed gives the same
+day of simulated traffic, which is what makes two runs comparable — the OTel and
+Faro adapters under identical traffic, for instance.
+
+### A/B test, and the A/A test
+
+**Two versions shown to randomly assigned, stable groups**, compared on one
+primary metric declared beforehand, with guardrail metrics that may not worsen and
+a sample size computed before the start. Stopping when B looks ahead (*peeking*)
+proves things that are not true. An **A/A test** runs A against itself: if it
+comes out significant, the assignment, the event tagging or the statistics are
+broken. With simulated traffic, an A/B shows that the machinery works, not what
+people prefer — except in search, where simulated clicks follow the golden set's
+judgments.
+
+---
+
 ## See also
 
 - [`search-evaluation.md`](search-evaluation.md) — the golden set format, the metrics, and every before/after number

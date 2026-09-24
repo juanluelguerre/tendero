@@ -38,7 +38,7 @@ objetivo (`docs/architecture.md`) pero **no se declaran aquí todavía**: ningun
 línea de código los lee. Entran en el mismo PR que los consuma — la fase 8
 (embeddings y búsqueda híbrida) y la fase 12 (observabilidad). No hay flag para
 activarlos: un flag protege comportamiento que existe, y hasta entonces no
-existe (artículo 07).
+existe (el artículo *The feature flag you did not need*).
 
 ## Elasticsearch no es una integración de Aspire
 

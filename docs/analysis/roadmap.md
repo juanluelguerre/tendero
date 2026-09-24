@@ -547,6 +547,9 @@ containers, which is what `initial-plan.md` §4 always intended. Grafana has bee
 AGPLv3 since 2021, and under the two-tier licensing policy that is fine: it runs
 as a separate service over a network boundary, unmodified, so the copyleft never
 reaches Tendero's code. Langfuse joins later for the LLM-specific view.
+*Moved on 2026-09-24:* the stack is built in phase 9b, before Knowledge, behind a
+switch that keeps the Aspire dashboard in both modes (ADR 0036) — the copilot
+reads a stack that already exists instead of bringing it.
 
 For the copilot: **not raw traces.** A trace store is the wrong interface for a
 language model — unbounded cardinality, no semantics, and a large
