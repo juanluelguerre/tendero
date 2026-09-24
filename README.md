@@ -27,6 +27,9 @@ AI-enriched multilanguage catalog with human review, agent-ready commerce
 (UCP/MCP), and observability for every token spent. It doubles as the companion
 code for a blog series on AI architecture.
 
+**Home page: [tendero.elguerre.com](https://tendero.elguerre.com)** — what Tendero is for, a
+41-second film, and its architecture at two zoom levels.
+
 ### What runs today
 
 Phases 0–9 of [the board](docs/delivery-plan.md) are in. That means the shop
