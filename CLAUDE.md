@@ -341,7 +341,12 @@ name.
 
 Build clean with `-warnaserror` · tests green including architecture tests ·
 new decisions recorded as ADR if they constrain the future · CLAUDE.md/docs
-updated if conventions changed · user-facing strings exist in es AND en.
+updated if conventions changed · user-facing strings exist in es AND en ·
+**the feature names the event that proves it is used, and that it is worth it**
+(ADR 0036): the event is in the tracking plan with the question it answers and
+the decision its value would change, and a feature with no such event says so in
+its spec rather than shipping silent. Binding from phase 9b on; the features that
+predate it are audited once, in `P9b-5`.
 **A phase is closed** when, on top of that, Stryker has run over the projects it
 touched, no `of covered` score fell below its baseline, the survivors are
 classified in `docs/testing.md`, and **the phase's material is filed into the

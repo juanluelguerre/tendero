@@ -16,4 +16,9 @@ What this deliberately does not do (and when it might).
 ## Measures
 How we know it works: tests to add, metrics/thresholds affected.
 
+## Evidence of use
+Which event proves it is used, and that it is worth it? Name the event (it goes
+in the tracking plan), the question it answers and the decision its value would
+change. If there is none, say why (ADR 0036).
+
 ## Open questions

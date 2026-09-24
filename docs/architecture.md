@@ -303,7 +303,7 @@ OpenTelemetry from slice 1: every I/O slice opens an `ActivitySource` span with
 tags (source, counts, took, tokens). GenAI semantic conventions for LLM calls.
 Outbox lag is a first-class metric.
 
-**Two modes, and the Aspire dashboard is in both** (ADR 0036, proposed; built in
+**Two modes, and the Aspire dashboard is in both** (ADR 0036; built in
 phase 9b). By default, services and browsers export to the Aspire dashboard.
 `Tendero__Observability=true` adds the Grafana stack (`grafana/otel-lgtm`: OTel
 Collector contrib, Prometheus, Tempo, Loki, Grafana), and the collector fans out to

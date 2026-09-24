@@ -1,6 +1,6 @@
 # ADR 0036 — Observability is a second stack behind a switch, browser telemetry is a port, and every feature names the event that proves it
 
-Status: proposed · 2026-09-24 · Related: [ADR 0017](0017-the-identity-provider-is-a-port.md), [ADR 0023](0023-feature-flags-with-removal-conditions.md), [ADR 0033](0033-a-design-artefact-is-disposable.md), [ADR 0035](0035-the-architecture-is-drawn-from-models-held-to-the-code.md) · Analysis: [`observability-tooling.md`](../analysis/observability-tooling.md)
+Status: accepted · 2026-09-24 · Related: [ADR 0017](0017-the-identity-provider-is-a-port.md), [ADR 0023](0023-feature-flags-with-removal-conditions.md), [ADR 0033](0033-a-design-artefact-is-disposable.md), [ADR 0035](0035-the-architecture-is-drawn-from-models-held-to-the-code.md) · Analysis: [`observability-tooling.md`](../analysis/observability-tooling.md)
 
 ## Context
 
@@ -71,7 +71,8 @@ the adapter's size — are written before the first run, as ADR 0033 did.
 - New npm dependencies for the first adapter — `@opentelemetry/api`,
   `sdk-trace-web`, `sdk-trace-base`, `instrumentation-fetch`,
   `instrumentation-xml-http-request`, `exporter-trace-otlp-http`, `sdk-logs`,
-  `web-vitals`, all Apache-2.0 — **pending the author's approval**; Faro's are a
+  `web-vitals`, all Apache-2.0 — **approved by the author on 2026-09-24**, tier 1;
+  the licence of each exact version is checked again when it is added. Faro's are a
   separate approval. Faro's clean tree rests on its pin of `ua-parser-js` 1.x (MIT;
   2.x is AGPL), checked on every upgrade.
 - The instrumentation that depends on zone.js is not used: Angular 22 is zoneless,
