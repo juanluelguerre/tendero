@@ -103,6 +103,26 @@
         }
       }
     },
+    "/api/telemetry/config": {
+      "get": {
+        "tags": [
+          "Telemetry"
+        ],
+        "operationId": "TelemetryConfiguration",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryConfiguration"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/publish": {
       "post": {
         "tags": [
@@ -3876,6 +3896,17 @@
           }
         }
       },
+      "TelemetryConfiguration": {
+        "required": [
+          "adapter"
+        ],
+        "type": "object",
+        "properties": {
+          "adapter": {
+            "type": "string"
+          }
+        }
+      },
       "VariantAxisRequest": {
         "required": [
           "code",
@@ -4046,6 +4077,9 @@
     },
     {
       "name": "Search"
+    },
+    {
+      "name": "Telemetry"
     }
   ]
 }

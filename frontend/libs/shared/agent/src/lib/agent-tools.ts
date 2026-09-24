@@ -1,4 +1,5 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
+import { Telemetry } from '@tendero/shared-telemetry';
 import {
   supportsModelContext,
   type ModelContext,
@@ -42,6 +43,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AgentTools {
   private readonly context = inject(MODEL_CONTEXT, { optional: true });
+  private readonly telemetry = inject(Telemetry);
 
   private registered = false;
 
@@ -69,8 +71,34 @@ export class AgentTools {
     const context = this.resolve();
     if (!context) return;
 
-    context.provideContext({ tools });
+    context.provideContext({ tools: tools.map((tool) => this.observed(tool)) });
     this.registered = true;
+  }
+
+  /**
+   * The same tool, reporting every call as `webmcp_tool_invoked` with
+   * `actor.kind=webmcp` (ADR 0036): the browser's half of telling a person from
+   * an agent. Wrapped here, once, so that no tool can forget — and the outcome is
+   * read from the response the agent receives, so a refusal counts as one.
+   */
+  private observed(tool: ToolDescriptor): ToolDescriptor {
+    const telemetry = this.telemetry;
+    const report = (outcome: 'answered' | 'refused' | 'failed') =>
+      telemetry.trackEvent('webmcp_tool_invoked', { tool: tool.name, outcome }, { actor: 'webmcp' });
+
+    return {
+      ...tool,
+      async execute(input) {
+        try {
+          const response = await tool.execute(input);
+          report(response.isError ? 'refused' : 'answered');
+          return response;
+        } catch (error) {
+          report('failed');
+          throw error;
+        }
+      },
+    };
   }
 
   private resolve(): ModelContext | null {

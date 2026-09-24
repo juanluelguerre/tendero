@@ -52,6 +52,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/telemetry/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TelemetryConfiguration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/publish": {
         parameters: {
             query?: never;
@@ -1185,6 +1201,9 @@ export interface components {
             /** Format: double */
             amount: number;
         };
+        TelemetryConfiguration: {
+            adapter: string;
+        };
         VariantAxisRequest: {
             code: string;
             options: string[];
@@ -1291,6 +1310,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthConfiguration"];
+                };
+            };
+        };
+    };
+    TelemetryConfiguration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelemetryConfiguration"];
                 };
             };
         };

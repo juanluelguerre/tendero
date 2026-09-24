@@ -153,6 +153,8 @@ instrument first, and whether a feature with no answer stays.
   `content-type` is there.
 - Tracking plan as Markdown held by a test, or YAML that generates both the types
   and the documentation?
-- Where the same-origin `/otlp` proxy lives: the API, or a small YARP route in
-  front of both apps.
+- ~~Where the same-origin `/otlp` proxy lives~~ — **in each app's dev-server
+  proxy** (`P9b-4`), beside `/api`: it forwards to whatever OTLP address Aspire
+  hands that dev server, and adds the dashboard's key there, so the page never
+  holds it. No API code and no YARP.
 - How much of `https-observability` is worth mirroring for `http`.

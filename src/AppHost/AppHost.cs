@@ -506,7 +506,7 @@ var frontend = Path.Combine("..", "..", "frontend");
 // F5 to re-check a lockfile that has not changed is the trade this line was
 // making, and it is why the frontends "often did not load" — they did, several
 // minutes after anybody had stopped waiting.
-builder.AddViteApp("storefront", frontend, "serve:storefront")
+var storefront = builder.AddViteApp("storefront", frontend, "serve:storefront")
     .WithNpm(install: false)
     .WithHttpEndpoint(targetPort: 4200, port: 4200, name: "http", isProxied: false)
     // Referenced but NOT waited on. The dev server has nothing to ask the API at
@@ -516,7 +516,7 @@ builder.AddViteApp("storefront", frontend, "serve:storefront")
     .WithReference(api)
     .WithExternalHttpEndpoints();
 
-builder.AddViteApp("backoffice", frontend, "serve:backoffice")
+var backoffice = builder.AddViteApp("backoffice", frontend, "serve:backoffice")
     .WithNpm(install: false)
     .WithHttpEndpoint(targetPort: 4201, port: 4201, name: "http", isProxied: false)
     .WithReference(api)
@@ -554,6 +554,12 @@ if (observability)
     var collector = grafanaStack.GetEndpoint("otlp-http");
     api.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
     workers.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
+
+    // The dev servers too: their proxy forwards the browser's `/otlp` to
+    // whatever this variable names, so the browser reaches the collector
+    // without ever knowing its address.
+    storefront.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
+    backoffice.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
 }
 
 // The worker does NOT wait for the API: it does not depend on it. That was there

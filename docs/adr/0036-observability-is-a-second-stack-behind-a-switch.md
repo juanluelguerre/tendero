@@ -68,11 +68,22 @@ the adapter's size — are written before the first run, as ADR 0033 did.
 
 ## Consequences
 
-- New npm dependencies for the first adapter — `@opentelemetry/api`,
-  `sdk-trace-web`, `sdk-trace-base`, `instrumentation-fetch`,
-  `instrumentation-xml-http-request`, `exporter-trace-otlp-http`, `sdk-logs`,
-  `web-vitals`, all Apache-2.0 — **approved by the author on 2026-09-24**, tier 1;
-  the licence of each exact version is checked again when it is added. Faro's are a
+- New npm dependencies for the first adapter, **approved by the author on
+  2026-09-24**, tier 1, each licence checked at the exact version added — all
+  Apache-2.0, and every transitive package Apache-2.0 or MIT: `@opentelemetry/api`
+  1.9.1, `api-logs`, `sdk-logs`, `instrumentation-fetch`,
+  `exporter-trace-otlp-proto` and `exporter-logs-otlp-proto` 0.222.0,
+  `sdk-trace-web` and `resources` 2.11.0, and `web-vitals` 6.2.2. The list that
+  was approved changed three ways while building (`P9b-4`): the exporters are the
+  **protobuf** ones, because the Aspire dashboard's OTLP/HTTP endpoint reads only
+  protobuf; `instrumentation-xml-http-request` and `sdk-trace-base` went, because
+  both apps call the API through `fetch` and `sdk-trace-web` re-exports what was
+  needed from the other; and `resources` and the logs exporter came in, for the
+  service name and for events. The adapter is a lazy chunk of 26 KB gzip; the
+  initial bundle grew by 0.8 KB.
+- The browser learns its adapter from `GET /api/telemetry/config`, anonymous, the
+  way it learns its issuer from `/api/auth/config`: one value, owned by the
+  server, that two apps cannot disagree about. Faro's are a
   separate approval. Faro's clean tree rests on its pin of `ua-parser-js` 1.x (MIT;
   2.x is AGPL), checked on every upgrade.
 - The instrumentation that depends on zone.js is not used: Angular 22 is zoneless,

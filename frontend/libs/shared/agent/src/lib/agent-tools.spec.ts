@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { describe, expect, it, vi } from 'vitest';
 import { AgentTools, MODEL_CONTEXT, refuse, say } from './agent-tools';
 import { supportsModelContext, type ModelContext, type ToolDescriptor } from './model-context';
@@ -86,6 +87,29 @@ describe('the agent surface', () => {
     expect(say('here you go').isError).toBeUndefined();
     expect(refuse('no such SKU').isError).toBe(true);
     expect(refuse('no such SKU').content[0].text).toBe('no such SKU');
+  });
+
+  /**
+   * The browser's half of telling a person from an agent (ADR 0036): every call
+   * an agent makes through WebMCP is an event marked webmcp, and a refusal is
+   * counted as a refusal rather than as an answer.
+   */
+  it('reports every agent call, and a refusal as one', async () => {
+    const provideContext = vi.fn();
+    TestBed.configureTestingModule({ providers: [{ provide: MODEL_CONTEXT, useValue: { provideContext } }] });
+    const trackEvent = vi.spyOn(TestBed.inject(Telemetry), 'trackEvent');
+
+    const declines: ToolDescriptor = { ...aTool('add_to_cart'), execute: () => Promise.resolve(refuse('no such SKU')) };
+    TestBed.inject(AgentTools).register([aTool('search_products'), declines]);
+    const [search, add] = provideContext.mock.calls[0][0].tools as ToolDescriptor[];
+
+    await search.execute({});
+    await add.execute({});
+
+    expect(trackEvent.mock.calls).toEqual([
+      ['webmcp_tool_invoked', { tool: 'search_products', outcome: 'answered' }, { actor: 'webmcp' }],
+      ['webmcp_tool_invoked', { tool: 'add_to_cart', outcome: 'refused' }, { actor: 'webmcp' }],
+    ]);
   });
 
   it('detects the capability from the navigator it is given', () => {

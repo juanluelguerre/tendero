@@ -46,6 +46,7 @@ libs/shared/
   i18n/             the Transloco wiring and the culture store (not the translations)
   auth/             the OIDC redirect sign-in, the token interceptor, the route guard
   agent/            the WebMCP registration mechanism, feature-detected (the tools stay per app)
+  telemetry/        browser telemetry behind a port: OpenTelemetry, later Faro, or none (ADR 0036)
 ```
 
 Inside each app: `layout/` (its own shell, which is **not** shared),
