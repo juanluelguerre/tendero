@@ -44,6 +44,36 @@ function likec4(...args) {
   return run;
 }
 
+/**
+ * The landing page draws levels 1 and 2 by hand, for people rather than for
+ * GitHub (landing-page/site/index.html, "How it fits together"). Hand-drawn is
+ * exactly how article 00's diagram came to show a Grafana nobody ran, so the
+ * drawing is held to the model both ways: every element of the model is a box
+ * with its id in `data-c4`, and the relations beside the drawing are the model's
+ * relations, no more and no fewer.
+ */
+function landingDisagreements(model) {
+  const page = readFileSync(join(root, 'landing-page', 'site', 'index.html'), 'utf8');
+  const drawn = [...page.matchAll(/data-c4="([^"]+)"/g)].map((m) => m[1]);
+  const relationsJson = /<script type="application\/json" id="arch-relations">([\s\S]*?)<\/script>/.exec(page)?.[1];
+  const elements = Object.keys(model.elements);
+  const endpoint = (end) => (typeof end === 'object' ? end.model : end);
+  const modelled = Object.values(model.relations).map((r) => `${endpoint(r.source)} -> ${endpoint(r.target)}`);
+  const pageRelations = relationsJson ? JSON.parse(relationsJson).map(([from, to]) => `${from} -> ${to}`) : [];
+
+  // Nothing read means nothing compared: a renamed attribute must not pass.
+  if (!drawn.includes('tendero.api') || pageRelations.length === 0) {
+    return ['Could not read the landing page\'s architecture drawing; the check would prove nothing.'];
+  }
+
+  return [
+    ...elements.filter((e) => !drawn.includes(e)).map((e) => `The landing's architecture drawing has no box for "${e}".`),
+    ...drawn.filter((e) => !elements.includes(e)).map((e) => `The landing draws "${e}", which the model does not have.`),
+    ...modelled.filter((r) => !pageRelations.includes(r)).map((r) => `The landing's drawing is missing the relation ${r}.`),
+    ...pageRelations.filter((r) => !modelled.includes(r)).map((r) => `The landing draws the relation ${r}, which the model does not have.`),
+  ];
+}
+
 function fail(message) {
   console.error(message);
   process.exit(1);
@@ -80,6 +110,7 @@ try {
     ...missing.map((r) => `The AppHost declares "${r}" and the model has no container for it — draw it, or say in NOT_CONTAINERS why not.`),
     ...extra.map((c) => `The model draws "${c}" and the AppHost declares no such resource.`),
     ...staleExceptions.map((r) => `NOT_CONTAINERS explains "${r}", which the AppHost no longer declares.`),
+    ...landingDisagreements(model),
   ];
   if (problems.length) fail(problems.join('\n'));
 
