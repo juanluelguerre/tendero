@@ -34,6 +34,8 @@
 | [0033](0033-a-design-artefact-is-disposable.md) | A design artefact is disposable, and the design tool is an experiment with a removal condition | accepted |
 | [0034](0034-a-ramps-middle-step-is-a-fill.md) | A ramp's middle step is a fill; only its dark step carries text | accepted |
 | [0035](0035-the-architecture-is-drawn-from-models-held-to-the-code.md) | The architecture is drawn from models, and each model is held to the code | accepted |
+| [0036](0036-observability-is-a-second-stack-behind-a-switch.md) | Observability is a second stack behind a switch, browser telemetry is a port, and every feature names the event that proves it | proposed |
+| [0037](0037-traffic-is-simulated-from-a-declared-model.md) | Traffic is simulated from a declared model, seeded, and labelled as synthetic | proposed |
 
 Format: context → decision → consequences. Keep each under a page.
 
