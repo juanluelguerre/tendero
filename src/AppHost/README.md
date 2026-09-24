@@ -13,7 +13,7 @@ Aspire en http://localhost:15130.
 | **workers** | — | Procesador del outbox, creación de índices, migraciones. |
 | **storefront** · **backoffice** | 4200 · 4201 | Las dos apps Angular, servidas por Vite con la URL de la API inyectada: el proxy de desarrollo es el único sitio con un `localhost` de reserva. |
 
-Y tres recursos **declarados siempre y arrancados a demanda** (`WithExplicitStart`,
+Y cuatro recursos **declarados siempre y arrancados a demanda** (`WithExplicitStart`,
 botón *Start* en el dashboard), porque un recurso creado sólo detrás de una
 variable de entorno es invisible para quien lanza desde Visual Studio o Rider:
 
@@ -22,6 +22,7 @@ variable de entorno es invisible para quien lanza desde Visual Studio o Rider:
 | **Keycloak** | 58443 | El segundo emisor OIDC, con el realm de `keycloak/` importado. La API lo usa cuando `Authentication:Authority` apunta a él — dos variables de entorno, ningún flag de compilación (`P7-8`). Con volumen y persistente. |
 | **pgweb** | 55433 | Mirar la base de datos sin un gigabyte de consola. |
 | **elasticvue** | 59201 | Mirar los índices. Corre en el navegador y habla con Elasticsearch directamente, así que el CORS de Elasticsearch nombra su origen y no `*`. |
+| **observability** | 53000 (Grafana) · 54317/54318 (OTLP) · 58027 (Faro) | La pila de Grafana (`grafana/otel-lgtm`: colector, Prometheus, Tempo, Loki). Con `Tendero__Observability=true` —o el perfil `https-observability`— arranca sola y los servicios exportan a su colector, que lo reenvía **también** al dashboard de Aspire: el modo completo añade, no quita (ADR 0036). Arrancarla a mano desde el dashboard no redirige nada: el destino de la telemetría se fija al arrancar cada servicio. Datos en el volumen `tendero-observability-data`; Grafana sin login. |
 
 Todos los puertos fijos están **fuera de su valor por defecto** a propósito: 5432
 y 9200 son los servicios de trabajo de alguien. Y todos los contenedores llevan
@@ -33,12 +34,12 @@ Elasticsearch); a partir de ahí es instantáneo.
 
 ## Qué NO arranca, y por qué
 
-Qdrant, Ollama (con bge-m3) y la pila de Grafana están en la arquitectura
-objetivo (`docs/architecture.md`) pero **no se declaran aquí todavía**: ninguna
-línea de código los lee. Entran en el mismo PR que los consuma — la fase 8
-(embeddings y búsqueda híbrida) y la fase 12 (observabilidad). No hay flag para
-activarlos: un flag protege comportamiento que existe, y hasta entonces no
-existe (el artículo *The feature flag you did not need*).
+Ollama y Redis están en la arquitectura objetivo (`docs/architecture.md`) pero
+**no se declaran aquí todavía**: ninguna línea de código los lee. Entran en el
+mismo PR que los consuma, como entraron la capa vectorial (fase 8, detrás de
+`Tendero__Vectors`) y la pila de Grafana (fase 9b, detrás de
+`Tendero__Observability`). Un flag protege comportamiento que existe, y hasta
+entonces no existe (el artículo *The feature flag you did not need*).
 
 ## Elasticsearch no es una integración de Aspire
 

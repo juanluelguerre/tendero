@@ -74,7 +74,7 @@ flowchart TB
     WK --> ES[(Elasticsearch)]
     WK -->|on demand| QD[(Qdrant)]
     WK -->|on demand| OL[TEI · bge-m3 + reranker]
-    Backend -.->|OTel · phase 9b| OBS[Grafana · Tempo · Prometheus · Loki]
+    Backend -->|OTel · Tendero__Observability| OBS[Grafana · Tempo · Prometheus · Loki]
     SF -.->|RUM · phase 9b| OBS
     Backend -.->|GenAI traces · phase 12| LF[Langfuse]
     EXT[Catalog connectors: seed · Shopify...] --> API
@@ -185,11 +185,19 @@ Every fixed port is deliberately off its default — 5432 and 9200 are somebody'
 work services — and Keycloak, pgweb and elasticvue are declared but only start
 when you press *Start* on the dashboard (`src/AppHost/README.md`).
 
+**Two observability modes.** By default every service reports to the Aspire
+dashboard. `Tendero__Observability=true` — or the `https-observability` launch
+profile in Visual Studio — adds the Grafana stack: the services report to its
+collector, which keeps Tempo, Prometheus and Loki and forwards everything to the
+Aspire dashboard too, so nothing you had goes away (ADR 0036). The image is about
+0.9 GB on first pull.
+
 | | |
 |---|---|
 | Storefront | http://localhost:4200 |
 | Backoffice | http://localhost:4201 |
 | Aspire dashboard | http://localhost:15130 |
+| Grafana, with `Tendero__Observability=true` | http://localhost:53000 |
 | Postgres · Elasticsearch | 55432 · 59200 |
 
 Then import the sample catalogue and search it — through the storefront's own

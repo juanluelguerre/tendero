@@ -415,8 +415,8 @@ the one edge that does not point straight down (ADR 0007), and `Catalog` and
 `Ordering` reference `Inventory`'s ports for availability, never its domain.
 The Docker diagram above is the target. Qdrant and Text Embeddings Inference
 are declared since phase 8 and start on demand (`Tendero__Vectors=true`); Redis is
-not declared until the phase that reads it, and the Grafana stack arrives in
-phase 9b behind `Tendero__Observability` (ADR 0036).
+not declared until the phase that reads it; the Grafana stack is declared since
+phase 9b and starts on demand (`Tendero__Observability=true`, ADR 0036).
 
 Architecture tests (`docs/testing.md`) enforce the downward-only rule; the
 `tests/` and `frontend/` trees sit beside these layers without entering them.
