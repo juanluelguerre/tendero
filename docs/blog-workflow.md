@@ -70,3 +70,9 @@ exists to protect.
 11. **Delete the HTML once the article is live**: the article HTML generated for
     WordPress was never kept, and the article's diagram `.html` sources go too,
     leaving their `.svg` and `.png`. A published diagram is what was published.
+12. **Redeploy the landing if it changed** (decided 2026-09-25). The landing is
+    deployed to Netlify by hand, so nothing does it on its own: with every
+    publication to the public repository, diff its inputs — `landing-page/`,
+    `design/tokens.css`, `brand/` and `seed/images` — against the last deployed
+    commit, and if anything moved run `node landing-page/tools/prepare.mjs` and
+    drag `landing-page/dist` onto the site's *Deploys* page.
