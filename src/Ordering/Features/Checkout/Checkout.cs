@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.Ordering.Contracts;
 using ElGuerre.Tendero.Ordering.Domain;
@@ -230,12 +231,26 @@ public sealed class PlaceOrderHandler(
     IPrincipalAccessor principal,
     IUnitOfWork unitOfWork,
     IOptions<CheckoutOptions> options,
-    TimeProvider clock)
+    TimeProvider clock,
+    IActorAccessor actors)
     : ICommandHandler<PlaceOrderCommand, PlaceOrderResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
 
+    /// <summary>
+    /// Every attempt is counted once, whichever of its eight exits it took: the
+    /// place-order path returns from seven places, and a counter in each is a
+    /// counter that one day misses one.
+    /// </summary>
     public async Task<PlaceOrderResult> HandleAsync(
+        PlaceOrderCommand command, CancellationToken cancellationToken)
+    {
+        var result = await PlaceAsync(command, cancellationToken);
+        CheckoutAttempts.Record(result, actors.Current);
+        return result;
+    }
+
+    private async Task<PlaceOrderResult> PlaceAsync(
         PlaceOrderCommand command, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("checkout.place_order");
@@ -390,6 +405,30 @@ public sealed class PlaceOrderHandler(
         activity?.SetTag("checkout.outcome", outcome.ToString());
         return new PlaceOrderResult(outcome, null, null, detail);
     }
+}
+
+/// <summary>
+/// `tendero.checkout.attempts` (the tracking plan): orders placed are the
+/// attempts whose outcome is <c>placed</c>, and every other outcome says which
+/// fix a failed checkout points at — our screen, our price, the shopper's card
+/// or the provider.
+/// </summary>
+internal static class CheckoutAttempts
+{
+    private static readonly Meter Meter = new(TelemetrySources.Ordering);
+
+    private static readonly Counter<long> Attempts = Meter.CreateCounter<long>(
+        "tendero.checkout.attempts", unit: "{attempt}",
+        description: "Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.");
+
+    public static void Record(PlaceOrderResult result, Actor actor) =>
+        Attempts.Add(1,
+            actor.KindLabel,
+            actor.SurfaceLabel,
+            new("outcome", MetricLabels.Of(result.Outcome)),
+            // Read off the priced cart when there was one; an attempt refused
+            // before pricing had no discount to apply.
+            new("discounted", result.Pricing?.Discounts.Count > 0 || result.Order?.Discounts.Count > 0));
 }
 
 // ---------- The wire ----------

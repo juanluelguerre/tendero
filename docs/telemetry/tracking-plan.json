@@ -4,53 +4,58 @@
     {
       "name": "Search",
       "area": "storefront",
-      "question": "What share of searches finds nothing, and is it worse for agents than for people?",
+      "question": "What share of typed searches finds nothing, and is it worse for agents than for people?",
       "decision": "Where the next relevance work goes: synonyms and golden-set queries for the empty ones, or the MCP tool's description if agents come back empty more often than people.",
-      "signals": ["tendero.search.requests"]
-    },
-    {
-      "name": "Filters",
-      "area": "storefront",
-      "question": "Do shoppers narrow a search with facets, or does the query alone do the work?",
-      "decision": "Whether the localized attribute taxonomy keeps getting investment, or facets shrink to the two that are used.",
-      "signals": ["tendero.search.requests"]
+      "signals": [
+        "tendero.search.requests"
+      ]
     },
     {
       "name": "Browsing by category",
       "area": "storefront",
       "question": "Do people browse the taxonomy, or go straight to search?",
       "decision": "Whether the category pages earn their place in the navigation.",
-      "signals": [],
-      "gap": "A category page is an ordinary product listing: the server cannot tell browsing from any other listing, so the answer is a navigation event in the browser, which is behavioural and waits for consent."
+      "signals": [
+        "tendero.search.requests"
+      ]
     },
     {
       "name": "Product page",
       "area": "storefront",
-      "question": "Does a product page turn a view into a cart?",
-      "decision": "Whether the page's next work is content (specs, evidence) or the add-to-cart path.",
-      "signals": [],
-      "gap": "A view is behavioural, and the storefront has no consent yet; the add-to-cart half is `tendero.carts.created`."
+      "question": "How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?",
+      "decision": "Where discovery work goes: the search box, the taxonomy or the home page's rows.",
+      "signals": [
+        "product_viewed",
+        "tendero.carts.created"
+      ]
     },
     {
       "name": "Cart",
       "area": "storefront",
       "question": "How many carts never become an order, and whose?",
       "decision": "Whether abandonment work (a saved cart, a reminder) comes before checkout friction.",
-      "signals": ["tendero.carts.created", "tendero.checkout.attempts"]
+      "signals": [
+        "tendero.carts.created",
+        "tendero.checkout.attempts"
+      ]
     },
     {
       "name": "Promotions",
       "area": "storefront",
       "question": "What share of orders carries a discount?",
       "decision": "Whether the promotion engine's combination rules are worth extending, or promotions stay a handful of codes.",
-      "signals": ["tendero.checkout.attempts"]
+      "signals": [
+        "tendero.checkout.attempts"
+      ]
     },
     {
       "name": "Checkout and payment",
       "area": "storefront",
       "question": "Why does a checkout fail to become an order: a stale screen, a changed price, a declined card, or a provider that did not answer?",
       "decision": "A stale screen or a price change is our copy and our cache; a decline is the shopper's; an unavailable provider is ours to retry. Each points at a different fix.",
-      "signals": ["tendero.checkout.attempts"]
+      "signals": [
+        "tendero.checkout.attempts"
+      ]
     },
     {
       "name": "Order page",
@@ -65,7 +70,9 @@
       "area": "storefront",
       "question": "Why do things come back?",
       "decision": "Wrong size and not-as-described are the product reasoning layer's case (phase 10); damaged and wrong item are the warehouse's.",
-      "signals": ["tendero.returns.requested"]
+      "signals": [
+        "tendero.returns.requested"
+      ]
     },
     {
       "name": "Account and guest cart claim",
@@ -80,14 +87,18 @@
       "area": "backoffice",
       "question": "Does the review queue move: how many drafts become products, and who approves them?",
       "decision": "Whether publishing needs bulk approval, and later whether the AI proposals of phase 10 are being approved or ignored.",
-      "signals": ["tendero.catalog.products.published"]
+      "signals": [
+        "tendero.catalog.products.published"
+      ]
     },
     {
       "name": "Stock and reservations",
       "area": "backoffice",
       "question": "How much held stock never becomes a sale?",
       "decision": "The hold's lifetime, and whether the expiry sweep the domain has a state for is worth building.",
-      "signals": ["tendero.inventory.reservations"]
+      "signals": [
+        "tendero.inventory.reservations"
+      ]
     },
     {
       "name": "Catalogue import",
@@ -110,37 +121,76 @@
       "area": "agents",
       "question": "Do browser agents use the shop's WebMCP tools, which ones, and do they succeed?",
       "decision": "Which tools to keep, extend or drop; a high share of refusals means a tool's contract is wrong for an agent.",
-      "signals": ["webmcp_tool_invoked"]
+      "signals": [
+        "webmcp_tool_invoked"
+      ]
     },
     {
       "name": "MCP server and UCP catalogue",
       "area": "agents",
       "question": "Do external agents call the catalogue over MCP and UCP, which tools, and how often are they refused?",
       "decision": "Whether the agent checkout of phase 11 has agents waiting for it, and which binding to build it on first.",
-      "signals": ["tendero.agent.tool_calls"]
+      "signals": [
+        "tendero.agent.tool_calls"
+      ]
     },
     {
       "name": "AI search layer",
       "area": "platform",
       "question": "How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss?",
       "decision": "Whether the AI stages can be on by default, which service to fix first, and when a reindex is due.",
-      "signals": ["tendero.search.degraded", "tendero.search.vector_projection.failed"]
+      "signals": [
+        "tendero.search.degraded",
+        "tendero.search.vector_projection.failed"
+      ]
     },
     {
       "name": "Outbox",
       "area": "platform",
       "question": "Is eventual consistency still eventual?",
       "decision": "When a second worker replica, and the row locking it needs, is worth building.",
-      "signals": ["tendero.outbox.lag"]
+      "signals": [
+        "tendero.outbox.lag"
+      ]
     }
   ],
   "events": [
     {
       "name": "webmcp_tool_invoked",
       "description": "A browser agent called one of the shop's WebMCP tools. Emitted with actor `webmcp`.",
+      "consent": "behavioural",
       "attributes": {
-        "tool": { "type": "string", "description": "The tool's registered name; never its arguments." },
-        "outcome": { "type": "string", "values": ["answered", "refused", "failed"], "description": "Refused is the shop saying no; failed is the tool breaking." }
+        "tool": {
+          "type": "string",
+          "description": "The tool's registered name; never its arguments."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "answered",
+            "refused",
+            "failed"
+          ],
+          "description": "Refused is the shop saying no; failed is the tool breaking."
+        }
+      }
+    },
+    {
+      "name": "product_viewed",
+      "description": "A shopper opened a product page. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "arrived_from": {
+          "type": "string",
+          "values": [
+            "search",
+            "category",
+            "home",
+            "other",
+            "direct"
+          ],
+          "description": "The page before this one, by kind; direct when there was none in this tab."
+        }
       }
     }
   ],
@@ -151,7 +201,14 @@
       "unit": "{search}",
       "description": "Searches answered without one of their AI stages, by stage.",
       "attributes": {
-        "stage": { "type": "string", "values": ["vector", "rerank"], "description": "The stage that did not answer." }
+        "stage": {
+          "type": "string",
+          "values": [
+            "vector",
+            "rerank"
+          ],
+          "description": "The stage that did not answer."
+        }
       }
     },
     {
@@ -172,13 +229,45 @@
       "name": "tendero.search.requests",
       "instrument": "counter",
       "unit": "{search}",
-      "description": "Searches answered, by who asked, through what, and whether anything came back.",
-      "planned": "P9b-6",
+      "description": "Searches answered, by who asked, through what, typed or browsed, and whether anything came back.",
       "attributes": {
-        "actor.kind": { "type": "string", "values": ["human", "agent"], "description": "From the authenticated principal (ADR 0036)." },
-        "surface": { "type": "string", "values": ["web", "webmcp", "mcp", "ucp"], "description": "The door the request came through." },
-        "result": { "type": "string", "values": ["found", "empty"], "description": "Whether the first page had any product." },
-        "filtered": { "type": "boolean", "description": "Whether at least one facet narrowed the search." }
+        "actor.kind": {
+          "type": "string",
+          "values": [
+            "human",
+            "agent"
+          ],
+          "description": "Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036)."
+        },
+        "surface": {
+          "type": "string",
+          "values": [
+            "web",
+            "mcp",
+            "ucp"
+          ],
+          "description": "The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`."
+        },
+        "mode": {
+          "type": "string",
+          "values": [
+            "query",
+            "browse"
+          ],
+          "description": "Query when text was typed; browse when it was not — a category page, a home-page row."
+        },
+        "category": {
+          "type": "boolean",
+          "description": "Whether the search was narrowed to a category."
+        },
+        "result": {
+          "type": "string",
+          "values": [
+            "found",
+            "empty"
+          ],
+          "description": "Whether the first page had any product."
+        }
       }
     },
     {
@@ -186,10 +275,24 @@
       "instrument": "counter",
       "unit": "{cart}",
       "description": "Carts opened. Against placed orders, it is abandonment: nothing sets a cart to Abandoned yet, so the difference is the measure.",
-      "planned": "P9b-6",
       "attributes": {
-        "actor.kind": { "type": "string", "values": ["human", "agent"], "description": "From the authenticated principal (ADR 0036)." },
-        "surface": { "type": "string", "values": ["web", "webmcp", "mcp", "ucp"], "description": "The door the request came through." }
+        "actor.kind": {
+          "type": "string",
+          "values": [
+            "human",
+            "agent"
+          ],
+          "description": "Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036)."
+        },
+        "surface": {
+          "type": "string",
+          "values": [
+            "web",
+            "mcp",
+            "ucp"
+          ],
+          "description": "The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`."
+        }
       }
     },
     {
@@ -197,26 +300,63 @@
       "instrument": "counter",
       "unit": "{attempt}",
       "description": "Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.",
-      "planned": "P9b-6",
       "attributes": {
-        "actor.kind": { "type": "string", "values": ["human", "agent"], "description": "From the authenticated principal (ADR 0036)." },
-        "surface": { "type": "string", "values": ["web", "webmcp", "mcp", "ucp"], "description": "The door the request came through." },
+        "actor.kind": {
+          "type": "string",
+          "values": [
+            "human",
+            "agent"
+          ],
+          "description": "Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036)."
+        },
+        "surface": {
+          "type": "string",
+          "values": [
+            "web",
+            "mcp",
+            "ucp"
+          ],
+          "description": "The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`."
+        },
         "outcome": {
           "type": "string",
-          "values": ["placed", "already_placed", "nothing_to_ship", "unknown_shipping_option", "unknown_skus", "price_changed", "payment_declined", "payment_unavailable"],
-          "description": "PlaceOrderOutcome, one to one."
+          "values": [
+            "placed",
+            "already_placed",
+            "nothing_to_ship",
+            "unknown_shipping_option",
+            "unknown_skus",
+            "price_changed",
+            "payment_declined",
+            "payment_unavailable"
+          ],
+          "description": "PlaceOrderOutcome, labelled by MetricLabels.",
+          "from": "PlaceOrderOutcome"
         },
-        "discounted": { "type": "boolean", "description": "Whether any promotion applied to the order." }
+        "discounted": {
+          "type": "boolean",
+          "description": "Whether any promotion applied to the order."
+        }
       }
     },
     {
       "name": "tendero.returns.requested",
       "instrument": "counter",
-      "unit": "{return}",
-      "description": "Return requests by their reason: the closed set of five the domain keeps for exactly this analysis.",
-      "planned": "P9b-6",
+      "unit": "{line}",
+      "description": "Lines of the returns opened, by their reason: the closed set of five the domain keeps for exactly this analysis.",
       "attributes": {
-        "reason": { "type": "string", "values": ["wrong_size", "not_as_described", "damaged", "wrong_item", "changed_mind"], "description": "ReturnReason, one to one." }
+        "reason": {
+          "type": "string",
+          "values": [
+            "wrong_size",
+            "not_as_described",
+            "damaged",
+            "wrong_item",
+            "changed_mind"
+          ],
+          "description": "ReturnReason, labelled by MetricLabels.",
+          "from": "ReturnReason"
+        }
       }
     },
     {
@@ -224,9 +364,15 @@
       "instrument": "counter",
       "unit": "{product}",
       "description": "Products moved from Draft to Active.",
-      "planned": "P9b-6",
       "attributes": {
-        "actor.kind": { "type": "string", "values": ["human", "agent"], "description": "From the authenticated principal (ADR 0036)." }
+        "actor.kind": {
+          "type": "string",
+          "values": [
+            "human",
+            "agent"
+          ],
+          "description": "Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036)."
+        }
       }
     },
     {
@@ -234,9 +380,18 @@
       "instrument": "counter",
       "unit": "{reservation}",
       "description": "Reservation transitions, by the state they reach.",
-      "planned": "P9b-6",
       "attributes": {
-        "status": { "type": "string", "values": ["held", "committed", "released", "expired"], "description": "ReservationStatus, one to one." }
+        "status": {
+          "type": "string",
+          "values": [
+            "held",
+            "committed",
+            "released",
+            "expired"
+          ],
+          "description": "ReservationStatus, labelled by MetricLabels. Expired is never recorded yet: nothing expires a hold.",
+          "from": "ReservationStatus"
+        }
       }
     },
     {
@@ -244,11 +399,28 @@
       "instrument": "counter",
       "unit": "{call}",
       "description": "Calls from external agents to the MCP tools and the UCP catalogue operations.",
-      "planned": "P9b-6",
       "attributes": {
-        "surface": { "type": "string", "values": ["mcp", "ucp"], "description": "The binding the call came through." },
-        "tool": { "type": "string", "description": "The tool or operation name; a closed set of the ones served." },
-        "outcome": { "type": "string", "values": ["answered", "refused", "failed"], "description": "Refused is the shop saying no; failed is the tool breaking." }
+        "surface": {
+          "type": "string",
+          "values": [
+            "mcp",
+            "ucp"
+          ],
+          "description": "The binding the call came through."
+        },
+        "tool": {
+          "type": "string",
+          "description": "The tool or operation name; a closed set of the ones served."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "answered",
+            "refused",
+            "failed"
+          ],
+          "description": "Refused is the shop saying no; failed is the tool breaking."
+        }
       }
     }
   ]

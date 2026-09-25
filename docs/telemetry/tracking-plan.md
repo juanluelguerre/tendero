@@ -11,30 +11,29 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-18 features: **3** answered by a signal emitted today,
-**9** by a signal planned, and **6** with no signal, each saying why.
+17 features: **13** answered by a signal emitted today,
+**0** by a signal planned, and **4** with no signal, each saying why.
 
 ### Storefront
 
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
-| Search | What share of searches finds nothing, and is it worse for agents than for people? | Where the next relevance work goes: synonyms and golden-set queries for the empty ones, or the MCP tool's description if agents come back empty more often than people. | `tendero.search.requests` | planned (P9b-6) |
-| Filters | Do shoppers narrow a search with facets, or does the query alone do the work? | Whether the localized attribute taxonomy keeps getting investment, or facets shrink to the two that are used. | `tendero.search.requests` | planned (P9b-6) |
-| Browsing by category | Do people browse the taxonomy, or go straight to search? | Whether the category pages earn their place in the navigation. | — A category page is an ordinary product listing: the server cannot tell browsing from any other listing, so the answer is a navigation event in the browser, which is behavioural and waits for consent. | none |
-| Product page | Does a product page turn a view into a cart? | Whether the page's next work is content (specs, evidence) or the add-to-cart path. | — A view is behavioural, and the storefront has no consent yet; the add-to-cart half is `tendero.carts.created`. | none |
-| Cart | How many carts never become an order, and whose? | Whether abandonment work (a saved cart, a reminder) comes before checkout friction. | `tendero.carts.created`, `tendero.checkout.attempts` | planned (P9b-6) |
-| Promotions | What share of orders carries a discount? | Whether the promotion engine's combination rules are worth extending, or promotions stay a handful of codes. | `tendero.checkout.attempts` | planned (P9b-6) |
-| Checkout and payment | Why does a checkout fail to become an order: a stale screen, a changed price, a declined card, or a provider that did not answer? | A stale screen or a price change is our copy and our cache; a decline is the shopper's; an unavailable provider is ours to retry. Each points at a different fix. | `tendero.checkout.attempts` | planned (P9b-6) |
+| Search | What share of typed searches finds nothing, and is it worse for agents than for people? | Where the next relevance work goes: synonyms and golden-set queries for the empty ones, or the MCP tool's description if agents come back empty more often than people. | `tendero.search.requests` | emitted |
+| Browsing by category | Do people browse the taxonomy, or go straight to search? | Whether the category pages earn their place in the navigation. | `tendero.search.requests` | emitted |
+| Product page | How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow? | Where discovery work goes: the search box, the taxonomy or the home page's rows. | `product_viewed`, `tendero.carts.created` | emitted |
+| Cart | How many carts never become an order, and whose? | Whether abandonment work (a saved cart, a reminder) comes before checkout friction. | `tendero.carts.created`, `tendero.checkout.attempts` | emitted |
+| Promotions | What share of orders carries a discount? | Whether the promotion engine's combination rules are worth extending, or promotions stay a handful of codes. | `tendero.checkout.attempts` | emitted |
+| Checkout and payment | Why does a checkout fail to become an order: a stale screen, a changed price, a declined card, or a provider that did not answer? | A stale screen or a price change is our copy and our cache; a decline is the shopper's; an unavailable provider is ours to retry. Each points at a different fix. | `tendero.checkout.attempts` | emitted |
 | Order page | Do shoppers come back to follow an order? | None today. | — No decision depends on the answer: the page is the receipt, and it stays whatever the count is. A signal with no decision does not enter the plan. | none |
-| Returns | Why do things come back? | Wrong size and not-as-described are the product reasoning layer's case (phase 10); damaged and wrong item are the warehouse's. | `tendero.returns.requested` | planned (P9b-6) |
+| Returns | Why do things come back? | Wrong size and not-as-described are the product reasoning layer's case (phase 10); damaged and wrong item are the warehouse's. | `tendero.returns.requested` | emitted |
 | Account and guest cart claim | Do guests sign in, and does their cart survive it? | Whether guest checkout stays the default path. | — Not measured yet, and not planned: sign-in is the identity provider's, and the claim is one call with no screen of its own. Revisit when accounts do more than hold orders. | none |
 
 ### Backoffice
 
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
-| Review queue and publishing | Does the review queue move: how many drafts become products, and who approves them? | Whether publishing needs bulk approval, and later whether the AI proposals of phase 10 are being approved or ignored. | `tendero.catalog.products.published` | planned (P9b-6) |
-| Stock and reservations | How much held stock never becomes a sale? | The hold's lifetime, and whether the expiry sweep the domain has a state for is worth building. | `tendero.inventory.reservations` | planned (P9b-6) |
+| Review queue and publishing | Does the review queue move: how many drafts become products, and who approves them? | Whether publishing needs bulk approval, and later whether the AI proposals of phase 10 are being approved or ignored. | `tendero.catalog.products.published` | emitted |
+| Stock and reservations | How much held stock never becomes a sale? | The hold's lifetime, and whether the expiry sweep the domain has a state for is worth building. | `tendero.inventory.reservations` | emitted |
 | Catalogue import | Does an import bring products in? | None beyond the run itself. | — An import is an operator's batch, answered by its own result and its span; a counter would say what the result already says. | none |
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
 
@@ -43,7 +42,7 @@ everything here that is not *planned* is emitted.
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
 | WebMCP | Do browser agents use the shop's WebMCP tools, which ones, and do they succeed? | Which tools to keep, extend or drop; a high share of refusals means a tool's contract is wrong for an agent. | `webmcp_tool_invoked` | emitted |
-| MCP server and UCP catalogue | Do external agents call the catalogue over MCP and UCP, which tools, and how often are they refused? | Whether the agent checkout of phase 11 has agents waiting for it, and which binding to build it on first. | `tendero.agent.tool_calls` | planned (P9b-6) |
+| MCP server and UCP catalogue | Do external agents call the catalogue over MCP and UCP, which tools, and how often are they refused? | Whether the agent checkout of phase 11 has agents waiting for it, and which binding to build it on first. | `tendero.agent.tool_calls` | emitted |
 
 ### Platform
 
@@ -55,11 +54,13 @@ everything here that is not *planned* is emitted.
 ## Events
 
 Emitted in the browser through `Telemetry.trackEvent`, whose types are generated
-from this plan (`libs/shared/telemetry/src/lib/generated/tracked-events.ts`).
+from this plan (`libs/shared/telemetry/src/lib/generated/tracked-events.ts`). A
+*behavioural* event is dropped until the shopper grants analytics consent; a
+*technical* one is not.
 
 ### `webmcp_tool_invoked`
 
-browser event. A browser agent called one of the shop's WebMCP tools. Emitted with actor `webmcp`.
+browser event, behavioural. A browser agent called one of the shop's WebMCP tools. Emitted with actor `webmcp`.
 
 Answers:
 
@@ -69,6 +70,18 @@ Answers:
 |---|---|---|---|
 | `tool` | string | — | The tool's registered name; never its arguments. |
 | `outcome` | string | `answered`, `refused`, `failed` | Refused is the shop saying no; failed is the tool breaking. |
+
+### `product_viewed`
+
+browser event, behavioural. A shopper opened a product page. Only with analytics consent.
+
+Answers:
+
+- **Product page** — How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `arrived_from` | string | `search`, `category`, `home`, `other`, `direct` | The page before this one, by kind; direct when there was none in this tab. |
 
 ## Metrics
 
@@ -109,36 +122,38 @@ No attributes.
 
 ### `tendero.search.requests`
 
-counter, unit `{search}` · **planned, P9b-6**. Searches answered, by who asked, through what, and whether anything came back.
+counter, unit `{search}`. Searches answered, by who asked, through what, typed or browsed, and whether anything came back.
 
 Answers:
 
-- **Search** — What share of searches finds nothing, and is it worse for agents than for people?
-- **Filters** — Do shoppers narrow a search with facets, or does the query alone do the work?
+- **Search** — What share of typed searches finds nothing, and is it worse for agents than for people?
+- **Browsing by category** — Do people browse the taxonomy, or go straight to search?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `actor.kind` | string | `human`, `agent` | From the authenticated principal (ADR 0036). |
-| `surface` | string | `web`, `webmcp`, `mcp`, `ucp` | The door the request came through. |
+| `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
+| `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
+| `mode` | string | `query`, `browse` | Query when text was typed; browse when it was not — a category page, a home-page row. |
+| `category` | boolean | — | Whether the search was narrowed to a category. |
 | `result` | string | `found`, `empty` | Whether the first page had any product. |
-| `filtered` | boolean | — | Whether at least one facet narrowed the search. |
 
 ### `tendero.carts.created`
 
-counter, unit `{cart}` · **planned, P9b-6**. Carts opened. Against placed orders, it is abandonment: nothing sets a cart to Abandoned yet, so the difference is the measure.
+counter, unit `{cart}`. Carts opened. Against placed orders, it is abandonment: nothing sets a cart to Abandoned yet, so the difference is the measure.
 
 Answers:
 
+- **Product page** — How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
 - **Cart** — How many carts never become an order, and whose?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `actor.kind` | string | `human`, `agent` | From the authenticated principal (ADR 0036). |
-| `surface` | string | `web`, `webmcp`, `mcp`, `ucp` | The door the request came through. |
+| `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
+| `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
 
 ### `tendero.checkout.attempts`
 
-counter, unit `{attempt}` · **planned, P9b-6**. Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.
+counter, unit `{attempt}`. Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.
 
 Answers:
 
@@ -148,14 +163,14 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `actor.kind` | string | `human`, `agent` | From the authenticated principal (ADR 0036). |
-| `surface` | string | `web`, `webmcp`, `mcp`, `ucp` | The door the request came through. |
-| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable` | PlaceOrderOutcome, one to one. |
+| `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
+| `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
+| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable` | PlaceOrderOutcome, labelled by MetricLabels. |
 | `discounted` | boolean | — | Whether any promotion applied to the order. |
 
 ### `tendero.returns.requested`
 
-counter, unit `{return}` · **planned, P9b-6**. Return requests by their reason: the closed set of five the domain keeps for exactly this analysis.
+counter, unit `{line}`. Lines of the returns opened, by their reason: the closed set of five the domain keeps for exactly this analysis.
 
 Answers:
 
@@ -163,11 +178,11 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `reason` | string | `wrong_size`, `not_as_described`, `damaged`, `wrong_item`, `changed_mind` | ReturnReason, one to one. |
+| `reason` | string | `wrong_size`, `not_as_described`, `damaged`, `wrong_item`, `changed_mind` | ReturnReason, labelled by MetricLabels. |
 
 ### `tendero.catalog.products.published`
 
-counter, unit `{product}` · **planned, P9b-6**. Products moved from Draft to Active.
+counter, unit `{product}`. Products moved from Draft to Active.
 
 Answers:
 
@@ -175,11 +190,11 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `actor.kind` | string | `human`, `agent` | From the authenticated principal (ADR 0036). |
+| `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
 
 ### `tendero.inventory.reservations`
 
-counter, unit `{reservation}` · **planned, P9b-6**. Reservation transitions, by the state they reach.
+counter, unit `{reservation}`. Reservation transitions, by the state they reach.
 
 Answers:
 
@@ -187,11 +202,11 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `status` | string | `held`, `committed`, `released`, `expired` | ReservationStatus, one to one. |
+| `status` | string | `held`, `committed`, `released`, `expired` | ReservationStatus, labelled by MetricLabels. Expired is never recorded yet: nothing expires a hold. |
 
 ### `tendero.agent.tool_calls`
 
-counter, unit `{call}` · **planned, P9b-6**. Calls from external agents to the MCP tools and the UCP catalogue operations.
+counter, unit `{call}`. Calls from external agents to the MCP tools and the UCP catalogue operations.
 
 Answers:
 

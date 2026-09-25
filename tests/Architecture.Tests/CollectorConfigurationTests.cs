@@ -76,6 +76,21 @@ public sealed class CollectorConfigurationTests
         return string.Join('\n', body);
     }
 
+    /// <summary>
+    /// Without a zero at each series' start, a counter whose first export already
+    /// carries its increments reads 0 under <c>increase()</c> — found live in
+    /// P9b-6, when the Shop pulse showed two orders and a conversion of 0 %.
+    /// </summary>
+    [Fact]
+    public void Prometheus_writes_a_zero_where_each_counter_starts()
+    {
+        var appHost = File.ReadAllText(Path.Combine(RepositoryRoot(), "src", "AppHost", "AppHost.cs"));
+
+        Assert.Matches(
+            new Regex(@"WithEnvironment\(""PROMETHEUS_EXTRA_ARGS"",\s*""[^""]*--enable-feature=created-timestamp-zero-ingestion"),
+            appHost);
+    }
+
     private static string RepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

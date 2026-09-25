@@ -68,6 +68,12 @@
     "unavailable": "The payment provider did not answer. Try again in a moment.",
     "unserved": "This shop does not deliver to {{country}} yet."
   },
+  "consent": {
+    "title": "Help us improve the shop.",
+    "body": "With your permission we record what you do here — which products you open, what brings you to them — without your name or anything that identifies you. Saying no changes nothing about the shop.",
+    "accept": "Allow",
+    "decline": "Don't allow"
+  },
   "nav": {
     "account": "Your account",
     "cart": "Cart",

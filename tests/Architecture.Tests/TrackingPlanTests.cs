@@ -123,6 +123,52 @@ public sealed class TrackingPlanTests
         Assert.True(identifiers.Length == 0, $"Attributes that name an id: {string.Join(", ", identifiers)}.");
     }
 
+    /// <summary>
+    /// A behavioural event waits for analytics consent; a technical one does not
+    /// (ADR 0036). The facade reads the class from the generated types, so an
+    /// event that did not say which it is would have no rule to follow.
+    /// </summary>
+    [Fact]
+    public void Every_event_says_whether_it_needs_consent()
+    {
+        var unclassified = ThePlan.Events
+            .Where(e => e.Consent is not ("behavioural" or "technical"))
+            .Select(e => e.Name);
+
+        Assert.Empty(unclassified);
+    }
+
+    /// <summary>
+    /// An attribute taken from an enum lists exactly that enum's members, in
+    /// <see cref="MetricLabels"/>' spelling — the one the code records them in.
+    /// A member added to the enum is a label the plan has not explained, and
+    /// this is where that stops being silent.
+    /// </summary>
+    [Fact]
+    public void An_attribute_taken_from_an_enum_lists_exactly_its_members()
+    {
+        var enums = Solution.All.SelectMany(LoadableTypes).Where(type => type.IsEnum).ToLookup(type => type.Name);
+
+        var disagreements = AllSignals
+            .SelectMany(signal => signal.Attributes.Select(attribute => (signal, attribute.Key, attribute.Value)))
+            .Where(entry => entry.Value.TryGetProperty("from", out _))
+            .Select(entry =>
+            {
+                var name = entry.Value.GetProperty("from").GetString()!;
+                var type = Assert.Single(enums[name]);
+                var members = Enum.GetNames(type).Select(MetricLabels.SnakeCase).Order(StringComparer.Ordinal);
+                var values = entry.Value.GetProperty("values").EnumerateArray().Select(v => v.GetString()!).Order(StringComparer.Ordinal);
+
+                return members.SequenceEqual(values)
+                    ? null
+                    : $"{entry.signal.Name}.{entry.Key} lists [{string.Join(", ", values)}], {name} has [{string.Join(", ", members)}]";
+            })
+            .OfType<string>()
+            .ToArray();
+
+        Assert.True(disagreements.Length == 0, string.Join("; ", disagreements));
+    }
+
     // ------------------------------------------------------------- the backend
 
     [Fact]
@@ -173,6 +219,45 @@ public sealed class TrackingPlanTests
             .ToArray();
 
         Assert.True(instance.Length == 0, $"Instruments or meters in instance fields: {string.Join(", ", instance)}.");
+    }
+
+    /// <summary>
+    /// A dashboard panel over a metric nobody emits is a panel that draws
+    /// "No data" forever and looks like a quiet shop. Every <c>tendero_*</c>
+    /// series a provisioned dashboard reads is a live metric of the plan, in
+    /// the name Prometheus gives it: dots to underscores, <c>_total</c> on a
+    /// counter, the unit on a histogram (<c>tendero_outbox_lag_seconds_bucket</c>).
+    /// </summary>
+    [Fact]
+    public void Every_tendero_series_a_dashboard_reads_is_a_live_metric()
+    {
+        var dashboards = Directory.GetFiles(
+            Path.Combine(RepositoryRoot(), "src", "AppHost", "observability", "dashboards"), "*.json");
+        var read = dashboards
+            .SelectMany(file => Regex.Matches(File.ReadAllText(file), @"\btendero_[a-z_]+").Select(match => match.Value))
+            .ToHashSet(StringComparer.Ordinal);
+
+        var served = ThePlan.Metrics
+            .Where(metric => metric.Planned is null)
+            .SelectMany(PrometheusNames)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.NotEmpty(dashboards);
+        Assert.NotEmpty(read);
+        Assert.True(!read.Except(served).Any(),
+            $"Dashboards read series no live metric produces: {string.Join(", ", read.Except(served).Order())}.");
+    }
+
+    private static IEnumerable<string> PrometheusNames(Signal metric)
+    {
+        var name = metric.Name.Replace('.', '_');
+        return metric.Instrument switch
+        {
+            "counter" => [$"{name}_total"],
+            "histogram" when metric.Unit == "s" => [$"{name}_seconds_bucket", $"{name}_seconds_count", $"{name}_seconds_sum"],
+            "histogram" => [$"{name}_bucket", $"{name}_count", $"{name}_sum"],
+            _ => [name]
+        };
     }
 
     // ------------------------------------------------------------- the frontend
@@ -261,6 +346,7 @@ public sealed class TrackingPlanTests
         string Name,
         string Description,
         string? Planned,
+        string? Consent,
         string? Instrument,
         string? Unit,
         Dictionary<string, JsonElement> Attributes);

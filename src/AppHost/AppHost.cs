@@ -302,6 +302,12 @@ var observability = string.Equals(builder.Configuration["Tendero:Observability"]
 var grafanaStack = builder.AddContainer("observability", "grafana/otel-lgtm", "0.33.1")
     .WithBindMount(Path.Combine(builder.AppHostDirectory, "observability", "otelcol-config.yaml"),
         "/otel-lgtm/otelcol-config.yaml", isReadOnly: true)
+    // The Shop pulse and whatever follows it: dashboards are files in the
+    // repository, provisioned read-only, never state kept in the volume.
+    .WithBindMount(Path.Combine(builder.AppHostDirectory, "observability", "dashboards.yaml"),
+        "/otel-lgtm/grafana/conf/provisioning/dashboards/tendero.yaml", isReadOnly: true)
+    .WithBindMount(Path.Combine(builder.AppHostDirectory, "observability", "dashboards"),
+        "/otel-lgtm/tendero-dashboards", isReadOnly: true)
     .WithVolume("tendero-observability-data", "/data")
     .WithHttpEndpoint(targetPort: 3000, port: grafanaPort, name: "grafana")
     .WithEndpoint(targetPort: 4317, port: collectorGrpcPort, name: "otlp-grpc", scheme: "http")
@@ -313,6 +319,12 @@ var grafanaStack = builder.AddContainer("observability", "grafana/otel-lgtm", "0
     // keeping is a secret that should not be here.
     .WithEnvironment("GF_AUTH_ANONYMOUS_ENABLED", "true")
     .WithEnvironment("GF_AUTH_ANONYMOUS_ORG_ROLE", "Admin")
+    // A counter born with its first increments already in it — two orders in
+    // one export interval — has no zero before it, and `increase()` over it
+    // reads 0: the Shop pulse showed two orders placed and a conversion of 0.
+    // With this, Prometheus writes a zero at each series' start time, which
+    // OTLP carries on every cumulative point.
+    .WithEnvironment("PROMETHEUS_EXTRA_ARGS", "--enable-feature=created-timestamp-zero-ingestion")
     // The dashboard's OTLP address and key, as Aspire hands them to anything it
     // exports for, then renamed for the collector's configuration: it reads
     // single values, and the key arrives as a `name=value` header list.

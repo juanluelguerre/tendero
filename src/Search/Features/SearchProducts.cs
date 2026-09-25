@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.Search.Contracts;
 using FluentValidation;
@@ -79,7 +80,8 @@ public sealed class SearchProductsEndpoint : ICarterModule
 
 public sealed class SearchProductsHandler(
     [FromKeyedServices(SearchStrategies.Hybrid)] ISearchStrategy hybrid,
-    ISearchAnswerer answerer)
+    ISearchAnswerer answerer,
+    IActorAccessor actors)
     : IQueryHandler<SearchProductsQuery, SearchResultPage>
 {
     // Hybrid answers every search since 2026-09-17: SearchVector met its removal
@@ -93,8 +95,33 @@ public sealed class SearchProductsHandler(
         var search = new ProductSearchQuery(query.Q, query.Culture, query.Page, query.PageSize, query.Category, query.Sort);
 
         var page = await hybrid.SearchAsync(search, ct);
+        SearchRequests.Record(query, page, actors.Current);
 
         // What kind of answer it is, once (ADR 0032).
         return page with { Answer = await answerer.AnswerAsync(search, ct) };
     }
+}
+
+/// <summary>
+/// `tendero.search.requests` (the tracking plan): every search answered, by who
+/// asked and through what, whether it was typed or browsed, and whether anything
+/// came back. Here and not in the endpoint because the storefront, the MCP tools
+/// and UCP all dispatch this query, so this is the one place all three pass.
+/// </summary>
+internal static class SearchRequests
+{
+    private static readonly Meter Meter = new(TelemetrySources.Search);
+
+    private static readonly Counter<long> Requests = Meter.CreateCounter<long>(
+        "tendero.search.requests", unit: "{search}",
+        description: "Searches answered, by who asked, through what, and whether anything came back.");
+
+    public static void Record(SearchProductsQuery query, SearchResultPage page, Actor actor) =>
+        Requests.Add(1,
+            actor.KindLabel,
+            actor.SurfaceLabel,
+            // Nothing typed is a browse: a category page, a home-page row.
+            new("mode", string.IsNullOrWhiteSpace(query.Q) ? "browse" : "query"),
+            new("category", query.Category is not null),
+            new("result", page.Hits.Count > 0 ? "found" : "empty"));
 }

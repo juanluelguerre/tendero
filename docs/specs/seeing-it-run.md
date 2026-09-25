@@ -52,7 +52,13 @@ comes first so that they are born observed instead of instrumented afterwards.
 - Meters in the slices that own the facts: orders placed, payment outcomes,
   carts created and abandoned, searches and zero-result searches, products
   published, stock movements, WebMCP tool calls — each with `actor.kind` and
-  surface, none with an id as a label.
+  surface, none with an id as a label. **As built (`P9b-6`)**: ten metrics, all
+  in the tracking plan — checkout attempts by outcome (orders and payment
+  outcomes are two of its values), carts created (abandonment is carts against
+  orders: nothing sets a cart to Abandoned), searches by mode, category and
+  result, products published, reservations by state, returned lines by reason,
+  and external agents' tool calls. WebMCP stays a browser event: the server
+  cannot see it (ADR 0036, amended).
 - A Grafana dashboard, **Shop pulse**, on one screen: RED per service with SLO
   burn rate; Web Vitals p75 and JS errors per app; orders per minute, conversion,
   cart abandonment, zero-result rate; the degradation counter; the agent share of

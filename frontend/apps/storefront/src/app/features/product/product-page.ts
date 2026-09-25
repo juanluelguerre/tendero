@@ -6,12 +6,14 @@ import { ProductImagePlaceholder } from '../../product-image-placeholder';
 import { filter, map } from 'rxjs';
 import { CultureStore, DEFAULT_CULTURE, PageTitles } from '@tendero/shared-i18n';
 import type { ProductDetail, VariantView } from '@tendero/shared-api';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
 import { ProductService } from '../../data-access/product.service';
 import { ReturnsPolicy } from '../../data-access/returns-policy.service';
 import { CanonicalLinks } from '../../seo/canonical-links';
 import { ShopLinks } from '../../shop-links';
+import { arrivedFrom } from './arrived-from';
 import {
   availabilityOf,
   initialSelection,
@@ -70,6 +72,10 @@ export class ProductPage {
   private readonly seo = inject(CanonicalLinks);
   private readonly titles = inject(PageTitles);
   private readonly images = inject(ProductImageUrls);
+  private readonly telemetry = inject(Telemetry);
+
+  /** The product last reported as viewed, so an answer in another language is not a second view. */
+  private viewed: string | null = null;
 
   /**
    * The returns promise, and it is the SERVER's number.
@@ -170,6 +176,7 @@ export class ProductPage {
         if (current.status === 'done') {
           this.selection.set(initialSelection(current.product));
           this.shown.set(null);
+          this.reportView(current.product.code);
           this.canonicalise(current.product);
           this.declare(current.product);
         } else if (current.status === 'failed' || current.status === 'notFound') {
@@ -180,6 +187,20 @@ export class ProductPage {
         }
       });
     });
+  }
+
+  /**
+   * `product_viewed` (the tracking plan): once per product, with the kind of
+   * page that led here — read BEFORE the canonical correction below, which is
+   * a navigation of its own and would make this page its own predecessor. The
+   * facade drops it unless the shopper allowed analytics.
+   */
+  private reportView(code: string): void {
+    if (this.viewed === code) return;
+    this.viewed = code;
+
+    const previous = this.router.lastSuccessfulNavigation()?.previousNavigation?.finalUrl;
+    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedFrom(previous) });
   }
 
   /**

@@ -319,8 +319,12 @@ instrumentation and the transport, one per page load, sent to a same-origin
 `/otlp` path. A failed adapter is Noop; telemetry never breaks the shop.
 
 **Who acted is decided on the server.** `actor.kind` (human / agent) and the
-surface (web / webmcp / mcp / ucp) come from the authenticated principal and ride
-on every metric, span and event; no id is ever a Prometheus label.
+surface (web / mcp / ucp) ride on every business metric, computed by the API's
+`IActorAccessor` from the route and the principal — an MCP or UCP caller is an
+agent although both are anonymous; WebMCP inherits the shopper's session, so to
+the server it is the web, and its evidence is the browser's own event (ADR 0036,
+amended). No id is ever a Prometheus label. The *Shop pulse* dashboard is a file
+in `src/AppHost/observability/dashboards/`, provisioned read-only.
 
 **The tracking plan is one file, held at both ends** (`P9b-5`).
 `docs/telemetry/tracking-plan.json` lists every feature with its question and the

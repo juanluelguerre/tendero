@@ -20,4 +20,24 @@ export interface TrackedEvents {
     /** Refused is the shop saying no; failed is the tool breaking. */
     readonly outcome: 'answered' | 'refused' | 'failed';
   };
+
+  /**
+   * A shopper opened a product page. Only with analytics consent.
+   *
+   * Product page: How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
+   * Decides: Where discovery work goes: the search box, the taxonomy or the home page's rows.
+   */
+  readonly product_viewed: {
+    /** The page before this one, by kind; direct when there was none in this tab. */
+    readonly arrived_from: 'search' | 'category' | 'home' | 'other' | 'direct';
+  };
 }
+
+/**
+ * Which events wait for analytics consent. A behavioural event says what a
+ * person did and is dropped until they agree; a technical one is not.
+ */
+export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavioural' | 'technical'>> = {
+  webmcp_tool_invoked: 'behavioural',
+  product_viewed: 'behavioural',
+};

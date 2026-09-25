@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.SharedKernel;
@@ -92,6 +93,7 @@ public sealed class StockLedger(
 
         stock.Add(Reservation.Hold(clock, orderId, lines));
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        ReservationTransitions.Record(ReservationStatus.Held);
 
         activity?.SetTag("inventory.reservation", "held");
         return ReservationOutcome.Held;
@@ -115,6 +117,7 @@ public sealed class StockLedger(
 
         reservation.Commit(clock);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        ReservationTransitions.Record(ReservationStatus.Committed);
     }
 
     public async Task ReleaseAsync(
@@ -133,6 +136,7 @@ public sealed class StockLedger(
 
         reservation.Release(clock, reason);
         await unitOfWork.SaveChangesAsync(cancellationToken);
+        ReservationTransitions.Record(ReservationStatus.Released);
     }
 
     public async Task<bool> IsHeldAsync(OrderId orderId, CancellationToken cancellationToken = default) =>
@@ -251,4 +255,21 @@ public sealed class StockLedger(
             ? $"{request.Sku} is not stocked in any open warehouse."
             : $"{request.Sku}: {request.Quantity} asked for, {total} available.";
     }
+}
+
+/// <summary>
+/// `tendero.inventory.reservations` (the tracking plan): how much held stock
+/// becomes a sale and how much goes back. <c>expired</c> is in the plan and never
+/// recorded yet, because nothing expires a hold: the state and its transition
+/// exist, the sweep does not.
+/// </summary>
+internal static class ReservationTransitions
+{
+    private static readonly Meter Meter = new(TelemetrySources.Inventory);
+
+    private static readonly Counter<long> Transitions = Meter.CreateCounter<long>(
+        "tendero.inventory.reservations", unit: "{reservation}", description: "Reservation transitions, by the state they reach.");
+
+    public static void Record(ReservationStatus status) =>
+        Transitions.Add(1, new KeyValuePair<string, object?>("status", MetricLabels.Of(status)));
 }

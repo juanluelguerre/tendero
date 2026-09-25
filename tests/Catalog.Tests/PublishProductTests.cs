@@ -15,7 +15,11 @@ namespace ElGuerre.Tendero.Catalog.Tests.Features;
 /// A deterministic fake rather than NSubstitute: the repository has behaviour (it
 /// saves, finds, counts saves) and a double with behaviour reads better than
 /// three chained Returns() (docs/testing.md).
+///
+/// Serial, because two of these listen to `tendero.catalog.products.published`,
+/// a static counter every other test here would add to.
 /// </summary>
+[Collection(PublishMetricsCollection.Name)]
 public sealed class PublishProductTests
 {
     private static readonly TestClock Clock = new();
@@ -50,6 +54,27 @@ public sealed class PublishProductTests
         // calling Publish() again would emit another ProductUpserted and set the
         // indexing worker to work leaving the index exactly as it was.
         Assert.Equal(0, unitOfWork.SaveCount);
+    }
+
+    /// <summary>
+    /// `tendero.catalog.products.published` (the tracking plan): a real Draft →
+    /// Active counts, by who did it; publishing what is already live does not.
+    /// </summary>
+    [Fact]
+    public async Task Only_a_real_publication_is_counted_and_by_whom()
+    {
+        using var heard = new InstrumentRecorder("tendero.catalog.products.published");
+        var draft = ADraftProduct();
+        var live = ADraftProduct();
+        live.Publish(Clock);
+        var handler = new PublishProductHandler(
+            new InMemoryProductRepository(draft, live), new CountingUnitOfWork(), Clock,
+            new GivenActor(new Actor(ActorKinds.Human, Surfaces.Web)));
+
+        await handler.HandleAsync(new PublishProductCommand(draft.Id), TestContext.Current.CancellationToken);
+        await handler.HandleAsync(new PublishProductCommand(live.Id), TestContext.Current.CancellationToken);
+
+        Assert.Equal("human", Assert.Single(heard.Of("tendero.catalog.products.published"))["actor.kind"]);
     }
 
     [Fact]
@@ -99,7 +124,7 @@ public sealed class PublishProductTests
         InMemoryProductRepository repository, out CountingUnitOfWork unitOfWork)
     {
         unitOfWork = new CountingUnitOfWork();
-        return new PublishProductHandler(repository, unitOfWork, Clock);
+        return new PublishProductHandler(repository, unitOfWork, Clock, new SystemActorAccessor());
     }
 
     private static Product ADraftProduct() =>
@@ -107,4 +132,15 @@ public sealed class PublishProductTests
             LocalizedText.From("es", "Cafetera italiana 12 tazas"),
             new Money(29.90m, "EUR"));
 
+}
+
+internal sealed class GivenActor(Actor actor) : IActorAccessor
+{
+    public Actor Current => actor;
+}
+
+[CollectionDefinition(Name, DisableParallelization = true)]
+public sealed class PublishMetricsCollection
+{
+    public const string Name = "Publish metrics";
 }

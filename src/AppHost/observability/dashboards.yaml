@@ -1,0 +1,14 @@
+# Tendero's own dashboards, provisioned from the repository (ADR 0036): a panel
+# changed in Grafana's editor is a change to a file here, or it is lost on the
+# next start. Mounted beside the image's own provider file, which keeps its
+# RED and JVM dashboards.
+apiVersion: 1
+
+providers:
+  - name: Tendero
+    folder: Tendero
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /otel-lgtm/tendero-dashboards
+      foldersFromFilesStructure: false

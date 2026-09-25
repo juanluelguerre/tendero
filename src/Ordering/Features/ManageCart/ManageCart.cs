@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -153,7 +154,7 @@ public sealed class AddToCartValidator : AbstractValidator<AddToCartCommand>
 }
 
 public sealed class AddToCartHandler(
-    ICartRepository carts, IPurchasableReader purchasables, IUnitOfWork unitOfWork, TimeProvider clock)
+    ICartRepository carts, IPurchasableReader purchasables, IUnitOfWork unitOfWork, TimeProvider clock, IActorAccessor actors)
     : ICommandHandler<AddToCartCommand, CartOutcome>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -172,6 +173,8 @@ public sealed class AddToCartHandler(
         var cart = command.Token is null
             ? null
             : await carts.FindOpenByTokenAsync(command.Token, cancellationToken);
+
+        var started = cart is null;
 
         if (cart is null)
         {
@@ -209,8 +212,29 @@ public sealed class AddToCartHandler(
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        // Counted once it exists: a cart refused on its first line was never
+        // saved, and is not a cart anybody abandoned.
+        if (started)
+            CartsCreated.Record(actors.Current);
+
         return new CartOutcome(CartResult.Changed, GetCartHandler.View(cart, command.Culture), null);
     }
+}
+
+/// <summary>
+/// `tendero.carts.created` (the tracking plan). Against the orders placed it is
+/// abandonment: nothing sets a cart to <see cref="CartStatus.Abandoned"/> yet —
+/// the state and its transition exist, the sweep does not — so the difference
+/// between the two counts is the measure.
+/// </summary>
+internal static class CartsCreated
+{
+    private static readonly Meter Meter = new(TelemetrySources.Ordering);
+
+    private static readonly Counter<long> Created = Meter.CreateCounter<long>(
+        "tendero.carts.created", unit: "{cart}", description: "Carts opened, by who opened them and through what.");
+
+    public static void Record(Actor actor) => Created.Add(1, actor.KindLabel, actor.SurfaceLabel);
 }
 
 // ---------- Changing and removing ----------
