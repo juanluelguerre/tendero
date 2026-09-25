@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="../Api/ElGuerre.Tendero.Api.csproj" />
     <ProjectReference Include="../Workers/ElGuerre.Tendero.Workers.csproj" />
+    <ProjectReference Include="../../tools/TrafficSim/ElGuerre.Tendero.TrafficSim.csproj" />
   </ItemGroup>
 
 </Project>

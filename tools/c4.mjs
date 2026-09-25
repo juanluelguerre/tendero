@@ -29,6 +29,7 @@ const appHost = join(root, 'src', 'AppHost', 'AppHost.cs');
 const NOT_CONTAINERS = {
   'tendero-db': 'a database inside the postgres container, not a process of its own',
   elasticvue: 'a development tool behind Tendero__Tools, not part of the system',
+  'traffic-sim': 'the traffic simulator (ADR 0037): a customer from outside, started by hand, not part of the system',
   keycloak: 'drawn as the external identity provider it is in production (decided 2026-09-23)',
 };
 

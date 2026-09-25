@@ -82,7 +82,10 @@ comes first so that they are born observed instead of instrumented afterwards.
 
 - Given the simulator is started from the dashboard with a seed, then human
   personas browse in headless browsers and agent personas call MCP and UCP, arriving
-  along a compressed daily curve, until stopped.
+  along a compressed daily curve, until stopped. **As built (`P9b-7`)**:
+  `tools/TrafficSim`, an explicit-start Aspire resource `traffic-sim` with the seed
+  as a parameter; four personas (window shopper, searcher, MCP agent, UCP agent);
+  see `tools/TrafficSim/README.md`.
 - Given the same seed twice, then the same sessions, in the same order, take the
   same steps.
 - Every request, span and event it causes is labelled synthetic (ADR 0037).
