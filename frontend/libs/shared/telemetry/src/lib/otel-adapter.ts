@@ -64,6 +64,9 @@ export function createOtelAdapter(options: OtelAdapterOptions = {}): TelemetryAd
       const resource = resourceFromAttributes({
         'service.name': context.service,
         'service.namespace': 'tendero',
+        // The traffic simulator's browsers say so in their User-Agent (ADR 0037);
+        // everything this page sends then carries OpenTelemetry's own label.
+        ...(isSynthetic() ? { 'user_agent.synthetic.type': 'test' } : {}),
       });
 
       const tracerProvider = new WebTracerProvider({
@@ -198,4 +201,11 @@ function instrumentFetch(provider: WebTracerProvider, endpoint: string, session:
     },
   });
   instrumentation.setTracerProvider(provider);
+}
+
+/** The User-Agent suffix `tools/TrafficSim` adds to every browser it drives. */
+export const SYNTHETIC_USER_AGENT = 'TenderoTrafficSim/';
+
+function isSynthetic(): boolean {
+  return typeof navigator !== 'undefined' && navigator.userAgent.includes(SYNTHETIC_USER_AGENT);
 }

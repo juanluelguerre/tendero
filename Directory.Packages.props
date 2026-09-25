@@ -48,6 +48,20 @@
          layer arriving through the door marked "agent surface" is the right
          door. -->
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+    <!-- The client half, for the traffic simulator's agent personas (ADR 0037).
+         Already in the tree as the package above's own dependency, same version,
+         same Apache-2.0 expression: a direct reference, not a new licence. -->
+    <PackageVersion Include="ModelContextProtocol" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Traffic simulation">
+    <!-- Microsoft.Playwright 1.63.0 - MIT, a licence EXPRESSION in the nuspec;
+         its three dependencies (Microsoft.Bcl.AsyncInterfaces,
+         System.ComponentModel.Annotations, System.Text.Json) are Microsoft's
+         and MIT. Tier 1, approved by the author on 2026-09-24 (ADR 0037), and
+         referenced only by tools/TrafficSim: the shop never links it. It
+         downloads its browsers on first use, outside the repository. -->
+    <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
   </ItemGroup>
 
   <ItemGroup Label="Persistence">

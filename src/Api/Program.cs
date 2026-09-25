@@ -110,6 +110,7 @@ builder.Services.AddProblemDetails();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+app.UseSyntheticTrafficLabels();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

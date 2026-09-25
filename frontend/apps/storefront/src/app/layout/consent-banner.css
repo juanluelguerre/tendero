@@ -1,8 +1,10 @@
-/* Fixed to the foot of the viewport, above the content and below the sticky
-   header's layer, so it never covers the search box people came for. */
+/* Sticky to the foot of the viewport rather than fixed: it stays in view while
+   the page scrolls, and at the end of the page it takes its own place after the
+   footer instead of lying over the last of the content — fixed, it hid the
+   cart's totals (found by the checkout e2e, P9b-7). Below the sticky header's
+   layer, so it never covers the search box people came for. */
 .consent {
-  position: fixed;
-  inset-inline: 0;
+  position: sticky;
   inset-block-end: 0;
   z-index: 5;
   background: var(--bg-surface);

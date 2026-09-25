@@ -574,6 +574,29 @@ if (observability)
     backoffice.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
 }
 
+// SIMULATED TRAFFIC (ADR 0037), listed and never started by itself.
+//
+// A shop with no customers gets simulated ones: people in headless browsers
+// through the storefront, agents over MCP and UCP, from one declared model and
+// one seed. Start it from the dashboard; stop it the same way. It is sized for
+// plausibility, not load — a few sessions a minute at the simulated day's peak —
+// and every request it makes says it is synthetic.
+//
+// The seed is a parameter with a fixed default, so a run is reproducible out of
+// the box and another is one configuration value away
+// (`Parameters:traffic-sim-seed`). A day lasts an hour of real time.
+var trafficSeed = builder.AddParameter("traffic-sim-seed", "20260925");
+
+var trafficSim = builder.AddProject<Projects.ElGuerre_Tendero_TrafficSim>("traffic-sim")
+    .WithReference(api)
+    .WithReference(storefront.GetEndpoint("http"))
+    .WithEnvironment("TrafficSim__Seed", trafficSeed)
+    .WithEnvironment("TrafficSim__DayLength", "01:00:00")
+    .WithExplicitStart();
+
+if (observability)
+    trafficSim.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", grafanaStack.GetEndpoint("otlp-http"));
+
 // The worker does NOT wait for the API: it does not depend on it. That was there
 // to tidy the dashboard, and the invented dependency left it blocked on
 // "Waiting" with the outbox undrained. A declared dependency that does not exist

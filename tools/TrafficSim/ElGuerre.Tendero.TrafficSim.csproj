@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- A shop with no customers gets simulated ones (ADR 0037): people in
+       headless browsers, agents over MCP and UCP, from one declared model and
+       one seed. A tool beside the shop, never part of it: it references nothing
+       of the shop's code but its telemetry defaults, and talks to it only as a
+       customer would. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ElGuerre.Tendero.TrafficSim</RootNamespace>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- The questions people type are the golden set's, read where SearchEval
+       keeps them rather than copied. -->
+  <ItemGroup>
+    <EmbeddedResource Include="../SearchEval/golden/es.json" LogicalName="ElGuerre.Tendero.TrafficSim.golden.es.json" />
+    <EmbeddedResource Include="../SearchEval/golden/en.json" LogicalName="ElGuerre.Tendero.TrafficSim.golden.en.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Playwright" />
+    <PackageReference Include="ModelContextProtocol" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/ServiceDefaults/ElGuerre.Tendero.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
