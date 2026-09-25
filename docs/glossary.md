@@ -546,6 +546,8 @@ every conversion counts. Its source of truth is domain events, not clicks. The
 **tracking plan** is the versioned list of every event, with its schema, the
 question it answers and the decision its value would change; the question every
 feature answers is *which event proves it is used, and that it is worth it?*
+Tendero's is `docs/telemetry/tracking-plan.json`, and it holds metrics as well as
+events: on the server the proof is usually a counter.
 
 ### Synthetic monitoring, load testing, traffic simulation
 

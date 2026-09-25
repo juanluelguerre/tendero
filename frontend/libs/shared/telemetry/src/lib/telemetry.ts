@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import type { TrackedEvents } from './generated/tracked-events';
 import { noopAdapter } from './noop-adapter';
 
 /**
@@ -9,21 +10,9 @@ import { noopAdapter } from './noop-adapter';
  */
 export type ActorKind = 'human' | 'webmcp';
 
-/**
- * Every event the frontends emit, by name, with its attributes.
- *
- * Typed so that an event nobody planned does not compile. `P9b-5` generates this
- * map from the tracking plan, where each event also says the question it answers
- * and the decision its value would change; until then it holds the one event
- * this phase needs.
- */
-export interface TrackedEvents {
-  /** A browser agent called one of the shop's WebMCP tools. */
-  readonly webmcp_tool_invoked: {
-    readonly tool: string;
-    readonly outcome: 'answered' | 'refused' | 'failed';
-  };
-}
+// Generated from docs/telemetry/tracking-plan.json by tools/tracking-plan.mjs:
+// an event nobody planned does not compile.
+export type { TrackedEvents } from './generated/tracked-events';
 
 export type TrackedEventName = keyof TrackedEvents;
 

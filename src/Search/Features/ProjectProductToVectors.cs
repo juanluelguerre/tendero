@@ -69,6 +69,7 @@ internal static class VectorProjectionFailures
 
     private static readonly Counter<long> Failed = Meter.CreateCounter<long>(
         "tendero.search.vector_projection.failed",
+        unit: "{change}",
         description: "Product changes the vector layer could not take; the lexical index took them.");
 
     public static void Record(ILogger logger, Exception exception, ProductId productId)

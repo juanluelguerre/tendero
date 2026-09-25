@@ -322,6 +322,14 @@ instrumentation and the transport, one per page load, sent to a same-origin
 surface (web / webmcp / mcp / ucp) come from the authenticated principal and ride
 on every metric, span and event; no id is ever a Prometheus label.
 
+**The tracking plan is one file, held at both ends** (`P9b-5`).
+`docs/telemetry/tracking-plan.json` lists every feature with its question and the
+decision it would change, and every event and metric that answers one;
+`tools/tracking-plan.mjs` renders it for people (`tracking-plan.md`) and for the
+browser (the event types), and `TrackingPlanTests` finds every Tendero instrument
+by reflection and every `trackEvent` call by text, and fails on either side of a
+disagreement.
+
 **Traffic in the laboratory is simulated** (ADR 0037): `tools/TrafficSim`, seeded,
 people in headless browsers and agents over MCP and UCP, every request labelled
 synthetic. Tools weighed: [`analysis/observability-tooling.md`](analysis/observability-tooling.md).

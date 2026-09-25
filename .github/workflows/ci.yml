@@ -199,6 +199,14 @@ jobs:
           npm run generate:api-types
           git diff --exit-code -- libs/shared/api/src/lib/generated/
 
+      # The tracking plan (ADR 0036) renders the browser's event types and its
+      # own document; both are committed, so the same regenerate-and-diff. The
+      # agreement between the plan and the code is TrackingPlanTests' job.
+      - name: The tracking plan's generated types and document are current
+        run: |
+          node ../tools/tracking-plan.mjs
+          git diff --exit-code -- libs/shared/telemetry/src/lib/generated/ ../docs/telemetry/
+
       # The C4 model (ADR 0035): LikeC4 validates it, the script holds its
       # containers to the AppHost's resources, and the diff holds the committed
       # diagrams to the model. Node is already here, and LikeC4 runs through npx

@@ -221,7 +221,7 @@ internal static class SearchDegradation
     private static readonly Meter Meter = new(TelemetrySources.Search);
 
     private static readonly Counter<long> Degraded = Meter.CreateCounter<long>(
-        CounterName, description: "Searches answered without one of their AI stages, by stage.");
+        CounterName, unit: "{search}", description: "Searches answered without one of their AI stages, by stage.");
 
     public static void Record(Activity? activity, string stage, Exception exception, ILogger logger)
     {
