@@ -61,13 +61,16 @@ public sealed class ShopModelTests
     /// <summary>
     /// The published rates, emerging from the chains rather than being written
     /// into them: sessions that add to cart, carts that never become an order,
-    /// sessions that end in one. Over human sessions, weighted by arrival share —
-    /// agents do not buy until phase 11.
+    /// sessions that end in one. Over the people who come to shop, weighted by
+    /// arrival share — not the agents, who do not buy until phase 11, nor the
+    /// customers coming back to an order, nor the shopkeeper.
     /// </summary>
     [Fact]
     public void The_people_add_to_cart_abandon_and_convert_at_the_published_rates()
     {
-        var humans = ShopModel.Personas.Where(persona => persona.Kind == PersonaKind.Human).ToArray();
+        var humans = ShopModel.Personas
+            .Where(persona => persona.Kind == PersonaKind.Human && persona.Transitions.ContainsKey(Step.Product))
+            .ToArray();
         var total = humans.Sum(persona => persona.Share.Value);
 
         double added = 0, paid = 0, ordered = 0;
@@ -173,5 +176,22 @@ public sealed class ShopModelTests
     public void The_queries_are_the_golden_sets(string culture)
     {
         Assert.True(GoldenQueries.In(culture).Count >= 20, $"Only {GoldenQueries.In(culture).Count} {culture} queries embedded.");
+    }
+
+    /// <summary>Every return a journey draws is a reason the domain knows, by its enum name.</summary>
+    [Fact]
+    public void Return_reasons_are_the_domains_five()
+    {
+        Assert.Equal(
+            ["ChangedMind", "Damaged", "NotAsDescribed", "WrongItem", "WrongSize"],
+            ShopModel.ReturnReasons.Value.Select(reason => reason.Reason).Order());
+
+        var drawn = Enumerable.Range(0, 2000)
+            .Select(i => Journey.Draw(i, Seeds.ForSession(7, i), ShopModel.Returner, _ => []))
+            .Where(journey => journey.Steps.Any(step => step.Step == Step.RequestReturn))
+            .ToArray();
+
+        Assert.NotEmpty(drawn);
+        Assert.All(drawn, journey => Assert.NotNull(journey.ReturnReason));
     }
 }

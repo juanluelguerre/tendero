@@ -23,7 +23,8 @@ public sealed record Journey(
     IReadOnlyList<JourneyStep> Steps,
     IReadOnlyList<string> Queries,
     IReadOnlyList<bool> CardDeclines,
-    string? AbandonmentReason)
+    string? AbandonmentReason,
+    string? ReturnReason = null)
 {
     /// <summary>Hard stop for a chain that keeps looping: no real visit is a hundred pages.</summary>
     public const int MaxSteps = 40;
@@ -71,11 +72,13 @@ public sealed record Journey(
         }
 
         var abandoned = steps.Any(step => step.Step == Step.AddToCart) && !steps.Any(step => step.Step == Step.Pay);
+        var returns = steps.Any(step => step.Step == Step.RequestReturn);
 
         return new Journey(
             index, seed, persona,
             culture, grantsConsent, steps, drawn, declines,
-            AbandonmentReason: abandoned ? Weighted(random, ShopModel.AbandonmentReasons.Value) : null);
+            AbandonmentReason: abandoned ? Weighted(random, ShopModel.AbandonmentReasons.Value) : null,
+            ReturnReason: returns ? Weighted(random, ShopModel.ReturnReasons.Value) : null);
     }
 
     private static Step Next(Random random, Persona persona, Step from)
@@ -100,7 +103,7 @@ public sealed record Journey(
         if (first)
             return TimeSpan.Zero;
 
-        var mean = kind == PersonaKind.Human ? ShopModel.ThinkTimeMeanSeconds.Value : ShopModel.AgentPauseMeanSeconds.Value;
+        var mean = kind == PersonaKind.Agent ? ShopModel.AgentPauseMeanSeconds.Value : ShopModel.ThinkTimeMeanSeconds.Value;
         var seconds = Math.Min(-mean * Math.Log(1 - random.NextDouble()), ShopModel.ThinkTimeCapSeconds.Value);
         return TimeSpan.FromSeconds(seconds);
     }

@@ -25,7 +25,7 @@ dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42 --TrafficSim:Sessi
 | `TrafficSim:StartHour` | the machine's hour | where in the day the run starts |
 | `TrafficSim:MaxBrowsers` | `6` | browser sessions at once; the rest wait, none is dropped |
 | `TrafficSim:Sessions` | unset | stop after this many sessions |
-| `TrafficSim:Storefront`, `:Api` | from Aspire, else `localhost:4200`, `:5130` | where to go |
+| `TrafficSim:Storefront`, `:Backoffice`, `:Api` | from Aspire, else `localhost:4200`, `:4201`, `:5130` | where to go |
 
 Playwright installs its Chromium on the first run. With
 `OTEL_EXPORTER_OTLP_ENDPOINT` set, the run's and each session's spans go to the
@@ -34,8 +34,10 @@ collector.
 ## How it works
 
 - **The model** (`Model/`): each persona is a Customer Behavior Model Graph
-  (Menascé), a Markov chain over page types. Two people — a window shopper and a
-  searcher — and two agents, over MCP and over UCP's REST binding. The transition
+  (Menascé), a Markov chain over page types. Two people who come to shop — a
+  window shopper and a searcher —, a customer coming back to an order to return
+  it, the shopkeeper in the backoffice (who ships and delivers, so that there is
+  anything to return), and two agents, over MCP and over UCP's REST binding. The transition
   probabilities are ours; `ShopModelTests` walks each person 200 000 times and
   holds what they add up to — add to cart ~6 %, abandonment ~70.22 % (Baymard),
   conversion 1.6–2.9 % — to the published rates.
