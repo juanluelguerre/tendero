@@ -60,6 +60,8 @@ public static class TenderoMcpServer
             // different shapes under names the specification fixes. Both on one
             // server because MapMcp offers one server per process.
             .WithTools<UcpCatalogTools>()
+            // Every call counted once, by tool and outcome (the tracking plan).
+            .WithRequestFilters(filters => filters.AddCallToolFilter(ToolCallCounting.Filter))
             .Services;
 
     public static IEndpointConventionBuilder MapTenderoMcp(this IEndpointRouteBuilder endpoints) =>

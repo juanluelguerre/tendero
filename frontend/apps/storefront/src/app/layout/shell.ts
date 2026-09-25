@@ -5,6 +5,7 @@ import { AgentTools } from '@tendero/shared-agent';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
 import { StorefrontTools } from '../agent/storefront-tools';
 import { CartStore } from '../data-access/cart.service';
+import { ConsentBanner } from './consent-banner';
 
 /**
  * The storefront shell. It is NOT shared with the backoffice: one is roomy and
@@ -17,7 +18,7 @@ import { CartStore } from '../data-access/cart.service';
  */
 @Component({
   selector: 'storefront-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective, ConsentBanner],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering.Contracts;
@@ -125,6 +126,7 @@ public sealed class RequestReturnHandler(
 
             returns.Add(request);
             await unitOfWork.SaveChangesAsync(cancellationToken);
+            ReturnedLines.Record(request);
 
             activity?.SetTag("returns.id", request.Id.ToString());
 
@@ -461,5 +463,25 @@ public sealed class ReturnEndpoints : ICarterModule
                 };
             })
             .WithName("DecideReturn");
+    }
+}
+
+/// <summary>
+/// `tendero.returns.requested` (the tracking plan): each line of an opened
+/// return, by its reason. The five reasons are a closed set for exactly this
+/// analysis — wrong size and not as described are the product reasoning layer's
+/// case, damaged and wrong item the warehouse's.
+/// </summary>
+internal static class ReturnedLines
+{
+    private static readonly Meter Meter = new(TelemetrySources.Ordering);
+
+    private static readonly Counter<long> Requested = Meter.CreateCounter<long>(
+        "tendero.returns.requested", unit: "{line}", description: "Lines of the returns opened, by their reason.");
+
+    public static void Record(ReturnRequest request)
+    {
+        foreach (var line in request.Lines)
+            Requested.Add(1, new KeyValuePair<string, object?>("reason", MetricLabels.Of(line.Reason)));
     }
 }

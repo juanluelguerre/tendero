@@ -2,6 +2,7 @@ using System.Security.Claims;
 using ElGuerre.Tendero.Accounts.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ElGuerre.Tendero.Api;
@@ -58,6 +59,11 @@ public static class AuthenticationExtensions
 
         services.AddHttpContextAccessor();
         services.AddScoped<IPrincipalAccessor, HttpPrincipalAccessor>();
+
+        // And who acted, for the business metrics: replaces the kernel's
+        // system default, whichever of the two was registered first.
+        services.RemoveAll<IActorAccessor>();
+        services.AddScoped<IActorAccessor, HttpActorAccessor>();
 
         return services;
     }

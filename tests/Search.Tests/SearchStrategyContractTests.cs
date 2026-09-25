@@ -82,7 +82,7 @@ public sealed class SearchProductsHandlerTests
     {
         var hybrid = new Recording("hybrid");
 
-        await new SearchProductsHandler(hybrid, new FixedAnswer(null))
+        await new SearchProductsHandler(hybrid, new FixedAnswer(null), new SystemActorAccessor())
             .HandleAsync(new SearchProductsQuery("cafetera", "en", Page: 3, PageSize: 7, Category: "KITCHEN", Sort: "newest"), Ct);
 
         Assert.Equal(new ProductSearchQuery("cafetera", "en", 3, 7, "KITCHEN", "newest"), Assert.Single(hybrid.Asked));
@@ -93,7 +93,7 @@ public sealed class SearchProductsHandlerTests
     {
         var expected = new SearchAnswer(SearchMatch.Related);
 
-        var page = await new SearchProductsHandler(new Recording("hybrid"), new FixedAnswer(expected))
+        var page = await new SearchProductsHandler(new Recording("hybrid"), new FixedAnswer(expected), new SystemActorAccessor())
             .HandleAsync(new SearchProductsQuery("regalo abuela", "es", 1, 20), Ct);
 
         Assert.Equal(expected, page.Answer);

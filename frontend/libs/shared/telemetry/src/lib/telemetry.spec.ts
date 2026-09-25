@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { AnalyticsConsent } from './consent';
 import { Telemetry, type TelemetryAdapter, type TelemetryContext } from './telemetry';
 
 const context: TelemetryContext = { service: 'storefront', sessionId: 'abc', endpoint: '/otlp' };
@@ -25,8 +26,14 @@ describe('Telemetry, the facade the apps inject', () => {
 
   beforeEach(() => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    localStorage.clear();
     telemetry = TestBed.inject(Telemetry);
+    // Every event planned today is behavioural; these tests are about the
+    // adapter, so the shopper has said yes. Consent has its own block below.
+    TestBed.inject(AnalyticsConsent).grant();
   });
+
+  afterEach(() => localStorage.clear());
 
   it('starts with the no-op, so calls before an adapter has loaded are harmless', () => {
     expect(telemetry.adapterName).toBe('noop');
@@ -75,5 +82,55 @@ describe('Telemetry, the facade the apps inject', () => {
     expect(() => telemetry.withSpan('checkout', work)).toThrow(failure);
     expect(work).toHaveBeenCalledTimes(1);
     expect(telemetry.adapterName).toBe('recording');
+  });
+});
+
+describe('Telemetry and analytics consent', () => {
+  let telemetry: Telemetry;
+  let consent: AnalyticsConsent;
+  let events: string[];
+
+  beforeEach(() => {
+    localStorage.clear();
+    telemetry = TestBed.inject(Telemetry);
+    consent = TestBed.inject(AnalyticsConsent);
+    events = [];
+    telemetry.use(
+      {
+        name: 'recording',
+        start: () => undefined,
+        event: (name) => void events.push(name),
+        error: () => void events.push('error'),
+        span: (_name, _attributes, work) => work(),
+        route: () => undefined,
+      },
+      { service: 'storefront', sessionId: 'abc', endpoint: '/otlp' },
+    );
+  });
+
+  afterEach(() => localStorage.clear());
+
+  it('drops a behavioural event while the shopper has not answered', () => {
+    expect(consent.state()).toBe('unasked');
+
+    telemetry.trackEvent('product_viewed', { arrived_from: 'search' });
+
+    expect(events).toEqual([]);
+  });
+
+  it('drops it when they said no, and sends it when they said yes', () => {
+    consent.deny();
+    telemetry.trackEvent('product_viewed', { arrived_from: 'search' });
+
+    consent.grant();
+    telemetry.trackEvent('product_viewed', { arrived_from: 'category' });
+
+    expect(events).toEqual(['product_viewed']);
+  });
+
+  it('never holds back technical telemetry: an error goes out without consent', () => {
+    telemetry.recordError(new Error('boom'));
+
+    expect(events).toEqual(['error']);
   });
 });

@@ -31,6 +31,11 @@ public static class CqrsServiceCollectionExtensions
         // is not a new dependency.
         services.TryAddSingleton(TimeProvider.System);
 
+        // Who acts, for the business metrics (ADR 0036). The system by default,
+        // so every container a handler is built in — the worker, SearchEval, a
+        // test — can build it; the API registers the request's actor instead.
+        services.TryAddSingleton<IActorAccessor, SystemActorAccessor>();
+
         services.TryAddScoped<ICommandDispatcher, CommandDispatcher>();
         services.TryAddScoped<IQueryDispatcher, QueryDispatcher>();
         services.TryAddScoped<IDomainEventDispatcher, DomainEventDispatcher>();

@@ -68,6 +68,12 @@
     "unavailable": "El proveedor de pago no ha respondido. Inténtalo dentro de un momento.",
     "unserved": "Esta tienda todavía no envía a {{country}}."
   },
+  "consent": {
+    "title": "Ayúdanos a mejorar la tienda.",
+    "body": "Con tu permiso anotamos lo que haces aquí —qué productos abres y qué te lleva a ellos— sin tu nombre ni nada que te identifique. Si dices que no, la tienda funciona igual.",
+    "accept": "Permitir",
+    "decline": "No permitir"
+  },
   "nav": {
     "account": "Tu cuenta",
     "cart": "Cesta",

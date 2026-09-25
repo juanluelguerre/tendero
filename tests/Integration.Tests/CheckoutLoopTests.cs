@@ -14,6 +14,7 @@ using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Pricing;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Tests;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -303,6 +304,63 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         Assert.Equal(ReturnStatus.Refunded, refunded.Return!.Status);
         Assert.NotNull(refunded.Return.RefundAmount);
         Assert.True(refunded.Return.RefundAmount!.Value.Amount > 0m);
+    }
+
+    /// <summary>
+    /// The loop, counted (the tracking plan, `P9b-6`): what the *Shop pulse*
+    /// draws is these four counters, and a counter is a statement no response
+    /// carries — so the test listens to them. A declined card, a stale price and
+    /// a placed order are three attempts with three outcomes; the cart is counted
+    /// once, when it opens; the hold is counted as it is taken and as it becomes a
+    /// sale; the return by its reason. Everything here is dispatched outside a
+    /// request, so the actor is the system.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task The_loop_is_counted_as_it_happens()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+
+        using var counted = new InstrumentRecorder(
+            "tendero.carts.created", "tendero.checkout.attempts",
+            "tendero.inventory.reservations", "tendero.returns.requested");
+
+        await using var shop = await Shop.OpenAsync(postgres, nameof(The_loop_is_counted_as_it_happens));
+
+        await shop.StockAsync(Sku, 5, ct);
+
+        var cart = await shop.AddToCartAsync(null, Sku, 1, ct);
+        await shop.AddToCartAsync(cart.Token, Sku, 1, ct);
+        var options = await shop.ShippingOptionsAsync(cart.Token, ct);
+        var stale = await shop.QuoteAsync(cart.Token, options.Options[0].Amount, ct);
+        await shop.AddToCartAsync(cart.Token, Sku, 1, ct);
+        var quote = await shop.QuoteAsync(cart.Token, options.Options[0].Amount, ct);
+
+        await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, stale.InputHash, ct);
+        await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, quote.InputHash, ct,
+            instrument: FakePaymentProvider.CardDeclined);
+        var order = (await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, quote.InputHash, ct)).Order!;
+
+        await shop.DrainAsync(ct);
+        await shop.MoveAsync(order.Id, moved => moved.Ship(TimeProvider.System), ct);
+        await shop.DrainAsync(ct);
+        await shop.MoveAsync(order.Id, moved => moved.Deliver(TimeProvider.System), ct);
+        await shop.DrainAsync(ct);
+        await shop.RequestReturnAsync(order.Id, Sku, 1, ct);
+
+        // One cart, however many lines went into it.
+        Assert.Single(counted.Of("tendero.carts.created"),
+            tags => tags["actor.kind"] is "system" && tags["surface"] is "internal");
+
+        Assert.Equal(
+            ["payment_declined", "placed", "price_changed"],
+            counted.Of("tendero.checkout.attempts").Select(tags => (string)tags["outcome"]!).Order());
+
+        Assert.Contains(counted.Of("tendero.inventory.reservations"), tags => tags["status"] is "held");
+        Assert.Contains(counted.Of("tendero.inventory.reservations"), tags => tags["status"] is "committed");
+
+        Assert.Equal("wrong_size", Assert.Single(counted.Of("tendero.returns.requested"))["reason"]);
     }
 
     /// <summary>

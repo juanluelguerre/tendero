@@ -93,3 +93,24 @@ the adapter's size — are written before the first run, as ADR 0033 did.
 - `P12-1` is done here; phase 12 keeps the AI panel and `AiInvocations`.
 - Session replay is out: it needs prior consent and there is no real behaviour to
   replay. Product analytics is first-party and is specified with phase 11.
+
+## Amendment · 2026-09-25 (`P9b-6`)
+
+**WebMCP is not a surface the server can see, and the metrics do not pretend
+otherwise.** Decision 5 listed four surfaces — web, webmcp, mcp, ucp. Building it
+showed the server can tell only three apart: WebMCP runs in the shopper's own tab
+and **inherits their session** (the three trust models in CLAUDE.md), so its
+requests are the web's, by design. A header from the browser could label them,
+and it would be a client asserting a fact the server then reports as its own —
+the one thing decision 5 was written to stop. So on the server `surface` is
+`web | mcp | ucp`, read from the route, and `actor.kind` is `agent` for MCP and
+UCP (both anonymous by decision, so the principal alone would call every external
+agent a person) and for a principal carrying an agent id. WebMCP's evidence is the
+browser's own `webmcp_tool_invoked`, which already existed.
+
+**Consent is in the port, as decision 2 said, and `P9b-4` had left it out.** The
+tracking plan marks each event *behavioural* or *technical*; the facade drops a
+behavioural event until the shopper has said yes, whatever the adapter; errors,
+Web Vitals and spans flow either way. The storefront asks once, at the foot of the
+page, with yes and no the same size.
+

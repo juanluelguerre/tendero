@@ -36,4 +36,8 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Listens to metrics (../InstrumentRecorder.cs), shared like TestClock. -->
+    <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
+  </ItemGroup>
 </Project>

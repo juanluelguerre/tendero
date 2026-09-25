@@ -1,0 +1,32 @@
+/* Fixed to the foot of the viewport, above the content and below the sticky
+   header's layer, so it never covers the search box people came for. */
+.consent {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 5;
+  background: var(--bg-surface);
+  border-block-start: 1px solid var(--border);
+  box-shadow: var(--shadow-pop);
+}
+
+.consent__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+  padding-block: var(--space-4);
+}
+
+.consent__text {
+  flex: 1 1 32rem;
+  margin: 0;
+  color: var(--text);
+  line-height: var(--leading-snug);
+}
+
+.consent__actions {
+  display: flex;
+  gap: var(--space-3);
+}
