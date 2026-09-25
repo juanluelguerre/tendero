@@ -12,7 +12,7 @@
 // anything: it reads a text file and writes Mermaid, and nothing ships with it.
 
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +53,10 @@ function likec4(...args) {
  * relations, no more and no fewer.
  */
 function landingDisagreements(model) {
+  // The landing stays out of the public repository until the two histories
+  // converge (docs/blog/publish-public.ps1), so a public clone has no folder to
+  // check. Only the whole folder missing excuses it: a moved page must still fail.
+  if (!existsSync(join(root, 'landing-page'))) return [];
   const page = readFileSync(join(root, 'landing-page', 'site', 'index.html'), 'utf8');
   const drawn = [...page.matchAll(/data-c4="([^"]+)"/g)].map((m) => m[1]);
   const relationsJson = /<script type="application\/json" id="arch-relations">([\s\S]*?)<\/script>/.exec(page)?.[1];

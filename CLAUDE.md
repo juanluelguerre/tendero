@@ -237,7 +237,7 @@ automatically on four hundred commits.
 ## The public repository
 
 Work happens in **`tendero-workshop`**, which is private. **`tendero`** is public:
-this history with `docs/blog/`, `docs/book/` and `design/unpublished/` filtered out, advanced one article at a time by
+this history with `docs/blog/`, `docs/book/`, `design/unpublished/` and `landing-page/` filtered out, advanced one article at a time by
 `docs/blog/publish-public.ps1`, so a reader gets the code an article describes
 when the article comes out and never the drafts. The filter is deterministic, so
 every publication is a fast-forward — and the day the articles catch up with the
@@ -251,7 +251,12 @@ That holds only while three rules do:
    `design/unpublished/` — the last added on 2026-09-19, where a design artefact
    waits for the article that publishes it, measured the same way: develop
    `660da7de` and both article tags `0955af5a` with two paths and with three,
-   287 commits both times, rev-list identical commit for commit. Removing
+   287 commits both times, rev-list identical commit for commit.
+   `landing-page/` joined on 2026-09-25, at the author's request, although it
+   was already in the history: it first appeared **after everything
+   published**, so only unpublished commits moved — the public develop's 176
+   commits and every article tag came out identical. That exception holds only
+   while no commit containing the path is public. Removing
    a path that appears in no commit yields the same tree, the same parents and
    therefore the same commit — measured on 2026-09-18, when `docs/book/` was
    added and all 273 filtered commits stayed where they were. A path that
@@ -282,7 +287,8 @@ fast-forward. Instead:
 
 **When they converge, the articles do not come with the history** — the filter
 that makes the hashes match is the one that removes `docs/blog/` and
-`docs/book/`. Before the filter runs, `docs/blog/` moves with its history to a
+`docs/book/`. `landing-page/` goes the same way, and comes back to the converged
+repository as an ordinary commit. Before the filter runs, `docs/blog/` moves with its history to a
 private `tendero-blog` repository, and `docs/book/` to one of its own. From then
 on, decided 2026-09-15:
 
