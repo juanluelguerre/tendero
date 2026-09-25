@@ -43,7 +43,12 @@ public sealed class SyntheticTrafficTests
         {
             ShouldListenTo = source => source.Name == "Microsoft.AspNetCore",
             Sample = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllDataAndRecorded,
-            ActivityStopped = heard.Enqueue,
+            // Collected when the span STARTS, not when it stops: the server
+            // closes its span after the response has gone, so a test reading
+            // stopped spans right after the response raced it — green on a
+            // laptop, empty on CI. The labels are set before the response, on
+            // the same object, so reading them afterwards is safe.
+            ActivityStarted = heard.Enqueue,
         };
         ActivitySource.AddActivityListener(listener);
 
