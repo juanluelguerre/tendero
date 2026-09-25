@@ -18,7 +18,7 @@ namespace ElGuerre.Tendero.TrafficSim.Driving;
 /// out, a cart that is empty) is skipped and tagged, never retried: the journey
 /// was drawn up front and the shop's answer does not change it.
 /// </summary>
-public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userAgent)
+public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userAgent, PlacedOrders orders)
 {
     private static readonly TimeSpan Patience = TimeSpan.FromSeconds(20);
 
@@ -59,7 +59,9 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
                     Step.AddToCart => await AddToCartAsync(page),
                     Step.Cart => await GoAsync(page, $"/{culture}/cart"),
                     Step.Checkout => await CheckoutAsync(page, culture),
-                    Step.Pay => await PayAsync(page, declines),
+                    Step.Pay => await PayAsync(page, declines, orders),
+                    Step.OpenOrder => await OpenOrderAsync(page, orders.Pick(random)),
+                    Step.RequestReturn => await RequestReturnAsync(page, journey.ReturnReason),
                     _ => false,
                 };
 
@@ -174,7 +176,7 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
     }
 
     /// <summary>The card the journey drew, then Pay; after a decline, the next one if there is one.</summary>
-    private static async Task<bool> PayAsync(IPage page, Queue<bool> declines)
+    private static async Task<bool> PayAsync(IPage page, Queue<bool> declines, PlacedOrders placed)
     {
         var paid = false;
 
@@ -191,6 +193,7 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
             try
             {
                 await page.WaitForURLAsync("**/orders/**", new() { Timeout = (float)Glance.TotalMilliseconds });
+                placed.Add(new Uri(page.Url).PathAndQuery);
                 paid = true;
                 break;
             }
@@ -201,6 +204,33 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
         }
 
         return paid;
+    }
+
+    /// <summary>A customer comes back to an order this run placed, by its link.</summary>
+    private static async Task<bool> OpenOrderAsync(IPage page, string? path)
+    {
+        if (path is null)
+            return false; // nothing placed yet: nothing to come back to
+
+        await GoAsync(page, path);
+        return true;
+    }
+
+    /// <summary>
+    /// Sends back the first thing left to return, for the reason the journey
+    /// drew. Only a delivered order offers the form: until the shopkeeper has
+    /// delivered it, the step is skipped.
+    /// </summary>
+    private static async Task<bool> RequestReturnAsync(IPage page, string? reason)
+    {
+        var pick = page.Locator(".returnable__pick input[type='checkbox']").First;
+        if (reason is null || !await AppearsAsync(pick, Glance))
+            return false;
+
+        await pick.CheckAsync();
+        await page.Locator(".returnable__detail select").First.SelectOptionAsync(reason);
+        await page.GetByRole(AriaRole.Button, new() { NameRegex = new Regex("request the return|solicitar la devolución", RegexOptions.IgnoreCase) }).ClickAsync();
+        return await AppearsAsync(page.Locator("p.notice--good[role='status']"), Glance);
     }
 
     /// <summary>Whether something shows up within a while: a page renders after its data arrives.</summary>

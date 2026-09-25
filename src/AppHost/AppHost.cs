@@ -590,6 +590,7 @@ var trafficSeed = builder.AddParameter("traffic-sim-seed", "20260925");
 var trafficSim = builder.AddProject<Projects.ElGuerre_Tendero_TrafficSim>("traffic-sim")
     .WithReference(api)
     .WithReference(storefront.GetEndpoint("http"))
+    .WithReference(backoffice.GetEndpoint("http"))
     .WithEnvironment("TrafficSim__Seed", trafficSeed)
     .WithEnvironment("TrafficSim__DayLength", "01:00:00")
     .WithExplicitStart();

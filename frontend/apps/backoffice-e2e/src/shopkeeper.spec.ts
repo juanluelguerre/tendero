@@ -128,6 +128,30 @@ test.describe('the backoffice', () => {
     await expect(row).toContainText(after);
   });
 
+  /**
+   * Publishing, the journey the traffic simulator's shopkeeper walks (ADR 0037).
+   * A draft leaves the queue and is on sale.
+   *
+   * Conditional, and said so: importing never publishes, and re-importing the
+   * seed updates what exists rather than making drafts again, so a laboratory
+   * whose catalogue was published has an empty queue — a legitimate state, the
+   * same one the orders test below allows for.
+   */
+  test('publishing a draft takes it out of the queue', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/review');
+
+    const empty = page.getByText(/Nothing is waiting for review|No hay nada pendiente/);
+    const publish = page.getByRole('button', { name: /^(publish|publicar)$/i });
+    await expect(empty.or(publish.first())).toBeVisible();
+    if (await empty.isVisible()) test.skip(true, 'The review queue is empty: every product is already on sale.');
+
+    const before = await publish.count();
+    await publish.first().click();
+
+    await expect(publish).toHaveCount(before - 1);
+  });
+
   test('the orders table offers only the moves the state machine allows', async ({ page }) => {
     await signIn(page);
     await page.goto('/orders');

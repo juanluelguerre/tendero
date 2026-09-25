@@ -20,6 +20,15 @@ public enum Step
     /// <see cref="Checkout"/> and leaving is the abandonment Baymard measures.</summary>
     Pay,
 
+    // A customer coming back to an order the simulation placed.
+    OpenOrder,
+    RequestReturn,
+
+    // The shopkeeper, in the backoffice.
+    SignIn,
+    MoveOrders,
+    ReviewQueue,
+
     // An agent, over MCP.
     McpSearch,
     McpProduct,

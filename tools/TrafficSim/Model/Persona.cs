@@ -6,7 +6,10 @@ public enum PersonaKind
     Human,
 
     /// <summary>Over a protocol, with no browser: MCP or UCP.</summary>
-    Agent
+    Agent,
+
+    /// <summary>The shop's own people, in a browser, in the backoffice.</summary>
+    Staff
 }
 
 /// <summary>One edge of the graph: from a step, the chance of going to another.</summary>

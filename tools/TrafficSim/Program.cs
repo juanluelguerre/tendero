@@ -24,6 +24,8 @@ builder.Services.AddOptions<SimulationOptions>()
             options.Api = new Uri(api);
         if (builder.Configuration["TrafficSim:Storefront"] is null && builder.Configuration["services:storefront:http:0"] is { } storefront)
             options.Storefront = new Uri(storefront);
+        if (builder.Configuration["TrafficSim:Backoffice"] is null && builder.Configuration["services:backoffice:http:0"] is { } backoffice)
+            options.Backoffice = new Uri(backoffice);
     });
 
 builder.Services.AddHttpClient("api");

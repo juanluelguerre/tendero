@@ -27,6 +27,8 @@ public sealed class SimulationOptions
 
     public Uri Storefront { get; set; } = new("http://localhost:4200");
 
+    public Uri Backoffice { get; set; } = new("http://localhost:4201");
+
     public Uri Api { get; set; } = new("http://localhost:5130");
 
     /// <summary>Stop after this many sessions; unset runs until stopped.</summary>
@@ -69,7 +71,9 @@ public sealed class Simulation(
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
         var userAgent = await UserAgentAsync(browser);
 
-        var people = new BrowserDriver(browser, settings.Storefront, userAgent);
+        var placed = new PlacedOrders();
+        var people = new BrowserDriver(browser, settings.Storefront, userAgent, placed);
+        var staff = new BackofficeDriver(browser, settings.Backoffice, userAgent);
         var agents = new AgentDriver(clients.CreateClient("api"), settings.Api);
         using var seats = new SemaphoreSlim(settings.MaxBrowsers);
         var running = new List<Task>();
@@ -86,7 +90,7 @@ public sealed class Simulation(
 
             var journey = Journey.Draw(arrival.Index, Seeds.ForSession(seed, arrival.Index), arrival.Persona, GoldenQueries.In);
             running.RemoveAll(task => task.IsCompleted);
-            running.Add(RunSessionAsync(journey, new SyntheticLabel(runId, journey.Persona.Name), people, agents, seats, cancellationToken));
+            running.Add(RunSessionAsync(journey, new SyntheticLabel(runId, journey.Persona.Name), people, staff, agents, seats, cancellationToken));
 
             logger.LogInformation("Session {Index} ({Persona}, {Culture}): {Steps}.",
                 journey.Index, journey.Persona.Name, journey.Culture, string.Join(" > ", journey.Steps.Select(step => step.Step)));
@@ -96,11 +100,12 @@ public sealed class Simulation(
     }
 
     private async Task RunSessionAsync(
-        Journey journey, SyntheticLabel label, BrowserDriver people, AgentDriver agents,
+        Journey journey, SyntheticLabel label, BrowserDriver people, BackofficeDriver staff, AgentDriver agents,
         SemaphoreSlim seats, CancellationToken cancellationToken)
     {
-        var human = journey.Persona.Kind == PersonaKind.Human;
-        if (human)
+        // A browser for a person and for the shopkeeper; the seats are shared.
+        var browserSession = journey.Persona.Kind != PersonaKind.Agent;
+        if (browserSession)
             await seats.WaitAsync(cancellationToken);
 
         // A root span of its own, so a session is one trace however long it waited.
@@ -115,13 +120,18 @@ public sealed class Simulation(
         activity?.SetTag("synthetic.steps", journey.Steps.Count);
         if (journey.AbandonmentReason is { } reason)
             activity?.SetTag("synthetic.abandonment_reason", reason);
+        if (journey.ReturnReason is { } returned)
+            activity?.SetTag("synthetic.return_reason", returned);
 
         try
         {
-            if (human)
-                await people.RunAsync(journey, label, cancellationToken);
-            else
-                await agents.RunAsync(journey, label, cancellationToken);
+            var run = journey.Persona.Kind switch
+            {
+                PersonaKind.Human => people.RunAsync(journey, label, cancellationToken),
+                PersonaKind.Staff => staff.RunAsync(journey, label, cancellationToken),
+                _ => agents.RunAsync(journey, label, cancellationToken),
+            };
+            await run;
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
         {
@@ -131,7 +141,7 @@ public sealed class Simulation(
         }
         finally
         {
-            if (human)
+            if (browserSession)
                 seats.Release();
         }
     }

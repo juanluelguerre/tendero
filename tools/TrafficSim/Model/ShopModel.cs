@@ -15,11 +15,11 @@ namespace ElGuerre.Tendero.TrafficSim.Model;
 /// </summary>
 public static class ShopModel
 {
-    static readonly Source Tpcw = new("TPC-W specification: think time, exponential with mean 7 s", Grade.Primary,
+    private static readonly Source Tpcw = new("TPC-W specification: think time, exponential with mean 7 s", Grade.Primary,
         "https://www.tpc.org/tpcw/");
-    static readonly Source Baymard = new("Baymard Institute: average of 50 cart abandonment studies", Grade.Primary,
+    private static readonly Source Baymard = new("Baymard Institute: average of 50 cart abandonment studies", Grade.Primary,
         "https://baymard.com/lists/cart-abandonment-rate");
-    static readonly Source Ours = Source.Assumption("chosen so the emergent rates match the published ones");
+    private static readonly Source Ours = Source.Assumption("chosen so the emergent rates match the published ones");
 
     // ---------------------------------------------------------------- the targets
 
@@ -77,13 +77,13 @@ public static class ShopModel
 
     // ---------------------------------------------------------------- the personas
 
-    static IReadOnlyList<Transition> T(params (Step To, double P)[] edges) =>
+    private static IReadOnlyList<Transition> T(params (Step To, double P)[] edges) =>
         [.. edges.Select(edge => new Transition(edge.To, edge.P))];
 
     /// <summary>Arrives on the home page and mostly browses.</summary>
     public static readonly Persona WindowShopper = new(
         "window-shopper", PersonaKind.Human,
-        new(0.52, Source.Assumption("most visitors browse; 30–50 % of visitors search (vendor aggregates)")),
+        new(0.50, Source.Assumption("most visitors browse; 30–50 % of visitors search (vendor aggregates)")),
         Step.Home,
         new Dictionary<Step, IReadOnlyList<Transition>>
         {
@@ -105,7 +105,7 @@ public static class ShopModel
     /// </summary>
     public static readonly Persona Searcher = new(
         "searcher", PersonaKind.Human,
-        new(0.38, Source.Assumption("30–50 % of visitors search (vendor aggregates, low grade)")),
+        new(0.36, Source.Assumption("30–50 % of visitors search (vendor aggregates, low grade)")),
         Step.Home,
         new Dictionary<Step, IReadOnlyList<Transition>>
         {
@@ -144,7 +144,50 @@ public static class ShopModel
         },
         Source.Assumption("an agent comparing a few products before answering"));
 
-    public static readonly IReadOnlyList<Persona> Personas = [WindowShopper, Searcher, McpAgent, UcpAgent];
+    /// <summary>
+    /// A customer coming back to an order the simulation placed: half of them
+    /// send something back. They can only return what the shopkeeper persona has
+    /// delivered, so returns lag orders by as long as the shop takes to ship.
+    /// </summary>
+    public static readonly Persona Returner = new(
+        "returner", PersonaKind.Human,
+        new(0.02, Source.Assumption("a small share of visits are customers checking on an order")),
+        Step.OpenOrder,
+        new Dictionary<Step, IReadOnlyList<Transition>>
+        {
+            [Step.OpenOrder] = T((Step.RequestReturn, 0.50), (Step.Exit, 0.50)),
+            [Step.RequestReturn] = T((Step.Exit, 1.0)),
+        },
+        Source.Assumption("online apparel return rates of 20–30 % are commonly quoted; half of those who come back"));
+
+    /// <summary>
+    /// The shopkeeper, in the backoffice: signs in, moves what is waiting — ships
+    /// what is confirmed, marks delivered what was shipped — and looks at the
+    /// review queue. Without it no order is ever delivered, so nothing could be
+    /// returned and no reservation would ever be committed.
+    /// </summary>
+    public static readonly Persona Shopkeeper = new(
+        "shopkeeper", PersonaKind.Staff,
+        new(0.02, Source.Assumption("the shop's own visits to its backoffice, a few an hour")),
+        Step.SignIn,
+        new Dictionary<Step, IReadOnlyList<Transition>>
+        {
+            [Step.SignIn] = T((Step.MoveOrders, 0.75), (Step.ReviewQueue, 0.25)),
+            [Step.MoveOrders] = T((Step.ReviewQueue, 0.20), (Step.Exit, 0.80)),
+            [Step.ReviewQueue] = T((Step.MoveOrders, 0.30), (Step.Exit, 0.70)),
+        },
+        Source.Assumption("orders first, the queue when there is time"));
+
+    /// <summary>
+    /// Why things come back, as weights over the domain's five reasons. Size and
+    /// fit lead by a distance in every survey of online apparel returns.
+    /// </summary>
+    public static readonly Sourced<IReadOnlyList<(string Reason, double Weight)>> ReturnReasons = new(
+    [
+        ("WrongSize", 0.50), ("NotAsDescribed", 0.20), ("ChangedMind", 0.12), ("Damaged", 0.10), ("WrongItem", 0.08)
+    ], new("Retailer and logistics surveys of return reasons (size and fit first, around half)", Grade.Low));
+
+    public static readonly IReadOnlyList<Persona> Personas = [WindowShopper, Searcher, McpAgent, UcpAgent, Returner, Shopkeeper];
 
     // ---------------------------------------------------------------- arrivals
 
