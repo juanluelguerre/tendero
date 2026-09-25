@@ -61,8 +61,9 @@ comes first so that they are born observed instead of instrumented afterwards.
 
 ### D · The question, as a rule
 
-- `docs/telemetry/tracking-plan.md` (or `.yaml`): every event's name, schema, the
-  question it answers and the decision its value would change.
+- `docs/telemetry/tracking-plan.json`, rendered to `tracking-plan.md`: every
+  feature's question and the decision its value would change, and every event and
+  metric that answers one, with its attributes.
 - The frontend's event names and payloads are generated from the plan: an
   unplanned event does not compile.
 - A test fails when an event emitted in `src/` is not in the plan, or an event in
@@ -151,8 +152,11 @@ instrument first, and whether a feature with no answer stays.
 
   `allowed_headers` replaces the defaults rather than adding to them, which is why
   `content-type` is there.
-- Tracking plan as Markdown held by a test, or YAML that generates both the types
-  and the documentation?
+- ~~Tracking plan as Markdown held by a test, or YAML that generates both the types
+  and the documentation?~~ **Neither: JSON** (`P9b-5`), because both readers
+  already parse it — `System.Text.Json` in the test, `JSON.parse` in the
+  generator — and YAML would have been a new dependency on each side for a file
+  nobody edits often. The Markdown is generated from it, with the audit's count.
 - ~~Where the same-origin `/otlp` proxy lives~~ — **in each app's dev-server
   proxy** (`P9b-4`), beside `/api`: it forwards to whatever OTLP address Aspire
   hands that dev server, and adds the dashboard's key there, so the page never
