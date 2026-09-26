@@ -169,6 +169,7 @@ Each with its date, who took it, and why — as it was taken.
 | 2026-09-26 | **NLI and the reranker are measured through TEI, not Python**: the reranker as it already runs, and NLI with `MoritzLaurer/bge-m3-zeroshot-v2.0` (MIT) instead of the mDeBERTa one | Claude, following the decision above | TEI is already the stack's model server; `bge-m3-zeroshot-v2.0` is an NLI fine-tune of the embeddings model the shop already runs, an architecture TEI serves, so the candidate measured is one the product could adopt with no new runtime |
 | 2026-09-26 | **No Python in the repository, not even for evaluation.** The spike's harness moves to C#, as `SearchEval`'s `claims` suite (`P10-9` brought forward); the Python script that produced the first numbers is deleted, and those numbers are reproduced by the C# suite before they are recorded here | the author | *"why are you writing Python, if it is not necessary and I do not want that code in the project?"* — it was a shortcut: `SearchEval` already is the project's evaluation tool, in the project's language |
 | 2026-09-26 | **Measure the makers' own ready formats before converting anything else**: Qwen3-4B and Qwen3-1.7B (Qwen's GGUF) and Granite 4.0 micro (IBM's GGUF); Phi-4-mini's official ONNX waits for the ONNX Runtime GenAI package to be approved; Gemma 4 and NuExtract later, on the numbers | the author, then Claude on the evidence | *"isn't there something already, so we don't reinvent the wheel?"* — there is, and a maker's file satisfies ADR 0031 with no conversion at all |
+| 2026-09-27 | **Gemma 4 E4B is measured from ggml-org's GGUF** (`ggml-org/gemma-4-E4B-it-GGUF@b8093469224f83f5c38f691eb906c380e9e63114`) — **an exception to ADR 0031 rule 5, for this measurement only** | the author | converting it ourselves needed more memory than the machine could give safely (killed at a 12 GB limit twice, and the host fell to 0.8 GB free at 20 GB); the file comes from llama.cpp's own organisation and names Google's repositories as its source, but not their revision, which is what rule 5 asks. Measuring it this way answers whether a second family changes the picture; adopting it in the product would still need its provenance tied to a revision, or the rule amended |
 | *open* | **How the model is served in the product**, and **which model** | the author, on the spike's numbers | — |
 
 ### The wheel already exists: formats the makers publish
@@ -261,7 +262,7 @@ traps) and `support.json` (40 pairs).
 | Granite 4.0 micro 3.4B, Q8 (IBM's GGUF) | 0.86 | 0.69 | 0.67 | 0.65 | 25 | 0.965 | 1.00 | 1 | 38 s |
 | Qwen3-1.7B, Q8 (Qwen's GGUF) | 0.90 | 0.61 | 0.63 | 0.24 | 13 | 1.000 | 0.31 | 1 | 16 s |
 | Phi-4-mini, int4 ONNX (Microsoft's), in process | 0.59 | 0.27 | 0.22 | 0.18 | 12 | 0.625 | 0.00 | 0 | 22 s |
-| Gemma 4 E4B | not measured: no official GGUF; converting it needed a newer `transformers` than the day's llama.cpp image and more than 12 GB |
+| Gemma 4 E4B, Q8 (ggml-org's GGUF, by exception) | 0.91 | 0.70 | 0.63 | 0.88 | 8 | 0.964 | 1.00 | 1 | 29 s |
 
 *Spurious* and *language* were added after the runs that exposed them, and say so.
 The two Qwen3.5-4B Q8 figures are the same file under two server configurations.
@@ -308,6 +309,7 @@ cache is reserved up front (~16 GB); the extractor now sets a ceiling.
 | yes/no, Qwen3-1.7B Q8 | 0.97 | 1.00 | 0.95 | 0.95 | 0.06 | ~3 GB | 0.31 s |
 | yes/no, Granite 4.0 micro Q8 | 1.00 | 1.00 | 1.00 | 0.55 | 0.38 | ~4.2 GB | 0.87 s |
 | reranker, `bge-reranker-v2-m3`, TEI | 0.99 | 0.99 | 0.99 | 0.85 | 0.16 | 3.6 GB | 1.2 s |
+| yes/no, Gemma 4 E4B Q8 | 1.00 | 1.00 | 1.00 | 1.00 | 0.00 | ~9.2 GB | 1.3 s |
 | Jev | not measured: waits on early access |
 
 ### Against the hypotheses
@@ -317,13 +319,15 @@ cache is reserved up front (~16 GB); the extractor now sets a ceiling.
 3. **Held, just.** The 2B lost ten points of recall.
 4. **Refuted.** 25–45 s per product, not ≤ 10: a worker's job, never a request's.
 5. **Refuted.** 4 bits cost seven points of precision and every language slip.
-6. **The author's — split.** Extraction: no ready-made model of ≤ 4B reached 0.70 recall (Granite 0.69, Qwen3 0.68), and one model generation was worth twelve points at the same size. Support: held outright — the 568M NLI model matches or beats every generative model, 35× faster than the best.
+6. **The author's — split.** Extraction: of the makers' own files, none reached 0.70 recall (Granite 0.69, Qwen3 0.68), and one model generation was worth twelve points at the same size. Gemma 4 E4B, ready-made by ggml-org, met it exactly — precision 0.91, recall 0.70 — with two caveats: *4B effective* is 8B of weights (9.2 GB served against Qwen3.5-4B's ~5), and its provenance is an exception to ADR 0031. Support: held outright — the 568M NLI model matches or beats every generative model, 35× faster than the best.
 
 ### What the numbers say, before any decision
 
 - **The extractor**: Qwen3.5-4B at 8 bits, converted by us from its revision
-  (ADR 0031's way), is the only candidate that met every declared bar. The makers'
-  own files are one or two points of recall short.
+  (ADR 0031's way), is the only candidate that met every declared bar with room.
+  Gemma 4 E4B is a close second — the same precision and typing, fewer spurious
+  types, ten points less recall, and nearly twice the memory. The makers' own
+  files are one or two points of recall short.
 - **The support scorer**: the NLI model through TEI — the model server the stack
   already runs, a model of the embeddings' own family, calibrated, local, pinned.
 - **Every model forces attributes** onto claims that have none (6 to 25 per run),
@@ -346,7 +350,8 @@ cache is reserved up front (~16 GB); the extractor now sets a ceiling.
 | `microsoft/Phi-4-mini-instruct-onnx` | `fc04c8f93df696602fd9f300a30d1bf2e3081347` | MIT | `cpu-int4-rtn-block-32-acc-level-4` |
 | `MoritzLaurer/bge-m3-zeroshot-v2.0` | `9abf1c8aaeb82a2447809c20753ed0b106b76652` | MIT; base `BAAI/bge-m3-retromae` | TEI `cpu-1.9.3` |
 | `BAAI/bge-reranker-v2-m3` | `953dc6f6f85a1b2dbfca4c34a2796e7dde08d41e` | Apache-2.0 (ADR 0031) | TEI `cpu-1.9.3` |
-| `google/gemma-4-E4B-it` | `ee0ef6023621cff504d758262d4e04895a5af4a2` | Apache-2.0 (model card) | not converted |
+| `google/gemma-4-E4B-it` | `ee0ef6023621cff504d758262d4e04895a5af4a2` | Apache-2.0 (model card) | not converted by us (memory) |
+| `ggml-org/gemma-4-E4B-it-GGUF` | `b8093469224f83f5c38f691eb906c380e9e63114` | Apache-2.0; source revision not stated (the ADR 0031 exception) | `gemma-4-E4B-it-Q8_0.gguf` `34be82b1…` |
 
 llama.cpp `server-v0.5.0` (`sha256:a94b642b…`) served, `full-v0.5.0`
 (`sha256:386ead2a…`) converted; `-c 4096 -np 1 --load-mode none` and
