@@ -146,14 +146,19 @@ public sealed class ArchitectureRules
     /// as Elasticsearch is behind the search ports. The OpenAI SDK is how TEI
     /// happens to be reached today (P8-2), and the day it is reached some other
     /// way — a second adapter, a hand-written client — only a folder changes.
+    ///
+    /// Knowledge reaches its generative model the same way (P10-0), behind the
+    /// same kind of fence: <c>Knowledge.Chat</c>, and the rest of the context sees
+    /// <c>IChatClient</c> and its own ports.
     /// </summary>
     [Fact]
-    public void The_openai_client_stays_inside_the_embeddings_adapter()
+    public void The_openai_client_stays_inside_its_adapters()
     {
         foreach (var assembly in Solution.All)
         {
             var result = Types.InAssembly(assembly)
                 .That().DoNotResideInNamespace("ElGuerre.Tendero.Search.Embeddings")
+                .And().DoNotResideInNamespace("ElGuerre.Tendero.Knowledge.Chat")
                 .ShouldNot().HaveDependencyOn("OpenAI")
                 .GetResult();
 
