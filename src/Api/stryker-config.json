@@ -1,0 +1,26 @@
+{
+  "stryker-config": {
+    "project": "ElGuerre.Tendero.Api.csproj",
+    "test-projects": [
+      "../../tests/Api.Tests/ElGuerre.Tendero.Api.Tests.csproj"
+    ],
+    "test-runner": "mtp",
+    "concurrency": 1,
+    "reporters": [
+      "html",
+      "json",
+      "cleartext"
+    ],
+    "ignore-methods": [
+      "*Log",
+      "Log*",
+      "*.LogInformation",
+      "*.LogWarning",
+      "*.LogError",
+      "*.LogDebug",
+      "*.SetTag",
+      "*.StartActivity",
+      "*.AddTag"
+    ]
+  }
+}

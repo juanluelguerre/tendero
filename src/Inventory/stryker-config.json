@@ -1,0 +1,27 @@
+{
+  "stryker-config": {
+    "project": "ElGuerre.Tendero.Inventory.csproj",
+    "test-projects": [
+      "../../tests/Inventory.Tests/ElGuerre.Tendero.Inventory.Tests.csproj",
+      "../../tests/Integration.Tests/ElGuerre.Tendero.Integration.Tests.csproj"
+    ],
+    "test-runner": "mtp",
+    "concurrency": 1,
+    "reporters": [
+      "html",
+      "json",
+      "cleartext"
+    ],
+    "ignore-methods": [
+      "*Log",
+      "Log*",
+      "*.LogInformation",
+      "*.LogWarning",
+      "*.LogError",
+      "*.LogDebug",
+      "*.SetTag",
+      "*.StartActivity",
+      "*.AddTag"
+    ]
+  }
+}

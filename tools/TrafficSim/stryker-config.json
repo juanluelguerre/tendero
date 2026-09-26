@@ -1,0 +1,31 @@
+{
+  "stryker-config": {
+    "project": "ElGuerre.Tendero.TrafficSim.csproj",
+    "test-projects": [
+      "../../tests/TrafficSim.Tests/ElGuerre.Tendero.TrafficSim.Tests.csproj"
+    ],
+    "test-runner": "mtp",
+    "concurrency": 1,
+    "reporters": [
+      "html",
+      "json",
+      "cleartext"
+    ],
+    "ignore-methods": [
+      "*Log",
+      "Log*",
+      "*.LogInformation",
+      "*.LogWarning",
+      "*.LogError",
+      "*.LogDebug",
+      "*.SetTag",
+      "*.StartActivity",
+      "*.AddTag"
+    ],
+    "mutate": [
+      "Model/**/*.cs",
+      "Scheduling/**/*.cs",
+      "Queries/**/*.cs"
+    ]
+  }
+}
