@@ -23,6 +23,13 @@ public interface IEvaluationSuite
     string Description { get; }
 
     /// <summary>
+    /// How long the whole run may take before it is cancelled. Five minutes is
+    /// generous for the search gate, which takes seconds; a suite that asks a
+    /// generative model about twenty products on a CPU needs its own figure.
+    /// </summary>
+    TimeSpan Budget => TimeSpan.FromMinutes(5);
+
+    /// <summary>
     /// 0 when it passes, 1 when it falls below the thresholds and <c>--ci</c> was
     /// asked for, 2 when it could not even run (a dependency is not answering).
     /// </summary>

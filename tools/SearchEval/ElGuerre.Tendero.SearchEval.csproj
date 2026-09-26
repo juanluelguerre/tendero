@@ -19,8 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The support suite's arithmetic (AUC, ECE) is internal and tested there. -->
+    <InternalsVisibleTo Include="ElGuerre.Tendero.SearchEval.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
+    <ProjectReference Include="../../src/Knowledge/ElGuerre.Tendero.Knowledge.csproj" />
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>

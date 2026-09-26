@@ -1,0 +1,245 @@
+{
+  "about": "Support pairs, phase 10 (P10-0): does this description support this claim? Written 2026-09-26 by Claude. 20 supported, 10 contradicted (the claim says the opposite of the text) and 10 not stated — among them the golden set's traps, where the product's attributes carry the fact and its description does not. A scorer is right when it gives supported pairs high support and the other twenty low.",
+  "pairs": [
+    {
+      "index": 0,
+      "code": "B073WXYZ01",
+      "claim": "Tiene un drop de 8 mm.",
+      "label": "supports"
+    },
+    {
+      "index": 5,
+      "code": "B05DEFG606",
+      "claim": "Es apta para inducción.",
+      "label": "supports"
+    },
+    {
+      "index": 5,
+      "code": "B05DEFG606",
+      "claim": "No contiene PFOA.",
+      "label": "supports"
+    },
+    {
+      "index": 7,
+      "code": "B10SHO0102",
+      "claim": "Pesa 218 g en talla 42.",
+      "label": "supports"
+    },
+    {
+      "index": 7,
+      "code": "B10SHO0102",
+      "claim": "Lleva una placa de carbono.",
+      "label": "supports"
+    },
+    {
+      "index": 13,
+      "code": "B10SHO0108",
+      "claim": "Se seca en una hora.",
+      "label": "supports"
+    },
+    {
+      "index": 22,
+      "code": "B10SHI0209",
+      "claim": "Cabe en su propio bolsillo.",
+      "label": "supports"
+    },
+    {
+      "index": 24,
+      "code": "B11COO0301",
+      "claim": "Se puede usar en el horno.",
+      "label": "supports"
+    },
+    {
+      "index": 24,
+      "code": "B11COO0301",
+      "claim": "Viene precurada.",
+      "label": "supports"
+    },
+    {
+      "index": 26,
+      "code": "B11COO0303",
+      "claim": "La tapa no se abre mientras hay presión dentro.",
+      "label": "supports"
+    },
+    {
+      "index": 27,
+      "code": "B11COO0304",
+      "claim": "El mango no se calienta.",
+      "label": "supports"
+    },
+    {
+      "index": 29,
+      "code": "B11COO0306",
+      "claim": "Se puede meter en el lavavajillas.",
+      "label": "supports"
+    },
+    {
+      "index": 37,
+      "code": "B11COF0402",
+      "claim": "Es apta para inducción.",
+      "label": "supports"
+    },
+    {
+      "index": 41,
+      "code": "B11COF0406",
+      "claim": "Tiene una capacidad de 1,7 litros.",
+      "label": "supports"
+    },
+    {
+      "index": 41,
+      "code": "B11COF0406",
+      "claim": "Tiene cinco temperaturas fijas.",
+      "label": "supports"
+    },
+    {
+      "index": 45,
+      "code": "B11TAB0502",
+      "claim": "Cada tazón tiene una capacidad de 450 ml.",
+      "label": "supports"
+    },
+    {
+      "index": 49,
+      "code": "B11TAB0506",
+      "claim": "No necesita plancha.",
+      "label": "supports"
+    },
+    {
+      "index": 55,
+      "code": "B12LAM0606",
+      "claim": "Se carga por USB-C.",
+      "label": "supports"
+    },
+    {
+      "index": 55,
+      "code": "B12LAM0606",
+      "claim": "Tiene doce horas de autonomía.",
+      "label": "supports"
+    },
+    {
+      "index": 58,
+      "code": "B12LAM0609",
+      "claim": "Se apaga sola a los treinta segundos.",
+      "label": "supports"
+    },
+    {
+      "index": 0,
+      "code": "B073WXYZ01",
+      "claim": "Tiene un drop de 12 mm.",
+      "label": "contradicts"
+    },
+    {
+      "index": 7,
+      "code": "B10SHO0102",
+      "claim": "Pesa más de 300 g en talla 42.",
+      "label": "contradicts"
+    },
+    {
+      "index": 13,
+      "code": "B10SHO0108",
+      "claim": "Tarda un día entero en secarse.",
+      "label": "contradicts"
+    },
+    {
+      "index": 24,
+      "code": "B11COO0301",
+      "claim": "No se puede usar en el horno.",
+      "label": "contradicts"
+    },
+    {
+      "index": 26,
+      "code": "B11COO0303",
+      "claim": "La tapa se puede abrir con presión dentro.",
+      "label": "contradicts"
+    },
+    {
+      "index": 27,
+      "code": "B11COO0304",
+      "claim": "El mango se calienta mucho.",
+      "label": "contradicts"
+    },
+    {
+      "index": 49,
+      "code": "B11TAB0506",
+      "claim": "Hay que plancharlo después de cada lavado.",
+      "label": "contradicts"
+    },
+    {
+      "index": 55,
+      "code": "B12LAM0606",
+      "claim": "Solo funciona enchufada a la corriente.",
+      "label": "contradicts"
+    },
+    {
+      "index": 58,
+      "code": "B12LAM0609",
+      "claim": "Se queda encendida toda la noche.",
+      "label": "contradicts"
+    },
+    {
+      "index": 41,
+      "code": "B11COF0406",
+      "claim": "Tiene una capacidad de 3 litros.",
+      "label": "contradicts"
+    },
+    {
+      "index": 29,
+      "code": "B11COO0306",
+      "claim": "Es apta para inducción.",
+      "label": "not_stated"
+    },
+    {
+      "index": 36,
+      "code": "B11COF0401",
+      "claim": "Es apta para inducción.",
+      "label": "not_stated"
+    },
+    {
+      "index": 36,
+      "code": "B11COF0401",
+      "claim": "Hace seis tazas.",
+      "label": "not_stated"
+    },
+    {
+      "index": 55,
+      "code": "B12LAM0606",
+      "claim": "Tiene una potencia de 3 W.",
+      "label": "not_stated"
+    },
+    {
+      "index": 76,
+      "code": "B14HOM0805",
+      "claim": "Es de lana merino.",
+      "label": "not_stated"
+    },
+    {
+      "index": 22,
+      "code": "B10SHI0209",
+      "claim": "Es impermeable.",
+      "label": "not_stated"
+    },
+    {
+      "index": 13,
+      "code": "B10SHO0108",
+      "claim": "Sirve para correr por asfalto.",
+      "label": "not_stated"
+    },
+    {
+      "index": 90,
+      "code": "B15APP1007",
+      "claim": "Es de lana merino.",
+      "label": "not_stated"
+    },
+    {
+      "index": 28,
+      "code": "B11COO0305",
+      "claim": "Es apta para inducción.",
+      "label": "not_stated"
+    },
+    {
+      "index": 45,
+      "code": "B11TAB0502",
+      "claim": "Se pueden usar en el microondas.",
+      "label": "not_stated"
+    }
+  ]
+}

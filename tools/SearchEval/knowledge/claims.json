@@ -1,0 +1,609 @@
+{
+  "about": "Golden claim set, phase 10 (P10-0; the seed of P10-9). Annotated 2026-09-26 by Claude under the criteria below, which the project lets it settle with real e-commerce practice and write down (as the search golden set does).",
+  "criteria": [
+    "A claim is one checkable property of the product, the kind a shopper filters or compares on, stated in the description. One property per claim.",
+    "Features and components count (a safety valve, a carbon plate); compatibilities count (induction, oven, dishwasher); measures count (weight, dimensions, battery hours).",
+    "Suggested uses do not ('para salsas', 'para correr en verano'), nor tone or taste ('de toda la vida', 'abriga sin dar calor de mas'): they are true of the copy, not checkable of the product.",
+    "A claim is typed only when an AttributeDefinition exists for it and the text states its value; units are converted to the definition's (450 ml -> CAPACITY_L 0.45).",
+    "known=true when the imported attributes already carry the same fact; the value of extraction is mostly in the known=false claims.",
+    "A trap is a fact the product's attributes carry and its description does not state: proposing it is a claim with no evidence, and counts as a false positive.",
+    "The quote is the shortest span of the Spanish description that carries the claim; a prediction matches when its Spanish quote overlaps it."
+  ],
+  "products": [
+    {
+      "index": 0,
+      "code": "B073WXYZ01",
+      "claims": [
+        {
+          "quote": "running neutras",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "espuma reactiva",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "malla transpirable",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "refuerzo en el talón",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Drop de 8 mm",
+          "attribute": "DROP_MM",
+          "value": 8,
+          "known": true
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 5,
+      "code": "B05DEFG606",
+      "claims": [
+        {
+          "quote": "de 20, 24 y 28 cm",
+          "attribute": "DIAMETERS_CM",
+          "value": "20, 24, 28",
+          "known": true
+        },
+        {
+          "quote": "Sartenes de 20, 24 y 28 cm",
+          "attribute": "PIECES",
+          "value": 3,
+          "known": true
+        },
+        {
+          "quote": "revestimiento antiadherente",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "libre de PFOA",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "base de acero para inducción",
+          "attribute": "INDUCTION",
+          "value": true,
+          "known": true
+        },
+        {
+          "quote": "mangos de baquelita",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 7,
+      "code": "B10SHO0102",
+      "claims": [
+        {
+          "quote": "placa de carbono",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "espuma de alto retorno",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Pesa 218 g en talla 42",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Drop de 6 mm",
+          "attribute": "DROP_MM",
+          "value": 6,
+          "known": true
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 13,
+      "code": "B10SHO0108",
+      "claims": [
+        {
+          "quote": "tres tiras regulables",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "suela de agarre para río y roca mojada",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Se seca en una hora",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 15,
+      "code": "B10SHI0202",
+      "claims": [
+        {
+          "quote": "sin mangas",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "de 92 g",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "espalda perforada",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 22,
+      "code": "B10SHI0209",
+      "claims": [
+        {
+          "quote": "de 140 g",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "cabe en su propio bolsillo",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Costuras selladas en los hombros",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 24,
+      "code": "B11COO0301",
+      "claims": [
+        {
+          "quote": "hierro fundido",
+          "attribute": "MATERIAL",
+          "value": "CAST_IRON",
+          "known": true
+        },
+        {
+          "quote": "precurada",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "apta para inducción",
+          "attribute": "INDUCTION",
+          "value": true,
+          "known": true
+        },
+        {
+          "quote": "horno",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "fuego directo",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Gana antiadherencia con el uso",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 26,
+      "code": "B11COO0303",
+      "claims": [
+        {
+          "quote": "dos niveles de cocción",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "válvula de seguridad",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "cierre que no abre bajo presión",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 27,
+      "code": "B11COO0304",
+      "claims": [
+        {
+          "quote": "acero al carbono",
+          "attribute": "MATERIAL",
+          "value": "CARBON_STEEL",
+          "known": true
+        },
+        {
+          "quote": "fondo plano para inducción",
+          "attribute": "INDUCTION",
+          "value": true,
+          "known": true
+        },
+        {
+          "quote": "mango de madera que no se calienta",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 28,
+      "code": "B11COO0305",
+      "claims": [
+        {
+          "quote": "pico vertedor a ambos lados",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "asa fría",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 29,
+      "code": "B11COO0306",
+      "claims": [
+        {
+          "quote": "cerámica esmaltada",
+          "attribute": "MATERIAL",
+          "value": "CERAMIC",
+          "known": true
+        },
+        {
+          "quote": "33 x 22 cm",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "horno",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "microondas",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "lavavajillas",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": [
+        {
+          "attribute": "INDUCTION",
+          "value": false,
+          "why": "the attributes say no; the description never mentions induction"
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "code": "B11COF0401",
+      "claims": [
+        {
+          "quote": "Cafetera de aluminio",
+          "attribute": "MATERIAL",
+          "value": "ALUMINIUM",
+          "known": true
+        },
+        {
+          "quote": "junta de silicona recambiable",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "válvula de seguridad",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": [
+        {
+          "attribute": "INDUCTION",
+          "value": false,
+          "why": "the attributes say no; the description never mentions induction"
+        },
+        {
+          "attribute": "CUPS",
+          "value": 6,
+          "why": "the attributes say 6 cups; the description does not"
+        }
+      ]
+    },
+    {
+      "index": 37,
+      "code": "B11COF0402",
+      "claims": [
+        {
+          "quote": "acero inoxidable",
+          "attribute": "MATERIAL",
+          "value": "STAINLESS_STEEL",
+          "known": true
+        },
+        {
+          "quote": "base ferromagnética para inducción",
+          "attribute": "INDUCTION",
+          "value": true,
+          "known": true
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 41,
+      "code": "B11COF0406",
+      "claims": [
+        {
+          "quote": "Hervidor de 1,7 litros",
+          "attribute": "CAPACITY_L",
+          "value": 1.7,
+          "known": true
+        },
+        {
+          "quote": "cinco temperaturas fijas",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "cuello de cisne",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 45,
+      "code": "B11TAB0502",
+      "claims": [
+        {
+          "quote": "Cuatro tazones",
+          "attribute": "PIECES",
+          "value": 4,
+          "known": true
+        },
+        {
+          "quote": "de gres",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "de 450 ml",
+          "attribute": "CAPACITY_L",
+          "value": 0.45,
+          "known": true
+        },
+        {
+          "quote": "base sin esmaltar para que no resbalen",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 49,
+      "code": "B11TAB0506",
+      "claims": [
+        {
+          "quote": "Mantel de lino",
+          "attribute": "MATERIAL",
+          "value": "LINEN",
+          "known": true
+        },
+        {
+          "quote": "lavado a la piedra",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "no necesita plancha",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Encoge lo justo en el primer lavado",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 55,
+      "code": "B12LAM0606",
+      "claims": [
+        {
+          "quote": "sin cable",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "doce horas de autonomía",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "tres niveles",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Se carga por USB-C",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": [
+        {
+          "attribute": "POWER_W",
+          "value": 3,
+          "why": "the attributes say 3 W; the description does not"
+        }
+      ]
+    },
+    {
+      "index": 58,
+      "code": "B12LAM0609",
+      "claims": [
+        {
+          "quote": "se enciende al detectar movimiento en la oscuridad",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "se apaga sola a los treinta segundos",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    },
+    {
+      "index": 76,
+      "code": "B14HOM0805",
+      "claims": [
+        {
+          "quote": "lana virgen",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "tejida en telar",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "fleco cosido a mano",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "Pesa 1,4 kg",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": [
+        {
+          "attribute": "MATERIAL",
+          "value": "MERINO_WOOL",
+          "why": "the attributes say merino; the description says virgin wool, which is not the same thing — a contradiction to surface, not a claim to propose"
+        }
+      ]
+    },
+    {
+      "index": 90,
+      "code": "B15APP1007",
+      "claims": [
+        {
+          "quote": "punto fino",
+          "attribute": null,
+          "value": null,
+          "known": false
+        },
+        {
+          "quote": "banda doble en la frente",
+          "attribute": null,
+          "value": null,
+          "known": false
+        }
+      ],
+      "traps": []
+    }
+  ]
+}
