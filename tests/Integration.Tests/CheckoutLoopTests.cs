@@ -341,6 +341,8 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, quote.InputHash, ct,
             instrument: FakePaymentProvider.CardDeclined);
         var order = (await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, quote.InputHash, ct)).Order!;
+        // An agent's retry: the same key answers with the order already placed, and prices nothing.
+        await shop.PlaceOrderAsync(cart.Token, options.Options[0].Code, quote.InputHash, ct);
 
         await shop.DrainAsync(ct);
         await shop.MoveAsync(order.Id, moved => moved.Ship(TimeProvider.System), ct);
@@ -354,8 +356,14 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
             tags => tags["actor.kind"] is "system" && tags["surface"] is "internal");
 
         Assert.Equal(
-            ["payment_declined", "placed", "price_changed"],
+            ["already_placed", "payment_declined", "placed", "price_changed"],
             counted.Of("tendero.checkout.attempts").Select(tags => (string)tags["outcome"]!).Order());
+        // Whether a promotion applied is read off what was priced, never assumed —
+        // and a replay, which prices nothing, reads it off the order it returns.
+        Assert.True(order.Discounts.Count > 0, "The sample promotions no longer discount this cart; the replay below proves nothing.");
+        Assert.All(
+            counted.Of("tendero.checkout.attempts").Where(tags => tags["outcome"] is "placed" or "already_placed"),
+            tags => Assert.Equal(true, tags["discounted"]));
 
         Assert.Contains(counted.Of("tendero.inventory.reservations"), tags => tags["status"] is "held");
         Assert.Contains(counted.Of("tendero.inventory.reservations"), tags => tags["status"] is "committed");

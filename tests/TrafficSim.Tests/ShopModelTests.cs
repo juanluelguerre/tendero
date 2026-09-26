@@ -14,8 +14,12 @@ namespace ElGuerre.Tendero.TrafficSim.Tests;
 /// </summary>
 public sealed class ShopModelTests
 {
-    /// <summary>Enough walks that a 1 % rate is measured to a tenth of a point.</summary>
-    private const int Walks = 200_000;
+    /// <summary>
+    /// Enough walks that a 1 % rate is measured to a tenth of a point, twice
+    /// over. It was 200 000, four times what the tolerances need, and a Stryker
+    /// run pays it once per mutant the chains cover.
+    /// </summary>
+    private const int Walks = 50_000;
 
     [Fact]
     public void Every_parameter_names_its_source()

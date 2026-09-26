@@ -1,0 +1,28 @@
+{
+  "stryker-config": {
+    "project": "ElGuerre.Tendero.SharedKernel.csproj",
+    "test-projects": [
+      "../../tests/SharedKernel.Tests/ElGuerre.Tendero.SharedKernel.Tests.csproj",
+      "../../tests/Api.Tests/ElGuerre.Tendero.Api.Tests.csproj",
+      "../../tests/Architecture.Tests/ElGuerre.Tendero.Architecture.Tests.csproj"
+    ],
+    "test-runner": "mtp",
+    "concurrency": 1,
+    "reporters": [
+      "html",
+      "json",
+      "cleartext"
+    ],
+    "ignore-methods": [
+      "*Log",
+      "Log*",
+      "*.LogInformation",
+      "*.LogWarning",
+      "*.LogError",
+      "*.LogDebug",
+      "*.SetTag",
+      "*.StartActivity",
+      "*.AddTag"
+    ]
+  }
+}

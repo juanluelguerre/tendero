@@ -70,13 +70,18 @@ public sealed class AgentToolCallMetricsTests
         // An empty lookup is a 200 that needs no catalogue; a product with no id
         // is the shop saying no; a well-formed code reaches Postgres, where
         // nothing listens. (A malformed one is refused by validation, and was.)
+        // A search reaches Elasticsearch, where nothing listens either.
         await client.PostAsJsonAsync("/ucp/catalog/lookup", new { ids = Array.Empty<string>() }, ct);
         await client.PostAsJsonAsync("/ucp/catalog/product", new { id = "" }, ct);
-        await client.PostAsJsonAsync("/ucp/catalog/lookup", new { ids = new[] { "0123456789" } }, ct);
+        var broken = await client.PostAsJsonAsync("/ucp/catalog/lookup", new { ids = new[] { "0123456789" } }, ct);
+        await client.PostAsJsonAsync("/ucp/catalog/search", new { query = "zapatillas" }, ct);
 
         Assert.Contains(Calls(listener), tags => tags is { surface: "ucp", tool: "lookup_catalog", outcome: "answered" });
         Assert.Contains(Calls(listener), tags => tags is { surface: "ucp", tool: "get_product", outcome: "refused" });
         Assert.Contains(Calls(listener), tags => tags is { surface: "ucp", tool: "lookup_catalog", outcome: "failed" });
+        Assert.Contains(Calls(listener), tags => tags is { surface: "ucp", tool: "search_catalog", outcome: "failed" });
+        // Counting a failure never swallows it: the agent still gets the 500.
+        Assert.Equal(HttpStatusCode.InternalServerError, broken.StatusCode);
     }
 
     /// <summary>

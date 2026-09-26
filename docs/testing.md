@@ -89,8 +89,19 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 
 | project | mutated with | of covered | of total | set |
 |---|---|---:|---:|---|
-| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 76.23 % | 54.65 % | 2026-09-17 · **stale, see below** |
-| `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 69.34 % | 61.29 % | 2026-09-17 |
+| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 82.07 % | 57.06 % | 2026-09-26 · re-derived after layer B left |
+| `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 70.95 % | 62.50 % | 2026-09-26 |
+| `tools/TrafficSim` | `TrafficSim.Tests` | 87.66 % | 87.10 % | 2026-09-26 · `Model/`, `Scheduling/`, `Queries/` |
+
+A project the phase touched in a few lines only is run **scoped to those lines**
+(`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
+the project's. **The span is in characters, not lines** — the first attempt, in
+line numbers, matched nothing and Stryker reported "unable to calculate a mutation
+score" rather than an error; convert first (the offsets start at the file's first
+character, after any byte-order mark). **Stryker only mutates a project a test
+project references directly**: `src/Mcp` and `src/ServiceDefaults`, reached from
+`Api.Tests` only through `src/Api`, fail with *No project found* and have no
+config; their phase code is proven by hand mutations at level 1.
 
 **Search's baseline was measured with layer B inside `src/Search`, and layer B
 left the same day** (ADR 0032, amended): the classifier, its anchors, its
@@ -200,6 +211,68 @@ touched, both run. Reports in `docs/blog/reports/2026-09-17-no-answer-research/s
   `not_found` messages and `featured` correlation, and the agent metadata's
   profile check. They are the next
   Ucp work's first tests, not this phase's.
+
+**2026-09-26 — the phase close of *Seeing it run* (phase 9b).** Every project
+the phase touched, in about an hour of machine time: three full runs, five
+scoped, two by hand. Reports in `docs/blog/reports/2026-09-26-seeing-it-run/stryker/`.
+
+- **`tools/TrafficSim`, first baseline.** First run **58.44 %** (64 survivors),
+  6.5 minutes — most of it the Monte Carlo test, 200 000 walks per persona, paid
+  once per mutant the chains cover. The survivors were one real gap:
+  `ShopModelTests` checks what the chains add up to, and nothing checked what a
+  journey draws on top of them — language, consent, the card and its retry, the
+  reasons, think time, one query per search, the step limit, SplitMix64, the
+  arrival index, the compressed day. The published rates' tolerances hid all of
+  it. `JourneyDrawTests` checks each on a persona built for it (a chain straight
+  to Pay measures the card in every walk), pinned to SplitMix64's reference
+  outputs; 17 hand mutations for 17 kills. The walks went from 200 000 to 50 000
+  — twice what the tolerances need, the rates moving from 6.36 / 71.54 / 1.73 %
+  to 6.29 / 71.86 / 1.71 %. **Second run: 87.66 %** (19 survivors), 4.4
+  minutes, the baseline. Three of the 19 were gaps too small to see before — a
+  one-step persona cannot tell `Any` from `All`, and the retry's own decline
+  rate was unchecked — closed after run 2, three mutations for three kills. The
+  other 16 are **equivalent**: `<` against `<=` on a uniform double (9), `>>>`
+  against `>>` on a `ulong` (5), shares that sum to one divided instead of
+  multiplied (1), and a retry rate of exactly 0.5 compared the other way (1).
+- **`src/Ucp`, run 1 fell under the ratchet: 68.92 %** against 69.34 %. Four
+  survivors were new, all in the `CountedAs` filter this phase added: nothing
+  called `search_catalog` over REST, and nothing checked that a failure counted
+  is still thrown — a filter that swallowed it would have answered the agent
+  with an empty 200. Both closed in `AgentToolCallMetricsTests` (two mutations,
+  two kills). The other two are **equivalent**: the fallback when a result is not
+  a `Results<…>` union (all three endpoints return one) and `< 500` against
+  `<= 500` (no handler returns a 500; a failure is thrown). **Run 2: 70.95 %**,
+  43 survivors, the baseline: those two, and the 41 of phase 9 written down above.
+- **`src/Search`, re-derived: 82.07 %** (83 survivors, 203 without coverage).
+  81 are survivors classified on 2026-09-17, matched by file, mutator and line;
+  the 36 that were there and are not are layer B's, gone with it, and the gaps
+  closed since. The 2 new ones are a counter's `unit` and `description` in a
+  static initializer: **runner artefacts**, and `TrackingPlanTests` holds the unit.
+- **Scoped runs.** `src/SharedKernel` (`Actor`, `AgentToolCalls`,
+  `MetricLabels`): 93.33 %, 1 survivor, a `StringBuilder` capacity hint —
+  **equivalent**. `src/Api` (`HttpActorAccessor`, `SyntheticTraffic`, the
+  telemetry configuration endpoint): 96.30 %, 1 survivor, the accessor's per-scope
+  cache of a deterministic answer — **equivalent**. `src/Catalog`
+  (`ProductsPublished`): 4 of 4 killed. `src/Inventory` (`ReservationTransitions`):
+  40 %, the 3 survivors are the counter's name, unit and description in a static
+  initializer — **runner artefacts**, the first two held by `TrackingPlanTests`.
+  `src/Ordering` (the checkout, cart and return meters): 91.30 %, 2 survivors,
+  both on the `discounted` label, which **nothing asserted anywhere**. The loop in
+  `CheckoutLoopTests` now asserts it on the order placed and on an idempotent
+  replay — the only path where an order comes back without a priced cart — and
+  the replay kills one. **Written down, waiting**: the other, which needs an order
+  placed with no promotion and then replayed; the sample promotions discount
+  every cart that test builds.
+- **By hand, where Stryker cannot reach.** `ToolCallCounting` in `src/Mcp`:
+  answered and refused swapped, a refusal counted as answered, a failure counted
+  as refused — three mutations, three kills. `SetExemplarFilter(TraceBased)` in
+  `src/ServiceDefaults` is **written down**: one line of configuration, seen
+  working in Grafana in `P9b-3`, and a test would read the SDK's internal state.
+- **What the runs cost, and what they are for.** The question the author asked
+  while they ran — *does it need to run this many times?* — had two answers. The
+  Monte Carlo test did not need its 200 000 walks, and now has 50 000. And the
+  runs themselves are the price of a phase close, not of a pull request: the
+  alternative was the three gaps above reaching the next phase unseen.
 
 ## Property-based (CsCheck)
 

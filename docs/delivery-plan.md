@@ -660,7 +660,7 @@ registry, so deleting a slice breaks the build.
 
 ## Phase 9b · Seeing it run
 
-`every task done 2026-09-26; not closed` — it closes with a Stryker run over the projects it touched · priority **high** · size **L** — inserted on 2026-09-24, before
+`hecha` (2026-09-26) · priority **high** · size **L** · **Stryker: TrafficSim 87.66 % (first baseline), Ucp 70.95 %, Search re-derived at 82.07 %, every survivor classified in `testing.md`** — inserted on 2026-09-24, before
 phase 10, so that claims and the agent checkout are born observed rather than
 instrumented afterwards. Spec: [`specs/seeing-it-run.md`](specs/seeing-it-run.md) ·
 tools: [`analysis/observability-tooling.md`](analysis/observability-tooling.md)
