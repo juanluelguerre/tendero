@@ -156,7 +156,8 @@ node tools/api-map.mjs --schema CartView
    asserted in a comment. In the browser this means feature-detecting
    `navigator.modelContext`; without it the shop is unchanged.
 9. **AI layering**: Microsoft.Extensions.AI for pipelines, Microsoft Agent
-   Framework only for real agents (phase 3 shopping assistant), no Agent
+   Framework only for real agents (the backoffice copilot, phase 12, and the
+   storefront shopping assistant, phase 12b), no Agent
    Harness (our agents are short-lived and constrained).
 10. **The identity provider is a port; we only ever validate tokens.** The
     contract is OIDC (discovery, JWKS, signed JWT), so the adapters are a

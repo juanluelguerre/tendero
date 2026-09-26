@@ -693,6 +693,7 @@ gate. Its analysis is `observability-tooling.md` §4.
 
 `no empezada` · priority **high** · size **L**
 
+- [ ] `P10-0` **Spike: what reads a description** — **M** · added 2026-09-26, when the author asked what the model is for and whether something newer does it better. Options, decisions as they are taken and the hypotheses, declared before measuring: [`analysis/claim-extraction-models.md`](analysis/claim-extraction-models.md). A 20-product golden claim set (the seed of `P10-9`); rules against small models under grammar; decides `P10-3`'s adapter
 - [ ] `P10-1` `src/Knowledge`; `SourceDocument` content-addressed like `ImageId` — **M**
 - [ ] `P10-2` `ProductClaim` with evidence, confidence, provenance (model, revision, prompt version, run) — **M**
 - [ ] `P10-3` `IClaimExtractor` via MEAI structured output — **M**
@@ -784,6 +785,45 @@ answer ends in a button. `#AIEngineering #agents #dotnet #ecommerce`
 
 ---
 
+## Phase 12b · The shopping assistant, with a voice
+
+`no empezada` · priority **medium** · size **L** — added 2026-09-26 at the author's
+request, with speech recognition inside it rather than in phase 13. The vision
+lists *a conversational assistant* among the standard 2026 capabilities and no
+phase had it; the gap analysis marked it missing. It comes **after phase 10**
+because an assistant with no approved claims can only paraphrase descriptions,
+and **after phase 12** because `src/Assist` and the cost and trace of every model
+call are built there.
+
+- [ ] `P12b-1` Spec and ADR: **the assistant answers only from tools** — search, the product page, approved claims — **cites each fact** and says *sin dato* where the shop does not know; never a fact of its own. The tracking plan's events, with the question each answers — **S**
+- [ ] `P12b-2` The agent in `src/Assist` (Microsoft Agent Framework, ADR 0005's *real agent*): read-only tools that reuse the slices the MCP server already exposes; short-lived, no memory past the conversation — **L**
+- [ ] `P12b-2b` **After-sale tools**, at the author's request (2026-09-26): *where is my order?* and *can I return it?*, answered from **that customer's** orders, returns and the return policy — the place the big shops get the most value from retrieval (Klarna reported its assistant handling two thirds of its service chats in 2024). Read-only and scoped to the signed-in principal: an order is found through `IPrincipalAccessor`, never by a number typed into the chat; opening a return stays the storefront's own form, which the answer links to — the assistant explains, the customer acts — **M**
+- [ ] `P12b-3` Grounding before sending: every factual sentence is held to the claim or product field it cites through the support port of `P10-0`; a sentence nothing supports is dropped, and counted — **M**
+- [ ] `P12b-4` The storefront conversation: es and en, one clay action, agent-driven actions in clay; **degrades to the search results** when no model answers (invariant 8), and the test proves it — **M**
+- [ ] `P12b-5` `ISpeechToText` with two adapters compared under one protocol: the browser's Web Speech API (no server, but Chrome sends the audio to Google) and **whisper.cpp** in a container, weights pinned by revision (ADR 0031), limits sized from a measurement; the text box is the non-AI path — **M**
+- [ ] `P12b-6` Voice in the assistant and in the search box on mobile; accessibility checked with the tokens and the keyboard, not assumed — **M**
+- [ ] `P12b-7` `assistant` eval suite in `SearchEval`: questions with the claims each answer must cite; a fact with no citation fails, no judge — **M**
+- [ ] `P12b-8` ADR — **S**
+
+**Risks.** Prompt injection through descriptions and claims, which the assistant
+reads — typed tools only, the grounding check before anything is shown. And the
+voice route that looks cheapest sends shoppers' audio to a third party: that is
+a decision for the author with the comparison in front of them, not a default.
+
+**Demo.** Spoken: *"una sartén que valga para inducción y no pese mucho"*. The
+answer lists two pans, and each claim carries its chip: *"base de acero para
+inducción" — approved by the shopkeeper*. The model is stopped; the same question
+typed returns the search results, and says so.
+
+**Evidences.** An assistant that cannot say what the shop has not verified, nor show one customer's order to another;
+retrieval through the shop's own tools rather than a second store of text; voice
+as a port with a self-hosted adapter measured against the browser's.
+
+**Article.** *"An assistant that shows its sources"* — RAG over approved claims, and
+what a microphone changes about the questions people ask. `#AIEngineering #RAG #voice #dotnet #angular #ecommerce`
+
+---
+
 ## Phase 13 · Multimodal and the kit solver
 
 `no empezada` · priority **medium** · size **L**
@@ -851,6 +891,9 @@ oversight, and each is a paragraph in some future article.
 | **Backoffice evaluation panel shows the answer metrics** | `admitted` and the notice rate are in `SearchEval`'s report and in `CultureScore`, and left out of `GET /api/search/evaluation` on purpose when they were added (2026-09-17); false out-of-scope left with layer B the same day, since nothing can produce it | The notice-rate decision is taken, or the panel is next touched |
 | **TEI's 32-text limit and `RerankDepth`** | TEI accepts at most 32 texts per request (`max_client_batch_size`), and `/rerank` refuses more. Found 2026-09-17 when the anchor build sent 133 and was refused; the anchors are batched now. `HybridSearchOptions.RerankDepth` defaults to 20 and has **no upper bound**, so a depth above 32 would be refused by the model server | Before anyone raises the depth: clamp it to 32 in validation, or chunk the pairs in the reranker |
 | ~~**Layer B, the refuted scope classifier**~~ | **Decided 2026-09-17: neither deleted nor shipped.** The classifier, its anchor file, the protocol's selection and acceptance rules and the 40 scope query pairs per culture are `tools/SearchEval/QueryScope`, and `--suite scope` runs the protocol end to end; the shipped answer has two values and the contract lost `OutOfScope`, `outOfScopeLabel` and UCP's `not_sold`. The reason it could not stay: with no calibration file it could never register, so it was unreachable code, an impossible enum value on the wire and eleven mutation survivors nothing could kill. The experiment is in the history (*"feat(search): say what kind of answer a page is, and make hybrid the default"*) and in `docs/blog/reports/2026-09-17-no-answer-research/layer-b-evidence.md` | done |
+| ~~**Speech recognition — voice as a way into search**~~ | **Moved 2026-09-26 into phase 12b**, inside the shopping assistant, at the author's decision — the analysis recorded the same day stays there: the search box on mobile and the assistant are where a spoken, long, natural query meets hybrid search and approved claims; voice commerce through smart speakers underdelivered, voice through AI assistants acting as agents is what grows; a port with the browser's Web Speech API and whisper.cpp compared | `P12b-5`, `P12b-6` |
+| **Tendero as a suite: Shopify as a channel** — **analysis scheduled after `P10-0`**, to decide whether it enters the plan **as an optional line** | recorded 2026-09-26 at the author's request; the author's leaning is *optional*, and the analysis decides first. The backoffice is sold as modules, and a customer who already has Shopify keeps its storefront and checkout. It reopens a written decision — *"Shopify is a catalog source, never the engine"* (`initial-plan.md`), because Shopify gives its merchants UCP by itself — for the modules that are worth something on top of Shopify, and keeps it for the agent surfaces. First reading, to be tested by the analysis: the **product reasoning layer** is the strongest module (Shopify has nothing like approved claims with a source; they would be published as metafields), a **PIM** feeding Shopify next; search, the copilot (Shopify Sidekick) and MCP/UCP/KYA add little there. It needs an **outbound channel port** the solution does not have (today only `ICatalogSourceConnector`, inbound), a written rule of which system owns which data (catalogue and claims here; orders, customers and payments in Shopify), and a storefront that is optional. Testable at laboratory scale on a free Shopify development store. Candidate first deliverable: *Knowledge for Shopify* | The analysis when `P10-0` closes; then an ADR and a phase |
+| **The storefront as a product, each customer with its own design** — very advanced, for the future, **an optional proposal for now** | recorded 2026-09-26 at the author's request, who called it an optional proposal, not a commitment. Selling the storefront means one codebase and many looks. The ground is partly laid: every colour, space and type size already comes from `design/tokens.css` and a test holds every stylesheet to it, so a customer's design starts as **a token set per customer** rather than a fork; beyond tokens it needs per-customer layout and content blocks, assets, and **multi-tenancy**, which the scale rule keeps out of scope today (one shop). ADR 0033 (*a design artefact is disposable*) and the accessibility pass (ADR 0034) set the bar any customer theme must still pass — contrast is checked per theme, not per shop | The suite analysis above is decided, and there is a second shop to serve |
 | Cart lines as a table | jsonb, read only with the cart that owns them | Something queries a line on its own. UCP mutating one goes through the aggregate, so it is not that |
 | Locale in the URL (`/es/…`) | one route serves two languages; the query is in the URL now, the language is still in a signal and in `localStorage` | The PDP route, which is where the per-culture slugs and `hreflang` both land (`P5-13`). The query already answers with every culture's slug |
 | A slug table with uniqueness and redirects | **settled, not deferred** — ADR 0026 makes the slug decorative and the URL carries a code, so there is nothing to make unique and no history to keep | Never, unless the code leaves the URL |
