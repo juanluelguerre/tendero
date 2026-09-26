@@ -19,6 +19,7 @@
 | [0015](0015-variant-is-the-indexed-unit.md) | The variant is the indexed unit; the product is the returned unit | accepted |
 | [0016](0016-quoted-live-frozen-at-order.md) | Prices are quoted live and frozen at order time | accepted |
 | [0017](0017-the-identity-provider-is-a-port.md) | The identity provider is a port; the first adapter was a development issuer | accepted |
+| [0018](0018-the-ai-writes-claims-not-products.md) | The AI writes claims, not products | accepted |
 | [0020](0020-transports-over-the-dispatcher.md) | MCP and UCP are transports over the dispatcher | accepted |
 | [0021](0021-the-manifest-is-derived.md) | The UCP manifest is derived from a capability registry | accepted |
 | [0023](0023-feature-flags-with-removal-conditions.md) | Feature flags are a closed set, each with a removal condition and one reader | accepted |
@@ -45,7 +46,8 @@ break the references the roadmap and the code already carry. 0017 was the first
 of those reservations to be cashed, in phase 7; 0020 and 0021 followed in phase
 9, and 0023 in phase 8 — with two flags rather than the five its title
 reserved, because a flag guards behaviour that exists, and none since 2026-09-17,
-when one became a capability and the other met its removal condition. What is still reserved
-and still unwritten: **0018** (the AI writes claims, not products), **0019**
+when one became a capability and the other met its removal condition; 0018 in phase 10,
+written first, before the domain it constrains. What is still reserved
+and still unwritten: **0019**
 (the copilot proposes commands, never prose) and **0022** (an agent is a
 principal, not a customer).
