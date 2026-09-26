@@ -2,7 +2,8 @@ import { SpanStatusCode } from '@opentelemetry/api';
 import { InMemoryLogRecordExporter } from '@opentelemetry/sdk-logs';
 import { InMemorySpanExporter } from '@opentelemetry/sdk-trace-web';
 import { describeTelemetryAdapterContract, type Emitted } from './adapter-contract';
-import { createOtelAdapter, SYNTHETIC_USER_AGENT } from './otel-adapter';
+import { createOtelAdapter } from './otel-adapter';
+import { SYNTHETIC_USER_AGENT } from './synthetic';
 
 describeTelemetryAdapterContract('The OpenTelemetry adapter', () => {
   const spans = new InMemorySpanExporter();

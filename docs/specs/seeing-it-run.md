@@ -94,8 +94,9 @@ comes first so that they are born observed instead of instrumented afterwards.
 
 ### F · The declared comparison
 
-- Written before the first run: the hypothesis, the seed, the duration, and what is
-  measured for the OTel and Faro adapters — bundle cost (the static half is
+- **Done (`P9b-8`)**: declared and measured in `analysis/otel-vs-faro.md`; OTel
+  stays the default. Written before the first run: the hypothesis, the seed, the
+  duration, and what is measured for the OTel and Faro adapters — bundle cost (the static half is
   measured already: 39.7 KB against 88.5 KB gzip), their effect on the vitals they
   report, fidelity in Grafana, adapter size. Then two runs and the numbers.
 

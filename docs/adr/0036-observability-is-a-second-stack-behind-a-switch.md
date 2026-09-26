@@ -83,9 +83,14 @@ the adapter's size — are written before the first run, as ADR 0033 did.
   initial bundle grew by 0.8 KB.
 - The browser learns its adapter from `GET /api/telemetry/config`, anonymous, the
   way it learns its issuer from `/api/auth/config`: one value, owned by the
-  server, that two apps cannot disagree about. Faro's are a
-  separate approval. Faro's clean tree rests on its pin of `ua-parser-js` 1.x (MIT;
-  2.x is AGPL), checked on every upgrade.
+  server, that two apps cannot disagree about. Faro's were a
+  separate approval, **given by the author on 2026-09-25** (`P9b-8`):
+  `@grafana/faro-web-sdk` and `@grafana/faro-web-tracing` 2.12.1, tier 1,
+  Apache-2.0, bringing six packages in all — `faro-core` and two OpenTelemetry
+  packages (Apache-2.0) and `ua-parser-js` **1.0.41** (MIT). Faro's clean tree
+  rests on that exact pin: `ua-parser-js` 2.x is AGPL-3.0, so it is checked on
+  every Faro upgrade. The Faro adapter reaches a receiver only in the full
+  observability mode; the Aspire dashboard reads OTLP, not Faro's payload.
 - The instrumentation that depends on zone.js is not used: Angular 22 is zoneless,
   and a user action is joined to its request explicitly, in an interceptor.
 - The C4 model gains the stack as containers (ADR 0035), and `tools/c4.mjs` names

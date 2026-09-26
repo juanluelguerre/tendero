@@ -34,6 +34,13 @@ const otlpHeaders = Object.fromEntries(
     .filter(([name, value]) => name && value),
 );
 
+/**
+ * /faro: the second browser adapter's payload (P9b-8), forwarded to the
+ * collector's Faro receiver — which exists only in the full observability mode,
+ * so the variable, and the route, exist only there too.
+ */
+const faro = process.env['FARO_ENDPOINT'];
+
 const telemetry = otlp
   ? [
       {
@@ -46,6 +53,10 @@ const telemetry = otlp
       },
     ]
   : [];
+
+if (faro) {
+  telemetry.push({ context: ['/faro'], target: faro, secure: false, changeOrigin: true });
+}
 
 export default [
   {

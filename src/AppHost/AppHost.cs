@@ -572,7 +572,28 @@ if (observability)
     // without ever knowing its address.
     storefront.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
     backoffice.WithEnvironment("OTEL_EXPORTER_OTLP_ENDPOINT", collector);
+
+    // And the Faro receiver, for the second browser adapter (P9b-8): only this
+    // mode has one, so only this mode hands its address to the dev servers.
+    var faroReceiver = grafanaStack.GetEndpoint("faro");
+    storefront.WithEnvironment("FARO_ENDPOINT", faroReceiver);
+    backoffice.WithEnvironment("FARO_ENDPOINT", faroReceiver);
 }
+
+// WHICH BROWSER TELEMETRY ADAPTER the pages load (ADR 0036): `otel` by default,
+// `faro` for the second adapter — which reaches a receiver only in the full
+// observability mode — or `noop`. The API answers it at /api/telemetry/config,
+// so both apps agree without either being rebuilt; changing it is
+// `Parameters:browser-telemetry` and a restart, which is how the declared
+// comparison switches between its two runs (docs/analysis/otel-vs-faro.md).
+//
+// Read from configuration here rather than left to `AddParameter`: given a value,
+// that overload makes it a CONSTANT, and `Parameters:browser-telemetry` on the
+// command line was silently ignored — the first Faro run of the comparison
+// loaded OTel.
+var browserTelemetry = builder.AddParameter("browser-telemetry",
+    builder.Configuration["Parameters:browser-telemetry"] ?? "otel");
+api.WithEnvironment("Telemetry__Browser__Adapter", browserTelemetry);
 
 // SIMULATED TRAFFIC (ADR 0037), listed and never started by itself.
 //
@@ -585,7 +606,8 @@ if (observability)
 // The seed is a parameter with a fixed default, so a run is reproducible out of
 // the box and another is one configuration value away
 // (`Parameters:traffic-sim-seed`). A day lasts an hour of real time.
-var trafficSeed = builder.AddParameter("traffic-sim-seed", "20260925");
+var trafficSeed = builder.AddParameter("traffic-sim-seed",
+    builder.Configuration["Parameters:traffic-sim-seed"] ?? "20260925");
 
 var trafficSim = builder.AddProject<Projects.ElGuerre_Tendero_TrafficSim>("traffic-sim")
     .WithReference(api)
