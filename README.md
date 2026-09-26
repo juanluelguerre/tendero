@@ -200,8 +200,8 @@ Aspire dashboard too, so nothing you had goes away (ADR 0036). The image is abou
 | Storefront | http://localhost:4200 |
 | Backoffice | http://localhost:4201 |
 | Aspire dashboard | http://localhost:15130 |
-| Grafana, with `Tendero__Observability=true` | http://localhost:53000 |
-| Postgres · Elasticsearch | 55432 · 59200 |
+| Grafana, with `Tendero__Observability=true` | http://localhost:33000 |
+| Postgres · Elasticsearch | 35432 · 39200 |
 
 Then import the sample catalogue and search it — through the storefront's own
 dev-server proxy, which is the same path the browser uses:

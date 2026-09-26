@@ -39,19 +39,27 @@ var tools = string.Equals(builder.Configuration["Tendero:Tools"], "true",
 // the ones already taken on a developer's machine by the Postgres and
 // Elasticsearch they use for work. That collision is the reason `docs/` warns
 // never to point SearchEval at localhost:9200.
-const int postgresPort = 55432;
-const int elasticsearchPort = 59200;
-const int pgWebPort = 55433;
-const int elasticvuePort = 59201;
-const int keycloakPort = 58443;
-const int qdrantGrpcPort = 56334;
-const int qdrantHttpPort = 56333;
-const int embeddingsPort = 58081;
-const int rerankerPort = 58082;
-const int grafanaPort = 53000;
-const int collectorGrpcPort = 54317;
-const int collectorHttpPort = 54318;
-const int faroPort = 58027;
+//
+// And all of them BELOW 49152 (moved on 2026-09-26). Windows hands out
+// 49152–65535 as its dynamic range, and Hyper-V and WinNAT reserve blocks of a
+// hundred ports inside it that move on every restart: one day 55371–55470 and
+// 52925–53024, covering Postgres, pgweb and Grafana, and the stack could not
+// start — Aspire's DCP warns "a port in the ephemeral range" on every start for
+// exactly this. The numbers kept their tails (55432 became 35432) so they still
+// read as what they are.
+const int postgresPort = 35432;
+const int elasticsearchPort = 39200;
+const int pgWebPort = 35433;
+const int elasticvuePort = 39201;
+const int keycloakPort = 38443;
+const int qdrantGrpcPort = 36334;
+const int qdrantHttpPort = 36333;
+const int embeddingsPort = 38081;
+const int rerankerPort = 38082;
+const int grafanaPort = 33000;
+const int collectorGrpcPort = 34317;
+const int collectorHttpPort = 34318;
+const int faroPort = 38027;
 
 // NAMED VOLUMES, and the name is the fix.
 //
