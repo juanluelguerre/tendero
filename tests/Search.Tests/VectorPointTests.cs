@@ -80,8 +80,8 @@ public sealed class VectorPointTests
     [Fact]
     public void Aspires_connection_string_and_a_bare_url_both_name_the_endpoint()
     {
-        var (endpoint, key) = QdrantConnection.Parse("Endpoint=http://localhost:56334;Key=tendero-dev");
-        Assert.Equal((new Uri("http://localhost:56334"), "tendero-dev"), (endpoint, key));
+        var (endpoint, key) = QdrantConnection.Parse("Endpoint=http://localhost:36334;Key=tendero-dev");
+        Assert.Equal((new Uri("http://localhost:36334"), "tendero-dev"), (endpoint, key));
 
         Assert.Equal((new Uri("http://qdrant:6334"), (string?)null), QdrantConnection.Parse("http://qdrant:6334"));
     }

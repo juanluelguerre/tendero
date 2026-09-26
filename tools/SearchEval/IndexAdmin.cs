@@ -52,11 +52,11 @@ public static class IndexAdmin
             // indexes, so it must never share an engine with anything else.
             throw new InvalidOperationException(
                 $"No Elasticsearch answering at {elasticsearch}. Start a throwaway one with:{Environment.NewLine}" +
-                "  docker run -d --name tendero-eval-es -p 59210:9200 \\" + Environment.NewLine +
+                "  docker run -d --name tendero-eval-es -p 39210:9200 \\" + Environment.NewLine +
                 "    --label com.docker.compose.project=tendero --label com.docker.compose.service=eval-es \\" + Environment.NewLine +
                 "    -e discovery.type=single-node -e xpack.security.enabled=false \\" + Environment.NewLine +
                 "    docker.elastic.co/elasticsearch/elasticsearch:9.5.0" + Environment.NewLine +
-                "and pass --elasticsearch http://localhost:59210.", exception);
+                "and pass --elasticsearch http://localhost:39210.", exception);
         }
     }
 

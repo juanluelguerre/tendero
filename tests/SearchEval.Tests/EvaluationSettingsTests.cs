@@ -13,7 +13,7 @@ public sealed class EvaluationSettingsTests
     [Fact]
     public void Without_a_strategy_the_gate_is_the_lexical_one_it_always_was()
     {
-        var options = EvaluationOptions.Parse(["--ci", "--elasticsearch", "http://localhost:59210"]);
+        var options = EvaluationOptions.Parse(["--ci", "--elasticsearch", "http://localhost:39210"]);
 
         Assert.Equal("lexical", options.Strategy);
         Assert.False(options.IsHybrid);
