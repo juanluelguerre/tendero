@@ -260,18 +260,41 @@ traps) and `support.json` (40 pairs).
 | Qwen3-4B, Q8 (Qwen's GGUF) | 0.89 | 0.68 | 0.69 | 0.65 | 6 | 0.963 | 0.76 | 1 | 40 s |
 | Granite 4.0 micro 3.4B, Q8 (IBM's GGUF) | 0.86 | 0.69 | 0.67 | 0.65 | 25 | 0.965 | 1.00 | 1 | 38 s |
 | Qwen3-1.7B, Q8 (Qwen's GGUF) | 0.90 | 0.61 | 0.63 | 0.24 | 13 | 1.000 | 0.31 | 1 | 16 s |
-| Phi-4-mini, int4 ONNX (Microsoft's), in process | — | — | — | — | — | — | — | — | 28 s |
+| Phi-4-mini, int4 ONNX (Microsoft's), in process | 0.59 | 0.27 | 0.22 | 0.18 | 12 | 0.625 | 0.00 | 0 | 22 s |
 | Gemma 4 E4B | not measured: no official GGUF; converting it needed a newer `transformers` than the day's llama.cpp image and more than 12 GB |
 
 *Spurious* and *language* were added after the runs that exposed them, and say so.
 The two Qwen3.5-4B Q8 figures are the same file under two server configurations.
 
-**Phi-4-mini, open.** All twenty answers failed to parse: a complete claims
-document followed by one extra `}`, and once a list that ran until the 3,072-token
-ceiling. ONNX Runtime GenAI 0.17's `IChatClient` does pass the schema to its
-constrained decoder (`SetGuidance("json_schema", …)`, read in its source at
-`rel-0.17.0`), and the native library carries LLGuidance — so the extra brace is
-not explained yet. Its first run also took the machine down: the maker's
+**Phi-4-mini: the extra brace is a bug in the runtime's chat client, found
+2026-09-27.** All twenty answers failed to parse: a complete claims document
+followed by one extra `}`, and once a list that ran until the 3,072-token
+ceiling. A diagnostic outside the repository ran the extractor's exact prompt and
+schema through ONNX Runtime GenAI's low-level API, token by token. Without
+guidance, Phi-4-mini does not write JSON at all; with it, the document is
+correct — and on the step where the grammar completes, `GenerateNextToken()` ends
+generation **without appending a token** (sequence length 645, 646, 647, **647**).
+A loop that reads "the last token of the sequence" after each step reads the
+closing `}` twice. `OnnxRuntimeGenAIChatClient` at `rel-0.17.0` reads exactly
+that way (`GetLastToken(generator.GetSequence(0))`), so every constrained answer
+it returns ends with its last token duplicated. Not Phi-4-mini, not the
+constrained decoder, not Tendero's code; no upstream issue found on 2026-09-27.
+Separately, and Phi's own: on one product it kept adding claims until the
+ceiling — the grammar allows an array of any length.
+
+**Is it a bug, or our misuse?** Asked by the author before anything was
+reported. The library's own example (`examples/csharp/ModelChat`) calls
+`GenerateNextToken()`, **asks `IsDone()` first** and stops without reading, and
+reads the step's token with `GetNextTokens()`. The chat client reads
+`GetSequence(0)[^1]` **before** asking — the one place that contradicts the
+library's documented loop, unchanged on `main`. Knowledge now runs ONNX models
+through its own `IChatClient` (`OnnxGenerationChatClient`), which decodes a token
+only when the sequence grew; with it **no answer carries the extra brace**. Phi-4-
+mini's own result, once readable: 12 of 20 answers parse, the other 8 run to the
+token ceiling adding claims; precision 0.59, recall 0.27, a third of its quotes
+not verbatim, every Spanish statement written in English. Of the models measured,
+the weakest at this job. Reported upstream on 2026-09-27, at the author's
+decision: [microsoft/onnxruntime-genai#2633](https://github.com/microsoft/onnxruntime-genai/issues/2633). Its first run also took the machine down: the maker's
 `genai_config.json` sets `max_length` to the full 131,072-token context, and the KV
 cache is reserved up front (~16 GB); the extractor now sets a ceiling.
 
