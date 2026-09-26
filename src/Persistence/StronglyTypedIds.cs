@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -28,6 +29,8 @@ internal static class StronglyTypedIds
         conventions.Properties<CustomerId>().HaveConversion<CustomerIdConverter>();
         conventions.Properties<ImageId>().HaveConversion<ImageIdConverter>();
         conventions.Properties<AgentId>().HaveConversion<AgentIdConverter>();
+        conventions.Properties<ClaimId>().HaveConversion<ClaimIdConverter>();
+        conventions.Properties<SourceDocumentId>().HaveConversion<SourceDocumentIdConverter>();
     }
 
     private sealed class ProductIdConverter() : ValueConverter<ProductId, Guid>(id => id.Value, value => new ProductId(value));
@@ -38,4 +41,6 @@ internal static class StronglyTypedIds
     private sealed class CustomerIdConverter() : ValueConverter<CustomerId, Guid>(id => id.Value, value => new CustomerId(value));
     private sealed class ImageIdConverter() : ValueConverter<ImageId, string>(id => id.Value, value => new ImageId(value));
     private sealed class AgentIdConverter() : ValueConverter<AgentId, string>(id => id.Value, value => new AgentId(value));
+    private sealed class ClaimIdConverter() : ValueConverter<ClaimId, Guid>(id => id.Value, value => new ClaimId(value));
+    private sealed class SourceDocumentIdConverter() : ValueConverter<SourceDocumentId, string>(id => id.Value, value => new SourceDocumentId(value));
 }

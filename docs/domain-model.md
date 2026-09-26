@@ -651,3 +651,97 @@ classDiagram
 |---|---|
 | `CustomerIdentified` | `CustomerId: CustomerId`, `Subject: string` |
 | `CustomerRegistered` | `CustomerId: CustomerId` |
+
+## Knowledge
+
+```mermaid
+classDiagram
+    class ClaimId {
+        <<record>>
+        +Guid Value
+    }
+    class ClaimStatus {
+        <<enumeration>>
+        Proposed
+        Approved
+        Rejected
+        Superseded
+    }
+    class Evidence {
+        <<record>>
+        +SourceDocumentId Document
+        +Quote Quote
+        +double Support
+    }
+    class ProductClaim {
+        <<aggregate>>
+        +ClaimId Id
+        +ProductId ProductId
+        +LocalizedText Statement
+        +string? AttributeCode
+        +string? Value
+        +Provenance Provenance
+        +ClaimStatus Status
+        +string? ReviewedBy
+        +DateTimeOffset? ReviewedAt
+        +DateTimeOffset CreatedAt
+        +Evidence[] Evidence
+        +double Support
+    }
+    class Provenance {
+        <<record>>
+        +string Extractor
+        +string? ModelId
+        +string? ModelRevision
+        +string? PromptVersion
+        +string RunId
+        +DateTimeOffset At
+    }
+    class Quote {
+        <<record>>
+        +string Text
+        +int Start
+        +int End
+    }
+    class SourceDocument {
+        +SourceDocumentId Id
+        +SourceKind Kind
+        +ProductId ProductId
+        +string Culture
+        +string Text
+        +DateTimeOffset RetrievedAt
+    }
+    class SourceDocumentId {
+        <<record>>
+        +string Value
+    }
+    class SourceKind {
+        <<enumeration>>
+        ProductDescription
+    }
+    Evidence --> SourceDocumentId : Document
+    Evidence --> Quote : Quote
+    ProductClaim --> ClaimId : Id
+    ProductClaim --> Provenance : Provenance
+    ProductClaim "1" --> "*" Evidence : Evidence
+    SourceDocument --> SourceDocumentId : Id
+```
+
+### Events
+
+| Event | Carries |
+|---|---|
+| `ClaimApproved` | `ClaimId: ClaimId`, `ProductId: ProductId`, `AttributeCode: string?`, `Value: string?`, `ApprovedBy: string` |
+| `ClaimProposed` | `ClaimId: ClaimId`, `ProductId: ProductId` |
+| `ClaimRejected` | `ClaimId: ClaimId`, `ProductId: ProductId`, `RejectedBy: string` |
+| `ClaimSuperseded` | `ClaimId: ClaimId`, `ProductId: ProductId`, `WasApproved: bool` |
+
+### ProductClaim states
+
+```mermaid
+stateDiagram-v2
+    Proposed --> Approved
+    Proposed --> Rejected
+    Proposed --> Superseded
+    Approved --> Superseded
+```

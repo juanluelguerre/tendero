@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
+using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Persistence.Configurations;
 using ElGuerre.Tendero.Persistence.Outbox;
@@ -23,6 +24,8 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<ReturnRequest> ReturnRequests => Set<ReturnRequest>();
     public DbSet<StockItem> StockItems => Set<StockItem>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<SourceDocument> SourceDocuments => Set<SourceDocument>();
+    public DbSet<ProductClaim> Claims => Set<ProductClaim>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     /// <summary>
@@ -49,6 +52,8 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ReturnRequestConfiguration());
         modelBuilder.ApplyConfiguration(new StockItemConfiguration());
         modelBuilder.ApplyConfiguration(new ReservationConfiguration());
+        modelBuilder.ApplyConfiguration(new SourceDocumentConfiguration());
+        modelBuilder.ApplyConfiguration(new ProductClaimConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 

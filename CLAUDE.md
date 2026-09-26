@@ -125,7 +125,9 @@ node tools/api-map.mjs --schema CartView
    count). A crossing carries values or an event record, never a reference:
    orders snapshot product name/price into `OrderLine`, an applied discount
    snapshots the promotion's code and label. Today: `Catalog`, `Pricing`,
-   `Inventory`, `Ordering`, `Accounts`. `Pricing` and `Inventory` reference
+   `Inventory`, `Ordering`, `Accounts`, `Knowledge` (phase 10: claims a model
+   proposes and a person approves, never written into `Catalog` — ADR 0018).
+   `Pricing` and `Inventory` reference
    SharedKernel and nothing else, and an architecture rule computes that by
    reflection — that purity is what makes the promotion engine verifiable with
    properties and the allocation strategies testable without a database.

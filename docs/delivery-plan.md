@@ -694,8 +694,8 @@ gate. Its analysis is `observability-tooling.md` §4.
 `no empezada` · priority **high** · size **L**
 
 - [x] `P10-0` **Spike: what reads a description** — **M** · **done 2026-09-27**: the extractor is **Qwen3.5-4B Q8** on llama.cpp with the rules as the non-AI path (precision 0.92, recall 0.80 on 71 golden claims), the support scorer the **NLI model on TEI** (AUC 1.00, ECE 0.03, 0.07 s); nine candidates measured through the ports that ship, a runtime bug found and reported upstream ([onnxruntime-genai#2633](https://github.com/microsoft/onnxruntime-genai/issues/2633)) · added 2026-09-26, when the author asked what the model is for and whether something newer does it better. Options, decisions as they are taken and the hypotheses, declared before measuring: [`analysis/claim-extraction-models.md`](analysis/claim-extraction-models.md). A 20-product golden claim set (the seed of `P10-9`); rules against small models under grammar; decides `P10-3`'s adapter
-- [ ] `P10-1` `src/Knowledge`; `SourceDocument` content-addressed like `ImageId` — **M**
-- [ ] `P10-2` `ProductClaim` with evidence, confidence, provenance (model, revision, prompt version, run) — **M**
+- [x] `P10-1` `src/Knowledge`; `SourceDocument` content-addressed like `ImageId` — **M** · **done 2026-09-27**: its id is the SHA-256 of the text, a quote is located without regard to case and kept in the text's own spelling (the capital letter of `P10-0`)
+- [x] `P10-2` `ProductClaim` with evidence, confidence, provenance (model, revision, prompt version, run) — **M** · **done 2026-09-27**: support measured per quote and the claim showing its weakest; a `TransitionTable` of four states (supersession when the text changes); `knowledge.claims` and `knowledge.source_documents` in Postgres, evidence and provenance in jsonb, a round trip through a real database with its events in the outbox
 - [ ] `P10-3` `IClaimExtractor` via MEAI structured output — **M**
 - [ ] `P10-4` `ProposeClaimsFromDescription` — no new sources, no scraping — **M**
 - [ ] `P10-5` Review queue for claims, reusing the existing pattern — **M**
@@ -703,7 +703,7 @@ gate. Its analysis is `observability-tooling.md` §4.
 - [ ] `P10-7` `CompareProducts`: approved claims only; "sin dato", never a guess — **M**
 - [ ] `P10-8` PDP specs table with source chips and confidence — **M**
 - [ ] `P10-9` `claims` eval suite — **M**
-- [ ] `P10-10` ADR 0018 — **S**
+- [x] `P10-10` ADR 0018 — **S** · **written first, 2026-09-27**, before the domain it constrains
 
 **Risks.** Confidence is easy to display and hard to calibrate — say plainly in
 the article that a model's self-reported confidence is not a probability. Second
