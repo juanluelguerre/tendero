@@ -693,7 +693,7 @@ gate. Its analysis is `observability-tooling.md` §4.
 
 `no empezada` · priority **high** · size **L**
 
-- [ ] `P10-0` **Spike: what reads a description** — **M** · added 2026-09-26, when the author asked what the model is for and whether something newer does it better. Options, decisions as they are taken and the hypotheses, declared before measuring: [`analysis/claim-extraction-models.md`](analysis/claim-extraction-models.md). A 20-product golden claim set (the seed of `P10-9`); rules against small models under grammar; decides `P10-3`'s adapter
+- [x] `P10-0` **Spike: what reads a description** — **M** · **done 2026-09-27**: the extractor is **Qwen3.5-4B Q8** on llama.cpp with the rules as the non-AI path (precision 0.92, recall 0.80 on 71 golden claims), the support scorer the **NLI model on TEI** (AUC 1.00, ECE 0.03, 0.07 s); nine candidates measured through the ports that ship, a runtime bug found and reported upstream ([onnxruntime-genai#2633](https://github.com/microsoft/onnxruntime-genai/issues/2633)) · added 2026-09-26, when the author asked what the model is for and whether something newer does it better. Options, decisions as they are taken and the hypotheses, declared before measuring: [`analysis/claim-extraction-models.md`](analysis/claim-extraction-models.md). A 20-product golden claim set (the seed of `P10-9`); rules against small models under grammar; decides `P10-3`'s adapter
 - [ ] `P10-1` `src/Knowledge`; `SourceDocument` content-addressed like `ImageId` — **M**
 - [ ] `P10-2` `ProductClaim` with evidence, confidence, provenance (model, revision, prompt version, run) — **M**
 - [ ] `P10-3` `IClaimExtractor` via MEAI structured output — **M**
