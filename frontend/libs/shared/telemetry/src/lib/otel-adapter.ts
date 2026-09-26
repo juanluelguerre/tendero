@@ -7,6 +7,7 @@ import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchLogRecordProcessor, LoggerProvider, type LogRecordExporter } from '@opentelemetry/sdk-logs';
 import { BatchSpanProcessor, WebTracerProvider, type ReadableSpan, type SpanExporter } from '@opentelemetry/sdk-trace-web';
 import { scrubUrl } from './scrub-url';
+import { isSynthetic } from './synthetic';
 import type { ActorKind, TelemetryAdapter, TelemetryContext } from './telemetry';
 
 /** What the tests replace: where spans and log records go, and whether Web Vitals are observed. */
@@ -201,11 +202,4 @@ function instrumentFetch(provider: WebTracerProvider, endpoint: string, session:
     },
   });
   instrumentation.setTracerProvider(provider);
-}
-
-/** The User-Agent suffix `tools/TrafficSim` adds to every browser it drives. */
-export const SYNTHETIC_USER_AGENT = 'TenderoTrafficSim/';
-
-function isSynthetic(): boolean {
-  return typeof navigator !== 'undefined' && navigator.userAgent.includes(SYNTHETIC_USER_AGENT);
 }

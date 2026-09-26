@@ -39,6 +39,22 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
 
         var page = await context.NewPageAsync();
         var random = new Random(journey.Seed ^ 0x5BD1E995);
+
+        // What the page's own telemetry costs to send (docs/analysis/otel-vs-faro.md,
+        // measure 2): every request to the same-origin telemetry paths, whichever
+        // adapter the page loaded.
+        var telemetryRequests = 0;
+        long telemetryBytes = 0;
+        page.Request += (_, request) =>
+        {
+            var path = new Uri(request.Url).AbsolutePath;
+            if (path.StartsWith("/otlp", StringComparison.Ordinal) || path.StartsWith("/faro", StringComparison.Ordinal))
+            {
+                Interlocked.Increment(ref telemetryRequests);
+                Interlocked.Add(ref telemetryBytes, request.PostDataBuffer?.Length ?? 0);
+            }
+        };
+        var session = System.Diagnostics.Activity.Current;
         var queries = new Queue<string>(journey.Queries);
         var declines = new Queue<bool>(journey.CardDeclines);
         var culture = journey.Culture;
@@ -75,6 +91,12 @@ public sealed class BrowserDriver(IBrowser browser, Uri storefront, string userA
                 activity?.SetTag("synthetic.step.timeout", exception.Message);
             }
         }
+
+        // Leaving the page is when both SDKs send what they still hold.
+        await page.CloseAsync(new() { RunBeforeUnload = true });
+        await Task.Delay(TimeSpan.FromSeconds(1), CancellationToken.None);
+        session?.SetTag("synthetic.telemetry.requests", telemetryRequests);
+        session?.SetTag("synthetic.telemetry.bytes", telemetryBytes);
     }
 
     private static async Task<bool> HomeAsync(IPage page, string culture, bool grantsConsent)

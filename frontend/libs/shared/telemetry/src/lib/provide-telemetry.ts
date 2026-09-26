@@ -33,6 +33,9 @@ export const TELEMETRY_ADAPTERS = new InjectionToken<Readonly<Record<string, () 
     providedIn: 'root',
     factory: () => ({
       otel: () => import('./otel-adapter').then((module) => module.createOtelAdapter()),
+      // The second adapter (P9b-8). It reaches a receiver only in the full
+      // observability mode: the Aspire dashboard reads OTLP, not Faro's payload.
+      faro: () => import('./faro-adapter').then((module) => module.createFaroAdapter()),
     }),
   },
 );
