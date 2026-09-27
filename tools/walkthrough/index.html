@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tendero · walkthrough</title>
+  <!-- The kit this page belongs to: docs/specs/redesign-walkthrough.md -->
+  <link rel="stylesheet" href="../../design/tokens.css">
+  <link rel="stylesheet" href="walkthrough.css">
+</head>
+<body>
+  <header class="bar">
+    <h1 data-t="title"></h1>
+    <div class="bar-actions">
+      <button type="button" class="lang" data-lang="es" aria-pressed="true">ES</button>
+      <button type="button" class="lang" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel" id="session">
+      <h2 data-t="session"></h2>
+      <div class="fields">
+        <label><span data-t="participant"></span>
+          <select id="participant"><option>P1</option><option>P2</option><option>P3</option></select>
+        </label>
+        <label><span data-t="round"></span>
+          <select id="round">
+            <option value="baseline" data-t="baseline"></option>
+            <option value="after" data-t="after"></option>
+          </select>
+        </label>
+        <label><span data-t="firstWidth"></span>
+          <select id="firstWidth"><option value="1440">1440 px</option><option value="390">390 px</option></select>
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" id="consent"> <span data-t="consent"></span></label>
+      <label class="check"><input type="checkbox" id="recorded"> <span data-t="recorded"></span></label>
+    </section>
+
+    <ol id="tasks" class="tasks"></ol>
+
+    <section class="panel" id="sus">
+      <h2>SUS</h2>
+      <p class="muted" data-t="susHelp"></p>
+      <ol id="susItems" class="sus"></ol>
+      <p class="score"><span data-t="susScore"></span> <strong id="susScore">—</strong></p>
+    </section>
+
+    <section class="panel" id="results">
+      <h2 data-t="results"></h2>
+      <div class="scroll"><table id="summary"></table></div>
+      <div class="actions">
+        <button type="button" id="export" class="primary" data-t="export"></button>
+        <label class="button"><span data-t="import"></span><input type="file" id="import" accept="application/json" hidden></label>
+        <button type="button" id="clear" data-t="clear"></button>
+      </div>
+      <p class="muted" data-t="privacy"></p>
+    </section>
+  </main>
+
+  <template id="task">
+    <li class="panel task">
+      <header>
+        <span class="code"></span>
+        <span class="width"></span>
+        <p class="wording"></p>
+      </header>
+      <p class="muted"><span data-t="startsAt"></span> <span class="starts"></span> · <span data-t="doneWhen"></span> <span class="done"></span></p>
+      <label class="target"><span data-t="card"></span> <input type="text" name="target"></label>
+      <div class="timer">
+        <output class="clock">0:00</output>
+        <button type="button" class="start" data-t="start"></button>
+        <button type="button" class="stop" data-t="stop"></button>
+        <button type="button" class="reset" data-t="reset"></button>
+      </div>
+      <fieldset class="outcome">
+        <legend data-t="outcome"></legend>
+      </fieldset>
+      <div class="fields">
+        <label><span data-t="interactions"></span> <input type="number" min="0" name="interactions"></label>
+        <label><span data-t="errors"></span> <input type="number" min="0" name="errors"></label>
+      </div>
+      <fieldset class="seq">
+        <legend data-t="seq"></legend>
+      </fieldset>
+      <label class="notes"><span data-t="notes"></span> <textarea name="notes" rows="2"></textarea></label>
+    </li>
+  </template>
+
+  <!-- A classic script, not a module: browsers refuse modules over file://. -->
+  <script src="walkthrough.js" defer></script>
+</body>
+</html>

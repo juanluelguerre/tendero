@@ -300,3 +300,5 @@ The three questions R-0 left open, decided by the author on 2026-09-27:
    script of the nine jobs, a short consent text, and a page that times each job
    and records SEQ and SUS. Doing the jobs, and finding the second person, is
    the author's. The results are analysed against the baseline.
+   **The kit:** [`redesign-walkthrough.md`](redesign-walkthrough.md) and its page,
+   `tools/walkthrough/index.html` (built 2026-09-27).
