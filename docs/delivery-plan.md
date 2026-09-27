@@ -699,7 +699,7 @@ gate. Its analysis is `observability-tooling.md` §4.
 - [x] `P10-3` `IClaimExtractor` via MEAI structured output — **M** · **built 2026-09-27**: `Tendero__Knowledge=true` starts a job that downloads, converts and hash-checks Qwen3.5-4B, llama.cpp serving it with P10-0's settings, and TEI with the NLI scorer — each with a memory and CPU limit from its measurement; with the switch off, the rules alone. *Not yet run end to end on the stack*
 - [x] `P10-4` `ProposeClaimsFromDescription` — no new sources, no scraping — **M** · **built 2026-09-27**, in two halves: on the outbox, a product's description per culture is recorded by its hash in milliseconds (unchanged text is nothing, a changed one supersedes the claims on the old, A → B → A reinstates); off it, a background proposer takes one waiting product at a time — the model when started, the rules otherwise — vets every claim, scores its support and proposes it. Four signals in the tracking plan
 - [x] `P10-5` Review queue for claims, reusing the existing pattern — **M** · **done 2026-09-27**: `GET /api/knowledge/claims` (the weakest support first, each quote with where it sits), `POST …/{id}/approve|reject` as audited commands whose reviewer is the session's principal, never the body; a backoffice screen that joins the product names from Catalog — Knowledge cannot, sharing no entity with it — with no optimistic state; `tendero.knowledge.claims.reviewed` in the tracking plan. The API registers Knowledge's rules only; the vocabulary adapter moved to Persistence so both hosts share it
-- [ ] `P10-6` `ClaimApproved` → outbox → Catalog `SetAttribute` and Search `specsText`. Knowledge never writes to Catalog — **M**
+- [x] `P10-6` `ClaimApproved` → outbox → Catalog `SetAttribute` ~~and Search `specsText`~~. Knowledge never writes to Catalog — **M** · **done 2026-09-27**: the worker turns the approval into Catalog's own `SetProductAttribute`, and the definition decides (`AttributeDefinition.Accept`, now the one rule the import mapper uses too); refused values are audited and counted (`tendero.knowledge.claims.applied`). **No `specsText`** (ADR 0018, amended): a claim paraphrases a description already indexed, so the typed value reaches Search through the product's own reindex and Search keeps no reference to Knowledge. The worker registers that single slice (`AddTenderoSlices`), not Catalog's assembly. End to end against Postgres, and the test kills a hand mutation that skips the handler
 - [ ] `P10-7` `CompareProducts`: approved claims only; "sin dato", never a guess — **M**
 - [ ] `P10-8` PDP specs table with source chips and confidence — **M**
 - [ ] `P10-9` `claims` eval suite — **M**
@@ -752,6 +752,24 @@ table.
 **Article.** *"A UCP merchant server in .NET"* — the missing reference
 implementation. **Treat as a launch**: README, LinkedIn, X, dev.to, a talk
 proposal, and a note to the UCP community. `#UCP #AP2 #agenticcommerce #dotnet #ecommerce`
+
+---
+
+## Between 11 and 12 · A backoffice review, and the plan it produces
+
+`no empezada` · priority **high** · size **S** (the review; the plan sizes the rest)
+
+Asked by the author on 2026-09-27: *the backoffice has to be responsive,
+professional, modern, fitted to the screen, easy to use and genuinely new,
+applying the most current UX techniques — review it after phase 11 and propose
+a plan.* It goes here, and not earlier, because phase 11 adds the dashboard
+(`P11-7`) and the agent screens: reviewing before them would review a backoffice
+that is about to change shape.
+
+- [ ] `R-1` Audit every backoffice view at phone, tablet, laptop and wide widths: layout, density, overflow, touch targets, keyboard paths, empty/loading/error states, and what the accessibility pass (ADR 0034) already holds — **S**
+- [ ] `R-2` Benchmark against current admin UX (Shopify Admin/Polaris, Linear, Stripe Dashboard, Seller Central): command palette, inline editing, bulk actions, optimistic updates, saved views, keyboard shortcuts, skeletons, contextual help — each judged for what it earns here, not adopted because it is fashionable — **S**
+- [ ] `R-3` The proposal: findings with screenshots, what to adopt and why, ordered and sized, within the design system (`design/DESIGN.md`, tokens only, one clay action per view), committed first as a document so the author can read it before anything built on it merges — **S**
+- [ ] `R-4` Build it, on its own branch cut from phase 11's (the author, 2026-09-27: *when phase 11 is done, continue on a new branch from it with the new design proposal*) — sized by `R-3`
 
 ---
 

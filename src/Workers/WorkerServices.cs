@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
@@ -54,6 +55,11 @@ public static class WorkerServices
             // Catalog's descriptions as values (Workers/Knowledge, ADR 0014).
             typeof(RecordDescriptionHandler).Assembly,
             typeof(RecordDescriptionOnProductUpserted).Assembly);
+
+        // One slice of Catalog's write side, not the assembly: an approved claim
+        // becomes an attribute through Catalog's own command (P10-6), and the rest
+        // of Catalog — the import and its connectors — has no business here.
+        builder.Services.AddTenderoSlices(typeof(SetProductAttributeCommand));
 
         builder.Services.AddTenderoPersistence(
             builder.Configuration.GetRequiredConnectionString("tendero-db"));

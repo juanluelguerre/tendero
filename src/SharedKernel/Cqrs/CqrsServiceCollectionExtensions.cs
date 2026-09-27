@@ -41,17 +41,34 @@ public static class CqrsServiceCollectionExtensions
         services.TryAddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
         foreach (var assembly in assemblies.Distinct())
-            RegisterHandlers(services, assembly);
+            RegisterHandlers(services, assembly.GetTypes());
 
         return services;
     }
 
-    private static void RegisterHandlers(IServiceCollection services, Assembly assembly)
+    /// <summary>
+    /// Registers the handlers and validators of single slices — the namespace of
+    /// each type given — rather than of a whole assembly. For a host that needs
+    /// one slice of a context and not the rest: the worker applies an approved
+    /// claim through Catalog's <c>SetProductAttribute</c> (P10-6), and scanning
+    /// all of Catalog would bring in the import and its connectors, which the
+    /// worker does not have and <c>ValidateOnBuild</c> would refuse to build.
+    /// Call <see cref="AddTenderoCqrs"/> as well: this adds handlers, not the dispatchers.
+    /// </summary>
+    public static IServiceCollection AddTenderoSlices(this IServiceCollection services, params Type[] slices)
+    {
+        foreach (var slice in slices.Distinct())
+            RegisterHandlers(services, slice.Assembly.GetTypes().Where(type => type.Namespace == slice.Namespace));
+
+        return services;
+    }
+
+    private static void RegisterHandlers(IServiceCollection services, IEnumerable<Type> types)
     {
         // GetTypes, not GetExportedTypes: an internal handler is legitimate (and
         // in fact preferable, since only the dispatcher invokes it), and with
         // GetExportedTypes it would go unregistered in silence, to fail at runtime.
-        foreach (var type in assembly.GetTypes())
+        foreach (var type in types)
         {
             if (type is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false } is false)
                 continue;

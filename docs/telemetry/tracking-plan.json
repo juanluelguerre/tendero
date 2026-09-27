@@ -173,6 +173,15 @@
       "signals": [
         "tendero.knowledge.claims.reviewed"
       ]
+    },
+    {
+      "name": "Approved claims reach the catalogue",
+      "area": "backoffice",
+      "question": "Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through?",
+      "decision": "Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs.",
+      "signals": [
+        "tendero.knowledge.claims.applied"
+      ]
     }
   ],
   "events": [
@@ -506,6 +515,26 @@
           ],
           "description": "ReviewDecision, labelled by MetricLabels.",
           "from": "ReviewDecision"
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.claims.applied",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Approved typed claims Catalog was asked to hold, by what it answered.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "set",
+            "unchanged",
+            "product_not_found",
+            "unknown_attribute",
+            "value_rejected"
+          ],
+          "description": "SetAttributeOutcome, labelled by MetricLabels.",
+          "from": "SetAttributeOutcome"
         }
       }
     }

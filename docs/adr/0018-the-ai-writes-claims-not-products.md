@@ -28,6 +28,21 @@ the outbox, a `Catalog` handler applies it (`SetAttribute`) and a `Search` handl
 adds it to what is indexed. **Propose, approve, apply** — three steps, three
 auditable writers, none of them a model.
 
+> **Amended 2026-09-27, when it was built (P10-6).** Search gets no handler and
+> no `specsText` field. A claim is read *from* the description, and the
+> description is already indexed: a statement adds a paraphrase of words the
+> index holds, and a searchable field made of paraphrases would move the NDCG
+> gate for no new word. What a claim adds that the index lacks is a **typed
+> value**, and that reaches Search the way every attribute does — Catalog's
+> `SetProductAttribute` raises `ProductUpserted`, and the ordinary projection
+> renders it into `attributesText` and the facets. Search keeps no reference to
+> Knowledge, and an untyped statement stays in Knowledge for the comparison and
+> the product page. Catalog has the last word on the value: its definition
+> accepts it or the command is refused, audited and counted
+> (`tendero.knowledge.claims.applied`). A superseded claim leaves the attribute
+> where it is — the value was a person's decision and is Catalog's now; a new
+> text's claims, approved, overwrite it.
+
 **2 · The model.**
 
 ```

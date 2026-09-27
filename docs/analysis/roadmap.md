@@ -524,7 +524,9 @@ quote; `ApproveClaim` and `RejectClaim` are commands.
 
 **`Knowledge` never writes to `Catalog`.** On approval it raises `ClaimApproved`
 → outbox → a `Catalog` handler calls `SetAttribute`, and a `Search` handler adds
-it to a `specsText` field. The AI proposes, the human approves, the system
+it to a `specsText` field. *(Built differently, ADR 0018's amendment: the typed
+value reaches Search through Catalog's own reindex, and there is no `specsText` —
+a claim paraphrases a description the index already holds.)* The AI proposes, the human approves, the system
 applies — three steps, each auditable. **The AI writes claims, not products.**
 
 **Comparisons** return aligned rows of **Approved claims only**, and say "sin

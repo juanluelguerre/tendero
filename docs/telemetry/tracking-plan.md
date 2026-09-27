@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-19 features: **15** answered by a signal emitted today,
+20 features: **16** answered by a signal emitted today,
 **0** by a signal planned, and **4** with no signal, each saying why.
 
 ### Storefront
@@ -38,6 +38,7 @@ everything here that is not *planned* is emitted.
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
 | Claims from descriptions | How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it? | A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it. | `tendero.knowledge.claims.proposed`, `tendero.knowledge.claims.dropped`, `tendero.knowledge.proposals.failed`, `tendero.knowledge.descriptions.failed` | emitted |
 | Claim review | Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones? | A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. | `tendero.knowledge.claims.reviewed` | emitted |
+| Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 
 ### Agents
 
@@ -275,3 +276,15 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `decision` | string | `approve`, `reject` | ReviewDecision, labelled by MetricLabels. |
+
+### `tendero.knowledge.claims.applied`
+
+counter, unit `{claim}`. Approved typed claims Catalog was asked to hold, by what it answered.
+
+Answers:
+
+- **Approved claims reach the catalogue** — Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `outcome` | string | `set`, `unchanged`, `product_not_found`, `unknown_attribute`, `value_rejected` | SetAttributeOutcome, labelled by MetricLabels. |
