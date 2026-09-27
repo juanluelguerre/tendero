@@ -22,8 +22,10 @@ namespace ElGuerre.Tendero.Ucp;
 /// </summary>
 public static class UcpProfileEndpoint
 {
-    public static IEndpointConventionBuilder MapTenderoUcp(this IEndpointRouteBuilder endpoints) =>
-        endpoints
+    public static IEndpointConventionBuilder MapTenderoUcp(this IEndpointRouteBuilder endpoints)
+    {
+        MapExtensionSchemas(endpoints);
+        return endpoints
             .MapGet(UcpSpecification.WellKnownPath, Ok<UcpProfile> (HttpContext http, Signing.IMerchantSigner signer) =>
                 TypedResults.Ok(Compose($"{http.Request.Scheme}://{http.Request.Host}", signer.PublishedKeys)))
             .AllowAnonymous()
@@ -31,6 +33,20 @@ public static class UcpProfileEndpoint
             // this document POINTS AT schemas rather than being described by
             // ours, and the committed OpenAPI document generates the storefront's
             // TypeScript types, which have no use for a discovery profile.
+            .WithMetadata(new ExcludeFromDescriptionAttribute());
+    }
+
+    /// <summary>
+    /// <c>GET /ucp/schemas/{name}</c>: the schemas of the shop's own extensions,
+    /// embedded in this assembly beside the code that keeps them. Anonymous, like the
+    /// profile that points at them — a contract nobody may read is not one.
+    /// </summary>
+    private static void MapExtensionSchemas(IEndpointRouteBuilder endpoints) =>
+        endpoints.MapGet("/ucp/schemas/{name}", IResult (string name) =>
+                typeof(UcpProfileEndpoint).Assembly.GetManifestResourceStream($"ucp-schema:{name}") is { } schema
+                    ? Results.Stream(schema, "application/schema+json")
+                    : Results.NotFound())
+            .AllowAnonymous()
             .WithMetadata(new ExcludeFromDescriptionAttribute());
 
     /// <summary>
@@ -87,8 +103,8 @@ public static class UcpProfileEndpoint
                         new UcpCapabilityDeclaration
                         {
                             Version = capability.Version,
-                            Spec = capability.Spec,
-                            Schema = capability.Schema,
+                            Spec = UcpCapabilities.Absolute(capability.Spec, host),
+                            Schema = UcpCapabilities.Absolute(capability.Schema, host),
                             Extends = capability.Extends,
                             Config = capability.Config
                         }

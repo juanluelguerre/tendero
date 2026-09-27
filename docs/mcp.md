@@ -148,6 +148,18 @@ entry, not an error; the payload arrives in `result.structuredContent`.
 Absent is fine. Malformed — a `ucp-agent` with no `profile` — is refused, and
 says which member is missing.
 
+**The shop's own extension, `com.elguerre.tendero.knowledge`** (P11-8). When the
+profile is on a trusted host and speaks it, every product `lookup_catalog` and
+`get_product` return carries `knowledge`. It holds the product's specs, each
+with its `source`: `catalogue`, or `description` when a person approved it from
+the product's own text. In that case it also carries the quoted words and how
+well they support the value, 0 to 1. The member lists only the specs the shop
+knows: a missing one means the shop does not know it. The answer's `ucp.capabilities`
+names the extension. Its schema is the shop's own, served at
+`/ucp/schemas/com.elguerre.tendero.knowledge.json` and linked from the profile.
+Without a profile, or with one from an untrusted host, the catalogue answers as
+before and nothing is refused. The development profiles speak it.
+
 **A search says what kind of answer it is**, as informational `messages` (ADR
 0032), over both the MCP and the REST binding:
 

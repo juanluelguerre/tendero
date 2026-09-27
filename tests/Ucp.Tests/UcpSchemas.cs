@@ -96,6 +96,15 @@ internal static class UcpSchemas
             count++;
         }
 
+        // The shop's own extensions' schemas, from where the API serves them: the
+        // Ucp assembly's embedded resources. Validated against the same way.
+        var ours = typeof(ElGuerre.Tendero.Ucp.UcpProfile).Assembly;
+        foreach (var name in ours.GetManifestResourceNames().Where(name => name.StartsWith("ucp-schema:", StringComparison.Ordinal)))
+        {
+            using var reader = new StreamReader(ours.GetManifestResourceStream(name)!);
+            SchemaRegistry.Global.Register(JsonSchema.FromText(reader.ReadToEnd()));
+        }
+
         // The whole point is that resolution is offline, so an empty or
         // half-loaded registry has to fail loudly rather than let every
         // validation pass over nothing.

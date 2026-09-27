@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
+using ElGuerre.Tendero.Knowledge.Features.ProductSpecs;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 
 namespace ElGuerre.Tendero.Ucp.Capabilities;
@@ -43,4 +44,35 @@ public sealed class CatalogLookupCapability : IUcpCapability
     public string Schema => $"{UcpSpecification.SchemaBaseUrl}/shopping/catalog_lookup.json";
 
     public IReadOnlyList<Type> Slices => [typeof(GetProductQuery)];
+}
+
+/// <summary>
+/// The shop's own extension of UCP's catalogue (P11-8), and the project's
+/// differentiator carried by the protocol's own mechanism: once negotiated, every
+/// product a lookup or a product read answers carries <c>knowledge</c> — its specs,
+/// each with its source, and for a value a person approved from the product's text,
+/// the words it rests on and how well they support it.
+///
+/// Reverse-DNS under our own name, because UCP reserves <c>dev.ucp.*</c>. Its
+/// schema is ours to publish, so it is served by this API rather than pointed at
+/// ucp.dev; its version is ours too, the date its shape was settled.
+/// </summary>
+public sealed class KnowledgeCapability : IUcpCapability
+{
+    public const string Name = "com.elguerre.tendero.knowledge";
+
+    public const string SchemaPath = "/ucp/schemas/com.elguerre.tendero.knowledge.json";
+
+    public string Id => Name;
+
+    public string Version => "2026-09-27";
+
+    /// <summary>The schema's own descriptions are its specification: one document, served beside the code that keeps it.</summary>
+    public string Spec => SchemaPath;
+
+    public string Schema => SchemaPath;
+
+    public string? Extends => "dev.ucp.shopping.catalog.lookup";
+
+    public IReadOnlyList<Type> Slices => [typeof(ProductSpecsQuery)];
 }

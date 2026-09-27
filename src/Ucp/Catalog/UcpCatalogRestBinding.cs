@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Ucp.Negotiation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -69,13 +70,13 @@ public static class UcpCatalogRestBinding
         group.MapPost("/catalog/lookup",
             async Task<Results<Ok<UcpCatalogPage>, BadRequest<string>>> (
                 UcpLookupRequest request, HttpContext http,
-                IQueryDispatcher dispatcher, CancellationToken ct) =>
+                IQueryDispatcher dispatcher, IPlatformProfiles profiles, CancellationToken ct) =>
             {
                 if (UcpCatalogOperations.Check(request.Meta, request.Ids.Count) is { } refusal)
                     return TypedResults.BadRequest(refusal.Reason);
 
                 return TypedResults.Ok(await UcpCatalogOperations.LookupAsync(
-                    dispatcher, request, Culture(http), BaseUrl(http), ct));
+                    dispatcher, request, Culture(http), BaseUrl(http), profiles, ct));
             })
             // The same names the MCP binding serves them under: one operation, two doors.
             .AddEndpointFilter(UcpToolCounting.CountedAs("lookup_catalog"));
@@ -83,7 +84,7 @@ public static class UcpCatalogRestBinding
         group.MapPost("/catalog/product",
             async Task<Results<Ok<UcpProductAnswer>, BadRequest<string>, NotFound<string>>> (
                 UcpGetProductRequest request, HttpContext http,
-                IQueryDispatcher dispatcher, CancellationToken ct) =>
+                IQueryDispatcher dispatcher, IPlatformProfiles profiles, CancellationToken ct) =>
             {
                 if (UcpCatalogOperations.Check(request.Meta) is { } refusal)
                     return TypedResults.BadRequest(refusal.Reason);
@@ -92,7 +93,7 @@ public static class UcpCatalogRestBinding
                     return TypedResults.BadRequest("`id` is required.");
 
                 var answer = await UcpCatalogOperations.GetProductAsync(
-                    dispatcher, request, Culture(http), BaseUrl(http), ct);
+                    dispatcher, request, Culture(http), BaseUrl(http), profiles, ct);
 
                 return answer is null
                     ? TypedResults.NotFound($"There is no product with id '{request.Id}'.")

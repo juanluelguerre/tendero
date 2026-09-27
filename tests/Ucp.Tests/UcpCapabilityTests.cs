@@ -22,6 +22,7 @@ public sealed class UcpCapabilityTests
         // same reason: this list IS the contract an agent reads.
         Assert.Equal(
             [
+                "com.elguerre.tendero.knowledge",
                 "dev.ucp.common.payment.ap2_mandate",
                 "dev.ucp.shopping.catalog.lookup", "dev.ucp.shopping.catalog.search",
                 "dev.ucp.shopping.checkout", "dev.ucp.shopping.discount", "dev.ucp.shopping.fulfillment",
@@ -79,11 +80,11 @@ public sealed class UcpCapabilityTests
     /// <summary>
     /// And what is still absent, deliberately. Checkout, fulfillment and
     /// discount arrived in phase 11 (P11-1), once an agent had a principal and
-    /// both bindings existed. **Order** waits because declaring it commits the shop
-    /// to signed webhooks, which need the signing keys AP2 brings; **cart** because a
-    /// checkout is created from line items and nothing yet needs a cart of its own
-    /// over UCP; **the AP2 mandate** until its verifier exists (P11-4). This test is
-    /// what keeps each of them a deliberate act rather than a class added.
+    /// both bindings existed, and the AP2 mandate once its verifier did (P11-4).
+    /// **Order** waits because declaring it commits the shop to signed webhooks;
+    /// **cart** because a checkout is created from line items and nothing yet needs a
+    /// cart of its own over UCP. This test is what keeps each of them a deliberate
+    /// act rather than a class added.
     /// </summary>
     [Theory]
     [InlineData("dev.ucp.shopping.cart")]

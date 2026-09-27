@@ -40,7 +40,10 @@ public interface IUcpCapability
     ///
     /// It is the protocol's URL and not one of ours. Declaring a schema of our
     /// own here would be saying "I speak a contract I wrote", which is the
-    /// opposite of what a manifest is for.
+    /// opposite of what a manifest is for — **except for an extension that is
+    /// ours** (<c>com.elguerre.tendero.*</c>, P11-8): its contract IS one we wrote,
+    /// so it names a path on this shop, which the documents resolve against the
+    /// shop's own address (<see cref="UcpCapabilities.Absolute"/>).
     /// </summary>
     string Schema { get; }
 

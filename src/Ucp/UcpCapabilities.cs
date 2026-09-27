@@ -40,4 +40,12 @@ public static class UcpCapabilities
     /// <summary>The ones this assembly declares, which is all of them today.</summary>
     public static IReadOnlyList<IUcpCapability> Declared =>
         DiscoverIn(typeof(UcpCapabilities).Assembly);
+
+    /// <summary>
+    /// A capability's spec or schema URL as a document publishes it: the
+    /// specification's own URLs are absolute, and an extension of ours names a path
+    /// on this shop (<c>/ucp/schemas/…</c>), resolved against where the shop is.
+    /// </summary>
+    public static string Absolute(string url, string host) =>
+        url.StartsWith('/') ? $"{host.TrimEnd('/')}{url}" : url;
 }

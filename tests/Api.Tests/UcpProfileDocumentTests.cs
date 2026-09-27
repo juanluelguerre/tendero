@@ -101,16 +101,40 @@ public sealed class UcpProfileDocumentTests
 
         // capability.json business_schema: entity requires version, and the
         // merchant schema adds schema — the URL a platform fetches.
+        // The specification's capabilities point at ucp.dev; an extension of ours
+        // (com.elguerre.tendero.*, P11-8) at the schema this API serves.
         foreach (var capability in ucp["capabilities"]!.AsObject())
         {
             var declaration = capability.Value!.AsArray()[0]!;
 
             Assert.NotNull(declaration["version"]);
             Assert.StartsWith(
-                "https://ucp.dev/schemas/",
+                capability.Key.StartsWith("com.elguerre.tendero.", StringComparison.Ordinal) ? "http://localhost/ucp/schemas/" : "https://ucp.dev/schemas/",
                 declaration["schema"]!.GetValue<string>(),
                 StringComparison.Ordinal);
         }
+    }
+
+    /// <summary>
+    /// The schema an extension of ours names is really there (P11-8): served
+    /// anonymously, as JSON Schema, and an unknown one is a 404 rather than a guess.
+    /// </summary>
+    [Fact]
+    public async Task The_schema_of_our_own_extension_is_served_where_the_profile_says()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        using var factory = new TenderoApiFactory();
+        using var client = factory.CreateClient();
+
+        var profile = await FetchProfileAsync(ct);
+        var url = profile!["ucp"]!["capabilities"]!["com.elguerre.tendero.knowledge"]![0]!["schema"]!.GetValue<string>();
+
+        var schema = await client.GetAsync(new Uri(url).PathAndQuery, ct);
+        schema.EnsureSuccessStatusCode();
+        Assert.Equal("application/schema+json", schema.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("com.elguerre.tendero.knowledge", JsonNode.Parse(await schema.Content.ReadAsStringAsync(ct))!["name"]!.GetValue<string>());
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, (await client.GetAsync("/ucp/schemas/nothing.json", ct)).StatusCode);
     }
 
     /// <summary>

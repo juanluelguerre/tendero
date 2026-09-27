@@ -18,6 +18,14 @@
       ]
     },
     "capabilities": {
+      "com.elguerre.tendero.knowledge": [
+        {
+          "version": "2026-09-27",
+          "spec": "http://localhost/ucp/schemas/com.elguerre.tendero.knowledge.json",
+          "schema": "http://localhost/ucp/schemas/com.elguerre.tendero.knowledge.json",
+          "extends": "dev.ucp.shopping.catalog.lookup"
+        }
+      ],
       "dev.ucp.common.payment.ap2_mandate": [
         {
           "version": "2026-08-25",

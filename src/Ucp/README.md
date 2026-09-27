@@ -26,6 +26,12 @@ to carry `payment_handlers`, so omitting it makes the document invalid rather
 than modest. An empty map does not advertise a checkout — it says this shop
 settles no payments over UCP, which is exactly true until phase 11.
 
+**Our own extension**, `com.elguerre.tendero.knowledge` (P11-8), extends catalogue
+lookup with a product's specs, their sources and the evidence behind them — the
+project's differentiator carried by the protocol's own mechanism. Its schema is
+ours, embedded under `Schemas/` and served at `/ucp/schemas/`; a capability of ours
+names a path on the shop, resolved against the shop's address in every document.
+
 `keys` stayed absent until something was signed. Since P11-4 it holds the shop's
 public key (ADR 0040): `ap2.merchant_authorization` on every checkout, once AP2 is
 negotiated, is verified with it — by the platform before it shows the checkout,

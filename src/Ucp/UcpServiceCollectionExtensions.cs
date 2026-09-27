@@ -48,7 +48,7 @@ public static class UcpServiceCollectionExtensions
 
         // `?ap2=false` is a platform that does not speak AP2's mandates: the same
         // agent, negotiating the checkout without them — both paths, one seed.
-        group.MapGet("/profile.json", (string agent, bool? ap2, DevelopmentPlatforms platforms) => Results.Json(new DevelopmentPlatformProfile
+        group.MapGet("/profile.json", (string agent, bool? ap2, HttpContext http, DevelopmentPlatforms platforms) => Results.Json(new DevelopmentPlatformProfile
         {
             Ucp = new DevelopmentPlatformEnvelope
             {
@@ -58,7 +58,13 @@ public static class UcpServiceCollectionExtensions
                     .ToDictionary(
                         capability => capability.Id,
                         IReadOnlyList<DevelopmentPlatformCapability> (capability) =>
-                            [new DevelopmentPlatformCapability { Version = capability.Version, Spec = capability.Spec, Schema = capability.Schema, Extends = capability.Extends }]),
+                            [new DevelopmentPlatformCapability
+                            {
+                                Version = capability.Version,
+                                Spec = UcpCapabilities.Absolute(capability.Spec, $"{http.Request.Scheme}://{http.Request.Host}"),
+                                Schema = UcpCapabilities.Absolute(capability.Schema, $"{http.Request.Scheme}://{http.Request.Host}"),
+                                Extends = capability.Extends,
+                            }]),
             },
             Keys = [platforms.KeyOf(agent)],
         }));
