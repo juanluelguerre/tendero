@@ -12,9 +12,10 @@ namespace ElGuerre.Tendero.Knowledge.Features.ProposeClaims;
 /// the worker and off the outbox: at ~30 s a product on a CPU (P10-0), a model
 /// inside the outbox would hold every projection and the stock saga behind it.
 ///
-/// A product that fails is retried on the next pass, up to
-/// <see cref="Domain.SourceDocument.MaxAttempts"/>; then it stops, counted, rather
-/// than spend the model on a text it cannot read.
+/// A product that fails is retried, up to <see cref="Domain.SourceDocument.MaxAttempts"/>,
+/// **after a pause**: the first real run burned all three attempts in seconds on a
+/// model that was still loading — nothing waits for the model, by design — and
+/// marked a readable product as unreadable. The reason is kept on the document.
 /// </summary>
 public sealed partial class ClaimProposer(
     IServiceScopeFactory scopes,
@@ -23,6 +24,9 @@ public sealed partial class ClaimProposer(
 {
     /// <summary>How long an empty queue waits before it looks again.</summary>
     public static readonly TimeSpan Idle = TimeSpan.FromSeconds(15);
+
+    /// <summary>How long a failure waits before the next attempt: enough for a model server to finish loading.</summary>
+    public static readonly TimeSpan AfterFailure = TimeSpan.FromMinutes(1);
 
     private static readonly Meter Meter = new(TelemetrySources.Knowledge);
 
@@ -33,10 +37,10 @@ public sealed partial class ClaimProposer(
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            var worked = false;
+            var pass = Pass.Idle;
             try
             {
-                worked = await ProposeNextAsync(stoppingToken);
+                pass = await ProposeNextAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -49,20 +53,29 @@ public sealed partial class ClaimProposer(
                 LogQueueUnavailable(logger, exception);
             }
 
-            if (!worked)
-                await Task.Delay(Idle, clock, stoppingToken).ContinueWith(_ => { }, TaskScheduler.Default);
+            var pause = pass switch { Pass.Proposed => TimeSpan.Zero, Pass.Failed => AfterFailure, _ => Idle };
+            if (pause > TimeSpan.Zero)
+                await Task.Delay(pause, clock, stoppingToken).ContinueWith(_ => { }, TaskScheduler.Default);
         }
     }
 
-    /// <summary>Proposes claims for the oldest waiting product; false when none waits.</summary>
-    public async Task<bool> ProposeNextAsync(CancellationToken cancellationToken)
+    /// <summary>What one pass did: nothing waited, a product was proposed, or it failed.</summary>
+    public enum Pass
+    {
+        Idle,
+        Proposed,
+        Failed,
+    }
+
+    /// <summary>Proposes claims for the oldest waiting product.</summary>
+    public async Task<Pass> ProposeNextAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
         var knowledge = scope.ServiceProvider.GetRequiredService<IKnowledgeRepository>();
 
         var waiting = await knowledge.WaitingAsync(1, cancellationToken);
         if (waiting.Count == 0)
-            return false;
+            return Pass.Idle;
 
         var product = waiting[0];
         try
@@ -70,6 +83,7 @@ public sealed partial class ClaimProposer(
             var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
                 .SendAsync(new ProposeClaimsCommand(product), cancellationToken);
             LogProposed(logger, result.Proposed, result.Dropped.Count, product, result.Extractor);
+            return Pass.Proposed;
         }
         catch (Exception exception) when (exception is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
@@ -81,11 +95,10 @@ public sealed partial class ClaimProposer(
             var fresh = retry.ServiceProvider.GetRequiredService<IKnowledgeRepository>();
             foreach (var document in await fresh.CurrentDocumentsAsync(product, cancellationToken))
                 if (document.IsWaiting)
-                    document.RecordFailedAttempt();
+                    document.RecordFailedAttempt($"{exception.GetType().Name}: {exception.Message}");
             await retry.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(cancellationToken);
+            return Pass.Failed;
         }
-
-        return true;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Proposed {Proposed} claims ({Dropped} refused) for product {ProductId} with {Extractor}")]

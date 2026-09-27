@@ -78,7 +78,6 @@ public static class WorkerServices
         // The claims layer (ADR 0018): the rules always, the models when the AppHost started them.
         builder.Services.AddKnowledge(builder.Configuration);
         builder.Services.AddScoped<IAttributeVocabulary, CatalogAttributeVocabulary>();
-        builder.Services.AddClaimProposer();
 
         // Inside the worker the actor is the system, and this is the
         // implementation `IPrincipalAccessor` documented and nobody had
@@ -123,6 +122,11 @@ public static class WorkerServices
         // In the background rather than in the start-up path: it waits for a
         // layer that may be downloading its model, and nothing waits for it.
         builder.Services.AddHostedService<RebuildEmptyVectorIndex>();
+
+        // After the migrations, like the index rebuilds: the claims layer's tables
+        // must exist before the catalogue's descriptions are recorded into them.
+        builder.Services.AddHostedService<RecordEveryDescriptionAtStart>();
+        builder.Services.AddClaimProposer();
 
         builder.Services.AddHostedService<OutboxProcessor>();
 

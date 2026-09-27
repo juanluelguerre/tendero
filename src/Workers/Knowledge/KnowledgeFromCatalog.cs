@@ -88,3 +88,56 @@ public sealed class CatalogAttributeVocabulary(IAttributeDefinitionReader defini
         ];
     }
 }
+
+/// <summary>
+/// The catalogue that was there before the claims layer. The worker records
+/// descriptions when a product changes; a catalogue imported before phase 10 —
+/// or before this worker last ran — would never be read. So at start every
+/// product's description is recorded once: a hundred commands of milliseconds,
+/// and idempotent, because an unchanged text is nothing (its hash). Search does
+/// the same for its index at start.
+/// </summary>
+public sealed partial class RecordEveryDescriptionAtStart(
+    IServiceScopeFactory scopes,
+    ILogger<RecordEveryDescriptionAtStart> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            var products = scope.ServiceProvider.GetRequiredService<IProductReader>();
+            var commands = scope.ServiceProvider.GetRequiredService<ICommandDispatcher>();
+            var recorded = 0;
+
+            await foreach (var product in products.StreamAllAsync(stoppingToken))
+            {
+                if (product.Description is not { } description)
+                    continue;
+
+                foreach (var (culture, text) in description.Values)
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                        continue;
+                    var result = await commands.SendAsync(new RecordDescriptionCommand(product.Id, culture, text), stoppingToken);
+                    if (result.Outcome == RecordDescriptionOutcome.Recorded)
+                        recorded++;
+                }
+            }
+
+            LogRecorded(logger, recorded);
+        }
+        catch (Exception exception) when (!stoppingToken.IsCancellationRequested)
+        {
+            // Not fatal: a product's next save records its description anyway.
+            LogFailed(logger, exception);
+        }
+    }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Recorded {Recorded} descriptions for claims at start; the rest were already recorded")]
+    private static partial void LogRecorded(ILogger logger, int recorded);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Could not record the catalogue's descriptions at start; each product's next save will")]
+    private static partial void LogFailed(ILogger logger, Exception exception);
+}
+

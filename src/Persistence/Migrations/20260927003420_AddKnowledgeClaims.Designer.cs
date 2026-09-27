@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ElGuerre.Tendero.Persistence.Migrations;
 
 [DbContext(typeof(TenderoDbContext))]
-[Migration("20260927000503_AddKnowledgeClaims")]
-partial class _20260927000503_AddKnowledgeClaims
+[Migration("20260927003420_AddKnowledgeClaims")]
+partial class _20260927003420_AddKnowledgeClaims
 {
     /// <inheritdoc />
     protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -450,6 +450,8 @@ partial class _20260927000503_AddKnowledgeClaims
                                 b2.Property<string>("Text")
                                     .IsRequired()
                                     .HasJsonPropertyName("text");
+
+                                b2.HasJsonPropertyName("quote");
                             });
 
                         b1
@@ -488,6 +490,11 @@ partial class _20260927000503_AddKnowledgeClaims
                     .HasMaxLength(40)
                     .HasColumnType("character varying(40)")
                     .HasColumnName("kind");
+
+                b.Property<string>("LastFailure")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("last_failure");
 
                 b.Property<Guid>("ProductId")
                     .HasColumnType("uuid")

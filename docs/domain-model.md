@@ -713,6 +713,7 @@ classDiagram
         +DateTimeOffset? ProposedAt
         +int FailedAttempts
         +bool IsWaiting
+        +string? LastFailure
     }
     class SourceDocumentId {
         <<record>>

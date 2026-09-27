@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260927000503_AddKnowledgeClaims";
+    public override string LastMigrationId => "20260927003420_AddKnowledgeClaims";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -452,6 +452,8 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                                 b2.Property<string>("Text")
                                     .IsRequired()
                                     .HasJsonPropertyName("text");
+
+                                b2.HasJsonPropertyName("quote");
                             });
 
                         b1
@@ -490,6 +492,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(40)
                     .HasColumnType("character varying(40)")
                     .HasColumnName("kind");
+
+                b.Property<string>("LastFailure")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("last_failure");
 
                 b.Property<Guid>("ProductId")
                     .HasColumnType("uuid")

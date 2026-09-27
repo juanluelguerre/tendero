@@ -70,6 +70,14 @@ what phase 10 builds, and what the Knowledge Base's own reviewers ask for.
 - Outcome: an article, *Knowledge for Shopify*, and the proof that phase 10 works
   on someone else's catalogue.
 
+**Where the module would live on Shopify** (the author asked, 2026-09-27: *does
+Shopify have its own backoffice?*). It does — **Shopify Admin**, with Sidekick,
+its AI assistant, inside it (Steward's counterpart). Apps are embedded in the
+Admin through App Bridge. So a Shopify merchant would review claims **inside
+Shopify Admin**, as an embedded app — never in Tendero's backoffice, which only a
+merchant running Tendero whole would use. Level 0 can still use the backoffice;
+from Level 2 on, the review queue has to exist as an embedded screen.
+
 **Level 1 · one real merchant, privately** — *L*.
 - Webhooks (`products/update`) to re-extract on change, rate limits, retries,
   per-store configuration and secrets.

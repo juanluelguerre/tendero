@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ElGuerre.Tendero.Persistence.Migrations;
 
 /// <inheritdoc />
-public partial class _20260927000503_AddKnowledgeClaims : Migration
+public partial class _20260927003420_AddKnowledgeClaims : Migration
 {
     /// <inheritdoc />
     protected override void Up(MigrationBuilder migrationBuilder)
@@ -48,7 +48,8 @@ public partial class _20260927000503_AddKnowledgeClaims : Migration
                 text = table.Column<string>(type: "text", nullable: false),
                 retrieved_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                 proposed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                failed_attempts = table.Column<int>(type: "integer", nullable: false)
+                failed_attempts = table.Column<int>(type: "integer", nullable: false),
+                last_failure = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
             },
             constraints: table =>
             {

@@ -44,6 +44,23 @@ public sealed class SourceDocumentTests
         Assert.True(document.IsWaiting);
     }
 
+    /// <summary>The first real run: a failure's reason had gone only to the worker's log, where nobody looked.</summary>
+    [Fact]
+    public void A_failed_attempt_keeps_its_reason_and_the_third_stops_the_retries()
+    {
+        var document = SourceDocument.Describe(ProductId.New(), "es", "Zapatillas de running neutras.", Clock);
+
+        document.RecordFailedAttempt("HttpRequestException: the model is still loading");
+        document.RecordFailedAttempt(new string('x', 900));
+        Assert.True(document.IsWaiting);
+        document.RecordFailedAttempt("third");
+
+        Assert.False(document.IsWaiting);
+        Assert.Equal("third", document.LastFailure);
+        document.Reinstate(Clock);
+        Assert.Null(document.LastFailure);
+    }
+
     /// <summary>P10-0's one "not verbatim" quote was a capital letter: the text is found, and kept in the text's own spelling.</summary>
     [Fact]
     public void A_quote_is_found_regardless_of_case_and_kept_as_the_text_spells_it()

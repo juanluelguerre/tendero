@@ -68,7 +68,14 @@ public sealed class SourceDocument
         ProposedAt = clock.GetUtcNow();
     }
 
-    public void RecordFailedAttempt() => FailedAttempts++;
+    /// <summary>Why the last proposal run failed, in a sentence: the queue's own diagnosis, where an operator can read it.</summary>
+    public string? LastFailure { get; private set; }
+
+    public void RecordFailedAttempt(string reason)
+    {
+        FailedAttempts++;
+        LastFailure = reason.Length <= 500 ? reason : reason[..500];
+    }
 
     /// <summary>
     /// The description went back to this text (A → B → A): it is the current
@@ -81,6 +88,7 @@ public sealed class SourceDocument
         RetrievedAt = clock.GetUtcNow();
         ProposedAt = null;
         FailedAttempts = 0;
+        LastFailure = null;
     }
 
     private SourceDocument() { } // EF Core
