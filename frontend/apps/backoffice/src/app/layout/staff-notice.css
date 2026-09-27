@@ -1,0 +1,23 @@
+:host { display: block; }
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  font-size: var(--text-xs);
+}
+
+.notice__text {
+  flex: 1 1 28rem;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.notice__text strong { color: var(--text); }
+
+.notice__actions { display: flex; gap: var(--space-2); }

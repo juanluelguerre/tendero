@@ -1,0 +1,8 @@
+<header class="head" *transloco="let t">
+  <button type="button" class="head__back" (click)="closed.emit()">{{ t('pane.back') }}</button>
+  <h2 class="head__title" [id]="headingId" tabindex="-1" #title>{{ heading() }}</h2>
+  <button type="button" class="head__close" [attr.aria-label]="t('pane.close')" (click)="closed.emit()">
+    <backoffice-icon name="close" />
+  </button>
+</header>
+<ng-content />

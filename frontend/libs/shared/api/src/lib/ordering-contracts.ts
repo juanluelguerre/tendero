@@ -61,6 +61,10 @@ export type ReturnableLineView = Schemas['ReturnableLineView'];
  */
 export type OrderSummary = Schemas['OrderSummary'];
 
+/** The orders list with a count for every status, zero included (the redesign's R-4.2). */
+export type ListOrdersResult = Schemas['ListOrdersResult'];
+export type OrderStatusCount = Schemas['OrderStatusCount'];
+
 export type RequestReturnRequest = Schemas['RequestReturnRequest'];
 export type ReturnLineRequest = Schemas['ReturnLineRequest'];
 

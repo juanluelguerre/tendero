@@ -33,12 +33,12 @@ public sealed class UcpCheckoutMapperTests
         var total = en.Totals.Single(entry => entry.Type == "total");
         Assert.Equal("Total (VAT included)", total.DisplayText);
         Assert.Equal(["Base at 21% VAT", "VAT 21%"], total.Lines!.Select(line => line.DisplayText));
-        Assert.Equal("Arrives in 3 days", en.Fulfillment!.Methods[0].Groups[0].Options[0].Description!.Plain);
+        Assert.Equal("Arrives in 3 days", en.Fulfillment!.Methods![0].Groups![0].Options![0].Description!.Plain);
 
         var totalEs = es.Totals.Single(entry => entry.Type == "total");
         Assert.Equal("Total (IVA incluido)", totalEs.DisplayText);
         Assert.Equal(["Base al 21 % de IVA", "IVA 21 %"], totalEs.Lines!.Select(line => line.DisplayText));
-        Assert.Equal("Llega en 3 días", es.Fulfillment!.Methods[0].Groups[0].Options[0].Description!.Plain);
+        Assert.Equal("Llega en 3 días", es.Fulfillment!.Methods![0].Groups![0].Options![0].Description!.Plain);
     }
 
     [Theory]
@@ -90,9 +90,9 @@ public sealed class UcpCheckoutMapperTests
 
         Assert.NotNull(ready.ExpiresAt);
         Assert.Equal("ana@example.com", ready.Buyer!.Email);
-        Assert.Equal(UcpCheckoutMapper.DestinationId, ready.Fulfillment!.Methods[0].SelectedDestinationId);
+        Assert.Equal(UcpCheckoutMapper.DestinationId, ready.Fulfillment!.Methods![0].SelectedDestinationId);
         Assert.Null(nobody.Buyer);
-        Assert.Null(nobody.Fulfillment!.Methods[0].SelectedDestinationId);
+        Assert.Null(nobody.Fulfillment!.Methods![0].SelectedDestinationId);
         Assert.Null(Wire(Ready(), new HashSet<string> { CheckoutCapability.Name }).Fulfillment);
         Assert.Null(Wire(Ready(), new HashSet<string> { CheckoutCapability.Name }).Discounts);
     }
@@ -116,7 +116,7 @@ public sealed class UcpCheckoutMapperTests
             Discounts = [new CheckoutDiscountView("BIENVENIDA10", "10 % de bienvenida", 16m), new CheckoutDiscountView("AUTO-2X1", "2x1", 5m)],
         };
 
-        var applied = Wire(session).Discounts!.Applied;
+        var applied = Wire(session).Discounts!.Applied!;
 
         Assert.Equal(("BIENVENIDA10", false), (applied[0].Code, applied[0].Automatic));
         Assert.Equal(((string?)null, true), (applied[1].Code, applied[1].Automatic));

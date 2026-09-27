@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { SHOPKEEPER, SHOPKEEPER_SUBJECT, signIn } from './session';
 
 /**
  * What a shopkeeper does, in a browser.
@@ -22,16 +23,6 @@ import { expect, test } from '@playwright/test';
  *    the single source of truth; this checks the screen never pretends to be a
  *    second one.
  */
-
-/** The seeded shopkeeper. Three identities, no passwords — see `src/DevIssuer`. */
-const SHOPKEEPER = 'Juan Luis';
-
-/**
- * The same subject in both issuers, and they have to agree: a development issuer
- * seeding one set of identities and a realm seeding another is how every test
- * fixture in the project forks in two.
- */
-const SHOPKEEPER_SUBJECT = 'juanlu';
 
 /** The seeded shopper: signed in, and not somebody the backoffice is for. */
 const SHOPPER = { name: 'Ana Ruiz', subject: 'ana' };
@@ -75,10 +66,12 @@ test.describe('the backoffice', () => {
     await expect(page).toHaveURL(/\/sign-in(\?|$)/);
   });
 
-  test('signs a shopkeeper in and lands on the review queue', async ({ page }) => {
+  test('signs a shopkeeper in and lands on the dashboard', async ({ page }) => {
     await signIn(page);
 
-    await expect(page).toHaveURL(/\/review$/);
+    // The dashboard has been the backoffice's home since P11-7; this still said
+    // the review queue, and failed against every stack since.
+    await expect(page).toHaveURL(/\/dashboard$/);
 
     // Who is acting and under which role, because "why can I not publish?" is a
     // question the interface should answer before it is asked.
@@ -96,6 +89,56 @@ test.describe('the backoffice', () => {
       // for four days, and this is the check that would have caught it.
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     }
+  });
+
+  /**
+   * The orders pane (the redesign's R-4.2): an order opens beside the list with
+   * the focus on its heading, and cancelling — once one click beside Ship —
+   * asks first and does nothing when the answer is to keep it (R-1, B-F5).
+   */
+  test('cancelling an order asks first, and keeping it changes nothing', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/orders?status=Confirmed');
+
+    const confirmed = page.getByRole('row').filter({ has: page.getByText(/^(Confirmed|Confirmado)$/) }).first();
+    const first = confirmed.getByRole('button', { name: /^(Open order|Abrir el pedido) / });
+    await expect(first).toBeVisible();
+    await first.click();
+
+    const pane = page.getByRole('complementary', { name: /^(Order|Pedido) / });
+    await expect(pane.getByRole('heading', { level: 2 })).toBeFocused();
+    await expect(pane.getByText(/^(Confirmed|Confirmado)$/)).toBeVisible();
+
+    await pane.getByRole('button', { name: /Cancel order…|Cancelar pedido…/ }).click();
+    const confirm = page.getByRole('dialog');
+    await expect(confirm).toBeVisible();
+    await confirm.getByRole('button', { name: /Keep the order|Mantener el pedido/ }).click();
+
+    await expect(confirm).toBeHidden();
+    await expect(pane.getByText(/^(Confirmed|Confirmado)$/)).toBeVisible();
+  });
+
+  /**
+   * Withdrawing is undoable, so it does not ask: it offers Undo, which is
+   * publishing again (the redesign's R-4.3, R-2's P12). The product ends where
+   * it started, so the laboratory is left as it was.
+   */
+  test('taking a product off sale offers Undo, and Undo puts it back', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/catalogue');
+
+    const first = page.getByRole('table').getByRole('button', { expanded: false }).first();
+    await first.click();
+
+    const pane = page.getByRole('complementary', { name: /./ });
+    await pane.getByRole('button', { name: /Take it off sale|Retirarlo de la venta/ }).click();
+
+    const undo = page.getByRole('status').getByRole('button', { name: /^(Undo|Deshacer)$/ });
+    await expect(undo).toBeVisible();
+    await expect(pane.getByText(/^\s*(Draft|Borrador)\s*$/)).toBeVisible();
+
+    await undo.click();
+    await expect(pane.getByText(/^\s*(On sale|A la venta)\s*$/)).toBeVisible();
   });
 
   test('a stocktake goes through the ledger and comes back recomputed', async ({ page }) => {
@@ -249,6 +292,9 @@ test.describe('the backoffice', () => {
   test('signing out sends you back to the door', async ({ page }) => {
     await signIn(page);
 
+    // Signing out lives in the account menu since the redesign (R-3), beside the
+    // language and the theme.
+    await page.getByRole('button', { name: /^(Account|Cuenta):/ }).click();
     await page.getByRole('button', { name: /Sign out|Cerrar sesión/ }).click();
 
     await expect(page).toHaveURL(/\/sign-in(\?|$)/);
@@ -259,59 +305,3 @@ test.describe('the backoffice', () => {
     await expect(page).toHaveURL(/\/sign-in(\?|$)/);
   });
 });
-
-/**
- * Signs in through the screen, on every spec, on purpose.
- *
- * The obvious optimisation is a cached `storageState`, and it does not work
- * here: the development issuer mints its signing key **per process**, so a token
- * saved by yesterday's run is invalid the moment the API restarts. Signing in
- * takes one click, and a fixture that failed mysteriously after every restart
- * would cost far more than it saved.
- */
-async function signIn(
-  page: import('@playwright/test').Page,
-  who: { name: string; subject: string } = { name: SHOPKEEPER, subject: SHOPKEEPER_SUBJECT },
-): Promise<void> {
-  await page.goto('/sign-in');
-
-  // The second step happens on ANOTHER ORIGIN, and that is the whole point of
-  // the change this helper had to follow: the shop no longer knows who exists
-  // and no longer collects a credential, so the identity is established on the
-  // issuer's own page and the browser comes back with a code.
-  await page.getByRole('button', { name: /continue/i }).click();
-
-  // **The same suite runs against both issuers**, which is what makes it a
-  // guarantee rather than a demonstration. Whichever one the API named is
-  // already on screen by now, so the branch is on the URL and not on a flag
-  // this spec would have to be told.
-  if (/\/realms\//.test(page.url())) {
-    // The seeded shopkeeper from `keycloak/realms/tendero-realm.json`. The
-    // password is the username, committed on purpose: a development realm with
-    // a credential worth protecting is a credential that should not be in a
-    // repository. This is the same call `FakePaymentProvider` makes about card
-    // numbers.
-    // By form field NAME rather than by label: `username` and `password` are
-    // what the OIDC login form posts, so they survive a theme and a Keycloak
-    // upgrade — where the visible label is translated and the accessible name
-    // `password` matches two elements, the field and the reveal button.
-    await page.locator('input[name="username"]').fill(who.subject);
-    await page.locator('input[name="password"]').fill(who.subject);
-    await page.locator('input[type="submit"], button[type="submit"]').first().click();
-  } else {
-    await page.getByRole('link', { name: who.name }).click();
-  }
-
-  // **Waits for the application to say you are IN, not for the URL to stop
-  // saying you are out.** `not.toHaveURL(/sign-in/)` was satisfied the instant
-  // the browser left that route — which, with a redirect flow, is while it is
-  // still on the ISSUER's domain and no token exists yet. The next `goto` then
-  // cut the redirect chain, and the test landed back at the door with a page
-  // snapshot that said "Sign in" and no explanation.
-  //
-  // It was intermittent against the development issuer, whose two hops are
-  // fast, and reliable against Keycloak, whose form makes the window wide. The
-  // sign-out button only exists once a token does — the BAR's, because the door
-  // that turns a shopper away offers one of its own.
-  await expect(page.getByRole('banner').getByRole('button', { name: /sign out|cerrar sesión/i })).toBeVisible();
-}

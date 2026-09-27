@@ -1,0 +1,7 @@
+@if (undo.offer(); as offer) {
+  <div class="toast" *transloco="let t">
+    <span class="toast__message">{{ offer.message }}</span>
+    <button type="button" class="toast__undo" (click)="undo.take()">{{ t('undo.take') }}</button>
+    <button type="button" class="toast__dismiss" [attr.aria-label]="t('undo.dismiss')" (click)="undo.dismiss()">×</button>
+  </div>
+}

@@ -1,0 +1,41 @@
+:host {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: var(--space-5);
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* It floats over the page, so it is one of the few things allowed a shadow. */
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: calc(100vw - 2 * var(--space-4));
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+  pointer-events: auto;
+}
+
+.toast__message { font-size: var(--text-sm); }
+
+.toast__undo,
+.toast__dismiss {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.toast__undo { color: var(--text); font-weight: 600; text-decoration: underline; }
+.toast__dismiss { color: var(--text-muted); }
+.toast__undo:hover, .toast__dismiss:hover { background: var(--bg-surface); }

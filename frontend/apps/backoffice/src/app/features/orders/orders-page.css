@@ -1,8 +1,10 @@
-.code { color: var(--text); font-weight: 500; }
+/* What is the orders screen's own. The list-and-pane pattern, the cards and
+   the pane itself are shared by every list of work (styles.css, work/). */
 .city { display: block; color: var(--text-muted); font-size: var(--text-3xs); }
+.code { color: var(--text); font-weight: 600; }
 .total { font-weight: 600; }
+.strong { font-weight: 600; }
 .actions { text-align: end; white-space: nowrap; }
-.actions .button + .button { margin-inline-start: var(--space-2); }
 
 /* Colour never carries meaning alone: every one of these has the word in
    it, and the colour only makes the word findable in a column. */
@@ -17,26 +19,15 @@
 
 .status--Pending { color: var(--text-muted); }
 .status--PaymentAuthorized, .status--Confirmed { color: var(--warning); }
-/* Not clay: design/DESIGN.md keeps the accent for what an AGENT did, so that
-   scanning the table shows it at a glance. A shipped order is in transit —
-   neither done nor waiting on anybody — and reads in the neutral text colour. */
+/* Not clay: design/DESIGN.md keeps the accent for what an AGENT did. A shipped
+   order is in transit, neither done nor waiting, and reads in the text colour. */
 .status--Shipped { color: var(--text); }
 .status--Delivered { color: var(--positive); }
 .status--PaymentFailed, .status--Cancelled { color: var(--danger); }
 
-/* The server's own sentence, under the row it belongs to. A toast would
-   float away from the thing it is about. */
-.refusal td {
-  padding-block: var(--space-2);
-  color: var(--danger);
-  font-size: var(--text-xs);
-}
+.status + .tag { margin-inline-start: var(--space-2); }
 
-/*
-  Why a row stopped, under its status. The backoffice is dense by design, so
-  this is one size down and subdued — a shopkeeper scanning for refusals finds
-  them by the status colour first and reads this second.
-*/
+/* Why an order stopped, under its status: one size down, read second. */
 .reason {
   display: block;
   margin-block-start: var(--space-1);
@@ -44,8 +35,19 @@
   font-size: var(--text-xs);
 }
 
-.reason__detail {
-  display: block;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+.reason__detail { display: block; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* The server's own sentence, under the row it belongs to. */
+.refusal td { padding-block: var(--space-2); color: var(--danger); font-size: var(--text-xs); }
+
+.pane-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+
+.lines { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); }
+.line { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-2); }
+
+.pane-total {
+  display: flex;
+  justify-content: space-between;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
 }

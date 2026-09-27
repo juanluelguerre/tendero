@@ -64,3 +64,16 @@ At full-catalogue scale the rebuild belongs in a background job rather than an
 HTTP request. It streams (`AsAsyncEnumerable`, no tracking) so memory is not the
 limit, but a request that walks 147k products is still the wrong shape. It moves
 with the full-dataset import, which is when there are numbers worth publishing.
+
+## Addendum (2026-09-27): a live product can go back to review
+
+`WithdrawProduct` moves an Active product back to Draft, the inverse of
+publishing, for the day a supplier recalls something or a price turns out wrong;
+archiving is for good. The rule above is unchanged, because a withdrawn product
+returns to the review queue and only `PublishProduct` brings it back. It needed
+nothing from the index: `ProductIndexProjection` already removed a product that
+is no longer Active on `ProductUpserted`. It was found missing when the
+redesign's walkthrough needed drafts and the laboratory had none: a draft could
+only come from importing something new. It answers to
+`tendero.catalog.products.withdrawn`. The backoffice has no button for it yet,
+and R-3 decides where one goes.

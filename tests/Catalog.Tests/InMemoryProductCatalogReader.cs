@@ -11,9 +11,15 @@ namespace ElGuerre.Tendero.Catalog.Tests;
 internal sealed class InMemoryProductCatalogReader(params Product[] products) : IProductCatalogReader
 {
     public Task<ProductPage> ListAsync(
-        ProductStatus? status, int page, int pageSize, CancellationToken ct)
+        ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct)
     {
-        var matching = products.Where(p => status is null || p.Status == status).ToList();
+        var typed = text?.Trim() ?? "";
+        var matching = products
+            .Where(p => status is null || p.Status == status)
+            .Where(p => typed.Length == 0
+                || p.Code.Contains(typed, StringComparison.OrdinalIgnoreCase)
+                || p.Name.Cultures.Any(culture => p.Name.In(culture).Contains(typed, StringComparison.OrdinalIgnoreCase)))
+            .ToList();
 
         return Task.FromResult(new ProductPage(
             [.. matching.Skip((page - 1) * pageSize).Take(pageSize)],

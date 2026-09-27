@@ -8,7 +8,8 @@
   <p class="page-hint">{{ t('promotions.hint') }}</p>
 
   @if (loading()) {
-    <p class="muted" role="status" aria-live="polite">{{ t('promotions.loading') }}</p>
+    <div class="skeleton-list" aria-hidden="true"></div>
+    <p class="sr-only" role="status" aria-live="polite">{{ t('promotions.loading') }}</p>
   } @else if (failed()) {
     <p class="failed" role="alert">{{ t('promotions.failed') }}</p>
   } @else if (items().length === 0) {

@@ -73,9 +73,11 @@ ${liveEvents.map(eventType).join('\n\n')}
 
 /**
  * Which events wait for analytics consent. A behavioural event says what a
- * person did and is dropped until they agree; a technical one is not.
+ * person did and is dropped until they agree; a technical one is not; a staff
+ * one is the shop measuring its own tools under a notice to staff, sent unless
+ * the staff member switched it off (ADR 0041).
  */
-export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavioural' | 'technical'>> = {
+export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavioural' | 'technical' | 'staff'>> = {
 ${liveEvents.map((event) => `  ${event.name}: '${event.consent}',`).join('\n')}
 };
 `;
@@ -162,7 +164,8 @@ ${areas
 Emitted in the browser through \`Telemetry.trackEvent\`, whose types are generated
 from this plan (\`libs/shared/telemetry/src/lib/generated/tracked-events.ts\`). A
 *behavioural* event is dropped until the shopper grants analytics consent; a
-*technical* one is not.
+*technical* one is not; a *staff* one is sent under the shop's notice to staff
+unless the staff member switched it off (ADR 0041).
 
 ${plan.events.map((event) => signalSection(event, 'event')).join('\n\n')}
 

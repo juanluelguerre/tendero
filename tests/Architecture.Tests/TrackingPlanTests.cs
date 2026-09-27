@@ -125,14 +125,15 @@ public sealed class TrackingPlanTests
 
     /// <summary>
     /// A behavioural event waits for analytics consent; a technical one does not
-    /// (ADR 0036). The facade reads the class from the generated types, so an
+    /// (ADR 0036); a staff one is sent under a notice to staff unless switched off
+    /// (ADR 0041). The facade reads the class from the generated types, so an
     /// event that did not say which it is would have no rule to follow.
     /// </summary>
     [Fact]
     public void Every_event_says_whether_it_needs_consent()
     {
         var unclassified = ThePlan.Events
-            .Where(e => e.Consent is not ("behavioural" or "technical"))
+            .Where(e => e.Consent is not ("behavioural" or "technical" or "staff"))
             .Select(e => e.Name);
 
         Assert.Empty(unclassified);

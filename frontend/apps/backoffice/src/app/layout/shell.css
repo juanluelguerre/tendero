@@ -1,89 +1,194 @@
+/* The frame of every screen (the redesign's R-3). One column on a phone, and a
+   rail beside the content from a tablet up: icons from 768 px, labels from
+   1200 px. The content takes all the width that is left (R-1, B-F11); only
+   running text keeps a measure, and the pages set that themselves. */
 :host {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 100dvh;
   background: var(--bg-page);
   color: var(--text);
 }
 
-.bar { border-block-end: 1px solid var(--border); background: var(--bg-surface); }
-.bar__inner {
+.brand {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  min-height: 48px;
+  gap: var(--space-2);
+  text-decoration: none;
 }
-.bar__mark { display: block; width: 26px; height: 26px; }
-/*
-  The wordmark is BRAND, like the storefront's: it names --brand and never the
-  --accent alias, which is the action colour and moves on its own. The size is
-  not decoration. The backoffice body is 14px, and at 14px #D85A30 is body text,
-  held to 4.5:1, which it misses on the dark bar (4.33:1). At --text-lg and 800
-  it is LARGE text, held to 3:1, and it clears that on every dark surface
-  (3.88:1 at the lowest). design-contrast.spec.ts pins both the size and the
-  colour, because either one alone is not legible.
-*/
-.bar__brand {
+
+.brand__mark { display: block; width: 1.75rem; height: 1.75rem; }
+
+/* Brand text: --brand and never the --accent alias, and large enough to be held
+   to 3:1 on every surface (design-contrast.spec.ts pins both). */
+.brand__name {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--text-lg);
   color: var(--brand);
 }
 
-/* Pushed to the right by margin-inline-start:auto, so the language, the
-   identity and sign-out read as one group at the end of the bar. */
+.rail { display: none; }
+
+@media (min-width: 48rem) {
+  :host(.with-rail) { grid-template-columns: auto minmax(0, 1fr); }
+
+  .rail {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    width: 4.5rem;
+    height: 100dvh;
+    padding: var(--space-4) var(--space-2);
+    overflow-y: auto;
+    border-inline-end: 1px solid var(--border);
+    background: var(--bg-surface);
+  }
+
+  .rail .brand__name { display: none; }
+  .rail .brand { justify-content: center; }
+}
+
+@media (min-width: 75rem) {
+  .rail { width: 14.5rem; padding-inline: var(--space-3); }
+  .rail .brand__name { display: inline; }
+  .rail .brand { justify-content: flex-start; padding-inline: var(--space-3); }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 3.5rem;
+  padding-inline: var(--space-3) var(--space-5);
+  border-block-end: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.bar__menu {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.bar__menu:hover { background: var(--bg-raised); }
+
+.bar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bar__spacer { flex: 1; }
+
+/* From a tablet up the rail carries the brand and the screens, so the bar
+   holds only what is the person's own. */
+@media (min-width: 48rem) {
+  :host(.with-rail) .bar__menu,
+  :host(.with-rail) .bar .bar__brand { display: none; }
+}
+
+@media (max-width: 40rem) {
+  .bar__area { display: none; }
+}
+
 .langs {
-  margin-inline-start: auto;
   display: flex;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
+
 .lang {
-  padding: 2px var(--space-2);
+  min-width: 2.75rem;
+  min-height: 2.25rem;
   border: 0;
   background: none;
   color: var(--text-muted);
   font: inherit;
-  font-size: var(--text-3xs);
+  font-size: var(--text-xs);
   text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
   cursor: pointer;
 }
-.lang:hover { color: var(--text); }
-.lang--active { background: var(--accent); color: var(--on-accent); }
 
-/* Who is acting, and under which role. */
-.who {
+.lang[aria-pressed='true'] { background: var(--accent-tint); color: var(--text); font-weight: 600; }
+
+.notice-slot { margin: var(--space-4) var(--space-5) 0; }
+
+.main {
+  flex: 1;
+  padding: var(--space-6) var(--space-5) var(--space-8);
+}
+
+@media (max-width: 40rem) {
+  .notice-slot { margin-inline: var(--space-4); }
+  .main { padding: var(--space-5) var(--space-4); }
+}
+
+/* The notice's standing switch (ADR 0041): quiet, at the foot of every screen,
+   so switching it off never means finding a settings page. */
+.usage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+}
+
+.linkish {
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* The phone's drawer. It floats, so it is allowed a shadow; the page behind is
+   dimmed with the darkest ink the tokens have, never a new colour. */
+.drawer {
+  inset-block: 0;
+  inset-inline: 0 auto;
+  width: min(20rem, 88vw);
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-3) var(--space-3) var(--space-6);
+  overflow-y: auto;
+  border: 0;
+  border-inline-end: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+}
+
+.drawer::backdrop { background: color-mix(in srgb, var(--ink-900) 60%, transparent); }
+
+.drawer__head {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-xs);
-}
-.who__name { color: var(--text-muted); }
-
-.tabs { border-block-end: 1px solid var(--border); background: var(--bg-surface); }
-.tabs__inner { display: flex; gap: var(--space-5); }
-
-.tab {
-  position: relative;
-  padding-block: var(--space-3);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color var(--dur-fast) var(--ease);
-}
-.tab:hover { color: var(--text); }
-.tab__mark { position: absolute; inset-inline: 0; inset-block-end: -1px; margin: 0; opacity: 0; }
-.tab--active { color: var(--text); }
-.tab--active .tab__mark { opacity: 1; }
-
-.main { flex: 1; padding-block: var(--space-6) var(--space-8); }
-
-/* The name goes first on a narrow bar: the role tag still says which powers
-   this identity has, and the brand is already in the icon. */
-@media (max-width: 640px) {
-  .bar__area, .who__name { display: none; }
-  .tabs__inner { gap: var(--space-4); overflow-x: auto; }
-  .main { padding-block: var(--space-5); }
+  justify-content: space-between;
+  margin-block-end: var(--space-4);
+  padding-inline-start: var(--space-3);
 }

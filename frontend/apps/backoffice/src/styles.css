@@ -185,16 +185,19 @@ p {
      whole reason the table exists, and cards destroy exactly that. The fade is
      what stops the sideways scroll from being a secret.
 
-     Pinned to the scroll container with `local`, so it tracks the scroll
-     position instead of sitting there permanently. */
-  background-image: linear-gradient(
-    to left,
-    color-mix(in srgb, var(--ink-900) 55%, transparent),
-    transparent 3rem
-  );
+     Two layers. The shade is fixed to the frame's right edge (`scroll`); a
+     cover in the surface's colour travels with the end of the content
+     (`local`) and sits over the shade once the end is reached — or from the
+     start, when the table fits. The first version had only the shade, pinned to
+     the content's end, so it showed on every table that did not scroll at all
+     (found in the redesign's R-4.3). */
+  background-image:
+    linear-gradient(to left, var(--bg-surface) 40%, transparent),
+    linear-gradient(to left, color-mix(in srgb, var(--ink-900) 45%, transparent), transparent);
+  background-position: right center, right center;
+  background-size: 3rem 100%, 1.5rem 100%;
   background-repeat: no-repeat;
-  background-attachment: local;
-  background-size: 100% 100%;
+  background-attachment: local, scroll;
 }
 
 .table {
@@ -331,12 +334,27 @@ p {
 }
 
 .widget__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
   color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
+/* Every figure is a way into acting on it (R-3, P9): its label opens the list
+   behind it, already filtered. Quiet until pointed at, and 24 px tall. */
+.fact__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fact__link:hover { color: var(--text); text-decoration: underline; }
+
 .widget__sub { margin: var(--space-2) 0 0; }
-.widget__sub a { color: inherit; }
+.widget__sub a { display: inline-flex; align-items: center; min-height: 1.5rem; color: inherit; }
 .widget__state { margin: 0; }
 .widget__note { margin: 0; font-size: var(--text-3xs); }
 
@@ -364,4 +382,165 @@ p {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* ---------- Lists of work (the redesign's R-4.3) ----------
+   One pattern for the six screens a shopkeeper works through item by item:
+   a list narrowed by filters and a search, the likely action kept on the row,
+   and a pane with what the decision needs (R-3, P3 and P6). The pane is its own
+   component; these are the parts each list lays out around it. */
+.work-layout { display: grid; gap: var(--space-5); }
+
+@media (min-width: 64rem) {
+  .work-layout--with-pane {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
+    align-items: start;
+  }
+}
+
+.work-list { min-width: 0; }
+
+.work-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-end: var(--space-4);
+}
+
+.find { flex: 1 1 14rem; display: flex; }
+
+.find__input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+.row { cursor: pointer; }
+.row--selected td { background: var(--accent-tint); }
+
+/* The row's name is the button that opens it, so the keyboard reaches every
+   row; the rest of the row answers the mouse. */
+.row__open {
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.row__open:hover { text-decoration: underline; }
+
+/* A table from a tablet up; cards on a phone, where a row's action was past a
+   sideways scroll (R-1, B-F4). */
+.narrow-only { display: none; }
+
+@media (max-width: 39.99rem) {
+  .wide-only { display: none; }
+  .narrow-only { display: grid; }
+}
+
+.work-cards { gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+
+.work-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+.work-card--selected { border-color: var(--accent); }
+
+.work-card__open {
+  display: grid;
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.work-card__line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.work-card__end { margin-inline-start: auto; }
+.work-card__action { min-height: 2.75rem; }
+.work-card__refusal { grid-column: 1 / -1; color: var(--danger); font-size: var(--text-xs); }
+
+/* Inside a pane: a titled section, the one clay action, and what is apart. */
+.pane-section { display: grid; gap: var(--space-1); }
+.pane-primary { min-height: 2.75rem; }
+
+.pane-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.pane-actions .pane-primary { flex: 1; }
+
+/* Apart, quiet and red: never beside the likely action, and it asks first. */
+.danger-zone {
+  display: grid;
+  gap: var(--space-1);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--text-xs);
+}
+
+.linkish {
+  justify-self: start;
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.linkish--danger { color: var(--danger); }
+
+/* The space what is loading will take, so the layout does not jump (P8). */
+.skeleton {
+  min-height: 4.5rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+.button--danger { background: var(--danger); color: var(--on-accent); }
+.button--danger:hover:not(:disabled) { background: var(--danger); filter: brightness(1.1); }
+
+/* A secondary way somewhere: quiet until pointed at. */
+.quiet-link { font-size: var(--text-xs); color: var(--text-muted); }
+.quiet-link:hover { color: var(--text); }
+
+/* A list that is loading keeps the shape of what is coming — rows, drawn by
+   the background alone — so nothing jumps when it arrives (R-3, P8; R-1,
+   B-F10). The words stay, for a screen reader. */
+.skeleton-list {
+  min-height: 15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 0.75rem, var(--bg-raised) 0.75rem 2.25rem, transparent 2.25rem 3rem)
+    var(--space-4) 0 / calc(100% - 2 * var(--space-4)) 100% no-repeat,
+    var(--bg-surface);
 }

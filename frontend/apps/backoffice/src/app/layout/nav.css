@@ -1,0 +1,118 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.group__label {
+  margin: 0 0 var(--space-1);
+  padding-inline: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-3xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2.25rem;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.link:hover {
+  background: var(--bg-raised);
+  color: var(--text);
+}
+
+.link--active {
+  background: var(--accent-tint);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* The awning stripe marks the current screen, as it marked the current tab:
+   the same stripe, stood on its end. */
+.link__mark {
+  position: absolute;
+  inset-block: var(--space-1);
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: repeating-linear-gradient(180deg, var(--clay-500) 0 6px, var(--clay-100) 6px 12px);
+  opacity: 0;
+}
+
+.link--active .link__mark { opacity: 1; }
+
+.link__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.link__badge {
+  font-size: var(--text-3xs);
+  color: var(--warning);
+}
+
+/* Between a phone and a wide screen the rail keeps only the icons. The label
+   stays the link's accessible name and appears beside it on hover or focus. */
+@media (min-width: 48rem) and (max-width: 74.99rem) {
+  :host(:not(.in-drawer)) .group__label {
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    margin-block: var(--space-2) 0;
+  }
+
+  :host(:not(.in-drawer)) .link {
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0;
+  }
+
+  :host(:not(.in-drawer)) .link__label {
+    position: absolute;
+    inset-inline-start: calc(100% + var(--space-2));
+    z-index: 2;
+    flex: none;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-raised);
+    color: var(--text);
+    white-space: nowrap;
+    box-shadow: var(--shadow-pop);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  :host(:not(.in-drawer)) .link:hover .link__label,
+  :host(:not(.in-drawer)) .link:focus-visible .link__label {
+    opacity: 1;
+  }
+
+  :host(:not(.in-drawer)) .link__badge {
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-end: 4px;
+  }
+}

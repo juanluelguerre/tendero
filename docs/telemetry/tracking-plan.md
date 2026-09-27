@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-25 features: **20** answered by a signal emitted today,
+28 features: **23** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -19,7 +19,7 @@ everything here that is not *planned* is emitted.
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
 | Search | What share of typed searches finds nothing, and is it worse for agents than for people? | Where the next relevance work goes: synonyms and golden-set queries for the empty ones, or the MCP tool's description if agents come back empty more often than people. | `tendero.search.requests` | emitted |
-| Browsing by category | Do people browse the taxonomy, or go straight to search? | Whether the category pages earn their place in the navigation. | `tendero.search.requests` | emitted |
+| Browsing by category | Do people browse the taxonomy, or go straight to search? | Whether the category pages earn their place in the navigation. | `tendero.search.requests`, `category_opened` | emitted |
 | Product page | How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow? | Where discovery work goes: the search box, the taxonomy or the home page's rows. | `product_viewed`, `tendero.carts.created` | emitted |
 | Specs with their source | Do shoppers open the sentence behind a spec, and do they compare products side by side once they can? | If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have. | `spec_source_opened`, `products_compared` | emitted |
 | Cart | How many carts never become an order, and whose? | Whether abandonment work (a saved cart, a reminder) comes before checkout friction. | `tendero.carts.created`, `tendero.checkout.attempts` | emitted |
@@ -34,6 +34,7 @@ everything here that is not *planned* is emitted.
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
 | Review queue and publishing | Does the review queue move: how many drafts become products, and who approves them? | Whether publishing needs bulk approval, and later whether the AI proposals of phase 10 are being approved or ignored. | `tendero.catalog.products.published` | emitted |
+| Withdrawing a product | How often does a live product have to come back to review, and who pulls it? | Whether withdrawing needs a recorded reason, as suspending an agent does, and whether imports should flag the changes that cause it. | `tendero.catalog.products.withdrawn` | emitted |
 | Stock and reservations | How much held stock never becomes a sale? | The hold's lifetime, and whether the expiry sweep the domain has a state for is worth building. | `tendero.inventory.reservations` | emitted |
 | Catalogue import | Does an import bring products in? | None beyond the run itself. | — An import is an operator's batch, answered by its own result and its span; a counter would say what the result already says. | none |
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
@@ -42,6 +43,8 @@ everything here that is not *planned* is emitted.
 | Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 | Agent registry | Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered? | A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet. | `tendero.checkout.attempts` | emitted |
 | Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
+| Backoffice jobs | Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen? | A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence. | `backoffice_view_opened`, `backoffice_action_taken` | emitted |
+| Theme choice | Does anybody change the theme from the system's, and to which? | If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event. | `backoffice_theme_chosen` | emitted |
 
 ### Agents
 
@@ -64,7 +67,8 @@ everything here that is not *planned* is emitted.
 Emitted in the browser through `Telemetry.trackEvent`, whose types are generated
 from this plan (`libs/shared/telemetry/src/lib/generated/tracked-events.ts`). A
 *behavioural* event is dropped until the shopper grants analytics consent; a
-*technical* one is not.
+*technical* one is not; a *staff* one is sent under the shop's notice to staff
+unless the staff member switched it off (ADR 0041).
 
 ### `webmcp_tool_invoked`
 
@@ -91,6 +95,18 @@ Answers:
 |---|---|---|---|
 | `arrived_from` | string | `search`, `category`, `home`, `other`, `direct` | The page before this one, by kind; direct when there was none in this tab. |
 
+### `category_opened`
+
+browser event, behavioural. A shopper opened a category listing (R-0 of the redesign). Only with analytics consent.
+
+Answers:
+
+- **Browsing by category** — Do people browse the taxonomy, or go straight to search?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `arrived_from` | string | `menu`, `search`, `category`, `home`, `other`, `direct` | How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. |
+
 ### `spec_source_opened`
 
 browser event, behavioural. A shopper opened the words behind a spec — the quote and its support. Only with analytics consent.
@@ -114,6 +130,44 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `products` | number | — | How many products were compared, two to four. |
+
+### `backoffice_view_opened`
+
+browser event, staff. The shopkeeper opened a backoffice screen (R-0 of the redesign). A staff event: sent by default under the shop's notice to staff, and never with who they are.
+
+Answers:
+
+- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen, by its route; never an id in it. |
+
+### `backoffice_action_taken`
+
+browser event, staff. The shopkeeper did what a screen is for — published, approved, shipped, decided, suspended — and how the server answered (R-0). A staff event.
+
+Answers:
+
+- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen it was done on. |
+| `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate` | What was done, from a closed list. |
+| `outcome` | string | `done`, `refused`, `failed` | done; refused when the server said no (a 4xx, a rule); failed when it could not answer. |
+
+### `backoffice_theme_chosen`
+
+browser event, staff. A staff member chose light, dark or the system's theme in the account menu (the redesign's R-3). A staff event under the shop's notice (ADR 0041), never with who they are.
+
+Answers:
+
+- **Theme choice** — Does anybody change the theme from the system's, and to which?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `theme` | string | `system`, `light`, `dark` | What was chosen, not what the system resolved it to. |
 
 ## Metrics
 
@@ -247,6 +301,18 @@ counter, unit `{product}`. Products moved from Draft to Active.
 Answers:
 
 - **Review queue and publishing** — Does the review queue move: how many drafts become products, and who approves them?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
+
+### `tendero.catalog.products.withdrawn`
+
+counter, unit `{product}`. Products moved from Active back to Draft.
+
+Answers:
+
+- **Withdrawing a product** — How often does a live product have to come back to review, and who pulls it?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|

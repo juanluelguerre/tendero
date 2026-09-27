@@ -43,6 +43,10 @@ public sealed record OperationsSummary(
     int Cancelled,
     /// <summary>Cancelled among the orders placed in the period, 0 to 1.</summary>
     decimal CancellationRate,
+    /// <summary>The rate the shop holds itself to (the redesign's R-4.5), 0 to 1.</summary>
+    decimal CancellationTarget,
+    /// <summary><c>within</c>, <c>near</c> or <c>outside</c> the target: decided here, so every screen says the same.</summary>
+    string CancellationStanding,
     int OpenReturns,
     IReadOnlyList<ReasonCount> OpenReturnsByReason,
     decimal Refunded,
@@ -93,6 +97,22 @@ public static class DashboardFigures
 {
     /// <summary>How long a confirmed order may wait for its parcel before it is late — Seller Central's measure, at a laboratory's patience.</summary>
     public static readonly TimeSpan LateAfter = TimeSpan.FromHours(48);
+
+    /// <summary>
+    /// The cancellation rate a shop holds itself to: Seller Central's published
+    /// account-health target, borrowed until the shop has one of its own (the
+    /// redesign's R-3, P10). The late-shipment target R-3 also named waits for
+    /// what it needs — the moment each order shipped, a status history the shop
+    /// does not keep yet — rather than being drawn from something else.
+    /// </summary>
+    public const decimal CancellationTarget = 0.025m;
+
+    /// <summary>Near is the last fifth of the way to the target: time to look, before it is a problem.</summary>
+    private const decimal NearFrom = 0.8m;
+
+    /// <summary>Where a rate stands against its target. At the target is near it; only above it is outside.</summary>
+    public static string Standing(decimal rate, decimal target) =>
+        rate > target ? "outside" : rate > target * NearFrom ? "near" : "within";
 
     private const int TopRows = 5;
 
@@ -146,6 +166,8 @@ public static class DashboardFigures
             working.Count(order => order.Status == OrderStatus.PaymentFailed),
             cancelled,
             Rate(cancelled, live.Count),
+            CancellationTarget,
+            Standing(Rate(cancelled, live.Count), CancellationTarget),
             open.Count,
             [
                 .. open.SelectMany(request => request.Lines)

@@ -84,6 +84,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/products/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WithdrawProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalog/products/{code}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReviewProduct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/publish": {
         parameters: {
             query?: never;
@@ -1097,6 +1129,7 @@ export interface components {
         };
         ListOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
+            counts: components["schemas"]["OrderStatusCount"][];
         };
         ListProductsResult: {
             items: components["schemas"]["ProductSummary"][];
@@ -1145,6 +1178,9 @@ export interface components {
             cancelled: number;
             /** Format: double */
             cancellationRate: number;
+            /** Format: double */
+            cancellationTarget: number;
+            cancellationStanding: string;
             /** Format: int32 */
             openReturns: number;
             openReturnsByReason: components["schemas"]["ReasonCount"][];
@@ -1186,6 +1222,11 @@ export interface components {
             currency: string;
             /** Format: date-time */
             expiresAt: null | string;
+        };
+        OrderStatusCount: {
+            status: string;
+            /** Format: int32 */
+            count: number;
         };
         OrderSummary: {
             orderId: string;
@@ -1292,6 +1333,27 @@ export interface components {
             alternates: components["schemas"]["AlternateSlug"][];
             missingCultures: string[];
             status: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ProductForReview: {
+            productId: string;
+            code: string;
+            status: string;
+            names: {
+                [key: string]: string;
+            };
+            descriptions: {
+                [key: string]: string;
+            };
+            brand: null | string;
+            category: null | string;
+            /** Format: double */
+            priceAmount: number;
+            priceCurrency: string;
+            imageIds: string[];
+            attributes: components["schemas"]["ProductAttributeView"][];
+            missingCultures: string[];
             /** Format: date-time */
             updatedAt: string;
         };
@@ -1703,6 +1765,15 @@ export interface components {
             isAvailable: boolean;
             reason: string;
         };
+        WithdrawProductConflict: {
+            title: string;
+            detail: string;
+        };
+        WithdrawProductResponse: {
+            productId: string;
+            outcome: string;
+            status: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -1830,6 +1901,75 @@ export interface operations {
             };
         };
     };
+    WithdrawProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WithdrawProductResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WithdrawProductConflict"];
+                };
+            };
+        };
+    };
+    ReviewProduct: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductForReview"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PublishProduct: {
         parameters: {
             query?: never;
@@ -1875,6 +2015,7 @@ export interface operations {
                 culture?: string;
                 page?: number;
                 pageSize?: number;
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -3045,7 +3186,10 @@ export interface operations {
     };
     ListOrders: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: string;
+                q?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3059,6 +3203,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListOrdersResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };

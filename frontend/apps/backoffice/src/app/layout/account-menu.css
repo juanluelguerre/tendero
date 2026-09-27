@@ -1,0 +1,108 @@
+:host { display: inline-flex; }
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  anchor-name: --account;
+}
+
+.trigger:hover { color: var(--text); border-color: var(--border-strong); }
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-tint);
+  color: var(--text);
+  font-size: var(--text-3xs);
+  font-weight: 600;
+}
+
+/* Anchored under its trigger where the browser can, and pinned to the corner
+   where it cannot: either way it floats, so it is one of the few things here
+   allowed a shadow. */
+.menu {
+  position-anchor: --account;
+  inset: auto;
+  top: anchor(bottom);
+  right: anchor(right);
+  margin: var(--space-2) 0 0;
+  width: min(18rem, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+}
+
+@supports not (anchor-name: --a) {
+  .menu {
+    top: calc(var(--header-h, 3.5rem) + var(--space-1));
+    right: var(--space-4);
+  }
+}
+
+.menu:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.menu__who {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.menu__label { font-size: var(--text-xs); color: var(--text-muted); }
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.segmented__option {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.75rem;
+  min-height: 2.25rem;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.segmented__option:hover { color: var(--text); }
+
+.segmented__option[aria-pressed='true'] {
+  background: var(--accent-tint);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.menu__signout { align-self: flex-start; }

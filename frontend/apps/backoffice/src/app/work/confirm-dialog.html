@@ -1,0 +1,18 @@
+<dialog class="confirm" #dialog [attr.aria-labelledby]="headingId">
+  <form method="dialog" (submit)="$event.preventDefault(); confirm()">
+    <h2 class="confirm__heading" [id]="headingId">{{ heading() }}</h2>
+    <p>{{ body() }}</p>
+    @if (reasonLabel(); as label) {
+      <label class="confirm__reason">
+        <span>{{ label }}</span>
+        <textarea rows="2" [required]="reasonRequired()" [value]="reason()" (input)="reason.set($any($event.target).value)"></textarea>
+      </label>
+    }
+    <div class="confirm__actions">
+      <button type="button" class="button button--quiet" (click)="keep()">{{ keepLabel() }}</button>
+      <button type="submit" class="button" [class.button--danger]="tone() === 'danger'" [disabled]="blocked()">
+        {{ confirmLabel() }}
+      </button>
+    </div>
+  </form>
+</dialog>

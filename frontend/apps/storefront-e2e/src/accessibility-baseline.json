@@ -1,0 +1,14 @@
+[
+  "category@1440 smallTargets: a",
+  "category@1440 smallTargets: button.card__compare",
+  "category@360 smallTargets: a",
+  "category@360 smallTargets: button.card__compare",
+  "category@768 smallTargets: a",
+  "category@768 smallTargets: button.card__compare",
+  "home@1440 smallTargets: button.card__compare",
+  "home@360 smallTargets: button.card__compare",
+  "home@768 smallTargets: button.card__compare",
+  "search@1440 smallTargets: button.card__compare",
+  "search@360 smallTargets: button.card__compare",
+  "search@768 smallTargets: button.card__compare"
+]

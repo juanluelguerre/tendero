@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, translateObjectSignal, translateSignal } from '@jsverse/transloco';
+import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import type { AuditEntryView } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -30,7 +31,7 @@ type Filter = 'denied' | 'failed' | 'allowed' | null;
  */
 @Component({
   selector: 'backoffice-audit',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, FilterChips],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-page.html',
   styleUrl: './audit-page.css',
@@ -50,11 +51,20 @@ export class AuditPage {
    *  side by side is a screen nobody can read. */
   protected readonly opened = signal<string | null>(null);
 
-  protected readonly refused = computed(
-    () => this.entries().filter((entry) => entry.outcome !== 'allowed').length,
-  );
-
   protected readonly filters: readonly Filter[] = ['denied', 'failed', 'allowed', null];
+
+  private readonly outcomeLabels = translateObjectSignal('audit.outcome');
+  private readonly everything = translateSignal('audit.all');
+
+  /** The count is known for the filter showing: how many it holds, said on its own chip. */
+  protected readonly filterOptions = computed<FilterOption[]>(() => {
+    const labels = this.outcomeLabels() as Record<string, string>;
+    return this.filters.map((option) => ({
+      key: option ?? 'all',
+      label: option ? (labels[option] ?? option) : this.everything(),
+      count: option === this.filter() && !this.loading() ? this.entries().length : null,
+    }));
+  });
 
   /** Who acted — or a guest, which is not the system. */
   protected readonly actorOf = actorOf;

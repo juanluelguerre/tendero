@@ -44,11 +44,13 @@ public interface IOrderRepository
 public interface IOrderReader
 {
     /// <summary>
-    /// The most recent orders, newest first. There is no paging: the shop has
-    /// six products and a laboratory's worth of orders, and a cap is the honest
+    /// The shopkeeper's list: newest first, narrowed by status and by what was
+    /// typed, with how many match each status (the redesign's R-4.2). The filter
+    /// runs in the database, so an old confirmed order is still one to ship. There
+    /// is no paging: a laboratory's worth of orders under a cap is the honest
     /// version of a page size nobody has asked for yet.
     /// </summary>
-    Task<IReadOnlyList<Order>> RecentAsync(CancellationToken cancellationToken = default);
+    Task<OrderList> ListAsync(OrderListQuery query, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// One customer's orders, newest first.
@@ -73,3 +75,16 @@ public interface IAgentActivity
     /// <summary>How many orders <paramref name="agent"/> placed since <paramref name="since"/>.</summary>
     Task<int> OrdersPlacedSinceAsync(AgentId agent, DateTimeOffset since, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// What the shopkeeper narrowed the list to. <see cref="Text"/> matches the start
+/// of an order's id, which is how the interface shows ids, or any part of the
+/// recipient's name or city.
+/// </summary>
+public sealed record OrderListQuery(OrderStatus? Status, string? Text);
+
+/// <summary>
+/// The orders that match, and how many match each status before the status is
+/// applied: the filter's counts, so "To ship 8" is true of what was typed.
+/// </summary>
+public sealed record OrderList(IReadOnlyList<Order> Orders, IReadOnlyDictionary<OrderStatus, int> CountByStatus);

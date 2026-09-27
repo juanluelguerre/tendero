@@ -1,0 +1,28 @@
+<ng-container *transloco="let t">
+  @for (group of groups; track group.label) {
+    <section class="group">
+      <h2 class="group__label">{{ t('nav.groups.' + group.label) }}</h2>
+      <ul class="group__items" role="list">
+        @for (item of group.items; track item.route) {
+          <li>
+            <a
+              class="link"
+              [routerLink]="item.route"
+              routerLinkActive="link--active"
+              ariaCurrentWhenActive="page"
+              (click)="chosen.emit()"
+            >
+              <span class="link__mark" aria-hidden="true"></span>
+              <backoffice-icon [name]="item.icon" />
+              <span class="link__label">{{ t('nav.' + item.label) }}</span>
+              @if (item.waiting && waiting()(item.waiting); as count) {
+                <span class="link__badge numeric" aria-hidden="true">{{ count }}</span>
+                <span class="sr-only">{{ t('nav.waiting', { count }) }}</span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</ng-container>

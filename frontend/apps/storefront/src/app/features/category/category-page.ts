@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { map, type Subscription } from 'rxjs';
 import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore, PageTitles } from '@tendero/shared-i18n';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { ProductSearchService } from '../../data-access/product-search.service';
 import { ShopFrontService, type Category } from '../../data-access/shop-front.service';
 import { ProductCard } from '../../product-card';
 import { ShopLinks } from '../../shop-links';
 import { departmentArt, rootOf } from '../../shop-art';
+import { openedVia } from './opened-via';
 
 type PageState =
   | { status: 'loading' }
@@ -45,6 +47,11 @@ export class CategoryPage {
   private readonly shopFront = inject(ShopFrontService);
   private readonly culture = inject(CultureStore);
   private readonly titles = inject(PageTitles);
+  private readonly router = inject(Router);
+  private readonly telemetry = inject(Telemetry);
+
+  /** The listing already reported, so a change of language is not a second opening. */
+  private reported: string | null = null;
 
   protected readonly links = inject(ShopLinks);
   protected readonly state = signal<PageState>({ status: 'loading' });
@@ -83,6 +90,17 @@ export class CategoryPage {
    */
   private inFlight?: Subscription;
   private appending?: Subscription;
+
+  /**
+   * `category_opened` (the tracking plan, R-0 of the redesign): once per listing,
+   * with how the shopper got there. The facade drops it unless they allowed
+   * analytics.
+   */
+  private reportOpened(code: string): void {
+    if (this.reported === code) return;
+    this.reported = code;
+    this.telemetry.trackEvent('category_opened', { arrived_from: openedVia(this.router.lastSuccessfulNavigation()) });
+  }
 
   constructor() {
     inject(DestroyRef).onDestroy(() => {
@@ -124,6 +142,8 @@ export class CategoryPage {
             this.state.set({ status: 'unknown' });
             return;
           }
+
+          this.reportOpened(found.code);
 
           this.page.set(1);
 

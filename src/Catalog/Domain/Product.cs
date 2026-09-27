@@ -417,6 +417,21 @@ public sealed class Product : AggregateRoot
         Touch(clock);
     }
 
+    /// <summary>
+    /// Takes a live product off sale and back to the review queue: a supplier's
+    /// recall, a wrong price, a description to check again. Draft is where a
+    /// product waits for a person, so it is where a withdrawn one goes, and only
+    /// PublishProduct brings it back (ADR 0012). The index projection already
+    /// removes a product that is no longer Active.
+    /// </summary>
+    public void Withdraw(TimeProvider clock)
+    {
+        if (Status != ProductStatus.Active)
+            throw new InvalidOperationException($"Only an active product can be withdrawn; this one is {Status}.");
+        Status = ProductStatus.Draft;
+        Touch(clock);
+    }
+
     public void Archive(TimeProvider clock)
     {
         Status = ProductStatus.Archived;

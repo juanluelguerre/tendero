@@ -162,6 +162,90 @@
         }
       }
     },
+    "/api/catalog/products/{id}/withdraw": {
+      "post": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "WithdrawProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawProductResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawProductConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalog/products/{code}/review": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "ReviewProduct",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductForReview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/publish": {
       "post": {
         "tags": [
@@ -241,6 +325,13 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1767,6 +1858,22 @@
           "Orders"
         ],
         "operationId": "ListOrders",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1774,6 +1881,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListOrdersResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -3215,7 +3332,8 @@
       },
       "ListOrdersResult": {
         "required": [
-          "orders"
+          "orders",
+          "counts"
         ],
         "type": "object",
         "properties": {
@@ -3223,6 +3341,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OrderSummary"
+            }
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderStatusCount"
             }
           }
         }
@@ -3368,6 +3492,8 @@
           "paymentFailed",
           "cancelled",
           "cancellationRate",
+          "cancellationTarget",
+          "cancellationStanding",
           "openReturns",
           "openReturnsByReason",
           "refunded",
@@ -3404,6 +3530,13 @@
           "cancellationRate": {
             "type": "number",
             "format": "double"
+          },
+          "cancellationTarget": {
+            "type": "number",
+            "format": "double"
+          },
+          "cancellationStanding": {
+            "type": "string"
           },
           "openReturns": {
             "type": "integer",
@@ -3553,6 +3686,22 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "OrderStatusCount": {
+        "required": [
+          "status",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -3993,6 +4142,88 @@
           },
           "status": {
             "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ProductForReview": {
+        "required": [
+          "productId",
+          "code",
+          "status",
+          "names",
+          "descriptions",
+          "brand",
+          "category",
+          "priceAmount",
+          "priceCurrency",
+          "imageIds",
+          "attributes",
+          "missingCultures",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "names": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "descriptions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "brand": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "priceAmount": {
+            "type": "number",
+            "format": "double"
+          },
+          "priceCurrency": {
+            "type": "string"
+          },
+          "imageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeView"
+            }
+          },
+          "missingCultures": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "updatedAt": {
             "type": "string",
@@ -5520,6 +5751,40 @@
             "type": "boolean"
           },
           "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "WithdrawProductConflict": {
+        "required": [
+          "title",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "WithdrawProductResponse": {
+        "required": [
+          "productId",
+          "outcome",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "status": {
             "type": "string"
           }
         }

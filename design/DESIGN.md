@@ -60,7 +60,7 @@ minimal — the accent is reserved for the primary action on each screen
 
 ### Backoffice
 Dense: body drops to `--text-sm`, tables to `--text-xs`, row height 36px.
-Dark mode enabled here by default (`data-theme="dark"`), light elsewhere. Status
+Light or dark as the person chooses in the account menu, following the system until they do (`data-theme` on the root, set before the first paint; the redesign's R-3). The storefront gains the same choice in R-5.1. Status
 is colour-coded and always paired with a word, never colour alone:
 
 | State | Token | Used for |
