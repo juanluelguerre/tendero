@@ -5,6 +5,7 @@ import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { OrderingService, type OrderMove } from '../../data-access/ordering.service';
+import { BackofficeUsage, type BackofficeAction } from '../../usage';
 
 /**
  * The orders, and the two buttons that move them.
@@ -21,6 +22,9 @@ import { OrderingService, type OrderMove } from '../../data-access/ordering.serv
  * never paid for needs to tell them apart. Capturing happens on shipping, so a
  * shipped order that still says "Authorised" is exactly the row worth finding.
  */
+/** Each move as the usage event names it (ADR 0041). */
+const OrderActions = { Ship: 'order_ship', Deliver: 'order_deliver', Cancel: 'order_cancel' } as const satisfies Record<OrderMove, BackofficeAction>;
+
 @Component({
   selector: 'backoffice-orders',
   imports: [TranslocoDirective],
@@ -30,6 +34,7 @@ import { OrderingService, type OrderMove } from '../../data-access/ordering.serv
 })
 export class OrdersPage {
   private readonly ordering = inject(OrderingService);
+  private readonly usage = inject(BackofficeUsage);
   private readonly culture = inject(CultureStore);
 
   protected readonly orders = signal<OrderSummary[]>([]);
@@ -76,7 +81,7 @@ export class OrdersPage {
     this.busy.set(order.orderId);
     this.refusal.update((current) => without(current, order.orderId));
 
-    this.ordering.move(order.orderId, move).subscribe({
+    this.ordering.move(order.orderId, move).pipe(this.usage.reported('orders', OrderActions[move])).subscribe({
       next: (updated) => {
         this.orders.update((current) =>
           current.map((candidate) => (candidate.orderId === updated.orderId ? updated : candidate)),

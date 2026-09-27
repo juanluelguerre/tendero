@@ -16,6 +16,7 @@ import type { ImportResult, ProductSummary } from '@tendero/shared-api';
 import { formatPrice } from '@tendero/shared-util';
 import type { Subscription } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
+import { BackofficeUsage } from '../../usage';
 
 type QueueState =
   | { status: 'loading' }
@@ -46,6 +47,7 @@ type QueueState =
 })
 export class ReviewQueuePage {
   private readonly catalog = inject(CatalogService);
+  private readonly usage = inject(BackofficeUsage);
   private readonly culture = inject(CultureStore);
 
   protected readonly state = signal<QueueState>({ status: 'loading' });
@@ -87,7 +89,7 @@ export class ReviewQueuePage {
   protected publish(item: ProductSummary): void {
     this.publishing.update((ids) => new Set(ids).add(item.productId));
 
-    this.catalog.publish(item.productId).subscribe({
+    this.catalog.publish(item.productId).pipe(this.usage.reported('review', 'publish')).subscribe({
       next: () => {
         this.clearPublishing(item.productId);
         // Reload rather than removing the row by hand: the queue belongs to the
@@ -107,7 +109,7 @@ export class ReviewQueuePage {
     this.importing.set(true);
     this.imported.set(null);
 
-    this.catalog.import().subscribe({
+    this.catalog.import().pipe(this.usage.reported('review', 'import')).subscribe({
       next: (result) => {
         this.importing.set(false);
         this.imported.set(result);

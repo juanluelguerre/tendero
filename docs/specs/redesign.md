@@ -72,7 +72,8 @@ that. So this one starts by saying what "better" will mean, and by measuring
 
 1. **Three browser events** join the tracking plan, and a feature ships them only
    with its question and its decision (ADR 0036):
-   - `backoffice_view_opened {view}`: the shopkeeper opened a screen.
+   - `backoffice_view_opened {view}`: the shopkeeper opened a screen. **Built
+     2026-09-27, with the one below, as staff events under ADR 0041.**
    - `backoffice_action_taken {view, action, outcome}`, with outcome one of
      `done`, `refused` or `failed`: they did what the screen is for (publish,
      approve, ship, decide, suspend). Time on task is the gap between the two
@@ -256,19 +257,33 @@ question and its decision:
   stays under 10 % of listings reached after a month of the laboratory's traffic, the
   menu gets simpler, not bigger.
 
-## Open questions (the author's to decide)
+## Decisions (the author, 2026-09-27)
 
-1. **An accessibility checker.** The usual tool, axe-core, is **MPL-2.0**, which the
-   licensing policy's tier 1 (MIT, Apache-2.0, BSD) does not allow as a dependency.
-   Lighthouse (Apache-2.0) bundles axe-core. Choices:
-   - by hand against WCAG 2.2 AA, with Playwright's accessibility snapshot, which
-     needs no new dependency;
-   - an exception recorded as an ADR, for a development-only dependency that is
-     never redistributed;
-   - running axe outside the repository.
+The three questions R-0 left open, decided by the author on 2026-09-27:
 
-   *Recommendation*: by hand for R-1, with the snapshot. It is what a heuristic
-   audit is anyway, and it adds nothing to the dependency budget.
-2. **The legal basis for backoffice telemetry.** The shopkeeper is staff, not a
-   shopper. Do their events follow the consent banner, or a staff notice?
-3. **A second participant** for the walkthrough, if there is one.
+1. **Accessibility checking stays inside the licensing policy (option A).** No
+   axe-core, since it is MPL-2.0 and tier 1 does not allow it. The audit script
+   gains a WCAG contrast check of its own: the relative-luminance formula,
+   applied to every visible text over its computed background. That, the
+   script's existing checks and Playwright's ARIA snapshot run as a test.
+   Keyboard paths and focus order are checked by hand. A one-off pass with axe
+   outside the repository, if it is ever wanted, cross-checks this and adds no
+   dependency.
+2. **Backoffice telemetry rests on legitimate interest, with a notice to staff
+   (option A).** Consent is a weak basis for an employee (EDPB guidelines
+   05/2020, on the power imbalance). Instead:
+   - the backoffice events are on by default, with a notice the shopkeeper sees
+     once, es/en;
+   - they carry the screen, the action and its outcome, never a person's id,
+     only the role;
+   - they are read in aggregate, never as a person's performance;
+   - a staff member can switch them off.
+
+   It is the design a real shop could deploy, and not legal advice. ADR 0041
+   records it.
+3. **The walkthrough has two participants: the author and one person who has
+   never seen Tendero.** Ideally someone who has used a shop's admin (Shopify,
+   WooCommerce, Seller Central). Everything around the sessions is prepared: the
+   script of the nine jobs, a short consent text, and a page that times each job
+   and records SEQ and SUS. Doing the jobs, and finding the second person, is
+   the author's. The results are analysed against the baseline.

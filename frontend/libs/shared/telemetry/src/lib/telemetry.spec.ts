@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { AnalyticsConsent } from './consent';
+import { StaffUsage } from './staff-usage';
 import { Telemetry, type TelemetryAdapter, type TelemetryContext } from './telemetry';
 
 const context: TelemetryContext = { service: 'storefront', sessionId: 'abc', endpoint: '/otlp' };
@@ -126,6 +127,19 @@ describe('Telemetry and analytics consent', () => {
     telemetry.trackEvent('product_viewed', { arrived_from: 'category' });
 
     expect(events).toEqual(['product_viewed']);
+  });
+
+  it('sends a staff event under the notice, without analytics consent, until it is switched off (ADR 0041)', () => {
+    const staff = TestBed.inject(StaffUsage);
+
+    telemetry.trackEvent('backoffice_view_opened', { view: 'orders' });
+    staff.switchOff();
+    telemetry.trackEvent('backoffice_view_opened', { view: 'returns' });
+    staff.switchOn();
+    telemetry.trackEvent('backoffice_action_taken', { view: 'orders', action: 'order_ship', outcome: 'done' });
+
+    expect(consent.state()).toBe('unasked');
+    expect(events).toEqual(['backoffice_view_opened', 'backoffice_action_taken']);
   });
 
   it('never holds back technical telemetry: an error goes out without consent', () => {

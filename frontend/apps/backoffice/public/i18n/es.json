@@ -464,5 +464,16 @@
     "cancel": "Cancelar",
     "reason": "Motivo de la suspensión",
     "reasonPlaceholder": "¿Por qué?"
+  },
+  "staffUsage": {
+    "title": "Cómo se usa el backoffice",
+    "notice": "Para saber si sus pantallas funcionan, la tienda registra cuáles se abren y qué se hace en ellas —publicar, enviar, decidir una devolución— y si salió bien. Nunca quién lo hizo: ni nombre ni cuenta, solo el rol. Las cifras se leen en conjunto, nunca como el rendimiento de nadie.",
+    "understood": "Entendido",
+    "switchOff": "Desactivar",
+    "switchOn": "Activar",
+    "footer": {
+      "on": "Se mide el uso del backoffice, sin decir quién.",
+      "off": "No se mide el uso del backoffice en este navegador."
+    }
   }
 }

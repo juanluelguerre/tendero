@@ -1,0 +1,9 @@
+<aside class="notice" role="region" *transloco="let t; prefix: 'staffUsage'" [attr.aria-label]="t('title')">
+  <p class="notice__text">
+    <strong>{{ t('title') }}.</strong> {{ t('notice') }}
+  </p>
+  <div class="notice__actions">
+    <button type="button" class="button button--small button--quiet" (click)="usage.switchOff()">{{ t('switchOff') }}</button>
+    <button type="button" class="button button--small" (click)="usage.acknowledge()">{{ t('understood') }}</button>
+  </div>
+</aside>

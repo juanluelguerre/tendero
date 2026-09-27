@@ -1,9 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { StaffUsage } from '@tendero/shared-telemetry';
+import { filter } from 'rxjs';
 import { backofficeAccess } from '../access';
+import { BackofficeUsage } from '../usage';
+import { StaffNotice } from './staff-notice';
 
 /**
  * The backoffice shell: dense and dark. None of this is shared with the
@@ -16,7 +21,7 @@ import { backofficeAccess } from '../access';
  */
 @Component({
   selector: 'backoffice-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoDirective],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslocoDirective, StaffNotice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
@@ -25,6 +30,10 @@ export class Shell {
   private readonly auth = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly cultureStore = inject(CultureStore);
+  private readonly usage = inject(BackofficeUsage);
+
+  /** The notice to staff and its switch (ADR 0041). */
+  protected readonly staffUsage = inject(StaffUsage);
 
   protected readonly cultures = this.cultureStore.available;
   protected readonly culture = this.cultureStore.active;
@@ -42,6 +51,13 @@ export class Shell {
   protected readonly canUseBackoffice = computed(() => backofficeAccess(this.identity()) === 'allowed');
 
   constructor() {
+    // R-0's measurement: every screen the shopkeeper opens, by its route (ADR 0041).
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe((event) => {
+        if (this.canUseBackoffice()) this.usage.opened(event.urlAfterRedirects);
+      });
+
     // The token can stop being valid without anybody pressing anything: the
     // development issuer mints its signing key per process, so every restart
     // invalidates every token in a browser. The interceptor clears it on the

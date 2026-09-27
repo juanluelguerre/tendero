@@ -41,6 +41,7 @@
 | [0038](0038-a-test-order-is-a-mode-the-credential-decides.md) | A test order is a mode the credential decides, fixed at placement | accepted |
 | [0039](0039-ucp-checkout-is-a-session-an-agent-owns.md) | UCP's checkout is a session an agent owns, served on both transports, and `/mcp` is not anonymous for it | accepted |
 | [0040](0040-a-mandate-is-verified-against-terms-the-shop-signed.md) | A checkout mandate is verified against terms the shop itself signed | accepted |
+| [0041](0041-staff-usage-is-measured-under-a-notice-not-consent.md) | Staff usage is measured under a notice, not by consent | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

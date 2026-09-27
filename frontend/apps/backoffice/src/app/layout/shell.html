@@ -87,5 +87,20 @@
     </nav>
   }
 
+  @if (canUseBackoffice() && !staffUsage.noticeSeen()) {
+    <backoffice-staff-notice />
+  }
+
   <main class="page-frame main"><router-outlet /></main>
+
+  @if (canUseBackoffice()) {
+    <footer class="page-frame usage">
+      <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
+      @if (staffUsage.state() === 'on') {
+        <button type="button" class="linkish" (click)="staffUsage.switchOff()">{{ t('staffUsage.switchOff') }}</button>
+      } @else {
+        <button type="button" class="linkish" (click)="staffUsage.switchOn()">{{ t('staffUsage.switchOn') }}</button>
+      }
+    </footer>
+  }
 </ng-container>

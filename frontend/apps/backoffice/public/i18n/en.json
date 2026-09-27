@@ -464,5 +464,16 @@
     "cancel": "Cancel",
     "reason": "Reason for the suspension",
     "reasonPlaceholder": "Why?"
+  },
+  "staffUsage": {
+    "title": "How the backoffice is used",
+    "notice": "To learn whether its screens work, the shop records which ones are opened and what is done on them — publishing, shipping, deciding a return — and whether it worked. Never who did it: no name, no account, only the role. The figures are read together, never as anyone's performance.",
+    "understood": "Understood",
+    "switchOff": "Switch it off",
+    "switchOn": "Switch it on",
+    "footer": {
+      "on": "Usage of the backoffice is measured, without saying who.",
+      "off": "Usage of the backoffice is not measured in this browser."
+    }
   }
 }

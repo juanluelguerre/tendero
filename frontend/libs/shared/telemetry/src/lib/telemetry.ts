@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { AnalyticsConsent } from './consent';
+import { StaffUsage } from './staff-usage';
 import { TRACKED_EVENT_CONSENT, type TrackedEvents } from './generated/tracked-events';
 import { noopAdapter } from './noop-adapter';
 
@@ -63,17 +64,21 @@ export class Telemetry {
   }
 
   private readonly consent = inject(AnalyticsConsent);
+  private readonly staff = inject(StaffUsage);
 
   /**
    * Emits a planned event. A behavioural one is dropped, here and silently,
-   * until the shopper has granted analytics consent — whatever the adapter.
+   * until the shopper has granted analytics consent — whatever the adapter. A
+   * staff one is dropped once the staff member has switched it off (ADR 0041).
    */
   trackEvent<N extends TrackedEventName>(
     name: N,
     attributes: TrackedEvents[N],
     options: { readonly actor?: ActorKind } = {},
   ): void {
-    if (TRACKED_EVENT_CONSENT[name] === 'behavioural' && this.consent.state() !== 'granted') return;
+    const consent = TRACKED_EVENT_CONSENT[name];
+    if (consent === 'behavioural' && this.consent.state() !== 'granted') return;
+    if (consent === 'staff' && this.staff.state() === 'off') return;
     this.guarded((adapter) => adapter.event(name, attributes, options.actor ?? 'human'));
   }
 

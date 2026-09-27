@@ -64,16 +64,46 @@ export interface TrackedEvents {
     /** How many products were compared, two to four. */
     readonly products: number;
   };
+
+  /**
+   * The shopkeeper opened a backoffice screen (R-0 of the redesign). A staff event: sent by default under the shop's notice to staff, and never with who they are.
+   *
+   * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+   * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
+   */
+  readonly backoffice_view_opened: {
+    /** The screen, by its route; never an id in it. */
+    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
+  };
+
+  /**
+   * The shopkeeper did what a screen is for — published, approved, shipped, decided, suspended — and how the server answered (R-0). A staff event.
+   *
+   * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+   * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
+   */
+  readonly backoffice_action_taken: {
+    /** The screen it was done on. */
+    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
+    /** What was done, from a closed list. */
+    readonly action: 'publish' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate';
+    /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
+    readonly outcome: 'done' | 'refused' | 'failed';
+  };
 }
 
 /**
  * Which events wait for analytics consent. A behavioural event says what a
- * person did and is dropped until they agree; a technical one is not.
+ * person did and is dropped until they agree; a technical one is not; a staff
+ * one is the shop measuring its own tools under a notice to staff, sent unless
+ * the staff member switched it off (ADR 0041).
  */
-export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavioural' | 'technical'>> = {
+export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavioural' | 'technical' | 'staff'>> = {
   webmcp_tool_invoked: 'behavioural',
   product_viewed: 'behavioural',
   category_opened: 'behavioural',
   spec_source_opened: 'behavioural',
   products_compared: 'behavioural',
+  backoffice_view_opened: 'staff',
+  backoffice_action_taken: 'staff',
 };

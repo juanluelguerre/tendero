@@ -222,6 +222,16 @@
       "gap": "Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time."
     },
     {
+      "name": "Backoffice jobs",
+      "area": "backoffice",
+      "question": "Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?",
+      "decision": "A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.",
+      "signals": [
+        "backoffice_view_opened",
+        "backoffice_action_taken"
+      ]
+    },
+    {
       "name": "Agent rules",
       "area": "agents",
       "question": "How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?",
@@ -312,6 +322,88 @@
         "products": {
           "type": "number",
           "description": "How many products were compared, two to four."
+        }
+      }
+    },
+    {
+      "name": "backoffice_view_opened",
+      "description": "The shopkeeper opened a backoffice screen (R-0 of the redesign). A staff event: sent by default under the shop's notice to staff, and never with who they are.",
+      "consent": "staff",
+      "attributes": {
+        "view": {
+          "type": "string",
+          "values": [
+            "dashboard",
+            "review",
+            "catalogue",
+            "claims",
+            "attributes",
+            "search",
+            "promotions",
+            "stock",
+            "orders",
+            "returns",
+            "agents",
+            "audit",
+            "variants"
+          ],
+          "description": "The screen, by its route; never an id in it."
+        }
+      }
+    },
+    {
+      "name": "backoffice_action_taken",
+      "description": "The shopkeeper did what a screen is for — published, approved, shipped, decided, suspended — and how the server answered (R-0). A staff event.",
+      "consent": "staff",
+      "attributes": {
+        "view": {
+          "type": "string",
+          "values": [
+            "dashboard",
+            "review",
+            "catalogue",
+            "claims",
+            "attributes",
+            "search",
+            "promotions",
+            "stock",
+            "orders",
+            "returns",
+            "agents",
+            "audit",
+            "variants"
+          ],
+          "description": "The screen it was done on."
+        },
+        "action": {
+          "type": "string",
+          "values": [
+            "publish",
+            "import",
+            "claim_approve",
+            "claim_reject",
+            "order_ship",
+            "order_deliver",
+            "order_cancel",
+            "return_approve",
+            "return_reject",
+            "return_receive",
+            "return_refund",
+            "agent_register",
+            "agent_trust",
+            "agent_suspend",
+            "agent_reinstate"
+          ],
+          "description": "What was done, from a closed list."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "done",
+            "refused",
+            "failed"
+          ],
+          "description": "done; refused when the server said no (a 4xx, a rule); failed when it could not answer."
         }
       }
     }

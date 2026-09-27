@@ -6,6 +6,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { forkJoin, type Subscription } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
 import { type ClaimDecision, KnowledgeService } from '../../data-access/knowledge.service';
+import { BackofficeUsage } from '../../usage';
 
 /** Below it, a claim's support is flagged: the quote may not say what the claim does (P10-0). */
 const WeakSupport = 0.8;
@@ -29,6 +30,7 @@ const WeakSupport = 0.8;
 })
 export class ClaimsReviewPage {
   private readonly knowledge = inject(KnowledgeService);
+  private readonly usage = inject(BackofficeUsage);
   private readonly catalog = inject(CatalogService);
   private readonly culture = inject(CultureStore);
 
@@ -69,7 +71,9 @@ export class ClaimsReviewPage {
   protected decide(claim: ClaimForReview, decision: ClaimDecision): void {
     this.busy.set(claim.claimId);
 
-    this.knowledge.decide(claim.claimId, decision).subscribe({
+    this.knowledge.decide(claim.claimId, decision)
+      .pipe(this.usage.reported('claims', decision === 'approve' ? 'claim_approve' : 'claim_reject'))
+      .subscribe({
       next: () => {
         this.busy.set(null);
         this.load();

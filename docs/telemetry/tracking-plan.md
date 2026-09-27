@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-25 features: **20** answered by a signal emitted today,
+26 features: **21** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -42,6 +42,7 @@ everything here that is not *planned* is emitted.
 | Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 | Agent registry | Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered? | A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet. | `tendero.checkout.attempts` | emitted |
 | Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
+| Backoffice jobs | Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen? | A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence. | `backoffice_view_opened`, `backoffice_action_taken` | emitted |
 
 ### Agents
 
@@ -64,7 +65,8 @@ everything here that is not *planned* is emitted.
 Emitted in the browser through `Telemetry.trackEvent`, whose types are generated
 from this plan (`libs/shared/telemetry/src/lib/generated/tracked-events.ts`). A
 *behavioural* event is dropped until the shopper grants analytics consent; a
-*technical* one is not.
+*technical* one is not; a *staff* one is sent under the shop's notice to staff
+unless the staff member switched it off (ADR 0041).
 
 ### `webmcp_tool_invoked`
 
@@ -126,6 +128,32 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `products` | number | — | How many products were compared, two to four. |
+
+### `backoffice_view_opened`
+
+browser event, staff. The shopkeeper opened a backoffice screen (R-0 of the redesign). A staff event: sent by default under the shop's notice to staff, and never with who they are.
+
+Answers:
+
+- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen, by its route; never an id in it. |
+
+### `backoffice_action_taken`
+
+browser event, staff. The shopkeeper did what a screen is for — published, approved, shipped, decided, suspended — and how the server answered (R-0). A staff event.
+
+Answers:
+
+- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen it was done on. |
+| `action` | string | `publish`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate` | What was done, from a closed list. |
+| `outcome` | string | `done`, `refused`, `failed` | done; refused when the server said no (a 4xx, a rule); failed when it could not answer. |
 
 ## Metrics
 

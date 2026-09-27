@@ -1,0 +1,56 @@
+import { HttpErrorResponse } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
+import { type MonoTypeOperatorFunction, tap } from 'rxjs';
+
+export type BackofficeView = TrackedEvents['backoffice_view_opened']['view'];
+export type BackofficeAction = TrackedEvents['backoffice_action_taken']['action'];
+export type ActionOutcome = TrackedEvents['backoffice_action_taken']['outcome'];
+
+const Views: readonly BackofficeView[] = [
+  'dashboard', 'review', 'catalogue', 'claims', 'attributes', 'search', 'promotions',
+  'stock', 'orders', 'returns', 'agents', 'audit', 'variants',
+];
+
+/**
+ * The screen a URL is, by its route and never by an id in it:
+ * `/products/0199…/variants` is `variants`. Null for anything that is not one of
+ * the shopkeeper's screens (the sign-in door), which is not measured.
+ */
+export function viewOf(url: string): BackofficeView | null {
+  const segments = url.split(/[?#]/)[0].split('/').filter(Boolean);
+  if (segments[0] === 'products' && segments[2] === 'variants') return 'variants';
+  const first = (segments[0] ?? 'dashboard') as BackofficeView;
+  return Views.includes(first) ? first : null;
+}
+
+/** done when the server did it; refused when it said no (a 4xx: a rule, a transition); failed otherwise. */
+export function outcomeOf(failure: unknown): ActionOutcome {
+  return failure instanceof HttpErrorResponse && failure.status >= 400 && failure.status < 500 ? 'refused' : 'failed';
+}
+
+/**
+ * The backoffice's half of R-0's measurement: which screens are opened and what is
+ * done on them, as staff events under the shop's notice (ADR 0041). Nothing here
+ * says who acted, only what and where.
+ */
+@Injectable({ providedIn: 'root' })
+export class BackofficeUsage {
+  private readonly telemetry = inject(Telemetry);
+
+  opened(url: string): void {
+    const view = viewOf(url);
+    if (view) this.telemetry.trackEvent('backoffice_view_opened', { view });
+  }
+
+  /**
+   * Reports an action once, with how the server answered: pipe it onto the call
+   * that does it, `this.catalog.publish(id).pipe(this.usage.reported('review', 'publish'))`.
+   */
+  reported<T>(view: BackofficeView, action: BackofficeAction): MonoTypeOperatorFunction<T> {
+    return tap<T>({
+      next: () => this.telemetry.trackEvent('backoffice_action_taken', { view, action, outcome: 'done' }),
+      error: (failure: unknown) => this.telemetry.trackEvent('backoffice_action_taken', { view, action, outcome: outcomeOf(failure) }),
+    });
+  }
+}

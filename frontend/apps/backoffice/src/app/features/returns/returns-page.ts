@@ -5,6 +5,7 @@ import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { OrderingService, type ReturnDecision } from '../../data-access/ordering.service';
+import { BackofficeUsage, type BackofficeAction } from '../../usage';
 
 /**
  * The returns queue.
@@ -20,6 +21,14 @@ import { OrderingService, type ReturnDecision } from '../../data-access/ordering
  * the post. Damaged goods never restock at all, which is one line of code and
  * the difference between a returns loop and a way to sell broken things twice.
  */
+/** Each decision as the usage event names it (ADR 0041). */
+const ReturnActions = {
+  Approve: 'return_approve',
+  Reject: 'return_reject',
+  Receive: 'return_receive',
+  Refund: 'return_refund',
+} as const satisfies Record<ReturnDecision, BackofficeAction>;
+
 @Component({
   selector: 'backoffice-returns',
   imports: [TranslocoDirective],
@@ -29,6 +38,7 @@ import { OrderingService, type ReturnDecision } from '../../data-access/ordering
 })
 export class ReturnsPage {
   private readonly ordering = inject(OrderingService);
+  private readonly usage = inject(BackofficeUsage);
   private readonly culture = inject(CultureStore);
 
   protected readonly requests = signal<ReturnView[]>([]);
@@ -69,7 +79,7 @@ export class ReturnsPage {
     this.busy.set(request.returnId);
     this.refusal.update((current) => without(current, request.returnId));
 
-    this.ordering.decide(request.returnId, decision).subscribe({
+    this.ordering.decide(request.returnId, decision).pipe(this.usage.reported('returns', ReturnActions[decision])).subscribe({
       next: (updated) => {
         // The queue only holds what is still waiting on somebody, so a refunded
         // or rejected return leaves it. Reloading would be the same list minus

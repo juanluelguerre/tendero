@@ -8,6 +8,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatDate } from '@tendero/shared-util';
 import type { Observable } from 'rxjs';
 import { AccountsService, type AgentTrust } from '../../data-access/accounts.service';
+import { BackofficeUsage, type BackofficeAction } from '../../usage';
 
 /**
  * The agents the shop knows (P11-2's registry, its screen in P11-7): who operates
@@ -28,6 +29,7 @@ import { AccountsService, type AgentTrust } from '../../data-access/accounts.ser
 })
 export class AgentsPage {
   private readonly accounts = inject(AccountsService);
+  private readonly usage = inject(BackofficeUsage);
   private readonly culture = inject(CultureStore);
 
   protected readonly agents = rxResource({ stream: () => this.accounts.agents() });
@@ -57,13 +59,13 @@ export class AgentsPage {
 
   protected register(): void {
     const draft = this.draft();
-    this.run('register', this.accounts.register({ ...draft, agentId: draft.agentId.trim() }), () =>
+    this.run('register', 'agent_register', this.accounts.register({ ...draft, agentId: draft.agentId.trim() }), () =>
       this.draft.set({ agentId: '', displayName: '', operator: '', trust: 'Known' }),
     );
   }
 
   protected trust(agent: AgentView, trust: string): void {
-    this.run(agent.agentId, this.accounts.trust(agent.agentId, trust as AgentTrust));
+    this.run(agent.agentId, 'agent_trust', this.accounts.trust(agent.agentId, trust as AgentTrust));
   }
 
   protected askReason(agent: AgentView): void {
@@ -72,19 +74,19 @@ export class AgentsPage {
   }
 
   protected suspend(agent: AgentView): void {
-    this.run(agent.agentId, this.accounts.suspend(agent.agentId, this.reason().trim()), () => this.suspending.set(null));
+    this.run(agent.agentId, 'agent_suspend', this.accounts.suspend(agent.agentId, this.reason().trim()), () => this.suspending.set(null));
   }
 
   protected reinstate(agent: AgentView): void {
-    this.run(agent.agentId, this.accounts.reinstate(agent.agentId));
+    this.run(agent.agentId, 'agent_reinstate', this.accounts.reinstate(agent.agentId));
   }
 
   /** One change at a time, the list reloaded after it, and a refusal in the server's words. */
-  private run(key: string, change: Observable<unknown>, done?: () => void): void {
+  private run(key: string, action: BackofficeAction, change: Observable<unknown>, done?: () => void): void {
     this.busy.set(key);
     this.refusal.set(null);
 
-    change.subscribe({
+    change.pipe(this.usage.reported('agents', action)).subscribe({
       next: () => {
         this.busy.set(null);
         done?.();
