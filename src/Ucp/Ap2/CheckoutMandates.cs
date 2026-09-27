@@ -13,7 +13,8 @@ public static class Ap2ErrorCodes
     public const string AgentMissingKey = "agent_missing_key";
     public const string MandateInvalidSignature = "mandate_invalid_signature";
     public const string MandateExpired = "mandate_expired";
-    public const string MandateScopeMismatch = "mandate_scope_mismatch";
+    /// <summary>The same code Ordering answers when the till finds the total outside the mandate (P11-5): one failure, one spelling.</summary>
+    public const string MandateScopeMismatch = Ordering.Features.CheckoutSessions.CheckoutIssueCodes.MandateScopeMismatch;
     public const string MerchantAuthorizationInvalid = "merchant_authorization_invalid";
     public const string MerchantAuthorizationMissing = "merchant_authorization_missing";
 }

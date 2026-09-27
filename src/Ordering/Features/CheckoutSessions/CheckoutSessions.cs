@@ -41,7 +41,8 @@ public sealed record UpdateCheckoutSessionCommand(CheckoutSessionId SessionId, I
 public sealed record GetCheckoutSessionQuery(CheckoutSessionId SessionId, string Culture) : IQuery<CheckoutSessionResult>;
 
 /// <param name="Instrument">What the payment handler's credential carries — for the sandbox handler, one of the fake provider's instruments.</param>
-public sealed record CompleteCheckoutSessionCommand(CheckoutSessionId SessionId, string Instrument, string IdempotencyKey, string Culture)
+/// <param name="Mandate">What the agent's verified mandate approved (P11-5), when AP2 was negotiated; frozen onto the order.</param>
+public sealed record CompleteCheckoutSessionCommand(CheckoutSessionId SessionId, string Instrument, string IdempotencyKey, string Culture, MandateScope? Mandate = null)
     : ICommand<CheckoutSessionResult>;
 
 public sealed record CancelCheckoutSessionCommand(CheckoutSessionId SessionId, string Culture) : ICommand<CheckoutSessionResult>;
@@ -82,6 +83,12 @@ public static class CheckoutIssueCodes
 
     /// <summary>The shop settles an agent's live payment nowhere yet: a person pays on the storefront (ADR 0038).</summary>
     public const string PaymentNotSettled = "payment_not_settled";
+
+    /// <summary>
+    /// The total is not what the mandate approved, or the mandate ended (P11-5).
+    /// Spelled as UCP's AP2 code, because it is that failure seen from the till.
+    /// </summary>
+    public const string MandateScopeMismatch = "mandate_scope_mismatch";
 }
 
 public sealed record CheckoutLineView(string Sku, string Title, string? VariantLabel, string? ImageId, int Quantity, decimal UnitPrice, decimal Total);
@@ -297,7 +304,8 @@ public sealed class CheckoutSessionsHandler(
                 command.IdempotencyKey,
                 session.Coupons,
                 session.Culture,
-                session.Buyer.Email),
+                session.Buyer.Email,
+                command.Mandate),
             session.Mode,
             cancellationToken);
         CheckoutAttempts.Record(result, actors.Current, session.Mode, principals.Current.Standing);
@@ -323,6 +331,7 @@ public sealed class CheckoutSessionsHandler(
                     PlaceOrderOutcome.PaymentDeclined => new CheckoutIssue(CheckoutIssueCodes.PaymentFailed, "payment", result.Detail),
                     PlaceOrderOutcome.PaymentUnavailable => new CheckoutIssue(CheckoutIssueCodes.PaymentUnavailable, "payment", result.Detail),
                     PlaceOrderOutcome.UnknownShippingOption => new CheckoutIssue(CheckoutIssueCodes.ShippingOptionUnavailable, "fulfillment.option", result.Detail),
+                    PlaceOrderOutcome.NotMandated => new CheckoutIssue(CheckoutIssueCodes.MandateScopeMismatch, "payment", result.Detail),
                     _ => new CheckoutIssue(CheckoutIssueCodes.ItemUnavailable, "lines", result.Detail),
                 };
                 return new CheckoutSessionResult(CheckoutSessionOutcome.NotPlaced, await ViewAsync(session, cart, [issue], show: false, cancellationToken));

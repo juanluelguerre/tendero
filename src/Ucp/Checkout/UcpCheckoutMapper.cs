@@ -359,4 +359,7 @@ public static class UcpCheckoutMapper
 
     /// <summary>Minor units: 39,00 € is 3900. Away from zero, as a till would.</summary>
     public static long Minor(decimal amount) => (long)Math.Round(amount * 100m, MidpointRounding.AwayFromZero);
+
+    /// <summary>Minor units back to the amount: what a mandate approved, in the money Ordering speaks.</summary>
+    public static decimal Major(long minor) => minor / 100m;
 }

@@ -181,9 +181,11 @@ because the confusion is the natural one:
 
 Where Tendero stands after `P11-1`: no limit is enforced yet. A test credential's
 agent completes without one (a rehearsal moves no money); a live agent cannot pay
-at all and escalates to a person. `P11-4` verifies mandates by `vct` and evaluates
-their constraints, `P11-5` snapshots the verified scope onto the order, `P11-6`
-adds the shop's own rules.
+at all and escalates to a person. `P11-4` verifies mandates by `vct` (closed ones: the
+limit is the exact total the person approved), `P11-5` snapshots the verified scope
+onto the order and re-checks it where the order is placed, `P11-6` adds the shop's
+own rules. Open mandates — the amount *ranges* and budgets above — are the next
+verifier, not built.
 
 ## 8 · Agent tokens and acting for a person (`P11-3`)
 

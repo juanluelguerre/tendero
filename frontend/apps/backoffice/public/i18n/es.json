@@ -112,7 +112,9 @@
       "test_order_ended": "Pedido de prueba finalizado"
     },
     "test": "Prueba",
-    "testHint": "Pedido de prueba de una credencial de prueba: no se envía y su stock ya se ha devuelto."
+    "testHint": "Pedido de prueba de una credencial de prueba: no se envía y su stock ya se ha devuelto.",
+    "mandate": "Mandato",
+    "mandateHint": "Lo compró un agente con un mandato AP2 firmado por {{issuer}}: la persona aprobó exactamente este total."
   },
   "promotions": {
     "title": "Promociones",

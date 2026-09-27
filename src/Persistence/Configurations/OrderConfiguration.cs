@@ -109,6 +109,10 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // the code to a column of its own — and only the code.
         builder.ComplexProperty(o => o.Stop, stop => stop.ToJson("stop"));
 
+        // Null for every order no mandate stood behind; jsonb like the payment,
+        // read with the order and never queried on its own (P11-5).
+        builder.ComplexProperty(o => o.Mandate, mandate => mandate.ToJson("mandate"));
+
         builder.Ignore(o => o.LinesTotal);
         builder.Ignore(o => o.Total);
         builder.Ignore(o => o.DomainEvents);

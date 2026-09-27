@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260927100623_AddCheckoutSessions";
+    public override string LastMigrationId => "20260927111204_AddOrderMandate";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -900,6 +900,35 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
 
                         b1
                             .ToJson("billing_address")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Mandate", "ElGuerre.Tendero.Ordering.Domain.Order.Mandate#OrderMandate", b1 =>
+                    {
+                        b1.Property<decimal>("ApprovedTotal")
+                            .HasJsonPropertyName("approvedTotal");
+
+                        b1.Property<string>("Currency")
+                            .IsRequired()
+                            .HasJsonPropertyName("currency");
+
+                        b1.Property<DateTimeOffset?>("ExpiresAt")
+                            .HasJsonPropertyName("expiresAt");
+
+                        b1.Property<string>("Issuer")
+                            .IsRequired()
+                            .HasJsonPropertyName("issuer");
+
+                        b1.Property<string>("Kind")
+                            .IsRequired()
+                            .HasJsonPropertyName("kind");
+
+                        b1.Property<string>("Reference")
+                            .IsRequired()
+                            .HasJsonPropertyName("reference");
+
+                        b1
+                            .ToJson("mandate")
                             .HasColumnType("jsonb");
                     });
 

@@ -84,7 +84,7 @@ public sealed class UcpCheckoutAp2Tests : IDisposable
         await Operations.CompleteAsync(Id, Pay, "key-1", "es", Call(ap2: false), TestContext.Current.CancellationToken);
 
         Assert.IsType<UcpCheckout>(got.Body);
-        Assert.Single(dispatcher.Completions);
+        Assert.Null(Assert.Single(dispatcher.Completions).Mandate);
     }
 
     [Fact]
@@ -95,7 +95,16 @@ public sealed class UcpCheckoutAp2Tests : IDisposable
 
         await Operations.CompleteAsync(Id, Pay with { Ap2 = new UcpAp2CompleteRequest { CheckoutMandate = MandateOver(shown) } }, "key-1", "es", Call(), TestContext.Current.CancellationToken);
 
-        Assert.Equal("tok_ok", Assert.Single(dispatcher.Completions).Instrument);
+        var completion = Assert.Single(dispatcher.Completions);
+        Assert.Equal("tok_ok", completion.Instrument);
+
+        // What verified travels on as values (P11-5): the kind, the platform key,
+        // the approval's hash, and the total the person approved — 148.85 EUR.
+        var scope = completion.Mandate!;
+        Assert.Equal((ClosedCheckoutMandateVerifier.Vct, platforms.KeyOf(Agent).KeyId, new Money(148.85m, "EUR")),
+            (scope.Kind, scope.Issuer, scope.ApprovedTotal));
+        Assert.Equal(43, scope.Reference.Length);
+        Assert.NotNull(scope.ExpiresAt);
     }
 
     [Fact]

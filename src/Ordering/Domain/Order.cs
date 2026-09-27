@@ -202,6 +202,12 @@ public sealed class Order : AggregateRoot
     public string? ContactEmail { get; private set; }
 
     /// <summary>
+    /// The mandate an agent placed it under, when there was one (P11-5): null for a
+    /// person's order and for an agent's without AP2. Fixed at placement like the mode.
+    /// </summary>
+    public OrderMandate? Mandate { get; private set; }
+
+    /// <summary>
     /// What came off, frozen as codes and labels. Backed by a list for the same
     /// reason the lines are: EF maps a private collection into one JSON column,
     /// and the aggregate keeps the only way to add to it.
@@ -278,7 +284,8 @@ public sealed class Order : AggregateRoot
         string culture = "es",
         OrderMode mode = OrderMode.Live,
         OrderId? id = null,
-        string? contactEmail = null)
+        string? contactEmail = null,
+        OrderMandate? mandate = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentNullException.ThrowIfNull(shippingAddress);
@@ -318,6 +325,14 @@ public sealed class Order : AggregateRoot
                 $"The order's totals do not add up: {totals.Subtotal} − {totals.DiscountTotal} + " +
                 $"{totals.Shipping} is {expected}, not {totals.Total}.");
 
+        // Placement checks this before charging anything; the aggregate holds the
+        // rule too, so no path — present or future — places an order for other
+        // money than a mandate approved.
+        if (mandate is not null
+            && (mandate.ApprovedTotal != totals.Total.Amount || !string.Equals(mandate.Currency, currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException(
+                $"The mandate approves {mandate.ApprovedTotal} {mandate.Currency}; this order is {totals.Total.Amount} {currency}.");
+
         var now = clock.GetUtcNow();
         var order = new Order
         {
@@ -327,6 +342,7 @@ public sealed class Order : AggregateRoot
             CustomerId = customerId,
             Mode = mode,
             ContactEmail = string.IsNullOrWhiteSpace(contactEmail) ? null : contactEmail.Trim(),
+            Mandate = mandate,
             IdempotencyKey = idempotencyKey,
             Culture = SharedKernel.Culture.Normalize(culture),
             Currency = currency,

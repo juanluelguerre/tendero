@@ -36,7 +36,13 @@ public enum PlaceOrderOutcome
 
     /// <summary>The provider could not be reached. Retryable with the same key,
     /// and a different answer from a decline.</summary>
-    PaymentUnavailable
+    PaymentUnavailable,
+
+    /// <summary>
+    /// The total is not what the agent's mandate approved, or the mandate ended
+    /// (P11-5). Nothing charged: the person approves these terms or none.
+    /// </summary>
+    NotMandated
 }
 
 public sealed record PlaceOrderResult(
@@ -54,7 +60,7 @@ public sealed record PlaceOrderResult(
         PlaceOrderOutcome.PaymentUnavailable => AuditOutcome.Failed,
         PlaceOrderOutcome.NothingToShip or PlaceOrderOutcome.UnknownShippingOption or
             PlaceOrderOutcome.UnknownSkus or PlaceOrderOutcome.PriceChanged or
-            PlaceOrderOutcome.PaymentDeclined => AuditOutcome.Denied
+            PlaceOrderOutcome.PaymentDeclined or PlaceOrderOutcome.NotMandated => AuditOutcome.Denied
     };
 
     string? IAuditedResult.AuditReason =>
@@ -71,7 +77,8 @@ public sealed record PlacementRequest(
     string IdempotencyKey,
     IReadOnlyList<string> Coupons,
     string Culture,
-    string? ContactEmail = null);
+    string? ContactEmail = null,
+    MandateScope? Mandate = null);
 
 /// <summary>
 /// The moment the shop commits, shared by every way into it: the storefront's
@@ -160,6 +167,17 @@ public sealed class OrderPlacement(
             return new PlaceOrderResult(PlaceOrderOutcome.PriceChanged, null, pricing, pricing.InputHash);
         }
 
+        // 3b · Within what the person approved, when an agent carries a mandate
+        // (P11-5). Checked here, after the final price and before any money, in
+        // the transaction that places the order — so an update that slipped in
+        // after the protocol layer verified the mandate is caught all the same.
+        if (request.Mandate is { } mandate && !mandate.Covers(pricing.Totals.Total, clock.GetUtcNow()))
+        {
+            activity?.SetTag("checkout.outcome", "not_mandated");
+            return new PlaceOrderResult(PlaceOrderOutcome.NotMandated, null, pricing,
+                $"approved {mandate.ApprovedTotal.Amount} {mandate.ApprovedTotal.Currency}, now {pricing.Totals.Total.Amount} {pricing.Totals.Total.Currency}");
+        }
+
         // 4 · The money. Nothing has been written yet, so a decline costs
         // nothing: no order, no reservation, an untouched cart. The id minted here
         // is the order's own, so the provider's record and the order name the
@@ -233,7 +251,8 @@ public sealed class OrderPlacement(
             cart.Culture,
             mode,
             orderId,
-            request.ContactEmail);
+            request.ContactEmail,
+            request.Mandate is { } approved ? OrderMandate.From(approved) : null);
 
         order.AuthorizePayment(clock, new OrderPayment(provider.Key, authorization.AuthorizationId!, null));
         orders.Add(order);

@@ -53,7 +53,7 @@ unnecessary and a real verifier possible without a real platform.
   which is the PSP's to verify. What `aud` and `nonce` in the key-binding JWT
   should hold, which UCP leaves to the platform.
 - The session is read, then completed: an update between the two is not seen by the
-  mandate check. `P11-5` moves the approved scope into the order, inside the same
-  transaction.
+  mandate check. `P11-5` closed that: what verified travels on as a `MandateScope`,
+  checked again where the order is placed, in the same transaction, and frozen onto it.
 - An ephemeral key in development means a checkout signed before a restart comes
   back `merchant_authorization_invalid`, which is correct, and says why.

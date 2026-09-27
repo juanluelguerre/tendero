@@ -488,6 +488,7 @@ classDiagram
         +OrderTotals Totals
         +OrderMode Mode
         +string? ContactEmail
+        +OrderMandate? Mandate
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -513,6 +514,15 @@ classDiagram
         +Money UnitPrice
         +int Quantity
         +Money Total
+    }
+    class OrderMandate {
+        <<record>>
+        +string Kind
+        +string Issuer
+        +string Reference
+        +decimal ApprovedTotal
+        +string Currency
+        +DateTimeOffset? ExpiresAt
     }
     class OrderMode {
         <<enumeration>>
@@ -612,6 +622,7 @@ classDiagram
     Order --> OrderShipping : Shipping
     Order --> OrderQuote : Quote
     Order --> OrderTotals : Totals
+    Order --> OrderMandate : Mandate
     Order "1" --> "*" OrderDiscount : Discounts
     Order "1" --> "*" OrderTax : Taxes
     Order --> OrderPayment : Payment

@@ -112,7 +112,9 @@
       "test_order_ended": "Test order ended"
     },
     "test": "Test",
-    "testHint": "A test order placed with a test credential: never shipped, its stock already given back."
+    "testHint": "A test order placed with a test credential: never shipped, its stock already given back.",
+    "mandate": "Mandate",
+    "mandateHint": "Bought by an agent under an AP2 mandate signed by {{issuer}}: the person approved exactly this total."
   },
   "promotions": {
     "title": "Promotions",

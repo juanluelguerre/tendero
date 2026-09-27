@@ -199,7 +199,7 @@ Answers:
 | `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
 | `order.mode` | string | `live`, `test` | Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own. |
 | `agent.trust` | string | `none`, `untrusted`, `known`, `verified` | How far the shop trusts the agent behind the attempt (P11-2): none for a person, untrusted for an agent nobody registered. |
-| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable` | PlaceOrderOutcome, labelled by MetricLabels. |
+| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable`, `not_mandated` | PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve. |
 | `discounted` | boolean | — | Whether any promotion applied to the order. |
 
 ### `tendero.orders.test_ended`

@@ -178,6 +178,41 @@ public sealed class UcpCheckoutSessionTests(PostgresFixture postgres)
         Assert.Equal(new AgentId("claude-desktop-test"), (await context.CheckoutSessions.SingleAsync(ct)).Owner);
     }
 
+    /// <summary>
+    /// P11-5: what the verified mandate approved travels with the completion, is
+    /// checked again in the transaction that places the order, and is frozen onto
+    /// it. A total the person did not approve places nothing and charges nothing.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_mandate_is_frozen_onto_the_order_and_a_total_it_did_not_approve_places_nothing()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        await using var shop = await Shop.OpenAsync(postgres, nameof(A_mandate_is_frozen_onto_the_order_and_a_total_it_did_not_approve_places_nothing), new Agent("claude-desktop-test", test: true));
+        await shop.StockAsync(Sku, 5, ct);
+
+        var ready = (await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], Described, "es"), ct)).Session!;
+        var id = new CheckoutSessionId(Guid.Parse(ready.Id));
+        MandateScope Approving(decimal total) =>
+            new("mandate.checkout.1", "dev-platform-claude-desktop-test", "hash-1", new Money(total, "EUR"), DateTimeOffset.UtcNow.AddMinutes(15));
+
+        var cheaper = await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardOk, "ucp-mandate-1", "es", Approving(ready.Totals!.Total - 1m)), ct);
+        Assert.Equal(CheckoutSessionOutcome.NotPlaced, cheaper.Outcome);
+        Assert.Contains(cheaper.Session!.Issues, issue => issue.Code == CheckoutIssueCodes.MandateScopeMismatch);
+
+        await using (var before = shop.Factory.Create())
+            Assert.Empty(await before.Orders.ToListAsync(ct));
+
+        var completed = await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardOk, "ucp-mandate-2", "es", Approving(ready.Totals.Total)), ct);
+        Assert.Equal(CheckoutState.Completed, completed.Session!.State);
+
+        await using var context = shop.Factory.Create();
+        var mandate = (await context.Orders.SingleAsync(ct)).Mandate!;
+        Assert.Equal(("mandate.checkout.1", "dev-platform-claude-desktop-test", "hash-1", ready.Totals.Total, "EUR"),
+            (mandate.Kind, mandate.Issuer, mandate.Reference, mandate.ApprovedTotal, mandate.Currency));
+    }
+
     private sealed class Agent(string id, bool test, CustomerId? customer = null) : IPrincipalAccessor
     {
         public CommercePrincipal Current { get; } =

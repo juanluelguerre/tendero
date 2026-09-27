@@ -342,6 +342,11 @@ public sealed class CheckoutEndpoints : ICarterModule
                     PlaceOrderOutcome.PaymentUnavailable => TypedResults.Problem(
                         detail: result.Detail, statusCode: StatusCodes.Status503ServiceUnavailable),
 
+                    // Only an agent's checkout carries a mandate (P11-5); here it
+                    // cannot happen, and if it ever did it is a refusal, not an order.
+                    PlaceOrderOutcome.NotMandated => TypedResults.Problem(
+                        detail: result.Detail, statusCode: StatusCodes.Status409Conflict),
+
                     _ => TypedResults.Ok(OrderView.From(result.Order!))
                 };
             })

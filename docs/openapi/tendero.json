@@ -3044,11 +3044,44 @@
           }
         }
       },
+      "OrderMandateSummary": {
+        "required": [
+          "kind",
+          "issuer",
+          "approvedTotal",
+          "currency",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "approvedTotal": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "OrderSummary": {
         "required": [
           "orderId",
           "status",
           "mode",
+          "mandate",
           "currency",
           "total",
           "lineCount",
@@ -3071,6 +3104,16 @@
           },
           "mode": {
             "type": "string"
+          },
+          "mandate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OrderMandateSummary"
+              }
+            ]
           },
           "currency": {
             "type": "string"

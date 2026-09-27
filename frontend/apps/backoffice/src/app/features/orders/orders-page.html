@@ -46,6 +46,11 @@
                 @if (order.mode === 'Test') {
                   <span class="tag tag--code" [title]="t('orders.testHint')">{{ t('orders.test') }}</span>
                 }
+                <!-- Placed by an agent under a mandate a platform signed (P11-5):
+                     the answer to "who said this could be bought?". -->
+                @if (order.mandate; as mandate) {
+                  <span class="tag tag--code" [title]="t('orders.mandateHint', { issuer: mandate.issuer })">{{ t('orders.mandate') }}</span>
+                }
 
                 <!--
                   Under the status and not in a column of its own: it is only

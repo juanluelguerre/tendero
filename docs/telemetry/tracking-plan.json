@@ -431,9 +431,10 @@
             "unknown_skus",
             "price_changed",
             "payment_declined",
-            "payment_unavailable"
+            "payment_unavailable",
+            "not_mandated"
           ],
-          "description": "PlaceOrderOutcome, labelled by MetricLabels.",
+          "description": "PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve.",
           "from": "PlaceOrderOutcome"
         },
         "discounted": {

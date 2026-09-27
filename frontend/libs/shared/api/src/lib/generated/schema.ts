@@ -1006,10 +1006,20 @@ export interface components {
             /** Format: int32 */
             quantity: number;
         };
+        OrderMandateSummary: {
+            kind: string;
+            issuer: string;
+            /** Format: double */
+            approvedTotal: number;
+            currency: string;
+            /** Format: date-time */
+            expiresAt: null | string;
+        };
         OrderSummary: {
             orderId: string;
             status: string;
             mode: string;
+            mandate: null | components["schemas"]["OrderMandateSummary"];
             currency: string;
             /** Format: double */
             total: number;

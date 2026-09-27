@@ -102,11 +102,17 @@ public sealed class UcpCheckoutOperations(
             return new UcpAnswer(400, new UcpProtocolError("invalid_request", $"The instrument must come from the handler '{UcpCheckoutMapper.SandboxHandlerId}' with a credential token."));
 
         var sessionId = new CheckoutSessionId(id);
-        if (call.Ap2 && await MandateRefusalAsync(sessionId, request.Ap2?.CheckoutMandate, culture, call, cancellationToken) is { } refusal)
-            return refusal;
+        MandateScope? scope = null;
+        if (call.Ap2)
+        {
+            var (refusal, verified) = await VerifyMandateAsync(sessionId, request.Ap2?.CheckoutMandate, culture, call, cancellationToken);
+            if (refusal is not null)
+                return refusal;
+            scope = verified;
+        }
 
         return Answer(await commands.SendAsync(new CompleteCheckoutSessionCommand(
-            sessionId, instrument.Credential!.Token!, idempotencyKey, culture), cancellationToken), call);
+            sessionId, instrument.Credential!.Token!, idempotencyKey, culture, scope), cancellationToken), call);
     }
 
     public async Task<UcpAnswer> CancelAsync(Guid id, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
@@ -119,15 +125,16 @@ public sealed class UcpCheckoutOperations(
     /// platform can ask the person again — with the one error that says why.
     ///
     /// The session is read and then completed in two steps, so an update landing
-    /// between them is not seen here; the completion re-quotes against what was
-    /// last shown, and `P11-5` moves the approved amount into the order itself.
+    /// between them is not seen here. That is why what verified travels on as a
+    /// <see cref="MandateScope"/>: placement checks the approved total again, in
+    /// the transaction that places the order, and freezes the scope onto it (P11-5).
     /// </summary>
-    private async Task<UcpAnswer?> MandateRefusalAsync(
+    private async Task<(UcpAnswer? Refusal, MandateScope? Scope)> VerifyMandateAsync(
         CheckoutSessionId id, string? presentation, string culture, UcpCheckoutCall call, CancellationToken cancellationToken)
     {
         var current = await queries.SendAsync(new GetCheckoutSessionQuery(id, culture), cancellationToken);
         if (current.Outcome != CheckoutSessionOutcome.Ok)
-            return Answer(current, call);
+            return (Answer(current, call), null);
 
         var shown = UcpCheckoutMapper.ToWire(current.Session!, call.Active, call.Links);
         var verdict = mandates.Verify(presentation, call.Negotiated.Platform);
@@ -135,9 +142,23 @@ public sealed class UcpCheckoutOperations(
                    ?? (UcpCheckoutTerms.Same(verdict.Mandate!.Checkout, Signed(shown)) ? null : Ap2ErrorCodes.MandateScopeMismatch);
 
         return code is null
-            ? null
-            : new UcpAnswer(200, Signed(UcpCheckoutMapper.ToWire(
-                current.Session! with { Issues = [.. current.Session.Issues, new CheckoutIssue(code, "payment")] }, call.Active, call.Links)));
+            ? (null, ScopeOf(verdict.Mandate!))
+            : (new UcpAnswer(200, Signed(UcpCheckoutMapper.ToWire(
+                current.Session! with { Issues = [.. current.Session.Issues, new CheckoutIssue(code, "payment")] }, call.Active, call.Links))), null);
+    }
+
+    /// <summary>What the person approved, as the value Ordering freezes: the mandated checkout's total, in its currency.</summary>
+    internal static MandateScope ScopeOf(VerifiedCheckoutMandate mandate)
+    {
+        var total = mandate.Checkout["totals"]!.AsArray()
+            .Single(entry => entry?["type"]?.GetValue<string>() == "total")!["amount"]!.GetValue<long>();
+
+        return new MandateScope(
+            mandate.Vct,
+            mandate.IssuerKeyId,
+            mandate.CheckoutHash,
+            new Money(UcpCheckoutMapper.Major(total), mandate.Checkout["currency"]!.GetValue<string>()),
+            mandate.ExpiresAt);
     }
 
     /// <summary>What was not negotiated is not read: no fulfillment extension, no destination; no discount extension, no codes.</summary>
