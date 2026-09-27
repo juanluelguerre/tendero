@@ -33,6 +33,17 @@ export interface TrackedEvents {
   };
 
   /**
+   * A shopper opened a category listing (R-0 of the redesign). Only with analytics consent.
+   *
+   * Browsing by category: Do people browse the taxonomy, or go straight to search?
+   * Decides: Whether the category pages earn their place in the navigation.
+   */
+  readonly category_opened: {
+    /** How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. */
+    readonly arrived_from: 'menu' | 'search' | 'category' | 'home' | 'other' | 'direct';
+  };
+
+  /**
    * A shopper opened the words behind a spec — the quote and its support. Only with analytics consent.
    *
    * Specs with their source: Do shoppers open the sentence behind a spec, and do they compare products side by side once they can?
@@ -62,6 +73,7 @@ export interface TrackedEvents {
 export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavioural' | 'technical'>> = {
   webmcp_tool_invoked: 'behavioural',
   product_viewed: 'behavioural',
+  category_opened: 'behavioural',
   spec_source_opened: 'behavioural',
   products_compared: 'behavioural',
 };

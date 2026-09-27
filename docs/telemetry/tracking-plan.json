@@ -16,7 +16,8 @@
       "question": "Do people browse the taxonomy, or go straight to search?",
       "decision": "Whether the category pages earn their place in the navigation.",
       "signals": [
-        "tendero.search.requests"
+        "tendero.search.requests",
+        "category_opened"
       ]
     },
     {
@@ -267,6 +268,25 @@
             "direct"
           ],
           "description": "The page before this one, by kind; direct when there was none in this tab."
+        }
+      }
+    },
+    {
+      "name": "category_opened",
+      "description": "A shopper opened a category listing (R-0 of the redesign). Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "arrived_from": {
+          "type": "string",
+          "values": [
+            "menu",
+            "search",
+            "category",
+            "home",
+            "other",
+            "direct"
+          ],
+          "description": "How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL."
         }
       }
     },

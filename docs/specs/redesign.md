@@ -51,7 +51,7 @@ that. So this one starts by saying what "better" will mean, and by measuring
 | Backoffice | **Happiness** | the jobs feel easy | a rating after each job | **SEQ** (Single Ease Question, 1–7) per job; **SUS** once for the whole backoffice | walkthrough |
 | Backoffice | **Engagement** | the day starts on the dashboard | dashboard openings against the queue's | openings per day | `http.server.request.duration` by route (the dashboard's tracking-plan entry) |
 | Backoffice | **Adoption** | new affordances are used | first use of each | share of sessions using it | `backoffice_action_taken` with the affordance's name *(new, when R-3 names them)* |
-| Storefront | **Task success** | a category is one or two steps away | reaching a listing, and how | interactions to a listing from home; **share of listings reached by navigation vs by search** | walkthrough; `category_opened {via}` *(new)* |
+| Storefront | **Task success** | a category is one or two steps away | reaching a listing, and how | interactions to a listing from home; **share of listings reached by navigation vs by search** | walkthrough; `category_opened {arrived_from}` *(built)* |
 | Storefront | **Engagement** | browsing leads somewhere | product pages per session | `product_viewed` per session | existing |
 | Storefront | **Retention / conversion** | nothing gets worse on the way to the till | carts to orders | conversion | `tendero.carts.created`, `tendero.checkout.attempts` (the dashboard's funnel) |
 | Both | **Quality floor** | nothing gets worse for anybody | defects per view | WCAG 2.2 AA failures; horizontal overflow at 360/390 px; Core Web Vitals (LCP, CLS, INP) | audit (R-1); browser telemetry already sends Web Vitals (ADR 0036) |
@@ -78,12 +78,15 @@ that. So this one starts by saying what "better" will mean, and by measuring
      approve, ship, decide, suspend). Time on task is the gap between the two
      within one session. Interaction cost comes from the walkthrough, not from
      telemetry.
-   - `category_opened {via}` in the storefront, with via one of `menu`, `link`,
-     `breadcrumb` or `search`: how a shopper reached a listing. Today it can only
-     be `link` or `search`.
+   - `category_opened {arrived_from}` in the storefront, with arrived_from one of
+     `menu`, `search`, `category`, `home`, `other` or `direct`: how a shopper reached
+     a listing. `menu` comes from the menu link's own navigation state; anything
+     else is the kind of page before, the same reading `product_viewed` makes.
+     Before R-5, `menu` never appears. **Built 2026-09-27.**
 
    Consent follows the storefront's rules for the shopper. For the shopkeeper,
-   these are staff tools; the author decides the basis (open question).
+   these are staff tools and the backoffice has no consent banner, so the two
+   backoffice events wait for the author's decision on their basis (open question 2).
 2. **The baseline is measured on today's interface**, twice over:
    - **The walkthrough.** The nine jobs above, on the laboratory shop seeded by
      TrafficSim (`--TrafficSim:Seed=42`), at a desktop (1440 px) and a phone
