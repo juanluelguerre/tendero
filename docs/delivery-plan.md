@@ -769,11 +769,41 @@ a plan.* It goes here, and not earlier, because phase 11 adds the dashboard
 (`P11-7`) and the agent screens: reviewing before them would review a backoffice
 that is about to change shape.
 
-- [ ] `R-1` Audit every backoffice view at phone, tablet, laptop and wide widths: layout, density, overflow, touch targets, keyboard paths, empty/loading/error states, and what the accessibility pass (ADR 0034) already holds — **S**
-- [ ] `R-2` Benchmark against current admin UX (Shopify Admin/Polaris, Linear, Stripe Dashboard, Seller Central): command palette, inline editing, bulk actions, optimistic updates, saved views, keyboard shortcuts, skeletons, contextual help — each judged for what it earns here, not adopted because it is fashionable — **S**
-- [ ] `R-3` The proposal: findings with screenshots, what to adopt and why, ordered and sized, within the design system (`design/DESIGN.md`, tokens only, one clay action per view), committed first as a document so the author can read it before anything built on it merges — **S**
-- [ ] `R-5` **The storefront's navigation** (the author, 2026-09-27: *"in the storefront I miss a menu or something, don't I?"*): the header has the logo, the language, the account and the cart, and no way into the catalogue — the taxonomy the backlog calls *invisible*. A category menu from `ListCategories` (a panel on a wide screen, a drawer on a phone, keyboard-complete), reviewed with the backoffice in `R-1`–`R-3` and built in `R-4` — **M**
-- [ ] `R-4` Build it, on its own branch cut from phase 11's (the author, 2026-09-27: *when phase 11 is done, continue on a new branch from it with the new design proposal*) — sized by `R-3`
+**How it fits the lifecycle** (the author, 2026-09-27: *a redesign has to fit the
+software lifecycle the rest of the project follows — how do large companies do
+it?*). The way product companies run it is the Design Council's **Double
+Diamond** — discover, define, develop, deliver — run as **dual-track**: discovery
+produces validated decisions, delivery ships them in slices, and a **measurement**
+closes the loop. Nothing here is new ceremony; each step maps onto something this
+repository already does for code:
+
+| Stage | What large teams do | Its Tendero equivalent |
+|---|---|---|
+| Discover | heuristic evaluation (Nielsen's ten), accessibility audit (WCAG 2.2 AA), analytics baseline, competitive review | `R-1`, `R-2` — findings, not opinions, each tied to a heuristic, a criterion or a number |
+| Define | goals and signals (Google's **HEART**: happiness, engagement, adoption, retention, task success), problem statements, success criteria agreed **before** designing | `R-0` — the tracking plan's events (ADR 0036) are the signals, and the baseline is measured before anything changes |
+| Develop | design doc / RFC, mock-ups, **design critique**, usability test of the mock-ups | `R-3` — the proposal as a document, `.pen` mock-ups, the author's review, a task-based walkthrough |
+| Deliver | the design system first (tokens, components), then screens in slices behind a flag, visual and a11y regression in CI | `R-4` — tokens and components before views, one screen per commit, old and new side by side until each is proven |
+| Measure | compare against the baseline; keep, iterate or roll back | `R-6` — the same signals, after; the numbers go in the article |
+
+**Both applications, not only the backoffice** (the author, 2026-09-27, approving
+this approach: *apply it to the storefront too — it is in good shape and should need
+little beyond the menus and navigation*). The storefront goes through the same
+stages at its own size: `R-0` gives it goals and a baseline too (finding a product
+from the home page, reaching a category, adding to the cart), `R-1` audits it with
+the same heuristics and criteria, and what it finds beyond `R-5`'s navigation is
+expected to be small and is proposed, not assumed.
+
+Decisions that constrain the future — a navigation model, a density scale, a new
+component — are **ADRs**, as for code; a design system change is versioned like an
+API (`design/DESIGN.md` gains a changelog).
+
+- [ ] `R-0` **Define before designing**: the problem statements (from the author's brief), the HEART goals and signals per surface — task success and time on task for the shopkeeper's jobs (review a claim, find an order, act on a return), adoption of new affordances — mapped to events in `docs/telemetry/tracking-plan.json`, and a **baseline** measured on the current UI with TrafficSim and by hand. Missing events are added first, so there is a *before* to compare with — **S**
+- [ ] `R-1` **Audit** every backoffice view at phone, tablet, laptop and wide widths: Nielsen's heuristics one by one, WCAG 2.2 AA (what ADR 0034 already holds, and what it does not), layout, density, overflow, touch targets, keyboard paths, empty/loading/error states. Each finding carries its heuristic or criterion, a screenshot and a severity — **S**
+- [ ] `R-2` **Benchmark** against current admin UX (Shopify Admin/Polaris, Linear, Stripe Dashboard, Seller Central): command palette, inline editing, bulk actions, optimistic updates, saved views, keyboard shortcuts, skeletons, contextual help — each judged for what it earns here against an `R-0` goal, not adopted because it is fashionable — **S**
+- [ ] `R-3` **The proposal**, a design document committed first so the author can read it before anything built on it merges: findings → decisions → what each should move in `R-0`'s signals, ordered and sized, within the design system (`design/DESIGN.md`, tokens only, one clay action per view). **Mock-ups in `.pen`** (the author, 2026-09-27): the key screens at phone, tablet and desktop widths, drawn with `design/tokens.css`'s tokens and never a new colour; the `.pen` is encrypted and cannot be diffed, so it lives under `design/unpublished/` and what is committed for readers is the exported SVG/PNG and the written proposal. The sketch, not the source of truth — the Angular built in `R-4` is. **Critique and a task walkthrough** on the mock-ups before building: the author runs the `R-0` tasks on them, and what fails is redesigned on paper, where it is cheap — **S**
+- [ ] `R-5` **The storefront's navigation** (the author, 2026-09-27: *"in the storefront I miss a menu or something, don't I?"*): the header has the logo, the language, the account and the cart, and no way into the catalogue — the taxonomy the backlog calls *invisible*. A category menu from `ListCategories` (a panel on a wide screen, a drawer on a phone, keyboard-complete), through the same `R-0`–`R-3` and built in `R-4` — **M**
+- [ ] `R-4` **Build it**, on its own branch cut from phase 11's (the author, 2026-09-27: *when phase 11 is done, continue on a new branch from it with the new design proposal*): tokens and shared components first, then one screen per commit, each with its tests, its a11y check and its screenshots at the four widths; es/en for every string — sized by `R-3`
+- [ ] `R-6` **Measure**: `R-0`'s signals again on the new UI, the same way; what moved, what did not, and what is iterated or rolled back. The before/after is the article's evidence, filed into the notebook and the material map — **S**
 
 ---
 
