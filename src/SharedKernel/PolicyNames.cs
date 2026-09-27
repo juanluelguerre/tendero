@@ -10,6 +10,9 @@ public static class TenderoPolicyNames
     public const string Shopper = "Shopper";
     public const string Shopkeeper = "Shopkeeper";
     public const string AgentOrShopper = "AgentOrShopper";
+
+    /// <summary>UCP's transactional surface (P11-1): an agent, and nothing else — a person checks out on the storefront.</summary>
+    public const string Agent = "Agent";
 }
 
 /// <summary>

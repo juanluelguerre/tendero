@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using ElGuerre.Tendero.Ordering.Contracts;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
@@ -69,7 +70,8 @@ public sealed record PlacementRequest(
     string Instrument,
     string IdempotencyKey,
     IReadOnlyList<string> Coupons,
-    string Culture);
+    string Culture,
+    string? ContactEmail = null);
 
 /// <summary>
 /// The moment the shop commits, shared by every way into it: the storefront's
@@ -80,8 +82,12 @@ public sealed record PlacementRequest(
 /// Six things happen and the order matters. The shipping option is rated by the
 /// call that offered it; the quote is recomputed and its fingerprint compared
 /// (ADR 0016); the money is authorised **before the order exists** (ADR 0025); the
-/// order is placed with everything frozen onto it; the cart is closed; and all of
-/// it commits in one transaction with the events that drive the rest.
+/// order is placed with everything frozen onto it; and the cart is closed.
+///
+/// **The caller commits**, so whatever else it changes lands in the same
+/// transaction as the order and the events that drive the rest — UCP completes a
+/// checkout session beside the order it placed, and a session marked completed
+/// without its order, or an order without its session, cannot happen.
 /// </summary>
 public sealed class OrderPlacement(
     IOrderRepository orders,
@@ -89,7 +95,6 @@ public sealed class OrderPlacement(
     IShippingRateProviderRegistry shipping,
     IPaymentProviderRegistry payments,
     IPrincipalAccessor principal,
-    IUnitOfWork unitOfWork,
     IOptions<CheckoutOptions> options,
     TimeProvider clock)
 {
@@ -124,7 +129,7 @@ public sealed class OrderPlacement(
     public Task<Order?> AlreadyPlacedAsync(string idempotencyKey, CancellationToken cancellationToken) =>
         orders.FindByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
 
-    /// <summary>Places the order for an open, non-empty cart. The caller finds the cart and checks the key first.</summary>
+    /// <summary>Places the order for an open, non-empty cart. The caller finds the cart, checks the key first, and saves.</summary>
     public async Task<PlaceOrderResult> PlaceAsync(
         Cart cart, PlacementRequest request, OrderMode mode, CancellationToken cancellationToken)
     {
@@ -227,16 +232,16 @@ public sealed class OrderPlacement(
             pricing.Taxes,
             cart.Culture,
             mode,
-            orderId);
+            orderId,
+            request.ContactEmail);
 
         order.AuthorizePayment(clock, new OrderPayment(provider.Key, authorization.AuthorizationId!, null));
         orders.Add(order);
 
         // 6 · The cart is done. `OrderPlaced` is the fact the rest of the system
-        // reacts to, and everything commits together — the outbox's whole
-        // correctness argument.
+        // reacts to, and the caller commits everything together — the outbox's
+        // whole correctness argument.
         cart.MarkCheckedOut(clock);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         activity?.SetTag("checkout.outcome", "placed");
         activity?.SetTag("order.id", order.Id.ToString());
@@ -250,4 +255,45 @@ public sealed class OrderPlacement(
         activity?.SetTag("checkout.outcome", outcome.ToString());
         return new PlaceOrderResult(outcome, null, null, detail);
     }
+}
+
+/// <summary>
+/// `tendero.checkout.attempts` (the tracking plan), from every way into checkout —
+/// the storefront's and UCP's: orders placed are the
+/// attempts whose outcome is <c>placed</c>, and every other outcome says which
+/// fix a failed checkout points at — our screen, our price, the shopper's card
+/// or the provider.
+/// </summary>
+public static class CheckoutAttempts
+{
+    private static readonly Meter Meter = new(TelemetrySources.Ordering);
+
+    private static readonly Counter<long> Attempts = Meter.CreateCounter<long>(
+        "tendero.checkout.attempts", unit: "{attempt}",
+        description: "Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.");
+
+    /// <summary>
+    /// On every attempt, so the *Shop pulse* can leave rehearsals out of the
+    /// shop's numbers and a test run can be read on its own (ADR 0038).
+    /// </summary>
+    public const string ModeTag = "order.mode";
+
+    /// <summary>
+    /// How far the shop trusts the agent behind the attempt (P11-2): <c>none</c>
+    /// for a person, <c>untrusted</c> for an agent nobody registered. What share of
+    /// agent sales come from agents the shop does not know is the question the
+    /// registry exists to answer.
+    /// </summary>
+    public const string TrustTag = "agent.trust";
+
+    public static void Record(PlaceOrderResult result, Actor actor, OrderMode mode, AgentStanding? standing) =>
+        Attempts.Add(1,
+            actor.KindLabel,
+            actor.SurfaceLabel,
+            new(ModeTag, MetricLabels.Of(mode)),
+            new(TrustTag, standing is null ? "none" : MetricLabels.Of(standing.Trust)),
+            new("outcome", MetricLabels.Of(result.Outcome)),
+            // Read off the priced cart when there was one; an attempt refused
+            // before pricing had no discount to apply.
+            new("discounted", result.Pricing?.Discounts.Count > 0 || result.Order?.Discounts.Count > 0));
 }

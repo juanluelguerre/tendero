@@ -25,6 +25,7 @@ internal static class StronglyTypedIds
         conventions.Properties<VariantId>().HaveConversion<VariantIdConverter>();
         conventions.Properties<OrderId>().HaveConversion<OrderIdConverter>();
         conventions.Properties<CartId>().HaveConversion<CartIdConverter>();
+        conventions.Properties<CheckoutSessionId>().HaveConversion<CheckoutSessionIdConverter>();
         conventions.Properties<ReturnRequestId>().HaveConversion<ReturnRequestIdConverter>();
         conventions.Properties<CustomerId>().HaveConversion<CustomerIdConverter>();
         conventions.Properties<ImageId>().HaveConversion<ImageIdConverter>();
@@ -37,6 +38,7 @@ internal static class StronglyTypedIds
     private sealed class VariantIdConverter() : ValueConverter<VariantId, Guid>(id => id.Value, value => new VariantId(value));
     private sealed class OrderIdConverter() : ValueConverter<OrderId, Guid>(id => id.Value, value => new OrderId(value));
     private sealed class CartIdConverter() : ValueConverter<CartId, Guid>(id => id.Value, value => new CartId(value));
+    private sealed class CheckoutSessionIdConverter() : ValueConverter<CheckoutSessionId, Guid>(id => id.Value, value => new CheckoutSessionId(value));
     private sealed class ReturnRequestIdConverter() : ValueConverter<ReturnRequestId, Guid>(id => id.Value, value => new ReturnRequestId(value));
     private sealed class CustomerIdConverter() : ValueConverter<CustomerId, Guid>(id => id.Value, value => new CustomerId(value));
     private sealed class ImageIdConverter() : ValueConverter<ImageId, string>(id => id.Value, value => new ImageId(value));

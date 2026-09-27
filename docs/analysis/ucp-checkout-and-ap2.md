@@ -119,3 +119,31 @@ the key once per request like the segment.
 - **What it enables.** `agent.trust` on the checkout metric answers *who buys
   through agents the shop does not know*; `P11-6`'s rules read `Standing` — a
   suspended agent is refused, an unknown one limited.
+
+## 6 · UCP's checkout, as built (`P11-1`, ADR 0039)
+
+The specification (checkout, cart, order and the two extensions, ~7,500 lines at the
+vendored commit) was mapped onto Tendero before any code: every operation, field,
+status and error code against the slice, aggregate or port it would land on, and
+the gaps. The decisions, each with its reason:
+
+| decision | reason |
+|---|---|
+| **Claim `2026-08-25`**, not `2026-04-08` | the vendored schemas are byte for byte release `v2026-08-25` (no schema file differs between that tag and the vendored commit; 110 differ from `2026-04-08`). A shop claiming one version and conforming to another is wrong where an agent reads first |
+| **`CheckoutSession` is an aggregate in Ordering**, owning a cart | UCP makes the business remember buyer, destination, option, codes, the price shown, the owner — a cart has no place for them, and `Ucp` owns no state |
+| **Only `Open → Completed \| Canceled` is stored**; `incomplete`, `ready_for_complete`, `requires_escalation` are derived | a derived status cannot drift from the facts it describes |
+| **Prices are not stored**; the session keeps the fingerprint of the quote shown | ADR 0016: completion re-quotes and compares; a moved price charges nothing and is shown again |
+| **`OrderPlacement` is shared, and the caller commits** | slices never reference slices; a session is completed in the same transaction as its order |
+| **Sandbox handler for test credentials; escalation for live agents** | the shop takes no agent's live money yet — `requires_escalation` hands the basket to a person, and paying completes the agent's checkout |
+| **Negotiation fetches only trusted hosts, no redirects** | UCP's SSRF warning, closed by construction; Development publishes its seeded agents' profiles |
+| **No `tax` totals entry**; VAT as lines inside the total | prices include VAT (ADR 0028); a platform adding entries would count VAT twice |
+| **MCP checkout tools need an agent's token** | capabilities are per service, so declaring checkout promised them on `/mcp`; the trust model is UCP's own principal, whatever the transport |
+| **Deferred**: `order` (signed webhooks need AP2's keys), cart over UCP, AP2, pickup, several packages, `complete_in_progress`, 409 on a reused idempotency key with another body | each written down with its condition, none silently absent |
+
+Found on the real stack, 2026-09-27, and fixed with a test each: a completed
+session re-priced its closed cart (with no shipping) instead of showing what the
+order froze; a handed-off order lost the email the agent had given. And one
+refactor the rule forced: `Ucp` reached Ordering's domain types
+(`CheckoutBuyer`, `CheckoutSessionId`), and the architecture test *a transport never
+reaches a domain* said so — the id moved to SharedKernel beside `OrderId` and
+`CartId`, and the slice publishes its own buyer contract.

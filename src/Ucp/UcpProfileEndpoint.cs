@@ -87,15 +87,21 @@ public static class UcpProfileEndpoint
                         {
                             Version = capability.Version,
                             Spec = capability.Spec,
-                            Schema = capability.Schema
+                            Schema = capability.Schema,
+                            Extends = capability.Extends
                         }
                     ],
                     StringComparer.Ordinal),
 
-                // Required of a business profile, and empty: this shop settles no
-                // payments over UCP until phase 11. Empty says that; absent would
-                // make the document invalid.
+                // One handler, and a sandbox one (ADR 0038 §6, P11-1): the fake
+                // provider, which a checkout offers to a test credential only. A
+                // live agent's checkout ends in requires_escalation until a real
+                // provider takes agents' money — the honest statement of what this
+                // shop settles.
                 PaymentHandlers = new Dictionary<string, IReadOnlyList<object>>(StringComparer.Ordinal)
+                {
+                    [Checkout.UcpCheckoutMapper.SandboxHandlerName] = [Checkout.UcpCheckoutMapper.SandboxHandler],
+                }
             }
         };
     }

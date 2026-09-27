@@ -27,6 +27,8 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
 
         // Live unless the credential that placed it was a test one (ADR 0038).
         // Every order before the column existed was live, hence the default.
+        builder.Property(o => o.ContactEmail).HasMaxLength(320);
+
         builder.Property(o => o.Mode)
             .HasConversion<string>()
             .HasMaxLength(10)

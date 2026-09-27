@@ -432,6 +432,45 @@ classDiagram
         CheckedOut
         Abandoned
     }
+    class CheckoutBuyer {
+        <<record>>
+        +string? FirstName
+        +string? LastName
+        +string? Email
+        +string? Phone
+        +string? FullName
+    }
+    class CheckoutGap {
+        <<enumeration>>
+        Lines
+        BuyerEmail
+        Destination
+        ShippingOption
+    }
+    class CheckoutSession {
+        <<aggregate>>
+        +CheckoutSessionId Id
+        +AgentId Owner
+        +CartId CartId
+        +OrderMode Mode
+        +string Culture
+        +CheckoutSessionStatus Status
+        +CheckoutBuyer Buyer
+        +Address? Destination
+        +string? ShippingOptionCode
+        +string[] Coupons
+        +string? ShownQuoteHash
+        +OrderId? OrderId
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset UpdatedAt
+        +DateTimeOffset ExpiresAt
+    }
+    class CheckoutSessionStatus {
+        <<enumeration>>
+        Open
+        Completed
+        Canceled
+    }
     class Order {
         <<aggregate>>
         +OrderId Id
@@ -448,6 +487,7 @@ classDiagram
         +OrderQuote Quote
         +OrderTotals Totals
         +OrderMode Mode
+        +string? ContactEmail
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -568,6 +608,7 @@ classDiagram
         Cancelled
     }
     Cart "1" --> "*" CartLine : Lines
+    CheckoutSession --> CheckoutBuyer : Buyer
     Order --> OrderShipping : Shipping
     Order --> OrderQuote : Quote
     Order --> OrderTotals : Totals
@@ -583,6 +624,8 @@ classDiagram
 
 | Event | Carries |
 |---|---|
+| `CheckoutSessionCanceled` | `SessionId: CheckoutSessionId` |
+| `CheckoutSessionCompleted` | `SessionId: CheckoutSessionId`, `OrderId: OrderId` |
 | `OrderCancelled` | `OrderId: OrderId`, `Reason: string` |
 | `OrderConfirmed` | `OrderId: OrderId` |
 | `OrderDelivered` | `OrderId: OrderId` |
@@ -603,6 +646,14 @@ classDiagram
 stateDiagram-v2
     Open --> CheckedOut
     Open --> Abandoned
+```
+
+### CheckoutSession states
+
+```mermaid
+stateDiagram-v2
+    Open --> Completed
+    Open --> Canceled
 ```
 
 ### Order states

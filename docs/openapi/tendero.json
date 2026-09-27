@@ -944,6 +944,40 @@
         }
       }
     },
+    "/api/checkout-sessions/{id}/handoff": {
+      "get": {
+        "tags": [
+          "Checkout"
+        ],
+        "operationId": "HandOffCheckoutSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutHandOff"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/pricing/quote": {
       "post": {
         "tags": [
@@ -2391,6 +2425,21 @@
         "type": "object",
         "properties": {
           "trust": {
+            "type": "string"
+          }
+        }
+      },
+      "CheckoutHandOff": {
+        "required": [
+          "cartToken",
+          "culture"
+        ],
+        "type": "object",
+        "properties": {
+          "cartToken": {
+            "type": "string"
+          },
+          "culture": {
             "type": "string"
           }
         }

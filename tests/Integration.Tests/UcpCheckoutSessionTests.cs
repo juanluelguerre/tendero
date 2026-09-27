@@ -1,0 +1,162 @@
+using ElGuerre.Tendero.Ordering;
+using ElGuerre.Tendero.Ordering.Adapters;
+using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.Ordering.Features.CheckoutSessions;
+using ElGuerre.Tendero.SharedKernel;
+using Microsoft.EntityFrameworkCore;
+using Xunit;
+
+namespace ElGuerre.Tendero.Integration.Tests;
+
+/// <summary>
+/// UCP's checkout (P11-1) end to end on a real Postgres, through the slice the
+/// REST and MCP bindings both dispatch to: a test credential's agent opens a
+/// session, describes it, completes it and gets a rehearsal order; a live agent's
+/// session stops at requires_escalation; another agent cannot see either.
+/// </summary>
+[Collection(PostgresCollection.Name)]
+public sealed class UcpCheckoutSessionTests(PostgresFixture postgres)
+{
+    private const string Sku = "B05DEFG606-DEFAULT";
+
+    private static readonly CheckoutDetails Described = new(
+        new CheckoutBuyerDetails("Ana", "Ruiz", "ana@example.com", null), Shop.ShipTo, "standard", []);
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_test_agent_opens_describes_and_completes_a_checkout_into_a_test_order()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        await using var shop = await Shop.OpenAsync(postgres, nameof(A_test_agent_opens_describes_and_completes_a_checkout_into_a_test_order), new Agent("claude-desktop-test", test: true));
+        await shop.StockAsync(Sku, 5, ct);
+
+        var opened = await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 2), new("NOPE-1", 1)], CheckoutDetails.None, "es"), ct);
+        Assert.Equal(CheckoutSessionOutcome.Ok, opened.Outcome);
+        var session = opened.Session!;
+        Assert.Equal(CheckoutState.Incomplete, session.State);
+        Assert.Contains(session.Issues, issue => issue is { Code: CheckoutIssueCodes.ItemUnavailable, Target: "line:NOPE-1" });
+        Assert.Contains(session.Issues, issue => issue is { Code: CheckoutIssueCodes.Missing, Target: "buyer.email" });
+
+        var id = new CheckoutSessionId(Guid.Parse(session.Id));
+        var ready = (await shop.SendAsync(new UpdateCheckoutSessionCommand(id, [new(Sku, 2)], Described, "es"), ct)).Session!;
+        Assert.Equal((CheckoutState.ReadyForComplete, true, "standard"), (ready.State, ready.CanSettle, ready.SelectedShippingOption));
+        Assert.NotNull(ready.Totals);
+
+        var completed = await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardOk, "ucp-complete-1", "es"), ct);
+        Assert.Equal((CheckoutSessionOutcome.Ok, CheckoutState.Completed), (completed.Outcome, completed.Session!.State));
+
+        // A retry of a completion that went through buys nothing twice.
+        var again = await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardOk, "ucp-complete-1", "es"), ct);
+        Assert.Equal(completed.Session.OrderId, again.Session!.OrderId);
+
+        await using var context = shop.Factory.Create();
+        var order = await context.Orders.SingleAsync(ct);
+        Assert.Equal((order.Id.ToString(), OrderMode.Test, "ana@example.com"), (completed.Session.OrderId, order.Mode, order.ContactEmail));
+        Assert.Equal(ready.Totals!.Total, order.Total.Amount);
+        Assert.Equal(CheckoutSessionStatus.Completed, (await context.CheckoutSessions.SingleAsync(ct)).Status);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_live_agents_session_stops_at_escalation_and_cannot_be_completed()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        await using var shop = await Shop.OpenAsync(postgres, nameof(A_live_agents_session_stops_at_escalation_and_cannot_be_completed), new Agent("claude-desktop", test: false));
+
+        var session = (await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], Described, "es"), ct)).Session!;
+
+        Assert.Equal((CheckoutState.RequiresEscalation, false), (session.State, session.CanSettle));
+        Assert.Contains(session.Issues, issue => issue.Code == CheckoutIssueCodes.PaymentNotSettled);
+
+        var refused = await shop.SendAsync(new CompleteCheckoutSessionCommand(new CheckoutSessionId(Guid.Parse(session.Id)), FakePaymentProvider.CardOk, "ucp-live-1", "es"), ct);
+        Assert.Equal(CheckoutSessionOutcome.NotReady, refused.Outcome);
+
+        await using var context = shop.Factory.Create();
+        Assert.Empty(await context.Orders.ToListAsync(ct));
+    }
+
+    /// <summary>
+    /// UCP's escalation, all the way round: the agent cannot pay live, so a person
+    /// follows the continue link, the storefront takes over the session's cart, the
+    /// person pays — and the agent's checkout reads completed, with the order.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_person_who_pays_for_a_handed_off_cart_completes_the_agents_checkout()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        await using var agent = await Shop.OpenAsync(postgres, nameof(A_person_who_pays_for_a_handed_off_cart_completes_the_agents_checkout), new Agent("claude-desktop", test: false));
+        await agent.StockAsync(Sku, 5, ct);
+        var id = new CheckoutSessionId(Guid.Parse((await agent.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], Described, "en"), ct)).Session!.Id));
+
+        await using var person = await Shop.OpenOnAsync(agent.Factory, new SystemPrincipalAccessor());
+        var handOff = await person.AskAsync(new HandOffCheckoutSessionQuery(id), ct);
+        Assert.Equal("en", handOff!.Culture);
+
+        var chosen = (await person.ShippingOptionsAsync(handOff.CartToken, ct)).Options[0];
+        var quote = await person.QuoteAsync(handOff.CartToken, chosen.Amount, ct, culture: "en");
+        var placed = await person.PlaceOrderAsync(handOff.CartToken, chosen.Code, quote.InputHash, ct);
+        Assert.Equal(PlaceOrderOutcome.Placed, placed.Outcome);
+
+        var read = (await agent.AskAsync(new GetCheckoutSessionQuery(id, "en"), ct)).Session!;
+        Assert.Equal((CheckoutState.Completed, placed.Order!.Id.ToString()), (read.State, read.OrderId));
+
+        // Both found on the stack, 2026-09-27: a completed checkout shows what its
+        // order froze — shipping included — not a fresh quote of a closed cart; and
+        // the order is confirmed to the email the agent gave.
+        Assert.Equal(placed.Order.Total.Amount, read.Totals!.Total);
+        Assert.Equal(placed.Order.Shipping.Amount.Amount, read.Totals.Shipping);
+        Assert.Equal("ana@example.com", placed.Order.ContactEmail);
+        // Handed off once: a completed session hands nothing over again.
+        Assert.Null(await person.AskAsync(new HandOffCheckoutSessionQuery(id), ct));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_declined_card_places_nothing_and_a_canceled_session_changes_no_more()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        await using var shop = await Shop.OpenAsync(postgres, nameof(A_declined_card_places_nothing_and_a_canceled_session_changes_no_more), new Agent("claude-desktop-test", test: true));
+
+        var id = new CheckoutSessionId(Guid.Parse((await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], Described, "es"), ct)).Session!.Id));
+
+        var declined = await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardDeclined, "ucp-declined-1", "es"), ct);
+        Assert.Equal(CheckoutSessionOutcome.NotPlaced, declined.Outcome);
+        Assert.Contains(declined.Session!.Issues, issue => issue.Code == CheckoutIssueCodes.PaymentFailed);
+
+        var canceled = await shop.SendAsync(new CancelCheckoutSessionCommand(id, "es"), ct);
+        Assert.Equal(CheckoutState.Canceled, canceled.Session!.State);
+        Assert.Equal(CheckoutSessionOutcome.NotOpen, (await shop.SendAsync(new UpdateCheckoutSessionCommand(id, [new(Sku, 2)], Described, "es"), ct)).Outcome);
+
+        await using var context = shop.Factory.Create();
+        Assert.Empty(await context.Orders.ToListAsync(ct));
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task Another_agent_cannot_see_a_session_and_a_person_cannot_open_one()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var name = nameof(Another_agent_cannot_see_a_session_and_a_person_cannot_open_one);
+
+        await using var owner = await Shop.OpenAsync(postgres, name, new Agent("claude-desktop-test", test: true));
+        var id = new CheckoutSessionId(Guid.Parse((await owner.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], CheckoutDetails.None, "es"), ct)).Session!.Id));
+
+        await using var stranger = await Shop.OpenOnAsync(owner.Factory, new Agent("someone-else", test: true));
+        Assert.Equal(CheckoutSessionOutcome.NotFound, (await stranger.AskAsync(new GetCheckoutSessionQuery(id, "es"), ct)).Outcome);
+
+        await using var person = await Shop.OpenOnAsync(owner.Factory, new SystemPrincipalAccessor());
+        Assert.Equal(CheckoutSessionOutcome.NotAnAgent, (await person.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], CheckoutDetails.None, "es"), ct)).Outcome);
+    }
+
+    private sealed class Agent(string id, bool test) : IPrincipalAccessor
+    {
+        public CommercePrincipal Current { get; } =
+            new(null, new AgentId(id), id, id, ["agent"]) { IsTest = test, Standing = AgentStanding.Unknown };
+    }
+}

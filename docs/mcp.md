@@ -168,6 +168,40 @@ specification's own JSON Schemas, vendored at a pinned commit under
 `tests/Ucp.Tests/ucp-schemas`. That includes every product in the shipped
 catalogue, in both languages, against a real database.
 
+### UCP's checkout binding — an agent's token required
+
+Phase 11 (ADR 0039). The five tools UCP defines for a checkout session, over the
+same operations as the REST binding at `/ucp/checkout-sessions`. **The one part of
+`/mcp` that is not anonymous**: each tool refuses a caller without an agent's
+bearer token, and a session belongs to the agent that opened it.
+
+| Tool | What it does |
+|---|---|
+| `create_checkout` | Opens a session for line items (`item.id` is a variant SKU from the catalogue tools) |
+| `get_checkout` | The session as it stands: status, totals, messages, fulfillment options |
+| `update_checkout` | Replaces the whole checkout — buyer, destination, chosen option, discount codes |
+| `complete_checkout` | Places the order with one instrument from a handler the checkout offered; needs `meta.idempotency-key` |
+| `cancel_checkout` | Cancels an open session; needs `meta.idempotency-key` |
+
+Every call carries `meta.ucp-agent.profile`: the shop fetches that profile to
+negotiate, **only from a trusted host** (`Ucp:TrustedPlatformHosts`; Development
+trusts `localhost`, where the API publishes its seeded agents' profiles at
+`/dev-platforms/{agent}/profile.json`).
+
+**What an agent can settle.** A test credential (ADR 0038 — `claude-desktop-test`
+in the development issuer) is offered the sandbox handler `com.elguerre.tendero.fake`:
+complete with `{"payment":{"instruments":[{"id":"i1","handler_id":"tendero_fake_1","type":"card","credential":{"type":"com.elguerre.tendero.fake_token","token":"card-ok"}}]}}`
+and the order is a rehearsal, ended before it ships. A live agent (`claude-desktop`)
+is offered no handler: its checkout reaches `requires_escalation`, and its
+`continue_url` hands the basket to a person on the storefront.
+
+Over REST, the same flow:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:5130/dev-issuer/connect/token   -d grant_type=password -d username=claude-desktop-test | jq -r .access_token)
+curl -s -X POST http://localhost:5130/ucp/checkout-sessions   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'   -H 'UCP-Agent: profile="http://localhost:5130/dev-platforms/claude-desktop-test/profile.json"'   -d '{"line_items":[{"item":{"id":"B11COO0301-DEFAULT"},"quantity":1}]}'
+```
+
 ### Tendero's own
 
 Answers UCP has no capability for, in this shop's own shapes.

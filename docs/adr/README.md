@@ -38,6 +38,7 @@
 | [0036](0036-observability-is-a-second-stack-behind-a-switch.md) | Observability is a second stack behind a switch, browser telemetry is a port, and every feature names the event that proves it | accepted |
 | [0037](0037-traffic-is-simulated-from-a-declared-model.md) | Traffic is simulated from a declared model, seeded, and labelled as synthetic | accepted |
 | [0038](0038-a-test-order-is-a-mode-the-credential-decides.md) | A test order is a mode the credential decides, fixed at placement | accepted |
+| [0039](0039-ucp-checkout-is-a-session-an-agent-owns.md) | UCP's checkout is a session an agent owns, served on both transports, and `/mcp` is not anonymous for it | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

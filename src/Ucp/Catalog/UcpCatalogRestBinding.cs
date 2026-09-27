@@ -64,7 +64,7 @@ public static class UcpCatalogRestBinding
                     dispatcher, request, Culture(http), BaseUrl(http), ct));
             })
             // The same names the MCP binding serves them under: one operation, two doors.
-            .AddEndpointFilter(CountedAs("search_catalog"));
+            .AddEndpointFilter(UcpToolCounting.CountedAs("search_catalog"));
 
         group.MapPost("/catalog/lookup",
             async Task<Results<Ok<UcpCatalogPage>, BadRequest<string>>> (
@@ -78,7 +78,7 @@ public static class UcpCatalogRestBinding
                     dispatcher, request, Culture(http), BaseUrl(http), ct));
             })
             // The same names the MCP binding serves them under: one operation, two doors.
-            .AddEndpointFilter(CountedAs("lookup_catalog"));
+            .AddEndpointFilter(UcpToolCounting.CountedAs("lookup_catalog"));
 
         group.MapPost("/catalog/product",
             async Task<Results<Ok<UcpProductAnswer>, BadRequest<string>, NotFound<string>>> (
@@ -99,7 +99,7 @@ public static class UcpCatalogRestBinding
                     : TypedResults.Ok(answer);
             })
             // The same names the MCP binding serves them under: one operation, two doors.
-            .AddEndpointFilter(CountedAs("get_product"));
+            .AddEndpointFilter(UcpToolCounting.CountedAs("get_product"));
 
         return group;
     }
@@ -114,42 +114,4 @@ public static class UcpCatalogRestBinding
 
     private static string BaseUrl(HttpContext http) =>
         $"{http.Request.Scheme}://{http.Request.Host}";
-
-    /// <summary>
-    /// Counts the call into `tendero.agent.tool_calls` by what came back: a 2xx
-    /// answered, a 4xx refused — a missing profile, a missing id, an unknown
-    /// product — and anything else, thrown or 5xx, failed. A validation failure
-    /// is thrown by the dispatcher and answered as a 400 further out, so it is
-    /// counted as the refusal it becomes.
-    /// </summary>
-    private static Func<EndpointFilterInvocationContext, EndpointFilterDelegate, ValueTask<object?>> CountedAs(string tool) =>
-        async (context, next) =>
-        {
-            try
-            {
-                var result = await next(context);
-                var status = ((result as INestedHttpResult)?.Result ?? result) is IStatusCodeHttpResult { StatusCode: { } code }
-                    ? code
-                    : StatusCodes.Status200OK;
-
-                AgentToolCalls.Record(Surfaces.Ucp, tool, status switch
-                {
-                    < 400 => AgentToolCalls.Answered,
-                    < 500 => AgentToolCalls.Refused,
-                    _ => AgentToolCalls.Failed
-                });
-
-                return result;
-            }
-            catch (FluentValidation.ValidationException)
-            {
-                AgentToolCalls.Record(Surfaces.Ucp, tool, AgentToolCalls.Refused);
-                throw;
-            }
-            catch (Exception exception) when (exception is not OperationCanceledException)
-            {
-                AgentToolCalls.Record(Surfaces.Ucp, tool, AgentToolCalls.Failed);
-                throw;
-            }
-        };
 }

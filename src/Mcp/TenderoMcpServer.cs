@@ -60,6 +60,9 @@ public static class TenderoMcpServer
             // different shapes under names the specification fixes. Both on one
             // server because MapMcp offers one server per process.
             .WithTools<UcpCatalogTools>()
+            // And checkout's binding (P11-1): the one set of tools on this server
+            // that needs an agent's token, checked tool by tool (ADR 0039).
+            .WithTools<UcpCheckoutTools>()
             // Every call counted once, by tool and outcome (the tracking plan).
             .WithRequestFilters(filters => filters.AddCallToolFilter(ToolCallCounting.Filter))
             .Services;

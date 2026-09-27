@@ -194,6 +194,14 @@ public sealed class Order : AggregateRoot
     public OrderMode Mode { get; private set; }
 
     /// <summary>
+    /// Where to write to the buyer about this order, when they said: a UCP checkout
+    /// asks for it before it completes (P11-1), the storefront does not yet.
+    /// Snapshotted like the address — the email a purchase was confirmed to is a
+    /// fact about the purchase.
+    /// </summary>
+    public string? ContactEmail { get; private set; }
+
+    /// <summary>
     /// What came off, frozen as codes and labels. Backed by a list for the same
     /// reason the lines are: EF maps a private collection into one JSON column,
     /// and the aggregate keeps the only way to add to it.
@@ -269,7 +277,8 @@ public sealed class Order : AggregateRoot
         IReadOnlyList<OrderTax>? taxes = null,
         string culture = "es",
         OrderMode mode = OrderMode.Live,
-        OrderId? id = null)
+        OrderId? id = null,
+        string? contactEmail = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentNullException.ThrowIfNull(shippingAddress);
@@ -317,6 +326,7 @@ public sealed class Order : AggregateRoot
             Id = id ?? OrderId.New(),
             CustomerId = customerId,
             Mode = mode,
+            ContactEmail = string.IsNullOrWhiteSpace(contactEmail) ? null : contactEmail.Trim(),
             IdempotencyKey = idempotencyKey,
             Culture = SharedKernel.Culture.Normalize(culture),
             Currency = currency,

@@ -140,9 +140,12 @@ public sealed class PlaceOrderValidator : AbstractValidator<PlaceOrderCommand>
 
 public sealed class PlaceOrderHandler(
     ICartRepository carts,
+    ICheckoutSessionRepository sessions,
     OrderPlacement placement,
+    IUnitOfWork unitOfWork,
     IPrincipalAccessor principal,
-    IActorAccessor actors)
+    IActorAccessor actors,
+    TimeProvider clock)
     : ICommandHandler<PlaceOrderCommand, PlaceOrderResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
@@ -187,54 +190,32 @@ public sealed class PlaceOrderHandler(
             return new PlaceOrderResult(PlaceOrderOutcome.NothingToShip, null, null, null);
         }
 
-        return await placement.PlaceAsync(
+        // A cart an agent's checkout handed to a person (requires_escalation,
+        // P11-1): the email the agent gave is where the order is confirmed.
+        var session = await sessions.FindByCartAsync(cart.Id, cancellationToken) is { Status: CheckoutSessionStatus.Open } open ? open : null;
+
+        var result = await placement.PlaceAsync(
             cart,
             new PlacementRequest(
                 command.ShippingAddress, command.BillingAddress, command.ShippingOptionCode,
-                command.ExpectedQuoteHash, command.Instrument, command.IdempotencyKey, command.Coupons, command.Culture),
+                command.ExpectedQuoteHash, command.Instrument, command.IdempotencyKey, command.Coupons, command.Culture,
+                session?.Buyer.Email),
             mode,
             cancellationToken);
+
+        if (result.Outcome == PlaceOrderOutcome.Placed)
+        {
+            // Paying for it here is what completes the agent's checkout, so the
+            // agent reads the order it asked for.
+            session?.Complete(clock, result.Order!.Id);
+
+            // One commit: the order, the closed cart, the session and the events
+            // that drive the stock saga land together or none of them do.
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+
+        return result;
     }
-}
-
-/// <summary>
-/// `tendero.checkout.attempts` (the tracking plan): orders placed are the
-/// attempts whose outcome is <c>placed</c>, and every other outcome says which
-/// fix a failed checkout points at — our screen, our price, the shopper's card
-/// or the provider.
-/// </summary>
-internal static class CheckoutAttempts
-{
-    private static readonly Meter Meter = new(TelemetrySources.Ordering);
-
-    private static readonly Counter<long> Attempts = Meter.CreateCounter<long>(
-        "tendero.checkout.attempts", unit: "{attempt}",
-        description: "Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.");
-
-    /// <summary>
-    /// On every attempt, so the *Shop pulse* can leave rehearsals out of the
-    /// shop's numbers and a test run can be read on its own (ADR 0038).
-    /// </summary>
-    public const string ModeTag = "order.mode";
-
-    /// <summary>
-    /// How far the shop trusts the agent behind the attempt (P11-2): <c>none</c>
-    /// for a person, <c>untrusted</c> for an agent nobody registered. What share of
-    /// agent sales come from agents the shop does not know is the question the
-    /// registry exists to answer.
-    /// </summary>
-    public const string TrustTag = "agent.trust";
-
-    public static void Record(PlaceOrderResult result, Actor actor, OrderMode mode, AgentStanding? standing) =>
-        Attempts.Add(1,
-            actor.KindLabel,
-            actor.SurfaceLabel,
-            new(ModeTag, MetricLabels.Of(mode)),
-            new(TrustTag, standing is null ? "none" : MetricLabels.Of(standing.Trust)),
-            new("outcome", MetricLabels.Of(result.Outcome)),
-            // Read off the priced cart when there was one; an attempt refused
-            // before pricing had no discount to apply.
-            new("discounted", result.Pricing?.Discounts.Count > 0 || result.Order?.Discounts.Count > 0));
 }
 
 // ---------- The wire ----------

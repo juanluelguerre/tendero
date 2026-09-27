@@ -28,4 +28,7 @@
     <ProjectReference Include="../../src/Ucp/ElGuerre.Tendero.Ucp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+  </ItemGroup>
 </Project>

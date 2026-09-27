@@ -613,6 +613,11 @@ var storefront = builder.AddViteApp("storefront", frontend, "serve:storefront")
     .WithReference(api)
     .WithExternalHttpEndpoints();
 
+// UCP's checkout links a person back to the storefront — an order's permalink,
+// and the page an agent's checkout continues on when it needs a person (P11-1).
+// An address, not a dependency: nothing waits on anything.
+api.WithEnvironment("Ucp__StorefrontUrl", storefront.GetEndpoint("http"));
+
 var backoffice = builder.AddViteApp("backoffice", frontend, "serve:backoffice")
     .WithNpm(install: false)
     .WithHttpEndpoint(targetPort: 4201, port: 4201, name: "http", isProxied: false)

@@ -55,7 +55,9 @@ public static class AuthenticationExtensions
             .AddPolicy(TenderoPolicyNames.Shopkeeper, policy =>
                 policy.RequireRole(TenderoRoles.Shopkeeper))
             .AddPolicy(TenderoPolicyNames.AgentOrShopper, policy =>
-                policy.RequireRole(TenderoRoles.Shopper, TenderoRoles.Agent));
+                policy.RequireRole(TenderoRoles.Shopper, TenderoRoles.Agent))
+            .AddPolicy(TenderoPolicyNames.Agent, policy =>
+                policy.RequireRole(TenderoRoles.Agent).RequireClaim(TenderoClaims.Agent));
 
         services.AddHttpContextAccessor();
         services.AddScoped<IPrincipalAccessor, HttpPrincipalAccessor>();

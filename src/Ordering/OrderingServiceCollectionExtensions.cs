@@ -25,6 +25,15 @@ public sealed class CheckoutOptions
     /// </summary>
     public string TestPaymentProvider { get; set; } = FakePaymentProvider.Key;
 
+    /// <summary>
+    /// Whether an agent's live checkout is settled by the shop (P11-1). False until
+    /// a real payment provider takes agents' money: until then a live agent's
+    /// session ends in <c>requires_escalation</c> and a person pays on the
+    /// storefront, which is the honest statement of what the shop can settle. A
+    /// test credential's rehearsal settles through the sandbox handler either way.
+    /// </summary>
+    public bool AgentsPayLive { get; set; }
+
     /// <summary>The provider for an order of this mode — the one place that choice is made.</summary>
     public string ProviderFor(Domain.OrderMode mode) =>
         mode == Domain.OrderMode.Test ? TestPaymentProvider : PaymentProvider;

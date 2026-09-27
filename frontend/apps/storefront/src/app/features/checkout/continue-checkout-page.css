@@ -1,0 +1,17 @@
+.continue {
+  max-inline-size: var(--container-prose);
+  padding-block: var(--space-7);
+}
+
+.continue__title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xl);
+}
+
+.continue__text {
+  color: var(--text-muted);
+}
+
+.continue__back {
+  color: var(--text);
+}

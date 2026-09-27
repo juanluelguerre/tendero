@@ -53,4 +53,10 @@ public interface IUcpCapability
     /// dispatcher can actually run.
     /// </summary>
     IReadOnlyList<Type> Slices { get; }
+
+    /// <summary>
+    /// The capability this one extends, for an extension such as fulfillment or
+    /// discount; null for a root capability.
+    /// </summary>
+    string? Extends => null;
 }

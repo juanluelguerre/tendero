@@ -43,9 +43,11 @@ search, multimodal ingestion, a conversational assistant, personalization.
 6. **AI observability and evaluation as a feature** — cost per conversation, evals, a trace for every decision.
 
 **Three agent surfaces, three trust models.** WebMCP runs in the user's browser
-and **inherits** their session, so it needs no second principal. The MCP server
-is external and read-only, `AllowAnonymous` by explicit decision. UCP + AP2 is
-server-to-server with its own principal and a signed mandate. They are not
+and **inherits** their session, so it needs no second principal. The MCP server's
+own tools and UCP's catalogue are read-only, `AllowAnonymous` by explicit decision;
+UCP's checkout tools share `/mcp` and are the one part of it that needs an agent's
+token (ADR 0039). UCP + AP2 is server-to-server with its own principal and a signed
+mandate, whichever transport carries it. They are not
 alternatives; each answers a different question.
 
 ### Scale rule

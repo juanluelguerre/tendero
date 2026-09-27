@@ -1,0 +1,17 @@
+<ng-container *transloco="let t">
+  <section class="continue" aria-live="polite">
+    @switch (state()) {
+      @case ('taking-over') {
+        <p class="continue__text">{{ t('checkout.continue.takingOver') }}</p>
+      }
+      @case ('gone') {
+        <h1 class="continue__title">{{ t('checkout.continue.goneTitle') }}</h1>
+        <p class="continue__text">{{ t('checkout.continue.gone') }}</p>
+        <a class="continue__back" [routerLink]="links.home()">{{ t('checkout.continue.backToShop') }}</a>
+      }
+      @case ('failed') {
+        <p class="continue__text" role="alert">{{ t('checkout.continue.failed') }}</p>
+      }
+    }
+  </section>
+</ng-container>

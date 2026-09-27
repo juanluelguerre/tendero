@@ -217,6 +217,33 @@ public sealed class Cart : AggregateRoot
     public void Remove(TimeProvider clock, string sku) => SetQuantity(clock, sku, 0);
 
     /// <summary>
+    /// The cart becomes exactly these lines, in this order — UCP's update is a
+    /// full replacement (P11-1), and a checkout session keeps its lines in a cart
+    /// so it inherits the line rules rather than restating them. The same limits
+    /// as adding: a repeated SKU is one line, and the caller clamps quantities
+    /// before it gets here, saying so to whoever asked.
+    /// </summary>
+    public void ReplaceLines(TimeProvider clock, IReadOnlyList<CartLine> lines)
+    {
+        EnsureOpen();
+        ArgumentNullException.ThrowIfNull(lines);
+
+        var merged = lines
+            .GroupBy(line => line.Sku, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First().WithQuantity(group.Sum(line => line.Quantity)))
+            .ToList();
+
+        if (merged.Count > MaximumLines)
+            throw new InvalidOperationException($"A cart takes at most {MaximumLines} lines.");
+        if (merged.Any(line => line.Quantity is <= 0 or > MaximumQuantity))
+            throw new InvalidOperationException($"Every line takes between 1 and {MaximumQuantity} units.");
+
+        this.lines.Clear();
+        this.lines.AddRange(merged);
+        Touch(clock);
+    }
+
+    /// <summary>
     /// A guest signed in. The cart becomes theirs; the token keeps working,
     /// because taking it away mid-session would empty the basket of anybody
     /// whose sign-in did not complete.

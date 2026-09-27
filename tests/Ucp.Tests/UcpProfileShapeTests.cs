@@ -61,10 +61,15 @@ public sealed class UcpProfileShapeTests
     [Fact]
     public void Unused_optional_members_are_absent_rather_than_null()
     {
-        var json = JsonSerializer.Serialize(Sample, Hostile);
+        using var json = JsonDocument.Parse(JsonSerializer.Serialize(Sample, Hostile));
+        var capabilities = json.RootElement.GetProperty("ucp").GetProperty("capabilities");
 
-        Assert.DoesNotContain("extends", json, StringComparison.Ordinal);
-        Assert.DoesNotContain("config", json, StringComparison.Ordinal);
+        // A root capability says nothing about extending; an extension says what it extends.
+        var search = capabilities.GetProperty("dev.ucp.shopping.catalog.search")[0];
+        Assert.False(search.TryGetProperty("extends", out _));
+        Assert.False(search.TryGetProperty("config", out _));
+        Assert.Equal("dev.ucp.shopping.checkout", capabilities.GetProperty("dev.ucp.shopping.fulfillment")[0].GetProperty("extends").GetString());
+        Assert.DoesNotContain("null", json.RootElement.GetRawText(), StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -81,7 +86,8 @@ public sealed class UcpProfileShapeTests
         Assert.Equal(UcpSpecification.Version, back.Ucp.Version);
         Assert.Equal("mcp", back.Ucp.Services[UcpSpecification.ShoppingService][0].Transport);
         Assert.True(back.Ucp.Capabilities.ContainsKey("dev.ucp.shopping.catalog.search"));
-        Assert.Empty(back.Ucp.PaymentHandlers);
+        // The one handler, a sandbox (ADR 0038 §6): offered to a test credential only.
+        Assert.Equal(["com.elguerre.tendero.fake"], back.Ucp.PaymentHandlers.Keys);
     }
 
     /// <summary>

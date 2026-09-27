@@ -68,6 +68,16 @@ export class CartStore {
     }
   }
 
+  /**
+   * Takes over a cart the shop handed to this browser — an agent's checkout a
+   * person finishes here (P11-1). The token replaces whatever basket was stored:
+   * the link is for this purchase.
+   */
+  async adopt(token: string): Promise<void> {
+    this.store(token);
+    await this.load();
+  }
+
   /** Reads whatever is stored. Safe to call on every page. */
   async load(): Promise<void> {
     if (!this.token) return;

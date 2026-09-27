@@ -66,7 +66,14 @@
     "region": "Province (optional)",
     "title": "Checkout",
     "unavailable": "The payment provider did not answer. Try again in a moment.",
-    "unserved": "This shop does not deliver to {{country}} yet."
+    "unserved": "This shop does not deliver to {{country}} yet.",
+    "continue": {
+      "takingOver": "Picking up the purchase your agent prepared…",
+      "goneTitle": "This link no longer works",
+      "gone": "The purchase your agent prepared was already completed, canceled or expired.",
+      "backToShop": "Back to the shop",
+      "failed": "We could not pick up the purchase. Try again in a moment."
+    }
   },
   "consent": {
     "title": "Help us improve the shop.",

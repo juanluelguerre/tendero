@@ -23,6 +23,12 @@ export type ShippingOptionView = Schemas['ShippingOptionView'];
 
 export type AddressRequest = Schemas['AddressRequest'];
 
+/**
+ * An agent's checkout handed to a person (UCP's requires_escalation, P11-1): the
+ * cart's token to take over, and the language the agent checked out in.
+ */
+export type CheckoutHandOff = Schemas['CheckoutHandOff'];
+
 /** What checkout sends: the address, the chosen rate, the quote's fingerprint and the idempotency key. */
 export type PlaceOrderRequest = Schemas['PlaceOrderRequest'];
 
