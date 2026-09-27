@@ -1,0 +1,30 @@
+<ng-container *transloco="let t">
+  @if (compare.items().length > 0) {
+    <aside class="tray" [attr.aria-label]="t('compare.tray')">
+      <div class="page-frame tray__inner">
+        <ul class="tray__items">
+          @for (item of compare.items(); track item.code) {
+            <li class="tray__item">
+              <span class="tray__name">{{ item.name }}</span>
+              <button
+                class="tray__remove"
+                type="button"
+                [attr.aria-label]="t('compare.remove', { name: item.name })"
+                (click)="compare.toggle(item)">×</button>
+            </li>
+          }
+        </ul>
+        <div class="tray__actions">
+          <button class="tray__clear" type="button" (click)="compare.clear()">{{ t('compare.clear') }}</button>
+          @if (compare.items().length > 1) {
+            <a class="tray__go" [routerLink]="links.compare()" [queryParams]="query()">
+              {{ t('compare.go', { count: compare.items().length }) }}
+            </a>
+          } @else {
+            <span class="tray__hint">{{ t('compare.pickAnother') }}</span>
+          }
+        </div>
+      </div>
+    </aside>
+  }
+</ng-container>

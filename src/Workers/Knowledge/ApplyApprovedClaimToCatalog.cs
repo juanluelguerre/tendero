@@ -1,6 +1,7 @@
 using System.Diagnostics.Metrics;
 using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Features.RecordClaimApplication;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Workers.Knowledge;
@@ -15,6 +16,10 @@ namespace ElGuerre.Tendero.Workers.Knowledge;
 ///
 /// An untyped claim — a statement with no attribute — changes nothing here: it
 /// stays in Knowledge, for the comparison and the product page to read.
+///
+/// Catalog's answer is then recorded on the claim — the value as it is held, or
+/// the refusal — so a spec row shows the claim's quote only beside the value the
+/// claim put there (P10-7).
 ///
 /// Unlike the description recorder it lets a failure through: the outbox then
 /// retries the message, which is what a person's decision deserves. A refusal is
@@ -38,8 +43,14 @@ public sealed partial class ApplyApprovedClaimToCatalog(
             domainEvent.ProductId, code, value, $"claim {domainEvent.ClaimId} approved by {domainEvent.ApprovedBy}"), ct);
 
         Applied.Add(1, new KeyValuePair<string, object?>("outcome", MetricLabels.Of(result.Outcome)));
-        if (result.Outcome is not (SetAttributeOutcome.Set or SetAttributeOutcome.Unchanged))
+        var refused = result.HeldAs is null;
+        if (refused)
             LogRefused(logger, domainEvent.ClaimId.Value, code, value, result.Outcome);
+
+        // Catalog's answer goes back onto the claim, as values: what a spec row
+        // matches its quote on, and what the review screen can show as refused.
+        await commands.SendAsync(new RecordClaimApplicationCommand(
+            domainEvent.ClaimId, result.HeldAs, refused ? MetricLabels.Of(result.Outcome) : null), ct);
     }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Catalog refused approved claim {ClaimId}: {AttributeCode} = {Value} ({Outcome})")]

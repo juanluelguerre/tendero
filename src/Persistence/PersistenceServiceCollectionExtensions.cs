@@ -64,6 +64,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();
         services.AddScoped<IKnowledgeRepository, EfKnowledgeRepository>();
         services.AddScoped<IAttributeVocabulary, CatalogAttributeVocabulary>();
+        services.AddScoped<IProductFacts, CatalogProductFacts>();
 
         // Whether an order's customer has an account: Ordering asks it to decide
         // who may read the order by its id, and must not learn what a Customer is.

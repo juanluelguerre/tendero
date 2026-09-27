@@ -135,3 +135,30 @@
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
+
+.card__compare {
+  align-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.card__compare[aria-pressed='true'] {
+  color: var(--text);
+}
+
+.card__compare:disabled {
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.card__compare:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

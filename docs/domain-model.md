@@ -61,6 +61,7 @@ classDiagram
         +string? RawText
         +decimal? Number
         +bool? Flag
+        +string Key
         +bool IsWorthIndexing
     }
     class Category {
@@ -686,6 +687,8 @@ classDiagram
         +DateTimeOffset? ReviewedAt
         +DateTimeOffset CreatedAt
         +Evidence[] Evidence
+        +string? AppliedAs
+        +string? ApplicationRefused
         +double Support
     }
     class Provenance {

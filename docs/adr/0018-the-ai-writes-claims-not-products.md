@@ -42,6 +42,12 @@ auditable writers, none of them a model.
 > (`tendero.knowledge.claims.applied`). A superseded claim leaves the attribute
 > where it is — the value was a person's decision and is Catalog's now; a new
 > text's claims, approved, overwrite it.
+>
+> **And Catalog's answer goes back onto the claim (P10-7).** The worker records
+> how Catalog holds the applied value (`AppliedAs`, its culture-free key) or why it
+> refused, through Knowledge's own command. A spec row shows a claim's words only
+> where the product holds exactly the value the claim put there — so a reimport
+> that changed it never leaves a quote beside a value it does not support.
 
 **2 · The model.**
 

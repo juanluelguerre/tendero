@@ -5,6 +5,7 @@ import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from './data-access/cart.service';
+import { CompareStore } from './data-access/compare.store';
 import { ProductImagePlaceholder } from './product-image-placeholder';
 import { ShopLinks } from './shop-links';
 
@@ -39,6 +40,7 @@ export class ProductCard {
   private readonly images = inject(ProductImageUrls);
 
   protected readonly links = inject(ShopLinks);
+  protected readonly compare = inject(CompareStore);
   protected readonly adding = signal(false);
 
   /** The seed points at images that may not be there, so a broken one is the
@@ -48,6 +50,11 @@ export class ProductCard {
   protected imageUrl(): string | null {
     const id = this.hit().imageId;
     return id && !this.broken() ? this.images.of(id) : null;
+  }
+
+  /** Picks the product for the comparison tray, or takes it out (P10-7). */
+  protected toggleCompare(): void {
+    this.compare.toggle({ code: this.hit().code, name: this.hit().name });
   }
 
   protected price(): string {

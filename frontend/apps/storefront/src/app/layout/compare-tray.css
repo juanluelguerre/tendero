@@ -1,0 +1,92 @@
+.tray {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 10;
+  border-block-start: 1px solid var(--border);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.tray__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+}
+
+.tray__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-inline-size: 0;
+}
+
+.tray__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-inline-size: 16rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-raised);
+  font-size: var(--text-xs);
+}
+
+.tray__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tray__remove,
+.tray__clear {
+  padding: 0 var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tray__clear {
+  font-size: var(--text-xs);
+  text-decoration: underline;
+}
+
+.tray__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* A secondary action: the page's clay stays with adding to the cart. */
+.tray__go {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.tray__go:hover {
+  background: var(--bg-raised);
+}
+
+.tray__hint {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.tray__remove:focus-visible,
+.tray__clear:focus-visible,
+.tray__go:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

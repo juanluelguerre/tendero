@@ -35,7 +35,8 @@ public enum SetAttributeOutcome
     ValueRejected,
 }
 
-public sealed record SetProductAttributeResult(SetAttributeOutcome Outcome, ProductId ProductId, string AttributeCode)
+/// <param name="HeldAs">The value's <see cref="AttributeValue.Key"/> once set — what the product holds — or null when refused.</param>
+public sealed record SetProductAttributeResult(SetAttributeOutcome Outcome, ProductId ProductId, string AttributeCode, string? HeldAs = null)
     : IAuditedResult
 {
     AuditOutcome IAuditedResult.AuditOutcome =>
@@ -91,12 +92,13 @@ public sealed class SetProductAttributeHandler(
         // Setting what is already there would raise ProductUpserted and reindex
         // an identical document — the same reasoning as publishing twice.
         if (product.AttributeFor(definition.Code) == value)
-            return Result(SetAttributeOutcome.Unchanged, definition.Code);
+            return Result(SetAttributeOutcome.Unchanged, definition.Code, value.Key);
 
         product.SetAttribute(clock, value);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        return Result(SetAttributeOutcome.Set, definition.Code);
+        return Result(SetAttributeOutcome.Set, definition.Code, value.Key);
 
-        SetProductAttributeResult Result(SetAttributeOutcome outcome, string code) => new(outcome, command.ProductId, code);
+        SetProductAttributeResult Result(SetAttributeOutcome outcome, string code, string? heldAs = null) =>
+            new(outcome, command.ProductId, code, heldAs);
     }
 }

@@ -49,5 +49,18 @@
         {{ adding() ? '…' : t('product.addToCart') }}
       </button>
     }
+
+    <!-- A toggle, not a link: the tray at the foot of the page collects the
+         picks, and the comparison is its own URL. Quiet, because adding to the
+         cart is this card's one accent action. -->
+    @let picked = compare.has(item.code);
+    <button
+      class="card__compare"
+      type="button"
+      [attr.aria-pressed]="picked"
+      [disabled]="!picked && compare.full()"
+      (click)="toggleCompare()">
+      {{ picked ? t('compare.picked') : t('compare.pick') }}
+    </button>
   </div>
 </ng-container>

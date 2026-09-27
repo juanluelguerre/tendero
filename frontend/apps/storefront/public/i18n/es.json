@@ -203,5 +203,30 @@
     "more": "Ver más productos",
     "loadingMore": "Cargando…",
     "title": "Sección"
+  },
+  "specs": {
+    "noData": "sin dato",
+    "fromCatalogue": "Catálogo",
+    "fromDescription": "De la descripción",
+    "quoteTitle": "Lo dice la descripción del producto",
+    "support": "Respaldo del texto: {{ percent }} %",
+    "supportNote": "Medido por un modelo que comprueba si la frase respalda el dato. Una persona de la tienda lo aprobó.",
+    "alsoSays": "Además"
+  },
+  "compare": {
+    "title": "Comparar productos",
+    "pick": "Comparar",
+    "picked": "En la comparación",
+    "tray": "Productos para comparar",
+    "remove": "Quitar {{ name }} de la comparación",
+    "clear": "Vaciar",
+    "go": "Comparar ({{ count }})",
+    "pickAnother": "Elige otro producto para comparar",
+    "tooFew": "Elige al menos dos productos para compararlos.",
+    "backToShop": "Volver a la tienda",
+    "loading": "Cargando la comparación…",
+    "failed": "No hemos podido cargar la comparación. Inténtalo dentro de un momento.",
+    "attribute": "Característica",
+    "note": "«sin dato» quiere decir que la tienda no lo sabe: no lo inventamos."
   }
 }

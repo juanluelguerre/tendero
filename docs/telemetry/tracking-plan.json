@@ -30,6 +30,16 @@
       ]
     },
     {
+      "name": "Specs with their source",
+      "area": "storefront",
+      "question": "Do shoppers open the sentence behind a spec, and do they compare products side by side once they can?",
+      "decision": "If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have.",
+      "signals": [
+        "spec_source_opened",
+        "products_compared"
+      ]
+    },
+    {
       "name": "Cart",
       "area": "storefront",
       "question": "How many carts never become an order, and whose?",
@@ -220,6 +230,31 @@
             "direct"
           ],
           "description": "The page before this one, by kind; direct when there was none in this tab."
+        }
+      }
+    },
+    {
+      "name": "spec_source_opened",
+      "description": "A shopper opened the words behind a spec — the quote and its support. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "source": {
+          "type": "string",
+          "values": [
+            "description"
+          ],
+          "description": "Where the value came from; only a value an approved claim put there has words to open."
+        }
+      }
+    },
+    {
+      "name": "products_compared",
+      "description": "A shopper opened a side-by-side comparison. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "products": {
+          "type": "number",
+          "description": "How many products were compared, two to four."
         }
       }
     }

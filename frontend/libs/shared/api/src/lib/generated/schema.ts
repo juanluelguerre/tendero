@@ -292,6 +292,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/knowledge/specs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetProductSpecs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{orderId}/returns": {
         parameters: {
             query?: never;
@@ -1247,6 +1263,46 @@ export interface components {
             variantLabel: null | string;
             slug: string;
         };
+        SpecCell: {
+            source: string;
+            kind: null | string;
+            value: null | string;
+            /** Format: double */
+            number: null | number;
+            unit: null | string;
+            flag: null | boolean;
+            evidence: null | components["schemas"]["SpecEvidence"];
+        };
+        SpecEvidence: {
+            /** Format: double */
+            support: number;
+            quotes: components["schemas"]["SpecQuote"][];
+        };
+        SpecProduct: {
+            productId: string;
+            code: string;
+            name: string;
+            slug: string;
+        };
+        SpecQuote: {
+            culture: string;
+            text: string;
+        };
+        SpecRow: {
+            attributeCode: string;
+            label: string;
+            cells: components["schemas"]["SpecCell"][];
+        };
+        SpecSheet: {
+            products: components["schemas"]["SpecProduct"][];
+            rows: components["schemas"]["SpecRow"][];
+            statements: components["schemas"]["SpecStatement"][];
+        };
+        SpecStatement: {
+            productId: string;
+            text: string;
+            evidence: components["schemas"]["SpecEvidence"];
+        };
         StockRowView: {
             sku: string;
             warehouseCode: string;
@@ -1813,6 +1869,36 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReviewClaimConflict"];
                 };
+            };
+        };
+    };
+    GetProductSpecs: {
+        parameters: {
+            query: {
+                codes: string;
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpecSheet"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

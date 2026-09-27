@@ -55,6 +55,8 @@ internal sealed class ProductClaimConfiguration : IEntityTypeConfiguration<Produ
         builder.Property(claim => claim.ReviewedBy).HasMaxLength(200);
         builder.Property(claim => claim.ReviewedAt);
         builder.Property(claim => claim.CreatedAt);
+        builder.Property(claim => claim.AppliedAs).HasMaxLength(200);
+        builder.Property(claim => claim.ApplicationRefused).HasMaxLength(40);
 
         builder.ComplexProperty(claim => claim.Provenance, provenance =>
         {

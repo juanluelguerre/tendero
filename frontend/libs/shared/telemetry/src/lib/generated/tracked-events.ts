@@ -31,6 +31,28 @@ export interface TrackedEvents {
     /** The page before this one, by kind; direct when there was none in this tab. */
     readonly arrived_from: 'search' | 'category' | 'home' | 'other' | 'direct';
   };
+
+  /**
+   * A shopper opened the words behind a spec — the quote and its support. Only with analytics consent.
+   *
+   * Specs with their source: Do shoppers open the sentence behind a spec, and do they compare products side by side once they can?
+   * Decides: If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have.
+   */
+  readonly spec_source_opened: {
+    /** Where the value came from; only a value an approved claim put there has words to open. */
+    readonly source: 'description';
+  };
+
+  /**
+   * A shopper opened a side-by-side comparison. Only with analytics consent.
+   *
+   * Specs with their source: Do shoppers open the sentence behind a spec, and do they compare products side by side once they can?
+   * Decides: If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have.
+   */
+  readonly products_compared: {
+    /** How many products were compared, two to four. */
+    readonly products: number;
+  };
 }
 
 /**
@@ -40,4 +62,6 @@ export interface TrackedEvents {
 export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavioural' | 'technical'>> = {
   webmcp_tool_invoked: 'behavioural',
   product_viewed: 'behavioural',
+  spec_source_opened: 'behavioural',
+  products_compared: 'behavioural',
 };

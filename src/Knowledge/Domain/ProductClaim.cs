@@ -102,6 +102,38 @@ public sealed class ProductClaim : AggregateRoot
     public IReadOnlyList<Evidence> Evidence => this.evidence;
 
     /// <summary>
+    /// How Catalog holds the value this claim applied — its culture-free key
+    /// ("GLASS", "3", "true") — once a person approved it and Catalog accepted it.
+    /// What a spec row is matched on (P10-7): the quote is shown beside a value only
+    /// when the product holds exactly the value the claim put there, so a later
+    /// reimport that changed it leaves the row with its catalogue source, not a
+    /// quote that no longer supports it.
+    /// </summary>
+    public string? AppliedAs { get; private set; }
+
+    /// <summary>Why Catalog would not hold the value — its answer, in one word — or null.</summary>
+    public string? ApplicationRefused { get; private set; }
+
+    /// <summary>
+    /// What Catalog answered when the approval was applied. Not a transition: the
+    /// claim stays approved either way — a person stood behind the statement, and
+    /// it is still true as a sentence — but a refused one types nothing and is
+    /// shown as a statement only.
+    /// </summary>
+    public void RecordApplication(string? heldAs, string? refusal)
+    {
+        if (Status != ClaimStatus.Approved)
+            throw new InvalidOperationException($"Only an approved claim is applied; claim {Id} is {Status}.");
+        if (AttributeCode is null)
+            throw new InvalidOperationException($"Claim {Id} types no attribute; there is nothing to apply.");
+        if ((heldAs is null) == (refusal is null))
+            throw new ArgumentException("Catalog either holds the value or refused it.", nameof(refusal));
+
+        AppliedAs = heldAs;
+        ApplicationRefused = refusal;
+    }
+
+    /// <summary>
     /// What the review screen shows: the claim's <em>weakest</em> support. A
     /// confident claim resting on a thin quote is the failure worth surfacing.
     /// </summary>

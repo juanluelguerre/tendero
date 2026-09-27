@@ -644,7 +644,9 @@ constrain it; same process so it shares the DI container and can reuse handlers.
 
 Five tools: `search_products`, `get_product`, `list_categories`,
 `get_product_specs`, `compare_products`. The last two are the differentiator —
-they answer from approved, source-backed claims.
+they answer from approved, source-backed claims. *(Phase 9 shipped the first
+three with two stand-ins; the last two arrived in phase 10, P10-7, over one
+`ProductSpecs` query shared with the storefront.)*
 
 **Reuse is enforced, not encouraged.** Each tool is about six lines: build the
 query record, call `IQueryDispatcher`, map to a flat result — never returning a

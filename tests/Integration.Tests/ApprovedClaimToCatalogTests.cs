@@ -23,7 +23,8 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// the approval leaves Knowledge through the outbox, the worker turns it into
 /// Catalog's own command, and the product holds the value — Knowledge never
 /// touching a product (ADR 0018). The product's own <c>ProductUpserted</c> then
-/// reindexes it on the next pass, as any other change would.
+/// reindexes it on the next pass, as any other change would — and Catalog's
+/// answer is recorded back on the claim, which the specs table matches on.
 ///
 /// The worker's container is composed here the way <c>AddTenderoWorker</c> does
 /// it: Catalog's single slice, not its assembly — so a registration missing from
@@ -67,6 +68,11 @@ public sealed class ApprovedClaimToCatalogTests(PostgresFixture postgres)
         var product = await reread.Products.SingleAsync(p => p.Id == pan, ct);
         Assert.Equal(3m, product.AttributeFor("CAPACITY_L")?.Number);
         Assert.NotEqual("unobtainium", product.AttributeFor("MATERIAL")?.RawText);
+
+        // Catalog's answer went back onto each claim, as values.
+        var claims = await reread.Claims.Where(claim => claim.ProductId == pan).ToListAsync(ct);
+        Assert.Equal("3", claims.Single(claim => claim.AttributeCode == "CAPACITY_L").AppliedAs);
+        Assert.Equal("value_rejected", claims.Single(claim => claim.AttributeCode == "MATERIAL").ApplicationRefused);
 
         var audited = await reread.AuditEntries.Where(entry => entry.CommandType == nameof(SetProductAttributeCommand)).ToListAsync(ct);
         Assert.Equal(2, audited.Count);

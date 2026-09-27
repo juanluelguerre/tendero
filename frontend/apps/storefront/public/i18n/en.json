@@ -203,5 +203,30 @@
     "more": "Show more products",
     "loadingMore": "Loading…",
     "title": "Section"
+  },
+  "specs": {
+    "noData": "no data",
+    "fromCatalogue": "Catalogue",
+    "fromDescription": "From the description",
+    "quoteTitle": "The product description says",
+    "support": "Text support: {{ percent }}%",
+    "supportNote": "Measured by a model that checks whether the sentence supports the value. A person at the shop approved it.",
+    "alsoSays": "Also"
+  },
+  "compare": {
+    "title": "Compare products",
+    "pick": "Compare",
+    "picked": "In the comparison",
+    "tray": "Products to compare",
+    "remove": "Remove {{ name }} from the comparison",
+    "clear": "Clear",
+    "go": "Compare ({{ count }})",
+    "pickAnother": "Pick another product to compare",
+    "tooFew": "Pick at least two products to compare them.",
+    "backToShop": "Back to the shop",
+    "loading": "Loading the comparison…",
+    "failed": "We could not load the comparison. Try again in a moment.",
+    "attribute": "Feature",
+    "note": "\"No data\" means the shop does not know it: we do not make it up."
   }
 }

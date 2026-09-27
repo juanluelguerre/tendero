@@ -21,6 +21,8 @@ export class ShopLinks {
   readonly cart = computed(() => ['/', this.culture(), 'cart']);
   readonly checkout = computed(() => ['/', this.culture(), 'checkout']);
   readonly account = computed(() => ['/', this.culture(), 'account']);
+  /** The comparison; the products travel in `?codes=`, so it can be shared (P10-7). */
+  readonly compare = computed(() => ['/', this.culture(), 'compare']);
 
   /**
    * A department or a section. The CODE is in the URL and not the name, for the

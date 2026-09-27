@@ -106,6 +106,33 @@ public sealed class ProductClaimTests
         Assert.Throws<ArgumentException>(() => ProductClaim.Propose(Pan, statement, "INDUCTION", null, [Quoted("horno")], provenance, Clock));
     }
 
+    /// <summary>
+    /// Catalog's answer is recorded on an approved, typed claim, and is one of the
+    /// two: the value as held, or the refusal. Anything else is a caller's bug.
+    /// </summary>
+    [Fact]
+    public void Only_an_approved_typed_claim_records_what_catalog_answered_and_only_one_answer()
+    {
+        var proposed = Induction();
+        Assert.Throws<InvalidOperationException>(() => proposed.RecordApplication("true", null));
+
+        var untyped = ProductClaim.Propose(
+            Pan, LocalizedText.From("es", "Va al horno."), null, null, [Quoted("horno")],
+            new Provenance("rules", null, null, null, "run-1", Clock.GetUtcNow()), Clock);
+        untyped.Approve("shopkeeper@tendero", Clock);
+        Assert.Throws<InvalidOperationException>(() => untyped.RecordApplication("true", null));
+
+        var approved = Induction();
+        approved.Approve("shopkeeper@tendero", Clock);
+        Assert.Throws<ArgumentException>(() => approved.RecordApplication(null, null));
+        Assert.Throws<ArgumentException>(() => approved.RecordApplication("true", "value_rejected"));
+
+        approved.RecordApplication(null, "value_rejected");
+        Assert.Equal((null, "value_rejected"), (approved.AppliedAs, approved.ApplicationRefused));
+        approved.RecordApplication("true", null);
+        Assert.Equal(("true", (string?)null), (approved.AppliedAs, approved.ApplicationRefused));
+    }
+
     private static void Move(ProductClaim claim, ClaimStatus to)
     {
         switch (to)
