@@ -15,6 +15,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// reasoned-and-wrong grounds that an empty map advertises a checkout we cannot
 /// honour. Prose describes a schema. Only the schema is the schema.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpProfileConformanceTests
 {
     private const string BusinessProfile = "https://ucp.dev/schemas/profile.json#/$defs/business_schema";
