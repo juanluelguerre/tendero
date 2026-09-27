@@ -12,6 +12,16 @@
          shop's tab. -->
     <link rel="icon" type="image/svg+xml" href="brand/tendero-icon-shop.svg" />
     <link rel="alternate icon" type="image/x-icon" href="favicon.ico" />
+    <!-- The theme before the first paint (the redesign's R-5.1). ThemeStore owns the
+         choice once Angular runs; this only keeps the page from flashing the
+         wrong one while it starts. Same key and rule as ThemeStore. -->
+    <script>
+      try {
+        var choice = localStorage.getItem('tendero.theme');
+        var dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <storefront-root></storefront-root>

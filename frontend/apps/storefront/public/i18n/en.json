@@ -87,7 +87,10 @@
     "continueShopping": "Continue shopping",
     "language": "Language",
     "skipToContent": "Skip to content",
-    "shop": "Shop"
+    "shop": "Shop",
+    "close": "Close the menu",
+    "search": "Search the shop",
+    "searchLabel": "Search the shop"
   },
   "order": {
     "lines": "What you bought",
@@ -236,5 +239,15 @@
     "failed": "We could not load the comparison. Try again in a moment.",
     "attribute": "Feature",
     "note": "\"No data\" means the shop does not know it: we do not make it up."
+  },
+  "menu": {
+    "here": "You are here · all of it",
+    "all": "All of it"
+  },
+  "theme": {
+    "label": "Theme",
+    "system": "As the system",
+    "light": "Light",
+    "dark": "Dark"
   }
 }

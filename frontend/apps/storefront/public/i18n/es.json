@@ -87,7 +87,10 @@
     "continueShopping": "Seguir comprando",
     "language": "Idioma",
     "skipToContent": "Saltar al contenido",
-    "shop": "Tienda"
+    "shop": "Tienda",
+    "close": "Cerrar el menú",
+    "search": "Buscar en la tienda",
+    "searchLabel": "Buscar en la tienda"
   },
   "order": {
     "lines": "Lo que has comprado",
@@ -236,5 +239,15 @@
     "failed": "No hemos podido cargar la comparación. Inténtalo dentro de un momento.",
     "attribute": "Característica",
     "note": "«sin dato» quiere decir que la tienda no lo sabe: no lo inventamos."
+  },
+  "menu": {
+    "here": "Estás aquí · ver todo",
+    "all": "Ver todo"
+  },
+  "theme": {
+    "label": "Tema",
+    "system": "Como el sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
   }
 }

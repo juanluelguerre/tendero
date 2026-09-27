@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-29 features: **24** answered by a signal emitted today,
+30 features: **25** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -28,6 +28,7 @@ everything here that is not *planned* is emitted.
 | Order page | Do shoppers come back to follow an order? | None today. | — No decision depends on the answer: the page is the receipt, and it stays whatever the count is. A signal with no decision does not enter the plan. | none |
 | Returns | Why do things come back? | Wrong size and not-as-described are the product reasoning layer's case (phase 10); damaged and wrong item are the warehouse's. | `tendero.returns.requested` | emitted |
 | Account and guest cart claim | Do guests sign in, and does their cart survive it? | Whether guest checkout stays the default path. | — Not measured yet, and not planned: sign-in is the identity provider's, and the claim is one call with no screen of its own. Revisit when accounts do more than hold orders. | none |
+| Storefront theme choice | Do shoppers change the theme from their system's, and does the dark shop hold the same conversion? | If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else. | `theme_chosen` | emitted |
 
 ### Backoffice
 
@@ -184,6 +185,18 @@ Answers:
 |---|---|---|---|
 | `affordance` | string | `palette`, `keys` | The palette (Ctrl K or /), or j and k down a queue. |
 | `target` | string | `screen`, `order`, `product`, `agent`, `next`, `previous` | What it reached; never which one. |
+
+### `theme_chosen`
+
+browser event, behavioural. A shopper chose light, dark or the system's theme (the redesign's R-5.1). Behavioural, so it waits for analytics consent.
+
+Answers:
+
+- **Storefront theme choice** — Do shoppers change the theme from their system's, and does the dark shop hold the same conversion?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `theme` | string | `system`, `light`, `dark` | What was chosen, not what the system resolved it to. |
 
 ## Metrics
 

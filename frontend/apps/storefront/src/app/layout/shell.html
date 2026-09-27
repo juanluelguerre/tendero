@@ -1,65 +1,66 @@
 <ng-container *transloco="let t">
   <a class="skip" href="#main">{{ t('nav.skipToContent') }}</a>
 
+  <!-- The row that sticks (R-3, S-P4): the way into the shop, the brand and the
+       basket. Only this row: on a phone its 56 px is all the product page
+       spends, and the Add to cart button stays inside the first screen. -->
   <header class="header">
-    <div class="page-frame header__inner">
+    <div class="page-frame header__row">
+      <!-- TIENDA became the menu it always looked like (R-1, S-F6): a
+           disclosure on a desktop, the drawer on a phone. -->
+      <button
+        #menuButton
+        type="button"
+        class="menu-button"
+        aria-controls="shop-menu"
+        [attr.aria-expanded]="expanded()"
+        (click)="toggleMenu()"
+      >
+        <svg class="menu-button__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <span>{{ t('nav.shop') }}</span>
+      </button>
+
       <a class="brand" [routerLink]="home()">
-        <!-- The icon, not the full lockup: the wordmark beside it already
-             uses real Bricolage, and the text embedded in the SVG only has
-             Inter to fall back on. Two different typefaces for the same word
-             show. Empty alt and aria-hidden because the name is right next
-             to it as text: reading it twice is a nuisance. -->
-        <img
-          class="brand__mark"
-          src="brand/tendero-icon-shop.svg"
-          alt=""
-          aria-hidden="true"
-          width="40"
-          height="40"
-        />
+        <!-- The icon, not the full lockup: the wordmark beside it already uses
+             real Bricolage, and the text embedded in the SVG only has Inter to
+             fall back on. Empty alt because the name is right next to it. -->
+        <img class="brand__mark" src="brand/tendero-icon-shop.svg" alt="" aria-hidden="true" width="40" height="40" />
         <span class="brand__text">
           <span class="brand__wordmark">{{ t('brand.name') }}</span>
           <span class="brand__tagline">{{ t('brand.tagline') }}</span>
         </span>
       </a>
+
+      @if (!onHome()) {
+        <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--row' }" />
+      }
+
       <div class="header__end">
-        <!-- The switcher is a pair of buttons and not a <select>: with two
-             options a dropdown hides half the answer behind a click, and
-             the current language should be readable without opening
-             anything. -->
-        <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
+        <!-- A pair of buttons and not a <select>: with two options a dropdown
+             hides half the answer behind a click. On a phone it moves to the
+             drawer's foot. -->
+        <div class="langs wide-only" role="group" [attr.aria-label]="t('nav.language')">
           @for (option of cultures; track option) {
-            <button
-              type="button"
-              class="lang"
-              [class.lang--active]="option === culture()"
-              [attr.aria-pressed]="option === culture()"
-              (click)="use(option)"
-            >
+            <button type="button" class="lang" [class.lang--active]="option === culture()" [attr.aria-pressed]="option === culture()" (click)="use(option)">
               {{ option }}
             </button>
           }
         </div>
-        <span class="brand__area eyebrow">{{ t('brand.area') }}</span>
 
-        <a class="account" [routerLink]="accountLink()" [attr.aria-label]="t('nav.account')">
+        <a class="account wide-only" [routerLink]="accountLink()" [attr.aria-label]="t('nav.account')">
           <svg class="account__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <circle cx="12" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6" />
-            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor"
-                  stroke-width="1.6" stroke-linecap="round" />
+            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
           </svg>
         </a>
 
         <!-- The basket. The count is on the badge and also in the label,
-             because a number in a circle is not something a screen reader
-             can make sense of on its own. -->
-        <a class="cart" [routerLink]="cartLink()"
-           [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'">
+             because a number in a circle means nothing to a screen reader. -->
+        <a class="cart" [routerLink]="cartLink()" [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'">
           <svg class="cart__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path
-              d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6"
-              fill="none" stroke="currentColor" stroke-width="1.6"
-              stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
             <circle cx="10" cy="19.5" r="1.4" fill="currentColor" />
             <circle cx="17" cy="19.5" r="1.4" fill="currentColor" />
           </svg>
@@ -69,10 +70,28 @@
         </a>
       </div>
     </div>
-    <!-- The signature, and the only decoration in the system. It marks where
-         the chrome ends and the shop begins. -->
-    <hr class="awning" />
+
+    <!-- The desktop's panel, under the row and over the page. -->
+    @if (menuOpen()) {
+      <div class="menu-panel" id="shop-menu">
+        <div class="page-frame">
+          <storefront-shop-menu [current]="department()" (chosen)="closeMenu(false)" />
+        </div>
+      </div>
+    }
   </header>
+
+  <!-- On a phone, search has a row of its own that scrolls away with the page;
+       the home page is a search, so it does not repeat one there. -->
+  @if (!onHome()) {
+    <div class="page-frame search-row narrow-only">
+      <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--full' }" />
+    </div>
+  }
+
+  <!-- The signature, and the only decoration in the system. It marks where the
+       chrome ends and the shop begins. -->
+  <hr class="awning" />
 
   <main id="main" class="page-frame main"><router-outlet /></main>
 
@@ -81,8 +100,43 @@
   <footer class="footer">
     <div class="page-frame footer__inner">
       <span class="muted">{{ t('brand.name') }} · {{ t('brand.tagline') }}</span>
+      <storefront-theme-switch class="wide-only" />
     </div>
   </footer>
+
+  <!-- The phone's menu: a modal dialog, so the platform traps the focus, closes
+       on Esc and makes the page behind it inert. -->
+  <dialog #drawer class="drawer" [attr.aria-label]="t('nav.shop')" (close)="drawerOpen.set(false)">
+    <div class="drawer__head">
+      <span class="drawer__title">{{ t('nav.shop') }}</span>
+      <button type="button" class="drawer__close" [attr.aria-label]="t('nav.close')" (click)="drawer.close()">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+    @if (drawerOpened()) {
+      <storefront-shop-menu class="drawer__menu" mode="drawer" [current]="department()" (chosen)="drawer.close()" />
+    }
+    <div class="drawer__foot">
+      <a class="drawer__account" [routerLink]="accountLink()" (click)="drawer.close()">{{ t('nav.account') }}</a>
+      <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
+        @for (option of cultures; track option) {
+          <button type="button" class="lang" [class.lang--active]="option === culture()" [attr.aria-pressed]="option === culture()" (click)="use(option)">
+            {{ option }}
+          </button>
+        }
+      </div>
+      <storefront-theme-switch />
+    </div>
+  </dialog>
+
+  <ng-template #search let-variant>
+    <form class="search" [class]="variant" role="search" (submit)="$event.preventDefault(); find(box.value)">
+      <label class="sr-only" [for]="'find-' + variant">{{ t('nav.searchLabel') }}</label>
+      <input #box class="search__input" type="search" [id]="'find-' + variant" [placeholder]="t('nav.search')" />
+    </form>
+  </ng-template>
 
   <storefront-consent-banner />
 </ng-container>

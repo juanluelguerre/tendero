@@ -86,10 +86,6 @@
             <h1 class="detail__name">{{ item.name }}</h1>
             <p class="detail__price numeric">{{ price() }}</p>
 
-            @if (item.description) {
-              <p class="detail__description">{{ item.description }}</p>
-            }
-
             <!-- Every option the CATALOGUE defines, not the ones that happen to
                  have a variant. A size that exists in navy and not in black
                  renders disabled: hiding it tells the shopper their size is not
@@ -156,6 +152,13 @@
                 <p class="buy__sku numeric muted">{{ t('product.sku', { sku: variant.sku }) }}</p>
               }
             </div>
+
+            <!-- After the action, not before it (the redesign's R-5.1): on a phone
+                 the description pushed Añadir al carrito out of the first screen,
+                 and price, options, buy is the order a decision is made in. -->
+            @if (item.description) {
+              <p class="detail__description">{{ item.description }}</p>
+            }
 
             <!-- The promise, and only the part the code will honour.
                  The window runs from DELIVERY because that is what

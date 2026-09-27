@@ -250,6 +250,15 @@
       ]
     },
     {
+      "name": "Storefront theme choice",
+      "area": "storefront",
+      "question": "Do shoppers change the theme from their system's, and does the dark shop hold the same conversion?",
+      "decision": "If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else.",
+      "signals": [
+        "theme_chosen"
+      ]
+    },
+    {
       "name": "Palette and list shortcuts",
       "area": "backoffice",
       "question": "Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?",
@@ -485,6 +494,22 @@
             "previous"
           ],
           "description": "What it reached; never which one."
+        }
+      }
+    },
+    {
+      "name": "theme_chosen",
+      "description": "A shopper chose light, dark or the system's theme (the redesign's R-5.1). Behavioural, so it waits for analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "theme": {
+          "type": "string",
+          "values": [
+            "system",
+            "light",
+            "dark"
+          ],
+          "description": "What was chosen, not what the system resolved it to."
         }
       }
     }

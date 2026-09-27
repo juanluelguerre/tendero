@@ -119,6 +119,17 @@ export interface TrackedEvents {
     /** What it reached; never which one. */
     readonly target: 'screen' | 'order' | 'product' | 'agent' | 'next' | 'previous';
   };
+
+  /**
+   * A shopper chose light, dark or the system's theme (the redesign's R-5.1). Behavioural, so it waits for analytics consent.
+   *
+   * Storefront theme choice: Do shoppers change the theme from their system's, and does the dark shop hold the same conversion?
+   * Decides: If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else.
+   */
+  readonly theme_chosen: {
+    /** What was chosen, not what the system resolved it to. */
+    readonly theme: 'system' | 'light' | 'dark';
+  };
 }
 
 /**
@@ -137,4 +148,5 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   backoffice_action_taken: 'staff',
   backoffice_theme_chosen: 'staff',
   backoffice_affordance_used: 'staff',
+  theme_chosen: 'behavioural',
 };
