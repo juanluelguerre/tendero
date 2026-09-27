@@ -758,7 +758,7 @@ proposal, and a note to the UCP community. `#UCP #AP2 #agenticcommerce #dotnet #
 
 ---
 
-## Between 11 and 12 · A backoffice review, and the plan it produces
+## Between 11 and 12 · A backoffice review, and the plan it produces (the storefront's navigation too)
 
 `no empezada` · priority **high** · size **S** (the review; the plan sizes the rest)
 
@@ -772,6 +772,7 @@ that is about to change shape.
 - [ ] `R-1` Audit every backoffice view at phone, tablet, laptop and wide widths: layout, density, overflow, touch targets, keyboard paths, empty/loading/error states, and what the accessibility pass (ADR 0034) already holds — **S**
 - [ ] `R-2` Benchmark against current admin UX (Shopify Admin/Polaris, Linear, Stripe Dashboard, Seller Central): command palette, inline editing, bulk actions, optimistic updates, saved views, keyboard shortcuts, skeletons, contextual help — each judged for what it earns here, not adopted because it is fashionable — **S**
 - [ ] `R-3` The proposal: findings with screenshots, what to adopt and why, ordered and sized, within the design system (`design/DESIGN.md`, tokens only, one clay action per view), committed first as a document so the author can read it before anything built on it merges — **S**
+- [ ] `R-5` **The storefront's navigation** (the author, 2026-09-27: *"in the storefront I miss a menu or something, don't I?"*): the header has the logo, the language, the account and the cart, and no way into the catalogue — the taxonomy the backlog calls *invisible*. A category menu from `ListCategories` (a panel on a wide screen, a drawer on a phone, keyboard-complete), reviewed with the backoffice in `R-1`–`R-3` and built in `R-4` — **M**
 - [ ] `R-4` Build it, on its own branch cut from phase 11's (the author, 2026-09-27: *when phase 11 is done, continue on a new branch from it with the new design proposal*) — sized by `R-3`
 
 ---

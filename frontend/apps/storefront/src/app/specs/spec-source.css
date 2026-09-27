@@ -39,6 +39,17 @@
   box-shadow: var(--shadow-pop);
 }
 
+/* Beside its chip where the browser can anchor it, and never off-screen: the
+   fallback flips it above when there is no room below. Elsewhere it stays
+   centred, which is the popover's own default. */
+@supports (position-area: bottom) {
+  .quote {
+    margin: var(--space-2) 0 0;
+    position-area: bottom span-right;
+    position-try-fallbacks: flip-block, flip-inline;
+  }
+}
+
 .quote::backdrop {
   background: transparent;
 }

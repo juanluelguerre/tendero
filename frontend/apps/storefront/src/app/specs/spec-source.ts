@@ -29,8 +29,16 @@ export class SpecSource {
 
   protected readonly id = `spec-source-${next++}`;
 
-  /** Support as a whole percentage — the NLI model's measure, not the extractor's say-so. */
-  protected readonly percent = computed(() => Math.round((this.evidence()?.support ?? 0) * 100));
+
+  /**
+   * Support as a whole percentage — the NLI model's measure, not the extractor's
+   * say-so — rounded DOWN: 0.996 read "100 %" in the first live run, which is a
+   * certainty nothing here has.
+   */
+  protected readonly percent = computed(() => Math.floor((this.evidence()?.support ?? 0) * 100));
+
+  /** Ties the popover to its chip where the browser supports anchor positioning; centred otherwise. */
+  protected readonly anchor = `--${this.id}`;
 
   /** Only a value an approved claim put there has words to open, so the source is always `description` here. */
   protected opened(event: Event): void {

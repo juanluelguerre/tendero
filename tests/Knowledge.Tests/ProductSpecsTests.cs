@@ -101,6 +101,37 @@ public sealed class ProductSpecsTests
         Assert.Contains(sheet.Statements, statement => statement.Text == "Tiene asa de baquelita." && statement.Evidence.Support == 0.9);
     }
 
+    /// <summary>
+    /// Found in the first live run: "glass carafe" under "jarra de vidrio" on a
+    /// Spanish page. The page's language when the claim has words in it, and
+    /// every quote when it has none — never no evidence at all.
+    /// </summary>
+    [Fact]
+    public async Task Quotes_come_in_the_pages_language_when_the_claim_has_words_in_it()
+    {
+        var spanish = SourceDocument.Describe(this.moka, "es", MokaText, this.clock);
+        var english = SourceDocument.Describe(this.moka, "en", "Aluminium stovetop coffee maker for 6 cups.", this.clock);
+        this.knowledge.Add(spanish);
+        this.knowledge.Add(english);
+        var claim = ProductClaim.Propose(
+            this.moka,
+            LocalizedText.From("es", "Es de aluminio.").With("en", "It is aluminium."),
+            "MATERIAL", "aluminio",
+            [new Evidence(spanish.Id, spanish.Locate("de aluminio")!, 0.95), new Evidence(english.Id, english.Locate("Aluminium")!, 0.9)],
+            new Provenance("rules", null, null, null, "run", this.clock.GetUtcNow()),
+            this.clock);
+        this.knowledge.Add(claim);
+        await ApproveAndApplyAsync(claim, heldAs: "ALUMINIUM");
+
+        var sheet = await new ProductSpecsHandler(this.facts, this.knowledge)
+            .HandleAsync(new ProductSpecsQuery(["CAF-001"], "en"), TestContext.Current.CancellationToken);
+
+        var quote = Assert.Single(sheet.Rows.Single(row => row.AttributeCode == "MATERIAL").Cells.Single().Evidence!.Quotes);
+        Assert.Equal(("en", "Aluminium"), (quote.Culture, quote.Text));
+        // The claim's support is still its weakest quote's, whichever language is shown.
+        Assert.Equal(0.9, sheet.Rows.Single(row => row.AttributeCode == "MATERIAL").Cells.Single().Evidence!.Support);
+    }
+
     [Fact]
     public async Task A_product_a_shopper_cannot_see_is_simply_not_there()
     {

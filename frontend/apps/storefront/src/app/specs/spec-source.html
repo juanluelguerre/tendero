@@ -1,9 +1,9 @@
 <ng-container *transloco="let t">
   @if (source() === 'description' && evidence(); as proof) {
-    <button class="chip chip--description" type="button" [attr.popovertarget]="id">
+    <button class="chip chip--description" type="button" [attr.popovertarget]="id" [style.anchor-name]="anchor">
       {{ t('specs.fromDescription') }}
     </button>
-    <div class="quote" popover [id]="id" (toggle)="opened($event)">
+    <div class="quote" popover [id]="id" [style.position-anchor]="anchor" (toggle)="opened($event)">
       <p class="quote__title">{{ t('specs.quoteTitle') }}</p>
       @for (quote of proof.quotes; track $index) {
         <blockquote class="quote__text" [attr.lang]="quote.culture || null">“{{ quote.text }}”</blockquote>

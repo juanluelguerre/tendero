@@ -96,7 +96,7 @@ public sealed class ProductSpecsHandler(IProductFacts facts, IKnowledgeRepositor
             sheets.Add((product, [.. standing.Where(claim => claim.Status == ClaimStatus.Approved)]));
         }
 
-        var quotes = new QuoteReader(knowledge);
+        var quotes = new QuoteReader(knowledge, query.Culture);
         var rows = new List<SpecRow>();
         foreach (var (code, label) in RowsOf(products))
         {
@@ -155,8 +155,13 @@ public sealed class ProductSpecsHandler(IProductFacts facts, IKnowledgeRepositor
             claim is null ? null : await quotes.EvidenceAsync(claim, cancellationToken));
     }
 
-    /// <summary>A claim's quotes with their culture, which is their document's; each document read once.</summary>
-    private sealed class QuoteReader(IKnowledgeRepository knowledge)
+    /// <summary>
+    /// A claim's quotes with their culture, which is their document's; each
+    /// document read once. Only the page's language when the claim has words in
+    /// it — the first live run showed "glass carafe" under "jarra de vidrio" on a
+    /// Spanish page — and every quote when it has none, rather than no evidence.
+    /// </summary>
+    private sealed class QuoteReader(IKnowledgeRepository knowledge, string culture)
     {
         private readonly Dictionary<SourceDocumentId, string> cultures = [];
 
@@ -165,16 +170,17 @@ public sealed class ProductSpecsHandler(IProductFacts facts, IKnowledgeRepositor
             var quotes = new List<SpecQuote>(claim.Evidence.Count);
             foreach (var evidence in claim.Evidence)
             {
-                if (!this.cultures.TryGetValue(evidence.Document, out var culture))
+                if (!this.cultures.TryGetValue(evidence.Document, out var documentCulture))
                 {
-                    culture = (await knowledge.FindDocumentAsync(evidence.Document, cancellationToken))?.Culture ?? "";
-                    this.cultures[evidence.Document] = culture;
+                    documentCulture = (await knowledge.FindDocumentAsync(evidence.Document, cancellationToken))?.Culture ?? "";
+                    this.cultures[evidence.Document] = documentCulture;
                 }
 
-                quotes.Add(new SpecQuote(culture, evidence.Quote.Text));
+                quotes.Add(new SpecQuote(documentCulture, evidence.Quote.Text));
             }
 
-            return new SpecEvidence(claim.Support, quotes);
+            var inCulture = quotes.Where(quote => quote.Culture == culture).ToList();
+            return new SpecEvidence(claim.Support, inCulture.Count > 0 ? inCulture : quotes);
         }
     }
 }

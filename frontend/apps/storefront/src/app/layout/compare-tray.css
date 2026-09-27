@@ -1,7 +1,14 @@
-.tray {
+/* The host is what sticks: a sticky element cannot leave its parent, and the
+   component's own element is that parent — inline by default, so the tray
+   stuck to nothing until the host became the sticky box. */
+:host {
+  display: block;
   position: sticky;
   inset-block-end: 0;
   z-index: 10;
+}
+
+.tray {
   border-block-start: 1px solid var(--border);
   background: var(--bg-surface);
   box-shadow: var(--shadow-pop);
