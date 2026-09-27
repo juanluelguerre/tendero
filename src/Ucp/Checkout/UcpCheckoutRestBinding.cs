@@ -25,29 +25,29 @@ public static class UcpCheckoutRestBinding
             // publishes its own description (ADR 0030).
             .WithMetadata(new ExcludeFromDescriptionAttribute());
 
-        group.MapPost("/", (UcpCheckoutRequest request, HttpContext http, ICommandDispatcher commands, CancellationToken ct) =>
-                WithNegotiation(http, ct, (active, links, culture) =>
-                    UcpCheckoutOperations.CreateAsync(commands, request, culture(request.Context?.Language), active, links, ct)))
+        group.MapPost("/", (UcpCheckoutRequest request, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
+                WithNegotiation(http, ct, (call, culture) =>
+                    checkout.CreateAsync(request, culture(request.Context?.Language), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("create_checkout"));
 
-        group.MapGet("/{id:guid}", (Guid id, HttpContext http, IQueryDispatcher queries, CancellationToken ct) =>
-                WithNegotiation(http, ct, (active, links, culture) =>
-                    UcpCheckoutOperations.GetAsync(queries, id, culture(null), active, links, ct)))
+        group.MapGet("/{id:guid}", (Guid id, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
+                WithNegotiation(http, ct, (call, culture) =>
+                    checkout.GetAsync(id, culture(null), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("get_checkout"));
 
-        group.MapPut("/{id:guid}", (Guid id, UcpCheckoutRequest request, HttpContext http, ICommandDispatcher commands, CancellationToken ct) =>
-                WithNegotiation(http, ct, (active, links, culture) =>
-                    UcpCheckoutOperations.UpdateAsync(commands, id, request, culture(request.Context?.Language), active, links, ct)))
+        group.MapPut("/{id:guid}", (Guid id, UcpCheckoutRequest request, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
+                WithNegotiation(http, ct, (call, culture) =>
+                    checkout.UpdateAsync(id, request, culture(request.Context?.Language), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("update_checkout"));
 
-        group.MapPost("/{id:guid}/complete", (Guid id, UcpCompleteRequest request, HttpContext http, ICommandDispatcher commands, CancellationToken ct) =>
-                WithNegotiation(http, ct, (active, links, culture) =>
-                    UcpCheckoutOperations.CompleteAsync(commands, id, request, http.Request.Headers["Idempotency-Key"].FirstOrDefault(), culture(null), active, links, ct)))
+        group.MapPost("/{id:guid}/complete", (Guid id, UcpCompleteRequest request, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
+                WithNegotiation(http, ct, (call, culture) =>
+                    checkout.CompleteAsync(id, request, http.Request.Headers["Idempotency-Key"].FirstOrDefault(), culture(null), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("complete_checkout"));
 
-        group.MapPost("/{id:guid}/cancel", (Guid id, HttpContext http, ICommandDispatcher commands, CancellationToken ct) =>
-                WithNegotiation(http, ct, (active, links, culture) =>
-                    UcpCheckoutOperations.CancelAsync(commands, id, culture(null), active, links, ct)))
+        group.MapPost("/{id:guid}/cancel", (Guid id, HttpContext http, UcpCheckoutOperations checkout, CancellationToken ct) =>
+                WithNegotiation(http, ct, (call, culture) =>
+                    checkout.CancelAsync(id, culture(null), call, ct)))
             .AddEndpointFilter(UcpToolCounting.CountedAs("cancel_checkout"));
 
         return group;
@@ -61,15 +61,14 @@ public static class UcpCheckoutRestBinding
     /// </summary>
     private static async Task<IResult> WithNegotiation(
         HttpContext http, CancellationToken ct,
-        Func<IReadOnlySet<string>, UcpLinks, Func<string?, string>, Task<UcpAnswer>> operation)
+        Func<UcpCheckoutCall, Func<string?, string>, Task<UcpAnswer>> operation)
     {
         var profiles = http.RequestServices.GetRequiredService<IPlatformProfiles>();
-        var (active, refusal) = await UcpCheckoutOperations.NegotiateAsync(
+        var (negotiated, refusal) = await UcpCheckoutOperations.NegotiateAsync(
             UcpAgentHeader.ProfileOf(http.Request.Headers[UcpAgentHeader.Name].FirstOrDefault()), profiles, ct);
 
         var answer = refusal ?? await operation(
-            active!,
-            new UcpLinks($"{http.Request.Scheme}://{http.Request.Host}", http.RequestServices.GetRequiredService<IOptions<UcpOptions>>().Value.StorefrontUrl),
+            new UcpCheckoutCall(negotiated!, new UcpLinks($"{http.Request.Scheme}://{http.Request.Host}", http.RequestServices.GetRequiredService<IOptions<UcpOptions>>().Value.StorefrontUrl)),
             language => CultureNegotiation.Resolve(language, http.Request.Headers.AcceptLanguage));
 
         // Declared as object, so the serializer writes the runtime type: a checkout,

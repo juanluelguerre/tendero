@@ -26,8 +26,11 @@ to carry `payment_handlers`, so omitting it makes the document invalid rather
 than modest. An empty map does not advertise a checkout — it says this shop
 settles no payments over UCP, which is exactly true until phase 11.
 
-`keys` stays absent, because that one really is optional and there is nothing to
-publish until something is signed.
+`keys` stayed absent until something was signed. Since P11-4 it holds the shop's
+public key (ADR 0040): `ap2.merchant_authorization` on every checkout, once AP2 is
+negotiated, is verified with it — by the platform before it shows the checkout,
+and by the shop when the checkout comes back inside a mandate. `Signing/` holds JCS,
+JWS and JWK; `Ap2/` holds SD-JWT, the mandate verifiers and the development platform.
 
 ## The version is pinned, and no conformance is claimed
 

@@ -205,3 +205,49 @@ adds the shop's own rules.
   the person's account, the audit row names the agent that placed it, and the
   session belongs to the agent. The mandate that says *how much* it may spend is
   `P11-4` (§7).
+
+## 9 · The checkout mandate, where UCP and AP2 seem to disagree (`P11-4`)
+
+Read at UCP 2026-08-25 (`docs/specification/payment/extensions/ap2-mandates.md`)
+and AP2 v0.2.0 (`schemas/checkout_mandate.json`, `docs/.../checkout_mandate.md`).
+
+- **UCP says** the checkout mandate "MUST contain the full checkout response
+  including `ap2.merchant_authorization`". **AP2's schema says** a closed checkout
+  mandate (`vct: mandate.checkout.1`) requires `checkout_jwt` — "the merchant-signed
+  JWT of the Checkout payload" — and `checkout_hash`, the hash of that string.
+- **They are the same bytes.** `merchant_authorization` is a JWS with *detached*
+  content: `<header>..<signature>`, signed over `<header>.<base64url(JCS(checkout
+  minus ap2))>`. Put the payload back between the dots and it is a compact JWS
+  whose payload is the checkout — which is exactly AP2's `checkout_jwt`. So a
+  platform that builds `checkout_jwt` from our response carries the full checkout
+  *and* our signature over it, and both documents are satisfied by one artefact.
+  Tendero reads AP2's claim names (the credential's own schema is AP2's, UCP says
+  so: "the mandate credential structure … is defined by AP2") and verifies
+  `checkout_jwt` with its own key, which is UCP's "verify business authorization".
+- **What the shop checks, in order**, each failure one of UCP's codes:
+  `mandate_required` (AP2 negotiated, no mandate) → `agent_missing_key` (the kid
+  is not in the platform profile's `keys`) → `mandate_invalid_signature` (issuer
+  signature, a disclosure not in `_sd`, a key-binding JWT that does not verify, a
+  `checkout_hash` that is not the hash of `checkout_jwt`, or a `vct` this shop
+  does not verify) → `mandate_expired` → `merchant_authorization_invalid` (the
+  embedded checkout is not signed by a key this shop published) →
+  `mandate_scope_mismatch` (another session, or other lines or totals than the
+  session's now).
+- **Only the Trusted Platform Provider flow.** The issuer key is the platform's,
+  from its profile's `keys`. The Digital Payment Credential flow — a bank-issued
+  credential and a wallet — needs a list of trusted credential issuers, and no
+  bank issues one yet. A key-binding JWT is verified when present, against the
+  mandate's `cnf` key, with `sd_hash` over what precedes it.
+- **Closed mandates only.** `mandate.checkout.open.1` — constraints the agent
+  fills in later, chained with a closed one through `delegate_payload` — is the
+  second adapter of `IMandateVerifier`, keyed by `vct` precisely so it is a class
+  and a registration. Written down, not built.
+- **The payment mandate is the PSP's.** UCP puts it in
+  `payment.instruments[*].credential.token` and says the PSP verifies it; the
+  sandbox handler's token stays the fake provider's instrument. What the shop
+  keeps from the checkout mandate — issuer, expiry, the amount the person
+  approved — is `P11-5`'s `MandateScope`.
+- **The plan said "a `fake` self-signed JWS as default".** AP2 v0.2 made that
+  unnecessary: the development API publishes a key per seeded platform and signs
+  real SD-JWTs for them (`/dev-platforms/{agent}/…`), the dev-issuer pattern again,
+  so tests and the traffic simulator exercise the verifier a real platform would.

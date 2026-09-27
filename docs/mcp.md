@@ -195,6 +195,16 @@ and the order is a rehearsal, ended before it ships. A live agent (`claude-deskt
 is offered no handler: its checkout reaches `requires_escalation`, and its
 `continue_url` hands the basket to a person on the storefront.
 
+**With AP2's mandates** (ADR 0040). The seeded profiles speak
+`dev.ucp.common.payment.ap2_mandate`, so every checkout comes back with
+`ap2.merchant_authorization` — the shop's signature, verifiable with the key under
+`keys` in `/.well-known/ucp` — and completion requires `ap2.checkout_mandate`. In
+Development the API plays the platform: POST the checkout it answered to
+`/dev-platforms/{agent}/checkout-mandates` and it returns a mandate signed with the
+key its profile publishes, which goes into the complete request as
+`"ap2":{"checkout_mandate":"…"}`. A profile URL ending in `?ap2=false` is the same
+agent without AP2: nothing is signed and no mandate is asked for.
+
 Over REST, the same flow:
 
 ```bash

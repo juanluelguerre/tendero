@@ -21,14 +21,14 @@ public sealed class UcpCheckoutConformanceTests
     private const string WithDiscount = "https://ucp.dev/schemas/shopping/discount.json#/$defs/dev.ucp.shopping.checkout";
     private const string ErrorResponse = "https://ucp.dev/schemas/common/types/error_response.json";
 
-    private static readonly UcpLinks Links = new("https://api.shop.example", "https://shop.example");
+    internal static readonly UcpLinks Links = new("https://api.shop.example", "https://shop.example");
 
     private static readonly IReadOnlySet<string> All =
         new HashSet<string> { CheckoutCapability.Name, FulfillmentCapability.Name, DiscountCapability.Name };
 
     private static readonly Address Madrid = Address.Create("Ana Ruiz", "Calle Mayor 1", null, "Madrid", null, "28013", "ES");
 
-    private static CheckoutSessionView Session(CheckoutState state, bool destination = true, bool option = true, bool email = true, string? orderId = null, bool canSettle = true, IReadOnlyList<CheckoutIssue>? issues = null) => new(
+    internal static CheckoutSessionView Session(CheckoutState state, bool destination = true, bool option = true, bool email = true, string? orderId = null, bool canSettle = true, IReadOnlyList<CheckoutIssue>? issues = null) => new(
         Id: "0199a1f0-0000-7000-8000-00000000c0de",
         State: state,
         Mode: "test",

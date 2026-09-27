@@ -37,27 +37,27 @@ public sealed class UcpCheckoutTools
         agent's bearer token and `meta.ucp-agent.profile`.
         """)]
     public static Task<JsonElement> CreateCheckoutAsync(
-        ICommandDispatcher dispatcher, IHttpContextAccessor requests, IPrincipalAccessor principals,
+        UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
         IPlatformProfiles profiles, IOptions<UcpOptions> options,
         [Description("The checkout: line_items, and optionally buyer, fulfillment, discounts, context.")]
         UcpCheckoutRequest checkout,
         [Description("`ucp-agent` with the platform `profile` URL.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (active, links, culture, _) =>
-            UcpCheckoutOperations.CreateAsync(dispatcher, checkout, culture(checkout.Context?.Language), active, links, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
+            operations.CreateAsync(checkout, culture(checkout.Context?.Language), call, cancellationToken));
 
     [McpServerTool(Name = "get_checkout", UseStructuredContent = true)]
     [Description("UCP: the current state of a checkout session this agent opened.")]
     public static Task<JsonElement> GetCheckoutAsync(
-        IQueryDispatcher dispatcher, IHttpContextAccessor requests, IPrincipalAccessor principals,
+        UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
         IPlatformProfiles profiles, IOptions<UcpOptions> options,
         [Description("The checkout session id.")] string id,
         [Description("`ucp-agent` with the platform `profile` URL.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (active, links, culture, _) =>
-            UcpCheckoutOperations.GetAsync(dispatcher, Id(id), culture(null), active, links, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
+            operations.GetAsync(Id(id), culture(null), call, cancellationToken));
 
     [McpServerTool(Name = "update_checkout", UseStructuredContent = true)]
     [Description("""
@@ -65,15 +65,15 @@ public sealed class UcpCheckoutTools
         a full replacement, not a patch.
         """)]
     public static Task<JsonElement> UpdateCheckoutAsync(
-        ICommandDispatcher dispatcher, IHttpContextAccessor requests, IPrincipalAccessor principals,
+        UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
         IPlatformProfiles profiles, IOptions<UcpOptions> options,
         [Description("The checkout session id.")] string id,
         [Description("The whole checkout as it should be now.")] UcpCheckoutRequest checkout,
         [Description("`ucp-agent` with the platform `profile` URL.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (active, links, culture, _) =>
-            UcpCheckoutOperations.UpdateAsync(dispatcher, Id(id), checkout, culture(checkout.Context?.Language), active, links, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
+            operations.UpdateAsync(Id(id), checkout, culture(checkout.Context?.Language), call, cancellationToken));
 
     [McpServerTool(Name = "complete_checkout", UseStructuredContent = true)]
     [Description("""
@@ -82,27 +82,27 @@ public sealed class UcpCheckoutTools
         buys twice.
         """)]
     public static Task<JsonElement> CompleteCheckoutAsync(
-        ICommandDispatcher dispatcher, IHttpContextAccessor requests, IPrincipalAccessor principals,
+        UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
         IPlatformProfiles profiles, IOptions<UcpOptions> options,
         [Description("The checkout session id.")] string id,
-        [Description("`payment.instruments`: one, with its handler_id and credential.")] UcpCompleteRequest checkout,
+        [Description("`payment.instruments`: one, with its handler_id and credential; and `ap2.checkout_mandate` when AP2 was negotiated.")] UcpCompleteRequest checkout,
         [Description("`ucp-agent` with the platform `profile` URL, and `idempotency-key`.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (active, links, culture, key) =>
-            UcpCheckoutOperations.CompleteAsync(dispatcher, Id(id), checkout, key, culture(null), active, links, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (call, culture, key) =>
+            operations.CompleteAsync(Id(id), checkout, key, culture(null), call, cancellationToken));
 
     [McpServerTool(Name = "cancel_checkout", UseStructuredContent = true)]
     [Description("UCP: cancel a checkout session that is still open. Requires `meta.idempotency-key`.")]
     public static Task<JsonElement> CancelCheckoutAsync(
-        ICommandDispatcher dispatcher, IHttpContextAccessor requests, IPrincipalAccessor principals,
+        UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
         IPlatformProfiles profiles, IOptions<UcpOptions> options,
         [Description("The checkout session id.")] string id,
         [Description("`ucp-agent` with the platform `profile` URL, and `idempotency-key`.")]
         IReadOnlyDictionary<string, JsonElement> meta,
         CancellationToken cancellationToken = default) =>
-        RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (active, links, culture, _) =>
-            UcpCheckoutOperations.CancelAsync(dispatcher, Id(id), culture(null), active, links, cancellationToken));
+        RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (call, culture, _) =>
+            operations.CancelAsync(Id(id), culture(null), call, cancellationToken));
 
     /// <summary>
     /// The part every tool shares: an agent, a well-formed <c>meta</c>, negotiation,
@@ -111,7 +111,7 @@ public sealed class UcpCheckoutTools
     private static async Task<JsonElement> RunAsync(
         IHttpContextAccessor requests, IPrincipalAccessor principals, IPlatformProfiles profiles, IOptions<UcpOptions> options,
         IReadOnlyDictionary<string, JsonElement> meta, bool requireKey, CancellationToken cancellationToken,
-        Func<IReadOnlySet<string>, UcpLinks, Func<string?, string>, string?, Task<UcpAnswer>> operation)
+        Func<UcpCheckoutCall, Func<string?, string>, string?, Task<UcpAnswer>> operation)
     {
         if (!principals.Current.IsAgent)
             throw new McpException("UCP checkout tools need an agent's bearer token: a checkout belongs to the agent that opens it.");
@@ -130,11 +130,10 @@ public sealed class UcpCheckoutTools
         if (requireKey && string.IsNullOrWhiteSpace(key))
             throw new McpException("`meta.idempotency-key` is required: a retry must not happen twice.");
 
-        var (active, refusal) = await UcpCheckoutOperations.NegotiateAsync(profile, profiles, cancellationToken);
+        var (negotiated, refusal) = await UcpCheckoutOperations.NegotiateAsync(profile, profiles, cancellationToken);
         var http = requests.HttpContext;
         var answer = refusal ?? await operation(
-            active!,
-            new UcpLinks(http is null ? "" : $"{http.Request.Scheme}://{http.Request.Host}", options.Value.StorefrontUrl),
+            new UcpCheckoutCall(negotiated!, new UcpLinks(http is null ? "" : $"{http.Request.Scheme}://{http.Request.Host}", options.Value.StorefrontUrl)),
             language => CultureNegotiation.Resolve(language, http?.Request.Headers.AcceptLanguage),
             key);
 

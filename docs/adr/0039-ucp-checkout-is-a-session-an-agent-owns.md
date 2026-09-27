@@ -62,7 +62,7 @@ transport carries it — only the sentence that described `/mcp` as a whole.
 
 - Declared: checkout, fulfillment (one method, one destination, one group) and
   discount (extending checkout). Not yet: **order** (it commits to signed webhooks,
-  which need the keys AP2 brings), **cart** over UCP, **the AP2 mandate** (P11-4),
+  which need the keys AP2 brings), **cart** over UCP, the AP2 mandate (built in P11-4, ADR 0040),
   pickup, several packages, `complete_in_progress`.
 - A rejected discount code is a warning and does not say why: the engine has no
   coupon finder, and a rejection that named the rule would be one.

@@ -23,13 +23,24 @@ namespace ElGuerre.Tendero.Ucp;
 /// advertises no payment handlers, which is exactly the case, and omitting the
 /// key makes the document invalid rather than modest.
 ///
-/// <c>keys</c> stays absent, because it is genuinely optional and there is
-/// nothing to publish until phase 11 signs something.
+/// <c>keys</c> was absent until phase 11 signed something (P11-4): the shop's
+/// signature over a checkout, <c>ap2.merchant_authorization</c>, is verified with
+/// the key published here, by the platform before it shows the checkout and by the
+/// shop when the checkout comes back inside a mandate.
 /// </summary>
 public sealed record UcpProfile
 {
     [JsonPropertyName("ucp")]
     public required UcpDocument Ucp { get; init; }
+
+    /// <summary>
+    /// The shop's public signing keys, a JWK Set beside <c>ucp</c> rather than
+    /// inside it — the schema puts it there so the profile doubles as a key source
+    /// for Web Bot Auth. Public members only: a profile is public.
+    /// </summary>
+    [JsonPropertyName("keys")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<Signing.Jwk>? Keys { get; init; }
 }
 
 /// <summary>

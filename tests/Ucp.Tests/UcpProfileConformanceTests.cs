@@ -19,12 +19,16 @@ public sealed class UcpProfileConformanceTests
 {
     private const string BusinessProfile = "https://ucp.dev/schemas/profile.json#/$defs/business_schema";
 
+    /// <summary>A key as the shop publishes it (P11-4): the profile is checked with its <c>keys</c>, not without.</summary>
+    private static readonly IReadOnlyList<Signing.Jwk> SigningKeys =
+        [Signing.Jwk.FromEcdsa(System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256))];
+
     private static JsonElement Profile
     {
         get
         {
             var json = JsonSerializer.Serialize(
-                UcpProfileEndpoint.Compose("https://shop.example"),
+                UcpProfileEndpoint.Compose("https://shop.example", SigningKeys),
                 // The naming policy the rest of the API uses, on purpose: if the
                 // explicit names ever stop winning, this fails as a conformance
                 // error rather than as a curiosity.
@@ -81,6 +85,18 @@ public sealed class UcpProfileConformanceTests
         """
         {"ucp":{"version":"2026-08-25","capabilities":{},"payment_handlers":{},
           "services":{"dev.ucp.shopping":[{"version":"2026-08-25","transport":"carrier-pigeon","endpoint":"https://shop.example/mcp"}]}}}
+        """)]
+    [InlineData(
+        "a private key member — a profile is public, and `d` is the half that signs",
+        """
+        {"ucp":{"version":"2026-08-25","services":{},"capabilities":{},"payment_handlers":{}},
+          "keys":[{"kid":"k1","kty":"EC","crv":"P-256","x":"AA","y":"AA","alg":"ES256","d":"AA"}]}
+        """)]
+    [InlineData(
+        "a P-256 key named for ES384 — the pairing UCP pins",
+        """
+        {"ucp":{"version":"2026-08-25","services":{},"capabilities":{},"payment_handlers":{}},
+          "keys":[{"kid":"k1","kty":"EC","crv":"P-256","x":"AA","y":"AA","alg":"ES384"}]}
         """)]
     public void A_profile_that_breaks_the_schema_is_rejected(string what, string json)
     {

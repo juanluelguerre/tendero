@@ -22,6 +22,7 @@ public sealed class UcpCapabilityTests
         // same reason: this list IS the contract an agent reads.
         Assert.Equal(
             [
+                "dev.ucp.common.payment.ap2_mandate",
                 "dev.ucp.shopping.catalog.lookup", "dev.ucp.shopping.catalog.search",
                 "dev.ucp.shopping.checkout", "dev.ucp.shopping.discount", "dev.ucp.shopping.fulfillment",
             ],
@@ -87,7 +88,6 @@ public sealed class UcpCapabilityTests
     [Theory]
     [InlineData("dev.ucp.shopping.cart")]
     [InlineData("dev.ucp.shopping.order")]
-    [InlineData("dev.ucp.common.payment.ap2_mandate")]
     [InlineData("dev.ucp.common.identity_linking")]
     public void What_is_not_built_is_not_declared(string id) =>
         Assert.DoesNotContain(id, UcpCapabilities.Declared.Select(capability => capability.Id));

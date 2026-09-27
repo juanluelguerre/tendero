@@ -70,7 +70,8 @@ public sealed class UcpNegotiationTests
         var (active, _) = await UcpCheckoutOperations.NegotiateAsync("https://agent.example/p",
             new Fixed(Platform([.. UcpCapabilities.Declared.Select(c => (c.Id, c.Version))]), null), TestContext.Current.CancellationToken);
 
-        Assert.Equal([CheckoutCapability.Name, DiscountCapability.Name, FulfillmentCapability.Name], active!.Order(StringComparer.Ordinal));
+        Assert.Equal([Ap2MandateCapability.Name, CheckoutCapability.Name, DiscountCapability.Name, FulfillmentCapability.Name],
+            active!.Active.Order(StringComparer.Ordinal));
     }
 
     /// <summary>

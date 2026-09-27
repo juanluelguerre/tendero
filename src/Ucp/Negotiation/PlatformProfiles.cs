@@ -5,8 +5,15 @@ using System.Text.RegularExpressions;
 
 namespace ElGuerre.Tendero.Ucp.Negotiation;
 
-/// <summary>What a platform's profile says it speaks: capability name to the versions it supports.</summary>
-public sealed record PlatformProfile(IReadOnlyDictionary<string, IReadOnlySet<string>> Capabilities);
+/// <summary>
+/// What a platform's profile says it speaks — capability name to the versions it
+/// supports — and the keys it signs with: in AP2's Trusted Platform Provider flow,
+/// the ones a checkout mandate is verified with.
+/// </summary>
+public sealed record PlatformProfile(IReadOnlyDictionary<string, IReadOnlySet<string>> Capabilities)
+{
+    public IReadOnlyList<Signing.Jwk> Keys { get; init; } = [];
+}
 
 /// <summary>Why a platform profile could not be used — each one UCP's own error code.</summary>
 public enum ProfileProblem
@@ -138,7 +145,11 @@ public sealed class HttpPlatformProfiles(HttpClient http, Microsoft.Extensions.O
         }
     }
 
-    /// <summary>`ucp.capabilities`: a map of name to a list of entries, each with a `version`.</summary>
+    /// <summary>
+    /// `ucp.capabilities`: a map of name to a list of entries, each with a `version`;
+    /// and the top-level `keys`, where a key this shop cannot read is skipped rather
+    /// than the profile refused — UCP's key vocabulary is open.
+    /// </summary>
     internal static PlatformProfile? Parse(JsonElement root)
     {
         if (root.ValueKind != JsonValueKind.Object
@@ -158,6 +169,28 @@ public sealed class HttpPlatformProfiles(HttpClient http, Microsoft.Extensions.O
                 .ToHashSet(StringComparer.Ordinal);
         }
 
-        return new PlatformProfile(parsed);
+        return new PlatformProfile(parsed) { Keys = KeysOf(root) };
+    }
+
+    private static IReadOnlyList<Signing.Jwk> KeysOf(JsonElement root)
+    {
+        if (!root.TryGetProperty("keys", out var keys) || keys.ValueKind != JsonValueKind.Array)
+            return [];
+
+        var parsed = new List<Signing.Jwk>();
+        foreach (var key in keys.EnumerateArray())
+        {
+            try
+            {
+                if (key.Deserialize<Signing.Jwk>() is { } jwk)
+                    parsed.Add(jwk);
+            }
+            catch (JsonException)
+            {
+                // Not a key this shop can name; the rest of the profile still counts.
+            }
+        }
+
+        return parsed;
     }
 }

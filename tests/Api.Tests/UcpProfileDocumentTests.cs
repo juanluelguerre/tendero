@@ -27,14 +27,20 @@ public sealed class UcpProfileDocumentTests
 {
     private const string UpdateVariable = "UPDATE_UCP";
 
-    private static readonly JsonSerializerOptions Formatting = new() { WriteIndented = true };
+    // Relaxed escaping: this is a document people read, and `dc+sd-jwt` spelled
+    // `dc\u002Bsd-jwt` helps nobody. JSON-equal either way, which is what is compared.
+    private static readonly JsonSerializerOptions Formatting = new()
+    {
+        WriteIndented = true,
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
 
     [Fact]
     public async Task The_committed_profile_is_the_one_the_api_serves()
     {
         var ct = TestContext.Current.CancellationToken;
 
-        var served = await FetchProfileAsync(ct);
+        var served = WithoutKeyMaterial(await FetchProfileAsync(ct));
         var committed = CommittedProfilePath();
 
         if (Environment.GetEnvironmentVariable(UpdateVariable) is not (null or ""))
@@ -131,6 +137,23 @@ public sealed class UcpProfileDocumentTests
         response.EnsureSuccessStatusCode();
 
         return JsonNode.Parse(await response.Content.ReadAsStringAsync(ct));
+    }
+
+    /// <summary>
+    /// The profile's <c>keys</c> are the deployment's (P11-4): a development API
+    /// makes a key at start-up, and a shop in production publishes its own. The
+    /// committed document keeps their SHAPE — how many, what type, which curve and
+    /// algorithm — and says where the material goes instead of freezing one run's.
+    /// </summary>
+    private static JsonNode? WithoutKeyMaterial(JsonNode? profile)
+    {
+        foreach (var key in profile?["keys"]?.AsArray() ?? [])
+        {
+            foreach (var member in new[] { "kid", "x", "y" })
+                key![member] = "<per deployment>";
+        }
+
+        return profile;
     }
 
     private static string Serialise(JsonNode? profile) =>

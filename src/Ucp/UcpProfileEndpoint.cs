@@ -24,8 +24,8 @@ public static class UcpProfileEndpoint
 {
     public static IEndpointConventionBuilder MapTenderoUcp(this IEndpointRouteBuilder endpoints) =>
         endpoints
-            .MapGet(UcpSpecification.WellKnownPath, Ok<UcpProfile> (HttpContext http) =>
-                TypedResults.Ok(Compose($"{http.Request.Scheme}://{http.Request.Host}")))
+            .MapGet(UcpSpecification.WellKnownPath, Ok<UcpProfile> (HttpContext http, Signing.IMerchantSigner signer) =>
+                TypedResults.Ok(Compose($"{http.Request.Scheme}://{http.Request.Host}", signer.PublishedKeys)))
             .AllowAnonymous()
             // Out of the OpenAPI document, like `/mcp` and for a sharper reason:
             // this document POINTS AT schemas rather than being described by
@@ -38,8 +38,9 @@ public static class UcpProfileEndpoint
     ///
     /// Public and pure so it can be read in a test without a server, which is
     /// what makes the committed snapshot a comparison rather than a screenshot.
+    /// The keys are the deployment's, so they are handed in.
     /// </summary>
-    public static UcpProfile Compose(string baseUrl)
+    public static UcpProfile Compose(string baseUrl, IReadOnlyList<Signing.Jwk>? keys = null)
     {
         var host = baseUrl.TrimEnd('/');
 
@@ -88,7 +89,8 @@ public static class UcpProfileEndpoint
                             Version = capability.Version,
                             Spec = capability.Spec,
                             Schema = capability.Schema,
-                            Extends = capability.Extends
+                            Extends = capability.Extends,
+                            Config = capability.Config
                         }
                     ],
                     StringComparer.Ordinal),
@@ -102,7 +104,8 @@ public static class UcpProfileEndpoint
                 {
                     [Checkout.UcpCheckoutMapper.SandboxHandlerName] = [Checkout.UcpCheckoutMapper.SandboxHandler],
                 }
-            }
+            },
+            Keys = keys is { Count: > 0 } ? keys : null
         };
     }
 }

@@ -1,8 +1,12 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using ElGuerre.Tendero.Ordering.Features.CheckoutSessions;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Ucp.Ap2;
 using ElGuerre.Tendero.Ucp.Capabilities;
 using ElGuerre.Tendero.Ucp.Negotiation;
+using ElGuerre.Tendero.Ucp.Signing;
 
 namespace ElGuerre.Tendero.Ucp.Checkout;
 
@@ -14,19 +18,32 @@ public sealed record UcpProtocolError(
     [property: JsonPropertyName("code")] string Code,
     [property: JsonPropertyName("content")] string Content);
 
+/// <summary>What negotiation settled with this caller: the capabilities active, and the platform's profile — its keys verify its mandates.</summary>
+public sealed record UcpNegotiated(IReadOnlySet<string> Active, PlatformProfile Platform);
+
+/// <summary>One checkout call: what was negotiated, and where the shop's own pages are.</summary>
+public sealed record UcpCheckoutCall(UcpNegotiated Negotiated, UcpLinks Links)
+{
+    public IReadOnlySet<string> Active => Negotiated.Active;
+
+    /// <summary>AP2's mandates were negotiated: every checkout is signed, and none completes without a mandate.</summary>
+    public bool Ap2 => Active.Contains(Ap2MandateCapability.Name);
+}
+
 /// <summary>
 /// Checkout's behaviour, once, for both transports — the rule the catalogue set
 /// (<see cref="Catalog.UcpCatalogOperations"/>): a transport marshals and maps
-/// errors; negotiation, dispatch and translation are here.
+/// errors; negotiation, dispatch, translation and AP2's signatures are here.
 /// </summary>
-public static class UcpCheckoutOperations
+public sealed class UcpCheckoutOperations(
+    ICommandDispatcher commands, IQueryDispatcher queries, IMerchantSigner signer, CheckoutMandates mandates)
 {
     /// <summary>
     /// The capabilities active for this caller: its platform profile, fetched from a
     /// trusted host, intersected with what the shop declares. No checkout without a
     /// profile — negotiation is how an agent and a shop agree on a shape at all.
     /// </summary>
-    public static async Task<(IReadOnlySet<string>? Active, UcpAnswer? Refusal)> NegotiateAsync(
+    public static async Task<(UcpNegotiated? Negotiated, UcpAnswer? Refusal)> NegotiateAsync(
         string? profileUrl, IPlatformProfiles profiles, CancellationToken cancellationToken)
     {
         if (profileUrl is null)
@@ -47,30 +64,31 @@ public static class UcpCheckoutOperations
 
         // Only what a checkout response carries: the catalogue is negotiated too,
         // and has no place in this one (UCP §Response Capability Selection).
-        return (active.Where(name => name is CheckoutCapability.Name or FulfillmentCapability.Name or DiscountCapability.Name).ToHashSet(StringComparer.Ordinal), null);
+        return (new UcpNegotiated(
+            active.Where(name => name is CheckoutCapability.Name or FulfillmentCapability.Name or DiscountCapability.Name or Ap2MandateCapability.Name)
+                .ToHashSet(StringComparer.Ordinal),
+            profile), null);
     }
 
-    public static async Task<UcpAnswer> CreateAsync(
-        ICommandDispatcher dispatcher, UcpCheckoutRequest request, string culture, IReadOnlySet<string> active, UcpLinks links, CancellationToken cancellationToken) =>
-        Answer(await dispatcher.SendAsync(new OpenCheckoutSessionCommand(
-            UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), active), culture), cancellationToken), active, links, created: true);
+    public async Task<UcpAnswer> CreateAsync(UcpCheckoutRequest request, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
+        Answer(await commands.SendAsync(new OpenCheckoutSessionCommand(
+            UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), call.Active), culture), cancellationToken), call, created: true);
 
-    public static async Task<UcpAnswer> UpdateAsync(
-        ICommandDispatcher dispatcher, Guid id, UcpCheckoutRequest request, string culture, IReadOnlySet<string> active, UcpLinks links, CancellationToken cancellationToken) =>
-        Answer(await dispatcher.SendAsync(new UpdateCheckoutSessionCommand(
-            new CheckoutSessionId(id), UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), active), culture), cancellationToken), active, links);
+    public async Task<UcpAnswer> UpdateAsync(Guid id, UcpCheckoutRequest request, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
+        Answer(await commands.SendAsync(new UpdateCheckoutSessionCommand(
+            new CheckoutSessionId(id), UcpCheckoutMapper.Lines(request), Allowed(UcpCheckoutMapper.Details(request), call.Active), culture), cancellationToken), call);
 
-    public static async Task<UcpAnswer> GetAsync(
-        IQueryDispatcher dispatcher, Guid id, string culture, IReadOnlySet<string> active, UcpLinks links, CancellationToken cancellationToken) =>
-        Answer(await dispatcher.SendAsync(new GetCheckoutSessionQuery(new CheckoutSessionId(id), culture), cancellationToken), active, links);
+    public async Task<UcpAnswer> GetAsync(Guid id, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
+        Answer(await queries.SendAsync(new GetCheckoutSessionQuery(new CheckoutSessionId(id), culture), cancellationToken), call);
 
     /// <summary>
     /// Completion: exactly one instrument, from a handler this shop offered. The
     /// sandbox handler's credential token names the fake provider's instrument.
+    /// With AP2 negotiated, a checkout mandate is required, and it has to authorise
+    /// this session's terms as they are now.
     /// </summary>
-    public static async Task<UcpAnswer> CompleteAsync(
-        ICommandDispatcher dispatcher, Guid id, UcpCompleteRequest request, string? idempotencyKey, string culture,
-        IReadOnlySet<string> active, UcpLinks links, CancellationToken cancellationToken)
+    public async Task<UcpAnswer> CompleteAsync(
+        Guid id, UcpCompleteRequest request, string? idempotencyKey, string culture, UcpCheckoutCall call, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
             return new UcpAnswer(400, new UcpProtocolError("idempotency_key_required", "Completing a checkout needs an Idempotency-Key: a retry must not buy twice."));
@@ -83,13 +101,62 @@ public static class UcpCheckoutOperations
         if (instrument.HandlerId != UcpCheckoutMapper.SandboxHandlerId || string.IsNullOrWhiteSpace(instrument.Credential?.Token))
             return new UcpAnswer(400, new UcpProtocolError("invalid_request", $"The instrument must come from the handler '{UcpCheckoutMapper.SandboxHandlerId}' with a credential token."));
 
-        return Answer(await dispatcher.SendAsync(new CompleteCheckoutSessionCommand(
-            new CheckoutSessionId(id), instrument.Credential!.Token!, idempotencyKey, culture), cancellationToken), active, links);
+        var sessionId = new CheckoutSessionId(id);
+        if (call.Ap2 && await MandateRefusalAsync(sessionId, request.Ap2?.CheckoutMandate, culture, call, cancellationToken) is { } refusal)
+            return refusal;
+
+        return Answer(await commands.SendAsync(new CompleteCheckoutSessionCommand(
+            sessionId, instrument.Credential!.Token!, idempotencyKey, culture), cancellationToken), call);
     }
 
-    public static async Task<UcpAnswer> CancelAsync(
-        ICommandDispatcher dispatcher, Guid id, string culture, IReadOnlySet<string> active, UcpLinks links, CancellationToken cancellationToken) =>
-        Answer(await dispatcher.SendAsync(new CancelCheckoutSessionCommand(new CheckoutSessionId(id), culture), cancellationToken), active, links);
+    public async Task<UcpAnswer> CancelAsync(Guid id, string culture, UcpCheckoutCall call, CancellationToken cancellationToken) =>
+        Answer(await commands.SendAsync(new CancelCheckoutSessionCommand(new CheckoutSessionId(id), culture), cancellationToken), call);
+
+    /// <summary>
+    /// The mandate against the session as it is now (UCP §Business Verification):
+    /// it verifies, and the checkout it carries is this one with these goods at
+    /// these amounts. A refusal is the current checkout — freshly signed, so the
+    /// platform can ask the person again — with the one error that says why.
+    ///
+    /// The session is read and then completed in two steps, so an update landing
+    /// between them is not seen here; the completion re-quotes against what was
+    /// last shown, and `P11-5` moves the approved amount into the order itself.
+    /// </summary>
+    private async Task<UcpAnswer?> MandateRefusalAsync(
+        CheckoutSessionId id, string? presentation, string culture, UcpCheckoutCall call, CancellationToken cancellationToken)
+    {
+        var current = await queries.SendAsync(new GetCheckoutSessionQuery(id, culture), cancellationToken);
+        if (current.Outcome != CheckoutSessionOutcome.Ok)
+            return Answer(current, call);
+
+        var shown = UcpCheckoutMapper.ToWire(current.Session!, call.Active, call.Links);
+        var verdict = mandates.Verify(presentation, call.Negotiated.Platform);
+        var code = verdict.Error
+                   ?? (UcpCheckoutTerms.Same(verdict.Mandate!.Checkout, Signed(shown)) ? null : Ap2ErrorCodes.MandateScopeMismatch);
+
+        return code is null ? null : new UcpAnswer(200, Signed(shown with { Messages = [.. shown.Messages ?? [], MandateError(code)] }));
+    }
+
+    private static UcpCheckoutMessage MandateError(string code) => new()
+    {
+        Type = "error",
+        Code = code,
+        Content = code switch
+        {
+            Ap2ErrorCodes.MandateRequired => "AP2 was negotiated: completing needs ap2.checkout_mandate.",
+            Ap2ErrorCodes.AgentMissingKey => "The mandate names a key the platform profile does not publish.",
+            Ap2ErrorCodes.MandateExpired => "The checkout mandate has expired: ask the buyer to approve again.",
+            Ap2ErrorCodes.MerchantAuthorizationInvalid => "The checkout in the mandate is not one this shop signed.",
+            Ap2ErrorCodes.MandateScopeMismatch => "The mandate approves other terms than this checkout's now: ask the buyer to approve these.",
+            _ => "The checkout mandate does not verify.",
+        },
+        Severity = code switch
+        {
+            Ap2ErrorCodes.MandateRequired or Ap2ErrorCodes.MandateExpired => "recoverable",
+            Ap2ErrorCodes.MandateScopeMismatch or Ap2ErrorCodes.MerchantAuthorizationInvalid => "requires_buyer_review",
+            _ => "unrecoverable",
+        },
+    };
 
     /// <summary>What was not negotiated is not read: no fulfillment extension, no destination; no discount extension, no codes.</summary>
     private static CheckoutDetails Allowed(CheckoutDetails details, IReadOnlySet<string> active) => details with
@@ -99,15 +166,29 @@ public static class UcpCheckoutOperations
         Coupons = active.Contains(DiscountCapability.Name) ? details.Coupons : [],
     };
 
-    private static UcpAnswer Answer(CheckoutSessionResult result, IReadOnlySet<string> active, UcpLinks links, bool created = false) => result.Outcome switch
+    private UcpAnswer Answer(CheckoutSessionResult result, UcpCheckoutCall call, bool created = false) => result.Outcome switch
     {
-        CheckoutSessionOutcome.Ok => new UcpAnswer(created ? 201 : 200, UcpCheckoutMapper.ToWire(result.Session!, active, links)),
-        CheckoutSessionOutcome.NotReady or CheckoutSessionOutcome.NotPlaced => new UcpAnswer(200, UcpCheckoutMapper.ToWire(result.Session!, active, links)),
+        CheckoutSessionOutcome.Ok => new UcpAnswer(created ? 201 : 200, Checkout(result.Session!, call)),
+        CheckoutSessionOutcome.NotReady or CheckoutSessionOutcome.NotPlaced => new UcpAnswer(200, Checkout(result.Session!, call)),
         CheckoutSessionOutcome.NotFound => new UcpAnswer(404, Error("not_found", "There is no checkout with that id for this agent.", "unrecoverable")),
         CheckoutSessionOutcome.NotOpen => new UcpAnswer(409, Error("checkout_not_open", "This checkout is completed, canceled or expired: nothing in it changes.", "unrecoverable")),
         CheckoutSessionOutcome.NothingPurchasable => new UcpAnswer(200, Error("item_unavailable", "None of the items can be bought right now.", "unrecoverable")),
         _ => new UcpAnswer(403, Error("unauthorized", "Only an agent opens a UCP checkout.", "unrecoverable")),
     };
+
+    /// <summary>
+    /// A checkout as the wire carries it — signed when AP2 was negotiated, and then
+    /// as the very JSON that was signed, so neither transport can serialise it into
+    /// other bytes than the ones the signature covers.
+    /// </summary>
+    private object Checkout(CheckoutSessionView session, UcpCheckoutCall call)
+    {
+        var checkout = UcpCheckoutMapper.ToWire(session, call.Active, call.Links);
+        return call.Ap2 ? Signed(checkout) : checkout;
+    }
+
+    private JsonObject Signed(UcpCheckout checkout) =>
+        MerchantAuthorization.Sign(JsonSerializer.SerializeToNode(checkout)!.AsObject(), signer);
 
     private static UcpErrorResponse Error(string code, string content, string severity) => new()
     {

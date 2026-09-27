@@ -487,6 +487,17 @@ public sealed record UcpCompleteRequest
 {
     [JsonPropertyName("payment")]
     public UcpPaymentRequest? Payment { get; init; }
+
+    /// <summary>Required at complete once AP2's mandate extension is negotiated, and read only then.</summary>
+    [JsonPropertyName("ap2")]
+    public UcpAp2CompleteRequest? Ap2 { get; init; }
+}
+
+/// <summary>AP2's member of a complete request: the checkout mandate, an SD-JWT+kb.</summary>
+public sealed record UcpAp2CompleteRequest
+{
+    [JsonPropertyName("checkout_mandate")]
+    public string? CheckoutMandate { get; init; }
 }
 
 public sealed record UcpPaymentRequest

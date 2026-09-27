@@ -65,3 +65,32 @@ public sealed class DiscountCapability : IUcpCapability
 
     public IReadOnlyList<Type> Slices => [typeof(UpdateCheckoutSessionCommand)];
 }
+
+/// <summary>
+/// AP2's mandates on UCP's checkout (P11-4): once negotiated, every checkout the
+/// shop answers carries its signature, <c>ap2.merchant_authorization</c>, and no
+/// checkout completes without a checkout mandate — an SD-JWT the platform signed
+/// over that signed checkout. The shop verifies the one format AP2 v0.2 names,
+/// <c>dc+sd-jwt</c>, in the Trusted Platform Provider flow (analysis §9).
+/// </summary>
+public sealed class Ap2MandateCapability : IUcpCapability
+{
+    public const string Name = "dev.ucp.common.payment.ap2_mandate";
+
+    public string Id => Name;
+
+    public string Version => UcpSpecification.Version;
+
+    public string Spec => $"{UcpSpecification.BaseUrl}/payment/extensions/ap2-mandates/";
+
+    public string Schema => $"{UcpSpecification.SchemaBaseUrl}/common/payment_ap2_mandate.json";
+
+    public string? Extends => CheckoutCapability.Name;
+
+    public IReadOnlyDictionary<string, object>? Config { get; } = new Dictionary<string, object>
+    {
+        ["vp_formats_supported"] = new Dictionary<string, object> { ["dc+sd-jwt"] = new Dictionary<string, object>() },
+    };
+
+    public IReadOnlyList<Type> Slices => [typeof(CompleteCheckoutSessionCommand)];
+}

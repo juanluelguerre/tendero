@@ -59,4 +59,10 @@ public interface IUcpCapability
     /// discount; null for a root capability.
     /// </summary>
     string? Extends => null;
+
+    /// <summary>
+    /// What the capability's own schema lets a business configure — AP2's mandate
+    /// extension names the credential formats it verifies — or null for none.
+    /// </summary>
+    IReadOnlyDictionary<string, object>? Config => null;
 }
