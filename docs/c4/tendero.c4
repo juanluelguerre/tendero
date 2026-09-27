@@ -75,6 +75,16 @@ model {
       technology 'Text Embeddings Inference'
       description 'bge-reranker-v2-m3; GPU only'
     }
+    extractor = service 'extractor' {
+      #optional
+      technology 'llama.cpp'
+      description 'Qwen3.5-4B, 8 bits, converted from its revision; proposes claims; only with Tendero__Knowledge'
+    }
+    support = service 'support' {
+      #optional
+      technology 'Text Embeddings Inference'
+      description 'An NLI model: does a quote support a claim; only with Tendero__Knowledge'
+    }
     observability = service 'observability' {
       #optional
       technology 'grafana/otel-lgtm: OTel Collector, Prometheus, Tempo, Loki, Grafana'
@@ -108,6 +118,8 @@ model {
   tendero.workers -> tendero.elasticsearch 'projects products'
   tendero.workers -> tendero.qdrant 'projects vectors'
   tendero.workers -> tendero.embeddings 'embeds products'
+  tendero.workers -> tendero.extractor 'proposes claims'
+  tendero.workers -> tendero.support 'scores their support'
   tendero.api -> identity 'validates tokens (JWKS)'
   tendero.api -> payments 'authorises, captures, refunds'
   tendero.api -> tendero.observability 'traces, metrics, logs (OTLP)'

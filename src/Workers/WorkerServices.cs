@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Inventory;
+using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
@@ -66,6 +67,9 @@ public static class WorkerServices
         // And it takes the money: the saga captures on shipping and releases the
         // hold on cancellation, both through the payment port.
         builder.Services.AddOrdering(builder.Configuration);
+
+        // The claims layer (ADR 0018): the rules always, the models when the AppHost started them.
+        builder.Services.AddKnowledge(builder.Configuration);
 
         // Inside the worker the actor is the system, and this is the
         // implementation `IPrincipalAccessor` documented and nobody had
