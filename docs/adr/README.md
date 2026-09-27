@@ -22,6 +22,7 @@
 | [0018](0018-the-ai-writes-claims-not-products.md) | The AI writes claims, not products | accepted |
 | [0020](0020-transports-over-the-dispatcher.md) | MCP and UCP are transports over the dispatcher | accepted |
 | [0021](0021-the-manifest-is-derived.md) | The UCP manifest is derived from a capability registry | accepted |
+| [0022](0022-an-agent-is-a-principal-not-a-customer.md) | An agent is a principal, not a customer | accepted |
 | [0023](0023-feature-flags-with-removal-conditions.md) | Feature flags are a closed set, each with a removal condition and one reader | accepted |
 | [0024](0024-the-outbox-is-the-process-manager.md) | The outbox is the process manager, orchestrated from Ordering | accepted |
 | [0025](0025-authorise-before-placing.md) | Checkout authorises the payment before it places the order | accepted |
@@ -50,7 +51,7 @@ of those reservations to be cashed, in phase 7; 0020 and 0021 followed in phase
 9, and 0023 in phase 8 — with two flags rather than the five its title
 reserved, because a flag guards behaviour that exists, and none since 2026-09-17,
 when one became a capability and the other met its removal condition; 0018 in phase 10,
-written first, before the domain it constrains. What is still reserved
-and still unwritten: **0019**
-(the copilot proposes commands, never prose) and **0022** (an agent is a
-principal, not a customer).
+written first, before the domain it constrains. 0022 was written in phase 11, once the
+registry, delegation, mandates and the shop's own rules existed to be decided about.
+What is still reserved and still unwritten: **0019** (the copilot proposes
+commands, never prose).

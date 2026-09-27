@@ -1,6 +1,6 @@
 # ADR 0040 — A checkout mandate is verified against terms the shop itself signed
 
-Status: accepted · 2026-09-27 · Related: [ADR 0039](0039-ucp-checkout-is-a-session-an-agent-owns.md), [ADR 0038](0038-a-test-order-is-a-mode-the-credential-decides.md), [ADR 0022 (reserved)](README.md) · Analysis: [`ucp-checkout-and-ap2.md`](../analysis/ucp-checkout-and-ap2.md) §3, §7, §9
+Status: accepted · 2026-09-27 · Related: [ADR 0039](0039-ucp-checkout-is-a-session-an-agent-owns.md), [ADR 0038](0038-a-test-order-is-a-mode-the-credential-decides.md), [ADR 0022](0022-an-agent-is-a-principal-not-a-customer.md) · Analysis: [`ucp-checkout-and-ap2.md`](../analysis/ucp-checkout-and-ap2.md) §3, §7, §9
 
 ## Context
 

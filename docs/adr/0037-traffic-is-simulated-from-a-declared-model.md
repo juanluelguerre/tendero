@@ -1,6 +1,6 @@
 # ADR 0037 — Traffic is simulated from a declared model, seeded, and labelled as synthetic
 
-Status: accepted · 2026-09-24 · Related: [ADR 0036](0036-observability-is-a-second-stack-behind-a-switch.md), [ADR 0022 (reserved)](README.md) · Analysis: [`observability-tooling.md`](../analysis/observability-tooling.md) §5–6
+Status: accepted · 2026-09-24 · Related: [ADR 0036](0036-observability-is-a-second-stack-behind-a-switch.md), [ADR 0022](0022-an-agent-is-a-principal-not-a-customer.md) · Analysis: [`observability-tooling.md`](../analysis/observability-tooling.md) §5–6
 
 ## Context
 

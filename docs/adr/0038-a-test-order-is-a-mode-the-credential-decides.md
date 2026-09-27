@@ -1,6 +1,6 @@
 # ADR 0038 — A test order is a mode the credential decides, fixed at placement
 
-Status: accepted · 2026-09-27 · Related: [ADR 0024](0024-the-outbox-is-the-process-manager.md), [ADR 0025](0025-authorise-before-placing.md), [ADR 0037](0037-traffic-is-simulated-from-a-declared-model.md), [ADR 0022 (reserved)](README.md) · Analysis: [`ucp-checkout-and-ap2.md`](../analysis/ucp-checkout-and-ap2.md) §2
+Status: accepted · 2026-09-27 · Related: [ADR 0024](0024-the-outbox-is-the-process-manager.md), [ADR 0025](0025-authorise-before-placing.md), [ADR 0037](0037-traffic-is-simulated-from-a-declared-model.md), [ADR 0022](0022-an-agent-is-a-principal-not-a-customer.md) · Analysis: [`ucp-checkout-and-ap2.md`](../analysis/ucp-checkout-and-ap2.md) §2
 
 ## Context
 

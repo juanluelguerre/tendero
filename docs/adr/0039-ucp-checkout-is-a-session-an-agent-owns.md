@@ -1,6 +1,6 @@
 # ADR 0039 — UCP's checkout is a session an agent owns, served on both transports, and `/mcp` is not anonymous for it
 
-Status: accepted · 2026-09-27 · Related: [ADR 0016](0016-quoted-live-frozen-at-order.md), [ADR 0020](0020-transports-over-the-dispatcher.md), [ADR 0025](0025-authorise-before-placing.md), [ADR 0030](0030-protocol-routes-are-not-in-the-openapi-document.md), [ADR 0038](0038-a-test-order-is-a-mode-the-credential-decides.md), [ADR 0022 (reserved)](README.md) · Analysis: [`ucp-checkout-and-ap2.md`](../analysis/ucp-checkout-and-ap2.md) §6
+Status: accepted · 2026-09-27 · Related: [ADR 0016](0016-quoted-live-frozen-at-order.md), [ADR 0020](0020-transports-over-the-dispatcher.md), [ADR 0025](0025-authorise-before-placing.md), [ADR 0030](0030-protocol-routes-are-not-in-the-openapi-document.md), [ADR 0038](0038-a-test-order-is-a-mode-the-credential-decides.md), [ADR 0022](0022-an-agent-is-a-principal-not-a-customer.md) · Analysis: [`ucp-checkout-and-ap2.md`](../analysis/ucp-checkout-and-ap2.md) §6
 
 ## Context
 
