@@ -1,6 +1,6 @@
 # Spec: the redesign, run as a lifecycle — R-0, define before designing
 
-**Status**: draft (R-0 written 2026-09-27; the baseline waits for a measurement run)
+**Status**: draft (R-0, R-1's automated half, R-2 and R-3's proposal written 2026-09-27; the baseline walkthrough waits for the author)
 **Slice(s)**: `frontend/apps/backoffice`, `frontend/apps/storefront`, `design/`, `docs/telemetry/tracking-plan.json`
 **Article**: *A redesign with a before and an after* (working title)
 
@@ -242,6 +242,218 @@ R-3 orders them by how much each moves R-0's numbers, and sizes them.
 [Seller Central Account Health](https://sellercentral.amazon.com/performance/dashboard) ·
 [Baymard, homepage and navigation](https://baymard.com/blog/ecommerce-navigation-best-practice) ·
 [Ecommerce navigation patterns](https://ecomdesignpro.com/ecommerce-navigation-patterns/)
+
+## R-3 — the proposal
+
+*Written 2026-09-27, before anything is built, so the author can read it and
+disagree while a change is still a sentence. It takes R-1's findings and R-2's
+verdicts, decides each one, says what it should move in R-0's signals, and orders
+the build. The design system does not change: tokens only, one clay action per
+view, status always a word as well as a colour. The mock-ups are in
+`design/unpublished/mockups/redesign.pen`; they are the sketch, and the Angular
+built in R-4 is the source of truth.*
+
+### Four rules the proposal keeps
+
+1. **A screen is shaped by its job, not by its table.** The nine jobs decide what
+   a screen leads with; everything else is one step further away.
+2. **The server decides, and the screen says so.** No optimistic state changes
+   (P7): a pending button, then the server's own words, as ADR 0010 already has it.
+3. **Nothing new to install.** The dialog, the drawer and the palette are the
+   platform's own `<dialog>` and popover, which give the focus trap, `Esc` and an
+   inert background for free. No CDK, no component library: the dependency budget
+   stays where it is.
+4. **Every new affordance is measured.** `backoffice_action_taken` gains `via`
+   (`list`, `pane`, `palette`, `shortcut`, `dashboard`), which is R-0's adoption
+   signal naming its affordances. The storefront's menu already reports as
+   `category_opened {arrived_from: menu}`.
+
+### Backoffice
+
+**Navigation: a side rail grouped by job** (P1; answers B-F1, B-F9, B-F8). Twelve
+tabs become six groups, in the order a working day meets them:
+
+| Group | Screens | Badge |
+|---|---|---|
+| Home | Dashboard | — |
+| Catalogue | Review queue · Products · Claims · Attributes | drafts waiting, claims waiting |
+| Sales | Orders · Returns · Promotions | orders to ship, returns open |
+| Stock | Stock | low-stock lines |
+| Agents | Agents · Audit | refusals today |
+| Insight | Search quality | — |
+
+- **Widths.** At 1200 px and wider the rail is full (labels, 232 px). From 768 to
+  1199 px it is icons with the label as a tooltip and as the accessible name
+  (64 px). Under 768 px it becomes a drawer behind a *Menu* button, as a modal
+  `<dialog>`.
+- **Badges** are the dashboard's own *Waiting for you* figures, read from the
+  endpoint that already serves them. A badge is a number and a word for screen
+  readers ("3 waiting"), never colour alone.
+- **The header** holds the page title and the palette's trigger (*Search or go
+  to… Ctrl K*). The language, the role and *Sign out* move into an account menu,
+  so the phone header is one row.
+- The awning stripe marks the current screen in the rail, which is what it
+  marked on the tab.
+
+**The lists of work: one index-and-pane pattern for six screens** (P3, P6; answers
+B-F3, B-F4, B-F5):
+
+- **Above the list:** a search box and a status filter with counts. Each screen
+  opens on the status its job needs: Orders on *To ship* (Confirmed), Returns on
+  *Open*, Products on *All*. A dashboard figure opens the list with its filter
+  already set (P9).
+- **The row keeps its one primary action inline**, the way the shortest path runs
+  today: *Ship* on a confirmed order, *Publish* on a draft, *Approve* on a return.
+  Clicking anywhere else on the row opens the **pane**. At 1024 px and wider the
+  pane opens beside the list and keeps your place in it. Below that it opens as a
+  full sheet with *Back*.
+- **The pane shows everything the decision needs**: the product with its
+  images, both languages and what is missing; the order with its lines, payment,
+  recipient and history; the claim with its quotes. It holds the screen's one clay
+  action.
+- **The destructive action is set apart and asks** (B-F5, P12). *Cancel order*
+  lives at the foot of the pane as a quiet danger button, never beside *Ship*. It
+  opens a confirmation that says what follows: "Cancelling releases the payment
+  hold. It cannot be undone." A reversible action does not ask. It offers *Undo*
+  instead, which is the domain's own reverse: *Suspend* offers *Reinstate*, and
+  *Withdraw* offers *Publish*.
+- **On a phone the table becomes cards.** Each card shows id, name, total, status
+  and age, with the primary action on the card itself, so there is no sideways
+  scroll (B-F4). A table that has to stay a table, such as the audit, scrolls
+  inside its own frame with the cue the other tables use (B-F2).
+- **Where it applies:** Orders, Returns, the Review queue, Claims, Products and
+  Agents. **Products gains *Withdraw*** (the slice built 2026-09-27) in its pane,
+  as a secondary action with *Undo*.
+
+**Bulk shipping** (P4, conditional) is left out of R-4: at eight confirmed orders
+a checkbox column costs more attention than it saves. It is written down, with
+the number (the confirmed orders per day) that would bring it back.
+
+**The command palette** (P2, with P11). *Ctrl K*, or `/`, opens a
+`<dialog>` holding a combobox (the WAI-ARIA APG pattern). It finds three kinds of
+thing:
+- screens, by name in either language;
+- the current screen's actions;
+- an order by the first characters of its id, a product by code or name, an agent
+  by name.
+
+Enter goes to the thing, with its pane open. It needs two small server changes:
+`ListOrders` gains `status` and `q`, and `ListProducts` gains `q`. The list
+filters need the same two. The review queue and claims gain `j`/`k` to move
+and `Enter` to open, and the palette lists those shortcuts. R-6 keeps the
+shortcuts only if `via: shortcut` shows they are used.
+
+**Home** (P9, P10). Every figure is a link to the filtered list behind it:
+*3 drafts* opens the review queue, *8 to ship* opens Orders on *To ship*. The
+operations widget sets its figures against targets, which live in
+`DashboardFigures` beside the figures, on the server:
+- **cancellations**: 2.5 % or less;
+- **late shipments**: 4 % or less.
+
+Both are Seller Central's published account-health targets, borrowed until the
+shop has its own. Each figure shows as *within*, *near* or *outside* its target,
+as a word and a colour.
+
+**The rest, in passing:**
+- **Skeletons shaped like the content** replace *Loading…* (P8, B-F10). Every
+  list and pane reserves its size, so nothing jumps (CLS).
+- **Copy in the shopkeeper's words** (B-F6). "The state machine decides which move
+  is legal" is removed rather than translated; the buttons already say it.
+  "Audit 13 refused" becomes *Audit* with a *13 refused* filter.
+  `CompleteCheckoutSessionCommand` becomes *Checkout completed*.
+- **The empty review queue** says "Nothing waiting for review. New products appear
+  here when the catalogue is imported." It has no clay button. *Import* moves to
+  the Products screen's secondary actions (B-F7).
+- **Targets:** 24 px minimum everywhere, and 44 px wherever the pointer is coarse
+  (B-F8).
+
+### Storefront
+
+**The menu the header promised** (S-P1, S-P2, S-P3; answers S-F1, S-F2 and S-F6).
+*TIENDA* stops being a label and becomes the button it looked like: *Tienda* /
+*Shop*, a disclosure (`aria-expanded`) rather than an ARIA menu, because its
+content is links.
+- **On a desktop** it opens a panel below the header, on click and never on hover
+  alone. The panel has one column per department: *Ropa*, *Hogar*, *Bolsas y
+  mochilas*. Each column is headed by a link to the whole department, and the
+  second level appears as group headings over their categories. That is 23 links
+  in all, inside NNg's limit.
+  - The current department is marked, as `aria-current` and not only by colour.
+  - `Esc`, a click outside, or choosing a link closes it, and focus returns to the
+    button.
+- **On a phone** it is a drawer, a modal `<dialog>` from the left. Every
+  department and category is visible under its heading, with no accordions,
+  because R-0's criterion says *at most two interactions*: *Tienda*, then the
+  category. An accordion would make it three. Rows are 48 px (S-P3). The language
+  switch moves to the drawer's foot.
+- **The phone header** becomes two rows: *Menu*, the logo on one line without its
+  tagline, and the cart on the first; search at full width on the second (S-F2).
+
+**The sticky header** (S-P4, conditional): only the first row sticks, 56 px, and
+search scrolls away with the page and comes back as an icon in the sticky row.
+The condition R-2 set is measured in the mock-up of the product page at 390×844:
+*Añadir al carrito* has to stay inside the first screen. If it does not, the
+header does not stick.
+
+**The rest, in passing:**
+- **Checkout offers the shipping options as soon as the postal code is complete**
+  (S-F3). *¿Cómo quieres recibirlo?* stops being a click, and S4 drops from nine
+  interactions to eight.
+- *Comparar*, *Seguir comprando*, *Tu cesta* and the breadcrumb's *Tienda* grow
+  to 44 px on touch (S-F4).
+- **Novedades** shows whole cards with previous and next buttons, instead of
+  cutting the last card in half (S-F5).
+
+### What it should move: the hypothesis R-6 tests
+
+| Job | Baseline (minimum interactions) | Proposed | What changes besides the count |
+|---|---|---|---|
+| B1 publish a draft | 2 | 2 — *Review queue* (or its badge) → *Publish*, from any screen | the pane shows what to check without leaving the list |
+| B2 review the weakest claim | 2 | 2 | quotes beside the claim; `j`/`k` down the queue |
+| B3 find an order and ship it | 2 + scan; plus a sideways scroll on a phone | 2 — *To ship* → *Ship* on the row; 3 with a search | no scan, no sideways scroll |
+| B4 decide a return | 2–3 | 2–3 | phone: a card instead of a sideways table |
+| B5 suspend an agent | 4 | 4 | *Undo* instead of a dead end |
+| S1 reach a category | 1–2, and only via home | **2 from any page**, phone and desktop | the header has a way in at all |
+| S2 find a product described | 3 | 3 | search stays reachable on a phone |
+| S3 add a variant | 1–2 | 1–2 | — |
+| S4 pay as a guest | 9 | **8** | no click to learn the shipping |
+
+**An honest reading of it.** B1 and B2 are at their floor already, which is to go
+there and act. Doing them in one interaction would mean publishing or approving
+from a list without seeing the thing, and R-2 rejected that (P4, ADR 0018).
+
+So R-0's first criterion, *fewer interactions than the baseline*, cannot hold for
+B1, B2, B4 and B5 without breaking a rule the project keeps on purpose. Only its
+second half, *and none takes more*, can. For those four jobs the target is
+**time on task and SEQ ≥ 6**. The count's gains land where R-1 found the damage:
+- B3's scan and sideways scroll;
+- S1 from every page;
+- S4's extra click.
+
+This is written down now, before building, so that R-6 does not discover it and
+call it a result. **It is the author's to accept.**
+
+### The build, in order (R-4 and R-5)
+
+Each increment ships whole and is measured. The old screen stays reachable until
+its replacement passes the accessibility ratchet and the e2e suite.
+
+| # | Increment | Answers | Size |
+|---|---|---|:-:|
+| R-4.1 | Shell: side rail, groups, badges, drawer, account menu, one-row header | B-F1, B-F8, B-F9, P1 | M |
+| R-4.2 | Orders on the index-and-pane pattern: filters, search, pane, cards on a phone, the confirmed *Cancel*; `ListOrders` gains `status` and `q` | B-F3, B-F4, B-F5, P3, P6 | L |
+| R-4.3 | The same pattern for Returns, the review queue, claims, products (with *Withdraw* and *Undo*) and agents (*Undo* for suspend) | P3, P6, P12 | L |
+| R-4.4 | Skeletons, copy and the empty queue | B-F6, B-F7, B-F10, P8 | S |
+| R-4.5 | Home: figures as links, health against targets | P9, P10 | S |
+| R-4.6 | Command palette and list shortcuts; `ListProducts` gains `q`; `via` on the action event | P2, P11 | M |
+| R-4.7 | The audit's table in its own frame | B-F2 | S |
+| R-5.1 | Storefront header, *Tienda* panel on a desktop, drawer on a phone, the sticky row if its condition holds | S-F1, S-F2, S-F6, S-P1–4 | M |
+| R-5.2 | Shipping on postal code, 44 px targets, Novedades with controls | S-F3, S-F4, S-F5 | S |
+
+**Before R-4 starts**, per the delivery plan: the author reads this and marks
+what they disagree with, the baseline walkthrough runs on today's interface, and
+the nine jobs are walked through on the mock-ups. What fails on paper is
+redesigned on paper.
 
 ## Non-goals
 
