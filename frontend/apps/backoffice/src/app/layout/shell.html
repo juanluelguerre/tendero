@@ -59,6 +59,10 @@
     <main class="main"><router-outlet /></main>
 
     @if (canUseBackoffice()) {
+      <backoffice-undo-toast />
+    }
+
+    @if (canUseBackoffice()) {
       <footer class="usage">
         <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
         @if (staffUsage.state() === 'on') {

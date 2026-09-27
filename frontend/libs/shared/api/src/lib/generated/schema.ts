@@ -100,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/products/{code}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReviewProduct"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/publish": {
         parameters: {
             query?: never;
@@ -1317,6 +1333,27 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        ProductForReview: {
+            productId: string;
+            code: string;
+            status: string;
+            names: {
+                [key: string]: string;
+            };
+            descriptions: {
+                [key: string]: string;
+            };
+            brand: null | string;
+            category: null | string;
+            /** Format: double */
+            priceAmount: number;
+            priceCurrency: string;
+            imageIds: string[];
+            attributes: components["schemas"]["ProductAttributeView"][];
+            missingCultures: string[];
+            /** Format: date-time */
+            updatedAt: string;
+        };
         ProductImageView: {
             imageId: string;
             alt: null | string;
@@ -1896,6 +1933,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["WithdrawProductConflict"];
                 };
+            };
+        };
+    };
+    ReviewProduct: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductForReview"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

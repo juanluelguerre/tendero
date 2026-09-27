@@ -1,6 +1,6 @@
 .product { font-weight: 500; white-space: nowrap; }
 
-.statement { margin: 0; }
+.statement { margin: 0; font-weight: 500; }
 
 .attribute {
   display: inline-block;
@@ -30,3 +30,12 @@
 
 .actions { text-align: end; white-space: nowrap; }
 .actions .button + .button { margin-inline-start: var(--space-2); }
+
+.quotes li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); }
+
+.pane-support {
+  display: flex;
+  justify-content: space-between;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}

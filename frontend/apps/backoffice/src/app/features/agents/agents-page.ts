@@ -1,7 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { AgentView } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -9,20 +10,22 @@ import { formatDate } from '@tendero/shared-util';
 import type { Observable } from 'rxjs';
 import { AccountsService, type AgentTrust } from '../../data-access/accounts.service';
 import { BackofficeUsage, type BackofficeAction } from '../../usage';
+import { ConfirmDialog } from '../../work/confirm-dialog';
+import { Undo } from '../../work/undo';
+import { WorkPane } from '../../work/work-pane';
 
 /**
- * The agents the shop knows (P11-2's registry, its screen in P11-7): who operates
- * each, how far the shop trusts it, and whether it is suspended — with the reason,
- * because a suspension nobody can explain is one nobody can lift.
+ * The agents a shop vouches for (P11-6), as R-3 drew the lists of work (R-4.3).
  *
- * An agent nobody registered is not listed and not refused: it shops as
- * *untrusted*, under the shop's tighter caps (P11-6). Registering is how a
- * shopkeeper vouches for one. The server owns every rule; a refusal is shown in
- * the server's own words.
+ * Suspending asks for a reason, because the domain keeps one and the agent is
+ * told it; it does **not** ask "are you sure?", because it can be undone —
+ * reinstating is the domain's own reverse, audited like any other change, and
+ * it is offered at once (R-2, P12). The job it serves (R-0, B5) keeps its four
+ * interactions, and gains a way back from a wrong one.
  */
 @Component({
   selector: 'backoffice-agents',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, WorkPane, ConfirmDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agents-page.html',
   styleUrl: './agents-page.css',
@@ -31,8 +34,17 @@ export class AgentsPage {
   private readonly accounts = inject(AccountsService);
   private readonly usage = inject(BackofficeUsage);
   private readonly culture = inject(CultureStore);
+  private readonly transloco = inject(TranslocoService);
+  private readonly undo = inject(Undo);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  private readonly suspendDialog = viewChild(ConfirmDialog);
+  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
 
   protected readonly agents = rxResource({ stream: () => this.accounts.agents() });
+  protected readonly selectedId = computed(() => this.params().get('agent'));
+  protected readonly selected = computed(() => this.agents.value()?.find((agent) => agent.agentId === this.selectedId()) ?? null);
 
   protected readonly trusts: readonly AgentTrust[] = ['Known', 'Verified'];
 
@@ -41,12 +53,28 @@ export class AgentsPage {
   protected readonly refusal = signal<string | null>(null);
   protected readonly busy = signal<string | null>(null);
 
-  /** Which row is asking for a suspension reason. One at a time. */
-  protected readonly suspending = signal<string | null>(null);
-  protected readonly reason = signal('');
+  /** The agent the suspension dialog is about. */
+  protected readonly suspending = signal<AgentView | null>(null);
+
+  /**
+   * The trust as the screen names it. The API says it in lower case and the
+   * options and translations use the enum's name, so "verified" matched no
+   * option and the select showed every agent as Known.
+   */
+  protected trustOf(agent: AgentView): AgentTrust {
+    return (agent.trust.charAt(0).toUpperCase() + agent.trust.slice(1)) as AgentTrust;
+  }
 
   protected when(at: string): string {
     return formatDate(at, this.culture.active());
+  }
+
+  protected open(agent: AgentView): void {
+    void this.router.navigate([], { queryParams: { agent: agent.agentId }, queryParamsHandling: 'merge' });
+  }
+
+  protected close(): void {
+    void this.router.navigate([], { queryParams: { agent: null }, queryParamsHandling: 'merge' });
   }
 
   protected edit(field: 'agentId' | 'displayName' | 'operator', value: string): void {
@@ -68,20 +96,25 @@ export class AgentsPage {
     this.run(agent.agentId, 'agent_trust', this.accounts.trust(agent.agentId, trust as AgentTrust));
   }
 
-  protected askReason(agent: AgentView): void {
-    this.suspending.set(agent.agentId);
-    this.reason.set('');
+  protected askToSuspend(agent: AgentView): void {
+    this.suspending.set(agent);
+    // After the change detection that gives the dialog this agent's words.
+    queueMicrotask(() => this.suspendDialog()?.open());
   }
 
-  protected suspend(agent: AgentView): void {
-    this.run(agent.agentId, 'agent_suspend', this.accounts.suspend(agent.agentId, this.reason().trim()), () => this.suspending.set(null));
+  protected suspend(reason: string | undefined): void {
+    const agent = this.suspending();
+    if (!agent || !reason) return;
+    this.run(agent.agentId, 'agent_suspend', this.accounts.suspend(agent.agentId, reason), () =>
+      this.undo.offerTo(this.transloco.translate('agents.suspended', { agent: agent.displayName }), () => this.reinstate(agent)),
+    );
   }
 
   protected reinstate(agent: AgentView): void {
     this.run(agent.agentId, 'agent_reinstate', this.accounts.reinstate(agent.agentId));
   }
 
-  /** One change at a time, the list reloaded after it, and a refusal in the server's words. */
+  /** One change at a time, the list asked again after it, and a refusal in the server's words. */
   private run(key: string, action: BackofficeAction, change: Observable<unknown>, done?: () => void): void {
     this.busy.set(key);
     this.refusal.set(null);

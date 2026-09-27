@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.Catalog.Rendering;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -30,20 +31,6 @@ namespace ElGuerre.Tendero.Catalog.Features.GetProduct;
 /// meant: search degrades, the shop does not go dark.
 /// </summary>
 public sealed record GetProductQuery(string Code, string Culture) : IQuery<ProductDetail?>;
-
-/// <summary>
-/// A rendered attribute. The VALUE is resolved here because it needs the
-/// definition; the WORDING is not, because "Sí"/"Yes" is interface copy and
-/// belongs in the frontend's translation files, never in an API response.
-/// </summary>
-public sealed record ProductAttributeView(
-    string Code,
-    string Label,
-    string Kind,
-    string? Value,
-    decimal? Number,
-    string? Unit,
-    bool? Flag);
 
 /// <summary>
 /// One axis and every option it offers, in the catalogue's order.
@@ -239,7 +226,7 @@ public sealed class GetProductHandler(
                 // fact, two audiences, and only one of them can do anything
                 // about it.
                 .Where(value => attributes.ByCode(value.Code) is not null)
-                .Select(value => Render(value, attributes.ByCode(value.Code), query.Culture))
+                .Select(value => ProductAttributes.Render(value, attributes.ByCode(value.Code), query.Culture))
                 .OrderBy(view => view.Label, StringComparer.OrdinalIgnoreCase)],
             [.. product.VariantAxes.Select(axis =>
                 Axis(axis, attributes.ByCode(axis), product, query.Culture))],
@@ -278,22 +265,6 @@ public sealed class GetProductHandler(
                 .Select(ancestor => new CategoryStep(ancestor!.Code, ancestor.Name.In(culture)))
         ];
     }
-
-    private static ProductAttributeView Render(
-        AttributeValue value, AttributeDefinition? definition, string culture) =>
-        new(value.Code,
-            // The caller has already dropped values with no definition, so the
-            // fallback is unreachable from the product page. It stays because
-            // the method is the rendering rule and not the filtering one, and a
-            // renderer that threw on a null definition would be a worse shape.
-            definition?.Label.In(culture) ?? value.Code,
-            value.Kind.ToString().ToLowerInvariant(),
-            value.Kind is AttributeKind.Number or AttributeKind.Boolean
-                ? null
-                : value.RenderIn(culture, definition),
-            value.Number,
-            definition?.Unit,
-            value.Flag);
 
     /// <summary>
     /// One axis and every option a shopper could press on it.

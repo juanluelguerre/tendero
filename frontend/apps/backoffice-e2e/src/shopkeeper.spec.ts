@@ -118,6 +118,29 @@ test.describe('the backoffice', () => {
     await expect(pane.getByText(/^(Confirmed|Confirmado)$/)).toBeVisible();
   });
 
+  /**
+   * Withdrawing is undoable, so it does not ask: it offers Undo, which is
+   * publishing again (the redesign's R-4.3, R-2's P12). The product ends where
+   * it started, so the laboratory is left as it was.
+   */
+  test('taking a product off sale offers Undo, and Undo puts it back', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/catalogue');
+
+    const first = page.getByRole('table').getByRole('button', { expanded: false }).first();
+    await first.click();
+
+    const pane = page.getByRole('complementary', { name: /./ });
+    await pane.getByRole('button', { name: /Take it off sale|Retirarlo de la venta/ }).click();
+
+    const undo = page.getByRole('status').getByRole('button', { name: /^(Undo|Deshacer)$/ });
+    await expect(undo).toBeVisible();
+    await expect(pane.getByText(/^\s*(Draft|Borrador)\s*$/)).toBeVisible();
+
+    await undo.click();
+    await expect(pane.getByText(/^\s*(On sale|A la venta)\s*$/)).toBeVisible();
+  });
+
   test('a stocktake goes through the ledger and comes back recomputed', async ({ page }) => {
     await signIn(page);
     await page.goto('/stock');

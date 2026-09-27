@@ -154,7 +154,7 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen it was done on. |
-| `action` | string | `publish`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate` | What was done, from a closed list. |
+| `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate` | What was done, from a closed list. |
 | `outcome` | string | `done`, `refused`, `failed` | done; refused when the server said no (a 4xx, a rule); failed when it could not answer. |
 
 ### `backoffice_theme_chosen`

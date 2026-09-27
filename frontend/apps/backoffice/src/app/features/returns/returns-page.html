@@ -1,83 +1,173 @@
-<section *transloco="let t">
-  <header class="page-head">
-    <h1 class="page-title">{{ t('returns.title') }}</h1>
-    @if (requests().length > 0) {
-      <span class="tag tag--warn">{{ t('returns.openCount', { count: requests().length }) }}</span>
-    }
-  </header>
-  <p class="page-hint">{{ t('returns.hint') }}</p>
+<section class="work-layout" [class.work-layout--with-pane]="selected()" *transloco="let t">
+  <div class="work-list">
+    <header class="page-head">
+      <h1 class="page-title">{{ t('returns.title') }}</h1>
+    </header>
+    <p class="page-hint">{{ t('returns.hint') }}</p>
 
-  @if (loading()) {
-    <p class="muted" role="status" aria-live="polite">{{ t('returns.loading') }}</p>
-  } @else if (failed()) {
-    <p class="failed" role="alert">{{ t('returns.failed') }}</p>
-  } @else if (requests().length === 0) {
-    <div class="empty"><p class="empty__text">{{ t('returns.empty') }}</p></div>
-  } @else {
-    <div class="table-wrap">
-      <table class="table">
-        <caption class="sr-only">{{ t('returns.title') }}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{{ t('returns.column.return') }}</th>
-            <th scope="col">{{ t('returns.column.order') }}</th>
-            <th scope="col">{{ t('returns.column.what') }}</th>
-            <th scope="col">{{ t('returns.column.status') }}</th>
-            <th scope="col" class="numeric">{{ t('returns.column.refund') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('returns.column.action') }}</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (request of requests(); track request.returnId) {
-            <tr>
-              <!-- Which return of the order, not the first segment of its GUID:
-                   two returns opened in the same second read the same there. -->
-              <td class="numeric code" [title]="request.returnId">#{{ request.number }}</td>
-              <td class="numeric" [title]="request.orderId">{{ shortId(request.orderId) }}</td>
-              <td>
-                <ul class="what">
-                  @for (line of request.lines; track line.sku) {
-                    <li class="what__line">
-                      <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
-                      <span class="reason" [class.reason--damaged]="line.reason === 'Damaged'">
-                        {{ t('returns.reason.' + line.reason) }}
-                      </span>
-                    </li>
-                  }
-                </ul>
-              </td>
-              <td>
-                <span class="status" [class]="'status--' + request.status">
-                  {{ t('returns.status.' + request.status) }}
-                </span>
-              </td>
-              <td class="numeric refund">
-                {{ request.refundAmount ? money(request.refundAmount) : '—' }}
-              </td>
-              <td class="actions">
-                @for (decision of decisions(request); track decision) {
-                  <!-- Quiet for the reason the orders table gives: one clay
-                       action per view, and a queue of rows has many. -->
-                  <button
-                    class="button button--small button--quiet"
-                    type="button"
-                    [disabled]="busy() === request.returnId"
-                    (click)="decide(request, decision)"
-                  >
-                    {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decide.' + decision) }}
-                  </button>
-                }
-              </td>
-            </tr>
-
-            @if (refusal()[request.returnId]; as reason) {
-              <tr class="refusal">
-                <td colspan="6">{{ reason }}</td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
+    <div class="work-tools">
+      <backoffice-filter-chips [options]="filters()" [selected]="statusKey()" [label]="t('returns.filterLabel')" (chosen)="filterBy($event)" />
     </div>
+
+    @if (loading()) {
+      <p class="muted" role="status" aria-live="polite">{{ t('returns.loading') }}</p>
+    } @else if (failed()) {
+      <p class="failed" role="alert">{{ t('returns.failed') }}</p>
+    } @else if (shown().length === 0) {
+      <div class="empty"><p class="empty__text">{{ requests().length === 0 ? t('returns.empty') : t('returns.none') }}</p></div>
+    } @else {
+      <div class="table-wrap wide-only">
+        <table class="table">
+          <caption class="sr-only">{{ t('returns.title') }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ t('returns.column.return') }}</th>
+              <th scope="col">{{ t('returns.column.order') }}</th>
+              <th scope="col">{{ t('returns.column.what') }}</th>
+              <th scope="col">{{ t('returns.column.status') }}</th>
+              <th scope="col" class="numeric">{{ t('returns.column.refund') }}</th>
+              <th scope="col"><span class="sr-only">{{ t('returns.column.action') }}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (request of shown(); track request.returnId) {
+              <tr class="row" [class.row--selected]="request.returnId === selectedId()" (click)="open(request)">
+                <!-- Which return of the order, not the first segment of its GUID:
+                     two returns opened in the same second read the same there. -->
+                <td>
+                  <button
+                    type="button"
+                    class="row__open numeric"
+                    [title]="request.returnId"
+                    [attr.aria-label]="t('returns.openReturn', { number: request.number })"
+                    [attr.aria-expanded]="request.returnId === selectedId()"
+                    (click)="$event.stopPropagation(); open(request)"
+                  >
+                    #{{ request.number }}
+                  </button>
+                </td>
+                <td class="numeric" [title]="request.orderId">{{ shortId(request.orderId) }}</td>
+                <td><ng-container *ngTemplateOutlet="whatOf; context: { $implicit: request }" /></td>
+                <td><ng-container *ngTemplateOutlet="statusOf; context: { $implicit: request }" /></td>
+                <td class="numeric refund">{{ request.refundAmount ? money(request.refundAmount) : '—' }}</td>
+                <td class="actions">
+                  @if (next(request); as decision) {
+                    <button
+                      class="button button--small button--quiet"
+                      type="button"
+                      [disabled]="busy() === request.returnId"
+                      (click)="$event.stopPropagation(); decide(request, decision)"
+                    >
+                      {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decide.' + decision) }}
+                    </button>
+                  }
+                </td>
+              </tr>
+              @if (refusal()[request.returnId] !== undefined) {
+                <tr class="refusal">
+                  <td colspan="6" role="alert">{{ refusal()[request.returnId] || t('returns.refused') }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="work-cards narrow-only" role="list">
+        @for (request of shown(); track request.returnId) {
+          <li class="work-card" [class.work-card--selected]="request.returnId === selectedId()">
+            <button type="button" class="work-card__open" [attr.aria-label]="t('returns.openReturn', { number: request.number })" (click)="open(request)">
+              <span class="work-card__line">
+                <span class="numeric strong">#{{ request.number }}</span>
+                <ng-container *ngTemplateOutlet="statusOf; context: { $implicit: request }" />
+                <span class="numeric work-card__end">{{ request.refundAmount ? money(request.refundAmount) : '' }}</span>
+              </span>
+              <ng-container *ngTemplateOutlet="whatOf; context: { $implicit: request }" />
+            </button>
+            @if (next(request); as decision) {
+              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === request.returnId" (click)="decide(request, decision)">
+                {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decide.' + decision) }}
+              </button>
+            }
+            @if (refusal()[request.returnId] !== undefined) {
+              <p class="work-card__refusal" role="alert">{{ refusal()[request.returnId] || t('returns.refused') }}</p>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (selected(); as request) {
+    <backoffice-work-pane [heading]="t('returns.paneTitle', { number: request.number, id: shortId(request.orderId) })" (closed)="close()">
+      <div class="pane-status">
+        <ng-container *ngTemplateOutlet="statusOf; context: { $implicit: request }" />
+        <a class="quiet-link" routerLink="/orders" [queryParams]="{ status: 'all', order: request.orderId }">
+          {{ t('returns.openOrder') }}
+        </a>
+      </div>
+
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('returns.column.what') }}</h3>
+        <ul class="lines" role="list">
+          @for (line of request.lines; track line.sku) {
+            <li class="line">
+              <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
+              <span class="reason" [class.reason--damaged]="line.reason === 'Damaged'">{{ t('returns.reason.' + line.reason) }}</span>
+              @if (line.comment) {
+                <q class="line__comment">{{ line.comment }}</q>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+
+      @if (request.refundAmount) {
+        <p class="pane-total">
+          <span class="muted">{{ t('returns.column.refund') }}</span>
+          <span class="numeric strong">{{ money(request.refundAmount) }}</span>
+        </p>
+      }
+
+      @if (refusal()[request.returnId] !== undefined) {
+        <p class="failed" role="alert">{{ refusal()[request.returnId] || t('returns.refused') }}</p>
+      }
+
+      @if (next(request); as decision) {
+        <button type="button" class="button pane-primary" [disabled]="busy() === request.returnId" (click)="decide(request, decision)">
+          {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decideLong.' + decision) }}
+        </button>
+      }
+
+      @if (rejectable(request)) {
+        <div class="danger-zone">
+          <button type="button" class="linkish linkish--danger" (click)="askToReject()">{{ t('returns.reject.open') }}</button>
+          <p class="muted">{{ t('returns.reject.consequence') }}</p>
+        </div>
+        <backoffice-confirm-dialog
+          [heading]="t('returns.reject.title', { number: request.number })"
+          [body]="t('returns.reject.body')"
+          [reasonLabel]="t('returns.reject.reason')"
+          [keepLabel]="t('returns.reject.keep')"
+          [confirmLabel]="t('returns.reject.confirm')"
+          (confirmed)="decide(request, 'Reject', $event)"
+        />
+      }
+    </backoffice-work-pane>
   }
+
+  <ng-template #statusOf let-request>
+    <span class="status" [class]="'status--' + request.status">{{ t('returns.status.' + request.status) }}</span>
+  </ng-template>
+
+  <ng-template #whatOf let-request>
+    <ul class="what">
+      @for (line of request.lines; track line.sku) {
+        <li class="what__line">
+          <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
+          <span class="reason" [class.reason--damaged]="line.reason === 'Damaged'">{{ t('returns.reason.' + line.reason) }}</span>
+        </li>
+      }
+    </ul>
+  </ng-template>
 </section>

@@ -46,16 +46,36 @@
     "title": "Tendero Backoffice"
   },
   "catalogue": {
-    "empty": "Todavía no hay nada publicado. Los productos se publican desde la cola de revisión.",
     "failed": "No se ha podido cargar el catálogo.",
-    "hint": "Todo lo que la tienda vende hoy. Las variantes son una decisión de catálogo, producto a producto.",
+    "hint": "Todos los productos, por estado. Publica un borrador, retira uno de la venta o abre sus variantes.",
     "loading": "Cargando el catálogo...",
     "next": "Siguiente",
     "pageOf": "Página {{page}} de {{pages}}",
     "pages": "Páginas",
     "previous": "Anterior",
-    "published": "{{count}} publicados",
-    "title": "Catálogo"
+    "title": "Productos",
+    "filterLabel": "Mostrar productos",
+    "filter": {
+      "active": "A la venta",
+      "draft": "Borradores",
+      "archived": "Archivados",
+      "all": "Todos"
+    },
+    "none": "No hay productos aquí. Prueba otro filtro.",
+    "column": {
+      "status": "Estado"
+    },
+    "status": {
+      "active": "A la venta",
+      "draft": "Borrador",
+      "archived": "Archivado"
+    },
+    "withdraw": "Retirarlo de la venta",
+    "withdrawing": "Retirándolo…",
+    "withdrawHint": "Vuelve a la cola de revisión, y puedes deshacerlo.",
+    "withdrawn": "{{name}} ya no está a la venta; ha vuelto a la cola de revisión.",
+    "refused": "El catálogo ha rechazado ese cambio.",
+    "toReview": "Revisar los borradores nuevos"
   },
   "nav": {
     "agents": "Registro",
@@ -146,15 +166,6 @@
       "Ship": "Enviar pedido",
       "Deliver": "Marcar como entregado"
     },
-    "pane": {
-      "title": "Pedido {{id}}",
-      "back": "Volver a la lista",
-      "close": "Cerrar",
-      "deliverTo": "Entregar a",
-      "lines": "Líneas",
-      "total": "Total, IVA y envío incluidos",
-      "failed": "No se han podido cargar las líneas de este pedido."
-    },
     "cancel": {
       "open": "Cancelar pedido…",
       "consequence": "Pregunta antes: libera la retención del pago y no se puede deshacer.",
@@ -163,7 +174,12 @@
       "reason": "Por qué (opcional, se guarda con el pedido)",
       "keep": "Mantener el pedido",
       "confirm": "Cancelar el pedido"
-    }
+    },
+    "paneTitle": "Pedido {{id}}",
+    "deliverTo": "Entregar a",
+    "lines": "Líneas",
+    "paneTotal": "Total, IVA y envío incluidos",
+    "paneFailed": "No se han podido cargar las líneas de este pedido."
   },
   "promotions": {
     "title": "Promociones",
@@ -209,9 +225,8 @@
     "deciding": "Trabajando...",
     "empty": "Nada en espera. Un pedido entregado se puede devolver durante 14 días.",
     "failed": "No se han podido cargar las devoluciones.",
-    "hint": "Aprobar es una promesa; recibir es un hecho. Solo recibir devuelve la mercancía a la estantería, y lo dañado nunca vuelve.",
+    "hint": "Primero lo que espera una decisión. Aprobar es una promesa; recibir es un hecho: solo recibir devuelve el género a la estantería, y el dañado nunca vuelve.",
     "loading": "Cargando devoluciones...",
-    "openCount": "{{count}} abiertas",
     "reason": {
       "WrongSize": "Talla equivocada",
       "NotAsDescribed": "No es como se describía",
@@ -227,7 +242,33 @@
       "Rejected": "Rechazada",
       "Cancelled": "Cancelada"
     },
-    "title": "Devoluciones"
+    "title": "Devoluciones",
+    "filterLabel": "Mostrar devoluciones",
+    "filter": {
+      "Requested": "Por decidir",
+      "Approved": "Aprobadas",
+      "Received": "Recibidas",
+      "all": "Todas"
+    },
+    "none": "No hay devoluciones aquí. Prueba otro filtro.",
+    "refused": "La devolución ha rechazado esa decisión.",
+    "openReturn": "Abrir la devolución n.º {{number}}",
+    "paneTitle": "Devolución n.º {{number}} del pedido {{id}}",
+    "decideLong": {
+      "Approve": "Aprobar la devolución",
+      "Receive": "Marcar como recibida",
+      "Refund": "Reembolsarla"
+    },
+    "reject": {
+      "open": "Rechazar…",
+      "consequence": "Pregunta antes: una devolución rechazada no se puede reabrir.",
+      "title": "¿Rechazar la devolución n.º {{number}}?",
+      "body": "Se avisa al cliente de que se ha rechazado, y no se puede reabrir.",
+      "reason": "Por qué (opcional, se guarda con la devolución)",
+      "keep": "Dejarla abierta",
+      "confirm": "Rechazar la devolución"
+    },
+    "openOrder": "Abrir el pedido"
   },
   "reviewQueue": {
     "column": {
@@ -238,9 +279,9 @@
       "product": "Producto"
     },
     "complete": "es · en",
-    "empty": "No hay nada pendiente de revisión. Importa un catálogo para añadir productos.",
+    "empty": "No hay nada pendiente de revisión. Aquí aparecen los productos nuevos y los retirados.",
     "failed": "La cola no respondió. Vuelve a intentarlo en un momento.",
-    "hint": "Importar nunca publica: Draft es la razón de ser de esta cola, y sólo publicar hace encontrable un producto.",
+    "hint": "Nada está a la venta hasta que alguien lo publica. Abre un producto para revisar cada idioma, las imágenes y el precio antes de que salga.",
     "import": "Importar catálogo de ejemplo",
     "importing": "Importando…",
     "loading": "Cargando…",
@@ -251,7 +292,8 @@
     "title": "Cola de revisión",
     "imported": "Importado: {{created}} nuevos, {{updated}} actualizados, en {{seconds}} s.",
     "importFailed": "{{count}} no se pudieron importar.",
-    "seeCatalogue": "Ver lo que ya está publicado"
+    "seeCatalogue": "Ver lo que ya está publicado",
+    "publishLong": "Publicarlo"
   },
   "searchEvaluation": {
     "better": "{{count}} mejor",
@@ -355,11 +397,10 @@
   },
   "claims": {
     "title": "Afirmaciones por revisar",
-    "waiting": "{{count}} esperando",
     "loading": "Cargando las afirmaciones…",
     "failed": "No se han podido cargar las afirmaciones. Vuelve a intentarlo.",
     "empty": "No hay afirmaciones esperando revisión.",
-    "hint": "Lo que un modelo ha leído en la descripción de cada producto. Nada cambia en el catálogo hasta que lo apruebas. Primero, las de respaldo más débil: la cita puede no decir lo que afirma.",
+    "hint": "Lo que un modelo leyó en la descripción de cada producto. Nada cambia en el catálogo hasta que lo apruebas. Primero las de respaldo débil: su cita puede no decir lo que afirman.",
     "column": {
       "product": "Producto",
       "claim": "Afirmación",
@@ -370,7 +411,14 @@
     "proposedBy": "Propuesta por {{extractor}}",
     "supportExplained": "Cuánto respalda la cita a la afirmación, medido por un modelo de inferencia textual — no lo que el extractor dice de sí mismo.",
     "approve": "Aprobar",
-    "reject": "Rechazar"
+    "reject": "Rechazar",
+    "filterLabel": "Mostrar afirmaciones",
+    "filter": {
+      "weak": "Respaldo débil",
+      "all": "Todas"
+    },
+    "none": "No hay afirmaciones con respaldo débil pendientes. El resto está en Todas.",
+    "nextHint": "Al decidir se abre la siguiente de la lista."
   },
   "dashboard": {
     "title": "Panel",
@@ -478,7 +526,6 @@
   },
   "agents": {
     "title": "Agentes",
-    "count": "{{count}} registrados",
     "hint": "Los agentes que la tienda conoce. Un agente que nadie registró no se rechaza: compra como no confiable, con topes más estrictos. Registrarlo es responder por él; una suspensión necesita un motivo, para poder levantarla.",
     "loading": "Cargando agentes…",
     "failed": "No se ha podido hacer el cambio.",
@@ -511,7 +558,10 @@
     "reinstate": "Rehabilitar",
     "cancel": "Cancelar",
     "reason": "Motivo de la suspensión",
-    "reasonPlaceholder": "¿Por qué?"
+    "suspendTitle": "¿Suspender a {{agent}}?",
+    "suspendBody": "Deja de comprar al instante, y se le dice por qué. Puedes readmitirlo cuando quieras.",
+    "suspendHint": "Deja de comprar al instante. Readmitirlo lo deshace.",
+    "suspended": "{{agent}} está suspendido."
   },
   "staffUsage": {
     "title": "Cómo se usa el backoffice",
@@ -532,5 +582,32 @@
       "light": "Claro",
       "dark": "Oscuro"
     }
+  },
+  "pane": {
+    "back": "Volver a la lista",
+    "close": "Cerrar"
+  },
+  "undo": {
+    "take": "Deshacer",
+    "dismiss": "Descartar"
+  },
+  "productReview": {
+    "image": "Imagen de {{name}}",
+    "noImages": "Todavía no tiene imágenes.",
+    "price": "Precio",
+    "brand": "Marca",
+    "category": "Categoría",
+    "code": "Código",
+    "culture": {
+      "es": "Español",
+      "en": "Inglés"
+    },
+    "noDescription": "Sin descripción en este idioma.",
+    "missing": "Falta: la tienda mostraría aquí el otro idioma.",
+    "attributes": "Atributos",
+    "yes": "Sí",
+    "no": "No",
+    "loading": "Cargando el producto…",
+    "failed": "No se ha podido cargar este producto."
   }
 }

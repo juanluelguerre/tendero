@@ -1,133 +1,112 @@
-<ng-container *transloco="let t">
-  <header class="page-head">
-    <h1 class="page-title">{{ t('reviewQueue.title') }}</h1>
-    @if (state().status === 'ready' && pending() > 0) {
-      <span class="tag tag--warn">{{ t('reviewQueue.pending', { count: pending() }) }}</span>
-    }
-    @if (state().status === 'ready' && pending() > 0) {
-      <div class="page-actions">
-        <button type="button" class="button button--quiet" [disabled]="importing()"
-                (click)="importSeed()">
-          {{ importing() ? t('reviewQueue.importing') : t('reviewQueue.import') }}
-        </button>
-      </div>
-    }
-  </header>
-  <p class="page-hint">{{ t('reviewQueue.hint') }}</p>
+<section class="work-layout" [class.work-layout--with-pane]="selected()" *transloco="let t">
+  <div class="work-list">
+    <header class="page-head">
+      <h1 class="page-title">{{ t('reviewQueue.title') }}</h1>
+    </header>
+    <p class="page-hint">{{ t('reviewQueue.hint') }}</p>
 
-  <!--
-    The awning stripe, finally doing the job design/DESIGN.md assigned it:
-    "the loading bar during import". It is the one decorative device in the
-    system and the only thing allowed to animate, and until now it appeared on
-    exactly one <hr>.
-
-    Indeterminate on purpose — the import is one request and the server counts as
-    it goes, so a percentage would be invented. What this says is "still
-    working", which is the only honest thing to say.
-  -->
-  @if (importing()) {
-    <div class="importing" role="status" aria-live="polite">
-      <div class="awning-rule awning-rule--thin importing__bar"></div>
-      <p class="importing__label muted">{{ t('reviewQueue.importing') }}</p>
-    </div>
-  }
-
-  @if (imported(); as result) {
-    <!-- The numbers, because "it worked" and "it created ninety-four products"
-         are different amounts of information, and the second is what tells you
-         the button did what you meant. -->
-    <p class="imported" [class.imported--failed]="result.failed > 0" role="status">
-      {{ t('reviewQueue.imported', {
-           created: result.created, updated: result.updated, seconds: seconds(result)
-         }) }}
-      @if (result.failed > 0) {
-        <strong>{{ t('reviewQueue.importFailed', { count: result.failed }) }}</strong>
-      }
-    </p>
-  }
-
-  @switch (state().status) {
-    @case ('loading') {
+    @if (loading()) {
       <p class="muted" role="status" aria-live="polite">{{ t('reviewQueue.loading') }}</p>
-    }
-    @case ('failed') {
+    } @else if (failed()) {
       <p class="failed" role="alert">{{ t('reviewQueue.failed') }}</p>
-    }
-    @case ('ready') {
-      @let ready = state();
-      @if (ready.status === 'ready') {
-        @if (ready.items.length === 0) {
-          <div class="empty">
-            <!-- Nothing waiting is not an empty shop: everything may simply be
-                 published. The copy used to say "import a catalog to get
-                 started" over a hundred published products. -->
-            <p class="empty__text">{{ t('reviewQueue.empty') }}</p>
-            <a class="quiet-link" routerLink="/catalogue">{{ t('reviewQueue.seeCatalogue') }}</a>
-            <!-- The view's only clay action (design/DESIGN.md). -->
-            <button type="button" class="button" [disabled]="importing()" (click)="importSeed()">
-              {{ importing() ? t('reviewQueue.importing') : t('reviewQueue.import') }}
-            </button>
-          </div>
-        } @else {
-          <div class="table-wrap">
-          <table class="table">
-            <caption class="sr-only">{{ t('reviewQueue.title') }}</caption>
-            <thead>
-              <tr>
-                <th scope="col">{{ t('reviewQueue.column.product') }}</th>
-                <th scope="col">{{ t('reviewQueue.column.brand') }}</th>
-                <th scope="col" class="right">{{ t('reviewQueue.column.price') }}</th>
-                <th scope="col">{{ t('reviewQueue.column.languages') }}</th>
-                <th scope="col"><span class="sr-only">{{ t('variants.title') }}</span></th>
-                <th scope="col"><span class="sr-only">{{ t('reviewQueue.column.action') }}</span></th>
+    } @else if (drafts().length === 0) {
+      <div class="empty">
+        <!-- Nothing waiting is not an empty shop: everything may simply be
+             published. No clay here: importing is the products screen's, and
+             it was a developer's action wearing this screen's accent (B-F7). -->
+        <p class="empty__text">{{ t('reviewQueue.empty') }}</p>
+        <a class="quiet-link" routerLink="/catalogue">{{ t('reviewQueue.seeCatalogue') }}</a>
+      </div>
+    } @else {
+      <div class="table-wrap wide-only">
+        <table class="table">
+          <caption class="sr-only">{{ t('reviewQueue.title') }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ t('reviewQueue.column.product') }}</th>
+              <th scope="col">{{ t('reviewQueue.column.brand') }}</th>
+              <th scope="col" class="right">{{ t('reviewQueue.column.price') }}</th>
+              <th scope="col">{{ t('reviewQueue.column.languages') }}</th>
+              <th scope="col"><span class="sr-only">{{ t('reviewQueue.column.action') }}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of drafts(); track item.productId) {
+              <tr class="row" [class.row--selected]="item.code === selectedCode()" (click)="open(item)">
+                <td>
+                  <button
+                    type="button"
+                    class="row__open"
+                    [attr.aria-expanded]="item.code === selectedCode()"
+                    (click)="$event.stopPropagation(); open(item)"
+                  >
+                    {{ item.name }}
+                  </button>
+                  <span class="slug numeric">{{ item.code }}</span>
+                </td>
+                <td>{{ item.brand ?? '—' }}</td>
+                <td class="right numeric">{{ price(item) }}</td>
+                <td>
+                  <ng-container *ngTemplateOutlet="languagesOf; context: { $implicit: item }" />
+                </td>
+                <td class="right">
+                  <!-- Quiet: one per row would be many clay buttons in one view
+                       (design/DESIGN.md). The pane's is the view's clay one. -->
+                  <button
+                    type="button"
+                    class="button button--small button--quiet"
+                    [disabled]="publishing().has(item.productId)"
+                    (click)="$event.stopPropagation(); publish(item)"
+                  >
+                    {{ publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              @for (item of ready.items; track item.productId) {
-                <tr>
-                  <td>
-                    <span class="name">{{ item.name }}</span>
-                    <span class="slug numeric">{{ item.slug }}</span>
-                  </td>
-                  <td>{{ item.brand ?? '—' }}</td>
-                  <td class="right numeric">{{ price(item) }}</td>
-                  <td>
-                    @if (item.missingCultures.length === 0) {
-                      <!-- Colour never alone: always with a word (design/DESIGN.md). -->
-                      <span class="tag tag--ok">{{ t('reviewQueue.complete') }}</span>
-                    } @else {
-                      <span class="tag tag--warn">{{
-                        t('reviewQueue.missing', { cultures: item.missingCultures.join(', ') })
-                      }}</span>
-                    }
-                  </td>
-                  <!-- Defining variants is a catalogue decision, not an
-                       import one, so it is offered per row and not in bulk. -->
-                  <td>
-                    <a class="quiet-link" [routerLink]="['/products', item.productId, 'variants']">
-                      {{ t('variants.title') }}
-                    </a>
-                  </td>
-                  <td class="right">
-                    <!-- Quiet: one per row would be many clay buttons in one
-                         view (design/DESIGN.md). The empty state's import is
-                         this screen's one clay action. -->
-                    <button
-                      type="button"
-                      class="button button--quiet"
-                      [disabled]="publishing().has(item.productId)"
-                      (click)="publish(item)"
-                    >
-                      {{ publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
-                    </button>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          </div>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="work-cards narrow-only" role="list">
+        @for (item of drafts(); track item.productId) {
+          <li class="work-card" [class.work-card--selected]="item.code === selectedCode()">
+            <button type="button" class="work-card__open" (click)="open(item)">
+              <span class="work-card__line">
+                <span class="name">{{ item.name }}</span>
+                <span class="numeric work-card__end">{{ price(item) }}</span>
+              </span>
+              <span class="work-card__line">
+                <ng-container *ngTemplateOutlet="languagesOf; context: { $implicit: item }" />
+                <span class="slug numeric">{{ item.brand ?? '' }}</span>
+              </span>
+            </button>
+            <button type="button" class="button button--quiet work-card__action" [disabled]="publishing().has(item.productId)" (click)="publish(item)">
+              {{ publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
+            </button>
+          </li>
         }
-      }
+      </ul>
     }
+  </div>
+
+  @if (selected(); as item) {
+    <backoffice-work-pane [heading]="item.name" (closed)="close()">
+      <backoffice-product-review [code]="item.code" />
+
+      <button type="button" class="button pane-primary" [disabled]="publishing().has(item.productId)" (click)="publish(item)">
+        {{ publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publishLong') }}
+      </button>
+      <!-- Defining variants is a catalogue decision, made one product at a time. -->
+      <a class="quiet-link" [routerLink]="['/products', item.productId, 'variants']">{{ t('variants.title') }}</a>
+    </backoffice-work-pane>
   }
-</ng-container>
+
+  <ng-template #languagesOf let-item>
+    @if (item.missingCultures.length === 0) {
+      <!-- Colour never alone: always with a word (design/DESIGN.md). -->
+      <span class="tag tag--ok">{{ t('reviewQueue.complete') }}</span>
+    } @else {
+      <span class="tag tag--warn">{{ t('reviewQueue.missing', { cultures: item.missingCultures.join(', ') }) }}</span>
+    }
+  </ng-template>
+</section>

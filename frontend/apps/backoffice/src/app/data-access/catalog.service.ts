@@ -6,9 +6,11 @@ import type {
   SkuDescriptionList,
   DefineVariantsResponse,
   ImportResult,
+  ProductForReview,
   ProductListPage,
   ProductStatus,
   PublishProductResponse,
+  WithdrawProductResponse,
 } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
@@ -84,6 +86,18 @@ export class CatalogService {
       `${this.baseUrl}/api/catalog/products/${productId}/publish`,
       null,
     );
+  }
+
+  /** Back to the review queue: the inverse of publishing (ADR 0012's addendum). */
+  withdraw(productId: string): Observable<WithdrawProductResponse> {
+    return this.http.post<WithdrawProductResponse>(`${this.baseUrl}/api/catalog/products/${productId}/withdraw`, {});
+  }
+
+  /** Every culture as stored, whatever the status: what a person approves (R-4.3). */
+  review(code: string, culture: string): Observable<ProductForReview> {
+    return this.http.get<ProductForReview>(`${this.baseUrl}/api/catalog/products/${encodeURIComponent(code)}/review`, {
+      params: new HttpParams().set('culture', culture),
+    });
   }
 
   import(source = 'seed'): Observable<ImportResult> {

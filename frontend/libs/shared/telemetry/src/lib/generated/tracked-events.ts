@@ -86,7 +86,7 @@ export interface TrackedEvents {
     /** The screen it was done on. */
     readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
     /** What was done, from a closed list. */
-    readonly action: 'publish' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate';
+    readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate';
     /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
     readonly outcome: 'done' | 'refused' | 'failed';
   };

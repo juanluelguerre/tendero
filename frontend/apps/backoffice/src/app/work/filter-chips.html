@@ -1,0 +1,8 @@
+@for (option of options(); track option.key) {
+  <button type="button" class="chip" [attr.aria-pressed]="option.key === selected()" (click)="chosen.emit(option.key)">
+    {{ option.label }}
+    @if (option.count !== null) {
+      <span class="chip__count numeric">{{ option.count }}</span>
+    }
+  </button>
+}

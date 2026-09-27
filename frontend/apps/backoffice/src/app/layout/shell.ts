@@ -13,6 +13,7 @@ import { AccountMenu } from './account-menu';
 import { Icon } from './icon';
 import { Nav } from './nav';
 import { StaffNotice } from './staff-notice';
+import { UndoToast } from '../work/undo-toast';
 import { Waiting } from './waiting';
 
 /**
@@ -28,7 +29,7 @@ import { Waiting } from './waiting';
  */
 @Component({
   selector: 'backoffice-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon, UndoToast],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',

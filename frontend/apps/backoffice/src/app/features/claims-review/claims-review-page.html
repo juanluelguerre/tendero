@@ -1,67 +1,119 @@
-<section *transloco="let t">
-  <header class="page-head">
-    <h1 class="page-title">{{ t('claims.title') }}</h1>
-    @if (claims().length > 0) {
-      <span class="tag tag--warn">{{ t('claims.waiting', { count: claims().length }) }}</span>
-    }
-  </header>
-  <p class="page-hint">{{ t('claims.hint') }}</p>
+<section class="work-layout" [class.work-layout--with-pane]="selected()" *transloco="let t">
+  <div class="work-list">
+    <header class="page-head">
+      <h1 class="page-title">{{ t('claims.title') }}</h1>
+    </header>
+    <p class="page-hint">{{ t('claims.hint') }}</p>
 
-  @if (loading()) {
-    <p class="muted" role="status" aria-live="polite">{{ t('claims.loading') }}</p>
-  } @else if (failed()) {
-    <p class="failed" role="alert">{{ t('claims.failed') }}</p>
-  } @else if (claims().length === 0) {
-    <div class="empty"><p class="empty__text">{{ t('claims.empty') }}</p></div>
-  } @else {
-    <div class="table-wrap">
-      <table class="table">
-        <caption class="sr-only">{{ t('claims.title') }}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{{ t('claims.column.product') }}</th>
-            <th scope="col">{{ t('claims.column.claim') }}</th>
-            <th scope="col">{{ t('claims.column.evidence') }}</th>
-            <th scope="col" class="numeric">{{ t('claims.column.support') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('claims.column.action') }}</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (claim of claims(); track claim.claimId) {
-            <tr>
-              <td class="product">{{ productName(claim) }}</td>
-              <td>
-                <p class="statement">{{ statement(claim) }}</p>
-                @if (claim.attributeCode) {
-                  <span class="attribute code">{{ claim.attributeCode }} = {{ claim.value }}</span>
-                }
-                <p class="provenance">{{ t('claims.proposedBy', { extractor: claim.model ?? claim.extractor }) }}</p>
-              </td>
-              <td>
-                <ul class="quotes">
-                  @for (quote of claim.quotes; track quote.culture) {
-                    <li class="quote"><span class="quote__culture">{{ quote.culture }}</span> «{{ quote.text }}»</li>
-                  }
-                </ul>
-              </td>
-              <td class="numeric">
-                <span class="support" [class.support--weak]="isWeak(claim)" [attr.title]="t('claims.supportExplained')">
-                  {{ percent(claim.support) }}
-                </span>
-              </td>
-              <td class="actions">
-                <!-- Quiet, both: one clay action per view, and a queue of rows has many. -->
-                <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'approve')">
-                  {{ t('claims.approve') }}
-                </button>
-                <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'reject')">
-                  {{ t('claims.reject') }}
-                </button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <div class="work-tools">
+      <backoffice-filter-chips [options]="filters()" [selected]="filterKey()" [label]="t('claims.filterLabel')" (chosen)="filterBy($event)" />
     </div>
+
+    @if (loading()) {
+      <p class="muted" role="status" aria-live="polite">{{ t('claims.loading') }}</p>
+    } @else if (failed()) {
+      <p class="failed" role="alert">{{ t('claims.failed') }}</p>
+    } @else if (shown().length === 0) {
+      <div class="empty"><p class="empty__text">{{ claims().length === 0 ? t('claims.empty') : t('claims.none') }}</p></div>
+    } @else {
+      <div class="table-wrap wide-only">
+        <table class="table">
+          <caption class="sr-only">{{ t('claims.title') }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ t('claims.column.claim') }}</th>
+              <th scope="col">{{ t('claims.column.product') }}</th>
+              <th scope="col" class="numeric">{{ t('claims.column.support') }}</th>
+              <th scope="col"><span class="sr-only">{{ t('claims.column.action') }}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (claim of shown(); track claim.claimId) {
+              <tr class="row" [class.row--selected]="claim.claimId === selectedId()" (click)="open(claim)">
+                <td>
+                  <button type="button" class="row__open statement" [attr.aria-expanded]="claim.claimId === selectedId()" (click)="$event.stopPropagation(); open(claim)">
+                    {{ statement(claim) }}
+                  </button>
+                  @if (claim.attributeCode) {
+                    <span class="attribute code">{{ claim.attributeCode }} = {{ claim.value }}</span>
+                  }
+                </td>
+                <td class="product">{{ productName(claim) }}</td>
+                <td class="numeric"><ng-container *ngTemplateOutlet="supportOf; context: { $implicit: claim }" /></td>
+                <td class="actions">
+                  <!-- Quiet, both: one clay action per view, and a queue of rows has many. -->
+                  <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="$event.stopPropagation(); decide(claim, 'approve')">
+                    {{ t('claims.approve') }}
+                  </button>
+                  <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="$event.stopPropagation(); decide(claim, 'reject')">
+                    {{ t('claims.reject') }}
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="work-cards narrow-only" role="list">
+        @for (claim of shown(); track claim.claimId) {
+          <li class="work-card" [class.work-card--selected]="claim.claimId === selectedId()">
+            <button type="button" class="work-card__open" (click)="open(claim)">
+              <span class="statement">{{ statement(claim) }}</span>
+              <span class="work-card__line">
+                <span class="product muted">{{ productName(claim) }}</span>
+                <span class="work-card__end"><ng-container *ngTemplateOutlet="supportOf; context: { $implicit: claim }" /></span>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (selected(); as claim) {
+    <backoffice-work-pane [heading]="productName(claim)" (closed)="close()">
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('claims.column.claim') }}</h3>
+        <p class="statement">{{ statement(claim, 'es') }}</p>
+        <p class="statement muted">{{ statement(claim, 'en') }}</p>
+        @if (claim.attributeCode) {
+          <span class="attribute code">{{ claim.attributeCode }} = {{ claim.value }}</span>
+        }
+      </section>
+
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('claims.column.evidence') }}</h3>
+        <ul class="quotes" role="list">
+          @for (quote of claim.quotes; track quote.culture + quote.start) {
+            <li class="quote">
+              <span class="quote__culture">{{ quote.culture }}</span>
+              <q>{{ quote.text }}</q>
+              <span class="numeric muted">{{ percent(quote.support) }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <p class="pane-support">
+        <span class="muted" [attr.title]="t('claims.supportExplained')">{{ t('claims.column.support') }}</span>
+        <ng-container *ngTemplateOutlet="supportOf; context: { $implicit: claim }" />
+      </p>
+      <p class="provenance">{{ t('claims.proposedBy', { extractor: claim.model ?? claim.extractor }) }}</p>
+
+      <div class="pane-actions">
+        <button type="button" class="button pane-primary" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'approve')">
+          {{ t('claims.approve') }}
+        </button>
+        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'reject')">
+          {{ t('claims.reject') }}
+        </button>
+      </div>
+      <p class="muted provenance">{{ t('claims.nextHint') }}</p>
+    </backoffice-work-pane>
   }
+
+  <ng-template #supportOf let-claim>
+    <span class="support" [class.support--weak]="isWeak(claim)" [attr.title]="t('claims.supportExplained')">{{ percent(claim.support) }}</span>
+  </ng-template>
 </section>

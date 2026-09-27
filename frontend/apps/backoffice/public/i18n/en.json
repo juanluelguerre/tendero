@@ -46,16 +46,36 @@
     "title": "Tendero Backoffice"
   },
   "catalogue": {
-    "empty": "Nothing is published yet. Products are published from the review queue.",
     "failed": "Could not load the catalogue.",
-    "hint": "Everything the shop sells today. Variants are a catalogue decision, made one product at a time.",
+    "hint": "Every product, by status. Publish a draft, take a product off sale, or open its variants.",
     "loading": "Loading the catalogue...",
     "next": "Next",
     "pageOf": "Page {{page}} of {{pages}}",
     "pages": "Pages",
     "previous": "Previous",
-    "published": "{{count}} published",
-    "title": "Catalogue"
+    "title": "Products",
+    "filterLabel": "Show products",
+    "filter": {
+      "active": "On sale",
+      "draft": "Drafts",
+      "archived": "Archived",
+      "all": "All"
+    },
+    "none": "No product here. Try another filter.",
+    "column": {
+      "status": "Status"
+    },
+    "status": {
+      "active": "On sale",
+      "draft": "Draft",
+      "archived": "Archived"
+    },
+    "withdraw": "Take it off sale",
+    "withdrawing": "Taking it off sale…",
+    "withdrawHint": "It goes back to the review queue, and you can undo it.",
+    "withdrawn": "{{name}} is off sale, back in the review queue.",
+    "refused": "The catalogue refused that change.",
+    "toReview": "Review the new drafts"
   },
   "nav": {
     "agents": "Registry",
@@ -146,15 +166,6 @@
       "Ship": "Ship order",
       "Deliver": "Mark as delivered"
     },
-    "pane": {
-      "title": "Order {{id}}",
-      "back": "Back to the list",
-      "close": "Close",
-      "deliverTo": "Deliver to",
-      "lines": "Lines",
-      "total": "Total, VAT and shipping included",
-      "failed": "Could not load this order's lines."
-    },
     "cancel": {
       "open": "Cancel order…",
       "consequence": "Asks first: it releases the payment hold and cannot be undone.",
@@ -163,7 +174,12 @@
       "reason": "Why (optional, kept with the order)",
       "keep": "Keep the order",
       "confirm": "Cancel the order"
-    }
+    },
+    "paneTitle": "Order {{id}}",
+    "deliverTo": "Deliver to",
+    "lines": "Lines",
+    "paneTotal": "Total, VAT and shipping included",
+    "paneFailed": "Could not load this order's lines."
   },
   "promotions": {
     "title": "Promotions",
@@ -209,9 +225,8 @@
     "deciding": "Working...",
     "empty": "Nothing waiting. A delivered order can be sent back for 14 days.",
     "failed": "Could not load the returns.",
-    "hint": "Approving is a promise; receiving is a fact. Only receiving puts the goods back on the shelf, and damaged goods never do.",
+    "hint": "What waits for a decision comes first. Approving is a promise; receiving is a fact: only receiving puts the goods back on the shelf, and damaged goods never do.",
     "loading": "Loading returns...",
-    "openCount": "{{count}} open",
     "reason": {
       "WrongSize": "Wrong size",
       "NotAsDescribed": "Not as described",
@@ -227,7 +242,33 @@
       "Rejected": "Rejected",
       "Cancelled": "Cancelled"
     },
-    "title": "Returns"
+    "title": "Returns",
+    "filterLabel": "Show returns",
+    "filter": {
+      "Requested": "To decide",
+      "Approved": "Approved",
+      "Received": "Received",
+      "all": "All"
+    },
+    "none": "No return here. Try another filter.",
+    "refused": "The return refused that decision.",
+    "openReturn": "Open return #{{number}}",
+    "paneTitle": "Return #{{number}} of order {{id}}",
+    "decideLong": {
+      "Approve": "Approve the return",
+      "Receive": "Mark as received",
+      "Refund": "Refund it"
+    },
+    "reject": {
+      "open": "Reject…",
+      "consequence": "Asks first: a rejected return cannot be reopened.",
+      "title": "Reject return #{{number}}?",
+      "body": "The customer is told it was rejected, and it cannot be reopened.",
+      "reason": "Why (optional, kept with the return)",
+      "keep": "Keep it open",
+      "confirm": "Reject the return"
+    },
+    "openOrder": "Open the order"
   },
   "reviewQueue": {
     "column": {
@@ -238,9 +279,9 @@
       "product": "Product"
     },
     "complete": "es · en",
-    "empty": "Nothing is waiting for review. Import a catalog to add products.",
+    "empty": "Nothing is waiting for review. New and withdrawn products appear here.",
     "failed": "The queue did not answer. Try again in a moment.",
-    "hint": "Importing never publishes: Draft is why this queue exists, and only publishing makes a product findable.",
+    "hint": "Nothing is on sale until somebody publishes it. Open a product to check every language, the images and the price before it goes out.",
     "import": "Import the sample catalog",
     "importing": "Importing…",
     "loading": "Loading…",
@@ -251,7 +292,8 @@
     "title": "Review queue",
     "imported": "Imported: {{created}} new, {{updated}} updated, in {{seconds}} s.",
     "importFailed": "{{count}} could not be imported.",
-    "seeCatalogue": "See what is already published"
+    "seeCatalogue": "See what is already published",
+    "publishLong": "Publish it"
   },
   "searchEvaluation": {
     "better": "{{count}} better",
@@ -355,11 +397,10 @@
   },
   "claims": {
     "title": "Claims to review",
-    "waiting": "{{count}} waiting",
     "loading": "Loading the claims…",
     "failed": "The claims could not be loaded. Try again.",
     "empty": "No claims are waiting for review.",
-    "hint": "What a model read in each product's description. Nothing changes in the catalogue until you approve it. The weakest support first: the quote may not say what the claim does.",
+    "hint": "What a model read in each product's description. Nothing changes in the catalogue until you approve it. The weakly supported first: their quote may not say what the claim does.",
     "column": {
       "product": "Product",
       "claim": "Claim",
@@ -370,7 +411,14 @@
     "proposedBy": "Proposed by {{extractor}}",
     "supportExplained": "How well the quote supports the claim, measured by a textual-inference model — not what the extractor says about itself.",
     "approve": "Approve",
-    "reject": "Reject"
+    "reject": "Reject",
+    "filterLabel": "Show claims",
+    "filter": {
+      "weak": "Weak support",
+      "all": "All"
+    },
+    "none": "No weakly supported claim is waiting. The rest are under All.",
+    "nextHint": "Deciding opens the next claim down the list."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -478,7 +526,6 @@
   },
   "agents": {
     "title": "Agents",
-    "count": "{{count}} registered",
     "hint": "The agents the shop knows. An agent nobody registered is not refused: it shops as untrusted, under tighter caps. Registering one is vouching for it; a suspension needs a reason, so it can be lifted.",
     "loading": "Loading agents…",
     "failed": "The change could not be made.",
@@ -511,7 +558,10 @@
     "reinstate": "Reinstate",
     "cancel": "Cancel",
     "reason": "Reason for the suspension",
-    "reasonPlaceholder": "Why?"
+    "suspendTitle": "Suspend {{agent}}?",
+    "suspendBody": "It stops buying at once, and is told why. You can reinstate it at any time.",
+    "suspendHint": "It stops buying at once. Reinstating undoes it.",
+    "suspended": "{{agent}} is suspended."
   },
   "staffUsage": {
     "title": "How the backoffice is used",
@@ -532,5 +582,32 @@
       "light": "Light",
       "dark": "Dark"
     }
+  },
+  "pane": {
+    "back": "Back to the list",
+    "close": "Close"
+  },
+  "undo": {
+    "take": "Undo",
+    "dismiss": "Dismiss"
+  },
+  "productReview": {
+    "image": "Image of {{name}}",
+    "noImages": "No images yet.",
+    "price": "Price",
+    "brand": "Brand",
+    "category": "Category",
+    "code": "Code",
+    "culture": {
+      "es": "Spanish",
+      "en": "English"
+    },
+    "noDescription": "No description in this language.",
+    "missing": "Missing: the storefront would show the other language here.",
+    "attributes": "Attributes",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading the product…",
+    "failed": "Could not load this product."
   }
 }

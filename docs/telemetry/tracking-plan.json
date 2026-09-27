@@ -397,6 +397,7 @@
           "type": "string",
           "values": [
             "publish",
+            "withdraw",
             "import",
             "claim_approve",
             "claim_reject",

@@ -21,6 +21,10 @@ type Schemas = components['schemas'];
 export type ProductSummary = Schemas['ProductSummary'];
 export type ProductListPage = Schemas['ListProductsResult'];
 export type PublishProductResponse = Schemas['PublishProductResponse'];
+export type WithdrawProductResponse = Schemas['WithdrawProductResponse'];
+
+/** A product as the shopkeeper reviews it: every culture as stored, whatever its status (R-4.3). */
+export type ProductForReview = Schemas['ProductForReview'];
 export type ImportResult = Schemas['ImportProductsResult'];
 export type DefineVariantsResponse = Schemas['DefineVariantsResponse'];
 

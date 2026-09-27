@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  type ElementRef,
   inject,
   Injector,
   linkedSignal,
@@ -13,13 +12,16 @@ import {
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import type { OrderSummary } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { OrderingService, type OrderMove } from '../../data-access/ordering.service';
 import { BackofficeUsage, type BackofficeAction } from '../../usage';
+import { ConfirmDialog } from '../../work/confirm-dialog';
+import { FilterChips, type FilterOption } from '../../work/filter-chips';
+import { WorkPane } from '../../work/work-pane';
 
 /** Each move as the usage event names it (ADR 0041). */
 const OrderActions = { Ship: 'order_ship', Deliver: 'order_deliver', Cancel: 'order_cancel' } as const satisfies Record<OrderMove, BackofficeAction>;
@@ -44,11 +46,10 @@ const ToShip = 'Confirmed';
  */
 @Component({
   selector: 'backoffice-orders',
-  imports: [TranslocoDirective, NgTemplateOutlet],
+  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips, ConfirmDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-page.html',
   styleUrl: './orders-page.css',
-  host: { '(keydown.escape)': 'closeOnEscape()' },
 })
 export class OrdersPage {
   private readonly ordering = inject(OrderingService);
@@ -58,8 +59,8 @@ export class OrdersPage {
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
 
-  private readonly paneHeading = viewChild<ElementRef<HTMLElement>>('paneHeading');
-  private readonly cancelDialog = viewChild<ElementRef<HTMLDialogElement>>('cancelDialog');
+  private readonly cancelDialog = viewChild(ConfirmDialog);
+  private readonly filterLabels = translateObjectSignal('orders.filter');
 
   private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
 
@@ -84,11 +85,15 @@ export class OrdersPage {
   protected readonly failed = computed(() => this.list.status() === 'error');
 
   /** One chip per status that has orders, plus the one showing and the job's own. */
-  protected readonly filters = computed(() => {
+  protected readonly filters = computed<FilterOption[]>(() => {
+    const labels = this.filterLabels() as Record<string, string>;
     const counts = new Map((this.list.value()?.counts ?? []).map((entry) => [entry.status, entry.count]));
     const shown = Statuses.filter((status) => status === ToShip || status === this.statusKey() || (counts.get(status) ?? 0) > 0);
     const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
-    return [...shown.map((status) => ({ key: status as string, count: counts.get(status) ?? 0 })), { key: 'all', count: total }];
+    return [
+      ...shown.map((status) => ({ key: status as string, label: labels[status] ?? status, count: counts.get(status) ?? 0 })),
+      { key: 'all', label: labels['all'] ?? 'all', count: total },
+    ];
   });
 
   /** The open order's row, kept while a move takes it out of the filtered list. */
@@ -108,7 +113,6 @@ export class OrdersPage {
 
   protected readonly busy = signal<string | null>(null);
   protected readonly refusal = signal<Record<string, string>>({});
-  protected readonly cancelReason = signal('');
 
   /** The likely move for a status: what the row and the pane lead with. Cancelling is never it. */
   protected primaryMove(status: string): OrderMove | null {
@@ -153,9 +157,6 @@ export class OrdersPage {
 
   protected open(order: OrderSummary): void {
     void this.router.navigate([], { queryParams: { order: order.orderId }, queryParamsHandling: 'merge' });
-    // The pane's heading takes the focus, so a keyboard or a screen reader is
-    // where the eye went.
-    afterNextRender(() => this.paneHeading()?.nativeElement.focus(), { injector: this.injector });
   }
 
   protected close(): void {
@@ -164,18 +165,8 @@ export class OrdersPage {
     afterNextRender(() => document.getElementById(`open-${id}`)?.focus(), { injector: this.injector });
   }
 
-  protected closeOnEscape(): void {
-    if (this.selectedId() && !this.cancelDialog()?.nativeElement.open) this.close();
-  }
-
   protected askToCancel(): void {
-    this.cancelReason.set('');
-    this.cancelDialog()?.nativeElement.showModal();
-  }
-
-  protected confirmCancel(order: OrderSummary): void {
-    this.cancelDialog()?.nativeElement.close();
-    this.apply(order, 'Cancel', this.cancelReason().trim() || undefined);
+    this.cancelDialog()?.open();
   }
 
   protected apply(order: OrderSummary, move: OrderMove, reason?: string): void {

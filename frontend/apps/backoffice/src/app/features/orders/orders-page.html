@@ -1,24 +1,17 @@
-<section class="layout" [class.layout--with-pane]="selectedId()" *transloco="let t">
-  <div class="list">
+<section class="work-layout" [class.work-layout--with-pane]="selectedId()" *transloco="let t">
+  <div class="work-list">
     <header class="page-head">
       <h1 class="page-title">{{ t('orders.title') }}</h1>
     </header>
     <p class="page-hint">{{ t('orders.hint') }}</p>
 
-    <div class="tools">
-      <div class="filters" role="group" [attr.aria-label]="t('orders.filterLabel')">
-        @for (filter of filters(); track filter.key) {
-          <button
-            type="button"
-            class="chip"
-            [attr.aria-pressed]="filter.key === statusKey()"
-            (click)="filterBy(filter.key)"
-          >
-            {{ filter.key === 'all' ? t('orders.filter.all') : t('orders.filter.' + filter.key) }}
-            <span class="chip__count numeric">{{ filter.count }}</span>
-          </button>
-        }
-      </div>
+    <div class="work-tools">
+      <backoffice-filter-chips
+        [options]="filters()"
+        [selected]="statusKey()"
+        [label]="t('orders.filterLabel')"
+        (chosen)="filterBy($event)"
+      />
 
       <label class="find">
         <span class="sr-only">{{ t('orders.findLabel') }}</span>
@@ -104,15 +97,15 @@
         </table>
       </div>
 
-      <ul class="cards narrow-only" role="list">
+      <ul class="work-cards narrow-only" role="list">
         @for (order of orders(); track order.orderId) {
-          <li class="card" [class.card--selected]="order.orderId === selectedId()">
-            <button type="button" class="card__open" [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })" (click)="open(order)">
-              <span class="card__line">
+          <li class="work-card" [class.work-card--selected]="order.orderId === selectedId()">
+            <button type="button" class="work-card__open" [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })" (click)="open(order)">
+              <span class="work-card__line">
                 <span class="numeric code">{{ shortId(order.orderId) }}</span>
-                <span class="numeric total card__total">{{ money(order.total, order.currency) }}</span>
+                <span class="numeric total work-card__end">{{ money(order.total, order.currency) }}</span>
               </span>
-              <span class="card__line">
+              <span class="work-card__line">
                 <ng-container *ngTemplateOutlet="statusOf; context: { $implicit: order }" />
               </span>
               <span class="card__who">{{ order.recipientName }}</span>
@@ -120,7 +113,7 @@
             </button>
             @if (primaryMove(order.status); as move) {
               <button
-                class="button button--quiet card__move"
+                class="button button--quiet work-card__action"
                 type="button"
                 [disabled]="busy() === order.orderId"
                 (click)="apply(order, move)"
@@ -129,7 +122,7 @@
               </button>
             }
             @if (refusal()[order.orderId] !== undefined) {
-              <p class="card__refusal" role="alert">{{ refusal()[order.orderId] || t('orders.refused') }}</p>
+              <p class="work-card__refusal" role="alert">{{ refusal()[order.orderId] || t('orders.refused') }}</p>
             }
           </li>
         }
@@ -140,37 +133,29 @@
   @if (selected(); as order) {
     <!-- The pane: beside the list from 1024 px, a sheet over it below. It holds
          the view's one clay action, and cancelling lives apart at its foot. -->
-    <aside class="pane" [attr.aria-labelledby]="'pane-title'">
-      <header class="pane__head">
-        <button type="button" class="pane__back narrow-pane-only" (click)="close()">{{ t('orders.pane.back') }}</button>
-        <h2 class="pane__title numeric" id="pane-title" tabindex="-1" #paneHeading>
-          {{ t('orders.pane.title', { id: shortId(order.orderId) }) }}
-        </h2>
-        <button type="button" class="pane__close wide-pane-only" [attr.aria-label]="t('orders.pane.close')" (click)="close()">×</button>
-      </header>
-
-      <div class="pane__status">
+    <backoffice-work-pane [heading]="t('orders.paneTitle', { id: shortId(order.orderId) })" (closed)="close()">
+      <div class="pane-status">
         <ng-container *ngTemplateOutlet="statusOf; context: { $implicit: order }" />
         <ng-container *ngTemplateOutlet="paymentOf; context: { $implicit: order }" />
       </div>
 
-      <section class="pane__section">
-        <h3 class="eyebrow">{{ t('orders.pane.deliverTo') }}</h3>
-        <p class="pane__strong">{{ order.recipientName }}</p>
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('orders.deliverTo') }}</h3>
+        <p class="strong">{{ order.recipientName }}</p>
         @if (detail.value(); as found) {
           <p class="muted">{{ found.order.shippingAddress }}</p>
           <p class="muted">{{ found.order.shippingLabel }}</p>
         }
       </section>
 
-      <section class="pane__section">
-        <h3 class="eyebrow">{{ t('orders.pane.lines') }}</h3>
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('orders.lines') }}</h3>
         @if (detail.value(); as found) {
           <ul class="lines" role="list">
             @for (line of found.order.lines; track line.sku) {
               <li class="line">
                 <span class="numeric muted">{{ line.quantity }} ×</span>
-                <span class="line__name">
+                <span>
                   {{ line.productName }}
                   @if (line.variantLabel) {
                     <span class="muted">· {{ line.variantLabel }}</span>
@@ -180,16 +165,15 @@
               </li>
             }
           </ul>
-          <p class="pane__total">
-            <span class="muted">{{ t('orders.pane.total') }}</span>
+          <p class="pane-total">
+            <span class="muted">{{ t('orders.paneTotal') }}</span>
             <span class="numeric total">{{ money(found.order.total, found.order.currency) }}</span>
           </p>
         } @else if (detail.isLoading()) {
-          <!-- The space the lines will take, so the pane does not jump (P8). -->
           <div class="skeleton" aria-hidden="true"></div>
           <p class="sr-only" role="status">{{ t('orders.loading') }}</p>
         } @else if (detail.status() === 'error') {
-          <p class="failed" role="alert">{{ t('orders.pane.failed') }}</p>
+          <p class="failed" role="alert">{{ t('orders.paneFailed') }}</p>
         }
       </section>
 
@@ -198,12 +182,7 @@
       }
 
       @if (primaryMove(order.status); as move) {
-        <button
-          type="button"
-          class="button pane__primary"
-          [disabled]="busy() === order.orderId"
-          (click)="apply(order, move)"
-        >
+        <button type="button" class="button pane-primary" [disabled]="busy() === order.orderId" (click)="apply(order, move)">
           {{ busy() === order.orderId ? t('orders.moving') : t('orders.moveLong.' + move) }}
         </button>
       }
@@ -215,19 +194,15 @@
         </div>
       }
 
-      <dialog class="confirm" #cancelDialog [attr.aria-labelledby]="'cancel-title'">
-        <h2 class="confirm__title" id="cancel-title">{{ t('orders.cancel.title', { id: shortId(order.orderId) }) }}</h2>
-        <p>{{ t('orders.cancel.body') }}</p>
-        <label class="confirm__reason">
-          <span>{{ t('orders.cancel.reason') }}</span>
-          <textarea rows="2" [value]="cancelReason()" (input)="cancelReason.set($any($event.target).value)"></textarea>
-        </label>
-        <div class="confirm__actions">
-          <button type="button" class="button button--quiet" (click)="cancelDialog.close()">{{ t('orders.cancel.keep') }}</button>
-          <button type="button" class="button button--danger" (click)="confirmCancel(order)">{{ t('orders.cancel.confirm') }}</button>
-        </div>
-      </dialog>
-    </aside>
+      <backoffice-confirm-dialog
+        [heading]="t('orders.cancel.title', { id: shortId(order.orderId) })"
+        [body]="t('orders.cancel.body')"
+        [reasonLabel]="t('orders.cancel.reason')"
+        [keepLabel]="t('orders.cancel.keep')"
+        [confirmLabel]="t('orders.cancel.confirm')"
+        (confirmed)="apply(order, 'Cancel', $event)"
+      />
+    </backoffice-work-pane>
   }
 
   <ng-template #statusOf let-order>
