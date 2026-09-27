@@ -184,3 +184,24 @@ agent completes without one (a rehearsal moves no money); a live agent cannot pa
 at all and escalates to a person. `P11-4` verifies mandates by `vct` and evaluates
 their constraints, `P11-5` snapshots the verified scope onto the order, `P11-6`
 adds the shop's own rules.
+
+## 8 · Agent tokens and acting for a person (`P11-3`)
+
+- **`client_credentials`** existed since P7-9: an agent's own token, `agent_id` in it.
+- **Token Exchange (RFC 8693), delegation only.** An agent presents a person's
+  access token (`subject_token`) and its own (`actor_token`); the issuer answers one
+  token with `sub` = the person and `act.sub` = the agent. **Impersonation** — the
+  agent becoming the person with nobody the wiser — is not offered: the actor stays
+  visible to the API and to the audit row. The token lives as long as the shorter of
+  the two it came from, and acts as the agent (its role opens UCP, not the person's
+  account pages).
+- **Why `act` and not only our `agent_id`**: `act` is the standard claim, and it is
+  what Keycloak's token-exchange delegation issues (experimental in Keycloak 26.7,
+  July 2026; its own tracker notes introspection still drops `act`). The API reads
+  either, so moving from the development issuer to Keycloak changes nothing
+  downstream — invariant 10 held by construction rather than by hope.
+- **What it buys**: `CommercePrincipal` was shaped for two identities from phase 7 —
+  a customer and an agent. With a delegated token both are filled: the order is in
+  the person's account, the audit row names the agent that placed it, and the
+  session belongs to the agent. The mandate that says *how much* it may spend is
+  `P11-4` (§7).

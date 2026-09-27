@@ -56,8 +56,11 @@ public static class AuthenticationExtensions
                 policy.RequireRole(TenderoRoles.Shopkeeper))
             .AddPolicy(TenderoPolicyNames.AgentOrShopper, policy =>
                 policy.RequireRole(TenderoRoles.Shopper, TenderoRoles.Agent))
+            // An agent's role and an agent named — by `agent_id` or by RFC 8693's
+            // `act` when it acts for a person (P11-3).
             .AddPolicy(TenderoPolicyNames.Agent, policy =>
-                policy.RequireRole(TenderoRoles.Agent).RequireClaim(TenderoClaims.Agent));
+                policy.RequireRole(TenderoRoles.Agent).RequireAssertion(context =>
+                    context.User.HasClaim(claim => claim.Type is TenderoClaims.Agent or TenderoClaims.Actor)));
 
         services.AddHttpContextAccessor();
         services.AddScoped<IPrincipalAccessor, HttpPrincipalAccessor>();
@@ -96,6 +99,27 @@ internal sealed class HttpPrincipalAccessor(
     /// </summary>
     public CommercePrincipal Current => field ??= Resolve();
 
+    /// <summary>`act` is a JSON object whose `sub` is the actor; anything else names nobody.</summary>
+    private static string? ActorOf(string? act)
+    {
+        if (string.IsNullOrWhiteSpace(act))
+            return null;
+
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(act);
+            return document.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object
+                   && document.RootElement.TryGetProperty("sub", out var sub)
+                   && sub.ValueKind == System.Text.Json.JsonValueKind.String
+                ? sub.GetString()
+                : null;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
     private CommercePrincipal Resolve()
     {
         var user = accessor.HttpContext?.User;
@@ -103,7 +127,11 @@ internal sealed class HttpPrincipalAccessor(
             return CommercePrincipal.Anonymous;
 
         var subject = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub");
-        var agent = user.FindFirstValue(TenderoClaims.Agent);
+        // The agent is named by the development issuer's `agent_id`, or by RFC
+        // 8693's `act` claim when a token acts for a person (P11-3) — the claim
+        // Keycloak's token-exchange delegation emits, so swapping issuers changes
+        // nothing here.
+        var agent = user.FindFirstValue(TenderoClaims.Agent) ?? ActorOf(user.FindFirstValue(TenderoClaims.Actor));
 
         // Null until `LinkIdentity` has run, and deliberately so: this is a
         // READ. An accessor that created a customer on first sight would turn

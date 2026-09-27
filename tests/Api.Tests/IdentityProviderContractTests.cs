@@ -285,6 +285,71 @@ public abstract class IdentityProviderContractTests : IDisposable
 
     /// <summary>How a token is asked of THIS issuer.</summary>
     protected abstract Task<string> GetTokenAsync(string subject, CancellationToken cancellationToken);
+
+    /// <summary>A person the issuer knows, for the delegation test.</summary>
+    protected virtual string ShopperSubject => "ana";
+
+    /// <summary>An agent the issuer knows, for the delegation test.</summary>
+    protected virtual string AgentSubject => "claude-desktop";
+
+    /// <summary>Why this issuer cannot run the delegation test yet, or null when it can.</summary>
+    protected virtual string? DelegationUnavailable => null;
+
+    /// <summary>RFC 8693 token exchange: the person's token and the agent's, for one that acts for the person.</summary>
+    protected abstract Task<HttpResponseMessage> ExchangeAsync(string subjectToken, string actorToken, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Delegation (P11-3): an agent acting for a person gets one token naming both —
+    /// the person as the subject, the agent as the actor — and it opens the agent's
+    /// surface. Reaching UCP's refusal for a missing profile, and not a 401 or 403,
+    /// is the proof the policy took it.
+    /// </summary>
+    [Fact]
+    public async Task A_token_acting_for_a_person_names_both_and_opens_the_agents_surface()
+    {
+        SkipIfUnavailable();
+        if (DelegationUnavailable is { } reason)
+            Assert.Skip(reason);
+        var ct = TestContext.Current.CancellationToken;
+
+        var exchanged = await ExchangeAsync(await GetTokenAsync(ShopperSubject, ct), await GetTokenAsync(AgentSubject, ct), ct);
+        exchanged.EnsureSuccessStatusCode();
+        var token = JsonNode.Parse(await exchanged.Content.ReadAsStringAsync(ct))!["access_token"]!.GetValue<string>();
+
+        var payload = JsonNode.Parse(Microsoft.IdentityModel.Tokens.Base64UrlEncoder.Decode(token.Split('.')[1]))!;
+        Assert.Equal(ShopperSubject, payload["sub"]!.GetValue<string>());
+        Assert.Equal(AgentSubject, payload["act"]!["sub"]!.GetValue<string>());
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/ucp/checkout-sessions")
+        {
+            Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json"),
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var response = await Client.SendAsync(request, ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("invalid_profile_url", await response.Content.ReadAsStringAsync(ct), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Delegation keeps the actor an agent and the subject a person: an agent cannot
+    /// act for another agent, a person's token is not an actor, and a token nobody
+    /// signed opens nothing.
+    /// </summary>
+    [Fact]
+    public async Task An_exchange_that_is_not_an_agent_acting_for_a_person_is_refused()
+    {
+        SkipIfUnavailable();
+        if (DelegationUnavailable is { } reason)
+            Assert.Skip(reason);
+        var ct = TestContext.Current.CancellationToken;
+        var person = await GetTokenAsync(ShopperSubject, ct);
+        var agent = await GetTokenAsync(AgentSubject, ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await ExchangeAsync(agent, agent, ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await ExchangeAsync(person, person, ct)).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await ExchangeAsync(person, agent[..^4] + "AAAA", ct)).StatusCode);
+    }
 }
 
 /// <summary>
@@ -310,6 +375,16 @@ public sealed class DevIssuerContractTests : IdentityProviderContractTests
         var body = JsonNode.Parse(await response.Content.ReadAsStringAsync(cancellationToken))!;
         return body["access_token"]!.GetValue<string>();
     }
+
+    protected override Task<HttpResponseMessage> ExchangeAsync(string subjectToken, string actorToken, CancellationToken cancellationToken) =>
+        Client.PostAsync("/dev-issuer/connect/token", new FormUrlEncodedContent(
+        [
+            new("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange"),
+            new("subject_token", subjectToken),
+            new("subject_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+            new("actor_token", actorToken),
+            new("actor_token_type", "urn:ietf:params:oauth:token-type:access_token"),
+        ]), cancellationToken);
 }
 
 /// <summary>
@@ -394,4 +469,16 @@ public sealed class KeycloakContractTests : IdentityProviderContractTests
         var body = JsonNode.Parse(await response.Content.ReadAsStringAsync(cancellationToken))!;
         return body["access_token"]!.GetValue<string>();
     }
+
+    /// <summary>
+    /// Keycloak's delegation is an experimental feature (`token-exchange-delegation`,
+    /// 26.7) the development realm does not enable yet. The API reads its `act`
+    /// claim already; enabling the feature and a delegation scope in the realm is
+    /// what turns this test on — written down in P11-3, not assumed.
+    /// </summary>
+    protected override string? DelegationUnavailable =>
+        "Keycloak's token-exchange delegation is experimental (26.7) and not enabled in the development realm yet.";
+
+    protected override Task<HttpResponseMessage> ExchangeAsync(string subjectToken, string actorToken, CancellationToken cancellationToken) =>
+        throw new NotSupportedException(DelegationUnavailable);
 }

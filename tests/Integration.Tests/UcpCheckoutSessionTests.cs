@@ -154,9 +154,33 @@ public sealed class UcpCheckoutSessionTests(PostgresFixture postgres)
         Assert.Equal(CheckoutSessionOutcome.NotAnAgent, (await person.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], CheckoutDetails.None, "es"), ct)).Outcome);
     }
 
-    private sealed class Agent(string id, bool test) : IPrincipalAccessor
+    /// <summary>
+    /// Delegation (P11-3): a token exchanged for one acting for a person carries the
+    /// person as the customer and the agent as the actor. The order is the person's —
+    /// it is in their account — and the session still belongs to the agent.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task An_agent_acting_for_a_person_places_the_order_in_their_account()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var ana = CustomerId.New();
+        await using var shop = await Shop.OpenAsync(postgres, nameof(An_agent_acting_for_a_person_places_the_order_in_their_account), new Agent("claude-desktop-test", test: true, customer: ana));
+        await shop.StockAsync(Sku, 5, ct);
+
+        var id = new CheckoutSessionId(Guid.Parse((await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, 1)], Described, "es"), ct)).Session!.Id));
+        var completed = await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardOk, "ucp-for-ana", "es"), ct);
+
+        await using var context = shop.Factory.Create();
+        var order = await context.Orders.SingleAsync(ct);
+        Assert.Equal((completed.Session!.OrderId, ana), (order.Id.ToString(), order.CustomerId));
+        Assert.Equal(new AgentId("claude-desktop-test"), (await context.CheckoutSessions.SingleAsync(ct)).Owner);
+    }
+
+    private sealed class Agent(string id, bool test, CustomerId? customer = null) : IPrincipalAccessor
     {
         public CommercePrincipal Current { get; } =
-            new(null, new AgentId(id), id, id, ["agent"]) { IsTest = test, Standing = AgentStanding.Unknown };
+            new(customer, new AgentId(id), id, id, ["agent"]) { IsTest = test, Standing = AgentStanding.Unknown };
     }
 }

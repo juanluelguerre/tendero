@@ -100,6 +100,9 @@ public static class TenderoClaims
     /// <summary>The agent a token was issued to, when it was issued to one.</summary>
     public const string Agent = "agent_id";
 
+    /// <summary>RFC 8693's actor: the agent acting for the token's subject (P11-3).</summary>
+    public const string Actor = "act";
+
     /// <summary><c>test</c> on a test credential (ADR 0038); absent on every other.</summary>
     public const string Mode = "tendero_mode";
 

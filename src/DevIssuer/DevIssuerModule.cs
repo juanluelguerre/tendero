@@ -35,7 +35,8 @@ public sealed record DevTokenResponse(
     [property: JsonPropertyName("access_token")] string AccessToken,
     [property: JsonPropertyName("token_type")] string TokenType,
     [property: JsonPropertyName("expires_in")] int ExpiresIn,
-    [property: JsonPropertyName("id_token")] string? IdToken = null);
+    [property: JsonPropertyName("id_token")] string? IdToken = null,
+    [property: JsonPropertyName("issued_token_type")] [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? IssuedTokenType = null);
 
 public sealed record DevIdentityView(string Subject, string Name, string Role, bool IsAgent, bool IsTest);
 
@@ -82,7 +83,7 @@ public sealed class DevIssuerModule : ICarterModule
                     ["end_session_endpoint"] = $"{issuer}/connect/logout",
                     ["response_types_supported"] = new[] { "code" },
                     ["grant_types_supported"] =
-                        new[] { "authorization_code", "password", "client_credentials" },
+                        new[] { "authorization_code", "password", "client_credentials", TokenExchange.GrantType },
                     // S256 only. `plain` is in RFC 7636 and is a challenge that
                     // challenges nothing; advertising it teaches a client that
                     // it is acceptable, and the client is the half we keep.
@@ -271,6 +272,18 @@ public sealed class DevIssuerModule : ICarterModule
                         clientId: form["client_id"].ToString(), nonce: grantedTo.Nonce));
                 }
 
+                // RFC 8693 token exchange (P11-3): an agent swaps a person's token and
+                // its own for one that acts FOR that person — the order lands in their
+                // account, and the agent is named as the actor (`act`).
+                if (grant == TokenExchange.GrantType)
+                {
+                    var issuer = Issuer(http, path);
+                    return TokenExchange.TryExchange(
+                            form["subject_token"].ToString(), form["actor_token"].ToString(), issuer, options.Value, key, out var delegated, out var refusal)
+                        ? TypedResults.Ok(delegated!)
+                        : TypedResults.BadRequest(refusal!);
+                }
+
                 var subject = grant switch
                 {
                     "client_credentials" => form["client_id"].ToString(),
@@ -280,8 +293,8 @@ public sealed class DevIssuerModule : ICarterModule
 
                 if (string.IsNullOrWhiteSpace(subject))
                     return TypedResults.BadRequest(
-                        "grant_type must be 'authorization_code', 'password' (with username) " +
-                        "or 'client_credentials' (with client_id).");
+                        "grant_type must be 'authorization_code', 'password' (with username), " +
+                        $"'client_credentials' (with client_id) or '{TokenExchange.GrantType}'.");
 
                 var identity = options.Value.Identities
                     .FirstOrDefault(i => string.Equals(i.Subject, subject, StringComparison.OrdinalIgnoreCase));

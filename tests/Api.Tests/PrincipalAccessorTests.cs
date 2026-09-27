@@ -112,6 +112,26 @@ public sealed class PrincipalAccessorTests
         Assert.Null(Resolve(SignedIn(new Claim("sub", "marta")), new FakeDirectory(), agents).Standing);
     }
 
+    /// <summary>
+    /// A token acting for a person (RFC 8693, P11-3) as Keycloak's delegation issues
+    /// it: no `agent_id`, the agent in `act.sub`. The person is the subject and the
+    /// agent is still named — the pair an order placed for somebody needs.
+    /// </summary>
+    [Theory]
+    [InlineData("{\"sub\":\"claude-desktop\"}", "claude-desktop")]
+    [InlineData("{\"client_id\":\"x\"}", null)]
+    [InlineData("not json", null)]
+    [InlineData("[\"claude-desktop\"]", null)]
+    public void An_actor_claim_names_the_agent_acting_for_the_subject(string act, string? agent)
+    {
+        var principal = Resolve(
+            SignedIn(new Claim("sub", "ana"), new Claim("act", act, "JSON")),
+            new FakeDirectory());
+
+        Assert.Equal(agent, principal.Agent?.Value);
+        Assert.Equal("ana", principal.Subject);
+    }
+
     [Fact]
     public void A_person_is_not_an_agent()
     {
