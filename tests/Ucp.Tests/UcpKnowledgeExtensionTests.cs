@@ -14,6 +14,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// valid against the schema the shop publishes — with negative controls, so a schema
 /// that accepts anything is caught.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpKnowledgeExtensionTests
 {
     private const string Knowledge = "urn:elguerre:tendero:ucp:com.elguerre.tendero.knowledge#/$defs/knowledge";

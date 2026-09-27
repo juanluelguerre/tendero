@@ -93,6 +93,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 70.95 % | 62.50 % | 2026-09-26 |
 | `tools/TrafficSim` | `TrafficSim.Tests` | 87.66 % | 87.10 % | 2026-09-26 · `Model/`, `Scheduling/`, `Queries/` |
 | `src/Knowledge` | `Knowledge.Tests` | 72.33 % | 57.91 % | 2026-09-27 · first run 49.76 % |
+| `src/Accounts` | `Accounts.Tests` | 74.29 % | 50.24 % | 2026-09-27 · phase 11 close, first run 61.43 % |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -322,6 +323,90 @@ scoped, two by hand. Reports in `docs/blog/reports/2026-09-26-seeing-it-run/stry
   Monte Carlo test did not need its 200 000 walks, and now has 50 000. And the
   runs themselves are the price of a phase close, not of a pull request: the
   alternative was the three gaps above reaching the next phase unseen.
+
+
+**Phase 11's close (2026-09-27)** — run under a memory ceiling. The host stopped two
+background runs because the machine was nearly out of memory: a terminal holding
+more than 30 GB, not Stryker. So every run went in the foreground, **scoped to what
+the phase wrote**, and the whole-project Ucp run (1 369 mutants) did not happen.
+The Ucp ratchet stays at its 2026-09-26 baseline and is **re-measured at the next
+close, whole**. Reports are in `docs/blog/reports/2026-09-27-phase-11/stryker/`.
+
+- **`src/Accounts`, first baseline.** First run **61.43 %**, 54 survivors. The
+  agent registry's were **real gaps**: suspending and reinstating raised events
+  nothing checked; a trust change to the same level must raise none; a blank
+  id, name, operator or reason must be refused; plus the registration's audit
+  reason and validators, and the denials panel's edge cases (no rule, a colon in
+  the detail, ties, a type that is not a command). All closed. **Run 2:
+  74.29 %**, 36 survivors, the baseline:
+  - **equivalent**: the null guards on the clock (a null clock fails anyway, with
+    another exception) and the empty-string defaults EF needs;
+  - **noise**: exception messages and span names;
+  - **written down, waiting**: the phase-7 survivors in `Customer` and
+    `LinkIdentity` (events raised and not asserted, `Touch`, and the handler's
+    two `SaveChanges` and guest checks). They are real, small, and the next
+    time Accounts changes they are closed first.
+- **`src/SharedKernel`, scoped** (`MandateScope`, `Dashboard`, `Principal`):
+  **88.89 %**, 1 survivor. `AgentStanding.Unknown` could have been declared
+  suspended and only Ordering's tests would have noticed, so the kernel's own
+  suite now says what an unregistered agent is, and what a dashboard window
+  covers. Hand mutation, red.
+- **`src/Ordering`, scoped to phase 11** (`AgentPolicy`, `Dashboard`,
+  `CheckoutSession`, `TestOrders`), with `Ordering.Tests`. A run that mutates with
+  the Postgres suite would start a database per mutant, so the integration tests
+  hold the handlers and this run holds the units. First run **68.00 %**, 48
+  survivors, most in the dashboard's arithmetic, and the lesson is worth the
+  article: **several of my own tests were symmetric**. One new and one returning
+  buyer, one of two orders mandated, carts that all expired at the same instant —
+  each was a case where a mutant that swapped the two answers gave the same
+  numbers. They are now asymmetric, and cover ties, windows and sums across
+  orders. `CheckoutSession` gained the owner, the replaced codes and the cancel
+  event. **Run 3: 84.00 %**, 24 survivors:
+  - **equivalent**: one currency for `Concat`/`Except`, and `First` over a
+    non-empty group;
+  - **boundaries accepted**: a return opened or refunded exactly on the window's
+    edge (the window is half-open, `[from, to)`);
+  - **noise or runner artefacts**: the denial details and the counters' name,
+    unit and description in static initializers, which `TrackingPlanTests` holds.
+- **`src/Ucp`, scoped in two parts**, with `Ucp.Tests`:
+  - **`Signing/` and `Ap2/`**: **74.22 % → 83.90 %**. It found a **real bug**: a
+    JWK whose point is not on the curve throws `PlatformNotSupportedException` on
+    Windows, which `ToEcdsa` did not catch. A malformed key in a platform's
+    profile would have crashed the verifier instead of being skipped, as UCP
+    asks. Fixed, with a test. Also closed:
+    - JCS's layout at its boundaries (`0.5`, `0.0001`, a space);
+    - keys of another type and a P-384 key;
+    - what is not a compact JWS;
+    - SD-JWT presentations without key binding or without a tilde, what is
+      disclosed and what is not, and a key binding over other disclosures;
+    - that the terms compare the line, the item and its unit price.
+
+    Survivors: **equivalent** — output keys renamed alike on both sides of the
+    terms, a `Remove` or `??=` overwritten a line later, logical forms with the
+    same outcome. **Noise** — texts and the development platform. **Written down**
+    — three `catch`-block removals whose survival is not explained yet.
+  - **`Checkout/` operations and mapper, the knowledge extension,
+    negotiation**: **58.13 % → 84.13 %**. The mapper had never been read in
+    English by a unit test, and nothing checked:
+    - the messages' JSONPaths;
+    - automatic discounts;
+    - half-written addresses;
+    - that completion refuses another handler's instrument even with a token.
+
+    All closed, plus a platform profile's `keys` read by the parser (every AP2
+    test had built its profile by hand; hand mutation, red). Survivors: the other
+    texts' Spanish variants and error codes (**noise**); `First` over lists that
+    are never empty (**equivalent**); the 201 of a create, held by `Api.Tests`
+    (**another suite**).
+- **Not mutated, and why.** `src/DevIssuer`'s token exchange and `src/Mcp`'s
+  checkout tools were proven by hand when they were written (P11-3, P11-1;
+  mutations listed in their commits). The frontend's dashboard figures by hand,
+  in P11-7's commit.
+- **Also found while running: the flaky schema failures.** A full `Ucp.Tests` run
+  failed a handful of validations with "could not resolve pagination.json" twice
+  in phase 11, and never in isolation. JsonSchema.Net's global registry is written
+  while a schema is evaluated, and seven classes evaluated in parallel. They now
+  share one xUnit collection, and three consecutive runs are green.
 
 ## Property-based (CsCheck)
 

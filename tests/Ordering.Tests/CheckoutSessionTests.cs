@@ -39,6 +39,10 @@ public sealed class CheckoutSessionTests
         Assert.Empty(session.Gaps(hasLines: true));
         Assert.Equal(("standard", "en"), (session.ShippingOptionCode, session.Culture));
         Assert.Equal(["BIENVENIDA10"], session.Coupons);
+
+        // An update is a full replacement (UCP): the codes are the new ones, not both.
+        session.Describe(Clock, new CheckoutBuyer("Ana", "Ruiz", "ana@example.com", null), Madrid, "standard", ["VERANO5"], "en");
+        Assert.Equal(["VERANO5"], session.Coupons);
     }
 
     /// <summary>An option means nothing without somewhere to send it: dropping the destination drops the option.</summary>
@@ -70,6 +74,7 @@ public sealed class CheckoutSessionTests
 
         var canceled = Open();
         canceled.Cancel(Clock);
+        Assert.Contains(canceled.DomainEvents, e => e is CheckoutSessionCanceled);
         Assert.Throws<InvalidOperationException>(() => canceled.Complete(Clock, OrderId.New()));
         Assert.False(canceled.HasExpiredAt(Clock.GetUtcNow() + TimeSpan.FromDays(1)));
     }
@@ -89,6 +94,12 @@ public sealed class CheckoutSessionTests
         session.Describe(Clock, CheckoutBuyer.Nobody, null, null, [], "es");
         Assert.False(session.HasExpiredAt(Clock.GetUtcNow() + TimeSpan.FromHours(5)));
         Assert.True(session.HasExpiredAt(Clock.GetUtcNow() + TimeSpan.FromHours(6)));
+    }
+
+    [Fact]
+    public void A_session_belongs_to_somebody()
+    {
+        Assert.Throws<ArgumentException>(() => CheckoutSession.Open(Clock, new AgentId(" "), CartId.New(), OrderMode.Test, "es"));
     }
 
     [Fact]
