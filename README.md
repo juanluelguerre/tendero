@@ -14,6 +14,21 @@
 
 ---
 
+> **A reference implementation of the Universal Commerce Protocol in .NET.** When
+> this was written (2026-09-27), UCP's official SDKs were Python and JavaScript, and
+> we found no .NET implementation of it at all. Tendero implements it in the open:
+> discovery (`/.well-known/ucp`, derived from code, never hand-written), the catalogue,
+> and **checkout with AP2 mandates**. That covers the shop's signature over every
+> checkout, SD-JWT mandates verified against terms the shop signed, a scope frozen
+> onto the order, and the shop's own rules for agents. It all runs over REST and MCP,
+> and every answer is validated against UCP's own JSON Schemas at release 2026-08-25.
+> It also ships a vendor extension of its own (`com.elguerre.tendero.knowledge`).
+> Nothing is a mock: it sits on a real shop with a real checkout, stock and returns.
+> Start with [docs/mcp.md](docs/mcp.md) and ADRs
+> [0039](docs/adr/0039-ucp-checkout-is-a-session-an-agent-owns.md),
+> [0040](docs/adr/0040-a-mandate-is-verified-against-terms-the-shop-signed.md) and
+> [0022](docs/adr/0022-an-agent-is-a-principal-not-a-customer.md).
+
 **Tendero** is Spanish for *shopkeeper*: the corner-shop owner who knows every
 customer, recommends what actually fits, and remembers what you bought last
 time. This project builds that shopkeeper as software — an AI-native ecommerce
@@ -32,9 +47,10 @@ code for a blog series on AI architecture.
 
 ### What runs today
 
-Phases 0–10 of [the board](docs/delivery-plan.md) are in. That means the shop
-works end to end, on a hundred-product catalogue; a browser agent can shop in
-it, and an external agent can read its catalogue over MCP or UCP:
+Phases 0–10 of [the board](docs/delivery-plan.md) are in, and phase 11's features
+are built and closing. That means the shop works end to end, on a hundred-product
+catalogue; a browser agent can shop in it, and an external agent can read its
+catalogue and **buy** over MCP or UCP:
 
 > Search it, put two things in a basket, and the cart shows one discount applied
 > and **four suppressed, each with the reason the engine gave**. Pay with the
@@ -61,9 +77,15 @@ small local model reads each description and proposes what it states, every clai
 quoting the exact words it rests on and scored for support by an NLI model; a
 person approves or rejects, and only then does the catalogue change. The product
 page shows each spec with where it came from, a comparison says *"sin dato"* rather
-than guess, and two MCP tools give agents the same answer. What is left is the half
-that needs trust at the till: UCP checkout with signed mandates, and the backoffice
-copilot.
+than guess, and two MCP tools give agents the same answer. **Agents at the till** are phase 11. An agent opens a UCP checkout session it
+owns. With AP2 negotiated, the shop signs every checkout, and the platform signs a
+mandate over it once the person consents. The shop verifies the mandate, charges
+exactly what was approved and freezes that scope onto the order. On top of the
+person's limits it applies its own: suspended agents place nothing, a cap per
+order depends on how far the shop trusts the agent, and there is a ceiling on orders
+per hour. A test credential rehearses the whole flow without moving money, and
+the backoffice's home is a dashboard that shows what agents bought and what they
+were refused. What is left is the backoffice copilot (phase 12).
 
 ## Architecture at a glance
 
@@ -73,8 +95,7 @@ flowchart TB
     SF[Storefront · Angular] --> API
     BO[Backoffice · Angular] --> API
     IDP[dev issuer · Keycloak] --- API
-    AG[AI agents] -->|MCP · UCP catalogue| API
-    AG -.->|UCP checkout · phase 11| API
+    AG[AI agents] -->|MCP · UCP catalogue, checkout + AP2| API
     subgraph Backend [.NET 11 · Aspire]
         API[API · Carter vertical slices]
         WK[Workers · outbox, indexing, saga]
@@ -112,9 +133,10 @@ Key principles:
   connector, the `fake` payment provider and a development OIDC issuer are the
   defaults — clone and run, no sign-ups.
 - **Three agent surfaces, three trust models.** WebMCP runs in the shopper's
-  tab and inherits their session (shipped, phase 6); the MCP server is external
-  and read-only (shipped, phase 9); UCP + AP2 is server to server with its own principal
-  and a signed mandate (phase 11). Not alternatives — each answers a different
+  tab and inherits their session (shipped, phase 6); the MCP server's own tools
+  and UCP's catalogue are read-only and open (shipped, phase 9); UCP + AP2 is server to
+  server with its own principal and a signed mandate (shipped, phase 11, ADRs 0039,
+  0040 and 0022). Not alternatives — each answers a different
   question.
 - **The identity provider is a port.** The API only ever validates tokens
   (OIDC discovery, JWKS, signed JWT); a development issuer signs them on a fresh
@@ -357,7 +379,7 @@ deferred with its measured number — is
 | 9 | Read-only MCP server and the UCP manifest | ✅ eight MCP tools; UCP's catalogue over MCP and REST, validated against UCP's own schemas |
 | 9b | Seeing it run: the Grafana stack behind a switch (Aspire kept), browser telemetry, a seeded traffic simulator | ✅ a tracking plan a test holds to the code; OpenTelemetry chosen over Faro on measured numbers |
 | 10 | Knowledge: product claims with source and confidence | ✅ **done** — nine models measured before one was chosen: Qwen3.5-4B extracts (precision 0.92, recall 0.80), an NLI model scores support; a review queue, approved claims reaching the catalogue through its own command, specs with source chips, comparisons that say "no data", `get_product_specs` and `compare_products` over MCP, and quality gates (rules in CI, the models at phase close) |
-| 11 | UCP transactional, AP2 and Know Your Agent | 🚧 **next — the headline** |
+| 11 | UCP transactional, AP2 and Know Your Agent | 🚧 **built, closing** — the headline: checkout over REST and MCP, AP2 mandates verified against terms the shop signed, the shop's own rules for agents, test orders, the backoffice dashboard |
 | 12 | **Steward**, the backoffice copilot, and the AI observability panel | 🔜 |
 | 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
 | 13 | Multimodal search and the kit solver | 🔜 |
