@@ -122,7 +122,8 @@
     "stop": {
       "out_of_stock": "We could not hold the stock for this order, so we cancelled it and charged you nothing.",
       "shop_cancelled": "The shop cancelled this order.",
-      "payment_declined": "The payment was declined, so the order was not placed."
+      "payment_declined": "The payment was declined, so the order was not placed.",
+      "test_order_ended": "Test order ended: it is never shipped, and its stock has been given back."
     },
     "title": "Your order"
   },

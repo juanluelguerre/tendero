@@ -40,6 +40,12 @@
                 <span class="status" [class]="'status--' + order.status">
                   {{ t('orders.status.' + order.status) }}
                 </span>
+                <!-- A rehearsal a test credential placed (ADR 0038): never
+                     shipped, its stock already given back. Said beside the
+                     status so nobody prepares a parcel for it. -->
+                @if (order.mode === 'Test') {
+                  <span class="tag tag--code" [title]="t('orders.testHint')">{{ t('orders.test') }}</span>
+                }
 
                 <!--
                   Under the status and not in a column of its own: it is only

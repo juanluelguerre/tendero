@@ -99,6 +99,47 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// A test credential's checkout, end to end on a real Postgres (ADR 0038,
+    /// P11-0): the whole saga runs — stock held, payment authorised, confirmed —
+    /// and then it ends, its stock given back and its hold voided, without anybody
+    /// deciding to cancel it. Nothing in the request said it was a test.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_test_credentials_order_runs_the_whole_saga_and_gives_its_stock_back()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+
+        await using var shop = await Shop.OpenAsync(postgres, nameof(
+            A_test_credentials_order_runs_the_whole_saga_and_gives_its_stock_back), new TestAgent());
+
+        await shop.StockAsync(Sku, 5, ct);
+        var cart = await shop.AddToCartAsync(null, Sku, 2, ct);
+        var chosen = (await shop.ShippingOptionsAsync(cart.Token, ct)).Options[0];
+        var quote = await shop.QuoteAsync(cart.Token, chosen.Amount, ct);
+
+        var placed = await shop.PlaceOrderAsync(cart.Token, chosen.Code, quote.InputHash, ct);
+
+        Assert.Equal(PlaceOrderOutcome.Placed, placed.Outcome);
+        Assert.Equal((OrderMode.Test, "fake"), (placed.Order!.Mode, placed.Order.Payment!.Provider));
+
+        await shop.DrainAllAsync(ct);
+
+        var ended = (await shop.OrderAsync(placed.Order.Id, ct))!;
+        Assert.Equal((OrderStatus.Cancelled, OrderStop.TestOrderEnded), (ended.Status, ended.Stop?.Code));
+        Assert.Equal(OrderMode.Test, ended.Mode);
+        Assert.Equal(0, await shop.HeldAsync(Sku, ct));
+        Assert.Equal(5, await shop.AvailableAsync(Sku, ct));
+    }
+
+    private sealed class TestAgent : IPrincipalAccessor
+    {
+        public CommercePrincipal Current { get; } =
+            new(null, new AgentId("claude-desktop-test"), "claude-desktop-test", "Claude Desktop (test)", ["agent"]) { IsTest = true };
+    }
+
+    /// <summary>
     /// The basket speaks the language it is read in, and the order the language it
     /// is placed in — not the one the first line happened to be added in.
     ///
@@ -477,7 +518,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
             Factory = factory;
         }
 
-        public static async Task<Shop> OpenAsync(PostgresFixture postgres, string name)
+        public static async Task<Shop> OpenAsync(PostgresFixture postgres, string name, IPrincipalAccessor? principal = null)
         {
             var factory = await postgres.CreateDatabaseAsync(name.ToLowerInvariant());
 
@@ -509,7 +550,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
             services.AddPricing(configuration);
             services.AddInventory(configuration);
             services.AddOrdering(configuration);
-            services.AddSingleton<IPrincipalAccessor, SystemPrincipalAccessor>();
+            services.AddSingleton(principal ?? new SystemPrincipalAccessor());
 
             var shop = new Shop(services.BuildServiceProvider(validateScopes: true), factory);
 
@@ -674,6 +715,18 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
 
         /// <summary>Up to two passes of the real worker (<see cref="WorkerOutbox"/>),
         /// because a handler's own changes raise the next message.</summary>
+        /// <summary>Until nothing is left: a saga whose steps each raise the next one's event.</summary>
+        public async Task DrainAllAsync(CancellationToken ct)
+        {
+            for (var pass = 0; pass < 10; pass++)
+            {
+                if (await WorkerOutbox.PassAsync(this.provider, ct) == 0)
+                    return;
+            }
+
+            Assert.Fail("The outbox was still busy after ten passes.");
+        }
+
         public async Task DrainAsync(CancellationToken ct)
         {
             for (var pass = 0; pass < 2; pass++)

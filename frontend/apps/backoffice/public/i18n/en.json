@@ -108,8 +108,11 @@
     "stop": {
       "out_of_stock": "Not enough stock",
       "shop_cancelled": "Cancelled by the shop",
-      "payment_declined": "Payment declined"
-    }
+      "payment_declined": "Payment declined",
+      "test_order_ended": "Test order ended"
+    },
+    "test": "Test",
+    "testHint": "A test order placed with a test credential: never shipped, its stock already given back."
   },
   "promotions": {
     "title": "Promotions",

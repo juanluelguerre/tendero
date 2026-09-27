@@ -906,6 +906,7 @@ export interface components {
         OrderSummary: {
             orderId: string;
             status: string;
+            mode: string;
             currency: string;
             /** Format: double */
             total: number;
@@ -933,6 +934,7 @@ export interface components {
         OrderView: {
             orderId: string;
             status: string;
+            mode: string;
             culture: string;
             currency: string;
             /** Format: date-time */

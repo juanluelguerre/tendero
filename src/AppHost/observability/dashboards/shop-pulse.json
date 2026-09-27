@@ -52,7 +52,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(rate(tendero_checkout_attempts_total{outcome=\"placed\"}[$__rate_interval])) or vector(0)) * 60",
+          "expr": "(sum(rate(tendero_checkout_attempts_total{order_mode!=\"test\",outcome=\"placed\"}[$__rate_interval])) or vector(0)) * 60",
           "range": true,
           "refId": "A",
           "datasource": {
@@ -95,7 +95,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(increase(tendero_checkout_attempts_total{outcome=\"placed\"}[$__range])) or vector(0)) / clamp_min(sum(increase(tendero_checkout_attempts_total[$__range])), 1)",
+          "expr": "(sum(increase(tendero_checkout_attempts_total{order_mode!=\"test\",outcome=\"placed\"}[$__range])) or vector(0)) / clamp_min(sum(increase(tendero_checkout_attempts_total{order_mode!=\"test\"}[$__range])), 1)",
           "range": true,
           "refId": "A",
           "datasource": {
@@ -138,7 +138,7 @@
       },
       "targets": [
         {
-          "expr": "clamp_min(1 - (sum(increase(tendero_checkout_attempts_total{outcome=\"placed\"}[$__range])) or vector(0)) / clamp_min(sum(increase(tendero_carts_created_total[$__range])), 1), 0)",
+          "expr": "clamp_min(1 - (sum(increase(tendero_checkout_attempts_total{order_mode!=\"test\",outcome=\"placed\"}[$__range])) or vector(0)) / clamp_min(sum(increase(tendero_carts_created_total[$__range])), 1), 0)",
           "range": true,
           "refId": "A",
           "datasource": {
@@ -181,7 +181,7 @@
       },
       "targets": [
         {
-          "expr": "(sum(increase(tendero_checkout_attempts_total{outcome=\"placed\",actor_kind=\"agent\"}[$__range])) or vector(0)) / clamp_min(sum(increase(tendero_checkout_attempts_total{outcome=\"placed\"}[$__range])), 1)",
+          "expr": "(sum(increase(tendero_checkout_attempts_total{order_mode!=\"test\",outcome=\"placed\",actor_kind=\"agent\"}[$__range])) or vector(0)) / clamp_min(sum(increase(tendero_checkout_attempts_total{order_mode!=\"test\",outcome=\"placed\"}[$__range])), 1)",
           "range": true,
           "refId": "A",
           "datasource": {
@@ -224,7 +224,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (outcome) (rate(tendero_checkout_attempts_total[$__rate_interval])) * 60",
+          "expr": "sum by (outcome) (rate(tendero_checkout_attempts_total{order_mode!=\"test\"}[$__rate_interval])) * 60",
           "range": true,
           "legendFormat": "{{outcome}}",
           "refId": "A",

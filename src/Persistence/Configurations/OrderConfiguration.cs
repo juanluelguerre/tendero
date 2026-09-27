@@ -25,6 +25,14 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        // Live unless the credential that placed it was a test one (ADR 0038).
+        // Every order before the column existed was live, hence the default.
+        builder.Property(o => o.Mode)
+            .HasConversion<string>()
+            .HasMaxLength(10)
+            .HasDefaultValue(OrderMode.Live)
+            .HasSentinel((OrderMode)(-1));
+
         builder.Property(o => o.CreatedAt);
         builder.Property(o => o.UpdatedAt);
 

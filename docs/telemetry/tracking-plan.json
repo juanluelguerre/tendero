@@ -192,6 +192,16 @@
       "signals": [
         "tendero.knowledge.claims.applied"
       ]
+    },
+    {
+      "name": "Test orders",
+      "area": "agents",
+      "question": "Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock?",
+      "decision": "Rehearsals that are placed but never ended mean the saga stopped short and stock is held for nobody: fix the drain before anything else. Agents that go live without ever rehearsing are the ones whose first failures a customer pays for: make the test credential part of onboarding an agent (P11-3).",
+      "signals": [
+        "tendero.checkout.attempts",
+        "tendero.orders.test_ended"
+      ]
     }
   ],
   "events": [
@@ -383,6 +393,15 @@
           ],
           "description": "The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`."
         },
+        "order.mode": {
+          "type": "string",
+          "values": [
+            "live",
+            "test"
+          ],
+          "description": "Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own.",
+          "from": "OrderMode"
+        },
         "outcome": {
           "type": "string",
           "values": [
@@ -403,6 +422,13 @@
           "description": "Whether any promotion applied to the order."
         }
       }
+    },
+    {
+      "name": "tendero.orders.test_ended",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Test orders that went all the way to confirmed and ended there, their stock given back.",
+      "attributes": {}
     },
     {
       "name": "tendero.returns.requested",

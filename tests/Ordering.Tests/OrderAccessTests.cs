@@ -109,17 +109,6 @@ public sealed class OrderAccessTests
         return handler.HandleAsync(new GetOrderQuery(order.Id), Ct);
     }
 
-    private sealed class OneOrder(Order order) : IOrderRepository
-    {
-        public Task<Order?> FindByIdAsync(OrderId id, CancellationToken cancellationToken = default) =>
-            Task.FromResult<Order?>(id == order.Id ? order : null);
-
-        public Task<Order?> FindByIdempotencyKeyAsync(string key, CancellationToken cancellationToken = default) =>
-            Task.FromResult<Order?>(null);
-
-        public void Add(Order order) { }
-    }
-
     private sealed class NoReturns : IReturnRequestRepository
     {
         public Task<ReturnRequest?> FindByIdAsync(ReturnRequestId id, CancellationToken cancellationToken = default) =>

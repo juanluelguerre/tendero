@@ -26,6 +26,8 @@ public sealed record OrderLinePreview(string Sku, string Name, string? ImageId);
 public sealed record OrderSummary(
     string OrderId,
     string Status,
+    /// <summary><c>Live</c>, or <c>Test</c> for a rehearsal a test credential placed (ADR 0038).</summary>
+    string Mode,
     string Currency,
     decimal Total,
     int LineCount,
@@ -70,6 +72,7 @@ public sealed record OrderSummary(
         // Flat. OrderId is a record struct and would serialise as {"value":"…"}.
         order.Id.ToString(),
         order.Status.ToString(),
+        order.Mode.ToString(),
         order.Currency,
         order.Total.Amount,
         order.Lines.Count,

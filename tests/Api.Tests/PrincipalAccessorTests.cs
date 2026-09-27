@@ -77,6 +77,25 @@ public sealed class PrincipalAccessorTests
         Assert.Equal(new AgentId("claude-desktop"), principal.Agent);
     }
 
+    /// <summary>
+    /// A test credential is the issuer's signed statement, like the agent id
+    /// (ADR 0038): only the exact claim makes one, and its absence — every real
+    /// credential — is a live one.
+    /// </summary>
+    [Theory]
+    [InlineData("test", true)]
+    [InlineData("TEST", false)]
+    [InlineData("live", false)]
+    [InlineData(null, false)]
+    public void Only_a_signed_test_mode_makes_a_test_credential(string? mode, bool test)
+    {
+        Claim[] claims = mode is null
+            ? [new Claim("sub", "claude-desktop"), new Claim("agent_id", "claude-desktop")]
+            : [new Claim("sub", "claude-desktop"), new Claim("agent_id", "claude-desktop"), new Claim("tendero_mode", mode)];
+
+        Assert.Equal(test, Resolve(SignedIn(claims), new FakeDirectory()).IsTest);
+    }
+
     [Fact]
     public void A_person_is_not_an_agent()
     {

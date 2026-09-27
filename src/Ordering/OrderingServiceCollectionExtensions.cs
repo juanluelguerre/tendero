@@ -17,6 +17,17 @@ public sealed class CheckoutOptions
     /// <summary>Which provider takes the money. `fake` until a real one is
     /// wired; the code around it does not change when it is.</summary>
     public string PaymentProvider { get; set; } = FakePaymentProvider.Key;
+
+    /// <summary>
+    /// Which provider a TEST order pays through (ADR 0038): the fake, whatever the
+    /// shop takes real money with. The day <see cref="PaymentProvider"/> is a real
+    /// one, a rehearsal still moves nothing.
+    /// </summary>
+    public string TestPaymentProvider { get; set; } = FakePaymentProvider.Key;
+
+    /// <summary>The provider for an order of this mode — the one place that choice is made.</summary>
+    public string ProviderFor(Domain.OrderMode mode) =>
+        mode == Domain.OrderMode.Test ? TestPaymentProvider : PaymentProvider;
 }
 
 public static class OrderingServiceCollectionExtensions

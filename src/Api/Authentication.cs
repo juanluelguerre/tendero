@@ -100,7 +100,7 @@ internal sealed class HttpPrincipalAccessor(
             return CommercePrincipal.Anonymous;
 
         var subject = user.FindFirstValue(ClaimTypes.NameIdentifier) ?? user.FindFirstValue("sub");
-        var agent = user.FindFirstValue("agent_id");
+        var agent = user.FindFirstValue(TenderoClaims.Agent);
 
         // Null until `LinkIdentity` has run, and deliberately so: this is a
         // READ. An accessor that created a customer on first sight would turn
@@ -132,7 +132,11 @@ internal sealed class HttpPrincipalAccessor(
         {
             // The tariff is a fact the shop holds about the customer, so it is
             // read here and nowhere else — never from a request body.
-            Segment = known?.Segment
+            Segment = known?.Segment,
+
+            // A test credential is the issuer's statement, signed, like the agent
+            // id beside it (ADR 0038).
+            IsTest = user.FindFirstValue(TenderoClaims.Mode) == TenderoClaims.TestMode,
         };
     }
 }

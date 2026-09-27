@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-21 features: **17** answered by a signal emitted today,
+22 features: **18** answered by a signal emitted today,
 **0** by a signal planned, and **4** with no signal, each saying why.
 
 ### Storefront
@@ -47,6 +47,7 @@ everything here that is not *planned* is emitted.
 |---|---|---|---|---|
 | WebMCP | Do browser agents use the shop's WebMCP tools, which ones, and do they succeed? | Which tools to keep, extend or drop; a high share of refusals means a tool's contract is wrong for an agent. | `webmcp_tool_invoked` | emitted |
 | MCP server and UCP catalogue | Do external agents call the catalogue over MCP and UCP, which tools, and how often are they refused? | Whether the agent checkout of phase 11 has agents waiting for it, and which binding to build it on first. | `tendero.agent.tool_calls` | emitted |
+| Test orders | Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock? | Rehearsals that are placed but never ended mean the saga stopped short and stock is held for nobody: fix the drain before anything else. Agents that go live without ever rehearsing are the ones whose first failures a customer pays for: make the test credential part of onboarding an agent (P11-3). | `tendero.checkout.attempts`, `tendero.orders.test_ended` | emitted |
 
 ### Platform
 
@@ -188,13 +189,25 @@ Answers:
 - **Cart** — How many carts never become an order, and whose?
 - **Promotions** — What share of orders carries a discount?
 - **Checkout and payment** — Why does a checkout fail to become an order: a stale screen, a changed price, a declined card, or a provider that did not answer?
+- **Test orders** — Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
 | `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
+| `order.mode` | string | `live`, `test` | Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own. |
 | `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable` | PlaceOrderOutcome, labelled by MetricLabels. |
 | `discounted` | boolean | — | Whether any promotion applied to the order. |
+
+### `tendero.orders.test_ended`
+
+counter, unit `{order}`. Test orders that went all the way to confirmed and ended there, their stock given back.
+
+Answers:
+
+- **Test orders** — Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock?
+
+No attributes.
 
 ### `tendero.returns.requested`
 

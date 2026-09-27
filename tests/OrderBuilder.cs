@@ -26,6 +26,7 @@ internal sealed class OrderBuilder
 
     private string culture = "es";
     private string idempotencyKey = "checkout-1";
+    private OrderMode mode = OrderMode.Live;
 
     /// <summary>
     /// Somewhere to send it. Every default here declares that it is irrelevant
@@ -55,6 +56,13 @@ internal sealed class OrderBuilder
     public OrderBuilder InCulture(string culture)
     {
         this.culture = culture;
+        return this;
+    }
+
+    /// <summary>A rehearsal, as a test credential would place it (ADR 0038).</summary>
+    public OrderBuilder AsTest()
+    {
+        this.mode = OrderMode.Test;
         return this;
     }
 
@@ -135,7 +143,8 @@ internal sealed class OrderBuilder
             totals,
             this.discounts,
             this.taxes,
-            this.culture);
+            this.culture,
+            this.mode);
     }
 
     /// <summary>

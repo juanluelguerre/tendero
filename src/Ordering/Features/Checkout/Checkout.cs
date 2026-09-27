@@ -245,16 +245,20 @@ public sealed class PlaceOrderHandler(
     public async Task<PlaceOrderResult> HandleAsync(
         PlaceOrderCommand command, CancellationToken cancellationToken)
     {
-        var result = await PlaceAsync(command, cancellationToken);
-        CheckoutAttempts.Record(result, actors.Current);
+        // Decided once, from the credential, before anything else: the payment,
+        // the order and the metric all read the same answer (ADR 0038).
+        var mode = OrderModes.Of(principal.Current);
+        var result = await PlaceAsync(command, mode, cancellationToken);
+        CheckoutAttempts.Record(result, actors.Current, mode);
         return result;
     }
 
     private async Task<PlaceOrderResult> PlaceAsync(
-        PlaceOrderCommand command, CancellationToken cancellationToken)
+        PlaceOrderCommand command, OrderMode mode, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("checkout.place_order");
         activity?.SetTag("checkout.idempotency_key", command.IdempotencyKey);
+        activity?.SetTag(CheckoutAttempts.ModeTag, MetricLabels.Of(mode));
 
         // Idempotency first, before anything is charged. With agents, a retry is
         // the normal case rather than the rare one.
@@ -301,7 +305,7 @@ public sealed class PlaceOrderHandler(
 
         // 4 · The money. Nothing has been written yet, so a decline costs
         // nothing: no order, no reservation, an untouched cart.
-        var provider = payments.Get(options.Value.PaymentProvider);
+        var provider = payments.Get(options.Value.ProviderFor(mode));
         var orderId = OrderId.New();
 
         var authorization = await provider.AuthorizeAsync(
@@ -377,7 +381,9 @@ public sealed class PlaceOrderHandler(
             pricing.Totals,
             pricing.Discounts,
             pricing.Taxes,
-            cart.Culture);
+            cart.Culture,
+            mode,
+            orderId);
 
         order.AuthorizePayment(clock, new OrderPayment(provider.Key, authorization.AuthorizationId!, null));
 
@@ -421,10 +427,17 @@ internal static class CheckoutAttempts
         "tendero.checkout.attempts", unit: "{attempt}",
         description: "Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.");
 
-    public static void Record(PlaceOrderResult result, Actor actor) =>
+    /// <summary>
+    /// On every attempt, so the *Shop pulse* can leave rehearsals out of the
+    /// shop's numbers and a test run can be read on its own (ADR 0038).
+    /// </summary>
+    public const string ModeTag = "order.mode";
+
+    public static void Record(PlaceOrderResult result, Actor actor, OrderMode mode) =>
         Attempts.Add(1,
             actor.KindLabel,
             actor.SurfaceLabel,
+            new(ModeTag, MetricLabels.Of(mode)),
             new("outcome", MetricLabels.Of(result.Outcome)),
             // Read off the priced cart when there was one; an attempt refused
             // before pricing had no discount to apply.

@@ -37,6 +37,7 @@
 | [0035](0035-the-architecture-is-drawn-from-models-held-to-the-code.md) | The architecture is drawn from models, and each model is held to the code | accepted |
 | [0036](0036-observability-is-a-second-stack-behind-a-switch.md) | Observability is a second stack behind a switch, browser telemetry is a port, and every feature names the event that proves it | accepted |
 | [0037](0037-traffic-is-simulated-from-a-declared-model.md) | Traffic is simulated from a declared model, seeded, and labelled as synthetic | accepted |
+| [0038](0038-a-test-order-is-a-mode-the-credential-decides.md) | A test order is a mode the credential decides, fixed at placement | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

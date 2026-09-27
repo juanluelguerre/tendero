@@ -29,6 +29,8 @@ public sealed record OrderTaxView(string TaxClass, decimal Rate, decimal Base, d
 public sealed record OrderView(
     string OrderId,
     string Status,
+    /// <summary><c>Live</c>, or <c>Test</c> for a rehearsal a test credential placed (ADR 0038).</summary>
+    string Mode,
     string Culture,
     string Currency,
     DateTimeOffset CreatedAt,
@@ -54,6 +56,7 @@ public sealed record OrderView(
     public static OrderView From(Order order) => new(
         order.Id.ToString(),
         order.Status.ToString(),
+        order.Mode.ToString(),
         order.Culture,
         order.Currency,
         order.CreatedAt,

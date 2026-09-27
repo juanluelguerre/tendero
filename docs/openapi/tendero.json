@@ -2709,6 +2709,7 @@
         "required": [
           "orderId",
           "status",
+          "mode",
           "currency",
           "total",
           "lineCount",
@@ -2727,6 +2728,9 @@
             "type": "string"
           },
           "status": {
+            "type": "string"
+          },
+          "mode": {
             "type": "string"
           },
           "currency": {
@@ -2806,6 +2810,7 @@
         "required": [
           "orderId",
           "status",
+          "mode",
           "culture",
           "currency",
           "createdAt",
@@ -2826,6 +2831,9 @@
             "type": "string"
           },
           "status": {
+            "type": "string"
+          },
+          "mode": {
             "type": "string"
           },
           "culture": {

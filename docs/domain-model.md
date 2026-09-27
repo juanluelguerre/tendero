@@ -447,6 +447,7 @@ classDiagram
         +OrderShipping Shipping
         +OrderQuote Quote
         +OrderTotals Totals
+        +OrderMode Mode
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -472,6 +473,11 @@ classDiagram
         +Money UnitPrice
         +int Quantity
         +Money Total
+    }
+    class OrderMode {
+        <<enumeration>>
+        Live
+        Test
     }
     class OrderPayment {
         <<record>>

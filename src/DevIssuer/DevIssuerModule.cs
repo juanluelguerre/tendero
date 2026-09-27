@@ -37,7 +37,7 @@ public sealed record DevTokenResponse(
     [property: JsonPropertyName("expires_in")] int ExpiresIn,
     [property: JsonPropertyName("id_token")] string? IdToken = null);
 
-public sealed record DevIdentityView(string Subject, string Name, string Role, bool IsAgent);
+public sealed record DevIdentityView(string Subject, string Name, string Role, bool IsAgent, bool IsTest);
 
 /// <summary>
 /// The three endpoints that make this a real OIDC issuer rather than a shortcut:
@@ -108,7 +108,7 @@ public sealed class DevIssuerModule : ICarterModule
         // rather than a form asking for a password that does not exist.
         app.MapGet($"{path}/identities",
             (IOptions<DevIssuerOptions> options) => TypedResults.Ok(options.Value.Identities
-                .Select(i => new DevIdentityView(i.Subject, i.Name, i.Role, i.IsAgent))
+                .Select(i => new DevIdentityView(i.Subject, i.Name, i.Role, i.IsAgent, i.IsTest))
                 .ToArray()))
             .AllowAnonymous()
             .ExcludeFromDescription()
@@ -314,6 +314,11 @@ public sealed class DevIssuerModule : ICarterModule
         // different principal, not a person with another role (ADR 0022, pending).
         if (identity.IsAgent)
             claims["agent_id"] = identity.Subject;
+
+        // Signed like the agent id, and read by the API as TenderoClaims.Mode:
+        // the mode of an order is the credential's, never the request's (ADR 0038).
+        if (identity.IsTest)
+            claims["tendero_mode"] = "test";
 
         var descriptor = new SecurityTokenDescriptor
         {

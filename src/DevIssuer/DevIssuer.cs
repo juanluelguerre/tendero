@@ -8,7 +8,9 @@ namespace ElGuerre.Tendero.DevIssuer;
 /// ones Keycloak's realm will bring when it arrives: if they diverge, every test
 /// fixture forks in two.
 /// </summary>
-public sealed record DevIdentity(string Subject, string Name, string Role, bool IsAgent = false);
+/// <param name="IsTest">A test credential: whatever it places is a test order (ADR 0038). A property of the
+/// credential the issuer signs, as it will be of a Keycloak client — never of the request.</param>
+public sealed record DevIdentity(string Subject, string Name, string Role, bool IsAgent = false, bool IsTest = false);
 
 public sealed class DevIssuerOptions
 {
@@ -27,7 +29,11 @@ public sealed class DevIssuerOptions
     [
         new("ana", "Ana Ruiz", "shopper"),
         new("juanlu", "Juan Luis", "shopkeeper"),
-        new("claude-desktop", "Claude Desktop", "agent", IsAgent: true)
+        new("claude-desktop", "Claude Desktop", "agent", IsAgent: true),
+
+        // The same agent's rehearsal credential (P11-0): a checkout it drives is
+        // a test order — paid through the fake, never shipped, stock given back.
+        new("claude-desktop-test", "Claude Desktop (test)", "agent", IsAgent: true, IsTest: true)
     ];
 }
 

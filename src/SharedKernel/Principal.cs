@@ -51,6 +51,13 @@ public sealed record CommercePrincipal(
 
     public bool IsAgent => Agent is not null;
 
+    /// <summary>
+    /// A test credential: whatever it places is a rehearsal (ADR 0038, P11-0). Read
+    /// from the token the identity provider signed — <see cref="TenderoClaims.Mode"/>
+    /// — never from a request, so an agent cannot choose to be charged or not.
+    /// </summary>
+    public bool IsTest { get; init; }
+
     public bool IsInRole(string role) =>
         Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
 }
@@ -76,4 +83,16 @@ public interface IPrincipalAccessor
 public sealed class SystemPrincipalAccessor : IPrincipalAccessor
 {
     public CommercePrincipal Current { get; } = CommercePrincipal.Anonymous with { Subject = "system", DisplayName = "system" };
+}
+
+/// <summary>The claims Tendero reads from a token beyond OIDC's own.</summary>
+public static class TenderoClaims
+{
+    /// <summary>The agent a token was issued to, when it was issued to one.</summary>
+    public const string Agent = "agent_id";
+
+    /// <summary><c>test</c> on a test credential (ADR 0038); absent on every other.</summary>
+    public const string Mode = "tendero_mode";
+
+    public const string TestMode = "test";
 }
