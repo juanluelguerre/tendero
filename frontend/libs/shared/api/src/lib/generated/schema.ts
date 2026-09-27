@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/agent-denials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAgentDenials"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/config": {
         parameters: {
             query?: never;
@@ -692,6 +708,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetSalesSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetOperationsSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetCheckoutFunnel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/agent-sales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetAgentSales"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/checkout/shipping-options": {
         parameters: {
             query?: never;
@@ -749,6 +829,45 @@ export interface components {
         AgentChangeResponse: {
             change: string;
             agent: components["schemas"]["AgentView"];
+        };
+        AgentDenialCount: {
+            agentId: string;
+            /** Format: int32 */
+            count: number;
+        };
+        AgentDenialsSummary: {
+            period: string;
+            /** Format: int32 */
+            total: number;
+            byReason: components["schemas"]["DenialCount"][];
+            byAgent: components["schemas"]["AgentDenialCount"][];
+            recent: components["schemas"]["RecentDenial"][];
+        };
+        AgentSales: {
+            period: string;
+            currency: string;
+            /** Format: int32 */
+            orders: number;
+            /** Format: double */
+            revenue: number;
+            /** Format: int32 */
+            agentOrders: number;
+            /** Format: double */
+            agentRevenue: number;
+            /** Format: int32 */
+            mandated: number;
+            /** Format: int32 */
+            rehearsals: number;
+            byAgent: components["schemas"]["AgentSalesRow"][];
+        };
+        AgentSalesRow: {
+            agentId: string;
+            /** Format: int32 */
+            orders: number;
+            /** Format: double */
+            revenue: number;
+            /** Format: int32 */
+            mandated: number;
         };
         AgentView: {
             agentId: string;
@@ -816,6 +935,14 @@ export interface components {
             authority: string;
             clientId: string;
         };
+        BestSeller: {
+            sku: string;
+            name: string;
+            /** Format: int32 */
+            units: number;
+            /** Format: double */
+            revenue: number;
+        };
         CartLineView: {
             productId: string;
             variantId: string;
@@ -851,6 +978,23 @@ export interface components {
         };
         ChangeAgentTrustRequest: {
             trust: string;
+        };
+        CheckoutFunnel: {
+            period: string;
+            /** Format: int32 */
+            cartsStarted: number;
+            /** Format: int32 */
+            checkedOut: number;
+            /** Format: int32 */
+            abandoned: number;
+            /** Format: int32 */
+            stillOpen: number;
+            /** Format: double */
+            conversion: number;
+            /** Format: int32 */
+            newCustomers: number;
+            /** Format: int32 */
+            returningCustomers: number;
         };
         CheckoutHandOff: {
             cartToken: string;
@@ -902,6 +1046,11 @@ export interface components {
             created: number;
             /** Format: int32 */
             existing: number;
+        };
+        DenialCount: {
+            reason: string;
+            /** Format: int32 */
+            count: number;
         };
         DescribeSkusResult: {
             items: components["schemas"]["SkuDescriptionView"][];
@@ -980,6 +1129,29 @@ export interface components {
             amount: null | number;
             /** Format: date-time */
             until: null | string;
+        };
+        OperationsSummary: {
+            period: string;
+            currency: string;
+            /** Format: int32 */
+            toShip: number;
+            /** Format: int32 */
+            lateToShip: number;
+            /** Format: int32 */
+            inProgress: number;
+            /** Format: int32 */
+            paymentFailed: number;
+            /** Format: int32 */
+            cancelled: number;
+            /** Format: double */
+            cancellationRate: number;
+            /** Format: int32 */
+            openReturns: number;
+            openReturnsByReason: components["schemas"]["ReasonCount"][];
+            /** Format: double */
+            refunded: number;
+            /** Format: double */
+            returnRate: number;
         };
         OrderDetail: {
             order: components["schemas"]["OrderView"];
@@ -1242,6 +1414,20 @@ export interface components {
             /** Format: double */
             net: number;
         };
+        ReasonCount: {
+            reason: string;
+            /** Format: int32 */
+            count: number;
+        };
+        RecentDenial: {
+            agentId: string;
+            actorName: null | string;
+            command: string;
+            reason: string;
+            detail: null | string;
+            /** Format: date-time */
+            at: string;
+        };
         RegisterAgentRequest: {
             agentId: string;
             displayName: string;
@@ -1314,6 +1500,23 @@ export interface components {
         ReviewClaimResponse: {
             claimId: string;
             outcome: string;
+        };
+        SalesFigures: {
+            /** Format: double */
+            revenue: number;
+            /** Format: int32 */
+            orders: number;
+            /** Format: int32 */
+            units: number;
+            /** Format: double */
+            averageOrderValue: number;
+        };
+        SalesSummary: {
+            period: string;
+            currency: string;
+            current: components["schemas"]["SalesFigures"];
+            previous: components["schemas"]["SalesFigures"];
+            bestSellers: components["schemas"]["BestSeller"][];
         };
         SearchAnswer: {
             match: components["schemas"]["SearchMatch"];
@@ -1552,6 +1755,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LinkedIdentity"];
+                };
+            };
+        };
+    };
+    GetAgentDenials: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentDenialsSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
@@ -2873,6 +3107,130 @@ export interface operations {
             };
             /** @description Conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    GetSalesSummary: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    GetOperationsSummary: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationsSummary"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    GetCheckoutFunnel: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutFunnel"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    GetAgentSales: {
+        parameters: {
+            query?: {
+                period?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentSales"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

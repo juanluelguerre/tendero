@@ -115,6 +115,16 @@ public interface IAuditReader
 }
 
 /// <summary>
+/// What agents were refused, read for the dashboard (P11-7): every denied command an
+/// agent sent since a moment. Its own port, so the audit screen's reader keeps its
+/// one question.
+/// </summary>
+public interface IAgentDenialHistory
+{
+    Task<IReadOnlyList<AuditEntry>> AgentDenialsSinceAsync(DateTimeOffset since, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// A command result that can be a refusal, saying which it was.
 ///
 /// This repository returns its expected refusals rather than throwing them — a

@@ -27,6 +27,10 @@ internal sealed class OrderBuilder
     private string culture = "es";
     private string idempotencyKey = "checkout-1";
     private OrderMode mode = OrderMode.Live;
+    private TimeProvider clock = Clock;
+    private CustomerId? customer;
+    private AgentId? placedBy;
+    private OrderMandate? mandate;
 
     /// <summary>
     /// Somewhere to send it. Every default here declares that it is irrelevant
@@ -63,6 +67,27 @@ internal sealed class OrderBuilder
     public OrderBuilder AsTest()
     {
         this.mode = OrderMode.Test;
+        return this;
+    }
+
+    /// <summary>Placed, and moved, at the clock's time: what a figure over a window of time needs.</summary>
+    public OrderBuilder At(TimeProvider clock)
+    {
+        this.clock = clock;
+        return this;
+    }
+
+    public OrderBuilder ForCustomer(CustomerId customer)
+    {
+        this.customer = customer;
+        return this;
+    }
+
+    /// <summary>Placed by an agent (P11-6), under a mandate when one is given (P11-5).</summary>
+    public OrderBuilder PlacedBy(string agent, OrderMandate? mandate = null)
+    {
+        this.placedBy = new AgentId(agent);
+        this.mandate = mandate;
         return this;
     }
 
@@ -132,8 +157,8 @@ internal sealed class OrderBuilder
             subtotal + this.shipping.Amount);
 
         return Order.Place(
-            Clock,
-            CustomerId.New(),
+            this.clock,
+            this.customer ?? CustomerId.New(),
             this.idempotencyKey,
             this.lines,
             this.shipTo,
@@ -144,7 +169,9 @@ internal sealed class OrderBuilder
             this.discounts,
             this.taxes,
             this.culture,
-            this.mode);
+            this.mode,
+            mandate: this.mandate is { } approved ? approved with { ApprovedTotal = totals.Total.Amount } : null,
+            placedBy: this.placedBy);
     }
 
     /// <summary>
@@ -162,28 +189,28 @@ internal sealed class OrderBuilder
             case OrderStatus.Pending:
                 break;
             case OrderStatus.PaymentAuthorized:
-                order.AuthorizePayment(Clock);
+                order.AuthorizePayment(this.clock);
                 break;
             case OrderStatus.PaymentFailed:
-                order.FailPayment(Clock, "card declined");
+                order.FailPayment(this.clock, "card declined");
                 break;
             case OrderStatus.Confirmed:
-                order.AuthorizePayment(Clock);
-                order.Confirm(Clock);
+                order.AuthorizePayment(this.clock);
+                order.Confirm(this.clock);
                 break;
             case OrderStatus.Shipped:
-                order.AuthorizePayment(Clock);
-                order.Confirm(Clock);
-                order.Ship(Clock);
+                order.AuthorizePayment(this.clock);
+                order.Confirm(this.clock);
+                order.Ship(this.clock);
                 break;
             case OrderStatus.Delivered:
-                order.AuthorizePayment(Clock);
-                order.Confirm(Clock);
-                order.Ship(Clock);
-                order.Deliver(Clock);
+                order.AuthorizePayment(this.clock);
+                order.Confirm(this.clock);
+                order.Ship(this.clock);
+                order.Deliver(this.clock);
                 break;
             case OrderStatus.Cancelled:
-                order.Cancel(Clock, OrderStop.ShopCancelled, "customer changed their mind");
+                order.Cancel(this.clock, OrderStop.ShopCancelled, "customer changed their mind");
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(status), status, "Unknown order status.");

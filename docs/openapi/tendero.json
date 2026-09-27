@@ -83,6 +83,45 @@
         }
       }
     },
+    "/api/dashboard/agent-denials": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetAgentDenials",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentDenialsSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/config": {
       "get": {
         "tags": [
@@ -1813,6 +1852,162 @@
         }
       }
     },
+    "/api/dashboard/sales": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSalesSummary",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/operations": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetOperationsSummary",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationsSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/funnel": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetCheckoutFunnel",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutFunnel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/agent-sales": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetAgentSales",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentSales"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/checkout/shipping-options": {
       "post": {
         "tags": [
@@ -2010,6 +2205,137 @@
           },
           "agent": {
             "$ref": "#/components/schemas/AgentView"
+          }
+        }
+      },
+      "AgentDenialCount": {
+        "required": [
+          "agentId",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AgentDenialsSummary": {
+        "required": [
+          "period",
+          "total",
+          "byReason",
+          "byAgent",
+          "recent"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byReason": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DenialCount"
+            }
+          },
+          "byAgent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentDenialCount"
+            }
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecentDenial"
+            }
+          }
+        }
+      },
+      "AgentSales": {
+        "required": [
+          "period",
+          "currency",
+          "orders",
+          "revenue",
+          "agentOrders",
+          "agentRevenue",
+          "mandated",
+          "rehearsals",
+          "byAgent"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "agentOrders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "agentRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "mandated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rehearsals": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byAgent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgentSalesRow"
+            }
+          }
+        }
+      },
+      "AgentSalesRow": {
+        "required": [
+          "agentId",
+          "orders",
+          "revenue",
+          "mandated"
+        ],
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "mandated": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2287,6 +2613,31 @@
           }
         }
       },
+      "BestSeller": {
+        "required": [
+          "sku",
+          "name",
+          "units",
+          "revenue"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "CartLineView": {
         "required": [
           "productId",
@@ -2426,6 +2777,52 @@
         "properties": {
           "trust": {
             "type": "string"
+          }
+        }
+      },
+      "CheckoutFunnel": {
+        "required": [
+          "period",
+          "cartsStarted",
+          "checkedOut",
+          "abandoned",
+          "stillOpen",
+          "conversion",
+          "newCustomers",
+          "returningCustomers"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "cartsStarted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "checkedOut": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "abandoned": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "stillOpen": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "conversion": {
+            "type": "number",
+            "format": "double"
+          },
+          "newCustomers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "returningCustomers": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2623,6 +3020,22 @@
             "format": "int32"
           },
           "existing": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "DenialCount": {
+        "required": [
+          "reason",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "count": {
             "type": "integer",
             "format": "int32"
           }
@@ -2942,6 +3355,73 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "OperationsSummary": {
+        "required": [
+          "period",
+          "currency",
+          "toShip",
+          "lateToShip",
+          "inProgress",
+          "paymentFailed",
+          "cancelled",
+          "cancellationRate",
+          "openReturns",
+          "openReturnsByReason",
+          "refunded",
+          "returnRate"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "toShip": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lateToShip": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inProgress": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paymentFailed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cancelled": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cancellationRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "openReturns": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "openReturnsByReason": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReasonCount"
+            }
+          },
+          "refunded": {
+            "type": "number",
+            "format": "double"
+          },
+          "returnRate": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -3966,6 +4446,60 @@
           }
         }
       },
+      "ReasonCount": {
+        "required": [
+          "reason",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RecentDenial": {
+        "required": [
+          "agentId",
+          "actorName",
+          "command",
+          "reason",
+          "detail",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "actorName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "command": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "RegisterAgentRequest": {
         "required": [
           "agentId",
@@ -4228,6 +4762,63 @@
           },
           "outcome": {
             "type": "string"
+          }
+        }
+      },
+      "SalesFigures": {
+        "required": [
+          "revenue",
+          "orders",
+          "units",
+          "averageOrderValue"
+        ],
+        "type": "object",
+        "properties": {
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "averageOrderValue": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "SalesSummary": {
+        "required": [
+          "period",
+          "currency",
+          "current",
+          "previous",
+          "bestSellers"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "current": {
+            "$ref": "#/components/schemas/SalesFigures"
+          },
+          "previous": {
+            "$ref": "#/components/schemas/SalesFigures"
+          },
+          "bestSellers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BestSeller"
+            }
           }
         }
       },
@@ -4950,6 +5541,9 @@
     },
     {
       "name": "Checkout"
+    },
+    {
+      "name": "Dashboard"
     },
     {
       "name": "Inventory"

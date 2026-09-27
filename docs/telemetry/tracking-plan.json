@@ -213,6 +213,14 @@
       ]
     },
     {
+      "name": "Shopkeeper dashboard",
+      "area": "backoffice",
+      "question": "Does the shopkeeper start the day on the dashboard, and over which period do they read it?",
+      "decision": "If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records.",
+      "signals": [],
+      "gap": "Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time."
+    },
+    {
       "name": "Agent rules",
       "area": "agents",
       "question": "How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?",

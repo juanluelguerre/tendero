@@ -58,7 +58,7 @@
     "title": "Catálogo"
   },
   "nav": {
-    "agents": "Actividad de agentes",
+    "agents": "Agentes",
     "attributes": "Atributos",
     "audit": "Auditoría",
     "catalogue": "Catálogo",
@@ -69,7 +69,8 @@
     "reviewQueue": "Cola de revisión",
     "search": "Evaluación de búsqueda",
     "stock": "Stock",
-    "claims": "Afirmaciones"
+    "claims": "Afirmaciones",
+    "dashboard": "Panel"
   },
   "orders": {
     "captured": "Cobrado",
@@ -322,5 +323,146 @@
     "supportExplained": "Cuánto respalda la cita a la afirmación, medido por un modelo de inferencia textual — no lo que el extractor dice de sí mismo.",
     "approve": "Aprobar",
     "reject": "Rechazar"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "hint": "El pulso de la tienda, con sus propios datos: qué se vendió, qué te espera, cómo convierte el checkout y qué aportan los agentes. Los pedidos de prueba quedan fuera de todas las cifras salvo del recuento de los agentes.",
+    "period": {
+      "label": "Periodo",
+      "day": "Últimas 24 h",
+      "week": "Últimos 7 días",
+      "month": "Últimos 30 días"
+    },
+    "sales": {
+      "title": "Ventas",
+      "vsPrevious": "Frente al periodo anterior",
+      "loading": "Cargando ventas…",
+      "failed": "No se han podido cargar las ventas.",
+      "revenue": "Facturación",
+      "orders": "Pedidos",
+      "units": "Unidades",
+      "averageOrder": "Pedido medio",
+      "direction": {
+        "up": "sube",
+        "down": "baja",
+        "flat": "sin cambios"
+      },
+      "bestSellers": "Más vendidos",
+      "nothingSold": "No se ha vendido nada en este periodo.",
+      "unitCount": "{{count}} ud."
+    },
+    "operations": {
+      "title": "Pedidos y salud",
+      "toOrders": "Pedidos",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
+      "toShip": "Por enviar",
+      "late": "{{count}} con retraso",
+      "inProgress": "Confirmándose",
+      "paymentFailed": "Pago fallido",
+      "cancellationRate": "Tasa de cancelación",
+      "cancelled": "{{count}} cancelados",
+      "returns": "Devoluciones",
+      "openReturns": "Abiertas",
+      "returnRate": "Tasa de devolución",
+      "refunded": "Reembolsado",
+      "byReason": "Devoluciones abiertas por motivo"
+    },
+    "funnel": {
+      "title": "Checkout",
+      "loading": "Cargando…",
+      "failed": "No se ha podido cargar el embudo.",
+      "conversion": "de los carritos acabaron en pedido",
+      "started": "Carritos iniciados",
+      "checkedOut": "Comprados",
+      "abandoned": "Abandonados",
+      "stillOpen": "Aún abiertos",
+      "buyers": "Compradores",
+      "newCustomers": "Nuevos",
+      "returningCustomers": "Recurrentes",
+      "noVisits": "Las visitas no se cuentan aquí: viven en la pila de observabilidad, de la que esta página no depende."
+    },
+    "agents": {
+      "title": "Agentes",
+      "toRegistry": "Registro",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
+      "salesHeading": "Lo que compraron",
+      "shareOfOrders": "Parte de los pedidos",
+      "ofOrders": "{{part}} de {{whole}}",
+      "shareOfRevenue": "Parte de las ventas",
+      "mandated": "Con mandato",
+      "rehearsals": "Ensayos",
+      "ordersCount": "{{count}} pedidos",
+      "denialsHeading": "Lo que la tienda les rechazó",
+      "noDenials": "Nada rechazado en este periodo.",
+      "denied": "rechazos",
+      "byRule": "Rechazos por regla",
+      "latest": "Últimos",
+      "rule": {
+        "agent_suspended": "Agente suspendido",
+        "order_over_trust_cap": "Supera el tope de su confianza",
+        "orders_per_hour": "Demasiados pedidos por hora",
+        "mandate_required": "Sin mandato",
+        "mandate_expired": "Mandato caducado",
+        "mandate_scope_mismatch": "Fuera de su mandato",
+        "mandate_invalid_signature": "El mandato no se verifica",
+        "agent_missing_key": "Clave de plataforma desconocida",
+        "merchant_authorization_invalid": "No es nuestra firma",
+        "payment_failed": "Pago rechazado",
+        "NotFound": "No es su checkout",
+        "NotAnAgent": "No es un agente",
+        "NotOpen": "Checkout cerrado",
+        "NotReady": "Checkout sin completar",
+        "denied": "Rechazado"
+      }
+    },
+    "tasks": {
+      "title": "Te esperan",
+      "failed": "No se ha podido cargar.",
+      "drafts": "Borradores por publicar",
+      "claims": "Claims por revisar",
+      "weakestFirst": "Primero los de menor respaldo",
+      "support": "{{value}} % de respaldo",
+      "lowStock": "Stock bajo",
+      "available": "quedan {{count}}"
+    }
+  },
+  "agents": {
+    "title": "Agentes",
+    "count": "{{count}} registrados",
+    "hint": "Los agentes que la tienda conoce. Un agente que nadie registró no se rechaza: compra como no confiable, con topes más estrictos. Registrarlo es responder por él; una suspensión necesita un motivo, para poder levantarla.",
+    "loading": "Cargando agentes…",
+    "failed": "No se ha podido hacer el cambio.",
+    "empty": "Todavía no hay ningún agente registrado.",
+    "register": {
+      "title": "Registrar un agente",
+      "agentId": "Id del agente (el de su token)",
+      "displayName": "Nombre",
+      "operator": "Lo opera",
+      "submit": "Registrar"
+    },
+    "column": {
+      "agent": "Agente",
+      "operator": "Operador",
+      "trust": "Confianza",
+      "status": "Estado",
+      "registered": "Registrado",
+      "action": "Acciones"
+    },
+    "trust": {
+      "Known": "Conocido",
+      "Verified": "Verificado"
+    },
+    "status": {
+      "Active": "Activo",
+      "Suspended": "Suspendido"
+    },
+    "changeTrust": "Cambiar la confianza de {{agent}}",
+    "suspend": "Suspender",
+    "reinstate": "Rehabilitar",
+    "cancel": "Cancelar",
+    "reason": "Motivo de la suspensión",
+    "reasonPlaceholder": "¿Por qué?"
   }
 }

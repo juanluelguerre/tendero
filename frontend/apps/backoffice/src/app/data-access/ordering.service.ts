@@ -1,6 +1,14 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { OrderDetail, OrderSummary, ReturnView } from '@tendero/shared-api';
+import type {
+  AgentSales,
+  CheckoutFunnel,
+  OperationsSummary,
+  OrderDetail,
+  OrderSummary,
+  ReturnView,
+  SalesSummary,
+} from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
@@ -10,6 +18,9 @@ export type OrderMove = 'Ship' | 'Deliver' | 'Cancel';
 
 /** And to a return. Same arrangement. */
 export type ReturnDecision = 'Approve' | 'Reject' | 'Receive' | 'Refund';
+
+/** The window a dashboard figure covers, against the one before it (P11-7). */
+export type DashboardPeriod = 'day' | 'week' | 'month';
 
 /**
  * The only place in the backoffice that knows what the ordering endpoints are
@@ -47,5 +58,29 @@ export class OrderingService {
 
   decide(id: string, decision: ReturnDecision, reason?: string): Observable<ReturnView> {
     return this.http.post<ReturnView>(`${this.baseUrl}/api/returns/${id}/decide`, { decision, reason });
+  }
+
+  // ---------- The dashboard's figures (P11-7): one endpoint each ----------
+
+  sales(period: DashboardPeriod): Observable<SalesSummary> {
+    return this.figure<SalesSummary>('sales', period);
+  }
+
+  operations(period: DashboardPeriod): Observable<OperationsSummary> {
+    return this.figure<OperationsSummary>('operations', period);
+  }
+
+  funnel(period: DashboardPeriod): Observable<CheckoutFunnel> {
+    return this.figure<CheckoutFunnel>('funnel', period);
+  }
+
+  agentSales(period: DashboardPeriod): Observable<AgentSales> {
+    return this.figure<AgentSales>('agent-sales', period);
+  }
+
+  private figure<T>(name: string, period: DashboardPeriod): Observable<T> {
+    return this.http.get<T>(`${this.baseUrl}/api/dashboard/${name}`, {
+      params: new HttpParams().set('period', period),
+    });
   }
 }

@@ -20,7 +20,7 @@ namespace ElGuerre.Tendero.Persistence;
 /// success is the better of the two failures, and a second outbox would buy
 /// durability for a table nobody reads in real time.
 /// </summary>
-internal sealed class EfAuditWriter(IDbContextFactory<TenderoDbContext> contexts) : IAuditWriter, IAuditReader
+internal sealed class EfAuditWriter(IDbContextFactory<TenderoDbContext> contexts) : IAuditWriter, IAuditReader, IAgentDenialHistory
 {
     public async Task WriteAsync(AuditEntry entry, CancellationToken cancellationToken = default)
     {
@@ -51,6 +51,17 @@ internal sealed class EfAuditWriter(IDbContextFactory<TenderoDbContext> contexts
         return await entries
             .OrderByDescending(entry => entry.At)
             .Take(take)
+            .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>Denied, by an agent, since then — on the denials' partial index, newest first.</summary>
+    public async Task<IReadOnlyList<AuditEntry>> AgentDenialsSinceAsync(DateTimeOffset since, CancellationToken cancellationToken = default)
+    {
+        await using var context = await contexts.CreateDbContextAsync(cancellationToken);
+
+        return await context.AuditEntries.AsNoTracking()
+            .Where(entry => entry.Outcome == AuditOutcome.Denied && entry.Agent != null && entry.At >= since)
+            .OrderByDescending(entry => entry.At)
             .ToListAsync(cancellationToken);
     }
 }

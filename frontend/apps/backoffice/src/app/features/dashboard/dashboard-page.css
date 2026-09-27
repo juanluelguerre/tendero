@@ -1,0 +1,26 @@
+/* Three columns on a wide screen, two on a laptop, one on a phone — the widgets
+   keep their order, so what matters most is first at every width. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-4);
+  padding-block-end: var(--space-6);
+}
+
+/* A grid item is as wide as its content by default, and a best seller's name is
+   long: without this, rows ran past the panel's edge on a phone (found on the
+   stack, 390 px). The names ellipsise instead. */
+.grid > * { min-width: 0; }
+
+/* Sales and agents carry the most figures, and take two columns when there are two. */
+@media (min-width: 60rem) {
+  .grid__wide { grid-column: span 2; }
+}
+
+.periods { display: inline-flex; gap: var(--space-1); }
+
+.period--active {
+  color: var(--text);
+  border-color: var(--text-muted);
+  font-weight: 600;
+}

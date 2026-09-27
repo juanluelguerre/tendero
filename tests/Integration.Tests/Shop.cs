@@ -313,5 +313,12 @@ internal sealed class Shop : IAsyncDisposable
         return await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>().SendAsync(query, ct);
     }
 
+    /// <summary>A port asked directly, in a scope of its own: an adapter's query checked against real Postgres.</summary>
+    public async Task<TResult> ReadAsync<TPort, TResult>(Func<TPort, Task<TResult>> read) where TPort : notnull
+    {
+        await using var scope = this.provider.CreateAsyncScope();
+        return await read(scope.ServiceProvider.GetRequiredService<TPort>());
+    }
+
     public async ValueTask DisposeAsync() => await this.provider.DisposeAsync();
 }

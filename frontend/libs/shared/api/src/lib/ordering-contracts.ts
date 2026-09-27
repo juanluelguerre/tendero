@@ -115,3 +115,17 @@ export type ReturnReason = (typeof RETURN_REASONS)[number];
  *  deliberately so: that one is allowed to return everything and this one is not. */
 export type MyOrders = Schemas['MyOrdersResult'];
 export type LinkedIdentity = Schemas['LinkedIdentity'];
+
+/**
+ * The shopkeeper's dashboard, Ordering's half (P11-7): one figure per endpoint,
+ * each widget asking for exactly what it draws. Rehearsals are left out of every
+ * figure but the agents' own count of them.
+ */
+export type SalesSummary = Schemas['SalesSummary'];
+export type SalesFigures = Schemas['SalesFigures'];
+export type BestSeller = Schemas['BestSeller'];
+export type OperationsSummary = Schemas['OperationsSummary'];
+export type CheckoutFunnel = Schemas['CheckoutFunnel'];
+export type AgentSales = Schemas['AgentSales'];
+export type AgentSalesRow = Schemas['AgentSalesRow'];
+export type OrderMandateSummary = Schemas['OrderMandateSummary'];

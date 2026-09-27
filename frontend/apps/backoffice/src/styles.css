@@ -303,3 +303,65 @@ p {
   white-space: nowrap;
   border: 0;
 }
+
+/* ---------- Dashboard widgets (P11-7) ----------
+   Shared by every widget, and here rather than in each component because a
+   widget's frame is the dashboard's, not the widget's own: the same head, the same
+   rhythm, the same ranking list — one definition, five users. */
+.widget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  block-size: 100%;
+  padding: var(--space-4);
+  overflow: visible;
+}
+
+.widget__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.widget__title {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.widget__link {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.widget__sub { margin: var(--space-2) 0 0; }
+.widget__sub a { color: inherit; }
+.widget__state { margin: 0; }
+.widget__note { margin: 0; font-size: var(--text-3xs); }
+
+.ranking {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.ranking__row {
+  /* A grid row is as wide as its content unless told otherwise, and an
+     unbreakable name is exactly the content that pushes it past the panel. */
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.ranking__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
