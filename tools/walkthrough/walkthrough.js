@@ -77,8 +77,8 @@ const TEXT = {
 
 const TASKS = [
   { id: 'B1', starts: { es: 'inicio del backoffice', en: 'backoffice home' }, done: { es: 'el producto está Activo', en: 'the product is Active' },
-    es: 'Ha llegado un producto nuevo del proveedor y está pendiente de revisar. Compruébalo y ponlo a la venta.',
-    en: 'A new product has come in from the supplier and is waiting to be checked. Check it and put it on sale.' },
+    es: 'Hay un producto pendiente de revisar antes de ponerse a la venta. Compruébalo y ponlo a la venta.',
+    en: 'A product is waiting to be checked before it goes on sale. Check it and put it on sale.' },
   { id: 'B2', starts: { es: 'inicio del backoffice', en: 'backoffice home' }, done: { es: 'aprobada o rechazada', en: 'approved or rejected' },
     es: 'El sistema ha propuesto datos sobre los productos que alguien tiene que validar. Mira el que ofrece menos confianza y decide si es correcto.',
     en: 'The system has proposed facts about products that somebody has to validate. Look at the one it is least sure of and decide whether it is right.' },

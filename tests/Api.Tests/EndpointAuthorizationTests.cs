@@ -71,6 +71,7 @@ public sealed class EndpointAuthorizationTests
     [Theory]
     [InlineData("/api/catalog/import")]
     [InlineData("/api/catalog/products/{id:guid}/publish")]
+    [InlineData("/api/catalog/products/{id:guid}/withdraw")]
     [InlineData("/api/search/reindex")]
     // Not a write, and here for the same reason: it reads drafts.
     [InlineData("/api/catalog/products")]

@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-26 features: **21** answered by a signal emitted today,
+27 features: **22** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -34,6 +34,7 @@ everything here that is not *planned* is emitted.
 | Feature | Question | Decision it changes | Signals | Status |
 |---|---|---|---|---|
 | Review queue and publishing | Does the review queue move: how many drafts become products, and who approves them? | Whether publishing needs bulk approval, and later whether the AI proposals of phase 10 are being approved or ignored. | `tendero.catalog.products.published` | emitted |
+| Withdrawing a product | How often does a live product have to come back to review, and who pulls it? | Whether withdrawing needs a recorded reason, as suspending an agent does, and whether imports should flag the changes that cause it. | `tendero.catalog.products.withdrawn` | emitted |
 | Stock and reservations | How much held stock never becomes a sale? | The hold's lifetime, and whether the expiry sweep the domain has a state for is worth building. | `tendero.inventory.reservations` | emitted |
 | Catalogue import | Does an import bring products in? | None beyond the run itself. | — An import is an operator's batch, answered by its own result and its span; a counter would say what the result already says. | none |
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
@@ -287,6 +288,18 @@ counter, unit `{product}`. Products moved from Draft to Active.
 Answers:
 
 - **Review queue and publishing** — Does the review queue move: how many drafts become products, and who approves them?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
+
+### `tendero.catalog.products.withdrawn`
+
+counter, unit `{product}`. Products moved from Active back to Draft.
+
+Answers:
+
+- **Withdrawing a product** — How often does a live product have to come back to review, and who pulls it?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|

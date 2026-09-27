@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/products/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WithdrawProduct"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/publish": {
         parameters: {
             query?: never;
@@ -1703,6 +1719,15 @@ export interface components {
             isAvailable: boolean;
             reason: string;
         };
+        WithdrawProductConflict: {
+            title: string;
+            detail: string;
+        };
+        WithdrawProductResponse: {
+            productId: string;
+            outcome: string;
+            status: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -1826,6 +1851,44 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TelemetryConfiguration"];
+                };
+            };
+        };
+    };
+    WithdrawProduct: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WithdrawProductResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WithdrawProductConflict"];
                 };
             };
         };

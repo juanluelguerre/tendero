@@ -23,19 +23,28 @@ less clean than having a moderator, and the article says so.
 
 ## Before the session
 
-1. **The shop.** Start the stack (`dotnet run --project src/AppHost`) and, once it
-   is up, run TrafficSim for a few minutes with the fixed seed
-   (`dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42`) so there are
-   orders, returns and agents to work on.
-2. **Pre-flight**, checked in the backoffice before the participant arrives. Each
-   job needs something to act on, and a task with nothing to do measures nothing:
-   - B1 — the *Review queue* has at least one draft. If it is empty, the
-     catalogue was published earlier; start from an empty laboratory database
-     and press *Import* once, before the session.
-   - B2 — *Claims* has at least one claim waiting.
-   - B3 — *Orders* has a confirmed order. Write its number on the task card.
-   - B4 — *Returns* has an open return.
-   - B5 — *Agents* has an active agent. Write its name on the task card.
+1. **The shop.** Start the stack (`dotnet run --project src/AppHost`), start
+   `traffic-sim` from the Aspire dashboard for a few minutes so there are orders,
+   returns and claims to work on, and **stop it**: its shopkeeper publishes every
+   draft and ships what it finds.
+2. **Pre-flight**, one command from `frontend/`. Each job needs something to act
+   on, and a task with nothing to do measures nothing:
+
+   ```bash
+   WALKTHROUGH_PREPARE=1 npx playwright test -c apps/backoffice-e2e/playwright.config.ts walkthrough-prepare
+   ```
+
+   It signs in as the shopkeeper and uses the shop's own operations:
+   - B1 — withdraws active products back to the review queue until there are
+     three drafts (`WALKTHROUGH_DRAFTS`), never a backpack, which S1 needs.
+   - B5 — reinstates a suspended agent, or registers the development issuer's
+     agent when none is registered.
+   - It then prints one line per job: the drafts, the claims waiting, the
+     confirmed orders with the first one's number for B3's card, the open
+     returns, and the active agent's name for B5's card. It fails if any job
+     has nothing, and running it twice changes nothing more.
+
+   What stays by hand:
    - S2 — choose a product and write a description of it that does not use its
      name (for example "something to keep coffee hot on the way to work").
    - S3 — choose a product with more than one variant and open its page.
@@ -74,7 +83,7 @@ backoffice, SUS, storefront, then the second width.
 
 | # | es | en | Starts at | Done when |
 |---|---|---|---|---|
-| B1 | Ha llegado un producto nuevo del proveedor y está pendiente de revisar. Compruébalo y ponlo a la venta. | A new product has come in from the supplier and is waiting to be checked. Check it and put it on sale. | backoffice home | the product is Active |
+| B1 | Hay un producto pendiente de revisar antes de ponerse a la venta. Compruébalo y ponlo a la venta. | A product is waiting to be checked before it goes on sale. Check it and put it on sale. | backoffice home | the product is Active |
 | B2 | El sistema ha propuesto datos sobre los productos que alguien tiene que validar. Mira el que ofrece menos confianza y decide si es correcto. | The system has proposed facts about products that somebody has to validate. Look at the one it is least sure of and decide whether it is right. | backoffice home | approved or rejected |
 | B3 | El pedido de la tarjeta ya está empaquetado. Déjalo registrado como enviado. | The order on the card is packed. Record it as shipped. | backoffice home | Shipped |
 | B4 | Un cliente ha pedido devolver algo. Decide esa devolución con tu criterio. | A customer has asked to return something. Decide that return as you see fit. | backoffice home | approved or rejected |

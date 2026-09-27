@@ -103,6 +103,15 @@
       ]
     },
     {
+      "name": "Withdrawing a product",
+      "area": "backoffice",
+      "question": "How often does a live product have to come back to review, and who pulls it?",
+      "decision": "Whether withdrawing needs a recorded reason, as suspending an agent does, and whether imports should flag the changes that cause it.",
+      "signals": [
+        "tendero.catalog.products.withdrawn"
+      ]
+    },
+    {
       "name": "Stock and reservations",
       "area": "backoffice",
       "question": "How much held stock never becomes a sale?",
@@ -632,6 +641,22 @@
       "instrument": "counter",
       "unit": "{product}",
       "description": "Products moved from Draft to Active.",
+      "attributes": {
+        "actor.kind": {
+          "type": "string",
+          "values": [
+            "human",
+            "agent"
+          ],
+          "description": "Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036)."
+        }
+      }
+    },
+    {
+      "name": "tendero.catalog.products.withdrawn",
+      "instrument": "counter",
+      "unit": "{product}",
+      "description": "Products moved from Active back to Draft.",
       "attributes": {
         "actor.kind": {
           "type": "string",
