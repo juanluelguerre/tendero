@@ -6,6 +6,10 @@ import { type MonoTypeOperatorFunction, tap } from 'rxjs';
 export type BackofficeView = TrackedEvents['backoffice_view_opened']['view'];
 export type BackofficeAction = TrackedEvents['backoffice_action_taken']['action'];
 export type ActionOutcome = TrackedEvents['backoffice_action_taken']['outcome'];
+/** Where an action was pressed: the list's row, the pane beside it, or the page itself. */
+export type ActionVia = TrackedEvents['backoffice_action_taken']['via'];
+export type Affordance = TrackedEvents['backoffice_affordance_used']['affordance'];
+export type AffordanceTarget = TrackedEvents['backoffice_affordance_used']['target'];
 
 const Views: readonly BackofficeView[] = [
   'dashboard', 'review', 'catalogue', 'claims', 'attributes', 'search', 'promotions',
@@ -49,13 +53,19 @@ export class BackofficeUsage {
   }
 
   /**
-   * Reports an action once, with how the server answered: pipe it onto the call
-   * that does it, `this.catalog.publish(id).pipe(this.usage.reported('review', 'publish'))`.
+   * Reports an action once, with how the server answered and where it was
+   * pressed: pipe it onto the call that does it,
+   * `this.catalog.publish(id).pipe(this.usage.reported('review', 'publish', 'row'))`.
    */
-  reported<T>(view: BackofficeView, action: BackofficeAction): MonoTypeOperatorFunction<T> {
+  reported<T>(view: BackofficeView, action: BackofficeAction, via: ActionVia): MonoTypeOperatorFunction<T> {
     return tap<T>({
-      next: () => this.telemetry.trackEvent('backoffice_action_taken', { view, action, outcome: 'done' }),
-      error: (failure: unknown) => this.telemetry.trackEvent('backoffice_action_taken', { view, action, outcome: outcomeOf(failure) }),
+      next: () => this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: 'done' }),
+      error: (failure: unknown) => this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: outcomeOf(failure) }),
     });
+  }
+
+  /** Something reached through the palette or a list shortcut (R-4.6): are they used? */
+  affordance(affordance: Affordance, target: AffordanceTarget): void {
+    this.telemetry.trackEvent('backoffice_affordance_used', { affordance, target });
   }
 }

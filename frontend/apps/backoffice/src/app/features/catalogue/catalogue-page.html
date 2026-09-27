@@ -38,6 +38,10 @@
 
     <div class="work-tools">
       <backoffice-filter-chips [options]="filters()" [selected]="statusKey()" [label]="t('catalogue.filterLabel')" (chosen)="filterBy($event)" />
+      <label class="find">
+        <span class="sr-only">{{ t('catalogue.findLabel') }}</span>
+        <input type="search" class="find__input" [placeholder]="t('catalogue.find')" [value]="text()" (input)="text.set($any($event.target).value)" />
+      </label>
     </div>
 
     @if (loading()) {

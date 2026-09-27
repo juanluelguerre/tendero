@@ -57,7 +57,7 @@
                       class="button button--small button--quiet"
                       type="button"
                       [disabled]="busy() === request.returnId"
-                      (click)="$event.stopPropagation(); decide(request, decision)"
+                      (click)="$event.stopPropagation(); decide(request, decision, 'row')"
                     >
                       {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decide.' + decision) }}
                     </button>
@@ -86,7 +86,7 @@
               <ng-container *ngTemplateOutlet="whatOf; context: { $implicit: request }" />
             </button>
             @if (next(request); as decision) {
-              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === request.returnId" (click)="decide(request, decision)">
+              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === request.returnId" (click)="decide(request, decision, 'row')">
                 {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decide.' + decision) }}
               </button>
             }
@@ -135,7 +135,7 @@
       }
 
       @if (next(request); as decision) {
-        <button type="button" class="button pane-primary" [disabled]="busy() === request.returnId" (click)="decide(request, decision)">
+        <button type="button" class="button pane-primary" [disabled]="busy() === request.returnId" (click)="decide(request, decision, 'pane')">
           {{ busy() === request.returnId ? t('returns.deciding') : t('returns.decideLong.' + decision) }}
         </button>
       }
@@ -151,7 +151,7 @@
           [reasonLabel]="t('returns.reject.reason')"
           [keepLabel]="t('returns.reject.keep')"
           [confirmLabel]="t('returns.reject.confirm')"
-          (confirmed)="decide(request, 'Reject', $event)"
+          (confirmed)="decide(request, 'Reject', 'pane', $event)"
         />
       }
     </backoffice-work-pane>

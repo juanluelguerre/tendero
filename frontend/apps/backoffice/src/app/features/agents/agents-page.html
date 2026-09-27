@@ -62,11 +62,11 @@
                 </td>
                 <td class="actions">
                   @if (agent.status === 'Suspended') {
-                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); reinstate(agent)">
+                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); reinstate(agent, 'row')">
                       {{ t('reinstate') }}
                     </button>
                   } @else {
-                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); askToSuspend(agent)">
+                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); askToSuspend(agent, 'row')">
                       {{ t('suspend') }}
                     </button>
                   }
@@ -92,9 +92,9 @@
               </span>
             </button>
             @if (agent.status === 'Suspended') {
-              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="reinstate(agent)">{{ t('reinstate') }}</button>
+              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="reinstate(agent, 'row')">{{ t('reinstate') }}</button>
             } @else {
-              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent)">{{ t('suspend') }}</button>
+              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent, 'row')">{{ t('suspend') }}</button>
             }
           </li>
         }
@@ -149,9 +149,9 @@
       </dl>
 
       @if (agent.status === 'Suspended') {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="reinstate(agent)">{{ t('reinstate') }}</button>
+        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="reinstate(agent, 'pane')">{{ t('reinstate') }}</button>
       } @else {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent)">{{ t('suspend') }}</button>
+        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent, 'pane')">{{ t('suspend') }}</button>
         <p class="muted hint">{{ t('suspendHint') }}</p>
       }
     </backoffice-work-pane>
@@ -159,7 +159,7 @@
 
   <backoffice-confirm-dialog
     tone="normal"
-    [heading]="t('suspendTitle', { agent: suspending()?.displayName ?? '' })"
+    [heading]="t('suspendTitle', { agent: suspending()?.agent?.displayName ?? '' })"
     [body]="t('suspendBody')"
     [reasonLabel]="t('reason')"
     [reasonRequired]="true"

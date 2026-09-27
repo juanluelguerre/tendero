@@ -104,7 +104,9 @@
     "withdrawHint": "It goes back to the review queue, and you can undo it.",
     "withdrawn": "{{name}} is off sale, back in the review queue.",
     "refused": "The catalogue refused that change.",
-    "toReview": "Review the new drafts"
+    "toReview": "Review the new drafts",
+    "findLabel": "Find a product",
+    "find": "Name in any language, or code"
   },
   "nav": {
     "agents": "Registry",
@@ -643,5 +645,26 @@
     "no": "No",
     "loading": "Loading the product…",
     "failed": "Could not load this product."
+  },
+  "palette": {
+    "title": "Go to, or find",
+    "open": "Go to, or find an order, a product, an agent…",
+    "placeholder": "A screen, an order id, a name, a city, a product…",
+    "results": "Results",
+    "searching": "Searching…",
+    "none": "Nothing matches.",
+    "order": "Order {{id}}",
+    "kind": {
+      "screen": "Screen",
+      "order": "Order",
+      "product": "Product",
+      "agent": "Agent"
+    },
+    "keys": {
+      "move": "↑ ↓ move",
+      "go": "Enter go",
+      "close": "Esc close",
+      "lists": "In the review queue and claims: j and k"
+    }
   }
 }

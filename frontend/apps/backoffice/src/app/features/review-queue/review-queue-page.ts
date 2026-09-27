@@ -9,7 +9,8 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import { ProductReview } from '../../catalogue/product-review';
 import { CatalogService } from '../../data-access/catalog.service';
-import { BackofficeUsage } from '../../usage';
+import { type ActionVia, BackofficeUsage } from '../../usage';
+import { landing, stepOf } from '../../work/list-keys';
 import { WorkPane } from '../../work/work-pane';
 
 /** The laboratory's whole catalogue fits in one page of the list (the scale rule). */
@@ -37,6 +38,7 @@ const QueueSize = 100;
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-queue-page.html',
   styleUrl: './review-queue-page.css',
+  host: { '(document:keydown)': 'key($event)' },
 })
 export class ReviewQueuePage {
   private readonly catalog = inject(CatalogService);
@@ -70,16 +72,28 @@ export class ReviewQueuePage {
     void this.router.navigate([], { queryParams: { product: item.code }, queryParamsHandling: 'merge' });
   }
 
+  /** j and k down the queue, the pane following (R-3, P11). */
+  protected key(event: KeyboardEvent): void {
+    const step = stepOf(event, !!document.querySelector('dialog[open]'));
+    if (!step) return;
+    const items = this.drafts();
+    const index = landing(items.findIndex((item) => item.code === this.selectedCode()), items.length, step);
+    if (index === null) return;
+    event.preventDefault();
+    this.usage.affordance('keys', step === 1 ? 'next' : 'previous');
+    this.open(items[index]);
+  }
+
   protected close(): void {
     void this.router.navigate([], { queryParams: { product: null }, queryParamsHandling: 'merge' });
   }
 
-  protected publish(item: ProductSummary): void {
+  protected publish(item: ProductSummary, via: ActionVia): void {
     this.publishing.update((ids) => new Set(ids).add(item.productId));
 
     this.catalog
       .publish(item.productId)
-      .pipe(this.usage.reported('review', 'publish'))
+      .pipe(this.usage.reported('review', 'publish', via))
       .subscribe({
         next: () => {
           this.settle(item.productId);

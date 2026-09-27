@@ -77,6 +77,7 @@
 }
 
 .bar__menu {
+  flex: none;
   display: inline-grid;
   place-items: center;
   width: 2.75rem;
@@ -98,6 +99,40 @@
 
 .bar__spacer { flex: 1; }
 
+/* The palette's door: wide enough to read as a search on a desktop, an icon on a phone. */
+.bar__palette {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  min-width: 2.75rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.bar__palette:hover { color: var(--text); border-color: var(--border-strong); }
+.bar__palette-hint { min-width: 16rem; text-align: start; }
+
+.bar__palette-key {
+  padding: 1px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-3xs);
+}
+
+@media (max-width: 47.99rem) {
+  .bar__palette-hint,
+  .bar__palette-key { display: none; }
+}
+
 /* From a tablet up the rail carries the brand and the screens, so the bar
    holds only what is the person's own. */
 @media (min-width: 48rem) {
@@ -107,6 +142,12 @@
 
 @media (max-width: 40rem) {
   .bar__area { display: none; }
+}
+
+/* On the narrowest phones the mark is the brand, and the room goes to the
+   menu, the palette and the account. */
+@media (max-width: 26rem) {
+  .bar .bar__brand .brand__name { display: none; }
 }
 
 .langs {

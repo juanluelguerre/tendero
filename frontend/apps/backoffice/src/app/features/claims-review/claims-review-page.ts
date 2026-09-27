@@ -9,8 +9,9 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { forkJoin } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
 import { type ClaimDecision, KnowledgeService } from '../../data-access/knowledge.service';
-import { BackofficeUsage } from '../../usage';
+import { type ActionVia, BackofficeUsage } from '../../usage';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
+import { landing, stepOf } from '../../work/list-keys';
 import { WorkPane } from '../../work/work-pane';
 
 /** Under this, a claim's quote may not say what the claim does: read these first. */
@@ -33,6 +34,7 @@ const WeakSupport = 0.8;
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claims-review-page.html',
   styleUrl: './claims-review-page.css',
+  host: { '(document:keydown)': 'key($event)' },
 })
 export class ClaimsReviewPage {
   private readonly knowledge = inject(KnowledgeService);
@@ -105,16 +107,28 @@ export class ClaimsReviewPage {
     void this.router.navigate([], { queryParams: { claim: claim.claimId }, queryParamsHandling: 'merge' });
   }
 
+  /** j and k down the queue, the pane following (R-3, P11). */
+  protected key(event: KeyboardEvent): void {
+    const step = stepOf(event, !!document.querySelector('dialog[open]'));
+    if (!step) return;
+    const claims = this.shown();
+    const index = landing(claims.findIndex((claim) => claim.claimId === this.selectedId()), claims.length, step);
+    if (index === null) return;
+    event.preventDefault();
+    this.usage.affordance('keys', step === 1 ? 'next' : 'previous');
+    this.open(claims[index]);
+  }
+
   protected close(): void {
     void this.router.navigate([], { queryParams: { claim: null }, queryParamsHandling: 'merge' });
   }
 
-  protected decide(claim: ClaimForReview, decision: ClaimDecision): void {
+  protected decide(claim: ClaimForReview, decision: ClaimDecision, via: ActionVia): void {
     this.busy.set(claim.claimId);
 
     this.knowledge
       .decide(claim.claimId, decision)
-      .pipe(this.usage.reported('claims', decision === 'approve' ? 'claim_approve' : 'claim_reject'))
+      .pipe(this.usage.reported('claims', decision === 'approve' ? 'claim_approve' : 'claim_reject', via))
       .subscribe({
         next: () => this.settle(claim),
         error: (failure: unknown) => {

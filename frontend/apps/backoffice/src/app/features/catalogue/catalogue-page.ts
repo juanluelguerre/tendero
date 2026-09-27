@@ -1,13 +1,13 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { rxResource, toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService, translateObjectSignal } from '@jsverse/transloco';
 import type { ImportResult, ProductStatus, ProductSummary } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
-import { type Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, type Observable } from 'rxjs';
 import { ProductReview } from '../../catalogue/product-review';
 import { CatalogService } from '../../data-access/catalog.service';
 import { BackofficeUsage } from '../../usage';
@@ -54,10 +54,14 @@ export class CataloguePage {
   protected readonly selectedCode = computed(() => this.params().get('product'));
   protected readonly page = computed(() => Math.max(1, Number(this.params().get('page') ?? 1) || 1));
 
+  /** A name in any culture, or a code; asked for a moment after the typing stops (R-4.6). */
+  protected readonly text = signal(this.route.snapshot.queryParamMap.get('q') ?? '');
+  private readonly query = toSignal(toObservable(this.text).pipe(debounceTime(250), distinctUntilChanged()), { initialValue: this.text() });
+
   private readonly list = rxResource({
-    params: () => ({ status: this.statusKey(), page: this.page(), culture: this.culture.active() }),
+    params: () => ({ status: this.statusKey(), page: this.page(), culture: this.culture.active(), text: this.query() }),
     stream: ({ params }) =>
-      this.catalog.list(params.status === 'all' ? null : (params.status as ProductStatus), params.culture, params.page, PageSize),
+      this.catalog.list(params.status === 'all' ? null : (params.status as ProductStatus), params.culture, params.page, PageSize, params.text),
   });
 
   protected readonly products = linkedSignal(() => this.list.value()?.items ?? []);
@@ -110,11 +114,11 @@ export class CataloguePage {
   }
 
   protected publish(item: ProductSummary): void {
-    this.change(item, this.catalog.publish(item.productId).pipe(this.usage.reported('catalogue', 'publish')), 'active');
+    this.change(item, this.catalog.publish(item.productId).pipe(this.usage.reported('catalogue', 'publish', 'pane')), 'active');
   }
 
   protected withdraw(item: ProductSummary): void {
-    this.change(item, this.catalog.withdraw(item.productId).pipe(this.usage.reported('catalogue', 'withdraw')), 'draft', () =>
+    this.change(item, this.catalog.withdraw(item.productId).pipe(this.usage.reported('catalogue', 'withdraw', 'pane')), 'draft', () =>
       this.undo.offerTo(this.transloco.translate('catalogue.withdrawn', { name: item.name }), () => this.publish({ ...item, status: 'draft' })),
     );
   }
@@ -125,7 +129,7 @@ export class CataloguePage {
 
     this.catalog
       .import()
-      .pipe(this.usage.reported('catalogue', 'import'))
+      .pipe(this.usage.reported('catalogue', 'import', 'page'))
       .subscribe({
         next: (result) => {
           this.importing.set(false);

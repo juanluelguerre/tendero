@@ -250,6 +250,16 @@
       ]
     },
     {
+      "name": "Palette and list shortcuts",
+      "area": "backoffice",
+      "question": "Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?",
+      "decision": "R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3.",
+      "signals": [
+        "backoffice_affordance_used",
+        "backoffice_action_taken"
+      ]
+    },
+    {
       "name": "Agent rules",
       "area": "agents",
       "question": "How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?",
@@ -423,6 +433,15 @@
             "failed"
           ],
           "description": "done; refused when the server said no (a 4xx, a rule); failed when it could not answer."
+        },
+        "via": {
+          "type": "string",
+          "values": [
+            "row",
+            "pane",
+            "page"
+          ],
+          "description": "Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane)."
         }
       }
     },
@@ -439,6 +458,33 @@
             "dark"
           ],
           "description": "What was chosen, not what the system resolved it to."
+        }
+      }
+    },
+    {
+      "name": "backoffice_affordance_used",
+      "description": "A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6). A staff event under the shop's notice (ADR 0041), never with who they are.",
+      "consent": "staff",
+      "attributes": {
+        "affordance": {
+          "type": "string",
+          "values": [
+            "palette",
+            "keys"
+          ],
+          "description": "The palette (Ctrl K or /), or j and k down a queue."
+        },
+        "target": {
+          "type": "string",
+          "values": [
+            "screen",
+            "order",
+            "product",
+            "agent",
+            "next",
+            "previous"
+          ],
+          "description": "What it reached; never which one."
         }
       }
     }

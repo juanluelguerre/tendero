@@ -529,7 +529,7 @@ p {
 .button--danger:hover:not(:disabled) { background: var(--danger); filter: brightness(1.1); }
 
 /* A secondary way somewhere: quiet until pointed at. */
-.quiet-link { font-size: var(--text-xs); color: var(--text-muted); }
+.quiet-link { display: inline-flex; align-items: center; min-height: 1.5rem; font-size: var(--text-xs); color: var(--text-muted); }
 .quiet-link:hover { color: var(--text); }
 
 /* A list that is loading keeps the shape of what is coming — rows, drawn by

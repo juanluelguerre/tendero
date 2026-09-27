@@ -68,6 +68,7 @@ export class CatalogService {
     culture: string,
     page = 1,
     pageSize = 20,
+    text = '',
   ): Observable<ProductListPage> {
     let params = new HttpParams()
       .set('culture', culture)
@@ -77,6 +78,8 @@ export class CatalogService {
     // No parameter at all rather than an empty one: the API rejects an unknown
     // status, and "" is one.
     if (status) params = params.set('status', status);
+    // A name in any culture, or a code (R-4.6).
+    if (text.trim()) params = params.set('q', text.trim());
 
     return this.http.get<ProductListPage>(`${this.baseUrl}/api/catalog/products`, { params });
   }

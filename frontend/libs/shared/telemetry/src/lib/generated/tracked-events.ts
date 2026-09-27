@@ -81,6 +81,9 @@ export interface TrackedEvents {
    *
    * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
    * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
+   *
+   * Palette and list shortcuts: Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
+   * Decides: R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3.
    */
   readonly backoffice_action_taken: {
     /** The screen it was done on. */
@@ -89,6 +92,8 @@ export interface TrackedEvents {
     readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate';
     /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
     readonly outcome: 'done' | 'refused' | 'failed';
+    /** Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). */
+    readonly via: 'row' | 'pane' | 'page';
   };
 
   /**
@@ -100,6 +105,19 @@ export interface TrackedEvents {
   readonly backoffice_theme_chosen: {
     /** What was chosen, not what the system resolved it to. */
     readonly theme: 'system' | 'light' | 'dark';
+  };
+
+  /**
+   * A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6). A staff event under the shop's notice (ADR 0041), never with who they are.
+   *
+   * Palette and list shortcuts: Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
+   * Decides: R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3.
+   */
+  readonly backoffice_affordance_used: {
+    /** The palette (Ctrl K or /), or j and k down a queue. */
+    readonly affordance: 'palette' | 'keys';
+    /** What it reached; never which one. */
+    readonly target: 'screen' | 'order' | 'product' | 'agent' | 'next' | 'previous';
   };
 }
 
@@ -118,4 +136,5 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   backoffice_view_opened: 'staff',
   backoffice_action_taken: 'staff',
   backoffice_theme_chosen: 'staff',
+  backoffice_affordance_used: 'staff',
 };

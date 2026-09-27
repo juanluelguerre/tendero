@@ -33,6 +33,15 @@
         <span class="bar__area eyebrow">{{ t('brand.area') }}</span>
       </span>
 
+      @if (canUseBackoffice()) {
+        <!-- The palette's door (R-3, P2): a search-looking button that says its key. -->
+        <button type="button" class="bar__palette" aria-haspopup="dialog" (click)="openPalette()">
+          <span aria-hidden="true">⌕</span>
+          <span class="bar__palette-hint">{{ t('palette.open') }}</span>
+          <kbd class="bar__palette-key">Ctrl K</kbd>
+        </button>
+      }
+
       <span class="bar__spacer"></span>
 
       @if (identity()) {
@@ -73,6 +82,10 @@
       </footer>
     }
   </div>
+
+  @if (canUseBackoffice()) {
+    <backoffice-palette />
+  }
 
   <!-- The phone's navigation: a modal dialog, so the platform traps focus,
        closes on Esc and makes the page behind it inert. -->

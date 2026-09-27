@@ -104,7 +104,9 @@
     "withdrawHint": "Vuelve a la cola de revisión, y puedes deshacerlo.",
     "withdrawn": "{{name}} ya no está a la venta; ha vuelto a la cola de revisión.",
     "refused": "El catálogo ha rechazado ese cambio.",
-    "toReview": "Revisar los borradores nuevos"
+    "toReview": "Revisar los borradores nuevos",
+    "findLabel": "Buscar un producto",
+    "find": "Nombre en cualquier idioma, o código"
   },
   "nav": {
     "agents": "Registro",
@@ -643,5 +645,26 @@
     "no": "No",
     "loading": "Cargando el producto…",
     "failed": "No se ha podido cargar este producto."
+  },
+  "palette": {
+    "title": "Ir a, o buscar",
+    "open": "Ir a, o buscar un pedido, un producto, un agente…",
+    "placeholder": "Una pantalla, un id de pedido, un nombre, una ciudad, un producto…",
+    "results": "Resultados",
+    "searching": "Buscando…",
+    "none": "Nada coincide.",
+    "order": "Pedido {{id}}",
+    "kind": {
+      "screen": "Pantalla",
+      "order": "Pedido",
+      "product": "Producto",
+      "agent": "Agente"
+    },
+    "keys": {
+      "move": "↑ ↓ moverse",
+      "go": "Intro ir",
+      "close": "Esc cerrar",
+      "lists": "En la cola de revisión y en afirmaciones: j y k"
+    }
   }
 }

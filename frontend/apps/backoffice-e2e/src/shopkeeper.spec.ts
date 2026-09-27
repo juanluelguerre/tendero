@@ -141,6 +141,48 @@ test.describe('the backoffice', () => {
     await expect(pane.getByText(/^\s*(On sale|A la venta)\s*$/)).toBeVisible();
   });
 
+  /**
+   * The command palette (the redesign's R-4.6): Ctrl K from anywhere, a screen
+   * by its name in either language, and a product by what is remembered of it.
+   */
+  test('the palette goes to a screen by its name, and finds a product', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/dashboard');
+    // The shortcut listens once the shell is up; a key pressed before it lands nowhere.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+    await page.keyboard.press('Control+k');
+    const palette = page.getByRole('dialog', { name: /Go to, or find|Ir a, o buscar/ });
+    const input = palette.getByRole('combobox');
+    await expect(input).toBeFocused();
+
+    await input.fill('return');
+    await expect(palette.getByRole('option').first()).toContainText(/Returns|Devoluciones/);
+    await input.press('Enter');
+    await expect(page).toHaveURL(/\/returns/);
+
+    await page.keyboard.press('Control+k');
+    await input.fill('mochila');
+    await expect(palette.getByRole('option').filter({ hasText: /Product|Producto/ }).first()).toBeVisible();
+  });
+
+  /** j and k down a queue worked item by item, the pane following (R-4.6). */
+  test('j and k move down and up the claims, the pane following', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/claims?support=all');
+    await expect(page.getByRole('table')).toBeVisible();
+
+    await page.keyboard.press('j');
+    await expect(page).toHaveURL(/claim=/);
+    const first = new URL(page.url()).searchParams.get('claim');
+
+    await page.keyboard.press('j');
+    await expect(page).not.toHaveURL(new RegExp(`claim=${first}`));
+
+    await page.keyboard.press('k');
+    await expect(page).toHaveURL(new RegExp(`claim=${first}`));
+  });
+
   test('a stocktake goes through the ledger and comes back recomputed', async ({ page }) => {
     await signIn(page);
     await page.goto('/stock');

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, Injector, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, Injector, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
@@ -12,6 +12,7 @@ import { BackofficeUsage } from '../usage';
 import { AccountMenu } from './account-menu';
 import { Icon } from './icon';
 import { Nav } from './nav';
+import { Palette } from './palette';
 import { StaffNotice } from './staff-notice';
 import { UndoToast } from '../work/undo-toast';
 import { Waiting } from './waiting';
@@ -29,11 +30,11 @@ import { Waiting } from './waiting';
  */
 @Component({
   selector: 'backoffice-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon, UndoToast],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon, UndoToast, Palette],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
-  host: { '[class.with-rail]': 'canUseBackoffice()' },
+  host: { '[class.with-rail]': 'canUseBackoffice()', '(document:keydown)': 'shortcut($event)' },
 })
 export class Shell {
   private readonly auth = inject(AuthStore);
@@ -105,8 +106,36 @@ export class Shell {
     });
   }
 
+  private readonly palette = viewChild(Palette);
+
+  /**
+   * Ctrl K, ⌘K, or / when not typing: the palette, from anywhere (R-3, P2). A /
+   * typed into a field is the field's, and a dialog already open keeps its keys.
+   */
+  protected openPalette(): void {
+    this.palette()?.open();
+  }
+
+  protected shortcut(event: KeyboardEvent): void {
+    const palette = this.palette();
+    if (!palette || !this.canUseBackoffice()) return;
+
+    const chord = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k';
+    const slash = event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey && !isTyping(event.target);
+    if (!chord && !slash) return;
+    if (document.querySelector('dialog[open]')) return;
+
+    event.preventDefault();
+    palette.open();
+  }
+
   protected signOut(): void {
     this.auth.signOut();
     void this.router.navigate(['/sign-in']);
   }
+}
+
+/** Whether a key press is somebody writing: then a / is a character, not a command. */
+function isTyping(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
 }

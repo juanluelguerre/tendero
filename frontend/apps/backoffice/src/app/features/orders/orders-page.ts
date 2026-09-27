@@ -18,7 +18,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { OrderingService, type OrderMove } from '../../data-access/ordering.service';
-import { BackofficeUsage, type BackofficeAction } from '../../usage';
+import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../usage';
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import { WorkPane } from '../../work/work-pane';
@@ -169,13 +169,13 @@ export class OrdersPage {
     this.cancelDialog()?.open();
   }
 
-  protected apply(order: OrderSummary, move: OrderMove, reason?: string): void {
+  protected apply(order: OrderSummary, move: OrderMove, via: ActionVia, reason?: string): void {
     this.busy.set(order.orderId);
     this.refusal.update((current) => without(current, order.orderId));
 
     this.ordering
       .move(order.orderId, move, reason)
-      .pipe(this.usage.reported('orders', OrderActions[move]))
+      .pipe(this.usage.reported('orders', OrderActions[move], via))
       .subscribe({
         next: (updated) => {
           this.orders.update((current) => current.map((row) => (row.orderId === updated.orderId ? updated : row)));
