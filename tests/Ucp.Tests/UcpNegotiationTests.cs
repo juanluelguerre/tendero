@@ -110,6 +110,25 @@ public sealed class UcpNegotiationTests
         Assert.Equal(1, handler.Calls);
     }
 
+    /// <summary>
+    /// A platform's keys are read from its profile, and one this shop cannot name is
+    /// skipped rather than the profile refused (P11-4) — every AP2 test built its
+    /// profile by hand, so nothing had read <c>keys</c> until phase 11's Stryker close.
+    /// </summary>
+    [Fact]
+    public async Task A_profile_s_keys_are_read_and_a_key_without_a_kid_is_skipped()
+    {
+        var body = """{"ucp":{"capabilities":{}},"keys":[{"kid":"k1","kty":"EC","crv":"P-256","x":"AA","y":"AA","alg":"ES256"},{"kty":"EC"},"not a key"]}""";
+        var profiles = new HttpPlatformProfiles(new HttpClient(new Recording(HttpStatusCode.OK, body)), Options.Create(new UcpOptions { TrustedPlatformHosts = ["agent.example"] }), new TestClock());
+        var none = new HttpPlatformProfiles(new HttpClient(new Recording(HttpStatusCode.OK, """{"ucp":{"capabilities":{}},"keys":{"k1":{}}}""")), Options.Create(new UcpOptions { TrustedPlatformHosts = ["agent.example"] }), new TestClock());
+
+        var (profile, _) = await profiles.GetAsync($"https://agent.example/{Guid.NewGuid()}.json", TestContext.Current.CancellationToken);
+        var (withoutKeys, _) = await none.GetAsync($"https://agent.example/{Guid.NewGuid()}.json", TestContext.Current.CancellationToken);
+
+        Assert.Equal(["k1"], profile!.Keys.Select(key => key.KeyId));
+        Assert.Empty(withoutKeys!.Keys);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.NotFound, "{}", ProfileProblem.Unreachable)]
     [InlineData(HttpStatusCode.OK, "not json", ProfileProblem.Malformed)]

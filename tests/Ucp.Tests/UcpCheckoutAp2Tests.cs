@@ -19,6 +19,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// dispatcher: every checkout comes back signed and valid against the extension's
 /// schema, and completion dispatches nothing until a mandate approves these terms.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpCheckoutAp2Tests : IDisposable
 {
     private const string Agent = "claude-desktop-test";

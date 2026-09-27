@@ -14,6 +14,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// with negative controls, so a schema that accepts anything is caught rather than
 /// quoted as evidence.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpCheckoutConformanceTests
 {
     private const string Checkout = "https://ucp.dev/schemas/shopping/checkout.json";

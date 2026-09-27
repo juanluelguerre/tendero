@@ -16,6 +16,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// **binds** to our records without losing anything, which is the failure a
 /// response test cannot see.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpRestRequestConformanceTests
 {
     private const string SearchRequest = "https://ucp.dev/schemas/shopping/catalog_search.json#/$defs/search_request";

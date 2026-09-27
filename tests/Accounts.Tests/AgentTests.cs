@@ -27,18 +27,33 @@ public sealed class AgentTests
         Assert.Throws<InvalidOperationException>(() => Agent.Register(Clock, Claude, "x", "y", AgentTrust.Untrusted));
     }
 
+    [Theory]
+    [InlineData("", "Claude", "Anthropic")]
+    [InlineData("claude", " ", "Anthropic")]
+    [InlineData("claude", "Claude", " ")]
+    public void An_agent_has_an_id_a_name_and_an_operator_or_it_is_not_registered(string id, string name, string @operator) =>
+        Assert.Throws<ArgumentException>(() => Agent.Register(Clock, new AgentId(id), name, @operator));
+
     [Fact]
     public void Suspending_keeps_the_reason_until_it_is_reinstated_and_neither_happens_twice()
     {
         var agent = Agent.Register(Clock, Claude, "Claude Desktop", "Anthropic");
 
+        agent.ClearDomainEvents();
+
         agent.Suspend(Clock, " refunds abused ");
         Assert.Equal((AgentStatus.Suspended, "refunds abused", true), (agent.Status, agent.SuspensionReason, agent.Standing.Suspended));
         Assert.Throws<InvalidOperationException>(() => agent.Suspend(Clock, "again"));
+        Assert.Throws<ArgumentException>(() => Agent.Register(Clock, Claude, "x", "y").Suspend(Clock, " "));
 
         agent.Reinstate(Clock);
         Assert.Equal((AgentStatus.Active, (string?)null), (agent.Status, agent.SuspensionReason));
         Assert.Throws<InvalidOperationException>(() => agent.Reinstate(Clock));
+
+        // Each change is an event the audit and the outbox can see — found missing by Stryker at phase 11's close.
+        Assert.Collection(agent.DomainEvents,
+            e => Assert.Equal("refunds abused", Assert.IsType<AgentSuspended>(e).Reason),
+            e => Assert.IsType<AgentReinstated>(e));
     }
 
     [Fact]
@@ -51,7 +66,9 @@ public sealed class AgentTests
         agent.ChangeTrust(Clock, AgentTrust.Verified);
 
         Assert.Equal(AgentTrust.Verified, agent.Trust);
-        Assert.Single(agent.DomainEvents, e => e is AgentTrustChanged { From: AgentTrust.Known, To: AgentTrust.Verified });
+        // One event, not one per call: a change to the same trust is no change.
+        var changed = Assert.IsType<AgentTrustChanged>(Assert.Single(agent.DomainEvents));
+        Assert.Equal((AgentTrust.Known, AgentTrust.Verified), (changed.From, changed.To));
         Assert.Throws<InvalidOperationException>(() => agent.ChangeTrust(Clock, AgentTrust.Untrusted));
     }
 
@@ -66,6 +83,7 @@ public sealed class AgentTests
 
         Assert.Equal((AgentChange.Registered, "known", "active"), (first.Change, first.Agent!.Trust, first.Agent.Status));
         Assert.Equal(AgentChange.AlreadyRegistered, second.Change);
+        Assert.Null(((IAuditedResult)first).AuditReason);
         Assert.Equal((AuditOutcome.Denied, "AlreadyRegistered"), (((IAuditedResult)second).AuditOutcome, ((IAuditedResult)second).AuditReason));
         Assert.Equal(1, registry.Saves);
     }
@@ -99,6 +117,9 @@ public sealed class AgentTests
         Assert.False(new RegisterAgentValidator().Validate(new RegisterAgentCommand(new AgentId(""), "Claude", "Anthropic", AgentTrust.Known)).IsValid);
         Assert.False(new ChangeAgentTrustValidator().Validate(new ChangeAgentTrustCommand(Claude, AgentTrust.Untrusted)).IsValid);
         Assert.False(new SuspendAgentValidator().Validate(new SuspendAgentCommand(Claude, " ")).IsValid);
+        Assert.False(new RegisterAgentValidator().Validate(new RegisterAgentCommand(Claude, "", "Anthropic", AgentTrust.Known)).IsValid);
+        Assert.False(new RegisterAgentValidator().Validate(new RegisterAgentCommand(Claude, "Claude", "", AgentTrust.Known)).IsValid);
+        Assert.True(new RegisterAgentValidator().Validate(new RegisterAgentCommand(Claude, "Claude", "Anthropic", AgentTrust.Known)).IsValid);
     }
 
     private sealed class InMemoryAgents(params Agent[] agents) : IAgentRepository, IUnitOfWork

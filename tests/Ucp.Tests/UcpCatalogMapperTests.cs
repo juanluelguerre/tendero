@@ -10,6 +10,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// Tendero's product said in UCP's words, and the one number that is easy to get
 /// plausibly wrong.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpCatalogMapperTests
 {
     private const string BaseUrl = "https://shop.example";

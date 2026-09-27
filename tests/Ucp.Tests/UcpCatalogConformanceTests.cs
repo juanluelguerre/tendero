@@ -22,6 +22,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// requiring a flat `"ucp-agent.profile"` and refusing every conformant caller
 /// that did not send it.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpCatalogConformanceTests
 {
     private const string SearchResponse = "https://ucp.dev/schemas/shopping/catalog_search.json#/$defs/search_response";

@@ -47,8 +47,7 @@ code for a blog series on AI architecture.
 
 ### What runs today
 
-Phases 0–10 of [the board](docs/delivery-plan.md) are in, and phase 11's features
-are built and closing. That means the shop works end to end, on a hundred-product
+Phases 0–11 of [the board](docs/delivery-plan.md) are in. That means the shop works end to end, on a hundred-product
 catalogue; a browser agent can shop in it, and an external agent can read its
 catalogue and **buy** over MCP or UCP:
 
@@ -379,7 +378,7 @@ deferred with its measured number — is
 | 9 | Read-only MCP server and the UCP manifest | ✅ eight MCP tools; UCP's catalogue over MCP and REST, validated against UCP's own schemas |
 | 9b | Seeing it run: the Grafana stack behind a switch (Aspire kept), browser telemetry, a seeded traffic simulator | ✅ a tracking plan a test holds to the code; OpenTelemetry chosen over Faro on measured numbers |
 | 10 | Knowledge: product claims with source and confidence | ✅ **done** — nine models measured before one was chosen: Qwen3.5-4B extracts (precision 0.92, recall 0.80), an NLI model scores support; a review queue, approved claims reaching the catalogue through its own command, specs with source chips, comparisons that say "no data", `get_product_specs` and `compare_products` over MCP, and quality gates (rules in CI, the models at phase close) |
-| 11 | UCP transactional, AP2 and Know Your Agent | 🚧 **built, closing** — the headline: checkout over REST and MCP, AP2 mandates verified against terms the shop signed, the shop's own rules for agents, test orders, the backoffice dashboard |
+| 11 | UCP transactional, AP2 and Know Your Agent | ✅ **the headline** — checkout over REST and MCP, AP2 mandates verified against terms the shop signed, the shop's own rules for agents, test orders, the backoffice dashboard |
 | 12 | **Steward**, the backoffice copilot, and the AI observability panel | 🔜 |
 | 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
 | 13 | Multimodal search and the kit solver | 🔜 |
