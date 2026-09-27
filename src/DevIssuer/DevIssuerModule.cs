@@ -36,7 +36,7 @@ public sealed record DevTokenResponse(
     [property: JsonPropertyName("token_type")] string TokenType,
     [property: JsonPropertyName("expires_in")] int ExpiresIn,
     [property: JsonPropertyName("id_token")] string? IdToken = null,
-    [property: JsonPropertyName("issued_token_type")] [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? IssuedTokenType = null);
+    [property: JsonPropertyName("issued_token_type")][property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] string? IssuedTokenType = null);
 
 public sealed record DevIdentityView(string Subject, string Name, string Role, bool IsAgent, bool IsTest);
 
