@@ -103,6 +103,63 @@ that. So this one starts by saying what "better" will mean, and by measuring
    and their summary goes in this spec. That is the "before" the article compares
    against.
 
+## R-1 — the audit: what today's interface does to the nine jobs
+
+*Run 2026-09-27 on the laboratory stack. Every route of both apps was checked at
+360, 390, 768, 1024 and 1440 px, with captures at 390 and 1440 and the machine
+checks in `findings.json`, all under `docs/blog/reports/2026-09-27-redesign-audit/`
+(private). The script checks what can be checked without a new dependency:
+horizontal overflow and what causes it, images without `alt`, controls without an
+accessible name, inputs without a label, touch targets under 24 px (WCAG 2.2
+2.5.8), and the heading outline. Contrast and visible focus are the by-hand half,
+still to do: the accessibility checker is open question 1. Severity follows
+Nielsen's scale: 4 is a catastrophe, 3 major, 2 minor, 1 cosmetic.*
+
+**What is already right, and stays.** Every page has exactly one `h1`. The machine
+found no image without `alt`, no control without a name and no input without a
+label, in either app. No storefront page scrolls sideways at any width. The
+storefront's product page on a phone reads well. And the dashboard already
+answers "what needs me?" (P11-7).
+
+### Backoffice
+
+| # | Finding | Heuristic / criterion | Sev. | Jobs |
+|---|---|---|:-:|---|
+| B-F1 | **The tab bar does not fit.** Twelve tabs in one row push every page 120 px sideways at 768 px (a tablet). On a phone the row scrolls with no cue past *Attributes*, and *Review queue* wraps onto two lines. | WCAG 1.4.10 Reflow · N8 aesthetic and minimalist · N6 recognition | **3** | all |
+| B-F2 | **The audit page scrolls the whole page sideways on a phone**, by 520 px. Its table is not in the frame the other tables scroll inside. | WCAG 1.4.10 Reflow · N4 consistency | **3** | B5 |
+| B-F3 | **Orders cannot be searched, filtered or sorted.** Twenty-four rows, newest first, and short ids. Finding one order means reading the list. | N7 flexibility and efficiency · N6 recognition | **3** | B3 |
+| B-F4 | **On a phone, an order's actions are off-screen.** *Ship* and *Cancel* sit in the table's last column, past *Payment*, *Lines* and *Total*; the job needs a sideways scroll per order. | N7 · WCAG 1.4.10 | **3** | B3, B4 |
+| B-F5 | **The destructive action has the same weight as the useful one.** *Cancel* sits beside *Ship*, the same size and style. Whether it asks before acting is for the by-hand pass to check. | N5 error prevention · N3 control | **3** | B3 |
+| B-F6 | **Screens speak the developer's language.** Hints read "the state machine decides which move is legal", "Draft is why this queue exists", "a log that leads with successes is a changelog". The command appears as `CompleteCheckoutSessionCommand`, and the heading reads "Audit 13 refused". | N2 match with the real world | **2** | B1, B3, B5 |
+| B-F7 | **The empty review queue offers a developer's action as its one clay button**: *Import the sample catalog*. | N2 · N8 | **2** | B1 |
+| B-F8 | **Small targets on a phone.** The language switch is 31×19 px, and the widget links are 18 px high. | WCAG 2.5.8 Target size (24 px) | **2** | all |
+| B-F9 | **The header wraps on a phone.** *Sign out* breaks onto two lines beside the role tag and the language switch. | N8 | **2** | all |
+| B-F10 | **Loading is a sentence**, *Loading…*, where the shape of what is coming would be. | N1 visibility of status | **1** | all |
+
+### Storefront
+
+| # | Finding | Heuristic / criterion | Sev. | Jobs |
+|---|---|---|:-:|---|
+| S-F1 | **No way into the catalogue from the header.** The departments exist only as cards on the home page. A breadcrumb leads up from a product; nothing leads across from the cart, the checkout or a search. S1 cannot be done from any page but home. | N6 recognition · N3 control · Baymard (navigation) | **3** | S1, S2 |
+| S-F2 | **The phone header spends its space on the brand.** The logo's three-line tagline and the language switch take the row where a menu and search would be. | N8 | **2** | S1, S2 |
+| S-F3 | **Checkout asks for a click to learn the shipping.** *¿Cómo quieres recibirlo?* has to be pressed before a total exists, and *Pagar* stays disabled with "Se calcula al pagar" until then. | N1 · N7 | **2** | S4 |
+| S-F4 | **Small targets.** *Comparar* on every card is 61×21 px, and *Seguir comprando*, *Tu cesta* and the breadcrumb's *Tienda* are 22 px high. | WCAG 2.5.8 | **2** | S2, S3 |
+| S-F5 | **"Novedades" cuts its last card at 1440 px.** The half card is the only cue that the row scrolls, and there is no control to scroll it. | N1 · N6 | **1** | S2 |
+
+### What R-1 hands to R-3
+
+The findings rank themselves by severity and by how many jobs they touch:
+- **B-F1, S-F1 and S-F2** are the navigation of both apps, and they are exactly
+  what R-2 adopted: P1, the side rail, and S-P1, the category menu.
+- **B-F3, B-F4 and B-F5** are the orders list, answered by P3 (filters), P6 (a
+  side pane) and a destructive action set apart.
+- **B-F2 and B-F8** are fixed in passing.
+- **B-F6 and B-F7** are copy, for `design/DESIGN.md`'s voice.
+
+Before R-3, two things remain. The by-hand pass (contrast, focus order and
+visibility, keyboard paths, B-F5's confirmation) waits for the checker decision.
+The **baseline walkthrough** (R-0) waits for the author, as the participant.
+
 ## R-2 — benchmark: what the good ones do, judged against R-0
 
 *Written 2026-09-27 from the products' own documentation and published research
