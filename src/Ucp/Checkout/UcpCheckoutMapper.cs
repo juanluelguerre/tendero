@@ -244,6 +244,11 @@ public static class UcpCheckoutMapper
             CheckoutIssueCodes.DiscountCodeInvalid or CheckoutIssueCodes.QuantityAdjusted => ("warning", (string?)null),
             // The one a person has to answer: requires_escalation says so (UCP §Status Values).
             CheckoutIssueCodes.PaymentNotSettled => ("error", "requires_buyer_input"),
+            // AP2's (ADR 0040): what the platform must do next — send one, ask the
+            // person again, or give up on a mandate that will never verify.
+            Ap2.Ap2ErrorCodes.MandateRequired or Ap2.Ap2ErrorCodes.MandateExpired => ("error", "recoverable"),
+            Ap2.Ap2ErrorCodes.MandateScopeMismatch or Ap2.Ap2ErrorCodes.MerchantAuthorizationInvalid => ("error", "requires_buyer_review"),
+            Ap2.Ap2ErrorCodes.AgentMissingKey or Ap2.Ap2ErrorCodes.MandateInvalidSignature => ("error", "unrecoverable"),
             _ => ("error", "recoverable"),
         };
 
@@ -300,6 +305,12 @@ public static class UcpCheckoutMapper
         CheckoutIssueCodes.PaymentFailed => en ? "The payment was declined." : "El pago ha sido rechazado.",
         CheckoutIssueCodes.PaymentUnavailable => en ? "The payment could not be processed right now; try again with the same key." : "No se ha podido procesar el pago ahora mismo; reinténtalo con la misma clave.",
         CheckoutIssueCodes.PaymentNotSettled => en ? "This shop does not take an agent's payment yet: a person completes the purchase at the continue URL." : "Esta tienda aún no cobra pagos de agentes: una persona completa la compra en la URL de continuación.",
+        Ap2.Ap2ErrorCodes.MandateRequired => en ? "AP2 was negotiated: completing needs the buyer's checkout mandate." : "Se negoció AP2: para completar hace falta el mandato de compra del comprador.",
+        Ap2.Ap2ErrorCodes.AgentMissingKey => en ? "The mandate names a key the platform's profile does not publish." : "El mandato nombra una clave que el perfil de la plataforma no publica.",
+        Ap2.Ap2ErrorCodes.MandateInvalidSignature => en ? "The checkout mandate does not verify." : "El mandato de compra no se puede verificar.",
+        Ap2.Ap2ErrorCodes.MandateExpired => en ? "The checkout mandate has expired: ask the buyer to approve again." : "El mandato de compra ha caducado: pide al comprador que lo apruebe de nuevo.",
+        Ap2.Ap2ErrorCodes.MerchantAuthorizationInvalid => en ? "The checkout in the mandate is not one this shop signed." : "El checkout del mandato no lo ha firmado esta tienda.",
+        Ap2.Ap2ErrorCodes.MandateScopeMismatch => en ? "The mandate approves other terms than this checkout's now: ask the buyer to approve these." : "El mandato aprueba otras condiciones que las de este checkout ahora: pide al comprador que apruebe estas.",
         _ => issue.Code,
     };
 

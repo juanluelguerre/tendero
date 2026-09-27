@@ -134,29 +134,11 @@ public sealed class UcpCheckoutOperations(
         var code = verdict.Error
                    ?? (UcpCheckoutTerms.Same(verdict.Mandate!.Checkout, Signed(shown)) ? null : Ap2ErrorCodes.MandateScopeMismatch);
 
-        return code is null ? null : new UcpAnswer(200, Signed(shown with { Messages = [.. shown.Messages ?? [], MandateError(code)] }));
+        return code is null
+            ? null
+            : new UcpAnswer(200, Signed(UcpCheckoutMapper.ToWire(
+                current.Session! with { Issues = [.. current.Session.Issues, new CheckoutIssue(code, "payment")] }, call.Active, call.Links)));
     }
-
-    private static UcpCheckoutMessage MandateError(string code) => new()
-    {
-        Type = "error",
-        Code = code,
-        Content = code switch
-        {
-            Ap2ErrorCodes.MandateRequired => "AP2 was negotiated: completing needs ap2.checkout_mandate.",
-            Ap2ErrorCodes.AgentMissingKey => "The mandate names a key the platform profile does not publish.",
-            Ap2ErrorCodes.MandateExpired => "The checkout mandate has expired: ask the buyer to approve again.",
-            Ap2ErrorCodes.MerchantAuthorizationInvalid => "The checkout in the mandate is not one this shop signed.",
-            Ap2ErrorCodes.MandateScopeMismatch => "The mandate approves other terms than this checkout's now: ask the buyer to approve these.",
-            _ => "The checkout mandate does not verify.",
-        },
-        Severity = code switch
-        {
-            Ap2ErrorCodes.MandateRequired or Ap2ErrorCodes.MandateExpired => "recoverable",
-            Ap2ErrorCodes.MandateScopeMismatch or Ap2ErrorCodes.MerchantAuthorizationInvalid => "requires_buyer_review",
-            _ => "unrecoverable",
-        },
-    };
 
     /// <summary>What was not negotiated is not read: no fulfillment extension, no destination; no discount extension, no codes.</summary>
     private static CheckoutDetails Allowed(CheckoutDetails details, IReadOnlySet<string> active) => details with

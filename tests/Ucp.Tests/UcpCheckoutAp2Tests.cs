@@ -114,6 +114,9 @@ public sealed class UcpCheckoutAp2Tests : IDisposable
         Assert.Equal((Ap2ErrorCodes.MandateRequired, "recoverable"), Error(missing));
         Assert.Equal((Ap2ErrorCodes.MandateScopeMismatch, "requires_buyer_review"), Error(moved));
 
+        // In the checkout's language, like every other message it carries (invariant 6).
+        Assert.StartsWith("Se negoció AP2", ((JsonObject)missing.Body)["messages"]!.AsArray().Last()!["content"]!.GetValue<string>(), StringComparison.Ordinal);
+
         // The refusal is the current checkout, signed afresh, so the platform can ask again.
         Assert.True(MerchantAuthorization.Verify((JsonObject)moved.Body, merchant.PublishedKeys));
         UcpSchemas.Validate(WithAp2, JsonSerializer.SerializeToElement(moved.Body), "A refused completion");
