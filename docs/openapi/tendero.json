@@ -1811,6 +1811,22 @@
           "Orders"
         ],
         "operationId": "ListOrders",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1818,6 +1834,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListOrdersResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -3259,7 +3285,8 @@
       },
       "ListOrdersResult": {
         "required": [
-          "orders"
+          "orders",
+          "counts"
         ],
         "type": "object",
         "properties": {
@@ -3267,6 +3294,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OrderSummary"
+            }
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderStatusCount"
             }
           }
         }
@@ -3597,6 +3630,22 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "OrderStatusCount": {
+        "required": [
+          "status",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

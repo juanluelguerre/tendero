@@ -1,108 +1,264 @@
-<section *transloco="let t">
-  <header class="page-head">
-    <h1 class="page-title">{{ t('orders.title') }}</h1>
-    @if (open() > 0) {
-      <span class="tag tag--warn">{{ t('orders.openCount', { count: open() }) }}</span>
-    }
-  </header>
-  <p class="page-hint">{{ t('orders.hint') }}</p>
+<section class="layout" [class.layout--with-pane]="selectedId()" *transloco="let t">
+  <div class="list">
+    <header class="page-head">
+      <h1 class="page-title">{{ t('orders.title') }}</h1>
+    </header>
+    <p class="page-hint">{{ t('orders.hint') }}</p>
 
-  @if (loading()) {
-    <p class="muted" role="status" aria-live="polite">{{ t('orders.loading') }}</p>
-  } @else if (failed()) {
-    <p class="failed" role="alert">{{ t('orders.failed') }}</p>
-  } @else if (orders().length === 0) {
-    <div class="empty"><p class="empty__text">{{ t('orders.empty') }}</p></div>
-  } @else {
-    <div class="table-wrap">
-      <table class="table">
-        <caption class="sr-only">{{ t('orders.title') }}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{{ t('orders.column.order') }}</th>
-            <th scope="col">{{ t('orders.column.customer') }}</th>
-            <th scope="col">{{ t('orders.column.status') }}</th>
-            <th scope="col">{{ t('orders.column.payment') }}</th>
-            <th scope="col" class="numeric">{{ t('orders.column.lines') }}</th>
-            <th scope="col" class="numeric">{{ t('orders.column.total') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('orders.column.action') }}</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (order of orders(); track order.orderId) {
-            <tr>
-              <td class="numeric code" [title]="order.orderId">{{ shortId(order.orderId) }}</td>
-              <td>
-                {{ order.recipientName }}
-                <span class="city">{{ order.city }}</span>
-              </td>
-              <td>
-                <span class="status" [class]="'status--' + order.status">
-                  {{ t('orders.status.' + order.status) }}
-                </span>
-                <!-- A rehearsal a test credential placed (ADR 0038): never
-                     shipped, its stock already given back. Said beside the
-                     status so nobody prepares a parcel for it. -->
-                @if (order.mode === 'Test') {
-                  <span class="tag tag--code" [title]="t('orders.testHint')">{{ t('orders.test') }}</span>
-                }
-                <!-- Placed by an agent under a mandate a platform signed (P11-5):
-                     the answer to "who said this could be bought?". -->
-                @if (order.mandate; as mandate) {
-                  <span class="tag tag--code" [title]="t('orders.mandateHint', { issuer: mandate.issuer })">{{ t('orders.mandate') }}</span>
-                }
+    <div class="tools">
+      <div class="filters" role="group" [attr.aria-label]="t('orders.filterLabel')">
+        @for (filter of filters(); track filter.key) {
+          <button
+            type="button"
+            class="chip"
+            [attr.aria-pressed]="filter.key === statusKey()"
+            (click)="filterBy(filter.key)"
+          >
+            {{ filter.key === 'all' ? t('orders.filter.all') : t('orders.filter.' + filter.key) }}
+            <span class="chip__count numeric">{{ filter.count }}</span>
+          </button>
+        }
+      </div>
 
-                <!--
-                  Under the status and not in a column of its own: it is only
-                  ever set on two of the seven statuses, and an empty column on
-                  every other row would cost more scanning than it repays.
-                -->
-                @if (order.stopCode) {
-                  <span class="reason" [title]="order.stopDetail ?? ''">
-                    {{ t('orders.stop.' + order.stopCode) }}
-                    @if (order.stopDetail) {
-                      <span class="reason__detail">{{ order.stopDetail }}</span>
-                    }
-                  </span>
-                }
-              </td>
-              <td>
-                @if (order.isCaptured) {
-                  <span class="tag tag--ok">{{ t('orders.captured') }}</span>
-                } @else if (order.isPaid) {
-                  <span class="tag tag--warn">{{ t('orders.paid') }}</span>
-                } @else {
-                  <span class="tag tag--danger">{{ t('orders.unpaid') }}</span>
-                }
-              </td>
-              <td class="numeric">{{ order.lineCount }}</td>
-              <td class="numeric total">{{ money(order) }}</td>
-              <td class="actions">
-                @for (move of moves(order); track move) {
-                  <!-- Quiet, every one of them: a row's likely move in clay made
-                       one clay button per ROW, and design/DESIGN.md allows one
-                       per VIEW — "if two things are clay, neither is primary".
-                       The likely move still comes first. -->
-                  <button
-                    class="button button--small button--quiet"
-                    type="button"
-                    [disabled]="busy() === order.orderId"
-                    (click)="apply(order, move)"
-                  >
-                    {{ busy() === order.orderId ? t('orders.moving') : t('orders.move.' + move) }}
-                  </button>
-                }
-              </td>
-            </tr>
-
-            @if (refusal()[order.orderId]; as reason) {
-              <tr class="refusal">
-                <td colspan="7">{{ reason }}</td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
+      <label class="find">
+        <span class="sr-only">{{ t('orders.findLabel') }}</span>
+        <input
+          type="search"
+          class="find__input"
+          [placeholder]="t('orders.find')"
+          [value]="text()"
+          (input)="text.set($any($event.target).value)"
+        />
+      </label>
     </div>
+
+    @if (loading()) {
+      <p class="muted" role="status" aria-live="polite">{{ t('orders.loading') }}</p>
+    } @else if (failed()) {
+      <p class="failed" role="alert">{{ t('orders.failed') }}</p>
+    } @else if (orders().length === 0) {
+      <div class="empty"><p class="empty__text">{{ text().trim() || statusKey() !== 'all' ? t('orders.none') : t('orders.empty') }}</p></div>
+    } @else {
+      <!-- A table from a tablet up; cards on a phone, where a row's move was
+           past a sideways scroll (R-1, B-F4). -->
+      <div class="table-wrap wide-only">
+        <table class="table">
+          <caption class="sr-only">{{ t('orders.title') }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ t('orders.column.order') }}</th>
+              <th scope="col">{{ t('orders.column.customer') }}</th>
+              <th scope="col">{{ t('orders.column.status') }}</th>
+              <th scope="col">{{ t('orders.column.payment') }}</th>
+              <th scope="col">{{ t('orders.column.placed') }}</th>
+              <th scope="col" class="numeric">{{ t('orders.column.total') }}</th>
+              <th scope="col"><span class="sr-only">{{ t('orders.column.action') }}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (order of orders(); track order.orderId) {
+              <tr class="row" [class.row--selected]="order.orderId === selectedId()" (click)="open(order)">
+                <td>
+                  <button
+                    type="button"
+                    class="row__open numeric"
+                    [id]="'open-' + order.orderId"
+                    [title]="order.orderId"
+                    [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })"
+                    [attr.aria-expanded]="order.orderId === selectedId()"
+                    (click)="$event.stopPropagation(); open(order)"
+                  >
+                    {{ shortId(order.orderId) }}
+                  </button>
+                </td>
+                <td>
+                  {{ order.recipientName }}
+                  <span class="city">{{ order.city }}</span>
+                </td>
+                <td>
+                  <ng-container *ngTemplateOutlet="statusOf; context: { $implicit: order }" />
+                </td>
+                <td><ng-container *ngTemplateOutlet="paymentOf; context: { $implicit: order }" /></td>
+                <td class="muted">{{ placed(order.createdAt) }}</td>
+                <td class="numeric total">{{ money(order.total, order.currency) }}</td>
+                <td class="actions">
+                  @if (primaryMove(order.status); as move) {
+                    <button
+                      class="button button--small button--quiet"
+                      type="button"
+                      [disabled]="busy() === order.orderId"
+                      (click)="$event.stopPropagation(); apply(order, move)"
+                    >
+                      {{ busy() === order.orderId ? t('orders.moving') : t('orders.move.' + move) }}
+                    </button>
+                  }
+                </td>
+              </tr>
+              @if (refusal()[order.orderId] !== undefined) {
+                <tr class="refusal">
+                  <td colspan="7" role="alert">{{ refusal()[order.orderId] || t('orders.refused') }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="cards narrow-only" role="list">
+        @for (order of orders(); track order.orderId) {
+          <li class="card" [class.card--selected]="order.orderId === selectedId()">
+            <button type="button" class="card__open" [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })" (click)="open(order)">
+              <span class="card__line">
+                <span class="numeric code">{{ shortId(order.orderId) }}</span>
+                <span class="numeric total card__total">{{ money(order.total, order.currency) }}</span>
+              </span>
+              <span class="card__line">
+                <ng-container *ngTemplateOutlet="statusOf; context: { $implicit: order }" />
+              </span>
+              <span class="card__who">{{ order.recipientName }}</span>
+              <span class="city">{{ order.city }} · {{ placed(order.createdAt) }}</span>
+            </button>
+            @if (primaryMove(order.status); as move) {
+              <button
+                class="button button--quiet card__move"
+                type="button"
+                [disabled]="busy() === order.orderId"
+                (click)="apply(order, move)"
+              >
+                {{ busy() === order.orderId ? t('orders.moving') : t('orders.move.' + move) }}
+              </button>
+            }
+            @if (refusal()[order.orderId] !== undefined) {
+              <p class="card__refusal" role="alert">{{ refusal()[order.orderId] || t('orders.refused') }}</p>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (selected(); as order) {
+    <!-- The pane: beside the list from 1024 px, a sheet over it below. It holds
+         the view's one clay action, and cancelling lives apart at its foot. -->
+    <aside class="pane" [attr.aria-labelledby]="'pane-title'">
+      <header class="pane__head">
+        <button type="button" class="pane__back narrow-pane-only" (click)="close()">{{ t('orders.pane.back') }}</button>
+        <h2 class="pane__title numeric" id="pane-title" tabindex="-1" #paneHeading>
+          {{ t('orders.pane.title', { id: shortId(order.orderId) }) }}
+        </h2>
+        <button type="button" class="pane__close wide-pane-only" [attr.aria-label]="t('orders.pane.close')" (click)="close()">×</button>
+      </header>
+
+      <div class="pane__status">
+        <ng-container *ngTemplateOutlet="statusOf; context: { $implicit: order }" />
+        <ng-container *ngTemplateOutlet="paymentOf; context: { $implicit: order }" />
+      </div>
+
+      <section class="pane__section">
+        <h3 class="eyebrow">{{ t('orders.pane.deliverTo') }}</h3>
+        <p class="pane__strong">{{ order.recipientName }}</p>
+        @if (detail.value(); as found) {
+          <p class="muted">{{ found.order.shippingAddress }}</p>
+          <p class="muted">{{ found.order.shippingLabel }}</p>
+        }
+      </section>
+
+      <section class="pane__section">
+        <h3 class="eyebrow">{{ t('orders.pane.lines') }}</h3>
+        @if (detail.value(); as found) {
+          <ul class="lines" role="list">
+            @for (line of found.order.lines; track line.sku) {
+              <li class="line">
+                <span class="numeric muted">{{ line.quantity }} ×</span>
+                <span class="line__name">
+                  {{ line.productName }}
+                  @if (line.variantLabel) {
+                    <span class="muted">· {{ line.variantLabel }}</span>
+                  }
+                </span>
+                <span class="numeric">{{ money(line.unitPrice * line.quantity, found.order.currency) }}</span>
+              </li>
+            }
+          </ul>
+          <p class="pane__total">
+            <span class="muted">{{ t('orders.pane.total') }}</span>
+            <span class="numeric total">{{ money(found.order.total, found.order.currency) }}</span>
+          </p>
+        } @else if (detail.isLoading()) {
+          <!-- The space the lines will take, so the pane does not jump (P8). -->
+          <div class="skeleton" aria-hidden="true"></div>
+          <p class="sr-only" role="status">{{ t('orders.loading') }}</p>
+        } @else if (detail.status() === 'error') {
+          <p class="failed" role="alert">{{ t('orders.pane.failed') }}</p>
+        }
+      </section>
+
+      @if (refusal()[order.orderId] !== undefined) {
+        <p class="failed" role="alert">{{ refusal()[order.orderId] || t('orders.refused') }}</p>
+      }
+
+      @if (primaryMove(order.status); as move) {
+        <button
+          type="button"
+          class="button pane__primary"
+          [disabled]="busy() === order.orderId"
+          (click)="apply(order, move)"
+        >
+          {{ busy() === order.orderId ? t('orders.moving') : t('orders.moveLong.' + move) }}
+        </button>
+      }
+
+      @if (cancellable(order.status)) {
+        <div class="danger-zone">
+          <button type="button" class="linkish linkish--danger" (click)="askToCancel()">{{ t('orders.cancel.open') }}</button>
+          <p class="muted">{{ t('orders.cancel.consequence') }}</p>
+        </div>
+      }
+
+      <dialog class="confirm" #cancelDialog [attr.aria-labelledby]="'cancel-title'">
+        <h2 class="confirm__title" id="cancel-title">{{ t('orders.cancel.title', { id: shortId(order.orderId) }) }}</h2>
+        <p>{{ t('orders.cancel.body') }}</p>
+        <label class="confirm__reason">
+          <span>{{ t('orders.cancel.reason') }}</span>
+          <textarea rows="2" [value]="cancelReason()" (input)="cancelReason.set($any($event.target).value)"></textarea>
+        </label>
+        <div class="confirm__actions">
+          <button type="button" class="button button--quiet" (click)="cancelDialog.close()">{{ t('orders.cancel.keep') }}</button>
+          <button type="button" class="button button--danger" (click)="confirmCancel(order)">{{ t('orders.cancel.confirm') }}</button>
+        </div>
+      </dialog>
+    </aside>
   }
+
+  <ng-template #statusOf let-order>
+    <span class="status" [class]="'status--' + order.status">{{ t('orders.status.' + order.status) }}</span>
+    <!-- A rehearsal a test credential placed (ADR 0038): never shipped, its
+         stock already given back. Said beside the status so nobody prepares a
+         parcel for it. -->
+    @if (order.mode === 'Test') {
+      <span class="tag tag--code" [title]="t('orders.testHint')">{{ t('orders.test') }}</span>
+    }
+    <!-- Placed by an agent under a mandate a platform signed (P11-5). -->
+    @if (order.mandate; as mandate) {
+      <span class="tag tag--code" [title]="t('orders.mandateHint', { issuer: mandate.issuer })">{{ t('orders.mandate') }}</span>
+    }
+    @if (order.stopCode) {
+      <span class="reason" [title]="order.stopDetail ?? ''">
+        {{ t('orders.stop.' + order.stopCode) }}
+        @if (order.stopDetail) {
+          <span class="reason__detail">{{ order.stopDetail }}</span>
+        }
+      </span>
+    }
+  </ng-template>
+
+  <ng-template #paymentOf let-order>
+    @if (order.isCaptured) {
+      <span class="tag tag--ok">{{ t('orders.captured') }}</span>
+    } @else if (order.isPaid) {
+      <span class="tag tag--warn">{{ t('orders.paid') }}</span>
+    } @else {
+      <span class="tag tag--danger">{{ t('orders.unpaid') }}</span>
+    }
+  </ng-template>
 </section>

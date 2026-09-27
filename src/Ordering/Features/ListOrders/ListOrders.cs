@@ -104,9 +104,17 @@ public sealed record OrderSummary(
         order.CreatedAt);
 }
 
-public sealed record ListOrdersResult(IReadOnlyList<OrderSummary> Orders);
+/// <summary>How many orders match one status, for the list's filter (the redesign's R-4.2).</summary>
+public sealed record OrderStatusCount(string Status, int Count);
 
-public sealed record ListOrdersQuery : IQuery<ListOrdersResult>;
+/// <summary>
+/// The orders that match, newest first, and the count for every status — zero
+/// included, so a filter can say "Cancelled 0" rather than vanish.
+/// </summary>
+public sealed record ListOrdersResult(IReadOnlyList<OrderSummary> Orders, IReadOnlyList<OrderStatusCount> Counts);
+
+/// <summary>Narrowed by status, and by the start of an id or any part of a name or a city.</summary>
+public sealed record ListOrdersQuery(OrderStatus? Status = null, string? Text = null) : IQuery<ListOrdersResult>;
 
 public sealed class ListOrdersHandler(IOrderReader orders) : IQueryHandler<ListOrdersQuery, ListOrdersResult>
 {
@@ -116,12 +124,17 @@ public sealed class ListOrdersHandler(IOrderReader orders) : IQueryHandler<ListO
         ListOrdersQuery query, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("ordering.list_orders");
+        activity?.SetTag("ordering.status_filter", query.Status?.ToString());
+        activity?.SetTag("ordering.text_filter", !string.IsNullOrWhiteSpace(query.Text));
 
-        var rows = await orders.RecentAsync(cancellationToken);
+        var list = await orders.ListAsync(new OrderListQuery(query.Status, query.Text), cancellationToken);
 
-        activity?.SetTag("ordering.order_count", rows.Count);
+        activity?.SetTag("ordering.order_count", list.Orders.Count);
 
-        return new ListOrdersResult([.. rows.Select(OrderSummary.Of)]);
+        return new ListOrdersResult(
+            [.. list.Orders.Select(OrderSummary.Of)],
+            [.. Enum.GetValues<OrderStatus>().Select(status =>
+                new OrderStatusCount(status.ToString(), list.CountByStatus.GetValueOrDefault(status)))]);
     }
 }
 
@@ -209,9 +222,22 @@ public sealed class OrderAdminEndpoints : ICarterModule
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Orders");
 
+        // GET /api/orders?status=Confirmed&q=01a0e
         orders.MapGet("/",
-            async Task<Ok<ListOrdersResult>> (IQueryDispatcher dispatcher, CancellationToken ct) =>
-                TypedResults.Ok(await dispatcher.SendAsync(new ListOrdersQuery(), ct)))
+            async Task<Results<Ok<ListOrdersResult>, BadRequest<string>>> (
+                   string? status, string? q, IQueryDispatcher dispatcher, CancellationToken ct) =>
+            {
+                OrderStatus? wanted = null;
+                if (!string.IsNullOrWhiteSpace(status))
+                {
+                    if (!Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var parsed) || !Enum.IsDefined(parsed))
+                        return TypedResults.BadRequest(
+                            $"A status is one of {string.Join(", ", Enum.GetNames<OrderStatus>())}.");
+                    wanted = parsed;
+                }
+
+                return TypedResults.Ok(await dispatcher.SendAsync(new ListOrdersQuery(wanted, q), ct));
+            })
             .WithName("ListOrders");
 
         orders.MapPost("/{orderId:guid}/move",

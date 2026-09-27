@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import type {
   AgentSales,
   CheckoutFunnel,
+  ListOrdersResult,
   OperationsSummary,
   OrderDetail,
   OrderSummary,
@@ -33,8 +34,12 @@ export class OrderingService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
 
-  orders(): Observable<{ orders: OrderSummary[] }> {
-    return this.http.get<{ orders: OrderSummary[] }>(`${this.baseUrl}/api/orders`);
+  /** Narrowed by status and by the start or end of an id, or any part of a name or city (R-4.2). */
+  orders(status: string | null = null, text = ''): Observable<ListOrdersResult> {
+    let params = new HttpParams();
+    if (status) params = params.set('status', status);
+    if (text.trim()) params = params.set('q', text.trim());
+    return this.http.get<ListOrdersResult>(`${this.baseUrl}/api/orders`, { params });
   }
 
   order(id: string, culture: string): Observable<OrderDetail> {

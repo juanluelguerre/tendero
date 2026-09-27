@@ -1,8 +1,94 @@
-.code { color: var(--text); font-weight: 500; }
+/* The list and, when an order is open, the pane beside it from 1024 px: the
+   list keeps its place, which is the round trip R-3's P6 saves. */
+.layout { display: grid; gap: var(--space-5); }
+
+@media (min-width: 64rem) {
+  .layout--with-pane { grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem); align-items: start; }
+}
+
+.list { min-width: 0; }
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-block-end: var(--space-4);
+}
+
+.filters {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-block: 2px;
+  /* The row scrolls on a phone, and the fade says it does. */
+  mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
+}
+
+@media (min-width: 64rem) {
+  .filters { flex-wrap: wrap; overflow: visible; mask-image: none; }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  min-height: 2.25rem;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.chip:hover { color: var(--text); border-color: var(--border-strong); }
+
+.chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.chip__count { color: var(--text-muted); font-size: var(--text-3xs); }
+
+.find { flex: 1 1 14rem; display: flex; }
+
+.find__input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+.row { cursor: pointer; }
+.row--selected td { background: var(--accent-tint); }
+
+.row__open {
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.row__open:hover { text-decoration: underline; }
+
 .city { display: block; color: var(--text-muted); font-size: var(--text-3xs); }
+.code { color: var(--text); font-weight: 600; }
 .total { font-weight: 600; }
 .actions { text-align: end; white-space: nowrap; }
-.actions .button + .button { margin-inline-start: var(--space-2); }
 
 /* Colour never carries meaning alone: every one of these has the word in
    it, and the colour only makes the word findable in a column. */
@@ -17,26 +103,15 @@
 
 .status--Pending { color: var(--text-muted); }
 .status--PaymentAuthorized, .status--Confirmed { color: var(--warning); }
-/* Not clay: design/DESIGN.md keeps the accent for what an AGENT did, so that
-   scanning the table shows it at a glance. A shipped order is in transit —
-   neither done nor waiting on anybody — and reads in the neutral text colour. */
+/* Not clay: design/DESIGN.md keeps the accent for what an AGENT did. A shipped
+   order is in transit — neither done nor waiting — and reads in the text colour. */
 .status--Shipped { color: var(--text); }
 .status--Delivered { color: var(--positive); }
 .status--PaymentFailed, .status--Cancelled { color: var(--danger); }
 
-/* The server's own sentence, under the row it belongs to. A toast would
-   float away from the thing it is about. */
-.refusal td {
-  padding-block: var(--space-2);
-  color: var(--danger);
-  font-size: var(--text-xs);
-}
+.status + .tag { margin-inline-start: var(--space-2); }
 
-/*
-  Why a row stopped, under its status. The backoffice is dense by design, so
-  this is one size down and subdued — a shopkeeper scanning for refusals finds
-  them by the status colour first and reads this second.
-*/
+/* Why an order stopped, under its status: one size down, read second. */
 .reason {
   display: block;
   margin-block-start: var(--space-1);
@@ -44,8 +119,175 @@
   font-size: var(--text-xs);
 }
 
-.reason__detail {
-  display: block;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+.reason__detail { display: block; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* The server's own sentence, under the row it belongs to. */
+.refusal td { padding-block: var(--space-2); color: var(--danger); font-size: var(--text-xs); }
+
+/* ---------- A phone: cards, the move on the card ---------- */
+.narrow-only { display: none; }
+
+@media (max-width: 39.99rem) {
+  .wide-only { display: none; }
+  .narrow-only { display: grid; }
 }
+
+.cards { gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+.card--selected { border-color: var(--accent); }
+
+.card__open {
+  display: grid;
+  gap: var(--space-1);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.card__line { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.card__total { margin-inline-start: auto; }
+.card__who { font-size: var(--text-sm); }
+.card__move { min-height: 2.75rem; }
+.card__refusal { grid-column: 1 / -1; color: var(--danger); font-size: var(--text-xs); }
+
+/* ---------- The pane ---------- */
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+}
+
+@media (min-width: 64rem) {
+  .pane { position: sticky; top: calc(3.5rem + var(--space-4)); max-height: calc(100dvh - 3.5rem - var(--space-6)); overflow-y: auto; }
+  .narrow-pane-only { display: none; }
+}
+
+/* Below 1024 px the pane is a sheet over the list, and Back returns to it. */
+@media (max-width: 63.99rem) {
+  .pane {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    overflow-y: auto;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .wide-pane-only { display: none; }
+}
+
+.pane__head { display: flex; align-items: center; gap: var(--space-3); }
+.pane__title { flex: 1; font-size: var(--text-lg); }
+.pane__title:focus { outline: none; }
+.pane__title:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.pane__close,
+.pane__back {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.pane__back { font-size: var(--text-sm); }
+.pane__close:hover, .pane__back:hover { background: var(--bg-raised); color: var(--text); }
+
+.pane__status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.pane__section { display: grid; gap: var(--space-1); }
+.pane__strong { font-weight: 600; }
+
+.lines { display: grid; gap: var(--space-1); margin: 0; padding: 0; list-style: none; font-size: var(--text-xs); }
+.line { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-2); }
+
+.pane__total {
+  display: flex;
+  justify-content: space-between;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}
+
+.pane__primary { min-height: 2.75rem; }
+
+.skeleton {
+  height: 4.5rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+}
+
+/* Apart, quiet and red: never beside Ship, and it asks first (R-1, B-F5). */
+.danger-zone {
+  display: grid;
+  gap: var(--space-1);
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--text-xs);
+}
+
+.linkish {
+  justify-self: start;
+  min-height: 1.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.linkish--danger { color: var(--danger); }
+
+/* ---------- The confirmation ---------- */
+.confirm {
+  width: min(28rem, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-5);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+}
+
+.confirm::backdrop { background: color-mix(in srgb, var(--ink-900) 60%, transparent); }
+
+.confirm__title { margin-block-end: var(--space-3); font-size: var(--text-lg); }
+
+.confirm__reason { display: grid; gap: var(--space-1); margin-block: var(--space-4); font-size: var(--text-xs); color: var(--text-muted); }
+
+.confirm__reason textarea {
+  padding: var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  color: var(--text);
+  font: inherit;
+}
+
+.confirm__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--space-2); }
+
+.button--danger { background: var(--danger); color: var(--on-accent); }
+.button--danger:hover:not(:disabled) { background: var(--danger); filter: brightness(1.1); }

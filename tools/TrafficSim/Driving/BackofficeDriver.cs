@@ -91,7 +91,9 @@ public sealed class BackofficeDriver(IBrowser browser, Uri backoffice, string us
 
     private static async Task<int> MoveOrdersAsync(IPage page)
     {
-        await page.GotoAsync("/orders");
+        // Every order, as the list showed before the redesign: it now opens on
+        // those to ship (R-4.2), and the shopkeeper here also delivers.
+        await page.GotoAsync("/orders?status=all");
         await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
 
         var moved = 0;

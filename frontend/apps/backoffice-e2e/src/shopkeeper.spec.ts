@@ -91,6 +91,33 @@ test.describe('the backoffice', () => {
     }
   });
 
+  /**
+   * The orders pane (the redesign's R-4.2): an order opens beside the list with
+   * the focus on its heading, and cancelling — once one click beside Ship —
+   * asks first and does nothing when the answer is to keep it (R-1, B-F5).
+   */
+  test('cancelling an order asks first, and keeping it changes nothing', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/orders?status=Confirmed');
+
+    const confirmed = page.getByRole('row').filter({ has: page.getByText(/^(Confirmed|Confirmado)$/) }).first();
+    const first = confirmed.getByRole('button', { name: /^(Open order|Abrir el pedido) / });
+    await expect(first).toBeVisible();
+    await first.click();
+
+    const pane = page.getByRole('complementary', { name: /^(Order|Pedido) / });
+    await expect(pane.getByRole('heading', { level: 2 })).toBeFocused();
+    await expect(pane.getByText(/^(Confirmed|Confirmado)$/)).toBeVisible();
+
+    await pane.getByRole('button', { name: /Cancel order…|Cancelar pedido…/ }).click();
+    const confirm = page.getByRole('dialog');
+    await expect(confirm).toBeVisible();
+    await confirm.getByRole('button', { name: /Keep the order|Mantener el pedido/ }).click();
+
+    await expect(confirm).toBeHidden();
+    await expect(pane.getByText(/^(Confirmed|Confirmado)$/)).toBeVisible();
+  });
+
   test('a stocktake goes through the ledger and comes back recomputed', async ({ page }) => {
     await signIn(page);
     await page.goto('/stock');

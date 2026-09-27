@@ -90,13 +90,13 @@
       "customer": "To",
       "status": "Status",
       "payment": "Payment",
-      "lines": "Lines",
       "total": "Total",
-      "action": "Move it along"
+      "action": "Move it along",
+      "placed": "Placed"
     },
     "empty": "No orders yet. Buy something from the storefront and it lands here.",
     "failed": "Could not load the orders.",
-    "hint": "The state machine decides which move is legal. A refused one comes back with the reason, in the server's own words.",
+    "hint": "What is waiting to ship comes first. Open an order to see it beside the list; a refused move comes back with the reason.",
     "loading": "Loading orders...",
     "move": {
       "Ship": "Ship",
@@ -104,7 +104,6 @@
       "Cancel": "Cancel"
     },
     "moving": "Working...",
-    "openCount": "{{count}} to handle",
     "paid": "Authorised",
     "status": {
       "Pending": "Awaiting payment",
@@ -126,7 +125,45 @@
     "test": "Test",
     "testHint": "A test order placed with a test credential: never shipped, its stock already given back.",
     "mandate": "Mandate",
-    "mandateHint": "Bought by an agent under an AP2 mandate signed by {{issuer}}: the person approved exactly this total."
+    "mandateHint": "Bought by an agent under an AP2 mandate signed by {{issuer}}: the person approved exactly this total.",
+    "filterLabel": "Show orders",
+    "findLabel": "Find an order",
+    "find": "Order id, name or city",
+    "none": "No order matches. Try another status or clear the search.",
+    "refused": "The order refused that move.",
+    "openOrder": "Open order {{id}}",
+    "filter": {
+      "Confirmed": "To ship",
+      "Pending": "Awaiting payment",
+      "PaymentAuthorized": "Being confirmed",
+      "PaymentFailed": "Payment failed",
+      "Shipped": "Shipped",
+      "Delivered": "Delivered",
+      "Cancelled": "Cancelled",
+      "all": "All"
+    },
+    "moveLong": {
+      "Ship": "Ship order",
+      "Deliver": "Mark as delivered"
+    },
+    "pane": {
+      "title": "Order {{id}}",
+      "back": "Back to the list",
+      "close": "Close",
+      "deliverTo": "Deliver to",
+      "lines": "Lines",
+      "total": "Total, VAT and shipping included",
+      "failed": "Could not load this order's lines."
+    },
+    "cancel": {
+      "open": "Cancel order…",
+      "consequence": "Asks first: it releases the payment hold and cannot be undone.",
+      "title": "Cancel order {{id}}?",
+      "body": "Cancelling releases the payment hold and gives the stock back. It cannot be undone.",
+      "reason": "Why (optional, kept with the order)",
+      "keep": "Keep the order",
+      "confirm": "Cancel the order"
+    }
   },
   "promotions": {
     "title": "Promotions",

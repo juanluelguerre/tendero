@@ -43,12 +43,46 @@ internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
     /// </summary>
     private const int Recent = 50;
 
-    public async Task<IReadOnlyList<Order>> RecentAsync(CancellationToken cancellationToken = default) =>
-        await context.Orders
-            .AsNoTracking()
+    public async Task<OrderList> ListAsync(OrderListQuery query, CancellationToken cancellationToken = default)
+    {
+        var matching = context.Orders.AsNoTracking();
+
+        if (query.Text?.Trim() is { Length: > 0 } text)
+        {
+            // An id is matched at either end. Its start is what the list shows, but
+            // an id is a version-7 Guid and its start is a timestamp, shared by
+            // every order placed within a minute or so; its end is random, and
+            // tells them apart. The cast reaches the Guid under OrderId and becomes
+            // `id::text LIKE '01a0e%'`. Name and city are read out of the address's
+            // JSON and matched anywhere, ignoring case.
+            var id = text.ToLowerInvariant();
+            var anywhere = $"%{Escaped(text)}%";
+            matching = matching.Where(order =>
+                ((Guid)(object)order.Id).ToString().StartsWith(id)
+                || ((Guid)(object)order.Id).ToString().EndsWith(id)
+                || EF.Functions.ILike(order.ShippingAddress.RecipientName, anywhere, LikeEscape)
+                || EF.Functions.ILike(order.ShippingAddress.City, anywhere, LikeEscape));
+        }
+
+        var counts = await matching
+            .GroupBy(order => order.Status)
+            .Select(group => new { Status = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.Status, row => row.Count, cancellationToken);
+
+        var shown = query.Status is { } status ? matching.Where(order => order.Status == status) : matching;
+        var orders = await shown
             .OrderByDescending(order => order.CreatedAt)
             .Take(Recent)
             .ToListAsync(cancellationToken);
+
+        return new OrderList(orders, counts);
+    }
+
+    private const string LikeEscape = "\\";
+
+    /// <summary>What was typed, matched as typed: a % or _ in it is a character, not a wildcard.</summary>
+    private static string Escaped(string text) =>
+        text.Replace(LikeEscape, LikeEscape + LikeEscape).Replace("%", LikeEscape + "%").Replace("_", LikeEscape + "_");
 
     /// <summary>
     /// One customer's orders. The filter is not optional and cannot be made so

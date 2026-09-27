@@ -90,13 +90,13 @@
       "customer": "Para",
       "status": "Estado",
       "payment": "Pago",
-      "lines": "Líneas",
       "total": "Total",
-      "action": "Moverlo"
+      "action": "Moverlo",
+      "placed": "Realizado"
     },
     "empty": "Todavía no hay pedidos. Compra algo en la tienda y aparecerá aquí.",
     "failed": "No se han podido cargar los pedidos.",
-    "hint": "La máquina de estados decide qué movimiento es legal. Uno rechazado vuelve con el motivo, en las palabras del servidor.",
+    "hint": "Primero lo que espera envío. Abre un pedido para verlo junto a la lista; un movimiento rechazado vuelve con el motivo.",
     "loading": "Cargando pedidos...",
     "move": {
       "Ship": "Enviar",
@@ -104,7 +104,6 @@
       "Cancel": "Cancelar"
     },
     "moving": "Trabajando...",
-    "openCount": "{{count}} por atender",
     "paid": "Autorizado",
     "status": {
       "Pending": "Pendiente de pago",
@@ -126,7 +125,45 @@
     "test": "Prueba",
     "testHint": "Pedido de prueba de una credencial de prueba: no se envía y su stock ya se ha devuelto.",
     "mandate": "Mandato",
-    "mandateHint": "Lo compró un agente con un mandato AP2 firmado por {{issuer}}: la persona aprobó exactamente este total."
+    "mandateHint": "Lo compró un agente con un mandato AP2 firmado por {{issuer}}: la persona aprobó exactamente este total.",
+    "filterLabel": "Mostrar pedidos",
+    "findLabel": "Buscar un pedido",
+    "find": "Id del pedido, nombre o ciudad",
+    "none": "Ningún pedido coincide. Prueba otro estado o borra la búsqueda.",
+    "refused": "El pedido ha rechazado ese movimiento.",
+    "openOrder": "Abrir el pedido {{id}}",
+    "filter": {
+      "Confirmed": "Por enviar",
+      "Pending": "Pendiente de pago",
+      "PaymentAuthorized": "Confirmándose",
+      "PaymentFailed": "Pago fallido",
+      "Shipped": "Enviados",
+      "Delivered": "Entregados",
+      "Cancelled": "Cancelados",
+      "all": "Todos"
+    },
+    "moveLong": {
+      "Ship": "Enviar pedido",
+      "Deliver": "Marcar como entregado"
+    },
+    "pane": {
+      "title": "Pedido {{id}}",
+      "back": "Volver a la lista",
+      "close": "Cerrar",
+      "deliverTo": "Entregar a",
+      "lines": "Líneas",
+      "total": "Total, IVA y envío incluidos",
+      "failed": "No se han podido cargar las líneas de este pedido."
+    },
+    "cancel": {
+      "open": "Cancelar pedido…",
+      "consequence": "Pregunta antes: libera la retención del pago y no se puede deshacer.",
+      "title": "¿Cancelar el pedido {{id}}?",
+      "body": "Cancelar libera la retención del pago y devuelve el stock. No se puede deshacer.",
+      "reason": "Por qué (opcional, se guarda con el pedido)",
+      "keep": "Mantener el pedido",
+      "confirm": "Cancelar el pedido"
+    }
   },
   "promotions": {
     "title": "Promociones",

@@ -1113,6 +1113,7 @@ export interface components {
         };
         ListOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
+            counts: components["schemas"]["OrderStatusCount"][];
         };
         ListProductsResult: {
             items: components["schemas"]["ProductSummary"][];
@@ -1202,6 +1203,11 @@ export interface components {
             currency: string;
             /** Format: date-time */
             expiresAt: null | string;
+        };
+        OrderStatusCount: {
+            status: string;
+            /** Format: int32 */
+            count: number;
         };
         OrderSummary: {
             orderId: string;
@@ -3108,7 +3114,10 @@ export interface operations {
     };
     ListOrders: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: string;
+                q?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3122,6 +3131,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListOrdersResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };
