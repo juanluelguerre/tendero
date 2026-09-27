@@ -149,6 +149,7 @@ answers "what needs me?" (P11-7).
 | B-F8 | **Small targets on a phone.** The language switch is 31×19 px, and the widget links are 18 px high. | WCAG 2.5.8 Target size (24 px) | **2** | all |
 | B-F9 | **The header wraps on a phone.** *Sign out* breaks onto two lines beside the role tag and the language switch. | N8 | **2** | all |
 | B-F10 | **Loading is a sentence**, *Loading…*, where the shape of what is coming would be. | N1 visibility of status | **1** | all |
+| B-F11 | **The content does not use the width it has.** Every screen sits in a centred column of fixed maximum width; at about 1360 px nearly 300 px stay empty at the sides, while the staff notice runs edge to edge, so the page looks misaligned. Found by the author, 2026-09-27, after R-1. | N8 · N4 consistency | **2** | all |
 
 ### Storefront
 
@@ -294,6 +295,15 @@ tabs become six groups, in the order a working day meets them:
   so the phone header is one row.
 - The awning stripe marks the current screen in the rail, which is what it
   marked on the tab.
+- **The content area is fluid** (B-F11). It runs from the rail to the window's
+  edge, and the dashboard's cards fill as many columns as fit: three when wide,
+  two on a laptop, one on a phone. Only running text keeps a maximum measure,
+  such as a screen's description or a pane's notes, because long lines read badly.
+- **The staff notice (ADR 0041) stays at the top**, under the header and inside
+  the content column, with its width and margins. At the foot it would be easy
+  to miss, and a notice that is missed weakens the basis it exists for. It shows
+  once. The permanent state, and the switch, are the line at the foot of every
+  screen, as today.
 
 **The lists of work: one index-and-pane pattern for six screens** (P3, P6; answers
 B-F3, B-F4, B-F5):
@@ -433,6 +443,40 @@ second half, *and none takes more*, can. For those four jobs the target is
 This is written down now, before building, so that R-6 does not discover it and
 call it a result. **It is the author's to accept.**
 
+### Light and dark, chosen by the person (both apps)
+
+*Asked by the author on 2026-09-27, and taken into the redesign rather than after
+it: the shell is being rebuilt anyway, and a theme added later would mean
+touching every new screen twice.*
+
+- **Both themes already exist.** `tokens.css` defines the light theme and the dark
+  one under `[data-theme='dark']`, and `design-contrast.spec.ts` holds every
+  text token to 4.5:1 in both. What is missing is the choice:
+  - the backoffice hard-codes `data-theme="dark"` in its `index.html`;
+  - the storefront never sets it.
+- **Three options: system, light and dark.** The default is *system*, which
+  follows `prefers-color-scheme`. That changes today's defaults: a backoffice
+  user whose system is light gets light. The choice is a per-browser convenience,
+  kept in `localStorage` and wrapped in try/catch, like the staff switch.
+- **No flash.** A few lines inline in each `index.html` set `data-theme` before
+  the first paint. The Angular service owns the choice after that.
+- **Where it lives:**
+  - in the backoffice, the account menu, beside the language;
+  - in the storefront, the drawer's foot on a phone and the footer on a desktop.
+    It does not go in the header, which R-3 is emptying.
+- **Held by the same tests.** The accessibility ratchet runs every route in
+  both themes, and the dark storefront gets its own baseline.
+- **The storefront's images are the risk.** The illustrations were painted for a
+  light page. On a dark one they must sit on the card's surface, not on the page,
+  and the dark storefront is drawn in the mock-ups before it is built.
+- **Evidence of use:** `theme_chosen {app, theme}` in the tracking plan. It is
+  behavioural in the storefront, so it waits for consent, and a staff event in the
+  backoffice.
+  - It answers: does anybody change it?
+  - It decides: if nobody does after a month, the switch goes and *system* stays.
+- **Built in** R-4.1 (the backoffice shell) and R-5.1 (the storefront header and
+  drawer), each **S**.
+
 ### The mock-ups, and what drawing them found
 
 Six screens in `design/unpublished/mockups/redesign.pen`, with PNGs beside it in
@@ -491,14 +535,14 @@ its replacement passes the accessibility ratchet and the e2e suite.
 
 | # | Increment | Answers | Size |
 |---|---|---|:-:|
-| R-4.1 | Shell: side rail, groups, badges, drawer, account menu, one-row header | B-F1, B-F8, B-F9, P1 | M |
+| R-4.1 | Shell: side rail, groups, badges, drawer, account menu, one-row header, fluid content, the notice in the content column, the theme switch | B-F1, B-F8, B-F9, B-F11, P1 | M |
 | R-4.2 | Orders on the index-and-pane pattern: filters, search, pane, cards on a phone, the confirmed *Cancel*; `ListOrders` gains `status` and `q` | B-F3, B-F4, B-F5, P3, P6 | L |
 | R-4.3 | The same pattern for Returns, the review queue, claims, products (with *Withdraw* and *Undo*) and agents (*Undo* for suspend) | P3, P6, P12 | L |
 | R-4.4 | Skeletons, copy and the empty queue | B-F6, B-F7, B-F10, P8 | S |
 | R-4.5 | Home: figures as links, health against targets | P9, P10 | S |
 | R-4.6 | Command palette and list shortcuts; `ListProducts` gains `q`; `via` on the action event | P2, P11 | M |
 | R-4.7 | The audit's table in its own frame | B-F2 | S |
-| R-5.1 | Storefront header, *Tienda* panel on a desktop, drawer on a phone, the sticky row if its condition holds | S-F1, S-F2, S-F6, S-P1–4 | M |
+| R-5.1 | Storefront header, *Tienda* panel on a desktop, drawer on a phone, the sticky row if its condition holds, the theme switch and a dark storefront | S-F1, S-F2, S-F6, S-P1–4 | M |
 | R-5.2 | Shipping on postal code, 44 px targets, Novedades with controls | S-F3, S-F4, S-F5 | S |
 
 **Before R-4 starts**, per the delivery plan: the author reads this and marks
