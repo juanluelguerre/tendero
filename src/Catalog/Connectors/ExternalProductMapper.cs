@@ -113,26 +113,12 @@ public static class ExternalProductMapper
         if (definition is null)
             return AttributeValue.Plain(name, value);
 
-        return definition.Kind switch
-        {
-            AttributeKind.Option => definition.ResolveOption(value) is { } option
-                ? AttributeValue.Option(definition.Code, option.Code)
-                // The source sent a value the definition does not know. It is
-                // kept as-is rather than discarded: losing the data would be
-                // worse, and this way it stays visible to whoever reviews.
-                : AttributeValue.Plain(definition.Code, value),
-
-            AttributeKind.Number => decimal.TryParse(
-                value.TrimEnd('"'), System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var number)
-                    ? AttributeValue.Numeric(definition.Code, number)
-                    : AttributeValue.Plain(definition.Code, value),
-
-            AttributeKind.Boolean => AttributeValue.Boolean(
-                definition.Code,
-                value.Trim() is "si" or "sí" or "yes" or "true" or "1"),
-
-            _ => AttributeValue.Plain(definition.Code, value)
-        };
+        // What the definition does not accept is kept as it came rather than
+        // discarded: losing the data would be worse, and this way it stays visible
+        // to whoever reviews. A yes/no that is neither reads as no, as it always did.
+        return definition.Accept(value)
+               ?? (definition.Kind == AttributeKind.Boolean
+                   ? AttributeValue.Boolean(definition.Code, false)
+                   : AttributeValue.Plain(definition.Code, value));
     }
 }

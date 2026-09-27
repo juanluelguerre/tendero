@@ -175,34 +175,34 @@
               </section>
             }
 
-            @if (item.attributes.length > 0) {
+            @if (specLines().length > 0 || statements().length > 0) {
               <section class="specs">
                 <h2 class="specs__title">{{ t('product.specs') }}</h2>
                 <dl class="specs__list">
-                  @for (attribute of item.attributes; track attribute.code) {
+                  @for (line of specLines(); track line.code) {
                     <div class="specs__row">
-                      <dt class="specs__key">{{ attribute.label }}</dt>
+                      <dt class="specs__key">{{ line.label }}</dt>
                       <dd class="specs__value">
-                        <!-- Typed, never phrased by the API: "Sí"/"Yes" is
-                             interface copy and lives in the translation files. -->
-                        @switch (attribute.kind) {
-                          @case ('boolean') {
-                            {{ attribute.flag ? t('product.yes') : t('product.no') }}
-                          }
-                          @case ('number') {
-                            <span class="numeric">{{ attribute.number }}</span>
-                            @if (attribute.unit) {
-                              <span class="specs__unit">{{ attribute.unit }}</span>
-                            }
-                          }
-                          @default {
-                            {{ attribute.value }}
-                          }
-                        }
+                        <storefront-spec-value [cell]="line.cell" />
+                        <storefront-spec-source [source]="line.cell.source" [evidence]="line.cell.evidence" />
                       </dd>
                     </div>
                   }
                 </dl>
+
+                <!-- What an approved claim says that is not a value: a sentence
+                     with its source, never promoted to a row. -->
+                @if (statements().length > 0) {
+                  <h3 class="specs__subtitle">{{ t('specs.alsoSays') }}</h3>
+                  <ul class="specs__statements">
+                    @for (statement of statements(); track $index) {
+                      <li class="specs__statement">
+                        {{ statement.text }}
+                        <storefront-spec-source source="description" [evidence]="statement.evidence" />
+                      </li>
+                    }
+                  </ul>
+                }
               </section>
             }
           </section>

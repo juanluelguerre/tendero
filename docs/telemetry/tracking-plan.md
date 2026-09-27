@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-17 features: **13** answered by a signal emitted today,
+21 features: **17** answered by a signal emitted today,
 **0** by a signal planned, and **4** with no signal, each saying why.
 
 ### Storefront
@@ -21,6 +21,7 @@ everything here that is not *planned* is emitted.
 | Search | What share of typed searches finds nothing, and is it worse for agents than for people? | Where the next relevance work goes: synonyms and golden-set queries for the empty ones, or the MCP tool's description if agents come back empty more often than people. | `tendero.search.requests` | emitted |
 | Browsing by category | Do people browse the taxonomy, or go straight to search? | Whether the category pages earn their place in the navigation. | `tendero.search.requests` | emitted |
 | Product page | How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow? | Where discovery work goes: the search box, the taxonomy or the home page's rows. | `product_viewed`, `tendero.carts.created` | emitted |
+| Specs with their source | Do shoppers open the sentence behind a spec, and do they compare products side by side once they can? | If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have. | `spec_source_opened`, `products_compared` | emitted |
 | Cart | How many carts never become an order, and whose? | Whether abandonment work (a saved cart, a reminder) comes before checkout friction. | `tendero.carts.created`, `tendero.checkout.attempts` | emitted |
 | Promotions | What share of orders carries a discount? | Whether the promotion engine's combination rules are worth extending, or promotions stay a handful of codes. | `tendero.checkout.attempts` | emitted |
 | Checkout and payment | Why does a checkout fail to become an order: a stale screen, a changed price, a declined card, or a provider that did not answer? | A stale screen or a price change is our copy and our cache; a decline is the shopper's; an unavailable provider is ours to retry. Each points at a different fix. | `tendero.checkout.attempts` | emitted |
@@ -36,6 +37,9 @@ everything here that is not *planned* is emitted.
 | Stock and reservations | How much held stock never becomes a sale? | The hold's lifetime, and whether the expiry sweep the domain has a state for is worth building. | `tendero.inventory.reservations` | emitted |
 | Catalogue import | Does an import bring products in? | None beyond the run itself. | — An import is an operator's batch, answered by its own result and its span; a counter would say what the result already says. | none |
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
+| Claims from descriptions | How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it? | A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it. | `tendero.knowledge.claims.proposed`, `tendero.knowledge.claims.dropped`, `tendero.knowledge.proposals.failed`, `tendero.knowledge.descriptions.failed` | emitted |
+| Claim review | Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones? | A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. | `tendero.knowledge.claims.reviewed` | emitted |
+| Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 
 ### Agents
 
@@ -82,6 +86,30 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `arrived_from` | string | `search`, `category`, `home`, `other`, `direct` | The page before this one, by kind; direct when there was none in this tab. |
+
+### `spec_source_opened`
+
+browser event, behavioural. A shopper opened the words behind a spec — the quote and its support. Only with analytics consent.
+
+Answers:
+
+- **Specs with their source** — Do shoppers open the sentence behind a spec, and do they compare products side by side once they can?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `source` | string | `description` | Where the value came from; only a value an approved claim put there has words to open. |
+
+### `products_compared`
+
+browser event, behavioural. A shopper opened a side-by-side comparison. Only with analytics consent.
+
+Answers:
+
+- **Specs with their source** — Do shoppers open the sentence behind a spec, and do they compare products side by side once they can?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `products` | number | — | How many products were compared, two to four. |
 
 ## Metrics
 
@@ -217,3 +245,71 @@ Answers:
 | `surface` | string | `mcp`, `ucp` | The binding the call came through. |
 | `tool` | string | — | The tool or operation name; a closed set of the ones served. |
 | `outcome` | string | `answered`, `refused`, `failed` | Refused is the shop saying no; failed is the tool breaking. |
+
+### `tendero.knowledge.claims.proposed`
+
+counter, unit `{claim}`. Claims proposed for review, by the extractor that read the text.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `extractor` | string | `rules`, `chat` | Which extractor read the description: the rules, or the model. |
+
+### `tendero.knowledge.claims.dropped`
+
+counter, unit `{claim}`. Claims an extractor proposed that code refused before any person saw them, by reason.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `reason` | string | `not_in_the_text`, `wrong_language`, `duplicate` | DropReason, labelled by MetricLabels. |
+
+### `tendero.knowledge.proposals.failed`
+
+counter, unit `{attempt}`. Proposal runs that failed on a product; retried until its limit.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+No attributes.
+
+### `tendero.knowledge.descriptions.failed`
+
+counter, unit `{change}`. Product changes whose description Knowledge could not record; the next save records it.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+No attributes.
+
+### `tendero.knowledge.claims.reviewed`
+
+counter, unit `{claim}`. Claims a person approved or rejected, by decision.
+
+Answers:
+
+- **Claim review** — Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `decision` | string | `approve`, `reject` | ReviewDecision, labelled by MetricLabels. |
+
+### `tendero.knowledge.claims.applied`
+
+counter, unit `{claim}`. Approved typed claims Catalog was asked to hold, by what it answered.
+
+Answers:
+
+- **Approved claims reach the catalogue** — Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `outcome` | string | `set`, `unchanged`, `product_not_found`, `unknown_attribute`, `value_rejected` | SetAttributeOutcome, labelled by MetricLabels. |

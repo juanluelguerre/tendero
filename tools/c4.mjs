@@ -31,6 +31,7 @@ const NOT_CONTAINERS = {
   elasticvue: 'a development tool behind Tendero__Tools, not part of the system',
   'traffic-sim': 'the traffic simulator (ADR 0037): a customer from outside, started by hand, not part of the system',
   keycloak: 'drawn as the external identity provider it is in production (decided 2026-09-23)',
+  'extractor-model': 'a job that prepares the model of the extractor into a volume once and exits, not a process of the system',
 };
 
 function likec4(...args) {

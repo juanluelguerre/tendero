@@ -179,6 +179,13 @@ Answers UCP has no capability for, in this shop's own shapes.
 | `list_categories` | The category tree, named in the answered language |
 | `list_offers` | The promotions running right now |
 | `get_return_policy` | How many days to send something back, from delivery |
+| `get_product_specs` | One product's specs, each value with its source — `catalogue`, or `description` with the exact words a person approved and how well they support it (phase 10) |
+| `compare_products` | Two to four products aligned row by row; a cell whose source is `none` is *no data*, never a guess (phase 10) |
+
+The last two waited for phase 10 on purpose: a comparison that cannot say "no
+data" with authority is a comparison that guesses (ADR 0018). They are one query
+— the one behind the product page's specs table and the storefront's comparison —
+so an agent and a shopper can never be told different things.
 
 `get_product_detail` was called `get_product` until the UCP binding arrived and
 took that name. Two tools cannot share one on a server; a name we chose yields to

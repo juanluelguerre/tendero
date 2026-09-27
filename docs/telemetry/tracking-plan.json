@@ -30,6 +30,16 @@
       ]
     },
     {
+      "name": "Specs with their source",
+      "area": "storefront",
+      "question": "Do shoppers open the sentence behind a spec, and do they compare products side by side once they can?",
+      "decision": "If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have.",
+      "signals": [
+        "spec_source_opened",
+        "products_compared"
+      ]
+    },
+    {
       "name": "Cart",
       "area": "storefront",
       "question": "How many carts never become an order, and whose?",
@@ -152,6 +162,36 @@
       "signals": [
         "tendero.outbox.lag"
       ]
+    },
+    {
+      "name": "Claims from descriptions",
+      "area": "backoffice",
+      "question": "How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?",
+      "decision": "A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it.",
+      "signals": [
+        "tendero.knowledge.claims.proposed",
+        "tendero.knowledge.claims.dropped",
+        "tendero.knowledge.proposals.failed",
+        "tendero.knowledge.descriptions.failed"
+      ]
+    },
+    {
+      "name": "Claim review",
+      "area": "backoffice",
+      "question": "Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones?",
+      "decision": "A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read.",
+      "signals": [
+        "tendero.knowledge.claims.reviewed"
+      ]
+    },
+    {
+      "name": "Approved claims reach the catalogue",
+      "area": "backoffice",
+      "question": "Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through?",
+      "decision": "Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs.",
+      "signals": [
+        "tendero.knowledge.claims.applied"
+      ]
     }
   ],
   "events": [
@@ -190,6 +230,31 @@
             "direct"
           ],
           "description": "The page before this one, by kind; direct when there was none in this tab."
+        }
+      }
+    },
+    {
+      "name": "spec_source_opened",
+      "description": "A shopper opened the words behind a spec — the quote and its support. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "source": {
+          "type": "string",
+          "values": [
+            "description"
+          ],
+          "description": "Where the value came from; only a value an approved claim put there has words to open."
+        }
+      }
+    },
+    {
+      "name": "products_compared",
+      "description": "A shopper opened a side-by-side comparison. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "products": {
+          "type": "number",
+          "description": "How many products were compared, two to four."
         }
       }
     }
@@ -420,6 +485,91 @@
             "failed"
           ],
           "description": "Refused is the shop saying no; failed is the tool breaking."
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.claims.proposed",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Claims proposed for review, by the extractor that read the text.",
+      "attributes": {
+        "extractor": {
+          "type": "string",
+          "values": [
+            "rules",
+            "chat"
+          ],
+          "description": "Which extractor read the description: the rules, or the model."
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.claims.dropped",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Claims an extractor proposed that code refused before any person saw them, by reason.",
+      "attributes": {
+        "reason": {
+          "type": "string",
+          "values": [
+            "not_in_the_text",
+            "wrong_language",
+            "duplicate"
+          ],
+          "description": "DropReason, labelled by MetricLabels.",
+          "from": "DropReason"
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.proposals.failed",
+      "instrument": "counter",
+      "unit": "{attempt}",
+      "description": "Proposal runs that failed on a product; retried until its limit.",
+      "attributes": {}
+    },
+    {
+      "name": "tendero.knowledge.descriptions.failed",
+      "instrument": "counter",
+      "unit": "{change}",
+      "description": "Product changes whose description Knowledge could not record; the next save records it.",
+      "attributes": {}
+    },
+    {
+      "name": "tendero.knowledge.claims.reviewed",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Claims a person approved or rejected, by decision.",
+      "attributes": {
+        "decision": {
+          "type": "string",
+          "values": [
+            "approve",
+            "reject"
+          ],
+          "description": "ReviewDecision, labelled by MetricLabels.",
+          "from": "ReviewDecision"
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.claims.applied",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Approved typed claims Catalog was asked to hold, by what it answered.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "set",
+            "unchanged",
+            "product_not_found",
+            "unknown_attribute",
+            "value_rejected"
+          ],
+          "description": "SetAttributeOutcome, labelled by MetricLabels.",
+          "from": "SetAttributeOutcome"
         }
       }
     }

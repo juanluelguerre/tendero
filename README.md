@@ -32,7 +32,7 @@ code for a blog series on AI architecture.
 
 ### What runs today
 
-Phases 0–9 of [the board](docs/delivery-plan.md) are in. That means the shop
+Phases 0–10 of [the board](docs/delivery-plan.md) are in. That means the shop
 works end to end, on a hundred-product catalogue; a browser agent can shop in
 it, and an external agent can read its catalogue over MCP or UCP:
 
@@ -44,8 +44,8 @@ it, and an external agent can read its catalogue over MCP or UCP:
 > 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3 before a
 > euro moves.
 
-**950 backend tests (929 green, 21 skipped with a reason), 65 frontend tests and
-20 browser specs**, with lexical search relevance at **NDCG@10 0.692 es / 0.748
+**1,274 backend tests (1,253 green, 21 skipped with a reason), 142 frontend tests
+and 20 browser specs**, with lexical search relevance at **NDCG@10 0.692 es / 0.748
 en** on a golden set of 52 queries per culture across eight query types, and a
 CI gate that fails a regression. Earlier figures — 0.927 / 0.935, and 0.943 /
 0.937 over six products — were measured on smaller golden sets and are not
@@ -56,8 +56,14 @@ in Qdrant, fused with BM25 and reranked — degrades to lexical search byte for
 byte, and with the reranker scores 0.831 es / 0.843 en; it stays off by default,
 because it still shows ten products for queries the shop has nothing for, and the
 reranker needs a GPU. The **MCP server** and **UCP's catalogue capability** ship
-too, read-only. What is left is the half that needs trust: product claims with a
-source, UCP checkout with signed mandates, and the backoffice copilot.
+too, read-only. And **product claims with a source** are in (phase 10): a
+small local model reads each description and proposes what it states, every claim
+quoting the exact words it rests on and scored for support by an NLI model; a
+person approves or rejects, and only then does the catalogue change. The product
+page shows each spec with where it came from, a comparison says *"sin dato"* rather
+than guess, and two MCP tools give agents the same answer. What is left is the half
+that needs trust at the till: UCP checkout with signed mandates, and the backoffice
+copilot.
 
 ## Architecture at a glance
 
@@ -78,7 +84,8 @@ flowchart TB
     WK -->|on demand| QD[(Qdrant)]
     WK -->|on demand| OL[TEI · bge-m3 + reranker]
     Backend -->|OTel · Tendero__Observability| OBS[Grafana · Tempo · Prometheus · Loki]
-    SF -.->|RUM · phase 9b| OBS
+    SF -->|RUM · Web Vitals, errors, traces| OBS
+    WK -->|on demand · phase 10| KN[llama.cpp · Qwen3.5-4B + TEI · NLI]
     Backend -.->|GenAI traces · phase 12| LF[Langfuse]
     EXT[Catalog connectors: seed · Shopify...] --> API
     PAY[Payments: fake · stripe-mock · Stripe test] --- API
@@ -89,8 +96,9 @@ arrow. What is solid runs today.
 
 Key principles:
 
-- **Five bounded contexts that share no entities** — `Catalog`, `Pricing`,
-  `Inventory`, `Ordering` and `Accounts`; `Search` is a projection over them,
+- **Six bounded contexts that share no entities** — `Catalog`, `Pricing`,
+  `Inventory`, `Ordering`, `Accounts` and `Knowledge` (claims a model proposes
+  and a person approves, ADR 0018); `Search` is a projection over them,
   not a context. A crossing carries values or an event record, never a
   reference: an order snapshots the product's name and price, and stock is keyed
   on a SKU so inventory never learns what a product is (ADR 0014).
@@ -276,7 +284,8 @@ src/
   Inventory/               # warehouses, stock, reservations — SharedKernel only too
   Ordering/                # cart, checkout, orders, payments, returns, the stock saga
   Accounts/                # customers and guests, the guest claim, the audit log's reader
-  Search/                  # indexing and lexical search (hybrid in phase 8)
+  Search/                  # Project Rastro: indexing, lexical and hybrid search, the answer
+  Knowledge/               # claims with source, support and approval (phase 10, ADR 0018)
   Ucp/                     # UCP + MCP server for AI agents (phase 9; a README today)
   DevIssuer/               # OIDC discovery, JWKS and signed tokens, Development only
   Api/  Workers/           # composition roots: HTTP endpoints, outbox processor
@@ -291,7 +300,8 @@ keycloak/                  # the committed realm: users, roles and clients for a
 brand/                     # logo, icons, brand guide
 design/                    # tokens.css — the single source of truth for four surfaces
 seed/                      # sample dataset (ABO-style schema, es/en)
-tools/SearchEval/          # golden set runner (NDCG@10, recall)
+tools/SearchEval/          # quality gates: search (NDCG@10, recall), claims, support
+tools/TrafficSim/          # simulated shoppers and agents from a declared model (ADR 0037)
 landing-page/              # the landing and its film (Netlify) — private until the two repositories converge
 docs/                      # plan, architecture, ADRs, analysis, testing, blog
 tests/                     # unit, contract, architecture, integration, API
@@ -343,12 +353,13 @@ deferred with its measured number — is
 | 5 | Cart, checkout, payments, returns, the product page | ✅ |
 | 6 | WebMCP in the storefront | ✅ the cheapest differentiator — the agent inherits the shopper's session |
 | 7 | Accounts, audit, and swapping the dev issuer for Keycloak | ✅ the swap was two environment variables; Token Exchange waits for phase 11 |
-| 8 | Embeddings, hybrid search, evals | ✅ built and degradable; hybrid + reranker beats lexical, and stays off by default |
+| 8 | **Project Rastro**: embeddings, hybrid search, evals | ✅ built and degradable; hybrid + reranker beats lexical, and stays off by default |
 | 9 | Read-only MCP server and the UCP manifest | ✅ eight MCP tools; UCP's catalogue over MCP and REST, validated against UCP's own schemas |
-| 9b | Seeing it run: the Grafana stack behind a switch (Aspire kept), browser telemetry, a seeded traffic simulator | 🔜 **next** — inserted before 10 so that claims and the agent checkout are born observed |
-| 10 | Knowledge: product claims with source and confidence | 🔜 |
-| 11 | UCP transactional, AP2 and Know Your Agent | 🔜 **the headline** |
-| 12 | Backoffice copilot and the AI observability panel | 🔜 |
+| 9b | Seeing it run: the Grafana stack behind a switch (Aspire kept), browser telemetry, a seeded traffic simulator | ✅ a tracking plan a test holds to the code; OpenTelemetry chosen over Faro on measured numbers |
+| 10 | Knowledge: product claims with source and confidence | ✅ **done** — nine models measured before one was chosen: Qwen3.5-4B extracts (precision 0.92, recall 0.80), an NLI model scores support; a review queue, approved claims reaching the catalogue through its own command, specs with source chips, comparisons that say "no data", `get_product_specs` and `compare_products` over MCP, and quality gates (rules in CI, the models at phase close) |
+| 11 | UCP transactional, AP2 and Know Your Agent | 🚧 **next — the headline** |
+| 12 | **Steward**, the backoffice copilot, and the AI observability panel | 🔜 |
+| 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
 | 13 | Multimodal search and the kit solver | 🔜 |
 
 The numbering changed on 2026-09-02: `initial-plan.md` §7 had four phases, the

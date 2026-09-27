@@ -25,7 +25,15 @@ public sealed record EvaluationOptions(
     string? ScopeDirectory = null,
     string? CategoriesPath = null,
     bool WriteCalibration = false,
-    string? CalibrationPath = null)
+    string? CalibrationPath = null,
+    string? Extractor = null,
+    string? Chat = null,
+    string? Model = null,
+    string? Scorer = null,
+    string? Tei = null,
+    string? AttributesPath = null,
+    string? Onnx = null,
+    string? ClaimsDirectory = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -56,6 +64,20 @@ public sealed record EvaluationOptions(
           --write-calibration     When the protocol ACCEPTS, write the chosen margin and its fingerprint
           --calibration <file>    Where to write it     (default tools/SearchEval/scope/query-scope.calibration.json)
           --ci                    With scope: exit 1 when the protocol refutes layer B
+
+        The claims suite (--suite claims) scores an extractor against knowledge/claims.json:
+          --knowledge <dir>       Claim and support sets (default tools/SearchEval/knowledge)
+          --extractor <name>      rules (default), or chat: a generative model over an OpenAI-compatible endpoint
+          --chat <url>            That endpoint (default http://localhost:38090)
+          --onnx <dir>            Or a maker's ONNX model folder, run in process by ONNX Runtime GenAI
+          --model <label>         What it serves, as it will appear in the report (e.g. qwen3.5-4b-q8)
+          --attributes <file>     Attribute seed        (default seed/attributes.sample.json)
+          --report <file>         Every prediction and its verdict, as JSON
+          --ci                    With claims or support: exit 1 under the floors in knowledge/gates.json
+
+        The support suite (--suite support) scores a scorer against knowledge/support.json:
+          --scorer <name>         nli, reranker (both through TEI at --tei) or yesno (through --chat)
+          --tei <url>             Text Embeddings Inference serving the scorer (default http://localhost:38091)
         """;
 
     public static EvaluationOptions Parse(string[] args)
@@ -128,6 +150,14 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("scope", Path.Combine("tools", "SearchEval", "scope")),
             values.GetValueOrDefault("categories", Path.Combine("seed", "categories.sample.json")),
             writeCalibration,
-            values.GetValueOrDefault("calibration", Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json")));
+            values.GetValueOrDefault("calibration", Path.Combine("tools", "SearchEval", "scope", "query-scope.calibration.json")),
+            values.GetValueOrDefault("extractor", "rules"),
+            values.GetValueOrDefault("chat", "http://localhost:38090"),
+            values.GetValueOrDefault("model"),
+            values.GetValueOrDefault("scorer"),
+            values.GetValueOrDefault("tei", "http://localhost:38091"),
+            values.GetValueOrDefault("attributes", Path.Combine("seed", "attributes.sample.json")),
+            values.GetValueOrDefault("onnx"),
+            values.GetValueOrDefault("knowledge", Path.Combine("tools", "SearchEval", "knowledge")));
     }
 }

@@ -1,0 +1,32 @@
+.product { font-weight: 500; white-space: nowrap; }
+
+.statement { margin: 0; }
+
+.attribute {
+  display: inline-block;
+  margin-block-start: var(--space-1);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-3xs);
+}
+
+.provenance { margin: var(--space-1) 0 0; color: var(--text-muted); font-size: var(--text-3xs); }
+
+.quotes { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: var(--text-xs); }
+
+.quote__culture {
+  display: inline-block;
+  min-inline-size: 2ch;
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+  text-transform: uppercase;
+}
+
+/* Support is a probability from the NLI scorer, never the model's word about itself
+   (ADR 0018). The weak ones are the rows to read first, and the server put them first. */
+.support { font-variant-numeric: tabular-nums; }
+.support--weak { color: var(--warning); font-weight: 600; }
+
+.actions { text-align: end; white-space: nowrap; }
+.actions .button + .button { margin-inline-start: var(--space-2); }

@@ -542,6 +542,167 @@
         }
       }
     },
+    "/api/knowledge/claims": {
+      "get": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ListClaimsForReview",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimForReview"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/claims/{id}/approve": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ApproveClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/claims/{id}/reject": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "RejectClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/specs": {
+      "get": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "GetProductSpecs",
+        "parameters": [
+          {
+            "name": "codes",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpecSheet"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/orders/{orderId}/returns": {
       "post": {
         "tags": [
@@ -1944,6 +2105,71 @@
           }
         }
       },
+      "ClaimForReview": {
+        "required": [
+          "claimId",
+          "productId",
+          "statementSpanish",
+          "statementEnglish",
+          "attributeCode",
+          "value",
+          "support",
+          "quotes",
+          "extractor",
+          "model",
+          "proposedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "statementSpanish": {
+            "type": "string"
+          },
+          "statementEnglish": {
+            "type": "string"
+          },
+          "attributeCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "support": {
+            "type": "number",
+            "format": "double"
+          },
+          "quotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteForReview"
+            }
+          },
+          "extractor": {
+            "type": "string"
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proposedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "CountStockRequest": {
         "required": [
           "onHand"
@@ -3186,6 +3412,36 @@
           }
         }
       },
+      "QuoteForReview": {
+        "required": [
+          "culture",
+          "text",
+          "start",
+          "end",
+          "support"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "end": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "support": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "QuoteLineRequest": {
         "required": [
           "sku",
@@ -3532,6 +3788,36 @@
           }
         }
       },
+      "ReviewClaimConflict": {
+        "required": [
+          "title",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "ReviewClaimResponse": {
+        "required": [
+          "claimId",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          }
+        }
+      },
       "SearchAnswer": {
         "required": [
           "match"
@@ -3792,6 +4078,190 @@
           },
           "slug": {
             "type": "string"
+          }
+        }
+      },
+      "SpecCell": {
+        "required": [
+          "source",
+          "kind",
+          "value",
+          "number",
+          "unit",
+          "flag",
+          "evidence"
+        ],
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "kind": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "number": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "unit": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "flag": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "evidence": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SpecEvidence"
+              }
+            ]
+          }
+        }
+      },
+      "SpecEvidence": {
+        "required": [
+          "support",
+          "quotes"
+        ],
+        "type": "object",
+        "properties": {
+          "support": {
+            "type": "number",
+            "format": "double"
+          },
+          "quotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecQuote"
+            }
+          }
+        }
+      },
+      "SpecProduct": {
+        "required": [
+          "productId",
+          "code",
+          "name",
+          "slug"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        }
+      },
+      "SpecQuote": {
+        "required": [
+          "culture",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      },
+      "SpecRow": {
+        "required": [
+          "attributeCode",
+          "label",
+          "cells"
+        ],
+        "type": "object",
+        "properties": {
+          "attributeCode": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecCell"
+            }
+          }
+        }
+      },
+      "SpecSheet": {
+        "required": [
+          "products",
+          "rows",
+          "statements"
+        ],
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecProduct"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecRow"
+            }
+          },
+          "statements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpecStatement"
+            }
+          }
+        }
+      },
+      "SpecStatement": {
+        "required": [
+          "productId",
+          "text",
+          "evidence"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/SpecEvidence"
           }
         }
       },
@@ -4059,6 +4529,9 @@
     },
     {
       "name": "Inventory"
+    },
+    {
+      "name": "Knowledge"
     },
     {
       "name": "Ordering"

@@ -68,7 +68,8 @@
     "returns": "Devoluciones",
     "reviewQueue": "Cola de revisión",
     "search": "Evaluación de búsqueda",
-    "stock": "Stock"
+    "stock": "Stock",
+    "claims": "Afirmaciones"
   },
   "orders": {
     "captured": "Cobrado",
@@ -297,5 +298,24 @@
     "generating": "Generando…",
     "created": "{{count}} variantes creadas",
     "back": "Volver a la cola"
+  },
+  "claims": {
+    "title": "Afirmaciones por revisar",
+    "waiting": "{{count}} esperando",
+    "loading": "Cargando las afirmaciones…",
+    "failed": "No se han podido cargar las afirmaciones. Vuelve a intentarlo.",
+    "empty": "No hay afirmaciones esperando revisión.",
+    "hint": "Lo que un modelo ha leído en la descripción de cada producto. Nada cambia en el catálogo hasta que lo apruebas. Primero, las de respaldo más débil: la cita puede no decir lo que afirma.",
+    "column": {
+      "product": "Producto",
+      "claim": "Afirmación",
+      "evidence": "Dónde lo dice",
+      "support": "Respaldo",
+      "action": "Decisión"
+    },
+    "proposedBy": "Propuesta por {{extractor}}",
+    "supportExplained": "Cuánto respalda la cita a la afirmación, medido por un modelo de inferencia textual — no lo que el extractor dice de sí mismo.",
+    "approve": "Aprobar",
+    "reject": "Rechazar"
   }
 }

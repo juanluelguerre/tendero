@@ -38,6 +38,13 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/category/category-page').then((m) => m.CategoryPage),
   },
   {
+    // The products are in the query, not the path: a comparison is a set, its
+    // order is the shopper's, and a URL that carries it can be shared (P10-7).
+    path: 'compare',
+    title: 'compare.title',
+    loadComponent: () => import('./features/compare/compare-page').then((m) => m.ComparePage),
+  },
+  {
     path: 'account',
     title: 'account.title',
     loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),

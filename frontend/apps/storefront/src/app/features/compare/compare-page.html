@@ -1,0 +1,74 @@
+<ng-container *transloco="let t">
+  <section class="compare">
+    <h1 class="compare__title">{{ t('compare.title') }}</h1>
+
+    @let current = state();
+    @switch (current.status) {
+      @case ('tooFew') {
+        <p class="compare__empty">{{ t('compare.tooFew') }}</p>
+        <a class="compare__back" [routerLink]="links.home()">{{ t('compare.backToShop') }}</a>
+      }
+      @case ('loading') {
+        <p class="compare__empty" aria-live="polite">{{ t('compare.loading') }}</p>
+      }
+      @case ('failed') {
+        <p class="compare__empty" role="alert">{{ t('compare.failed') }}</p>
+      }
+      @case ('done') {
+        @if (current.status === 'done') {
+          @let sheet = current.sheet;
+          <!-- The table scrolls inside its frame on a phone, never the page;
+               the attribute column stays put while the products slide. -->
+          <div class="compare__frame" tabindex="0" role="region" [attr.aria-label]="t('compare.title')">
+            <table class="compare__table">
+              <thead>
+                <tr>
+                  <th scope="col" class="compare__corner">{{ t('compare.attribute') }}</th>
+                  @for (product of sheet.products; track product.code) {
+                    <th scope="col" class="compare__product">
+                      <a class="compare__productLink" [routerLink]="links.product(product.slug, product.code)">{{ product.name }}</a>
+                      <button
+                        class="compare__drop"
+                        type="button"
+                        [attr.aria-label]="t('compare.remove', { name: product.name })"
+                        (click)="drop(product.code)">×</button>
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of sheet.rows; track row.attributeCode) {
+                  <tr>
+                    <th scope="row" class="compare__attribute">{{ row.label }}</th>
+                    @for (cell of row.cells; track $index) {
+                      <td class="compare__cell" [class.compare__cell--none]="cell.source === 'none'">
+                        <storefront-spec-value [cell]="cell" />
+                        <storefront-spec-source class="compare__source" [source]="cell.source" [evidence]="cell.evidence" />
+                      </td>
+                    }
+                  </tr>
+                }
+                <tr>
+                  <th scope="row" class="compare__attribute">{{ t('specs.alsoSays') }}</th>
+                  @for (product of sheet.products; track product.code) {
+                    <td class="compare__cell">
+                      @for (statement of statementsOf(sheet, product.productId); track $index) {
+                        <p class="compare__statement">
+                          {{ statement.text }}
+                          <storefront-spec-source source="description" [evidence]="statement.evidence" />
+                        </p>
+                      } @empty {
+                        <span class="compare__nothing">—</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="compare__note">{{ t('compare.note') }}</p>
+        }
+      }
+    }
+  </section>
+</ng-container>

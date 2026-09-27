@@ -10,9 +10,13 @@ import { Telemetry } from '@tendero/shared-telemetry';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../data-access/cart.service';
 import { ProductService } from '../../data-access/product.service';
+import { SpecsService } from '../../data-access/specs.service';
 import { ReturnsPolicy } from '../../data-access/returns-policy.service';
 import { CanonicalLinks } from '../../seo/canonical-links';
 import { ShopLinks } from '../../shop-links';
+import { SpecSource } from '../../specs/spec-source';
+import { specLines, specStatements } from '../../specs/spec-lines';
+import { SpecValue } from '../../specs/spec-value';
 import { arrivedFrom } from './arrived-from';
 import {
   availabilityOf,
@@ -55,7 +59,7 @@ type PageState =
  */
 @Component({
   selector: 'storefront-product-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, SpecValue, SpecSource],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',
   styleUrl: './product-page.css',
@@ -65,6 +69,7 @@ export class ProductPage {
   protected readonly links = inject(ShopLinks);
 
   private readonly products = inject(ProductService);
+  private readonly specs = inject(SpecsService);
   private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);
   private readonly router = inject(Router);
@@ -131,6 +136,29 @@ export class ProductPage {
     },
     stream: ({ params }) => this.products.get(params.code, params.culture),
   });
+
+  /**
+   * The same product's specs with their sources (P10-8), beside the product and
+   * never in front of it: the page renders from the catalogue first, and the
+   * chips arrive when Knowledge answers — or never, if it does not (invariant 8).
+   */
+  private readonly sheet = rxResource({
+    params: () => {
+      const code = this.code();
+      return code ? { code, culture: this.culture.active() } : undefined;
+    },
+    stream: ({ params }) => this.specs.get([params.code], params.culture),
+  });
+
+  /** A failed sheet is no sheet: the lines fall back to the catalogue's attributes. */
+  private readonly loadedSheet = computed(() => (this.sheet.status() === 'resolved' ? this.sheet.value() : undefined));
+
+  protected readonly specLines = computed(() => {
+    const current = this.state();
+    return current.status === 'done' ? specLines(current.product.attributes, this.loadedSheet()) : [];
+  });
+
+  protected readonly statements = computed(() => specStatements(this.loadedSheet()));
 
   protected readonly state = computed<PageState>(() => {
     if (!this.code()) return { status: 'notFound' };

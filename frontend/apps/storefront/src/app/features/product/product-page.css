@@ -246,11 +246,33 @@
 .specs__value {
   margin: 0;
   color: var(--text);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
-.specs__unit {
-  margin-inline-start: var(--space-1);
-  color: var(--text-muted);
+.specs__subtitle {
+  margin-block: var(--space-5) var(--space-2);
+  font-size: var(--text-md);
+}
+
+.specs__statements {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.specs__statement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  border-block-end: 1px solid var(--border);
 }
 
 /* ---------- The returns promise ---------- */

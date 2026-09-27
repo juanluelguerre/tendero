@@ -22,3 +22,7 @@
 *.ps1 text eol=crlf
 *.cmd text eol=crlf
 *.bat text eol=crlf
+
+# Shell scripts run inside Linux containers (src/AppHost/scripts): a CRLF would
+# break them on a Windows checkout with autocrlf.
+*.sh text eol=lf

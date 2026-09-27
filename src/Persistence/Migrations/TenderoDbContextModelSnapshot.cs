@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260915085907_CartLineLocalizedNames";
+    public override string LastMigrationId => "20260927075751_AddClaimApplication";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -353,6 +353,185 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDatabaseName("ix_stock_items_sku");
 
                 b.ToTable("stock_items", "inventory");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Knowledge.Domain.ProductClaim", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<string>("ApplicationRefused")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("application_refused");
+
+                b.Property<string>("AppliedAs")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("applied_as");
+
+                b.Property<string>("AttributeCode")
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("attribute_code");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("product_id");
+
+                b.Property<DateTimeOffset?>("ReviewedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("reviewed_at");
+
+                b.Property<string>("ReviewedBy")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("reviewed_by");
+
+                b.Property<string>("Statement")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("statement");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<string>("Value")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("value");
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Provenance", "ElGuerre.Tendero.Knowledge.Domain.ProductClaim.Provenance#Provenance", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<DateTimeOffset>("At")
+                            .HasJsonPropertyName("at");
+
+                        b1.Property<string>("Extractor")
+                            .IsRequired()
+                            .HasJsonPropertyName("extractor");
+
+                        b1.Property<string>("ModelId")
+                            .HasJsonPropertyName("modelId");
+
+                        b1.Property<string>("ModelRevision")
+                            .HasJsonPropertyName("modelRevision");
+
+                        b1.Property<string>("PromptVersion")
+                            .HasJsonPropertyName("promptVersion");
+
+                        b1.Property<string>("RunId")
+                            .IsRequired()
+                            .HasJsonPropertyName("runId");
+
+                        b1
+                            .ToJson("provenance")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexCollection(typeof(List<Dictionary<string, object>>), "evidence", "ElGuerre.Tendero.Knowledge.Domain.ProductClaim.evidence#Evidence", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("Document")
+                            .IsRequired()
+                            .HasJsonPropertyName("document");
+
+                        b1.Property<double>("Support")
+                            .HasJsonPropertyName("support");
+
+                        b1.ComplexProperty(typeof(Dictionary<string, object>), "Quote", "ElGuerre.Tendero.Knowledge.Domain.ProductClaim.evidence#Evidence.Quote#Quote", b2 =>
+                            {
+                                b2.IsRequired();
+
+                                b2.Property<int>("End")
+                                    .HasJsonPropertyName("end");
+
+                                b2.Property<int>("Start")
+                                    .HasJsonPropertyName("start");
+
+                                b2.Property<string>("Text")
+                                    .IsRequired()
+                                    .HasJsonPropertyName("text");
+
+                                b2.HasJsonPropertyName("quote");
+                            });
+
+                        b1
+                            .ToJson("evidence")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.HasKey("Id")
+                    .HasName("pk_claims");
+
+                b.HasIndex("ProductId", "Status")
+                    .HasDatabaseName("ix_claims_product_id_status");
+
+                b.ToTable("claims", "knowledge");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Knowledge.Domain.SourceDocument", b =>
+            {
+                b.Property<string>("Id")
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("id");
+
+                b.Property<string>("Culture")
+                    .IsRequired()
+                    .HasMaxLength(10)
+                    .HasColumnType("character varying(10)")
+                    .HasColumnName("culture");
+
+                b.Property<int>("FailedAttempts")
+                    .HasColumnType("integer")
+                    .HasColumnName("failed_attempts");
+
+                b.Property<string>("Kind")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("kind");
+
+                b.Property<string>("LastFailure")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)")
+                    .HasColumnName("last_failure");
+
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("product_id");
+
+                b.Property<DateTimeOffset?>("ProposedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("proposed_at");
+
+                b.Property<DateTimeOffset>("RetrievedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("retrieved_at");
+
+                b.Property<string>("Text")
+                    .IsRequired()
+                    .HasColumnType("text")
+                    .HasColumnName("text");
+
+                b.HasKey("Id")
+                    .HasName("pk_source_documents");
+
+                b.HasIndex("ProductId", "Culture")
+                    .HasDatabaseName("ix_source_documents_product_id_culture");
+
+                b.ToTable("source_documents", "knowledge");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.Cart", b =>

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bounded context Knowledge (ADR 0014, roadmap B4): what the shop can say
+       about a product, with the source it rests on and how sure it is. The AI
+       proposes claims here; it never writes to Catalog.
+
+       It starts as two ports and their adapters — reading a description, and
+       scoring whether a quote supports a claim — because phase 10 measures them
+       (P10-0) before it builds the claims they feed. The domain arrives in P10-2
+       and references SharedKernel alone, as every *.Domain does.
+
+       Microsoft.Extensions.AI and its OpenAI adapter are already in the solution
+       (Search, P8-2) at the versions checked there. ONNX Runtime GenAI was
+       added for P10-0 by the author's approval, to run a maker's ONNX model in
+       process (Directory.Packages.props says what was checked). -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Knowledge</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Knowledge.Tests" />
+  </ItemGroup>
+
+</Project>

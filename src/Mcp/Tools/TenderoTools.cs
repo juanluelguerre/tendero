@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
 using ElGuerre.Tendero.Catalog.Features.ListCategories;
+using ElGuerre.Tendero.Knowledge.Features.ProductSpecs;
 using ElGuerre.Tendero.Ordering.Features.Returns;
 using ElGuerre.Tendero.Pricing.Features.ListOffers;
 using ElGuerre.Tendero.Search.Contracts;
@@ -24,14 +25,15 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 /// nothing here may implement a handler or touch a <c>*.Domain</c> namespace, so
 /// a tool cannot quietly become logic.
 ///
-/// **Five, and two of the roadmap's five are not among them.**
+/// **Seven: the roadmap's five, and the two that stood in for its missing two.**
 /// <c>get_product_specs</c> and <c>compare_products</c> answer from approved,
-/// source-backed claims, and <c>Knowledge</c> is phase 10 — a comparison tool
-/// with no claims cannot say "no data" with any authority, which is its entire
-/// argument. They are replaced by two things that exist and that an agent
-/// genuinely needs: what is on offer, and how long the shopper has to send it
-/// back. Same call phase 6 made when <c>apply_filter</c> was dropped for being a
-/// tool over facets that did not exist yet.
+/// source-backed claims, so they waited for <c>Knowledge</c> (phase 10) — a
+/// comparison tool with no claims cannot say "no data" with any authority, which
+/// is its entire argument. Until then two things that existed and that an agent
+/// genuinely needs took their place — what is on offer, and how long the shopper
+/// has to send it back — and they stay. Same call phase 6 made when
+/// <c>apply_filter</c> was dropped for being a tool over facets that did not
+/// exist yet.
 /// </summary>
 [McpServerToolType]
 public sealed class TenderoTools
@@ -120,6 +122,60 @@ public sealed class TenderoTools
         // the product up again.
         return new Answered<ProductDetail>(answered, product
             ?? throw new McpException($"There is no product with code '{code}'."));
+    }
+
+    [McpServerTool(Name = "get_product_specs")]
+    [Description("""
+        One product's specs, each value with its source: 'catalogue', or 'description'
+        when a person approved it from the product's own text — then with the exact
+        words it rests on and how well they support it (0 to 1, measured, not
+        declared). Sentences that are not a value come apart, in 'statements'.
+        """)]
+    public static Task<Answered<SpecSheet>> GetProductSpecsAsync(
+        IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
+        [Description("The product's public code, as it appears in search results.")]
+        string code,
+        [Description("Answer in this language: es or en. Anything else falls back to es.")]
+        string? culture = null,
+        CancellationToken cancellationToken = default) =>
+        SpecsAsync(dispatcher, requests, [code], culture, cancellationToken);
+
+    [McpServerTool(Name = "compare_products")]
+    [Description("""
+        Two to four products side by side: one row per attribute, one cell per product,
+        in the order given. A cell whose source is 'none' means the shop does not know
+        that value for that product — say so; never fill it in. Only values a person
+        approved or the catalogue holds appear.
+        """)]
+    public static Task<Answered<SpecSheet>> CompareProductsAsync(
+        IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
+        [Description("Two to four public product codes, as they appear in search results.")]
+        string[] codes,
+        [Description("Answer in this language: es or en. Anything else falls back to es.")]
+        string? culture = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (codes is not { Length: >= 2 })
+            throw new McpException("Compare at least two products; use get_product_specs for one.");
+
+        return SpecsAsync(dispatcher, requests, codes, culture, cancellationToken);
+    }
+
+    /// <summary>The one query behind both tools, as behind the product page and the comparison page.</summary>
+    private static async Task<Answered<SpecSheet>> SpecsAsync(
+        IQueryDispatcher dispatcher, IHttpContextAccessor requests, string[] codes, string? culture, CancellationToken cancellationToken)
+    {
+        var answered = Resolve(culture, requests);
+
+        var sheet = await Refusals.Readable(() => dispatcher.SendAsync(
+            new ProductSpecsQuery([.. codes.Select(code => code.Trim())], answered), cancellationToken));
+
+        // Told, not left empty: an agent handed an empty sheet guesses.
+        return sheet.Products.Count == 0
+            ? throw new McpException($"There is no product with code {string.Join(" or ", codes.Select(code => $"'{code}'"))}.")
+            : new Answered<SpecSheet>(answered, sheet);
     }
 
     [McpServerTool(Name = "list_categories")]

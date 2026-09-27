@@ -142,8 +142,8 @@ public sealed class McpTransportTests
             // this shop's own, including `get_product_detail`, which used to be
             // `get_product` and gave the name up to the protocol.
             [
-                "get_product", "get_product_detail", "get_return_policy",
-                "list_categories", "list_offers", "lookup_catalog",
+                "compare_products", "get_product", "get_product_detail", "get_product_specs",
+                "get_return_policy", "list_categories", "list_offers", "lookup_catalog",
                 "search_catalog", "search_products"
             ],
             tools.GetProperty("result").GetProperty("tools").EnumerateArray()

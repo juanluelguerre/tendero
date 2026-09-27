@@ -6,7 +6,7 @@ using ElGuerre.Tendero.SearchEval.Suites;
 // hybrid one would be measured against a baseline that can no longer be compared
 // with the committed one.
 
-IEvaluationSuite[] suites = [new SearchRelevanceSuite(), new QueryScopeSuite()];
+IEvaluationSuite[] suites = [new SearchRelevanceSuite(), new QueryScopeSuite(), new ClaimsSuite(), new SupportSuite()];
 
 EvaluationOptions options;
 try
@@ -34,5 +34,5 @@ if (suite is null)
     return 2;
 }
 
-using var cancellation = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+using var cancellation = new CancellationTokenSource(suite.Budget);
 return await suite.RunAsync(options, cancellation.Token);

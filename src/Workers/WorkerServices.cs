@@ -1,5 +1,8 @@
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
 using ElGuerre.Tendero.Inventory;
+using ElGuerre.Tendero.Knowledge;
+using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
 using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
@@ -9,6 +12,7 @@ using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Workers.Knowledge;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ElGuerre.Tendero.Workers;
@@ -46,7 +50,16 @@ public static class WorkerServices
         // marks a message processed whether or not anybody handled it.
         builder.Services.AddTenderoCqrs(
             typeof(ProjectProductOnUpserted).Assembly,
-            typeof(ReserveStockOnOrderPlaced).Assembly);
+            typeof(ReserveStockOnOrderPlaced).Assembly,
+            // Knowledge's slices, and the worker's own handler that feeds them
+            // Catalog's descriptions as values (Workers/Knowledge, ADR 0014).
+            typeof(RecordDescriptionHandler).Assembly,
+            typeof(RecordDescriptionOnProductUpserted).Assembly);
+
+        // One slice of Catalog's write side, not the assembly: an approved claim
+        // becomes an attribute through Catalog's own command (P10-6), and the rest
+        // of Catalog — the import and its connectors — has no business here.
+        builder.Services.AddTenderoSlices(typeof(SetProductAttributeCommand));
 
         builder.Services.AddTenderoPersistence(
             builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -66,6 +79,9 @@ public static class WorkerServices
         // And it takes the money: the saga captures on shipping and releases the
         // hold on cancellation, both through the payment port.
         builder.Services.AddOrdering(builder.Configuration);
+
+        // The claims layer (ADR 0018): the rules always, the models when the AppHost started them.
+        builder.Services.AddKnowledge(builder.Configuration);
 
         // Inside the worker the actor is the system, and this is the
         // implementation `IPrincipalAccessor` documented and nobody had
@@ -110,6 +126,11 @@ public static class WorkerServices
         // In the background rather than in the start-up path: it waits for a
         // layer that may be downloading its model, and nothing waits for it.
         builder.Services.AddHostedService<RebuildEmptyVectorIndex>();
+
+        // After the migrations, like the index rebuilds: the claims layer's tables
+        // must exist before the catalogue's descriptions are recorded into them.
+        builder.Services.AddHostedService<RecordEveryDescriptionAtStart>();
+        builder.Services.AddClaimProposer();
 
         builder.Services.AddHostedService<OutboxProcessor>();
 

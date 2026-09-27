@@ -47,6 +47,8 @@ graph TB
     Tendero.Backoffice@{ shape: rounded, label: "backoffice" }
     Tendero.Workers@{ shape: rectangle, label: "workers" }
     Tendero.Api@{ shape: rectangle, label: "api" }
+    Tendero.Extractor@{ shape: rectangle, label: "extractor" }
+    Tendero.Support@{ shape: rectangle, label: "support" }
     Tendero.Postgres@{ shape: disk, label: "postgres" }
     Tendero.Elasticsearch@{ shape: disk, label: "elasticsearch" }
     Tendero.Qdrant@{ shape: disk, label: "qdrant" }
@@ -73,6 +75,8 @@ graph TB
   Tendero.Workers -. "`projects products`" .-> Tendero.Elasticsearch
   Tendero.Workers -. "`projects vectors`" .-> Tendero.Qdrant
   Tendero.Workers -. "`embeds products`" .-> Tendero.Embeddings
+  Tendero.Workers -. "`proposes claims`" .-> Tendero.Extractor
+  Tendero.Workers -. "`scores their support`" .-> Tendero.Support
   Tendero.Workers -. "`traces, metrics, logs (OTLP)`" .-> Tendero.Observability
   Tendero.Api -. "`validates tokens (JWKS)`" .-> Identity
   Tendero.Api -. "`authorises, captures, refunds`" .-> Payments

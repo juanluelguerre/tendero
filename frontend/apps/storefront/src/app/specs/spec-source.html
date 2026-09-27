@@ -1,0 +1,17 @@
+<ng-container *transloco="let t">
+  @if (source() === 'description' && evidence(); as proof) {
+    <button class="chip chip--description" type="button" [attr.popovertarget]="id" [style.anchor-name]="anchor">
+      {{ t('specs.fromDescription') }}
+    </button>
+    <div class="quote" popover [id]="id" [style.position-anchor]="anchor" (toggle)="opened($event)">
+      <p class="quote__title">{{ t('specs.quoteTitle') }}</p>
+      @for (quote of proof.quotes; track $index) {
+        <blockquote class="quote__text" [attr.lang]="quote.culture || null">“{{ quote.text }}”</blockquote>
+      }
+      <p class="quote__support">{{ t('specs.support', { percent: percent() }) }}</p>
+      <p class="quote__note">{{ t('specs.supportNote') }}</p>
+    </div>
+  } @else if (source() === 'catalogue') {
+    <span class="chip">{{ t('specs.fromCatalogue') }}</span>
+  }
+</ng-container>

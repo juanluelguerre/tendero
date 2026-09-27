@@ -5,6 +5,7 @@ import { AgentTools } from '@tendero/shared-agent';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
 import { StorefrontTools } from '../agent/storefront-tools';
 import { CartStore } from '../data-access/cart.service';
+import { CompareTray } from './compare-tray';
 import { ConsentBanner } from './consent-banner';
 
 /**
@@ -18,7 +19,7 @@ import { ConsentBanner } from './consent-banner';
  */
 @Component({
   selector: 'storefront-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, ConsentBanner],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective, ConsentBanner, CompareTray],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',

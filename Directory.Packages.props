@@ -149,6 +149,22 @@
     <PackageVersion Include="Aspire.Hosting.Keycloak" Version="13.5.3-preview.1.26425.3" />
   </ItemGroup>
 
+  <ItemGroup Label="Knowledge">
+    <!-- Microsoft.ML.OnnxRuntimeGenAI 0.17.0 - MIT, approved by the author on
+         2026-09-26 for P10-0 and read in the LICENSE file of this exact version,
+         as were its three dependencies: Microsoft.ML.OnnxRuntimeGenAI.Managed
+         0.17.0, Microsoft.ML.OnnxRuntime 1.30.0 and Microsoft.ML.OnnxRuntime.Managed
+         1.30.0, all MIT. It runs a maker's ONNX model (Phi-4-mini, published by
+         Microsoft) inside the .NET process, and its managed half already
+         implements IChatClient and turns a JSON-schema ResponseFormat into
+         constrained decoding - so ChatClaimExtractor runs over it unchanged.
+
+         It brings its own onnxruntime.dll, as the DirectML package below does:
+         the two must never meet in one project, and they do not (Knowledge and
+         tools/SeedImages share no output folder). -->
+    <PackageVersion Include="Microsoft.ML.OnnxRuntimeGenAI" Version="0.17.0" />
+  </ItemGroup>
+
   <!-- Seed image generation. A TOOL-ONLY group: nothing here enters a shipped
        assembly, and no project outside tools/SeedImages may reference it. -->
   <ItemGroup Label="Seed images (tools only)">

@@ -187,6 +187,48 @@ public sealed class AttributeDefinition : AggregateRoot
                        string.Equals(label, trimmed, StringComparison.OrdinalIgnoreCase)));
     }
 
+    /// <summary>
+    /// The value this definition accepts for a raw string, or null when it does
+    /// not accept it: an option it does not have, a number that is not one, a
+    /// yes/no that is neither. One rule for every writer — the import mapper
+    /// falls back to plain text on a null, an approved claim (P10-6) is refused.
+    ///
+    /// A number may carry this definition's own unit ("20 L"), because that is how
+    /// a description says it; any other trailing word makes it not a number. A
+    /// localized text is never accepted from one raw string: a single string has
+    /// one language, and the attribute promises two (invariant 6).
+    /// </summary>
+    public AttributeValue? Accept(string raw)
+    {
+        ArgumentNullException.ThrowIfNull(raw);
+        var trimmed = raw.Trim();
+
+        return Kind switch
+        {
+            AttributeKind.Option => ResolveOption(trimmed) is { } option ? AttributeValue.Option(Code, option.Code) : null,
+            AttributeKind.Number => ParseNumber(trimmed) is { } number ? AttributeValue.Numeric(Code, number) : null,
+            AttributeKind.Boolean => trimmed.ToLowerInvariant() switch
+            {
+                "si" or "sí" or "yes" or "true" or "1" => AttributeValue.Boolean(Code, true),
+                "no" or "false" or "0" => AttributeValue.Boolean(Code, false),
+                _ => null,
+            },
+            AttributeKind.Text => trimmed.Length == 0 ? null : AttributeValue.Plain(Code, trimmed),
+            _ => null,
+        };
+    }
+
+    private decimal? ParseNumber(string text)
+    {
+        var number = text.TrimEnd('"').Trim();
+        if (Unit is { Length: > 0 } unit && number.EndsWith(unit, StringComparison.OrdinalIgnoreCase))
+            number = number[..^unit.Length].Trim();
+
+        return decimal.TryParse(number, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)
+            ? value
+            : null;
+    }
+
     /// <summary>How this reads in one culture: "azul marino" / "navy blue".</summary>
     public string LabelForOption(string optionCode, string culture) =>
         this.options.FirstOrDefault(option =>

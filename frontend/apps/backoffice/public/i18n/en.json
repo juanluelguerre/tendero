@@ -68,7 +68,8 @@
     "returns": "Returns",
     "reviewQueue": "Review queue",
     "search": "Search evaluation",
-    "stock": "Stock"
+    "stock": "Stock",
+    "claims": "Claims"
   },
   "orders": {
     "captured": "Captured",
@@ -297,5 +298,24 @@
     "generating": "Generating…",
     "created": "{{count}} variants created",
     "back": "Back to the queue"
+  },
+  "claims": {
+    "title": "Claims to review",
+    "waiting": "{{count}} waiting",
+    "loading": "Loading the claims…",
+    "failed": "The claims could not be loaded. Try again.",
+    "empty": "No claims are waiting for review.",
+    "hint": "What a model read in each product's description. Nothing changes in the catalogue until you approve it. The weakest support first: the quote may not say what the claim does.",
+    "column": {
+      "product": "Product",
+      "claim": "Claim",
+      "evidence": "Where it says so",
+      "support": "Support",
+      "action": "Decision"
+    },
+    "proposedBy": "Proposed by {{extractor}}",
+    "supportExplained": "How well the quote supports the claim, measured by a textual-inference model — not what the extractor says about itself.",
+    "approve": "Approve",
+    "reject": "Reject"
   }
 }

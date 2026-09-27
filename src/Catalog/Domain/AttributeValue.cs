@@ -36,6 +36,22 @@ public sealed record AttributeValue(
         new(AttributeDefinition.Normalise(code), AttributeKind.Boolean, Flag: flag);
 
     /// <summary>
+    /// The value as one culture-free string — the option's code, the number in
+    /// invariant form, true/false — for telling whether two writers hold the same
+    /// value without either knowing the other's type. What an applied claim is
+    /// matched on (P10-7): a quote shown beside a value is only honest if that
+    /// value is the one the claim put there.
+    /// </summary>
+    public string Key => Kind switch
+    {
+        AttributeKind.Option => OptionCode ?? string.Empty,
+        AttributeKind.Number => Number?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty,
+        AttributeKind.Boolean => Flag == true ? "true" : "false",
+        AttributeKind.LocalizedText => Text?.In("es") ?? string.Empty,
+        _ => RawText ?? string.Empty
+    };
+
+    /// <summary>
     /// Whether it contributes anything to the searchable text. A boolean that is
     /// false does not: indexing "induction" on a pan that is NOT induction is
     /// worse than not indexing it, because it makes it turn up in exactly the

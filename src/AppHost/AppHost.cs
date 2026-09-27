@@ -56,6 +56,8 @@ const int qdrantGrpcPort = 36334;
 const int qdrantHttpPort = 36333;
 const int embeddingsPort = 38081;
 const int rerankerPort = 38082;
+const int extractorPort = 38083;
+const int supportPort = 38084;
 const int grafanaPort = 33000;
 const int collectorGrpcPort = 34317;
 const int collectorHttpPort = 34318;
@@ -70,8 +72,12 @@ const int faroPort = 38027;
 // customers were all still on disk, attached to nothing. Nothing failed; the shop
 // simply had no products. A fixed name survives a rename, a second clone and a
 // move to another drive, which is what `tendero-tei-models` below already does.
+// Every container carries a memory and CPU limit sized from a measurement (the
+// rule since 2026-09-26): the peak under load, plus a margin, never a round guess.
+// Postgres peaked at 49 MB serving the catalogue and the claims layer at once.
 var postgres = builder.AddPostgres("postgres", port: postgresPort)
-    .WithDataVolume("tendero-postgres-data"); // the imported catalogue survives a restart
+    .WithDataVolume("tendero-postgres-data") // the imported catalogue survives a restart
+    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", "--cpus=2");
 
 // Aspire's own helper — no new package, it ships with Aspire.Hosting.PostgreSQL,
 // which the AppHost already references. It wires the connection for you, so
@@ -95,6 +101,8 @@ var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/ela
     .WithEnvironment("discovery.type", "single-node")
     .WithEnvironment("xpack.security.enabled", "false")
     .WithEnvironment("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
+    // A 1 GB heap held 1.66 GB of container memory under load: the limit is 2.
+    .WithContainerRuntimeArgs("--memory=2g", "--memory-swap=2g", "--cpus=4")
     .WithHttpEndpoint(targetPort: 9200, port: elasticsearchPort, name: "http")
     // Without a health check, WaitFor(elasticsearch) has nothing to wait for.
     .WithHttpHealthCheck("/_cluster/health", endpointName: "http")
@@ -277,6 +285,75 @@ if (!rerank)
     reranker.WithExplicitStart();
 
 var rerankerEndpoint = reranker.GetEndpoint("http");
+
+// THE CLAIMS LAYER, declared always and started on demand (phase 10, ADR 0018).
+//
+//   Tendero__Knowledge=true dotnet run --project src/AppHost
+//
+// Off by default for the vector layer's reason: the extractor holds ~5 GB and a
+// first start downloads, converts and quantizes a 9 GB model. With the switch off
+// the worker gets no model at all, and claims are proposed by the rules alone —
+// the path with no model (invariant 8), exact about the little it sees.
+//
+// Every figure below is P10-0's measurement, not a guess, and every container has
+// a memory and CPU limit sized from it (the rule since the machine ran out of
+// memory on 2026-09-26). Nothing waits for these: a slow or missing model is
+// fewer claims proposed, never a worker that refuses to start.
+var knowledge = string.Equals(builder.Configuration["Tendero:Knowledge"], "true",
+    StringComparison.OrdinalIgnoreCase);
+
+// The model, prepared once into its own volume: downloaded at the checked
+// revision, converted and quantized with llama.cpp's own tools, and held to the
+// SHA-256 P10-0 measured (scripts/prepare-extractor.sh). No maker publishes a
+// GGUF of Qwen3.5, and ADR 0031 refuses a third party's. Conversion peaked at
+// 4.0 GB and quantization at 3.2: the limit is the peak and a gigabyte, no more.
+const string llamaCppRelease = "v0.5.0";
+
+var extractorModel = builder.AddContainer("extractor-model", "ghcr.io/ggml-org/llama.cpp", "full-" + llamaCppRelease)
+    .WithEntrypoint("sh")
+    .WithArgs("/scripts/prepare-extractor.sh")
+    .WithBindMount(Path.Combine(builder.AppHostDirectory, "scripts"), "/scripts", isReadOnly: true)
+    .WithVolume("tendero-extractor-models", "/models")
+    .WithContainerRuntimeArgs("--memory=5g", "--memory-swap=5g", "--cpus=8");
+
+// Qwen3.5-4B at 8 bits, the extractor P10-0 chose: precision 0.92, recall 0.80,
+// ~30 s a product on the CPU — a worker's pace, never a request's. Served with
+// the settings it was measured under, because the same file gave different
+// claims under another configuration: one slot of 4,096 tokens, weights read
+// into memory rather than mapped (so its limit is honest), thinking off. It held
+// 5.3 GB; the limit is 6 — the minimum that fits, not a comfortable round number.
+var extractor = builder.AddContainer("extractor", "ghcr.io/ggml-org/llama.cpp", "server-" + llamaCppRelease)
+    .WithArgs("-m", "/models/qwen3.5-4b-q8_0.gguf", "--host", "0.0.0.0", "--port", "8080",
+        "-c", "4096", "-np", "1", "-t", "12", "--jinja", "--load-mode", "none",
+        "--chat-template-kwargs", "{\"enable_thinking\":false}")
+    .WithHttpEndpoint(targetPort: 8080, port: extractorPort, name: "http")
+    .WithHttpHealthCheck("/health", endpointName: "http")
+    .WithVolume("tendero-extractor-models", "/models", isReadOnly: true)
+    .WithContainerRuntimeArgs("--memory=6g", "--memory-swap=6g", "--cpus=12")
+    .WaitForCompletion(extractorModel);
+
+// The support scorer: an NLI model on the model server the stack already runs.
+// As good as the best generative yes/no on the forty support pairs (AUC 1.00,
+// ECE 0.03), at 0.07 s: 2.8 GB loaded in the spike, 1.8 under load in the stack —
+// limited to 3. Its batches are sized to the
+// pairs it scores: TEI warming up for its defaults died at 4 GB twice.
+const string supportModel = "MoritzLaurer/bge-m3-zeroshot-v2.0";
+const string supportModelRevision = "9abf1c8aaeb82a2447809c20753ed0b106b76652";
+
+var support = builder.AddContainer("support", "ghcr.io/huggingface/text-embeddings-inference", "cpu-1.9.3")
+    .WithArgs("--model-id", supportModel, "--revision", supportModelRevision,
+        "--max-batch-tokens", "1024", "--max-batch-requests", "1", "--auto-truncate", "--tokenization-workers", "2")
+    .WithHttpEndpoint(targetPort: 80, port: supportPort, name: "http")
+    .WithHttpHealthCheck("/health", endpointName: "http")
+    .WithVolume("tendero-tei-models", "/data")
+    .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", "--cpus=8");
+
+if (!knowledge)
+{
+    extractorModel.WithExplicitStart();
+    extractor.WithExplicitStart();
+    support.WithExplicitStart();
+}
 
 // THE GRAFANA STACK, declared always and started on demand (phase 9b, ADR 0036).
 //
@@ -559,6 +636,12 @@ var workers = builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
 // — hostage.
 if (vectors)
     workers.WithReference(qdrant).WithReference(embeddingsEndpoint);
+
+// The worker proposes claims (P10-4) and is handed the models only when the
+// switch started them — the same rule: an address nothing answers would fail
+// every product, where no address at all is the rules alone.
+if (knowledge)
+    workers.WithReference(extractor.GetEndpoint("http")).WithReference(support.GetEndpoint("http"));
 
 // The full observability mode points both services at the collector, and only
 // then — the vector layer's rule: an address is handed over exactly when the
