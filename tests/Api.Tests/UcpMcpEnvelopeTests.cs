@@ -79,7 +79,7 @@ public sealed class UcpMcpEnvelopeTests
         var structured = answer.GetProperty("result").GetProperty("structuredContent");
 
         UcpSchemas.Validate(LookupResponse, structured, "The structuredContent of a lookup_catalog answer");
-        Assert.Equal("2026-04-08", structured.GetProperty("ucp").GetProperty("version").GetString());
+        Assert.Equal("2026-08-25", structured.GetProperty("ucp").GetProperty("version").GetString());
     }
 
     /// <summary>

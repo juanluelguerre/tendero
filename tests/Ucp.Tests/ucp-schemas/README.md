@@ -9,6 +9,11 @@ commit 3b114a1d74c702e404abada75b4ad7b3955a562d   (2026-09-08)
 source/schemas/**
 ```
 
+**Which is release `v2026-08-25`** (tag commit `cd78fb3`): the eight commits
+between that tag and the one above touch no file under `source/schemas/`,
+compared on 2026-09-27. So the profile claims `2026-08-25`, the version these
+files are; until then it claimed `2026-04-08` while being validated against them.
+
 ## Why they are committed rather than fetched
 
 A test that downloads the thing it validates against is not a gate. It fails

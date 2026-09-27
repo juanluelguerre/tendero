@@ -31,7 +31,7 @@ publish until something is signed.
 
 ## The version is pinned, and no conformance is claimed
 
-`2026-04-08`, read from [the specification](https://ucp.dev/2026-04-08/specification/overview/)
+`2026-08-25` (claimed as `2026-04-08` until 2026-09-27, when the vendored schemas turned out to be the later release), read from [the specification](https://ucp.dev/2026-08-25/specification/overview/)
 on 2026-09-08. UCP versions are dates; a shop advertising "whatever the latest
 is" would be promising a document nobody has read it against, so moving that
 string is a deliberate act with a diff.

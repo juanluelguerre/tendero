@@ -53,34 +53,34 @@ public sealed class UcpProfileConformanceTests
     [InlineData(
         "no payment_handlers — required of a business profile, and omitted here on the "
         + "reasoned-and-wrong grounds that an empty map advertises a checkout we cannot honour",
-        """{"ucp":{"version":"2026-04-08","services":{},"capabilities":{},"keys":[]}}""")]
+        """{"ucp":{"version":"2026-08-25","services":{},"capabilities":{},"keys":[]}}""")]
     [InlineData(
         "no version",
         """{"ucp":{"services":{},"capabilities":{},"payment_handlers":{}}}""")]
     [InlineData(
         "a capability as an object instead of an array — the shape this code had until the schema said otherwise",
         """
-        {"ucp":{"version":"2026-04-08","services":{},"payment_handlers":{},
+        {"ucp":{"version":"2026-08-25","services":{},"payment_handlers":{},
           "capabilities":{"dev.ucp.shopping.catalog.search":
-            {"version":"2026-04-08","schema":"https://ucp.dev/schemas/shopping/catalog_search.json"}}}}
+            {"version":"2026-08-25","schema":"https://ucp.dev/schemas/shopping/catalog_search.json"}}}}
         """)]
     [InlineData(
         "a capability with no schema — required of a business profile, because a platform fetches it to compose the capability",
         """
-        {"ucp":{"version":"2026-04-08","services":{},"payment_handlers":{},
-          "capabilities":{"dev.ucp.shopping.catalog.search":[{"version":"2026-04-08"}]}}}
+        {"ucp":{"version":"2026-08-25","services":{},"payment_handlers":{},
+          "capabilities":{"dev.ucp.shopping.catalog.search":[{"version":"2026-08-25"}]}}}
         """)]
     [InlineData(
         "an mcp binding with no endpoint — a service an agent cannot reach",
         """
-        {"ucp":{"version":"2026-04-08","capabilities":{},"payment_handlers":{},
-          "services":{"dev.ucp.shopping":[{"version":"2026-04-08","transport":"mcp"}]}}}
+        {"ucp":{"version":"2026-08-25","capabilities":{},"payment_handlers":{},
+          "services":{"dev.ucp.shopping":[{"version":"2026-08-25","transport":"mcp"}]}}}
         """)]
     [InlineData(
         "a transport the specification does not define",
         """
-        {"ucp":{"version":"2026-04-08","capabilities":{},"payment_handlers":{},
-          "services":{"dev.ucp.shopping":[{"version":"2026-04-08","transport":"carrier-pigeon","endpoint":"https://shop.example/mcp"}]}}}
+        {"ucp":{"version":"2026-08-25","capabilities":{},"payment_handlers":{},
+          "services":{"dev.ucp.shopping":[{"version":"2026-08-25","transport":"carrier-pigeon","endpoint":"https://shop.example/mcp"}]}}}
         """)]
     public void A_profile_that_breaks_the_schema_is_rejected(string what, string json)
     {

@@ -125,7 +125,7 @@ public sealed class UcpProfileShapeTests
     [Fact]
     public void The_specification_version_is_the_one_this_was_written_against()
     {
-        Assert.Equal("2026-04-08", UcpSpecification.Version);
+        Assert.Equal("2026-08-25", UcpSpecification.Version);
         Assert.Equal("/.well-known/ucp", UcpSpecification.WellKnownPath);
     }
 }
