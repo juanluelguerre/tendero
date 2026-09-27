@@ -147,3 +147,40 @@ refactor the rule forced: `Ucp` reached Ordering's domain types
 (`CheckoutBuyer`, `CheckoutSessionId`), and the architecture test *a transport never
 reaches a domain* said so — the id moved to SharedKernel beside `OrderId` and
 `CartId`, and the slice publishes its own buyer contract.
+
+## 7 · Who sets an agent's spending limits? (the question every reader will ask)
+
+Asked by the author on 2026-09-27: *"in UCP, how do we give an agent the €/$ caps it
+may spend, and its other limits — that is part of the protocol, isn't it?"* Not of
+UCP's own objects. The answer is three layers, and it is worth an article paragraph
+because the confusion is the natural one:
+
+1. **UCP carries no limits.** It is the conversation of a purchase — session, lines,
+   fulfillment, discounts, payment. It plugs AP2 in through the extension
+   `dev.ucp.common.payment.ap2_mandate`: with it negotiated, `complete` requires a
+   `checkout_mandate`, and the shop answers `mandate_required`,
+   `mandate_scope_mismatch`, `mandate_expired`… when it is missing or wrong.
+2. **AP2 carries the user's limits**, signed by the **user** on a trusted surface
+   (their wallet or credential provider) in an *open* mandate that also names the
+   agent's key (`cnf`); the agent then signs a *closed* mandate per purchase.
+   - **Payment Mandate** — verified where the money is taken (in Tendero, behind the
+     payment port): `payment.amount_range` (min/max and currency — the demo's "up to
+     200 €"), `payment.budget` with `payment.agent_recurrence` (a running total, which
+     means the verifier keeps a ledger), `payment.allowed_payees`,
+     `payment.allowed_payment_instruments`, `payment.execution_date`,
+     `payment.reference` (tied to one open checkout mandate).
+   - **Checkout Mandate** — verified by the merchant: `checkout.allowed_merchants`,
+     `checkout.line_items`; bound by hash to the checkout the merchant signed, so
+     nothing changes after the user or agent approved it.
+   - Both expire (`exp`); *human present* approves the exact checkout, *human not
+     present* approves only the constraints.
+3. **The shop adds its own limits** (Know Your Agent, `P11-6`), which no protocol
+   defines and which apply on top of the user's: an unregistered agent capped at a
+   small amount, a suspended one refused, N orders an hour per agent — each denial
+   audited, and the denied row is the demo.
+
+Where Tendero stands after `P11-1`: no limit is enforced yet. A test credential's
+agent completes without one (a rehearsal moves no money); a live agent cannot pay
+at all and escalates to a person. `P11-4` verifies mandates by `vct` and evaluates
+their constraints, `P11-5` snapshots the verified scope onto the order, `P11-6`
+adds the shop's own rules.
