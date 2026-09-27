@@ -62,3 +62,14 @@ public interface IOrderReader
     Task<IReadOnlyList<Order>> ForCustomerAsync(
         CustomerId customer, CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// What an agent has been doing, as the shop's rules for agents ask it (P11-6). Its
+/// own port rather than one more method on the repository: the one caller that
+/// needs it should not make every other double implement it.
+/// </summary>
+public interface IAgentActivity
+{
+    /// <summary>How many orders <paramref name="agent"/> placed since <paramref name="since"/>.</summary>
+    Task<int> OrdersPlacedSinceAsync(AgentId agent, DateTimeOffset since, CancellationToken cancellationToken = default);
+}

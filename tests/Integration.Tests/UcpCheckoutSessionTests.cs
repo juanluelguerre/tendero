@@ -213,6 +213,43 @@ public sealed class UcpCheckoutSessionTests(PostgresFixture postgres)
             (mandate.Kind, mandate.Issuer, mandate.Reference, mandate.ApprovedTotal, mandate.Currency));
     }
 
+    /// <summary>
+    /// P11-6: the shop's own rules for agents, on top of whatever the person allows —
+    /// an order above what an untrusted agent may spend is refused, and so is the
+    /// second order in an hour when the shop allows one. Each refusal names its rule,
+    /// charges nothing, and a placed order remembers the agent that placed it.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task The_shops_rules_for_agents_refuse_over_the_cap_and_over_the_hourly_count()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        await using var shop = await Shop.OpenAsync(postgres, nameof(The_shops_rules_for_agents_refuse_over_the_cap_and_over_the_hourly_count),
+            new Agent("claude-desktop-test", test: true),
+            new Dictionary<string, string?> { ["AgentPolicy:OrderCaps:Untrusted"] = "60", ["AgentPolicy:MaxOrdersPerHour"] = "1" });
+        await shop.StockAsync(Sku, 10, ct);
+
+        async Task<CheckoutSessionResult> BuyAsync(int quantity, string key)
+        {
+            var id = new CheckoutSessionId(Guid.Parse((await shop.SendAsync(new OpenCheckoutSessionCommand([new(Sku, quantity)], Described, "es"), ct)).Session!.Id));
+            return await shop.SendAsync(new CompleteCheckoutSessionCommand(id, FakePaymentProvider.CardOk, key, "es"), ct);
+        }
+
+        var tooMuch = await BuyAsync(2, "ucp-rules-1");
+        Assert.Equal(CheckoutSessionOutcome.NotPlaced, tooMuch.Outcome);
+        Assert.StartsWith("order_over_trust_cap", tooMuch.Session!.Issues.Single(issue => issue.Code == CheckoutIssueCodes.AgentRefused).Detail, StringComparison.Ordinal);
+
+        var first = await BuyAsync(1, "ucp-rules-2");
+        Assert.Equal(CheckoutState.Completed, first.Session!.State);
+
+        var second = await BuyAsync(1, "ucp-rules-3");
+        Assert.StartsWith("orders_per_hour", second.Session!.Issues.Single(issue => issue.Code == CheckoutIssueCodes.AgentRefused).Detail, StringComparison.Ordinal);
+
+        await using var context = shop.Factory.Create();
+        Assert.Equal(new AgentId("claude-desktop-test"), (await context.Orders.SingleAsync(ct)).PlacedBy);
+    }
+
     private sealed class Agent(string id, bool test, CustomerId? customer = null) : IPrincipalAccessor
     {
         public CommercePrincipal Current { get; } =

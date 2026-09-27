@@ -44,14 +44,15 @@ internal sealed class Shop : IAsyncDisposable
         Factory = factory;
     }
 
-    public static async Task<Shop> OpenAsync(PostgresFixture postgres, string name, IPrincipalAccessor? principal = null)
+    /// <param name="settings">Configuration on top of the seed's — the shop's rules for agents, say (P11-6).</param>
+    public static async Task<Shop> OpenAsync(PostgresFixture postgres, string name, IPrincipalAccessor? principal = null, IReadOnlyDictionary<string, string?>? settings = null)
     {
         var factory = await postgres.CreateDatabaseAsync(name.ToLowerInvariant());
 
         await using (var context = factory.Create())
             await context.Database.MigrateAsync();
 
-        var shop = Compose(factory, principal);
+        var shop = Compose(factory, principal, settings);
         await shop.ImportAndPublishAsync();
         return shop;
     }
@@ -60,7 +61,7 @@ internal sealed class Shop : IAsyncDisposable
     public static Task<Shop> OpenOnAsync(TenderoDbContextFactory factory, IPrincipalAccessor principal) =>
         Task.FromResult(Compose(factory, principal));
 
-    private static Shop Compose(TenderoDbContextFactory factory, IPrincipalAccessor? principal)
+    private static Shop Compose(TenderoDbContextFactory factory, IPrincipalAccessor? principal, IReadOnlyDictionary<string, string?>? settings = null)
     {
         static string Seed(string file) => Path.Combine(AppContext.BaseDirectory, "TestData", file);
 
@@ -74,6 +75,7 @@ internal sealed class Shop : IAsyncDisposable
                 ["Pricing:Seed:PromotionsPath"] = Seed("promotions.sample.json"),
                 ["Inventory:Warehouses:FilePath"] = Seed("warehouses.sample.json")
             })
+            .AddInMemoryCollection(settings ?? new Dictionary<string, string?>())
             .Build();
 
         var services = new ServiceCollection();

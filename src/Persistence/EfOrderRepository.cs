@@ -25,6 +25,13 @@ internal sealed class EfOrderRepository(TenderoDbContext context) : IOrderReposi
     public void Add(Order order) => context.Orders.Add(order);
 }
 
+/// <summary>An agent's recent orders, counted where they are: one indexed count, by agent then time.</summary>
+internal sealed class EfAgentActivity(TenderoDbContext context) : IAgentActivity
+{
+    public Task<int> OrdersPlacedSinceAsync(AgentId agent, DateTimeOffset since, CancellationToken cancellationToken = default) =>
+        context.Orders.CountAsync(order => order.PlacedBy == agent && order.CreatedAt >= since, cancellationToken);
+}
+
 /// <summary>The read side. No tracking, newest first, capped.</summary>
 internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
 {

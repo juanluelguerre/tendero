@@ -347,6 +347,11 @@ public sealed class CheckoutEndpoints : ICarterModule
                     PlaceOrderOutcome.NotMandated => TypedResults.Problem(
                         detail: result.Detail, statusCode: StatusCodes.Status409Conflict),
 
+                    // An agent's token on the storefront's checkout is held to the
+                    // shop's rules for agents too (P11-6).
+                    PlaceOrderOutcome.AgentRefused => TypedResults.Problem(
+                        detail: result.Detail, statusCode: StatusCodes.Status403Forbidden),
+
                     _ => TypedResults.Ok(OrderView.From(result.Order!))
                 };
             })

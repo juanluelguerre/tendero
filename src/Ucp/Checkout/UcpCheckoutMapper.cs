@@ -249,6 +249,9 @@ public static class UcpCheckoutMapper
             Ap2.Ap2ErrorCodes.MandateRequired or Ap2.Ap2ErrorCodes.MandateExpired => ("error", "recoverable"),
             Ap2.Ap2ErrorCodes.MandateScopeMismatch or Ap2.Ap2ErrorCodes.MerchantAuthorizationInvalid => ("error", "requires_buyer_review"),
             Ap2.Ap2ErrorCodes.AgentMissingKey or Ap2.Ap2ErrorCodes.MandateInvalidSignature => ("error", "unrecoverable"),
+            // The shop's own rules (P11-6): a person decides — the shopkeeper, or
+            // the buyer finishing on the storefront.
+            CheckoutIssueCodes.AgentRefused => ("error", "requires_buyer_input"),
             _ => ("error", "recoverable"),
         };
 
@@ -310,6 +313,17 @@ public static class UcpCheckoutMapper
         Ap2.Ap2ErrorCodes.MandateInvalidSignature => en ? "The checkout mandate does not verify." : "El mandato de compra no se puede verificar.",
         Ap2.Ap2ErrorCodes.MandateExpired => en ? "The checkout mandate has expired: ask the buyer to approve again." : "El mandato de compra ha caducado: pide al comprador que lo apruebe de nuevo.",
         Ap2.Ap2ErrorCodes.MerchantAuthorizationInvalid => en ? "The checkout in the mandate is not one this shop signed." : "El checkout del mandato no lo ha firmado esta tienda.",
+        CheckoutIssueCodes.AgentRefused => (issue.Detail?.Split(':')[0], en) switch
+        {
+            (Ordering.SuspendedAgentsPlaceNothing.RuleName, true) => "This shop has suspended this agent: the purchase can be finished by a person at the continue URL.",
+            (Ordering.SuspendedAgentsPlaceNothing.RuleName, false) => "Esta tienda ha suspendido a este agente: una persona puede terminar la compra en la URL de continuación.",
+            (Ordering.OrderCapByTrust.RuleName, true) => "The total is above what this shop lets this agent spend in one order: a person can finish it at the continue URL.",
+            (Ordering.OrderCapByTrust.RuleName, false) => "El total supera lo que esta tienda deja gastar a este agente en un pedido: una persona puede terminarlo en la URL de continuación.",
+            (Ordering.OrdersPerAgentPerHour.RuleName, true) => "This agent has placed as many orders this hour as the shop allows: try later, or a person can finish it at the continue URL.",
+            (Ordering.OrdersPerAgentPerHour.RuleName, false) => "Este agente ya ha hecho los pedidos por hora que la tienda permite: prueba más tarde, o una persona puede terminarlo en la URL de continuación.",
+            (_, true) => "This shop's rules for agents refused this purchase.",
+            _ => "Las reglas de esta tienda para agentes han rechazado esta compra.",
+        },
         Ap2.Ap2ErrorCodes.MandateScopeMismatch => en ? "The mandate approves other terms than this checkout's now: ask the buyer to approve these." : "El mandato aprueba otras condiciones que las de este checkout ahora: pide al comprador que apruebe estas.",
         _ => issue.Code,
     };

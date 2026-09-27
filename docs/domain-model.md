@@ -489,6 +489,7 @@ classDiagram
         +OrderMode Mode
         +string? ContactEmail
         +OrderMandate? Mandate
+        +AgentId? PlacedBy
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment

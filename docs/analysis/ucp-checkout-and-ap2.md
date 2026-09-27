@@ -184,7 +184,8 @@ agent completes without one (a rehearsal moves no money); a live agent cannot pa
 at all and escalates to a person. `P11-4` verifies mandates by `vct` (closed ones: the
 limit is the exact total the person approved), `P11-5` snapshots the verified scope
 onto the order and re-checks it where the order is placed, `P11-6` adds the shop's
-own rules. Open mandates — the amount *ranges* and budgets above — are the next
+own rules — built: suspended agents place nothing, a cap per order by registry trust,
+and a ceiling on orders per agent per hour, checked at the till on the final total. Open mandates — the amount *ranges* and budgets above — are the next
 verifier, not built.
 
 ## 8 · Agent tokens and acting for a person (`P11-3`)

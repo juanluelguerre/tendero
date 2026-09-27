@@ -80,6 +80,14 @@ public static class OrderingServiceCollectionExtensions
         services.AddScoped<OrderAccess>();
         services.AddScoped<OrderPlacement>();
 
+        // The shop's rules for agents (P11-6), a table in registration order: the
+        // first to deny decides. Their numbers are configuration.
+        services.Configure<AgentPolicyOptions>(configuration.GetSection(AgentPolicyOptions.SectionName));
+        services.AddSingleton<IAgentRule, SuspendedAgentsPlaceNothing>();
+        services.AddSingleton<IAgentRule, OrderCapByTrust>();
+        services.AddSingleton<IAgentRule, OrdersPerAgentPerHour>();
+        services.TryAddSingleton<IAgentPolicy, DeclarativeAgentPolicy>();
+
         // The fake is resolvable unkeyed too, because the webhook demo has to be
         // able to SIGN a payload and only the concrete type can do that. A real
         // adapter would not need it.

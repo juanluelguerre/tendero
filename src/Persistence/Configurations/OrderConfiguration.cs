@@ -29,6 +29,11 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // Every order before the column existed was live, hence the default.
         builder.Property(o => o.ContactEmail).HasMaxLength(320);
 
+        // Counted per agent over the last hour by the shop's own rules (P11-6),
+        // hence the index that starts with it.
+        builder.Property(o => o.PlacedBy).HasMaxLength(100);
+        builder.HasIndex(o => new { o.PlacedBy, o.CreatedAt });
+
         builder.Property(o => o.Mode)
             .HasConversion<string>()
             .HasMaxLength(10)

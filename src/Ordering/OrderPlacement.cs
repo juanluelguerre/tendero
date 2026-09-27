@@ -42,7 +42,13 @@ public enum PlaceOrderOutcome
     /// The total is not what the agent's mandate approved, or the mandate ended
     /// (P11-5). Nothing charged: the person approves these terms or none.
     /// </summary>
-    NotMandated
+    NotMandated,
+
+    /// <summary>
+    /// One of the shop's own rules for agents said no (P11-6): the detail names the
+    /// rule and the numbers. Nothing charged, and the denial is audited.
+    /// </summary>
+    AgentRefused
 }
 
 public sealed record PlaceOrderResult(
@@ -60,7 +66,8 @@ public sealed record PlaceOrderResult(
         PlaceOrderOutcome.PaymentUnavailable => AuditOutcome.Failed,
         PlaceOrderOutcome.NothingToShip or PlaceOrderOutcome.UnknownShippingOption or
             PlaceOrderOutcome.UnknownSkus or PlaceOrderOutcome.PriceChanged or
-            PlaceOrderOutcome.PaymentDeclined or PlaceOrderOutcome.NotMandated => AuditOutcome.Denied
+            PlaceOrderOutcome.PaymentDeclined or PlaceOrderOutcome.NotMandated or
+            PlaceOrderOutcome.AgentRefused => AuditOutcome.Denied
     };
 
     string? IAuditedResult.AuditReason =>
@@ -102,6 +109,8 @@ public sealed class OrderPlacement(
     IShippingRateProviderRegistry shipping,
     IPaymentProviderRegistry payments,
     IPrincipalAccessor principal,
+    IAgentPolicy agentPolicy,
+    IAgentActivity agentActivity,
     IOptions<CheckoutOptions> options,
     TimeProvider clock)
 {
@@ -178,6 +187,26 @@ public sealed class OrderPlacement(
                 $"approved {mandate.ApprovedTotal.Amount} {mandate.ApprovedTotal.Currency}, now {pricing.Totals.Total.Amount} {pricing.Totals.Total.Currency}");
         }
 
+        // 3c · The shop's own rules for agents (P11-6), on the final total and after
+        // the person's mandate: whatever the person allows, the shop decides whom it
+        // serves and how much. A person's order never reaches them.
+        if (principal.Current is { Agent: { } agent } buyer)
+        {
+            var verdict = agentPolicy.Evaluate(new AgentAct(
+                agent,
+                buyer.Standing ?? AgentStanding.Unknown,
+                pricing.Totals.Total,
+                request.Mandate,
+                await agentActivity.OrdersPlacedSinceAsync(agent, clock.GetUtcNow().AddHours(-1), cancellationToken)));
+
+            if (!verdict.Allowed)
+            {
+                activity?.SetTag("checkout.outcome", "agent_refused");
+                activity?.SetTag("agent.rule", verdict.Rule);
+                return new PlaceOrderResult(PlaceOrderOutcome.AgentRefused, null, pricing, $"{verdict.Rule}: {verdict.Detail}");
+            }
+        }
+
         // 4 · The money. Nothing has been written yet, so a decline costs
         // nothing: no order, no reservation, an untouched cart. The id minted here
         // is the order's own, so the provider's record and the order name the
@@ -252,7 +281,8 @@ public sealed class OrderPlacement(
             mode,
             orderId,
             request.ContactEmail,
-            request.Mandate is { } approved ? OrderMandate.From(approved) : null);
+            request.Mandate is { } approved ? OrderMandate.From(approved) : null,
+            principal.Current.Agent);
 
         order.AuthorizePayment(clock, new OrderPayment(provider.Key, authorization.AuthorizationId!, null));
         orders.Add(order);

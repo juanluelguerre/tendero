@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-23 features: **19** answered by a signal emitted today,
+24 features: **20** answered by a signal emitted today,
 **0** by a signal planned, and **4** with no signal, each saying why.
 
 ### Storefront
@@ -49,6 +49,7 @@ everything here that is not *planned* is emitted.
 | WebMCP | Do browser agents use the shop's WebMCP tools, which ones, and do they succeed? | Which tools to keep, extend or drop; a high share of refusals means a tool's contract is wrong for an agent. | `webmcp_tool_invoked` | emitted |
 | MCP server and UCP catalogue | Do external agents call the catalogue over MCP and UCP, which tools, and how often are they refused? | Whether the agent checkout of phase 11 has agents waiting for it, and which binding to build it on first. | `tendero.agent.tool_calls` | emitted |
 | Test orders | Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock? | Rehearsals that are placed but never ended mean the saga stopped short and stock is held for nobody: fix the drain before anything else. Agents that go live without ever rehearsing are the ones whose first failures a customer pays for: make the test credential part of onboarding an agent (P11-3). | `tendero.checkout.attempts`, `tendero.orders.test_ended` | emitted |
+| Agent rules | How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust? | Refusals of known or verified agents by the cap mean the caps are too tight for the agents the shop wants: raise them. Refusals of untrusted agents are the rules working — and a rise in orders_per_hour from one trust level is the signal to look at who is looping. No refusals at all for a month means the rules are not earning their place in checkout's path. | `tendero.agents.denials`, `tendero.checkout.attempts` | emitted |
 
 ### Platform
 
@@ -192,6 +193,7 @@ Answers:
 - **Checkout and payment** — Why does a checkout fail to become an order: a stale screen, a changed price, a declined card, or a provider that did not answer?
 - **Test orders** — Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock?
 - **Agent registry** — Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered?
+- **Agent rules** — How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
@@ -199,8 +201,21 @@ Answers:
 | `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
 | `order.mode` | string | `live`, `test` | Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own. |
 | `agent.trust` | string | `none`, `untrusted`, `known`, `verified` | How far the shop trusts the agent behind the attempt (P11-2): none for a person, untrusted for an agent nobody registered. |
-| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable`, `not_mandated` | PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve. |
+| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable`, `not_mandated`, `agent_refused` | PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve. |
 | `discounted` | boolean | — | Whether any promotion applied to the order. |
+
+### `tendero.agents.denials`
+
+counter, unit `{denial}`. Agent orders the shop's own rules refused (P11-6), by rule and by how far the shop trusts the agent.
+
+Answers:
+
+- **Agent rules** — How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `rule` | string | `agent_suspended`, `order_over_trust_cap`, `orders_per_hour` | The first rule in the table that denied. |
+| `agent.trust` | string | `untrusted`, `known`, `verified` | The agent's standing in the registry; untrusted for one nobody registered. |
 
 ### `tendero.orders.test_ended`
 

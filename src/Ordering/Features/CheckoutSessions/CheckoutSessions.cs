@@ -89,6 +89,9 @@ public static class CheckoutIssueCodes
     /// Spelled as UCP's AP2 code, because it is that failure seen from the till.
     /// </summary>
     public const string MandateScopeMismatch = "mandate_scope_mismatch";
+
+    /// <summary>One of the shop's own rules for agents refused it (P11-6); the detail names the rule.</summary>
+    public const string AgentRefused = "agent_refused";
 }
 
 public sealed record CheckoutLineView(string Sku, string Title, string? VariantLabel, string? ImageId, int Quantity, decimal UnitPrice, decimal Total);
@@ -153,7 +156,15 @@ public sealed record CheckoutSessionResult(CheckoutSessionOutcome Outcome, Check
         _ => AuditOutcome.Denied,
     };
 
-    string? IAuditedResult.AuditReason => Outcome == CheckoutSessionOutcome.Ok ? null : Outcome.ToString();
+    /// <summary>
+    /// The issue that stopped it when there is one — which rule, which numbers — so
+    /// the audit row of a refused completion says why, not only that (P11-6).
+    /// </summary>
+    string? IAuditedResult.AuditReason => Outcome == CheckoutSessionOutcome.Ok
+        ? null
+        : (Issues?.LastOrDefault() ?? Session?.Issues.LastOrDefault()) is { } issue
+            ? $"{issue.Code}: {issue.Detail ?? issue.Target}"
+            : Outcome.ToString();
 }
 
 public sealed class CheckoutLineInputValidator : AbstractValidator<CheckoutLineInput>
@@ -332,6 +343,7 @@ public sealed class CheckoutSessionsHandler(
                     PlaceOrderOutcome.PaymentUnavailable => new CheckoutIssue(CheckoutIssueCodes.PaymentUnavailable, "payment", result.Detail),
                     PlaceOrderOutcome.UnknownShippingOption => new CheckoutIssue(CheckoutIssueCodes.ShippingOptionUnavailable, "fulfillment.option", result.Detail),
                     PlaceOrderOutcome.NotMandated => new CheckoutIssue(CheckoutIssueCodes.MandateScopeMismatch, "payment", result.Detail),
+                    PlaceOrderOutcome.AgentRefused => new CheckoutIssue(CheckoutIssueCodes.AgentRefused, "payment", result.Detail),
                     _ => new CheckoutIssue(CheckoutIssueCodes.ItemUnavailable, "lines", result.Detail),
                 };
                 return new CheckoutSessionResult(CheckoutSessionOutcome.NotPlaced, await ViewAsync(session, cart, [issue], show: false, cancellationToken));

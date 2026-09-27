@@ -106,6 +106,26 @@ public sealed class UcpCheckoutConformanceTests
         Assert.Contains(escalated.Messages!, message => message.Severity == "requires_buyer_input");
     }
 
+    /// <summary>
+    /// The shop's own rules for agents (P11-6) reach the agent as a message it can
+    /// act on: which limit, in the checkout's language, and a person to finish it.
+    /// </summary>
+    [Theory]
+    [InlineData("es", "order_over_trust_cap: 120 EUR over the 100 cap for untrusted agents", "El total supera")]
+    [InlineData("en", "orders_per_hour: 10 orders in the last hour, the most is 10", "This agent has placed")]
+    [InlineData("en", "agent_suspended: claude-desktop is suspended", "This shop has suspended")]
+    public void A_refusal_by_the_shops_rules_says_which_limit_in_the_checkouts_language(string culture, string detail, string starts)
+    {
+        var session = Session(CheckoutState.ReadyForComplete, issues: [new(CheckoutIssueCodes.AgentRefused, "payment", detail)]) with { Culture = culture };
+
+        var wire = UcpCheckoutMapper.ToWire(session, All, Links);
+
+        var message = Assert.Single(wire.Messages!);
+        Assert.Equal((CheckoutIssueCodes.AgentRefused, "requires_buyer_input"), (message.Code, message.Severity));
+        Assert.StartsWith(starts, message.Content, StringComparison.Ordinal);
+        UcpSchemas.Validate(Checkout, Json(wire), "A checkout the shop's rules refused");
+    }
+
     [Fact]
     public void A_completed_checkout_names_its_order_and_offers_no_way_to_continue()
     {

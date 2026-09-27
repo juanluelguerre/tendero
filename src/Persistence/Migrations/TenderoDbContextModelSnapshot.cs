@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260927111204_AddOrderMandate";
+    public override string LastMigrationId => "20260927112225_AddOrderPlacedBy";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -855,6 +855,11 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasDefaultValue("Live")
                     .HasColumnName("mode");
 
+                b.Property<string>("PlacedBy")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("placed_by");
+
                 b.Property<string>("Status")
                     .IsRequired()
                     .HasMaxLength(20)
@@ -1162,6 +1167,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("IdempotencyKey")
                     .IsUnique()
                     .HasDatabaseName("ix_orders_idempotency_key");
+
+                b.HasIndex("PlacedBy", "CreatedAt")
+                    .HasDatabaseName("ix_orders_placed_by_created_at");
 
                 b.ToTable("orders", "ordering");
             });

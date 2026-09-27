@@ -208,6 +208,13 @@ public sealed class Order : AggregateRoot
     public OrderMandate? Mandate { get; private set; }
 
     /// <summary>
+    /// The agent that placed it, when one did (P11-6): frozen like the mode, so
+    /// "how many orders has this agent placed this hour" and "what share of sales do
+    /// agents bring" are questions about orders, not about logs.
+    /// </summary>
+    public AgentId? PlacedBy { get; private set; }
+
+    /// <summary>
     /// What came off, frozen as codes and labels. Backed by a list for the same
     /// reason the lines are: EF maps a private collection into one JSON column,
     /// and the aggregate keeps the only way to add to it.
@@ -285,7 +292,8 @@ public sealed class Order : AggregateRoot
         OrderMode mode = OrderMode.Live,
         OrderId? id = null,
         string? contactEmail = null,
-        OrderMandate? mandate = null)
+        OrderMandate? mandate = null,
+        AgentId? placedBy = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentNullException.ThrowIfNull(shippingAddress);
@@ -343,6 +351,7 @@ public sealed class Order : AggregateRoot
             Mode = mode,
             ContactEmail = string.IsNullOrWhiteSpace(contactEmail) ? null : contactEmail.Trim(),
             Mandate = mandate,
+            PlacedBy = placedBy,
             IdempotencyKey = idempotencyKey,
             Culture = SharedKernel.Culture.Normalize(culture),
             Currency = currency,

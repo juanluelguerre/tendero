@@ -60,6 +60,7 @@ public static class PersistenceServiceCollectionExtensions
 
         services.AddScoped<IOrderRepository, EfOrderRepository>();
         services.AddScoped<IOrderReader, EfOrderReader>();
+        services.AddScoped<IAgentActivity, EfAgentActivity>();
         services.AddScoped<ICartRepository, EfCartRepository>();
         services.AddScoped<ICheckoutSessionRepository, EfCheckoutSessionRepository>();
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();

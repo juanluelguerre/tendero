@@ -211,6 +211,16 @@
       "signals": [
         "tendero.checkout.attempts"
       ]
+    },
+    {
+      "name": "Agent rules",
+      "area": "agents",
+      "question": "How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?",
+      "decision": "Refusals of known or verified agents by the cap mean the caps are too tight for the agents the shop wants: raise them. Refusals of untrusted agents are the rules working — and a rise in orders_per_hour from one trust level is the signal to look at who is looping. No refusals at all for a month means the rules are not earning their place in checkout's path.",
+      "signals": [
+        "tendero.agents.denials",
+        "tendero.checkout.attempts"
+      ]
     }
   ],
   "events": [
@@ -432,7 +442,8 @@
             "price_changed",
             "payment_declined",
             "payment_unavailable",
-            "not_mandated"
+            "not_mandated",
+            "agent_refused"
           ],
           "description": "PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve.",
           "from": "PlaceOrderOutcome"
@@ -440,6 +451,32 @@
         "discounted": {
           "type": "boolean",
           "description": "Whether any promotion applied to the order."
+        }
+      }
+    },
+    {
+      "name": "tendero.agents.denials",
+      "instrument": "counter",
+      "unit": "{denial}",
+      "description": "Agent orders the shop's own rules refused (P11-6), by rule and by how far the shop trusts the agent.",
+      "attributes": {
+        "rule": {
+          "type": "string",
+          "values": [
+            "agent_suspended",
+            "order_over_trust_cap",
+            "orders_per_hour"
+          ],
+          "description": "The first rule in the table that denied."
+        },
+        "agent.trust": {
+          "type": "string",
+          "values": [
+            "untrusted",
+            "known",
+            "verified"
+          ],
+          "description": "The agent's standing in the registry; untrusted for one nobody registered."
         }
       }
     },
