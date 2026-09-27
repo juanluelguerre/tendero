@@ -11,17 +11,37 @@ public sealed class SourceDocumentTests
     private static readonly TestClock Clock = new();
 
     [Fact]
-    public void The_same_text_is_the_same_document_and_any_change_is_another()
+    public void The_same_text_of_the_same_product_is_the_same_document_and_any_change_is_another()
     {
         var product = ProductId.New();
 
         var first = SourceDocument.Describe(product, "es", "Cortavientos de 140 g.", Clock);
-        var again = SourceDocument.Describe(ProductId.New(), "es", "Cortavientos de 140 g.", Clock);
+        var again = SourceDocument.Describe(product, "es", "Cortavientos de 140 g.", Clock);
         var edited = SourceDocument.Describe(product, "es", "Cortavientos de 145 g.", Clock);
 
         Assert.Equal(first.Id, again.Id);
         Assert.NotEqual(first.Id, edited.Id);
         Assert.Equal(64, first.Id.Value.Length);
+    }
+
+    /// <summary>Two products may share a sentence; they must not share a document, or one's claims would rest on the other's text.</summary>
+    [Fact]
+    public void Two_products_with_the_same_text_have_two_documents()
+    {
+        Assert.NotEqual(
+            SourceDocument.Describe(ProductId.New(), "es", "Tres pares de calcetines.", Clock).Id,
+            SourceDocument.Describe(ProductId.New(), "es", "Tres pares de calcetines.", Clock).Id);
+    }
+
+    [Fact]
+    public void A_text_that_comes_back_waits_for_claims_again()
+    {
+        var document = SourceDocument.Describe(ProductId.New(), "es", "Manta de lana virgen.", Clock);
+        document.MarkProposed(Clock);
+
+        document.Reinstate(Clock);
+
+        Assert.True(document.IsWaiting);
     }
 
     /// <summary>P10-0's one "not verbatim" quote was a capital letter: the text is found, and kept in the text's own spelling.</summary>

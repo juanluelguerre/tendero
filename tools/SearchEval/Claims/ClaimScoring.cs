@@ -76,7 +76,7 @@ public sealed record ClaimScore(
 /// How a candidate's claims are judged against the golden set — the rules the
 /// P10-0 spike declared, in one place, so every candidate is judged the same way.
 /// </summary>
-public static partial class ClaimScoring
+public static class ClaimScoring
 {
     /// <summary>
     /// Judges one product's predictions. A prediction matches when its Spanish
@@ -183,22 +183,8 @@ public static partial class ClaimScoring
         _ => false,
     };
 
-    private static readonly Dictionary<string, HashSet<string>> Stopwords = new()
-    {
-        ["es"] = ["el", "la", "los", "las", "es", "de", "con", "y", "se", "que", "un", "una", "para", "en", "tiene", "del", "sin"],
-        ["en"] = ["the", "is", "of", "with", "and", "a", "an", "it", "for", "in", "has", "to", "can", "without"],
-    };
-
-    /// <summary>
-    /// Observed, not hypothesised: a statement "in Spanish" written in English
-    /// breaks invariant 6. Crude on purpose — function words, counted.
-    /// </summary>
-    public static bool InLanguage(string text, string language)
-    {
-        var words = Words().Matches(text.ToLowerInvariant()).Select(match => match.Value).ToArray();
-        var other = language == "es" ? "en" : "es";
-        return words.Count(Stopwords[language].Contains) >= words.Count(Stopwords[other].Contains);
-    }
+    /// <summary>The product's own check (Knowledge's <see cref="StatementLanguage"/>), so the exam and the product agree.</summary>
+    public static bool InLanguage(string text, string language) => StatementLanguage.Is(text, language);
 
     private static List<(int Start, int End)> Spans(string text, string quote) =>
         quote.Length == 0
@@ -211,7 +197,4 @@ public static partial class ClaimScoring
         sorted.Length == 0 ? 0 : sorted.Length % 2 == 1 || p != 0.5
             ? sorted[(int)(p * (sorted.Length - 1))]
             : (sorted[sorted.Length / 2 - 1] + sorted[sorted.Length / 2]) / 2;
-
-    [GeneratedRegex("[a-záéíóúñü]+")]
-    private static partial Regex Words();
 }

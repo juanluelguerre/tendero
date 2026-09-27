@@ -278,7 +278,7 @@ src/
   Inventory/               # warehouses, stock, reservations — SharedKernel only too
   Ordering/                # cart, checkout, orders, payments, returns, the stock saga
   Accounts/                # customers and guests, the guest claim, the audit log's reader
-  Search/                  # indexing, lexical and hybrid search, the answer
+  Search/                  # Project Rastro: indexing, lexical and hybrid search, the answer
   Knowledge/               # claims with source, support and approval (phase 10, ADR 0018)
   Ucp/                     # UCP + MCP server for AI agents (phase 9; a README today)
   DevIssuer/               # OIDC discovery, JWKS and signed tokens, Development only
@@ -347,13 +347,13 @@ deferred with its measured number — is
 | 5 | Cart, checkout, payments, returns, the product page | ✅ |
 | 6 | WebMCP in the storefront | ✅ the cheapest differentiator — the agent inherits the shopper's session |
 | 7 | Accounts, audit, and swapping the dev issuer for Keycloak | ✅ the swap was two environment variables; Token Exchange waits for phase 11 |
-| 8 | Embeddings, hybrid search, evals | ✅ built and degradable; hybrid + reranker beats lexical, and stays off by default |
+| 8 | **Project Rastro**: embeddings, hybrid search, evals | ✅ built and degradable; hybrid + reranker beats lexical, and stays off by default |
 | 9 | Read-only MCP server and the UCP manifest | ✅ eight MCP tools; UCP's catalogue over MCP and REST, validated against UCP's own schemas |
 | 9b | Seeing it run: the Grafana stack behind a switch (Aspire kept), browser telemetry, a seeded traffic simulator | ✅ a tracking plan a test holds to the code; OpenTelemetry chosen over Faro on measured numbers |
 | 10 | Knowledge: product claims with source and confidence | 🚧 **in progress** — nine models measured before one was chosen: Qwen3.5-4B extracts (precision 0.92, recall 0.80), an NLI model scores support; the domain and its tables are in |
 | 11 | UCP transactional, AP2 and Know Your Agent | 🔜 **the headline** |
-| 12 | Backoffice copilot and the AI observability panel | 🔜 |
-| 12b | The storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
+| 12 | **Steward**, the backoffice copilot, and the AI observability panel | 🔜 |
+| 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
 | 13 | Multimodal search and the kit solver | 🔜 |
 
 The numbering changed on 2026-09-02: `initial-plan.md` §7 had four phases, the

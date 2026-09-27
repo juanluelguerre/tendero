@@ -21,6 +21,9 @@ internal sealed class SourceDocumentConfiguration : IEntityTypeConfiguration<Sou
         builder.Property(document => document.Culture).HasMaxLength(10);
         builder.Property(document => document.Text);
         builder.Property(document => document.RetrievedAt);
+        builder.Property(document => document.ProposedAt);
+        builder.Property(document => document.FailedAttempts);
+        builder.Ignore(document => document.IsWaiting);
 
         // "The documents of this product" — to find the current text and supersede the claims of the old one.
         builder.HasIndex(document => new { document.ProductId, document.Culture });

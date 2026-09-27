@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Extraction;
+using ElGuerre.Tendero.Knowledge.Features.ProposeClaims;
 using ElGuerre.Tendero.Knowledge.Support;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.AI;
@@ -55,6 +56,16 @@ public static class KnowledgeServiceCollectionExtensions
         }
 
         services.AddSingleton(Extractor);
+        return services;
+    }
+
+    /// <summary>
+    /// The queue that proposes claims, for the worker only: the API records
+    /// nothing and proposes nothing, it reads what was approved.
+    /// </summary>
+    public static IServiceCollection AddClaimProposer(this IServiceCollection services)
+    {
+        services.AddHostedService<ClaimProposer>();
         return services;
     }
 }

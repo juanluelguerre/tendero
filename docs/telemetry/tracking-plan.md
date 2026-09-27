@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-17 features: **13** answered by a signal emitted today,
+18 features: **14** answered by a signal emitted today,
 **0** by a signal planned, and **4** with no signal, each saying why.
 
 ### Storefront
@@ -36,6 +36,7 @@ everything here that is not *planned* is emitted.
 | Stock and reservations | How much held stock never becomes a sale? | The hold's lifetime, and whether the expiry sweep the domain has a state for is worth building. | `tendero.inventory.reservations` | emitted |
 | Catalogue import | Does an import bring products in? | None beyond the run itself. | — An import is an operator's batch, answered by its own result and its span; a counter would say what the result already says. | none |
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
+| Claims from descriptions | How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it? | A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it. | `tendero.knowledge.claims.proposed`, `tendero.knowledge.claims.dropped`, `tendero.knowledge.proposals.failed`, `tendero.knowledge.descriptions.failed` | emitted |
 
 ### Agents
 
@@ -217,3 +218,47 @@ Answers:
 | `surface` | string | `mcp`, `ucp` | The binding the call came through. |
 | `tool` | string | — | The tool or operation name; a closed set of the ones served. |
 | `outcome` | string | `answered`, `refused`, `failed` | Refused is the shop saying no; failed is the tool breaking. |
+
+### `tendero.knowledge.claims.proposed`
+
+counter, unit `{claim}`. Claims proposed for review, by the extractor that read the text.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `extractor` | string | `rules`, `chat` | Which extractor read the description: the rules, or the model. |
+
+### `tendero.knowledge.claims.dropped`
+
+counter, unit `{claim}`. Claims an extractor proposed that code refused before any person saw them, by reason.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `reason` | string | `not_in_the_text`, `wrong_language`, `duplicate` | DropReason, labelled by MetricLabels. |
+
+### `tendero.knowledge.proposals.failed`
+
+counter, unit `{attempt}`. Proposal runs that failed on a product; retried until its limit.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+No attributes.
+
+### `tendero.knowledge.descriptions.failed`
+
+counter, unit `{change}`. Product changes whose description Knowledge could not record; the next save records it.
+
+Answers:
+
+- **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
+
+No attributes.

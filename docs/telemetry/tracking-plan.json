@@ -152,6 +152,18 @@
       "signals": [
         "tendero.outbox.lag"
       ]
+    },
+    {
+      "name": "Claims from descriptions",
+      "area": "backoffice",
+      "question": "How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?",
+      "decision": "A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it.",
+      "signals": [
+        "tendero.knowledge.claims.proposed",
+        "tendero.knowledge.claims.dropped",
+        "tendero.knowledge.proposals.failed",
+        "tendero.knowledge.descriptions.failed"
+      ]
     }
   ],
   "events": [
@@ -422,6 +434,54 @@
           "description": "Refused is the shop saying no; failed is the tool breaking."
         }
       }
+    },
+    {
+      "name": "tendero.knowledge.claims.proposed",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Claims proposed for review, by the extractor that read the text.",
+      "attributes": {
+        "extractor": {
+          "type": "string",
+          "values": [
+            "rules",
+            "chat"
+          ],
+          "description": "Which extractor read the description: the rules, or the model."
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.claims.dropped",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Claims an extractor proposed that code refused before any person saw them, by reason.",
+      "attributes": {
+        "reason": {
+          "type": "string",
+          "values": [
+            "not_in_the_text",
+            "wrong_language",
+            "duplicate"
+          ],
+          "description": "DropReason, labelled by MetricLabels.",
+          "from": "DropReason"
+        }
+      }
+    },
+    {
+      "name": "tendero.knowledge.proposals.failed",
+      "instrument": "counter",
+      "unit": "{attempt}",
+      "description": "Proposal runs that failed on a product; retried until its limit.",
+      "attributes": {}
+    },
+    {
+      "name": "tendero.knowledge.descriptions.failed",
+      "instrument": "counter",
+      "unit": "{change}",
+      "description": "Product changes whose description Knowledge could not record; the next save records it.",
+      "attributes": {}
     }
   ]
 }

@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ElGuerre.Tendero.Persistence.Migrations;
 
 [DbContext(typeof(TenderoDbContext))]
-[Migration("20260926234915_AddKnowledgeClaims")]
-partial class _20260926234915_AddKnowledgeClaims
+[Migration("20260927000503_AddKnowledgeClaims")]
+partial class _20260927000503_AddKnowledgeClaims
 {
     /// <inheritdoc />
     protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -479,6 +479,10 @@ partial class _20260926234915_AddKnowledgeClaims
                     .HasColumnType("character varying(10)")
                     .HasColumnName("culture");
 
+                b.Property<int>("FailedAttempts")
+                    .HasColumnType("integer")
+                    .HasColumnName("failed_attempts");
+
                 b.Property<string>("Kind")
                     .IsRequired()
                     .HasMaxLength(40)
@@ -488,6 +492,10 @@ partial class _20260926234915_AddKnowledgeClaims
                 b.Property<Guid>("ProductId")
                     .HasColumnType("uuid")
                     .HasColumnName("product_id");
+
+                b.Property<DateTimeOffset?>("ProposedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("proposed_at");
 
                 b.Property<DateTimeOffset>("RetrievedAt")
                     .HasColumnType("timestamp with time zone")

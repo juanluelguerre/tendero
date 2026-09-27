@@ -1,6 +1,8 @@
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
+using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
+using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
@@ -10,6 +12,7 @@ using ElGuerre.Tendero.Search.Features.ProjectProductToIndex;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Workers.Knowledge;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ElGuerre.Tendero.Workers;
@@ -47,7 +50,11 @@ public static class WorkerServices
         // marks a message processed whether or not anybody handled it.
         builder.Services.AddTenderoCqrs(
             typeof(ProjectProductOnUpserted).Assembly,
-            typeof(ReserveStockOnOrderPlaced).Assembly);
+            typeof(ReserveStockOnOrderPlaced).Assembly,
+            // Knowledge's slices, and the worker's own handler that feeds them
+            // Catalog's descriptions as values (Workers/Knowledge, ADR 0014).
+            typeof(RecordDescriptionHandler).Assembly,
+            typeof(RecordDescriptionOnProductUpserted).Assembly);
 
         builder.Services.AddTenderoPersistence(
             builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -70,6 +77,8 @@ public static class WorkerServices
 
         // The claims layer (ADR 0018): the rules always, the models when the AppHost started them.
         builder.Services.AddKnowledge(builder.Configuration);
+        builder.Services.AddScoped<IAttributeVocabulary, CatalogAttributeVocabulary>();
+        builder.Services.AddClaimProposer();
 
         // Inside the worker the actor is the system, and this is the
         // implementation `IPrincipalAccessor` documented and nobody had

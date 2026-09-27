@@ -16,7 +16,8 @@ public sealed record AttributeSpec(
     string Kind,
     string? Unit,
     string Label,
-    IReadOnlyList<string> Options);
+    IReadOnlyList<string> Options,
+    string? LabelSpanish = null);
 
 /// <summary>
 /// One claim as an extractor proposes it: nothing here is trusted yet. The quote

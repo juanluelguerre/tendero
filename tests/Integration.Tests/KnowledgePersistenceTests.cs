@@ -1,7 +1,10 @@
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Ports;
+using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace ElGuerre.Tendero.Integration.Tests;
@@ -58,11 +61,48 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
         Assert.Equal(storedDocument.Text[evidence.Quote.Start..evidence.Quote.End], evidence.Quote.Text);
         Assert.Equal(0.97, stored.Support);
         Assert.Equal("851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a", stored.Provenance.ModelRevision);
-        Assert.Equal(SourceDocumentId.Of(storedDocument.Text), storedDocument.Id);
+        Assert.Equal(SourceDocumentId.Of(pan, "es", storedDocument.Text), storedDocument.Id);
 
         // Proposed and approved in one save: both events leave through the outbox.
         var types = await reread.OutboxMessages.Select(message => message.Type).ToListAsync(ct);
         Assert.Contains(types, type => type.Contains(nameof(ClaimProposed), StringComparison.Ordinal));
         Assert.Contains(types, type => type.Contains(nameof(ClaimApproved), StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Only a product's current Spanish text can wait: an older one replaced before
+    /// the model reached it would otherwise be offered for ever, and the proposer
+    /// would loop on a queue that never empties.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task Only_the_current_text_of_a_product_waits_for_claims()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("knowledge_waiting");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var clock = new TestClock();
+        var replaced = ProductId.New();
+        var older = SourceDocument.Describe(replaced, "es", "Texto antiguo.", clock);
+        clock.Advance(TimeSpan.FromMinutes(1));
+        var newer = SourceDocument.Describe(replaced, "es", "Texto nuevo.", clock);
+        newer.MarkProposed(clock);
+        var waiting = ProductId.New();
+        var fresh = SourceDocument.Describe(waiting, "es", "Texto por leer.", clock);
+        var english = SourceDocument.Describe(ProductId.New(), "en", "English only.", clock);
+
+        await using (var context = factory.Create())
+        {
+            context.SourceDocuments.AddRange(older, newer, fresh, english);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var repository = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString)
+            .BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<IKnowledgeRepository>();
+
+        Assert.Equal([waiting], await repository.WaitingAsync(10, ct));
     }
 }

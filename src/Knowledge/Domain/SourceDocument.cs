@@ -5,17 +5,20 @@ using ElGuerre.Tendero.SharedKernel;
 namespace ElGuerre.Tendero.Knowledge.Domain;
 
 /// <summary>
-/// A document's identity: the SHA-256 of its text, as <see cref="ImageId"/> is of
-/// an image's bytes. A claim can never point at text that changed under it —
-/// changed text is a different document, and the claims resting on the old one
-/// are superseded rather than edited (ADR 0018).
+/// A document's identity: the SHA-256 of what it is — the product, the culture
+/// and the text — as <see cref="ImageId"/> is of an image's bytes. A claim can
+/// never point at text that changed under it: changed text is a different
+/// document, and the claims resting on the old one are superseded rather than
+/// edited (ADR 0018). The product and culture are in the hash because two
+/// products may well share a sentence, and must not share a document.
 /// </summary>
 public readonly record struct SourceDocumentId(string Value)
 {
-    public static SourceDocumentId Of(string text)
+    public static SourceDocumentId Of(ProductId productId, string culture, string text)
     {
+        ArgumentNullException.ThrowIfNull(culture);
         ArgumentNullException.ThrowIfNull(text);
-        return new(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(text))));
+        return new(Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('\n', productId, culture, text)))));
     }
 
     public override string ToString() => Value;
@@ -46,6 +49,40 @@ public sealed class SourceDocument
     public string Text { get; private set; } = "";
     public DateTimeOffset RetrievedAt { get; private set; }
 
+    /// <summary>
+    /// When claims were proposed from it. Not part of its content — its identity
+    /// is the text — but the queue's own mark: a document with none is waiting.
+    /// </summary>
+    public DateTimeOffset? ProposedAt { get; private set; }
+
+    /// <summary>Proposal runs that failed on it. After <see cref="MaxAttempts"/> it stops being retried and says so.</summary>
+    public int FailedAttempts { get; private set; }
+
+    public const int MaxAttempts = 3;
+
+    public bool IsWaiting => ProposedAt is null && FailedAttempts < MaxAttempts;
+
+    public void MarkProposed(TimeProvider clock)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+        ProposedAt = clock.GetUtcNow();
+    }
+
+    public void RecordFailedAttempt() => FailedAttempts++;
+
+    /// <summary>
+    /// The description went back to this text (A → B → A): it is the current
+    /// document again, and waits for claims again — the ones it had were
+    /// superseded when it was replaced.
+    /// </summary>
+    public void Reinstate(TimeProvider clock)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+        RetrievedAt = clock.GetUtcNow();
+        ProposedAt = null;
+        FailedAttempts = 0;
+    }
+
     private SourceDocument() { } // EF Core
 
     public static SourceDocument Describe(ProductId productId, string culture, string text, TimeProvider clock)
@@ -56,7 +93,7 @@ public sealed class SourceDocument
 
         return new SourceDocument
         {
-            Id = SourceDocumentId.Of(text),
+            Id = SourceDocumentId.Of(productId, culture, text),
             Kind = SourceKind.ProductDescription,
             ProductId = productId,
             Culture = culture,

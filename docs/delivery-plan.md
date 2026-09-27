@@ -588,7 +588,7 @@ fake was the issuer and never the token validation, and what the swap cost.
 
 ---
 
-## Phase 8 · Embeddings, hybrid search, evals
+## Phase 8 · Project Rastro: embeddings, hybrid search, evals
 
 `hecha` (2026-09-15, on `feature/phase-8-hybrid-search`; the default since 2026-09-17) · priority **high** · size **L** · **hybrid reranked en 0.843 / es 0.831 against lexical 0.748 / 0.692 in three consecutive gate runs — the default, degradable, and every page says what kind of answer it is**
 
@@ -696,8 +696,8 @@ gate. Its analysis is `observability-tooling.md` §4.
 - [x] `P10-0` **Spike: what reads a description** — **M** · **done 2026-09-27**: the extractor is **Qwen3.5-4B Q8** on llama.cpp with the rules as the non-AI path (precision 0.92, recall 0.80 on 71 golden claims), the support scorer the **NLI model on TEI** (AUC 1.00, ECE 0.03, 0.07 s); nine candidates measured through the ports that ship, a runtime bug found and reported upstream ([onnxruntime-genai#2633](https://github.com/microsoft/onnxruntime-genai/issues/2633)) · added 2026-09-26, when the author asked what the model is for and whether something newer does it better. Options, decisions as they are taken and the hypotheses, declared before measuring: [`analysis/claim-extraction-models.md`](analysis/claim-extraction-models.md). A 20-product golden claim set (the seed of `P10-9`); rules against small models under grammar; decides `P10-3`'s adapter
 - [x] `P10-1` `src/Knowledge`; `SourceDocument` content-addressed like `ImageId` — **M** · **done 2026-09-27**: its id is the SHA-256 of the text, a quote is located without regard to case and kept in the text's own spelling (the capital letter of `P10-0`)
 - [x] `P10-2` `ProductClaim` with evidence, confidence, provenance (model, revision, prompt version, run) — **M** · **done 2026-09-27**: support measured per quote and the claim showing its weakest; a `TransitionTable` of four states (supersession when the text changes); `knowledge.claims` and `knowledge.source_documents` in Postgres, evidence and provenance in jsonb, a round trip through a real database with its events in the outbox
-- [ ] `P10-3` `IClaimExtractor` via MEAI structured output — **M**
-- [ ] `P10-4` `ProposeClaimsFromDescription` — no new sources, no scraping — **M**
+- [x] `P10-3` `IClaimExtractor` via MEAI structured output — **M** · **built 2026-09-27**: `Tendero__Knowledge=true` starts a job that downloads, converts and hash-checks Qwen3.5-4B, llama.cpp serving it with P10-0's settings, and TEI with the NLI scorer — each with a memory and CPU limit from its measurement; with the switch off, the rules alone. *Not yet run end to end on the stack*
+- [x] `P10-4` `ProposeClaimsFromDescription` — no new sources, no scraping — **M** · **built 2026-09-27**, in two halves: on the outbox, a product's description per culture is recorded by its hash in milliseconds (unchanged text is nothing, a changed one supersedes the claims on the old, A → B → A reinstates); off it, a background proposer takes one waiting product at a time — the model when started, the rules otherwise — vets every claim, scores its support and proposes it. Four signals in the tracking plan
 - [ ] `P10-5` Review queue for claims, reusing the existing pattern — **M**
 - [ ] `P10-6` `ClaimApproved` → outbox → Catalog `SetAttribute` and Search `specsText`. Knowledge never writes to Catalog — **M**
 - [ ] `P10-7` `CompareProducts`: approved claims only; "sin dato", never a guess — **M**
@@ -755,7 +755,7 @@ proposal, and a note to the UCP community. `#UCP #AP2 #agenticcommerce #dotnet #
 
 ---
 
-## Phase 12 · Copilot and AI observability
+## Phase 12 · Steward, the backoffice copilot, and AI observability
 
 `no empezada` · priority **medium** · size **L**
 
@@ -785,7 +785,7 @@ answer ends in a button. `#AIEngineering #agents #dotnet #ecommerce`
 
 ---
 
-## Phase 12b · The shopping assistant, with a voice
+## Phase 12b · Tino, the shopping assistant, with a voice
 
 `no empezada` · priority **medium** · size **L** — added 2026-09-26 at the author's
 request, with speech recognition inside it rather than in phase 13. The vision

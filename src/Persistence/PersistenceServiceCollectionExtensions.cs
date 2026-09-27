@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Accounts.Ports;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
+using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Pricing.Ports;
 using ElGuerre.Tendero.Search.Contracts;
@@ -61,6 +62,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IOrderReader, EfOrderReader>();
         services.AddScoped<ICartRepository, EfCartRepository>();
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();
+        services.AddScoped<IKnowledgeRepository, EfKnowledgeRepository>();
 
         // Whether an order's customer has an account: Ordering asks it to decide
         // who may read the order by its id, and must not learn what a Customer is.

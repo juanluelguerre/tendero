@@ -710,6 +710,9 @@ classDiagram
         +string Culture
         +string Text
         +DateTimeOffset RetrievedAt
+        +DateTimeOffset? ProposedAt
+        +int FailedAttempts
+        +bool IsWaiting
     }
     class SourceDocumentId {
         <<record>>
