@@ -433,6 +433,57 @@ second half, *and none takes more*, can. For those four jobs the target is
 This is written down now, before building, so that R-6 does not discover it and
 call it a result. **It is the author's to accept.**
 
+### The mock-ups, and what drawing them found
+
+Six screens in `design/unpublished/mockups/redesign.pen`, with PNGs beside it in
+`redesign/`:
+- the backoffice's orders at 1440 px (rail, list and pane) and at 390 px (cards);
+- the command palette;
+- the storefront's *Tienda* panel at 1440 px;
+- its phone drawer;
+- the product page at 390 px.
+
+Every colour is a token variable. The one colour `tokens.css` does not have, a
+**scrim** behind the drawer and the palette, is declared in `proposals.json` for
+the author to accept as `--scrim`. That is the flow `design-mockups.spec.ts`
+protects.
+
+The PNGs are the `.pen` exported to HTML and rendered in Chromium, because the
+design tool's own capture renders new nodes blank. The same render is how they
+were checked: the export carries every node's name, so a position can be read
+off the page rather than guessed.
+
+**S-P4's condition, measured.** In the mock-up of the product page at 390×844,
+*Añadir al carrito* ends at **629 px**. The layout is:
+- the sticky row (56 px) and the search row (52 px);
+- a one-line breadcrumb;
+- a 4:3 image in place of the square one.
+
+**The condition holds, so the first row sticks.**
+
+Drawing it found something R-1 had missed: **on today's product page the button
+already ends at about 912 px, below the first screen.** R-1's capture shows it
+there, under a square image and a breadcrumb on two lines. So the redesign does
+not merely avoid pushing the button down. It brings the page's one clay action
+back into view, and R-6 can check that on the running app.
+
+**What the drawing itself caught**, fixed in the mock-ups or noted for R-4:
+- The first drawer grouped *Cocina* as "Cocina: menaje, cafeteras…". That hid
+  five categories and broke the two-tap rule, so every category is now its own
+  48 px row.
+- The drawer lists departments in the desktop panel's order (N4), so the current
+  department can fall below the first screen. **The drawer opens scrolled to the
+  current department**, and R-4 builds it that way.
+- The palette showed *Go to: Orders, Returns* for a query that was plainly an
+  order id. **It lists only screens whose name matches**, and an id-shaped query
+  shows orders first.
+- The phone's filter chips scroll sideways inside their row with nothing to say
+  so. They get the fade at the edge the existing tables already use as their
+  cue.
+
+What remains is the **walkthrough on the mock-ups**: the nine jobs, done on
+paper by the author. It belongs to the author, and it comes before R-4.
+
 ### The build, in order (R-4 and R-5)
 
 Each increment ships whole and is measured. The old screen stays reachable until
