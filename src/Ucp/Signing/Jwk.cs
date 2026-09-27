@@ -89,7 +89,11 @@ public sealed record Jwk
                 Q = new ECPoint { X = Base64Url.DecodeFromChars(X), Y = Base64Url.DecodeFromChars(Y) },
             });
         }
-        catch (Exception exception) when (exception is FormatException or CryptographicException)
+        // A point that is not on the curve surfaces as PlatformNotSupportedException on
+        // Windows, not as a CryptographicException — found by phase 11's Stryker close,
+        // when a malformed key in a profile would have crashed the verifier instead of
+        // being skipped, as UCP asks.
+        catch (Exception exception) when (exception is FormatException or CryptographicException or PlatformNotSupportedException)
         {
             return null;
         }
