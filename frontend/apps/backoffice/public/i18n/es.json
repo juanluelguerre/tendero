@@ -25,20 +25,49 @@
     "failed": "No se ha podido cargar la auditoría.",
     "filterLabel": "Filtrar por resultado",
     "hidePayload": "Ocultar",
-    "lede": "Quién hizo qué, y qué rechazó la tienda. Abre por los rechazos: un registro que empieza por los aciertos es un historial de cambios.",
+    "lede": "Quién hizo qué, y qué rechazó la tienda. Se abre en los rechazos, que son lo primero que merece la pena leer.",
     "loading": "Cargando la auditoría...",
     "outcome": {
       "allowed": "Permitido",
       "denied": "Rechazado",
       "failed": "Fallo"
     },
-    "refused": "{{count}} rechazados",
     "showPayload": "Ver comando",
     "guest": "invitado",
     "title": "Auditoría",
     "trace": "Traza {{id}}",
     "emptyFor": "No hay nada registrado como «{{outcome}}». Que es la buena noticia.",
-    "showEverything": "Ver todo"
+    "showEverything": "Ver todo",
+    "commands": {
+      "AddToCartCommand": "Añadir al carrito",
+      "CancelCheckoutSessionCommand": "Cancelar un pago",
+      "ChangeAgentTrustCommand": "Cambiar la confianza de un agente",
+      "ClaimCartCommand": "Conservar el carrito al iniciar sesión",
+      "CompleteCheckoutSessionCommand": "Completar un pago",
+      "CountStockCommand": "Contar existencias",
+      "DecideReturnCommand": "Decidir una devolución",
+      "DefineVariantsCommand": "Definir variantes",
+      "ImportProductsCommand": "Importar productos",
+      "LinkIdentityCommand": "Vincular un inicio de sesión a un cliente",
+      "MoveOrderCommand": "Avanzar un pedido",
+      "OpenCheckoutSessionCommand": "Abrir un pago",
+      "PaymentWebhookCommand": "Aviso del proveedor de pago",
+      "PlaceOrderCommand": "Hacer un pedido",
+      "ProposeClaimsCommand": "Proponer afirmaciones de una descripción",
+      "PublishProductCommand": "Publicar un producto",
+      "RecordClaimApplicationCommand": "Aplicar una afirmación aprobada",
+      "RecordDescriptionCommand": "Registrar una descripción",
+      "RegisterAgentCommand": "Registrar un agente",
+      "ReindexProductsCommand": "Reconstruir el índice de búsqueda",
+      "ReinstateAgentCommand": "Readmitir un agente",
+      "RequestReturnCommand": "Pedir una devolución",
+      "ReviewClaimCommand": "Decidir una afirmación",
+      "SetCartLineCommand": "Cambiar una línea del carrito",
+      "SetProductAttributeCommand": "Fijar un atributo de producto",
+      "SuspendAgentCommand": "Suspender un agente",
+      "UpdateCheckoutSessionCommand": "Actualizar un pago",
+      "WithdrawProductCommand": "Retirar un producto de la venta"
+    }
   },
   "brand": {
     "area": "Backoffice",
@@ -462,7 +491,12 @@
       "openReturns": "Abiertas",
       "returnRate": "Tasa de devolución",
       "refunded": "Reembolsado",
-      "byReason": "Devoluciones abiertas por motivo"
+      "byReason": "Devoluciones abiertas por motivo",
+      "standing": {
+        "within": "Dentro del objetivo del {{target}}",
+        "near": "Cerca del objetivo del {{target}}",
+        "outside": "Por encima del objetivo del {{target}}"
+      }
     },
     "funnel": {
       "title": "Checkout",

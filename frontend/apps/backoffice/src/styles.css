@@ -334,12 +334,27 @@ p {
 }
 
 .widget__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
   color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
+/* Every figure is a way into acting on it (R-3, P9): its label opens the list
+   behind it, already filtered. Quiet until pointed at, and 24 px tall. */
+.fact__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.fact__link:hover { color: var(--text); text-decoration: underline; }
+
 .widget__sub { margin: var(--space-2) 0 0; }
-.widget__sub a { color: inherit; }
+.widget__sub a { display: inline-flex; align-items: center; min-height: 1.5rem; color: inherit; }
 .widget__state { margin: 0; }
 .widget__note { margin: 0; font-size: var(--text-3xs); }
 
@@ -516,3 +531,16 @@ p {
 /* A secondary way somewhere: quiet until pointed at. */
 .quiet-link { font-size: var(--text-xs); color: var(--text-muted); }
 .quiet-link:hover { color: var(--text); }
+
+/* A list that is loading keeps the shape of what is coming — rows, drawn by
+   the background alone — so nothing jumps when it arrives (R-3, P8; R-1,
+   B-F10). The words stay, for a screen reader. */
+.skeleton-list {
+  min-height: 15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 0.75rem, var(--bg-raised) 0.75rem 2.25rem, transparent 2.25rem 3rem)
+    var(--space-4) 0 / calc(100% - 2 * var(--space-4)) 100% no-repeat,
+    var(--bg-surface);
+}

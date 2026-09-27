@@ -204,4 +204,21 @@ public sealed class DashboardFiguresTests
     [InlineData("1", null)]
     public void A_period_is_one_of_three_and_a_week_by_default(string? given, DashboardPeriod? expected) =>
         Assert.Equal(expected, DashboardPeriods.Parse(given));
+
+    /// <summary>
+    /// Health against a target (the redesign's R-4.5), on the boundaries that
+    /// decide it: the last fifth up to the target, the target included, is near,
+    /// and only above it is outside.
+    /// </summary>
+    [Theory]
+    [InlineData("0", "within")]
+    [InlineData("0.02", "within")]
+    [InlineData("0.0201", "near")]
+    [InlineData("0.025", "near")]
+    [InlineData("0.0251", "outside")]
+    public void Says_where_a_rate_stands_against_its_target(string rate, string standing)
+    {
+        // As text: a double would arrive as 0.025000000000000001 and land on the wrong side.
+        Assert.Equal(standing, DashboardFigures.Standing(decimal.Parse(rate, System.Globalization.CultureInfo.InvariantCulture), DashboardFigures.CancellationTarget));
+    }
 }

@@ -1,33 +1,24 @@
 <ng-container *transloco="let t">
-  <header class="head">
-    <h1 class="head__title">
-      {{ t('audit.title') }}
-      @if (refused() > 0) {
-        <!-- Colour never carries meaning alone (design/DESIGN.md). -->
-        <span class="pill pill--warning">{{ t('audit.refused', { count: refused() }) }}</span>
-      }
-    </h1>
-    <p class="head__lede muted">{{ t('audit.lede') }}</p>
+  <header class="page-head">
+    <!-- The title is the screen's name; how many were refused is the filter's
+         count, not part of the heading (R-1, B-F6: it read "Audit 13 refused"). -->
+    <h1 class="page-title">{{ t('audit.title') }}</h1>
   </header>
+  <p class="page-hint">{{ t('audit.lede') }}</p>
 
   <!-- It opens on the refusals. An audit log whose default view is a thousand
        successful publishes is a changelog. -->
-  <div class="filters" role="group" [attr.aria-label]="t('audit.filterLabel')">
-    @for (option of filters; track option) {
-      <button
-        type="button"
-        class="chip"
-        [class.chip--active]="filter() === option"
-        [attr.aria-pressed]="filter() === option"
-        (click)="use(option)"
-      >
-        {{ option ? t('audit.outcome.' + option) : t('audit.all') }}
-      </button>
-    }
-  </div>
+  <backoffice-filter-chips
+    class="filters"
+    [options]="filterOptions()"
+    [selected]="filter() ?? 'all'"
+    [label]="t('audit.filterLabel')"
+    (chosen)="use($event === 'all' ? null : $any($event))"
+  />
 
   @if (loading()) {
-    <p class="muted" role="status" aria-live="polite">{{ t('audit.loading') }}</p>
+    <div class="skeleton-list" aria-hidden="true"></div>
+    <p class="sr-only" role="status" aria-live="polite">{{ t('audit.loading') }}</p>
   } @else if (failed()) {
     <p class="notice notice--danger">{{ t('audit.failed') }}</p>
   } @else if (entries().length === 0) {
@@ -64,7 +55,8 @@
           @for (entry of entries(); track entry.id) {
             <tr [class.row--refused]="entry.outcome !== 'allowed'">
               <td class="numeric when">{{ when(entry.at) }}</td>
-              <td class="command">{{ entry.commandType }}</td>
+              <!-- In the shopkeeper's words; the type stays as its title for whoever needs it (B-F6). -->
+              <td class="command" [title]="entry.commandType">{{ t('audit.commands.' + entry.commandType) }}</td>
               <td class="who">
                 <!-- An agent is a principal, not a customer, and both travel: the
                      question worth answering later is who acted AND on whose

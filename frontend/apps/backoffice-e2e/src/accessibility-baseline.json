@@ -1,15 +1,3 @@
 [
-  "audit@1440 smallTargets: button.chip",
-  "audit@1440 smallTargets: button.chip.chip--active",
-  "audit@1440 smallTargets: button.quiet",
-  "audit@360 smallTargets: button.chip",
-  "audit@360 smallTargets: button.chip.chip--active",
-  "audit@768 smallTargets: button.chip",
-  "audit@768 smallTargets: button.chip.chip--active",
-  "dashboard@1440 smallTargets: a",
-  "dashboard@1440 smallTargets: a.widget__link",
-  "dashboard@360 smallTargets: a",
-  "dashboard@360 smallTargets: a.widget__link",
-  "dashboard@768 smallTargets: a",
-  "dashboard@768 smallTargets: a.widget__link"
+  "audit@1440 smallTargets: button.quiet"
 ]

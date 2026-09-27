@@ -10,7 +10,8 @@
     }
 
     @if (agents.isLoading() && !agents.hasValue()) {
-      <p class="muted" role="status" aria-live="polite">{{ t('loading') }}</p>
+      <div class="skeleton-list" aria-hidden="true"></div>
+    <p class="sr-only" role="status" aria-live="polite">{{ t('loading') }}</p>
     } @else if (agents.error()) {
       <p class="failed" role="alert">{{ t('failed') }}</p>
     } @else if (agents.value()?.length === 0) {

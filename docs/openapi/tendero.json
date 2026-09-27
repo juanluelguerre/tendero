@@ -3485,6 +3485,8 @@
           "paymentFailed",
           "cancelled",
           "cancellationRate",
+          "cancellationTarget",
+          "cancellationStanding",
           "openReturns",
           "openReturnsByReason",
           "refunded",
@@ -3521,6 +3523,13 @@
           "cancellationRate": {
             "type": "number",
             "format": "double"
+          },
+          "cancellationTarget": {
+            "type": "number",
+            "format": "double"
+          },
+          "cancellationStanding": {
+            "type": "string"
           },
           "openReturns": {
             "type": "integer",

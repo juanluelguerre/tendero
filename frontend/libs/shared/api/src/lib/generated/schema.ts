@@ -1178,6 +1178,9 @@ export interface components {
             cancelled: number;
             /** Format: double */
             cancellationRate: number;
+            /** Format: double */
+            cancellationTarget: number;
+            cancellationStanding: string;
             /** Format: int32 */
             openReturns: number;
             openReturnsByReason: components["schemas"]["ReasonCount"][];

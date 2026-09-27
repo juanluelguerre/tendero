@@ -25,20 +25,49 @@
     "failed": "The audit log could not be loaded.",
     "filterLabel": "Filter by outcome",
     "hidePayload": "Hide",
-    "lede": "Who did what, and what the shop refused. It opens on the refusals: a log that leads with successes is a changelog.",
+    "lede": "Who did what, and what the shop refused. It opens on the refusals, which are the entries worth reading first.",
     "loading": "Loading the audit log...",
     "outcome": {
       "allowed": "Allowed",
       "denied": "Denied",
       "failed": "Failed"
     },
-    "refused": "{{count}} refused",
     "showPayload": "Show command",
     "guest": "guest",
     "title": "Audit",
     "trace": "Trace {{id}}",
     "emptyFor": "Nothing {{outcome}} has been recorded. That is the good outcome.",
-    "showEverything": "Show everything"
+    "showEverything": "Show everything",
+    "commands": {
+      "AddToCartCommand": "Add to cart",
+      "CancelCheckoutSessionCommand": "Cancel a checkout",
+      "ChangeAgentTrustCommand": "Change an agent's trust",
+      "ClaimCartCommand": "Keep a guest's cart on signing in",
+      "CompleteCheckoutSessionCommand": "Complete a checkout",
+      "CountStockCommand": "Count stock",
+      "DecideReturnCommand": "Decide a return",
+      "DefineVariantsCommand": "Define variants",
+      "ImportProductsCommand": "Import products",
+      "LinkIdentityCommand": "Link a sign-in to a customer",
+      "MoveOrderCommand": "Move an order along",
+      "OpenCheckoutSessionCommand": "Open a checkout",
+      "PaymentWebhookCommand": "Payment provider's notice",
+      "PlaceOrderCommand": "Place an order",
+      "ProposeClaimsCommand": "Propose claims from a description",
+      "PublishProductCommand": "Publish a product",
+      "RecordClaimApplicationCommand": "Apply an approved claim",
+      "RecordDescriptionCommand": "Record a description",
+      "RegisterAgentCommand": "Register an agent",
+      "ReindexProductsCommand": "Rebuild the search index",
+      "ReinstateAgentCommand": "Reinstate an agent",
+      "RequestReturnCommand": "Ask for a return",
+      "ReviewClaimCommand": "Decide a claim",
+      "SetCartLineCommand": "Change a cart line",
+      "SetProductAttributeCommand": "Set a product attribute",
+      "SuspendAgentCommand": "Suspend an agent",
+      "UpdateCheckoutSessionCommand": "Update a checkout",
+      "WithdrawProductCommand": "Take a product off sale"
+    }
   },
   "brand": {
     "area": "Backoffice",
@@ -462,7 +491,12 @@
       "openReturns": "Open",
       "returnRate": "Return rate",
       "refunded": "Refunded",
-      "byReason": "Open returns by reason"
+      "byReason": "Open returns by reason",
+      "standing": {
+        "within": "Within the {{target}} target",
+        "near": "Near the {{target}} target",
+        "outside": "Over the {{target}} target"
+      }
     },
     "funnel": {
       "title": "Checkout",

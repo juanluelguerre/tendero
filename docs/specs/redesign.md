@@ -364,6 +364,10 @@ Both are Seller Central's published account-health targets, borrowed until the
 shop has its own. Each figure shows as *within*, *near* or *outside* its target,
 as a word and a colour.
 
+*Built in R-4.5 for cancellations only.* The late-shipment rate needs the
+moment each order shipped, a status history the shop does not keep, so its
+target waits for that history rather than being computed from something else.
+
 **The rest, in passing:**
 - **Skeletons shaped like the content** replace *Loading…* (P8, B-F10). Every
   list and pane reserves its size, so nothing jumps (CLS).
