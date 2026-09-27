@@ -45,91 +45,95 @@
       </button>
     }
   } @else {
-    <table class="table">
-      <caption class="sr-only">{{ t('audit.title') }}</caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t('audit.column.when') }}</th>
-          <th scope="col">{{ t('audit.column.command') }}</th>
-          <th scope="col">{{ t('audit.column.who') }}</th>
-          <th scope="col">{{ t('audit.column.outcome') }}</th>
-          <th scope="col">{{ t('audit.column.reason') }}</th>
-          <th scope="col"><span class="sr-only">{{ t('audit.column.payload') }}</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (entry of entries(); track entry.id) {
-          <tr [class.row--refused]="entry.outcome !== 'allowed'">
-            <td class="numeric when">{{ when(entry.at) }}</td>
-            <td class="command">{{ entry.commandType }}</td>
-            <td class="who">
-              <!-- An agent is a principal, not a customer, and both travel: the
-                   question worth answering later is who acted AND on whose
-                   behalf. Agent-driven rows render in clay (design/DESIGN.md). -->
-              @if (entry.agentId) {
-                <span class="agent">{{ entry.agentId }}</span>
-              }
-
-              <!--
-                The NAME, with the subject under it and only when the two differ.
-                Keycloak signs an opaque UUID as the subject — as every real OIDC
-                provider does, because a subject must be stable and a username is
-                not — so this column used to read
-                `681c3d75-9cc6-437d-a9c2-98d1d41ecf36` and name nobody.
-
-                The subject stays visible because it is what correlates two rows,
-                and it is shortened for the same reason order ids are: the first
-                segment is enough to match against something you are already
-                looking at, and the whole value is one hover away.
-              -->
-              @let actor = actorOf(entry);
-              <span class="subject">{{ 'guest' in actor ? t('audit.guest') : actor.label }}</span>
-
-              <!--
-                Only when there IS a name and it differs. Rows written before
-                this column existed carry none, so they fall back to printing the
-                subject above — and repeating its first segment underneath was
-                the same value twice, which is exactly the noise this was meant
-                to remove.
-              -->
-              @if (entry.actorName && entry.subject && entry.subject !== entry.actorName) {
-                <span class="who__id" [title]="entry.subject">{{ short(entry.subject) }}</span>
-              }
-            </td>
-            <td>
-              <span
-                class="pill"
-                [class.pill--warning]="entry.outcome === 'denied'"
-                [class.pill--danger]="entry.outcome === 'failed'"
-              >
-                {{ t('audit.outcome.' + entry.outcome) }}
-              </span>
-            </td>
-            <td class="reason">{{ entry.reason }}</td>
-            <td class="numeric">
-              <button type="button" class="quiet" (click)="toggle(entry.id)">
-                {{ opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
-              </button>
-            </td>
+    <!-- In the frame every other table scrolls inside, with its cue: on a phone
+         it scrolled the whole page sideways by 520 px (R-1, B-F2). -->
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">{{ t('audit.title') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('audit.column.when') }}</th>
+            <th scope="col">{{ t('audit.column.command') }}</th>
+            <th scope="col">{{ t('audit.column.who') }}</th>
+            <th scope="col">{{ t('audit.column.outcome') }}</th>
+            <th scope="col">{{ t('audit.column.reason') }}</th>
+            <th scope="col"><span class="sr-only">{{ t('audit.column.payload') }}</span></th>
           </tr>
+        </thead>
+        <tbody>
+          @for (entry of entries(); track entry.id) {
+            <tr [class.row--refused]="entry.outcome !== 'allowed'">
+              <td class="numeric when">{{ when(entry.at) }}</td>
+              <td class="command">{{ entry.commandType }}</td>
+              <td class="who">
+                <!-- An agent is a principal, not a customer, and both travel: the
+                     question worth answering later is who acted AND on whose
+                     behalf. Agent-driven rows render in clay (design/DESIGN.md). -->
+                @if (entry.agentId) {
+                  <span class="agent">{{ entry.agentId }}</span>
+                }
 
-          @if (opened() === entry.id) {
-            <tr class="payload-row">
-              <td colspan="6">
-                <!-- The command as it was sent, with credentials replaced. The
-                     trace id is here rather than in a column because it is what
-                     you copy once you have already found the row. -->
-                <pre class="payload code">{{ pretty(entry.payload) }}</pre>
-                @if (entry.traceId) {
-                  <p class="trace muted code" [title]="entry.traceId">
-                    {{ t('audit.trace', { id: short(entry.traceId) }) }}
-                  </p>
+                <!--
+                  The NAME, with the subject under it and only when the two differ.
+                  Keycloak signs an opaque UUID as the subject — as every real OIDC
+                  provider does, because a subject must be stable and a username is
+                  not — so this column used to read
+                  `681c3d75-9cc6-437d-a9c2-98d1d41ecf36` and name nobody.
+
+                  The subject stays visible because it is what correlates two rows,
+                  and it is shortened for the same reason order ids are: the first
+                  segment is enough to match against something you are already
+                  looking at, and the whole value is one hover away.
+                -->
+                @let actor = actorOf(entry);
+                <span class="subject">{{ 'guest' in actor ? t('audit.guest') : actor.label }}</span>
+
+                <!--
+                  Only when there IS a name and it differs. Rows written before
+                  this column existed carry none, so they fall back to printing the
+                  subject above — and repeating its first segment underneath was
+                  the same value twice, which is exactly the noise this was meant
+                  to remove.
+                -->
+                @if (entry.actorName && entry.subject && entry.subject !== entry.actorName) {
+                  <span class="who__id" [title]="entry.subject">{{ short(entry.subject) }}</span>
                 }
               </td>
+              <td>
+                <span
+                  class="pill"
+                  [class.pill--warning]="entry.outcome === 'denied'"
+                  [class.pill--danger]="entry.outcome === 'failed'"
+                >
+                  {{ t('audit.outcome.' + entry.outcome) }}
+                </span>
+              </td>
+              <td class="reason">{{ entry.reason }}</td>
+              <td class="numeric">
+                <button type="button" class="quiet" (click)="toggle(entry.id)">
+                  {{ opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
+                </button>
+              </td>
             </tr>
+
+            @if (opened() === entry.id) {
+              <tr class="payload-row">
+                <td colspan="6">
+                  <!-- The command as it was sent, with credentials replaced. The
+                       trace id is here rather than in a column because it is what
+                       you copy once you have already found the row. -->
+                  <pre class="payload code">{{ pretty(entry.payload) }}</pre>
+                  @if (entry.traceId) {
+                    <p class="trace muted code" [title]="entry.traceId">
+                      {{ t('audit.trace', { id: short(entry.traceId) }) }}
+                    </p>
+                  }
+                </td>
+              </tr>
+            }
           }
-        }
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   }
 </ng-container>

@@ -43,6 +43,11 @@ export class BackofficeUsage {
     if (view) this.telemetry.trackEvent('backoffice_view_opened', { view });
   }
 
+  /** The theme a staff member chose in the account menu (R-3): does anybody change it? */
+  themeChosen(theme: TrackedEvents['backoffice_theme_chosen']['theme']): void {
+    this.telemetry.trackEvent('backoffice_theme_chosen', { theme });
+  }
+
   /**
    * Reports an action once, with how the server answered: pipe it onto the call
    * that does it, `this.catalog.publish(id).pipe(this.usage.reported('review', 'publish'))`.

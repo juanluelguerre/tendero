@@ -1,0 +1,48 @@
+<ng-container *transloco="let t">
+  @if (identity(); as who) {
+    <button type="button" class="trigger" popovertarget="account-menu" [attr.aria-label]="t('account.open', { name: who.name, role: who.role })">
+      <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+      <span class="tag tag--code">{{ who.role }}</span>
+      <backoffice-icon name="chevron" />
+    </button>
+
+    <div id="account-menu" class="menu" popover>
+      <p class="menu__who">
+        <strong>{{ who.name }}</strong>
+      </p>
+
+      <div class="menu__row">
+        <span class="menu__label" id="account-language">{{ t('nav.language') }}</span>
+        <div class="segmented" role="group" aria-labelledby="account-language">
+          @for (option of cultures; track option) {
+            <button type="button" class="segmented__option" [attr.aria-pressed]="option === culture()" (click)="use(option)">
+              {{ option }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="menu__row">
+        <span class="menu__label" id="account-theme">{{ t('account.theme') }}</span>
+        <div class="segmented" role="group" aria-labelledby="account-theme">
+          @for (choice of themes; track choice) {
+            <button
+              type="button"
+              class="segmented__option"
+              [attr.aria-pressed]="choice === themeChoice()"
+              [attr.aria-label]="t('account.themes.' + choice)"
+              [attr.title]="t('account.themes.' + choice)"
+              (click)="choose(choice)"
+            >
+              <backoffice-icon [name]="choice" />
+            </button>
+          }
+        </div>
+      </div>
+
+      <button type="button" class="button button--quiet menu__signout" (click)="signOut.emit()">
+        {{ t('signIn.signOut') }}
+      </button>
+    </div>
+  }
+</ng-container>

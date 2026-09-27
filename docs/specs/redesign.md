@@ -469,9 +469,10 @@ touching every new screen twice.*
 - **The storefront's images are the risk.** The illustrations were painted for a
   light page. On a dark one they must sit on the card's surface, not on the page,
   and the dark storefront is drawn in the mock-ups before it is built.
-- **Evidence of use:** `theme_chosen {app, theme}` in the tracking plan. It is
-  behavioural in the storefront, so it waits for consent, and a staff event in the
-  backoffice.
+- **Evidence of use:** two events, because a planned event has one kind of
+  consent. `backoffice_theme_chosen {theme}` is a staff event, built with R-4.1.
+  `theme_chosen {theme}` is behavioural, so it waits for consent, and arrives with
+  R-5.1.
   - It answers: does anybody change it?
   - It decides: if nobody does after a month, the switch goes and *system* stays.
 - **Built in** R-4.1 (the backoffice shell) and R-5.1 (the storefront header and

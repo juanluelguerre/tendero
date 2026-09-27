@@ -90,6 +90,17 @@ export interface TrackedEvents {
     /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
     readonly outcome: 'done' | 'refused' | 'failed';
   };
+
+  /**
+   * A staff member chose light, dark or the system's theme in the account menu (the redesign's R-3). A staff event under the shop's notice (ADR 0041), never with who they are.
+   *
+   * Theme choice: Does anybody change the theme from the system's, and to which?
+   * Decides: If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event.
+   */
+  readonly backoffice_theme_chosen: {
+    /** What was chosen, not what the system resolved it to. */
+    readonly theme: 'system' | 'light' | 'dark';
+  };
 }
 
 /**
@@ -106,4 +117,5 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   products_compared: 'behavioural',
   backoffice_view_opened: 'staff',
   backoffice_action_taken: 'staff',
+  backoffice_theme_chosen: 'staff',
 };

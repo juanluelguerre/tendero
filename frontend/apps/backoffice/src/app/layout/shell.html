@@ -1,106 +1,89 @@
 <ng-container *transloco="let t">
-  <header class="bar">
-    <div class="page-frame bar__inner">
-      <!-- See the storefront shell: the icon, not the lockup, because of the
-           typeface. It is 26 px here because the bar is dense by design. -->
-      <img
-        class="bar__mark"
-        src="brand/tendero-icon-backoffice.svg"
-        alt=""
-        aria-hidden="true"
-        width="26"
-        height="26"
-      />
-      <span class="bar__brand">{{ t('brand.name') }}</span>
-      <span class="bar__area eyebrow">{{ t('brand.area') }}</span>
+  @if (canUseBackoffice()) {
+    <!-- The rail (R-3, P1): the screens grouped by job, full on a wide screen,
+         icons on a tablet, and replaced by the drawer below on a phone. -->
+    <aside class="rail">
+      <a class="brand" routerLink="/dashboard">
+        <!-- See the storefront shell: the icon, not the lockup, because of the
+             typeface. -->
+        <img class="brand__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true" width="28" height="28" />
+        <span class="brand__name">{{ t('brand.name') }}</span>
+      </a>
+      <backoffice-nav />
+    </aside>
+  }
 
-      <!-- Same control as the storefront's, styled for a dense dark bar:
-           ADR 0010 shares the behaviour and not the component. -->
-      <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
-        @for (option of cultures; track option) {
-          <button
-            type="button"
-            class="lang"
-            [class.lang--active]="option === culture()"
-            [attr.aria-pressed]="option === culture()"
-            (click)="use(option)"
-          >
-            {{ option }}
-          </button>
-        }
-      </div>
-
-      @if (identity(); as who) {
-        <div class="who">
-          <span class="who__name">{{ who.name }}</span>
-          <span class="tag tag--code">{{ who.role }}</span>
-        </div>
-        <!-- Without this you cannot switch identity, and trying the roles
-             means clearing localStorage by hand. -->
-        <button class="button button--quiet" type="button" (click)="signOut()">
-          {{ t('signIn.signOut') }}
+  <div class="column">
+    <header class="bar">
+      @if (canUseBackoffice()) {
+        <button
+          type="button"
+          class="bar__menu"
+          aria-haspopup="dialog"
+          [attr.aria-label]="t('nav.menu')"
+          (click)="drawer.showModal()"
+        >
+          <backoffice-icon name="menu" />
         </button>
       }
-    </div>
-  </header>
 
-  @if (canUseBackoffice()) {
-    <nav class="tabs" [attr.aria-label]="t('brand.area')">
-      <div class="page-frame tabs__inner">
-        <a class="tab" routerLink="/dashboard" routerLinkActive="tab--active">
-          {{ t('nav.dashboard') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/review" routerLinkActive="tab--active">
-          {{ t('nav.reviewQueue') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/catalogue" routerLinkActive="tab--active">
-          {{ t('nav.catalogue') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/claims" routerLinkActive="tab--active">
-          {{ t('nav.claims') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/attributes" routerLinkActive="tab--active">
-          {{ t('nav.attributes') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/search" routerLinkActive="tab--active">
-          {{ t('nav.search') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/promotions" routerLinkActive="tab--active">
-          {{ t('nav.promotions') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/stock" routerLinkActive="tab--active">
-          {{ t('nav.stock') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/orders" routerLinkActive="tab--active">
-          {{ t('nav.orders') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/returns" routerLinkActive="tab--active">
-          {{ t('nav.returns') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/agents" routerLinkActive="tab--active">
-          {{ t('nav.agents') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-        <a class="tab" routerLink="/audit" routerLinkActive="tab--active">
-          {{ t('nav.audit') }}<hr class="awning awning-thin tab__mark" />
-        </a>
-      </div>
-    </nav>
-  }
+      <span class="bar__brand">
+        <img class="brand__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true" width="26" height="26" />
+        <span class="brand__name">{{ t('brand.name') }}</span>
+        <span class="bar__area eyebrow">{{ t('brand.area') }}</span>
+      </span>
 
-  @if (canUseBackoffice() && !staffUsage.noticeSeen()) {
-    <backoffice-staff-notice />
-  }
+      <span class="bar__spacer"></span>
 
-  <main class="page-frame main"><router-outlet /></main>
-
-  @if (canUseBackoffice()) {
-    <footer class="page-frame usage">
-      <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
-      @if (staffUsage.state() === 'on') {
-        <button type="button" class="linkish" (click)="staffUsage.switchOff()">{{ t('staffUsage.switchOff') }}</button>
+      @if (identity()) {
+        <backoffice-account-menu (signOut)="signOut()" />
       } @else {
-        <button type="button" class="linkish" (click)="staffUsage.switchOn()">{{ t('staffUsage.switchOn') }}</button>
+        <!-- Before signing in there is no account menu, and the door still has
+             to be readable in both languages. -->
+        <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
+          @for (option of cultures; track option) {
+            <button type="button" class="lang" [attr.aria-pressed]="option === culture()" (click)="use(option)">
+              {{ option }}
+            </button>
+          }
+        </div>
       }
-    </footer>
-  }
+    </header>
+
+    @if (canUseBackoffice() && !staffUsage.noticeSeen()) {
+      <!-- ADR 0041's notice stays at the top, where it cannot be missed, but in
+           the content's column and width (R-3). -->
+      <backoffice-staff-notice class="notice-slot" />
+    }
+
+    <main class="main"><router-outlet /></main>
+
+    @if (canUseBackoffice()) {
+      <footer class="usage">
+        <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
+        @if (staffUsage.state() === 'on') {
+          <button type="button" class="linkish" (click)="staffUsage.switchOff()">{{ t('staffUsage.switchOff') }}</button>
+        } @else {
+          <button type="button" class="linkish" (click)="staffUsage.switchOn()">{{ t('staffUsage.switchOn') }}</button>
+        }
+      </footer>
+    }
+  </div>
+
+  <!-- The phone's navigation: a modal dialog, so the platform traps focus,
+       closes on Esc and makes the page behind it inert. -->
+  <dialog #drawer class="drawer" [attr.aria-label]="t('nav.menu')">
+    @if (canUseBackoffice()) {
+      <div class="drawer__head">
+        <span class="bar__brand">
+          <img class="brand__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true" width="26" height="26" />
+          <span class="brand__name">{{ t('brand.name') }}</span>
+        </span>
+        <button type="button" class="bar__menu" [attr.aria-label]="t('nav.close')" (click)="drawer.close()">
+          <backoffice-icon name="close" />
+        </button>
+      </div>
+      <backoffice-nav [inDrawer]="true" (chosen)="drawer.close()" />
+    }
+  </dialog>
 </ng-container>

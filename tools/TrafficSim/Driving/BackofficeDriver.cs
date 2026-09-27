@@ -83,9 +83,10 @@ public sealed class BackofficeDriver(IBrowser browser, Uri backoffice, string us
             await page.GetByRole(AriaRole.Link, new() { Name = ShopkeeperName }).ClickAsync();
         }
 
-        // In when the bar offers a way out: a token exists only then.
-        var signOut = page.GetByRole(AriaRole.Banner).GetByRole(AriaRole.Button, new() { NameRegex = new Regex("sign out|cerrar sesión", RegexOptions.IgnoreCase) });
-        return await AppearsAsync(signOut);
+        // In when the bar offers the account menu: a token exists only then. It
+        // holds the way out since the redesign (R-3), so the menu is what shows.
+        var account = page.GetByRole(AriaRole.Banner).GetByRole(AriaRole.Button, new() { NameRegex = new Regex("^(account|cuenta):", RegexOptions.IgnoreCase) });
+        return await AppearsAsync(account);
     }
 
     private static async Task<int> MoveOrdersAsync(IPage page)

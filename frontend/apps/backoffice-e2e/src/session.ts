@@ -61,7 +61,8 @@ export async function signIn(
   //
   // It was intermittent against the development issuer, whose two hops are
   // fast, and reliable against Keycloak, whose form makes the window wide. The
-  // sign-out button only exists once a token does — the BAR's, because the door
-  // that turns a shopper away offers one of its own.
-  await expect(page.getByRole('banner').getByRole('button', { name: /sign out|cerrar sesión/i })).toBeVisible();
+  // account menu only exists once a token does — the BAR's, because the door
+  // that turns a shopper away offers a way out of its own. (It was the sign-out
+  // button until the redesign moved that into the menu, R-3.)
+  await expect(page.getByRole('banner').getByRole('button', { name: /^(account|cuenta):/i })).toBeVisible();
 }

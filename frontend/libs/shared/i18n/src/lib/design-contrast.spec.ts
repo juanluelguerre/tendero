@@ -192,7 +192,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    */
   const WORDMARKS = [
     ['storefront', 'frontend/apps/storefront/src/app/layout/shell.css', 'brand__wordmark'],
-    ['backoffice', 'frontend/apps/backoffice/src/app/layout/shell.css', 'bar__brand'],
+    ['backoffice', 'frontend/apps/backoffice/src/app/layout/shell.css', 'brand__name'],
   ] as const;
 
   it.each(WORDMARKS)(

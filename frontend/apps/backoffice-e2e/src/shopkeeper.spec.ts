@@ -66,10 +66,12 @@ test.describe('the backoffice', () => {
     await expect(page).toHaveURL(/\/sign-in(\?|$)/);
   });
 
-  test('signs a shopkeeper in and lands on the review queue', async ({ page }) => {
+  test('signs a shopkeeper in and lands on the dashboard', async ({ page }) => {
     await signIn(page);
 
-    await expect(page).toHaveURL(/\/review$/);
+    // The dashboard has been the backoffice's home since P11-7; this still said
+    // the review queue, and failed against every stack since.
+    await expect(page).toHaveURL(/\/dashboard$/);
 
     // Who is acting and under which role, because "why can I not publish?" is a
     // question the interface should answer before it is asked.
@@ -240,6 +242,9 @@ test.describe('the backoffice', () => {
   test('signing out sends you back to the door', async ({ page }) => {
     await signIn(page);
 
+    // Signing out lives in the account menu since the redesign (R-3), beside the
+    // language and the theme.
+    await page.getByRole('button', { name: /^(Account|Cuenta):/ }).click();
     await page.getByRole('button', { name: /Sign out|Cerrar sesión/ }).click();
 
     await expect(page).toHaveURL(/\/sign-in(\?|$)/);

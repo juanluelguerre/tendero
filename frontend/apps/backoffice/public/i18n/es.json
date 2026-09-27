@@ -58,19 +58,30 @@
     "title": "Catálogo"
   },
   "nav": {
-    "agents": "Agentes",
+    "agents": "Registro",
     "attributes": "Atributos",
     "audit": "Auditoría",
-    "catalogue": "Catálogo",
+    "catalogue": "Productos",
     "language": "Idioma",
     "orders": "Pedidos",
     "promotions": "Promociones",
     "returns": "Devoluciones",
     "reviewQueue": "Cola de revisión",
-    "search": "Evaluación de búsqueda",
+    "search": "Calidad de búsqueda",
     "stock": "Stock",
     "claims": "Afirmaciones",
-    "dashboard": "Panel"
+    "dashboard": "Panel",
+    "groups": {
+      "home": "Inicio",
+      "catalogue": "Catálogo",
+      "sales": "Ventas",
+      "stock": "Stock",
+      "agents": "Agentes",
+      "insight": "Análisis"
+    },
+    "menu": "Menú",
+    "close": "Cerrar menú",
+    "waiting": "{{count}} pendientes"
   },
   "orders": {
     "captured": "Cobrado",
@@ -474,6 +485,15 @@
     "footer": {
       "on": "Se mide el uso del backoffice, sin decir quién.",
       "off": "No se mide el uso del backoffice en este navegador."
+    }
+  },
+  "account": {
+    "open": "Cuenta: {{name}}, {{role}}",
+    "theme": "Tema",
+    "themes": {
+      "system": "Como el sistema",
+      "light": "Claro",
+      "dark": "Oscuro"
     }
   }
 }
