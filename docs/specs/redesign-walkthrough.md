@@ -23,6 +23,18 @@ less clean than having a moderator, and the article says so.
 
 ## Before the session
 
+0. **The interface under test.** The baseline runs on the interface as it was
+   before R-4, tagged `redesign/before`, so R-4 can be built without waiting for
+   the sessions. From the repository:
+
+   ```bash
+   git worktree add ../tendero-before redesign/before
+   cd ../tendero-before && dotnet run --project src/AppHost
+   ```
+
+   Stop the main checkout's stack first: both use the same ports. R-6's round
+   runs on the redesigned interface.
+
 1. **The shop.** Start the stack (`dotnet run --project src/AppHost`), start
    `traffic-sim` from the Aspire dashboard for a few minutes so there are orders,
    returns and claims to work on, and **stop it**: its shopkeeper publishes every
