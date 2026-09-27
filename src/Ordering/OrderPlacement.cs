@@ -1,0 +1,253 @@
+using System.Diagnostics;
+using ElGuerre.Tendero.Ordering.Contracts;
+using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.Ordering.Ports;
+using ElGuerre.Tendero.SharedKernel;
+using Microsoft.Extensions.Options;
+
+namespace ElGuerre.Tendero.Ordering;
+
+public enum PlaceOrderOutcome
+{
+    Placed,
+
+    /// <summary>The same idempotency key already bought something. The existing
+    /// order comes back, and nothing happens twice.</summary>
+    AlreadyPlaced,
+
+    NothingToShip,
+
+    /// <summary>The chosen option is not one this destination is offered. Almost
+    /// always a stale screen, and never something to charge for.</summary>
+    UnknownShippingOption,
+
+    /// <summary>Some SKU stopped being on sale between the cart and the till.</summary>
+    UnknownSkus,
+
+    /// <summary>
+    /// The price is not what the shopper was shown. The **new** quote comes back
+    /// so the screen can say what changed and ask them to confirm, which is the
+    /// whole reason a quote carries a fingerprint.
+    /// </summary>
+    PriceChanged,
+
+    PaymentDeclined,
+
+    /// <summary>The provider could not be reached. Retryable with the same key,
+    /// and a different answer from a decline.</summary>
+    PaymentUnavailable
+}
+
+public sealed record PlaceOrderResult(
+    PlaceOrderOutcome Outcome,
+    Order? Order,
+    CartPricing? Pricing,
+    string? Detail) : IAuditedResult
+{
+    /// <summary>A declined card is the shop saying no, which is a denial; a
+    /// provider that did not answer is a fault. Each refusal carries its words,
+    /// or its name when it has none.</summary>
+    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
+    {
+        PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced => AuditOutcome.Allowed,
+        PlaceOrderOutcome.PaymentUnavailable => AuditOutcome.Failed,
+        PlaceOrderOutcome.NothingToShip or PlaceOrderOutcome.UnknownShippingOption or
+            PlaceOrderOutcome.UnknownSkus or PlaceOrderOutcome.PriceChanged or
+            PlaceOrderOutcome.PaymentDeclined => AuditOutcome.Denied
+    };
+
+    string? IAuditedResult.AuditReason =>
+        Outcome is PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced ? null : Detail ?? Outcome.ToString();
+}
+
+/// <summary>Everything placing an order needs beyond the cart: where, how, at what price, paid how, and under which key.</summary>
+public sealed record PlacementRequest(
+    Address ShippingAddress,
+    Address? BillingAddress,
+    string ShippingOptionCode,
+    string? ExpectedQuoteHash,
+    string Instrument,
+    string IdempotencyKey,
+    IReadOnlyList<string> Coupons,
+    string Culture);
+
+/// <summary>
+/// The moment the shop commits, shared by every way into it: the storefront's
+/// checkout and UCP's (P11-1). Not a slice — two slices place orders, and shared
+/// behaviour goes down or out rather than across (invariant 2), the same call
+/// <see cref="OrderAccess"/> makes.
+///
+/// Six things happen and the order matters. The shipping option is rated by the
+/// call that offered it; the quote is recomputed and its fingerprint compared
+/// (ADR 0016); the money is authorised **before the order exists** (ADR 0025); the
+/// order is placed with everything frozen onto it; the cart is closed; and all of
+/// it commits in one transaction with the events that drive the rest.
+/// </summary>
+public sealed class OrderPlacement(
+    IOrderRepository orders,
+    ICartPricer pricer,
+    IShippingRateProviderRegistry shipping,
+    IPaymentProviderRegistry payments,
+    IPrincipalAccessor principal,
+    IUnitOfWork unitOfWork,
+    IOptions<CheckoutOptions> options,
+    TimeProvider clock)
+{
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
+
+    /// <summary>
+    /// What it costs to get this cart to that address — shared with placing, so
+    /// the option a shopper picked is priced by exactly the call that offered it.
+    ///
+    /// The subtotal is the raw line total and not the discounted one, which is a
+    /// simplification worth naming: "free over 50 €" is measured before
+    /// promotions, so a coupon cannot buy free shipping by accident.
+    /// </summary>
+    public async Task<IReadOnlyList<ShippingOption>> RateAsync(Cart cart, Address destination, CancellationToken cancellationToken)
+    {
+        var provider = shipping.Get(options.Value.ShippingProvider);
+
+        return await provider.QuoteAsync(
+            new ShippingQuoteRequest(
+                destination,
+                [.. cart.Lines.Select(line => new ShippableLine(line.Sku, line.Quantity))],
+                // The cart holds no money (ADR 0016), so the only subtotal
+                // available without a second pricing call is a count-based
+                // stand-in. It is zero, deliberately: a free-shipping threshold
+                // that fired on a number nobody computed would be worse than one
+                // that never fires.
+                Money.Zero(cart.Currency)),
+            cancellationToken);
+    }
+
+    /// <summary>An order already placed under this key: with agents, a retry is the normal case rather than the rare one.</summary>
+    public Task<Order?> AlreadyPlacedAsync(string idempotencyKey, CancellationToken cancellationToken) =>
+        orders.FindByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
+
+    /// <summary>Places the order for an open, non-empty cart. The caller finds the cart and checks the key first.</summary>
+    public async Task<PlaceOrderResult> PlaceAsync(
+        Cart cart, PlacementRequest request, OrderMode mode, CancellationToken cancellationToken)
+    {
+        var activity = Activity.Current;
+
+        // 1 · Shipping, from the same call that offered the options.
+        var rates = await RateAsync(cart, request.ShippingAddress, cancellationToken);
+
+        var option = rates.FirstOrDefault(rate =>
+            string.Equals(rate.Code, request.ShippingOptionCode, StringComparison.OrdinalIgnoreCase));
+
+        if (option is null)
+            return Refuse(activity, PlaceOrderOutcome.UnknownShippingOption, request.ShippingOptionCode);
+
+        // 2 · The price, recomputed by the engine that issued the quote.
+        var pricing = await pricer.QuoteAsync(
+            cart.PricingLines(), request.Culture, option.Amount, request.Coupons, cancellationToken);
+
+        if (pricing.Outcome != PricingOutcome.Quoted)
+            return Refuse(activity, PlaceOrderOutcome.UnknownSkus, string.Join(", ", pricing.Offending));
+
+        // 3 · Is it still what the shopper was shown? A missing expectation is
+        // treated as a mismatch rather than waved through: an agent that does
+        // not send the hash has not agreed to a price.
+        if (!string.Equals(pricing.InputHash, request.ExpectedQuoteHash, StringComparison.Ordinal))
+        {
+            activity?.SetTag("checkout.outcome", "price_changed");
+            return new PlaceOrderResult(PlaceOrderOutcome.PriceChanged, null, pricing, pricing.InputHash);
+        }
+
+        // 4 · The money. Nothing has been written yet, so a decline costs
+        // nothing: no order, no reservation, an untouched cart. The id minted here
+        // is the order's own, so the provider's record and the order name the
+        // same order (ADR 0038's consequence).
+        var provider = payments.Get(options.Value.ProviderFor(mode));
+        var orderId = OrderId.New();
+
+        var authorization = await provider.AuthorizeAsync(
+            new PaymentRequest(
+                orderId,
+                pricing.Totals.Total,
+                request.IdempotencyKey,
+                request.Instrument,
+                $"Tendero {orderId}"),
+            cancellationToken);
+
+        if (!authorization.Succeeded)
+        {
+            activity?.SetTag("checkout.outcome", authorization.Outcome.ToString());
+
+            return new PlaceOrderResult(
+                authorization.Outcome == PaymentOutcome.Declined
+                    ? PlaceOrderOutcome.PaymentDeclined
+                    : PlaceOrderOutcome.PaymentUnavailable,
+                null, pricing, authorization.DeclineReason);
+        }
+
+        // 5 · Who is buying. Guests are first class, so a customer id is MINTED
+        // here when nobody signed in — an order always has a buyer, even an
+        // anonymous one. It is written back onto the cart so the two agree.
+        var customer = principal.Current.Customer ?? cart.CustomerId ?? CustomerId.New();
+
+        if (cart.CustomerId is null)
+            cart.Claim(clock, customer);
+
+        var unitPrices = pricing.Lines.ToDictionary(
+            line => line.Sku, line => line.UnitPrice, StringComparer.OrdinalIgnoreCase);
+
+        // The order speaks the language the shopper checked out in, not the one
+        // the cart happened to be started in.
+        cart.UseCulture(clock, request.Culture);
+
+        var order = Order.Place(
+            clock,
+            customer,
+            request.IdempotencyKey,
+            [
+                .. cart.Lines.Select(line => new OrderLine(
+                    line.ProductId,
+                    line.VariantId,
+                    line.Sku,
+                    // Resolved once, here, and frozen: the order keeps one
+                    // language because it is a record of one purchase.
+                    line.ProductName.In(cart.Culture),
+                    line.VariantLabel?.In(cart.Culture),
+                    line.ImageId,
+                    // The price pricing just quoted, not one the cart carried:
+                    // the cart carries none, on purpose.
+                    unitPrices[line.Sku],
+                    line.Quantity))
+            ],
+            request.ShippingAddress,
+            // Billing defaults to shipping and is still its OWN copy: "the same
+            // today" is not "the same forever".
+            request.BillingAddress ?? request.ShippingAddress,
+            new OrderShipping(option.Code, option.Label.In(cart.Culture), option.Amount, option.EstimatedDays),
+            pricing.AsOrderQuote(),
+            pricing.Totals,
+            pricing.Discounts,
+            pricing.Taxes,
+            cart.Culture,
+            mode,
+            orderId);
+
+        order.AuthorizePayment(clock, new OrderPayment(provider.Key, authorization.AuthorizationId!, null));
+        orders.Add(order);
+
+        // 6 · The cart is done. `OrderPlaced` is the fact the rest of the system
+        // reacts to, and everything commits together — the outbox's whole
+        // correctness argument.
+        cart.MarkCheckedOut(clock);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        activity?.SetTag("checkout.outcome", "placed");
+        activity?.SetTag("order.id", order.Id.ToString());
+        activity?.SetTag("order.total", order.Total.Amount);
+
+        return new PlaceOrderResult(PlaceOrderOutcome.Placed, order, pricing, null);
+    }
+
+    private static PlaceOrderResult Refuse(Activity? activity, PlaceOrderOutcome outcome, string? detail)
+    {
+        activity?.SetTag("checkout.outcome", outcome.ToString());
+        return new PlaceOrderResult(outcome, null, null, detail);
+    }
+}

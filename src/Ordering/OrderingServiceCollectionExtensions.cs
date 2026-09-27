@@ -69,6 +69,7 @@ public static class OrderingServiceCollectionExtensions
         // Who may reach an order through its id. Scoped, because the principal
         // it asks about is the request's.
         services.AddScoped<OrderAccess>();
+        services.AddScoped<OrderPlacement>();
 
         // The fake is resolvable unkeyed too, because the webhook demo has to be
         // able to SIGN a payload and only the concrete type can do that. A real
