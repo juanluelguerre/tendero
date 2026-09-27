@@ -2015,6 +2015,7 @@ export interface operations {
                 culture?: string;
                 page?: number;
                 pageSize?: number;
+                q?: string;
             };
             header?: never;
             path?: never;

@@ -28,7 +28,11 @@ public sealed record ProductPage(IReadOnlyList<Product> Items, int Total);
 /// </summary>
 public interface IProductCatalogReader
 {
-    Task<ProductPage> ListAsync(ProductStatus? status, int page, int pageSize, CancellationToken ct);
+    /// <summary>
+    /// A page of products, narrowed by status and by text (the redesign's R-4.6):
+    /// the text matches any part of the name in any culture, or the code.
+    /// </summary>
+    Task<ProductPage> ListAsync(ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct);
 
     /// <summary>
     /// The product a URL names, by its public code.

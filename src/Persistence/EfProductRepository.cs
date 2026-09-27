@@ -19,12 +19,35 @@ internal sealed class EfProductRepository(TenderoDbContext context)
     // whole filter and not to the page, because a review queue needs to say how
     // many are left. Counting in SQL avoids pulling the catalogue in to discard it.
     public async Task<ProductPage> ListAsync(
-        ProductStatus? status, int page, int pageSize, CancellationToken ct)
+        ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct)
     {
         var query = context.Products.AsNoTracking();
 
         if (status is not null)
             query = query.Where(product => product.Status == status);
+
+        if (text?.Trim() is { Length: > 0 } typed)
+        {
+            // The name is jsonb behind a converter, so LINQ cannot reach inside
+            // it. SQL can, over the VALUES only: `name::text` would also match
+            // the keys, and typing "es" would find every product. Every culture
+            // at once, which is what somebody typing a Spanish or an English name
+            // wants. The ids that match are a subquery EF composes into this one
+            // statement (`WHERE p.id IN (SELECT …)`); a FromSql over the whole
+            // entity is what EF 11's preview cannot compose with its JSON
+            // columns. The interpolated values are parameters, not text.
+            //
+            // A sequential scan, and fine for a laboratory's hundred products;
+            // the full catalogue wants a trigram index (the standing backlog).
+            var pattern = $"%{Escaped(typed)}%";
+            var matching = context.Database.SqlQuery<Guid>(
+                $"""
+                SELECT p.id AS "Value" FROM catalog.products AS p
+                WHERE p.code ILIKE {pattern} ESCAPE '\'
+                   OR EXISTS (SELECT 1 FROM jsonb_each_text(p.name) AS n WHERE n.value ILIKE {pattern} ESCAPE '\')
+                """);
+            query = query.Where(product => matching.Contains((Guid)(object)product.Id));
+        }
 
         var total = await query.CountAsync(ct);
 
@@ -39,6 +62,10 @@ internal sealed class EfProductRepository(TenderoDbContext context)
 
         return new ProductPage(items, total);
     }
+
+    /// <summary>What was typed, matched as typed: a % or _ in it is a character, not a wildcard.</summary>
+    private static string Escaped(string text) =>
+        text.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
 
     /// <summary>
     /// The product a URL names.

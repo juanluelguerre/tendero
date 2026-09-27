@@ -326,6 +326,13 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
