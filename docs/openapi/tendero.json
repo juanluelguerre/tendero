@@ -542,6 +542,127 @@
         }
       }
     },
+    "/api/knowledge/claims": {
+      "get": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ListClaimsForReview",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimForReview"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/claims/{id}/approve": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ApproveClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/knowledge/claims/{id}/reject": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "RejectClaim",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewClaimConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orders/{orderId}/returns": {
       "post": {
         "tags": [
@@ -1944,6 +2065,71 @@
           }
         }
       },
+      "ClaimForReview": {
+        "required": [
+          "claimId",
+          "productId",
+          "statementSpanish",
+          "statementEnglish",
+          "attributeCode",
+          "value",
+          "support",
+          "quotes",
+          "extractor",
+          "model",
+          "proposedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "statementSpanish": {
+            "type": "string"
+          },
+          "statementEnglish": {
+            "type": "string"
+          },
+          "attributeCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "support": {
+            "type": "number",
+            "format": "double"
+          },
+          "quotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteForReview"
+            }
+          },
+          "extractor": {
+            "type": "string"
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proposedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "CountStockRequest": {
         "required": [
           "onHand"
@@ -3186,6 +3372,36 @@
           }
         }
       },
+      "QuoteForReview": {
+        "required": [
+          "culture",
+          "text",
+          "start",
+          "end",
+          "support"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "start": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "end": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "support": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "QuoteLineRequest": {
         "required": [
           "sku",
@@ -3529,6 +3745,36 @@
           "quantity": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ReviewClaimConflict": {
+        "required": [
+          "title",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "ReviewClaimResponse": {
+        "required": [
+          "claimId",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
           }
         }
       },
@@ -4059,6 +4305,9 @@
     },
     {
       "name": "Inventory"
+    },
+    {
+      "name": "Knowledge"
     },
     {
       "name": "Ordering"

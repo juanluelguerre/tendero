@@ -244,6 +244,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/knowledge/claims": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListClaimsForReview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge/claims/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApproveClaim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/knowledge/claims/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RejectClaim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{orderId}/returns": {
         parameters: {
             query?: never;
@@ -689,6 +737,21 @@ export interface components {
             /** Format: int32 */
             depth: number;
         };
+        ClaimForReview: {
+            claimId: string;
+            productId: string;
+            statementSpanish: string;
+            statementEnglish: string;
+            attributeCode: null | string;
+            value: null | string;
+            /** Format: double */
+            support: number;
+            quotes: components["schemas"]["QuoteForReview"][];
+            extractor: string;
+            model: null | string;
+            /** Format: date-time */
+            proposedAt: string;
+        };
         CountStockRequest: {
             /** Format: int32 */
             onHand: number;
@@ -997,6 +1060,16 @@ export interface components {
             shipping?: null | number;
             coupons?: null | string[];
         };
+        QuoteForReview: {
+            culture: string;
+            text: string;
+            /** Format: int32 */
+            start: number;
+            /** Format: int32 */
+            end: number;
+            /** Format: double */
+            support: number;
+        };
         QuoteLineRequest: {
             sku: string;
             /** Format: int32 */
@@ -1095,6 +1168,14 @@ export interface components {
             sku: string;
             /** Format: int32 */
             quantity: number;
+        };
+        ReviewClaimConflict: {
+            title: string;
+            detail: string;
+        };
+        ReviewClaimResponse: {
+            claimId: string;
+            outcome: string;
         };
         SearchAnswer: {
             match: components["schemas"]["SearchMatch"];
@@ -1633,6 +1714,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    ListClaimsForReview: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimForReview"][];
+                };
+            };
+        };
+    };
+    ApproveClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewClaimResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewClaimConflict"];
+                };
+            };
+        };
+    };
+    RejectClaim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewClaimResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewClaimConflict"];
                 };
             };
         };

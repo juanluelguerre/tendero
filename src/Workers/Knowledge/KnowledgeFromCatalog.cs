@@ -1,9 +1,6 @@
 using System.Diagnostics.Metrics;
 using ElGuerre.Tendero.Catalog.Domain;
-using ElGuerre.Tendero.Catalog.Ports;
-using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
-using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.SharedKernel;
 
@@ -60,33 +57,6 @@ public sealed partial class RecordDescriptionOnProductUpserted(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Could not record the description of product {ProductId} for claims; its next save will")]
     private static partial void LogFailed(ILogger logger, Exception exception, ProductId productId);
-}
-
-/// <summary>
-/// Catalog's attribute definitions as the specs a claim may be typed with.
-/// The variant axes and the size range come from the import and the variants,
-/// not from a description, and are left out — as they were in P10-0's golden set.
-/// </summary>
-public sealed class CatalogAttributeVocabulary(IAttributeDefinitionReader definitions) : IAttributeVocabulary
-{
-    private static readonly HashSet<string> NotFromText = new(StringComparer.OrdinalIgnoreCase) { "SIZE_RANGE" };
-
-    public async Task<IReadOnlyList<AttributeSpec>> CurrentAsync(CancellationToken cancellationToken = default)
-    {
-        var all = await definitions.AllAsync(cancellationToken);
-        return
-        [
-            .. all.All
-                .Where(definition => !definition.IsVariantAxis && !NotFromText.Contains(definition.Code))
-                .Select(definition => new AttributeSpec(
-                    definition.Code,
-                    definition.Kind.ToString(),
-                    definition.Unit,
-                    definition.Label.In("en"),
-                    [.. definition.Options.Select(option => option.Code)],
-                    definition.Label.In("es"))),
-        ];
-    }
 }
 
 /// <summary>

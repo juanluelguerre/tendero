@@ -18,6 +18,11 @@ public interface IKnowledgeRepository
     /// <summary>Products whose current Spanish description is waiting for claims, oldest first.</summary>
     Task<IReadOnlyList<ProductId>> WaitingAsync(int limit, CancellationToken cancellationToken = default);
 
+    Task<ProductClaim?> FindClaimAsync(ClaimId id, CancellationToken cancellationToken = default);
+
+    /// <summary>Claims in one status, the weakest-supported first — the order a reviewer should read them in (ADR 0018, 5).</summary>
+    Task<IReadOnlyList<ProductClaim>> ClaimsAsync(ClaimStatus status, int limit, CancellationToken cancellationToken = default);
+
     void Add(SourceDocument document);
 
     void Add(ProductClaim claim);

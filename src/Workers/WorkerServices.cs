@@ -2,7 +2,6 @@ using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
-using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.StockSaga;
 using ElGuerre.Tendero.Persistence;
@@ -77,7 +76,6 @@ public static class WorkerServices
 
         // The claims layer (ADR 0018): the rules always, the models when the AppHost started them.
         builder.Services.AddKnowledge(builder.Configuration);
-        builder.Services.AddScoped<IAttributeVocabulary, CatalogAttributeVocabulary>();
 
         // Inside the worker the actor is the system, and this is the
         // implementation `IPrincipalAccessor` documented and nobody had

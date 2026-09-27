@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-18 features: **14** answered by a signal emitted today,
+19 features: **15** answered by a signal emitted today,
 **0** by a signal planned, and **4** with no signal, each saying why.
 
 ### Storefront
@@ -37,6 +37,7 @@ everything here that is not *planned* is emitted.
 | Catalogue import | Does an import bring products in? | None beyond the run itself. | — An import is an operator's batch, answered by its own result and its span; a counter would say what the result already says. | none |
 | Back-office administration | Are the orders, returns, promotions, attributes, variants, stock and audit screens used? | None at three roles and a handful of users. | — Every write they make is already an audit row with its actor (ListAuditEntries): that is their evidence, and a metric would count the same thing twice. | none |
 | Claims from descriptions | How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it? | A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it. | `tendero.knowledge.claims.proposed`, `tendero.knowledge.claims.dropped`, `tendero.knowledge.proposals.failed`, `tendero.knowledge.descriptions.failed` | emitted |
+| Claim review | Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones? | A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. | `tendero.knowledge.claims.reviewed` | emitted |
 
 ### Agents
 
@@ -262,3 +263,15 @@ Answers:
 - **Claims from descriptions** — How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it?
 
 No attributes.
+
+### `tendero.knowledge.claims.reviewed`
+
+counter, unit `{claim}`. Claims a person approved or rejected, by decision.
+
+Answers:
+
+- **Claim review** — Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `decision` | string | `approve`, `reject` | ReviewDecision, labelled by MetricLabels. |

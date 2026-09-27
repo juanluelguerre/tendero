@@ -7,6 +7,8 @@ using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.DevIssuer;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Inventory.Features.ListStock;
+using ElGuerre.Tendero.Knowledge;
+using ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
 using ElGuerre.Tendero.Mcp;
 using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.Checkout;
@@ -33,7 +35,8 @@ builder.Services.AddTenderoCqrs(
     typeof(QuoteCartQuery).Assembly,
     typeof(ListStockQuery).Assembly,
     typeof(PlaceOrderCommand).Assembly,
-    typeof(LinkIdentityCommand).Assembly);
+    typeof(LinkIdentityCommand).Assembly,
+    typeof(ReviewClaimsEndpoints).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -88,6 +91,10 @@ builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
 // `ICatalogSourceRegistry`, into a captive dependency, and the API stopped
 // starting in Development with "Cannot consume scoped service … from singleton".
 // A mechanism nobody uses should not be able to bring the process down.
+// The claims layer's review side (P10-5). Its models are handed only to the
+// worker; here, with no address for them, Knowledge registers the rules alone.
+builder.Services.AddKnowledge(builder.Configuration);
+
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 
 // The document is the API's shape, and from it come the frontend's types

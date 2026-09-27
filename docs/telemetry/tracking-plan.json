@@ -164,6 +164,15 @@
         "tendero.knowledge.proposals.failed",
         "tendero.knowledge.descriptions.failed"
       ]
+    },
+    {
+      "name": "Claim review",
+      "area": "backoffice",
+      "question": "Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones?",
+      "decision": "A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read.",
+      "signals": [
+        "tendero.knowledge.claims.reviewed"
+      ]
     }
   ],
   "events": [
@@ -482,6 +491,23 @@
       "unit": "{change}",
       "description": "Product changes whose description Knowledge could not record; the next save records it.",
       "attributes": {}
+    },
+    {
+      "name": "tendero.knowledge.claims.reviewed",
+      "instrument": "counter",
+      "unit": "{claim}",
+      "description": "Claims a person approved or rejected, by decision.",
+      "attributes": {
+        "decision": {
+          "type": "string",
+          "values": [
+            "approve",
+            "reject"
+          ],
+          "description": "ReviewDecision, labelled by MetricLabels.",
+          "from": "ReviewDecision"
+        }
+      }
     }
   ]
 }

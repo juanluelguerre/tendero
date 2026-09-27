@@ -46,6 +46,22 @@ internal sealed class EfKnowledgeRepository(TenderoDbContext context) : IKnowled
             .Take(limit)
             .ToListAsync(cancellationToken);
 
+    public Task<ProductClaim?> FindClaimAsync(ClaimId id, CancellationToken cancellationToken = default) =>
+        context.Claims.FirstOrDefaultAsync(claim => claim.Id == id, cancellationToken);
+
+    /// <summary>
+    /// The weakest first. Support lives in the evidence's jsonb, so the order is
+    /// taken here over a status's claims — a review queue, never a catalogue.
+    /// </summary>
+    public async Task<IReadOnlyList<ProductClaim>> ClaimsAsync(ClaimStatus status, int limit, CancellationToken cancellationToken = default)
+    {
+        var claims = await context.Claims.AsNoTracking()
+            .Where(claim => claim.Status == status)
+            .ToListAsync(cancellationToken);
+
+        return [.. claims.OrderBy(claim => claim.Support).ThenBy(claim => claim.CreatedAt).Take(limit)];
+    }
+
     public void Add(SourceDocument document) => context.SourceDocuments.Add(document);
 
     public void Add(ProductClaim claim) => context.Claims.Add(claim);
