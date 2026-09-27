@@ -116,6 +116,19 @@ accessible name, inputs without a label, touch targets under 24 px (WCAG 2.2
 still to do: the accessibility checker is open question 1. Severity follows
 Nielsen's scale: 4 is a catastrophe, 3 major, 2 minor, 1 cosmetic.*
 
+**Contrast, measured (2026-09-27, decision 1-A).** Every visible text on every route
+of both apps was checked at 360, 768 and 1440 px with WCAG's own formula (4.5:1,
+3:1 for large text), composited over its real background: **no failure in either
+app**. The tokens were built with their ratios written beside them, and this is
+that care showing. The check lives in `libs/shared/a11y`, is held to known pairs
+in its spec, and was proven to catch grey on white before its zero was believed.
+Both end-to-end suites now hold the interface to R-1 as a **ratchet**
+(`accessibility-baseline.json`): 147 backoffice findings (124 small targets, 23
+overflows, which are B-F1, B-F2 and B-F8) and 12 storefront ones (small targets,
+S-F4). A new finding fails the run, and a fixed one is reported so the baseline
+shrinks as R-4 works through it. Keyboard paths and focus order are still the
+by-hand half.
+
 **What is already right, and stays.** Every page has exactly one `h1`. The machine
 found no image without `alt`, no control without a name and no input without a
 label, in either app. No storefront page scrolls sideways at any width. The
