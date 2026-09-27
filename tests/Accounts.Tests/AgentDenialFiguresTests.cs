@@ -21,6 +21,9 @@ public sealed class AgentDenialFiguresTests
     [InlineData("agent_refused: orders_per_hour: 10 orders in the last hour, the most is 10", "orders_per_hour", "10 orders in the last hour, the most is 10")]
     [InlineData("mandate_scope_mismatch: approved 49.85 EUR, now 54.80 EUR", "mandate_scope_mismatch", "approved 49.85 EUR, now 54.80 EUR")]
     [InlineData("NotFound", "NotFound", null)]
+    [InlineData("agent_refused", "agent_refused", null)]
+    [InlineData("agent_refused: orders_per_hour", "orders_per_hour", null)]
+    [InlineData("mandate_scope_mismatch: approved: 49.85 EUR", "mandate_scope_mismatch", "approved: 49.85 EUR")]
     [InlineData(null, "denied", null)]
     public void A_denial_is_counted_under_the_rule_that_said_no(string? audited, string reason, string? detail) =>
         Assert.Equal((reason, detail), AgentDenialFigures.ReasonOf(audited));
@@ -39,5 +42,20 @@ public sealed class AgentDenialFiguresTests
         Assert.Equal([new DenialCount("order_over_trust_cap", 2), new DenialCount("mandate_expired", 1)], summary.ByReason);
         Assert.Equal([new AgentDenialCount("claude-desktop", 2), new AgentDenialCount("other", 1)], summary.ByAgent);
         Assert.Equal(("other", "CompleteCheckoutSession", "mandate_expired"), (summary.Recent[0].AgentId, summary.Recent[0].Command, summary.Recent[0].Reason));
+    }
+
+    /// <summary>Ties are ordered by name, so two equal counts never swap between two reads of the same audit.</summary>
+    [Fact]
+    public void Equal_counts_are_ordered_by_name_and_a_type_that_is_not_a_command_keeps_its_name()
+    {
+        var summary = AgentDenialFigures.Summarise(DashboardPeriod.Day,
+        [
+            Denied("zeta", "orders_per_hour: x", 3) with { CommandType = "ElGuerre.Tendero.Something.PlaceThing" },
+            Denied("alpha", "agent_suspended: y", 2),
+        ]);
+
+        Assert.Equal(["agent_suspended", "orders_per_hour"], summary.ByReason.Select(reason => reason.Reason));
+        Assert.Equal(["alpha", "zeta"], summary.ByAgent.Select(agent => agent.AgentId));
+        Assert.Equal("PlaceThing", summary.Recent[1].Command);
     }
 }
