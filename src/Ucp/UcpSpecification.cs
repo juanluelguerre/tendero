@@ -12,13 +12,23 @@ namespace ElGuerre.Tendero.Ucp;
 ///
 /// **No conformance is claimed.** What is asserted here is that the profile has
 /// the shape the specification describes for the capabilities Tendero actually
-/// serves — read from the specification on 2026-09-08 — and nothing about
+/// serves — read from the specification on 2026-09-08, and moved on 2026-09-27
+/// from `2026-04-08` to the release the vendored schemas actually are (see below)
+/// — and nothing about
 /// passing anybody's certification, which does not exist to pass yet.
 /// </summary>
 public static class UcpSpecification
 {
-    /// <summary>The specification version, which is a date in YYYY-MM-DD.</summary>
-    public const string Version = "2026-04-08";
+    /// <summary>
+    /// The specification version, which is a date in YYYY-MM-DD. It said
+    /// <c>2026-04-08</c> until phase 11, while every answer was validated against
+    /// schemas vendored from a later commit — which turned out to be byte for byte
+    /// the <c>v2026-08-25</c> release (110 schema files changed between the two
+    /// releases, none between that release and the vendored commit). A shop that
+    /// claims one version and conforms to another is wrong in the one place an
+    /// agent reads first.
+    /// </summary>
+    public const string Version = "2026-08-25";
 
     /// <summary>Where a human reads what this document means.</summary>
     public const string BaseUrl = $"https://ucp.dev/{Version}/specification";

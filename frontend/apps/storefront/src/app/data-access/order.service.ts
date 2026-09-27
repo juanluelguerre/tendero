@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type {
+  CheckoutHandOff,
   OrderDetail,
   OrderView,
   PlaceOrderRequest,
@@ -44,6 +45,17 @@ export class OrderService {
   }
 
   /** The order and the returns opened against it — one page, one call. */
+  /**
+   * The cart an agent's checkout handed to a person (UCP's requires_escalation,
+   * P11-1). The session id in the link is the credential; a 404 means the
+   * checkout was completed, canceled or expired.
+   */
+  handOff(sessionId: string): Promise<CheckoutHandOff> {
+    return firstValueFrom(
+      this.http.get<CheckoutHandOff>(`${this.baseUrl}/api/checkout-sessions/${encodeURIComponent(sessionId)}/handoff`),
+    );
+  }
+
   get(orderId: string, culture: string): Promise<OrderDetail> {
     return firstValueFrom(
       this.http.get<OrderDetail>(`${this.baseUrl}/api/orders/${encodeURIComponent(orderId)}`, {

@@ -60,7 +60,10 @@ public static class PersistenceServiceCollectionExtensions
 
         services.AddScoped<IOrderRepository, EfOrderRepository>();
         services.AddScoped<IOrderReader, EfOrderReader>();
+        services.AddScoped<IAgentActivity, EfAgentActivity>();
+        services.AddScoped<IShopHistory, EfShopHistory>();
         services.AddScoped<ICartRepository, EfCartRepository>();
+        services.AddScoped<ICheckoutSessionRepository, EfCheckoutSessionRepository>();
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();
         services.AddScoped<IKnowledgeRepository, EfKnowledgeRepository>();
         services.AddScoped<IAttributeVocabulary, CatalogAttributeVocabulary>();
@@ -80,11 +83,16 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<EfAuditWriter>();
         services.AddScoped<IAuditWriter>(services => services.GetRequiredService<EfAuditWriter>());
         services.AddScoped<IAuditReader>(services => services.GetRequiredService<EfAuditWriter>());
+        services.AddScoped<IAgentDenialHistory>(services => services.GetRequiredService<EfAuditWriter>());
 
         // One adapter, two Accounts ports, one instance per scope.
         services.AddScoped<EfCustomerRepository>();
         services.AddScoped<ICustomerRepository>(services => services.GetRequiredService<EfCustomerRepository>());
         services.AddScoped<ICustomerDirectory>(services => services.GetRequiredService<EfCustomerRepository>());
+
+        services.AddScoped<EfAgentRepository>();
+        services.AddScoped<IAgentRepository>(services => services.GetRequiredService<EfAgentRepository>());
+        services.AddScoped<IAgentDirectory>(services => services.GetRequiredService<EfAgentRepository>());
 
         return services;
     }

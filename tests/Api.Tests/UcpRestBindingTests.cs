@@ -43,7 +43,7 @@ public sealed class UcpRestBindingTests
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct)).RootElement;
 
         UcpSchemas.Validate(LookupResponse, body, "A REST lookup answer");
-        Assert.Equal("2026-04-08", body.GetProperty("ucp").GetProperty("version").GetString());
+        Assert.Equal("2026-08-25", body.GetProperty("ucp").GetProperty("version").GetString());
     }
 
     /// <summary>

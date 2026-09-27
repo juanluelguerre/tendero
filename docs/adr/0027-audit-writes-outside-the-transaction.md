@@ -85,5 +85,5 @@ composition failure.
 
 - ADR 0024 — the outbox is the process manager. The audit log deliberately does
   **not** use it: durability there buys nothing a reader would notice.
-- ADR 0022 (reserved) — an agent is a principal, not a customer. The entry
+- [ADR 0022](0022-an-agent-is-a-principal-not-a-customer.md) — an agent is a principal, not a customer. The entry
   carries both, which is what makes "who acted, and on whose behalf" answerable.

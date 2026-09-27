@@ -11,8 +11,8 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-21 features: **17** answered by a signal emitted today,
-**0** by a signal planned, and **4** with no signal, each saying why.
+25 features: **20** answered by a signal emitted today,
+**0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
 
@@ -40,6 +40,8 @@ everything here that is not *planned* is emitted.
 | Claims from descriptions | How much of what a product's description states reaches the shopkeeper as a claim worth reviewing — and what is refused before they see it? | A rising refusal rate for one reason points at one fix: not in the text is the prompt or the model, wrong language is the quantization (P10-0), a failed run is the model server. A queue that keeps failing on a product stops spending the model on it. | `tendero.knowledge.claims.proposed`, `tendero.knowledge.claims.dropped`, `tendero.knowledge.proposals.failed`, `tendero.knowledge.descriptions.failed` | emitted |
 | Claim review | Does the shopkeeper accept what the extractor proposes — and does reviewing the weakest first find the wrong ones? | A falling approval rate means the extractor proposes what the shop would not say: revisit the prompt, the model or its settings before the queue stops being read. | `tendero.knowledge.claims.reviewed` | emitted |
 | Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
+| Agent registry | Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered? | A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet. | `tendero.checkout.attempts` | emitted |
+| Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
 
 ### Agents
 
@@ -47,6 +49,8 @@ everything here that is not *planned* is emitted.
 |---|---|---|---|---|
 | WebMCP | Do browser agents use the shop's WebMCP tools, which ones, and do they succeed? | Which tools to keep, extend or drop; a high share of refusals means a tool's contract is wrong for an agent. | `webmcp_tool_invoked` | emitted |
 | MCP server and UCP catalogue | Do external agents call the catalogue over MCP and UCP, which tools, and how often are they refused? | Whether the agent checkout of phase 11 has agents waiting for it, and which binding to build it on first. | `tendero.agent.tool_calls` | emitted |
+| Test orders | Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock? | Rehearsals that are placed but never ended mean the saga stopped short and stock is held for nobody: fix the drain before anything else. Agents that go live without ever rehearsing are the ones whose first failures a customer pays for: make the test credential part of onboarding an agent (P11-3). | `tendero.checkout.attempts`, `tendero.orders.test_ended` | emitted |
+| Agent rules | How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust? | Refusals of known or verified agents by the cap mean the caps are too tight for the agents the shop wants: raise them. Refusals of untrusted agents are the rules working — and a rise in orders_per_hour from one trust level is the signal to look at who is looping. No refusals at all for a month means the rules are not earning their place in checkout's path. | `tendero.agents.denials`, `tendero.checkout.attempts` | emitted |
 
 ### Platform
 
@@ -188,13 +192,41 @@ Answers:
 - **Cart** — How many carts never become an order, and whose?
 - **Promotions** — What share of orders carries a discount?
 - **Checkout and payment** — Why does a checkout fail to become an order: a stale screen, a changed price, a declined card, or a provider that did not answer?
+- **Test orders** — Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock?
+- **Agent registry** — Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered?
+- **Agent rules** — How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `actor.kind` | string | `human`, `agent` | Agent for MCP and UCP, and for a principal carrying an agent id; human otherwise (ADR 0036). |
 | `surface` | string | `web`, `mcp`, `ucp` | The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`. |
-| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable` | PlaceOrderOutcome, labelled by MetricLabels. |
+| `order.mode` | string | `live`, `test` | Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own. |
+| `agent.trust` | string | `none`, `untrusted`, `known`, `verified` | How far the shop trusts the agent behind the attempt (P11-2): none for a person, untrusted for an agent nobody registered. |
+| `outcome` | string | `placed`, `already_placed`, `nothing_to_ship`, `unknown_shipping_option`, `unknown_skus`, `price_changed`, `payment_declined`, `payment_unavailable`, `not_mandated`, `agent_refused` | PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve. |
 | `discounted` | boolean | — | Whether any promotion applied to the order. |
+
+### `tendero.agents.denials`
+
+counter, unit `{denial}`. Agent orders the shop's own rules refused (P11-6), by rule and by how far the shop trusts the agent.
+
+Answers:
+
+- **Agent rules** — How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `rule` | string | `agent_suspended`, `order_over_trust_cap`, `orders_per_hour` | The first rule in the table that denied. |
+| `agent.trust` | string | `untrusted`, `known`, `verified` | The agent's standing in the registry; untrusted for one nobody registered. |
+
+### `tendero.orders.test_ended`
+
+counter, unit `{order}`. Test orders that went all the way to confirmed and ended there, their stock given back.
+
+Answers:
+
+- **Test orders** — Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock?
+
+No attributes.
 
 ### `tendero.returns.requested`
 

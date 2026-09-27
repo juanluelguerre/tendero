@@ -122,7 +122,7 @@ public static class UcpCatalogMapper
                     Alt = image.Alt
                 })];
 
-    private static string ImageUrl(string imageId, string baseUrl) =>
+    internal static string ImageUrl(string imageId, string baseUrl) =>
         $"{baseUrl.TrimEnd('/')}/api/images/{imageId}";
 
     /// <summary>

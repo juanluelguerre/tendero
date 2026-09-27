@@ -40,7 +40,10 @@ public interface IUcpCapability
     ///
     /// It is the protocol's URL and not one of ours. Declaring a schema of our
     /// own here would be saying "I speak a contract I wrote", which is the
-    /// opposite of what a manifest is for.
+    /// opposite of what a manifest is for — **except for an extension that is
+    /// ours** (<c>com.elguerre.tendero.*</c>, P11-8): its contract IS one we wrote,
+    /// so it names a path on this shop, which the documents resolve against the
+    /// shop's own address (<see cref="UcpCapabilities.Absolute"/>).
     /// </summary>
     string Schema { get; }
 
@@ -53,4 +56,16 @@ public interface IUcpCapability
     /// dispatcher can actually run.
     /// </summary>
     IReadOnlyList<Type> Slices { get; }
+
+    /// <summary>
+    /// The capability this one extends, for an extension such as fulfillment or
+    /// discount; null for a root capability.
+    /// </summary>
+    string? Extends => null;
+
+    /// <summary>
+    /// What the capability's own schema lets a business configure — AP2's mandate
+    /// extension names the credential formats it verifies — or null for none.
+    /// </summary>
+    IReadOnlyDictionary<string, object>? Config => null;
 }

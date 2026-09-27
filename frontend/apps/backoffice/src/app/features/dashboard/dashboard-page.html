@@ -1,0 +1,29 @@
+<section *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('dashboard.title') }}</h1>
+    <div class="page-actions">
+      <div class="periods" role="group" [attr.aria-label]="t('dashboard.period.label')">
+        @for (option of periods; track option) {
+          <button
+            type="button"
+            class="button button--small button--quiet period"
+            [class.period--active]="option === period()"
+            [attr.aria-pressed]="option === period()"
+            (click)="period.set(option)"
+          >
+            {{ t('dashboard.period.' + option) }}
+          </button>
+        }
+      </div>
+    </div>
+  </header>
+  <p class="page-hint">{{ t('dashboard.hint') }}</p>
+
+  <div class="grid">
+    <backoffice-sales-widget class="grid__wide" [period]="period()" />
+    <backoffice-tasks-widget />
+    <backoffice-operations-widget [period]="period()" />
+    <backoffice-funnel-widget [period]="period()" />
+    <backoffice-agents-widget class="grid__wide" [period]="period()" />
+  </div>
+</section>

@@ -43,6 +43,13 @@ public readonly record struct CartId(Guid Value)
     public override string ToString() => Value.ToString();
 }
 
+/// <summary>A UCP checkout session's identity (P11-1): what an agent names a session by on every call after the first.</summary>
+public readonly record struct CheckoutSessionId(Guid Value)
+{
+    public static CheckoutSessionId New() => new(Guid.CreateVersion7());
+    public override string ToString() => Value.ToString();
+}
+
 /// <summary>A return request's identity. Returns are their own aggregate because
 /// they are per LINE, which an order-level state machine cannot express without
 /// a combinatorial explosion.</summary>

@@ -66,6 +66,17 @@ public sealed record OrderQuote(string QuoteId, string InputHash, DateTimeOffset
 /// `fake` authorisation through `stripe-mock` is the class of mistake that only
 /// shows up in production.
 /// </summary>
+/// <summary>
+/// The mandate an order was placed under (P11-5), frozen as values: what kind, who
+/// signed it, which approval, how much it approved and until when. Never resolved
+/// again — the evidence is what was verified at the till.
+/// </summary>
+public sealed record OrderMandate(string Kind, string Issuer, string Reference, decimal ApprovedTotal, string Currency, DateTimeOffset? ExpiresAt)
+{
+    public static OrderMandate From(MandateScope scope) =>
+        new(scope.Kind, scope.Issuer, scope.Reference, scope.ApprovedTotal.Amount, scope.ApprovedTotal.Currency, scope.ExpiresAt);
+}
+
 public sealed record OrderPayment(string Provider, string AuthorizationId, string? CaptureId)
 {
     public OrderPayment Captured(string captureId) => this with { CaptureId = captureId };

@@ -192,6 +192,43 @@
       "signals": [
         "tendero.knowledge.claims.applied"
       ]
+    },
+    {
+      "name": "Test orders",
+      "area": "agents",
+      "question": "Do agents rehearse checkouts before they buy for real, and does every rehearsal end — none left holding stock?",
+      "decision": "Rehearsals that are placed but never ended mean the saga stopped short and stock is held for nobody: fix the drain before anything else. Agents that go live without ever rehearsing are the ones whose first failures a customer pays for: make the test credential part of onboarding an agent (P11-3).",
+      "signals": [
+        "tendero.checkout.attempts",
+        "tendero.orders.test_ended"
+      ]
+    },
+    {
+      "name": "Agent registry",
+      "area": "backoffice",
+      "question": "Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered?",
+      "decision": "A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet.",
+      "signals": [
+        "tendero.checkout.attempts"
+      ]
+    },
+    {
+      "name": "Shopkeeper dashboard",
+      "area": "backoffice",
+      "question": "Does the shopkeeper start the day on the dashboard, and over which period do they read it?",
+      "decision": "If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records.",
+      "signals": [],
+      "gap": "Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time."
+    },
+    {
+      "name": "Agent rules",
+      "area": "agents",
+      "question": "How often do the shop's own rules for agents refuse an order, which rule, and against agents of what trust?",
+      "decision": "Refusals of known or verified agents by the cap mean the caps are too tight for the agents the shop wants: raise them. Refusals of untrusted agents are the rules working — and a rise in orders_per_hour from one trust level is the signal to look at who is looping. No refusals at all for a month means the rules are not earning their place in checkout's path.",
+      "signals": [
+        "tendero.agents.denials",
+        "tendero.checkout.attempts"
+      ]
     }
   ],
   "events": [
@@ -383,6 +420,25 @@
           ],
           "description": "The route the request came through. WebMCP inherits the shopper's session, so to the server it is the web; its evidence is `webmcp_tool_invoked`."
         },
+        "order.mode": {
+          "type": "string",
+          "values": [
+            "live",
+            "test"
+          ],
+          "description": "Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own.",
+          "from": "OrderMode"
+        },
+        "agent.trust": {
+          "type": "string",
+          "values": [
+            "none",
+            "untrusted",
+            "known",
+            "verified"
+          ],
+          "description": "How far the shop trusts the agent behind the attempt (P11-2): none for a person, untrusted for an agent nobody registered."
+        },
         "outcome": {
           "type": "string",
           "values": [
@@ -393,9 +449,11 @@
             "unknown_skus",
             "price_changed",
             "payment_declined",
-            "payment_unavailable"
+            "payment_unavailable",
+            "not_mandated",
+            "agent_refused"
           ],
-          "description": "PlaceOrderOutcome, labelled by MetricLabels.",
+          "description": "PlaceOrderOutcome, labelled by MetricLabels. not_mandated (P11-5): an agent's total outside what its verified mandate approved — how often agents try to spend what the person did not approve.",
           "from": "PlaceOrderOutcome"
         },
         "discounted": {
@@ -403,6 +461,39 @@
           "description": "Whether any promotion applied to the order."
         }
       }
+    },
+    {
+      "name": "tendero.agents.denials",
+      "instrument": "counter",
+      "unit": "{denial}",
+      "description": "Agent orders the shop's own rules refused (P11-6), by rule and by how far the shop trusts the agent.",
+      "attributes": {
+        "rule": {
+          "type": "string",
+          "values": [
+            "agent_suspended",
+            "order_over_trust_cap",
+            "orders_per_hour"
+          ],
+          "description": "The first rule in the table that denied."
+        },
+        "agent.trust": {
+          "type": "string",
+          "values": [
+            "untrusted",
+            "known",
+            "verified"
+          ],
+          "description": "The agent's standing in the registry; untrusted for one nobody registered."
+        }
+      }
+    },
+    {
+      "name": "tendero.orders.test_ended",
+      "instrument": "counter",
+      "unit": "{order}",
+      "description": "Test orders that went all the way to confirmed and ended there, their stock given back.",
+      "attributes": {}
     },
     {
       "name": "tendero.returns.requested",

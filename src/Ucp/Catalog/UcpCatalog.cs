@@ -230,6 +230,11 @@ public sealed record UcpProduct
     [JsonPropertyName("variants")]
     public required IReadOnlyList<UcpVariant> Variants { get; init; }
 
+    /// <summary>The shop's own extension (P11-8): present only when <c>com.elguerre.tendero.knowledge</c> was negotiated.</summary>
+    [JsonPropertyName("knowledge")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public UcpKnowledge? Knowledge { get; init; }
+
     [JsonPropertyName("tags")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyList<string>? Tags { get; init; }
@@ -301,6 +306,15 @@ public sealed record UcpEnvelope
 {
     [JsonPropertyName("version")]
     public required string Version { get; init; }
+
+    /// <summary>
+    /// The extensions active in this answer, when any was negotiated — only the
+    /// shop's knowledge extension, today. Absent otherwise: the catalogue answers
+    /// anonymously and names nothing it did not add.
+    /// </summary>
+    [JsonPropertyName("capabilities")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyDictionary<string, IReadOnlyList<Checkout.UcpVersionOnly>>? Capabilities { get; init; }
 }
 
 public sealed record UcpCatalogPage

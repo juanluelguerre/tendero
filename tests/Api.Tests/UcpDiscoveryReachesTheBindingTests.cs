@@ -66,7 +66,7 @@ public sealed class UcpDiscoveryReachesTheBindingTests
         response.EnsureSuccessStatusCode();
 
         var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct)).RootElement;
-        Assert.Equal("2026-04-08", body.GetProperty("ucp").GetProperty("version").GetString());
+        Assert.Equal("2026-08-25", body.GetProperty("ucp").GetProperty("version").GetString());
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public sealed class UcpDiscoveryReachesTheBindingTests
 
         // The UCP one carries the protocol envelope where the binding says it must.
         Assert.True(ucp.TryGetProperty("structuredContent", out var structured));
-        Assert.Equal("2026-04-08", structured.GetProperty("ucp").GetProperty("version").GetString());
+        Assert.Equal("2026-08-25", structured.GetProperty("ucp").GetProperty("version").GetString());
 
         // The shop's own carries the shop's own answer, and no UCP envelope —
         // it is not pretending to be UCP, which is the honest half.

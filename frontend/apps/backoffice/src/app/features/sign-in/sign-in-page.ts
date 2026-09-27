@@ -62,12 +62,12 @@ export class SignInPage {
   protected readonly issuer = this.auth.issuer();
 
   /**
-   * Where the guard was taking them, or the review queue when they came to the
-   * door directly. Never this page: signing in and landing back on the sign-in
+   * Where the guard was taking them, or the dashboard — the backoffice's home
+   * since P11-7 — when they came to the door directly. Never this page: signing in and landing back on the sign-in
    * screen is the shape of a login loop, and it is what happened before the
    * guard started saying where it had intercepted somebody.
    */
-  private readonly returnTo = this.route.snapshot.queryParamMap.get('returnTo') ?? '/review';
+  private readonly returnTo = this.route.snapshot.queryParamMap.get('returnTo') ?? '/dashboard';
 
   protected signIn(): void {
     this.auth.signIn(this.returnTo);

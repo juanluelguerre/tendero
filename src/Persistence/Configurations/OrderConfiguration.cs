@@ -25,6 +25,21 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        // Live unless the credential that placed it was a test one (ADR 0038).
+        // Every order before the column existed was live, hence the default.
+        builder.Property(o => o.ContactEmail).HasMaxLength(320);
+
+        // Counted per agent over the last hour by the shop's own rules (P11-6),
+        // hence the index that starts with it.
+        builder.Property(o => o.PlacedBy).HasMaxLength(100);
+        builder.HasIndex(o => new { o.PlacedBy, o.CreatedAt });
+
+        builder.Property(o => o.Mode)
+            .HasConversion<string>()
+            .HasMaxLength(10)
+            .HasDefaultValue(OrderMode.Live)
+            .HasSentinel((OrderMode)(-1));
+
         builder.Property(o => o.CreatedAt);
         builder.Property(o => o.UpdatedAt);
 
@@ -98,6 +113,10 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         // a shopkeeper filters "cancelled for stock", ADR 0008's criterion sends
         // the code to a column of its own — and only the code.
         builder.ComplexProperty(o => o.Stop, stop => stop.ToJson("stop"));
+
+        // Null for every order no mandate stood behind; jsonb like the payment,
+        // read with the order and never queried on its own (P11-5).
+        builder.ComplexProperty(o => o.Mandate, mandate => mandate.ToJson("mandate"));
 
         builder.Ignore(o => o.LinesTotal);
         builder.Ignore(o => o.Total);

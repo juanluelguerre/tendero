@@ -22,6 +22,7 @@ using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Ucp;
 using ElGuerre.Tendero.Ucp.Catalog;
+using ElGuerre.Tendero.Ucp.Checkout;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -72,6 +73,10 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration["Authentication:Authority"] ??=
         $"http://localhost:{builder.Configuration["ASPNETCORE_HTTP_PORT"] ?? "5130"}/dev-issuer";
     builder.Configuration["Authentication:AllowHttpMetadata"] ??= "true";
+
+    // The seeded agents' platform profiles are published by this process in
+    // Development (P11-1), so negotiation fetches from localhost and nowhere else.
+    builder.Configuration["Ucp:TrustedPlatformHosts:0"] ??= "localhost";
 }
 
 builder.Services.AddTenderoAuthentication(builder.Configuration);
@@ -110,6 +115,9 @@ builder.Services.AddOpenApi(options =>
 // project implements no handler of its own.
 builder.Services.AddTenderoMcp();
 
+// UCP's transactional half: its options and the negotiation port (P11-1).
+builder.Services.AddTenderoUcp(builder.Configuration);
+
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
 builder.Services.AddExceptionHandler<SearchUnavailableExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -141,6 +149,12 @@ app.MapTenderoUcp();
 // And UCP's REST binding, the second transport of the same capability. Its paths
 // are the specification's; only the `/ucp` prefix is ours.
 app.MapUcpCatalogRest();
+
+// And checkout's REST binding (P11-1): the same prefix, an agent's only.
+app.MapUcpCheckoutRest();
+
+if (app.Environment.IsDevelopment())
+    app.MapDevelopmentPlatformProfiles();
 
 app.Run();
 

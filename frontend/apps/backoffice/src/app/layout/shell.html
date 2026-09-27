@@ -47,6 +47,9 @@
   @if (canUseBackoffice()) {
     <nav class="tabs" [attr.aria-label]="t('brand.area')">
       <div class="page-frame tabs__inner">
+        <a class="tab" routerLink="/dashboard" routerLinkActive="tab--active">
+          {{ t('nav.dashboard') }}<hr class="awning awning-thin tab__mark" />
+        </a>
         <a class="tab" routerLink="/review" routerLinkActive="tab--active">
           {{ t('nav.reviewQueue') }}<hr class="awning awning-thin tab__mark" />
         </a>
@@ -73,6 +76,9 @@
         </a>
         <a class="tab" routerLink="/returns" routerLinkActive="tab--active">
           {{ t('nav.returns') }}<hr class="awning awning-thin tab__mark" />
+        </a>
+        <a class="tab" routerLink="/agents" routerLinkActive="tab--active">
+          {{ t('nav.agents') }}<hr class="awning awning-thin tab__mark" />
         </a>
         <a class="tab" routerLink="/audit" routerLinkActive="tab--active">
           {{ t('nav.audit') }}<hr class="awning awning-thin tab__mark" />

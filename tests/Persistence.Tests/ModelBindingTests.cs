@@ -62,4 +62,29 @@ public sealed class ModelBindingTests
 
         Assert.Empty(unbound);
     }
+
+    /// <summary>
+    /// A configuration written and never registered does not fail: EF maps the
+    /// entity by convention instead, in the public schema, with enums as integers
+    /// and every string unbounded — and a migration generated from that looks
+    /// entirely reasonable. It happened to the agent registry (P11-2): the context
+    /// applies configurations one by one, and the new one was not on the list. So
+    /// every configuration in the assembly must be one the model applied, and the
+    /// sign is the one thing a convention never produces: a schema.
+    /// </summary>
+    [Fact]
+    public void Every_entity_configuration_in_the_assembly_is_applied()
+    {
+        var configured = typeof(TenderoDbContext).Assembly.GetTypes()
+            .SelectMany(type => type.GetInterfaces())
+            .Where(contract => contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>))
+            .Select(contract => contract.GetGenericArguments()[0])
+            .Distinct()
+            .ToList();
+
+        Assert.NotEmpty(configured);
+        Assert.All(configured, entity =>
+            Assert.False(string.IsNullOrEmpty(Model.FindEntityType(entity)?.GetSchema()),
+                $"{entity.Name} has a configuration the context never applied — it is mapped by convention."));
+    }
 }

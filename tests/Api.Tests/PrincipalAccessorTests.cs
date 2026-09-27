@@ -77,6 +77,61 @@ public sealed class PrincipalAccessorTests
         Assert.Equal(new AgentId("claude-desktop"), principal.Agent);
     }
 
+    /// <summary>
+    /// A test credential is the issuer's signed statement, like the agent id
+    /// (ADR 0038): only the exact claim makes one, and its absence — every real
+    /// credential — is a live one.
+    /// </summary>
+    [Theory]
+    [InlineData("test", true)]
+    [InlineData("TEST", false)]
+    [InlineData("live", false)]
+    [InlineData(null, false)]
+    public void Only_a_signed_test_mode_makes_a_test_credential(string? mode, bool test)
+    {
+        Claim[] claims = mode is null
+            ? [new Claim("sub", "claude-desktop"), new Claim("agent_id", "claude-desktop")]
+            : [new Claim("sub", "claude-desktop"), new Claim("agent_id", "claude-desktop"), new Claim("tendero_mode", mode)];
+
+        Assert.Equal(test, Resolve(SignedIn(claims), new FakeDirectory()).IsTest);
+    }
+
+    /// <summary>
+    /// Know Your Agent (P11-2): what the shop thinks of an agent travels with it —
+    /// its trust and whether it is suspended — and an agent nobody registered is
+    /// unknown, not absent. A person has no standing to carry.
+    /// </summary>
+    [Fact]
+    public void An_agent_carries_its_standing_and_an_unregistered_one_is_unknown()
+    {
+        var agents = new FakeAgents(("claude-desktop", new AgentStanding(AgentTrust.Verified, Suspended: true)));
+        ClaimsPrincipal Agent(string id) => SignedIn(new Claim("sub", id), new Claim("agent_id", id));
+
+        Assert.Equal(new AgentStanding(AgentTrust.Verified, true), Resolve(Agent("claude-desktop"), new FakeDirectory(), agents).Standing);
+        Assert.Equal(AgentStanding.Unknown, Resolve(Agent("stranger"), new FakeDirectory(), agents).Standing);
+        Assert.Null(Resolve(SignedIn(new Claim("sub", "marta")), new FakeDirectory(), agents).Standing);
+    }
+
+    /// <summary>
+    /// A token acting for a person (RFC 8693, P11-3) as Keycloak's delegation issues
+    /// it: no `agent_id`, the agent in `act.sub`. The person is the subject and the
+    /// agent is still named — the pair an order placed for somebody needs.
+    /// </summary>
+    [Theory]
+    [InlineData("{\"sub\":\"claude-desktop\"}", "claude-desktop")]
+    [InlineData("{\"client_id\":\"x\"}", null)]
+    [InlineData("not json", null)]
+    [InlineData("[\"claude-desktop\"]", null)]
+    public void An_actor_claim_names_the_agent_acting_for_the_subject(string act, string? agent)
+    {
+        var principal = Resolve(
+            SignedIn(new Claim("sub", "ana"), new Claim("act", act, "JSON")),
+            new FakeDirectory());
+
+        Assert.Equal(agent, principal.Agent?.Value);
+        Assert.Equal("ana", principal.Subject);
+    }
+
     [Fact]
     public void A_person_is_not_an_agent()
     {
@@ -164,7 +219,7 @@ public sealed class PrincipalAccessorTests
     {
         var directory = new FakeDirectory(("marta", new KnownCustomer(CustomerId.New(), "retail")));
 
-        using var factory = FactoryWith(directory);
+        using var factory = FactoryWith(directory, new FakeAgents());
         using var scope = factory.Services.CreateScope();
         SetUser(scope, SignedIn(new Claim("sub", "marta")));
 
@@ -178,9 +233,9 @@ public sealed class PrincipalAccessorTests
 
     // ---------- Plumbing ----------
 
-    private static CommercePrincipal Resolve(ClaimsPrincipal user, FakeDirectory directory)
+    private static CommercePrincipal Resolve(ClaimsPrincipal user, FakeDirectory directory, FakeAgents? agents = null)
     {
-        using var factory = FactoryWith(directory);
+        using var factory = FactoryWith(directory, agents ?? new FakeAgents());
         using var scope = factory.Services.CreateScope();
         SetUser(scope, user);
 
@@ -188,10 +243,13 @@ public sealed class PrincipalAccessorTests
     }
 
     private static WebApplicationFactory<Program> FactoryWith(
-        FakeDirectory directory) =>
+        FakeDirectory directory, FakeAgents agents) =>
         new TenderoApiFactory().WithWebHostBuilder(builder =>
             builder.ConfigureTestServices(services =>
-                services.AddScoped<ICustomerDirectory>(_ => directory)));
+            {
+                services.AddScoped<ICustomerDirectory>(_ => directory);
+                services.AddScoped<IAgentDirectory>(_ => agents);
+            }));
 
     private static void SetUser(IServiceScope scope, ClaimsPrincipal user) =>
         scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext =
@@ -199,6 +257,12 @@ public sealed class PrincipalAccessorTests
 
     private static ClaimsPrincipal SignedIn(params Claim[] claims) =>
         new(new ClaimsIdentity(claims, authenticationType: "test"));
+
+    private sealed class FakeAgents(params (string Agent, AgentStanding Standing)[] registered) : IAgentDirectory
+    {
+        public Task<AgentStanding?> StandingOfAsync(AgentId id, CancellationToken ct = default) =>
+            Task.FromResult(registered.Where(entry => entry.Agent == id.Value).Select(entry => (AgentStanding?)entry.Standing).FirstOrDefault());
+    }
 
     private sealed class FakeDirectory(params (string Subject, KnownCustomer Customer)[] customers)
         : ICustomerDirectory

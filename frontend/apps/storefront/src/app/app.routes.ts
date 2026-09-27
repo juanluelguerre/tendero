@@ -45,6 +45,13 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/compare/compare-page').then((m) => m.ComparePage),
   },
   {
+    // An agent's checkout that needs a person (UCP's requires_escalation): the
+    // link it gives them lands here, takes over the cart and goes to checkout.
+    path: 'checkout/continue/:sessionId',
+    title: 'checkout.title',
+    loadComponent: () => import('./features/checkout/continue-checkout-page').then((m) => m.ContinueCheckoutPage),
+  },
+  {
     path: 'account',
     title: 'account.title',
     loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),

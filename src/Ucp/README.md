@@ -26,12 +26,21 @@ to carry `payment_handlers`, so omitting it makes the document invalid rather
 than modest. An empty map does not advertise a checkout — it says this shop
 settles no payments over UCP, which is exactly true until phase 11.
 
-`keys` stays absent, because that one really is optional and there is nothing to
-publish until something is signed.
+**Our own extension**, `com.elguerre.tendero.knowledge` (P11-8), extends catalogue
+lookup with a product's specs, their sources and the evidence behind them — the
+project's differentiator carried by the protocol's own mechanism. Its schema is
+ours, embedded under `Schemas/` and served at `/ucp/schemas/`; a capability of ours
+names a path on the shop, resolved against the shop's address in every document.
+
+`keys` stayed absent until something was signed. Since P11-4 it holds the shop's
+public key (ADR 0040): `ap2.merchant_authorization` on every checkout, once AP2 is
+negotiated, is verified with it — by the platform before it shows the checkout,
+and by the shop when the checkout comes back inside a mandate. `Signing/` holds JCS,
+JWS and JWK; `Ap2/` holds SD-JWT, the mandate verifiers and the development platform.
 
 ## The version is pinned, and no conformance is claimed
 
-`2026-04-08`, read from [the specification](https://ucp.dev/2026-04-08/specification/overview/)
+`2026-08-25` (claimed as `2026-04-08` until 2026-09-27, when the vendored schemas turned out to be the later release), read from [the specification](https://ucp.dev/2026-08-25/specification/overview/)
 on 2026-09-08. UCP versions are dates; a shop advertising "whatever the latest
 is" would be promising a document nobody has read it against, so moving that
 string is a deliberate act with a diff.

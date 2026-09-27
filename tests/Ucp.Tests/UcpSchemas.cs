@@ -17,6 +17,16 @@ namespace ElGuerre.Tendero.Tests.Ucp;
 /// </summary>
 internal static class UcpSchemas
 {
+    /// <summary>
+    /// Every class that validates against the schemas runs in this one collection,
+    /// never two at once. JsonSchema.Net's global registry is written while a schema
+    /// is evaluated, not only while it is loaded, and a full run failed a handful of
+    /// validations with "could not resolve pagination.json" twice in phase 11 — once
+    /// on 2026-09-27 and once at the phase's close — and never in isolation. Serialising
+    /// the classes that share the registry costs a second and removes the race.
+    /// </summary>
+    public const string Collection = "UCP schemas";
+
     private static readonly Lazy<int> Registered = new(Load);
 
     /// <summary>
@@ -96,6 +106,15 @@ internal static class UcpSchemas
             count++;
         }
 
+        // The shop's own extensions' schemas, from where the API serves them: the
+        // Ucp assembly's embedded resources. Validated against the same way.
+        var ours = typeof(ElGuerre.Tendero.Ucp.UcpProfile).Assembly;
+        foreach (var name in ours.GetManifestResourceNames().Where(name => name.StartsWith("ucp-schema:", StringComparison.Ordinal)))
+        {
+            using var reader = new StreamReader(ours.GetManifestResourceStream(name)!);
+            SchemaRegistry.Global.Register(JsonSchema.FromText(reader.ReadToEnd()));
+        }
+
         // The whole point is that resolution is offline, so an empty or
         // half-loaded registry has to fail loudly rather than let every
         // validation pass over nothing.
@@ -104,3 +123,6 @@ internal static class UcpSchemas
         return count;
     }
 }
+
+[CollectionDefinition(UcpSchemas.Collection)]
+public sealed class UcpSchemasCollection;

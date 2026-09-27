@@ -1,0 +1,120 @@
+<section *transloco="let t; prefix: 'agents'">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('title') }}</h1>
+    @if (agents.value(); as list) {
+      <span class="tag tag--code">{{ t('count', { count: list.length }) }}</span>
+    }
+  </header>
+  <p class="page-hint">{{ t('hint') }}</p>
+
+  @if (refusal() !== null) {
+    <p class="failed" role="alert">{{ refusal() || t('failed') }}</p>
+  }
+
+  <form class="register panel" (submit)="$event.preventDefault(); register()">
+    <h2 class="register__title">{{ t('register.title') }}</h2>
+    <label class="register__field">
+      <span>{{ t('register.agentId') }}</span>
+      <input class="field" required [value]="draft().agentId" (input)="edit('agentId', $any($event.target).value)" />
+    </label>
+    <label class="register__field">
+      <span>{{ t('register.displayName') }}</span>
+      <input class="field" required [value]="draft().displayName" (input)="edit('displayName', $any($event.target).value)" />
+    </label>
+    <label class="register__field">
+      <span>{{ t('register.operator') }}</span>
+      <input class="field" required [value]="draft().operator" (input)="edit('operator', $any($event.target).value)" />
+    </label>
+    <label class="register__field">
+      <span>{{ t('column.trust') }}</span>
+      <select class="field" [value]="draft().trust" (change)="editTrust($any($event.target).value)">
+        @for (trust of trusts; track trust) {
+          <option [value]="trust">{{ t('trust.' + trust) }}</option>
+        }
+      </select>
+    </label>
+    <!-- The view's one clay action: vouching for an agent. -->
+    <button class="button register__submit" type="submit" [disabled]="busy() === 'register'">{{ t('register.submit') }}</button>
+  </form>
+
+  @if (agents.isLoading() && !agents.hasValue()) {
+    <p class="muted" role="status" aria-live="polite">{{ t('loading') }}</p>
+  } @else if (agents.error()) {
+    <p class="failed" role="alert">{{ t('failed') }}</p>
+  } @else if (agents.value()?.length === 0) {
+    <div class="empty"><p class="empty__text">{{ t('empty') }}</p></div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">{{ t('title') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('column.agent') }}</th>
+            <th scope="col">{{ t('column.operator') }}</th>
+            <th scope="col">{{ t('column.trust') }}</th>
+            <th scope="col">{{ t('column.status') }}</th>
+            <th scope="col">{{ t('column.registered') }}</th>
+            <th scope="col"><span class="sr-only">{{ t('column.action') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (agent of agents.value(); track agent.agentId) {
+            <tr>
+              <td>
+                <span class="agent__name">{{ agent.displayName }}</span>
+                <span class="numeric muted agent__id">{{ agent.agentId }}</span>
+              </td>
+              <td>{{ agent.operator }}</td>
+              <td>
+                <select
+                  class="field field--inline"
+                  [value]="agent.trust"
+                  [disabled]="busy() === agent.agentId"
+                  [attr.aria-label]="t('changeTrust', { agent: agent.displayName })"
+                  (change)="trust(agent, $any($event.target).value)"
+                >
+                  @for (trust of trusts; track trust) {
+                    <option [value]="trust">{{ t('trust.' + trust) }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                @if (agent.status === 'Suspended') {
+                  <span class="tag tag--danger">{{ t('status.Suspended') }}</span>
+                  <span class="muted agent__reason">{{ agent.suspensionReason }}</span>
+                } @else {
+                  <span class="tag tag--ok">{{ t('status.Active') }}</span>
+                }
+              </td>
+              <td class="numeric">{{ when(agent.registeredAt) }}</td>
+              <td class="actions">
+                @if (agent.status === 'Suspended') {
+                  <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="reinstate(agent)">
+                    {{ t('reinstate') }}
+                  </button>
+                } @else if (suspending() === agent.agentId) {
+                  <form class="suspend" (submit)="$event.preventDefault(); suspend(agent)">
+                    <input
+                      class="field field--inline"
+                      required
+                      [placeholder]="t('reasonPlaceholder')"
+                      [attr.aria-label]="t('reason')"
+                      [value]="reason()"
+                      (input)="reason.set($any($event.target).value)"
+                    />
+                    <button class="button button--small button--quiet" type="submit" [disabled]="busy() === agent.agentId || !reason().trim()">
+                      {{ t('suspend') }}
+                    </button>
+                    <button class="button button--small button--quiet" type="button" (click)="suspending.set(null)">{{ t('cancel') }}</button>
+                  </form>
+                } @else {
+                  <button class="button button--small button--quiet" type="button" (click)="askReason(agent)">{{ t('suspend') }}</button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

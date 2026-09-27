@@ -17,6 +17,26 @@ public sealed class CheckoutOptions
     /// <summary>Which provider takes the money. `fake` until a real one is
     /// wired; the code around it does not change when it is.</summary>
     public string PaymentProvider { get; set; } = FakePaymentProvider.Key;
+
+    /// <summary>
+    /// Which provider a TEST order pays through (ADR 0038): the fake, whatever the
+    /// shop takes real money with. The day <see cref="PaymentProvider"/> is a real
+    /// one, a rehearsal still moves nothing.
+    /// </summary>
+    public string TestPaymentProvider { get; set; } = FakePaymentProvider.Key;
+
+    /// <summary>
+    /// Whether an agent's live checkout is settled by the shop (P11-1). False until
+    /// a real payment provider takes agents' money: until then a live agent's
+    /// session ends in <c>requires_escalation</c> and a person pays on the
+    /// storefront, which is the honest statement of what the shop can settle. A
+    /// test credential's rehearsal settles through the sandbox handler either way.
+    /// </summary>
+    public bool AgentsPayLive { get; set; }
+
+    /// <summary>The provider for an order of this mode — the one place that choice is made.</summary>
+    public string ProviderFor(Domain.OrderMode mode) =>
+        mode == Domain.OrderMode.Test ? TestPaymentProvider : PaymentProvider;
 }
 
 public static class OrderingServiceCollectionExtensions
@@ -58,6 +78,15 @@ public static class OrderingServiceCollectionExtensions
         // Who may reach an order through its id. Scoped, because the principal
         // it asks about is the request's.
         services.AddScoped<OrderAccess>();
+        services.AddScoped<OrderPlacement>();
+
+        // The shop's rules for agents (P11-6), a table in registration order: the
+        // first to deny decides. Their numbers are configuration.
+        services.Configure<AgentPolicyOptions>(configuration.GetSection(AgentPolicyOptions.SectionName));
+        services.AddSingleton<IAgentRule, SuspendedAgentsPlaceNothing>();
+        services.AddSingleton<IAgentRule, OrderCapByTrust>();
+        services.AddSingleton<IAgentRule, OrdersPerAgentPerHour>();
+        services.TryAddSingleton<IAgentPolicy, DeclarativeAgentPolicy>();
 
         // The fake is resolvable unkeyed too, because the webhook demo has to be
         // able to SIGN a payload and only the concrete type can do that. A real

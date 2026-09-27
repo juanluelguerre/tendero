@@ -51,6 +51,22 @@ public sealed record CommercePrincipal(
 
     public bool IsAgent => Agent is not null;
 
+    /// <summary>
+    /// A test credential: whatever it places is a rehearsal (ADR 0038, P11-0). Read
+    /// from the token the identity provider signed — <see cref="TenderoClaims.Mode"/>
+    /// — never from a request, so an agent cannot choose to be charged or not.
+    /// </summary>
+    public bool IsTest { get; init; }
+
+    /// <summary>
+    /// What the shop knows about the agent behind this principal — how far it is
+    /// trusted and whether it is suspended — as Accounts holds it (P11-2). Null
+    /// for a person; <see cref="AgentStanding.Unknown"/> for an agent with a valid
+    /// token the shop never registered. A value, not the registration: the rules
+    /// that read it (P11-6) need two facts, not an aggregate.
+    /// </summary>
+    public AgentStanding? Standing { get; init; }
+
     public bool IsInRole(string role) =>
         Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
 }
@@ -76,4 +92,42 @@ public interface IPrincipalAccessor
 public sealed class SystemPrincipalAccessor : IPrincipalAccessor
 {
     public CommercePrincipal Current { get; } = CommercePrincipal.Anonymous with { Subject = "system", DisplayName = "system" };
+}
+
+/// <summary>The claims Tendero reads from a token beyond OIDC's own.</summary>
+public static class TenderoClaims
+{
+    /// <summary>The agent a token was issued to, when it was issued to one.</summary>
+    public const string Agent = "agent_id";
+
+    /// <summary>RFC 8693's actor: the agent acting for the token's subject (P11-3).</summary>
+    public const string Actor = "act";
+
+    /// <summary><c>test</c> on a test credential (ADR 0038); absent on every other.</summary>
+    public const string Mode = "tendero_mode";
+
+    public const string TestMode = "test";
+}
+
+/// <summary>
+/// How far the shop trusts an agent (Know Your Agent). A valid token says who an
+/// agent is; this says what the shop thinks of it.
+/// </summary>
+public enum AgentTrust
+{
+    /// <summary>A valid token and nothing else: the shop has never heard of it.</summary>
+    Untrusted,
+
+    /// <summary>Registered by a shopkeeper, who knows who operates it.</summary>
+    Known,
+
+    /// <summary>Known, and its operator's identity checked beyond the registration.</summary>
+    Verified,
+}
+
+/// <summary>An agent's standing with the shop, as the principal carries it.</summary>
+public sealed record AgentStanding(AgentTrust Trust, bool Suspended)
+{
+    /// <summary>An agent the shop never registered: untrusted, and not suspended — there is nothing to suspend.</summary>
+    public static readonly AgentStanding Unknown = new(AgentTrust.Untrusted, false);
 }

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Text.Json;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Ucp.Catalog;
+using ElGuerre.Tendero.Ucp.Negotiation;
 using Microsoft.AspNetCore.Http;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
@@ -71,6 +72,7 @@ public sealed class UcpCatalogTools
     public static async Task<UcpCatalogPage> LookupCatalogAsync(
         IQueryDispatcher dispatcher,
         IHttpContextAccessor requests,
+        IPlatformProfiles profiles,
         [Description("Product identifiers to resolve.")]
         IReadOnlyList<string> ids,
         [Description("Transport metadata. Optional; when present, `ucp-agent` must carry a `profile`.")]
@@ -86,7 +88,7 @@ public sealed class UcpCatalogTools
         };
 
         return await Refusals.Readable(() => UcpCatalogOperations.LookupAsync(
-            dispatcher, request, Culture(requests), BaseUrl(requests), cancellationToken));
+            dispatcher, request, Culture(requests), BaseUrl(requests), profiles, cancellationToken));
     }
 
     [McpServerTool(Name = "get_product", UseStructuredContent = true)]
@@ -97,6 +99,7 @@ public sealed class UcpCatalogTools
     public static async Task<UcpProductAnswer> GetProductAsync(
         IQueryDispatcher dispatcher,
         IHttpContextAccessor requests,
+        IPlatformProfiles profiles,
         [Description("The product identifier.")]
         string id,
         [Description("Transport metadata. Optional; when present, `ucp-agent` must carry a `profile`.")]
@@ -115,7 +118,7 @@ public sealed class UcpCatalogTools
         // it is an error carrying the id. Same operation, two spellings, which
         // is the only thing a transport is allowed to decide.
         return await Refusals.Readable(() => UcpCatalogOperations.GetProductAsync(
-            dispatcher, request, Culture(requests), BaseUrl(requests), cancellationToken))
+            dispatcher, request, Culture(requests), BaseUrl(requests), profiles, cancellationToken))
             ?? throw new McpException($"There is no product with id '{id}'.");
     }
 

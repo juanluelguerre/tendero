@@ -357,15 +357,4 @@ public sealed class PaymentWebhookHandlerTests
                 Warnings.Add(formatter(state, exception));
         }
     }
-
-    private sealed class CountingUnitOfWork : IUnitOfWork
-    {
-        public int Saves { get; private set; }
-
-        public Task SaveChangesAsync(CancellationToken ct)
-        {
-            Saves++;
-            return Task.CompletedTask;
-        }
-    }
 }

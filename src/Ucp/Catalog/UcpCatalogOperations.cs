@@ -2,6 +2,7 @@ using System.Globalization;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.SharedKernel;
+using ElGuerre.Tendero.Ucp.Negotiation;
 
 namespace ElGuerre.Tendero.Ucp.Catalog;
 
@@ -54,16 +55,24 @@ public static class UcpCatalogOperations
             UcpSearchNotices.For(page.Answer, request.Query ?? string.Empty, culture));
     }
 
+    /// <param name="profiles">
+    /// Where a platform's profile is fetched from, to see whether it speaks the shop's
+    /// knowledge extension (P11-8). Optional: the catalogue is anonymous either way.
+    /// </param>
     public static async Task<UcpCatalogPage> LookupAsync(
         IQueryDispatcher dispatcher,
         UcpLookupRequest request,
         string culture,
         string baseUrl,
+        IPlatformProfiles? profiles,
         CancellationToken cancellationToken)
     {
         var found = await DetailsAsync(dispatcher, request.Ids, culture, cancellationToken);
+        var page = UcpCatalogAnswers.Lookup(found, request.Ids, baseUrl);
 
-        return UcpCatalogAnswers.Lookup(found, request.Ids, baseUrl);
+        return await UcpKnowledgeExtension.NegotiatedAsync(UcpAgentMetadata.ProfileOf(request.Meta), profiles, cancellationToken)
+            ? UcpKnowledgeExtension.Attach(page, await UcpKnowledgeExtension.ForAsync(dispatcher, page.Products.Select(product => product.Id), culture, cancellationToken))
+            : page;
     }
 
     /// <summary>
@@ -77,11 +86,17 @@ public static class UcpCatalogOperations
         UcpGetProductRequest request,
         string culture,
         string baseUrl,
+        IPlatformProfiles? profiles,
         CancellationToken cancellationToken)
     {
         var detail = await dispatcher.SendAsync(new GetProductQuery(request.Id, culture), cancellationToken);
+        if (detail is null)
+            return null;
 
-        return detail is null ? null : UcpCatalogAnswers.Product(detail, baseUrl);
+        var answer = UcpCatalogAnswers.Product(detail, baseUrl);
+        return await UcpKnowledgeExtension.NegotiatedAsync(UcpAgentMetadata.ProfileOf(request.Meta), profiles, cancellationToken)
+            ? UcpKnowledgeExtension.Attach(answer, await UcpKnowledgeExtension.ForAsync(dispatcher, [answer.Product.Id], culture, cancellationToken))
+            : answer;
     }
 
     /// <summary>How many identifiers one lookup may carry.</summary>

@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260927075751_AddClaimApplication";
+    public override string LastMigrationId => "20260927112225_AddOrderPlacedBy";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -27,6 +27,56 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+        modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Agent", b =>
+            {
+                b.Property<string>("Id")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("id");
+
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("display_name");
+
+                b.Property<string>("Operator")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("operator");
+
+                b.Property<DateTimeOffset>("RegisteredAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("registered_at");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<string>("SuspensionReason")
+                    .HasMaxLength(300)
+                    .HasColumnType("character varying(300)")
+                    .HasColumnName("suspension_reason");
+
+                b.Property<string>("Trust")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("trust");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.HasKey("Id")
+                    .HasName("pk_agents");
+
+                b.ToTable("agents", "accounts");
+            });
 
         modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Customer", b =>
             {
@@ -625,11 +675,151 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.ToTable("carts", "ordering");
             });
 
+        modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.CheckoutSession", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<Guid>("CartId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("cart_id");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<string>("Culture")
+                    .IsRequired()
+                    .HasMaxLength(5)
+                    .HasColumnType("character varying(5)")
+                    .HasColumnName("culture");
+
+                b.Property<DateTimeOffset>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("expires_at");
+
+                b.Property<string>("Mode")
+                    .IsRequired()
+                    .HasMaxLength(10)
+                    .HasColumnType("character varying(10)")
+                    .HasColumnName("mode");
+
+                b.Property<Guid?>("OrderId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("order_id");
+
+                b.Property<string>("Owner")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("owner");
+
+                b.Property<string>("ShippingOptionCode")
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)")
+                    .HasColumnName("shipping_option_code");
+
+                b.Property<string>("ShownQuoteHash")
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)")
+                    .HasColumnName("shown_quote_hash");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.PrimitiveCollection<string>("coupons")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("coupons");
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Buyer", "ElGuerre.Tendero.Ordering.Domain.CheckoutSession.Buyer#CheckoutBuyer", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("Email")
+                            .HasJsonPropertyName("email");
+
+                        b1.Property<string>("FirstName")
+                            .HasJsonPropertyName("firstName");
+
+                        b1.Property<string>("LastName")
+                            .HasJsonPropertyName("lastName");
+
+                        b1.Property<string>("Phone")
+                            .HasJsonPropertyName("phone");
+
+                        b1
+                            .ToJson("buyer")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Destination", "ElGuerre.Tendero.Ordering.Domain.CheckoutSession.Destination#Address", b1 =>
+                    {
+                        b1.Property<string>("City")
+                            .IsRequired()
+                            .HasJsonPropertyName("city");
+
+                        b1.Property<string>("CountryCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("countryCode");
+
+                        b1.Property<string>("Line1")
+                            .IsRequired()
+                            .HasJsonPropertyName("line1");
+
+                        b1.Property<string>("Line2")
+                            .HasJsonPropertyName("line2");
+
+                        b1.Property<string>("Phone")
+                            .HasJsonPropertyName("phone");
+
+                        b1.Property<string>("PostalCode")
+                            .IsRequired()
+                            .HasJsonPropertyName("postalCode");
+
+                        b1.Property<string>("RecipientName")
+                            .IsRequired()
+                            .HasJsonPropertyName("recipientName");
+
+                        b1.Property<string>("Region")
+                            .HasJsonPropertyName("region");
+
+                        b1
+                            .ToJson("destination")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.HasKey("Id")
+                    .HasName("pk_checkout_sessions");
+
+                b.HasIndex("CartId")
+                    .IsUnique()
+                    .HasDatabaseName("ix_checkout_sessions_cart_id");
+
+                b.HasIndex("Owner")
+                    .HasDatabaseName("ix_checkout_sessions_owner");
+
+                b.ToTable("checkout_sessions", "ordering");
+            });
+
         modelBuilder.Entity("ElGuerre.Tendero.Ordering.Domain.Order", b =>
             {
                 b.Property<Guid>("Id")
                     .HasColumnType("uuid")
                     .HasColumnName("id");
+
+                b.Property<string>("ContactEmail")
+                    .HasMaxLength(320)
+                    .HasColumnType("character varying(320)")
+                    .HasColumnName("contact_email");
 
                 b.Property<DateTimeOffset>("CreatedAt")
                     .HasColumnType("timestamp with time zone")
@@ -656,6 +846,19 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(200)
                     .HasColumnType("character varying(200)")
                     .HasColumnName("idempotency_key");
+
+                b.Property<string>("Mode")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasMaxLength(10)
+                    .HasColumnType("character varying(10)")
+                    .HasDefaultValue("Live")
+                    .HasColumnName("mode");
+
+                b.Property<string>("PlacedBy")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("placed_by");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -702,6 +905,35 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
 
                         b1
                             .ToJson("billing_address")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Mandate", "ElGuerre.Tendero.Ordering.Domain.Order.Mandate#OrderMandate", b1 =>
+                    {
+                        b1.Property<decimal>("ApprovedTotal")
+                            .HasJsonPropertyName("approvedTotal");
+
+                        b1.Property<string>("Currency")
+                            .IsRequired()
+                            .HasJsonPropertyName("currency");
+
+                        b1.Property<DateTimeOffset?>("ExpiresAt")
+                            .HasJsonPropertyName("expiresAt");
+
+                        b1.Property<string>("Issuer")
+                            .IsRequired()
+                            .HasJsonPropertyName("issuer");
+
+                        b1.Property<string>("Kind")
+                            .IsRequired()
+                            .HasJsonPropertyName("kind");
+
+                        b1.Property<string>("Reference")
+                            .IsRequired()
+                            .HasJsonPropertyName("reference");
+
+                        b1
+                            .ToJson("mandate")
                             .HasColumnType("jsonb");
                     });
 
@@ -935,6 +1167,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("IdempotencyKey")
                     .IsUnique()
                     .HasDatabaseName("ix_orders_idempotency_key");
+
+                b.HasIndex("PlacedBy", "CreatedAt")
+                    .HasDatabaseName("ix_orders_placed_by_created_at");
 
                 b.ToTable("orders", "ordering");
             });

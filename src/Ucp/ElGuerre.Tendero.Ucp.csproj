@@ -24,6 +24,8 @@
 
   <ItemGroup>
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
+    <ProjectReference Include="../Knowledge/ElGuerre.Tendero.Knowledge.csproj" />
+    <ProjectReference Include="../Ordering/ElGuerre.Tendero.Ordering.csproj" />
     <ProjectReference Include="../Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
@@ -32,6 +34,13 @@
        answer into UCP's messages, not a shape any other project should build
        on. Its own tests are the exception, same pattern as Inventory, Pricing
        and Search grant their test projects. -->
+  <!-- The schemas of the shop's own extensions, served at /ucp/schemas/: a vendor
+       extension's contract is ours to publish, and it ships with the code that
+       keeps it. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas/*.json" LogicalName="ucp-schema:%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="ElGuerre.Tendero.Ucp.Tests" />
   </ItemGroup>

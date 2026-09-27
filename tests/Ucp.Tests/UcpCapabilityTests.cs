@@ -21,7 +21,12 @@ public sealed class UcpCapabilityTests
         // drift — the same assertion the WebMCP tool set is held to, and for the
         // same reason: this list IS the contract an agent reads.
         Assert.Equal(
-            ["dev.ucp.shopping.catalog.lookup", "dev.ucp.shopping.catalog.search"],
+            [
+                "com.elguerre.tendero.knowledge",
+                "dev.ucp.common.payment.ap2_mandate",
+                "dev.ucp.shopping.catalog.lookup", "dev.ucp.shopping.catalog.search",
+                "dev.ucp.shopping.checkout", "dev.ucp.shopping.discount", "dev.ucp.shopping.fulfillment",
+            ],
             UcpCapabilities.Declared.Select(capability => capability.Id).ToArray(),
             StringComparer.Ordinal);
     }
@@ -73,23 +78,19 @@ public sealed class UcpCapabilityTests
     }
 
     /// <summary>
-    /// And the transactional half is absent, deliberately.
-    ///
-    /// Every slice behind cart, discount, fulfillment and checkout exists and
-    /// has since phase 5. What does not exist is a way for an agent to be
-    /// authorised — its own principal and a signed mandate are phase 11 — so
-    /// declaring them would advertise a checkout no agent can reach. This test
-    /// is what makes phase 11 a deliberate act rather than something that
-    /// happens by adding a class.
+    /// And what is still absent, deliberately. Checkout, fulfillment and
+    /// discount arrived in phase 11 (P11-1), once an agent had a principal and
+    /// both bindings existed, and the AP2 mandate once its verifier did (P11-4).
+    /// **Order** waits because declaring it commits the shop to signed webhooks;
+    /// **cart** because a checkout is created from line items and nothing yet needs a
+    /// cart of its own over UCP. This test is what keeps each of them a deliberate
+    /// act rather than a class added.
     /// </summary>
     [Theory]
     [InlineData("dev.ucp.shopping.cart")]
-    [InlineData("dev.ucp.shopping.discount")]
-    [InlineData("dev.ucp.shopping.fulfillment")]
-    [InlineData("dev.ucp.shopping.checkout")]
-    [InlineData("dev.ucp.shopping.orders")]
+    [InlineData("dev.ucp.shopping.order")]
     [InlineData("dev.ucp.common.identity_linking")]
-    public void The_transactional_capabilities_are_not_declared_yet(string id) =>
+    public void What_is_not_built_is_not_declared(string id) =>
         Assert.DoesNotContain(id, UcpCapabilities.Declared.Select(capability => capability.Id));
 
     /// <summary>

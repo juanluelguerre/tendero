@@ -66,7 +66,14 @@
     "region": "Province (optional)",
     "title": "Checkout",
     "unavailable": "The payment provider did not answer. Try again in a moment.",
-    "unserved": "This shop does not deliver to {{country}} yet."
+    "unserved": "This shop does not deliver to {{country}} yet.",
+    "continue": {
+      "takingOver": "Picking up the purchase your agent prepared…",
+      "goneTitle": "This link no longer works",
+      "gone": "The purchase your agent prepared was already completed, canceled or expired.",
+      "backToShop": "Back to the shop",
+      "failed": "We could not pick up the purchase. Try again in a moment."
+    }
   },
   "consent": {
     "title": "Help us improve the shop.",
@@ -122,7 +129,8 @@
     "stop": {
       "out_of_stock": "We could not hold the stock for this order, so we cancelled it and charged you nothing.",
       "shop_cancelled": "The shop cancelled this order.",
-      "payment_declined": "The payment was declined, so the order was not placed."
+      "payment_declined": "The payment was declined, so the order was not placed.",
+      "test_order_ended": "Test order ended: it is never shipped, and its stock has been given back."
     },
     "title": "Your order"
   },

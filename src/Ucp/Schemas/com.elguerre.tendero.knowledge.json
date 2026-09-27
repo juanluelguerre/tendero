@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:elguerre:tendero:ucp:com.elguerre.tendero.knowledge",
+  "name": "com.elguerre.tendero.knowledge",
+  "title": "Tendero Product Knowledge Extension",
+  "description": "Extends dev.ucp.shopping.catalog.lookup. Once negotiated, every product a catalog lookup or a product read returns carries `knowledge`: the product's specs as the shop knows them, each with its source. A value whose source is `description` was proposed by a model from the product's own text and approved by a person; its evidence quotes the exact words and says how well they support the value, measured by an entailment check, 0 to 1. A spec the shop does not know is absent: an agent MUST NOT infer it, and SHOULD say the shop does not know. Values are in the language the request asked for.",
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "description": "What a value or a statement rests on.",
+      "required": ["support", "quotes"],
+      "additionalProperties": false,
+      "properties": {
+        "support": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How well the quotes support the value, as measured when it was proposed."
+        },
+        "quotes": {
+          "type": "array",
+          "description": "The exact words of the product's own text the value rests on, in the request's language when the shop has them in it.",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "description": "One attribute's value for this product.",
+      "required": ["attribute", "label", "value", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "attribute": { "type": "string", "minLength": 1, "description": "The attribute's stable code, the same for every product: what to compare on." },
+        "label": { "type": "string", "minLength": 1, "description": "The attribute's name, in the request's language." },
+        "value": { "type": "string", "minLength": 1, "description": "The value as the shop writes it, unit included." },
+        "source": {
+          "type": "string",
+          "enum": ["catalogue", "description"],
+          "description": "`catalogue`: the catalogue holds it, from its import or a person. `description`: a person approved it from the product's own text, and `evidence` says from which words."
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      },
+      "if": { "properties": { "source": { "const": "description" } } },
+      "then": { "required": ["evidence"] }
+    },
+    "statement": {
+      "type": "object",
+      "description": "An approved fact that is a sentence rather than a value, such as 'it has an anti-theft pocket'.",
+      "required": ["text", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      }
+    },
+    "knowledge": {
+      "type": "object",
+      "description": "What the shop knows about one product.",
+      "required": ["specs", "statements"],
+      "additionalProperties": false,
+      "properties": {
+        "specs": { "type": "array", "items": { "$ref": "#/$defs/spec" } },
+        "statements": { "type": "array", "items": { "$ref": "#/$defs/statement" } }
+      }
+    },
+    "product": {
+      "type": "object",
+      "description": "The member this extension adds to a catalog Product.",
+      "properties": {
+        "knowledge": { "$ref": "#/$defs/knowledge" }
+      }
+    }
+  }
+}

@@ -58,7 +58,7 @@
     "title": "Catalogue"
   },
   "nav": {
-    "agents": "Agent activity",
+    "agents": "Agents",
     "attributes": "Attributes",
     "audit": "Audit",
     "catalogue": "Catalogue",
@@ -69,7 +69,8 @@
     "reviewQueue": "Review queue",
     "search": "Search evaluation",
     "stock": "Stock",
-    "claims": "Claims"
+    "claims": "Claims",
+    "dashboard": "Dashboard"
   },
   "orders": {
     "captured": "Captured",
@@ -108,8 +109,13 @@
     "stop": {
       "out_of_stock": "Not enough stock",
       "shop_cancelled": "Cancelled by the shop",
-      "payment_declined": "Payment declined"
-    }
+      "payment_declined": "Payment declined",
+      "test_order_ended": "Test order ended"
+    },
+    "test": "Test",
+    "testHint": "A test order placed with a test credential: never shipped, its stock already given back.",
+    "mandate": "Mandate",
+    "mandateHint": "Bought by an agent under an AP2 mandate signed by {{issuer}}: the person approved exactly this total."
   },
   "promotions": {
     "title": "Promotions",
@@ -317,5 +323,146 @@
     "supportExplained": "How well the quote supports the claim, measured by a textual-inference model — not what the extractor says about itself.",
     "approve": "Approve",
     "reject": "Reject"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "hint": "The shop's pulse, from its own data: what sold, what is waiting for you, how the checkout converts and what agents bring. Test orders are left out of every figure but the agents' count of them.",
+    "period": {
+      "label": "Period",
+      "day": "Last 24 h",
+      "week": "Last 7 days",
+      "month": "Last 30 days"
+    },
+    "sales": {
+      "title": "Sales",
+      "vsPrevious": "Against the previous period",
+      "loading": "Loading sales…",
+      "failed": "Sales could not be loaded.",
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "units": "Units",
+      "averageOrder": "Average order",
+      "direction": {
+        "up": "up",
+        "down": "down",
+        "flat": "no change"
+      },
+      "bestSellers": "Best sellers",
+      "nothingSold": "Nothing sold in this period.",
+      "unitCount": "{{count}} u."
+    },
+    "operations": {
+      "title": "Orders and health",
+      "toOrders": "Orders",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
+      "toShip": "To ship",
+      "late": "{{count}} late",
+      "inProgress": "Being confirmed",
+      "paymentFailed": "Payment failed",
+      "cancellationRate": "Cancellation rate",
+      "cancelled": "{{count}} cancelled",
+      "returns": "Returns",
+      "openReturns": "Open",
+      "returnRate": "Return rate",
+      "refunded": "Refunded",
+      "byReason": "Open returns by reason"
+    },
+    "funnel": {
+      "title": "Checkout",
+      "loading": "Loading…",
+      "failed": "The funnel could not be loaded.",
+      "conversion": "of carts became orders",
+      "started": "Carts started",
+      "checkedOut": "Checked out",
+      "abandoned": "Abandoned",
+      "stillOpen": "Still open",
+      "buyers": "Buyers",
+      "newCustomers": "New",
+      "returningCustomers": "Returning",
+      "noVisits": "Visits are not counted here: they live in the observability stack, which this page does not depend on."
+    },
+    "agents": {
+      "title": "Agents",
+      "toRegistry": "Registry",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
+      "salesHeading": "What they bought",
+      "shareOfOrders": "Share of orders",
+      "ofOrders": "{{part}} of {{whole}}",
+      "shareOfRevenue": "Share of sales",
+      "mandated": "With a mandate",
+      "rehearsals": "Rehearsals",
+      "ordersCount": "{{count}} orders",
+      "denialsHeading": "What the shop refused them",
+      "noDenials": "Nothing refused in this period.",
+      "denied": "refused",
+      "byRule": "Refusals by rule",
+      "latest": "Latest",
+      "rule": {
+        "agent_suspended": "Agent suspended",
+        "order_over_trust_cap": "Over the cap for its trust",
+        "orders_per_hour": "Too many orders an hour",
+        "mandate_required": "No mandate",
+        "mandate_expired": "Mandate expired",
+        "mandate_scope_mismatch": "Outside its mandate",
+        "mandate_invalid_signature": "Mandate does not verify",
+        "agent_missing_key": "Unknown platform key",
+        "merchant_authorization_invalid": "Not our signature",
+        "payment_failed": "Payment declined",
+        "NotFound": "Not its checkout",
+        "NotAnAgent": "Not an agent",
+        "NotOpen": "Checkout closed",
+        "NotReady": "Checkout not ready",
+        "denied": "Refused"
+      }
+    },
+    "tasks": {
+      "title": "Waiting for you",
+      "failed": "Could not be loaded.",
+      "drafts": "Drafts to publish",
+      "claims": "Claims to review",
+      "weakestFirst": "Weakest support first",
+      "support": "{{value}}% support",
+      "lowStock": "Low stock",
+      "available": "{{count}} left"
+    }
+  },
+  "agents": {
+    "title": "Agents",
+    "count": "{{count}} registered",
+    "hint": "The agents the shop knows. An agent nobody registered is not refused: it shops as untrusted, under tighter caps. Registering one is vouching for it; a suspension needs a reason, so it can be lifted.",
+    "loading": "Loading agents…",
+    "failed": "The change could not be made.",
+    "empty": "No agent is registered yet.",
+    "register": {
+      "title": "Register an agent",
+      "agentId": "Agent id (from its token)",
+      "displayName": "Name",
+      "operator": "Operated by",
+      "submit": "Register"
+    },
+    "column": {
+      "agent": "Agent",
+      "operator": "Operator",
+      "trust": "Trust",
+      "status": "Status",
+      "registered": "Registered",
+      "action": "Actions"
+    },
+    "trust": {
+      "Known": "Known",
+      "Verified": "Verified"
+    },
+    "status": {
+      "Active": "Active",
+      "Suspended": "Suspended"
+    },
+    "changeTrust": "Change {{agent}}'s trust",
+    "suspend": "Suspend",
+    "reinstate": "Reinstate",
+    "cancel": "Cancel",
+    "reason": "Reason for the suspension",
+    "reasonPlaceholder": "Why?"
   }
 }

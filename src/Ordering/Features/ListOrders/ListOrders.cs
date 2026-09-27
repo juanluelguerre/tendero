@@ -23,9 +23,20 @@ namespace ElGuerre.Tendero.Ordering.Features.ListOrders;
 /// </summary>
 public sealed record OrderLinePreview(string Sku, string Name, string? ImageId);
 
+/// <summary>
+/// The mandate an agent placed the order under (P11-5): what kind, which platform
+/// key signed it, and what it approved. Enough to answer "who said this could be
+/// bought?" from the list; the evidence itself stays on the order.
+/// </summary>
+public sealed record OrderMandateSummary(string Kind, string Issuer, decimal ApprovedTotal, string Currency, DateTimeOffset? ExpiresAt);
+
 public sealed record OrderSummary(
     string OrderId,
     string Status,
+    /// <summary><c>Live</c>, or <c>Test</c> for a rehearsal a test credential placed (ADR 0038).</summary>
+    string Mode,
+    /// <summary>Null unless an agent placed it under a verified mandate (P11-5).</summary>
+    OrderMandateSummary? Mandate,
     string Currency,
     decimal Total,
     int LineCount,
@@ -70,6 +81,10 @@ public sealed record OrderSummary(
         // Flat. OrderId is a record struct and would serialise as {"value":"…"}.
         order.Id.ToString(),
         order.Status.ToString(),
+        order.Mode.ToString(),
+        order.Mandate is { } mandate
+            ? new OrderMandateSummary(mandate.Kind, mandate.Issuer, mandate.ApprovedTotal, mandate.Currency, mandate.ExpiresAt)
+            : null,
         order.Currency,
         order.Total.Amount,
         order.Lines.Count,

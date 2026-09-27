@@ -62,7 +62,7 @@ public sealed record ShippingOptionsResult(
 
 public sealed class GetShippingOptionsHandler(
     ICartRepository carts,
-    IShippingRateProviderRegistry providers,
+    OrderPlacement placement,
     IOptions<CheckoutOptions> options)
     : IQueryHandler<GetShippingOptionsQuery, ShippingOptionsResult>
 {
@@ -81,7 +81,9 @@ public sealed class GetShippingOptionsHandler(
         if (cart is null || cart.IsEmpty)
             return new ShippingOptionsResult(ShippingOutcome.NothingToShip, "EUR", []);
 
-        var rates = await Rate(providers, options.Value, cart, query.Destination, cancellationToken);
+        // The same call placing the order makes, so a shopper is never charged
+        // for an option the screen did not show.
+        var rates = await placement.RateAsync(cart, query.Destination, cancellationToken);
 
         activity?.SetTag("shipping.provider", options.Value.ShippingProvider);
         activity?.SetTag("shipping.option_count", rates.Count);
@@ -90,39 +92,6 @@ public sealed class GetShippingOptionsHandler(
             rates.Count == 0 ? ShippingOutcome.Unserved : ShippingOutcome.Quoted,
             cart.Currency,
             rates);
-    }
-
-    /// <summary>
-    /// Shared with <c>PlaceOrder</c> so the option a shopper picked is priced by
-    /// exactly the call that offered it. Two code paths here would let checkout
-    /// charge for an option the screen never showed.
-    ///
-    /// The subtotal is the raw line total and not the discounted one, which is a
-    /// simplification worth naming: "free over 50 €" is measured before
-    /// promotions, so a coupon cannot buy free shipping by accident. A shop that
-    /// wanted the other rule would pass the discounted figure, and the port
-    /// would not change.
-    /// </summary>
-    internal static async Task<IReadOnlyList<ShippingOption>> Rate(
-        IShippingRateProviderRegistry providers,
-        CheckoutOptions options,
-        Cart cart,
-        Address destination,
-        CancellationToken cancellationToken)
-    {
-        var provider = providers.Get(options.ShippingProvider);
-
-        return await provider.QuoteAsync(
-            new ShippingQuoteRequest(
-                destination,
-                [.. cart.Lines.Select(line => new ShippableLine(line.Sku, line.Quantity))],
-                // The cart holds no money (ADR 0016), so the only subtotal
-                // available without a second pricing call is a count-based
-                // stand-in. It is zero, deliberately: a free-shipping threshold
-                // that fired on a number nobody computed would be worse than one
-                // that never fires. `PlaceOrder` passes the real subtotal.
-                Money.Zero(cart.Currency)),
-            cancellationToken);
     }
 }
 
@@ -158,59 +127,6 @@ public sealed record PlaceOrderCommand(
     IReadOnlyList<string> Coupons,
     string Culture) : ICommand<PlaceOrderResult>;
 
-public enum PlaceOrderOutcome
-{
-    Placed,
-
-    /// <summary>The same idempotency key already bought something. The existing
-    /// order comes back, and nothing happens twice.</summary>
-    AlreadyPlaced,
-
-    NothingToShip,
-
-    /// <summary>The chosen option is not one this destination is offered. Almost
-    /// always a stale screen, and never something to charge for.</summary>
-    UnknownShippingOption,
-
-    /// <summary>Some SKU stopped being on sale between the cart and the till.</summary>
-    UnknownSkus,
-
-    /// <summary>
-    /// The price is not what the shopper was shown. The **new** quote comes back
-    /// so the screen can say what changed and ask them to confirm, which is the
-    /// whole reason a quote carries a fingerprint.
-    /// </summary>
-    PriceChanged,
-
-    PaymentDeclined,
-
-    /// <summary>The provider could not be reached. Retryable with the same key,
-    /// and a different answer from a decline.</summary>
-    PaymentUnavailable
-}
-
-public sealed record PlaceOrderResult(
-    PlaceOrderOutcome Outcome,
-    Order? Order,
-    CartPricing? Pricing,
-    string? Detail) : IAuditedResult
-{
-    /// <summary>A declined card is the shop saying no, which is a denial; a
-    /// provider that did not answer is a fault. Each refusal carries its words,
-    /// or its name when it has none.</summary>
-    AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
-    {
-        PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced => AuditOutcome.Allowed,
-        PlaceOrderOutcome.PaymentUnavailable => AuditOutcome.Failed,
-        PlaceOrderOutcome.NothingToShip or PlaceOrderOutcome.UnknownShippingOption or
-            PlaceOrderOutcome.UnknownSkus or PlaceOrderOutcome.PriceChanged or
-            PlaceOrderOutcome.PaymentDeclined => AuditOutcome.Denied
-    };
-
-    string? IAuditedResult.AuditReason =>
-        Outcome is PlaceOrderOutcome.Placed or PlaceOrderOutcome.AlreadyPlaced ? null : Detail ?? Outcome.ToString();
-}
-
 public sealed class PlaceOrderValidator : AbstractValidator<PlaceOrderCommand>
 {
     public PlaceOrderValidator()
@@ -224,43 +140,41 @@ public sealed class PlaceOrderValidator : AbstractValidator<PlaceOrderCommand>
 
 public sealed class PlaceOrderHandler(
     ICartRepository carts,
-    IOrderRepository orders,
-    ICartPricer pricer,
-    IShippingRateProviderRegistry shipping,
-    IPaymentProviderRegistry payments,
-    IPrincipalAccessor principal,
+    ICheckoutSessionRepository sessions,
+    OrderPlacement placement,
     IUnitOfWork unitOfWork,
-    IOptions<CheckoutOptions> options,
-    TimeProvider clock,
-    IActorAccessor actors)
+    IPrincipalAccessor principal,
+    IActorAccessor actors,
+    TimeProvider clock)
     : ICommandHandler<PlaceOrderCommand, PlaceOrderResult>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
 
     /// <summary>
-    /// Every attempt is counted once, whichever of its eight exits it took: the
-    /// place-order path returns from seven places, and a counter in each is a
-    /// counter that one day misses one.
+    /// Every attempt is counted once, whichever of its exits it took: a counter
+    /// in each return is a counter that one day misses one.
     /// </summary>
     public async Task<PlaceOrderResult> HandleAsync(
         PlaceOrderCommand command, CancellationToken cancellationToken)
     {
-        var result = await PlaceAsync(command, cancellationToken);
-        CheckoutAttempts.Record(result, actors.Current);
+        // Decided once, from the credential, before anything else: the payment,
+        // the order and the metric all read the same answer (ADR 0038).
+        var mode = OrderModes.Of(principal.Current);
+        var result = await PlaceAsync(command, mode, cancellationToken);
+        CheckoutAttempts.Record(result, actors.Current, mode, principal.Current.Standing);
         return result;
     }
 
     private async Task<PlaceOrderResult> PlaceAsync(
-        PlaceOrderCommand command, CancellationToken cancellationToken)
+        PlaceOrderCommand command, OrderMode mode, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("checkout.place_order");
         activity?.SetTag("checkout.idempotency_key", command.IdempotencyKey);
+        activity?.SetTag(CheckoutAttempts.ModeTag, MetricLabels.Of(mode));
 
         // Idempotency first, before anything is charged. With agents, a retry is
         // the normal case rather than the rare one.
-        var existing = await orders.FindByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
-
-        if (existing is not null)
+        if (await placement.AlreadyPlacedAsync(command.IdempotencyKey, cancellationToken) is { } existing)
         {
             activity?.SetTag("checkout.outcome", "already_placed");
             return new PlaceOrderResult(PlaceOrderOutcome.AlreadyPlaced, existing, null, null);
@@ -271,164 +185,37 @@ public sealed class PlaceOrderHandler(
             : await carts.FindOpenByTokenAsync(command.Token, cancellationToken);
 
         if (cart is null || cart.IsEmpty)
-            return Refuse(activity, PlaceOrderOutcome.NothingToShip, null);
-
-        // 1 · Shipping, from the same call that offered the options.
-        var rates = await GetShippingOptionsHandler.Rate(
-            shipping, options.Value, cart, command.ShippingAddress, cancellationToken);
-
-        var option = rates.FirstOrDefault(rate =>
-            string.Equals(rate.Code, command.ShippingOptionCode, StringComparison.OrdinalIgnoreCase));
-
-        if (option is null)
-            return Refuse(activity, PlaceOrderOutcome.UnknownShippingOption, command.ShippingOptionCode);
-
-        // 2 · The price, recomputed by the engine that issued the quote.
-        var pricing = await pricer.QuoteAsync(
-            cart.PricingLines(), command.Culture, option.Amount, command.Coupons, cancellationToken);
-
-        if (pricing.Outcome != PricingOutcome.Quoted)
-            return Refuse(activity, PlaceOrderOutcome.UnknownSkus, string.Join(", ", pricing.Offending));
-
-        // 3 · Is it still what the shopper was shown? A missing expectation is
-        // treated as a mismatch rather than waved through: an agent that does
-        // not send the hash has not agreed to a price.
-        if (!string.Equals(pricing.InputHash, command.ExpectedQuoteHash, StringComparison.Ordinal))
         {
-            activity?.SetTag("checkout.outcome", "price_changed");
-            return new PlaceOrderResult(PlaceOrderOutcome.PriceChanged, null, pricing, pricing.InputHash);
+            activity?.SetTag("checkout.outcome", PlaceOrderOutcome.NothingToShip.ToString());
+            return new PlaceOrderResult(PlaceOrderOutcome.NothingToShip, null, null, null);
         }
 
-        // 4 · The money. Nothing has been written yet, so a decline costs
-        // nothing: no order, no reservation, an untouched cart.
-        var provider = payments.Get(options.Value.PaymentProvider);
-        var orderId = OrderId.New();
+        // A cart an agent's checkout handed to a person (requires_escalation,
+        // P11-1): the email the agent gave is where the order is confirmed.
+        var session = await sessions.FindByCartAsync(cart.Id, cancellationToken) is { Status: CheckoutSessionStatus.Open } open ? open : null;
 
-        var authorization = await provider.AuthorizeAsync(
-            new PaymentRequest(
-                orderId,
-                pricing.Totals.Total,
-                command.IdempotencyKey,
-                command.Instrument,
-                $"Tendero {orderId}"),
+        var result = await placement.PlaceAsync(
+            cart,
+            new PlacementRequest(
+                command.ShippingAddress, command.BillingAddress, command.ShippingOptionCode,
+                command.ExpectedQuoteHash, command.Instrument, command.IdempotencyKey, command.Coupons, command.Culture,
+                session?.Buyer.Email),
+            mode,
             cancellationToken);
 
-        if (!authorization.Succeeded)
+        if (result.Outcome == PlaceOrderOutcome.Placed)
         {
-            activity?.SetTag("checkout.outcome", authorization.Outcome.ToString());
+            // Paying for it here is what completes the agent's checkout, so the
+            // agent reads the order it asked for.
+            session?.Complete(clock, result.Order!.Id);
 
-            return new PlaceOrderResult(
-                authorization.Outcome == PaymentOutcome.Declined
-                    ? PlaceOrderOutcome.PaymentDeclined
-                    : PlaceOrderOutcome.PaymentUnavailable,
-                null, pricing, authorization.DeclineReason);
+            // One commit: the order, the closed cart, the session and the events
+            // that drive the stock saga land together or none of them do.
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
-        // 5 · Who is buying.
-        //
-        // Guests are first class, so a customer id is MINTED here when nobody
-        // signed in — an order always has a buyer, even an anonymous one, and a
-        // nullable CustomerId would spread null through every order query for a
-        // case the domain does not actually have. It is written back onto the
-        // cart so the two agree, which is what phase 7's LinkIdentity links an
-        // account to.
-        var customer = principal.Current.Customer ?? cart.CustomerId ?? CustomerId.New();
-
-        if (cart.CustomerId is null)
-            cart.Claim(clock, customer);
-
-        var unitPrices = pricing.Lines.ToDictionary(
-            line => line.Sku, line => line.UnitPrice, StringComparer.OrdinalIgnoreCase);
-
-        // The order speaks the language the shopper checked out in, not the one
-        // the cart happened to be started in. `UseCulture` existed for exactly
-        // this and nothing called it, so an order placed in English from a basket
-        // begun in Spanish froze Spanish names and a Spanish shipping label.
-        cart.UseCulture(clock, command.Culture);
-
-        var order = Order.Place(
-            clock,
-            customer,
-            command.IdempotencyKey,
-            [
-                .. cart.Lines.Select(line => new OrderLine(
-                    line.ProductId,
-                    line.VariantId,
-                    line.Sku,
-                    // Resolved once, here, and frozen: the order keeps one
-                    // language because it is a record of one purchase.
-                    line.ProductName.In(cart.Culture),
-                    line.VariantLabel?.In(cart.Culture),
-                    // Carried forward from the cart, which took it from the
-                    // catalogue when the line was added. The order freezes it
-                    // there.
-                    line.ImageId,
-                    // The price pricing just quoted, not one the cart carried:
-                    // the cart carries none, on purpose.
-                    unitPrices[line.Sku],
-                    line.Quantity))
-            ],
-            command.ShippingAddress,
-            // Billing defaults to shipping and is still its OWN copy: "the same
-            // today" is not "the same forever".
-            command.BillingAddress ?? command.ShippingAddress,
-            new OrderShipping(option.Code, option.Label.In(cart.Culture), option.Amount, option.EstimatedDays),
-            pricing.AsOrderQuote(),
-            pricing.Totals,
-            pricing.Discounts,
-            pricing.Taxes,
-            cart.Culture);
-
-        order.AuthorizePayment(clock, new OrderPayment(provider.Key, authorization.AuthorizationId!, null));
-
-        orders.Add(order);
-
-        // 6 · The cart is done. No `CartCheckedOut` event: this is one
-        // transaction in one handler, and `OrderPlaced` is the fact the rest of
-        // the system reacts to.
-        cart.MarkCheckedOut(clock);
-
-        // One commit. The order, the closed cart and the events that drive the
-        // stock saga all land together or none of them do — which is the outbox's
-        // whole correctness argument.
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        activity?.SetTag("checkout.outcome", "placed");
-        activity?.SetTag("order.id", order.Id.ToString());
-        activity?.SetTag("order.total", order.Total.Amount);
-
-        return new PlaceOrderResult(PlaceOrderOutcome.Placed, order, pricing, null);
+        return result;
     }
-
-    private static PlaceOrderResult Refuse(Activity? activity, PlaceOrderOutcome outcome, string? detail)
-    {
-        activity?.SetTag("checkout.outcome", outcome.ToString());
-        return new PlaceOrderResult(outcome, null, null, detail);
-    }
-}
-
-/// <summary>
-/// `tendero.checkout.attempts` (the tracking plan): orders placed are the
-/// attempts whose outcome is <c>placed</c>, and every other outcome says which
-/// fix a failed checkout points at — our screen, our price, the shopper's card
-/// or the provider.
-/// </summary>
-internal static class CheckoutAttempts
-{
-    private static readonly Meter Meter = new(TelemetrySources.Ordering);
-
-    private static readonly Counter<long> Attempts = Meter.CreateCounter<long>(
-        "tendero.checkout.attempts", unit: "{attempt}",
-        description: "Every place-order attempt by its outcome; orders placed are the ones whose outcome is placed.");
-
-    public static void Record(PlaceOrderResult result, Actor actor) =>
-        Attempts.Add(1,
-            actor.KindLabel,
-            actor.SurfaceLabel,
-            new("outcome", MetricLabels.Of(result.Outcome)),
-            // Read off the priced cart when there was one; an attempt refused
-            // before pricing had no discount to apply.
-            new("discounted", result.Pricing?.Discounts.Count > 0 || result.Order?.Discounts.Count > 0));
 }
 
 // ---------- The wire ----------
@@ -554,6 +341,16 @@ public sealed class CheckoutEndpoints : ICarterModule
                     // 503 and retryable: same idempotency key, same order.
                     PlaceOrderOutcome.PaymentUnavailable => TypedResults.Problem(
                         detail: result.Detail, statusCode: StatusCodes.Status503ServiceUnavailable),
+
+                    // Only an agent's checkout carries a mandate (P11-5); here it
+                    // cannot happen, and if it ever did it is a refusal, not an order.
+                    PlaceOrderOutcome.NotMandated => TypedResults.Problem(
+                        detail: result.Detail, statusCode: StatusCodes.Status409Conflict),
+
+                    // An agent's token on the storefront's checkout is held to the
+                    // shop's rules for agents too (P11-6).
+                    PlaceOrderOutcome.AgentRefused => TypedResults.Problem(
+                        detail: result.Detail, statusCode: StatusCodes.Status403Forbidden),
 
                     _ => TypedResults.Ok(OrderView.From(result.Order!))
                 };

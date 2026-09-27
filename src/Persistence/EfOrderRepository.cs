@@ -25,6 +25,13 @@ internal sealed class EfOrderRepository(TenderoDbContext context) : IOrderReposi
     public void Add(Order order) => context.Orders.Add(order);
 }
 
+/// <summary>An agent's recent orders, counted where they are: one indexed count, by agent then time.</summary>
+internal sealed class EfAgentActivity(TenderoDbContext context) : IAgentActivity
+{
+    public Task<int> OrdersPlacedSinceAsync(AgentId agent, DateTimeOffset since, CancellationToken cancellationToken = default) =>
+        context.Orders.CountAsync(order => order.PlacedBy == agent && order.CreatedAt >= since, cancellationToken);
+}
+
 /// <summary>The read side. No tracking, newest first, capped.</summary>
 internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
 {
@@ -56,4 +63,44 @@ internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
             .OrderByDescending(order => order.CreatedAt)
             .Take(Recent)
             .ToListAsync(cancellationToken);
+}
+
+/// <summary>
+/// The dashboard's reads (P11-7): windows of orders, carts and returns, untracked.
+/// The sums happen in <c>DashboardFigures</c>; at laboratory scale a window is a
+/// few hundred rows, and pushing the sums into SQL is scale work, written down.
+/// </summary>
+internal sealed class EfShopHistory(TenderoDbContext context) : IShopHistory
+{
+    public async Task<IReadOnlyList<Order>> OrdersPlacedAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default) =>
+        await context.Orders.AsNoTracking()
+            .Where(order => order.CreatedAt >= from && order.CreatedAt < to)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Order>> OrdersInAsync(IReadOnlyCollection<OrderStatus> statuses, CancellationToken cancellationToken = default) =>
+        await context.Orders.AsNoTracking()
+            .Where(order => statuses.Contains(order.Status))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Cart>> CartsStartedAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default) =>
+        await context.Carts.AsNoTracking()
+            .Where(cart => cart.CreatedAt >= from && cart.CreatedAt < to)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ReturnRequest>> ReturnsOpenOrChangedSinceAsync(DateTimeOffset since, CancellationToken cancellationToken = default) =>
+        await context.ReturnRequests.AsNoTracking()
+            .Where(request => request.UpdatedAt >= since
+                              || request.Status == ReturnStatus.Requested
+                              || request.Status == ReturnStatus.Approved
+                              || request.Status == ReturnStatus.Received)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlySet<CustomerId>> CustomersWhoOrderedBeforeAsync(
+        IReadOnlyCollection<CustomerId> customers, DateTimeOffset before, CancellationToken cancellationToken = default) =>
+        (await context.Orders.AsNoTracking()
+            .Where(order => customers.Contains(order.CustomerId) && order.CreatedAt < before && order.Mode == OrderMode.Live)
+            .Select(order => order.CustomerId)
+            .Distinct()
+            .ToListAsync(cancellationToken))
+        .ToHashSet();
 }

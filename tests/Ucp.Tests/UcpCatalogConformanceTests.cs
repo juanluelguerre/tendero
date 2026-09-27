@@ -22,6 +22,7 @@ namespace ElGuerre.Tendero.Ucp.Tests;
 /// requiring a flat `"ucp-agent.profile"` and refusing every conformant caller
 /// that did not send it.
 /// </summary>
+[Collection(UcpSchemas.Collection)]
 public sealed class UcpCatalogConformanceTests
 {
     private const string SearchResponse = "https://ucp.dev/schemas/shopping/catalog_search.json#/$defs/search_response";
@@ -232,10 +233,10 @@ public sealed class UcpCatalogConformanceTests
     /// </summary>
     [Theory]
     [InlineData("no ucp envelope", """{"products":[]}""")]
-    [InlineData("no products array", """{"ucp":{"version":"2026-04-08"}}""")]
+    [InlineData("no products array", """{"ucp":{"version":"2026-08-25"}}""")]
     [InlineData(
         "the old limit/offset/total pagination, which is the request shape and not the response one",
-        """{"ucp":{"version":"2026-04-08"},"products":[],"pagination":{"limit":10,"offset":0,"total":0}}""")]
+        """{"ucp":{"version":"2026-08-25"},"products":[],"pagination":{"limit":10,"offset":0,"total":0}}""")]
     public void A_search_answer_that_breaks_the_schema_is_rejected(string what, string json) =>
         Assert.False(
             UcpSchemas.Get(SearchResponse).Evaluate(JsonDocument.Parse(json).RootElement).IsValid,

@@ -432,6 +432,45 @@ classDiagram
         CheckedOut
         Abandoned
     }
+    class CheckoutBuyer {
+        <<record>>
+        +string? FirstName
+        +string? LastName
+        +string? Email
+        +string? Phone
+        +string? FullName
+    }
+    class CheckoutGap {
+        <<enumeration>>
+        Lines
+        BuyerEmail
+        Destination
+        ShippingOption
+    }
+    class CheckoutSession {
+        <<aggregate>>
+        +CheckoutSessionId Id
+        +AgentId Owner
+        +CartId CartId
+        +OrderMode Mode
+        +string Culture
+        +CheckoutSessionStatus Status
+        +CheckoutBuyer Buyer
+        +Address? Destination
+        +string? ShippingOptionCode
+        +string[] Coupons
+        +string? ShownQuoteHash
+        +OrderId? OrderId
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset UpdatedAt
+        +DateTimeOffset ExpiresAt
+    }
+    class CheckoutSessionStatus {
+        <<enumeration>>
+        Open
+        Completed
+        Canceled
+    }
     class Order {
         <<aggregate>>
         +OrderId Id
@@ -447,6 +486,10 @@ classDiagram
         +OrderShipping Shipping
         +OrderQuote Quote
         +OrderTotals Totals
+        +OrderMode Mode
+        +string? ContactEmail
+        +OrderMandate? Mandate
+        +AgentId? PlacedBy
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -472,6 +515,20 @@ classDiagram
         +Money UnitPrice
         +int Quantity
         +Money Total
+    }
+    class OrderMandate {
+        <<record>>
+        +string Kind
+        +string Issuer
+        +string Reference
+        +decimal ApprovedTotal
+        +string Currency
+        +DateTimeOffset? ExpiresAt
+    }
+    class OrderMode {
+        <<enumeration>>
+        Live
+        Test
     }
     class OrderPayment {
         <<record>>
@@ -562,9 +619,11 @@ classDiagram
         Cancelled
     }
     Cart "1" --> "*" CartLine : Lines
+    CheckoutSession --> CheckoutBuyer : Buyer
     Order --> OrderShipping : Shipping
     Order --> OrderQuote : Quote
     Order --> OrderTotals : Totals
+    Order --> OrderMandate : Mandate
     Order "1" --> "*" OrderDiscount : Discounts
     Order "1" --> "*" OrderTax : Taxes
     Order --> OrderPayment : Payment
@@ -577,6 +636,8 @@ classDiagram
 
 | Event | Carries |
 |---|---|
+| `CheckoutSessionCanceled` | `SessionId: CheckoutSessionId` |
+| `CheckoutSessionCompleted` | `SessionId: CheckoutSessionId`, `OrderId: OrderId` |
 | `OrderCancelled` | `OrderId: OrderId`, `Reason: string` |
 | `OrderConfirmed` | `OrderId: OrderId` |
 | `OrderDelivered` | `OrderId: OrderId` |
@@ -597,6 +658,14 @@ classDiagram
 stateDiagram-v2
     Open --> CheckedOut
     Open --> Abandoned
+```
+
+### CheckoutSession states
+
+```mermaid
+stateDiagram-v2
+    Open --> Completed
+    Open --> Canceled
 ```
 
 ### Order states
@@ -632,6 +701,23 @@ stateDiagram-v2
 
 ```mermaid
 classDiagram
+    class Agent {
+        <<aggregate>>
+        +AgentId Id
+        +string DisplayName
+        +string Operator
+        +AgentTrust Trust
+        +AgentStatus Status
+        +string? SuspensionReason
+        +DateTimeOffset RegisteredAt
+        +DateTimeOffset UpdatedAt
+        +AgentStanding Standing
+    }
+    class AgentStatus {
+        <<enumeration>>
+        Active
+        Suspended
+    }
     class Customer {
         <<aggregate>>
         +CustomerId Id
@@ -650,8 +736,20 @@ classDiagram
 
 | Event | Carries |
 |---|---|
+| `AgentRegistered` | `AgentId: AgentId`, `Trust: AgentTrust` |
+| `AgentReinstated` | `AgentId: AgentId` |
+| `AgentSuspended` | `AgentId: AgentId`, `Reason: string` |
+| `AgentTrustChanged` | `AgentId: AgentId`, `From: AgentTrust`, `To: AgentTrust` |
 | `CustomerIdentified` | `CustomerId: CustomerId`, `Subject: string` |
 | `CustomerRegistered` | `CustomerId: CustomerId` |
+
+### Agent states
+
+```mermaid
+stateDiagram-v2
+    Active --> Suspended
+    Suspended --> Active
+```
 
 ## Knowledge
 

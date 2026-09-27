@@ -83,6 +83,37 @@ public sealed record OrderStop(string Code, string? Detail)
 
     /// <summary>The card said no.</summary>
     public const string PaymentDeclined = "payment_declined";
+
+    /// <summary>
+    /// A test order that went all the way to confirmed, and ends here: it is never
+    /// shipped, and cancelling it is what gives its stock back and voids its hold
+    /// (ADR 0038).
+    /// </summary>
+    public const string TestOrderEnded = "test_order_ended";
+}
+
+/// <summary>
+/// Whether an order is real (ADR 0038, P11-0). A <c>Test</c> order goes through the
+/// whole saga — reservation, state machine, audit, events — pays through the test
+/// provider, is never shipped and gives its stock back. **Fixed at placement and
+/// decided by the server from the credential**, never by the request: a mode an
+/// agent could choose is a way to get goods without paying, or to be charged by
+/// mistake.
+/// </summary>
+public enum OrderMode
+{
+    Live,
+    Test,
+}
+
+public static class OrderModes
+{
+    /// <summary>The one rule: a test credential places test orders, every other one live ones.</summary>
+    public static OrderMode Of(CommercePrincipal principal)
+    {
+        ArgumentNullException.ThrowIfNull(principal);
+        return principal.IsTest ? OrderMode.Test : OrderMode.Live;
+    }
 }
 public sealed record OrderShipped(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;
 
@@ -159,6 +190,30 @@ public sealed class Order : AggregateRoot
 
     public OrderTotals Totals { get; private set; } = default!;
 
+    /// <summary>Live or a rehearsal, fixed when the order was placed (ADR 0038).</summary>
+    public OrderMode Mode { get; private set; }
+
+    /// <summary>
+    /// Where to write to the buyer about this order, when they said: a UCP checkout
+    /// asks for it before it completes (P11-1), the storefront does not yet.
+    /// Snapshotted like the address — the email a purchase was confirmed to is a
+    /// fact about the purchase.
+    /// </summary>
+    public string? ContactEmail { get; private set; }
+
+    /// <summary>
+    /// The mandate an agent placed it under, when there was one (P11-5): null for a
+    /// person's order and for an agent's without AP2. Fixed at placement like the mode.
+    /// </summary>
+    public OrderMandate? Mandate { get; private set; }
+
+    /// <summary>
+    /// The agent that placed it, when one did (P11-6): frozen like the mode, so
+    /// "how many orders has this agent placed this hour" and "what share of sales do
+    /// agents bring" are questions about orders, not about logs.
+    /// </summary>
+    public AgentId? PlacedBy { get; private set; }
+
     /// <summary>
     /// What came off, frozen as codes and labels. Backed by a list for the same
     /// reason the lines are: EF maps a private collection into one JSON column,
@@ -233,7 +288,12 @@ public sealed class Order : AggregateRoot
         OrderTotals totals,
         IReadOnlyList<OrderDiscount>? discounts = null,
         IReadOnlyList<OrderTax>? taxes = null,
-        string culture = "es")
+        string culture = "es",
+        OrderMode mode = OrderMode.Live,
+        OrderId? id = null,
+        string? contactEmail = null,
+        OrderMandate? mandate = null,
+        AgentId? placedBy = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentNullException.ThrowIfNull(shippingAddress);
@@ -273,11 +333,25 @@ public sealed class Order : AggregateRoot
                 $"The order's totals do not add up: {totals.Subtotal} − {totals.DiscountTotal} + " +
                 $"{totals.Shipping} is {expected}, not {totals.Total}.");
 
+        // Placement checks this before charging anything; the aggregate holds the
+        // rule too, so no path — present or future — places an order for other
+        // money than a mandate approved.
+        if (mandate is not null
+            && (mandate.ApprovedTotal != totals.Total.Amount || !string.Equals(mandate.Currency, currency, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException(
+                $"The mandate approves {mandate.ApprovedTotal} {mandate.Currency}; this order is {totals.Total.Amount} {currency}.");
+
         var now = clock.GetUtcNow();
         var order = new Order
         {
-            Id = OrderId.New(),
+            // The id the payment was authorised under, when checkout minted it
+            // first: the provider's record and the order name the same order.
+            Id = id ?? OrderId.New(),
             CustomerId = customerId,
+            Mode = mode,
+            ContactEmail = string.IsNullOrWhiteSpace(contactEmail) ? null : contactEmail.Trim(),
+            Mandate = mandate,
+            PlacedBy = placedBy,
             IdempotencyKey = idempotencyKey,
             Culture = SharedKernel.Culture.Normalize(culture),
             Currency = currency,
@@ -339,8 +413,31 @@ public sealed class Order : AggregateRoot
     public void Confirm(TimeProvider clock) =>
         TransitionTo(clock, OrderStatus.Confirmed, now => new OrderConfirmed(Id, now));
 
-    public void Ship(TimeProvider clock) =>
+    /// <summary>
+    /// A test order is never shipped: it is not a transition the table lacks —
+    /// a live order takes it — but a rule about which orders are real. Refused
+    /// here, so no path (the backoffice, a webhook, a future carrier callback)
+    /// can send a rehearsal to somebody's door.
+    /// </summary>
+    public void Ship(TimeProvider clock)
+    {
+        if (Mode == OrderMode.Test)
+            throw new InvalidOperationException($"Order {Id} is a test order; a test order is never shipped.");
+
         TransitionTo(clock, OrderStatus.Shipped, now => new OrderShipped(Id, now));
+    }
+
+    /// <summary>
+    /// The end of a rehearsal: a confirmed test order is cancelled, and the same
+    /// compensation as any cancellation gives its stock back and voids its hold.
+    /// </summary>
+    public void EndTest(TimeProvider clock)
+    {
+        if (Mode != OrderMode.Test)
+            throw new InvalidOperationException($"Order {Id} is a live order; only a test order ends by itself.");
+
+        Cancel(clock, OrderStop.TestOrderEnded, "A test order: never shipped, its stock given back.");
+    }
 
     public void Deliver(TimeProvider clock) =>
         TransitionTo(clock, OrderStatus.Delivered, now => new OrderDelivered(Id, now));

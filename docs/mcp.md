@@ -148,6 +148,18 @@ entry, not an error; the payload arrives in `result.structuredContent`.
 Absent is fine. Malformed — a `ucp-agent` with no `profile` — is refused, and
 says which member is missing.
 
+**The shop's own extension, `com.elguerre.tendero.knowledge`** (P11-8). When the
+profile is on a trusted host and speaks it, every product `lookup_catalog` and
+`get_product` return carries `knowledge`. It holds the product's specs, each
+with its `source`: `catalogue`, or `description` when a person approved it from
+the product's own text. In that case it also carries the quoted words and how
+well they support the value, 0 to 1. The member lists only the specs the shop
+knows: a missing one means the shop does not know it. The answer's `ucp.capabilities`
+names the extension. Its schema is the shop's own, served at
+`/ucp/schemas/com.elguerre.tendero.knowledge.json` and linked from the profile.
+Without a profile, or with one from an untrusted host, the catalogue answers as
+before and nothing is refused. The development profiles speak it.
+
 **A search says what kind of answer it is**, as informational `messages` (ADR
 0032), over both the MCP and the REST binding:
 
@@ -167,6 +179,50 @@ Every one of these answers is validated in the test suite against the
 specification's own JSON Schemas, vendored at a pinned commit under
 `tests/Ucp.Tests/ucp-schemas`. That includes every product in the shipped
 catalogue, in both languages, against a real database.
+
+### UCP's checkout binding — an agent's token required
+
+Phase 11 (ADR 0039). The five tools UCP defines for a checkout session, over the
+same operations as the REST binding at `/ucp/checkout-sessions`. **The one part of
+`/mcp` that is not anonymous**: each tool refuses a caller without an agent's
+bearer token, and a session belongs to the agent that opened it.
+
+| Tool | What it does |
+|---|---|
+| `create_checkout` | Opens a session for line items (`item.id` is a variant SKU from the catalogue tools) |
+| `get_checkout` | The session as it stands: status, totals, messages, fulfillment options |
+| `update_checkout` | Replaces the whole checkout — buyer, destination, chosen option, discount codes |
+| `complete_checkout` | Places the order with one instrument from a handler the checkout offered; needs `meta.idempotency-key` |
+| `cancel_checkout` | Cancels an open session; needs `meta.idempotency-key` |
+
+Every call carries `meta.ucp-agent.profile`: the shop fetches that profile to
+negotiate, **only from a trusted host** (`Ucp:TrustedPlatformHosts`; Development
+trusts `localhost`, where the API publishes its seeded agents' profiles at
+`/dev-platforms/{agent}/profile.json`).
+
+**What an agent can settle.** A test credential (ADR 0038 — `claude-desktop-test`
+in the development issuer) is offered the sandbox handler `com.elguerre.tendero.fake`:
+complete with `{"payment":{"instruments":[{"id":"i1","handler_id":"tendero_fake_1","type":"card","credential":{"type":"com.elguerre.tendero.fake_token","token":"card-ok"}}]}}`
+and the order is a rehearsal, ended before it ships. A live agent (`claude-desktop`)
+is offered no handler: its checkout reaches `requires_escalation`, and its
+`continue_url` hands the basket to a person on the storefront.
+
+**With AP2's mandates** (ADR 0040). The seeded profiles speak
+`dev.ucp.common.payment.ap2_mandate`, so every checkout comes back with
+`ap2.merchant_authorization` — the shop's signature, verifiable with the key under
+`keys` in `/.well-known/ucp` — and completion requires `ap2.checkout_mandate`. In
+Development the API plays the platform: POST the checkout it answered to
+`/dev-platforms/{agent}/checkout-mandates` and it returns a mandate signed with the
+key its profile publishes, which goes into the complete request as
+`"ap2":{"checkout_mandate":"…"}`. A profile URL ending in `?ap2=false` is the same
+agent without AP2: nothing is signed and no mandate is asked for.
+
+Over REST, the same flow:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:5130/dev-issuer/connect/token   -d grant_type=password -d username=claude-desktop-test | jq -r .access_token)
+curl -s -X POST http://localhost:5130/ucp/checkout-sessions   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'   -H 'UCP-Agent: profile="http://localhost:5130/dev-platforms/claude-desktop-test/profile.json"'   -d '{"line_items":[{"item":{"id":"B11COO0301-DEFAULT"},"quantity":1}]}'
+```
 
 ### Tendero's own
 

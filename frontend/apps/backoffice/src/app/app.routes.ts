@@ -41,7 +41,22 @@ export const appRoutes: Route[] = [
     path: '',
     component: Shell,
     children: [
-      { path: '', pathMatch: 'full', redirectTo: 'review' },
+      // The shop's pulse is the backoffice's home (P11-7): the first thing a
+      // shopkeeper sees is what needs them, not a queue.
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      {
+        path: 'dashboard',
+        title: 'dashboard.title',
+        canActivate: [shopkeeper],
+        loadComponent: () =>
+          import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+      },
+      {
+        path: 'agents',
+        title: 'agents.title',
+        canActivate: [shopkeeper],
+        loadComponent: () => import('./features/agents/agents-page').then((m) => m.AgentsPage),
+      },
       {
         path: 'sign-in',
         title: 'signIn.title',
