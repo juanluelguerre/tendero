@@ -129,7 +129,7 @@ answers "what needs me?" (P11-7).
 | B-F2 | **The audit page scrolls the whole page sideways on a phone**, by 520 px. Its table is not in the frame the other tables scroll inside. | WCAG 1.4.10 Reflow · N4 consistency | **3** | B5 |
 | B-F3 | **Orders cannot be searched, filtered or sorted.** Twenty-four rows, newest first, and short ids. Finding one order means reading the list. | N7 flexibility and efficiency · N6 recognition | **3** | B3 |
 | B-F4 | **On a phone, an order's actions are off-screen.** *Ship* and *Cancel* sit in the table's last column, past *Payment*, *Lines* and *Total*; the job needs a sideways scroll per order. | N7 · WCAG 1.4.10 | **3** | B3, B4 |
-| B-F5 | **The destructive action has the same weight as the useful one.** *Cancel* sits beside *Ship*, the same size and style. Whether it asks before acting is for the by-hand pass to check. | N5 error prevention · N3 control | **3** | B3 |
+| B-F5 | **The destructive action has the same weight as the useful one, and does not ask.** *Cancel* sits beside *Ship*, the same size and style, and one click cancels the order, releasing its payment hold. The code confirms it: the move is sent on click. There is no undo, because a cancelled order is final. | N5 error prevention · N3 control | **3** | B3 |
 | B-F6 | **Screens speak the developer's language.** Hints read "the state machine decides which move is legal", "Draft is why this queue exists", "a log that leads with successes is a changelog". The command appears as `CompleteCheckoutSessionCommand`, and the heading reads "Audit 13 refused". | N2 match with the real world | **2** | B1, B3, B5 |
 | B-F7 | **The empty review queue offers a developer's action as its one clay button**: *Import the sample catalog*. | N2 · N8 | **2** | B1 |
 | B-F8 | **Small targets on a phone.** The language switch is 31×19 px, and the widget links are 18 px high. | WCAG 2.5.8 Target size (24 px) | **2** | all |
@@ -144,12 +144,13 @@ answers "what needs me?" (P11-7).
 | S-F2 | **The phone header spends its space on the brand.** The logo's three-line tagline and the language switch take the row where a menu and search would be. | N8 | **2** | S1, S2 |
 | S-F3 | **Checkout asks for a click to learn the shipping.** *¿Cómo quieres recibirlo?* has to be pressed before a total exists, and *Pagar* stays disabled with "Se calcula al pagar" until then. | N1 · N7 | **2** | S4 |
 | S-F4 | **Small targets.** *Comparar* on every card is 61×21 px, and *Seguir comprando*, *Tu cesta* and the breadcrumb's *Tienda* are 22 px high. | WCAG 2.5.8 | **2** | S2, S3 |
+| S-F6 | **"TIENDA" in the header looks like navigation and is not.** On a desktop the header reads *ES EN · TIENDA · account · cart*, and *TIENDA* is a label (`brand__area`) set in the same row and weight as the links. It is the menu the author missed, promised by the layout and absent from it. | N4 consistency · N2 | **3** | S1 |
 | S-F5 | **"Novedades" cuts its last card at 1440 px.** The half card is the only cue that the row scrolls, and there is no control to scroll it. | N1 · N6 | **1** | S2 |
 
 ### What R-1 hands to R-3
 
 The findings rank themselves by severity and by how many jobs they touch:
-- **B-F1, S-F1 and S-F2** are the navigation of both apps, and they are exactly
+- **B-F1, S-F1, S-F2 and S-F6** are the navigation of both apps, and they are exactly
   what R-2 adopted: P1, the side rail, and S-P1, the category menu.
 - **B-F3, B-F4 and B-F5** are the orders list, answered by P3 (filters), P6 (a
   side pane) and a destructive action set apart.
@@ -159,6 +160,25 @@ The findings rank themselves by severity and by how many jobs they touch:
 Before R-3, two things remain. The by-hand pass (contrast, focus order and
 visibility, keyboard paths, B-F5's confirmation) waits for the checker decision.
 The **baseline walkthrough** (R-0) waits for the author, as the participant.
+
+### The baseline's automated half: minimum interaction cost today
+
+The shortest path for each of R-0's jobs, read off the running app on 2026-09-27.
+"Interactions" are clicks and taps plus fields filled; "scan" means the job depends
+on reading a list that no tool narrows. R-6 counts the same paths on the new
+interface. Times and SEQ come from the walkthrough.
+
+| Job | Shortest path today | Interactions | Notes |
+|---|---|:-:|---|
+| B1 publish a draft | tab *Review queue* → *Publish* | 2 | no drafts in the laboratory today; the path is read from the screen |
+| B2 review the weakest claim | tab *Claims* → *Approve* / *Reject* | 2 | the queue is already weakest-first |
+| B3 find an order and ship it | tab *Orders* → scan → *Ship* | 2 + scan | no search; on a phone, plus a sideways scroll to reach *Ship* (B-F4) |
+| B4 decide a return | tab *Returns* → *Approve* / *Reject* (+ a reason) | 2–3 | |
+| B5 suspend an agent | tab *Agents* → *Suspend* → reason → *Suspend* | 4 | |
+| S1 reach a category | from home: a department card, 1. From a product: its breadcrumb, 1–2. From search, cart or checkout: logo → card, **2, and only via home** | 1–2 | no route from the header at all (S-F1, S-F6) |
+| S2 find a product described, not named | type → *Buscar* → a result | 3 | |
+| S3 add a variant to the cart | pick the variant → *Añadir al carrito* | 1–2 | |
+| S4 pay as a guest | 6 address fields → *¿Cómo quieres recibirlo?* → an option → *Pagar* | 9 | the shipping click is S-F3 |
 
 ## R-2 — benchmark: what the good ones do, judged against R-0
 
