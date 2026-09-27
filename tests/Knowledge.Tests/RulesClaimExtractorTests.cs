@@ -70,4 +70,54 @@ public sealed class RulesClaimExtractorTests
 
         Assert.All(await Extract(text), claim => Assert.Contains(claim.QuoteSpanish, text, StringComparison.Ordinal));
     }
+
+    /// <summary>
+    /// The whole vocabulary the rules know, word by word: a table in a static
+    /// field, whose entries Stryker cannot see killed (a runner artefact,
+    /// docs/testing.md) — so this is where losing one of them turns red.
+    /// </summary>
+    [Theory]
+    [InlineData("hierro fundido", "CAST_IRON")]
+    [InlineData("acero al carbono", "CARBON_STEEL")]
+    [InlineData("acero inoxidable", "STAINLESS_STEEL")]
+    [InlineData("aluminio", "ALUMINIUM")]
+    [InlineData("lino", "LINEN")]
+    [InlineData("cerámica", "CERAMIC")]
+    [InlineData("bambú", "BAMBOO")]
+    [InlineData("algodón", "COTTON")]
+    [InlineData("merino", "MERINO_WOOL")]
+    [InlineData("cristal", "GLASS")]
+    public async Task Every_material_the_rules_know_is_typed_as_its_option(string word, string option)
+    {
+        var claims = await Extract($"Una pieza de {word} hecha a mano.");
+
+        Assert.Contains(claims, claim => claim.QuoteSpanish == word && claim.AttributeCode == "MATERIAL" && claim.Value == option);
+    }
+
+    [Theory]
+    [InlineData("Dos", "2")]
+    [InlineData("Tres", "3")]
+    [InlineData("Cuatro", "4")]
+    [InlineData("Cinco", "5")]
+    [InlineData("Seis", "6")]
+    public async Task A_count_that_opens_the_description_is_the_number_of_pieces(string word, string pieces)
+    {
+        var claims = await Extract($"{word} cuencos apilables.");
+
+        Assert.Contains(claims, claim => claim.AttributeCode == "PIECES" && claim.Value == pieces);
+    }
+
+    /// <summary>
+    /// The rules quote Spanish and write no statement in either language: vetting
+    /// states a typed claim from its attribute and an untyped one from its own
+    /// words. A rule that wrote a statement would be judged as a model's.
+    /// </summary>
+    [Fact]
+    public async Task The_rules_write_no_statement_and_no_english_quote()
+    {
+        var claims = await Extract("Cazo de 20 cm con asa de 30 x 12 cm y 1,2 kg de aluminio.");
+
+        Assert.NotEmpty(claims);
+        Assert.All(claims, claim => Assert.Equal(("", "", ""), (claim.QuoteEnglish, claim.StatementSpanish, claim.StatementEnglish)));
+    }
 }

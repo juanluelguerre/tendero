@@ -49,5 +49,12 @@ public sealed class InMemoryKnowledge : IKnowledgeRepository, IUnitOfWork
 
     public void Add(ProductClaim claim) => Claims.Add(claim);
 
-    public Task SaveChangesAsync(CancellationToken ct) => Task.CompletedTask;
+    /// <summary>How many times a handler saved: a decision that is never saved is a decision that did not happen.</summary>
+    public int SaveCount { get; private set; }
+
+    public Task SaveChangesAsync(CancellationToken ct)
+    {
+        SaveCount++;
+        return Task.CompletedTask;
+    }
 }

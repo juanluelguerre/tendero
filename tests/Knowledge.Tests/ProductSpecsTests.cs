@@ -44,6 +44,43 @@ public sealed class ProductSpecsTests
         var cups = Assert.Single(sheet.Rows, row => row.AttributeCode == "CUPS").Cells.Single();
         Assert.Equal((SpecSources.Catalogue, 6m), (cups.Source, cups.Number));
         Assert.Null(cups.Evidence);
+
+        // An applied claim is a row, not also a sentence; the rows read by label.
+        Assert.Empty(sheet.Statements);
+        Assert.Equal(["Material", "Tazas"], sheet.Rows.Select(row => row.Label));
+    }
+
+    [Fact]
+    public async Task Of_two_claims_behind_one_value_the_better_supported_is_shown()
+    {
+        await ApproveAndApplyAsync(Claim(this.moka, "de aluminio", "MATERIAL", "aluminio", 0.71), heldAs: "ALUMINIUM");
+        await ApproveAndApplyAsync(Claim(this.moka, "Cafetera italiana de aluminio", "MATERIAL", "aluminio", 0.96), heldAs: "ALUMINIUM");
+
+        var material = (await SpecsAsync("CAF-001")).Rows.Single(row => row.AttributeCode == "MATERIAL").Cells.Single();
+
+        Assert.Equal(0.96, material.Evidence!.Support);
+    }
+
+    [Fact]
+    public async Task A_claim_with_no_words_in_the_pages_language_shows_the_words_it_has()
+    {
+        await ApproveAndApplyAsync(Claim(this.moka, "de aluminio", "MATERIAL", "aluminio", 0.93), heldAs: "ALUMINIUM");
+
+        var sheet = await new ProductSpecsHandler(this.facts, this.knowledge)
+            .HandleAsync(new ProductSpecsQuery(["CAF-001"], "en"), TestContext.Current.CancellationToken);
+
+        var quote = Assert.Single(sheet.Rows.Single(row => row.AttributeCode == "MATERIAL").Cells.Single().Evidence!.Quotes);
+        Assert.Equal("es", quote.Culture);
+    }
+
+    [Fact]
+    public void Four_products_are_compared_and_a_blank_code_or_an_unknown_language_is_not()
+    {
+        var validator = new ProductSpecsValidator();
+
+        Assert.True(validator.Validate(new ProductSpecsQuery(["A", "B", "C", "D"], "en")).IsValid);
+        Assert.False(validator.Validate(new ProductSpecsQuery(["A", ""], "es")).IsValid);
+        Assert.False(validator.Validate(new ProductSpecsQuery(["A", "B"], "fr")).IsValid);
     }
 
     [Fact]
@@ -160,6 +197,17 @@ public sealed class ProductSpecsTests
 
         Assert.False(recorded);
         Assert.Null(superseded.AppliedAs);
+    }
+
+    [Fact]
+    public async Task Catalogs_answer_is_saved()
+    {
+        var claim = Claim(this.moka, "de aluminio", "MATERIAL", "aluminio", 0.93);
+        var saves = this.knowledge.SaveCount;
+
+        await ApproveAndApplyAsync(claim, heldAs: "ALUMINIUM");
+
+        Assert.Equal((saves + 1, "ALUMINIUM"), (this.knowledge.SaveCount, claim.AppliedAs));
     }
 
     private Task<SpecSheet> SpecsAsync(params string[] codes) =>

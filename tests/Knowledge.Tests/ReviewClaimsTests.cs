@@ -73,6 +73,31 @@ public sealed class ReviewClaimsTests
         Assert.Equal(("Ana Tendera", ClaimStatus.Rejected), (claim.ReviewedBy, claim.Status));
     }
 
+    [Fact]
+    public async Task Rejecting_is_saved_counted_and_answered_as_a_rejection()
+    {
+        var claim = Propose("brazo articulado", 0.97);
+        using var metrics = new InstrumentRecorder("tendero.knowledge.claims.reviewed");
+        var saves = this.knowledge.SaveCount;
+
+        var result = await Review(claim, ReviewDecision.Reject, "Ana Tendera");
+
+        Assert.Equal(ReviewOutcome.Rejected, result.Outcome);
+        Assert.Equal(saves + 1, this.knowledge.SaveCount);
+        Assert.Contains(metrics.Of("tendero.knowledge.claims.reviewed"), tags => Equals(tags["decision"], "reject"));
+    }
+
+    [Fact]
+    public async Task The_queue_shows_the_statement_in_both_languages()
+    {
+        Propose("brazo articulado", 0.97);
+
+        var queued = Assert.Single(await new ListClaimsForReviewHandler(this.knowledge)
+            .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken));
+
+        Assert.Equal(("Tiene brazo articulado.", "It has brazo articulado."), (queued.StatementSpanish, queued.StatementEnglish));
+    }
+
     private Task<ReviewClaimResult> Review(ProductClaim claim, ReviewDecision decision, string reviewer) =>
         new ReviewClaimHandler(this.knowledge, new Reviewer(reviewer), this.knowledge, this.clock)
             .HandleAsync(new ReviewClaimCommand(claim.Id, decision), TestContext.Current.CancellationToken);

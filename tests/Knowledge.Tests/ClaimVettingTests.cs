@@ -25,6 +25,8 @@ public sealed class ClaimVettingTests
     [
         new("CAPACITY_L", "Number", "L", "capacity", [], "capacidad"),
         new("MATERIAL", "Option", null, "material", ["CAST_IRON", "LINEN"], "material"),
+        new("INDUCTION", "Boolean", null, "induction", [], "inducción"),
+        new("MODEL", "Text", null, "model", [], "modelo"),
     ];
 
     private static ProposedClaim Claim(string quote, string es = "", string en = "", string? attribute = null, string? value = null, string quoteEn = "") =>
@@ -41,6 +43,8 @@ public sealed class ClaimVettingTests
         var claim = Assert.Single(kept);
         Assert.Equal("cabe en su propio bolsillo", claim.QuoteSpanish.Text);
         Assert.Equal("folds into its own pocket", claim.QuoteEnglish!.Text);
+        Assert.Equal(["en", "es"], claim.Statement.Cultures.Order());
+        Assert.Equal("It folds into its own pocket.", claim.Statement.In("en"));
     }
 
     [Fact]
@@ -101,5 +105,47 @@ public sealed class ClaimVettingTests
         Assert.Equal("capacidad: 0.45 L", kept[0].Statement.In("es"));
         Assert.Equal("capacity: 0.45 L", kept[0].Statement.In("en"));
         Assert.Equal("140 g", kept[1].Statement.In("en"));
+    }
+
+    /// <summary>
+    /// Typing, case by case (Stryker at the phase-10 close): a yes/no in the words a
+    /// Spanish or English description uses, an option whatever its case, a text
+    /// trimmed — and what cannot be typed is refused with the claim kept, while a
+    /// claim that types nothing is not a refusal at all.
+    /// </summary>
+    [Theory]
+    [InlineData("INDUCTION", "sí", "INDUCTION", "true", false)]
+    [InlineData("INDUCTION", "si", "INDUCTION", "true", false)]
+    [InlineData("INDUCTION", "Yes", "INDUCTION", "true", false)]
+    [InlineData("INDUCTION", "TRUE", "INDUCTION", "true", false)]
+    [InlineData("INDUCTION", "no", "INDUCTION", "false", false)]
+    [InlineData("INDUCTION", "false", "INDUCTION", "false", false)]
+    [InlineData("INDUCTION", "quizá", null, null, true)]
+    [InlineData("material", "linen", "MATERIAL", "LINEN", false)]
+    [InlineData("MODEL", " X1 ", "MODEL", "X1", false)]
+    [InlineData("MODEL", "  ", null, null, true)]
+    [InlineData("WEIGHT_G", "140", null, null, true)]
+    [InlineData("CAPACITY_L", "1,5", "CAPACITY_L", "1.5", false)]
+    [InlineData("MATERIAL", null, null, null, false)]
+    [InlineData(null, "LINEN", null, null, false)]
+    public void Typing_is_normalised_or_refused_and_the_claim_kept(string? attribute, string? value, string? code, string? typed, bool refused)
+    {
+        var (kept, dropped) = Vet(Claim("140 g", attribute: attribute, value: value));
+
+        Assert.Empty(dropped);
+        Assert.Equal((code, typed, refused), (kept[0].AttributeCode, kept[0].Value, kept[0].TypingRefused));
+    }
+
+    [Fact]
+    public void An_english_statement_written_in_spanish_is_refused_too() =>
+        Assert.Equal([DropReason.WrongLanguage], Vet(Claim("140 g", "Pesa 140 g.", "Pesa solo 140 g con la bolsa.")).Dropped);
+
+    [Fact]
+    public void A_rules_claim_on_an_attribute_without_a_unit_says_none_and_uses_the_english_label_when_there_is_no_spanish_one()
+    {
+        var (kept, _) = ClaimVetting.Vet(
+            [Claim("140 g", attribute: "MODEL", value: "X1")], Spanish, English, [new AttributeSpec("MODEL", "Text", null, "model", [], null)]);
+
+        Assert.Equal(("model: X1", "model: X1"), (kept[0].Statement.In("es"), kept[0].Statement.In("en")));
     }
 }

@@ -25,6 +25,8 @@ public sealed class KnowledgeRegistrationTests
         Assert.IsType<RulesClaimExtractor>(provider.GetRequiredKeyedService<IClaimExtractor>(ClaimExtractors.Rules));
         Assert.Null(provider.GetKeyedService<IClaimExtractor>(ClaimExtractors.Chat));
         Assert.Null(provider.GetService<ISupportScorer>());
+        // The model a proposal records as its provenance is known either way.
+        Assert.Equal("Qwen/Qwen3.5-4B", provider.GetRequiredService<ExtractorModel>().ModelId);
     }
 
     [Fact]

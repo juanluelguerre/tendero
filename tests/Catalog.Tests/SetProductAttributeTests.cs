@@ -31,7 +31,13 @@ public sealed class SetProductAttributeTests
     [InlineData("CAPACITY_L", "20 L", "20")]
     [InlineData("CAPACITY_L", "1.5", "1.5")]
     [InlineData("INDUCTION", "sí", "True")]
+    [InlineData("INDUCTION", "si", "True")]
+    [InlineData("INDUCTION", "Yes", "True")]
+    [InlineData("INDUCTION", "true", "True")]
+    [InlineData("INDUCTION", "1", "True")]
     [InlineData("INDUCTION", "no", "False")]
+    [InlineData("INDUCTION", "false", "False")]
+    [InlineData("INDUCTION", "0", "False")]
     [InlineData("LAPTOP_MAX_IN", "15\"", "15\"")]
     public void A_definition_accepts_what_it_can_hold(string code, string raw, string held)
     {
@@ -57,6 +63,36 @@ public sealed class SetProductAttributeTests
     public void A_definition_refuses_what_it_cannot_hold(string code, string raw) =>
         Assert.Null(Definitions.ByCode(code)!.Accept(raw));
 
+    /// <summary>
+    /// The culture-free key an applied claim is matched on (P10-7): one string per
+    /// value, the same whoever wrote it — the import or an approved claim.
+    /// </summary>
+    [Fact]
+    public void A_value_has_one_culture_free_key_whatever_its_kind()
+    {
+        Assert.Equal("GLASS", AttributeValue.Option("MATERIAL", "glass").Key);
+        Assert.Equal("1.5", AttributeValue.Numeric("CAPACITY_L", 1.5m).Key);
+        Assert.Equal(("true", "false"), (AttributeValue.Boolean("INDUCTION", true).Key, AttributeValue.Boolean("INDUCTION", false).Key));
+        Assert.Equal("15\"", AttributeValue.Plain("LAPTOP_MAX_IN", "15\"").Key);
+        Assert.Equal("a mano", AttributeValue.Localized("CARE", LocalizedText.From("es", "a mano").With("en", "by hand")).Key);
+    }
+
+    /// <summary>The import goes through the same rule: an accepted value as the definition holds it, a refused one as the source's text — and a yes/no that is neither reads as no, as it always did.</summary>
+    [Theory]
+    [InlineData("material", "vidrio", "GLASS")]
+    [InlineData("material", "unobtainium", "unobtainium")]
+    [InlineData("capacidad", "grande", "grande")]
+    [InlineData("INDUCTION", "quizá", "false")]
+    [InlineData("SOMETHING_ELSE", "x", "x")]
+    public void The_import_resolves_what_the_definition_accepts_and_keeps_what_it_refuses(string key, string raw, string kept)
+    {
+        var definitions = new AttributeDefinitions([.. Definitions.All]);
+        foreach (var definition in definitions.All.Where(d => d.Code == "CAPACITY_L"))
+            definition.AddAlias(Clock, "capacidad");
+
+        Assert.Equal(kept, ElGuerre.Tendero.Catalog.Connectors.ExternalProductMapper.Resolve(key, raw, definitions).Key);
+    }
+
     [Fact]
     public async Task An_accepted_value_is_set_and_the_product_saved()
     {
@@ -65,7 +101,8 @@ public sealed class SetProductAttributeTests
 
         var result = await handler.HandleAsync(Command(product, "material", "vidrio"), TestContext.Current.CancellationToken);
 
-        Assert.Equal((SetAttributeOutcome.Set, "MATERIAL"), (result.Outcome, result.AttributeCode));
+        Assert.Equal((SetAttributeOutcome.Set, "MATERIAL", "GLASS"), (result.Outcome, result.AttributeCode, result.HeldAs));
+        Assert.Equal((AuditOutcome.Allowed, (string?)null), (((IAuditedResult)result).AuditOutcome, ((IAuditedResult)result).AuditReason));
         Assert.Equal("GLASS", product.AttributeFor("MATERIAL")?.OptionCode);
         Assert.Equal(1, unitOfWork.SaveCount);
         Assert.Contains(product.DomainEvents, e => e is ProductUpserted);
@@ -81,7 +118,8 @@ public sealed class SetProductAttributeTests
 
         var result = await handler.HandleAsync(Command(product, "MATERIAL", "glass"), TestContext.Current.CancellationToken);
 
-        Assert.Equal(SetAttributeOutcome.Unchanged, result.Outcome);
+        Assert.Equal((SetAttributeOutcome.Unchanged, "GLASS"), (result.Outcome, result.HeldAs));
+        Assert.Equal(AuditOutcome.Allowed, ((IAuditedResult)result).AuditOutcome);
         Assert.Equal(0, unitOfWork.SaveCount);
         Assert.Empty(product.DomainEvents);
     }
@@ -96,8 +134,9 @@ public sealed class SetProductAttributeTests
 
         var result = await handler.HandleAsync(Command(product, code, value), TestContext.Current.CancellationToken);
 
-        Assert.Equal(expected, result.Outcome);
+        Assert.Equal((expected, (string?)null), (result.Outcome, result.HeldAs));
         Assert.Equal(AuditOutcome.Denied, ((IAuditedResult)result).AuditOutcome);
+        Assert.Equal(expected.ToString(), ((IAuditedResult)result).AuditReason);
         Assert.Null(product.AttributeFor(code));
         Assert.Equal(0, unitOfWork.SaveCount);
     }

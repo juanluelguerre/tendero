@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+    <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
   </ItemGroup>
 
 </Project>

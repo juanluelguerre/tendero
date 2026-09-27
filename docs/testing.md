@@ -92,6 +92,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/Search` | `Search.Tests`, `SearchEval.Tests` | 82.07 % | 57.06 % | 2026-09-26 · re-derived after layer B left |
 | `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 70.95 % | 62.50 % | 2026-09-26 |
 | `tools/TrafficSim` | `TrafficSim.Tests` | 87.66 % | 87.10 % | 2026-09-26 · `Model/`, `Scheduling/`, `Queries/` |
+| `src/Knowledge` | `Knowledge.Tests` | 72.33 % | 57.91 % | 2026-09-27 · first run 49.76 % |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -211,6 +212,54 @@ touched, both run. Reports in `docs/blog/reports/2026-09-17-no-answer-research/s
   `not_found` messages and `featured` correlation, and the agent metadata's
   profile check. They are the next
   Ucp work's first tests, not this phase's.
+
+**2026-09-27 — the phase close of *Knowledge* (phase 10).** One new project in
+full, three touched ones scoped to what the phase wrote, and the gates. Reports in
+`docs/blog/reports/2026-09-27-knowledge/stryker/`.
+
+- **`src/Knowledge`, first baseline.** First run **49.76 %**, 211 survivors — a
+  project written test-first where it mattered and read by the golden set
+  everywhere else, and the golden set is not a unit test. Classified, the real
+  gaps were: typing case by case (the yes/no words, an option whatever its case, a
+  text trimmed, an unknown attribute refused, a claim that types nothing not
+  being a refusal); an *"English"* statement written in Spanish; the chat
+  extractor's **JSON schema**, of which only the attribute list was checked —
+  the schema is part of the prompt, and it is now pinned whole beside
+  `PromptVersion`, so changing one without the other is a red test; the reader
+  turning a model's `null` into `""`; which texts the model reads and which
+  statement the scorer hears; a model registered without its scorer not being
+  used; a claim resting on both languages falling when either changes; every
+  handler **saving** (`InMemoryKnowledge` now counts saves — a decision never
+  saved is a decision that did not happen); the three metrics' labels; the specs
+  table's row order, its better-supported claim, the page-language fallback and
+  the validator's boundary; a failure reason cut to its column. **Final run:
+  72.33 %**, 119 survivors, the baseline. They are **runner artefacts** (63:
+  the rules' material and count tables, `StatementLanguage`'s function words and
+  the metric names and descriptions — static initializers; one proved by hand:
+  dropping *"lino"* turns the new vocabulary theory red), **guards** (19:
+  `ThrowIfNull` whose removal only moves the failure to a null reference),
+  **exception messages** (9), **equivalent** (14: EF's default `""` initializers,
+  `<` against `<=` at a boundary that returns the same string, `First` against
+  `FirstOrDefault` over a non-empty group, `LocalizedText`'s fallback making
+  `In("en")` and `In("")` the same answer, the schema's `"claims"` name, a JSON
+  null read either way, `Count == 0` against `<= 0`), and **the model's
+  instructions** (the prompt text, 14): unobservable without a model, and measured
+  where they matter, by the `claims` gate. `OpenAICompatibleChat`'s transport and
+  `InProcessOnnxChat` are adapters with no unit tests by design; the gate and the
+  live run prove them.
+- **Scoped runs.** `src/Catalog` (`AttributeDefinition.Accept`,
+  `AttributeValue.Key`, the mapper's use of `Accept`, the `SetProductAttribute`
+  slice): first run 67.86 % — `Key` and `HeldAs` had **no test at all**, and the
+  yes/no words, the import's fallback and the audit of an unchanged value were
+  unasserted; three runs later **97.83 %**, one survivor, a guard. `src/SharedKernel`
+  (`AddTenderoSlices`): it had no unit test — only the integration test composed
+  it — and got `SliceRegistrationTests`; **100 %**. `tools/SearchEval`
+  (`KnowledgeGates`, first config for the tool): 66.67 %, the survivors every one
+  of them the words a red CI run prints; pinned, output included; **100 %**.
+- **By hand, where Stryker cannot reach.** `ApplyApprovedClaimToCatalog` in the
+  worker (returning before it dispatches turns the end-to-end test red), the
+  specs' `AppliedAs` match, the culture filter and the gate's verbatim floor —
+  each cited in its commit and each killed. Three of them were run minutes *after* the commit that cited them rather than before; all three held, and the habit is the other order.
 
 **2026-09-26 — the phase close of *Seeing it run* (phase 9b).** Every project
 the phase touched, in about an hour of machine time: three full runs, five

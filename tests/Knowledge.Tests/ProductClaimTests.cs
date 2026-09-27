@@ -103,6 +103,8 @@ public sealed class ProductClaimTests
 
         Assert.Throws<ArgumentException>(() => ProductClaim.Propose(Pan, statement, null, null, [], provenance, Clock));
         Assert.Throws<ArgumentException>(() => ProductClaim.Propose(Pan, statement, null, null, [Quoted("horno", 1.4)], provenance, Clock));
+        // One bad quote among good ones is enough to refuse the claim.
+        Assert.Throws<ArgumentException>(() => ProductClaim.Propose(Pan, statement, null, null, [Quoted("horno", 0.9), Quoted("inducción", -0.1)], provenance, Clock));
         Assert.Throws<ArgumentException>(() => ProductClaim.Propose(Pan, statement, "INDUCTION", null, [Quoted("horno")], provenance, Clock));
     }
 

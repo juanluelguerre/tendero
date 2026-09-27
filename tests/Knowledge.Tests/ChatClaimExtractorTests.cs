@@ -32,6 +32,23 @@ public sealed class ChatClaimExtractorTests
         Assert.NotNull(format.Schema);
     }
 
+    /// <summary>
+    /// The whole schema, as the model is held to it. It is part of the prompt: a
+    /// change here changes what every claim was read under, so it bumps
+    /// <see cref="ChatClaimExtractor.PromptVersion"/> — and this test is where
+    /// that change is noticed.
+    /// </summary>
+    [Fact]
+    public void The_schema_is_the_one_the_prompt_version_names()
+    {
+        var schema = ChatClaimExtractor.Schema(Attributes).GetRawText();
+
+        Assert.Equal("claims-2026-09-26", ChatClaimExtractor.PromptVersion);
+        Assert.Equal(
+            """{"type":"object","required":["claims"],"properties":{"claims":{"type":"array","items":{"type":"object","required":["quote_es","quote_en","statement_es","statement_en","attribute","value","confidence"],"properties":{"quote_es":{"type":"string"},"quote_en":{"type":"string"},"statement_es":{"type":"string"},"statement_en":{"type":"string"},"attribute":{"anyOf":[{"enum":["DROP_MM","MATERIAL"]},{"type":"null"}]},"value":{"anyOf":[{"type":"number"},{"type":"boolean"},{"type":"string"},{"type":"null"}]},"confidence":{"type":"number"}}}}}}""",
+            schema);
+    }
+
     [Fact]
     public void The_schema_offers_exactly_the_attributes_it_was_given_or_none()
     {
@@ -71,7 +88,32 @@ public sealed class ChatClaimExtractorTests
 
         Assert.Equal(["8", "true", "LINEN", null], claims.Select(claim => claim.Value));
         Assert.Equal(["DROP_MM", null, "MATERIAL", null], claims.Select(claim => claim.AttributeCode));
-        Assert.Equal("It has an 8 mm drop.", claims[0].StatementEnglish);
+        Assert.Equal(("Drop de 8 mm", "8 mm drop", "Tiene un drop de 8 mm.", "It has an 8 mm drop."),
+            (claims[0].QuoteSpanish, claims[0].QuoteEnglish, claims[0].StatementSpanish, claims[0].StatementEnglish));
+    }
+
+    /// <summary>A model that writes null where a string belongs gives an empty string, which vetting then judges — never a crash in the reader.</summary>
+    [Fact]
+    public async Task A_null_where_a_text_belongs_reads_as_empty()
+    {
+        var chat = new FakeChat("""
+            {"claims":[{"quote_es":null,"quote_en":null,"statement_es":null,"statement_en":null,"attribute":null,"value":null,"confidence":0.5}]}
+            """);
+
+        var claim = Assert.Single(await Extract(chat));
+
+        Assert.Equal(("", "", "", ""), (claim.QuoteSpanish, claim.QuoteEnglish, claim.StatementSpanish, claim.StatementEnglish));
+    }
+
+    [Fact]
+    public async Task The_model_reads_both_descriptions_each_under_its_name()
+    {
+        var chat = new FakeChat("""{"claims":[]}""");
+
+        await Extract(chat);
+
+        var user = chat.Messages!.Single(message => message.Role == ChatRole.User).Text;
+        Assert.Equal("Spanish description:\nRefuerzo en el talón. Drop de 8 mm.\n\nEnglish description:\nReinforced heel. 8 mm drop.", user);
     }
 
     /// <summary>A runtime that did not hold the schema must be told apart from a model that could not keep to it: the error carries what the model said.</summary>

@@ -82,4 +82,17 @@ public sealed class SourceDocumentTests
         Assert.Null(document.Locate("lana merino"));
         Assert.Null(document.Locate(""));
     }
+
+    /// <summary>The reason is kept for an operator, and kept to what its column holds: a stack trace does not fit, its first 500 characters do.</summary>
+    [Fact]
+    public void A_failure_reason_is_kept_to_its_column_and_a_reinstated_text_forgets_it()
+    {
+        var document = SourceDocument.Describe(ProductId.New(), "es", "Cortavientos de 140 g.", Clock);
+
+        document.RecordFailedAttempt(new string('x', 501));
+        Assert.Equal((1, 500), (document.FailedAttempts, document.LastFailure!.Length));
+
+        document.Reinstate(Clock);
+        Assert.Equal((0, (string?)null, true), (document.FailedAttempts, document.LastFailure, document.IsWaiting));
+    }
 }
