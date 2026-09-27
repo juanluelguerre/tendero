@@ -1,9 +1,11 @@
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
+using ElGuerre.Tendero.Catalog.Features.PublishProduct;
 using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Knowledge.Domain;
+using ElGuerre.Tendero.Knowledge.Features.ProductSpecs;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.Search;
@@ -77,6 +79,22 @@ public sealed class ApprovedClaimToCatalogTests(PostgresFixture postgres)
         var audited = await reread.AuditEntries.Where(entry => entry.CommandType == nameof(SetProductAttributeCommand)).ToListAsync(ct);
         Assert.Equal(2, audited.Count);
         Assert.Single(audited, entry => entry.Outcome == AuditOutcome.Denied);
+
+        // And the specs table reads it back through Catalog's facts (P10-7): a
+        // draft is not there, and once published the capacity carries its quote
+        // while the refused value is only a sentence.
+        await using var specs = provider.CreateAsyncScope();
+        var queries = specs.ServiceProvider.GetRequiredService<IQueryDispatcher>();
+        Assert.Empty((await queries.SendAsync(new ProductSpecsQuery([product.Code], "es"), ct)).Products);
+
+        await specs.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(new PublishProductCommand(pan), ct);
+        var sheet = await queries.SendAsync(new ProductSpecsQuery([product.Code], "es"), ct);
+
+        Assert.Equal(product.Slug.In("es"), Assert.Single(sheet.Products).Slug);
+        var capacity = sheet.Rows.Single(row => row.AttributeCode == "CAPACITY_L").Cells.Single();
+        Assert.Equal((SpecSources.Description, 3m, "L"), (capacity.Source, capacity.Number, capacity.Unit));
+        Assert.Equal("3 L", capacity.Evidence!.Quotes.Single().Text);
+        Assert.Contains(sheet.Statements, statement => statement.Text == "Tiene unobtainium.");
     }
 
     private static ProductClaim Approved(ProductId product, string attribute, string value)

@@ -73,6 +73,7 @@ public sealed record EvaluationOptions(
           --model <label>         What it serves, as it will appear in the report (e.g. qwen3.5-4b-q8)
           --attributes <file>     Attribute seed        (default seed/attributes.sample.json)
           --report <file>         Every prediction and its verdict, as JSON
+          --ci                    With claims or support: exit 1 under the floors in knowledge/gates.json
 
         The support suite (--suite support) scores a scorer against knowledge/support.json:
           --scorer <name>         nli, reranker (both through TEI at --tei) or yesno (through --chat)

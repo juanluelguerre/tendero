@@ -75,7 +75,11 @@ internal sealed class ClaimsSuite : IEvaluationSuite
         if (options.ReportPath is { Length: > 0 } report)
             await File.WriteAllTextAsync(report, JsonSerializer.Serialize(new { extractor = name, score, products = judged }, Indented), cancellationToken);
 
-        return score.Errors > 0 ? 2 : 0;
+        // The floor for this kind of extractor (P10-9); an extractor with none is measured, not judged.
+        var gates = await KnowledgeGates.LoadAsync(options.ClaimsDirectory!, cancellationToken);
+        return gates.Claims.TryGetValue(options.Extractor ?? "", out var gate)
+            ? GateVerdict.Report(Name, options.Extractor!, gate.Failures(score), options.FailUnderThresholds)
+            : score.Errors > 0 ? 2 : 0;
     }
 
     internal static string Line(string name, ClaimScore s) => string.Create(CultureInfo.InvariantCulture,

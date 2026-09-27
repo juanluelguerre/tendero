@@ -122,6 +122,14 @@ jobs:
           --elasticsearch http://localhost:9200
           --report ndcg-report.md
 
+      # The claims layer's gate (P10-9), on its non-AI path: the rules extractor
+      # is deterministic and needs no model, so it is judged on every push in
+      # seconds. The model's own floor and the NLI scorer's live in the same
+      # file (tools/SearchEval/knowledge/gates.json) and are run at phase close,
+      # because a runner cannot hold a 4B model and a 2.8 GB scorer.
+      - name: Run the claims gate (rules)
+        run: dotnet run --project tools/SearchEval -- --suite claims --extractor rules --ci
+
       # Everything below runs even when the gate fails, because a failed gate is
       # precisely when you want to read the per-query table.
       - name: Add the report to the job summary

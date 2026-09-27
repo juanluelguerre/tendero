@@ -113,6 +113,49 @@ Two things make the run reproducible, and both were learned the hard way:
   query: 0.860 and then 0.769. Polling until *some* query returns a hit is not
   enough — it only proves one document is visible, not all six.
 
+## The claims layer's gates (P10-9, 2026-09-27)
+
+Two more suites share the tool, and since P10-9 they are gates, not only
+measurements: `--suite claims` (an extractor against the 71 golden claims in
+`knowledge/claims.json`) and `--suite support` (a support scorer against the 40
+pairs in `knowledge/support.json`). Their floors are in
+**`knowledge/gates.json`**, each beside the measurement it was set from — a
+little under what P10-0 measured, so a regression fails and a model's
+run-to-run wobble does not:
+
+| gate | floors | measured with |
+|---|---|---|
+| `claims`, **rules** | P ≥ 0.95, R ≥ 0.28, typing ≥ 0.90, verbatim = 1.0, traps 0, errors 0 | the deterministic `RulesClaimExtractor` |
+| `claims`, **chat** | P ≥ 0.88, R ≥ 0.75, typing ≥ 0.83, verbatim ≥ 0.97, language ≥ 0.95, traps ≤ 1, errors 0 | Qwen3.5-4B Q8 at `851bf6e`, llama.cpp v0.5.0, prompt `claims-2026-09-26` |
+| `support`, **nli** | AUC ≥ 0.97, accuracy at 0.5 ≥ 0.95, ECE ≤ 0.06 | `bge-m3-zeroshot-v2.0` at `9abf1c8`, TEI 1.9.3 |
+
+**Keyed by the extractor's kind, not the model's name.** The chat floor names
+the model, revision and prompt it was measured with; another one is re-measured
+before the floor means anything, and the file says so instead of a key quietly
+not matching. A scorer or extractor with no floor (the reranker, the yes/no
+models) is measured, not judged.
+
+**Where each runs.** CI runs the **rules** gate on every push — deterministic,
+no model, seconds. The chat and NLI gates need a 4B model and a 2.8 GB scorer a
+runner cannot hold, so they run **at phase close**, against throwaway containers
+started with the AppHost's own arguments and limits (never the running stack's):
+
+```bash
+MSYS_NO_PATHCONV=1 docker run -d --name gate-support -p 38084:80 -v tendero-tei-models:/data   --memory=3g --cpus=8 ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3   --model-id MoritzLaurer/bge-m3-zeroshot-v2.0 --revision 9abf1c8aaeb82a2447809c20753ed0b106b76652   --max-batch-tokens 1024 --max-batch-requests 1 --auto-truncate
+dotnet run --project tools/SearchEval -- --suite support --scorer nli --tei http://localhost:38084 --ci
+
+MSYS_NO_PATHCONV=1 docker run -d --name gate-extractor -p 38090:8080 -v tendero-extractor-models:/models:ro   --memory=6g --cpus=12 ghcr.io/ggml-org/llama.cpp:server-v0.5.0 -m /models/qwen3.5-4b-q8_0.gguf   --host 0.0.0.0 --port 8080 -c 4096 -np 1 -t 12 --jinja --load-mode none   --chat-template-kwargs '{"enable_thinking":false}'
+dotnet run --project tools/SearchEval -- --suite claims --extractor chat --chat http://localhost:38090 --model qwen3.5-4b-q8 --ci
+```
+
+`MSYS_NO_PATHCONV=1` is not decoration on Windows: Git Bash rewrote
+`/models/…` into `C:/Program Files/Git/models/…`, the server exited before it
+listened, and the first gate run scored twenty unreadable answers. **That is the
+gate working** — a server that is not there fails the run with every error
+counted, rather than passing on no claims at all — but the wait loop that
+printed *ready* after timing out was not, and it now fails when the server never
+answers.
+
 ## What the shop says when it has nothing (2026-09-17)
 
 **The queries with nothing to find are no longer a threshold question.** H1, H4 and

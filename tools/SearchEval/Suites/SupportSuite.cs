@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Support;
+using ElGuerre.Tendero.SearchEval.Claims;
 
 namespace ElGuerre.Tendero.SearchEval.Suites;
 
@@ -55,7 +56,11 @@ internal sealed class SupportSuite : IEvaluationSuite
         if (options.ReportPath is { Length: > 0 } report)
             await File.WriteAllTextAsync(report, JsonSerializer.Serialize(new { scorer = name, score, pairs = scored }, Indented), cancellationToken);
 
-        return 0;
+        // Only the scorer that ships has a floor; the reranker and the yes/no models are measured for comparison.
+        var gates = await KnowledgeGates.LoadAsync(options.ClaimsDirectory!, cancellationToken);
+        return gates.Support.TryGetValue(name, out var gate)
+            ? GateVerdict.Report(Name, name, gate.Failures(score), options.FailUnderThresholds)
+            : 0;
     }
 
     internal static SupportScore Summarise(IReadOnlyList<ScoredPair> scored)

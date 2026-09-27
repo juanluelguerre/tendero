@@ -1,0 +1,31 @@
+{
+  "claims": {
+    "rules": {
+      "measuredWith": "RulesClaimExtractor, deterministic; P10-0 measured P 1.00, R 0.30, typing 0.94, verbatim 1.000, traps 0",
+      "precision": 0.95,
+      "recall": 0.28,
+      "typedAccuracy": 0.90,
+      "verbatim": 1.0,
+      "maxTraps": 0,
+      "maxErrors": 0
+    },
+    "chat": {
+      "measuredWith": "Qwen/Qwen3.5-4B at 851bf6e, Q8 GGUF converted by prepare-extractor.sh, llama.cpp server v0.5.0, prompt claims-2026-09-26; P10-0 measured P 0.92, R 0.80, typing 0.88, verbatim 0.984, language 1.00, traps 1. Another model or prompt is re-measured before these apply.",
+      "precision": 0.88,
+      "recall": 0.75,
+      "typedAccuracy": 0.83,
+      "verbatim": 0.97,
+      "language": 0.95,
+      "maxTraps": 1,
+      "maxErrors": 0
+    }
+  },
+  "support": {
+    "nli": {
+      "measuredWith": "MoritzLaurer/bge-m3-zeroshot-v2.0 at 9abf1c8 on TEI cpu-1.9.3; P10-0 measured AUC 1.00, acc@0.5 1.00, ECE 0.03",
+      "auc": 0.97,
+      "accuracyAtHalf": 0.95,
+      "maxEce": 0.06
+    }
+  }
+}
