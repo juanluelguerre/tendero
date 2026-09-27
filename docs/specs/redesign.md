@@ -103,6 +103,55 @@ that. So this one starts by saying what "better" will mean, and by measuring
    and their summary goes in this spec. That is the "before" the article compares
    against.
 
+## R-2 — benchmark: what the good ones do, judged against R-0
+
+*Written 2026-09-27 from the products' own documentation and published research
+(sources at the end). Every pattern is judged by the question R-0 set — does it make
+one of the nine jobs take fewer interactions, or feel easier, or keep the quality
+floor? — and not by whether it is fashionable. **Adopt** goes to R-3's proposal,
+**conditional** goes with its condition, **reject** says why.*
+
+### Backoffice
+
+| # | Pattern | Seen in | Verdict | Why, against R-0 |
+|---|---|---|---|---|
+| P1 | **Navigation grouped by job, in a side rail that collapses** (full on a desktop, icons on a laptop, a drawer on a phone) instead of twelve tabs in one row | Shopify Admin, Stripe, Seller Central | **Adopt** | The dashboard's phone capture already shows the tab row scrolling sideways with no cue (R-1's first finding). Grouping *Catalogue* (review, catalogue, attributes, claims), *Sales* (orders, returns, promotions), *Stock*, *Agents* (registry, audit) and *Insight* (dashboard, search evaluation) turns twelve peers into five decisions. |
+| P2 | **A command palette**, Ctrl/⌘ K: jump to any screen, or to an order, product or agent by its id or name, and run the screen's action from there | Linear | **Adopt** | B3 (find an order and ship it) today means opening Orders and scanning. Pasting an order id goes straight to it. Keyboard-first, and invisible to anyone who does not want it; R-0's adoption signal measures it. |
+| P3 | **Index tables: search, filters and sort on the list itself** | Shopify Polaris (IndexTable) | **Adopt** | Orders, returns and the review queue are lists of work. A status filter and a search box shorten B1, B3 and B4, which today scroll. |
+| P4 | **Bulk actions** on a selection | Polaris | **Conditional** | Only where the decision is the same for every row — shipping several confirmed orders. **Rejected for claims and for publishing**: each is a judgement about one product, and a bulk approve is how a review queue becomes a rubber stamp (ADR 0018). |
+| P5 | **Saved views** per user | Polaris, Linear | **Reject for now** | Per-user state is P11-7's v2. At three roles and a handful of users, the filters in P3 cover the same need without a new store. |
+| P6 | **A side pane that keeps your place**: open an order or a return beside the list, act, and go on down the list | Linear | **Adopt** | B3 and B4 today leave the list and come back to its top. A pane saves the round trip for every item worked through, which is exactly the interaction cost R-0 measures. |
+| P7 | **Optimistic updates** | Linear | **Reject** for state changes | Linear applies them where rollback is safe. Ours are audited domain commands the server can refuse (a 409 from a transition table, a mandate, a rule), and the screen shows the server's own words (ADR 0010's rule). Painting "shipped" before the server agrees would show a refusal as a flicker. Instant feedback comes from P8 and a pending state on the button, not from guessing. |
+| P8 | **Skeletons in the shape of the content** instead of "Loading…" text | Polaris, Stripe | **Adopt** | Perceived speed, and a layout that does not jump when data arrives (CLS, R-0's quality floor). |
+| P9 | **An opinionated home**: the figures that change what the shopkeeper does, each one a way into acting on it | Stripe ("opinionated beats configurable for most users") | **Adopt** — mostly built | P11-7's dashboard already works this way. R-3 makes each figure a link to the filtered list behind it (P3): *8 to ship* opens orders filtered to *Confirmed*. |
+| P10 | **Health with thresholds**: a figure against its target, green, amber or red | Seller Central, *Account Health* | **Adopt** | Late shipments and cancellation rate mean something only against a target. The operations widget gains the target and says when the shop is outside it. |
+| P11 | **A few list shortcuts** (j/k to move, Enter to open, the screen's action on one key), shown in the palette and on hover | Linear | **Conditional** | Only on the two lists worked through item by item (review queue, claims). A shortcut nobody discovers is dead code, so the palette lists them and R-0's adoption signal decides whether they stay. |
+| P12 | **Undo instead of "are you sure?"** for an action that can be reversed (suspend, then reinstate) | Linear, Gmail | **Conditional** | Only where the domain has the reverse operation and nothing has left the shop yet. A refund, a shipment or a publication is not undoable: those keep an explicit confirmation. |
+
+### Storefront
+
+| # | Pattern | Seen in / research | Verdict | Why, against R-0 |
+|---|---|---|---|---|
+| S-P1 | **A category menu**: on a desktop, a panel with group headings, one column per department; on a phone, a drawer with an accordion per department and "all of the department" at the top of each | Baymard (2025: 76 % of large shops use mega menus; menus without group headings have 23 % more abandonment); NNg (≤ 28–36 links) | **Adopt** | S1 is impossible from the header today. The taxonomy is three departments and twenty categories, well inside the limits, and every link fits under a heading. |
+| S-P2 | **Where am I**: the current department marked in the menu, and the breadcrumb already on category pages | Baymard (95 % of shops fail to show it) | **Adopt** | Cheap, and it is the difference between a menu and a list of links. |
+| S-P3 | **Thumb-sized targets** (≥ 44 px) in the drawer, and the menu reachable with the keyboard alone | Baymard mobile; WCAG 2.2 (2.5.8 target size) | **Adopt** | R-0's quality floor. |
+| S-P4 | **A sticky header** with search and the menu | Baymard; most large shops | **Conditional** | Only if it does not cost the product page its first screen on a 390 px phone. It is measured in R-3's mock-ups before it is built. |
+
+### What R-2 hands to R-3
+
+**Backoffice:** P1, P2, P3, P6, P8, P9 and P10, plus P4, P11 and P12 with their
+conditions. **Storefront:** S-P1, S-P2 and S-P3, plus S-P4 with its condition.
+R-3 orders them by how much each moves R-0's numbers, and sizes them.
+
+**Sources:** [Polaris IndexTable](https://polaris-react.shopify.com/components/tables/index-table) ·
+[Shopify index table composition](https://shopify.dev/docs/api/app-home/patterns/compositions/index-table) ·
+[Why Linear feels fast](https://dev.to/0xgosu/why-linear-feels-fast-local-data-small-updates-and-product-discipline-1m53) ·
+[How we redesigned the Linear UI](https://linear.app/now/how-we-redesigned-the-linear-ui) ·
+[Stripe dashboard design breakdown](https://www.925studios.co/blog/stripe-dashboard-design-breakdown) ·
+[Seller Central Account Health](https://sellercentral.amazon.com/performance/dashboard) ·
+[Baymard, homepage and navigation](https://baymard.com/blog/ecommerce-navigation-best-practice) ·
+[Ecommerce navigation patterns](https://ecomdesignpro.com/ecommerce-navigation-patterns/)
+
 ## Non-goals
 
 - **Not a rebrand.** The design system stays (`design/DESIGN.md`, `tokens.css`, one
