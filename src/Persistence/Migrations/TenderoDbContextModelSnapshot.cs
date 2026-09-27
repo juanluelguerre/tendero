@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260927091714_AddOrderMode";
+    public override string LastMigrationId => "20260927093100_AddAgents";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -27,6 +27,56 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+        modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Agent", b =>
+            {
+                b.Property<string>("Id")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("id");
+
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("display_name");
+
+                b.Property<string>("Operator")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("operator");
+
+                b.Property<DateTimeOffset>("RegisteredAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("registered_at");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<string>("SuspensionReason")
+                    .HasMaxLength(300)
+                    .HasColumnType("character varying(300)")
+                    .HasColumnName("suspension_reason");
+
+                b.Property<string>("Trust")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("trust");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.HasKey("Id")
+                    .HasName("pk_agents");
+
+                b.ToTable("agents", "accounts");
+            });
 
         modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Customer", b =>
             {

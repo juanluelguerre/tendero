@@ -95,3 +95,27 @@ decisions for `P11-2` … `P11-6` are taken below as each task starts.
   database: refused — a rehearsal that does not run on the shop's own saga proves
   nothing about it, which was the reader's whole point. A timer that ends the
   rehearsal later: refused — no scheduler, and stock held for nobody.
+
+## 5 · The agent registry (`P11-2`)
+
+**Decision (2026-09-27): the aggregate is `Agent`, not `AgentPrincipal`.** The
+roadmap's name mixed two things. The *principal* is the runtime identity a token
+proves — the identity provider's statement, which Tendero only validates
+(invariant 10). The *registry entry* is what the shop thinks of that identity:
+who operates it, how far it is trusted, whether it is suspended. The second is a
+fact the shop owns, like a customer's tariff, and it lives in Accounts; the
+principal carries it as a value (`AgentStanding(Trust, Suspended)`), resolved on
+the key once per request like the segment.
+
+- **Untrusted is not a registry state.** An agent with a valid token that nobody
+  registered is `AgentStanding.Unknown`; registering makes it at least `Known`, and
+  it never goes back — that would be unregistering, and an audit trail is not
+  unregistered. Suspension is the switch, with its reason.
+- **No keys, no secrets.** The roadmap sketched `PublicKeyJwkRef` on the agent.
+  AP2 v0.2 makes it unnecessary for mandates: the agent's key is in the open
+  mandate's `cnf`, signed by the *user*, so the shop never has to be told it. UCP's
+  request signing (the platform's key in its profile) is a separate question for
+  `P11-3`, and it too belongs to the platform's published profile, not a copy here.
+- **What it enables.** `agent.trust` on the checkout metric answers *who buys
+  through agents the shop does not know*; `P11-6`'s rules read `Standing` — a
+  suspended agent is refused, an unknown one limited.

@@ -111,6 +111,7 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         postgres.SkipIfUnavailable();
         var ct = TestContext.Current.CancellationToken;
 
+        using var counted = new InstrumentRecorder("tendero.checkout.attempts");
         await using var shop = await Shop.OpenAsync(postgres, nameof(
             A_test_credentials_order_runs_the_whole_saga_and_gives_its_stock_back), new TestAgent());
 
@@ -131,12 +132,20 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         Assert.Equal(OrderMode.Test, ended.Mode);
         Assert.Equal(0, await shop.HeldAsync(Sku, ct));
         Assert.Equal(5, await shop.AvailableAsync(Sku, ct));
+
+        // An agent nobody registered, rehearsing: both facts on the metric.
+        Assert.Single(counted.Of("tendero.checkout.attempts"),
+            tags => tags["order.mode"] is "test" && tags["agent.trust"] is "untrusted" && tags["outcome"] is "placed");
     }
 
     private sealed class TestAgent : IPrincipalAccessor
     {
         public CommercePrincipal Current { get; } =
-            new(null, new AgentId("claude-desktop-test"), "claude-desktop-test", "Claude Desktop (test)", ["agent"]) { IsTest = true };
+            new(null, new AgentId("claude-desktop-test"), "claude-desktop-test", "Claude Desktop (test)", ["agent"])
+            {
+                IsTest = true,
+                Standing = AgentStanding.Unknown,
+            };
     }
 
     /// <summary>
@@ -399,6 +408,9 @@ public sealed class CheckoutLoopTests(PostgresFixture postgres)
         Assert.Equal(
             ["already_placed", "payment_declined", "placed", "price_changed"],
             counted.Of("tendero.checkout.attempts").Select(tags => (string)tags["outcome"]!).Order());
+        // A person's checkout, live: the labels the Shop pulse filters and splits on.
+        Assert.All(counted.Of("tendero.checkout.attempts"),
+            tags => Assert.Equal(("live", "none"), ((string)tags["order.mode"]!, (string)tags["agent.trust"]!)));
         // Whether a promotion applied is read off what was priced, never assumed —
         // and a replay, which prices nothing, reads it off the order it returns.
         Assert.True(order.Discounts.Count > 0, "The sample promotions no longer discount this cart; the replay below proves nothing.");

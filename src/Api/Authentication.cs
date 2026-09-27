@@ -77,7 +77,8 @@ public static class AuthenticationExtensions
 /// </summary>
 internal sealed class HttpPrincipalAccessor(
     IHttpContextAccessor accessor,
-    ICustomerDirectory customers) : IPrincipalAccessor
+    ICustomerDirectory customers,
+    IAgentDirectory agents) : IPrincipalAccessor
 {
     /// <summary>
     /// Resolved once per request and then remembered.
@@ -137,6 +138,13 @@ internal sealed class HttpPrincipalAccessor(
             // A test credential is the issuer's statement, signed, like the agent
             // id beside it (ADR 0038).
             IsTest = user.FindFirstValue(TenderoClaims.Mode) == TenderoClaims.TestMode,
+
+            // What the shop thinks of the agent, beside who it is (P11-2): the same
+            // shape of read as the customer's segment, on the primary key. An agent
+            // nobody registered is Unknown — never a row created by being seen.
+            Standing = agent is null
+                ? null
+                : agents.StandingOfAsync(new AgentId(agent)).GetAwaiter().GetResult() ?? AgentStanding.Unknown,
         };
     }
 }

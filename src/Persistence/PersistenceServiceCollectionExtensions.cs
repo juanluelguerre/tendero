@@ -86,6 +86,10 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<ICustomerRepository>(services => services.GetRequiredService<EfCustomerRepository>());
         services.AddScoped<ICustomerDirectory>(services => services.GetRequiredService<EfCustomerRepository>());
 
+        services.AddScoped<EfAgentRepository>();
+        services.AddScoped<IAgentRepository>(services => services.GetRequiredService<EfAgentRepository>());
+        services.AddScoped<IAgentDirectory>(services => services.GetRequiredService<EfAgentRepository>());
+
         return services;
     }
 }

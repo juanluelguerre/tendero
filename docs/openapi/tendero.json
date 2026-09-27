@@ -1164,6 +1164,226 @@
         }
       }
     },
+    "/api/agents": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ListAgents",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AgentView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "RegisterAgent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterAgentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/agents/{agentId}/trust": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ChangeAgentTrust",
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeAgentTrustRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/agents/{agentId}/suspend": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "SuspendAgent",
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendAgentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/agents/{agentId}/reinstate": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ReinstateAgent",
+        "parameters": [
+          {
+            "name": "agentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/returns": {
       "get": {
         "tags": [
@@ -1744,6 +1964,65 @@
           }
         }
       },
+      "AgentChangeResponse": {
+        "required": [
+          "change",
+          "agent"
+        ],
+        "type": "object",
+        "properties": {
+          "change": {
+            "type": "string"
+          },
+          "agent": {
+            "$ref": "#/components/schemas/AgentView"
+          }
+        }
+      },
+      "AgentView": {
+        "required": [
+          "agentId",
+          "displayName",
+          "operator",
+          "trust",
+          "status",
+          "suspensionReason",
+          "registeredAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string"
+          },
+          "trust": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "suspensionReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "registeredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "AlternateSlug": {
         "required": [
           "culture",
@@ -2102,6 +2381,17 @@
           "depth": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ChangeAgentTrustRequest": {
+        "required": [
+          "trust"
+        ],
+        "type": "object",
+        "properties": {
+          "trust": {
+            "type": "string"
           }
         }
       },
@@ -3584,6 +3874,29 @@
           }
         }
       },
+      "RegisterAgentRequest": {
+        "required": [
+          "agentId",
+          "displayName",
+          "operator"
+        ],
+        "type": "object",
+        "properties": {
+          "agentId": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string"
+          },
+          "trust": {
+            "type": "string",
+            "default": "known"
+          }
+        }
+      },
       "ReindexProductsResult": {
         "required": [
           "indexed",
@@ -4345,6 +4658,17 @@
           "meanMilliseconds": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "SuspendAgentRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
           }
         }
       },

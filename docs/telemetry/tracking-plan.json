@@ -202,6 +202,15 @@
         "tendero.checkout.attempts",
         "tendero.orders.test_ended"
       ]
+    },
+    {
+      "name": "Agent registry",
+      "area": "backoffice",
+      "question": "Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered?",
+      "decision": "A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet.",
+      "signals": [
+        "tendero.checkout.attempts"
+      ]
     }
   ],
   "events": [
@@ -401,6 +410,16 @@
           ],
           "description": "Test when the credential that placed it is a test one (ADR 0038): the Shop pulse leaves it out, and a rehearsal is read on its own.",
           "from": "OrderMode"
+        },
+        "agent.trust": {
+          "type": "string",
+          "values": [
+            "none",
+            "untrusted",
+            "known",
+            "verified"
+          ],
+          "description": "How far the shop trusts the agent behind the attempt (P11-2): none for a person, untrusted for an agent nobody registered."
         },
         "outcome": {
           "type": "string",

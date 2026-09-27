@@ -249,7 +249,7 @@ public sealed class PlaceOrderHandler(
         // the order and the metric all read the same answer (ADR 0038).
         var mode = OrderModes.Of(principal.Current);
         var result = await PlaceAsync(command, mode, cancellationToken);
-        CheckoutAttempts.Record(result, actors.Current, mode);
+        CheckoutAttempts.Record(result, actors.Current, mode, principal.Current.Standing);
         return result;
     }
 
@@ -433,11 +433,20 @@ internal static class CheckoutAttempts
     /// </summary>
     public const string ModeTag = "order.mode";
 
-    public static void Record(PlaceOrderResult result, Actor actor, OrderMode mode) =>
+    /// <summary>
+    /// How far the shop trusts the agent behind the attempt (P11-2): <c>none</c>
+    /// for a person, <c>untrusted</c> for an agent nobody registered. What share of
+    /// agent sales come from agents the shop does not know is the question the
+    /// registry exists to answer.
+    /// </summary>
+    public const string TrustTag = "agent.trust";
+
+    public static void Record(PlaceOrderResult result, Actor actor, OrderMode mode, AgentStanding? standing) =>
         Attempts.Add(1,
             actor.KindLabel,
             actor.SurfaceLabel,
             new(ModeTag, MetricLabels.Of(mode)),
+            new(TrustTag, standing is null ? "none" : MetricLabels.Of(standing.Trust)),
             new("outcome", MetricLabels.Of(result.Outcome)),
             // Read off the priced cart when there was one; an attempt refused
             // before pricing had no discount to apply.

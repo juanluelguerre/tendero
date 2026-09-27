@@ -638,6 +638,23 @@ stateDiagram-v2
 
 ```mermaid
 classDiagram
+    class Agent {
+        <<aggregate>>
+        +AgentId Id
+        +string DisplayName
+        +string Operator
+        +AgentTrust Trust
+        +AgentStatus Status
+        +string? SuspensionReason
+        +DateTimeOffset RegisteredAt
+        +DateTimeOffset UpdatedAt
+        +AgentStanding Standing
+    }
+    class AgentStatus {
+        <<enumeration>>
+        Active
+        Suspended
+    }
     class Customer {
         <<aggregate>>
         +CustomerId Id
@@ -656,8 +673,20 @@ classDiagram
 
 | Event | Carries |
 |---|---|
+| `AgentRegistered` | `AgentId: AgentId`, `Trust: AgentTrust` |
+| `AgentReinstated` | `AgentId: AgentId` |
+| `AgentSuspended` | `AgentId: AgentId`, `Reason: string` |
+| `AgentTrustChanged` | `AgentId: AgentId`, `From: AgentTrust`, `To: AgentTrust` |
 | `CustomerIdentified` | `CustomerId: CustomerId`, `Subject: string` |
 | `CustomerRegistered` | `CustomerId: CustomerId` |
+
+### Agent states
+
+```mermaid
+stateDiagram-v2
+    Active --> Suspended
+    Suspended --> Active
+```
 
 ## Knowledge
 
