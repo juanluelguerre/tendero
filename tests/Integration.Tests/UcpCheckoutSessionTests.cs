@@ -238,6 +238,10 @@ public sealed class UcpCheckoutSessionTests(PostgresFixture postgres)
 
         var tooMuch = await BuyAsync(2, "ucp-rules-1");
         Assert.Equal(CheckoutSessionOutcome.NotPlaced, tooMuch.Outcome);
+        // Found on the stack: refused by the shop's rules is not "incomplete" — a
+        // person can finish it at the continue URL, which is UCP's escalation.
+        Assert.Equal(CheckoutState.RequiresEscalation, tooMuch.Session!.State);
+        Assert.DoesNotContain(tooMuch.Session.Issues, issue => issue.Code == CheckoutIssueCodes.PaymentNotSettled);
         Assert.StartsWith("order_over_trust_cap", tooMuch.Session!.Issues.Single(issue => issue.Code == CheckoutIssueCodes.AgentRefused).Detail, StringComparison.Ordinal);
 
         var first = await BuyAsync(1, "ucp-rules-2");

@@ -514,11 +514,15 @@ public sealed class CheckoutSessionsHandler(
             CheckoutSessionStatus.Completed => CheckoutState.Completed,
             CheckoutSessionStatus.Canceled => CheckoutState.Canceled,
             // A cart that cannot be priced cannot be bought, whatever else it lacks.
-            _ when found.Any(Blocks) || (!cart.IsEmpty && totals is null) => CheckoutState.Incomplete,
+            _ when found.Any(issue => Blocks(issue) && issue.Code != CheckoutIssueCodes.AgentRefused) || (!cart.IsEmpty && totals is null)
+                => CheckoutState.Incomplete,
+            // The shop's own rules refused the agent (P11-6), not the purchase: a
+            // person can still finish it at the continue URL — UCP's escalation.
+            _ when found.Any(issue => issue.Code == CheckoutIssueCodes.AgentRefused) => CheckoutState.RequiresEscalation,
             _ when !canSettle => CheckoutState.RequiresEscalation,
             _ => CheckoutState.ReadyForComplete,
         };
-        if (state == CheckoutState.RequiresEscalation)
+        if (state == CheckoutState.RequiresEscalation && !canSettle)
             found.Add(new CheckoutIssue(CheckoutIssueCodes.PaymentNotSettled, "payment"));
 
         return new CheckoutSessionView(
