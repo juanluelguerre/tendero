@@ -13,6 +13,7 @@ import { CatalogService } from '../../data-access/catalog.service';
 import { BackofficeUsage } from '../../usage';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import { Pager } from '../../work/pager';
+import { keptCounts, statusChips } from '../../work/status-chips';
 import { Undo } from '../../work/undo';
 import { WorkPane } from '../../work/work-pane';
 
@@ -80,23 +81,11 @@ export class CataloguePage {
    * did, a click moved a count from one chip to another, the row changed width
    * and the search box beside it jumped (the author, 2026-09-28).
    */
-  private readonly counts = linkedSignal<ReadonlyMap<string, number> | undefined, ReadonlyMap<string, number> | null>({
-    source: () => {
-      const list = this.list.value();
-      return list && new Map(list.counts.map((entry) => [entry.status, entry.count]));
-    },
-    computation: (counts, previous) => counts ?? previous?.value ?? null,
-  });
+  private readonly counts = keptCounts(() => this.list.value()?.counts);
 
-  protected readonly filters = computed<FilterOption[]>(() => {
-    const labels = this.filterLabels() as Record<string, string>;
-    const counts = this.counts();
-    const total = counts ? [...counts.values()].reduce((sum, count) => sum + count, 0) : null;
-    return [
-      ...Statuses.map((key) => ({ key: key as string, label: labels[key] ?? key, count: counts ? (counts.get(key) ?? 0) : null })),
-      { key: 'all', label: labels['all'] ?? 'all', count: total },
-    ];
-  });
+  protected readonly filters = computed<FilterOption[]>(() =>
+    statusChips(Statuses, this.filterLabels() as Record<string, string>, this.counts()),
+  );
 
   protected readonly selected = computed(() => this.products().find((item) => item.code === this.selectedCode()) ?? null);
 

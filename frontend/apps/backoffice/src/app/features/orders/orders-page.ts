@@ -22,6 +22,7 @@ import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../us
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import { Pager } from '../../work/pager';
+import { keptCounts, statusChips } from '../../work/status-chips';
 import { WorkPane } from '../../work/work-pane';
 
 /** Each move as the usage event names it (ADR 0041). */
@@ -104,17 +105,12 @@ export class OrdersPage {
   protected readonly loading = computed(() => this.list.isLoading() && !this.list.hasValue());
   protected readonly failed = computed(() => this.list.status() === 'error');
 
-  /** One chip per status that has orders, plus the one showing and the job's own. */
-  protected readonly filters = computed<FilterOption[]>(() => {
-    const labels = this.filterLabels() as Record<string, string>;
-    const counts = new Map((this.list.value()?.counts ?? []).map((entry) => [entry.status, entry.count]));
-    const shown = Statuses.filter((status) => status === ToShip || status === this.statusKey() || (counts.get(status) ?? 0) > 0);
-    const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
-    return [
-      ...shown.map((status) => ({ key: status as string, label: labels[status] ?? status, count: counts.get(status) ?? 0 })),
-      { key: 'all', label: labels['all'] ?? 'all', count: total },
-    ];
-  });
+  private readonly counts = keptCounts(() => this.list.value()?.counts);
+
+  /** Every status, always, then *All*: a fixed row that does not move under the pointer (`statusChips`). */
+  protected readonly filters = computed<FilterOption[]>(() =>
+    statusChips(Statuses, this.filterLabels() as Record<string, string>, this.counts()),
+  );
 
   /** The open order's row, kept while a move takes it out of the filtered list. */
   protected readonly selected = linkedSignal<OrderSummary | null, OrderSummary | null>({

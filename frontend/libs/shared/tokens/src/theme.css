@@ -119,3 +119,20 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
+
+/* ---------- What the preflight takes away ----------
+   Tailwind 4's preflight gives every <button> `cursor: default`, as a browser
+   does, where v3 gave it `pointer`. A button styled as text — "Mostrar
+   comando" in the audit — then looks like text all the way to the click,
+   because nothing under the pointer says it can be pressed (found in the
+   redesign's second walkthrough). Tailwind's upgrade guide gives this rule
+   back; it sits here, beside the import that removed it, so both apps have it
+   and a component never has to remember it. Disabled controls keep the
+   default: a hand over something that will not answer is a promise broken. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  summary {
+    cursor: pointer;
+  }
+}
