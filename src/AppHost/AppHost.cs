@@ -647,7 +647,7 @@ var workers = builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     .WithReference(database).WaitFor(database)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
     // THIS one is a real dependency, and it was the one missing:
-    // SearchIndexInitializer creates products_es/products_en during startup, so
+    // CreateSearchIndexesAtStartupWorker creates products_es/products_en during startup, so
     // if Elasticsearch is not ready the hosted service throws and the process
     // dies without retrying.
     .WithSeedFiles(repositoryRoot)

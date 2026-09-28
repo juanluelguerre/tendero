@@ -33,7 +33,7 @@ internal static class Solution
     public static readonly Assembly Persistence = typeof(TenderoDbContext).Assembly;
     public static readonly Assembly ServiceDefaults = typeof(HostingExtensions).Assembly;
     public static readonly Assembly Api = typeof(TenderoApi::Program).Assembly;
-    public static readonly Assembly Workers = typeof(Workers.OutboxProcessor).Assembly;
+    public static readonly Assembly Workers = typeof(Workers.OutboxWorker).Assembly;
     public static readonly Assembly SearchEval = typeof(SearchEval.EvaluationReport).Assembly;
 
     public static readonly Assembly Mcp = typeof(TenderoMcpServer).Assembly;

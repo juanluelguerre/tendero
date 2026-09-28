@@ -30,9 +30,9 @@ internal static class CultureAnalyzers
 }
 
 /// <summary>Creates products_es and products_en at startup if they are missing (idempotent).</summary>
-internal sealed class SearchIndexInitializer(
+internal sealed class CreateSearchIndexesAtStartupWorker(
     ElasticsearchClient client,
-    ILogger<SearchIndexInitializer> logger) : IHostedService
+    ILogger<CreateSearchIndexesAtStartupWorker> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {

@@ -29,14 +29,14 @@ public sealed class StockSeedOptions
 ///
 /// It runs **only when the table is empty**, which is what keeps it from
 /// resetting a shop somebody has been using. And only in Development, for the
-/// same reason <c>SchemaMigrator</c> is: seeding on startup is a deployment
+/// same reason <c>MigrateSchemaAtStartupWorker</c> is: seeding on startup is a deployment
 /// decision, not a process one.
 /// </summary>
-public sealed class StockSeeder(
+public sealed class SeedStockAtStartupWorker(
     IServiceScopeFactory scopes,
     IOptions<StockSeedOptions> options,
     IHostEnvironment environment,
-    ILogger<StockSeeder> logger) : IHostedService
+    ILogger<SeedStockAtStartupWorker> logger) : IHostedService
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 

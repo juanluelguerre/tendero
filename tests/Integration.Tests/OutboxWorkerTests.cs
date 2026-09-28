@@ -165,7 +165,7 @@ public sealed class OutboxProcessorTests(PostgresFixture postgres)
 
         public TenderoDbContextFactory Factory { get; }
         public ProbeHandler Handler { get; } = new();
-        public OutboxProcessor Processor { get; }
+        public OutboxWorker Processor { get; }
 
         public WorkerScope(TenderoDbContextFactory factory, OutboxOptions options)
         {
@@ -179,10 +179,10 @@ public sealed class OutboxProcessorTests(PostgresFixture postgres)
 
             this.provider = services.BuildServiceProvider(validateScopes: true);
 
-            Processor = new OutboxProcessor(
+            Processor = new OutboxWorker(
                 this.provider.GetRequiredService<IServiceScopeFactory>(),
                 Options.Create(options),
-                NullLogger<OutboxProcessor>.Instance);
+                NullLogger<OutboxWorker>.Instance);
         }
 
         public async Task EnqueueAsync(CancellationToken ct, params ProbeEvent[] events)

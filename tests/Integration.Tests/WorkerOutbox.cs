@@ -11,7 +11,7 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// <summary>
 /// The outbox, drained by the worker that drains it in production.
 ///
-/// Three suites here used to carry their own copy of <see cref="OutboxProcessor"/>'s
+/// Three suites here used to carry their own copy of <see cref="OutboxWorker"/>'s
 /// loop "without the timer", and a copy tests the events rather than the loop:
 /// the retry cap, the isolation of a poisoned message and the error kept in the
 /// row could all have changed with every one of these suites still green. They
@@ -38,10 +38,10 @@ internal static class WorkerOutbox
     {
         var processedBefore = await CountProcessedAsync(provider, ct);
 
-        await new OutboxProcessor(
+        await new OutboxWorker(
                 provider.GetRequiredService<IServiceScopeFactory>(),
                 Options.Create(OnePass),
-                NullLogger<OutboxProcessor>.Instance)
+                NullLogger<OutboxWorker>.Instance)
             .ProcessBatchAsync(ct);
 
         await using var scope = provider.CreateAsyncScope();

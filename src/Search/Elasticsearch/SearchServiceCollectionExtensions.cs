@@ -33,7 +33,7 @@ public static class SearchServiceCollectionExtensions
     /// hosts it: two API replicas racing to create the index adds nothing.</summary>
     public static IServiceCollection AddSearchIndexInitializer(this IServiceCollection services)
     {
-        services.AddHostedService<SearchIndexInitializer>();
+        services.AddHostedService<CreateSearchIndexesAtStartupWorker>();
         return services;
     }
 }

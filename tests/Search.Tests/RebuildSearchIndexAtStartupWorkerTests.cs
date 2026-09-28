@@ -61,7 +61,7 @@ public sealed class RebuildEmptySearchIndexTests
         Assert.Empty(dispatcher.Sent);
     }
 
-    private static (RebuildEmptySearchIndex Service, RecordingDispatcher Dispatcher) Build(IProductIndexer indexer)
+    private static (RebuildSearchIndexAtStartupWorker Service, RecordingDispatcher Dispatcher) Build(IProductIndexer indexer)
     {
         var dispatcher = new RecordingDispatcher();
 
@@ -70,9 +70,9 @@ public sealed class RebuildEmptySearchIndexTests
             .AddSingleton<ICommandDispatcher>(dispatcher)
             .BuildServiceProvider();
 
-        return (new RebuildEmptySearchIndex(
+        return (new RebuildSearchIndexAtStartupWorker(
             services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<RebuildEmptySearchIndex>.Instance), dispatcher);
+            NullLogger<RebuildSearchIndexAtStartupWorker>.Instance), dispatcher);
     }
 
     private sealed class ProbingIndexer(bool empty, bool unreachable = false) : IProductIndexer

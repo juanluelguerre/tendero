@@ -24,7 +24,7 @@ namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 /// empty with the whole catalogue in Active — and the outbox cannot restore it,
 /// because it already delivered those events and republishing an already-active
 /// product changes nothing (by design). Until 2026-09-11 nothing else did
-/// either; <see cref="RebuildEmptySearchIndex"/> now does, at worker startup.
+/// either; <see cref="RebuildSearchIndexAtStartupWorker"/> now does, at worker startup.
 ///
 /// It applies the SAME rule as the outbox projection, and literally the same
 /// code: <see cref="ProductIndexProjection"/>. Active is indexed, the rest is
@@ -32,7 +32,7 @@ namespace ElGuerre.Tendero.Search.Features.ReindexProducts;
 /// leaves the index — rather than merely adding.
 ///
 /// It does not recreate the indexes or touch their mappings: that is
-/// SearchIndexInitializer's job, and duplicating the mapping definition here
+/// CreateSearchIndexesAtStartupWorker's job, and duplicating the mapping definition here
 /// would be two sources for the same truth.
 ///
 /// A known LIMIT: it converges for the products that EXIST. A product deleted
@@ -134,9 +134,9 @@ public sealed class ReindexProductsEndpoint : ICarterModule
 /// that is the wrong shape, and it is the standing backlog's "reindex as a
 /// background job" row, which already names its trigger.
 /// </summary>
-public sealed class RebuildEmptySearchIndex(
+public sealed class RebuildSearchIndexAtStartupWorker(
     IServiceScopeFactory scopes,
-    ILogger<RebuildEmptySearchIndex> logger) : IHostedService
+    ILogger<RebuildSearchIndexAtStartupWorker> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -181,10 +181,10 @@ public sealed class RebuildEmptySearchIndex(
 /// Whatever the outbox tried to project while it waited was logged and skipped
 /// (<c>ProjectProductToVectors</c>), and this rebuild is what catches it up.
 /// </summary>
-public sealed class RebuildEmptyVectorIndex(
+public sealed class RebuildVectorIndexAtStartupWorker(
     IServiceScopeFactory scopes,
     TimeProvider clock,
-    ILogger<RebuildEmptyVectorIndex> logger) : BackgroundService
+    ILogger<RebuildVectorIndexAtStartupWorker> logger) : BackgroundService
 {
     internal TimeSpan RetryEvery { get; init; } = TimeSpan.FromSeconds(15);
 

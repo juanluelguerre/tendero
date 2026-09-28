@@ -393,7 +393,7 @@ of updating optimistically, and why `tendero.outbox.lag` is a first-class metric
 
 → `src/Persistence/TenderoDbContext.cs` drains
 `AggregateRoot.DomainEvents` into the outbox on `SaveChanges` ·
-`src/Workers/OutboxProcessor.cs` polls every 2 s, batches 50, and stops retrying
+`src/Workers/OutboxWorker.cs` polls every 2 s, batches 50, and stops retrying
 a message at 5 attempts · a filtered index on `processed_at IS NULL` keeps the
 drain query cheap.
 

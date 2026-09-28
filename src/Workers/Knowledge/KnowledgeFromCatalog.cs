@@ -67,9 +67,9 @@ public sealed partial class RecordDescriptionOnProductUpserted(
 /// and idempotent, because an unchanged text is nothing (its hash). Search does
 /// the same for its index at start.
 /// </summary>
-public sealed partial class RecordEveryDescriptionAtStart(
+public sealed partial class RecordDescriptionsAtStartupWorker(
     IServiceScopeFactory scopes,
-    ILogger<RecordEveryDescriptionAtStart> logger) : BackgroundService
+    ILogger<RecordDescriptionsAtStartupWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
