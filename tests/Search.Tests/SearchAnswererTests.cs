@@ -30,10 +30,10 @@ public sealed class SearchAnswererTests
     }
 
     [Theory]
-    [InlineData("", null)]
-    [InlineData("   ", null)]
-    [InlineData("cafetera", "newest")]
-    public async Task A_browse_or_a_date_order_has_no_answer_to_judge(string text, string? sort)
+    [InlineData("", ProductSort.Relevance)]
+    [InlineData("   ", ProductSort.Relevance)]
+    [InlineData("cafetera", ProductSort.Newest)]
+    public async Task A_browse_or_a_date_order_has_no_answer_to_judge(string text, ProductSort sort)
     {
         var fullMatch = new FullMatch(true);
 

@@ -243,22 +243,13 @@ public sealed class OrderAdminEndpoints : ICarterModule
             .WithTags("Orders");
 
         // GET /api/orders?status=Confirmed&q=01a0e&page=1&pageSize=20
+        // The status is read by its name, in any case, and a name the set does
+        // not have is the binding's 400 (ADR 0043), so the handler never sees one.
         orders.MapGet("/",
-            async Task<Results<Ok<ListOrdersResult>, BadRequest<string>>> (
-                   string? status, string? q, int? page, int? pageSize, IQueryDispatcher dispatcher, CancellationToken ct) =>
-            {
-                OrderStatus? wanted = null;
-                if (!string.IsNullOrWhiteSpace(status))
-                {
-                    if (!Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var parsed) || !Enum.IsDefined(parsed))
-                        return TypedResults.BadRequest(
-                            $"A status is one of {string.Join(", ", Enum.GetNames<OrderStatus>())}.");
-                    wanted = parsed;
-                }
-
-                return TypedResults.Ok(await dispatcher.SendAsync(
-                    new ListOrdersQuery(wanted, q, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct));
-            })
+            async Task<Ok<ListOrdersResult>> (
+                   WireEnum<OrderStatus>? status, string? q, int? page, int? pageSize, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(
+                    new ListOrdersQuery(status?.Value, q, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct)))
             .WithName("ListOrders");
 
         orders.MapPost("/{orderId:guid}/move",

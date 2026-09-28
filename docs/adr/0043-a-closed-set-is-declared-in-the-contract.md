@@ -77,3 +77,32 @@ it reached the contract, which declared no `enum` at all.
   against `"active"` sees `"Active"`: the change is written in `docs/mcp.md`.
 - Telemetry keeps its own vocabulary: a metric label stays `payment_declined`,
   held by the tracking plan and `TrackingPlanTests`.
+
+## Amendment, 2026-09-28: what a client sends
+
+The decision covered what the API **answers**. A query parameter is as much the
+API's shape, and nine were bare strings: `sort` on the search, `status` on the
+orders and the catalogue, `outcome` on the audit, `period` on five dashboard
+figures. It came up when the storefront's filters (R-7.3) needed to name an
+order, and the test that followed found the other eight.
+
+- **A closed set in a query string is bound as `WireEnum<TEnum>`** (SharedKernel,
+  beside `WireJson`): the member's exact name, in any case. The framework's own
+  enum binding was not used because a test showed what it does: case-sensitive,
+  `?sort=1` read as the second member, and in Development a typo answered with a
+  500. A binding that fails is a 400 with problem details
+  (`BadRequestExceptionHandler`), in every environment.
+- **The document declares it** as the enum's names
+  (`ClosedSetsInTheQueryTransformer`), and a contract test holds every
+  parameter named like a closed set to that, as the first test holds fields.
+- **A combination is not a member.** `Enum.TryParse` ORs `"Day, Week"` into
+  `Week`, a real member, so nothing downstream could tell; the JSON converter did
+  the same in a body. Both now refuse it: `WireEnum` compares the text with the
+  member's name, and `WireJson.Enums()` wraps the framework's converter to refuse
+  a comma. Wrapping it costs the generator's recognition, which declared enums
+  as `{}`; `EnumsAreTheirNamesTransformer` declares them again, and the committed
+  document shows one change: a request field with a default is now an inline
+  enum rather than a `$ref`, with the same values.
+- The hand-written parsers these replaced — `DashboardPeriods.Parse`, the
+  orders' `Enum.TryParse`, the audit's — are gone, with the `BadRequest<string>`
+  arms that only they used. A client that sends a lowercase name keeps working.

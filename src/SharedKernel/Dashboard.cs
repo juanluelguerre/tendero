@@ -22,13 +22,16 @@ public sealed record DashboardWindow(DateTimeOffset From, DateTimeOffset To, Dat
     }
 }
 
+/// <remarks>
+/// Parsing used to live here too, a hand copy of the rule a query string's
+/// closed sets now share: an endpoint binds <c>WireEnum&lt;DashboardPeriod&gt;?</c>
+/// (ADR 0043), so a period is read by its name in any case, a number is refused,
+/// and the document declares the three names. What is left is the one thing
+/// that is the dashboard's own, and it stays in one place because five
+/// endpoints in two contexts have to agree on it.
+/// </remarks>
 public static class DashboardPeriods
 {
-    public const string Error = "period is one of: day, week, month.";
-
-    /// <summary>A week when none is asked for: the period a shopkeeper opens the dashboard to see. Null for anything else.</summary>
-    public static DashboardPeriod? Parse(string? period) =>
-        period is null ? DashboardPeriod.Week
-        : Enum.TryParse<DashboardPeriod>(period, ignoreCase: true, out var parsed) && Enum.IsDefined(parsed) && !int.TryParse(period, out _) ? parsed
-        : null;
+    /// <summary>A week when none is asked for: the period a shopkeeper opens the dashboard to see.</summary>
+    public const DashboardPeriod Default = DashboardPeriod.Week;
 }

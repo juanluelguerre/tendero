@@ -196,15 +196,6 @@ public sealed class DashboardFiguresTests
             agents.ByAgent);
     }
 
-    [Theory]
-    [InlineData(null, DashboardPeriod.Week)]
-    [InlineData("day", DashboardPeriod.Day)]
-    [InlineData("MONTH", DashboardPeriod.Month)]
-    [InlineData("year", null)]
-    [InlineData("1", null)]
-    public void A_period_is_one_of_three_and_a_week_by_default(string? given, DashboardPeriod? expected) =>
-        Assert.Equal(expected, DashboardPeriods.Parse(given));
-
     /// <summary>
     /// Health against a target (the redesign's R-4.5), on the boundaries that
     /// decide it: the last fifth up to the target, the target included, is near,

@@ -18,63 +18,72 @@
         "label": {
           "es": "azul marino",
           "en": "navy blue"
-        }
+        },
+        "swatch": "#233A5E"
       },
       {
         "code": "BLACK",
         "label": {
           "es": "negro",
           "en": "black"
-        }
+        },
+        "swatch": "#201D1B"
       },
       {
         "code": "WHITE",
         "label": {
           "es": "blanco",
           "en": "white"
-        }
+        },
+        "swatch": "#FFFFFF"
       },
       {
         "code": "FOREST_GREEN",
         "label": {
           "es": "verde bosque",
           "en": "forest green"
-        }
+        },
+        "swatch": "#2F5D3A"
       },
       {
         "code": "STAINLESS_STEEL",
         "label": {
           "es": "acero inoxidable",
           "en": "stainless steel"
-        }
+        },
+        "swatch": "#B8BCC0"
       },
       {
         "code": "GREY",
         "label": {
           "es": "gris",
           "en": "grey"
-        }
+        },
+        "swatch": "#8A847C"
       },
       {
         "code": "TERRACOTTA",
         "label": {
           "es": "terracota",
           "en": "terracotta"
-        }
+        },
+        "swatch": "#C0643F"
       },
       {
         "code": "CREAM",
         "label": {
           "es": "crema",
           "en": "cream"
-        }
+        },
+        "swatch": "#EFE6D2"
       },
       {
         "code": "OLIVE",
         "label": {
           "es": "oliva",
           "en": "olive"
-        }
+        },
+        "swatch": "#6B7A3A"
       }
     ]
   },

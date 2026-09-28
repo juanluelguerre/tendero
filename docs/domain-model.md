@@ -51,6 +51,7 @@ classDiagram
         <<record>>
         +string Code
         +LocalizedText Label
+        +string? Swatch
     }
     class AttributeValue {
         <<record>>
@@ -199,6 +200,13 @@ classDiagram
         <<record>>
         +string Kind
         +string Canonical
+    }
+    class OfferReach {
+        <<record>>
+        +bool Everything
+        +string[] CategoryCodes
+        +string[] Skus
+        +bool IsNothing
     }
     class PercentOffLine {
         <<record>>

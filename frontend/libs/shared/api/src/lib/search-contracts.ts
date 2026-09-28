@@ -11,12 +11,30 @@
  *
  * Regenerate with `npm run generate:api-types` from `frontend/`.
  */
-import type { components } from './generated/schema';
+import type { components, operations } from './generated/schema';
 
 type Schemas = components['schemas'];
 
 export type SearchHit = Schemas['SearchHit'];
+
+/**
+ * The orders `GET /api/search?sort=` keeps, as the contract declares them
+ * (ADR 0043: a closed set a client SENDS is declared too). A query parameter's
+ * set lives on its operation, not among the schemas.
+ */
+export type ProductSort = NonNullable<NonNullable<operations['SearchProducts']['parameters']['query']>['sort']>;
 export type SearchResultPage = Schemas['SearchResultPage'];
+
+/**
+ * The filters a listing can be narrowed by, each with how much every choice
+ * would leave (the storefront's facets, F-2). Returned only when they split
+ * the results, which is the server's rule and not the screen's.
+ */
+export type SearchFacet = Schemas['SearchFacet'];
+export type FacetKind = Schemas['FacetKind'];
+export type FacetOption = Schemas['FacetOption'];
+export type PriceFacetRange = Schemas['PriceFacetRange'];
+export type PriceBand = Schemas['PriceBand'];
 
 /**
  * What kind of answer a page is (ADR 0032), decided with no model: `Exact` when

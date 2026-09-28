@@ -83,9 +83,9 @@ public sealed class SearchProductsHandlerTests
         var hybrid = new Recording("hybrid");
 
         await new SearchProductsHandler(hybrid, new FixedAnswer(null), new SystemActorAccessor())
-            .HandleAsync(new SearchProductsQuery("cafetera", "en", Page: 3, PageSize: 7, Category: "KITCHEN", Sort: "newest"), Ct);
+            .HandleAsync(new SearchProductsQuery("cafetera", "en", Page: 3, PageSize: 7, Category: "KITCHEN", Sort: ProductSort.Newest), Ct);
 
-        Assert.Equal(new ProductSearchQuery("cafetera", "en", 3, 7, "KITCHEN", "newest"), Assert.Single(hybrid.Asked));
+        Assert.Equal(new ProductSearchQuery("cafetera", "en", 3, 7, "KITCHEN", ProductSort.Newest), Assert.Single(hybrid.Asked));
     }
 
     [Fact]

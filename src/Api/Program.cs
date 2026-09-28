@@ -107,7 +107,11 @@ builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators())
 // in phase 9, the UCP capability schemas. It lives in the framework: neither
 // Swashbuckle nor NSwag, which would be two dependencies for one job.
 builder.Services.AddOpenApi(options =>
-    options.AddSchemaTransformer<NumbersAreNumbersTransformer>());
+{
+    options.AddSchemaTransformer<NumbersAreNumbersTransformer>();
+    options.AddSchemaTransformer<EnumsAreTheirNamesTransformer>();
+    options.AddOperationTransformer<ClosedSetsInTheQueryTransformer>();
+});
 
 // A closed set travels as its C# name and nothing else (ADR 0043): one converter
 // for the whole API, so a slice passes the enum and never spells it, and the
@@ -126,6 +130,7 @@ builder.Services.AddTenderoMcp();
 builder.Services.AddTenderoUcp(builder.Configuration);
 
 builder.Services.AddExceptionHandler<ValidationExceptionHandler>();
+builder.Services.AddExceptionHandler<BadRequestExceptionHandler>();
 builder.Services.AddExceptionHandler<SearchUnavailableExceptionHandler>();
 builder.Services.AddProblemDetails();
 

@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import type {
   AttributeDefinitionList,
   AuditLog,
+  AuditOutcome,
   SkuDescriptionList,
   DefineVariantsResponse,
   ImportResult,
@@ -61,7 +62,7 @@ export class CatalogService {
    * three later features read it. The day the agent activity panel arrives
    * (phase 11), both move to an `accounts.service.ts` together.
    */
-  audit(outcome: string | null, page = 1, pageSize = 20): Observable<AuditLog> {
+  audit(outcome: AuditOutcome | null, page = 1, pageSize = 20): Observable<AuditLog> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (outcome) params = params.set('outcome', outcome);
 

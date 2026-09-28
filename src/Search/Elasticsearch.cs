@@ -8,6 +8,7 @@ using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Offers;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -62,18 +63,34 @@ internal sealed class CreateSearchIndexesAtStartupWorker(
 /// </summary>
 internal static class SearchIndexes
 {
+    /// <summary>
+    /// Raised whenever the mapping below changes — or what a document holds, which
+    /// a live index would otherwise keep until something reprojected every
+    /// product — so an index built by an older one is recreated and refilled at
+    /// startup (`ISearchIndexSchema`).
+    /// 3: a variant axis stated on a product with no variants along it joins
+    /// `FacetValues` (F-3's check found the shoes' colours missing).
+    /// 2: `FacetValues` (R-7.3, F-1). 1: everything before, unversioned.
+    /// </summary>
+    public const int MappingVersion = 3;
+
+    public const string VersionKey = "mapping_version";
+
     public static async Task CreateAsync(
         ElasticsearchClient client, string culture, string analyzer, CancellationToken ct)
     {
         var index = ProductSearchDocument.IndexNameFor(culture);
 
         var response = await client.Indices.CreateAsync(index, c => c
-            .Mappings(m => m.Properties<ProductSearchDocument>(p => p
+            .Mappings(m => m
+                .Meta(new Dictionary<string, object> { [VersionKey] = MappingVersion })
+                .Properties<ProductSearchDocument>(p => p
                 .Keyword(d => d.Id)
                 // The collapse field: it has to be a keyword, not text.
                 .Keyword(d => d.ProductId)
                 .Keyword(d => d.Sku)
                 .Keyword(d => d.AxisValues)
+                .Keyword(d => d.FacetValues)
                 .Keyword(d => d.Culture)
                 .Text(d => d.Name, t => t.Analyzer(analyzer))
                 .Text(d => d.Description!, t => t.Analyzer(analyzer))
@@ -100,6 +117,39 @@ internal static class SearchIndexes
             throw new InvalidOperationException(
                 $"Could not create index '{index}': {response.DebugInformation}");
     }
+}
+
+/// <summary>
+/// Reads each index's mapping version (`ISearchIndexSchema`).
+/// </summary>
+internal sealed class ElasticsearchIndexSchema(ElasticsearchClient client) : ISearchIndexSchema
+{
+    public async Task<bool> IsCurrentAsync(CancellationToken ct = default)
+    {
+        foreach (var culture in CultureAnalyzers.ByCulture.Keys)
+        {
+            var index = ProductSearchDocument.IndexNameFor(culture);
+            var response = await client.Indices.GetMappingAsync(new Elastic.Clients.Elasticsearch.IndexManagement.GetMappingRequest(index), ct);
+
+            if (response.ApiCallDetails.HttpStatusCode == 404)
+                continue;
+
+            if (!response.IsValidResponse)
+                throw new SearchUnavailableException("mapping", response.DebugInformation);
+
+            var meta = response.Mappings.Values.FirstOrDefault()?.Mappings.Meta;
+            if (VersionOf(meta) < SearchIndexes.MappingVersion)
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>The version a mapping says it is; none said is the first, unversioned one.</summary>
+    internal static int VersionOf(IDictionary<string, object>? meta) =>
+        meta is not null && meta.TryGetValue(SearchIndexes.VersionKey, out var value) && int.TryParse(value?.ToString(), out var version)
+            ? version
+            : 1;
 }
 
 /// <summary>
@@ -255,7 +305,12 @@ internal sealed class ElasticsearchProductIndexer(
     }
 }
 
-internal sealed partial class ElasticsearchLexicalSearch(ElasticsearchClient client) : ILexicalProductSearch
+internal sealed partial class ElasticsearchLexicalSearch(
+    ElasticsearchClient client,
+    IAttributeDefinitionReader attributes,
+    ICategoryReader categories,
+    IRunningOffers offers,
+    TimeProvider clock) : ILexicalProductSearch
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
@@ -367,90 +422,185 @@ internal sealed partial class ElasticsearchLexicalSearch(ElasticsearchClient cli
         activity?.SetTag("search.culture", query.Culture);
         activity?.SetTag("search.text", query.Text);
 
-        var response = await client.SearchAsync<ProductSearchDocument>(s => s
-            .Indices(ProductSearchDocument.IndexNameFor(query.Culture))
-            .From((query.Page - 1) * query.PageSize)
-            .Size(query.PageSize)
-            // Collapse by product: matching and filtering happen per variant —
-            // which is what makes them exact — and the result comes back as a
-            // product, with the variant that won inside it.
-            .Collapse(c => c.Field(d => d.ProductId))
-            // Sorting is opt-in and there is exactly one option, because a sort
-            // is a promise the index has to be able to keep. Relevance stays the
-            // default: it is the only order that means anything when somebody
-            // typed something, and the golden set measures it.
-            .Sort(sort =>
-            {
-                if (!string.Equals(query.Sort, "newest", StringComparison.OrdinalIgnoreCase))
-                    return;
+        var filters = ProductFilters.From(query.Filters, await offers.NowAsync(ct), Today(clock));
+        activity?.SetTag("search.filters", filters.Chosen.Count);
 
-                sort.Field(d => d.AvailableFrom!, f => f.Order(SortOrder.Desc));
-            })
-            // The `hits` total counts DOCUMENTS, and here a document is a
-            // variant. The number the interface shows is products, so it comes
-            // from a cardinality over the collapsed field. Approximate above
-            // 40,000 groups, exact far below that.
-            .Aggregations(a => a.Add("products", agg => agg.Cardinality(c => c.Field(d => d.ProductId))))
-            .Query(q => q.Bool(b => b
-                // **An empty query is a BROWSE, not a failure.** Everything a
-                // home page shows — a category, what is new, what is on offer —
-                // is this question with no words in it, and until there was a
-                // home page nobody noticed the only way in was to already know
-                // what you wanted.
-                //
-                // `MinimumShouldMatch` is what makes it safe: with no `should`
-                // clauses the boolean matches everything, and the filters below
-                // still apply.
-                .Must(m =>
+        var response = await client.SearchAsync<ProductSearchDocument>(s =>
+        {
+            s.Indices(ProductSearchDocument.IndexNameFor(query.Culture))
+                .From((query.Page - 1) * query.PageSize)
+                .Size(query.PageSize)
+                // Collapse by product: matching and filtering happen per variant —
+                // which is what makes them exact — and the result comes back as a
+                // product, with the variant that won inside it. Under a price
+                // order the variant that wins is the cheapest (ascending) or the
+                // dearest (descending), so a product is placed by the price it
+                // shows: acceptable, and the card's range says the rest.
+                .Collapse(c => c.Field(d => d.ProductId))
+                // Sorting is opt-in, because a sort is a promise the index has to
+                // be able to keep. Relevance stays the default: it is the only
+                // order that means anything when somebody typed something, and
+                // the golden set measures it.
+                .Sort(sort =>
                 {
-                    // `Must` takes an action rather than returning a clause, so
-                    // this is an if and not the ternary it wants to be.
-                    if (string.IsNullOrWhiteSpace(query.Text))
+                    switch (query.Sort)
                     {
-                        m.MatchAll(_ => { });
-                        return;
+                        case ProductSort.Newest:
+                            sort.Field(d => d.AvailableFrom!, f => f.Order(SortOrder.Desc));
+                            break;
+                        case ProductSort.PriceAsc:
+                            sort.Field(d => d.PriceAmount, f => f.Order(SortOrder.Asc));
+                            break;
+                        case ProductSort.PriceDesc:
+                            sort.Field(d => d.PriceAmount, f => f.Order(SortOrder.Desc));
+                            break;
                     }
-
-                    m.Bool(alternatives => alternatives
-                        .Should(
-                            AllWordsAcrossFields(query.Text),
-                            AllWordsForgivingTypos(query.Text),
-                            // **The fallback, and most of what recall was
-                            // missing.** With only AND clauses a query of three
-                            // words returned the one product carrying all three:
-                            // "tech tee" found 1 of 5 relevant products, "running
-                            // shoes" 2 of 8. The docs blamed a vocabulary gap for
-                            // hybrid search to earn; measured on 2026-09-11 over a
-                            // golden set re-pooled so nothing in anybody's top ten
-                            // was unjudged, this one clause took recall@50 from
-                            // 0.564 to 0.939 (es) and 0.457 to 0.955 (en), and
-                            // NDCG@10 from 0.800 to 0.927 and 0.739 to 0.935. The
-                            // AND clause's boost keeps full matches first; this
-                            // only decides what comes after them.
-                            should => should.MultiMatch(mm => mm
-                                .Query(query.Text)
-                                .Fields(SearchableFields)
-                                .Type(TextQueryType.CrossFields)
-                                .Operator(Operator.Or)))
-                        .MinimumShouldMatch(1));
                 })
-                .Filter(ActiveInBranch(query.Category)))),
-            ct);
+                // The `hits` total counts DOCUMENTS, and here a document is a
+                // variant. The number the interface shows is products, so it comes
+                // from a cardinality over the collapsed field — among the facets'
+                // aggregations, under every chosen filter (`total`).
+                .Aggregations(FacetAggregations.For(filters))
+                .Query(Matching(query));
+
+            // The shopper's filters narrow the hits AFTER the aggregations have
+            // counted, which is what lets each facet count without its own
+            // choice. With none chosen there is no post filter at all, and the
+            // query is the one the golden set has always measured.
+            if (filters.All() is { } chosen)
+                s.PostFilter(chosen);
+        }, ct);
 
         if (!response.IsValidResponse)
             throw new SearchUnavailableException("query", response.DebugInformation);
 
         var hits = response.Hits.Select(SearchHits.From).ToList();
+        var counts = FacetCounts.Read(response.Aggregations, filters);
+        var products = response.Aggregations is null ? hits.Count : counts.Total;
 
-        var products = response.Aggregations?.GetCardinality("products")?.Value is { } value
-            ? (long)value
-            : hits.Count;
+        var (bands, bandsTook) = await PriceBandsAsync(query, filters, counts.Price, ct);
+        var facets = FacetAssembler.Build(
+            counts, bands, filters, query.Culture, await attributes.AllAsync(ct), await categories.AllAsync(ct));
 
         activity?.SetTag("search.total", products);
         activity?.SetTag("search.variants", response.Total);
-        activity?.SetTag("search.took_ms", response.Took);
+        activity?.SetTag("search.facets", facets.Count);
+        activity?.SetTag("search.took_ms", response.Took + bandsTook);
 
-        return new SearchResultPage(hits, products, query.Page, query.PageSize, response.Took);
+        return new SearchResultPage(hits, products, query.Page, query.PageSize, response.Took + bandsTook, Facets: facets);
+    }
+
+    /// <summary>Today, for "new arrivals": the date part of the clock, in UTC like every date the index holds.</summary>
+    internal static DateOnly Today(TimeProvider clock) => DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+
+    /// <summary>
+    /// What a query matches before any filter the shopper chose: the words (or
+    /// everything, for a browse), Active, inside the branch. The page's request
+    /// and the price bands' request share it, so both count the same set.
+    /// </summary>
+    internal static Action<QueryDescriptor<ProductSearchDocument>> Matching(ProductSearchQuery query) =>
+        q => q.Bool(b => b
+            // **An empty query is a BROWSE, not a failure.** Everything a
+            // home page shows — a category, what is new, what is on offer —
+            // is this question with no words in it, and until there was a
+            // home page nobody noticed the only way in was to already know
+            // what you wanted.
+            //
+            // `MinimumShouldMatch` is what makes it safe: with no `should`
+            // clauses the boolean matches everything, and the filters below
+            // still apply.
+            .Must(m =>
+            {
+                // `Must` takes an action rather than returning a clause, so
+                // this is an if and not the ternary it wants to be.
+                if (string.IsNullOrWhiteSpace(query.Text))
+                {
+                    m.MatchAll(_ => { });
+                    return;
+                }
+
+                // Hybrid search's union: the words OR the products meaning found.
+                // The meaning clause scores nothing (boost 0), so a product the
+                // words matched scores exactly what it did without it, and one
+                // only meaning found scores zero — counted, never ranked.
+                if (query.AlsoMatching is { Count: > 0 } found)
+                {
+                    m.Bool(union => union
+                        .Should(TheWords(query.Text), FoundByMeaning(found))
+                        .MinimumShouldMatch(1));
+                    return;
+                }
+
+                TheWords(query.Text)(m);
+            })
+            .Filter(ActiveInBranch(query.Category)));
+
+    private static Action<QueryDescriptor<ProductSearchDocument>> TheWords(string text) =>
+        words => words.Bool(alternatives => alternatives
+            .Should(
+                AllWordsAcrossFields(text),
+                AllWordsForgivingTypos(text),
+                // **The fallback, and most of what recall was
+                // missing.** With only AND clauses a query of three
+                // words returned the one product carrying all three:
+                // "tech tee" found 1 of 5 relevant products, "running
+                // shoes" 2 of 8. The docs blamed a vocabulary gap for
+                // hybrid search to earn; measured on 2026-09-11 over a
+                // golden set re-pooled so nothing in anybody's top ten
+                // was unjudged, this one clause took recall@50 from
+                // 0.564 to 0.939 (es) and 0.457 to 0.955 (en), and
+                // NDCG@10 from 0.800 to 0.927 and 0.739 to 0.935. The
+                // AND clause's boost keeps full matches first; this
+                // only decides what comes after them.
+                should => should.MultiMatch(mm => mm
+                    .Query(text)
+                    .Fields(SearchableFields)
+                    .Type(TextQueryType.CrossFields)
+                    .Operator(Operator.Or)))
+            .MinimumShouldMatch(1));
+
+    private static Action<QueryDescriptor<ProductSearchDocument>> FoundByMeaning(IReadOnlyCollection<string> productIds) =>
+        meaning => meaning.Terms(t => t
+            .Field(d => d.ProductId)
+            .Terms(new TermsQueryField([.. productIds.Select(id => FieldValue.String(id))]))
+            .Boost(0));
+
+    /// <summary>
+    /// The count of each price band, cut from the percentiles the page's request
+    /// returned — the second request of a page, and only when the results hold a
+    /// range to cut (<see cref="FacetAggregations.PriceBandCounts"/> says why).
+    /// </summary>
+    private async Task<(IReadOnlyList<PriceBand> Bands, long Took)> PriceBandsAsync(
+        ProductSearchQuery query, ProductFilters filters, PriceSpread? spread, CancellationToken ct)
+    {
+        if (spread is null)
+            return ([], 0);
+
+        var bands = PriceBands.Between(PriceBands.Boundaries(spread.Min, spread.Max, spread.Percentiles));
+        if (bands.Count == 0)
+            return ([], 0);
+
+        var response = await client.SearchAsync<ProductSearchDocument>(s => s
+            .Indices(ProductSearchDocument.IndexNameFor(query.Culture))
+            .Size(0)
+            .Aggregations(FacetAggregations.PriceBandCounts(filters, bands))
+            .Query(Matching(query)), ct);
+
+        if (!response.IsValidResponse)
+            throw new SearchUnavailableException("counting price bands", response.DebugInformation);
+
+        var buckets = response.Aggregations?.GetFilter(FacetAggregations.Bands)?.Aggregations?
+            .GetFilters(FacetAggregations.Bands)?.Buckets
+            .ToDictionary(bucket => bucket.Key ?? string.Empty, bucket => FacetCounts.ProductsIn(bucket.Aggregations), StringComparer.Ordinal)
+            ?? [];
+
+        long[] counts =
+        [
+            .. bands.Select((_, position) =>
+                buckets.GetValueOrDefault(position.ToString(System.Globalization.CultureInfo.InvariantCulture)))
+        ];
+
+        return (FacetAssembler.Bands(bands, counts, filters.Asked), response.Took);
     }
 
     /// <summary>
@@ -540,13 +690,23 @@ internal sealed class ElasticsearchFullMatch(ElasticsearchClient client) : ILexi
 /// the lexical search reads — so a meaning-only hit shows the same price, image
 /// and stock a lexical hit for that product would.
 /// </summary>
-internal sealed class ElasticsearchHitReader(ElasticsearchClient client) : ISearchHitReader
+internal sealed class ElasticsearchHitReader(
+    ElasticsearchClient client, IRunningOffers offers, TimeProvider clock) : ISearchHitReader
 {
     public async Task<IReadOnlyList<SearchHit>> FindAsync(
-        IReadOnlyCollection<string> productIds, string culture, string? category, CancellationToken ct = default)
+        IReadOnlyCollection<string> productIds, string culture, string? category, SearchFilters filters,
+        CancellationToken ct = default)
     {
         if (productIds.Count == 0)
             return [];
+
+        // The shopper's filters, as the page's hits have them: a product meaning
+        // found is a card only if it passes them, and the card is a variant that
+        // does — the black one when black was chosen. With none there is nothing
+        // to ask Pricing, and the request is the one it was before filters.
+        var chosen = filters.IsEmpty
+            ? null
+            : ProductFilters.From(filters, await offers.NowAsync(ct), ElasticsearchLexicalSearch.Today(clock)).All();
 
         var response = await client.SearchAsync<ProductSearchDocument>(s => s
             .Indices(ProductSearchDocument.IndexNameFor(culture))
@@ -570,7 +730,8 @@ internal sealed class ElasticsearchHitReader(ElasticsearchClient client) : ISear
                     filter => filter.Terms(t => t
                         .Field(d => d.ProductId)
                         .Terms(new TermsQueryField([.. productIds.Select(id => FieldValue.String(id))]))),
-                    .. ElasticsearchLexicalSearch.ActiveInBranch(category)
+                    .. ElasticsearchLexicalSearch.ActiveInBranch(category),
+                    .. Chosen(chosen)
                 ]))),
             ct);
 
@@ -579,6 +740,9 @@ internal sealed class ElasticsearchHitReader(ElasticsearchClient client) : ISear
 
         return [.. response.Hits.Select(SearchHits.From)];
     }
+
+    private static Action<QueryDescriptor<ProductSearchDocument>>[] Chosen(Query? chosen) =>
+        chosen is null ? [] : [filter => filter.Bool(new BoolQuery { Filter = [chosen] })];
 }
 
 /// <summary>A document hit as the search contract's <see cref="SearchHit"/>, in one place for both readers.</summary>

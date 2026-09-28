@@ -1127,6 +1127,16 @@ export interface components {
         /** @enum {unknown} */
         DiscountOutcome: "Applied" | "Suppressed";
         /** @enum {unknown} */
+        FacetKind: "Category" | "Brand" | "Price" | "Offer" | "New" | "InStock" | "Axis" | "Attribute" | "Flag";
+        FacetOption: {
+            value: string;
+            label: string;
+            /** Format: int64 */
+            count: number;
+            chosen: boolean;
+            swatch?: null | string;
+        };
+        /** @enum {unknown} */
         FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
         ImportProductsCommand: {
             source: string;
@@ -1362,6 +1372,15 @@ export interface components {
             billingAddress?: null | components["schemas"]["AddressRequest"];
             coupons?: null | string[];
         };
+        PriceBand: {
+            /** Format: double */
+            from: null | number;
+            /** Format: double */
+            to: null | number;
+            /** Format: int64 */
+            count: number;
+            chosen: boolean;
+        };
         PriceChangedResponse: {
             quoteHash: string;
             /** Format: double */
@@ -1372,6 +1391,17 @@ export interface components {
             taxTotal: number;
             /** Format: double */
             discountTotal: number;
+        };
+        PriceFacetRange: {
+            /** Format: double */
+            min: number;
+            /** Format: double */
+            max: number;
+            /** Format: double */
+            chosenMin: null | number;
+            /** Format: double */
+            chosenMax: null | number;
+            bands: components["schemas"]["PriceBand"][];
         };
         ProductAttributeView: {
             code: string;
@@ -1573,7 +1603,11 @@ export interface components {
             agentId: string;
             displayName: string;
             operator: string;
-            trust?: components["schemas"]["AgentTrust"];
+            /**
+             * @default Known
+             * @enum {unknown}
+             */
+            trust: "Untrusted" | "Known" | "Verified";
         };
         ReindexProductsResult: {
             /** Format: int32 */
@@ -1680,6 +1714,13 @@ export interface components {
             /** Format: double */
             elapsedSeconds: number;
         };
+        SearchFacet: {
+            code: string;
+            kind: components["schemas"]["FacetKind"];
+            label: string;
+            options: components["schemas"]["FacetOption"][];
+            price?: null | components["schemas"]["PriceFacetRange"];
+        };
         SearchHit: {
             productId: string;
             code: string;
@@ -1714,6 +1755,7 @@ export interface components {
             /** Format: double */
             tookMs: number;
             answer?: null | components["schemas"]["SearchAnswer"];
+            facets?: null | components["schemas"]["SearchFacet"][];
         };
         SetCartLineRequest: {
             /** Format: int32 */
@@ -1883,7 +1925,7 @@ export interface operations {
     ListAuditEntries: {
         parameters: {
             query?: {
-                outcome?: string;
+                outcome?: "Allowed" | "Denied" | "Failed";
                 page?: number;
                 pageSize?: number;
             };
@@ -1931,7 +1973,7 @@ export interface operations {
     GetAgentDenials: {
         parameters: {
             query?: {
-                period?: string;
+                period?: "Day" | "Week" | "Month";
             };
             header?: never;
             path?: never;
@@ -1946,15 +1988,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentDenialsSummary"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
                 };
             };
         };
@@ -2109,7 +2142,7 @@ export interface operations {
     ListProducts: {
         parameters: {
             query?: {
-                status?: string;
+                status?: "Draft" | "Active" | "Archived";
                 culture?: string;
                 page?: number;
                 pageSize?: number;
@@ -2817,7 +2850,15 @@ export interface operations {
                 page?: number;
                 pageSize?: number;
                 category?: string;
-                sort?: string;
+                sort?: "Relevance" | "Newest" | "PriceAsc" | "PriceDesc";
+                brand?: string[];
+                within?: string[];
+                f?: string[];
+                minPrice?: number;
+                maxPrice?: number;
+                onOffer?: boolean;
+                newArrivals?: boolean;
+                inStock?: boolean;
             };
             header?: never;
             path?: never;
@@ -3293,7 +3334,7 @@ export interface operations {
     ListOrders: {
         parameters: {
             query?: {
-                status?: string;
+                status?: "Pending" | "PaymentAuthorized" | "PaymentFailed" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
                 q?: string;
                 page?: number;
                 pageSize?: number;
@@ -3311,15 +3352,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListOrdersResult"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
                 };
             };
         };
@@ -3380,7 +3412,7 @@ export interface operations {
     GetSalesSummary: {
         parameters: {
             query?: {
-                period?: string;
+                period?: "Day" | "Week" | "Month";
             };
             header?: never;
             path?: never;
@@ -3397,21 +3429,12 @@ export interface operations {
                     "application/json": components["schemas"]["SalesSummary"];
                 };
             };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
         };
     };
     GetOperationsSummary: {
         parameters: {
             query?: {
-                period?: string;
+                period?: "Day" | "Week" | "Month";
             };
             header?: never;
             path?: never;
@@ -3428,21 +3451,12 @@ export interface operations {
                     "application/json": components["schemas"]["OperationsSummary"];
                 };
             };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
         };
     };
     GetCheckoutFunnel: {
         parameters: {
             query?: {
-                period?: string;
+                period?: "Day" | "Week" | "Month";
             };
             header?: never;
             path?: never;
@@ -3459,21 +3473,12 @@ export interface operations {
                     "application/json": components["schemas"]["CheckoutFunnel"];
                 };
             };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
-                };
-            };
         };
     };
     GetAgentSales: {
         parameters: {
             query?: {
-                period?: string;
+                period?: "Day" | "Week" | "Month";
             };
             header?: never;
             path?: never;
@@ -3488,15 +3493,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentSales"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": string;
                 };
             };
         };

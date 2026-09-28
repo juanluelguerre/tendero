@@ -88,7 +88,7 @@ public sealed class OpenApiDocumentTests
     /// never sent.
     /// </summary>
     private static readonly string[] ClosedSetNames =
-        ["status", "kind", "mode", "outcome", "trust", "decision", "move", "change", "combination", "period"];
+        ["status", "kind", "mode", "outcome", "trust", "decision", "move", "change", "combination", "period", "sort"];
 
     /// <summary>The fields with such a name that are open by design, and why.</summary>
     private static readonly Dictionary<string, string> OpenByDesign = new()
@@ -120,6 +120,36 @@ public sealed class OpenApiDocumentTests
              Type the record's property as its enum and let the API's converter
              spell it (ADR 0043). If one is open on purpose, add it to
              {nameof(OpenByDesign)} with the reason.
+             """);
+    }
+
+    /// <summary>
+    /// The same rule for what a client SENDS. A query parameter is as much the
+    /// API's shape as a response field: <c>?sort=</c> was a bare string, its set
+    /// learnt from a 400, until the storefront's filters needed to name it.
+    /// </summary>
+    [Fact]
+    public async Task Every_closed_set_a_client_sends_is_declared_as_one()
+    {
+        var document = await FetchDocumentAsync(TestContext.Current.CancellationToken);
+        var paths = document?["paths"]?.AsObject() ?? [];
+
+        var bare = paths
+            .SelectMany(path => path.Value?.AsObject() ?? [])
+            .SelectMany(operation => (operation.Value?["parameters"]?.AsArray() ?? [])
+                .Select(parameter => (Operation: operation.Value?["operationId"]?.GetValue<string>() ?? operation.Key,
+                    Name: parameter?["name"]?.GetValue<string>() ?? "", Shape: parameter?["schema"])))
+            .Where(parameter => ClosedSetNames.Contains(parameter.Name, StringComparer.Ordinal) && IsBareString(parameter.Shape))
+            .Select(parameter => $"{parameter.Operation}?{parameter.Name}")
+            .ToArray();
+
+        Assert.True(bare.Length == 0,
+            $"""
+             These query parameters are named like a closed set and published as a bare string:
+                 {string.Join(Environment.NewLine + "    ", bare)}
+
+             Bind the parameter as WireEnum<TEnum> (ADR 0043), which the document
+             declares as the enum's names.
              """);
     }
 

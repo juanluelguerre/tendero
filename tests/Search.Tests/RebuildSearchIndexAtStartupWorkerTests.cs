@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
@@ -19,7 +20,7 @@ namespace ElGuerre.Tendero.Search.Tests;
 /// has a button for. `ReindexProducts` had described the case in its own
 /// comment — "nothing restores it" — for a week.
 /// </summary>
-public sealed class RebuildEmptySearchIndexTests
+public sealed class RebuildSearchIndexAtStartupWorkerTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -61,14 +62,52 @@ public sealed class RebuildEmptySearchIndexTests
         Assert.Empty(dispatcher.Sent);
     }
 
-    private static (RebuildSearchIndexAtStartupWorker Service, RecordingDispatcher Dispatcher) Build(IProductIndexer indexer)
+    /// <summary>
+    /// An index on an older mapping is recreated and refilled even though it is
+    /// full (R-7.3, F-1): its new fields were mapped dynamically, and a filter on
+    /// them would fail without a word.
+    /// </summary>
+    [Fact]
+    public async Task A_populated_index_on_an_older_mapping_is_recreated()
+    {
+        var (service, dispatcher) = Build(new ProbingIndexer(empty: false), new FixedSchema(current: false));
+
+        await service.StartAsync(Ct);
+
+        Assert.True(Assert.IsType<ReindexProductsCommand>(Assert.Single(dispatcher.Sent)).Recreate);
+    }
+
+    [Fact]
+    public async Task An_empty_index_on_the_current_mapping_is_refilled_without_recreating()
+    {
+        var (service, dispatcher) = Build(new ProbingIndexer(empty: true), new FixedSchema(current: true));
+
+        await service.StartAsync(Ct);
+
+        Assert.False(Assert.IsType<ReindexProductsCommand>(Assert.Single(dispatcher.Sent)).Recreate);
+    }
+
+    [Theory]
+    [InlineData(null, 1)]
+    [InlineData("2", 2)]
+    [InlineData("not a number", 1)]
+    public void A_mapping_says_its_version_or_is_the_first(string? stored, int version)
+    {
+        var meta = stored is null ? new Dictionary<string, object>() : new Dictionary<string, object> { ["mapping_version"] = stored };
+
+        Assert.Equal(version, ElasticsearchIndexSchema.VersionOf(meta));
+    }
+
+    private static (RebuildSearchIndexAtStartupWorker Service, RecordingDispatcher Dispatcher) Build(IProductIndexer indexer, ISearchIndexSchema? schema = null)
     {
         var dispatcher = new RecordingDispatcher();
 
-        var services = new ServiceCollection()
+        var collection = new ServiceCollection()
             .AddSingleton(indexer)
-            .AddSingleton<ICommandDispatcher>(dispatcher)
-            .BuildServiceProvider();
+            .AddSingleton<ICommandDispatcher>(dispatcher);
+        if (schema is not null)
+            collection.AddSingleton(schema);
+        var services = collection.BuildServiceProvider();
 
         return (new RebuildSearchIndexAtStartupWorker(
             services.GetRequiredService<IServiceScopeFactory>(),
@@ -85,6 +124,11 @@ public sealed class RebuildEmptySearchIndexTests
         public Task IndexAsync(Product product, CancellationToken ct = default) => Task.CompletedTask;
         public Task RemoveAsync(ProductId productId, CancellationToken ct = default) => Task.CompletedTask;
         public Task RecreateAsync(CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+    private sealed class FixedSchema(bool current) : ISearchIndexSchema
+    {
+        public Task<bool> IsCurrentAsync(CancellationToken ct = default) => Task.FromResult(current);
     }
 
     private sealed class RecordingDispatcher : ICommandDispatcher

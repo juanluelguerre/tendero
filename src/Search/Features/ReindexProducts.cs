@@ -142,9 +142,16 @@ public sealed class RebuildSearchIndexAtStartupWorker(
     {
         await using var scope = scopes.CreateAsyncScope();
 
+        var recreate = false;
         try
         {
-            if (!await scope.ServiceProvider.GetRequiredService<IProductIndexer>().IsEmptyAsync(cancellationToken))
+            // An index built from an older mapping is recreated as well as
+            // refilled (R-7.3, F-1): a field added to the document would
+            // otherwise be mapped as text and fail its filters in silence.
+            recreate = scope.ServiceProvider.GetService<ISearchIndexSchema>() is { } schema
+                && !await schema.IsCurrentAsync(cancellationToken);
+
+            if (!recreate && !await scope.ServiceProvider.GetRequiredService<IProductIndexer>().IsEmptyAsync(cancellationToken))
                 return;
         }
         catch (SearchUnavailableException exception)
@@ -156,11 +163,11 @@ public sealed class RebuildSearchIndexAtStartupWorker(
         }
 
         var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
-            .SendAsync(new ReindexProductsCommand(), cancellationToken);
+            .SendAsync(new ReindexProductsCommand(Recreate: recreate), cancellationToken);
 
         logger.LogInformation(
-            "The search index was empty at startup and was rebuilt: {Indexed} indexed, {Removed} removed, {Elapsed:F1}s",
-            result.Indexed, result.Removed, result.ElapsedSeconds);
+            "The search index was {Reason} at startup and was rebuilt: {Indexed} indexed, {Removed} removed, {Elapsed:F1}s",
+            recreate ? "on an older mapping" : "empty", result.Indexed, result.Removed, result.ElapsedSeconds);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

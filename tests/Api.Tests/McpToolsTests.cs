@@ -2,6 +2,7 @@ using ElGuerre.Tendero.Catalog.Features.GetProduct;
 using ElGuerre.Tendero.Catalog.Features.ListCategories;
 using ElGuerre.Tendero.Mcp.Tools;
 using ElGuerre.Tendero.Pricing.Features.ListOffers;
+using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Http;
@@ -105,16 +106,40 @@ public sealed class McpToolsTests
         var dispatcher = new RecordingDispatcher();
 
         await TenderoTools.SearchProductsAsync(
-            dispatcher, NoHeader, query: "cafetera", culture: "en", category: "KITCHEN", sort: "newest",
+            dispatcher, NoHeader, query: "cafetera", culture: "en", category: "KITCHEN", sort: ProductSort.Newest,
             page: 3, pageSize: 5, cancellationToken: TestContext.Current.CancellationToken);
 
         var query = Assert.IsType<SearchProductsQuery>(dispatcher.Query);
 
         Assert.Equal("cafetera", query.Q);
         Assert.Equal("KITCHEN", query.Category);
-        Assert.Equal("newest", query.Sort);
+        Assert.Equal(ProductSort.Newest, query.Sort);
         Assert.Equal(3, query.Page);
         Assert.Equal(5, query.PageSize);
+    }
+
+    /// <summary>The storefront's filters, by the record's names (F-5); none is no filters at all.</summary>
+    [Fact]
+    public async Task Search_passes_the_filters_through_and_none_is_none()
+    {
+        var dispatcher = new RecordingDispatcher();
+
+        await TenderoTools.SearchProductsAsync(
+            dispatcher, NoHeader, category: "SHOES", brands: ["Vertex"], facets: ["COLOR:BLACK"],
+            maxPrice: 80m, inStock: true, cancellationToken: TestContext.Current.CancellationToken);
+        var filtered = Assert.IsType<SearchProductsQuery>(dispatcher.Query).Filters;
+
+        await TenderoTools.SearchProductsAsync(
+            dispatcher, NoHeader, category: "SHOES", cancellationToken: TestContext.Current.CancellationToken);
+        var unfiltered = Assert.IsType<SearchProductsQuery>(dispatcher.Query).Filters;
+
+        Assert.NotNull(filtered);
+        Assert.Equal(["Vertex"], filtered.Brands);
+        Assert.Equal(["COLOR:BLACK"], filtered.Facets);
+        Assert.Equal(80m, filtered.MaxPrice);
+        Assert.True(filtered.InStock);
+        Assert.False(filtered.OnOffer);
+        Assert.Null(unfiltered);
     }
 
     /// <summary>

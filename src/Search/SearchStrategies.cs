@@ -59,7 +59,18 @@ public interface ISearchHitReader
     /// branch when there is one. Ids with no such product are left out, not errors.
     /// </summary>
     Task<IReadOnlyList<SearchHit>> FindAsync(
-        IReadOnlyCollection<string> productIds, string culture, string? category, CancellationToken ct = default);
+        IReadOnlyCollection<string> productIds, string culture, string? category, CancellationToken ct = default) =>
+        FindAsync(productIds, culture, category, SearchFilters.None, ct);
+
+    /// <summary>
+    /// The same, narrowed by the shopper's filters: a product that fails them is
+    /// left out like an archived one, and the card is a variant that passes them.
+    /// It is how hybrid search keeps the vector side — which knows nothing of
+    /// brands, prices or sizes — from bringing back what the filters excluded.
+    /// </summary>
+    Task<IReadOnlyList<SearchHit>> FindAsync(
+        IReadOnlyCollection<string> productIds, string culture, string? category, SearchFilters filters,
+        CancellationToken ct = default);
 }
 
 /// <summary>

@@ -20,7 +20,7 @@ public sealed class ListAuditEntriesTests
     {
         var reader = new ScriptedReader([], 0, new Dictionary<AuditOutcome, int>());
 
-        await Handle(reader, new ListAuditEntriesQuery("DENIED", 3, 7));
+        await Handle(reader, new ListAuditEntriesQuery(AuditOutcome.Denied, 3, 7));
 
         Assert.Equal(((AuditOutcome?)AuditOutcome.Denied, 3, 7), reader.Asked);
     }
@@ -38,7 +38,7 @@ public sealed class ListAuditEntriesTests
             total: 2,
             new Dictionary<AuditOutcome, int> { [AuditOutcome.Allowed] = 7, [AuditOutcome.Denied] = 2 });
 
-        var result = await Handle(reader, new ListAuditEntriesQuery("denied", 2, 1));
+        var result = await Handle(reader, new ListAuditEntriesQuery(AuditOutcome.Denied, 2, 1));
 
         Assert.Single(result.Entries);
         Assert.Equal((2, 2, 1), (result.Total, result.Page, result.PageSize));

@@ -26,7 +26,7 @@ namespace ElGuerre.Tendero.Accounts.Features.ListAuditEntries;
 /// and moving one file is the whole cost of having been wrong.
 /// </summary>
 public sealed record ListAuditEntriesQuery(
-    string? Outcome, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize)
+    AuditOutcome? Outcome, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize)
     : IQuery<ListAuditEntriesResult>;
 
 public sealed record AuditEntryView(
@@ -61,9 +61,10 @@ public sealed class ListAuditEntriesValidator : AbstractValidator<ListAuditEntri
 {
     public ListAuditEntriesValidator()
     {
-        RuleFor(query => query.Outcome)
-            .Must(outcome => outcome is null || Enum.TryParse<AuditOutcome>(outcome, ignoreCase: true, out _))
-            .WithMessage("Outcome must be one of: allowed, denied, failed.");
+        // The binding already refused a name the set does not have (ADR 0043);
+        // this is for a caller that builds the query in code, where a cast
+        // number is still an AuditOutcome the log has never written.
+        RuleFor(query => query.Outcome).IsInEnum();
 
         // A screen, not an export: the shared ceiling is the one this log had
         // reason to want. An audit log that could be pulled a hundred thousand
@@ -81,10 +82,10 @@ public sealed class ListAuditEntriesEndpoint : ICarterModule
         // GET /api/audit?outcome=denied&page=1&pageSize=20
         app.MapGet("/api/audit",
             async Task<Ok<ListAuditEntriesResult>> (
-                   string? outcome, int? page, int? pageSize,
+                   WireEnum<AuditOutcome>? outcome, int? page, int? pageSize,
                    IQueryDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(
-                    new ListAuditEntriesQuery(outcome, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct)))
+                    new ListAuditEntriesQuery(outcome?.Value, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct)))
             // The audit log names customers, agents and subjects, and quotes the
             // payload of every command. It is the single most sensitive read in
             // the system and it is behind the shopkeeper policy for that reason
@@ -104,13 +105,9 @@ public sealed class ListAuditEntriesHandler(IAuditReader audit)
         ListAuditEntriesQuery query, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("accounts.list_audit");
-        activity?.SetTag("audit.outcome", query.Outcome);
+        activity?.SetTag("audit.outcome", query.Outcome?.ToString());
 
-        var outcome = query.Outcome is null
-            ? (AuditOutcome?)null
-            : Enum.Parse<AuditOutcome>(query.Outcome, ignoreCase: true);
-
-        var page = await audit.PageAsync(outcome, query.Page, query.PageSize, cancellationToken);
+        var page = await audit.PageAsync(query.Outcome, query.Page, query.PageSize, cancellationToken);
 
         activity?.SetTag("audit.returned", page.Entries.Count);
         activity?.SetTag("audit.total", page.Total);

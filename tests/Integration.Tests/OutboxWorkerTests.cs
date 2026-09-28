@@ -24,7 +24,7 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// and not any context's handler.
 /// </summary>
 [Collection(PostgresCollection.Name)]
-public sealed class OutboxProcessorTests(PostgresFixture postgres)
+public sealed class OutboxWorkerTests(PostgresFixture postgres)
 {
     private static readonly DateTimeOffset T0 = new(2026, 9, 10, 20, 0, 0, TimeSpan.Zero);
 

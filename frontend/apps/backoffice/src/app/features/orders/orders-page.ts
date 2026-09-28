@@ -13,7 +13,7 @@ import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
-import type { OrderSummary } from '@tendero/shared-api';
+import type { OrderStatus, OrderSummary } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -28,10 +28,19 @@ import { WorkPane } from '../../work/work-pane';
 const OrderActions = { Ship: 'order_ship', Deliver: 'order_deliver', Cancel: 'order_cancel' } as const satisfies Record<OrderMove, BackofficeAction>;
 
 /** The filter's statuses in the order a working day meets them: what is to ship first. */
-const Statuses = ['Confirmed', 'Pending', 'PaymentAuthorized', 'PaymentFailed', 'Shipped', 'Delivered', 'Cancelled'] as const;
+const Statuses = ['Confirmed', 'Pending', 'PaymentAuthorized', 'PaymentFailed', 'Shipped', 'Delivered', 'Cancelled'] as const satisfies readonly OrderStatus[];
 
 /** The status the list opens on: the job this screen is for is shipping (R-0, B3). */
-const ToShip = 'Confirmed';
+const ToShip: OrderStatus = 'Confirmed';
+
+/**
+ * The URL's status as the API's set, or none. A status typed by hand that the
+ * shop does not have lists everything rather than asking for a 400: the address
+ * is the person's, the set is the contract's.
+ */
+function statusIn(key: string): OrderStatus | null {
+  return (Statuses as readonly string[]).includes(key) ? (key as OrderStatus) : null;
+}
 
 /**
  * The orders, as R-3 drew them (R-4.2): a list narrowed by status and by what is
@@ -70,7 +79,7 @@ export class OrdersPage {
 
   /** The status in the URL; none means the job's default, `all` means no filter. */
   protected readonly statusKey = computed(() => this.params().get('status') ?? ToShip);
-  private readonly status = computed(() => (this.statusKey() === 'all' ? null : this.statusKey()));
+  private readonly status = computed(() => statusIn(this.statusKey()));
   protected readonly selectedId = computed(() => this.params().get('order'));
 
   protected readonly text = signal(this.route.snapshot.queryParamMap.get('q') ?? '');

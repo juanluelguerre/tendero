@@ -7,6 +7,7 @@ import type {
   ListOrdersResult,
   OperationsSummary,
   OrderDetail,
+  OrderStatus,
   OrderSummary,
   ReturnView,
   SalesSummary,
@@ -33,7 +34,7 @@ export class OrderingService {
   private readonly baseUrl = inject(API_BASE_URL);
 
   /** Narrowed by status and by the start or end of an id, or any part of a name or city (R-4.2). */
-  orders(status: string | null = null, text = '', page = 1, pageSize = 20): Observable<ListOrdersResult> {
+  orders(status: OrderStatus | null = null, text = '', page = 1, pageSize = 20): Observable<ListOrdersResult> {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (status) params = params.set('status', status);
     if (text.trim()) params = params.set('q', text.trim());

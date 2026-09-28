@@ -431,6 +431,23 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// Search sees Pricing through one class, too (R-7.3, F-2). It asks which
+    /// offers are running when a search filters by them, and that answer crosses
+    /// as values — branches and SKUs — never as a promotion. A second class
+    /// reaching into Pricing would be the search starting to price things.
+    /// </summary>
+    [Fact]
+    public void Search_sees_pricing_through_one_adapter_and_nowhere_else()
+    {
+        var result = Types.InAssembly(Solution.Search)
+            .That().DoNotHaveName("PricingRunningOffers")
+            .ShouldNot().HaveDependencyOn("ElGuerre.Tendero.Pricing")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, Describe(Solution.Search, result));
+    }
+
+    /// <summary>
     /// What <paramref name="assembly"/>'s domain may not touch: the assemblies
     /// its .csproj references (minus the framework and the SharedKernel) and its
     /// own namespaces outside Domain.

@@ -21,6 +21,11 @@
             "name": "outcome",
             "in": "query",
             "schema": {
+              "enum": [
+                "Allowed",
+                "Denied",
+                "Failed"
+              ],
               "type": "string"
             }
           },
@@ -102,6 +107,11 @@
             "name": "period",
             "in": "query",
             "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
               "type": "string"
             }
           }
@@ -113,16 +123,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentDenialsSummary"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -309,6 +309,11 @@
             "name": "status",
             "in": "query",
             "schema": {
+              "enum": [
+                "Draft",
+                "Active",
+                "Archived"
+              ],
               "type": "string"
             }
           },
@@ -1320,7 +1325,80 @@
             "name": "sort",
             "in": "query",
             "schema": {
+              "enum": [
+                "Relevance",
+                "Newest",
+                "PriceAsc",
+                "PriceDesc"
+              ],
               "type": "string"
+            }
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "within",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "f",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "onOffer",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "newArrivals",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "inStock",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -1929,6 +2007,15 @@
             "name": "status",
             "in": "query",
             "schema": {
+              "enum": [
+                "Pending",
+                "PaymentAuthorized",
+                "PaymentFailed",
+                "Confirmed",
+                "Shipped",
+                "Delivered",
+                "Cancelled"
+              ],
               "type": "string"
             }
           },
@@ -1963,16 +2050,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListOrdersResult"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -2062,6 +2139,11 @@
             "name": "period",
             "in": "query",
             "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
               "type": "string"
             }
           }
@@ -2073,16 +2155,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SalesSummary"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -2101,6 +2173,11 @@
             "name": "period",
             "in": "query",
             "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
               "type": "string"
             }
           }
@@ -2112,16 +2189,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OperationsSummary"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -2140,6 +2207,11 @@
             "name": "period",
             "in": "query",
             "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
               "type": "string"
             }
           }
@@ -2151,16 +2223,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CheckoutFunnel"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -2179,6 +2241,11 @@
             "name": "period",
             "in": "query",
             "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
               "type": "string"
             }
           }
@@ -2190,16 +2257,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentSales"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }
@@ -3390,6 +3447,49 @@
           "Suppressed"
         ]
       },
+      "FacetKind": {
+        "enum": [
+          "Category",
+          "Brand",
+          "Price",
+          "Offer",
+          "New",
+          "InStock",
+          "Axis",
+          "Attribute",
+          "Flag"
+        ]
+      },
+      "FacetOption": {
+        "required": [
+          "value",
+          "label",
+          "count",
+          "chosen"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "chosen": {
+            "type": "boolean"
+          },
+          "swatch": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "FactKind": {
         "enum": [
           "Text",
@@ -4286,6 +4386,38 @@
           }
         }
       },
+      "PriceBand": {
+        "required": [
+          "from",
+          "to",
+          "count",
+          "chosen"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "to": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "chosen": {
+            "type": "boolean"
+          }
+        }
+      },
       "PriceChangedResponse": {
         "required": [
           "quoteHash",
@@ -4314,6 +4446,46 @@
           "discountTotal": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "PriceFacetRange": {
+        "required": [
+          "min",
+          "max",
+          "chosenMin",
+          "chosenMax",
+          "bands"
+        ],
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "format": "double"
+          },
+          "max": {
+            "type": "number",
+            "format": "double"
+          },
+          "chosenMin": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "chosenMax": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "bands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceBand"
+            }
           }
         }
       },
@@ -5105,7 +5277,12 @@
             "type": "string"
           },
           "trust": {
-            "$ref": "#/components/schemas/AgentTrust"
+            "enum": [
+              "Untrusted",
+              "Known",
+              "Verified"
+            ],
+            "default": "Known"
           }
         }
       },
@@ -5496,6 +5673,42 @@
           }
         }
       },
+      "SearchFacet": {
+        "required": [
+          "code",
+          "kind",
+          "label",
+          "options"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/FacetKind"
+          },
+          "label": {
+            "type": "string"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FacetOption"
+            }
+          },
+          "price": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PriceFacetRange"
+              }
+            ]
+          }
+        }
+      },
       "SearchHit": {
         "required": [
           "productId",
@@ -5623,6 +5836,15 @@
                 "$ref": "#/components/schemas/SearchAnswer"
               }
             ]
+          },
+          "facets": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SearchFacet"
+            }
           }
         }
       },

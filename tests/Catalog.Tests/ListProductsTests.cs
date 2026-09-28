@@ -27,7 +27,7 @@ public sealed class ListProductsTests
         active.Publish(Clock);
 
         var result = await HandlerOver(draft, active).HandleAsync(
-            new ListProductsQuery("draft", "es", 1, 20), TestContext.Current.CancellationToken);
+            new ListProductsQuery(ProductStatus.Draft, "es", 1, 20), TestContext.Current.CancellationToken);
 
         Assert.Equal(1, result.Total);
         Assert.Equal(draft.Id.Value.ToString(), Assert.Single(result.Items).ProductId);
@@ -47,7 +47,7 @@ public sealed class ListProductsTests
         var other = ADraftProduct("Mochila");
 
         var result = await HandlerOver(draft, active, other).HandleAsync(
-            new ListProductsQuery("active", "es", 1, 20, Text: "cafetera"), TestContext.Current.CancellationToken);
+            new ListProductsQuery(ProductStatus.Active, "es", 1, 20, Text: "cafetera"), TestContext.Current.CancellationToken);
 
         Assert.Equal(Enum.GetValues<ProductStatus>(), result.Counts.Select(count => count.Status));
         Assert.Equal(1, result.Counts.Single(count => count.Status == ProductStatus.Active).Count);
@@ -93,26 +93,30 @@ public sealed class ListProductsTests
         var products = Enumerable.Range(0, 5).Select(i => ADraftProduct($"Producto {i}")).ToArray();
 
         var result = await HandlerOver(products).HandleAsync(
-            new ListProductsQuery("draft", "es", 1, 2), TestContext.Current.CancellationToken);
+            new ListProductsQuery(ProductStatus.Draft, "es", 1, 2), TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.Items.Count);
         Assert.Equal(5, result.Total);
     }
 
     [Theory]
-    [InlineData("draft")]
-    [InlineData("DRAFT")]
-    [InlineData("active")]
-    [InlineData("archived")]
+    [InlineData(ProductStatus.Draft)]
+    [InlineData(ProductStatus.Active)]
+    [InlineData(ProductStatus.Archived)]
     [InlineData(null)]
-    public void Accepted_statuses_validate(string? status) =>
+    public void Accepted_statuses_validate(ProductStatus? status) =>
         Assert.True(new ListProductsValidator()
             .Validate(new ListProductsQuery(status, "es", 1, 20)).IsValid);
 
+    /// <summary>
+    /// Over HTTP a name the set does not have never gets this far: the binding
+    /// refuses "pendiente" (ADR 0043, held by <c>WireEnumTests</c>). What is
+    /// left for the validator is a status built in code from a number.
+    /// </summary>
     [Fact]
     public void An_unknown_status_is_rejected_instead_of_silently_ignored() =>
         Assert.False(new ListProductsValidator()
-            .Validate(new ListProductsQuery("pendiente", "es", 1, 20)).IsValid);
+            .Validate(new ListProductsQuery((ProductStatus)99, "es", 1, 20)).IsValid);
 
     private static ListProductsHandler HandlerOver(params Product[] products) =>
         new(new InMemoryProductCatalogReader(products));

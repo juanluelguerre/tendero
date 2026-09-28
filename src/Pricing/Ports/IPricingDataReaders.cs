@@ -21,6 +21,15 @@ public interface IPriceListReader
 public interface IPromotionReader
 {
     Task<IReadOnlyList<Promotion>> AllAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// What the offers running at <paramref name="at"/> reach, for the search's
+    /// "on offer" filter (<see cref="OfferReach.Of"/>). On the port, so an
+    /// adapter that can answer it without reading every promotion — a table with
+    /// an index on the window — may, and every caller keeps the same rule.
+    /// </summary>
+    async Task<OfferReach> OffersRunningAtAsync(DateTimeOffset at, CancellationToken cancellationToken = default) =>
+        OfferReach.Of(await AllAsync(cancellationToken), at);
 }
 
 /// <summary>

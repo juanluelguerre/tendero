@@ -21,7 +21,7 @@ namespace ElGuerre.Tendero.Catalog.Features.ListProducts;
 /// is under review is precisely what is not indexed yet, because only Active is
 /// indexed. A review queue served from Elasticsearch would always be empty.
 /// </summary>
-public sealed record ListProductsQuery(string? Status, string Culture, int Page, int PageSize, string? Text = null)
+public sealed record ListProductsQuery(ProductStatus? Status, string Culture, int Page, int PageSize, string? Text = null)
     : IQuery<ListProductsResult>;
 
 public sealed record ProductSummary(
@@ -52,10 +52,9 @@ public sealed class ListProductsValidator : AbstractValidator<ListProductsQuery>
     {
         // An unknown status is rejected rather than ignored: filtering by
         // "pending" and getting the whole catalogue back is worse than a 400,
-        // because it looks like it worked.
-        RuleFor(x => x.Status)
-            .Must(status => status is null || Enum.TryParse<ProductStatus>(status, ignoreCase: true, out _))
-            .WithMessage("Status must be one of: draft, active, archived.");
+        // because it looks like it worked. Over HTTP the binding refuses it
+        // first (ADR 0043); this holds for a query built in code from a cast.
+        RuleFor(x => x.Status).IsInEnum();
 
         RuleFor(x => x.Culture).Must(c => c is "es" or "en")
             .WithMessage("Supported cultures: es, en.");
@@ -75,7 +74,7 @@ public sealed class ListProductsEndpoint : ICarterModule
         // .Produces<T>() can go on lying after a change and nobody finds out.
         app.MapGet("/api/catalog/products",
             async Task<Ok<ListProductsResult>> (
-                   string? status, string? culture, int? page, int? pageSize, string? q,
+                   WireEnum<ProductStatus>? status, string? culture, int? page, int? pageSize, string? q,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 // Culture: explicit query parameter > Accept-Language > "es".
@@ -93,7 +92,7 @@ public sealed class ListProductsEndpoint : ICarterModule
                     culture, http.Request.Headers.AcceptLanguage);
 
                 var result = await dispatcher.SendAsync(
-                    new ListProductsQuery(status, resolved, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize, q), ct);
+                    new ListProductsQuery(status?.Value, resolved, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize, q), ct);
 
                 // The client asks, the server declares. Vary because the response
                 // depends on Accept-Language when the parameter is absent.
@@ -130,13 +129,9 @@ public sealed class ListProductsHandler(IProductCatalogReader products)
         ListProductsQuery query, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("catalog.list");
-        activity?.SetTag("catalog.status", query.Status);
+        activity?.SetTag("catalog.status", query.Status?.ToString());
 
-        var status = query.Status is null
-            ? (ProductStatus?)null
-            : Enum.Parse<ProductStatus>(query.Status, ignoreCase: true);
-
-        var page = await products.ListAsync(status, query.Text, query.Page, query.PageSize, cancellationToken);
+        var page = await products.ListAsync(query.Status, query.Text, query.Page, query.PageSize, cancellationToken);
 
         activity?.SetTag("catalog.total", page.Total);
 

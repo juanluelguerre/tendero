@@ -274,6 +274,57 @@ public sealed class ProductSearchDocumentTests
         Assert.Equal([draft.Id], indexer.Removed);
     }
 
+    // ---------- The facets (R-7.3, F-1) ----------
+
+    /// <summary>
+    /// What a shopper can filter by: options and yes-or-nos whose definition is a
+    /// facet, as codes. Not a number (ranges are deferred), and nothing whose
+    /// definition is not a facet. A variant axis only when the product has no
+    /// variants along it — a shoe sold in one colour states it on the product —
+    /// because otherwise AxisValues carries it per variant and it would count twice.
+    /// </summary>
+    [Fact]
+    public void The_facets_are_the_options_and_yes_or_nos_marked_so_and_an_axis_only_without_variants_along_it()
+    {
+        var definitions = FacetDefinitions();
+
+        var single = AProductWithFacets();
+        single.AddVariant(Clock, "PAN-DEFAULT", new Money(24m, "EUR"));
+        single.Publish(Clock);
+
+        var along = AProductWithFacets();
+        along.DefineAxes(Clock, ["COLOR"]);
+        along.AddVariant(Clock, "PAN-BLACK", new Money(24m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        along.Publish(Clock);
+
+        Assert.Equal(["COLOR:BLACK", "GENDER:WOMEN", "INDUCTION:true"], ProductSearchDocument.ForVariants(single, "es", definitions).Single().FacetValues);
+        Assert.Equal(["GENDER:WOMEN", "INDUCTION:true"], ProductSearchDocument.ForVariants(along, "es", definitions).Single().FacetValues);
+    }
+
+    private static AttributeDefinitions FacetDefinitions() => new(
+    [
+        AttributeDefinition.Define(Clock, "GENDER", Text("Género", "Gender"), AttributeKind.Option, isFacet: true),
+        AttributeDefinition.Define(Clock, "INDUCTION", Text("Inducción", "Induction"), AttributeKind.Boolean, isFacet: true),
+        AttributeDefinition.Define(Clock, "COLOR", Text("Color", "Colour"), AttributeKind.Option, isVariantAxis: true, isFacet: true),
+        AttributeDefinition.Define(Clock, "CAPACITY_L", Text("Capacidad", "Capacity"), AttributeKind.Number, isFacet: true),
+        AttributeDefinition.Define(Clock, "FINISH", Text("Acabado", "Finish"), AttributeKind.Option),
+    ]);
+
+    private static Product AProductWithFacets()
+    {
+        var product = Product.Create(Clock, Text("Cazo", "Saucepan"), new Money(24m, "EUR"));
+        product.SetAttribute(Clock, AttributeValue.Boolean("INDUCTION", true));
+        product.SetAttribute(Clock, AttributeValue.Option("GENDER", "WOMEN"));
+        product.SetAttribute(Clock, AttributeValue.Option("COLOR", "BLACK"));
+        product.SetAttribute(Clock, AttributeValue.Numeric("CAPACITY_L", 2m));
+        product.SetAttribute(Clock, AttributeValue.Option("FINISH", "MATTE"));
+        return product;
+    }
+
+    [Fact]
+    public void With_no_definitions_nothing_is_a_facet() =>
+        Assert.Empty(Documents(AShirt(), "es")[0].FacetValues);
+
     // ---------- Builders ----------
 
     private static IReadOnlyList<ProductSearchDocument> Documents(

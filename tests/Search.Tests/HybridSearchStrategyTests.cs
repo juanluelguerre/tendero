@@ -213,9 +213,9 @@ public sealed class HybridSearchStrategyTests
     /// shopper chose: neither goes near the vector side, so neither can degrade.
     /// </summary>
     [Theory]
-    [InlineData("", null)]
-    [InlineData("cafetera", "newest")]
-    public async Task A_browse_and_a_date_order_are_answered_by_lexical_alone(string text, string? sort)
+    [InlineData("", ProductSort.Relevance)]
+    [InlineData("cafetera", ProductSort.Newest)]
+    public async Task A_browse_and_a_date_order_are_answered_by_lexical_alone(string text, ProductSort sort)
     {
         var query = new ProductSearchQuery(text, "es", Category: "KITCHEN", Sort: sort);
         var lexical = new Lexical("a", "b");
@@ -253,6 +253,87 @@ public sealed class HybridSearchStrategyTests
             .SearchAsync(new ProductSearchQuery("cafetera", "es"), Ct);
 
         Assert.Equal(40, result.Total);
+    }
+
+    // ---------- R-7.3, F-2: the union, and filters over it ----------
+
+    /// <summary>
+    /// The lexical request carries what meaning found, so its total and its
+    /// facets are the union of both halves — the page lists both, and counts both.
+    /// </summary>
+    [Fact]
+    public async Task The_lexical_request_counts_what_meaning_found_and_its_facets_are_the_pages()
+    {
+        var facets = new[] { new SearchFacet("brand", FacetKind.Brand, "Brand", [new FacetOption("Kuisina", "Kuisina", 3, false)]) };
+        var lexical = new Lexical("a", "b") { AnswersTheUnion = true, Facets = facets };
+
+        var result = await Hybrid(lexical, new Vectors(("d", 0.9), ("a", 0.8)), new Cards("d"))
+            .SearchAsync(new ProductSearchQuery("regalo", "es"), Ct);
+
+        Assert.Equal(["d", "a"], lexical.Asked.Single().AlsoMatching);
+        Assert.Same(facets, result.Facets);
+        Assert.Equal(3, result.Total);
+    }
+
+    /// <summary>
+    /// A product in the union only because meaning found it scores zero, and it
+    /// is not a lexical match: ranked as one it would have its meaning counted twice.
+    /// </summary>
+    [Fact]
+    public async Task A_product_only_meaning_found_is_fused_by_its_meaning_rank_alone()
+    {
+        var lexical = new Lexical("a") { AnswersTheUnion = true };
+
+        var result = await Hybrid(lexical, new Vectors(("d", 0.9)), new Cards("d"))
+            .SearchAsync(new ProductSearchQuery("regalo", "es"), Ct);
+
+        Assert.Equal(1d / 61, result.Hits.Single(hit => hit.ProductId == "d").Score, precision: 12);
+    }
+
+    /// <summary>
+    /// Qdrant knows nothing of brands or sizes, so its nearest list comes back
+    /// unfiltered — and a product the filters exclude must neither appear nor take
+    /// a rank another would have had. "x" is nearest and fails the filters: "b",
+    /// second in the vector list, fuses as first.
+    /// </summary>
+    [Fact]
+    public async Task With_filters_the_nearest_products_that_fail_them_are_cut_before_fusion()
+    {
+        var filters = new SearchFilters { Brands = ["Vertex"] };
+        var cards = new Cards("x") { PassingFilters = [] };
+
+        var result = await Hybrid(new Lexical("a", "b"), new Vectors(("x", 0.9), ("b", 0.8)), cards)
+            .SearchAsync(new ProductSearchQuery("zapatillas", "es", Filters: filters), Ct);
+
+        Assert.Equal(["b", "a"], result.Hits.Select(hit => hit.ProductId));
+        Assert.Equal(1d / 62 + 1d / 61, result.Hits[0].Score, precision: 12);
+        Assert.Same(filters, Assert.Single(cards.Filtered));
+    }
+
+    /// <summary>Without filters the nearest list fuses whole, as it did before filters existed: the golden set runs here.</summary>
+    [Fact]
+    public async Task Without_filters_the_nearest_list_fuses_whole()
+    {
+        var result = await Hybrid(new Lexical("a", "b"), new Vectors(("x", 0.9), ("b", 0.8)), new Cards())
+            .SearchAsync(new ProductSearchQuery("zapatillas", "es"), Ct);
+
+        Assert.Equal(["b", "a"], result.Hits.Select(hit => hit.ProductId));
+        Assert.Equal(1d / 62 + 1d / 62, result.Hits[0].Score, precision: 12);
+    }
+
+    [Fact]
+    public async Task A_filtered_search_whose_vector_side_fails_is_the_filtered_lexical_answer()
+    {
+        var query = new ProductSearchQuery("zapatillas", "es", Filters: new SearchFilters { InStock = true });
+        var lexical = new Lexical("a", "b");
+        var vectors = new Vectors(("x", 0.9)) { Failure = new SearchUnavailableException("vector search", "down") };
+
+        var degraded = await Hybrid(lexical, vectors).SearchAsync(query, Ct);
+
+        Assert.Equal(
+            JsonSerializer.Serialize(await new LexicalSearchStrategy(lexical).SearchAsync(query, Ct)),
+            JsonSerializer.Serialize(degraded));
+        Assert.All(lexical.Asked, asked => Assert.True(asked.Filters!.InStock));
     }
 
     // ---------- P8-6: the reranker ----------

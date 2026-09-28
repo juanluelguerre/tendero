@@ -315,31 +315,23 @@ public sealed class DashboardEndpoints : ICarterModule
             .WithTags("Dashboard");
 
         dashboard.MapGet("/sales",
-            async Task<Results<Ok<SalesSummary>, BadRequest<string>>> (string? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
-                DashboardPeriods.Parse(period) is { } parsed
-                    ? TypedResults.Ok(await dispatcher.SendAsync(new GetSalesSummaryQuery(parsed), ct))
-                    : TypedResults.BadRequest(DashboardPeriods.Error))
+            async Task<Ok<SalesSummary>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetSalesSummaryQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .WithName("GetSalesSummary");
 
         dashboard.MapGet("/operations",
-            async Task<Results<Ok<OperationsSummary>, BadRequest<string>>> (string? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
-                DashboardPeriods.Parse(period) is { } parsed
-                    ? TypedResults.Ok(await dispatcher.SendAsync(new GetOperationsSummaryQuery(parsed), ct))
-                    : TypedResults.BadRequest(DashboardPeriods.Error))
+            async Task<Ok<OperationsSummary>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetOperationsSummaryQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .WithName("GetOperationsSummary");
 
         dashboard.MapGet("/funnel",
-            async Task<Results<Ok<CheckoutFunnel>, BadRequest<string>>> (string? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
-                DashboardPeriods.Parse(period) is { } parsed
-                    ? TypedResults.Ok(await dispatcher.SendAsync(new GetCheckoutFunnelQuery(parsed), ct))
-                    : TypedResults.BadRequest(DashboardPeriods.Error))
+            async Task<Ok<CheckoutFunnel>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetCheckoutFunnelQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .WithName("GetCheckoutFunnel");
 
         dashboard.MapGet("/agent-sales",
-            async Task<Results<Ok<AgentSales>, BadRequest<string>>> (string? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
-                DashboardPeriods.Parse(period) is { } parsed
-                    ? TypedResults.Ok(await dispatcher.SendAsync(new GetAgentSalesQuery(parsed), ct))
-                    : TypedResults.BadRequest(DashboardPeriods.Error))
+            async Task<Ok<AgentSales>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetAgentSalesQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .WithName("GetAgentSales");
     }
 

@@ -101,10 +101,8 @@ public sealed class AgentDenialsEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app) =>
         app.MapGet("/api/dashboard/agent-denials",
-                async Task<Results<Ok<AgentDenialsSummary>, BadRequest<string>>> (string? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
-                    DashboardPeriods.Parse(period) is { } parsed
-                        ? TypedResults.Ok(await dispatcher.SendAsync(new GetAgentDenialsQuery(parsed), ct))
-                        : TypedResults.BadRequest(DashboardPeriods.Error))
+                async Task<Ok<AgentDenialsSummary>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                    TypedResults.Ok(await dispatcher.SendAsync(new GetAgentDenialsQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Dashboard")
             .WithName("GetAgentDenials");

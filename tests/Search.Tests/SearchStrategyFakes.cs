@@ -33,17 +33,32 @@ internal static class Strategies
         /// <summary>What the engine claims it matched, when that is more than it returned.</summary>
         public long? Total { get; init; }
 
+        /// <summary>
+        /// Whether it answers the union the way Elasticsearch does: the products
+        /// in <see cref="ProductSearchQuery.AlsoMatching"/> that no word matched
+        /// come after the words' matches, scoring zero.
+        /// </summary>
+        public bool AnswersTheUnion { get; init; }
+
+        /// <summary>The facets it counted, handed back as they are.</summary>
+        public IReadOnlyList<SearchFacet>? Facets { get; init; }
+
         public Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
         {
             Asked.Add(query);
 
-            var hits = matched
+            var byMeaning = AnswersTheUnion
+                ? (query.AlsoMatching ?? []).Where(id => !matched.Contains(id)).ToArray()
+                : [];
+
+            var hits = matched.Select(id => Hit(id))
+                .Concat(byMeaning.Select(id => Hit(id) with { Score = 0 }))
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
-                .Select(id => Hit(id))
                 .ToList();
 
-            return Task.FromResult(new SearchResultPage(hits, Total ?? matched.Length, query.Page, query.PageSize, TookMs: 7));
+            return Task.FromResult(new SearchResultPage(
+                hits, Total ?? matched.Length + byMeaning.Length, query.Page, query.PageSize, TookMs: 7, Facets: Facets));
         }
     }
 
@@ -75,12 +90,29 @@ internal static class Strategies
                 productIds.Where(Texts.ContainsKey).ToDictionary(id => id, id => Texts[id]));
     }
 
-    /// <summary>The lexical index's cards, for the products it knows are Active.</summary>
+    /// <summary>
+    /// The lexical index's cards, for the products it knows are Active — and,
+    /// when the search is filtered, only for those that pass the filters.
+    /// </summary>
     public sealed class Cards(params string[] active) : ISearchHitReader
     {
+        /// <summary>The products a filtered search keeps; null keeps every Active one.</summary>
+        public string[]? PassingFilters { get; init; }
+
+        public List<SearchFilters> Filtered { get; } = [];
+
         public Task<IReadOnlyList<SearchHit>> FindAsync(
-            IReadOnlyCollection<string> productIds, string culture, string? category, CancellationToken ct = default) =>
-            Task.FromResult<IReadOnlyList<SearchHit>>([.. productIds.Where(active.Contains).Select(id => Hit(id))]);
+            IReadOnlyCollection<string> productIds, string culture, string? category, SearchFilters filters,
+            CancellationToken ct = default)
+        {
+            Filtered.Add(filters);
+
+            var kept = productIds.Where(active.Contains);
+            if (!filters.IsEmpty && PassingFilters is { } passing)
+                kept = kept.Where(passing.Contains);
+
+            return Task.FromResult<IReadOnlyList<SearchHit>>([.. kept.Select(id => Hit(id))]);
+        }
     }
 
     /// <summary>A reranker that scores each text by a rule, or fails, or takes forever.</summary>

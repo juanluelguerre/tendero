@@ -128,10 +128,7 @@ public sealed class ListOffersHandler(IPromotionReader promotions, TimeProvider 
     /// written for — the cart shows it, with its reason, which is where a
     /// suppressed or targeted promotion belongs.
     /// </summary>
-    private static bool Public(Promotion promotion, DateTimeOffset now) =>
-        promotion.IsActiveAt(now)
-        && promotion.CouponCode is null
-        && promotion.Segment is null;
+    private static bool Public(Promotion promotion, DateTimeOffset now) => promotion.IsPublicAt(now);
 
     private static OfferView View(Promotion promotion, string culture) => new(
         promotion.Code,
