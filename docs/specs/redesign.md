@@ -1,6 +1,6 @@
 # Spec: the redesign, run as a lifecycle — R-0, define before designing
 
-**Status**: built (R-0 to R-3 written 2026-09-27; R-4.1 to R-4.7, R-5.1 and R-5.2 built 2026-09-27/28). R-6 waits for the author's baseline walkthrough on `redesign/before`
+**Status**: built (R-0 to R-3 written 2026-09-27; R-4.1 to R-4.7, R-5.1 and R-5.2 built 2026-09-27/28). The baseline walkthrough ran 2026-09-28 (P1); R-6 is P1 again on the redesign
 **Slice(s)**: `frontend/apps/backoffice`, `frontend/apps/storefront`, `design/`, `docs/telemetry/tracking-plan.json`
 **Article**: *A redesign with a before and an after* (working title)
 
@@ -195,7 +195,81 @@ interface. Times and SEQ come from the walkthrough.
 | S3 add a variant to the cart | pick the variant → *Añadir al carrito* | 1–2 | |
 | S4 pay as a guest | 6 address fields → *¿Cómo quieres recibirlo?* → an option → *Pagar* | 9 | the shipping click is S-F3 |
 
-## R-2 — benchmark: what the good ones do, judged against R-0
+### The baseline walkthrough (2026-09-28)
+
+*Run on the tag `redesign/before`, in a worktree beside the redesigned code, with
+the shop filled by TrafficSim and prepared by `walkthrough-prepare`. One
+participant, the author (P1), desktop first. The results are in
+`docs/blog/reports/2026-09-28-redesign-baseline/walkthrough/`.*
+
+| Task | Width | Time | Outcome | Interactions | SEQ | P1's note |
+|---|:-:|--:|---|:-:|:-:|---|
+| B1 | 1440 | 22 s | done | 2 | 7 | |
+| B2 | 1440 | 8 s | done | 1 | 7 | |
+| B3 | 1440 | 4 s | done | 1 | 7 | |
+| B4 | 1440 | 47 s | done | 3 | 6 | the return's detail falls a little short |
+| B5 | 1440 | 25 s | done | 2 | 6 | suspended with a reason, and the list still showed the agent as active |
+| S1 | 1440 | 6 s | **not done** | 1 | **2** | |
+| S2 | 1440 | 17 s | done | — | 7 | |
+| S3 | 1440 | 10 s | done | 1 | — | the cart's count changes, but a short message saying it was added would help |
+| S4 | 1440 | 64 s | done | 4 | 7 | |
+| B3 | 390 | 7 s | done | 2 | 7 | had to go to, or refresh, Orders |
+| S1 | 390 | 4 s | done | 1 | 7 | |
+| S4 | 390 | 14 s | done | 4 | 7 | |
+
+**SUS 97.5** (68 is the usual average).
+
+**How to read it:**
+- **One participant, and the one who built the shop.** The author decided on
+  2026-09-28 not to run P2: apart from the add-to-cart message, the backoffice had
+  felt simple, quick and agile, and the gain they expected from the redesign was in
+  its navigation. So this is n = 1, by someone who knows every screen. It describes
+  that session and nothing wider, and the article says so.
+- **A ceiling.** SUS 97.5 and SEQ 7 on most tasks leave the backoffice almost no
+  room to improve on those two scales. R-6 cannot show a gain in them, only avoid
+  a loss. What can move is what failed or cost: **S1 at a desktop** (not done,
+  SEQ 2 — S-F1 exactly, the taxonomy invisible from the header) and the findings
+  below.
+- **Interactions were counted differently from the automated half.** P1 counted
+  decisions, not fields, and started some tasks already on the screen (B2 and B3
+  in 1, S4 in 4 against a minimum of 9). R-6 compares P1 with P1, counted the same
+  way, and the automated half with itself. The two are never mixed.
+- **The second width learned from the first.** S1 at a phone, from the cart, was
+  done in 4 s after failing at a desktop. The order of widths was meant to spread
+  that learning over two participants, and with one it cannot.
+
+**What the session found**, beyond the numbers:
+- **W-1 · B5: a suspended agent showed as active** (severity 3). The server says
+  `suspended` in lower case, and the screen compared it with `'Suspended'`. The
+  agent was suspended, but its tag stayed *Active* and its *Suspend* button stayed
+  there. **The redesign had carried the same comparison** into its six places in
+  `agents-page.html`. It is the same mismatch R-4.3 found in the trust select: an
+  enum's name on one side and its label on the other. No test crossed that line,
+  because the e2e checked the Undo toast, not the tag. Fixed first as a symptom (a
+  case-insensitive `isSuspended`, since removed), then as a class the same day by
+  [ADR 0043](../adr/0043-a-closed-set-is-declared-in-the-contract.md): every closed
+  set in the API is typed as its enum, spelled as its C# name and declared in the
+  document, so the generated type is `'Active' | 'Suspended'` and a comparison
+  with a value the API never sends stops compiling. Regenerating the types found
+  seventeen such comparisons in the two apps. An e2e now suspends an agent, reads
+  its row and undoes it (hand mutation, red), and a contract test refuses a field
+  named like a closed set that is published as a bare string (hand mutation,
+  red).
+- **W-2 · S3: nothing says the product was added** (severity 2). Only the cart's
+  count changes, in the header, away from the button — and a refusal changed
+  nothing at all. **Built as R-5.3 on 2026-09-28**: a notice beside the action, in
+  a status region that is always there, saying *added* with a link to the cart,
+  or *not added*. It stays rather than fading, as P1's "toast" would have: beside
+  the button is where the eyes are, and a message that leaves on a timer is gone
+  before a slow reader is done with it (WCAG 2.2.1). It goes when another variant
+  is chosen. `cart_notice_followed` measures the link; the e2e holds the notice
+  and the link (hand mutation, success read as failure: red).
+- **W-3 · B4: the return's detail is thin** (severity 2). To re-check at R-6
+  against the returns pane R-4.3 built.
+- **W-4 · B3 at a phone: the orders list had to be reached or refreshed**
+  (severity 2). R-4.2's *To ship* filter and badge are what R-6 checks it against.
+
+
 
 *Written 2026-09-27 from the products' own documentation and published research
 (sources at the end). Every pattern is judged by the question R-0 set — does it make
@@ -533,6 +607,13 @@ back into view, and R-6 can check that on the running app.
 What remains is the **walkthrough on the mock-ups**: the nine jobs, done on
 paper by the author. It belongs to the author, and it comes before R-4.
 
+**Amended 2026-09-28 by R-7.3's mock-ups:** on a desktop, *☰ Tienda* left of the
+logo gives way to the logo top left and a visible row of the departments, each
+opening the same panel. The author found *Tienda* and the listing's *Ocultar
+filtros* read as the same kind of control. The phone keeps R-5.1's header. The
+reasoning and the drawing are in [`storefront-facets.md`](storefront-facets.md),
+*The mock-ups*.
+
 ### The build, in order (R-4 and R-5)
 
 Each increment ships whole and is measured. The old screen stays reachable until
@@ -549,6 +630,7 @@ its replacement passes the accessibility ratchet and the e2e suite.
 | R-4.7 | The audit's table in its own frame | B-F2 | S |
 | R-5.1 | Storefront header, *Tienda* panel on a desktop, drawer on a phone, the sticky row if its condition holds, the theme switch and a dark storefront | S-F1, S-F2, S-F6, S-P1–4 | M |
 | R-5.2 | Shipping on postal code, 44 px targets, Novedades with controls | S-F3, S-F4, S-F5 | S |
+| R-5.3 | A notice beside *Añadir al carrito*: added, with a link to the cart, or not added — raised by the baseline walkthrough, not the audit | W-2 | S |
 
 **Before R-4 starts**, per the delivery plan: the author reads this and marks
 what they disagree with, the baseline walkthrough runs on today's interface, and
