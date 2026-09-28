@@ -17,6 +17,14 @@
 
 .trigger:hover { color: var(--text); border-color: var(--border-strong); }
 
+/* The role as words, not a tag: the button is already the box, and a box
+   inside it read as a second control (the author, the second walkthrough). */
+.trigger__role {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+}
+
 .avatar {
   display: inline-grid;
   place-items: center;

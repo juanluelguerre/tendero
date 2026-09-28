@@ -71,14 +71,27 @@
   inline-size: 100%;
   block-size: auto;
   aspect-ratio: 4 / 3;
-  object-fit: contain;
-  /* On a wide screen (R-7.4) three departments share 1800px: the cards grow
-     wide, and 4:3 would make them taller than the screen. The height stops
-     at 18rem and the drawing is centred in the box rather than cropped. */
-  max-block-size: 18rem;
+  object-fit: cover;
   /* Whatever replaces these drawings will be a photograph with its own
      proportions; the box is what keeps the row of cards level either way. */
   background: var(--accent-tint);
+}
+
+/* A wide screen shares its width between three departments (R-7.4): standing
+   up, each card would grow taller than the screen, and a picture capped in
+   height leaves bands beside a drawing that is 4:3. So the card lies down —
+   the picture at its own 4:3 on the left, the words beside it — and the row
+   fills the width with nothing stretched and nothing cropped. */
+@media (min-width: 100rem) {
+  .department {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: var(--space-2);
+  }
+
+  .department__art { grid-row: 1 / span 2; }
+
+  .department__name { align-self: end; }
 }
 
 .department__name,

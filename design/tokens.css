@@ -114,11 +114,14 @@
   /* ---------- Layout ---------- */
   --container-prose: 68ch;   /* docs and blog measure */
   --container-app: 1440px;
-  /* The shop's frame: a list of products is browsed, not read, so it grows
-     with the screen — more cards to a row, not wider cards — up to a width
-     past which a glance can no longer take a row in (R-7.4). Reading columns
-     keep their own measure in ch inside it. */
-  --container-shop: 1920px;
+  /* The shop's frame: a list of products is browsed, not read, so it takes
+     the screen, as the large shops do — more cards to a row, not wider cards
+     (R-7.4). A 1920px cap still left 320px of nothing each side of a 2560px
+     screen, which the author saw at once. What must not grow carries its own
+     measure inside it: a line of text in ch, and a page that is read or
+     filled in rather than browsed — product, cart, checkout, order, account —
+     --container-app (the list is in the storefront's styles.css). */
+  --container-shop: none;
   --header-h: 64px;
 }
 

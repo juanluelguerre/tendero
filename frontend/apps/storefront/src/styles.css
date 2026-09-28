@@ -68,15 +68,35 @@ img {
    Named `page-frame` and not `container`: Tailwind 4 is imported for its theme
    bridge, so `.container` is one of ITS utilities, it lands in a later cascade
    layer and it wins. The symptom was a 1440px page laid out at 768.
-   The frame is the shop's width, 1920px, and its gutters grow with the
-   screen: 16px on a phone, 3 % of the width between, 64px at most. At 1440px
-   it was a column in the middle of a wide monitor, with more margin than
-   shop at 2560px (R-7.4). */
+   The frame is the screen's width (--container-shop), and only its gutters
+   stop it: 16px on a phone, 3 % of the width between, 64px at most. At 1440px
+   it was a column in the middle of a wide monitor, with more margin than shop
+   at 2560px (R-7.4). */
 .page-frame {
   width: 100%;
   max-width: var(--container-shop);
   margin-inline: auto;
   padding-inline: clamp(var(--space-4), 3vw, var(--space-8));
+}
+
+/* A page that is read or filled in, not browsed, keeps the app's reading
+   width, centred inside the frame (R-7.4): a product, the cart, the checkout,
+   an order, the account. At 2560px the frame's full width put a cart's
+   quantity 1400px from its product and made the checkout's fields 1600px
+   long, and the product page a white field the author circled. The lists —
+   home, category, search, the comparison of four side by side — take the
+   frame. One list, here, rather than the same three lines in five components. */
+:is(
+  storefront-product-page,
+  storefront-cart,
+  storefront-checkout,
+  storefront-continue-checkout-page,
+  storefront-order,
+  storefront-account-page
+) {
+  display: block;
+  max-inline-size: var(--container-app);
+  margin-inline: auto;
 }
 
 /* ---------- Micro-labels: the one place uppercase is allowed ---------- */
