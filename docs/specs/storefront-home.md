@@ -160,13 +160,21 @@ not be, and the spec says so rather than faking one.
 
 ### Sigue donde lo dejaste — the trail
 
-- **Kept in the browser, not on the server.** Viewed products and searches are
-  written to `localStorage` on this device, never sent anywhere: the shop
-  does not build a profile, so it needs no consent banner entry, and the
-  privacy note says so in one line. A signed-in, cross-device trail is a later
-  step (it is personal data, and Accounts would own it).
-- **Removable**, one by one and all at once, and it forgets on its own after
-  30 days.
+- **As Amazon does it** (the author asked, 2026-09-29): a guest's trail lives in
+  the browser; a signed-in customer's lives in their account, follows them to
+  every device, and the guest's trail is merged into it at sign-in. Either way
+  the customer can see it, delete it and switch it off.
+- **A guest**: viewed products and searches are written to `localStorage` on
+  this device and never sent anywhere.
+- **A customer**: the trail is kept by **Accounts**, which owns customers
+  (a new writer there: `RecordBrowsing`, capped at the last 50 products and 20
+  searches, forgotten after 90 days). Signing in sends the browser's trail once
+  and clears it locally, so there is one trail, not two. It is personal data:
+  the privacy note says what is kept and for how long, and it is read only by
+  the customer's own session.
+- **Tu historial**, in *Tu cuenta*: the whole trail, removable one by one and
+  all at once, and a switch that turns it off — after which nothing is kept,
+  not even in the browser. A guest has the same controls on the row itself.
 - **Degrades to nothing**: private windows and blocked storage simply show no
   row (the listing's folded column already works this way).
 
@@ -183,8 +191,9 @@ not be, and the spec says so rather than faking one.
   promotions and theme — chosen from the drawings and accents the design system
   has, never uploaded images or free colours. Editing promotions themselves
   stays out of this slice.
-- **Not personalization.** *Recommended for you* is the vision's standard AI
-  (phase 12b and after); the trail is the shopper's own history, shown back.
+- **Not a profile.** The trail is the shopper's own history shown back and the
+  suggestions it explains; nothing is inferred about the person, and nothing is
+  shared or used for advertising.
 - **Not a carousel of banners.** One campaign at a time; a rotating hero is
   the pattern the large shops are abandoning, because nobody sees slide 3.
 - **Not stock-pressure copy** ("¡Solo quedan 2!") beyond what the product
@@ -220,9 +229,8 @@ not be, and the spec says so rather than faking one.
 
 ## Open questions
 
-1. **The name.** *Tendero Days* is the author's; the alternatives the shop
-   could own: *Días Tendero*, *La Semana del Tendero*. English and Spanish
-   both need a form (invariant 6): *Tendero Days* reads in both.
+1. ~~The name.~~ **Decided by the author, 2026-09-29: *Tendero Days*, in both
+   languages.**
 2. ~~Fixed dates or a recurring window?~~ **Decided by the author,
    2026-09-28: specific dates, set in the backoffice.** The seed carries one
    campaign so a fresh shop has something to show, and the demo creates one for
@@ -230,11 +238,15 @@ not be, and the spec says so rather than faking one.
 3. ~~One campaign or several?~~ **Decided by the author, 2026-09-28: several,
    taken into account from the start.** Black Friday is therefore a campaign
    of its own beside Tendero Days, not an edition of it.
-4. **Where the trail lives when signed in.** Browser-only for now is the
-   proposal; say if cross-device is wanted in this slice.
-5. **An agent-native touch on the home**: a small card, *Compra con tu
-   agente*, pointing an assistant at the shop's MCP server — the project's
-   differentiator, visible to a shopper. In, or later?
+4. **Where the trail lives when signed in.** The author asked how Amazon does
+   it; the proposal follows it (above): the browser for a guest, Accounts for a
+   customer, merged at sign-in, with *Tu historial* to see, delete and switch
+   off. Waiting for the author's yes.
+5. ~~An agent-native touch on the home?~~ **Decided by the author, 2026-09-29:
+   now.** A card, *Compra con tu agente*, below the campaign: what an assistant
+   can do here (search, compare, fill the cart), how to point one at the shop
+   (the MCP server's address, the browser's own agent), and that the shopper
+   stays the one who pays. Measured by `home_module_opened {module: agent}`.
 
 ## How it will be decided
 
@@ -251,8 +263,9 @@ author's approval, and only then the build — in the order below.
 | H-1 | Pricing's campaigns: the ADR (Pricing's first writer), the aggregate and its lifecycle, persistence and a migration, the window and order rules, `GET /api/pricing/campaigns`, `?campaign=` on the listing | L |
 | H-1b | The backoffice: a Campaigns list (ADR 0042's list-and-pane) with create, edit, schedule and end early, each with its audit row | M |
 | H-2 | The campaign card — the leading campaign only — with its clock, before and during | M |
-| H-3 | The trail: storage, the row, removal | M |
+| H-3 | The trail for a guest: storage, the row, removal | M |
+| H-3b | The trail for a customer: Accounts' `RecordBrowsing`, the merge at sign-in, *Tu historial* with delete and switch-off | M |
 | H-4 | Offers as products, best sellers, trends, the promise strip, the new order of the page | M |
 | H-4b | *Puede que te guste*: the rule, the vector re-rank with its fallback, `GET /api/search/similar` | M |
-| H-5 | Agents: `list_campaigns` in WebMCP and on the MCP server | S |
+| H-5 | Agents: `list_campaigns` in WebMCP and on the MCP server, and the *Compra con tu agente* card | S |
 | H-6 | The events, in the tracking plan | S |
