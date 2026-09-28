@@ -237,3 +237,61 @@
   .header__end { margin-inline-start: 0; }
   .main { padding-block: var(--space-5) var(--space-6); }
 }
+
+/* ---------- The departments (R-7.3, F-0) ----------
+   A row of its own on a desktop, each a link with its sections' toggle beside
+   it. The phone and the tablet keep TIENDA and its drawer, which is the
+   convention there, so the row and the button never show together. */
+.departments { display: none; border-block-start: 1px solid var(--border); }
+
+.departments__list {
+  display: flex;
+  gap: var(--space-5);
+  margin-block: 0;
+  padding-block: 0;
+  list-style: none;
+}
+
+.departments__item { display: flex; align-items: center; gap: var(--space-1); }
+
+.departments__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  border-block-end: 2px solid transparent;
+}
+
+.departments__link:hover { color: var(--accent); }
+
+/* The shelves sit at the row's end and read as links in the accent, as the
+   mock-ups draw them: places to look, not departments. */
+.departments__item--shelf { margin-inline-start: auto; }
+.departments__link--shelf { color: var(--accent); }
+.departments__link--shelf:hover { text-decoration: underline; }
+.departments__link[aria-current='true'] { border-block-end-color: var(--accent); }
+
+.departments__toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.departments__toggle:hover { color: var(--text); background: var(--bg-raised); }
+.departments__toggle svg { width: 16px; height: 16px; transition: transform var(--dur-fast) var(--ease); }
+.departments__toggle[aria-expanded='true'] svg { transform: rotate(180deg); }
+
+@media (min-width: 64rem) {
+  .departments { display: block; }
+  .menu-button { display: none; }
+}
+

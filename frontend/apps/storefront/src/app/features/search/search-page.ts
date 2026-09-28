@@ -1,45 +1,25 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { map, type Subscription } from 'rxjs';
+import { map } from 'rxjs';
 import { AuthStore } from '@tendero/shared-auth';
-import { CultureStore } from '@tendero/shared-i18n';
-import type { SearchAnswer, SearchHit } from '@tendero/shared-api';
-import { ProductSearchService } from '../../data-access/product-search.service';
 import { ReturnsPolicy } from '../../data-access/returns-policy.service';
+import { Listing } from '../../listing/listing';
+import { hasFilters, listingQueryParams, NoFilters } from '../../listing/listing-filters';
+import { ListingState } from '../../listing/listing-state';
 import { HomeSections } from '../home/home-sections';
-import { ProductCard } from '../../product-card';
 import { ShopLinks } from '../../shop-links';
 
 /** Below this, a query matches so much that the answer is noise. */
 const MinimumQueryLength = 2;
 
-type SearchState =
-  | { status: 'idle' }
-  | { status: 'tooShort' }
-  | { status: 'searching' }
-  | {
-      status: 'done';
-      hits: SearchHit[];
-      total: number;
-      tookMs: number;
-      query: string;
-      /**
-       * Whether this answer came from a language switch rather than from
-       * somebody pressing search. It changes what an empty result MEANS: not
-       * "we do not sell that" but "that query is in the other language", and
-       * telling somebody to use fewer words when the real answer is "try it in
-       * English" is worse than saying nothing.
-       */
-      afterLanguageChange: boolean;
-      /**
-       * What kind of answer this is, decided with no model (ADR 0032, layer A).
-       * `null` for a browse or a date order — there is nothing to judge there.
-       */
-      answer: SearchAnswer | null;
-    }
-  | { status: 'failed' };
+/**
+ * What the page is showing: the shop's front, a query too short to send, or a
+ * listing — which a query OR a filter alone makes, so `/es?offer=1` lists
+ * everything on offer (R-7.3, F-3).
+ */
+type SearchMode = 'idle' | 'tooShort' | 'listing';
 
 /**
  * The storefront's home is the search: the first thing a shopkeeper does is
@@ -48,8 +28,10 @@ type SearchState =
  */
 @Component({
   selector: 'storefront-search-page',
-  imports: [TranslocoDirective, RouterLink, ProductCard, HomeSections],
+  imports: [TranslocoDirective, RouterLink, HomeSections, Listing],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its own listing: the filters in the URL, the request, the phone's batch.
+  providers: [ListingState],
   templateUrl: './search-page.html',
   styleUrl: './search-page.css',
 })
@@ -60,28 +42,21 @@ export class SearchPage {
   /** Whether to offer the way back to an order somebody already placed. */
   protected readonly signedIn = inject(AuthStore).isSignedIn;
 
-  private readonly search = inject(ProductSearchService);
-  private readonly culture = inject(CultureStore);
   private readonly transloco = inject(TranslocoService);
   private readonly returns = inject(ReturnsPolicy);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * The results are one listing with the category pages (R-7.3, F-3): the
+   * filters, the count, the chips and the order are the listing's, and this
+   * page says what it lists — the words in the URL.
+   */
+  protected readonly listing = inject(ListingState);
 
   /** The window the shop actually honours, read once and shared with the order
    *  page's own copy of this number (`ReturnsPolicy`). */
   protected readonly returnsWindowDays = this.returns.windowDays;
-
-  /**
-   * The last query that was actually sent, so switching language can re-run it.
-   *
-   * Without this, changing to English retranslates the chrome and leaves the
-   * Spanish products underneath it — labels and results disagreeing on the same
-   * page, which is worse than not offering the switch at all. The names, the
-   * attribute text and the promotion reasons all come from the server in the
-   * requested culture; only the server can answer again.
-   */
-  private readonly lastQuery = signal<string | null>(null);
-
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
 
   /**
    * The query the URL is carrying. It is what makes a result page shareable,
@@ -98,38 +73,31 @@ export class SearchPage {
     { initialValue: '' },
   );
 
+  private readonly query = computed(() => this.queryFromUrl().trim());
+
+  protected readonly filtered = computed(() => hasFilters(this.listing.filters()));
+
   /**
-   * The search being answered. A new query or a language switch cancels it
-   * rather than racing it: two answers in flight would otherwise be settled by
-   * whichever arrived last, not by whichever was asked for last.
+   * A single character is not a search, and saying so is not pedantry: the
+   * alternative is pressing the button and getting nothing back, which reads
+   * as a broken shop rather than as a query that was never sent.
    */
-  private inFlight?: Subscription;
+  protected readonly mode = computed<SearchMode>(() => {
+    const query = this.query();
+    if (query.length > 0 && query.length < MinimumQueryLength) return 'tooShort';
+    return query.length > 0 || this.filtered() ? 'listing' : 'idle';
+  });
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.inFlight?.unsubscribe());
-
+    // The URL is the source of truth for what is listed, so back and forward
+    // work without anything extra: the browser changes the parameters and the
+    // listing asks again. Typing into the box only navigates. A language switch
+    // asks again as well, and the listing says when an answer came from one.
     effect(() => {
-      const culture = this.culture.active();
-      const query = untracked(() => this.lastQuery());
-
-      if (query) this.run(query, culture, { afterLanguageChange: true });
-    });
-
-    // The URL is the source of truth for what is being searched, so back and
-    // forward work without anything extra: the browser changes the parameter
-    // and this runs. Typing into the box only navigates.
-    effect(() => {
-      const query = this.queryFromUrl();
-
-      untracked(() => {
-        if (query === (this.lastQuery() ?? '')) return;
-
-        this.execute(query);
-      });
+      const mode = this.mode();
+      this.listing.place.set(mode === 'listing' ? { query: this.query(), category: null } : null);
     });
   }
-
-  protected readonly state = signal<SearchState>({ status: 'idle' });
 
   /**
    * Real queries from the golden set, not ones chosen because they look good.
@@ -155,76 +123,39 @@ export class SearchPage {
     { initialValue: [] as string[] },
   );
 
-  /** Four, because the grid is four wide at the width most people have. */
-  protected readonly placeholders = [0, 1, 2, 3];
-
   /** Whether the search band should step back and let the results have the room. */
   protected hasResults(): boolean {
-    const current = this.state();
-    return current.status !== 'idle';
+    return this.mode() !== 'idle';
+  }
+
+  /** The page's heading once it lists something: what was asked, or which shelf the filters make. */
+  protected heading(t: (key: string, params?: Record<string, unknown>) => string): string {
+    const query = this.query();
+    const filters = this.listing.filters();
+    if (this.mode() !== 'listing') return t('search.heading');
+    if (query) return t('listing.title.query', { query });
+    if (filters.onOffer) return t('listing.title.offers');
+    if (filters.newArrivals) return t('listing.title.newArrivals');
+    return t('listing.title.all');
   }
 
   /**
    * Pressing search does not search: it navigates. The URL then carries the
-   * query, and the effect above runs it — one path in, so the answer is the
-   * same whether somebody typed it, pressed a suggestion, followed a link or
-   * used the back button.
+   * query, and the listing runs it — one path in, so the answer is the same
+   * whether somebody typed it, pressed a suggestion, followed a link or used
+   * the back button. A new question starts with no filters: a price range
+   * chosen for backpacks says nothing about coffee makers.
    */
   protected submit(query: string): void {
     const text = query.trim();
 
     void this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { q: text.length > 0 ? text : null },
+      queryParams: { ...listingQueryParams(NoFilters), q: text.length > 0 ? text : null },
       queryParamsHandling: 'merge',
       // A search is not a page in its own history entry: pressing back after
       // three refinements should leave the shop, not walk back through them.
       replaceUrl: true,
-    });
-  }
-
-  private execute(query: string): void {
-    const text = query.trim();
-
-    // A single character is not a search, and saying so is not pedantry: the
-    // alternative is pressing the button and getting nothing back, which reads
-    // as a broken shop rather than as a query that was never sent.
-    if (text.length === 0) {
-      this.inFlight?.unsubscribe();
-      this.lastQuery.set(null);
-      this.state.set({ status: 'idle' });
-      return;
-    }
-
-    if (text.length < MinimumQueryLength) {
-      this.inFlight?.unsubscribe();
-      this.lastQuery.set(null);
-      this.state.set({ status: 'tooShort' });
-      return;
-    }
-
-    this.lastQuery.set(text);
-    this.run(text, this.culture.active(), { afterLanguageChange: false });
-  }
-
-  private run(text: string, culture: string, origin: { afterLanguageChange: boolean }): void {
-    this.state.set({ status: 'searching' });
-
-    this.inFlight?.unsubscribe();
-    this.inFlight = this.search.search(text, culture).subscribe({
-      next: (page) =>
-        this.state.set({
-          status: 'done',
-          hits: page.hits,
-          total: page.total,
-          tookMs: page.tookMs,
-          query: text,
-          afterLanguageChange: origin.afterLanguageChange,
-          // The schema marks it optional as well as nullable — a browse
-          // request answers with neither field at all.
-          answer: page.answer ?? null,
-        }),
-      error: () => this.state.set({ status: 'failed' }),
     });
   }
 }

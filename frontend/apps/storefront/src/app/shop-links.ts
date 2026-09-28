@@ -41,6 +41,11 @@ export class ShopLinks {
     return ['/', this.culture(), 'orders', id];
   }
 
+  /** A category's path in a given language; its code is the same in every one. */
+  categoryIn(culture: string, code: string): string {
+    return `/${culture}/c/${code}`;
+  }
+
   /** The same path in another language, which is what `hreflang` points at. */
   productIn(culture: string, slug: string, code: string): string {
     return `/${culture}/p/${slug}/${code}`;

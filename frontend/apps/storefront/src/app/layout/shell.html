@@ -6,8 +6,10 @@
        spends, and the Add to cart button stays inside the first screen. -->
   <header class="header">
     <div class="page-frame header__row">
-      <!-- TIENDA became the menu it always looked like (R-1, S-F6): a
-           disclosure on a desktop, the drawer on a phone. -->
+      <!-- TIENDA opens the drawer on a phone and a tablet. On a desktop the
+           departments have a row of their own below (R-7.3, F-0): a hamburger
+           left of the logo was the phone's convention carried over, and beside
+           the listing's filter toggle it read as the same kind of control. -->
       <button
         #menuButton
         type="button"
@@ -57,11 +59,57 @@
       </div>
     </div>
 
-    <!-- The desktop's panel, under the row and over the page. -->
+    <!-- The departments, visible on a desktop as Amazon, Zalando and El Corte
+         Inglés show theirs: each a link, one click from any page, and a toggle
+         beside it for its sections. No hover: the same for a pointer, a finger
+         and a keyboard (the WAI disclosure navigation pattern). -->
+    <nav class="departments" [attr.aria-label]="t('nav.departments')">
+      <ul class="page-frame departments__list" role="list">
+        @for (item of departments(); track item.code) {
+          <li class="departments__item">
+            <a
+              class="departments__link"
+              [routerLink]="links.category(item.code)"
+              [state]="fromMenu"
+              [attr.aria-current]="department() === item.code ? 'true' : null"
+            >
+              {{ item.name }}
+            </a>
+            <button
+              type="button"
+              class="departments__toggle"
+              aria-controls="shop-menu"
+              [attr.data-department-toggle]="item.code"
+              [attr.aria-expanded]="openDepartment() === item.code"
+              [attr.aria-label]="t('nav.sectionsOf', { name: item.name })"
+              (click)="toggleDepartment(item.code)"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </li>
+        }
+        <!-- Two shelves the filters make, at the row's end: the listing with
+             *En oferta* or *Novedades* on, and nothing else (R-7.3, F-3). -->
+        <li class="departments__item departments__item--shelf">
+          <a class="departments__link departments__link--shelf" [routerLink]="links.home()" [queryParams]="onOffer">
+            {{ t('nav.offers') }}
+          </a>
+        </li>
+        <li class="departments__item">
+          <a class="departments__link departments__link--shelf" [routerLink]="links.home()" [queryParams]="newArrivals">
+            {{ t('nav.newArrivals') }}
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- A department's sections, under the row and over the page. -->
     @if (menuOpen()) {
       <div class="menu-panel" id="shop-menu">
         <div class="page-frame">
-          <storefront-shop-menu [current]="department()" (chosen)="closeMenu(false)" />
+          <storefront-shop-menu [only]="openDepartment()" [current]="department()" (chosen)="closeMenu(false)" />
         </div>
       </div>
     }

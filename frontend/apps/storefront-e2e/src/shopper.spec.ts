@@ -44,7 +44,7 @@ async function firstProduct(page: Page): Promise<{ href: string; name: string }>
   // It waits for the results' own status line, and reads both values at once.
   await expect(page.getByRole('status').filter({ hasText: /zapatillas/i })).toBeVisible();
 
-  const link = page.locator('.results-meta + .grid a.card__link').first();
+  const link = page.locator('.listing__grid a.card__link').first();
   await expect(link).toBeVisible();
 
   return link.evaluate((anchor) => ({

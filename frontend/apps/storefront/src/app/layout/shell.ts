@@ -10,13 +10,14 @@ import { filter, map } from 'rxjs';
 import { StorefrontTools } from '../agent/storefront-tools';
 import { CartStore } from '../data-access/cart.service';
 import { departmentOf, Taxonomy } from '../data-access/taxonomy';
+import { ListingParam } from '../listing/listing-filters';
+import { ShopLinks } from '../shop-links';
 import { CompareTray } from './compare-tray';
 import { ConsentBanner } from './consent-banner';
 import { ShopMenu } from './shop-menu';
 import { AccountMenu } from './account-menu';
 
 /** Where the menu stops being a panel and becomes the phone's drawer: the tablet breakpoint the backoffice uses. */
-const DrawerBelow = '(max-width: 47.99rem)';
 
 /**
  * The storefront shell. It is NOT shared with the backoffice: one is roomy and
@@ -58,11 +59,24 @@ export class Shell {
   private readonly tools = inject(StorefrontTools);
 
   /** The desktop's panel. */
-  protected readonly menuOpen = signal(false);
+  /**
+   * The department whose sections are open under the desktop's row, or none
+   * (R-7.3, F-0). The row replaced R-5.1's single *Tienda* disclosure there: a
+   * department is a link, one click from any page, and its sections are the
+   * toggle beside it.
+   */
+  protected readonly openDepartment = signal<string | null>(null);
+  protected readonly menuOpen = computed(() => this.openDepartment() !== null);
+  protected readonly departments = computed(() => this.taxonomy.menu().map((department) => department.category));
+  protected readonly links = inject(ShopLinks);
+  protected readonly fromMenu = { via: 'menu' };
+  /** The row's two shelves, in the listing's own parameters: `/es?offer=1` lists everything on offer. */
+  protected readonly onOffer = { [ListingParam.offer]: '1' };
+  protected readonly newArrivals = { [ListingParam.newArrivals]: '1' };
   /** The phone's drawer, open now; and whether it has ever been, so its menu is drawn only once it is wanted. */
   protected readonly drawerOpen = signal(false);
   protected readonly drawerOpened = signal(false);
-  protected readonly expanded = computed(() => this.menuOpen() || this.drawerOpen());
+  protected readonly expanded = computed(() => this.drawerOpen());
 
   private readonly url = toSignal(
     this.router.events.pipe(
@@ -91,31 +105,34 @@ export class Shell {
     // A navigation is an answer: whatever was open to find it closes.
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd), takeUntilDestroyed())
-      .subscribe(() => this.menuOpen.set(false));
+      .subscribe(() => this.openDepartment.set(null));
   }
 
+  /** The phone's and the tablet's way in: the drawer, with every department. */
   protected toggleMenu(): void {
-    if (this.document.defaultView?.matchMedia(DrawerBelow).matches) {
-      this.drawerOpened.set(true);
-      this.drawerOpen.set(true);
-      this.drawer().nativeElement.showModal();
-      return;
-    }
-    this.menuOpen.update((open) => !open);
+    this.drawerOpened.set(true);
+    this.drawerOpen.set(true);
+    this.drawer().nativeElement.showModal();
+  }
+
+  /** A department's sections, under the desktop's row; its toggle again, or another's, closes them. */
+  protected toggleDepartment(code: string): void {
+    this.openDepartment.update((open) => (open === code ? null : code));
   }
 
   /** Esc, or a choice: the panel closes, and Esc gives the focus back to the button. */
   protected closeMenu(refocus: boolean): void {
-    if (!this.menuOpen()) return;
-    this.menuOpen.set(false);
-    if (refocus) this.menuButton().nativeElement.focus();
+    const open = this.openDepartment();
+    if (open === null) return;
+    this.openDepartment.set(null);
+    if (refocus) this.document.querySelector<HTMLButtonElement>(`[data-department-toggle="${open}"]`)?.focus();
   }
 
   /** A click outside the header closes the panel, as a disclosure's should. */
   protected clickedAt(event: MouseEvent): void {
     if (!this.menuOpen() || this.drawer().nativeElement.open) return;
     const header = this.menuButton().nativeElement.closest('header');
-    if (header && event.target instanceof Node && !header.contains(event.target)) this.menuOpen.set(false);
+    if (header && event.target instanceof Node && !header.contains(event.target)) this.openDepartment.set(null);
   }
 
   protected find(text: string): void {

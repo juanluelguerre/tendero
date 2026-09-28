@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-32 features: **27** answered by a signal emitted today,
+33 features: **28** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -20,6 +20,7 @@ everything here that is not *planned* is emitted.
 |---|---|---|---|---|
 | Search | What share of typed searches finds nothing, and is it worse for agents than for people? | Where the next relevance work goes: synonyms and golden-set queries for the empty ones, or the MCP tool's description if agents come back empty more often than people. | `tendero.search.requests` | emitted |
 | Browsing by category | Do people browse the taxonomy, or go straight to search? | Whether the category pages earn their place in the navigation. | `tendero.search.requests`, `category_opened` | emitted |
+| Listing filters | Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed? | If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading. | `filter_applied`, `filters_cleared`, `product_viewed` | emitted |
 | Product page | How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow? | Where discovery work goes: the search box, the taxonomy or the home page's rows. | `product_viewed`, `tendero.carts.created` | emitted |
 | Specs with their source | Do shoppers open the sentence behind a spec, and do they compare products side by side once they can? | If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have. | `spec_source_opened`, `products_compared` | emitted |
 | Cart | How many carts never become an order, and whose? | Whether abandonment work (a saved cart, a reminder) comes before checkout friction. | `tendero.carts.created`, `tendero.checkout.attempts` | emitted |
@@ -93,11 +94,13 @@ browser event, behavioural. A shopper opened a product page. Only with analytics
 
 Answers:
 
+- **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
 - **Product page** — How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `arrived_from` | string | `search`, `category`, `home`, `other`, `direct` | The page before this one, by kind; direct when there was none in this tab. |
+| `arrived_from` | string | `search`, `category`, `listing`, `home`, `other`, `direct` | The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. |
+| `filtered` | boolean | — | Whether the list the shopper came from was narrowed by filters. False for a page that is not a list. |
 
 ### `category_opened`
 
@@ -109,7 +112,33 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `arrived_from` | string | `menu`, `search`, `category`, `home`, `other`, `direct` | How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. |
+| `arrived_from` | string | `menu`, `search`, `category`, `listing`, `home`, `other`, `direct` | How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. |
+
+### `filter_applied`
+
+browser event, behavioural. A shopper narrowed a list by a facet, or changed a facet's choices (R-7.3, F-6): once per facet a choice changed, when it takes effect — at once in the column, with Ver N productos in the phone's sheet. Only with analytics consent. A browser agent's apply_filter is counted by webmcp_tool_invoked, not here.
+
+Answers:
+
+- **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `facet` | string | — | The facet's code: category, brand, price, offer, new or stock, or an attribute's catalogue code (COLOR, SIZE). Never the value chosen. |
+| `listing` | string | `category`, `search`, `listing` | The kind of list narrowed: a category page, a search's results, or a list made only of filters (Ofertas, Novedades). |
+| `surface` | string | `column`, `sheet` | The desktop's column, which applies each choice, or the phone's sheet, which applies a batch. |
+
+### `filters_cleared`
+
+browser event, behavioural. A shopper took every filter off a list at once (R-7.3, F-6). Only with analytics consent.
+
+Answers:
+
+- **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `surface` | string | `toolbar`, `empty`, `sheet` | Quitar todo beside the chips, the one offered by a list that filters emptied, or the phone's sheet. |
 
 ### `spec_source_opened`
 

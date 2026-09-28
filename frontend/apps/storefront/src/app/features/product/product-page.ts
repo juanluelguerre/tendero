@@ -17,7 +17,7 @@ import { ShopLinks } from '../../shop-links';
 import { SpecSource } from '../../specs/spec-source';
 import { specLines, specStatements } from '../../specs/spec-lines';
 import { SpecValue } from '../../specs/spec-value';
-import { arrivedFrom } from './arrived-from';
+import { arrivedFrom, cameFiltered } from './arrived-from';
 import {
   availabilityOf,
   initialSelection,
@@ -237,7 +237,7 @@ export class ProductPage {
     this.viewed = code;
 
     const previous = this.router.lastSuccessfulNavigation()?.previousNavigation?.finalUrl;
-    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedFrom(previous) });
+    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedFrom(previous), filtered: cameFiltered(previous) });
   }
 
   /**

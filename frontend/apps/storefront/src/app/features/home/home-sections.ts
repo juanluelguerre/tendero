@@ -113,7 +113,7 @@ export class HomeSections {
       error: () => this.offers.set([]),
     });
 
-    this.search.browse({ culture, sort: 'newest', pageSize: 8 }).subscribe({
+    this.search.browse({ culture, sort: 'Newest', pageSize: 8 }).subscribe({
       next: (page) => this.newest.set(page.hits),
       error: () => this.newest.set([]),
     });

@@ -21,6 +21,17 @@
       ]
     },
     {
+      "name": "Listing filters",
+      "area": "storefront",
+      "question": "Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?",
+      "decision": "If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading.",
+      "signals": [
+        "filter_applied",
+        "filters_cleared",
+        "product_viewed"
+      ]
+    },
+    {
       "name": "Product page",
       "area": "storefront",
       "question": "How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?",
@@ -328,11 +339,16 @@
           "values": [
             "search",
             "category",
+            "listing",
             "home",
             "other",
             "direct"
           ],
-          "description": "The page before this one, by kind; direct when there was none in this tab."
+          "description": "The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab."
+        },
+        "filtered": {
+          "type": "boolean",
+          "description": "Whether the list the shopper came from was narrowed by filters. False for a page that is not a list."
         }
       }
     },
@@ -347,11 +363,56 @@
             "menu",
             "search",
             "category",
+            "listing",
             "home",
             "other",
             "direct"
           ],
           "description": "How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL."
+        }
+      }
+    },
+    {
+      "name": "filter_applied",
+      "description": "A shopper narrowed a list by a facet, or changed a facet's choices (R-7.3, F-6): once per facet a choice changed, when it takes effect — at once in the column, with Ver N productos in the phone's sheet. Only with analytics consent. A browser agent's apply_filter is counted by webmcp_tool_invoked, not here.",
+      "consent": "behavioural",
+      "attributes": {
+        "facet": {
+          "type": "string",
+          "description": "The facet's code: category, brand, price, offer, new or stock, or an attribute's catalogue code (COLOR, SIZE). Never the value chosen."
+        },
+        "listing": {
+          "type": "string",
+          "values": [
+            "category",
+            "search",
+            "listing"
+          ],
+          "description": "The kind of list narrowed: a category page, a search's results, or a list made only of filters (Ofertas, Novedades)."
+        },
+        "surface": {
+          "type": "string",
+          "values": [
+            "column",
+            "sheet"
+          ],
+          "description": "The desktop's column, which applies each choice, or the phone's sheet, which applies a batch."
+        }
+      }
+    },
+    {
+      "name": "filters_cleared",
+      "description": "A shopper took every filter off a list at once (R-7.3, F-6). Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "surface": {
+          "type": "string",
+          "values": [
+            "toolbar",
+            "empty",
+            "sheet"
+          ],
+          "description": "Quitar todo beside the chips, the one offered by a list that filters emptied, or the phone's sheet."
         }
       }
     },

@@ -11,7 +11,7 @@ export async function aProductInTheCart(page: Page): Promise<void> {
   await page.goto('/en?q=backpack');
   await expect(page.getByRole('status').filter({ hasText: /backpack/i })).toBeVisible();
 
-  const links = page.locator('.results-meta + .grid a.card__link');
+  const links = page.locator('.listing__grid a.card__link');
   const count = await links.count();
 
   for (let i = 0; i < count; i++) {

@@ -36,7 +36,7 @@ async function withAgent(page: Page, path = '/es'): Promise<void> {
   });
 
   await page.goto(path);
-  await expect(page.getByRole('searchbox')).toBeVisible();
+  await expect(page.getByRole('searchbox').first()).toBeVisible();
 }
 
 function call(page: Page, name: string, input: Record<string, unknown>): Promise<ToolResult> {
@@ -63,8 +63,9 @@ test.describe('the agent surface', () => {
 
     // The list IS the contract with every agent that visits, and it lives in one
     // file so a specification change is one edit. A test on it is what makes
-    // adding a fifth tool a deliberate act rather than a drift.
-    expect(names).toEqual(['search_products', 'get_product', 'add_to_cart', 'get_cart']);
+    // adding a tool a deliberate act rather than a drift. The two filter tools
+    // were added on purpose with the facets (R-7.3, F-5).
+    expect(names).toEqual(['search_products', 'list_filters', 'apply_filter', 'get_product', 'add_to_cart', 'get_cart']);
   });
 
   test('searches the shop and answers with a product code', async ({ page }) => {
@@ -143,6 +144,35 @@ test.describe('the agent surface', () => {
     expect(cart.isError).toBe(false);
     expect(cart.text).toContain(sku as string);
     expect(cart.text).toContain('not applied —');
+  });
+
+  /**
+   * The filters narrow the list the shopper is looking at, the way a click does
+   * (F-5): the address holds the choice and the chip shows it. Where there is no
+   * list, the tools say so rather than narrow something nobody can see.
+   */
+  test('narrows the list on screen by a facet it read from that list', async ({ page }) => {
+    await withAgent(page);
+    expect((await call(page, 'list_filters', {})).isError).toBe(true);
+
+    await page.goto('/es/c/SHOES');
+    await expect(page.locator('.toolbar__count[role="status"]')).toContainText(/\d/);
+
+    const facets = await call(page, 'list_filters', {});
+    expect(facets.isError).toBe(false);
+    const brand = /^- brand \([^)]*\): (\S+) \[/m.exec(facets.text)?.[1];
+    expect(brand).toBeTruthy();
+
+    const narrowed = await call(page, 'apply_filter', { facet: 'brand', values: [brand as string] });
+    expect(narrowed.isError).toBe(false);
+    expect(narrowed.text).toMatch(/^\d+ product\(s\) now on screen/);
+    await expect(page).toHaveURL(new RegExp(`[?&]brand=${brand as string}`));
+    await expect(page.locator('.chips .chip')).toHaveText([brand as string]);
+
+    // A label is not a value: the refusal names what to send instead.
+    const wrong = await call(page, 'apply_filter', { facet: 'brand', values: ['nobody'] });
+    expect(wrong.isError).toBe(true);
+    expect(wrong.text).toContain('Its options:');
   });
 
   /**

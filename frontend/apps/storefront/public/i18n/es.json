@@ -90,7 +90,11 @@
     "shop": "Tienda",
     "close": "Cerrar el menú",
     "search": "Buscar en la tienda",
-    "searchLabel": "Buscar en la tienda"
+    "searchLabel": "Buscar en la tienda",
+    "departments": "Departamentos",
+    "sectionsOf": "{{name}}: sus secciones",
+    "offers": "Ofertas",
+    "newArrivals": "Novedades"
   },
   "order": {
     "lines": "Lo que has comprado",
@@ -184,8 +188,6 @@
       "title": "No tenemos nada que coincida exactamente con «{{query}}»",
       "heading": "Lo más parecido que vendemos"
     },
-    "results": "{{total}} resultados para «{{query}}»",
-    "searching": "Buscando…",
     "submit": "Buscar",
     "suggestions": [
       "zapatillas running",
@@ -215,9 +217,6 @@
     "unknown": "Esa sección no existe. Puede que el enlace esté mal.",
     "failed": "No hemos podido cargar esta sección.",
     "empty": "Aquí no hay nada todavía.",
-    "count": "{{count}} productos",
-    "more": "Ver más productos",
-    "loadingMore": "Cargando…",
     "title": "Sección"
   },
   "specs": {
@@ -258,5 +257,80 @@
   "accountMenu": {
     "open": "Tu cuenta y tus preferencias ({{name}})",
     "guest": "Invitado"
+  },
+  "listing": {
+    "filters": "Filtros",
+    "results": "Resultados",
+    "loading": "Buscando…",
+    "hide": "Ocultar filtros",
+    "show": "Mostrar filtros",
+    "showCount": "Mostrar filtros ({{count}})",
+    "open": "Filtros",
+    "openCount": "Filtros ({{count}})",
+    "title": {
+      "query": "Resultados para «{{query}}»",
+      "offers": "Ofertas",
+      "newArrivals": "Novedades",
+      "all": "Todos los productos"
+    },
+    "count": {
+      "one": "1 producto",
+      "all": "{{total}} productos",
+      "page": "{{from}}–{{to}} de {{total}} productos",
+      "for": {
+        "one": "1 resultado para «{{query}}»",
+        "all": "{{total}} resultados para «{{query}}»",
+        "page": "{{from}}–{{to}} de {{total}} resultados para «{{query}}»"
+      }
+    },
+    "chips": {
+      "label": "Filtros aplicados",
+      "remove": "Quitar el filtro {{label}}"
+    },
+    "clearAll": "Quitar todo",
+    "sort": {
+      "label": "Ordenar:",
+      "relevance": "Relevancia",
+      "recommended": "Recomendados",
+      "price-asc": "Precio: de menor a mayor",
+      "price-desc": "Precio: de mayor a menor",
+      "newest": "Novedades"
+    },
+    "section": {
+      "department": "Departamento",
+      "category": "Categoría",
+      "categories": "Categorías",
+      "switches": "Ofertas y disponibilidad"
+    },
+    "brand": {
+      "more": "Ver más marcas ({{count}})",
+      "fewer": "Ver menos marcas",
+      "find": "Buscar una marca",
+      "none": "Ninguna marca con ese nombre."
+    },
+    "price": {
+      "upTo": "Hasta {{price}}",
+      "from": "{{price}} o más",
+      "between": "{{min}} – {{max}}",
+      "min": "Mín",
+      "max": "Máx",
+      "minLabel": "Precio mínimo",
+      "maxLabel": "Precio máximo",
+      "go": "Ir",
+      "goLabel": "Aplicar el precio"
+    },
+    "offer": "En oferta",
+    "newArrivals": "Novedades",
+    "inStock": "Disponible",
+    "empty": "Nada con estos filtros. Quita alguno para ver más.",
+    "seen": "Has visto {{shown}} de {{total}}",
+    "more": "Mostrar {{count}} más",
+    "loadingMore": "Cargando…",
+    "sheet": {
+      "close": "Cerrar los filtros",
+      "apply": "Ver {{count}} productos",
+      "applyOne": "Ver 1 producto",
+      "applyUnknown": "Ver productos"
+    }
   }
 }

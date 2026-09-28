@@ -1,26 +1,21 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { map, type Subscription } from 'rxjs';
-import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore, PageTitles } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
-import { ProductSearchService } from '../../data-access/product-search.service';
 import { ShopFrontService, type Category } from '../../data-access/shop-front.service';
-import { ProductCard } from '../../product-card';
+import { Listing } from '../../listing/listing';
+import { hasFilters } from '../../listing/listing-filters';
+import { ListingState } from '../../listing/listing-state';
+import { childLinks } from '../../listing/listing-view';
 import { ShopLinks } from '../../shop-links';
 import { departmentArt, rootOf } from '../../shop-art';
 import { openedVia } from './opened-via';
 
-type PageState =
-  | { status: 'loading' }
-  | { status: 'ready'; hits: SearchHit[]; total: number }
-  | { status: 'unknown' }
-  | { status: 'failed' };
-
-/** Enough to fill the grid without asking for the whole department. */
-const PageSize = 24;
+/** The taxonomy's answer about the code in the URL; the products are the listing's. */
+type PageState = 'loading' | 'found' | 'unknown' | 'failed';
 
 /**
  * Everything in one branch of the taxonomy.
@@ -33,34 +28,52 @@ const PageSize = 24;
  *
  * The code is in the URL and the name is not, for the reason ADR 0026 gives
  * about products: a name is not stable, and this one exists in two languages.
+ *
+ * **It is the same listing as the search results** (R-7.3, F-3): a category
+ * page is that list with a category chosen, so the filters, the chips, the
+ * order and *Mostrar más* are the listing's, and the filters live in the query
+ * string beside the code in the path.
  */
 @Component({
   selector: 'storefront-category-page',
-  imports: [TranslocoDirective, RouterLink, ProductCard],
+  imports: [TranslocoDirective, RouterLink, Listing],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Its own listing: the filters in the URL, the request, the phone's batch.
+  providers: [ListingState],
   templateUrl: './category-page.html',
   styleUrl: './category-page.css',
 })
 export class CategoryPage {
   private readonly route = inject(ActivatedRoute);
-  private readonly search = inject(ProductSearchService);
   private readonly shopFront = inject(ShopFrontService);
   private readonly culture = inject(CultureStore);
   private readonly titles = inject(PageTitles);
   private readonly router = inject(Router);
   private readonly telemetry = inject(Telemetry);
 
-  /** The listing already reported, so a change of language is not a second opening. */
+  /** The listing already reported, so a change of language or of a filter is not a second opening. */
   private reported: string | null = null;
 
   protected readonly links = inject(ShopLinks);
-  protected readonly state = signal<PageState>({ status: 'loading' });
+  protected readonly listing = inject(ListingState);
+  protected readonly state = signal<PageState>('loading');
 
   /** The category itself, for the heading and the breadcrumb. */
   protected readonly category = signal<Category | null>(null);
 
   /** Its children, so a department offers the sections inside it. */
   protected readonly children = signal<Category[]>([]);
+
+  /** The sections again, as the column's links, with the counts the listing's category facet gives them. */
+  protected readonly navigation = computed(() => {
+    const category = this.category();
+    const result = this.listing.result();
+    return category
+      ? childLinks(category.code, this.children(), result.status === 'ready' ? result.facets : [])
+      : null;
+  });
+
+  protected readonly filtered = computed(() => hasFilters(this.listing.filters()));
 
   /**
    * The department's illustration, borrowed by everything under it.
@@ -71,25 +84,17 @@ export class CategoryPage {
    */
   protected readonly art = signal<string | null>(null);
 
-  /** The page already asked for. `Ver más` appends rather than replacing,
-   *  because a shopper scrolling a department has not finished reading the
-   *  rows above the button. */
-  private readonly page = signal(1);
-
-  protected readonly loadingMore = signal(false);
-
   private readonly code = toSignal(
     this.route.paramMap.pipe(map((params) => params.get('code') ?? '')),
     { initialValue: '' },
   );
 
   /**
-   * The request being answered, so a change of code or language cancels it
-   * rather than racing it: without this the answer that arrived LAST won,
-   * whichever had been asked for last.
+   * The taxonomy request being answered, so a change of code or language
+   * cancels it rather than racing it: without this the answer that arrived
+   * LAST won, whichever had been asked for last.
    */
   private inFlight?: Subscription;
-  private appending?: Subscription;
 
   /**
    * `category_opened` (the tracking plan, R-0 of the redesign): once per listing,
@@ -103,10 +108,7 @@ export class CategoryPage {
   }
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => {
-      this.inFlight?.unsubscribe();
-      this.appending?.unsubscribe();
-    });
+    inject(DestroyRef).onDestroy(() => this.inFlight?.unsubscribe());
 
     effect(() => {
       const code = this.code();
@@ -115,9 +117,7 @@ export class CategoryPage {
       if (!code) return;
 
       this.inFlight?.unsubscribe();
-      this.appending?.unsubscribe();
-      this.loadingMore.set(false);
-      this.state.set({ status: 'loading' });
+      this.state.set('loading');
 
       // The taxonomy first, because a code nobody recognises is a 404 rather
       // than an empty grid — "no products here" and "no such category" are
@@ -139,66 +139,17 @@ export class CategoryPage {
           );
 
           if (!found) {
-            this.state.set({ status: 'unknown' });
+            this.state.set('unknown');
+            this.listing.place.set(null);
             return;
           }
 
           this.reportOpened(found.code);
-
-          this.page.set(1);
-
-          this.inFlight = this.search
-            .browse({ culture, category: found.code, pageSize: PageSize })
-            .subscribe({
-              next: (page) => this.state.set({ status: 'ready', hits: page.hits, total: page.total }),
-              error: () => this.state.set({ status: 'failed' }),
-            });
+          this.state.set('found');
+          this.listing.place.set({ query: '', category: found.code });
         },
-        error: () => this.state.set({ status: 'failed' }),
+        error: () => this.state.set('failed'),
       });
     });
-  }
-
-  /**
-   * The next page, appended.
-   *
-   * **A department of fifty-five products that shows twenty-four and stops is
-   * a shop with thirty-one things you cannot reach.** The count above the grid
-   * was already saying so out loud.
-   */
-  protected loadMore(): void {
-    const current = this.state();
-    const category = this.category();
-    if (current.status !== 'ready' || !category || this.loadingMore()) return;
-
-    const next = this.page() + 1;
-    this.loadingMore.set(true);
-
-    this.appending = this.search
-      .browse({
-        culture: this.culture.active(),
-        category: category.code,
-        page: next,
-        pageSize: PageSize,
-      })
-      .subscribe({
-        next: (page) => {
-          this.page.set(next);
-          this.loadingMore.set(false);
-          this.state.set({
-            status: 'ready',
-            hits: [...current.hits, ...page.hits],
-            total: page.total,
-          });
-        },
-        // Nothing is lost and nothing is claimed: the rows already read stay,
-        // and the button comes back so it can be tried again.
-        error: () => this.loadingMore.set(false),
-      });
-  }
-
-  protected hasMore(): boolean {
-    const current = this.state();
-    return current.status === 'ready' && current.hits.length < current.total;
   }
 }

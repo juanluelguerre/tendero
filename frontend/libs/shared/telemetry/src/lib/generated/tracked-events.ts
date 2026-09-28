@@ -24,12 +24,17 @@ export interface TrackedEvents {
   /**
    * A shopper opened a product page. Only with analytics consent.
    *
+   * Listing filters: Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+   * Decides: If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading.
+   *
    * Product page: How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
    * Decides: Where discovery work goes: the search box, the taxonomy or the home page's rows.
    */
   readonly product_viewed: {
-    /** The page before this one, by kind; direct when there was none in this tab. */
-    readonly arrived_from: 'search' | 'category' | 'home' | 'other' | 'direct';
+    /** The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. */
+    readonly arrived_from: 'search' | 'category' | 'listing' | 'home' | 'other' | 'direct';
+    /** Whether the list the shopper came from was narrowed by filters. False for a page that is not a list. */
+    readonly filtered: boolean;
   };
 
   /**
@@ -40,7 +45,33 @@ export interface TrackedEvents {
    */
   readonly category_opened: {
     /** How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. */
-    readonly arrived_from: 'menu' | 'search' | 'category' | 'home' | 'other' | 'direct';
+    readonly arrived_from: 'menu' | 'search' | 'category' | 'listing' | 'home' | 'other' | 'direct';
+  };
+
+  /**
+   * A shopper narrowed a list by a facet, or changed a facet's choices (R-7.3, F-6): once per facet a choice changed, when it takes effect — at once in the column, with Ver N productos in the phone's sheet. Only with analytics consent. A browser agent's apply_filter is counted by webmcp_tool_invoked, not here.
+   *
+   * Listing filters: Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+   * Decides: If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading.
+   */
+  readonly filter_applied: {
+    /** The facet's code: category, brand, price, offer, new or stock, or an attribute's catalogue code (COLOR, SIZE). Never the value chosen. */
+    readonly facet: string;
+    /** The kind of list narrowed: a category page, a search's results, or a list made only of filters (Ofertas, Novedades). */
+    readonly listing: 'category' | 'search' | 'listing';
+    /** The desktop's column, which applies each choice, or the phone's sheet, which applies a batch. */
+    readonly surface: 'column' | 'sheet';
+  };
+
+  /**
+   * A shopper took every filter off a list at once (R-7.3, F-6). Only with analytics consent.
+   *
+   * Listing filters: Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+   * Decides: If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading.
+   */
+  readonly filters_cleared: {
+    /** Quitar todo beside the chips, the one offered by a list that filters emptied, or the phone's sheet. */
+    readonly surface: 'toolbar' | 'empty' | 'sheet';
   };
 
   /**
@@ -154,6 +185,8 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   webmcp_tool_invoked: 'behavioural',
   product_viewed: 'behavioural',
   category_opened: 'behavioural',
+  filter_applied: 'behavioural',
+  filters_cleared: 'behavioural',
   spec_source_opened: 'behavioural',
   products_compared: 'behavioural',
   backoffice_view_opened: 'staff',

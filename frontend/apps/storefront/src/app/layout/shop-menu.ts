@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Taxonomy } from '../data-access/taxonomy';
@@ -26,9 +26,20 @@ export class ShopMenu {
   readonly mode = input<'panel' | 'drawer'>('panel');
   /** The department the shopper is in, marked where it is listed. */
   readonly current = input<string | null>(null);
+  /**
+   * One department only: the desktop opens the sections of the department its
+   * row's toggle belongs to (R-7.3, F-0). Null lists them all, as the phone's
+   * drawer does.
+   */
+  readonly only = input<string | null>(null);
   readonly chosen = output<void>();
 
-  protected readonly menu = inject(Taxonomy).menu;
+  private readonly taxonomy = inject(Taxonomy);
+  protected readonly menu = computed(() => {
+    const only = this.only();
+    const all = this.taxonomy.menu();
+    return only ? all.filter((department) => department.category.code === only) : all;
+  });
   protected readonly links = inject(ShopLinks);
   protected readonly fromMenu = { via: 'menu' };
 }
