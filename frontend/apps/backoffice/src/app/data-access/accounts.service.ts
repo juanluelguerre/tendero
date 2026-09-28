@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import type {
   AgentChangeResponse,
   AgentDenialsSummary,
+  AgentTrust as AgentTrustLevel,
   AgentView,
   RegisterAgentRequest,
 } from '@tendero/shared-api';
@@ -10,8 +11,8 @@ import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 import type { DashboardPeriod } from './ordering.service';
 
-/** How far the shop trusts an agent it registered. The server owns the rules; this is the vocabulary. */
-export type AgentTrust = 'Known' | 'Verified';
+/** How far the shop can trust an agent it registers: every level but the unregistered one. The server owns the rules. */
+export type AgentTrust = Exclude<AgentTrustLevel, 'Untrusted'>;
 
 /**
  * The only place in the backoffice that knows the Accounts endpoints: the agent

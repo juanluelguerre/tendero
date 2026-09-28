@@ -21,6 +21,7 @@ import { OrderingService, type OrderMove } from '../../data-access/ordering.serv
 import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../usage';
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
+import { Pager } from '../../work/pager';
 import { WorkPane } from '../../work/work-pane';
 
 /** Each move as the usage event names it (ADR 0041). */
@@ -44,9 +45,12 @@ const ToShip = 'Confirmed';
  * buttons are derived from the status it sent, and when one is wrong the server
  * answers 409 with a sentence that the screen shows as it came.
  */
+/** Twenty rows a page, as every list of work (R-7.2). */
+const PageSize = 20;
+
 @Component({
   selector: 'backoffice-orders',
-  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips, ConfirmDialog],
+  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips, Pager, ConfirmDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-page.html',
   styleUrl: './orders-page.css',
@@ -74,10 +78,17 @@ export class OrdersPage {
     initialValue: this.text(),
   });
 
+  /** The page in the URL, as the filter is, so page three can be shared (R-7.2). */
+  protected readonly page = computed(() => Math.max(1, Number(this.params().get('page') ?? 1) || 1));
+  protected readonly pageSize = PageSize;
+
   private readonly list = rxResource({
-    params: () => ({ status: this.status(), text: this.query() }),
-    stream: ({ params }) => this.ordering.orders(params.status, params.text),
+    params: () => ({ status: this.status(), text: this.query(), page: this.page() }),
+    stream: ({ params }) => this.ordering.orders(params.status, params.text, params.page, PageSize),
   });
+
+  /** How many the filter and the search hold, not the page: the pager says it. */
+  protected readonly total = computed(() => this.list.value()?.total ?? 0);
 
   /** The rows, replaced one by one as moves come back, until the list is asked again. */
   protected readonly orders = linkedSignal(() => this.list.value()?.orders ?? []);
@@ -150,9 +161,13 @@ export class OrdersPage {
 
   protected filterBy(status: string): void {
     void this.router.navigate([], {
-      queryParams: { status: status === ToShip ? null : status },
+      queryParams: { status: status === ToShip ? null : status, page: null },
       queryParamsHandling: 'merge',
     });
+  }
+
+  protected go(page: number): void {
+    void this.router.navigate([], { queryParams: { page: page <= 1 ? null : page }, queryParamsHandling: 'merge' });
   }
 
   protected open(order: OrderSummary): void {

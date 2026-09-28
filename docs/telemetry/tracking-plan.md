@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-30 features: **25** answered by a signal emitted today,
+32 features: **27** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -29,6 +29,7 @@ everything here that is not *planned* is emitted.
 | Returns | Why do things come back? | Wrong size and not-as-described are the product reasoning layer's case (phase 10); damaged and wrong item are the warehouse's. | `tendero.returns.requested` | emitted |
 | Account and guest cart claim | Do guests sign in, and does their cart survive it? | Whether guest checkout stays the default path. | — Not measured yet, and not planned: sign-in is the identity provider's, and the claim is one call with no screen of its own. Revisit when accounts do more than hold orders. | none |
 | Storefront theme choice | Do shoppers change the theme from their system's, and does the dark shop hold the same conversion? | If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else. | `theme_chosen` | emitted |
+| Added-to-cart notice | Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping? | If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action. | `cart_notice_followed` | emitted |
 
 ### Backoffice
 
@@ -47,6 +48,7 @@ everything here that is not *planned* is emitted.
 | Backoffice jobs | Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen? | A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence. | `backoffice_view_opened`, `backoffice_action_taken` | emitted |
 | Theme choice | Does anybody change the theme from the system's, and to which? | If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event. | `backoffice_theme_chosen` | emitted |
 | Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
+| Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
 
 ### Agents
 
@@ -175,16 +177,17 @@ Answers:
 
 ### `backoffice_affordance_used`
 
-browser event, staff. A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6). A staff event under the shop's notice (ADR 0041), never with who they are.
+browser event, staff. A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6), or narrowed a list by searching or filtering it (R-7.1). A staff event under the shop's notice (ADR 0041), never with who they are.
 
 Answers:
 
 - **Palette and list shortcuts** — Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
+- **Stock search and filters** — Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `affordance` | string | `palette`, `keys` | The palette (Ctrl K or /), or j and k down a queue. |
-| `target` | string | `screen`, `order`, `product`, `agent`, `next`, `previous` | What it reached; never which one. |
+| `affordance` | string | `palette`, `keys`, `search`, `filter` | The palette (Ctrl K or /), j and k down a queue, or a list's search box and filter chips (R-7.1). |
+| `target` | string | `screen`, `order`, `product`, `agent`, `next`, `previous`, `stock` | What it reached; never which one. |
 
 ### `theme_chosen`
 
@@ -197,6 +200,16 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `theme` | string | `system`, `light`, `dark` | What was chosen, not what the system resolved it to. |
+
+### `cart_notice_followed`
+
+browser event, behavioural. A shopper followed the link in the notice that says a product went into the cart (the redesign's R-5.3, raised by the baseline walkthrough). Behavioural, so it waits for analytics consent.
+
+Answers:
+
+- **Added-to-cart notice** — Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping?
+
+No attributes.
 
 ## Metrics
 

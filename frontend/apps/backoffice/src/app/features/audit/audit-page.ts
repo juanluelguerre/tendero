@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslocoDirective, translateObjectSignal, translateSignal } from '@jsverse/transloco';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
-import type { AuditEntryView } from '@tendero/shared-api';
+import { Pager } from '../../work/pager';
+import type { AuditEntryView, AuditOutcome } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime } from '@tendero/shared-util';
@@ -9,7 +10,7 @@ import { CatalogService } from '../../data-access/catalog.service';
 import { actorOf } from './audit-actor';
 
 /** What the filter can be set to. `null` is everything. */
-type Filter = 'denied' | 'failed' | 'allowed' | null;
+type Filter = AuditOutcome | null;
 
 /**
  * Who did what, and what the shop refused.
@@ -29,9 +30,12 @@ type Filter = 'denied' | 'failed' | 'allowed' | null;
  * JSON, it is the widest column by an order of magnitude, and it is the thing
  * you want only once you have found the row.
  */
+/** Twenty rows a page, as every list of work (R-7.2). */
+const PageSize = 20;
+
 @Component({
   selector: 'backoffice-audit',
-  imports: [TranslocoDirective, FilterChips],
+  imports: [TranslocoDirective, FilterChips, Pager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-page.html',
   styleUrl: './audit-page.css',
@@ -41,28 +45,40 @@ export class AuditPage {
   private readonly culture = inject(CultureStore);
 
   protected readonly entries = signal<AuditEntryView[]>([]);
+  protected readonly page = signal(1);
+  protected readonly pageSize = PageSize;
+  protected readonly total = signal(0);
+
+  /** Every outcome's number over the whole log, kept while the next page loads (R-7.2). */
+  private readonly counts = signal<ReadonlyMap<string, number> | null>(null);
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
 
   /** Opens on the refusals. Everything else is one click away. */
-  protected readonly filter = signal<Filter>('denied');
+  protected readonly filter = signal<Filter>('Denied');
 
   /** Which payload is open. One at a time: they are JSON blobs, and two of them
    *  side by side is a screen nobody can read. */
   protected readonly opened = signal<string | null>(null);
 
-  protected readonly filters: readonly Filter[] = ['denied', 'failed', 'allowed', null];
+  protected readonly filters: readonly Filter[] = ['Denied', 'Failed', 'Allowed', null];
 
   private readonly outcomeLabels = translateObjectSignal('audit.outcome');
   private readonly everything = translateSignal('audit.all');
 
-  /** The count is known for the filter showing: how many it holds, said on its own chip. */
+  /**
+   * Every chip says its number, whichever is chosen, and all of them the log's:
+   * it used to be the chosen one's, counted from the rows it had — which was
+   * the page's once the log had more than one.
+   */
   protected readonly filterOptions = computed<FilterOption[]>(() => {
     const labels = this.outcomeLabels() as Record<string, string>;
+    const counts = this.counts();
+    const all = counts ? [...counts.values()].reduce((sum, count) => sum + count, 0) : null;
     return this.filters.map((option) => ({
       key: option ?? 'all',
       label: option ? (labels[option] ?? option) : this.everything(),
-      count: option === this.filter() && !this.loading() ? this.entries().length : null,
+      count: option ? (counts?.get(option) ?? null) : all,
     }));
   });
 
@@ -87,6 +103,13 @@ export class AuditPage {
 
   protected use(filter: Filter): void {
     this.filter.set(filter);
+    this.page.set(1);
+    this.opened.set(null);
+    this.load();
+  }
+
+  protected go(page: number): void {
+    this.page.set(page);
     this.opened.set(null);
     this.load();
   }
@@ -124,9 +147,11 @@ export class AuditPage {
     this.loading.set(true);
     this.failed.set(false);
 
-    this.catalog.audit(this.filter()).subscribe({
+    this.catalog.audit(this.filter(), this.page(), PageSize).subscribe({
       next: (log) => {
         this.entries.set(log.entries);
+        this.total.set(log.total);
+        this.counts.set(new Map(log.counts.map((entry) => [entry.outcome, entry.count])));
         this.loading.set(false);
       },
       error: (failure: unknown) => {

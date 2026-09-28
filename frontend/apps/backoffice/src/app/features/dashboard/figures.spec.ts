@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { changeOf, formatChange, formatShare, lowStockOf, shareOf } from './figures';
+import { bySkuLowestFirst, changeOf, formatChange, formatShare, shareOf } from './figures';
 
 /**
  * How the dashboard says a figure moved. The one rule worth a test: against a
@@ -31,19 +31,19 @@ describe('a figure against the previous period', () => {
   });
 });
 
-describe('stock running low', () => {
-  it('is counted per SKU across warehouses, not per warehouse row', () => {
+describe('stock to restock, as shown', () => {
+  it('is one line per SKU across warehouses, lowest first, ties by SKU', () => {
     const rows = [
-      { sku: 'A', available: 0 },
-      { sku: 'A', available: 40 },
+      { sku: 'C', available: 3 },
       { sku: 'B', available: 2 },
       { sku: 'B', available: 1 },
-      { sku: 'C', available: 5 },
+      { sku: 'A', available: 0 },
     ];
 
-    expect(lowStockOf(rows)).toEqual([
+    expect(bySkuLowestFirst(rows)).toEqual([
+      { sku: 'A', available: 0 },
       { sku: 'B', available: 3 },
-      { sku: 'C', available: 5 },
+      { sku: 'C', available: 3 },
     ]);
   });
 });

@@ -123,6 +123,41 @@ test.describe('the backoffice', () => {
    * publishing again (the redesign's R-4.3, R-2's P12). The product ends where
    * it started, so the laboratory is left as it was.
    */
+  /**
+   * A suspended agent reads as suspended (W-1, the baseline walkthrough). The API
+   * says `suspended` and the screen compared with `'Suspended'`, so the tag
+   * stayed Active and the Suspend button stayed there. The Undo test above held
+   * the toast and nothing held the row. Undo reinstates, so the laboratory is
+   * left as it was.
+   */
+  test('a suspended agent shows as suspended until Undo reinstates it', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/agents');
+
+    const suspend = /^\s*(Suspend|Suspender)\s*$/;
+    const reinstate = /^\s*(Reinstate|Rehabilitar)\s*$/;
+    const row = page.getByRole('table').getByRole('row').filter({ has: page.getByRole('button', { name: /^\s*(Suspend|Suspender|Reinstate|Rehabilitar)\s*$/ }) }).first();
+    await expect(row).toBeVisible();
+
+    // The walkthrough's B5 leaves its agent suspended, as walkthrough-prepare
+    // knows; start from an active one the same way it does.
+    if (await row.getByRole('button', { name: reinstate }).isVisible()) {
+      await row.getByRole('button', { name: reinstate }).click();
+      await expect(row.getByRole('button', { name: suspend })).toBeVisible();
+    }
+
+    await row.getByRole('button', { name: suspend }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox').fill('e2e: placing strange orders');
+    await dialog.getByRole('button', { name: suspend }).click();
+
+    await expect(row.getByText(/^\s*(Suspended|Suspendido)\s*$/)).toBeVisible();
+    await expect(row.getByRole('button', { name: reinstate })).toBeVisible();
+
+    await page.getByRole('status').getByRole('button', { name: /^(Undo|Deshacer)$/ }).click();
+    await expect(row.getByText(/^\s*(Active|Activo)\s*$/)).toBeVisible();
+  });
+
   test('taking a product off sale offers Undo, and Undo puts it back', async ({ page }) => {
     await signIn(page);
     await page.goto('/catalogue');
@@ -211,6 +246,76 @@ test.describe('the backoffice', () => {
     // subtracted for itself would disagree with the search index the moment a
     // reservation existed.
     await expect(row).toContainText(after);
+  });
+
+  /**
+   * R-7.1: the dashboard's figure opens the stock exactly there, with the same
+   * number, and a SKU is found by its product's name — the catalogue's half of
+   * the search — as well as by the SKU itself, the ledger's.
+   */
+  test('the stock opens on what to restock, and finds a SKU by its product name or its code', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/dashboard');
+
+    const figure = page.getByRole('link', { name: /to restock|por reponer/i });
+    // A number, not the dash the widget shows until its answer arrives.
+    await expect(figure.locator('.task__count')).toHaveText(/^\s*\d+\s*$/);
+    const shown = (await figure.locator('.task__count').innerText()).trim();
+    await figure.click();
+
+    await expect(page).toHaveURL(/filter=Restock/);
+    const chip = page.getByRole('button', { name: /^\s*(to restock|por reponer)/i });
+    await expect(chip).toHaveAttribute('aria-pressed', 'true');
+    await expect(chip).toContainText(shown);
+
+    await page.getByRole('button', { name: /^\s*(all|todo)/i }).click();
+
+    // A SKU the catalogue names — some seed SKUs belong to no product, which
+    // the screen shows as such — found by its product's first word, then by
+    // part of the SKU itself.
+    const named = page.locator('tr').filter({ has: page.locator('.product__name') }).first();
+    await expect(named).toBeVisible();
+    const sku = (await named.locator('td').nth(1).innerText()).trim();
+    const word = (await named.locator('.product__name').innerText()).trim().split(/\s+/)[0];
+
+    const search = page.getByRole('searchbox');
+    await search.fill(word);
+    await expect(page).toHaveURL(new RegExp(`q=${encodeURIComponent(word)}`));
+    await expect(page.getByRole('row').filter({ hasText: sku }).first()).toBeVisible();
+
+    await search.fill(sku.slice(0, 6).toLowerCase());
+    await expect(page.getByRole('row').filter({ hasText: sku }).first()).toBeVisible();
+
+    await search.fill('zzz-nothing-zzz');
+    await expect(page.getByText(/nothing matches|nada coincide/i)).toBeVisible();
+  });
+
+  /**
+   * R-7.2: a list longer than a page says how long it is and walks it, instead
+   * of stopping at fifty and saying nothing. The page is in the URL, so page two
+   * is a link; choosing another filter starts again at the first.
+   */
+  test('a long list says how long it is and pages through it', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/orders?status=all');
+
+    const pager = page.getByRole('navigation', { name: /pages|páginas/i });
+    const range = pager.getByRole('status');
+    await expect(range).toHaveText(/^\s*1–20 (of|de) \d+\s*$/);
+    const total = Number((await range.innerText()).trim().split(/\s+/).pop());
+    test.skip(total <= 20, 'The laboratory has twenty orders or fewer.');
+
+    // The ids on the page, not its text: a page two that repeated page one would
+    // still say 21–40, because the range is the pager's arithmetic.
+    const ids = () => page.locator('tbody tr button[title]').evaluateAll((buttons) => buttons.map((b) => b.getAttribute('title')));
+    const firstPage = await ids();
+    await pager.getByRole('button', { name: /next|siguiente/i }).click();
+    await expect(page).toHaveURL(/page=2/);
+    await expect(range).toHaveText(new RegExp(`^\\s*21–${Math.min(40, total)} (of|de) ${total}\\s*$`));
+    await expect.poll(async () => (await ids()).some((id) => firstPage.includes(id))).toBe(false);
+
+    await page.getByRole('button', { name: /^\s*(to ship|por enviar)/i }).click();
+    await expect(page).not.toHaveURL(/page=/);
   });
 
   /**

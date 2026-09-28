@@ -52,7 +52,7 @@ export class ReviewQueuePage {
 
   private readonly queue = rxResource({
     params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) => this.catalog.list('draft', params.culture, 1, QueueSize),
+    stream: ({ params }) => this.catalog.list('Draft', params.culture, 1, QueueSize),
   });
 
   protected readonly drafts = linkedSignal(() => this.queue.value()?.items ?? []);

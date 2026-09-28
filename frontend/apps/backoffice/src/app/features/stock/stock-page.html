@@ -1,13 +1,26 @@
 <section *transloco="let t">
   <header class="page-head">
     <h1 class="page-title">{{ t('stock.title') }}</h1>
-    @if (outOfStock() > 0) {
-      <span class="tag tag--danger">{{ t('stock.outOfStock', { count: outOfStock() }) }}</span>
+    @if (soldOut() > 0) {
+      <span class="tag tag--danger">{{ t('stock.outOfStock', { count: soldOut() }) }}</span>
     } @else if (rows().length > 0) {
       <span class="tag tag--ok">{{ t('stock.allAvailable') }}</span>
     }
   </header>
   <p class="page-hint">{{ t('stock.hint') }}</p>
+
+  <!-- The list's tools, as every list of work has them (ADR 0042): what the
+       dashboard's figure opens on, and a search by SKU or by product name. -->
+  <div class="work-tools">
+    <backoffice-filter-chips [options]="filters()" [selected]="filter()" [label]="t('stock.filterLabel')" (chosen)="filterBy($event)" />
+    <label class="find">
+      <span class="sr-only">{{ t('stock.findLabel') }}</span>
+      <input type="search" class="find__input" [placeholder]="t('stock.find')" [value]="text()" (input)="text.set($any($event.target).value)" />
+    </label>
+  </div>
+  @if (filter() === 'Restock' && restockAt() !== null) {
+    <p class="muted restock-rule">{{ t('stock.restockRule', { count: restockAt() }) }}</p>
+  }
 
   @if (loading()) {
     <div class="skeleton-list" aria-hidden="true"></div>
@@ -15,7 +28,11 @@
   } @else if (failed()) {
     <p class="failed" role="alert">{{ t('stock.failed') }}</p>
   } @else if (rows().length === 0) {
-    <div class="empty"><p class="empty__text">{{ t('stock.empty') }}</p></div>
+    <div class="empty">
+      <p class="empty__text">
+        {{ searching() ? t('stock.nothingFor', { text: text() }) : filter() === 'All' ? t('stock.empty') : t('stock.nothingToRestock') }}
+      </p>
+    </div>
   } @else {
     <div class="grid">
       <div class="table-wrap">
@@ -96,6 +113,7 @@
           <p class="failed" role="alert">{{ t('stock.saveFailed') }}</p>
         }
       </div>
+      <backoffice-pager [page]="page()" [pageSize]="pageSize" [total]="total()" (go)="go($event)" />
 
       <!-- The panel that explains the grid. Its most interesting row is a
            refusal: a reservation that never held anything, carrying the

@@ -46,10 +46,10 @@
               <dt>{{ attribute.label }}</dt>
               <dd>
                 @switch (attribute.kind) {
-                  @case ('number') {
+                  @case ('Number') {
                     <span class="numeric">{{ attribute.number }} {{ attribute.unit ?? '' }}</span>
                   }
-                  @case ('boolean') {
+                  @case ('Boolean') {
                     {{ attribute.flag ? t('yes') : t('no') }}
                   }
                   @default {

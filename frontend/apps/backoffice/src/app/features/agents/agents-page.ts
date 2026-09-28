@@ -56,15 +56,6 @@ export class AgentsPage {
   /** The agent the suspension dialog is about. */
   protected readonly suspending = signal<{ agent: AgentView; via: ActionVia } | null>(null);
 
-  /**
-   * The trust as the screen names it. The API says it in lower case and the
-   * options and translations use the enum's name, so "verified" matched no
-   * option and the select showed every agent as Known.
-   */
-  protected trustOf(agent: AgentView): AgentTrust {
-    return (agent.trust.charAt(0).toUpperCase() + agent.trust.slice(1)) as AgentTrust;
-  }
-
   protected when(at: string): string {
     return formatDate(at, this.culture.active());
   }

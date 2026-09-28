@@ -27,7 +27,7 @@ import { TasksWidget } from './tasks-widget';
   styleUrl: './dashboard-page.css',
 })
 export class DashboardPage {
-  protected readonly periods: readonly DashboardPeriod[] = ['day', 'week', 'month'];
+  protected readonly periods: readonly DashboardPeriod[] = ['Day', 'Week', 'Month'];
 
-  protected readonly period = signal<DashboardPeriod>('week');
+  protected readonly period = signal<DashboardPeriod>('Week');
 }

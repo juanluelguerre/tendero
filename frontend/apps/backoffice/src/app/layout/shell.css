@@ -42,6 +42,10 @@
     width: 4.5rem;
     height: 100dvh;
     padding: var(--space-4) var(--space-2);
+    /* Vertical only. With the other axis left visible the browser makes it
+       scrollable too, and an icon's hidden label beside the rail gave the
+       collapsed rail a sideways scrollbar. */
+    overflow-x: hidden;
     overflow-y: auto;
     border-inline-end: 1px solid var(--border);
     background: var(--bg-surface);
@@ -188,6 +192,9 @@
 .usage {
   display: flex;
   flex-wrap: wrap;
+  /* On the text's line, not the box's top: the button is 24 px tall to be a
+     target, and stretched beside it the sentence sat above its own link. */
+  align-items: baseline;
   gap: var(--space-2);
   padding: var(--space-5);
   color: var(--text-muted);

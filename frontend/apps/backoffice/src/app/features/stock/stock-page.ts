@@ -1,20 +1,20 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
-import type { ReservationRow, SkuDescription, StockRow } from '@tendero/shared-api';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, linkedSignal, signal } from '@angular/core';
+import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
+import type { ReservationRow, SkuDescription, StockFilter, StockList, StockRow } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { without } from '@tendero/shared-util';
-import type { Subscription } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, type Observable, of, switchMap } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
 import { InventoryService } from '../../data-access/inventory.service';
+import { BackofficeUsage } from '../../usage';
+import { FilterChips, type FilterOption } from '../../work/filter-chips';
+import { Pager } from '../../work/pager';
+
+/** The document's set, in the chips' order: the job first (R-7.1). */
+const Filters: readonly StockFilter[] = ['Restock', 'SoldOut', 'All'];
 
 /**
  * What is on every shelf, and what is being held.
@@ -37,9 +37,12 @@ import { InventoryService } from '../../data-access/inventory.service';
  * server-side and a grid that subtracted for itself would disagree with the
  * search index the moment a hold expired.
  */
+/** Twenty rows a page, as every list of work (R-7.2). */
+const PageSize = 20;
+
 @Component({
   selector: 'backoffice-stock',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, FilterChips, Pager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-page.html',
   styleUrl: './stock-page.css',
@@ -48,11 +51,81 @@ export class StockPage {
   private readonly inventory = inject(InventoryService);
   private readonly catalog = inject(CatalogService);
   private readonly culture = inject(CultureStore);
+  private readonly usage = inject(BackofficeUsage);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
-  protected readonly rows = signal<StockRow[]>([]);
-  protected readonly reservations = signal<ReservationRow[]>([]);
-  protected readonly loading = signal(true);
-  protected readonly failed = signal(false);
+  private readonly filterLabels = translateObjectSignal('stock.filter');
+  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
+
+  /**
+   * The filter and the search live in the URL, as every list's do (ADR 0042), so
+   * the dashboard's *To restock* figure can open this screen exactly there.
+   */
+  protected readonly filter = computed<StockFilter>(() => {
+    // Read in any case, as the server reads it: `restock` is a link a person could type.
+    const asked = this.params().get('filter')?.toLowerCase();
+    return Filters.find((filter) => filter.toLowerCase() === asked) ?? 'All';
+  });
+
+  /** A SKU, or a product's name in any language; asked for a moment after the typing stops. */
+  protected readonly text = signal(this.route.snapshot.queryParamMap.get('q') ?? '');
+  private readonly query = toSignal(toObservable(this.text).pipe(debounceTime(250), distinctUntilChanged()), {
+    initialValue: this.text(),
+  });
+
+  /**
+   * The shelves for the filter and the search, reloaded when the language
+   * changes: the warehouse labels come from the server in the requested culture.
+   *
+   * A search asks the catalogue first, because a product's name is the
+   * catalogue's: it answers with the SKUs it matched, and the ledger shows those
+   * and any whose SKU contains the text (R-7.1). The two contexts still meet
+   * only here, where a person is looking at both.
+   */
+  /** The page in the URL, of SKUs rather than rows: a SKU's warehouses stay together (R-7.2). */
+  protected readonly page = computed(() => Math.max(1, Number(this.params().get('page') ?? 1) || 1));
+  protected readonly pageSize = PageSize;
+
+  private readonly list = rxResource({
+    params: () => ({ culture: this.culture.active(), filter: this.filter(), text: this.query().trim(), page: this.page() }),
+    stream: ({ params }): Observable<StockList> =>
+      params.text
+        ? this.catalog.skusMatching(params.text, params.culture).pipe(
+            map((found) => found.items.map((item) => item.sku)),
+            // A catalogue that cannot answer leaves the SKU half of the search
+            // working: the shelf does not depend on the catalogue being up.
+            catchError(() => of<string[]>([])),
+            switchMap((skus) => this.inventory.stock(params.culture, params.filter, { text: params.text, skus }, params.page, PageSize)),
+          )
+        : this.inventory.stock(params.culture, params.filter, undefined, params.page, PageSize),
+  });
+
+  /** The rows, which a count replaces one at a time with what the server stored. */
+  protected readonly rows = linkedSignal(() => this.list.value()?.rows ?? []);
+  protected readonly reservations = computed(() => this.list.value()?.reservations ?? []);
+  protected readonly restockAt = computed(() => this.list.value()?.restockAt ?? null);
+  protected readonly total = computed(() => this.list.value()?.total ?? 0);
+  protected readonly loading = computed(() => this.list.isLoading() && !this.list.hasValue());
+  protected readonly failed = computed(() => this.list.status() === 'error');
+  protected readonly searching = computed(() => this.query().trim().length > 0);
+
+  /** Every filter's number, kept while the next answer loads, so no chip changes size on a click. */
+  private readonly counts = linkedSignal<ReadonlyMap<StockFilter, number> | undefined, ReadonlyMap<StockFilter, number> | null>({
+    source: () => {
+      const list = this.list.value();
+      return list && new Map(list.counts.map((entry) => [entry.filter, entry.count]));
+    },
+    computation: (counts, previous) => counts ?? previous?.value ?? null,
+  });
+
+  protected readonly filters = computed<FilterOption[]>(() => {
+    const labels = this.filterLabels() as Record<string, string>;
+    const counts = this.counts();
+    return Filters.map((key) => ({ key, label: labels[key] ?? key, count: counts?.get(key) ?? null }));
+  });
+
+  protected readonly soldOut = computed(() => this.counts()?.get('SoldOut') ?? 0);
 
   /** Which row is in flight, which one just landed, and whether one blew up. */
   protected readonly saving = signal<string | null>(null);
@@ -71,12 +144,43 @@ export class StockPage {
    * Stock exists without a catalogue exactly as it exists without orders
    * (ADR 0024). The grid asks both and joins them here, which is what a screen
    * is for.
+   *
+   * Not awaited before the grid renders: the numbers are what the screen is
+   * FOR, and a failure here leaves the SKUs unlabelled and the grid working.
+   * Distinct SKUs, because two warehouses hold the same one.
    */
-  private readonly descriptions = signal<Record<string, SkuDescription>>({});
+  private readonly naming = rxResource({
+    params: () => {
+      const skus = [...new Set((this.list.value()?.rows ?? []).map((row) => row.sku))];
+      return skus.length === 0 ? undefined : { skus, culture: this.culture.active() };
+    },
+    stream: ({ params }) =>
+      this.catalog.describeSkus(params.skus, params.culture).pipe(catchError(() => of({ items: [] as SkuDescription[] }))),
+  });
 
-  protected readonly outOfStock = computed(
-    () => this.rows().filter((row) => row.available === 0).length,
+  private readonly descriptions = computed<Record<string, SkuDescription>>(() =>
+    Object.fromEntries((this.naming.value()?.items ?? []).map((item) => [item.sku, item])),
   );
+
+  constructor() {
+    // The search goes into the URL too, replacing the entry rather than adding
+    // one per keystroke, and is measured once per search actually run (R-7.1).
+    effect(() => {
+      const q = this.query().trim();
+      if ((this.params().get('q') ?? '') === q) return;
+      void this.router.navigate([], { queryParams: { q: q || null, page: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      if (q) this.usage.affordance('search', 'stock');
+    });
+  }
+
+  protected filterBy(filter: string): void {
+    this.usage.affordance('filter', 'stock');
+    void this.router.navigate([], { queryParams: { filter: filter === 'All' ? null : filter, page: null }, queryParamsHandling: 'merge' });
+  }
+
+  protected go(page: number): void {
+    void this.router.navigate([], { queryParams: { page: page <= 1 ? null : page }, queryParamsHandling: 'merge' });
+  }
 
   /**
    * The product a row is holding, or null when the catalogue has never heard of
@@ -148,74 +252,6 @@ export class StockPage {
         this.saving.set(null);
         this.saveFailed.set(true);
       },
-    });
-  }
-
-  /** The requests being answered, so a language switch cancels them rather than racing them. */
-  private inFlight?: Subscription;
-  private naming?: Subscription;
-
-  constructor() {
-    inject(DestroyRef).onDestroy(() => {
-      this.inFlight?.unsubscribe();
-      this.naming?.unsubscribe();
-    });
-
-    // Reloaded when the language changes: the warehouse labels and the product
-    // names come from the server in the requested culture, and a grid that kept
-    // its Spanish names under English headings would be the review queue's bug
-    // repeated one tab over.
-    effect(() => this.load(this.culture.active()));
-  }
-
-  private load(culture: string): void {
-    this.inFlight?.unsubscribe();
-    this.naming?.unsubscribe();
-    this.loading.set(true);
-    this.failed.set(false);
-
-    this.inFlight = this.inventory.stock(culture).subscribe({
-      next: (result) => {
-        this.rows.set(result.rows);
-        this.reservations.set(result.reservations);
-        this.loading.set(false);
-        this.name(result.rows, culture);
-      },
-      error: (failure: unknown) => {
-        if (isSessionExpired(failure)) return;
-
-        this.failed.set(true);
-        this.loading.set(false);
-      },
-    });
-  }
-
-  /**
-   * Fills in the product names, after the grid is already on screen.
-   *
-   * Deliberately not awaited before rendering: the numbers are what the screen
-   * is FOR, and holding a stocktake behind a second request would make the
-   * catalogue's availability a prerequisite for counting a shelf — which is the
-   * dependency the boundary exists to refuse. The names arrive a moment later
-   * and the column fills in.
-   *
-   * Distinct SKUs, because two warehouses hold the same one and asking twice
-   * for the same answer is the N+1 the endpoint takes a set to avoid.
-   */
-  private name(rows: readonly StockRow[], culture: string): void {
-    const skus = [...new Set(rows.map((row) => row.sku))];
-    if (skus.length === 0) return;
-
-    this.naming = this.catalog.describeSkus(skus, culture).subscribe({
-      next: (result) =>
-        this.descriptions.set(
-          Object.fromEntries(result.items.map((item) => [item.sku, item])),
-        ),
-      // A failure here leaves the SKUs unlabelled and the grid working. The
-      // shelf numbers do not depend on the catalogue being reachable, and a
-      // screen that broke because a name could not be fetched would have made
-      // them depend on it.
-      error: () => undefined,
     });
   }
 }

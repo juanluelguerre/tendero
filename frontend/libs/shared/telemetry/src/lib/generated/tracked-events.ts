@@ -108,16 +108,19 @@ export interface TrackedEvents {
   };
 
   /**
-   * A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6). A staff event under the shop's notice (ADR 0041), never with who they are.
+   * A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6), or narrowed a list by searching or filtering it (R-7.1). A staff event under the shop's notice (ADR 0041), never with who they are.
    *
    * Palette and list shortcuts: Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
    * Decides: R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3.
+   *
+   * Stock search and filters: Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which?
+   * Decides: If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count.
    */
   readonly backoffice_affordance_used: {
-    /** The palette (Ctrl K or /), or j and k down a queue. */
-    readonly affordance: 'palette' | 'keys';
+    /** The palette (Ctrl K or /), j and k down a queue, or a list's search box and filter chips (R-7.1). */
+    readonly affordance: 'palette' | 'keys' | 'search' | 'filter';
     /** What it reached; never which one. */
-    readonly target: 'screen' | 'order' | 'product' | 'agent' | 'next' | 'previous';
+    readonly target: 'screen' | 'order' | 'product' | 'agent' | 'next' | 'previous' | 'stock';
   };
 
   /**
@@ -129,6 +132,15 @@ export interface TrackedEvents {
   readonly theme_chosen: {
     /** What was chosen, not what the system resolved it to. */
     readonly theme: 'system' | 'light' | 'dark';
+  };
+
+  /**
+   * A shopper followed the link in the notice that says a product went into the cart (the redesign's R-5.3, raised by the baseline walkthrough). Behavioural, so it waits for analytics consent.
+   *
+   * Added-to-cart notice: Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping?
+   * Decides: If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action.
+   */
+  readonly cart_notice_followed: {
   };
 }
 
@@ -149,4 +161,5 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   backoffice_theme_chosen: 'staff',
   backoffice_affordance_used: 'staff',
   theme_chosen: 'behavioural',
+  cart_notice_followed: 'behavioural',
 };

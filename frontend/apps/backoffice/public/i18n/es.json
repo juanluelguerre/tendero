@@ -28,9 +28,9 @@
     "lede": "Quién hizo qué, y qué rechazó la tienda. Se abre en los rechazos, que son lo primero que merece la pena leer.",
     "loading": "Cargando la auditoría...",
     "outcome": {
-      "allowed": "Permitido",
-      "denied": "Rechazado",
-      "failed": "Fallo"
+      "Allowed": "Permitido",
+      "Denied": "Rechazado",
+      "Failed": "Fallo"
     },
     "showPayload": "Ver comando",
     "guest": "invitado",
@@ -78,16 +78,12 @@
     "failed": "No se ha podido cargar el catálogo.",
     "hint": "Todos los productos, por estado. Publica un borrador, retira uno de la venta o abre sus variantes.",
     "loading": "Cargando el catálogo...",
-    "next": "Siguiente",
-    "pageOf": "Página {{page}} de {{pages}}",
-    "pages": "Páginas",
-    "previous": "Anterior",
     "title": "Productos",
     "filterLabel": "Mostrar productos",
     "filter": {
-      "active": "A la venta",
-      "draft": "Borradores",
-      "archived": "Archivados",
+      "Active": "A la venta",
+      "Draft": "Borradores",
+      "Archived": "Archivados",
       "all": "Todos"
     },
     "none": "No hay productos aquí. Prueba otro filtro.",
@@ -95,9 +91,9 @@
       "status": "Estado"
     },
     "status": {
-      "active": "A la venta",
-      "draft": "Borrador",
-      "archived": "Archivado"
+      "Active": "A la venta",
+      "Draft": "Borrador",
+      "Archived": "Archivado"
     },
     "withdraw": "Retirarlo de la venta",
     "withdrawing": "Retirándolo…",
@@ -412,7 +408,18 @@
       "Expired": "Caducado"
     },
     "title": "Stock",
-    "unknownProduct": "No está en el catálogo"
+    "unknownProduct": "No está en el catálogo",
+    "filterLabel": "Mostrar",
+    "filter": {
+      "Restock": "Por reponer",
+      "SoldOut": "Agotado",
+      "All": "Todo"
+    },
+    "find": "SKU o nombre de producto",
+    "findLabel": "Buscar stock por SKU o nombre de producto",
+    "nothingFor": "Nada coincide con «{{text}}».",
+    "nothingToRestock": "Nada por reponer: todos los SKU tienen de sobra.",
+    "restockRule": "Un SKU está por reponer con {{count}} o menos disponibles sumando todos los almacenes."
   },
   "variants": {
     "title": "Variantes",
@@ -445,8 +452,8 @@
     "reject": "Rechazar",
     "filterLabel": "Mostrar afirmaciones",
     "filter": {
-      "weak": "Respaldo débil",
-      "all": "Todas"
+      "Weak": "Respaldo débil",
+      "All": "Todas"
     },
     "none": "No hay afirmaciones con respaldo débil pendientes. El resto está en Todas.",
     "nextHint": "Al decidir se abre la siguiente de la lista."
@@ -456,9 +463,9 @@
     "hint": "El pulso de la tienda, con sus propios datos: qué se vendió, qué te espera, cómo convierte el checkout y qué aportan los agentes. Los pedidos de prueba quedan fuera de todas las cifras salvo del recuento de los agentes.",
     "period": {
       "label": "Periodo",
-      "day": "Últimas 24 h",
-      "week": "Últimos 7 días",
-      "month": "Últimos 30 días"
+      "Day": "Últimas 24 h",
+      "Week": "Últimos 7 días",
+      "Month": "Últimos 30 días"
     },
     "sales": {
       "title": "Ventas",
@@ -556,7 +563,7 @@
       "claims": "Claims por revisar",
       "weakestFirst": "Primero los de menor respaldo",
       "support": "{{value}} % de respaldo",
-      "lowStock": "Stock bajo",
+      "lowStock": "Por reponer",
       "available": "quedan {{count}}"
     }
   },
@@ -666,5 +673,11 @@
       "close": "Esc cerrar",
       "lists": "En la cola de revisión y en afirmaciones: j y k"
     }
+  },
+  "pager": {
+    "label": "Páginas",
+    "range": "{{from}}–{{to}} de {{total}}",
+    "previous": "Anterior",
+    "next": "Siguiente"
   }
 }

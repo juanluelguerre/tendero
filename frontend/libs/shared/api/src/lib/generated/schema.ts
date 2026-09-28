@@ -858,8 +858,10 @@ export interface components {
             countryCode: string;
             phone: null | string;
         };
+        /** @enum {unknown} */
+        AgentChange: "Registered" | "Updated" | "Unchanged" | "AlreadyRegistered" | "NotFound";
         AgentChangeResponse: {
-            change: string;
+            change: components["schemas"]["AgentChange"];
             agent: components["schemas"]["AgentView"];
         };
         AgentDenialCount: {
@@ -868,7 +870,7 @@ export interface components {
             count: number;
         };
         AgentDenialsSummary: {
-            period: string;
+            period: components["schemas"]["DashboardPeriod"];
             /** Format: int32 */
             total: number;
             byReason: components["schemas"]["DenialCount"][];
@@ -876,7 +878,7 @@ export interface components {
             recent: components["schemas"]["RecentDenial"][];
         };
         AgentSales: {
-            period: string;
+            period: components["schemas"]["DashboardPeriod"];
             currency: string;
             /** Format: int32 */
             orders: number;
@@ -901,12 +903,16 @@ export interface components {
             /** Format: int32 */
             mandated: number;
         };
+        /** @enum {unknown} */
+        AgentStatus: "Active" | "Suspended";
+        /** @enum {unknown} */
+        AgentTrust: "Untrusted" | "Known" | "Verified";
         AgentView: {
             agentId: string;
             displayName: string;
             operator: string;
-            trust: string;
-            status: string;
+            trust: components["schemas"]["AgentTrust"];
+            status: components["schemas"]["AgentStatus"];
             suspensionReason: null | string;
             /** Format: date-time */
             registeredAt: string;
@@ -923,8 +929,8 @@ export interface components {
             /** Format: double */
             amount: number;
             effect: string;
-            combination: string;
-            outcome: string;
+            combination: components["schemas"]["CombinationPolicy"];
+            outcome: components["schemas"]["DiscountOutcome"];
             reasonCode: null | string;
             reason: null | string;
         };
@@ -933,7 +939,7 @@ export interface components {
             label: {
                 [key: string]: string;
             };
-            kind: string;
+            kind: components["schemas"]["AttributeKind"];
             unit: null | string;
             isVariantAxis: boolean;
             isFacet: boolean;
@@ -942,6 +948,8 @@ export interface components {
             options: components["schemas"]["AttributeOptionView"][];
             missingCultures: string[];
         };
+        /** @enum {unknown} */
+        AttributeKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option";
         AttributeOptionView: {
             code: string;
             label: {
@@ -956,11 +964,18 @@ export interface components {
             agentId: null | string;
             subject: null | string;
             actorName: null | string;
-            outcome: string;
+            outcome: components["schemas"]["AuditOutcome"];
             reason: null | string;
             traceId: null | string;
             /** Format: date-time */
             at: string;
+        };
+        /** @enum {unknown} */
+        AuditOutcome: "Allowed" | "Denied" | "Failed";
+        AuditOutcomeCount: {
+            outcome: components["schemas"]["AuditOutcome"];
+            /** Format: int32 */
+            count: number;
         };
         AuthConfiguration: {
             issuer: string;
@@ -1009,10 +1024,10 @@ export interface components {
             depth: number;
         };
         ChangeAgentTrustRequest: {
-            trust: string;
+            trust: components["schemas"]["AgentTrust"];
         };
         CheckoutFunnel: {
-            period: string;
+            period: components["schemas"]["DashboardPeriod"];
             /** Format: int32 */
             cartsStarted: number;
             /** Format: int32 */
@@ -1046,7 +1061,27 @@ export interface components {
             model: null | string;
             /** Format: date-time */
             proposedAt: string;
+            isWeak: boolean;
         };
+        ClaimSupportCount: {
+            support: components["schemas"]["ClaimSupportFilter"];
+            /** Format: int32 */
+            count: number;
+        };
+        /** @enum {unknown} */
+        ClaimSupportFilter: "Weak" | "All";
+        ClaimsForReviewPage: {
+            items: components["schemas"]["ClaimForReview"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            counts: components["schemas"]["ClaimSupportCount"][];
+        };
+        /** @enum {unknown} */
+        CombinationPolicy: "ExclusiveGlobal" | "ExclusiveInGroup" | "Stackable";
         CountStockRequest: {
             /** Format: int32 */
             onHand: number;
@@ -1065,8 +1100,10 @@ export interface components {
             hybrid: components["schemas"]["StrategyScore"];
             queries: components["schemas"]["QueryEvaluation"][];
         };
+        /** @enum {unknown} */
+        DashboardPeriod: "Day" | "Week" | "Month";
         DecideReturnRequest: {
-            decision: string;
+            decision: components["schemas"]["ReturnDecision"];
             reason: null | string;
         };
         DefineVariantsRequest: {
@@ -1087,6 +1124,10 @@ export interface components {
         DescribeSkusResult: {
             items: components["schemas"]["SkuDescriptionView"][];
         };
+        /** @enum {unknown} */
+        DiscountOutcome: "Applied" | "Suppressed";
+        /** @enum {unknown} */
+        FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
         ImportProductsCommand: {
             source: string;
         };
@@ -1106,12 +1147,14 @@ export interface components {
             /** Format: uuid */
             guest: null | string;
         };
+        /** @enum {unknown} */
+        LinkOutcome: "Registered" | "Linked" | "Recognised";
         LinkedIdentity: {
             customerId: string;
             displayName: null | string;
             segment: string;
             culture: string;
-            outcome: string;
+            outcome: components["schemas"]["LinkOutcome"];
         };
         ListAttributeDefinitionsResult: {
             items: components["schemas"]["AttributeDefinitionView"][];
@@ -1119,7 +1162,12 @@ export interface components {
         ListAuditEntriesResult: {
             entries: components["schemas"]["AuditEntryView"][];
             /** Format: int32 */
-            refused: number;
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            counts: components["schemas"]["AuditOutcomeCount"][];
         };
         ListCategoriesResult: {
             items: components["schemas"]["CategoryView"][];
@@ -1129,6 +1177,12 @@ export interface components {
         };
         ListOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
             counts: components["schemas"]["OrderStatusCount"][];
         };
         ListProductsResult: {
@@ -1139,16 +1193,26 @@ export interface components {
             page: number;
             /** Format: int32 */
             pageSize: number;
+            counts: components["schemas"]["ProductStatusCount"][];
         };
         ListPromotionsResult: {
             items: components["schemas"]["PromotionView"][];
         };
         ListStockResult: {
             rows: components["schemas"]["StockRowView"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
             reservations: components["schemas"]["ReservationView"][];
+            counts: components["schemas"]["StockFilterCount"][];
+            /** Format: int32 */
+            restockAt: number;
         };
         MoveOrderRequest: {
-            move: string;
+            move: components["schemas"]["OrderMove"];
             reason: null | string;
         };
         MyOrdersResult: {
@@ -1164,7 +1228,7 @@ export interface components {
             until: null | string;
         };
         OperationsSummary: {
-            period: string;
+            period: components["schemas"]["DashboardPeriod"];
             currency: string;
             /** Format: int32 */
             toShip: number;
@@ -1223,15 +1287,21 @@ export interface components {
             /** Format: date-time */
             expiresAt: null | string;
         };
+        /** @enum {unknown} */
+        OrderMode: "Live" | "Test";
+        /** @enum {unknown} */
+        OrderMove: "Ship" | "Deliver" | "Cancel";
+        /** @enum {unknown} */
+        OrderStatus: "Pending" | "PaymentAuthorized" | "PaymentFailed" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
         OrderStatusCount: {
-            status: string;
+            status: components["schemas"]["OrderStatus"];
             /** Format: int32 */
             count: number;
         };
         OrderSummary: {
             orderId: string;
-            status: string;
-            mode: string;
+            status: components["schemas"]["OrderStatus"];
+            mode: components["schemas"]["OrderMode"];
             mandate: null | components["schemas"]["OrderMandateSummary"];
             currency: string;
             /** Format: double */
@@ -1259,8 +1329,8 @@ export interface components {
         };
         OrderView: {
             orderId: string;
-            status: string;
-            mode: string;
+            status: components["schemas"]["OrderStatus"];
+            mode: components["schemas"]["OrderMode"];
             culture: string;
             currency: string;
             /** Format: date-time */
@@ -1306,7 +1376,7 @@ export interface components {
         ProductAttributeView: {
             code: string;
             label: string;
-            kind: string;
+            kind: components["schemas"]["AttributeKind"];
             value: null | string;
             /** Format: double */
             number: null | number;
@@ -1332,14 +1402,14 @@ export interface components {
             priceCurrency: string;
             alternates: components["schemas"]["AlternateSlug"][];
             missingCultures: string[];
-            status: string;
+            status: components["schemas"]["ProductStatus"];
             /** Format: date-time */
             updatedAt: string;
         };
         ProductForReview: {
             productId: string;
             code: string;
-            status: string;
+            status: components["schemas"]["ProductStatus"];
             names: {
                 [key: string]: string;
             };
@@ -1363,6 +1433,13 @@ export interface components {
             /** Format: int32 */
             sortOrder: number;
         };
+        /** @enum {unknown} */
+        ProductStatus: "Draft" | "Active" | "Archived";
+        ProductStatusCount: {
+            status: components["schemas"]["ProductStatus"];
+            /** Format: int32 */
+            count: number;
+        };
         ProductSummary: {
             productId: string;
             code: string;
@@ -1374,7 +1451,7 @@ export interface components {
             priceAmount: number;
             priceCurrency: string;
             imageId: null | string;
-            status: string;
+            status: components["schemas"]["ProductStatus"];
             missingCultures: string[];
             /** Format: date-time */
             updatedAt: string;
@@ -1386,7 +1463,7 @@ export interface components {
             };
             effect: string;
             effectDetail: string;
-            combination: string;
+            combination: components["schemas"]["CombinationPolicy"];
             /** Format: int32 */
             priority: number;
             exclusivityGroup: null | string;
@@ -1399,14 +1476,16 @@ export interface components {
             isActive: boolean;
             missingCultures: string[];
         };
+        /** @enum {unknown} */
+        PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
         PublishProductConflict: {
             title: string;
             detail: string;
         };
         PublishProductResponse: {
             productId: string;
-            outcome: string;
-            status: string;
+            outcome: components["schemas"]["PublishOutcome"];
+            status: components["schemas"]["ProductStatus"];
         };
         QueryEvaluation: {
             query: string;
@@ -1477,7 +1556,7 @@ export interface components {
             net: number;
         };
         ReasonCount: {
-            reason: string;
+            reason: components["schemas"]["ReturnReason"];
             /** Format: int32 */
             count: number;
         };
@@ -1494,8 +1573,7 @@ export interface components {
             agentId: string;
             displayName: string;
             operator: string;
-            /** @default known */
-            trust: string;
+            trust?: components["schemas"]["AgentTrust"];
         };
         ReindexProductsResult: {
             /** Format: int32 */
@@ -1508,10 +1586,12 @@ export interface components {
         RequestReturnRequest: {
             lines: components["schemas"]["ReturnLineRequest"][];
         };
+        /** @enum {unknown} */
+        ReservationStatus: "Held" | "Committed" | "Released" | "Expired";
         ReservationView: {
             reservationId: string;
             orderId: string;
-            status: string;
+            status: components["schemas"]["ReservationStatus"];
             reason: null | string;
             lines: string[];
             /** Format: date-time */
@@ -1519,28 +1599,34 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        /** @enum {unknown} */
+        ReturnDecision: "Approve" | "Reject" | "Receive" | "Refund";
         ReturnLineRequest: {
             sku: string;
             /** Format: int32 */
             quantity: number;
-            reason: string;
+            reason: components["schemas"]["ReturnReason"];
             comment: null | string;
         };
         ReturnLineView: {
             sku: string;
             /** Format: int32 */
             quantity: number;
-            reason: string;
+            reason: components["schemas"]["ReturnReason"];
             comment: null | string;
         };
         ReturnPolicy: {
             /** Format: int32 */
             windowDays: number;
         };
+        /** @enum {unknown} */
+        ReturnReason: "WrongSize" | "NotAsDescribed" | "Damaged" | "WrongItem" | "ChangedMind";
+        /** @enum {unknown} */
+        ReturnStatus: "Requested" | "Approved" | "Received" | "Refunded" | "Rejected" | "Cancelled";
         ReturnView: {
             returnId: string;
             orderId: string;
-            status: string;
+            status: components["schemas"]["ReturnStatus"];
             resolution: null | string;
             /** Format: double */
             refundAmount: null | number;
@@ -1561,8 +1647,10 @@ export interface components {
         };
         ReviewClaimResponse: {
             claimId: string;
-            outcome: string;
+            outcome: components["schemas"]["ReviewOutcome"];
         };
+        /** @enum {unknown} */
+        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "NotFound";
         SalesFigures: {
             /** Format: double */
             revenue: number;
@@ -1574,7 +1662,7 @@ export interface components {
             averageOrderValue: number;
         };
         SalesSummary: {
-            period: string;
+            period: components["schemas"]["DashboardPeriod"];
             currency: string;
             current: components["schemas"]["SalesFigures"];
             previous: components["schemas"]["SalesFigures"];
@@ -1652,7 +1740,7 @@ export interface components {
         };
         SpecCell: {
             source: string;
-            kind: null | string;
+            kind: null | components["schemas"]["FactKind"];
             value: null | string;
             /** Format: double */
             number: null | number;
@@ -1689,6 +1777,13 @@ export interface components {
             productId: string;
             text: string;
             evidence: components["schemas"]["SpecEvidence"];
+        };
+        /** @enum {unknown} */
+        StockFilter: "Restock" | "SoldOut" | "All";
+        StockFilterCount: {
+            filter: components["schemas"]["StockFilter"];
+            /** Format: int32 */
+            count: number;
         };
         StockRowView: {
             sku: string;
@@ -1765,14 +1860,16 @@ export interface components {
             isAvailable: boolean;
             reason: string;
         };
+        /** @enum {unknown} */
+        WithdrawOutcome: "Withdrawn" | "AlreadyDraft" | "Archived" | "NotFound";
         WithdrawProductConflict: {
             title: string;
             detail: string;
         };
         WithdrawProductResponse: {
             productId: string;
-            outcome: string;
-            status: string;
+            outcome: components["schemas"]["WithdrawOutcome"];
+            status: components["schemas"]["ProductStatus"];
         };
     };
     responses: never;
@@ -1787,7 +1884,8 @@ export interface operations {
         parameters: {
             query?: {
                 outcome?: string;
-                take?: number;
+                page?: number;
+                pageSize?: number;
             };
             header?: never;
             path?: never;
@@ -2153,8 +2251,9 @@ export interface operations {
     };
     DescribeSkus: {
         parameters: {
-            query: {
-                sku: string[];
+            query?: {
+                sku?: string[];
+                q?: string;
                 culture?: string;
             };
             header?: never;
@@ -2220,6 +2319,11 @@ export interface operations {
         parameters: {
             query?: {
                 culture?: string;
+                filter?: components["schemas"]["StockFilter"];
+                q?: string;
+                sku?: string[];
+                page?: number;
+                pageSize?: number;
             };
             header?: never;
             path?: never;
@@ -2277,7 +2381,9 @@ export interface operations {
     ListClaimsForReview: {
         parameters: {
             query?: {
-                limit?: number;
+                support?: components["schemas"]["ClaimSupportFilter"];
+                page?: number;
+                pageSize?: number;
             };
             header?: never;
             path?: never;
@@ -2291,7 +2397,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ClaimForReview"][];
+                    "application/json": components["schemas"]["ClaimsForReviewPage"];
                 };
             };
         };
@@ -3189,6 +3295,8 @@ export interface operations {
             query?: {
                 status?: string;
                 q?: string;
+                page?: number;
+                pageSize?: number;
             };
             header?: never;
             path?: never;

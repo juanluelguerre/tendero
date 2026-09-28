@@ -10,6 +10,8 @@ type Schemas = components['schemas'];
 
 /** An agent the shop knows: who operates it, how far it is trusted, and whether it is suspended. */
 export type AgentView = Schemas['AgentView'];
+export type AgentTrust = Schemas['AgentTrust'];
+export type AgentStatus = Schemas['AgentStatus'];
 export type RegisterAgentRequest = Schemas['RegisterAgentRequest'];
 export type AgentChangeResponse = Schemas['AgentChangeResponse'];
 

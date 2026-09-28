@@ -53,7 +53,7 @@
         </thead>
         <tbody>
           @for (entry of entries(); track entry.id) {
-            <tr [class.row--refused]="entry.outcome !== 'allowed'">
+            <tr [class.row--refused]="entry.outcome !== 'Allowed'">
               <td class="numeric when">{{ when(entry.at) }}</td>
               <!-- In the shopkeeper's words; the type stays as its title for whoever needs it (B-F6). -->
               <td class="command" [title]="entry.commandType">{{ t('audit.commands.' + entry.commandType) }}</td>
@@ -94,8 +94,8 @@
               <td>
                 <span
                   class="pill"
-                  [class.pill--warning]="entry.outcome === 'denied'"
-                  [class.pill--danger]="entry.outcome === 'failed'"
+                  [class.pill--warning]="entry.outcome === 'Denied'"
+                  [class.pill--danger]="entry.outcome === 'Failed'"
                 >
                   {{ t('audit.outcome.' + entry.outcome) }}
                 </span>
@@ -127,5 +127,6 @@
         </tbody>
       </table>
     </div>
+      <backoffice-pager [page]="page()" [pageSize]="pageSize" [total]="total()" (go)="go($event)" />
   }
 </ng-container>

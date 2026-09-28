@@ -6,7 +6,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { CatalogService } from '../../data-access/catalog.service';
 import { InventoryService } from '../../data-access/inventory.service';
 import { KnowledgeService } from '../../data-access/knowledge.service';
-import { lowStockOf } from './figures';
+import { bySkuLowestFirst } from './figures';
 
 const Shown = 3;
 
@@ -32,28 +32,31 @@ export class TasksWidget {
 
   protected readonly drafts = rxResource({
     params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) => this.catalog.list('draft', params.culture, 1, 1),
+    stream: ({ params }) => this.catalog.list('Draft', params.culture, 1, 1),
   });
 
   protected readonly claims = rxResource({
-    stream: () => this.knowledge.claims(),
+    stream: () => this.knowledge.claims('All', 1, Shown),
   });
 
   protected readonly stock = rxResource({
     params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) => this.inventory.stock(params.culture),
+    stream: ({ params }) => this.inventory.stock(params.culture, 'Restock'),
   });
 
-  protected readonly weakestClaims = computed(() =>
-    [...(this.claims.value() ?? [])].sort((a, b) => a.support - b.support).slice(0, Shown),
-  );
+  /** The server's first page is the weakest first: the queue's own order. */
+  protected readonly weakestClaims = computed(() => this.claims.value()?.items ?? []);
 
   /**
-   * Per SKU, across warehouses. Found on the stack: counted per warehouse row, a
-   * SKU stocked in only one warehouse read as empty in the other, and 144 "low"
-   * rows said nothing a shopkeeper could act on.
+   * The SKUs to restock, by the server's rule, and how many (R-7.1). Per SKU,
+   * across warehouses: counted per warehouse row, a SKU stocked in only one
+   * warehouse read as empty in the other, and 144 "low" rows said nothing a
+   * shopkeeper could act on.
    */
-  protected readonly lowStock = computed(() => lowStockOf(this.stock.value()?.rows ?? []));
+  protected readonly lowStock = computed(() => bySkuLowestFirst(this.stock.value()?.rows ?? []));
+  protected readonly restockCount = computed(
+    () => this.stock.value()?.counts.find((count) => count.filter === 'Restock')?.count ?? 0,
+  );
 
   protected statement(claim: { statementSpanish: string; statementEnglish: string }): string {
     return this.culture.active() === 'en' ? claim.statementEnglish : claim.statementSpanish;

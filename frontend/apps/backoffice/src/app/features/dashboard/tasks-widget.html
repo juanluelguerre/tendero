@@ -17,7 +17,7 @@
     <li class="task">
       <a class="task__head" routerLink="/claims">
         <span>{{ t('claims') }}</span>
-        <span class="numeric task__count">{{ claims.value()?.length ?? '—' }}</span>
+        <span class="numeric task__count">{{ claims.value()?.total ?? '—' }}</span>
       </a>
       @if (claims.error()) {
         <p class="failed task__note" role="alert">{{ t('failed') }}</p>
@@ -35,10 +35,10 @@
     </li>
 
     <li class="task">
-      <a class="task__head" routerLink="/stock">
+      <a class="task__head" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">
         <span>{{ t('lowStock') }}</span>
-        <span class="numeric task__count" [class.task__count--warn]="lowStock().length > 0">
-          {{ stock.hasValue() ? lowStock().length : '—' }}
+        <span class="numeric task__count" [class.task__count--warn]="restockCount() > 0">
+          {{ stock.hasValue() ? restockCount() : '—' }}
         </span>
       </a>
       @if (stock.error()) {

@@ -1,9 +1,9 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
-import type { ClaimForReview } from '@tendero/shared-api';
+import type { ClaimForReview, ClaimSupportFilter } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { forkJoin } from 'rxjs';
@@ -12,10 +12,10 @@ import { type ClaimDecision, KnowledgeService } from '../../data-access/knowledg
 import { type ActionVia, BackofficeUsage } from '../../usage';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import { landing, stepOf } from '../../work/list-keys';
+import { Pager } from '../../work/pager';
 import { WorkPane } from '../../work/work-pane';
 
 /** Under this, a claim's quote may not say what the claim does: read these first. */
-const WeakSupport = 0.8;
 
 /**
  * Claims a model proposed and a person decides (phase 10, ADR 0018), as R-3
@@ -28,9 +28,12 @@ const WeakSupport = 0.8;
  * product, and a bulk approve is how a review queue becomes a rubber stamp.
  * Nothing reaches the catalogue until a person approves it (invariant 12).
  */
+/** Twenty rows a page, as every list of work (R-7.2). */
+const PageSize = 20;
+
 @Component({
   selector: 'backoffice-claims-review-page',
-  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips],
+  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips, Pager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claims-review-page.html',
   styleUrl: './claims-review-page.css',
@@ -47,7 +50,11 @@ export class ClaimsReviewPage {
   private readonly filterLabels = translateObjectSignal('claims.filter');
   private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
 
-  protected readonly filterKey = computed(() => this.params().get('support') ?? 'weak');
+  /** The queue opens on the weak ones (R-4.3); which are weak is the server's rule now (R-7.2). */
+  // Read in any case: a link saved before the filter took the enum's name said `all`.
+  protected readonly filterKey = computed<ClaimSupportFilter>(() => (this.params().get('support')?.toLowerCase() === 'all' ? 'All' : 'Weak'));
+  protected readonly page = computed(() => Math.max(1, Number(this.params().get('page') ?? 1) || 1));
+  protected readonly pageSize = PageSize;
   protected readonly selectedId = computed(() => this.params().get('claim'));
 
   /**
@@ -56,28 +63,39 @@ export class ClaimsReviewPage {
    * catalogue for the queue's products only.
    */
   private readonly queue = rxResource({
-    params: () => ({ culture: this.culture.active() }),
+    params: () => ({ culture: this.culture.active(), support: this.filterKey(), page: this.page() }),
     stream: ({ params }) =>
-      forkJoin({ claims: this.knowledge.claims(), products: this.catalog.list(null, params.culture, 1, 100) }),
+      forkJoin({
+        claims: this.knowledge.claims(params.support, params.page, PageSize),
+        products: this.catalog.list(null, params.culture, 1, 100),
+      }),
   });
 
-  protected readonly claims = computed(() => this.queue.value()?.claims ?? []);
+  /** The page of the queue the filter shows. */
+  protected readonly claims = computed(() => this.queue.value()?.claims.items ?? []);
+  protected readonly total = computed(() => this.queue.value()?.claims.total ?? 0);
+
+  /** Every filter's number over the whole queue, kept while the next page loads. */
+  private readonly counts = linkedSignal<ReadonlyMap<string, number> | undefined, ReadonlyMap<string, number> | null>({
+    source: () => {
+      const page = this.queue.value()?.claims;
+      return page && new Map(page.counts.map((entry) => [entry.support, entry.count]));
+    },
+    computation: (counts, previous) => counts ?? previous?.value ?? null,
+  });
   private readonly names = computed(
     () => new Map((this.queue.value()?.products.items ?? []).map((product) => [product.productId, product.name])),
   );
   protected readonly loading = computed(() => this.queue.isLoading() && !this.queue.hasValue());
   protected readonly failed = computed(() => this.queue.status() === 'error');
 
-  protected readonly shown = computed(() =>
-    this.filterKey() === 'all' ? this.claims() : this.claims().filter((claim) => this.isWeak(claim)),
-  );
+  /** The server filtered it; the page is what is shown. */
+  protected readonly shown = this.claims;
 
   protected readonly filters = computed<FilterOption[]>(() => {
     const labels = this.filterLabels() as Record<string, string>;
-    return [
-      { key: 'weak', label: labels['weak'] ?? 'weak', count: this.claims().filter((claim) => this.isWeak(claim)).length },
-      { key: 'all', label: labels['all'] ?? 'all', count: this.claims().length },
-    ];
+    const counts = this.counts();
+    return (['Weak', 'All'] as const).map((key) => ({ key, label: labels[key] ?? key, count: counts?.get(key) ?? null }));
   });
 
   protected readonly selected = computed(() => this.claims().find((claim) => claim.claimId === this.selectedId()) ?? null);
@@ -91,16 +109,16 @@ export class ClaimsReviewPage {
     return this.names().get(claim.productId) ?? claim.productId.slice(0, 8);
   }
 
-  protected isWeak(claim: ClaimForReview): boolean {
-    return claim.support < WeakSupport;
-  }
-
   protected percent(support: number): string {
     return `${Math.round(support * 100)} %`;
   }
 
   protected filterBy(key: string): void {
-    void this.router.navigate([], { queryParams: { support: key === 'weak' ? null : key }, queryParamsHandling: 'merge' });
+    void this.router.navigate([], { queryParams: { support: key === 'Weak' ? null : key, page: null }, queryParamsHandling: 'merge' });
+  }
+
+  protected go(page: number): void {
+    void this.router.navigate([], { queryParams: { page: page <= 1 ? null : page }, queryParamsHandling: 'merge' });
   }
 
   protected open(claim: ClaimForReview): void {

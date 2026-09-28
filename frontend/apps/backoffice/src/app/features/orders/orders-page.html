@@ -128,6 +128,7 @@
           </li>
         }
       </ul>
+      <backoffice-pager [page]="page()" [pageSize]="pageSize" [total]="total()" (go)="go($event)" />
     }
   </div>
 

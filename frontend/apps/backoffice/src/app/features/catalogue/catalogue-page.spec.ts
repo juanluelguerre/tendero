@@ -48,7 +48,7 @@ describe('the catalogue page', () => {
 
     const request = http.expectOne((req) => req.url === 'http://api/api/catalog/products');
 
-    expect(request.request.params.get('status')).toBe('active');
+    expect(request.request.params.get('status')).toBe('Active');
   });
 
   it('offers the variants of every published product', async () => {
@@ -59,6 +59,11 @@ describe('the catalogue page', () => {
       total: 2,
       page: 1,
       pageSize: 20,
+      counts: [
+        { status: 'Active', count: 2 },
+        { status: 'Draft', count: 0 },
+        { status: 'Archived', count: 0 },
+      ],
     });
 
     // `*transloco` renders nothing until its language arrives, so the pending

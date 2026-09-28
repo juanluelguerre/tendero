@@ -69,6 +69,7 @@
           </li>
         }
       </ul>
+      <backoffice-pager [page]="page()" [pageSize]="pageSize" [total]="total()" (go)="go($event)" />
     }
   </div>
 
@@ -115,6 +116,6 @@
   }
 
   <ng-template #supportOf let-claim>
-    <span class="support" [class.support--weak]="isWeak(claim)" [attr.title]="t('claims.supportExplained')">{{ percent(claim.support) }}</span>
+    <span class="support" [class.support--weak]="claim.isWeak" [attr.title]="t('claims.supportExplained')">{{ percent(claim.support) }}</span>
   </ng-template>
 </section>
