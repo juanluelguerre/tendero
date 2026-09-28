@@ -2,7 +2,7 @@
   @if (identity(); as who) {
     <button type="button" class="trigger" popovertarget="account-menu" [attr.aria-label]="t('account.open', { name: who.name, role: who.role })">
       <span class="avatar" aria-hidden="true">{{ initials() }}</span>
-      <span class="tag tag--code">{{ who.role }}</span>
+      <span class="trigger__role">{{ who.role }}</span>
       <backoffice-icon name="chevron" />
     </button>
 
