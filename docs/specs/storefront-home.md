@@ -61,12 +61,17 @@ Three things recur, and they are what the home lacks:
    of promotion names), each card with its saving, and *Ver todas* to the
    listing's `?offer=1`. The promotions' own names become the row's small
    print: they are rules, the products are what is bought.
-4. **Lo más vendido** — the week's best sellers, a row, from Ordering's own
+4. **Puede que te guste** — suggestions from the shopper's own trail, each
+   saying why: *Porque viste Mochila CityPack 18L*. Only when there is a trail.
+5. **Tendencias** — what is rising this week: the products whose sales grew
+   most against the week before, from Ordering's own figures. Different from
+   best sellers on purpose: a steady best seller is not news, a rising one is.
+6. **Lo más vendido** — the week's best sellers, a row, from Ordering's own
    figure (the dashboard already computes it). Ranked, never with counts.
-5. **Novedades** — as today, the row that scrolls.
-6. **Secciones de la tienda** — the departments, lower and smaller: the header's
+7. **Novedades** — as today, the row that scrolls.
+8. **Secciones de la tienda** — the departments, lower and smaller: the header's
    row already reaches them in one click (R-7.3, F-0).
-7. **La tienda promete** — a slim strip: free shipping from 50 €, 14 days to
+9. **La tienda promete** — a slim strip: free shipping from 50 €, 14 days to
    return from delivery, secure payment. Every number read from the rule that
    holds it (the shipping promotion, `GET /api/returns/policy`), never typed
    into the page.
@@ -100,8 +105,9 @@ proves with properties — untouched.
 - **An audit row for every change** (who, what, when), as every backoffice
   action has, and the dates are validated where they are set: a window that
   ends before it starts, or in the past, is refused.
-- **What it carries**: a code, a name and a line (es/en, invariant 6), a window,
-  a priority, the promotions' codes, and a theme for the card (which drawing,
+- **What it carries**: a code, a name and a line (es/en, invariant 6), a kind
+  (`Event` or `Season`) and a scope (the shop, or a category code) — closed sets
+  (ADR 0043) — a window, a priority, the promotions' codes, and a theme for the card (which drawing,
   which accent) — never a colour value, a token name.
 - **The API**: `GET /api/pricing/campaigns` — the campaigns running now and
   those starting within a horizon (30 days), leading one first (running before
@@ -111,6 +117,15 @@ proves with properties — untouched.
   promotions reach; an empty list when none is near. The clock is computed in
   the browser from the window, so a cached answer never shows a wrong
   countdown. The order is the server's rule, not the page's.
+- **Two kinds, two scopes.** An **event** (*Tendero Days*, *Black Friday*) is
+  short, has a clock and leads. A **season** (*Rebajas de verano*, *Otoño*) is
+  weeks long, has no clock, and is what the card shows when no event runs — the
+  shop always has a season, so the first screen is never empty for want of an
+  event. And a campaign's **scope** is the whole shop or one category: a
+  shop-wide one leads the home; a category one (*Semana del hogar*) is the
+  banner of that category's pages and never reaches the home. This is how the
+  large shops run several at once without two shouting in one place: one
+  headline for the shop, the others where they apply.
 - **Overlap is a rule, not an accident**: two campaigns may run at once, and
   the engine is unaffected — it still chooses between promotions by their own
   combination rules; the campaigns only decide what the page leads with.
@@ -118,6 +133,30 @@ proves with properties — untouched.
   headed with the campaign's name, the products its promotions reach — the same query-time rule as
   *on offer* (R-7.3: a fact that time changes is computed when read), narrowed
   to the campaign's promotions.
+
+### Puede que te guste — suggestions that say why
+
+Differentiator 5 of the vision: explainable recommendations. Each suggestion
+names the product in the trail it comes from, and the rule is deterministic
+first (invariant 12: what code can decide, code decides):
+
+- **The rule**: products sharing the viewed product's category and its
+  attributes (material, colour family, use), ranked by how many they share,
+  never a product already viewed, never one sold out.
+- **With the vector layer up**: the same candidates re-ranked by the
+  similarity of their embeddings, which the hybrid search already computes.
+  **Without it, the rule alone** (invariant 8) — and a test takes Qdrant away
+  to prove the row still fills.
+- `GET /api/search/similar?codes=…` answers with the products and, for each,
+  the code it came from: the *why* is data, not wording made up by the page.
+
+### Tendencias — what is rising
+
+Ordering's own figures, no telemetry: units sold per product in the last seven
+days against the seven before, the biggest risers first, with a floor (at least
+three units this week) so one sale against none is not a trend. With too few
+orders to say anything, the row is not drawn — at laboratory scale it may often
+not be, and the spec says so rather than faking one.
 
 ### Sigue donde lo dejaste — the trail
 
@@ -174,7 +213,10 @@ proves with properties — untouched.
   *before* card is not opened, the teaser is not worth its place.
 - `trail_cleared {scope}` — `one` or `all`. **Decision:** if many clear it,
   the trail is felt as surveillance; show less, or ask first.
-- `product_viewed.arrived_from` gains `trail` and `campaign`.
+- `product_viewed.arrived_from` gains `trail`, `campaign`, `suggested` and
+  `trending`. **Decision:** if suggestions lead to products no more often than
+  the new arrivals do, the rule is not worth its place above them; if the
+  vector re-rank does not beat the rule alone, it is switched off.
 
 ## Open questions
 
@@ -210,6 +252,7 @@ author's approval, and only then the build — in the order below.
 | H-1b | The backoffice: a Campaigns list (ADR 0042's list-and-pane) with create, edit, schedule and end early, each with its audit row | M |
 | H-2 | The campaign card — the leading campaign only — with its clock, before and during | M |
 | H-3 | The trail: storage, the row, removal | M |
-| H-4 | Offers as products, best sellers, the promise strip, the new order of the page | M |
+| H-4 | Offers as products, best sellers, trends, the promise strip, the new order of the page | M |
+| H-4b | *Puede que te guste*: the rule, the vector re-rank with its fallback, `GET /api/search/similar` | M |
 | H-5 | Agents: `list_campaigns` in WebMCP and on the MCP server | S |
 | H-6 | The events, in the tracking plan | S |
