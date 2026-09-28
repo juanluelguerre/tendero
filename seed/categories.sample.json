@@ -144,7 +144,7 @@
     "code": "SMALL_APPLIANCE",
     "parent": "KITCHEN",
     "name": {
-      "es": "Pequeno electrodomestico",
+      "es": "Pequeño electrodoméstico",
       "en": "Small appliances"
     }
   },
@@ -168,7 +168,7 @@
     "code": "BAGS_TOTE",
     "parent": "BAGS",
     "name": {
-      "es": "Bolsas y rinoneras",
+      "es": "Bolsas y riñoneras",
       "en": "Totes and hip packs"
     }
   },

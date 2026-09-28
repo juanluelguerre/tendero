@@ -197,7 +197,7 @@
       {
         "code": "COTTON",
         "label": {
-          "es": "algodon",
+          "es": "algodón",
           "en": "cotton"
         }
       },
@@ -211,7 +211,7 @@
       {
         "code": "CERAMIC",
         "label": {
-          "es": "ceramica",
+          "es": "cerámica",
           "en": "ceramic"
         }
       },
@@ -225,7 +225,7 @@
       {
         "code": "BAMBOO",
         "label": {
-          "es": "bambu",
+          "es": "bambú",
           "en": "bamboo"
         }
       },

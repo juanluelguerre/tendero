@@ -312,7 +312,7 @@ La descripción en inglés de cada producto está en su ficha, en cursiva. Es la
 que conviene usar: describe el objeto sin nombre de marca inventado, que es lo
 que un generador entiende mejor.
 
-## Bolsas y mochilas > Bolsas y rinoneras
+## Bolsas y mochilas > Bolsas y riñoneras
 
 ### `B13BAG0707.webp` — Bolsa de lona Mercado · **hecha**
 
