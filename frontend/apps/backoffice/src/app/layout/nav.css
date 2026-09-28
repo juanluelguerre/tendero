@@ -68,8 +68,18 @@
   min-width: 0;
 }
 
+/* What is waiting, as a pill on a tint of its own colour. The text alone was
+   --warning, which in the light theme is amber-700: dark enough to pass on
+   white, and at 11px beside a grey label it read as one more grey (the
+   author, the second walkthrough). The tint carries the colour in both
+   themes; the text keeps the contrast. The way Primer and Linear draw a
+   counter. */
 .link__badge {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
   font-size: var(--text-3xs);
+  font-weight: 600;
   color: var(--warning);
 }
 
