@@ -1,7 +1,0 @@
-<div class="switch" role="group" [attr.aria-label]="t('theme.label')" *transloco="let t">
-  @for (choice of choices; track choice) {
-    <button type="button" class="switch__option" [attr.aria-pressed]="choice === chosen()" (click)="choose(choice)">
-      {{ t('theme.' + choice) }}
-    </button>
-  }
-</div>

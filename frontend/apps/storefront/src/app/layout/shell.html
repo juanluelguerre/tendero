@@ -38,23 +38,9 @@
       }
 
       <div class="header__end">
-        <!-- A pair of buttons and not a <select>: with two options a dropdown
-             hides half the answer behind a click. On a phone it moves to the
-             drawer's foot. -->
-        <div class="langs wide-only" role="group" [attr.aria-label]="t('nav.language')">
-          @for (option of cultures; track option) {
-            <button type="button" class="lang" [class.lang--active]="option === culture()" [attr.aria-pressed]="option === culture()" (click)="use(option)">
-              {{ option }}
-            </button>
-          }
-        </div>
-
-        <a class="account wide-only" [routerLink]="accountLink()" [attr.aria-label]="t('nav.account')">
-          <svg class="account__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <circle cx="12" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6" />
-            <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-          </svg>
-        </a>
+        <!-- Who is shopping, the language and the theme: one menu at every
+             width, as in the backoffice (the author, 2026-09-28). -->
+        <storefront-account-menu />
 
         <!-- The basket. The count is on the badge and also in the label,
              because a number in a circle means nothing to a screen reader. -->
@@ -100,7 +86,6 @@
   <footer class="footer">
     <div class="page-frame footer__inner">
       <span class="muted">{{ t('brand.name') }} · {{ t('brand.tagline') }}</span>
-      <storefront-theme-switch class="wide-only" />
     </div>
   </footer>
 
@@ -118,17 +103,6 @@
     @if (drawerOpened()) {
       <storefront-shop-menu class="drawer__menu" mode="drawer" [current]="department()" (chosen)="drawer.close()" />
     }
-    <div class="drawer__foot">
-      <a class="drawer__account" [routerLink]="accountLink()" (click)="drawer.close()">{{ t('nav.account') }}</a>
-      <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
-        @for (option of cultures; track option) {
-          <button type="button" class="lang" [class.lang--active]="option === culture()" [attr.aria-pressed]="option === culture()" (click)="use(option)">
-            {{ option }}
-          </button>
-        }
-      </div>
-      <storefront-theme-switch />
-    </div>
   </dialog>
 
   <ng-template #search let-variant>

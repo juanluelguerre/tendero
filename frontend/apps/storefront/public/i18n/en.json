@@ -159,7 +159,10 @@
     "soldOut": "Sold out",
     "specs": "Details",
     "yes": "Yes",
-    "title": "Product"
+    "title": "Product",
+    "added": "Added to your cart",
+    "viewCart": "View cart",
+    "notAdded": "It could not be added. Please try again."
   },
   "search": {
     "empty": "Nothing for “{{query}}”. Try fewer words.",
@@ -251,5 +254,9 @@
     "system": "As the system",
     "light": "Light",
     "dark": "Dark"
+  },
+  "accountMenu": {
+    "open": "Your account and preferences ({{name}})",
+    "guest": "Guest"
   }
 }

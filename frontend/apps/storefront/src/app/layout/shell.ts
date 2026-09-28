@@ -4,7 +4,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AgentTools } from '@tendero/shared-agent';
-import { Culture, CultureStore } from '@tendero/shared-i18n';
+import { CultureStore } from '@tendero/shared-i18n';
 import { ThemeStore } from '@tendero/shared-ui';
 import { filter, map } from 'rxjs';
 import { StorefrontTools } from '../agent/storefront-tools';
@@ -13,7 +13,7 @@ import { departmentOf, Taxonomy } from '../data-access/taxonomy';
 import { CompareTray } from './compare-tray';
 import { ConsentBanner } from './consent-banner';
 import { ShopMenu } from './shop-menu';
-import { ThemeSwitch } from './theme-switch';
+import { AccountMenu } from './account-menu';
 
 /** Where the menu stops being a panel and becomes the phone's drawer: the tablet breakpoint the backoffice uses. */
 const DrawerBelow = '(max-width: 47.99rem)';
@@ -30,7 +30,7 @@ const DrawerBelow = '(max-width: 47.99rem)';
  */
 @Component({
   selector: 'storefront-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, NgTemplateOutlet, ConsentBanner, CompareTray, ShopMenu, ThemeSwitch],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective, NgTemplateOutlet, ConsentBanner, CompareTray, ShopMenu, AccountMenu],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
@@ -45,7 +45,6 @@ export class Shell {
   private readonly drawer = viewChild.required<ElementRef<HTMLDialogElement>>('drawer');
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
 
-  protected readonly cultures = this.cultureStore.available;
   protected readonly culture = this.cultureStore.active;
 
   /**
@@ -124,24 +123,8 @@ export class Shell {
     void this.router.navigate(['/', this.culture()], { queryParams: q ? { q } : {} });
   }
 
-  /**
-   * Switching language NAVIGATES; it does not just flip a signal. The URL is
-   * what carries the culture (`P5-13`), so swapping the first segment is the
-   * switch, and a language change is a page a person can bookmark and share.
-   * On a product page the slug is wrong for a moment and the code still
-   * resolves it, which is why the code is the key (ADR 0026).
-   */
-  protected use(culture: Culture): void {
-    const [path, query] = this.router.url.split('?');
-    const segments = path.split('/').filter(Boolean);
-
-    segments[0] = culture;
-
-    void this.router.navigateByUrl(`/${segments.join('/')}${query ? `?${query}` : ''}`);
-  }
 
   /** Links have to carry the language segment, so they are built from it. */
   protected readonly home = computed(() => ['/', this.culture()]);
   protected readonly cartLink = computed(() => ['/', this.culture(), 'cart']);
-  protected readonly accountLink = computed(() => ['/', this.culture(), 'account']);
 }

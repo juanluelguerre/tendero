@@ -139,6 +139,21 @@
                   {{ adding() ? t('product.adding') : t('product.addToCart') }}
                 </button>
 
+                <!-- Beside the action, where the eyes are, and it stays: a toast
+                     that fades is gone before a screen reader or a slow reader
+                     is done with it (WCAG 2.2.1). The region is always there, so
+                     what enters it is announced. -->
+                <p class="buy__notice" role="status">
+                  @if (notice(); as said) {
+                    @if (said.ok) {
+                      <span class="buy__added">{{ t('product.added') }}</span>
+                      <a class="quiet" [routerLink]="cartLink()" (click)="noticeFollowed()">{{ t('product.viewCart') }}</a>
+                    } @else {
+                      <span class="buy__notAdded">{{ t('product.notAdded') }}</span>
+                    }
+                  }
+                </p>
+
                 @let left = remaining();
                 @if (left !== null) {
                   <!-- Only when it is a reason to hurry. The server decides the

@@ -159,7 +159,10 @@
     "soldOut": "Agotado",
     "specs": "Detalles",
     "yes": "Sí",
-    "title": "Producto"
+    "title": "Producto",
+    "added": "Añadido al carrito",
+    "viewCart": "Ver carrito",
+    "notAdded": "No se ha podido añadir. Inténtalo de nuevo."
   },
   "search": {
     "empty": "Nada para «{{query}}». Prueba con menos palabras.",
@@ -251,5 +254,9 @@
     "system": "Como el sistema",
     "light": "Claro",
     "dark": "Oscuro"
+  },
+  "accountMenu": {
+    "open": "Tu cuenta y tus preferencias ({{name}})",
+    "guest": "Invitado"
   }
 }

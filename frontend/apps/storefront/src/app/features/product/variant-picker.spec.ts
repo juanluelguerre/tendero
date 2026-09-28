@@ -49,7 +49,7 @@ function aShirt(): ProductDetail {
     priceCurrency: 'EUR',
     alternates: [],
     missingCultures: [],
-    status: 'active',
+    status: 'Active',
     updatedAt: '2026-09-03T00:00:00Z',
   } as unknown as ProductDetail;
 }

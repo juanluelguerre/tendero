@@ -155,51 +155,7 @@
   line-height: 1;
 }
 
-.langs {
-  display: flex;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-  background: var(--bg-surface);
-}
-.lang {
-  min-width: 2.75rem;
-  min-height: 2.25rem;
-  padding: var(--space-1) var(--space-3);
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-2xs);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  cursor: pointer;
-}
-.lang:hover { color: var(--text); }
-.lang--active { background: var(--accent); color: var(--on-accent); }
 
-/* ---------- Account ----------
-   Beside the basket and quieter than it: the shop works signed out, so this is
-   not an action anybody has to take. Never clay. */
-.account {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: 44px;
-  block-size: 44px;
-  border-radius: var(--radius-full);
-  color: var(--text-muted);
-  text-decoration: none;
-}
-
-.account:hover { color: var(--text); background: var(--bg-raised); }
-
-.account:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-.account__icon { inline-size: 22px; block-size: 22px; }
 
 .main { flex: 1; padding-block: var(--space-6) var(--space-8); }
 
@@ -264,22 +220,6 @@
 
 .drawer__menu { flex: 1; overflow-y: auto; padding: var(--space-3) var(--space-4); }
 
-.drawer__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-block-start: 1px solid var(--border);
-}
-
-.drawer__account {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  margin-inline-end: auto;
-  color: var(--text);
-}
 
 /* ---------- Widths ---------- */
 .narrow-only { display: none; }

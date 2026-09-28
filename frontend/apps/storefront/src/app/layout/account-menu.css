@@ -1,0 +1,124 @@
+/* The backoffice's account menu (its account-menu.css), with the shop's round
+   trigger: the same shape as the basket beside it. */
+:host { display: inline-flex; }
+
+.trigger {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  anchor-name: --account;
+}
+
+.trigger:hover { color: var(--text); background: var(--bg-raised); }
+
+.trigger:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.trigger__icon { inline-size: 22px; block-size: 22px; }
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-tint);
+  color: var(--text);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+}
+
+/* Anchored under its trigger where the browser can, and pinned to the corner
+   where it cannot: either way it floats, so it is allowed a shadow. */
+.menu {
+  position-anchor: --account;
+  inset: auto;
+  top: anchor(bottom);
+  right: anchor(right);
+  margin: var(--space-2) 0 0;
+  width: min(18rem, calc(100vw - 2 * var(--space-4)));
+  padding: var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+}
+
+@supports not (anchor-name: --a) {
+  .menu {
+    top: calc(3.5rem + var(--space-1));
+    right: var(--space-4);
+  }
+}
+
+.menu:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.menu__who { margin: 0; }
+
+.menu__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.menu__label { font-size: var(--text-xs); color: var(--text-muted); }
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.segmented__option {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.75rem;
+  min-height: 2.25rem;
+  padding: 0 var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.segmented__option:hover { color: var(--text); }
+
+.segmented__option[aria-pressed='true'] {
+  background: var(--accent-tint);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.segmented__icon { inline-size: 1.125rem; block-size: 1.125rem; }
+
+.menu__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-block-start: var(--space-3);
+  border-block-start: 1px solid var(--border);
+}
+
+@media (pointer: coarse) {
+  .segmented__option { min-height: 2.75rem; }
+}
