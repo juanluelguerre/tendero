@@ -117,8 +117,10 @@
   /* The shop's frame: a list of products is browsed, not read, so it takes
      the screen, as the large shops do — more cards to a row, not wider cards
      (R-7.4). A 1920px cap still left 320px of nothing each side of a 2560px
-     screen, which the author saw at once. What must not grow (an image, a
-     line of text) carries its own measure inside it. */
+     screen, which the author saw at once. What must not grow carries its own
+     measure inside it: a line of text in ch, and a page that is read or
+     filled in rather than browsed — product, cart, checkout, order, account —
+     --container-app (the list is in the storefront's styles.css). */
   --container-shop: none;
   --header-h: 64px;
 }

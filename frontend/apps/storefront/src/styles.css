@@ -79,6 +79,26 @@ img {
   padding-inline: clamp(var(--space-4), 3vw, var(--space-8));
 }
 
+/* A page that is read or filled in, not browsed, keeps the app's reading
+   width, centred inside the frame (R-7.4): a product, the cart, the checkout,
+   an order, the account. At 2560px the frame's full width put a cart's
+   quantity 1400px from its product and made the checkout's fields 1600px
+   long, and the product page a white field the author circled. The lists —
+   home, category, search, the comparison of four side by side — take the
+   frame. One list, here, rather than the same three lines in five components. */
+:is(
+  storefront-product-page,
+  storefront-cart,
+  storefront-checkout,
+  storefront-continue-checkout-page,
+  storefront-order,
+  storefront-account-page
+) {
+  display: block;
+  max-inline-size: var(--container-app);
+  margin-inline: auto;
+}
+
 /* ---------- Micro-labels: the one place uppercase is allowed ---------- */
 .eyebrow {
   font-size: var(--text-2xs);
