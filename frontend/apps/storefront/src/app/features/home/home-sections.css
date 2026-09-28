@@ -71,7 +71,11 @@
   inline-size: 100%;
   block-size: auto;
   aspect-ratio: 4 / 3;
-  object-fit: cover;
+  object-fit: contain;
+  /* On a wide screen (R-7.4) three departments share 1800px: the cards grow
+     wide, and 4:3 would make them taller than the screen. The height stops
+     at 18rem and the drawing is centred in the box rather than cropped. */
+  max-block-size: 18rem;
   /* Whatever replaces these drawings will be a photograph with its own
      proportions; the box is what keeps the row of cards level either way. */
   background: var(--accent-tint);

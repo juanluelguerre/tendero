@@ -114,6 +114,11 @@
   /* ---------- Layout ---------- */
   --container-prose: 68ch;   /* docs and blog measure */
   --container-app: 1440px;
+  /* The shop's frame: a list of products is browsed, not read, so it grows
+     with the screen — more cards to a row, not wider cards — up to a width
+     past which a glance can no longer take a row in (R-7.4). Reading columns
+     keep their own measure in ch inside it. */
+  --container-shop: 1920px;
   --header-h: 64px;
 }
 

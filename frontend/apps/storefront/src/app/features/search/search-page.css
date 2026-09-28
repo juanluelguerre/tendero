@@ -26,7 +26,9 @@
 @media (min-width: 900px) {
   .hero {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 40%);
+    /* The drawing takes 40 % of the row and never more than 32rem: on a wide
+       screen (R-7.4) it is decoration, and it must not outgrow the search. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, min(40%, 32rem));
     grid-template-areas:
       'title art'
       'lede art'
