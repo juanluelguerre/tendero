@@ -28,5 +28,16 @@
   color: var(--text-muted);
 }
 
-.kpi__change--up { color: var(--positive); }
-.kpi__change--down { color: var(--danger); }
+/* A direction is a pill on a tint of its colour, as the nav's counters are:
+   the text colours alone (olive-600, red-600) are the steps chosen to pass
+   contrast on white, and at this size in the light theme they read as grey. */
+.kpi__change--up,
+.kpi__change--down {
+  width: fit-content;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+}
+
+.kpi__change--up { color: var(--positive); background: color-mix(in srgb, var(--positive) 14%, transparent); }
+.kpi__change--down { color: var(--danger); background: color-mix(in srgb, var(--danger) 14%, transparent); }
