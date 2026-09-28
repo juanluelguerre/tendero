@@ -1,6 +1,6 @@
 # Spec: a home page that sells (campaigns, and where you left off)
 
-**Status**: proposal agreed with the author (2026-09-29); the mock-ups are next (H-0) (R-8)
+**Status**: proposal agreed and mock-ups approved by the author (2026-09-29); H-1 is next (R-8)
 **Slice(s)**: Pricing (a campaign over promotions), Ordering (what sells), the storefront's home, the browser's own memory
 **Article**: *A shop window is a query*
 
@@ -262,11 +262,21 @@ mock-ups in `design/unpublished/mockups/storefront-home.pen` (the home at
 1440, a phone, the card before and during a campaign, the trail), then the
 author's approval, and only then the build — in the order below.
 
+## The mock-ups (2026-09-29, approved)
+
+`design/unpublished/mockups/storefront-home.pen`, with its PNGs in
+`storefront-home/`: the home at 1440 with Tendero Days running, the campaign
+card's variants (with its own image, before it starts, a season), and the home
+on a phone. `backoffice-campaign.pen`, with its PNG in `backoffice-campaign/`:
+Campañas as ADR 0042's list and pane. The products are the seed's own drawings,
+referenced from `seed/images`; the campaign's image (`tendero-days.png`) was
+generated in pen.dev and stands for the one a shopkeeper uploads.
+
 ## Building it, in order
 
 | # | Increment | Size |
 |---|---|:-:|
-| H-0 | The mock-ups, approved | S |
+| H-0 | The mock-ups, approved | S ✓ |
 | H-1 | Pricing's campaigns: the ADR (Pricing's first writer), the aggregate and its lifecycle, persistence and a migration, the window and order rules, `GET /api/pricing/campaigns`, `?campaign=` on the listing | L |
 | H-1b | The backoffice: a Campaigns list (ADR 0042's list-and-pane) with create, edit, schedule and end early, each with its audit row | M |
 | H-2 | The campaign card — the leading campaign only — with its clock, before and during | M |
