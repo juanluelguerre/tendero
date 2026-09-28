@@ -408,6 +408,34 @@ close, whole**. Reports are in `docs/blog/reports/2026-09-27-phase-11/stryker/`.
   while a schema is evaluated, and seven classes evaluated in parallel. They now
   share one xUnit collection, and three consecutive runs are green.
 
+**The redesign's close (2026-09-28)** — scoped to the backend the redesign wrote,
+because the redesign is a frontend lifecycle and its few server slices are new.
+Reports are in `docs/blog/reports/2026-09-28-redesign/stryker/`.
+
+- **`src/Catalog`, scoped** (`WithdrawProduct`, `ReviewProduct`,
+  `ProductAttributes`), with `Catalog.Tests`. First run **90.48 %**, 2 survivors,
+  both **real gaps**: nothing asserted the status a withdrawal answers with when
+  there is no product (`"unknown"`), and nothing read a defined attribute by its
+  label in the culture asked for, so the fallback to the bare code survived.
+  Both closed. **Run 2: 100 %** of covered. The 25 without coverage are the
+  validators, the endpoints and the audit reasons, which `Api.Tests` holds and
+  this run does not load (**another suite**).
+- **`src/Ordering`, scoped** (`ListOrders`, `Dashboard`), with `Ordering.Tests`
+  only. The configuration also loads `Integration.Tests`, which needs Docker, and
+  a run with Docker stopped errors before it mutates anything; the database's
+  filtering is held by `OrderListFilterTests` against Postgres, not here. First
+  run **89.41 %**, 9 survivors. Three were **real gaps** in the one projection
+  every orders list uses: authorised and captured could have been the same
+  boolean, and the preview could have skipped the first line instead of taking
+  the first three. Closed in `ListOrdersTests`; hand mutation (both at once),
+  two tests red. **Run 2: 92.94 %**, 6 survivors, all in `Dashboard` and all
+  already classified at phase 11's close: `Concat`/`Except` over one currency
+  and `First` over a non-empty group (**equivalent**), and the returns window's
+  edges (**boundaries accepted**, the window is half-open).
+- **Not mutated, and why.** The redesign's Angular code has no mutation runner;
+  its behaviour is held by the unit specs and the end-to-end tests named in the
+  spec, and its hand mutations are listed in the commits that wrote them.
+
 ## Property-based (CsCheck)
 
 Value objects carry the invariants worth generating inputs for:

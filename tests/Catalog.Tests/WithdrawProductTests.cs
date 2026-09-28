@@ -80,6 +80,8 @@ public sealed class WithdrawProductTests
         var result = await handler.HandleAsync(new WithdrawProductCommand(ProductId.New()), TestContext.Current.CancellationToken);
 
         Assert.Equal(WithdrawOutcome.NotFound, result.Outcome);
+        // A status for the audit and the answer even when there is no product to have one.
+        Assert.Equal("unknown", result.Status);
         Assert.Equal(0, unitOfWork.SaveCount);
     }
 

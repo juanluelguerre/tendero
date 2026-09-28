@@ -40,6 +40,34 @@ public sealed class ListOrdersTests
         Assert.Single(result.Orders);
     }
 
+    [Fact]
+    public void A_row_tells_authorised_from_captured()
+    {
+        var unpaid = OrderBuilder.Default().Build();
+        var authorised = OrderBuilder.Default().Build();
+        authorised.AuthorizePayment(TimeProvider.System, new OrderPayment("fake", "auth-1", null));
+        var captured = OrderBuilder.Default().Build();
+        captured.AuthorizePayment(TimeProvider.System, new OrderPayment("fake", "auth-2", null));
+        captured.CapturePayment(TimeProvider.System, "cap-2");
+
+        Assert.Equal((false, false), Paid(OrderSummary.Of(unpaid)));
+        Assert.Equal((true, false), Paid(OrderSummary.Of(authorised)));
+        Assert.Equal((true, true), Paid(OrderSummary.Of(captured)));
+
+        static (bool, bool) Paid(OrderSummary row) => (row.IsPaid, row.IsCaptured);
+    }
+
+    [Fact]
+    public void A_row_previews_the_first_three_lines_in_their_order()
+    {
+        var lines = Enumerable.Range(1, 4).Select(_ => OrderBuilder.Line(10m, "EUR")).ToArray();
+
+        var row = OrderSummary.Of(OrderBuilder.Default().WithLines(lines).Build());
+
+        Assert.Equal(lines.Take(3).Select(line => line.Sku), row.Preview.Select(preview => preview.Sku));
+        Assert.Equal(4, row.LineCount);
+    }
+
     private sealed class ScriptedReader(IReadOnlyList<Order> orders, IReadOnlyDictionary<OrderStatus, int> counts) : IOrderReader
     {
         public OrderListQuery? Asked { get; private set; }
