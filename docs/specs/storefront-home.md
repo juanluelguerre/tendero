@@ -47,12 +47,12 @@ Three things recur, and they are what the home lacks:
    clay action (*Ver las ofertas*), the event's name and line, its clock, and
    what it holds ("hasta −25 % en ropa · envío gratis desde 50 €") from the
    promotions it groups. Before the window: *Empieza en 3 d* and what it will
-   hold. **The shop will have several campaigns** (the author, 2026-09-28), so
-   the card shows the one that leads — running before upcoming, then the
-   campaign's own priority — and the next ones sit beside it as smaller cards,
-   each with its own clock (*Black Friday · empieza en 58 d*). With none near,
-   nothing is drawn and the page starts with row 2 — a home never shows an
-   empty stage.
+   hold. **The shop will have several campaigns, and the home shows one at a
+   time** (the author, 2026-09-28): the one that leads — a running campaign
+   before an upcoming one, then the campaign's own priority. The others wait
+   their turn; they are not stacked beside it, because two events shouting at
+   once is none. With none near, nothing is drawn and the page starts with
+   row 2 — a home never shows an empty stage.
 2. **Sigue donde lo dejaste** — the products the shopper viewed and the
    searches they made, most recent first (up to 8 products, 5 searches as
    chips). Only for somebody who has a trail; a first visit does not see an
@@ -94,8 +94,9 @@ proves with properties — untouched.
   a priority, the promotions' codes, and a theme for the card (which drawing,
   which accent) — never a colour value, a token name.
 - **The API**: `GET /api/pricing/campaigns` — the campaigns running now and
-  those starting within a horizon (30 days), in the order the home draws them
-  (running first, then by priority, then by start), each with its window, its
+  those starting within a horizon (30 days), leading one first (running before
+  upcoming, then by priority, then by start). The home draws only the first;
+  the whole list is for agents and for whatever lists campaigns later, each with its window, its
   phase (`Upcoming` or `Running`, a closed set — ADR 0043) and what its
   promotions reach; an empty list when none is near. The clock is computed in
   the browser from the window, so a cached answer never shows a wrong
@@ -158,7 +159,7 @@ proves with properties — untouched.
 - `home_module_opened {module, position}` — `campaign`, `trail`, `offers`,
   `best_sellers`, `new`, `departments`. **Decision:** a module nobody opens
   in a month moves down or goes; the order of the page follows the numbers.
-- `campaign_card_opened {campaign, phase, position}` — `before` or `during`, leading or beside. **Decision:** if the
+- `campaign_card_opened {campaign, phase}` — `before` or `during`. **Decision:** if the
   *before* card is not opened, the teaser is not worth its place.
 - `trail_cleared {scope}` — `one` or `all`. **Decision:** if many clear it,
   the trail is felt as surveillance; show less, or ask first.
@@ -196,7 +197,7 @@ author's approval, and only then the build — in the order below.
 |---|---|:-:|
 | H-0 | The mock-ups, approved | S |
 | H-1 | Pricing's campaigns: the file, the window and order rules, `GET /api/pricing/campaigns`, `?campaign=` on the listing | M |
-| H-2 | The campaign cards — the leading one and the next — with their clocks, before and during | M |
+| H-2 | The campaign card — the leading campaign only — with its clock, before and during | M |
 | H-3 | The trail: storage, the row, removal | M |
 | H-4 | Offers as products, best sellers, the promise strip, the new order of the page | M |
 | H-5 | Agents: `list_campaigns` in WebMCP and on the MCP server | S |
