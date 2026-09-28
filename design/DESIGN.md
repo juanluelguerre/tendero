@@ -64,7 +64,10 @@ row beneath it, each opening its panel of sections, with *Ofertas* and
 drawer. Either way a category is two interactions from any page, and the
 department the page is in is marked with `aria-current`, not only with colour
 (R-5.1). Language and theme live in the account menu, as in the backoffice
-(R-5.3).
+(R-5.3). The shop has one search, in the header, in the same place on every
+page, as the large shops do: a results page shows its words in that box and
+carries no second one, and the home page offers a few real queries as a way in
+instead of a box of its own (the redesign's second walkthrough).
 
 A list of products — search results, a category, *Ofertas* — is one pattern
 (R-7.3): a toolbar with the count, the applied filters as removable chips,

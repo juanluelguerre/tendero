@@ -35,9 +35,10 @@
         </span>
       </a>
 
-      @if (!onHome()) {
-        <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--row' }" />
-      }
+      <!-- The shop's one search, in the same place on every page, as the large
+           shops have it: the search page no longer carries a second box
+           (the author, the redesign's second walkthrough). -->
+      <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--row' }" />
 
       <div class="header__end">
         <!-- Who is shopping, the language and the theme: one menu at every
@@ -115,13 +116,11 @@
     }
   </header>
 
-  <!-- On a phone, search has a row of its own that scrolls away with the page;
-       the home page is a search, so it does not repeat one there. -->
-  @if (!onHome()) {
-    <div class="page-frame search-row narrow-only">
-      <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--full' }" />
-    </div>
-  }
+  <!-- On a phone, search has a row of its own that scrolls away with the page,
+       on every page, as the header's box does on a wider screen. -->
+  <div class="page-frame search-row narrow-only">
+    <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--full' }" />
+  </div>
 
   <!-- The signature, and the only decoration in the system. It marks where the
        chrome ends and the shop begins. -->
@@ -156,7 +155,15 @@
   <ng-template #search let-variant>
     <form class="search" [class]="variant" role="search" (submit)="$event.preventDefault(); find(box.value)">
       <label class="sr-only" [for]="'find-' + variant">{{ t('nav.searchLabel') }}</label>
-      <input #box class="search__input" type="search" [id]="'find-' + variant" [placeholder]="t('nav.search')" />
+      <!-- The box shows what the page is listing, so a results page says what
+           it answered and the words can be refined where they were typed. -->
+      <input #box class="search__input" type="search" [id]="'find-' + variant" [placeholder]="t('nav.search')" [value]="query()" />
+      <button type="submit" class="search__go" [attr.aria-label]="t('nav.searchGo')">
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2" />
+          <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
     </form>
   </ng-template>
 

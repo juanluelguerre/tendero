@@ -27,8 +27,8 @@
 
       Shown only when there is no session and no results: on an idle home it is
       the answer to "where did my order go", and over a result list it would be
-      an advert. It is NOT the clay action — the search button is, and one accent
-      per view is the rule.
+      an advert. It is not a clay action: one accent per view is the rule, and a
+      way back to an order is not the shop's main call.
     -->
     @if (!signedIn() && !hasResults()) {
       <p class="hero__account">
@@ -37,44 +37,21 @@
       </p>
     }
 
-    <form class="search" (submit)="$event.preventDefault(); submit(box.value)">
-      <label class="sr-only" for="q">{{ t('search.label') }}</label>
-      <div class="search__row">
-        <svg class="search__icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-          <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2" />
-          <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" />
-        </svg>
-        <!-- The URL is what the box shows. Following it rather than owning the
-             text is what makes a shared link, a bookmark and the back button all
-             land on the same results. -->
-        <input
-          #box
-          id="q"
-          name="q"
-          type="search"
-          class="field search__input"
-          [value]="queryFromUrl()"
-          [attr.placeholder]="t('search.placeholder')"
-          autocomplete="off"
-        />
-        <!-- The view's only clay action (design/DESIGN.md). -->
-        <button type="submit" class="button search__submit">{{ t('search.submit') }}</button>
-      </div>
-
-      <!-- Real queries from the golden set, so the first click is a query the
-           gate actually measures rather than one that happens to look good. -->
+    <!-- The words are asked in the header's box, the shop's one search, in
+         the same place on every page (the author, the redesign's second
+         walkthrough). What stays here is a way in for somebody who has not
+         typed yet: real queries from the golden set, so the first click is one
+         the gate measures rather than one that happens to look good. -->
+    @if (!hasResults()) {
       <ul class="suggestions">
         <li class="suggestions__label eyebrow">{{ t('search.tryLabel') }}</li>
         @for (suggestion of suggestions(); track suggestion) {
           <li>
-            <button type="button" class="chip" (click)="box.value = suggestion; submit(suggestion)">
-              {{ suggestion }}
-            </button>
+            <button type="button" class="chip" (click)="submit(suggestion)">{{ suggestion }}</button>
           </li>
         }
       </ul>
-    </form>
+    }
   </section>
 
   @switch (mode()) {

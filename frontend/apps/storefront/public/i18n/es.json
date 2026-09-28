@@ -90,6 +90,7 @@
     "shop": "Tienda",
     "close": "Cerrar el menú",
     "search": "Buscar en la tienda",
+    "searchGo": "Buscar",
     "searchLabel": "Buscar en la tienda",
     "departments": "Departamentos",
     "sectionsOf": "{{name}}: sus secciones",
