@@ -198,6 +198,9 @@ node tools/api-map.mjs --schema CartView
   the prose.
 - C# 14, file-scoped namespaces, primary constructors, collection expressions.
 - Strongly-typed ids (`ProductId`, `OrderId`) — never raw Guids in signatures.
+- A closed set is an enum everywhere it crosses the wire (ADR 0043): in a body
+  through `WireJson.Enums()`, in a query string bound as `WireEnum<T>` — by exact
+  name in any case, never a number — and the contract tests hold both.
 - Custom CQRS abstractions (`ICommand`/`IQuery` + dispatchers), NOT MediatR-the-package.
 - FluentValidation per slice; Carter modules for endpoints.
 - A hosted service ends in `Worker`; one that does its job once when the host

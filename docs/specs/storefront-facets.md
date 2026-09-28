@@ -95,13 +95,28 @@ What the index holds today (`ProductSearchDocument`):
 | Department / category | tree, narrowing | links inside the results | `CategoryCodes` | search results with 2 or more departments |
 | Brand | options, multi | checkboxes, top 7, *Ver más*, a box past 20 | `Brand` | 2 or more brands |
 | Price | range | two inputs and bands from the results | `PriceAmount` | always |
-| On offer | switch | switch | **new**: a running promotion applies (Pricing, projected) | some results are on offer |
+| On offer | switch | switch | **asked at query time**: the automatic line promotions Pricing says are running, and the categories and SKUs they reach — never indexed (below) | some results are on offer |
 | New arrivals | switch | switch | `AvailableFrom` in the last 30 days | some results are new |
 | Available | switch | switch | `InStock` | always |
 | Colour (variant axis) | options, multi | swatches with the name | axis values | 2 or more values |
 | Size (variant axis) | options, multi | a grid of buttons | axis values | 2 or more values |
 | Material, gender (option attributes marked `IsFacet`) | options, multi | checkboxes | **new**: attribute values indexed as keywords | 2 or more values |
 | Induction (boolean attributes marked `IsFacet`) | switch | switch | **new** | some results have it |
+
+**Why *on offer* is not in the index** (found while building F-1, 2026-09-28,
+and noted at the author's request). A promotion has a validity window: Black
+Friday opens on 27 November and closes four days later. A flag written into the
+index when a product was projected would be true after the offer ended and
+false before it began, until something reindexed at exactly the right minute,
+and no event says "a window just opened". So the filter asks at query time
+instead. Pricing answers which automatic, line-level promotions run now (no
+coupon; percent off a line, or buy X get Y) and which categories and SKUs they
+reach. The search filters on `CategoryCodes` and `Sku` with those values and
+counts with the same filter. It is exact to the second, needs no reindex, and
+is one small request to a context that reads committed files. The same argument
+keeps *new arrivals* out of the index as a flag: `AvailableFrom` is indexed, and
+"the last 30 days" is a range computed when asked. **A fact that changes with
+time, and not with an event, is computed when read, never stored.**
 
 The order is the one above, and the attribute filters follow their definitions'
 order. A new attribute marked `IsFacet` in the backoffice appears as a filter
@@ -136,6 +151,14 @@ after a reindex, with no code.
   stays the unfiltered category, and the filter controls are buttons, not links,
   so no crawler follows a combination. One category does not become a thousand
   indexable URLs.
+- **As built (`listing/listing-indexing.ts`):** a category, filtered or sorted,
+  declares the unfiltered category as canonical with its `hreflang` alternates;
+  a search or a list made only of filters (`/es?q=…`, `/es?offer=1`) says
+  `noindex,follow` and no canonical — Google asks sites not to let their own
+  search results be indexed, and a page never carries both, which would say
+  "index that other URL" and "index nothing" at once. The home page says nothing,
+  as before. Leaving the listing takes its tags with it, so a product reached
+  from a search is never `noindex`.
 
 ### The API
 
@@ -198,17 +221,29 @@ after a reindex, with no code.
 
 ## Evidence of use
 
-- `filter_applied {facet, surface}`: facet is `category`, `brand`, `price`,
-  `offer`, `new`, `stock`, `axis` or `attribute`, never the value; surface is `category` or
-  `search`. It answers whether shoppers filter, and with what.
+- `filter_applied {facet, listing, surface}`: facet is the facet's code —
+  `category`, `brand`, `price`, `offer`, `new`, `stock`, or an attribute's
+  catalogue code (`COLOR`, `SIZE`) — never the value; listing is `category`,
+  `search` or `listing` (a list made only of filters); surface is `column` or
+  `sheet`. It answers whether shoppers filter, with what, and on which device.
+  *(As built: the draft had `axis`/`attribute` for the kind and `surface` for
+  the page; the code names the attribute, which is what a decision about one
+  facet needs, and the device got its own attribute because the sheet's batch
+  is the friction the author chose knowingly.)*
   - **Decision:** if under 5 % of category visits use a filter in a month, the
     column opens folded by default.
   - **Decision:** a facet nobody uses in a month is looked at before it is kept.
 - `filters_cleared {surface}`: whether *Quitar todo* is used, or filters are
-  removed one by one.
-- The product views that follow a filtered listing already carry
-  `arrived_from` (`product_viewed`). A new value, `filtered`, answers whether
-  filtering leads anywhere.
+  removed one by one — `toolbar`, `empty` (the one a list that filters emptied
+  offers) or `sheet`.
+- The product views that follow a filtered listing carry `arrived_from`
+  (`product_viewed`). **As built, not a value `filtered` but an attribute:**
+  `filtered: true|false`, because a value would have replaced the page's kind
+  and lost whether the filtered list was a category or a search. `arrived_from`
+  gained `listing` instead, for *Ofertas* and *Novedades* (`/es?offer=1`), which
+  were being counted as `home`.
+- A browser agent's `apply_filter` is not a `filter_applied`: it is counted by
+  `webmcp_tool_invoked`, as every browser tool is.
 
 ## Open questions
 
@@ -227,6 +262,15 @@ after a reindex, with no code.
    exported PNGs beside it as the redesign's. To draw: search results with the
    column (1440), the column folded, a category page, the phone's sheet (390),
    and the applied chips with the count and the sort.
+
+## How it was decided
+
+The proposal, the author's corrections, the questions and their answers, the
+mock-ups and the header the author saw were all settled before a line of it was
+built. The author asked for that loop to be recorded as the method: agent
+proposes and draws, human judges and corrects, and only then code. It is the
+method of *De 0 a N con Task[in]*, and the notebook (2026-09-28) tells it step
+by step for the article and the book.
 
 ## The mock-ups (2026-09-28)
 
@@ -276,17 +320,110 @@ platform's convention. R-6's second walkthrough measures this header, not R-5.1'
   names first drafted: a mock-up draws the shop's data, never placeholders that
   look like it.
 
+## F-2 as built (2026-09-28)
+
+`GET /api/search` takes `brand`, `within` and `f` (`CODE:VALUE`), all repeatable;
+`minPrice` and `maxPrice`, both inclusive; `onOffer`, `newArrivals` and `inStock`;
+and `sort=price-asc|price-desc|newest`. It answers with `facets`, and every count
+is a product (a cardinality over `productId`), never a variant document. The
+Elasticsearch work lives in `src/Search/Elasticsearch/ProductFacets.cs`, the
+*on offer* rule in Pricing's domain (`OfferReach`), shared with `ListOffers`,
+and one adapter (`PricingRunningOffers`) is the only Search class that sees
+Pricing, which an architecture rule holds.
+
+Decided while building, and kept:
+- **A yes-or-no attribute is its own kind, `Flag`**, drawn as a switch whose
+  one option is `CODE:true`.
+- **An options facet has to narrow, not just list.** It needs two or more
+  options with products *and* one whose count is below the facet's own base.
+  Otherwise a product filed in HOME, KITCHEN and COOKWARE at once, or a shoe
+  sold in every size, would show a facet whose every option leaves the list
+  unchanged.
+- **Price bands are inclusive at both ends**, as the two inputs they fill are,
+  so a product priced exactly on a boundary counts in both neighbouring bands.
+  With sayable boundaries (30, 60) against shop prices (29.90, 59.90) this is
+  rare, and it is the honest consequence of a band meaning what the inputs mean.
+  The one surviving hand mutation (an exclusive upper bound) survives because
+  no test product sits on a boundary. **Written down, to close at the phase's
+  Stryker run.**
+- **Hybrid:** the vector candidates join the lexical request as a zero-boost
+  clause, so results, total and facets are one union narrowed by the filters,
+  with BM25 scores unchanged. Meaning-only products are dropped from the word
+  ranking and fetched with the filters applied.
+
+Measured on a real Elasticsearch 9.5.0, as the median of 20 warm runs with both
+requests of a page included: a faceted browse took 20–28 ms, a faceted text
+search 14–17 ms. **SearchEval on the throwaway node: NDCG@10 0.748 (en) and
+0.692 (es), recall@50 0.795 and 0.738 — identical to the committed baseline.**
+The filters narrow; they did not move the ranking.
+
+## F-3 to F-6 as built (2026-09-28)
+
+**One listing, two places.** `listing/` holds it: `listing-filters.ts` (the URL
+is the state — pure functions between the query string, the filters and the
+API's parameters), `listing-view.ts` (sections, chips, labels), `listing-state.ts`
+(one per page, fetching through the search endpoint the relevance gate
+measures), and the `Listing` and `FilterPanel` components. The search page and
+the category page each provide a `ListingState` and say what they list.
+
+**The walk against the mock-ups** at 1440 and 390, light and dark, found four
+things, fixed before anything else was built:
+
+- *A native checkbox stayed white in the dark theme.* Native controls draw from
+  `color-scheme`, not from the tokens; `design/tokens.css` now declares it on
+  `:root` and on `[data-theme='dark']`, which fixes every checkbox, select and
+  scrollbar in both apps, not only this column.
+- *The phone's price bands were four to a row*, wrapping "30 € – 50 €" over
+  two lines: now two to a row.
+- *The phone grid was one card wide* where the mock-up has two. One card a
+  screen is a shop you scroll through, not one you browse: two.
+- *The price inputs stopped short of the right edge in the sheet*: a
+  three-track grid kept the gap of its empty third track (the sheet has no
+  «Ir»). A flex row.
+
+**A test that passed by luck.** The phone e2e read *Ver N productos* the moment
+it was visible, and for one frame after the tap the button still carries the
+list's own total. It passed three runs, then failed three in a row: it now
+waits for the batch's number, never the list's.
+
+**`sort` became a closed set a client sends** (ADR 0043, extended). `ProductSort
+{ Relevance, Newest, PriceAsc, PriceDesc }` in the contract; the storefront's
+URL keeps its readable `price-asc` and maps it in one typed table. Binding it
+showed that the framework's own enum binding is case-sensitive, takes `?sort=1`
+as the second member, and — in Development, where it throws — answered a typo
+with a **500**: `WireEnum<T>` binds by exact name in any case,
+`BadRequestExceptionHandler` answers a failed binding with a 400, and a new
+contract test holds every query parameter named like a closed set to an `enum`
+— which found eight more (`status`, `outcome`, `period`), migrated the same way,
+retiring `DashboardPeriods.Parse`, the same rule written by hand. Its test found
+that `Enum.TryParse` ORs `"Day, Week"` into `Week`, and the JSON converter did
+the same in a body; both now refuse a combination.
+
+**Agents (F-5).** In the browser, `list_filters` reads the facets of the list on
+screen and `apply_filter` narrows THAT list by one facet — the facet's code and
+the options' values, exactly what the column sends, so nothing is translated.
+It is `ListingState.apply`, the navigation a click makes: the shopper watches
+the list narrow and the back button undoes it, which is how it keeps phase 6's
+rule that the person navigates. A root `ActiveListing` lets the tools find the
+page's own state; nothing holds a second copy of the filters. On the MCP server,
+`search_products` takes the filters as arguments (`brands`, `within`, `facets`,
+`minPrice`, `maxPrice`, `onOffer`, `newArrivals`, `inStock`, `sort`), and its
+answer already carries the facets an agent narrows from.
+
+**SEO**, above under *The URL, and search engines*. **Events (F-6)**, above
+under *Evidence of use*.
+
 ## Building it, in order
 
 | # | Increment | Size |
 |---|---|:-:|
 | F-0 | The desktop header: logo left, the departments' row (opening R-5.1's panel), *Ofertas* and *Novedades*; the phone's unchanged | S |
-| F-1 | The index: option and boolean attributes marked `IsFacet` as keywords, *on offer* projected from Pricing's promotions, *new* from `AvailableFrom`; a reindex | M |
+| F-1 | The index: option and boolean attributes marked `IsFacet` as keywords, and a mapping version, so a changed mapping recreates and refills itself at startup instead of silently mapping a new field as text. *On offer* and *new* need no index change (above) | S |
 | F-2 | `SearchProducts`: filter parameters and facets with disjunctive counts, over browse and over hybrid search (the union), the "splits the results" rule; contract and ES tests | L |
-| F-3 | One listing for search and category pages: the column with brand at scale, swatches, size grid, price, the chips, the sort, the count, the URL; folding remembered | L |
-| F-4 | The phone's sheet; accessibility; e2e | M |
-| F-5 | WebMCP `apply_filter` and MCP `search_products` filters | S |
-| F-6 | The events, in the tracking plan | S |
+| F-3 | One listing for search and category pages: the column with brand at scale, swatches, size grid, price, the chips, the sort, the count, the URL; folding remembered | L ✓ |
+| F-4 | The phone's sheet; accessibility; e2e | M ✓ |
+| F-5 | WebMCP `apply_filter` and MCP `search_products` filters | S ✓ |
+| F-6 | The events, in the tracking plan | S ✓ |
 
 Search results are no longer a later version: they are the primary surface, as
 on Amazon, and they arrive with the first build.
