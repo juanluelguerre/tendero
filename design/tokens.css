@@ -30,9 +30,11 @@
      chosen for contrast and read as greys at 11px beside grey labels, where the
      dark theme's steps stood out (the author, the redesign's second
      walkthrough). These are the most saturated that keep 4.5:1 on all three
-     light surfaces — 5.25 / 4.65 / 4.99 on stone-0 / 100 / 50. The backoffice
-     uses them for its states in the light theme; the storefront keeps its own. */
-  --green-600: #3D7A1F;   /* passing, in stock, up — text */
+     light surfaces and on the tint an active row sits on (stone-0 / 100 / 50,
+     clay-50) — the backoffice's accessibility ratchet found the tint when the
+     first amber missed it by 0.02. The backoffice uses them for its states in
+     the light theme; the storefront keeps its own. */
+  --green-600: #3D7A1F;   /* passing, in stock, up — text (5.25 / 4.65 / 4.99 / 4.62) */
 
   --stone-0:   #FFFFFF;   /* cards, inputs, app surfaces */
   --stone-50:  #FAF9F7;   /* raised rows */
@@ -47,10 +49,10 @@
 
   --amber-500: #C77F14;   /* fills and decoration only */
   --amber-700: #8F5C0E;   /* needs review, pending — dark accents */
-  --amber-600: #A85A00;   /* needs review, pending — text (5.09 / 4.51 / 4.84) */
+  --amber-600: #A05600;   /* needs review, pending — text (5.49 / 4.87 / 5.22 / 4.83) */
   --amber-50:  #FBF1DE;
   --red-600:   #B3261E;   /* destructive, failed — fills */
-  --red-550:   #CC2A1F;   /* destructive, failed — text (5.36 / 4.75 / 5.09) */
+  --red-550:   #CC2A1F;   /* destructive, failed — text (5.36 / 4.75 / 5.09 / 4.72) */
   --red-50:    #FBEAE9;
 
   /* ---------- Semantic aliases (use these in components) ---------- */
