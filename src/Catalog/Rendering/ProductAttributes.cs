@@ -10,7 +10,7 @@ namespace ElGuerre.Tendero.Catalog.Rendering;
 public sealed record ProductAttributeView(
     string Code,
     string Label,
-    string Kind,
+    AttributeKind Kind,
     string? Value,
     decimal? Number,
     string? Unit,
@@ -31,7 +31,7 @@ public static class ProductAttributes
             // is not the filtering one, and a renderer that threw on a null
             // definition would be a worse shape.
             definition?.Label.In(culture) ?? value.Code,
-            value.Kind.ToString().ToLowerInvariant(),
+            value.Kind,
             value.Kind is AttributeKind.Number or AttributeKind.Boolean
                 ? null
                 : value.RenderIn(culture, definition),

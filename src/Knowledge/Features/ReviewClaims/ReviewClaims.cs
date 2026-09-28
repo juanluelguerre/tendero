@@ -1,9 +1,9 @@
 using System.Diagnostics.Metrics;
-using System.Text.Json;
 using Carter;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -13,8 +13,34 @@ namespace ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
 
 // ---------- The queue ----------
 
-/// <summary>The claims waiting for a person, the weakest-supported first (ADR 0018, 5).</summary>
-public sealed record ListClaimsForReviewQuery(int Limit = 100) : IQuery<IReadOnlyList<ClaimForReview>>;
+/// <summary>
+/// The claims waiting for a person, the weakest-supported first (ADR 0018, 5), a
+/// page at a time (R-7.2). It stopped at a hundred without saying so, and a queue
+/// that hides its hundred-and-first claim is a queue that looks finished.
+/// </summary>
+public sealed record ListClaimsForReviewQuery(
+    ClaimSupportFilter Support = ClaimSupportFilter.All, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize)
+    : IQuery<ClaimsForReviewPage>;
+
+/// <summary>How many waiting claims one support filter shows.</summary>
+public sealed record ClaimSupportCount(ClaimSupportFilter Support, int Count);
+
+/// <param name="Total">How many the support filter matched: the queue's length, not the page's.</param>
+/// <param name="Counts">Every filter, zero included, over the whole queue
+/// whichever is shown: the weak count is the server's rule, and a count the
+/// screen took from one page would be the page's.</param>
+public sealed record ClaimsForReviewPage(
+    IReadOnlyList<ClaimForReview> Items, int Total, int Page, int PageSize, IReadOnlyList<ClaimSupportCount> Counts);
+
+public sealed class ListClaimsForReviewValidator : AbstractValidator<ListClaimsForReviewQuery>
+{
+    public ListClaimsForReviewValidator()
+    {
+        RuleFor(query => query.Support).IsInEnum();
+        RuleFor(query => query.Page).IsAPage();
+        RuleFor(query => query.PageSize).IsAPageSize();
+    }
+}
 
 /// <summary>
 /// One claim as the reviewer reads it: what it says, in both languages, what it
@@ -32,19 +58,23 @@ public sealed record ClaimForReview(
     IReadOnlyList<QuoteForReview> Quotes,
     string Extractor,
     string? Model,
-    DateTimeOffset ProposedAt);
+    DateTimeOffset ProposedAt,
+    /// <summary>Whether its support is under the line a person is for — the
+    /// server's rule (`ProductClaim.WeakSupport`), sent so the screen marks it
+    /// without keeping a copy of 0.8 (R-7.2).</summary>
+    bool IsWeak);
 
 public sealed record QuoteForReview(string Culture, string Text, int Start, int End, double Support);
 
 public sealed class ListClaimsForReviewHandler(IKnowledgeRepository knowledge)
-    : IQueryHandler<ListClaimsForReviewQuery, IReadOnlyList<ClaimForReview>>
+    : IQueryHandler<ListClaimsForReviewQuery, ClaimsForReviewPage>
 {
-    public async Task<IReadOnlyList<ClaimForReview>> HandleAsync(ListClaimsForReviewQuery query, CancellationToken cancellationToken)
+    public async Task<ClaimsForReviewPage> HandleAsync(ListClaimsForReviewQuery query, CancellationToken cancellationToken)
     {
-        var claims = await knowledge.ClaimsAsync(ClaimStatus.Proposed, Math.Clamp(query.Limit, 1, 500), cancellationToken);
-        var result = new List<ClaimForReview>(claims.Count);
+        var page = await knowledge.ClaimsAsync(ClaimStatus.Proposed, query.Support, query.Page, query.PageSize, cancellationToken);
+        var result = new List<ClaimForReview>(page.Claims.Count);
 
-        foreach (var claim in claims)
+        foreach (var claim in page.Claims)
         {
             var quotes = new List<QuoteForReview>();
             foreach (var evidence in claim.Evidence)
@@ -58,10 +88,14 @@ public sealed class ListClaimsForReviewHandler(IKnowledgeRepository knowledge)
                 claim.Id.ToString(), claim.ProductId.ToString(),
                 claim.Statement.In("es"), claim.Statement.In("en"),
                 claim.AttributeCode, claim.Value, claim.Support, quotes,
-                claim.Provenance.Extractor, claim.Provenance.ModelId, claim.CreatedAt));
+                claim.Provenance.Extractor, claim.Provenance.ModelId, claim.CreatedAt,
+                claim.IsWeaklySupported));
         }
 
-        return result;
+        return new ClaimsForReviewPage(
+            result, page.Total, query.Page, query.PageSize,
+            [.. Enum.GetValues<ClaimSupportFilter>().Select(filter =>
+                new ClaimSupportCount(filter, page.CountBySupport.GetValueOrDefault(filter)))]);
     }
 }
 
@@ -152,7 +186,7 @@ internal static class ClaimsReviewed
 
 // ---------- The wire ----------
 
-public sealed record ReviewClaimResponse(string ClaimId, string Outcome);
+public sealed record ReviewClaimResponse(string ClaimId, ReviewOutcome Outcome);
 
 public sealed record ReviewClaimConflict(string Title, string Detail);
 
@@ -160,10 +194,14 @@ public sealed class ReviewClaimsEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // GET /api/knowledge/claims — the review queue, weakest support first.
+        // GET /api/knowledge/claims?support=Weak&page=1&pageSize=20 — the review
+        // queue, weakest support first. Every claim unless `support` says Weak:
+        // which one a screen opens on is the screen's choice.
         app.MapGet("/api/knowledge/claims",
-            async Task<Ok<IReadOnlyList<ClaimForReview>>> (int? limit, IQueryDispatcher dispatcher, CancellationToken ct) =>
-                TypedResults.Ok(await dispatcher.SendAsync(new ListClaimsForReviewQuery(limit ?? 100), ct)))
+            async Task<Ok<ClaimsForReviewPage>> (
+                   ClaimSupportFilter? support, int? page, int? pageSize, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new ListClaimsForReviewQuery(
+                    support ?? ClaimSupportFilter.All, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct)))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Knowledge")
             .WithName("ListClaimsForReview");
@@ -193,7 +231,7 @@ public sealed class ReviewClaimsEndpoints : ICarterModule
                 "The claim is not waiting for review.",
                 "It was already decided, or its description changed and a newer claim replaced it.")),
             _ => TypedResults.Ok(new ReviewClaimResponse(
-                result.ClaimId.ToString(), JsonNamingPolicy.CamelCase.ConvertName(result.Outcome.ToString()))),
+                result.ClaimId.ToString(), result.Outcome)),
         };
     }
 }

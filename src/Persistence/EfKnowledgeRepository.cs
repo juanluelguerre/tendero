@@ -50,17 +50,39 @@ internal sealed class EfKnowledgeRepository(TenderoDbContext context) : IKnowled
         context.Claims.FirstOrDefaultAsync(claim => claim.Id == id, cancellationToken);
 
     /// <summary>
-    /// The weakest first. Support lives in the evidence's jsonb, so the order is
-    /// taken here over a status's claims — a review queue, never a catalogue.
+    /// The weakest first, paged and counted in Postgres. Support lives in the
+    /// evidence's jsonb, and a claim's support is its weakest quote's, so the
+    /// order is the minimum over that array and "weak" is any quote under the
+    /// line — the same rule as <see cref="ProductClaim.IsWeaklySupported"/>,
+    /// said the way SQL can, and held to it by the integration test.
     /// </summary>
-    public async Task<IReadOnlyList<ProductClaim>> ClaimsAsync(ClaimStatus status, int limit, CancellationToken cancellationToken = default)
+    public async Task<ClaimPage> ClaimsAsync(
+        ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var claims = await context.Claims.AsNoTracking()
-            .Where(claim => claim.Status == status)
+        var claims = context.Claims.AsNoTracking().Where(claim => claim.Status == status);
+        var weak = claims.Where(claim => EF.Property<List<Evidence>>(claim, EvidenceColumn)
+            .Any(item => item.Support < ProductClaim.WeakSupport));
+
+        var counts = new Dictionary<ClaimSupportFilter, int>
+        {
+            [ClaimSupportFilter.Weak] = await weak.CountAsync(cancellationToken),
+            [ClaimSupportFilter.All] = await claims.CountAsync(cancellationToken),
+        };
+
+        var shown = support == ClaimSupportFilter.Weak ? weak : claims;
+        var items = await shown
+            .OrderBy(claim => EF.Property<List<Evidence>>(claim, EvidenceColumn).Min(item => item.Support))
+            .ThenBy(claim => claim.CreatedAt)
+            .ThenBy(claim => claim.Id)   // a stable tie-break, or two pages repeat a claim
+            .Skip(Paging.Offset(page, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
-        return [.. claims.OrderBy(claim => claim.Support).ThenBy(claim => claim.CreatedAt).Take(limit)];
+        return new ClaimPage(items, counts[support], counts);
     }
+
+    /// <summary>The field the evidence is mapped through (<c>ProductClaimConfiguration</c>).</summary>
+    private const string EvidenceColumn = "evidence";
 
     public void Add(SourceDocument document) => context.SourceDocuments.Add(document);
 

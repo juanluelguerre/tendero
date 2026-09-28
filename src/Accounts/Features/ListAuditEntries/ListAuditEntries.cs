@@ -25,7 +25,8 @@ namespace ElGuerre.Tendero.Accounts.Features.ListAuditEntries;
 /// own — a retention policy, an export — that is the moment it earns a context,
 /// and moving one file is the whole cost of having been wrong.
 /// </summary>
-public sealed record ListAuditEntriesQuery(string? Outcome, int Take)
+public sealed record ListAuditEntriesQuery(
+    string? Outcome, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize)
     : IQuery<ListAuditEntriesResult>;
 
 public sealed record AuditEntryView(
@@ -38,27 +39,38 @@ public sealed record AuditEntryView(
     string? Subject,
     /// <summary>What that subject was called when this happened.</summary>
     string? ActorName,
-    string Outcome,
+    AuditOutcome Outcome,
     string? Reason,
     string? TraceId,
     DateTimeOffset At);
 
-public sealed record ListAuditEntriesResult(IReadOnlyList<AuditEntryView> Entries, int Refused);
+/// <summary>How many entries of the log have one outcome.</summary>
+public sealed record AuditOutcomeCount(AuditOutcome Outcome, int Count);
+
+/// <param name="Total">How many entries the outcome filter matched: the log's, not the page's (R-7.2).</param>
+/// <param name="Counts">Every outcome, zero included, whichever one is shown:
+/// a chip keeps its number and its width when another is chosen.</param>
+/// <remarks>There used to be a `Refused` number beside these. Nothing read it
+/// once the heading stopped counting refusals (R-4.4), and it is the counts'
+/// Denied and Failed added up: one number in two fields is two numbers that can
+/// disagree, so it went with R-7.2.</remarks>
+public sealed record ListAuditEntriesResult(
+    IReadOnlyList<AuditEntryView> Entries, int Total, int Page, int PageSize, IReadOnlyList<AuditOutcomeCount> Counts);
 
 public sealed class ListAuditEntriesValidator : AbstractValidator<ListAuditEntriesQuery>
 {
-    /// <summary>A screen, not an export. An audit log that could be pulled a
-    /// hundred thousand rows at a time through a browser is an exfiltration
-    /// endpoint with a table in front of it.</summary>
-    private const int MaximumTake = 200;
-
     public ListAuditEntriesValidator()
     {
         RuleFor(query => query.Outcome)
             .Must(outcome => outcome is null || Enum.TryParse<AuditOutcome>(outcome, ignoreCase: true, out _))
             .WithMessage("Outcome must be one of: allowed, denied, failed.");
 
-        RuleFor(query => query.Take).InclusiveBetween(1, MaximumTake);
+        // A screen, not an export: the shared ceiling is the one this log had
+        // reason to want. An audit log that could be pulled a hundred thousand
+        // rows at a time through a browser is an exfiltration endpoint with a
+        // table in front of it.
+        RuleFor(query => query.Page).IsAPage();
+        RuleFor(query => query.PageSize).IsAPageSize();
     }
 }
 
@@ -66,13 +78,13 @@ public sealed class ListAuditEntriesEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // GET /api/audit?outcome=denied&take=50
+        // GET /api/audit?outcome=denied&page=1&pageSize=20
         app.MapGet("/api/audit",
             async Task<Ok<ListAuditEntriesResult>> (
-                   string? outcome, int? take,
+                   string? outcome, int? page, int? pageSize,
                    IQueryDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(
-                    new ListAuditEntriesQuery(outcome, take ?? 50), ct)))
+                    new ListAuditEntriesQuery(outcome, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct)))
             // The audit log names customers, agents and subjects, and quotes the
             // payload of every command. It is the single most sensitive read in
             // the system and it is behind the shopkeeper policy for that reason
@@ -98,16 +110,21 @@ public sealed class ListAuditEntriesHandler(IAuditReader audit)
             ? (AuditOutcome?)null
             : Enum.Parse<AuditOutcome>(query.Outcome, ignoreCase: true);
 
-        var entries = await audit.RecentAsync(outcome, query.Take, cancellationToken);
+        var page = await audit.PageAsync(outcome, query.Page, query.PageSize, cancellationToken);
 
-        activity?.SetTag("audit.returned", entries.Count);
+        activity?.SetTag("audit.returned", page.Entries.Count);
+        activity?.SetTag("audit.total", page.Total);
+
+        var counts = Enum.GetValues<AuditOutcome>()
+            .Select(each => new AuditOutcomeCount(each, page.CountByOutcome.GetValueOrDefault(each)))
+            .ToList();
 
         return new ListAuditEntriesResult(
-            [.. entries.Select(View)],
-            // What the screen leads with. A count of refusals in the page is the
-            // number a shopkeeper is actually looking for, and computing it here
-            // saves the client from filtering a list it was given filtered.
-            entries.Count(entry => entry.Outcome != AuditOutcome.Allowed));
+            [.. page.Entries.Select(View)],
+            page.Total,
+            query.Page,
+            query.PageSize,
+            counts);
     }
 
     private static AuditEntryView View(AuditEntry entry) =>
@@ -120,7 +137,7 @@ public sealed class ListAuditEntriesHandler(IAuditReader audit)
             entry.Agent?.Value,
             entry.Subject,
             entry.ActorName,
-            entry.Outcome.ToString().ToLowerInvariant(),
+            entry.Outcome,
             entry.Reason,
             entry.TraceId,
             entry.At);

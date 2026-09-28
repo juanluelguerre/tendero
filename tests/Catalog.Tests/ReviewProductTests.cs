@@ -30,7 +30,7 @@ public sealed class ReviewProductTests
         var review = await Handler(draft).HandleAsync(new ReviewProductQuery(draft.Code, "en"), TestContext.Current.CancellationToken);
 
         Assert.NotNull(review);
-        Assert.Equal("draft", review.Status);
+        Assert.Equal(ProductStatus.Draft, review.Status);
         Assert.Equal(new Dictionary<string, string> { ["es"] = "Camiseta técnica" }, review.Names);
         // No English description falls back to the Spanish one: the gap is what the review is for.
         Assert.False(review.Descriptions.ContainsKey("en"));

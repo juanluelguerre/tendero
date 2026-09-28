@@ -80,6 +80,63 @@ public sealed class OpenApiDocumentTests
         Assert.All(paths, path => Assert.StartsWith("/api/", path, StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// The names a closed set goes by in this API. A field called one of them is
+    /// declared as an <c>enum</c>, not as a bare string (ADR 0043): a suspended
+    /// agent showed as active for as long as the document said <c>string</c>,
+    /// because the generated type let a template compare with a value the API
+    /// never sent.
+    /// </summary>
+    private static readonly string[] ClosedSetNames =
+        ["status", "kind", "mode", "outcome", "trust", "decision", "move", "change", "combination", "period"];
+
+    /// <summary>The fields with such a name that are open by design, and why.</summary>
+    private static readonly Dictionary<string, string> OpenByDesign = new()
+    {
+        ["OrderMandateSummary.kind"] = "an AP2 credential's type (its vct), which the protocol leaves open",
+        ["OfferView.kind"] = "a promotion effect's kind, declared by each effect rather than by an enum",
+    };
+
+    [Fact]
+    public async Task Every_closed_set_is_declared_as_one()
+    {
+        var document = await FetchDocumentAsync(TestContext.Current.CancellationToken);
+        var schemas = document?["components"]?["schemas"]?.AsObject() ?? [];
+
+        var bare = schemas
+            .SelectMany(schema => (schema.Value?["properties"]?.AsObject() ?? [])
+                .Select(property => (Name: $"{schema.Key}.{property.Key}", Field: property.Key, Shape: property.Value)))
+            .Where(property => ClosedSetNames.Contains(property.Field, StringComparer.Ordinal)
+                && !OpenByDesign.ContainsKey(property.Name)
+                && IsBareString(property.Shape))
+            .Select(property => property.Name)
+            .ToArray();
+
+        Assert.True(bare.Length == 0,
+            $"""
+             These fields are named like a closed set and published as a bare string:
+                 {string.Join(Environment.NewLine + "    ", bare)}
+
+             Type the record's property as its enum and let the API's converter
+             spell it (ADR 0043). If one is open on purpose, add it to
+             {nameof(OpenByDesign)} with the reason.
+             """);
+    }
+
+    /// <summary>A string with nothing declaring its values: no enum, no reference to one.</summary>
+    private static bool IsBareString(JsonNode? shape)
+    {
+        if (shape is null || shape["$ref"] is not null || shape["enum"] is not null)
+            return false;
+
+        return shape["type"] switch
+        {
+            JsonValue single => single.GetValue<string>() == "string",
+            JsonArray union => union.Any(type => type?.GetValue<string>() == "string"),
+            _ => false,
+        };
+    }
+
     private static async Task<JsonNode?> FetchDocumentAsync(CancellationToken ct)
     {
         using var factory = new TenderoApiFactory();

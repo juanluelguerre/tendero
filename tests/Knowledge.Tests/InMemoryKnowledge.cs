@@ -41,9 +41,25 @@ public sealed class InMemoryKnowledge : IKnowledgeRepository, IUnitOfWork
     public Task<ProductClaim?> FindClaimAsync(ClaimId id, CancellationToken cancellationToken = default) =>
         Task.FromResult(Claims.FirstOrDefault(claim => claim.Id == id));
 
-    public Task<IReadOnlyList<ProductClaim>> ClaimsAsync(ClaimStatus status, int limit, CancellationToken cancellationToken = default) =>
-        Task.FromResult<IReadOnlyList<ProductClaim>>(
-            [.. Claims.Where(claim => claim.Status == status).OrderBy(claim => claim.Support).ThenBy(claim => claim.CreatedAt).Take(limit)]);
+    public Task<ClaimPage> ClaimsAsync(
+        ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var inStatus = Claims.Where(claim => claim.Status == status).ToList();
+        var counts = new Dictionary<ClaimSupportFilter, int>
+        {
+            [ClaimSupportFilter.Weak] = inStatus.Count(claim => claim.IsWeaklySupported),
+            [ClaimSupportFilter.All] = inStatus.Count,
+        };
+
+        var shown = support == ClaimSupportFilter.Weak ? inStatus.Where(claim => claim.IsWeaklySupported) : inStatus;
+        return Task.FromResult(new ClaimPage(
+            [
+                .. shown.OrderBy(claim => claim.Support).ThenBy(claim => claim.CreatedAt).ThenBy(claim => claim.Id.Value)
+                    .Skip(Paging.Offset(page, pageSize)).Take(pageSize),
+            ],
+            counts[support],
+            counts));
+    }
 
     public void Add(SourceDocument document) => Documents.Add(document);
 

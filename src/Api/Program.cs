@@ -109,6 +109,13 @@ builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators())
 builder.Services.AddOpenApi(options =>
     options.AddSchemaTransformer<NumbersAreNumbersTransformer>());
 
+// A closed set travels as its C# name and nothing else (ADR 0043): one converter
+// for the whole API, so a slice passes the enum and never spells it, and the
+// document declares every set, so the frontends' types are unions the compiler
+// holds. Integers are refused, so a position in an enum is never the contract.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(WireJson.Enums()));
+
 // The read-only MCP server, in this process and in its own assembly. Same
 // process so the tools reuse the container that is already built; separate
 // assembly so an architecture rule has something to point at when it says this

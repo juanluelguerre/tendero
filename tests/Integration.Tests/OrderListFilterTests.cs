@@ -84,6 +84,63 @@ public sealed class OrderListFilterTests(PostgresFixture postgres)
         Assert.Empty((await reader.ListAsync(new OrderListQuery(null, "ana%ruiz"), ct)).Orders);
     }
 
+    /// <summary>
+    /// The list pages (R-7.2), and only Postgres can say whether its order is
+    /// stable: five orders placed in the same instant tie on their time, and the
+    /// id is what keeps page two from repeating or skipping one of them. The
+    /// newest, placed a minute later, still comes first.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task Page_two_continues_page_one_through_orders_placed_in_the_same_instant()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("order_list_paging");
+        await using (var context = factory.Create())
+            await context.Database.MigrateAsync(ct);
+
+        var clock = new TestClock();
+        var tied = Enumerable.Range(0, 5)
+            .Select(i => OrderBuilder.Default().At(clock).WithIdempotencyKey($"list-paging-{i}").Build())
+            .ToList();
+        foreach (var order in tied.Take(3))
+        {
+            order.AuthorizePayment(clock, new OrderPayment("fake", $"auth-{order.Id}", null));
+            order.CapturePayment(clock, $"capture-{order.Id}");
+            order.Confirm(clock);
+        }
+
+        clock.Advance(TimeSpan.FromMinutes(1));
+        var newest = OrderBuilder.Default().At(clock).WithIdempotencyKey("list-paging-newest").Build();
+
+        await using (var context = factory.Create())
+        {
+            context.Orders.AddRange([.. tied, newest]);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var services = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString).BuildServiceProvider();
+        await using var scope = services.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IOrderReader>();
+
+        var pages = new List<OrderList>();
+        for (var page = 1; page <= 3; page++)
+            pages.Add(await reader.ListAsync(new OrderListQuery(null, null, page, 2), ct));
+
+        // Newest first, then the tie in the id's order: Postgres orders a uuid by
+        // its bytes, which is the order of its lower-case text.
+        OrderId[] expected = [newest.Id, .. tied.Select(order => order.Id).OrderBy(id => id.ToString(), StringComparer.Ordinal)];
+        Assert.Equal(expected, pages.SelectMany(page => page.Orders).Select(order => order.Id));
+        Assert.All(pages, page => Assert.Equal(6, page.Total));
+
+        // The total is the status's, not the page's: three confirmed, one on page two.
+        var confirmed = await reader.ListAsync(new OrderListQuery(OrderStatus.Confirmed, null, 2, 2), ct);
+        Assert.Single(confirmed.Orders);
+        Assert.Equal(3, confirmed.Total);
+        Assert.Empty((await reader.ListAsync(new OrderListQuery(null, null, 4, 2), ct)).Orders);
+    }
+
     private static Order Placed(string recipient, string city, string key, bool confirm)
     {
         var order = OrderBuilder.Default()

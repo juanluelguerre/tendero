@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Text.Json;
 using Carter;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
@@ -30,7 +29,8 @@ public enum WithdrawOutcome
     NotFound
 }
 
-public sealed record WithdrawProductResult(WithdrawOutcome Outcome, ProductId ProductId, string Status)
+/// <param name="Status">Where the product stands after the command; null when there is no product.</param>
+public sealed record WithdrawProductResult(WithdrawOutcome Outcome, ProductId ProductId, ProductStatus? Status)
     : IAuditedResult
 {
     /// <summary>Withdrawing what is already a draft is idempotence, as publishing
@@ -46,7 +46,7 @@ public sealed record WithdrawProductResult(WithdrawOutcome Outcome, ProductId Pr
 }
 
 /// <summary>The wire's shape: a flat id and a named outcome, as PublishProductResponse.</summary>
-public sealed record WithdrawProductResponse(string ProductId, string Outcome, string Status);
+public sealed record WithdrawProductResponse(string ProductId, WithdrawOutcome Outcome, ProductStatus Status);
 
 public sealed record WithdrawProductConflict(string Title, string Detail);
 
@@ -77,10 +77,11 @@ public sealed class WithdrawProductEndpoint : ICarterModule
                     WithdrawOutcome.Archived => TypedResults.Conflict(new WithdrawProductConflict(
                         "The product is archived.",
                         "Archived products are already out of the catalogue.")),
+                    // Past the two refusals there is always a product, so a status.
                     _ => TypedResults.Ok(new WithdrawProductResponse(
                         result.ProductId.Value.ToString(),
-                        JsonNamingPolicy.CamelCase.ConvertName(result.Outcome.ToString()),
-                        result.Status))
+                        result.Outcome,
+                        result.Status!.Value))
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
@@ -107,7 +108,7 @@ public sealed class WithdrawProductHandler(
         var product = await repository.FindByIdAsync(command.ProductId, cancellationToken);
 
         if (product is null)
-            return Outcome(WithdrawOutcome.NotFound, command.ProductId, "unknown", activity);
+            return Outcome(WithdrawOutcome.NotFound, command.ProductId, null, activity);
 
         if (product.Status == ProductStatus.Archived)
             return Outcome(WithdrawOutcome.Archived, product.Id, product.Status, activity);
@@ -125,11 +126,7 @@ public sealed class WithdrawProductHandler(
     }
 
     private static WithdrawProductResult Outcome(
-        WithdrawOutcome outcome, ProductId id, ProductStatus status, Activity? activity) =>
-        Outcome(outcome, id, status.ToString().ToLowerInvariant(), activity);
-
-    private static WithdrawProductResult Outcome(
-        WithdrawOutcome outcome, ProductId id, string status, Activity? activity)
+        WithdrawOutcome outcome, ProductId id, ProductStatus? status, Activity? activity)
     {
         activity?.SetTag("catalog.withdraw_outcome", outcome.ToString());
         return new WithdrawProductResult(outcome, id, status);

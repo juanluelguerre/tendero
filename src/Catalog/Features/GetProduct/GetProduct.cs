@@ -85,7 +85,7 @@ public sealed record ProductDetail(
     string PriceCurrency,
     IReadOnlyList<AlternateSlug> Alternates,
     IReadOnlyList<string> MissingCultures,
-    string Status,
+    ProductStatus Status,
     DateTimeOffset UpdatedAt);
 
 public sealed class GetProductValidator : AbstractValidator<GetProductQuery>
@@ -243,7 +243,7 @@ public sealed class GetProductHandler(
                 .Select(pair => new AlternateSlug(pair.Key, pair.Value))
                 .OrderBy(alternate => alternate.Culture, StringComparer.Ordinal)],
             [.. Cultures.Where(culture => !product.Name.Cultures.Contains(culture))],
-            product.Status.ToString().ToLowerInvariant(),
+            product.Status,
             product.UpdatedAt);
     }
 

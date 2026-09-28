@@ -43,6 +43,7 @@
 | [0040](0040-a-mandate-is-verified-against-terms-the-shop-signed.md) | A checkout mandate is verified against terms the shop itself signed | accepted |
 | [0041](0041-staff-usage-is-measured-under-a-notice-not-consent.md) | Staff usage is measured under a notice, not by consent | accepted |
 | [0042](0042-work-is-done-beside-the-list.md) | Work is done beside the list; what can be undone offers Undo, what cannot asks first | proposed |
+| [0043](0043-a-closed-set-is-declared-in-the-contract.md) | A closed set is declared in the contract, spelled as its C# name | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

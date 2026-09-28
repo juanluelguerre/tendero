@@ -38,7 +38,7 @@ public sealed class AgentDenialFiguresTests
             Denied("other", "mandate_expired: payment", 5),
         ]);
 
-        Assert.Equal(("day", 3), (summary.Period, summary.Total));
+        Assert.Equal((DashboardPeriod.Day, 3), (summary.Period, summary.Total));
         Assert.Equal([new DenialCount("order_over_trust_cap", 2), new DenialCount("mandate_expired", 1)], summary.ByReason);
         Assert.Equal([new AgentDenialCount("claude-desktop", 2), new AgentDenialCount("other", 1)], summary.ByAgent);
         Assert.Equal(("other", "CompleteCheckoutSession", "mandate_expired"), (summary.Recent[0].AgentId, summary.Recent[0].Command, summary.Recent[0].Reason));

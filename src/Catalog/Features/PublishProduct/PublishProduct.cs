@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Text.Json;
 using Carter;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
@@ -33,7 +32,8 @@ public enum PublishOutcome
     NotFound
 }
 
-public sealed record PublishProductResult(PublishOutcome Outcome, ProductId ProductId, string Status)
+/// <param name="Status">Where the product stands after the command; null when there is no product.</param>
+public sealed record PublishProductResult(PublishOutcome Outcome, ProductId ProductId, ProductStatus? Status)
     : IAuditedResult
 {
     /// <summary>Publishing what is already published is not a refusal — it is
@@ -56,10 +56,12 @@ public sealed record PublishProductResult(PublishOutcome Outcome, ProductId Prod
 /// <c>{"value":"…"}</c>, while the search endpoint returns the flat id. Two
 /// shapes of the same id in one API is a trap for whoever consumes it.
 ///
-/// And the enum comes out as a number: <c>"outcome":1</c> tells an agent nothing
-/// and breaks the moment somebody reorders the members.
+/// And the outcome and the status are enums, written by their member names
+/// (<c>"AlreadyActive"</c>) by the API's one converter (ADR 0043) — never the
+/// number, which tells an agent nothing and breaks the moment somebody reorders
+/// the members.
 /// </summary>
-public sealed record PublishProductResponse(string ProductId, string Outcome, string Status);
+public sealed record PublishProductResponse(string ProductId, PublishOutcome Outcome, ProductStatus Status);
 
 /// <summary>
 /// The 409's body. It used to be an anonymous object, which produces the same
@@ -102,13 +104,11 @@ public sealed class PublishProductEndpoint : ICarterModule
                     PublishOutcome.Archived => TypedResults.Conflict(new PublishProductConflict(
                         "The product is archived.",
                         "Archived products stay out of the catalogue. Restore it before publishing.")),
-                    // camelCase, not ToLowerInvariant: "alreadyactive" loses the
-                    // word boundary, and the payload's properties already travel
-                    // in camelCase, so the value follows the same convention.
+                    // Past the two refusals there is always a product, so a status.
                     _ => TypedResults.Ok(new PublishProductResponse(
                         result.ProductId.Value.ToString(),
-                        JsonNamingPolicy.CamelCase.ConvertName(result.Outcome.ToString()),
-                        result.Status))
+                        result.Outcome,
+                        result.Status!.Value))
                 };
             })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
@@ -135,7 +135,7 @@ public sealed class PublishProductHandler(
         var product = await repository.FindByIdAsync(command.ProductId, cancellationToken);
 
         if (product is null)
-            return Outcome(PublishOutcome.NotFound, command.ProductId, "unknown", activity);
+            return Outcome(PublishOutcome.NotFound, command.ProductId, null, activity);
 
         if (product.Status == ProductStatus.Archived)
             return Outcome(PublishOutcome.Archived, product.Id, product.Status, activity);
@@ -155,11 +155,7 @@ public sealed class PublishProductHandler(
     }
 
     private static PublishProductResult Outcome(
-        PublishOutcome outcome, ProductId id, ProductStatus status, Activity? activity) =>
-        Outcome(outcome, id, status.ToString().ToLowerInvariant(), activity);
-
-    private static PublishProductResult Outcome(
-        PublishOutcome outcome, ProductId id, string status, Activity? activity)
+        PublishOutcome outcome, ProductId id, ProductStatus? status, Activity? activity)
     {
         activity?.SetTag("catalog.publish_outcome", outcome.ToString());
         return new PublishProductResult(outcome, id, status);

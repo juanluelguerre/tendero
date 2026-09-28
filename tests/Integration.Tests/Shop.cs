@@ -190,7 +190,7 @@ internal sealed class Shop : IAsyncDisposable
 
         return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
             .SendAsync(new RequestReturnCommand(
-                orderId, [new ReturnLineRequest(sku, quantity, nameof(ReturnReason.WrongSize), null)], "es"), ct);
+                orderId, [new ReturnLineRequest(sku, quantity, ReturnReason.WrongSize, null)], "es"), ct);
     }
 
     /// <summary>A return opened against what its own scope read, and not yet

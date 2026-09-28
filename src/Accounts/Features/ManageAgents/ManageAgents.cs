@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.Json;
 using Carter;
 using ElGuerre.Tendero.Accounts.Domain;
 using ElGuerre.Tendero.Accounts.Ports;
@@ -20,14 +19,12 @@ namespace ElGuerre.Tendero.Accounts.Features.ManageAgents;
 
 public sealed record ListAgentsQuery : IQuery<IReadOnlyList<AgentView>>;
 
-/// <param name="Trust">untrusted | known | verified, as a label.</param>
-/// <param name="Status">active | suspended.</param>
 public sealed record AgentView(
     string AgentId,
     string DisplayName,
     string Operator,
-    string Trust,
-    string Status,
+    AgentTrust Trust,
+    AgentStatus Status,
     string? SuspensionReason,
     DateTimeOffset RegisteredAt,
     DateTimeOffset UpdatedAt)
@@ -36,8 +33,8 @@ public sealed record AgentView(
         agent.Id.Value,
         agent.DisplayName,
         agent.Operator,
-        MetricLabels.Of(agent.Trust),
-        MetricLabels.Of(agent.Status),
+        agent.Trust,
+        agent.Status,
         agent.SuspensionReason,
         agent.RegisteredAt,
         agent.UpdatedAt);
@@ -166,13 +163,15 @@ public sealed class ManageAgentsHandler(IAgentRepository agents, IUnitOfWork uni
 
 // ---------- The wire ----------
 
-public sealed record RegisterAgentRequest(string AgentId, string DisplayName, string Operator, string Trust = "known");
+/// <param name="Trust">Known or Verified; Untrusted is what an unregistered agent is, and the validator refuses it.</param>
+public sealed record RegisterAgentRequest(string AgentId, string DisplayName, string Operator, AgentTrust Trust = AgentTrust.Known);
 
-public sealed record ChangeAgentTrustRequest(string Trust);
+/// <param name="Trust">Known or Verified; to stop trusting an agent, suspend it.</param>
+public sealed record ChangeAgentTrustRequest(AgentTrust Trust);
 
 public sealed record SuspendAgentRequest(string Reason);
 
-public sealed record AgentChangeResponse(string Change, AgentView Agent);
+public sealed record AgentChangeResponse(AgentChange Change, AgentView Agent);
 
 public sealed class ManageAgentsEndpoints : ICarterModule
 {
@@ -189,11 +188,8 @@ public sealed class ManageAgentsEndpoints : ICarterModule
         agents.MapPost("/", async Task<Results<Ok<AgentChangeResponse>, BadRequest<string>, Conflict<string>>> (
                 RegisterAgentRequest request, ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
-                if (!TryTrust(request.Trust, out var trust))
-                    return TypedResults.BadRequest($"Unknown trust '{request.Trust}'. Use known or verified.");
-
                 var result = await dispatcher.SendAsync(
-                    new RegisterAgentCommand(new AgentId(request.AgentId.Trim()), request.DisplayName, request.Operator, trust), ct);
+                    new RegisterAgentCommand(new AgentId(request.AgentId.Trim()), request.DisplayName, request.Operator, request.Trust), ct);
 
                 return result.Change == AgentChange.AlreadyRegistered
                     ? TypedResults.Conflict($"Agent '{request.AgentId}' is already registered.")
@@ -203,12 +199,7 @@ public sealed class ManageAgentsEndpoints : ICarterModule
 
         agents.MapPost("/{agentId}/trust", async Task<Results<Ok<AgentChangeResponse>, BadRequest<string>, NotFound>> (
                 string agentId, ChangeAgentTrustRequest request, ICommandDispatcher dispatcher, CancellationToken ct) =>
-            {
-                if (!TryTrust(request.Trust, out var trust))
-                    return TypedResults.BadRequest($"Unknown trust '{request.Trust}'. Use known or verified.");
-
-                return Found(await dispatcher.SendAsync(new ChangeAgentTrustCommand(new AgentId(agentId), trust), ct));
-            })
+                Found(await dispatcher.SendAsync(new ChangeAgentTrustCommand(new AgentId(agentId), request.Trust), ct)))
             .WithName("ChangeAgentTrust");
 
         agents.MapPost("/{agentId}/suspend", async Task<Results<Ok<AgentChangeResponse>, BadRequest<string>, NotFound>> (
@@ -222,12 +213,9 @@ public sealed class ManageAgentsEndpoints : ICarterModule
             .WithName("ReinstateAgent");
     }
 
-    private static bool TryTrust(string value, out AgentTrust trust) =>
-        Enum.TryParse(value, ignoreCase: true, out trust) && trust != AgentTrust.Untrusted && Enum.IsDefined(trust);
-
     private static Results<Ok<AgentChangeResponse>, BadRequest<string>, NotFound> Found(AgentResult result) =>
         result.Change == AgentChange.NotFound ? TypedResults.NotFound() : TypedResults.Ok(Answer(result));
 
     private static AgentChangeResponse Answer(AgentResult result) =>
-        new(JsonNamingPolicy.CamelCase.ConvertName(result.Change.ToString()), result.Agent!);
+        new(result.Change, result.Agent!);
 }

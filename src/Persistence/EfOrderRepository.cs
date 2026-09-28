@@ -32,14 +32,12 @@ internal sealed class EfAgentActivity(TenderoDbContext context) : IAgentActivity
         context.Orders.CountAsync(order => order.PlacedBy == agent && order.CreatedAt >= since, cancellationToken);
 }
 
-/// <summary>The read side. No tracking, newest first, capped.</summary>
+/// <summary>The read side. No tracking, newest first; the shopkeeper's list paged, a shopper's own capped.</summary>
 internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
 {
     /// <summary>
-    /// Enough to see what the shop has been doing without a page control that
-    /// nothing needs yet. The number is here rather than in configuration
-    /// because it is a laboratory-scale decision, and the standing backlog is
-    /// where scale work goes.
+    /// A shopper's own history, capped. The shopkeeper's list outgrew its cap and
+    /// pages (R-7.2); this one has not been asked to.
     /// </summary>
     private const int Recent = 50;
 
@@ -70,12 +68,20 @@ internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
             .ToDictionaryAsync(row => row.Status, row => row.Count, cancellationToken);
 
         var shown = query.Status is { } status ? matching.Where(order => order.Status == status) : matching;
+
+        // The counts already hold the total: the status's own, or all of them.
+        var total = query.Status is { } counted ? counts.GetValueOrDefault(counted) : counts.Values.Sum();
+
+        // Offset paging. Keyset paging (after this CreatedAt and id) is what
+        // holds up at scale; at laboratory scale it is deferred, not missing.
         var orders = await shown
             .OrderByDescending(order => order.CreatedAt)
-            .Take(Recent)
+            .ThenBy(order => order.Id)   // a stable tie-break, or two pages repeat an order
+            .Skip(Paging.Offset(query.Page, query.PageSize))
+            .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 
-        return new OrderList(orders, counts);
+        return new OrderList(orders, total, counts);
     }
 
     private const string LikeEscape = "\\";
@@ -95,6 +101,8 @@ internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
             .AsNoTracking()
             .Where(order => order.CustomerId == customer)
             .OrderByDescending(order => order.CreatedAt)
+            // Still stops at fifty: whether a shopper's history pages is the
+            // storefront's question, and R-7.2 answered the backoffice's.
             .Take(Recent)
             .ToListAsync(cancellationToken);
 }

@@ -18,7 +18,7 @@ namespace ElGuerre.Tendero.Ordering.Features.Returns;
 
 // ---------- Asking ----------
 
-public sealed record ReturnLineRequest(string Sku, int Quantity, string Reason, string? Comment);
+public sealed record ReturnLineRequest(string Sku, int Quantity, ReturnReason Reason, string? Comment);
 
 public sealed record RequestReturnRequest(IReadOnlyList<ReturnLineRequest> Lines);
 
@@ -35,8 +35,7 @@ public enum RequestReturnOutcome
     /// sentences, because a shopper needs to be told which.</summary>
     WindowClosed,
 
-    /// <summary>A SKU that is not on the order, more than was bought, or a
-    /// reason outside the closed set.</summary>
+    /// <summary>A SKU that is not on the order, or more than was bought.</summary>
     Refused
 }
 
@@ -61,12 +60,7 @@ public sealed class RequestReturnValidator : AbstractValidator<RequestReturnComm
         RuleFor(command => command.Lines)
             .NotEmpty().WithMessage("A return needs at least one line.")
             .Must(lines => lines.All(line => line.Quantity > 0))
-                .WithMessage("Quantities must be positive.")
-            .Must(lines => lines.All(line => Enum.TryParse<ReturnReason>(line.Reason, ignoreCase: true, out _)))
-                // The set is closed and the message says what it contains: a
-                // caller told only "invalid reason" has to guess, and an agent
-                // guesses badly.
-                .WithMessage($"A reason is one of {string.Join(", ", Enum.GetNames<ReturnReason>())}.");
+                .WithMessage("Quantities must be positive.");
 
         RuleForEach(command => command.Lines)
             .Must(line => line.Comment is null || line.Comment.Length <= 500)
@@ -120,7 +114,7 @@ public sealed class RequestReturnHandler(
                         string.Equals(candidate.Sku, line.Sku, StringComparison.OrdinalIgnoreCase)).VariantId,
                     line.Sku,
                     line.Quantity,
-                    Enum.Parse<ReturnReason>(line.Reason, ignoreCase: true),
+                    line.Reason,
                     line.Comment))
             ], earlier);
 
@@ -156,7 +150,7 @@ public sealed class RequestReturnHandler(
 
 public enum ReturnDecision { Approve, Reject, Receive, Refund }
 
-public sealed record DecideReturnRequest(string Decision, string? Reason);
+public sealed record DecideReturnRequest(ReturnDecision Decision, string? Reason);
 
 /// <summary>
 /// The shopkeeper's side of a return, in one command with a closed set of moves.
@@ -446,12 +440,8 @@ public sealed class ReturnEndpoints : ICarterModule
                    Guid returnId, DecideReturnRequest request,
                    ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
-                if (!Enum.TryParse<ReturnDecision>(request.Decision, ignoreCase: true, out var decision))
-                    return TypedResults.BadRequest(
-                        $"A decision is one of {string.Join(", ", Enum.GetNames<ReturnDecision>())}.");
-
                 var result = await dispatcher.SendAsync(
-                    new DecideReturnCommand(new ReturnRequestId(returnId), decision, request.Reason), ct);
+                    new DecideReturnCommand(new ReturnRequestId(returnId), request.Decision, request.Reason), ct);
 
                 return result.Outcome switch
                 {

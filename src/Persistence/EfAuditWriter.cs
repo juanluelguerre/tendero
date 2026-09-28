@@ -31,27 +31,41 @@ internal sealed class EfAuditWriter(IDbContextFactory<TenderoDbContext> contexts
     }
 
     /// <summary>
-    /// A page of the log, newest first, on the same separate context.
+    /// A page of the log, newest first, on the same separate context, with the
+    /// log counted by outcome beside it.
     ///
     /// The `outcome` filter is what the screen opens on. Denials and failures
     /// have their own partial index precisely because they are the rows somebody
     /// goes looking for — an audit screen whose default view is a thousand
     /// successful publishes is a changelog.
     /// </summary>
-    public async Task<IReadOnlyList<AuditEntry>> RecentAsync(
-        AuditOutcome? outcome, int take, CancellationToken cancellationToken = default)
+    public async Task<AuditPage> PageAsync(
+        AuditOutcome? outcome, int page, int pageSize, CancellationToken cancellationToken = default)
     {
         await using var context = await contexts.CreateDbContextAsync(cancellationToken);
 
         var entries = context.AuditEntries.AsNoTracking();
 
+        // Per outcome before narrowing to one, as the orders list does: every
+        // chip says its number whichever is chosen (R-7.2).
+        var counts = await entries
+            .GroupBy(entry => entry.Outcome)
+            .Select(group => new { Outcome = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.Outcome, row => row.Count, cancellationToken);
+
         if (outcome is { } wanted)
             entries = entries.Where(entry => entry.Outcome == wanted);
 
-        return await entries
+        var total = outcome is { } counted ? counts.GetValueOrDefault(counted) : counts.Values.Sum();
+
+        var shown = await entries
             .OrderByDescending(entry => entry.At)
-            .Take(take)
+            .ThenBy(entry => entry.Id)   // a stable tie-break, or two pages repeat a row
+            .Skip(Paging.Offset(page, pageSize))
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return new AuditPage(shown, total, counts);
     }
 
     /// <summary>Denied, by an agent, since then — on the denials' partial index, newest first.</summary>

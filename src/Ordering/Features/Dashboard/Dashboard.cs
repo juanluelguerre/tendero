@@ -22,16 +22,16 @@ public sealed record SalesFigures(decimal Revenue, int Orders, int Units, decima
 
 public sealed record BestSeller(string Sku, string Name, int Units, decimal Revenue);
 
-public sealed record SalesSummary(string Period, string Currency, SalesFigures Current, SalesFigures Previous, IReadOnlyList<BestSeller> BestSellers);
+public sealed record SalesSummary(DashboardPeriod Period, string Currency, SalesFigures Current, SalesFigures Previous, IReadOnlyList<BestSeller> BestSellers);
 
 public sealed record GetSalesSummaryQuery(DashboardPeriod Period) : IQuery<SalesSummary>;
 
 // ---------- Operations ----------
 
-public sealed record ReasonCount(string Reason, int Count);
+public sealed record ReasonCount(ReturnReason Reason, int Count);
 
 public sealed record OperationsSummary(
-    string Period,
+    DashboardPeriod Period,
     string Currency,
     /// <summary>Confirmed and paid, waiting for a parcel.</summary>
     int ToShip,
@@ -58,7 +58,7 @@ public sealed record GetOperationsSummaryQuery(DashboardPeriod Period) : IQuery<
 // ---------- Checkout funnel ----------
 
 public sealed record CheckoutFunnel(
-    string Period,
+    DashboardPeriod Period,
     int CartsStarted,
     int CheckedOut,
     int Abandoned,
@@ -75,7 +75,7 @@ public sealed record GetCheckoutFunnelQuery(DashboardPeriod Period) : IQuery<Che
 public sealed record AgentSalesRow(string AgentId, int Orders, decimal Revenue, int Mandated);
 
 public sealed record AgentSales(
-    string Period,
+    DashboardPeriod Period,
     string Currency,
     int Orders,
     decimal Revenue,
@@ -131,7 +131,7 @@ public static class DashboardFigures
         var sales = current.Where(IsSale).ToList();
 
         return new SalesSummary(
-            MetricLabels.Of(period),
+            period,
             CurrencyOf(current.Concat(previous)),
             Figures(sales),
             Figures([.. previous.Where(IsSale)]),
@@ -158,7 +158,7 @@ public static class DashboardFigures
         var opened = returns.Count(request => request.CreatedAt >= window.From && request.CreatedAt < window.To);
 
         return new OperationsSummary(
-            MetricLabels.Of(period),
+            period,
             CurrencyOf(placed),
             toShip.Count,
             toShip.Count(order => order.UpdatedAt <= window.To - LateAfter),
@@ -172,9 +172,10 @@ public static class DashboardFigures
             [
                 .. open.SelectMany(request => request.Lines)
                     .GroupBy(line => line.Reason)
-                    .Select(group => new ReasonCount(MetricLabels.Of(group.Key), group.Sum(line => line.Quantity)))
+                    .Select(group => new ReasonCount(group.Key, group.Sum(line => line.Quantity)))
                     .OrderByDescending(reason => reason.Count)
-                    .ThenBy(reason => reason.Reason, StringComparer.Ordinal)
+                    // Ties by name, not by the order the members were declared in.
+                    .ThenBy(reason => reason.Reason.ToString(), StringComparer.Ordinal)
             ],
             returns
                 .Where(request => request.Status == ReturnStatus.Refunded && request.UpdatedAt >= window.From && request.UpdatedAt < window.To)
@@ -190,7 +191,7 @@ public static class DashboardFigures
         var buyers = placed.Where(IsSale).Select(order => order.CustomerId).Distinct().ToList();
 
         return new CheckoutFunnel(
-            MetricLabels.Of(period),
+            period,
             carts.Count,
             checkedOut,
             abandoned,
@@ -206,7 +207,7 @@ public static class DashboardFigures
         var byAgents = sales.Where(order => order.PlacedBy is not null).ToList();
 
         return new AgentSales(
-            MetricLabels.Of(period),
+            period,
             CurrencyOf(placed),
             sales.Count,
             sales.Sum(order => order.Total.Amount),

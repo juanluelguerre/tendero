@@ -23,31 +23,21 @@ internal sealed class EfProductRepository(TenderoDbContext context)
     {
         var query = context.Products.AsNoTracking();
 
-        if (status is not null)
-            query = query.Where(product => product.Status == status);
-
         if (text?.Trim() is { Length: > 0 } typed)
         {
-            // The name is jsonb behind a converter, so LINQ cannot reach inside
-            // it. SQL can, over the VALUES only: `name::text` would also match
-            // the keys, and typing "es" would find every product. Every culture
-            // at once, which is what somebody typing a Spanish or an English name
-            // wants. The ids that match are a subquery EF composes into this one
-            // statement (`WHERE p.id IN (SELECT …)`); a FromSql over the whole
-            // entity is what EF 11's preview cannot compose with its JSON
-            // columns. The interpolated values are parameters, not text.
-            //
-            // A sequential scan, and fine for a laboratory's hundred products;
-            // the full catalogue wants a trigram index (the standing backlog).
-            var pattern = $"%{Escaped(typed)}%";
-            var matching = context.Database.SqlQuery<Guid>(
-                $"""
-                SELECT p.id AS "Value" FROM catalog.products AS p
-                WHERE p.code ILIKE {pattern} ESCAPE '\'
-                   OR EXISTS (SELECT 1 FROM jsonb_each_text(p.name) AS n WHERE n.value ILIKE {pattern} ESCAPE '\')
-                """);
+            var matching = Matching(typed);
             query = query.Where(product => matching.Contains((Guid)(object)product.Id));
         }
+
+        // Per status before narrowing to one, as the orders list does: the
+        // filters say what each would show for this text (the redesign's R-4.3).
+        var counts = await query
+            .GroupBy(product => product.Status)
+            .Select(group => new { Status = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.Status, row => row.Count, ct);
+
+        if (status is not null)
+            query = query.Where(product => product.Status == status);
 
         var total = await query.CountAsync(ct);
 
@@ -60,7 +50,44 @@ internal sealed class EfProductRepository(TenderoDbContext context)
             .Take(pageSize)
             .ToListAsync(ct);
 
-        return new ProductPage(items, total);
+        return new ProductPage(items, total, counts);
+    }
+
+    public async Task<IReadOnlyList<string>> SkusOfProductsMatchingAsync(string text, CancellationToken ct)
+    {
+        if (text.Trim() is not { Length: > 0 } typed)
+            return [];
+
+        var matching = Matching(typed);
+        var products = await context.Products
+            .AsNoTracking()
+            .Where(product => matching.Contains((Guid)(object)product.Id))
+            .ToListAsync(ct);
+
+        return [.. products.SelectMany(product => product.Variants.Select(variant => variant.Sku))];
+    }
+
+    /// <summary>The ids of the products whose name, in any culture, or code contains the text.</summary>
+    private IQueryable<Guid> Matching(string typed)
+    {
+        // The name is jsonb behind a converter, so LINQ cannot reach inside
+        // it. SQL can, over the VALUES only: `name::text` would also match
+        // the keys, and typing "es" would find every product. Every culture
+        // at once, which is what somebody typing a Spanish or an English name
+        // wants. The ids that match are a subquery EF composes into this one
+        // statement (`WHERE p.id IN (SELECT …)`); a FromSql over the whole
+        // entity is what EF 11's preview cannot compose with its JSON
+        // columns. The interpolated values are parameters, not text.
+        //
+        // A sequential scan, and fine for a laboratory's hundred products;
+        // the full catalogue wants a trigram index (the standing backlog).
+        var pattern = $"%{Escaped(typed)}%";
+        return context.Database.SqlQuery<Guid>(
+            $"""
+            SELECT p.id AS "Value" FROM catalog.products AS p
+            WHERE p.code ILIKE {pattern} ESCAPE '\'
+               OR EXISTS (SELECT 1 FROM jsonb_each_text(p.name) AS n WHERE n.value ILIKE {pattern} ESCAPE '\')
+            """);
     }
 
     /// <summary>What was typed, matched as typed: a % or _ in it is a character, not a wildcard.</summary>

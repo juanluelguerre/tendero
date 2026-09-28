@@ -185,4 +185,22 @@ public sealed class McpToolsTests
         await call(dispatcher);
         return read(dispatcher.Query!);
     }
+
+    private enum Standing { Active, Suspended }
+
+    private sealed record Row(Standing Status);
+
+    /// <summary>
+    /// A tool answers a closed set as the endpoint does, by its C# name, and never
+    /// as a number (ADR 0043). The tools return the API's own records, and the SDK
+    /// serialises them with its options rather than ASP.NET's, so the server is
+    /// handed the API's rule instead of relying on the SDK's default.
+    /// </summary>
+    [Fact]
+    public void A_tool_spells_an_enum_as_the_api_does()
+    {
+        var answer = System.Text.Json.JsonSerializer.SerializeToNode(new Row(Standing.Suspended), ElGuerre.Tendero.Mcp.TenderoMcpServer.ToolAnswers);
+
+        Assert.Equal("Suspended", answer?["status"]?.GetValue<string>());
+    }
 }

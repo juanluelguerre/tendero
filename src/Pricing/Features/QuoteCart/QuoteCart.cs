@@ -110,8 +110,8 @@ public sealed record AppliedDiscountResponse(
     string Label,
     decimal Amount,
     string Effect,
-    string Combination,
-    string Outcome,
+    CombinationPolicy Combination,
+    DiscountOutcome Outcome,
     string? ReasonCode,
     string? Reason);
 
@@ -188,8 +188,8 @@ public sealed class QuoteCartEndpoint : ICarterModule
             discount.Label.In(culture),
             discount.Amount.Amount,
             discount.EffectKind,
-            discount.Combination.ToString(),
-            discount.Outcome.ToString(),
+            discount.Combination,
+            discount.Outcome,
             discount.Reason?.Code,
             discount.Reason?.Explanation.In(culture)))],
         [.. quote.Taxes.Select(tax => new TaxLineResponse(

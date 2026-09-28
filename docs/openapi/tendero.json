@@ -25,7 +25,15 @@
             }
           },
           {
-            "name": "take",
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -501,12 +509,18 @@
           {
             "name": "sku",
             "in": "query",
-            "required": true,
             "schema": {
               "type": "array",
               "items": {
                 "type": "string"
               }
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -598,6 +612,46 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StockFilter"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sku",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
         "responses": {
@@ -680,7 +734,22 @@
         "operationId": "ListClaimsForReview",
         "parameters": [
           {
-            "name": "limit",
+            "name": "support",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ClaimSupportFilter"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -694,10 +763,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ClaimForReview"
-                  }
+                  "$ref": "#/components/schemas/ClaimsForReviewPage"
                 }
               }
             }
@@ -1872,6 +1938,22 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
         "responses": {
@@ -2310,6 +2392,15 @@
           }
         }
       },
+      "AgentChange": {
+        "enum": [
+          "Registered",
+          "Updated",
+          "Unchanged",
+          "AlreadyRegistered",
+          "NotFound"
+        ]
+      },
       "AgentChangeResponse": {
         "required": [
           "change",
@@ -2318,7 +2409,7 @@
         "type": "object",
         "properties": {
           "change": {
-            "type": "string"
+            "$ref": "#/components/schemas/AgentChange"
           },
           "agent": {
             "$ref": "#/components/schemas/AgentView"
@@ -2352,7 +2443,7 @@
         "type": "object",
         "properties": {
           "period": {
-            "type": "string"
+            "$ref": "#/components/schemas/DashboardPeriod"
           },
           "total": {
             "type": "integer",
@@ -2393,7 +2484,7 @@
         "type": "object",
         "properties": {
           "period": {
-            "type": "string"
+            "$ref": "#/components/schemas/DashboardPeriod"
           },
           "currency": {
             "type": "string"
@@ -2456,6 +2547,19 @@
           }
         }
       },
+      "AgentStatus": {
+        "enum": [
+          "Active",
+          "Suspended"
+        ]
+      },
+      "AgentTrust": {
+        "enum": [
+          "Untrusted",
+          "Known",
+          "Verified"
+        ]
+      },
       "AgentView": {
         "required": [
           "agentId",
@@ -2479,10 +2583,10 @@
             "type": "string"
           },
           "trust": {
-            "type": "string"
+            "$ref": "#/components/schemas/AgentTrust"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/AgentStatus"
           },
           "suspensionReason": {
             "type": [
@@ -2542,10 +2646,10 @@
             "type": "string"
           },
           "combination": {
-            "type": "string"
+            "$ref": "#/components/schemas/CombinationPolicy"
           },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/DiscountOutcome"
           },
           "reasonCode": {
             "type": [
@@ -2586,7 +2690,7 @@
             }
           },
           "kind": {
-            "type": "string"
+            "$ref": "#/components/schemas/AttributeKind"
           },
           "unit": {
             "type": [
@@ -2622,6 +2726,15 @@
             }
           }
         }
+      },
+      "AttributeKind": {
+        "enum": [
+          "Text",
+          "LocalizedText",
+          "Number",
+          "Boolean",
+          "Option"
+        ]
       },
       "AttributeOptionView": {
         "required": [
@@ -2691,7 +2804,7 @@
             ]
           },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/AuditOutcome"
           },
           "reason": {
             "type": [
@@ -2708,6 +2821,29 @@
           "at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "AuditOutcome": {
+        "enum": [
+          "Allowed",
+          "Denied",
+          "Failed"
+        ]
+      },
+      "AuditOutcomeCount": {
+        "required": [
+          "outcome",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "$ref": "#/components/schemas/AuditOutcome"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2893,7 +3029,7 @@
         "type": "object",
         "properties": {
           "trust": {
-            "type": "string"
+            "$ref": "#/components/schemas/AgentTrust"
           }
         }
       },
@@ -2911,7 +3047,7 @@
         "type": "object",
         "properties": {
           "period": {
-            "type": "string"
+            "$ref": "#/components/schemas/DashboardPeriod"
           },
           "cartsStarted": {
             "type": "integer",
@@ -2970,7 +3106,8 @@
           "quotes",
           "extractor",
           "model",
-          "proposedAt"
+          "proposedAt",
+          "isWeak"
         ],
         "type": "object",
         "properties": {
@@ -3020,8 +3157,76 @@
           "proposedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "isWeak": {
+            "type": "boolean"
           }
         }
+      },
+      "ClaimSupportCount": {
+        "required": [
+          "support",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "support": {
+            "$ref": "#/components/schemas/ClaimSupportFilter"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ClaimSupportFilter": {
+        "enum": [
+          "Weak",
+          "All"
+        ]
+      },
+      "ClaimsForReviewPage": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "counts"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimForReview"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimSupportCount"
+            }
+          }
+        }
+      },
+      "CombinationPolicy": {
+        "enum": [
+          "ExclusiveGlobal",
+          "ExclusiveInGroup",
+          "Stackable"
+        ]
       },
       "CountStockRequest": {
         "required": [
@@ -3086,6 +3291,13 @@
           }
         }
       },
+      "DashboardPeriod": {
+        "enum": [
+          "Day",
+          "Week",
+          "Month"
+        ]
+      },
       "DecideReturnRequest": {
         "required": [
           "decision",
@@ -3094,7 +3306,7 @@
         "type": "object",
         "properties": {
           "decision": {
-            "type": "string"
+            "$ref": "#/components/schemas/ReturnDecision"
           },
           "reason": {
             "type": [
@@ -3172,6 +3384,22 @@
           }
         }
       },
+      "DiscountOutcome": {
+        "enum": [
+          "Applied",
+          "Suppressed"
+        ]
+      },
+      "FactKind": {
+        "enum": [
+          "Text",
+          "LocalizedText",
+          "Number",
+          "Boolean",
+          "Option",
+          null
+        ]
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -3239,6 +3467,13 @@
           }
         }
       },
+      "LinkOutcome": {
+        "enum": [
+          "Registered",
+          "Linked",
+          "Recognised"
+        ]
+      },
       "LinkedIdentity": {
         "required": [
           "customerId",
@@ -3265,7 +3500,7 @@
             "type": "string"
           },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/LinkOutcome"
           }
         }
       },
@@ -3286,7 +3521,10 @@
       "ListAuditEntriesResult": {
         "required": [
           "entries",
-          "refused"
+          "total",
+          "page",
+          "pageSize",
+          "counts"
         ],
         "type": "object",
         "properties": {
@@ -3296,9 +3534,23 @@
               "$ref": "#/components/schemas/AuditEntryView"
             }
           },
-          "refused": {
+          "total": {
             "type": "integer",
             "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditOutcomeCount"
+            }
           }
         }
       },
@@ -3333,6 +3585,9 @@
       "ListOrdersResult": {
         "required": [
           "orders",
+          "total",
+          "page",
+          "pageSize",
           "counts"
         ],
         "type": "object",
@@ -3342,6 +3597,18 @@
             "items": {
               "$ref": "#/components/schemas/OrderSummary"
             }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
           },
           "counts": {
             "type": "array",
@@ -3356,7 +3623,8 @@
           "items",
           "total",
           "page",
-          "pageSize"
+          "pageSize",
+          "counts"
         ],
         "type": "object",
         "properties": {
@@ -3377,6 +3645,12 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductStatusCount"
+            }
           }
         }
       },
@@ -3397,7 +3671,12 @@
       "ListStockResult": {
         "required": [
           "rows",
-          "reservations"
+          "total",
+          "page",
+          "pageSize",
+          "reservations",
+          "counts",
+          "restockAt"
         ],
         "type": "object",
         "properties": {
@@ -3407,11 +3686,33 @@
               "$ref": "#/components/schemas/StockRowView"
             }
           },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
           "reservations": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ReservationView"
             }
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockFilterCount"
+            }
+          },
+          "restockAt": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -3423,7 +3724,7 @@
         "type": "object",
         "properties": {
           "move": {
-            "type": "string"
+            "$ref": "#/components/schemas/OrderMove"
           },
           "reason": {
             "type": [
@@ -3502,7 +3803,7 @@
         "type": "object",
         "properties": {
           "period": {
-            "type": "string"
+            "$ref": "#/components/schemas/DashboardPeriod"
           },
           "currency": {
             "type": "string"
@@ -3689,6 +3990,30 @@
           }
         }
       },
+      "OrderMode": {
+        "enum": [
+          "Live",
+          "Test"
+        ]
+      },
+      "OrderMove": {
+        "enum": [
+          "Ship",
+          "Deliver",
+          "Cancel"
+        ]
+      },
+      "OrderStatus": {
+        "enum": [
+          "Pending",
+          "PaymentAuthorized",
+          "PaymentFailed",
+          "Confirmed",
+          "Shipped",
+          "Delivered",
+          "Cancelled"
+        ]
+      },
       "OrderStatusCount": {
         "required": [
           "status",
@@ -3697,7 +4022,7 @@
         "type": "object",
         "properties": {
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/OrderStatus"
           },
           "count": {
             "type": "integer",
@@ -3729,10 +4054,10 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/OrderStatus"
           },
           "mode": {
-            "type": "string"
+            "$ref": "#/components/schemas/OrderMode"
           },
           "mandate": {
             "oneOf": [
@@ -3842,10 +4167,10 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/OrderStatus"
           },
           "mode": {
-            "type": "string"
+            "$ref": "#/components/schemas/OrderMode"
           },
           "culture": {
             "type": "string"
@@ -4011,7 +4336,7 @@
             "type": "string"
           },
           "kind": {
-            "type": "string"
+            "$ref": "#/components/schemas/AttributeKind"
           },
           "value": {
             "type": [
@@ -4141,7 +4466,7 @@
             }
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProductStatus"
           },
           "updatedAt": {
             "type": "string",
@@ -4174,7 +4499,7 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProductStatus"
           },
           "names": {
             "type": "object",
@@ -4254,6 +4579,29 @@
           }
         }
       },
+      "ProductStatus": {
+        "enum": [
+          "Draft",
+          "Active",
+          "Archived"
+        ]
+      },
+      "ProductStatusCount": {
+        "required": [
+          "status",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ProductSummary": {
         "required": [
           "productId",
@@ -4309,7 +4657,7 @@
             ]
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProductStatus"
           },
           "missingCultures": {
             "type": "array",
@@ -4357,7 +4705,7 @@
             "type": "string"
           },
           "combination": {
-            "type": "string"
+            "$ref": "#/components/schemas/CombinationPolicy"
           },
           "priority": {
             "type": "integer",
@@ -4406,6 +4754,14 @@
           }
         }
       },
+      "PublishOutcome": {
+        "enum": [
+          "Published",
+          "AlreadyActive",
+          "Archived",
+          "NotFound"
+        ]
+      },
       "PublishProductConflict": {
         "required": [
           "title",
@@ -4433,10 +4789,10 @@
             "type": "string"
           },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/PublishOutcome"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProductStatus"
           }
         }
       },
@@ -4685,7 +5041,7 @@
         "type": "object",
         "properties": {
           "reason": {
-            "type": "string"
+            "$ref": "#/components/schemas/ReturnReason"
           },
           "count": {
             "type": "integer",
@@ -4749,8 +5105,7 @@
             "type": "string"
           },
           "trust": {
-            "type": "string",
-            "default": "known"
+            "$ref": "#/components/schemas/AgentTrust"
           }
         }
       },
@@ -4790,6 +5145,14 @@
           }
         }
       },
+      "ReservationStatus": {
+        "enum": [
+          "Held",
+          "Committed",
+          "Released",
+          "Expired"
+        ]
+      },
       "ReservationView": {
         "required": [
           "reservationId",
@@ -4809,7 +5172,7 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/ReservationStatus"
           },
           "reason": {
             "type": [
@@ -4833,6 +5196,14 @@
           }
         }
       },
+      "ReturnDecision": {
+        "enum": [
+          "Approve",
+          "Reject",
+          "Receive",
+          "Refund"
+        ]
+      },
       "ReturnLineRequest": {
         "required": [
           "sku",
@@ -4850,7 +5221,7 @@
             "format": "int32"
           },
           "reason": {
-            "type": "string"
+            "$ref": "#/components/schemas/ReturnReason"
           },
           "comment": {
             "type": [
@@ -4877,7 +5248,7 @@
             "format": "int32"
           },
           "reason": {
-            "type": "string"
+            "$ref": "#/components/schemas/ReturnReason"
           },
           "comment": {
             "type": [
@@ -4899,6 +5270,25 @@
           }
         }
       },
+      "ReturnReason": {
+        "enum": [
+          "WrongSize",
+          "NotAsDescribed",
+          "Damaged",
+          "WrongItem",
+          "ChangedMind"
+        ]
+      },
+      "ReturnStatus": {
+        "enum": [
+          "Requested",
+          "Approved",
+          "Received",
+          "Refunded",
+          "Rejected",
+          "Cancelled"
+        ]
+      },
       "ReturnView": {
         "required": [
           "returnId",
@@ -4919,7 +5309,7 @@
             "type": "string"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/ReturnStatus"
           },
           "resolution": {
             "type": [
@@ -4992,9 +5382,17 @@
             "type": "string"
           },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/ReviewOutcome"
           }
         }
+      },
+      "ReviewOutcome": {
+        "enum": [
+          "Approved",
+          "Rejected",
+          "NotWaiting",
+          "NotFound"
+        ]
       },
       "SalesFigures": {
         "required": [
@@ -5034,7 +5432,7 @@
         "type": "object",
         "properties": {
           "period": {
-            "type": "string"
+            "$ref": "#/components/schemas/DashboardPeriod"
           },
           "currency": {
             "type": "string"
@@ -5332,9 +5730,13 @@
             "type": "string"
           },
           "kind": {
-            "type": [
-              "null",
-              "string"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FactKind"
+              }
             ]
           },
           "value": {
@@ -5497,6 +5899,29 @@
           },
           "evidence": {
             "$ref": "#/components/schemas/SpecEvidence"
+          }
+        }
+      },
+      "StockFilter": {
+        "enum": [
+          "Restock",
+          "SoldOut",
+          "All"
+        ]
+      },
+      "StockFilterCount": {
+        "required": [
+          "filter",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/StockFilter"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -5755,6 +6180,14 @@
           }
         }
       },
+      "WithdrawOutcome": {
+        "enum": [
+          "Withdrawn",
+          "AlreadyDraft",
+          "Archived",
+          "NotFound"
+        ]
+      },
       "WithdrawProductConflict": {
         "required": [
           "title",
@@ -5782,10 +6215,10 @@
             "type": "string"
           },
           "outcome": {
-            "type": "string"
+            "$ref": "#/components/schemas/WithdrawOutcome"
           },
           "status": {
-            "type": "string"
+            "$ref": "#/components/schemas/ProductStatus"
           }
         }
       }

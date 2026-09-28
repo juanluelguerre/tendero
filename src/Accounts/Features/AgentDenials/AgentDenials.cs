@@ -21,7 +21,7 @@ public sealed record RecentDenial(string AgentId, string? ActorName, string Comm
 /// (P11-6); a denial is the most interesting row in the system.
 /// </summary>
 public sealed record AgentDenialsSummary(
-    string Period,
+    DashboardPeriod Period,
     int Total,
     IReadOnlyList<DenialCount> ByReason,
     IReadOnlyList<AgentDenialCount> ByAgent,
@@ -51,7 +51,7 @@ public static class AgentDenialFigures
     }
 
     public static AgentDenialsSummary Summarise(DashboardPeriod period, IReadOnlyList<AuditEntry> denials) => new(
-        MetricLabels.Of(period),
+        period,
         denials.Count,
         [
             .. denials.GroupBy(entry => ReasonOf(entry.Reason).Reason, StringComparer.Ordinal)

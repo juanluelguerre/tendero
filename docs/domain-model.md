@@ -788,6 +788,7 @@ classDiagram
         +string? AppliedAs
         +string? ApplicationRefused
         +double Support
+        +bool IsWeaklySupported
     }
     class Provenance {
         <<record>>

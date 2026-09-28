@@ -30,7 +30,7 @@ public sealed class RequestReturnRaceTests
             new OrderAccess(new NoAccounts(), new Guest()));
 
         var result = await handler.HandleAsync(
-            new RequestReturnCommand(order.Id, [new(order.Lines[0].Sku, 1, nameof(ReturnReason.WrongSize), null)], "es"),
+            new RequestReturnCommand(order.Id, [new(order.Lines[0].Sku, 1, ReturnReason.WrongSize, null)], "es"),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(RequestReturnOutcome.Refused, result.Outcome);

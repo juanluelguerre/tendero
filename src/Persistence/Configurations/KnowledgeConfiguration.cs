@@ -74,6 +74,7 @@ internal sealed class ProductClaimConfiguration : IEntityTypeConfiguration<Produ
 
         builder.Ignore(claim => claim.Evidence);
         builder.Ignore(claim => claim.Support);
+        builder.Ignore(claim => claim.IsWeaklySupported);
         builder.Ignore(claim => claim.DomainEvents);
     }
 }

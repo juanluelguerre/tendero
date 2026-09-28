@@ -139,6 +139,16 @@ public sealed class ProductClaim : AggregateRoot
     /// </summary>
     public double Support => this.evidence.Min(item => item.Support);
 
+    /// <summary>
+    /// Support below this is what a person is for: the quote may not say what the
+    /// claim does. The review queue opens on these. It was a constant in the
+    /// backoffice until the queue was paged (R-7.2) — a rule counted over one page
+    /// counts the page — so it is the server's, and the screen reads the counts.
+    /// </summary>
+    public const double WeakSupport = 0.8;
+
+    public bool IsWeaklySupported => Support < WeakSupport;
+
     private ProductClaim() { } // EF Core
 
     public static ProductClaim Propose(

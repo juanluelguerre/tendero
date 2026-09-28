@@ -33,6 +33,29 @@ public sealed class ListProductsTests
         Assert.Equal(draft.Id.Value.ToString(), Assert.Single(result.Items).ProductId);
     }
 
+    /// <summary>
+    /// Every status says its number whichever one is shown, and zero when it has
+    /// none: the filter chips kept their width only while the selected one alone
+    /// had a count, and the search box beside them jumped on every click.
+    /// </summary>
+    [Fact]
+    public async Task Counts_every_status_for_the_text_whichever_is_shown()
+    {
+        var draft = ADraftProduct("Cafetera");
+        var active = ADraftProduct("Cafetera italiana");
+        active.Publish(Clock);
+        var other = ADraftProduct("Mochila");
+
+        var result = await HandlerOver(draft, active, other).HandleAsync(
+            new ListProductsQuery("active", "es", 1, 20, Text: "cafetera"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(Enum.GetValues<ProductStatus>(), result.Counts.Select(count => count.Status));
+        Assert.Equal(1, result.Counts.Single(count => count.Status == ProductStatus.Active).Count);
+        Assert.Equal(1, result.Counts.Single(count => count.Status == ProductStatus.Draft).Count);
+        Assert.Equal(0, result.Counts.Single(count => count.Status == ProductStatus.Archived).Count);
+        Assert.Equal(1, result.Total);
+    }
+
     [Fact]
     public async Task Listing_without_a_status_returns_the_whole_catalogue()
     {

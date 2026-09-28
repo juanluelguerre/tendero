@@ -29,7 +29,7 @@ public sealed record ReviewProductQuery(string Code, string Culture) : IQuery<Pr
 public sealed record ProductForReview(
     string ProductId,
     string Code,
-    string Status,
+    ProductStatus Status,
     /// <summary>Culture to text, as stored: a culture that is absent is missing.</summary>
     IReadOnlyDictionary<string, string> Names,
     IReadOnlyDictionary<string, string> Descriptions,
@@ -102,7 +102,7 @@ public sealed class ReviewProductHandler(
         return new ProductForReview(
             product.Id.Value.ToString(),
             product.Code,
-            product.Status.ToString().ToLowerInvariant(),
+            product.Status,
             AsStored(product.Name),
             product.Description is { } description ? AsStored(description) : new Dictionary<string, string>(),
             product.Brand,

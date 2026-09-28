@@ -45,10 +45,11 @@ public interface IOrderReader
 {
     /// <summary>
     /// The shopkeeper's list: newest first, narrowed by status and by what was
-    /// typed, with how many match each status (the redesign's R-4.2). The filter
-    /// runs in the database, so an old confirmed order is still one to ship. There
-    /// is no paging: a laboratory's worth of orders under a cap is the honest
-    /// version of a page size nobody has asked for yet.
+    /// typed, with how many match each status (the redesign's R-4.2), one page at
+    /// a time (R-7.2). The filter runs in the database, so an old confirmed order
+    /// is still one to ship. It used to stop at fifty without saying so — "the
+    /// honest version of a page size nobody has asked for yet", until a list
+    /// that ended at fifty looked like a shop that had sold fifty.
     /// </summary>
     Task<OrderList> ListAsync(OrderListQuery query, CancellationToken cancellationToken = default);
 
@@ -81,10 +82,13 @@ public interface IAgentActivity
 /// of an order's id, which is how the interface shows ids, or any part of the
 /// recipient's name or city.
 /// </summary>
-public sealed record OrderListQuery(OrderStatus? Status, string? Text);
+public sealed record OrderListQuery(
+    OrderStatus? Status, string? Text, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize);
 
 /// <summary>
-/// The orders that match, and how many match each status before the status is
-/// applied: the filter's counts, so "To ship 8" is true of what was typed.
+/// One page of the orders that match, how many match in all, and how many match
+/// each status before the status is applied: the filter's counts, so "To ship 8"
+/// is true of what was typed.
 /// </summary>
-public sealed record OrderList(IReadOnlyList<Order> Orders, IReadOnlyDictionary<OrderStatus, int> CountByStatus);
+/// <param name="Total">Of the whole filter, status included — not of the page.</param>
+public sealed record OrderList(IReadOnlyList<Order> Orders, int Total, IReadOnlyDictionary<OrderStatus, int> CountByStatus);

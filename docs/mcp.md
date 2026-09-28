@@ -247,6 +247,15 @@ so an agent and a shopper can never be told different things.
 took that name. Two tools cannot share one on a server; a name we chose yields to
 a name we were given.
 
+**A closed set is spelled as the shop's API spells it: by its C# name**
+(ADR 0043). A product's `status` is `Active` or `Draft`, an attribute's `kind` is
+`LocalizedText`, a spec's `kind` the same. Until 2026-09-28 these tools said
+`active` and `localizedtext`; an agent that matched those strings should match
+the new ones. A spec's `source` is unchanged — `catalogue`, `description` or
+`none` — because it is a set of constants UCP's knowledge extension publishes
+too, not an enum. The UCP tools spell their values as UCP says, and did not
+change.
+
 ## Try the refusals first
 
 A system that says yes is a demo like any other. These need no catalogue data:

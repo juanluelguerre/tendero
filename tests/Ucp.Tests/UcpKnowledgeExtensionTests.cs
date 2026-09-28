@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Knowledge.Features.ProductSpecs;
+using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.Tests.Ucp;
 using ElGuerre.Tendero.Ucp.Capabilities;
 using ElGuerre.Tendero.Ucp.Catalog;
@@ -23,12 +24,12 @@ public sealed class UcpKnowledgeExtensionTests
         [new SpecProduct("p1", "B13BAG0701", "Mochila urbana", "mochila-urbana"), new SpecProduct("p2", "B13BAG0702", "Mochila de senderismo", "mochila-senderismo")],
         [
             new SpecRow("capacity", "Capacidad", [
-                new SpecCell(SpecSources.Catalogue, "number", "18 L", 18m, "L", null, null),
-                new SpecCell(SpecSources.Description, "number", "30 L", 30m, "L", null, new SpecEvidence(0.91, [new SpecQuote("es", "capacidad de 30 litros")])),
+                new SpecCell(SpecSources.Catalogue, FactKind.Number, "18 L", 18m, "L", null, null),
+                new SpecCell(SpecSources.Description, FactKind.Number, "30 L", 30m, "L", null, new SpecEvidence(0.91, [new SpecQuote("es", "capacidad de 30 litros")])),
             ]),
             new SpecRow("waterproof", "Impermeable", [
                 new SpecCell(SpecSources.None, null, null, null, null, null, null),
-                new SpecCell(SpecSources.Catalogue, "flag", "Sí", null, null, true, null),
+                new SpecCell(SpecSources.Catalogue, FactKind.Boolean, "Sí", null, null, true, null),
             ]),
         ],
         [new SpecStatement("p1", "Tiene un bolsillo antirrobo.", new SpecEvidence(0.88, [new SpecQuote("es", "bolsillo antirrobo en la espalda")]))]);

@@ -48,10 +48,22 @@ internal sealed class CatalogProductFacts(
     private static ProductFact Fact(AttributeValue value, AttributeDefinition definition, string culture) => new(
         definition.Code,
         definition.Label.In(culture),
-        value.Kind.ToString().ToLowerInvariant(),
+        KindOf(value.Kind),
         value.Kind is AttributeKind.Number or AttributeKind.Boolean ? null : value.RenderIn(culture, definition),
         value.Number,
         definition.Unit,
         value.Flag,
         value.Key);
+
+    /// <summary>Catalog's kind in Knowledge's words: the same members, two
+    /// types, because neither context references the other.</summary>
+    private static FactKind KindOf(AttributeKind kind) => kind switch
+    {
+        AttributeKind.Text => FactKind.Text,
+        AttributeKind.LocalizedText => FactKind.LocalizedText,
+        AttributeKind.Number => FactKind.Number,
+        AttributeKind.Boolean => FactKind.Boolean,
+        AttributeKind.Option => FactKind.Option,
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "An attribute kind Knowledge has no word for."),
+    };
 }
