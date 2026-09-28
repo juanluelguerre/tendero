@@ -42,6 +42,7 @@
 | [0039](0039-ucp-checkout-is-a-session-an-agent-owns.md) | UCP's checkout is a session an agent owns, served on both transports, and `/mcp` is not anonymous for it | accepted |
 | [0040](0040-a-mandate-is-verified-against-terms-the-shop-signed.md) | A checkout mandate is verified against terms the shop itself signed | accepted |
 | [0041](0041-staff-usage-is-measured-under-a-notice-not-consent.md) | Staff usage is measured under a notice, not by consent | accepted |
+| [0042](0042-work-is-done-beside-the-list.md) | Work is done beside the list; what can be undone offers Undo, what cannot asks first | proposed |
 
 Format: context → decision → consequences. Keep each under a page.
 

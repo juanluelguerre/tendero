@@ -58,9 +58,26 @@ Prices in `.price` (mono, tabular). Images do the selling, so chrome stays
 minimal — the accent is reserved for the primary action on each screen
 (add to cart, checkout) and nothing else. One clay button per view.
 
+The header's TIENDA opens the departments as a panel on a desktop and as a
+drawer on a phone, so a category is two taps from any page, and the department
+the page is in is marked with `aria-current`, not only with colour (R-5.1). The
+theme switch sits in the header beside the language. A row that scrolls
+sideways shows whole cards on a desktop, with two buttons that stop at the
+ends; on a phone the next card peeking in is the cue. Anything a finger taps is
+at least 44 px tall under a coarse pointer, links included (R-5.2).
+
 ### Backoffice
 Dense: body drops to `--text-sm`, tables to `--text-xs`, row height 36px.
-Light or dark as the person chooses in the account menu, following the system until they do (`data-theme` on the root, set before the first paint; the redesign's R-3). The storefront gains the same choice in R-5.1. Status
+Light or dark as the person chooses in the account menu, following the system
+until they do (`data-theme` on the root, set before the first paint; the
+redesign's R-3). The storefront has the same choice since R-5.1.
+
+A list of work is a list with a pane beside it (ADR 0042): the likely action on
+the row, the item opened in a pane from 1024 px and in a sheet below, filter
+chips with their counts, and the filter, search and open item in the URL. What
+can be undone offers Undo; what cannot asks first, apart from the likely action.
+On a phone the list is cards. The parts are in `backoffice/src/app/work/`, and
+a new list uses them. Status
 is colour-coded and always paired with a word, never colour alone:
 
 | State | Token | Used for |

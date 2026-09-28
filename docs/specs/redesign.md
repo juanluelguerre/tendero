@@ -1,6 +1,6 @@
 # Spec: the redesign, run as a lifecycle — R-0, define before designing
 
-**Status**: draft (R-0, R-1's automated half, R-2 and R-3's proposal written 2026-09-27; the baseline walkthrough waits for the author)
+**Status**: built (R-0 to R-3 written 2026-09-27; R-4.1 to R-4.7, R-5.1 and R-5.2 built 2026-09-27/28). R-6 waits for the author's baseline walkthrough on `redesign/before`
 **Slice(s)**: `frontend/apps/backoffice`, `frontend/apps/storefront`, `design/`, `docs/telemetry/tracking-plan.json`
 **Article**: *A redesign with a before and an after* (working title)
 
