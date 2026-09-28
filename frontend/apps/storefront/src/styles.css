@@ -208,13 +208,33 @@ img {
   padding: 0 var(--space-4);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  background: var(--bg-surface);
+  background-color: var(--bg-surface);
   color: var(--text);
   font: inherit;
 }
 
 .field::placeholder {
   color: var(--text-muted);
+}
+
+/* A dropdown draws its own chevron, with room around it. The browser's arrow
+   sits against the right border and ignores padding, so a select read as a
+   box with a mark stuck to its edge (the author, the redesign's second
+   walkthrough). Two token-coloured gradients make the chevron — no image, no
+   hex — 1rem in from the border, and the text stops before it. The way
+   Bootstrap's form-select and Tailwind's forms plugin do it. */
+.select {
+  appearance: none;
+  padding-inline-end: 2.75rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.3rem) 50%,
+    calc(100% - 1rem) 50%;
+  background-size: 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  cursor: pointer;
 }
 
 /* ---------- Surfaces ---------- */
