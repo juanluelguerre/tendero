@@ -422,7 +422,8 @@ internal sealed partial class ElasticsearchLexicalSearch(
         activity?.SetTag("search.culture", query.Culture);
         activity?.SetTag("search.text", query.Text);
 
-        var filters = ProductFilters.From(query.Filters, await offers.NowAsync(ct), Today(clock));
+        var filters = ProductFilters.From(
+            query.Filters, await offers.NowAsync(ct), Today(clock), await offers.CampaignAskedAsync(query.Filters, ct));
         activity?.SetTag("search.filters", filters.Chosen.Count);
 
         var response = await client.SearchAsync<ProductSearchDocument>(s =>
@@ -706,7 +707,9 @@ internal sealed class ElasticsearchHitReader(
         // to ask Pricing, and the request is the one it was before filters.
         var chosen = filters.IsEmpty
             ? null
-            : ProductFilters.From(filters, await offers.NowAsync(ct), ElasticsearchLexicalSearch.Today(clock)).All();
+            : ProductFilters.From(
+                filters, await offers.NowAsync(ct), ElasticsearchLexicalSearch.Today(clock),
+                await offers.CampaignAskedAsync(filters, ct)).All();
 
         var response = await client.SearchAsync<ProductSearchDocument>(s => s
             .Indices(ProductSearchDocument.IndexNameFor(culture))

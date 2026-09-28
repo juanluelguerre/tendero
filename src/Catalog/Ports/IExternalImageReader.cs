@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Catalog.Ports;
 

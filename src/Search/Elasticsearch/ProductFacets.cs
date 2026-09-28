@@ -32,6 +32,10 @@ internal static class FacetCodes
     public const string Offer = "offer";
     public const string New = "new";
     public const string InStock = "stock";
+
+    /// <summary>A campaign's listing (R-8). Not a facet a screen draws: a filter
+    /// every facet is narrowed by, because the listing IS the campaign.</summary>
+    public const string Campaign = "campaign";
 }
 
 /// <summary>One filter the query chose, and the facet it belongs to — the facet
@@ -66,7 +70,9 @@ internal sealed class ProductFilters
     /// <summary>The attribute and axis codes chosen, in the order first asked.</summary>
     public IReadOnlyList<string> ChosenCodes => [.. Chosen.Select(filter => filter.Facet).Where(IsAttributeCode).Distinct()];
 
-    public static ProductFilters From(SearchFilters? filters, OfferScope offers, DateOnly today)
+    /// <param name="campaign">What the asked campaign's promotions reach now; null reads as nothing,
+    /// so a campaign asked for and not looked up can never widen a listing to the whole shop.</param>
+    public static ProductFilters From(SearchFilters? filters, OfferScope offers, DateOnly today, OfferScope? campaign = null)
     {
         var asked = filters ?? SearchFilters.None;
         var onOffer = OfferQuery(offers);
@@ -92,6 +98,11 @@ internal sealed class ProductFilters
 
         if (asked.InStock)
             chosen.Add(new(FacetCodes.InStock, available));
+
+        // The same clause as "on offer", over the campaign's own reach: one rule
+        // for what an offer reaches, whichever promotions it is asked of.
+        if (asked.Campaign is not null)
+            chosen.Add(new(FacetCodes.Campaign, OfferQuery(campaign ?? OfferScope.Nothing)));
 
         // One group per CODE, its values OR'd. Axes live on the variant document
         // and attributes on every document of the product, and a "CODE:VALUE" is

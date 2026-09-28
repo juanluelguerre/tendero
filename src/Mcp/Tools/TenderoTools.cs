@@ -112,6 +112,8 @@ public sealed class TenderoTools
         bool newArrivals = false,
         [Description("Only products that can be bought now.")]
         bool inStock = false,
+        [Description("A campaign's code, e.g. TENDERO_DAYS: only the products its promotions reach while it runs; nothing when it is not running.")]
+        string? campaign = null,
         CancellationToken cancellationToken = default)
     {
         var filters = new SearchFilters
@@ -124,6 +126,7 @@ public sealed class TenderoTools
             OnOffer = onOffer,
             NewArrivals = newArrivals,
             InStock = inStock,
+            Campaign = string.IsNullOrWhiteSpace(campaign) ? null : campaign.Trim(),
         };
 
         return Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(

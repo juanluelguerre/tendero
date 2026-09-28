@@ -94,6 +94,8 @@ public static class WorkerServices
         builder.Services.TryAddSingleton<IPrincipalAccessor, SystemPrincipalAccessor>();
         builder.Services.Configure<StockSeedOptions>(
             builder.Configuration.GetSection(StockSeedOptions.SectionName));
+        builder.Services.Configure<CampaignSeedOptions>(
+            builder.Configuration.GetSection(CampaignSeedOptions.SectionName));
 
         builder.Services.AddLexicalSearch(
             builder.Configuration.GetRequiredConnectionString("elasticsearch"));
@@ -115,6 +117,9 @@ public static class WorkerServices
             // order: seeding into a schema that does not exist yet is the one
             // ordering constraint here.
             builder.Services.AddHostedService<SeedStockAtStartupWorker>();
+
+            // Pricing's calendar (R-8): after the migrator for the same reason.
+            builder.Services.AddHostedService<SeedCampaignsAtStartupWorker>();
         }
 
         // After the migrator, for the same ordering reason as the seeder: it

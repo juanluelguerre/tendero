@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Logging;
 
 namespace ElGuerre.Tendero.Catalog.Adapters;

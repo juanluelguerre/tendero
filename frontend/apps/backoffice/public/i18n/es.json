@@ -45,8 +45,10 @@
       "ClaimCartCommand": "Conservar el carrito al iniciar sesión",
       "CompleteCheckoutSessionCommand": "Completar un pago",
       "CountStockCommand": "Contar existencias",
+      "CreateCampaignCommand": "Crear una campaña",
       "DecideReturnCommand": "Decidir una devolución",
       "DefineVariantsCommand": "Definir variantes",
+      "EndCampaignCommand": "Terminar una campaña",
       "ImportProductsCommand": "Importar productos",
       "LinkIdentityCommand": "Vincular un inicio de sesión a un cliente",
       "MoveOrderCommand": "Avanzar un pedido",
@@ -62,9 +64,12 @@
       "ReinstateAgentCommand": "Readmitir un agente",
       "RequestReturnCommand": "Pedir una devolución",
       "ReviewClaimCommand": "Decidir una afirmación",
+      "ScheduleCampaignCommand": "Programar una campaña",
       "SetCartLineCommand": "Cambiar una línea del carrito",
       "SetProductAttributeCommand": "Fijar un atributo de producto",
       "SuspendAgentCommand": "Suspender un agente",
+      "UnscheduleCampaignCommand": "Desprogramar una campaña",
+      "UpdateCampaignCommand": "Editar una campaña",
       "UpdateCheckoutSessionCommand": "Actualizar un pago",
       "WithdrawProductCommand": "Retirar un producto de la venta"
     }

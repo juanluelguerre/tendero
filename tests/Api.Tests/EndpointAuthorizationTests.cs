@@ -98,6 +98,60 @@ public sealed class EndpointAuthorizationTests
     }
 
     /// <summary>
+    /// Pricing's first writer (ADR 0044): every campaign route of the backoffice
+    /// — the calendar's reads included, because they show drafts — and the image
+    /// upload are the shopkeeper's. Several methods share a pattern, so each
+    /// pattern is checked on every endpoint it has.
+    /// </summary>
+    [Theory]
+    [InlineData("/api/pricing/campaign-calendar", 2)]
+    [InlineData("/api/pricing/campaign-calendar/{code}", 2)]
+    [InlineData("/api/pricing/campaign-calendar/{code}/schedule", 1)]
+    [InlineData("/api/pricing/campaign-calendar/{code}/unschedule", 1)]
+    [InlineData("/api/pricing/campaign-calendar/{code}/end", 1)]
+    [InlineData("/api/pricing/campaign-images", 1)]
+    public void Campaigns_are_managed_by_the_shopkeeper_only(string route, int endpoints)
+    {
+        using var factory = new TenderoApiFactory();
+        _ = factory.CreateClient();
+
+        var matching = factory.Services
+            .GetRequiredService<EndpointDataSource>()
+            .Endpoints
+            .OfType<RouteEndpoint>()
+            .Where(candidate => candidate.RoutePattern.RawText?.TrimEnd('/') == route)
+            .ToArray();
+
+        Assert.Equal(endpoints, matching.Length);
+        Assert.All(matching, endpoint =>
+        {
+            Assert.Null(endpoint.Metadata.GetMetadata<IAllowAnonymous>());
+            Assert.Contains(SharedKernel.TenderoPolicyNames.Shopkeeper,
+                endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy));
+        });
+    }
+
+    /// <summary>The shop's list of campaigns is its window display: public, as the offers are.</summary>
+    [Fact]
+    public async Task Anybody_reads_the_campaigns_near_now()
+    {
+        using var factory = new TenderoApiFactory();
+        _ = factory.CreateClient();
+
+        var endpoint = factory.Services
+            .GetRequiredService<EndpointDataSource>()
+            .Endpoints
+            .OfType<RouteEndpoint>()
+            .Single(candidate => candidate.RoutePattern.RawText == "/api/pricing/campaigns");
+
+        Assert.NotNull(endpoint.Metadata.GetMetadata<IAllowAnonymous>());
+
+        var response = await factory.CreateClient().PostAsync(
+            "/api/pricing/campaign-calendar/TENDERO_DAYS/end", null, TestContext.Current.CancellationToken);
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    /// <summary>
     /// The catalogue list reads the TABLE, drafts included — it is the review
     /// queue's reader — and it was anonymous under a comment saying "the
     /// catalogue is public". The public catalogue is what is Active, and it is

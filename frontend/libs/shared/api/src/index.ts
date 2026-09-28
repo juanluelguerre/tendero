@@ -1,4 +1,5 @@
 export * from './lib/accounts-contracts';
+export * from './lib/campaigns-contracts';
 export * from './lib/catalog-contracts';
 export * from './lib/inventory-contracts';
 export * from './lib/knowledge-contracts';

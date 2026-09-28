@@ -1,6 +1,7 @@
 using System.Text;
 using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Xunit;

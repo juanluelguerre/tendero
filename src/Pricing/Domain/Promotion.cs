@@ -143,7 +143,15 @@ public sealed record Promotion(
     /// is a tease in either place.
     /// </summary>
     public bool IsPublicAt(DateTimeOffset at) =>
-        IsActiveAt(at) && CouponCode is null && Segment is null;
+        IsActiveAt(at) && IsForEveryone;
+
+    /// <summary>
+    /// Automatic and for no segment in particular, whenever it runs: the half of
+    /// <see cref="IsPublicAt"/> that does not depend on the clock. A campaign
+    /// announcing what it WILL hold names only these, for the reason the window
+    /// does — a coupon's discount shown without its code is a tease.
+    /// </summary>
+    public bool IsForEveryone => CouponCode is null && Segment is null;
 
     /// <summary>With no segment it serves anyone.</summary>
     public bool Serves(string segment) =>

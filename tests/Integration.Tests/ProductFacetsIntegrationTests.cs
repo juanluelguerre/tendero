@@ -422,6 +422,8 @@ public sealed class ProductFacetsIntegrationTests(ElasticsearchFixture elasticse
     private sealed class FixedOffers(OfferScope scope) : IRunningOffers
     {
         public Task<OfferScope> NowAsync(CancellationToken ct = default) => Task.FromResult(scope);
+
+        public Task<OfferScope> CampaignNowAsync(string campaign, CancellationToken ct = default) => Task.FromResult(OfferScope.Nothing);
     }
 
     /// <summary>A vector side that found these products, nearest first — whatever the filters say.</summary>

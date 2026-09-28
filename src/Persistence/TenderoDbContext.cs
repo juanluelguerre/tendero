@@ -5,13 +5,14 @@ using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Persistence.Configurations;
 using ElGuerre.Tendero.Persistence.Outbox;
+using ElGuerre.Tendero.Pricing.Domain;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
 namespace ElGuerre.Tendero.Persistence;
 
 /// <summary>
-/// One DbContext, five schemas (accounts, catalog, inventory, ordering, audit) and the outbox.
+/// One DbContext, six schemas (accounts, catalog, inventory, ordering, pricing, audit) and the outbox.
 /// Bounded contexts share no entities — they share a connection, which is what
 /// puts an event and its state change in the same transaction.
 /// </summary>
@@ -28,6 +29,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<SourceDocument> SourceDocuments => Set<SourceDocument>();
     public DbSet<ProductClaim> Claims => Set<ProductClaim>();
+    public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     /// <summary>
@@ -58,6 +60,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ReservationConfiguration());
         modelBuilder.ApplyConfiguration(new SourceDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new ProductClaimConfiguration());
+        modelBuilder.ApplyConfiguration(new CampaignConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 

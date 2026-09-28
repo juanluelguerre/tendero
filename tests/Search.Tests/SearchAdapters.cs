@@ -21,9 +21,10 @@ internal static class Adapters
         ElasticsearchClient client,
         OfferScope? offers = null,
         AttributeDefinitions? definitions = null,
-        CategoryTree? categories = null) =>
+        CategoryTree? categories = null,
+        OfferScope? campaign = null) =>
         new(client, new Definitions(definitions ?? AttributeDefinitions.Empty), new Categories(categories ?? CategoryTree.Empty),
-            new Offers(offers ?? OfferScope.Nothing), Clock);
+            new Offers(offers ?? OfferScope.Nothing, campaign), Clock);
 
     public static ElasticsearchHitReader HitReader(ElasticsearchClient client, OfferScope? offers = null) =>
         new(client, new Offers(offers ?? OfferScope.Nothing), Clock);
@@ -73,8 +74,12 @@ internal static class Adapters
         public Task<CategoryTree> AllAsync(CancellationToken cancellationToken = default) => Task.FromResult(tree);
     }
 
-    private sealed class Offers(OfferScope scope) : IRunningOffers
+    /// <summary>The running offers as given, and whichever campaign is asked reaching <paramref name="campaign"/> (nothing by default).</summary>
+    private sealed class Offers(OfferScope scope, OfferScope? campaign = null) : IRunningOffers
     {
         public Task<OfferScope> NowAsync(CancellationToken ct = default) => Task.FromResult(scope);
+
+        public Task<OfferScope> CampaignNowAsync(string code, CancellationToken ct = default) =>
+            Task.FromResult(campaign ?? OfferScope.Nothing);
     }
 }

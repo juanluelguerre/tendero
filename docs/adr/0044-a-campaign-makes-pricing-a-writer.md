@@ -50,11 +50,17 @@ writer; promotions stay committed files for now.
 
 ## Consequences
 
-- Pricing gains a migration and a table (`pricing_campaigns`); the promotion
+- Pricing gains a migration and a table (`pricing.campaigns`, in its own schema as every context has); the promotion
   engine and its property tests are untouched.
 - The day promotions move into the database too, they follow this pattern; this
   ADR does not decide that.
 - ADR 0014's sentence about Pricing is now history: Pricing has a writer. The
   context count does not change.
-- A campaign's status on the wire is a closed set (ADR 0043): `Draft`,
-  `Scheduled`, `Running`, `Ended` — the last two computed or stored as above.
+- On the wire, two closed sets (ADR 0043), as built: the stored **status**
+  `Draft`, `Scheduled`, `Ended`, and the **phase** computed from the window when
+  read, `Upcoming`, `Running`, `Over` — the backoffice shows both; the shop's
+  public list only ever answers `Upcoming` or `Running`.
+- A promotion behind a coupon is *shown* by the campaign, with its code as data
+  (`holds: [{name, couponCode}]`), and not counted by `?campaign=`: a price that
+  needs a code is not the price the listing shows everybody. A segment's
+  promotion is neither — it is somebody's, not the shop's.

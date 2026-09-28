@@ -1228,6 +1228,54 @@
         }
       }
     },
+    "/api/pricing/campaign-images": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "UploadCampaignImage",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignImageUploaded"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/pricing/promotions": {
       "get": {
         "tags": [
@@ -1270,6 +1318,35 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListOffersResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/campaigns": {
+      "get": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ListCampaigns",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListCampaignsResult"
                 }
               }
             }
@@ -1399,6 +1476,13 @@
             "in": "query",
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "campaign",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -2381,6 +2465,333 @@
           }
         }
       }
+    },
+    "/api/pricing/campaign-calendar": {
+      "get": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ListManagedCampaigns",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManagedCampaignView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "CreateCampaign",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCampaignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/campaign-calendar/{code}": {
+      "get": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "GetManagedCampaign",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedCampaignView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "UpdateCampaign",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CampaignDetailsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/campaign-calendar/{code}/schedule": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "ScheduleCampaign",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/campaign-calendar/{code}/unschedule": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "UnscheduleCampaign",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pricing/campaign-calendar/{code}/end": {
+      "post": {
+        "tags": [
+          "Pricing"
+        ],
+        "operationId": "EndCampaign",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignChangeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2948,6 +3359,270 @@
           }
         }
       },
+      "BilingualText": {
+        "required": [
+          "es",
+          "en"
+        ],
+        "type": "object",
+        "properties": {
+          "es": {
+            "type": "string"
+          },
+          "en": {
+            "type": "string"
+          }
+        }
+      },
+      "CampaignChange": {
+        "enum": [
+          "Created",
+          "Updated",
+          "Scheduled",
+          "Unscheduled",
+          "Ended",
+          "Unchanged",
+          "NotFound",
+          "AlreadyExists",
+          "UnknownPromotion",
+          "UnknownImage",
+          "WindowClosed",
+          "NotEditable",
+          "NotAllowed"
+        ]
+      },
+      "CampaignChangeResponse": {
+        "required": [
+          "change",
+          "campaign"
+        ],
+        "type": "object",
+        "properties": {
+          "change": {
+            "$ref": "#/components/schemas/CampaignChange"
+          },
+          "campaign": {
+            "$ref": "#/components/schemas/ManagedCampaignView"
+          }
+        }
+      },
+      "CampaignDetailsRequest": {
+        "required": [
+          "name",
+          "line",
+          "kind",
+          "categoryCode",
+          "startsAt",
+          "endsAt",
+          "priority",
+          "promotionCodes"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/BilingualText"
+          },
+          "line": {
+            "$ref": "#/components/schemas/BilingualText"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CampaignKind"
+          },
+          "categoryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "promotionCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "image": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CampaignImageRequest"
+              }
+            ]
+          }
+        }
+      },
+      "CampaignHold": {
+        "required": [
+          "name",
+          "couponCode"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "couponCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CampaignImageRequest": {
+        "required": [
+          "imageId",
+          "alt"
+        ],
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string"
+          },
+          "alt": {
+            "$ref": "#/components/schemas/BilingualText"
+          }
+        }
+      },
+      "CampaignImageUploaded": {
+        "required": [
+          "imageId"
+        ],
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string"
+          }
+        }
+      },
+      "CampaignImageView": {
+        "required": [
+          "imageId",
+          "alt"
+        ],
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string"
+          },
+          "alt": {
+            "$ref": "#/components/schemas/BilingualText"
+          }
+        }
+      },
+      "CampaignKind": {
+        "enum": [
+          "Event",
+          "Season"
+        ]
+      },
+      "CampaignPhase": {
+        "enum": [
+          "Upcoming",
+          "Running",
+          "Over"
+        ]
+      },
+      "CampaignScope": {
+        "enum": [
+          "Shop",
+          "Category"
+        ]
+      },
+      "CampaignStatus": {
+        "enum": [
+          "Draft",
+          "Scheduled",
+          "Ended"
+        ]
+      },
+      "CampaignView": {
+        "required": [
+          "code",
+          "name",
+          "line",
+          "kind",
+          "scope",
+          "categoryCode",
+          "phase",
+          "startsAt",
+          "endsAt",
+          "priority",
+          "holds",
+          "imageId",
+          "imageAlt"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "line": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CampaignKind"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/CampaignScope"
+          },
+          "categoryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "phase": {
+            "$ref": "#/components/schemas/CampaignPhase"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "holds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CampaignHold"
+            }
+          },
+          "imageId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageAlt": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CartLineView": {
         "required": [
           "productId",
@@ -3322,6 +3997,21 @@
           }
         }
       },
+      "CreateCampaignRequest": {
+        "required": [
+          "code",
+          "details"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "details": {
+            "$ref": "#/components/schemas/CampaignDetailsRequest"
+          }
+        }
+      },
       "CultureEvaluation": {
         "required": [
           "culture",
@@ -3500,6 +4190,10 @@
           null
         ]
       },
+      "IFormFile": {
+        "type": "string",
+        "format": "binary"
+      },
       "ImportProductsCommand": {
         "required": [
           "source"
@@ -3650,6 +4344,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AuditOutcomeCount"
+            }
+          }
+        }
+      },
+      "ListCampaignsResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CampaignView"
             }
           }
         }
@@ -3813,6 +4521,99 @@
           "restockAt": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ManagedCampaignView": {
+        "required": [
+          "code",
+          "name",
+          "line",
+          "kind",
+          "scope",
+          "categoryCode",
+          "startsAt",
+          "endsAt",
+          "priority",
+          "promotionCodes",
+          "image",
+          "status",
+          "phase",
+          "endedAt",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/BilingualText"
+          },
+          "line": {
+            "$ref": "#/components/schemas/BilingualText"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CampaignKind"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/CampaignScope"
+          },
+          "categoryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "promotionCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "image": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CampaignImageView"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/CampaignStatus"
+          },
+          "phase": {
+            "$ref": "#/components/schemas/CampaignPhase"
+          },
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

@@ -45,8 +45,10 @@
       "ClaimCartCommand": "Keep a guest's cart on signing in",
       "CompleteCheckoutSessionCommand": "Complete a checkout",
       "CountStockCommand": "Count stock",
+      "CreateCampaignCommand": "Create a campaign",
       "DecideReturnCommand": "Decide a return",
       "DefineVariantsCommand": "Define variants",
+      "EndCampaignCommand": "End a campaign",
       "ImportProductsCommand": "Import products",
       "LinkIdentityCommand": "Link a sign-in to a customer",
       "MoveOrderCommand": "Move an order along",
@@ -62,9 +64,12 @@
       "ReinstateAgentCommand": "Reinstate an agent",
       "RequestReturnCommand": "Ask for a return",
       "ReviewClaimCommand": "Decide a claim",
+      "ScheduleCampaignCommand": "Schedule a campaign",
       "SetCartLineCommand": "Change a cart line",
       "SetProductAttributeCommand": "Set a product attribute",
       "SuspendAgentCommand": "Suspend an agent",
+      "UnscheduleCampaignCommand": "Unschedule a campaign",
+      "UpdateCampaignCommand": "Edit a campaign",
       "UpdateCheckoutSessionCommand": "Update a checkout",
       "WithdrawProductCommand": "Take a product off sale"
     }

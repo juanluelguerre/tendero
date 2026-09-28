@@ -484,6 +484,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/campaign-images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UploadCampaignImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/pricing/promotions": {
         parameters: {
             query?: never;
@@ -508,6 +524,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["ListOffers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/campaigns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListCampaigns"];
         put?: never;
         post?: never;
         delete?: never;
@@ -836,6 +868,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pricing/campaign-calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListManagedCampaigns"];
+        put?: never;
+        post: operations["CreateCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/campaign-calendar/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetManagedCampaign"];
+        put: operations["UpdateCampaign"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/campaign-calendar/{code}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ScheduleCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/campaign-calendar/{code}/unschedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnscheduleCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pricing/campaign-calendar/{code}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndCampaign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -990,6 +1102,71 @@ export interface components {
             /** Format: double */
             revenue: number;
         };
+        BilingualText: {
+            es: string;
+            en: string;
+        };
+        /** @enum {unknown} */
+        CampaignChange: "Created" | "Updated" | "Scheduled" | "Unscheduled" | "Ended" | "Unchanged" | "NotFound" | "AlreadyExists" | "UnknownPromotion" | "UnknownImage" | "WindowClosed" | "NotEditable" | "NotAllowed";
+        CampaignChangeResponse: {
+            change: components["schemas"]["CampaignChange"];
+            campaign: components["schemas"]["ManagedCampaignView"];
+        };
+        CampaignDetailsRequest: {
+            name: components["schemas"]["BilingualText"];
+            line: components["schemas"]["BilingualText"];
+            kind: components["schemas"]["CampaignKind"];
+            categoryCode: null | string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: int32 */
+            priority: number;
+            promotionCodes: string[];
+            image?: null | components["schemas"]["CampaignImageRequest"];
+        };
+        CampaignHold: {
+            name: string;
+            couponCode: null | string;
+        };
+        CampaignImageRequest: {
+            imageId: string;
+            alt: components["schemas"]["BilingualText"];
+        };
+        CampaignImageUploaded: {
+            imageId: string;
+        };
+        CampaignImageView: {
+            imageId: string;
+            alt: components["schemas"]["BilingualText"];
+        };
+        /** @enum {unknown} */
+        CampaignKind: "Event" | "Season";
+        /** @enum {unknown} */
+        CampaignPhase: "Upcoming" | "Running" | "Over";
+        /** @enum {unknown} */
+        CampaignScope: "Shop" | "Category";
+        /** @enum {unknown} */
+        CampaignStatus: "Draft" | "Scheduled" | "Ended";
+        CampaignView: {
+            code: string;
+            name: string;
+            line: string;
+            kind: components["schemas"]["CampaignKind"];
+            scope: components["schemas"]["CampaignScope"];
+            categoryCode: null | string;
+            phase: components["schemas"]["CampaignPhase"];
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: int32 */
+            priority: number;
+            holds: components["schemas"]["CampaignHold"][];
+            imageId: null | string;
+            imageAlt: null | string;
+        };
         CartLineView: {
             productId: string;
             variantId: string;
@@ -1094,6 +1271,10 @@ export interface components {
             /** Format: int32 */
             available: number;
         };
+        CreateCampaignRequest: {
+            code: string;
+            details: components["schemas"]["CampaignDetailsRequest"];
+        };
         CultureEvaluation: {
             culture: string;
             lexical: components["schemas"]["StrategyScore"];
@@ -1138,6 +1319,8 @@ export interface components {
         };
         /** @enum {unknown} */
         FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
+        /** Format: binary */
+        IFormFile: string;
         ImportProductsCommand: {
             source: string;
         };
@@ -1178,6 +1361,9 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
             counts: components["schemas"]["AuditOutcomeCount"][];
+        };
+        ListCampaignsResult: {
+            items: components["schemas"]["CampaignView"][];
         };
         ListCategoriesResult: {
             items: components["schemas"]["CategoryView"][];
@@ -1220,6 +1406,30 @@ export interface components {
             counts: components["schemas"]["StockFilterCount"][];
             /** Format: int32 */
             restockAt: number;
+        };
+        ManagedCampaignView: {
+            code: string;
+            name: components["schemas"]["BilingualText"];
+            line: components["schemas"]["BilingualText"];
+            kind: components["schemas"]["CampaignKind"];
+            scope: components["schemas"]["CampaignScope"];
+            categoryCode: null | string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            /** Format: int32 */
+            priority: number;
+            promotionCodes: string[];
+            image: null | components["schemas"]["CampaignImageView"];
+            status: components["schemas"]["CampaignStatus"];
+            phase: components["schemas"]["CampaignPhase"];
+            /** Format: date-time */
+            endedAt: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         MoveOrderRequest: {
             move: components["schemas"]["OrderMove"];
@@ -2800,6 +3010,41 @@ export interface operations {
             };
         };
     };
+    UploadCampaignImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    file: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignImageUploaded"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     ListPromotions: {
         parameters: {
             query?: never;
@@ -2842,6 +3087,28 @@ export interface operations {
             };
         };
     };
+    ListCampaigns: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListCampaignsResult"];
+                };
+            };
+        };
+    };
     SearchProducts: {
         parameters: {
             query?: {
@@ -2859,6 +3126,7 @@ export interface operations {
                 onOffer?: boolean;
                 newArrivals?: boolean;
                 inStock?: boolean;
+                campaign?: string;
             };
             header?: never;
             path?: never;
@@ -3581,6 +3849,296 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PriceChangedResponse"];
+                };
+            };
+        };
+    };
+    ListManagedCampaigns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedCampaignView"][];
+                };
+            };
+        };
+    };
+    CreateCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignChangeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    GetManagedCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedCampaignView"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UpdateCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignDetailsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignChangeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    ScheduleCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignChangeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    UnscheduleCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignChangeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
+    EndCampaign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignChangeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
                 };
             };
         };

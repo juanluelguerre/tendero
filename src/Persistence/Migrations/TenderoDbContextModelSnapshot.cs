@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260927112225_AddOrderPlacedBy";
+    public override string LastMigrationId => "20260928224504_AddPricingCampaigns";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -1301,6 +1301,89 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasFilter("processed_at IS NULL");
 
                 b.ToTable("messages", "outbox");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Pricing.Domain.Campaign", b =>
+            {
+                b.Property<string>("Code")
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)")
+                    .HasColumnName("code");
+
+                b.Property<string>("CategoryCode")
+                    .HasMaxLength(60)
+                    .HasColumnType("character varying(60)")
+                    .HasColumnName("category_code");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<DateTimeOffset?>("EndedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("ended_at");
+
+                b.Property<DateTimeOffset>("EndsAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("ends_at");
+
+                b.Property<string>("ImageAlt")
+                    .HasColumnType("jsonb")
+                    .HasColumnName("image_alt");
+
+                b.Property<string>("ImageId")
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)")
+                    .HasColumnName("image_id");
+
+                b.Property<string>("Kind")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("kind");
+
+                b.Property<string>("Line")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("line");
+
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("name");
+
+                b.Property<int>("Priority")
+                    .HasColumnType("integer")
+                    .HasColumnName("priority");
+
+                b.Property<DateTimeOffset>("StartsAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("starts_at");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.Property<string>("promotionCodes")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("promotion_codes")
+                    .HasDefaultValueSql("'[]'::jsonb");
+
+                b.HasKey("Code")
+                    .HasName("pk_campaigns");
+
+                b.HasIndex("Status", "EndsAt")
+                    .HasDatabaseName("ix_campaigns_status_ends_at");
+
+                b.ToTable("campaigns", "pricing");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.SharedKernel.AuditEntry", b =>

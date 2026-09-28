@@ -2,6 +2,7 @@ using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Connectors.Seed;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
