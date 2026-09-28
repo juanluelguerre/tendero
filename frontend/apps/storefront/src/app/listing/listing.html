@@ -73,7 +73,7 @@
 
       <label class="sort">
         <span class="sort__label">{{ t('listing.sort.label') }}</span>
-        <select #sortBox class="sort__select" (change)="sortBy(sortBox.value)">
+        <select #sortBox class="select sort__select" (change)="sortBy(sortBox.value)">
           <option value="" [selected]="filters.sort === null">
             {{ searching() ? t('listing.sort.relevance') : t('listing.sort.recommended') }}
           </option>

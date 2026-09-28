@@ -26,6 +26,15 @@
   --olive-500: #5C7F38;   /* fills and decoration only */
   --olive-600: #4E6B2F;   /* verified, in stock, passing — the step used as text */
   --olive-700: #3D5623;
+  /* The state colours as text, light theme (2026-09-28). The steps above were
+     chosen for contrast and read as greys at 11px beside grey labels, where the
+     dark theme's steps stood out (the author, the redesign's second
+     walkthrough). These are the most saturated that keep 4.5:1 on all three
+     light surfaces and on the tint an active row sits on (stone-0 / 100 / 50,
+     clay-50) — the backoffice's accessibility ratchet found the tint when the
+     first amber missed it by 0.02. The backoffice uses them for its states in
+     the light theme; the storefront keeps its own. */
+  --green-600: #3D7A1F;   /* passing, in stock, up — text (5.25 / 4.65 / 4.99 / 4.62) */
 
   --stone-0:   #FFFFFF;   /* cards, inputs, app surfaces */
   --stone-50:  #FAF9F7;   /* raised rows */
@@ -39,9 +48,11 @@
   --ink-400:   #938C84;   /* decoration only: too light for text on any surface */
 
   --amber-500: #C77F14;   /* fills and decoration only */
-  --amber-700: #8F5C0E;   /* needs review, pending — the step used as text */
+  --amber-700: #8F5C0E;   /* needs review, pending — dark accents */
+  --amber-600: #A05600;   /* needs review, pending — text (5.49 / 4.87 / 5.22 / 4.83) */
   --amber-50:  #FBF1DE;
-  --red-600:   #B3261E;   /* destructive, failed */
+  --red-600:   #B3261E;   /* destructive, failed — fills */
+  --red-550:   #CC2A1F;   /* destructive, failed — text (5.36 / 4.75 / 5.09 / 4.72) */
   --red-50:    #FBEAE9;
 
   /* ---------- Semantic aliases (use these in components) ---------- */
@@ -56,6 +67,7 @@
   --accent:         var(--clay-600);
   --accent-hover:   var(--clay-700);
   --accent-tint:    var(--clay-50);
+  --danger-tint:    var(--red-50);    /* a message that something failed, behind its text */
   --on-accent:      var(--stone-0);
   --positive:       var(--olive-600);
   --warning:        var(--amber-700);
@@ -114,14 +126,6 @@
   /* ---------- Layout ---------- */
   --container-prose: 68ch;   /* docs and blog measure */
   --container-app: 1440px;
-  /* The shop's frame: a list of products is browsed, not read, so it takes
-     the screen, as the large shops do — more cards to a row, not wider cards
-     (R-7.4). A 1920px cap still left 320px of nothing each side of a 2560px
-     screen, which the author saw at once. What must not grow carries its own
-     measure inside it: a line of text in ch, and a page that is read or
-     filled in rather than browsed — product, cart, checkout, order, account —
-     --container-app (the list is in the storefront's styles.css). */
-  --container-shop: none;
   --header-h: 64px;
 }
 
@@ -141,6 +145,12 @@
   --accent:        #F07A50;
   --accent-hover:  #F59570;
   --accent-tint:   #3A2115;
+  /* Added 2026-09-28. A failed search's box used --red-50 straight from the
+     palette, which no theme redefines: a pale pink under the dark theme's light
+     text, the title invisible and the line beside it faint (the author, the
+     redesign's second walkthrough). The tint is a token now, deep red here as
+     --accent-tint is deep clay: --text 13.9:1, --text-muted 6.2:1 on it. */
+  --danger-tint:   #3A1A18;
   --on-accent:     var(--ink-900);
   --positive:      #8FB463;
 

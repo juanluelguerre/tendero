@@ -102,7 +102,7 @@
                       <label class="row row--grow">
                         <span class="row__label">{{ t('order.returnReason') }}</span>
                         <select
-                          class="field"
+                          class="field select"
                           [ngModel]="reasonOf(line.sku)"
                           (ngModelChange)="setReason(line.sku, $event)"
                           [name]="'reason-' + line.sku"

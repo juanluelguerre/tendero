@@ -263,7 +263,7 @@
     ],
     "attributes": {
       "color": "blanco",
-      "material": "algodon",
+      "material": "algodón",
       "genero": "mujer",
       "tallas": "36-42"
     },
@@ -482,7 +482,7 @@
     ],
     "attributes": {
       "color": "blanco",
-      "material": "algodon",
+      "material": "algodón",
       "genero": "hombre",
       "tallas": "38-44"
     },
@@ -536,7 +536,7 @@
     ],
     "attributes": {
       "color": "azul marino",
-      "material": "algodon",
+      "material": "algodón",
       "genero": "mujer",
       "tallas": "36-44"
     },
@@ -804,7 +804,7 @@
       "images/B11COO0306.webp"
     ],
     "attributes": {
-      "material": "ceramica",
+      "material": "cerámica",
       "induccion": "no"
     },
     "available_from": "2026-05-25"
@@ -829,7 +829,7 @@
       "images/B11COO0307.webp"
     ],
     "attributes": {
-      "material": "bambu",
+      "material": "bambú",
       "piezas": "1"
     },
     "available_from": "2025-09-13"
@@ -854,7 +854,7 @@
       "images/B11COO0308.webp"
     ],
     "attributes": {
-      "material": "bambu",
+      "material": "bambú",
       "piezas": "5"
     },
     "available_from": "2024-11-06"
@@ -929,7 +929,7 @@
       "images/B11COO0311.webp"
     ],
     "attributes": {
-      "material": "ceramica",
+      "material": "cerámica",
       "piezas": "1"
     },
     "available_from": "2025-06-17"
@@ -1186,7 +1186,7 @@
       "images/B11TAB0501.webp"
     ],
     "attributes": {
-      "material": "ceramica",
+      "material": "cerámica",
       "diametros_cm": "27",
       "piezas": "4",
       "color": "crema"
@@ -1213,7 +1213,7 @@
       "images/B11TAB0502.webp"
     ],
     "attributes": {
-      "material": "ceramica",
+      "material": "cerámica",
       "piezas": "4",
       "capacidad_l": "0.45",
       "color": "terracota"
@@ -1419,7 +1419,7 @@
       "images/B12LAM0604.webp"
     ],
     "attributes": {
-      "material": "ceramica",
+      "material": "cerámica",
       "color": "terracota",
       "temperatura_color": "2700 K"
     },
@@ -1760,7 +1760,7 @@
     ],
     "attributes": {
       "color": "crema",
-      "material": "algodon",
+      "material": "algodón",
       "capacidad_l": "20"
     },
     "available_from": "2026-08-18"
@@ -1991,7 +1991,7 @@
       "images/B14HOM0804.webp"
     ],
     "attributes": {
-      "material": "bambu",
+      "material": "bambú",
       "diametros_cm": "40",
       "color": "crema"
     },
@@ -2068,7 +2068,7 @@
       "images/B14HOM0807.webp"
     ],
     "attributes": {
-      "material": "algodon",
+      "material": "algodón",
       "color": "crema"
     },
     "available_from": "2026-07-03"
@@ -2119,7 +2119,7 @@
       "images/B14ORG0901.webp"
     ],
     "attributes": {
-      "material": "bambu",
+      "material": "bambú",
       "piezas": "1"
     },
     "available_from": "2025-10-05"
@@ -2144,7 +2144,7 @@
       "images/B14ORG0902.webp"
     ],
     "attributes": {
-      "material": "bambu"
+      "material": "bambú"
     },
     "available_from": "2026-03-26"
   },
@@ -2507,7 +2507,7 @@
     ],
     "attributes": {
       "color": "crema",
-      "material": "algodon",
+      "material": "algodón",
       "genero": "mujer",
       "tallas": "36-42"
     },

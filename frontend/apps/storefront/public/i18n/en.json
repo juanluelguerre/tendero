@@ -90,6 +90,7 @@
     "shop": "Shop",
     "close": "Close the menu",
     "search": "Search the shop",
+    "searchGo": "Search",
     "searchLabel": "Search the shop",
     "departments": "Departments",
     "sectionsOf": "{{name}}: its sections",

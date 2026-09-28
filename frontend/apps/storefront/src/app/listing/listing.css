@@ -99,14 +99,13 @@
 .sort__select {
   width: 100%;
   min-height: 2.75rem;
-  padding-inline: var(--space-3);
+  padding-inline-start: var(--space-3);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  background: var(--bg-surface);
+  background-color: var(--bg-surface);
   color: var(--text);
   font: inherit;
   font-size: var(--text-sm);
-  cursor: pointer;
 }
 
 /* ---------- The column and the results ---------- */

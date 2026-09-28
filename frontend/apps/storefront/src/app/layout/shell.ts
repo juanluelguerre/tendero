@@ -86,8 +86,8 @@ export class Shell {
     { initialValue: this.router.url },
   );
 
-  /** The home page is a search: it does not get a second one in the header. */
-  protected readonly onHome = computed(() => this.url().split(/[?#]/)[0].split('/').filter(Boolean).length <= 1);
+  /** What the page is listing, for the header's box to show: the words of `?q=`, or nothing. */
+  protected readonly query = computed(() => this.router.parseUrl(this.url()).queryParamMap.get('q') ?? '');
 
   /** The department of the category on screen, for the menu to mark (S-P2). */
   protected readonly department = computed(() => {

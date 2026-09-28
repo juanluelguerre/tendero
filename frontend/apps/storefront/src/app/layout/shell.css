@@ -84,20 +84,40 @@
 .menu-button[aria-expanded='true'] { border-color: var(--text); }
 .menu-button__icon { width: 20px; height: 20px; }
 
-.search { display: flex; }
+.search { display: flex; position: relative; }
 .search--row { flex: 1; max-width: 36rem; }
 .search--full { width: 100%; }
 
 .search__input {
   width: 100%;
   min-height: 2.75rem;
-  padding: 0 var(--space-3);
+  padding: 0 2.75rem 0 var(--space-3);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
   background: var(--bg-surface);
   color: var(--text);
   font: inherit;
 }
+
+/* The magnifier sends it, inside the box's right end, as the large shops draw
+   it: Enter is not the only way, and on a phone there may be no Enter key in
+   sight. Quiet, not clay: the page's one accent action is the page's. */
+.search__go {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  border: 0;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  background: none;
+  color: var(--text-muted);
+}
+
+.search__go:hover { color: var(--text); }
+
+.search__go svg { inline-size: 1.125rem; block-size: 1.125rem; }
 
 .search-row { padding-block: var(--space-1) var(--space-2); }
 

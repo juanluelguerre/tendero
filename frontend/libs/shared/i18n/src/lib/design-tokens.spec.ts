@@ -79,6 +79,43 @@ describe('the design tokens', () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * A component names what a colour is for, never which paint it is.
+   *
+   * `--red-50` is a pale pink in every theme, because no theme redefines a
+   * palette step — only the semantic tokens change. A failed search's box used
+   * it, and under the dark theme's light text the title vanished (the author,
+   * the redesign's second walkthrough); a selected variant and the skeleton's
+   * sweep did the same with the stone steps. So an app's stylesheet reaches the
+   * palette only where a colour is meant to stay the same in both themes, and
+   * each such place says why.
+   */
+  const PALETTE = /var\(--(stone|ink|clay|olive|amber|red|green)-\d+\)/g;
+
+  /** Where a palette step is the point, not an accident. */
+  const THEMELESS: Record<string, string> = {
+    'frontend/libs/shared/tokens/src/theme.css': 'the bridge that maps the palette into Tailwind',
+    'frontend/apps/backoffice/src/styles.css': "the light theme's state colours, defined from the palette",
+    'frontend/apps/backoffice/src/app/layout/nav.css': 'the awning stripes of the current page: brand, the same in both themes',
+    'frontend/apps/backoffice/src/app/layout/palette.css': 'a scrim: ink over the page, dark in both themes',
+    'frontend/apps/backoffice/src/app/layout/shell.css': 'a scrim: ink over the page, dark in both themes',
+    'frontend/apps/backoffice/src/app/work/confirm-dialog.css': 'a scrim: ink over the page, dark in both themes',
+    'frontend/apps/storefront/src/app/layout/shell.css': 'a scrim: ink over the page, dark in both themes',
+    'frontend/apps/storefront/src/app/listing/listing.css': 'a scrim: ink over the page, dark in both themes',
+  };
+
+  it('are reached by purpose in the apps, so a theme can change them', () => {
+    const offenders = stylesheets(join(repository, 'frontend'))
+      .map((path) => [relative(repository, path).replaceAll('\\', '/'), path] as const)
+      .filter(([name]) => !(name in THEMELESS))
+      .flatMap(([name, path]) => {
+        const css = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+        return [...(css.match(PALETTE) ?? [])].map((step) => `${name}: ${step}`);
+      });
+
+    expect(offenders).toEqual([]);
+  });
+
   it('are actually defined, so the rule is not passing over nothing', () => {
     const tokens = readFileSync(join(repository, SOURCE), 'utf8');
 
