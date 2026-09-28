@@ -96,9 +96,8 @@ public static class PersistenceServiceCollectionExtensions
 
         // Pricing's first writer (ADR 0044): one adapter, the backoffice's
         // repository and the shop's reader, one instance per scope.
-        services.AddScoped<EfCampaignRepository>();
-        services.AddScoped<ICampaignRepository>(services => services.GetRequiredService<EfCampaignRepository>());
-        services.AddScoped<ICampaignReader>(services => services.GetRequiredService<EfCampaignRepository>());
+        services.AddScoped<ICampaignRepository, EfCampaignRepository>();
+        services.AddScoped<ICampaignReader, EfCampaignReader>();
 
         return services;
     }
