@@ -102,7 +102,7 @@
               </td>
               <td class="reason">{{ entry.reason }}</td>
               <td class="numeric">
-                <button type="button" class="quiet" (click)="toggle(entry.id)">
+                <button type="button" class="linkish" [attr.aria-expanded]="opened() === entry.id" (click)="toggle(entry.id)">
                   {{ opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
                 </button>
               </td>
