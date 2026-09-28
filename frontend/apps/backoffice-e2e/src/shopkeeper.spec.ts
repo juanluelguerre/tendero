@@ -81,7 +81,7 @@ test.describe('the backoffice', () => {
   test('every tab reaches the screen it names', async ({ page }) => {
     await signIn(page);
 
-    for (const path of ['/catalogue', '/stock', '/orders', '/returns', '/attributes', '/promotions', '/audit']) {
+    for (const path of ['/catalogue', '/stock', '/orders', '/returns', '/attributes', '/promotions', '/campaigns', '/audit']) {
       await page.goto(path);
 
       // A heading, not a URL: a route that resolves to a blank component would
@@ -156,6 +156,50 @@ test.describe('the backoffice', () => {
 
     await page.getByRole('status').getByRole('button', { name: /^(Undo|Deshacer)$/ }).click();
     await expect(row.getByText(/^\s*(Active|Activo)\s*$/)).toBeVisible();
+  });
+
+  /**
+   * A campaign's whole life from the backoffice (R-8, H-1b): drafted in the
+   * pane, scheduled, found under Scheduled because its window opens tomorrow,
+   * and ended — which asks first, because it cannot be undone. Each run makes
+   * its own campaign, by a code nobody else uses, and leaves it ended.
+   */
+  test('a campaign is drafted, scheduled, found under Scheduled, and ended', async ({ page }) => {
+    await signIn(page);
+    await page.goto('/campaigns');
+
+    await page.getByRole('button', { name: /^\+?\s*(New campaign|Nueva campaña)$/ }).click();
+    const newPane = page.getByRole('complementary', { name: /^(New campaign|Nueva campaña)$/ });
+    await expect(newPane.getByRole('heading', { level: 2 })).toBeFocused();
+
+    const name = `E2E ${Date.now().toString(36).toUpperCase()}`;
+    const named = newPane.getByRole('group', { name: /^(Name|Nombre)$/ });
+    await named.getByRole('textbox', { name: 'es' }).fill(name);
+    await named.getByRole('textbox', { name: 'en' }).fill(name);
+    const line = newPane.getByRole('group', { name: /^(Line|Lema)$/ });
+    await line.getByRole('textbox', { name: 'es' }).fill('Una semana de prueba');
+    await line.getByRole('textbox', { name: 'en' }).fill('A week of testing');
+    await newPane.getByRole('checkbox').first().check();
+    await newPane.getByRole('button', { name: /^(Create draft|Crear borrador)$/ }).click();
+
+    // Saved, it opens among the drafts, under its own name.
+    const pane = page.getByRole('complementary', { name });
+    await expect(pane.getByRole('button', { name: /^(Schedule|Programar)$/ })).toBeEnabled();
+    await expect(page.getByRole('table').getByRole('row').filter({ hasText: name }).getByText(/^\s*(Draft|Borrador)\s*$/)).toBeVisible();
+
+    await pane.getByRole('button', { name: /^(Schedule|Programar)$/ }).click();
+    await expect(pane.getByRole('button', { name: /^(Unschedule to edit|Desprogramar para editar)$/ })).toBeVisible();
+
+    await page.getByRole('group', { name: /^(Filter campaigns|Filtrar campañas)$/ }).getByRole('button', { name: /^(Scheduled|Programadas)/ }).click();
+    const row = page.getByRole('table').getByRole('row').filter({ hasText: name });
+    await expect(row.getByText(/^\s*(Scheduled|Programada)\s*$/)).toBeVisible();
+
+    await pane.getByRole('button', { name: /^(End now…|Terminar ahora…)$/ }).click();
+    const confirm = page.getByRole('dialog');
+    await confirm.getByRole('button', { name: /^(End it|Terminarla)$/ }).click();
+
+    await expect(pane.getByText(/^\s*(Ended|Terminada):/)).toBeVisible();
+    await expect(row).toBeHidden();
   });
 
   test('taking a product off sale offers Undo, and Undo puts it back', async ({ page }) => {

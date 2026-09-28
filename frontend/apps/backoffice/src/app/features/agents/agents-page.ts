@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,6 +12,7 @@ import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../us
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { Undo } from '../../work/undo';
 import { WorkPane } from '../../work/work-pane';
+import { refusalOf } from '../../work/refusal';
 
 /**
  * The agents a shop vouches for (P11-6), as R-3 drew the lists of work (R-4.3).
@@ -120,7 +120,7 @@ export class AgentsPage {
       error: (failure: unknown) => {
         this.busy.set(null);
         if (isSessionExpired(failure)) return;
-        this.refusal.set(failure instanceof HttpErrorResponse && typeof failure.error === 'string' ? failure.error : '');
+        this.refusal.set(refusalOf(failure));
       },
     });
   }

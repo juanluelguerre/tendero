@@ -99,18 +99,18 @@ export interface TrackedEvents {
   /**
    * The shopkeeper opened a backoffice screen (R-0 of the redesign). A staff event: sent by default under the shop's notice to staff, and never with who they are.
    *
-   * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+   * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
    * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
    */
   readonly backoffice_view_opened: {
     /** The screen, by its route; never an id in it. */
-    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
+    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
   };
 
   /**
    * The shopkeeper did what a screen is for — published, approved, shipped, decided, suspended — and how the server answered (R-0). A staff event.
    *
-   * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+   * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
    * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
    *
    * Palette and list shortcuts: Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
@@ -118,9 +118,9 @@ export interface TrackedEvents {
    */
   readonly backoffice_action_taken: {
     /** The screen it was done on. */
-    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
+    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
     /** What was done, from a closed list. */
-    readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate';
+    readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate' | 'campaign_create' | 'campaign_update' | 'campaign_schedule' | 'campaign_unschedule' | 'campaign_end';
     /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
     readonly outcome: 'done' | 'refused' | 'failed';
     /** Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). */

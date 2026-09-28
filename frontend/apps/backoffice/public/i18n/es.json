@@ -117,6 +117,7 @@
     "language": "Idioma",
     "orders": "Pedidos",
     "promotions": "Promociones",
+    "campaigns": "Campañas",
     "returns": "Devoluciones",
     "reviewQueue": "Cola de revisión",
     "search": "Calidad de búsqueda",
@@ -237,6 +238,102 @@
     "state": {
       "running": "Activa",
       "scheduled": "Sin activar"
+    }
+  },
+  "campaigns": {
+    "title": "Campañas",
+    "hint": "Eventos y temporadas con fechas. La tienda muestra una a la vez: la que está en curso y tiene más prioridad.",
+    "new": "Nueva campaña",
+    "loading": "Cargando campañas…",
+    "failed": "No se pudieron cargar las campañas.",
+    "refused": "No se ha podido hacer el cambio.",
+    "filterLabel": "Filtrar campañas",
+    "filter": {
+      "running": "En curso",
+      "scheduled": "Programadas",
+      "drafts": "Borradores",
+      "ended": "Terminadas",
+      "all": "Todas"
+    },
+    "empty": {
+      "running": "Ahora no hay ninguna campaña en curso.",
+      "scheduled": "No hay campañas programadas.",
+      "drafts": "No hay borradores.",
+      "ended": "Todavía no ha terminado ninguna campaña.",
+      "all": "Todavía no hay campañas. Crea la primera con «Nueva campaña»."
+    },
+    "column": {
+      "campaign": "Campaña",
+      "kind": "Tipo",
+      "scope": "Alcance",
+      "dates": "Fechas",
+      "state": "Estado"
+    },
+    "kind": {
+      "Event": "Evento",
+      "Season": "Temporada"
+    },
+    "scope": {
+      "shop": "Toda la tienda"
+    },
+    "state": {
+      "running": "En curso",
+      "scheduled": "Programada",
+      "drafts": "Borrador",
+      "ended": "Terminada"
+    },
+    "form": {
+      "legend": "Datos de la campaña",
+      "code": "Código",
+      "codeHint": "En mayúsculas y con guiones bajos, como TENDERO_DAYS. Sale del nombre; no se puede cambiar después.",
+      "name": "Nombre",
+      "line": "Lema",
+      "kind": "Tipo",
+      "scope": "Alcance",
+      "startsAt": "Desde",
+      "endsAt": "Hasta",
+      "priority": "Prioridad",
+      "priorityHint": "Si dos campañas coinciden, la tienda muestra la de más prioridad (0 a 1000).",
+      "promotions": "Promociones que agrupa",
+      "noPromotions": "No hay promociones que agrupar.",
+      "image": "Imagen",
+      "imageNone": "Sin imagen: la tarjeta muestra los productos de la campaña.",
+      "imageHint": "Opcional. WebP, AVIF, PNG o JPEG, hasta 2 MB.",
+      "imageUpload": "Subir imagen",
+      "imageUploading": "Subiendo…",
+      "imageChange": "Cambiar",
+      "imageRemove": "Quitar",
+      "alt": "Texto alternativo"
+    },
+    "create": "Crear borrador",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "saving": "Guardando…",
+    "saveFirst": "Guarda los cambios antes de programarla.",
+    "schedule": "Programar",
+    "scheduling": "Programando…",
+    "unschedule": "Desprogramar para editar",
+    "unscheduling": "Desprogramando…",
+    "moved": {
+      "schedule": "«{{name}}» está programada.",
+      "unschedule": "«{{name}}» vuelve a ser un borrador."
+    },
+    "readOnly": {
+      "scheduled": "Programada: la tienda ya cuenta con ella. Para editarla, desprográmala primero.",
+      "ended": "Terminada: ya no se puede editar ni volver a programar."
+    },
+    "history": {
+      "created": "Creada el {{date}}",
+      "updated": "modificada el {{date}}",
+      "ended": "terminada el {{date}}"
+    },
+    "end": {
+      "open": "Terminar ahora…",
+      "consequence": "Deja de mostrarse al instante y no se puede deshacer.",
+      "title": "¿Terminar «{{name}}» ahora?",
+      "body": "La tienda deja de mostrarla en cuanto la terminas. Una campaña terminada no vuelve a programarse: para repetirla, crea otra.",
+      "keep": "Mantenerla",
+      "confirm": "Terminarla"
     }
   },
   "returns": {

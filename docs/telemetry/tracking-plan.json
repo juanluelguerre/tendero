@@ -244,7 +244,7 @@
     {
       "name": "Backoffice jobs",
       "area": "backoffice",
-      "question": "Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?",
+      "question": "Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?",
       "decision": "A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.",
       "signals": [
         "backoffice_view_opened",
@@ -456,6 +456,7 @@
             "attributes",
             "search",
             "promotions",
+            "campaigns",
             "stock",
             "orders",
             "returns",
@@ -482,6 +483,7 @@
             "attributes",
             "search",
             "promotions",
+            "campaigns",
             "stock",
             "orders",
             "returns",
@@ -509,7 +511,12 @@
             "agent_register",
             "agent_trust",
             "agent_suspend",
-            "agent_reinstate"
+            "agent_reinstate",
+            "campaign_create",
+            "campaign_update",
+            "campaign_schedule",
+            "campaign_unschedule",
+            "campaign_end"
           ],
           "description": "What was done, from a closed list."
         },

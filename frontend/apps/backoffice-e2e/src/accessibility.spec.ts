@@ -9,9 +9,14 @@ import { signIn } from './session';
  * spec), at a phone, a tablet and a desktop width.
  */
 const Screens = [
-  'dashboard', 'review', 'catalogue', 'claims', 'attributes', 'search',
-  'promotions', 'stock', 'orders', 'returns', 'agents', 'audit',
-].map((screen) => [screen, `/${screen}`] as const);
+  ...[
+    'dashboard', 'review', 'catalogue', 'claims', 'attributes', 'search',
+    'promotions', 'campaigns', 'stock', 'orders', 'returns', 'agents', 'audit',
+  ].map((screen) => [screen, `/${screen}`] as const),
+  // A pane is where the fields are: a new campaign's form, and a seeded one read-only.
+  ['campaigns-new', '/campaigns?campaign=new'],
+  ['campaigns-scheduled', '/campaigns?status=all&campaign=TENDERO_DAYS'],
+] as const;
 
 const Widths = [360, 768, 1440] as const;
 

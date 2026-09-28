@@ -24,6 +24,7 @@ import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import { Pager } from '../../work/pager';
 import { keptCounts, statusChips } from '../../work/status-chips';
 import { WorkPane } from '../../work/work-pane';
+import { refusalOf } from '../../work/refusal';
 
 /** Each move as the usage event names it (ADR 0041). */
 const OrderActions = { Ship: 'order_ship', Deliver: 'order_deliver', Cancel: 'order_cancel' } as const satisfies Record<OrderMove, BackofficeAction>;
@@ -203,11 +204,11 @@ export class OrdersPage {
           this.busy.set(null);
           if (this.selectedId() === updated.orderId) this.detail.reload();
         },
-        error: (error: { error?: unknown }) => {
+        error: (error: unknown) => {
           this.busy.set(null);
           this.refusal.update((current) => ({
             ...current,
-            [order.orderId]: typeof error.error === 'string' ? error.error : '',
+            [order.orderId]: refusalOf(error),
           }));
         },
       });
