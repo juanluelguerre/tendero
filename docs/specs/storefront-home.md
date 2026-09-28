@@ -1,6 +1,6 @@
 # Spec: a home page that sells (campaigns, and where you left off)
 
-**Status**: draft — the proposal, for the author to read before anything is drawn or built (R-8)
+**Status**: proposal agreed with the author (2026-09-29); the mock-ups are next (H-0) (R-8)
 **Slice(s)**: Pricing (a campaign over promotions), Ordering (what sells), the storefront's home, the browser's own memory
 **Article**: *A shop window is a query*
 
@@ -238,10 +238,10 @@ not be, and the spec says so rather than faking one.
 3. ~~One campaign or several?~~ **Decided by the author, 2026-09-28: several,
    taken into account from the start.** Black Friday is therefore a campaign
    of its own beside Tendero Days, not an edition of it.
-4. **Where the trail lives when signed in.** The author asked how Amazon does
-   it; the proposal follows it (above): the browser for a guest, Accounts for a
-   customer, merged at sign-in, with *Tu historial* to see, delete and switch
-   off. Waiting for the author's yes.
+4. ~~Where the trail lives when signed in?~~ **Decided by the author,
+   2026-09-29, as Amazon does it:** the browser for a guest, Accounts for a
+   signed-in customer, merged at sign-in, with *Tu historial* to see, delete and
+   switch off.
 5. ~~An agent-native touch on the home?~~ **Decided by the author, 2026-09-29:
    now.** A card, *Compra con tu agente*, below the campaign: what an assistant
    can do here (search, compare, fill the cart), how to point one at the shop
