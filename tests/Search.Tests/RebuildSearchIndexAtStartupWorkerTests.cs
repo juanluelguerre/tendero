@@ -1,6 +1,6 @@
-using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.ReindexProducts;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.DependencyInjection;

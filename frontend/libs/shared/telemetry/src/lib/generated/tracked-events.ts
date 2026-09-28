@@ -171,8 +171,7 @@ export interface TrackedEvents {
    * Added-to-cart notice: Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping?
    * Decides: If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action.
    */
-  readonly cart_notice_followed: {
-  };
+  readonly cart_notice_followed: Record<string, never>;
 }
 
 /**

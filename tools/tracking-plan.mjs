@@ -46,8 +46,16 @@ function eventType(event) {
   for (const feature of claimedBy(event.name)) {
     lines.push('   *', `   * ${feature.name}: ${feature.question}`, `   * Decides: ${feature.decision}`);
   }
+  const attributes = Object.entries(event.attributes ?? {});
+  // An event that carries nothing is `Record<string, never>`, not `{}`: `{}`
+  // accepts any value that is not null, so an attribute sent by mistake would
+  // compile. The linter said so, which is how cart_notice_followed found it.
+  if (attributes.length === 0) {
+    lines.push('   */', `  readonly ${event.name}: Record<string, never>;`);
+    return lines.join('\n');
+  }
   lines.push('   */', `  readonly ${event.name}: {`);
-  for (const [name, attribute] of Object.entries(event.attributes)) {
+  for (const [name, attribute] of attributes) {
     lines.push(`    /** ${attribute.description} */`, `    readonly ${name}: ${tsType(attribute)};`);
   }
   lines.push('  };');
