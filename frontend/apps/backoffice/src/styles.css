@@ -16,6 +16,19 @@
    Not one hex appears below.
    ============================================================ */
 
+/* The states, light theme (the redesign's second walkthrough). The shared
+   steps (olive-600, amber-700, red-600) are right for the storefront's roomy
+   type and read as greys in the backoffice's 11–13px figures and counters,
+   where the dark theme's steps stand out. The backoffice takes the brighter
+   text steps from tokens.css, still 4.5:1 on every light surface; the dark
+   theme ([data-theme='dark'] in tokens.css) is untouched, which is what the
+   :not() is for. */
+:root:not([data-theme='dark']) {
+  --positive: var(--green-600);
+  --warning: var(--amber-600);
+  --danger: var(--red-550);
+}
+
 *,
 *::before,
 *::after {

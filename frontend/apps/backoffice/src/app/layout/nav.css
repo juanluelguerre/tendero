@@ -70,6 +70,7 @@
 
 .link__badge {
   font-size: var(--text-3xs);
+  font-weight: 600;
   color: var(--warning);
 }
 

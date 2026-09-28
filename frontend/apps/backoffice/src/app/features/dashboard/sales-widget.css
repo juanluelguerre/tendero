@@ -28,5 +28,8 @@
   color: var(--text-muted);
 }
 
+.kpi__change--up,
+.kpi__change--down { font-weight: 600; }
+
 .kpi__change--up { color: var(--positive); }
 .kpi__change--down { color: var(--danger); }
