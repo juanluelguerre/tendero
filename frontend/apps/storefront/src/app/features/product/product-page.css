@@ -158,8 +158,8 @@
 }
 
 .option--chosen {
-  border-color: var(--ink-900);
-  background: var(--stone-100);
+  border-color: var(--text);
+  background: var(--bg-page);
 }
 
 /* Sold out is SELECTABLE. The shopper can pick it, see the answer and
@@ -196,7 +196,7 @@
   margin: 0;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--stone-50);
+  background: var(--bg-raised);
   color: var(--text-muted);
   font-size: var(--text-sm);
 }

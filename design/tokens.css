@@ -67,6 +67,7 @@
   --accent:         var(--clay-600);
   --accent-hover:   var(--clay-700);
   --accent-tint:    var(--clay-50);
+  --danger-tint:    var(--red-50);    /* a message that something failed, behind its text */
   --on-accent:      var(--stone-0);
   --positive:       var(--olive-600);
   --warning:        var(--amber-700);
@@ -144,6 +145,12 @@
   --accent:        #F07A50;
   --accent-hover:  #F59570;
   --accent-tint:   #3A2115;
+  /* Added 2026-09-28. A failed search's box used --red-50 straight from the
+     palette, which no theme redefines: a pale pink under the dark theme's light
+     text, the title invisible and the line beside it faint (the author, the
+     redesign's second walkthrough). The tint is a token now, deep red here as
+     --accent-tint is deep clay: --text 13.9:1, --text-muted 6.2:1 on it. */
+  --danger-tint:   #3A1A18;
   --on-accent:     var(--ink-900);
   --positive:      #8FB463;
 

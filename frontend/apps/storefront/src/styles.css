@@ -252,7 +252,7 @@ img {
   background: linear-gradient(
     90deg,
     var(--bg-raised) 0%,
-    var(--stone-100) 50%,
+    var(--bg-page) 50%,
     var(--bg-raised) 100%
   );
   background-size: 200% 100%;

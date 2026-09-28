@@ -177,7 +177,7 @@
 
 .notice--danger {
   border-color: var(--danger);
-  background: var(--red-50);
+  background: var(--danger-tint);
 }
 
 /* ---------- The heading above a non-exact answer ----------
