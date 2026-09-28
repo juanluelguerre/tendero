@@ -202,7 +202,9 @@
     "offersLede": "Se aplican solas en el carrito. Sin códigos y sin letra pequeña.",
     "newest": "Novedades",
     "freeShipping": "Envío gratis",
-    "until": "Hasta el {{date}}"
+    "until": "Hasta el {{date}}",
+    "newestPrevious": "Novedades anteriores",
+    "newestNext": "Más novedades"
   },
   "category": {
     "breadcrumb": "Dónde estás",

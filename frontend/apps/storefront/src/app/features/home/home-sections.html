@@ -92,14 +92,23 @@
   -->
   @if (newest().length > 0) {
     <section class="band">
-      <h2 class="band__title">{{ t('home.newest') }}</h2>
+      <div class="band__head">
+        <h2 class="band__title">{{ t('home.newest') }}</h2>
+        <!-- The row said it scrolled only by cutting its last card in half
+             (R-1, S-F5). Now it shows whole cards and says so with two
+             buttons, which stop at the ends. -->
+        <div class="row-controls">
+          <button type="button" class="row-controls__button" aria-controls="newest-row" [attr.aria-label]="t('home.newestPrevious')" [disabled]="atStart()" (click)="page(newestRow, -1)">‹</button>
+          <button type="button" class="row-controls__button" aria-controls="newest-row" [attr.aria-label]="t('home.newestNext')" [disabled]="atEnd()" (click)="page(newestRow, 1)">›</button>
+        </div>
+      </div>
 
       <!--
         A row you scroll, not a carousel that scrolls itself. Nothing moves on
         its own: people rarely see past the first slide of a rotating hero, and
         design/DESIGN.md keeps animation for the awning bar alone.
       -->
-      <ul class="row" [attr.aria-label]="t('home.newest')">
+      <ul class="row" id="newest-row" #newestRow [attr.aria-label]="t('home.newest')" (scroll)="edges(newestRow)">
         @for (hit of newest(); track hit.productId) {
           <li class="row__item">
             <storefront-product-card class="card" [hit]="hit" />

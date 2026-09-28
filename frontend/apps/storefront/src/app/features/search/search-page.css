@@ -284,12 +284,19 @@
 
 
 .hero__account-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
   color: var(--text);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .hero__account-link:hover { color: var(--accent); }
+
+@media (pointer: coarse) {
+  .hero__account-link { min-height: 2.75rem; }
+}
 
 /*
   The skeleton keeps its own shape now that the card is a component. It is not

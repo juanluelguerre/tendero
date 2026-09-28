@@ -1,5 +1,9 @@
+/* 24 px with a mouse, 44 px under a finger (R-5.2): the pill grows on a phone
+   rather than hiding a taller hit area nobody can see. */
 .chip {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
   padding: 0 var(--space-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
@@ -77,4 +81,8 @@
   margin: var(--space-1) 0 0;
   font-size: var(--text-2xs);
   color: var(--text-muted);
+}
+
+@media (pointer: coarse) {
+  .chip { min-height: 2.75rem; }
 }

@@ -167,10 +167,15 @@ export class CheckoutPage {
     }
   }
 
-  /** A guest's name arrives last, so it is what completes the address: the
-      options load then, rather than waiting for a button nobody knows to press. */
-  protected async nameEntered(): Promise<void> {
-    if (this.options().length === 0) await this.loadOptions();
+  /**
+   * Any field of the address, once it has changed: the options and the total
+   * follow it (the redesign's R-5.2, S-F3). There used to be a button, *¿Cómo
+   * quieres recibirlo?*, that had to be pressed before a total existed, and
+   * Pagar stayed disabled until somebody found it; the shipping depends on the
+   * address, so the address is what asks.
+   */
+  protected async addressChanged(): Promise<void> {
+    await this.loadOptions();
   }
 
   /**

@@ -186,13 +186,20 @@ img {
 /* A link that reads as a link and not as a second button: one clay action per
    view, and the way back is never it. */
 .quiet {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  /* 24 px, and 44 where a finger aims (R-1, S-F4). */
+  min-height: 1.5rem;
   color: var(--text-muted);
   font-size: var(--text-sm);
   text-decoration: none;
 }
 
 .quiet:hover { color: var(--text); text-decoration: underline; }
+
+@media (pointer: coarse) {
+  .quiet { min-height: 2.75rem; }
+}
 
 /* ---------- Fields ---------- */
 .field {

@@ -20,32 +20,32 @@
           <div class="grid">
             <label class="row row--wide">
               <span class="row__label">{{ t('checkout.recipientName') }}</span>
-              <input class="field" name="recipientName" [(ngModel)]="address.recipientName" (change)="nameEntered()" autocomplete="name" required />
+              <input class="field" name="recipientName" [(ngModel)]="address.recipientName" (change)="addressChanged()" autocomplete="name" required />
             </label>
 
             <label class="row row--wide">
               <span class="row__label">{{ t('checkout.line1') }}</span>
-              <input class="field" name="line1" [(ngModel)]="address.line1" autocomplete="address-line1" />
+              <input class="field" name="line1" [(ngModel)]="address.line1" (change)="addressChanged()" autocomplete="address-line1" />
             </label>
 
             <label class="row row--wide">
               <span class="row__label">{{ t('checkout.line2') }}</span>
-              <input class="field" name="line2" [(ngModel)]="address.line2" autocomplete="address-line2" />
+              <input class="field" name="line2" [(ngModel)]="address.line2" (change)="addressChanged()" autocomplete="address-line2" />
             </label>
 
             <label class="row">
               <span class="row__label">{{ t('checkout.postalCode') }}</span>
-              <input class="field" name="postalCode" [(ngModel)]="address.postalCode" autocomplete="postal-code" />
+              <input class="field" name="postalCode" [(ngModel)]="address.postalCode" (change)="addressChanged()" autocomplete="postal-code" />
             </label>
 
             <label class="row">
               <span class="row__label">{{ t('checkout.city') }}</span>
-              <input class="field" name="city" [(ngModel)]="address.city" autocomplete="address-level2" />
+              <input class="field" name="city" [(ngModel)]="address.city" (change)="addressChanged()" autocomplete="address-level2" />
             </label>
 
             <label class="row">
               <span class="row__label">{{ t('checkout.region') }}</span>
-              <input class="field" name="region" [(ngModel)]="address.region" autocomplete="address-level1" />
+              <input class="field" name="region" [(ngModel)]="address.region" (change)="addressChanged()" autocomplete="address-level1" />
             </label>
 
             <label class="row">
@@ -58,14 +58,15 @@
                 maxlength="2"
                 autocomplete="country"
                 [(ngModel)]="address.countryCode"
-                (blur)="loadOptions()"
+                (change)="addressChanged()"
               />
             </label>
           </div>
 
-          <button class="button button--quiet" type="button" [disabled]="rating()" (click)="loadOptions()">
-            {{ rating() ? t('checkout.loadingOptions') : t('checkout.delivery') }}
-          </button>
+          <!-- No button to press to learn the shipping (R-1, S-F3): the options and
+               the total follow the address as it is written, and this says so
+               while they are on their way. -->
+          <p class="rating muted" role="status" aria-live="polite">{{ rating() ? t('checkout.loadingOptions') : '' }}</p>
         </fieldset>
 
         <!-- 2 · How -->

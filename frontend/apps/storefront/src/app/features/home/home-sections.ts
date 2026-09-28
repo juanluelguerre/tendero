@@ -46,6 +46,10 @@ export class HomeSections {
 
   private readonly categories = signal<Category[]>([]);
 
+  /** Whether the Novedades row is at either end, for its buttons to say so by being disabled. */
+  protected readonly atStart = signal(true);
+  protected readonly atEnd = signal(false);
+
   protected readonly offers = signal<Offer[]>([]);
   protected readonly newest = signal<SearchHit[]>([]);
 
@@ -113,5 +117,15 @@ export class HomeSections {
       next: (page) => this.newest.set(page.hits),
       error: () => this.newest.set([]),
     });
+  }
+
+  /** A page of the row: as far as it shows, so the next whole cards come in. */
+  protected page(row: HTMLElement, direction: 1 | -1): void {
+    row.scrollBy({ left: direction * row.clientWidth, behavior: 'smooth' });
+  }
+
+  protected edges(row: HTMLElement): void {
+    this.atStart.set(row.scrollLeft <= 1);
+    this.atEnd.set(row.scrollLeft + row.clientWidth >= row.scrollWidth - 1);
   }
 }

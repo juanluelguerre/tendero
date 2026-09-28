@@ -202,7 +202,9 @@
     "offersLede": "They apply themselves in the basket. No codes, no small print.",
     "newest": "New in",
     "freeShipping": "Free shipping",
-    "until": "Until {{date}}"
+    "until": "Until {{date}}",
+    "newestPrevious": "Earlier new arrivals",
+    "newestNext": "More new arrivals"
   },
   "category": {
     "breadcrumb": "Where you are",

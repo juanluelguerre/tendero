@@ -51,7 +51,12 @@
   font-size: var(--text-sm);
 }
 
-.crumbs a { color: inherit; }
+.crumbs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  color: inherit;
+}
 .crumbs a:hover { color: var(--accent); }
 
 .category__title {
@@ -91,4 +96,9 @@
 .more {
   margin-block-start: var(--space-6);
   text-align: center;
+}
+
+/* The crumb's links reach 24 px, and 44 where a finger aims (R-1, S-F4). */
+@media (pointer: coarse) {
+  .crumbs a { min-height: 2.75rem; }
 }

@@ -157,9 +157,41 @@
 
 .row .card { flex: 1; }
 
+/* Whole cards on a desktop: four to a view, never one cut in half (S-F5). On a
+   phone the next card peeking in is the cue, and it is kept on purpose. */
+@media (min-width: 64rem) {
+  .row { grid-auto-columns: calc((100% - 3 * var(--space-4)) / 4); }
+}
+
 @media (max-width: 640px) {
   .row { grid-auto-columns: minmax(72%, 1fr); }
 }
+
+.band__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.row-controls { display: flex; gap: var(--space-2); }
+
+.row-controls__button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-lg);
+  cursor: pointer;
+}
+
+.row-controls__button:hover:not(:disabled) { border-color: var(--border-strong); }
+.row-controls__button:disabled { opacity: 0.4; cursor: default; }
 
 /* Words, not a figure: the display face at a readable size rather than the mono
    one stretched to fit. */
