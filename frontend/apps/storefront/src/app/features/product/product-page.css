@@ -31,9 +31,12 @@
   grid-template-columns: 1fr;
 }
 
+/* Halves until the image is as large as it is useful (42rem, 672px): past
+   that a wider frame (R-7.4) widens the words' column instead, and the words
+   keep their own measure inside it. */
 @media (min-width: 900px) {
   .product {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 42rem) minmax(0, 1fr);
     gap: var(--space-7);
     align-items: start;
   }
