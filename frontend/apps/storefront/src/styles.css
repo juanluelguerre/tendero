@@ -68,10 +68,10 @@ img {
    Named `page-frame` and not `container`: Tailwind 4 is imported for its theme
    bridge, so `.container` is one of ITS utilities, it lands in a later cascade
    layer and it wins. The symptom was a 1440px page laid out at 768.
-   The frame is the shop's width, 1920px, and its gutters grow with the
-   screen: 16px on a phone, 3 % of the width between, 64px at most. At 1440px
-   it was a column in the middle of a wide monitor, with more margin than
-   shop at 2560px (R-7.4). */
+   The frame is the screen's width (--container-shop), and only its gutters
+   stop it: 16px on a phone, 3 % of the width between, 64px at most. At 1440px
+   it was a column in the middle of a wide monitor, with more margin than shop
+   at 2560px (R-7.4). */
 .page-frame {
   width: 100%;
   max-width: var(--container-shop);
