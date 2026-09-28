@@ -102,6 +102,13 @@ proves with properties — untouched.
   Running → Ended, a `TransitionTable`, invariant 5) and its own actor, the
   shopkeeper; the decision is recorded as an ADR before it is built. Promotions
   stay committed files for this slice; a campaign references them by code.
+- **An image of its own, optional** (the author, 2026-09-29): the shopkeeper
+  uploads a WebP for the campaign in the backoffice, stored and served as
+  product images are (`/api/images/{id}`), with its alt text in es and en. The
+  card shows it beside the words; with none, the card shows the products the
+  campaign reaches, so it is never empty. **No GIFs**: heavy for what they
+  give, and deaf to the system's *reduce motion*. What moves is CSS — the
+  awning's stripes, the clock — and stops under `prefers-reduced-motion`.
 - **An audit row for every change** (who, what, when), as every backoffice
   action has, and the dates are validated where they are set: a window that
   ends before it starts, or in the past, is refused.
@@ -188,8 +195,8 @@ not be, and the spec says so rather than faking one.
 ## Non-goals
 
 - **Not a CMS.** The backoffice sets a campaign's name, line, dates, priority,
-  promotions and theme — chosen from the drawings and accents the design system
-  has, never uploaded images or free colours. Editing promotions themselves
+  promotions, an optional image and a theme — an accent chosen from the design
+  system, never a free colour. Editing promotions themselves
   stays out of this slice.
 - **Not a profile.** The trail is the shopper's own history shown back and the
   suggestions it explains; nothing is inferred about the person, and nothing is
