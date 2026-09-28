@@ -26,7 +26,7 @@ public sealed class ElasticsearchRequestBodyTests
     {
         var (client, bodies) = Capturing();
 
-        await Assert.ThrowsAnyAsync<Exception>(() => new ElasticsearchHitReader(client).FindAsync(["p1", "p2"], "es", "KITCHEN", Ct));
+        await Assert.ThrowsAnyAsync<Exception>(() => Adapters.HitReader(client).FindAsync(["p1", "p2"], "es", "KITCHEN", SearchFilters.None, Ct));
 
         var body = Assert.Single(bodies);
         Assert.Contains("\"productId\"", body);
@@ -42,7 +42,7 @@ public sealed class ElasticsearchRequestBodyTests
         var (client, bodies) = Capturing();
 
         await Assert.ThrowsAnyAsync<Exception>(() =>
-            new ElasticsearchLexicalSearch(client).SearchAsync(new ProductSearchQuery("", "es", Category: "KITCHEN"), Ct));
+            Adapters.Lexical(client).SearchAsync(new ProductSearchQuery("", "es", Category: "KITCHEN"), Ct));
 
         var body = Assert.Single(bodies);
         Assert.Contains("\"status\"", body);
@@ -178,7 +178,7 @@ public sealed class ElasticsearchRequestBodyTests
     [Fact]
     public async Task Newest_first_sorts_by_availability_and_relevance_does_not()
     {
-        Assert.Contains("\"availableFrom\"", await LexicalBody(new ProductSearchQuery("", "es", Sort: "newest")));
+        Assert.Contains("\"availableFrom\"", await LexicalBody(new ProductSearchQuery("", "es", Sort: ProductSort.Newest)));
         Assert.DoesNotContain("\"availableFrom\"", await LexicalBody(new ProductSearchQuery("cafetera", "es")));
     }
 
@@ -204,13 +204,21 @@ public sealed class ElasticsearchRequestBodyTests
         Assert.DoesNotContain("\"categoryCodes\"", body);
     }
 
+    /// <summary>
+    /// The request WITHOUT its aggregations. Since the facets (R-7.3, F-2) they
+    /// name every field a filter reads — `categoryCodes`, `availableFrom`, a
+    /// `match_all` for an empty filter — and what these tests ask is what the
+    /// query and the order say. <c>ProductFacetsTests</c> reads the aggregations.
+    /// </summary>
     private static async Task<string> LexicalBody(ProductSearchQuery query)
     {
         var (client, bodies) = Capturing();
 
-        await Assert.ThrowsAnyAsync<Exception>(() => new ElasticsearchLexicalSearch(client).SearchAsync(query, Ct));
+        await Assert.ThrowsAnyAsync<Exception>(() => Adapters.Lexical(client).SearchAsync(query, Ct));
 
-        return Assert.Single(bodies);
+        var body = System.Text.Json.Nodes.JsonNode.Parse(Assert.Single(bodies))!.AsObject();
+        body.Remove("aggregations");
+        return body.ToJsonString();
     }
 
     private static (ElasticsearchClient Client, List<string> Bodies) Capturing()

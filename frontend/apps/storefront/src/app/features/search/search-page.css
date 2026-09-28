@@ -69,10 +69,15 @@
   padding-block: var(--space-5) var(--space-4);
 }
 
-.hero--compact .hero__title,
+/* Once the page lists something the heading says what (the mock-ups:
+   *Resultados para «mochila»*), and it is smaller: the products are the page. */
+.hero--compact .hero__title {
+  max-width: none;
+  font-size: var(--text-2xl);
+}
+
 .hero--compact .hero__lede {
-  /* Kept in the accessibility tree, out of the way visually: the heading still
-     names the page for a screen reader once results push it aside. */
+  /* Kept in the accessibility tree, out of the way visually. */
   position: absolute;
   width: 1px;
   height: 1px;
@@ -152,60 +157,6 @@
   font-size: var(--text-sm);
 }
 
-/* ---------- Result meta ---------- */
-.results-meta {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-block-end: var(--space-4);
-  border-block-end: 1px solid var(--border);
-  font-size: var(--text-sm);
-}
-
-.took { color: var(--text-muted); font-size: var(--text-2xs); }
-
-/* ---------- The grid ----------
-   auto-fill with a minimum, not a fixed column count: the shelf fills whatever
-   width it is given, from one column on a phone to five on a wide desktop,
-   without a media query per breakpoint. */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--space-5);
-  margin: var(--space-5) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-@media (max-width: 480px) {
-  .grid { grid-template-columns: 1fr; gap: var(--space-4); }
-}
-
-/* ---------- Cards ----------
-   Images sell; everything else gets out of the way. No shadow until hover, per
-   design/DESIGN.md: shadows are for things that genuinely float. */
-
-
-
-/*
-  Layout only. The placeholder brings its own colour, and it is stone rather
-  than clay on purpose: a grid of terracotta tiles competes with the one accent
-  action the view is allowed (design/DESIGN.md), and a product with no picture
-  should recede, not shout.
-*/
-
-/* The name is the link to the product page, and it does not advertise itself
-   as one until you reach it: a grid of underlined blue headings reads as a
-   directory rather than a shop. The focus ring is not optional — every
-   interactive element has a visible one (design/DESIGN.md). */
-
-
-
-/* Skeleton lines inside a loading card. */
-.skeleton--line { height: 1em; }
-.skeleton--short { width: 40%; }
-
 /* ---------- Notices ----------
    An empty result and a broken engine are different events and must not look
    the same: one is the shop saying "not here", the other is the shop saying
@@ -241,7 +192,7 @@
    Quiet on purpose: no clay here. The search button stays the view's one
    accent action (design/DESIGN.md), and this is an answer, not an invitation. */
 .help-card {
-  margin-block-start: var(--space-5);
+  margin-block: 0 var(--space-5);
   padding: var(--space-5);
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -274,16 +225,10 @@
   .search__input { padding-inline-start: var(--space-4); }
 }
 
-/* Sold out. The photo is dimmed rather than hidden — the shopper still has to
-   recognise the thing they searched for — and the words carry the meaning, so
-   the state survives without colour (design/DESIGN.md). */
-
-
-/* Add to cart. Quiet by default and clay on hover: the accent on a grid of
-   twelve cards would be twelve accents, which is none (design/DESIGN.md). */
-
-
 .hero__account-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
   color: var(--text);
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -291,32 +236,6 @@
 
 .hero__account-link:hover { color: var(--accent); }
 
-/*
-  The skeleton keeps its own shape now that the card is a component. It is not
-  the card with a modifier: a loading tile has no link, no button and no image
-  to break, and borrowing the card's class to get a border was the kind of reuse
-  that makes both harder to change.
-*/
-.skeleton-card {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+@media (pointer: coarse) {
+  .hero__account-link { min-height: 2.75rem; }
 }
-
-.skeleton-card__image {
-  aspect-ratio: 4 / 3;
-  width: 100%;
-}
-
-.skeleton-card__body {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-4);
-}
-
-/* The card fills its grid cell; the component owns everything inside it. */
-.grid > li { display: flex; }
-.grid .card { flex: 1; }

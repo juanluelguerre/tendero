@@ -65,7 +65,7 @@ public static class KnowledgeServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddClaimProposer(this IServiceCollection services)
     {
-        services.AddHostedService<ClaimProposer>();
+        services.AddHostedService<ClaimProposalWorker>();
         return services;
     }
 }

@@ -17,9 +17,9 @@ namespace ElGuerre.Tendero.Knowledge.Features.ProposeClaims;
 /// model that was still loading — nothing waits for the model, by design — and
 /// marked a readable product as unreadable. The reason is kept on the document.
 /// </summary>
-public sealed partial class ClaimProposer(
+public sealed partial class ClaimProposalWorker(
     IServiceScopeFactory scopes,
-    ILogger<ClaimProposer> logger,
+    ILogger<ClaimProposalWorker> logger,
     TimeProvider clock) : BackgroundService
 {
     /// <summary>How long an empty queue waits before it looks again.</summary>

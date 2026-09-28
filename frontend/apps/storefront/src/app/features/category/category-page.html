@@ -26,7 +26,9 @@
 
     <!-- The sections inside, when there are any. A department is a way in, and
          landing on fifty-five products with no way to narrow them is the same
-         problem the shop had before it had categories at all. -->
+         problem the shop had before it had categories at all. On a desktop the
+         column lists them with their counts; this row is the phone's, where the
+         column is a sheet behind a button. -->
     @if (children().length > 0) {
       <ul class="sections">
         @for (child of children(); track child.code) {
@@ -38,7 +40,7 @@
     }
   }
 
-  @switch (state().status) {
+  @switch (state()) {
     @case ('loading') {
       <p class="muted" role="status" aria-live="polite">{{ t('category.loading') }}</p>
     }
@@ -56,36 +58,15 @@
       <p class="notice notice--danger" role="alert">{{ t('category.failed') }}</p>
     }
 
-    @case ('ready') {
-      @let ready = state();
-      @if (ready.status === 'ready') {
-        @if (ready.hits.length === 0) {
-          <p class="muted">{{ t('category.empty') }}</p>
-        } @else {
-          <p class="category__count muted" role="status">
-            {{ t('category.count', { count: ready.total }) }}
-          </p>
-
-          <ul class="grid">
-            @for (hit of ready.hits; track hit.productId) {
-              <li>
-                <storefront-product-card class="card" [hit]="hit" />
-              </li>
-            }
-          </ul>
-
-          <!-- Not infinite scroll: a footer nobody can reach is the price of
-               that, and this page has one. A button also survives the back
-               button, which an accumulating scroll position does not. -->
-          @if (hasMore()) {
-            <p class="more">
-              <button type="button" class="button button--quiet"
-                      [disabled]="loadingMore()" (click)="loadMore()">
-                {{ loadingMore() ? t('category.loadingMore') : t('category.more') }}
-              </button>
-            </p>
-          }
-        }
+    @case ('found') {
+      @let result = listing.result();
+      @if (result.status === 'failed') {
+        <p class="notice notice--danger" role="alert">{{ t('category.failed') }}</p>
+      } @else if (result.status === 'ready' && result.total === 0 && !filtered()) {
+        <p class="muted">{{ t('category.empty') }}</p>
+      } @else {
+        <!-- The same listing as the search results (R-7.3, F-3). -->
+        <storefront-listing [navigation]="navigation()" />
       }
     }
   }

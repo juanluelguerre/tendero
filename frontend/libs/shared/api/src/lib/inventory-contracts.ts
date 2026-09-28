@@ -30,9 +30,6 @@ export type StockList = Schemas['ListStockResult'];
 /** The counted row, flat, so the grid can replace the one it is showing. */
 export type CountedStock = Schemas['CountStockResponse'];
 
-/**
- * Narrowed on the client, not promised by the document: the status travels as a
- * `string` because the server serialises the enum name by hand. Same decision,
- * and same caveat, as `ProductStatus` and `CombinationPolicy`.
- */
-export type ReservationStatus = 'Held' | 'Committed' | 'Released' | 'Expired';
+/** From the document (ADR 0043). */
+export type ReservationStatus = Schemas['ReservationStatus'];
+export type StockFilter = Schemas['StockFilter'];

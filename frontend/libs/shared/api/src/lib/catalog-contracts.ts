@@ -60,7 +60,7 @@ export type SkuDescriptionList = Schemas['DescribeSkusResult'];
  */
 export type AuditEntryView = Schemas['AuditEntryView'];
 export type AuditLog = Schemas['ListAuditEntriesResult'];
-export type AuditOutcome = 'allowed' | 'denied' | 'failed';
+export type AuditOutcome = Schemas['AuditOutcome'];
 
 /**
  * The labels arrive UNRESOLVED — the whole culture dictionary — and that is
@@ -78,17 +78,15 @@ export type AttributeDefinitionList = Schemas['ListAttributeDefinitionsResult'];
 export type PublishProductConflict = Schemas['PublishProductConflict'];
 
 /**
- * These two do not come from the document, and that is not an oversight: they
- * travel as `string` because the server serialises them in camelCase by hand —
- * see the comment on `PublishProductResponse` in the slice, where the enum came
- * out as a number and broke the moment anybody reordered the members.
- *
- * Narrowing them here is the client's decision, not the contract's. They are
- * documented together so they read as what they are: a promise the document
- * cannot enforce yet.
+ * From the document since ADR 0043. They were narrowed here by hand, as "a
+ * promise the document cannot enforce yet", because the server spelled them in
+ * camel and lower case itself; now the API declares every closed set, spelled
+ * as its C# name, and the compiler holds a comparison to it.
  */
-export type ProductStatus = 'draft' | 'active' | 'archived';
-export type PublishOutcome = 'published' | 'alreadyActive' | 'archived' | 'notFound';
+export type ProductStatus = Schemas['ProductStatus'];
+export type PublishOutcome = Schemas['PublishOutcome'];
+export type WithdrawOutcome = Schemas['WithdrawOutcome'];
+export type AttributeKind = Schemas['AttributeKind'];
 
 /**
  * One node of the taxonomy. Flat rather than nested, because the shape is

@@ -42,7 +42,7 @@ public sealed record SpecRow(string AttributeCode, string Label, IReadOnlyList<S
 /// the interface's (invariant 6).
 /// </summary>
 public sealed record SpecCell(
-    string Source, string? Kind, string? Value, decimal? Number, string? Unit, bool? Flag, SpecEvidence? Evidence);
+    string Source, FactKind? Kind, string? Value, decimal? Number, string? Unit, bool? Flag, SpecEvidence? Evidence);
 
 public static class SpecSources
 {

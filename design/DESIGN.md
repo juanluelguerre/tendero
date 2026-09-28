@@ -58,9 +58,40 @@ Prices in `.price` (mono, tabular). Images do the selling, so chrome stays
 minimal — the accent is reserved for the primary action on each screen
 (add to cart, checkout) and nothing else. One clay button per view.
 
+On a desktop the header puts the logo left and the departments in a visible
+row beneath it, each opening its panel of sections, with *Ofertas* and
+*Novedades* at its end (R-7.3, F-0); on a phone ☰ TIENDA opens them as a
+drawer. Either way a category is two interactions from any page, and the
+department the page is in is marked with `aria-current`, not only with colour
+(R-5.1). Language and theme live in the account menu, as in the backoffice
+(R-5.3).
+
+A list of products — search results, a category, *Ofertas* — is one pattern
+(R-7.3): a toolbar with the count, the applied filters as removable chips,
+*Quitar todo* and the order; the filters in a foldable column beside the grid
+on a desktop, each choice applying at once, and behind *Filtros (n)* in a modal
+sheet on a phone that collects a batch and applies it with the view's one clay
+button, *Ver N productos*. Every option says how many products it would leave;
+one that would leave none stays, disabled, so nothing moves under the pointer.
+Colours are swatches with their names beside them, never a dot alone. The URL
+holds every filter, so a list can be shared and the back button undoes one
+choice. Two cards to a row on a phone. A row that scrolls
+sideways shows whole cards on a desktop, with two buttons that stop at the
+ends; on a phone the next card peeking in is the cue. Anything a finger taps is
+at least 44 px tall under a coarse pointer, links included (R-5.2).
+
 ### Backoffice
 Dense: body drops to `--text-sm`, tables to `--text-xs`, row height 36px.
-Light or dark as the person chooses in the account menu, following the system until they do (`data-theme` on the root, set before the first paint; the redesign's R-3). The storefront gains the same choice in R-5.1. Status
+Light or dark as the person chooses in the account menu, following the system
+until they do (`data-theme` on the root, set before the first paint; the
+redesign's R-3). The storefront has the same choice since R-5.1.
+
+A list of work is a list with a pane beside it (ADR 0042): the likely action on
+the row, the item opened in a pane from 1024 px and in a sheet below, filter
+chips with their counts, and the filter, search and open item in the URL. What
+can be undone offers Undo; what cannot asks first, apart from the likely action.
+On a phone the list is cards. The parts are in `backoffice/src/app/work/`, and
+a new list uses them. Status
 is colour-coded and always paired with a word, never colour alone:
 
 | State | Token | Used for |

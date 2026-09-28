@@ -44,6 +44,23 @@ public interface IProductIndexer
 }
 
 /// <summary>
+/// Whether the live index was created with the mapping this code writes.
+///
+/// An index that exists is never re-mapped, so a field added to the document
+/// lands in it mapped dynamically — a keyword array comes back as text, and a
+/// term filter on it fails silently. The mapping carries a version; an index
+/// with an older one is recreated and refilled at startup, the way an empty
+/// one already was (R-7.3, F-1), instead of waiting for somebody to remember
+/// `POST /api/search/reindex?recreate=true`.
+/// </summary>
+public interface ISearchIndexSchema
+{
+    /// <summary>False when an index exists with an older mapping version. A
+    /// missing index is current: creating it is the initializer's job.</summary>
+    Task<bool> IsCurrentAsync(CancellationToken ct = default);
+}
+
+/// <summary>
 /// Reading the catalogue from the search side. It lived inside the
 /// ProjectProductToIndex slice while that was its only reader; with
 /// ReindexProducts it became shared, and a slice cannot reference another slice.
@@ -153,13 +170,200 @@ public sealed class SearchUnavailableException(string operation, string diagnost
 /// made when it chose to store the materialised path as analysed text.
 /// </param>
 /// <param name="Sort">
-/// `newest` orders by the source's first-listed date; anything else, including
-/// null, leaves relevance in charge — which is the right default and the only
-/// one that means anything when there IS a query.
+/// <see cref="ProductSort.Newest"/> orders by the source's first-listed date,
+/// <see cref="ProductSort.PriceAsc"/> and <see cref="ProductSort.PriceDesc"/> by
+/// the price of the variant shown; <see cref="ProductSort.Relevance"/>, the
+/// default, leaves the score in charge — the only order that means anything when
+/// there IS a query.
+/// </param>
+/// <param name="Filters">
+/// What the shopper narrowed the list by. Null is none, and none is the query
+/// this record described before filters existed, clause for clause: the golden
+/// set runs unfiltered, and NDCG must not move because a feature it does not
+/// use arrived (the facets spec, "Measures").
+/// </param>
+/// <param name="AlsoMatching">
+/// Product ids that count as matches besides the words — the vector half of a
+/// hybrid search (<c>HybridSearchStrategy</c>). They widen what is COUNTED — the
+/// total and every facet are the union of what words and meaning found, as a
+/// page that lists both has to say — without moving the words' ranking: they
+/// score nothing, so every product the words matched keeps its place, and a
+/// product only meaning found comes after them with a score of zero.
 /// </param>
 public sealed record ProductSearchQuery(
     string Text, string Culture, int Page = 1, int PageSize = 20,
-    string? Category = null, string? Sort = null);
+    string? Category = null, ProductSort Sort = ProductSort.Relevance,
+    SearchFilters? Filters = null,
+    IReadOnlyCollection<string>? AlsoMatching = null);
+
+/// <summary>
+/// The orders a listing can be asked for: a closed set, so an enum (ADR 0043),
+/// and one the contract declares — a query parameter is as much the API's shape
+/// as a response field, and a client that could only learn the set from a 400
+/// had been told it by the one channel nobody generates a type from.
+///
+/// `?sort=PriceAsc`, as the member is named, bound through
+/// <see cref="WireEnum{TEnum}"/>: without regard to case (`priceasc` is the same
+/// order), and never as a number, which is what the JSON converter does with
+/// the same set in a body.
+/// </summary>
+public enum ProductSort
+{
+    Relevance,
+    Newest,
+    PriceAsc,
+    PriceDesc,
+}
+
+/// <summary>
+/// What a listing is narrowed by (R-7.3, F-2). **Within a filter the choices
+/// add up (OR); across filters they narrow (AND)**: two brands show both, a
+/// brand and a size show that brand's products in that size.
+///
+/// Every value is a CODE, never a label: a URL holding a filter has to mean the
+/// same thing in both cultures' indexes.
+/// </summary>
+public sealed record SearchFilters
+{
+    public static readonly SearchFilters None = new();
+
+    /// <summary>Brands, as the catalogue spells them ("Vertex").</summary>
+    public IReadOnlyList<string> Brands { get; init; } = [];
+
+    /// <summary>
+    /// Category codes INSIDE a result list, several allowed. Not the same thing
+    /// as <see cref="ProductSearchQuery.Category"/>, which stays single: that one
+    /// is a place, with its URL and its breadcrumb; this one narrows a list.
+    /// </summary>
+    public IReadOnlyList<string> Within { get; init; } = [];
+
+    /// <summary>
+    /// "CODE:VALUE" pairs, for variant axes and faceted attributes alike
+    /// ("COLOR:BLACK", "SIZE:42", "MATERIAL:ALUMINIUM", "INDUCTION:true"). One
+    /// group per CODE: values of one code add up, codes narrow each other, and
+    /// two axes are matched on the SAME variant — black in a 42, not a black 38
+    /// beside a red 42.
+    /// </summary>
+    public IReadOnlyList<string> Facets { get; init; } = [];
+
+    /// <summary>Inclusive, like the two inputs a person types it into.</summary>
+    public decimal? MinPrice { get; init; }
+
+    /// <summary>Inclusive, like the two inputs a person types it into.</summary>
+    public decimal? MaxPrice { get; init; }
+
+    /// <summary>A running automatic promotion reaches it — asked of Pricing when the search runs, never indexed.</summary>
+    public bool OnOffer { get; init; }
+
+    /// <summary>First listed in the last <see cref="NewArrivalDays"/> days.</summary>
+    public bool NewArrivals { get; init; }
+
+    /// <summary>The variant shown can be bought now.</summary>
+    public bool InStock { get; init; }
+
+    /// <summary>What "new" means, once: the spec's thirty days.</summary>
+    public const int NewArrivalDays = 30;
+
+    public bool IsEmpty =>
+        Brands.Count == 0 && Within.Count == 0 && Facets.Count == 0
+        && MinPrice is null && MaxPrice is null && !OnOffer && !NewArrivals && !InStock;
+}
+
+/// <summary>
+/// What a facet is. It tells the screen how to draw one and the tracking plan
+/// what to call it (`filter_applied {facet}`); the values themselves are in its
+/// options.
+/// </summary>
+public enum FacetKind
+{
+    /// <summary>The category branches the results are in — every code with its
+    /// count, and the screen picks the level it draws (departments on a search,
+    /// children on a category page).</summary>
+    Category,
+
+    Brand,
+
+    /// <summary>A range: two inputs and the bands computed from the results.</summary>
+    Price,
+
+    /// <summary>A switch: a running automatic promotion reaches it.</summary>
+    Offer,
+
+    /// <summary>A switch: first listed in the last thirty days.</summary>
+    New,
+
+    /// <summary>A switch: the variant can be bought now.</summary>
+    InStock,
+
+    /// <summary>A variant axis marked as a facet (colour, size): options, matched per variant.</summary>
+    Axis,
+
+    /// <summary>An option attribute marked as a facet (material, gender): options.</summary>
+    Attribute,
+
+    /// <summary>A yes-or-no attribute marked as a facet (induction): a switch
+    /// whose one option is <c>CODE:true</c>.</summary>
+    Flag,
+}
+
+/// <summary>
+/// One filter the listing can be narrowed by, with how much each choice would
+/// leave. Returned only when it splits the results — the server's rule, not the
+/// screen's (ADR 0043's lesson: a rule the screen counts by is the server's).
+/// </summary>
+/// <param name="Code">The attribute's code for an axis, attribute or flag;
+/// for the others a fixed one (`category`, `brand`, `price`, `offer`, `new`,
+/// `stock`).</param>
+/// <param name="Label">In the query's culture.</param>
+/// <param name="Options">The choices, each with its count. Empty for price.</param>
+/// <param name="Price">The range, for price only.</param>
+public sealed record SearchFacet(
+    string Code,
+    FacetKind Kind,
+    string Label,
+    IReadOnlyList<FacetOption> Options,
+    PriceFacetRange? Price = null);
+
+/// <summary>
+/// One choice of a facet.
+///
+/// **The count is disjunctive**: it is how many products the list would hold
+/// with this choice added to everything chosen in the OTHER facets, not in this
+/// one. Choosing Vertex still shows how many Caminante would add; without that a
+/// shopper could never choose a second brand. It counts PRODUCTS, never the
+/// variant documents the index holds.
+/// </summary>
+/// <param name="Value">What goes back in the URL: a brand, a category code,
+/// "CODE:VALUE" for an axis, attribute or flag, "true" for a built-in switch.</param>
+/// <param name="Label">In the query's culture: the definition's option label,
+/// the category's name, the brand itself.</param>
+/// <param name="Chosen">Whether the query chose it. A chosen option is returned
+/// even at zero, so it can be unchosen.</param>
+/// <param name="Swatch">The option's colour, `#RRGGBB`, when its definition gives
+/// one, so a colour is drawn as a swatch beside its name (never colour alone).</param>
+public sealed record FacetOption(string Value, string Label, long Count, bool Chosen, string? Swatch = null);
+
+/// <summary>
+/// The price facet: the results' range, what was chosen, and bands computed from
+/// the results — rounded to prices a person would say and each with its count.
+/// All of it ignores the price filter itself (disjunctive), or choosing a band
+/// would make the others vanish.
+/// </summary>
+public sealed record PriceFacetRange(
+    decimal Min,
+    decimal Max,
+    decimal? ChosenMin,
+    decimal? ChosenMax,
+    IReadOnlyList<PriceBand> Bands);
+
+/// <summary>
+/// One band, both ends inclusive, exactly as choosing it filters: its count is
+/// what choosing it leaves. A product priced exactly on a boundary is therefore
+/// counted in both bands beside it — the honest answer to both questions.
+/// </summary>
+/// <param name="From">Null for the lowest band ("up to 25 €").</param>
+/// <param name="To">Null for the highest band ("100 € and above").</param>
+public sealed record PriceBand(decimal? From, decimal? To, long Count, bool Chosen);
 
 /// <summary>
 /// A result is a PRODUCT, even though what matched was one specific variant
@@ -196,13 +400,19 @@ public sealed record SearchHit(
 /// <param name="Answer">
 /// What kind of answer this page is. Null for a browse or a date order.
 /// </param>
+/// <param name="Facets">
+/// What the list can be narrowed by, in the order a column draws them: category,
+/// brand, price, on offer, new, in stock, then axes and attributes in their
+/// definitions' order. Counted over the whole result set, not the page.
+/// </param>
 public sealed record SearchResultPage(
     IReadOnlyList<SearchHit> Hits,
     long Total,
     int Page,
     int PageSize,
     double TookMs,
-    SearchAnswer? Answer = null);
+    SearchAnswer? Answer = null,
+    IReadOnlyList<SearchFacet>? Facets = null);
 
 /// <summary>
 /// A flat document per (VARIANT, culture), collapsed to a product at query time.
@@ -280,6 +490,20 @@ public sealed record ProductSearchDocument
     /// filtering by an exact combination without promising one that does not exist.</summary>
     public string[] AxisValues { get; init; } = [];
 
+    /// <summary>
+    /// The product's filterable facts as "CODE:VALUE" keywords: every attribute
+    /// whose definition is marked `IsFacet`, of the kinds a shopper picks from —
+    /// an option ("MATERIAL:ALUMINIO") or a yes-or-no ("INDUCTION:true"). A variant
+    /// axis comes here only when the product has no variants along it; otherwise
+    /// `AxisValues` carries it per variant (R-7.3, F-1).
+    ///
+    /// Codes and not labels: a label is the culture's, and a filter in the URL
+    /// has to mean the same thing in both indexes. The screen asks the
+    /// definitions for the words. Marking a new attribute `IsFacet` in the
+    /// backoffice makes it a filter after a reindex, with no code.
+    /// </summary>
+    public string[] FacetValues { get; init; } = [];
+
     /// <summary>THIS variant's price. Exact, not a range.</summary>
     public decimal PriceAmount { get; init; }
 
@@ -348,6 +572,33 @@ public sealed record ProductSearchDocument
     }
 
     /// <summary>
+    /// The facet keywords (see <see cref="FacetValues"/>), ordered, so a
+    /// reprojection of an unchanged product writes the same document.
+    /// </summary>
+    internal static string[] FacetValuesOf(Product product, AttributeDefinitions? definitions) =>
+    [
+        .. product.Attributes
+            .Where(value => definitions?.ByCode(value.Code) is { IsFacet: true } definition
+                // An axis travels per variant in AxisValues, but only for a product
+                // that has variants along it. One sold in a single colour states
+                // that colour on the product, and it is a colour a shopper filters
+                // by all the same — found on the laboratory's shoes, whose colour
+                // facet was missing. Never both, so a product counts once.
+                && (!definition.IsVariantAxis || !product.Variants.Any(variant => variant.AxisValues.ContainsKey(value.Code))))
+            .Select(value => value.Kind switch
+            {
+                AttributeKind.Option when value.OptionCode is { } option => $"{value.Code}:{option}",
+                AttributeKind.Boolean when value.Flag is { } flag => $"{value.Code}:{(flag ? "true" : "false")}",
+                // A number or a free text is not a choice from a list: numeric
+                // ranges are deferred with their threshold (the spec's non-goals).
+                _ => null,
+            })
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+    ];
+
+    /// <summary>
     /// One document per available variant. A product with no variants should not
     /// exist — importing always mints a default one — but if one turned up it is
     /// not indexed: there is nothing to buy.
@@ -388,6 +639,7 @@ public sealed record ProductSearchDocument
             Slug = product.Slug.In(culture),
             Code = product.Code,
             AxisValues = [.. variant.AxisValues.Select(pair => $"{pair.Key}:{pair.Value}")],
+            FacetValues = FacetValuesOf(product, definitions),
             PriceAmount = variant.Price.Amount,
             InStock = inStock,
             PriceFrom = priceFrom,

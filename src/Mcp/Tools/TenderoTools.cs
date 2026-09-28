@@ -65,11 +65,21 @@ public sealed class TenderoTools
         CultureNegotiation.Resolve(
             culture, requests.HttpContext?.Request.Headers.AcceptLanguage);
 
+    /// <summary>
+    /// The filters are the storefront's (R-7.3, F-5), under the names the
+    /// record gives them, and the answer carries the facets: what the results
+    /// can be narrowed by, each option with its code and how many it would
+    /// leave. An agent learns what to send from the answer it already has,
+    /// without a second call and without guessing a code from a label.
+    /// </summary>
     [McpServerTool(Name = "search_products")]
     [Description("""
         Search the shop's catalogue. Returns products, each carrying the variant that
-        matched with its SKU, price and whether it can be bought right now.
-        Leave the query empty to browse a category instead of searching.
+        matched with its SKU, price and whether it can be bought right now, and the
+        facets the results can be narrowed by: each facet's options with the value to
+        send back and how many products it would leave. Leave the query empty to
+        browse a category instead of searching. Within a filter the choices add up
+        (two brands show both); across filters they narrow.
         """)]
     public static Task<Answered<SearchResultPage>> SearchProductsAsync(
         IQueryDispatcher dispatcher,
@@ -80,15 +90,46 @@ public sealed class TenderoTools
         string? culture = null,
         [Description("Category code to browse or narrow to, e.g. KITCHEN.")]
         string? category = null,
-        [Description("Order by 'newest', or leave unset for relevance.")]
-        string? sort = null,
+        [Description("Newest, PriceAsc or PriceDesc; leave unset for Relevance.")]
+        ProductSort? sort = null,
         [Description("1-based page number.")]
         int page = 1,
         [Description("Results per page, 1 to 50.")]
         int pageSize = 20,
-        CancellationToken cancellationToken = default) =>
-        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
-            new SearchProductsQuery(query, answered, page, pageSize, category, sort), cancellationToken)));
+        [Description("Brands, as the brand facet spells them, e.g. [\"Vertex\"].")]
+        string[]? brands = null,
+        [Description("Category codes to narrow a search to, from the category facet.")]
+        string[]? within = null,
+        [Description("Attribute values as CODE:VALUE, from the facets, e.g. [\"COLOR:BLACK\", \"SIZE:42\"].")]
+        string[]? facets = null,
+        [Description("Lowest price, inclusive.")]
+        decimal? minPrice = null,
+        [Description("Highest price, inclusive.")]
+        decimal? maxPrice = null,
+        [Description("Only products on offer now.")]
+        bool onOffer = false,
+        [Description("Only products listed in the last 30 days.")]
+        bool newArrivals = false,
+        [Description("Only products that can be bought now.")]
+        bool inStock = false,
+        CancellationToken cancellationToken = default)
+    {
+        var filters = new SearchFilters
+        {
+            Brands = brands ?? [],
+            Within = within ?? [],
+            Facets = facets ?? [],
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            OnOffer = onOffer,
+            NewArrivals = newArrivals,
+            InStock = inStock,
+        };
+
+        return Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+            new SearchProductsQuery(query, answered, page, pageSize, category, sort ?? ProductSort.Relevance,
+                filters.IsEmpty ? null : filters), cancellationToken)));
+    }
 
     /// <summary>
     /// Named <c>get_product</c> until the UCP binding arrived and took that name.

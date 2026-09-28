@@ -26,7 +26,7 @@ public sealed record AttributeOptionView(string Code, IReadOnlyDictionary<string
 public sealed record AttributeDefinitionView(
     string Code,
     IReadOnlyDictionary<string, string> Label,
-    string Kind,
+    AttributeKind Kind,
     string? Unit,
     bool IsVariantAxis,
     bool IsFacet,
@@ -76,7 +76,7 @@ public sealed class ListAttributeDefinitionsHandler(IAttributeDefinitionReader d
     private static AttributeDefinitionView View(AttributeDefinition definition) => new(
         definition.Code,
         definition.Label.Values,
-        definition.Kind.ToString(),
+        definition.Kind,
         definition.Unit,
         definition.IsVariantAxis,
         definition.IsFacet,

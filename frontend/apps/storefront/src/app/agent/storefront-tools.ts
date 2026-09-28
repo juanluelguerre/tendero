@@ -6,6 +6,8 @@ import { formatPrice } from '@tendero/shared-util';
 import { CartStore } from '../data-access/cart.service';
 import { ProductSearchService } from '../data-access/product-search.service';
 import { ProductService } from '../data-access/product.service';
+import { ActiveListing } from '../listing/active-listing';
+import { chooseFilter, describeFacets, type FilterChoice } from './filter-tool';
 
 /**
  * Everything the shop offers a browser agent, in ONE file.
@@ -35,12 +37,13 @@ export class StorefrontTools {
   private readonly products = inject(ProductService);
   private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);
+  private readonly listing = inject(ActiveListing);
 
   /** Enough to answer with, few enough not to fill a model's context. */
   private static readonly MaximumResults = 8;
 
   all(): readonly ToolDescriptor[] {
-    return [this.searchProducts(), this.getProduct(), this.addToCart(), this.getCart()];
+    return [this.searchProducts(), this.listFilters(), this.applyFilter(), this.getProduct(), this.addToCart(), this.getCart()];
   }
 
   private searchProducts(): ToolDescriptor {
@@ -84,6 +87,87 @@ export class StorefrontTools {
       },
     };
   }
+
+  /**
+   * The list on screen's facets (R-7.3, F-5). Phase 6 deferred filtering "until
+   * the shop has facets to filter on"; this is that day. Both tools read and
+   * change the page's own listing, so they refuse where there is none rather
+   * than filter a list the shopper cannot see.
+   */
+  private listFilters(): ToolDescriptor {
+    return {
+      name: 'list_filters',
+      description:
+        'Lists what the product list on screen can be narrowed by — brand, price, ' +
+        'colour, size, on offer… — with the code of each facet, the value of each ' +
+        'option and how many products it would leave. Call it before apply_filter. ' +
+        'Only works on a search or category page.',
+      inputSchema: { type: 'object', properties: {} },
+      execute: async () => {
+        const listing = this.listing.current();
+        const result = listing?.result();
+        if (!listing || result?.status !== 'ready') return refuse(StorefrontTools.NoList);
+
+        return say(describeFacets(result.facets, result.total));
+      },
+    };
+  }
+
+  /**
+   * One facet's choices, applied to the list on screen the way a click applies
+   * them: a navigation, so the shopper watches the list narrow, the URL holds it
+   * and the back button undoes it. The agent narrows; it does not take the page
+   * anywhere the shopper did not already go.
+   */
+  private applyFilter(): ToolDescriptor {
+    return {
+      name: 'apply_filter',
+      description:
+        "Narrows the product list on screen, in the shopper's view, by one facet " +
+        "from list_filters. `values` REPLACES that facet's choices (several values " +
+        'add up: two brands show both); an empty list clears it. For price send ' +
+        'minPrice and/or maxPrice instead. Returns how many products are left.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          facet: { type: 'string', description: 'A facet code from list_filters, e.g. brand, price, COLOR.' },
+          values: { type: 'array', items: { type: 'string' }, description: 'Option values from list_filters, e.g. ["COLOR:BLACK"].' },
+          minPrice: { type: 'number', description: 'For the price facet: the lowest price, inclusive.' },
+          maxPrice: { type: 'number', description: 'For the price facet: the highest price, inclusive.' },
+        },
+        required: ['facet'],
+      },
+      execute: async (input) => {
+        const listing = this.listing.current();
+        const place = listing?.place();
+        const result = listing?.result();
+        if (!listing || !place || result?.status !== 'ready') return refuse(StorefrontTools.NoList);
+
+        const choice: FilterChoice = {
+          facet: String(input['facet'] ?? '').trim(),
+          values: Array.isArray(input['values']) ? input['values'].map(String) : [],
+          minPrice: input['minPrice'] === undefined ? null : Number(input['minPrice']),
+          maxPrice: input['maxPrice'] === undefined ? null : Number(input['maxPrice']),
+        };
+
+        const outcome = chooseFilter(listing.filters(), result.facets, place, choice);
+        if (!outcome.ok) return refuse(outcome.reason);
+
+        try {
+          const after = await listing.applyAndSettle(outcome.filters);
+          if (after.status !== 'ready') return refuse('The shop could not list the products just now.');
+
+          const lines = after.hits.slice(0, StorefrontTools.MaximumResults).map((hit) => `${hit.name} · code ${hit.code}`);
+          return say(`${after.total} product(s) now on screen:\n${lines.join('\n')}`);
+        } catch {
+          return refuse('The list did not answer in time.');
+        }
+      },
+    };
+  }
+
+  private static readonly NoList =
+    'There is no product list on screen. Filters narrow a search or category page the shopper is on.';
 
   private getProduct(): ToolDescriptor {
     return {
@@ -233,10 +317,12 @@ export class StorefrontTools {
    * rather than helping in it, and this surface keeps the PERSON as the one who
    * navigates. The link a tool returns is the invitation; the click is theirs.
    *
-   * `apply_filter` from the roadmap is the same question deferred rather than
-   * refused: it lands when the shop has facets to filter on, which is phase 8's
-   * aggregations. Adding it now would be a tool over a filter that does not
-   * exist — the speculative configuration the article *The feature flag you did not need*
-   * argues against, one layer up.
+   * `apply_filter` is the one change to the page an agent makes, and it keeps
+   * the rule: it narrows the list the shopper already opened, where they watch
+   * it happen and undo it with the back button. It was deferred in phase 6
+   * until the shop had facets to filter on — a tool over a filter that did not
+   * exist would have been the speculative configuration the article *The
+   * feature flag you did not need* argues against — and it landed with them
+   * (R-7.3, F-5).
    */
 }

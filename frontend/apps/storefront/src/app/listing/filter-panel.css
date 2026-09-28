@@ -1,0 +1,338 @@
+/* The filters, section by section. Every colour is a token; the only colour
+   that is not is a swatch's, and that is the shop's data, bound from the
+   attribute definition. */
+:host { display: block; }
+
+.facet {
+  padding-block: var(--space-4);
+  border-block-start: 1px solid var(--border);
+}
+
+.facet__heading {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.facet__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.facet__chevron {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.facet__toggle[aria-expanded='false'] .facet__chevron { transform: rotate(180deg); }
+
+.facet__body {
+  display: grid;
+  gap: var(--space-1);
+  margin-block-start: var(--space-2);
+}
+
+.facet__body[hidden] { display: none; }
+
+.facet__none { color: var(--text-muted); font-size: var(--text-sm); }
+
+.count {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+
+/* ---------- Checkboxes and radios ---------- */
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+/* 24 px, the smallest target WCAG 2.5.8 allows, and the audit's line. */
+.check input {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: inherit;
+}
+
+.check:has(input:checked) .check__label { font-weight: 600; }
+
+/* Nothing left with it: still there, so nothing moves, and plainly out of reach. */
+.check--dead { color: var(--text-muted); cursor: not-allowed; }
+
+/* A label reserves the width of its bold self, so choosing it does not widen
+   it by the pixel the weight adds and nothing beside it moves (the backoffice's
+   chips found this first). */
+.check__label {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.check__label::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* ---------- Links: a category page's sections, and "show more" ---------- */
+.links {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.links__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2rem;
+  color: var(--accent);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+
+.links__link:hover { text-decoration: underline; }
+
+.more {
+  justify-self: start;
+  min-height: 2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.more:hover { text-decoration: underline; }
+
+.find { min-height: 2.5rem; margin-block-end: var(--space-2); font-size: var(--text-sm); }
+
+/* ---------- Price ---------- */
+.range {
+  /* Flex, not a three-column grid: in the sheet there is no «Ir» (the footer
+     applies), and an empty third track still took its gap off the right edge. */
+  display: flex;
+  gap: var(--space-2);
+  margin-block-start: var(--space-2);
+}
+
+.range__box {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 2.5rem;
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.range__box:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.range__prefix { color: var(--text-muted); font-size: var(--text-xs); }
+
+.range__input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+}
+
+/* The box draws the ring for both. */
+.range__input:focus-visible { outline: none; }
+
+.range__go { min-height: 2.5rem; padding-inline: var(--space-3); }
+
+.bands {
+  display: grid;
+  /* Wide enough for «30 € – 50 €» on one line: two to a row on a phone. */
+  grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+  gap: var(--space-2);
+}
+
+.band {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 3rem;
+  padding: var(--space-2) var(--space-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.band[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  font-weight: 600;
+}
+
+/* ---------- Switches ---------- */
+.switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.switch__track {
+  position: relative;
+  flex: none;
+  width: 2.5rem;
+  height: 1.375rem;
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.switch__thumb {
+  position: absolute;
+  inset-block-start: 3px;
+  inset-inline-start: 3px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  transition: translate var(--dur-fast) var(--ease);
+}
+
+.switch[aria-checked='true'] .switch__track { background: var(--accent); }
+.switch[aria-checked='true'] .switch__thumb { translate: 1.125rem 0; }
+
+/* ---------- Swatches and sizes ---------- */
+.swatches {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.swatch,
+.size {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding-inline: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: start;
+  cursor: pointer;
+}
+
+.swatch:hover:not(:disabled),
+.size:hover:not(:disabled) { border-color: var(--border-strong); }
+
+.swatch[aria-pressed='true'],
+.size[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.swatch[aria-pressed='true'] .check__label { font-weight: 600; }
+
+.swatch__dot {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+/* An option the definition gives no colour: an empty ring, and its name says the rest. */
+.swatch__dot--none { border-style: dashed; }
+
+.sizes {
+  grid-template-columns: repeat(auto-fill, minmax(3.5rem, 1fr));
+  gap: var(--space-2);
+}
+
+.size {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0;
+  padding-block: var(--space-1);
+  text-align: center;
+}
+
+.size[aria-pressed='true'] .size__label { font-weight: 600; }
+
+.swatch:disabled,
+.size:disabled,
+.band:disabled,
+.switch:disabled {
+  color: var(--text-muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- The phone's sheet: roomier, and 44 px where a finger aims ---------- */
+:host(.in-sheet) .facet__heading { font-size: var(--text-sm); }
+:host(.in-sheet) .check,
+:host(.in-sheet) .switch { min-height: 2.75rem; font-size: var(--text-md); }
+
+@media (pointer: coarse) {
+  .facet__toggle,
+  .check,
+  .switch,
+  .swatch,
+  .size,
+  .more,
+  .links__link,
+  .range__box,
+  .range__go { min-height: 2.75rem; }
+}

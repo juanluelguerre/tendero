@@ -1,0 +1,49 @@
+<dialog class="palette" #dialog [attr.aria-label]="t('palette.title')" (close)="closed()" *transloco="let t">
+  <div class="palette__input">
+    <span class="palette__icon" aria-hidden="true">⌕</span>
+    <input
+      #input
+      type="text"
+      role="combobox"
+      aria-autocomplete="list"
+      aria-controls="palette-options"
+      [attr.aria-expanded]="options().length > 0"
+      [attr.aria-activedescendant]="options()[active()] ? 'palette-' + options()[active()].id : null"
+      [attr.aria-label]="t('palette.title')"
+      [placeholder]="t('palette.placeholder')"
+      [value]="query()"
+      (input)="typed($any($event.target).value)"
+      (keydown)="key($event)"
+    />
+    <kbd class="palette__esc">Esc</kbd>
+  </div>
+
+  <ul class="palette__options" id="palette-options" role="listbox" [attr.aria-label]="t('palette.results')">
+    @for (option of options(); track option.id; let index = $index) {
+      <li
+        class="option"
+        role="option"
+        [id]="'palette-' + option.id"
+        [attr.aria-selected]="index === active()"
+        tabindex="-1"
+        (click)="go(option)"
+        (keydown.enter)="go(option)"
+        (mousemove)="active.set(index)"
+      >
+        <span class="option__kind">{{ t('palette.kind.' + option.kind) }}</span>
+        <span class="option__label">{{ option.label }}</span>
+        <span class="option__detail">{{ option.detail }}</span>
+      </li>
+    }
+  </ul>
+  @if (options().length === 0) {
+    <p class="palette__none" role="status">{{ loading() ? t('palette.searching') : t('palette.none') }}</p>
+  }
+
+  <p class="palette__keys">
+    <span>{{ t('palette.keys.move') }}</span>
+    <span>{{ t('palette.keys.go') }}</span>
+    <span>{{ t('palette.keys.close') }}</span>
+    <span>{{ t('palette.keys.lists') }}</span>
+  </p>
+</dialog>

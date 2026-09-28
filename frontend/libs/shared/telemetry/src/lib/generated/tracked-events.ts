@@ -24,12 +24,17 @@ export interface TrackedEvents {
   /**
    * A shopper opened a product page. Only with analytics consent.
    *
+   * Listing filters: Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+   * Decides: If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading.
+   *
    * Product page: How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
    * Decides: Where discovery work goes: the search box, the taxonomy or the home page's rows.
    */
   readonly product_viewed: {
-    /** The page before this one, by kind; direct when there was none in this tab. */
-    readonly arrived_from: 'search' | 'category' | 'home' | 'other' | 'direct';
+    /** The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. */
+    readonly arrived_from: 'search' | 'category' | 'listing' | 'home' | 'other' | 'direct';
+    /** Whether the list the shopper came from was narrowed by filters. False for a page that is not a list. */
+    readonly filtered: boolean;
   };
 
   /**
@@ -40,7 +45,33 @@ export interface TrackedEvents {
    */
   readonly category_opened: {
     /** How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. */
-    readonly arrived_from: 'menu' | 'search' | 'category' | 'home' | 'other' | 'direct';
+    readonly arrived_from: 'menu' | 'search' | 'category' | 'listing' | 'home' | 'other' | 'direct';
+  };
+
+  /**
+   * A shopper narrowed a list by a facet, or changed a facet's choices (R-7.3, F-6): once per facet a choice changed, when it takes effect — at once in the column, with Ver N productos in the phone's sheet. Only with analytics consent. A browser agent's apply_filter is counted by webmcp_tool_invoked, not here.
+   *
+   * Listing filters: Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+   * Decides: If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading.
+   */
+  readonly filter_applied: {
+    /** The facet's code: category, brand, price, offer, new or stock, or an attribute's catalogue code (COLOR, SIZE). Never the value chosen. */
+    readonly facet: string;
+    /** The kind of list narrowed: a category page, a search's results, or a list made only of filters (Ofertas, Novedades). */
+    readonly listing: 'category' | 'search' | 'listing';
+    /** The desktop's column, which applies each choice, or the phone's sheet, which applies a batch. */
+    readonly surface: 'column' | 'sheet';
+  };
+
+  /**
+   * A shopper took every filter off a list at once (R-7.3, F-6). Only with analytics consent.
+   *
+   * Listing filters: Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+   * Decides: If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading.
+   */
+  readonly filters_cleared: {
+    /** Quitar todo beside the chips, the one offered by a list that filters emptied, or the phone's sheet. */
+    readonly surface: 'toolbar' | 'empty' | 'sheet';
   };
 
   /**
@@ -81,6 +112,9 @@ export interface TrackedEvents {
    *
    * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
    * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
+   *
+   * Palette and list shortcuts: Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
+   * Decides: R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3.
    */
   readonly backoffice_action_taken: {
     /** The screen it was done on. */
@@ -89,6 +123,8 @@ export interface TrackedEvents {
     readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate';
     /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
     readonly outcome: 'done' | 'refused' | 'failed';
+    /** Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). */
+    readonly via: 'row' | 'pane' | 'page';
   };
 
   /**
@@ -100,6 +136,42 @@ export interface TrackedEvents {
   readonly backoffice_theme_chosen: {
     /** What was chosen, not what the system resolved it to. */
     readonly theme: 'system' | 'light' | 'dark';
+  };
+
+  /**
+   * A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6), or narrowed a list by searching or filtering it (R-7.1). A staff event under the shop's notice (ADR 0041), never with who they are.
+   *
+   * Palette and list shortcuts: Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
+   * Decides: R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3.
+   *
+   * Stock search and filters: Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which?
+   * Decides: If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count.
+   */
+  readonly backoffice_affordance_used: {
+    /** The palette (Ctrl K or /), j and k down a queue, or a list's search box and filter chips (R-7.1). */
+    readonly affordance: 'palette' | 'keys' | 'search' | 'filter';
+    /** What it reached; never which one. */
+    readonly target: 'screen' | 'order' | 'product' | 'agent' | 'next' | 'previous' | 'stock';
+  };
+
+  /**
+   * A shopper chose light, dark or the system's theme (the redesign's R-5.1). Behavioural, so it waits for analytics consent.
+   *
+   * Storefront theme choice: Do shoppers change the theme from their system's, and does the dark shop hold the same conversion?
+   * Decides: If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else.
+   */
+  readonly theme_chosen: {
+    /** What was chosen, not what the system resolved it to. */
+    readonly theme: 'system' | 'light' | 'dark';
+  };
+
+  /**
+   * A shopper followed the link in the notice that says a product went into the cart (the redesign's R-5.3, raised by the baseline walkthrough). Behavioural, so it waits for analytics consent.
+   *
+   * Added-to-cart notice: Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping?
+   * Decides: If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action.
+   */
+  readonly cart_notice_followed: {
   };
 }
 
@@ -113,9 +185,14 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   webmcp_tool_invoked: 'behavioural',
   product_viewed: 'behavioural',
   category_opened: 'behavioural',
+  filter_applied: 'behavioural',
+  filters_cleared: 'behavioural',
   spec_source_opened: 'behavioural',
   products_compared: 'behavioural',
   backoffice_view_opened: 'staff',
   backoffice_action_taken: 'staff',
   backoffice_theme_chosen: 'staff',
+  backoffice_affordance_used: 'staff',
+  theme_chosen: 'behavioural',
+  cart_notice_followed: 'behavioural',
 };

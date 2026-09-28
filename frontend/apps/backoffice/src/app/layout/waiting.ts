@@ -7,7 +7,6 @@ import { CatalogService } from '../data-access/catalog.service';
 import { InventoryService } from '../data-access/inventory.service';
 import { KnowledgeService } from '../data-access/knowledge.service';
 import { OrderingService } from '../data-access/ordering.service';
-import { lowStockOf } from '../features/dashboard/figures';
 import type { WaitingKind } from './navigation';
 
 /**
@@ -34,11 +33,15 @@ export class Waiting {
     params: () => ({ culture: this.culture.active(), asked: this.asked() }),
     stream: ({ params }) =>
       forkJoin({
-        drafts: quietly(this.catalog.list('draft', params.culture, 1, 1).pipe(map((page) => page.total))),
-        claims: quietly(this.knowledge.claims().pipe(map((claims) => claims.length))),
-        operations: quietly(this.ordering.operations('day')),
-        lowStock: quietly(this.inventory.stock(params.culture).pipe(map((stock) => lowStockOf(stock.rows).length))),
-        refusals: quietly(this.accounts.agentDenials('day').pipe(map((denials) => denials.total))),
+        drafts: quietly(this.catalog.list('Draft', params.culture, 1, 1).pipe(map((page) => page.total))),
+        claims: quietly(this.knowledge.claims('All', 1, 1).pipe(map((queue) => queue.total))),
+        operations: quietly(this.ordering.operations('Day')),
+        lowStock: quietly(
+          this.inventory
+            .stock(params.culture, 'Restock')
+            .pipe(map((stock) => stock.counts.find((count) => count.filter === 'Restock')?.count ?? 0)),
+        ),
+        refusals: quietly(this.accounts.agentDenials('Day').pipe(map((denials) => denials.total))),
       }),
   });
 

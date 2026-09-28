@@ -24,7 +24,7 @@ namespace ElGuerre.Tendero.Integration.Tests;
 /// and not any context's handler.
 /// </summary>
 [Collection(PostgresCollection.Name)]
-public sealed class OutboxProcessorTests(PostgresFixture postgres)
+public sealed class OutboxWorkerTests(PostgresFixture postgres)
 {
     private static readonly DateTimeOffset T0 = new(2026, 9, 10, 20, 0, 0, TimeSpan.Zero);
 
@@ -165,7 +165,7 @@ public sealed class OutboxProcessorTests(PostgresFixture postgres)
 
         public TenderoDbContextFactory Factory { get; }
         public ProbeHandler Handler { get; } = new();
-        public OutboxProcessor Processor { get; }
+        public OutboxWorker Processor { get; }
 
         public WorkerScope(TenderoDbContextFactory factory, OutboxOptions options)
         {
@@ -179,10 +179,10 @@ public sealed class OutboxProcessorTests(PostgresFixture postgres)
 
             this.provider = services.BuildServiceProvider(validateScopes: true);
 
-            Processor = new OutboxProcessor(
+            Processor = new OutboxWorker(
                 this.provider.GetRequiredService<IServiceScopeFactory>(),
                 Options.Create(options),
-                NullLogger<OutboxProcessor>.Instance);
+                NullLogger<OutboxWorker>.Instance);
         }
 
         public async Task EnqueueAsync(CancellationToken ct, params ProbeEvent[] events)

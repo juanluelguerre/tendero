@@ -134,3 +134,7 @@
 @media (max-width: 560px) {
   .grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Where "calculating the delivery" is said while the options are on their way;
+   it keeps its line, so the form does not jump when they arrive. */
+.rating { min-height: 1.5rem; margin: var(--space-2) 0 0; font-size: var(--text-xs); }

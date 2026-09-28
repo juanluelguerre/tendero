@@ -1,4 +1,5 @@
 using System.Text.Json;
+using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Tests.Ucp;
@@ -59,7 +60,7 @@ public sealed class UcpCatalogConformanceTests
         PriceCurrency: "EUR",
         Alternates: [],
         MissingCultures: [],
-        Status: "Active",
+        Status: ProductStatus.Active,
         UpdatedAt: DateTimeOffset.UnixEpoch);
 
     [Fact]

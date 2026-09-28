@@ -1,3 +1,4 @@
+import type { ReturnReason } from '@tendero/shared-api';
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -35,9 +36,9 @@ export class OperationsWidget {
     return formatPrice(amount, currency, this.culture.active());
   }
 
-  /** The server labels a reason `wrong_size`; the returns screen's words are keyed `WrongSize`. */
-  protected reasonKey(label: string): string {
-    return 'returns.reason.' + label.replace(/(^|_)([a-z])/g, (_, __, letter: string) => letter.toUpperCase());
+  /** The returns screen's words for a reason: the server and the keys spell it the same way (ADR 0043). */
+  protected reasonKey(reason: ReturnReason): string {
+    return 'returns.reason.' + reason;
   }
 
   protected share(rate: number): string {

@@ -31,13 +31,9 @@ export type TaxLine = Schemas['TaxLineResponse'];
  */
 export type AppliedDiscount = Schemas['AppliedDiscountResponse'];
 
-/**
- * Narrowed on the client, not promised by the document: both travel as `string`
- * because the server serialises the enum name by hand. Same decision, and same
- * caveat, as `ProductStatus` in the catalogue contracts.
- */
-export type CombinationPolicy = 'ExclusiveGlobal' | 'ExclusiveInGroup' | 'Stackable';
-export type DiscountOutcome = 'Applied' | 'Suppressed';
+/** From the document (ADR 0043). */
+export type CombinationPolicy = Schemas['CombinationPolicy'];
+export type DiscountOutcome = Schemas['DiscountOutcome'];
 
 /**
  * A promotion as a SHOPPER may see it, which is a different type from

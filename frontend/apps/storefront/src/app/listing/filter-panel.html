@@ -1,0 +1,287 @@
+<ng-container *transloco="let t">
+  <!-- A category page's sections: links, because a section is a place with its
+       own URL, breadcrumb and canonical, not a filter (the spec). -->
+  @if (navigation(); as children) {
+    @if (children.length > 0) {
+      <section class="facet">
+        <ng-container *ngTemplateOutlet="heading; context: { id: 'nav', label: t('listing.section.categories') }" />
+        <ul class="facet__body links" role="list" [id]="uid + '-nav'" [attr.aria-labelledby]="uid + '-nav-h'" [hidden]="!isOpen('nav')">
+          @for (child of children; track child.code) {
+            <li>
+              <a class="links__link" [routerLink]="links.category(child.code)">
+                {{ child.name }}
+                @if (child.count !== null) {
+                  <span class="count"> ({{ child.count }})</span>
+                }
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+
+  @for (section of sections(); track section.id) {
+    <section class="facet">
+      @switch (section.kind) {
+        @case ('category') {
+          @if (section.kind === 'category') {
+            @let level = categoryLevel(section.facet);
+            <ng-container
+              *ngTemplateOutlet="heading; context: { id: section.id, label: level.depth === 0 ? t('listing.section.department') : t('listing.section.category') }" />
+            <div class="facet__body" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              @for (option of level.options; track option.value) {
+                <ng-container *ngTemplateOutlet="check; context: { kind: 'Category', option }" />
+              }
+            </div>
+          }
+        }
+
+        @case ('brand') {
+          @if (section.kind === 'brand') {
+            @let view = brands(section.facet);
+            <ng-container *ngTemplateOutlet="heading; context: { id: section.id, label: section.facet.label }" />
+            <div class="facet__body" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              <!-- Past twenty brands, a box to find one: the day there are three
+                   hundred, the column does not change (the spec). -->
+              @if (view.findable) {
+                <label class="sr-only" [for]="uid + '-find'">{{ t('listing.brand.find') }}</label>
+                <input
+                  #find
+                  class="field find"
+                  type="text"
+                  autocomplete="off"
+                  [id]="uid + '-find'"
+                  [value]="brandFind()"
+                  [attr.placeholder]="t('listing.brand.find')"
+                  (input)="brandFind.set(find.value)"
+                />
+              }
+              @for (option of view.shown; track option.value) {
+                <ng-container *ngTemplateOutlet="check; context: { kind: 'Brand', option }" />
+              } @empty {
+                <p class="facet__none">{{ t('listing.brand.none') }}</p>
+              }
+              @if (view.hidden > 0) {
+                <button type="button" class="more" (click)="brandsExpanded.set(true)">
+                  {{ t('listing.brand.more', { count: view.hidden }) }}
+                </button>
+              } @else if (brandsExpanded() && !brandFind()) {
+                <button type="button" class="more" (click)="brandsExpanded.set(false)">{{ t('listing.brand.fewer') }}</button>
+              }
+            </div>
+          }
+        }
+
+        @case ('price') {
+          @if (section.kind === 'price') {
+            <ng-container *ngTemplateOutlet="heading; context: { id: section.id, label: section.facet.label }" />
+            <div class="facet__body" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              @if (mode() === 'sheet') {
+                <!-- A thumb's target on a phone: the same choice as the radios,
+                     drawn as buttons in a row (the mock-ups). -->
+                <div class="bands">
+                  @for (band of section.facet.price?.bands ?? []; track $index) {
+                    <button
+                      type="button"
+                      class="band"
+                      [attr.aria-pressed]="bandChosen(band)"
+                      [disabled]="band.count === 0 && !bandChosen(band)"
+                      (click)="chooseBand(band)"
+                    >
+                      <span class="band__label">{{ bandLabel(band) }}</span>
+                      <span class="count"> ({{ band.count }})</span>
+                    </button>
+                  }
+                </div>
+              } @else {
+                @for (band of section.facet.price?.bands ?? []; track $index) {
+                  <label class="check" [class.check--dead]="band.count === 0 && !bandChosen(band)">
+                    <input
+                      type="radio"
+                      [name]="uid + '-band'"
+                      [checked]="bandChosen(band)"
+                      [disabled]="band.count === 0 && !bandChosen(band)"
+                      (click)="chooseBand(band)"
+                    />
+                    <span class="check__label" [attr.data-label]="bandLabel(band)">{{ bandLabel(band) }}</span>
+                    <span class="count"> ({{ band.count }})</span>
+                  </label>
+                }
+              }
+
+              <div class="range">
+                <label class="range__box">
+                  <span class="range__prefix" aria-hidden="true">{{ t('listing.price.min') }}</span>
+                  <input
+                    #min
+                    class="range__input"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    [attr.aria-label]="t('listing.price.minLabel')"
+                    [value]="minText()"
+                    (input)="minText.set(min.value)"
+                    (keydown.enter)="applyRange()"
+                    (change)="mode() === 'sheet' ? applyRange() : null"
+                  />
+                </label>
+                <label class="range__box">
+                  <span class="range__prefix" aria-hidden="true">{{ t('listing.price.max') }}</span>
+                  <input
+                    #max
+                    class="range__input"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    [attr.aria-label]="t('listing.price.maxLabel')"
+                    [value]="maxText()"
+                    (input)="maxText.set(max.value)"
+                    (keydown.enter)="applyRange()"
+                    (change)="mode() === 'sheet' ? applyRange() : null"
+                  />
+                </label>
+                @if (mode() === 'column') {
+                  <button type="button" class="button button--quiet range__go" [attr.aria-label]="t('listing.price.goLabel')" (click)="applyRange()">
+                    {{ t('listing.price.go') }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+
+        @case ('switches') {
+          @if (section.kind === 'switches') {
+            <ng-container *ngTemplateOutlet="heading; context: { id: section.id, label: t('listing.section.switches') }" />
+            <div class="facet__body" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              @for (facet of section.facets; track facet.code) {
+                @for (option of facet.options; track option.value) {
+                  <ng-container *ngTemplateOutlet="toggleSwitch; context: { kind: facet.kind, option }" />
+                }
+              }
+            </div>
+          }
+        }
+
+        @case ('flag') {
+          @if (section.kind === 'flag') {
+            <ng-container *ngTemplateOutlet="heading; context: { id: section.id, label: section.facet.label }" />
+            <div class="facet__body" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              @for (option of section.facet.options; track option.value) {
+                <ng-container *ngTemplateOutlet="toggleSwitch; context: { kind: 'Flag', option }" />
+              }
+            </div>
+          }
+        }
+
+        @case ('swatches') {
+          @if (section.kind === 'swatches') {
+            <ng-container *ngTemplateOutlet="heading; context: { id: section.id, label: section.facet.label }" />
+            <!-- A colour is its swatch AND its name, never the colour alone
+                 (design/DESIGN.md). The colour is the shop's data, painted from
+                 the attribute definition, not from a stylesheet. -->
+            <div class="facet__body swatches" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              @for (option of section.facet.options; track option.value) {
+                <button
+                  type="button"
+                  class="swatch"
+                  [attr.aria-pressed]="chosen(section.facet.kind, option.value)"
+                  [disabled]="dead(section.facet.kind, option)"
+                  (click)="toggle(section.facet.kind, option.value)"
+                >
+                  <span class="swatch__dot" [class.swatch__dot--none]="!swatch(option)" [style.background-color]="swatch(option)" aria-hidden="true"></span>
+                  <span class="check__label" [attr.data-label]="option.label">{{ option.label }}</span>
+                  <span class="count"> ({{ option.count }})</span>
+                </button>
+              }
+            </div>
+          }
+        }
+
+        @case ('sizes') {
+          @if (section.kind === 'sizes') {
+            <ng-container *ngTemplateOutlet="heading; context: { id: section.id, label: section.facet.label }" />
+            <div class="facet__body sizes" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              @for (option of section.facet.options; track option.value) {
+                <button
+                  type="button"
+                  class="size"
+                  [attr.aria-pressed]="chosen(section.facet.kind, option.value)"
+                  [disabled]="dead(section.facet.kind, option)"
+                  (click)="toggle(section.facet.kind, option.value)"
+                >
+                  <span class="size__label">{{ option.label }}</span>
+                  <span class="count"> ({{ option.count }})</span>
+                </button>
+              }
+            </div>
+          }
+        }
+
+        @case ('checks') {
+          @if (section.kind === 'checks') {
+            <ng-container *ngTemplateOutlet="heading; context: { id: section.id, label: section.facet.label }" />
+            <div class="facet__body" role="group" [id]="uid + '-' + section.id" [attr.aria-labelledby]="uid + '-' + section.id + '-h'" [hidden]="!isOpen(section.id)">
+              @for (option of section.facet.options; track option.value) {
+                <ng-container *ngTemplateOutlet="check; context: { kind: section.facet.kind, option }" />
+              }
+            </div>
+          }
+        }
+      }
+    </section>
+  }
+
+  <!-- A section's heading is the button that folds it, and the name of its group. -->
+  <ng-template #heading let-id="id" let-label="label">
+    <h3 class="facet__heading">
+      <button
+        type="button"
+        class="facet__toggle"
+        [id]="uid + '-' + id + '-h'"
+        [attr.aria-expanded]="isOpen(id)"
+        [attr.aria-controls]="uid + '-' + id"
+        (click)="toggleSection(id)"
+      >
+        <span>{{ label }}</span>
+        <svg class="facet__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </h3>
+  </ng-template>
+
+  <!-- A checkbox, its label and its count: the count is part of the name a
+       screen reader reads, "Caminante (8)". -->
+  <ng-template #check let-kind="kind" let-option="option">
+    <label class="check" [class.check--dead]="dead(kind, option)">
+      <input
+        type="checkbox"
+        [checked]="chosen(kind, option.value)"
+        [disabled]="dead(kind, option)"
+        (change)="toggle(kind, option.value)"
+      />
+      <span class="check__label" [attr.data-label]="option.label">{{ option.label }}</span>
+      <span class="count"> ({{ option.count }})</span>
+    </label>
+  </ng-template>
+
+  <!-- A yes-or-no fact as a switch: a button that says it is one. -->
+  <ng-template #toggleSwitch let-kind="kind" let-option="option">
+    <button
+      type="button"
+      role="switch"
+      class="switch"
+      [attr.aria-checked]="chosen(kind, option.value)"
+      [disabled]="dead(kind, option)"
+      (click)="toggle(kind, option.value)"
+    >
+      <span class="switch__label">
+        {{ option.label }}
+        <span class="count"> ({{ option.count }})</span>
+      </span>
+      <span class="switch__track" aria-hidden="true"><span class="switch__thumb"></span></span>
+    </button>
+  </ng-template>
+</ng-container>

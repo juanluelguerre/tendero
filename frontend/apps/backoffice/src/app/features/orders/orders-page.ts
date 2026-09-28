@@ -13,24 +13,34 @@ import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
-import type { OrderSummary } from '@tendero/shared-api';
+import type { OrderStatus, OrderSummary } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { OrderingService, type OrderMove } from '../../data-access/ordering.service';
-import { BackofficeUsage, type BackofficeAction } from '../../usage';
+import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../usage';
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
+import { Pager } from '../../work/pager';
 import { WorkPane } from '../../work/work-pane';
 
 /** Each move as the usage event names it (ADR 0041). */
 const OrderActions = { Ship: 'order_ship', Deliver: 'order_deliver', Cancel: 'order_cancel' } as const satisfies Record<OrderMove, BackofficeAction>;
 
 /** The filter's statuses in the order a working day meets them: what is to ship first. */
-const Statuses = ['Confirmed', 'Pending', 'PaymentAuthorized', 'PaymentFailed', 'Shipped', 'Delivered', 'Cancelled'] as const;
+const Statuses = ['Confirmed', 'Pending', 'PaymentAuthorized', 'PaymentFailed', 'Shipped', 'Delivered', 'Cancelled'] as const satisfies readonly OrderStatus[];
 
 /** The status the list opens on: the job this screen is for is shipping (R-0, B3). */
-const ToShip = 'Confirmed';
+const ToShip: OrderStatus = 'Confirmed';
+
+/**
+ * The URL's status as the API's set, or none. A status typed by hand that the
+ * shop does not have lists everything rather than asking for a 400: the address
+ * is the person's, the set is the contract's.
+ */
+function statusIn(key: string): OrderStatus | null {
+  return (Statuses as readonly string[]).includes(key) ? (key as OrderStatus) : null;
+}
 
 /**
  * The orders, as R-3 drew them (R-4.2): a list narrowed by status and by what is
@@ -44,9 +54,12 @@ const ToShip = 'Confirmed';
  * buttons are derived from the status it sent, and when one is wrong the server
  * answers 409 with a sentence that the screen shows as it came.
  */
+/** Twenty rows a page, as every list of work (R-7.2). */
+const PageSize = 20;
+
 @Component({
   selector: 'backoffice-orders',
-  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips, ConfirmDialog],
+  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips, Pager, ConfirmDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-page.html',
   styleUrl: './orders-page.css',
@@ -66,7 +79,7 @@ export class OrdersPage {
 
   /** The status in the URL; none means the job's default, `all` means no filter. */
   protected readonly statusKey = computed(() => this.params().get('status') ?? ToShip);
-  private readonly status = computed(() => (this.statusKey() === 'all' ? null : this.statusKey()));
+  private readonly status = computed(() => statusIn(this.statusKey()));
   protected readonly selectedId = computed(() => this.params().get('order'));
 
   protected readonly text = signal(this.route.snapshot.queryParamMap.get('q') ?? '');
@@ -74,10 +87,17 @@ export class OrdersPage {
     initialValue: this.text(),
   });
 
+  /** The page in the URL, as the filter is, so page three can be shared (R-7.2). */
+  protected readonly page = computed(() => Math.max(1, Number(this.params().get('page') ?? 1) || 1));
+  protected readonly pageSize = PageSize;
+
   private readonly list = rxResource({
-    params: () => ({ status: this.status(), text: this.query() }),
-    stream: ({ params }) => this.ordering.orders(params.status, params.text),
+    params: () => ({ status: this.status(), text: this.query(), page: this.page() }),
+    stream: ({ params }) => this.ordering.orders(params.status, params.text, params.page, PageSize),
   });
+
+  /** How many the filter and the search hold, not the page: the pager says it. */
+  protected readonly total = computed(() => this.list.value()?.total ?? 0);
 
   /** The rows, replaced one by one as moves come back, until the list is asked again. */
   protected readonly orders = linkedSignal(() => this.list.value()?.orders ?? []);
@@ -150,9 +170,13 @@ export class OrdersPage {
 
   protected filterBy(status: string): void {
     void this.router.navigate([], {
-      queryParams: { status: status === ToShip ? null : status },
+      queryParams: { status: status === ToShip ? null : status, page: null },
       queryParamsHandling: 'merge',
     });
+  }
+
+  protected go(page: number): void {
+    void this.router.navigate([], { queryParams: { page: page <= 1 ? null : page }, queryParamsHandling: 'merge' });
   }
 
   protected open(order: OrderSummary): void {
@@ -169,13 +193,13 @@ export class OrdersPage {
     this.cancelDialog()?.open();
   }
 
-  protected apply(order: OrderSummary, move: OrderMove, reason?: string): void {
+  protected apply(order: OrderSummary, move: OrderMove, via: ActionVia, reason?: string): void {
     this.busy.set(order.orderId);
     this.refusal.update((current) => without(current, order.orderId));
 
     this.ordering
       .move(order.orderId, move, reason)
-      .pipe(this.usage.reported('orders', OrderActions[move]))
+      .pipe(this.usage.reported('orders', OrderActions[move], via))
       .subscribe({
         next: (updated) => {
           this.orders.update((current) => current.map((row) => (row.orderId === updated.orderId ? updated : row)));

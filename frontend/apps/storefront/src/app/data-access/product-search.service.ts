@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { SearchResultPage } from '@tendero/shared-api';
+import type { ProductSort, SearchResultPage } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
@@ -28,13 +28,24 @@ export class ProductSearchService {
   browse(options: {
     culture: string;
     category?: string;
-    sort?: 'newest';
+    sort?: ProductSort;
     page?: number;
     pageSize?: number;
   }): Observable<SearchResultPage> {
     return this.query({ culture: options.culture, category: options.category,
                         sort: options.sort, page: options.page,
                         pageSize: options.pageSize ?? 8 });
+  }
+
+  /**
+   * A listing with its filters (R-7.3, F-3): the same endpoint again, with the
+   * parameters `searchParams` in `listing/listing-filters.ts` builds from the
+   * URL, arrays repeated. The answer carries the facets.
+   */
+  list(params: Record<string, string | string[]>): Observable<SearchResultPage> {
+    return this.http.get<SearchResultPage>(`${this.baseUrl}/api/search`, {
+      params: new HttpParams({ fromObject: params }),
+    });
   }
 
   private query(options: {

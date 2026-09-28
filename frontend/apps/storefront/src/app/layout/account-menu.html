@@ -1,0 +1,79 @@
+<ng-container *transloco="let t">
+  @let who = identity();
+  <button
+    type="button"
+    class="trigger"
+    popovertarget="account-menu"
+    [attr.aria-label]="t('accountMenu.open', { name: who?.name ?? t('accountMenu.guest') })"
+  >
+    @if (who) {
+      <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+    } @else {
+      <svg class="trigger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="12" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      </svg>
+    }
+  </button>
+
+  <div #menu id="account-menu" class="menu" popover>
+    <p class="menu__who">
+      <strong>{{ who?.name ?? t('accountMenu.guest') }}</strong>
+    </p>
+
+    <div class="menu__row">
+      <span class="menu__label" id="account-language">{{ t('nav.language') }}</span>
+      <div class="segmented" role="group" aria-labelledby="account-language">
+        @for (option of cultures; track option) {
+          <button type="button" class="segmented__option" [attr.aria-pressed]="option === culture()" (click)="use(option)">
+            {{ option }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="menu__row">
+      <span class="menu__label" id="account-theme">{{ t('theme.label') }}</span>
+      <div class="segmented" role="group" aria-labelledby="account-theme">
+        @for (choice of themes; track choice) {
+          <button
+            type="button"
+            class="segmented__option"
+            [attr.aria-pressed]="choice === themeChoice()"
+            [attr.aria-label]="t('theme.' + choice)"
+            [title]="t('theme.' + choice)"
+            (click)="choose(choice)"
+          >
+            <svg class="segmented__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              @switch (choice) {
+                @case ('system') {
+                  <rect x="3.5" y="4.5" width="17" height="11.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M9 20h6M12 16v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                }
+                @case ('light') {
+                  <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6" />
+                  <path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                }
+                @case ('dark') {
+                  <path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                }
+              }
+            </svg>
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="menu__actions">
+      @if (who) {
+        <a class="quiet" [routerLink]="accountLink()" (click)="close()">{{ t('account.title') }}</a>
+        <button type="button" class="quiet" (click)="signOut()">{{ t('account.signOut') }}</button>
+      } @else {
+        <!-- To the account page and not straight to the issuer: that page is
+             where signing in finishes, with the customer linked and the basket
+             claimed. -->
+        <a class="quiet" [routerLink]="accountLink()" (click)="close()">{{ t('account.signIn') }}</a>
+      }
+    </div>
+  </div>
+</ng-container>

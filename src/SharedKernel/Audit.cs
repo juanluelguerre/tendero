@@ -110,9 +110,20 @@ public interface IAuditWriter
 /// </summary>
 public interface IAuditReader
 {
-    Task<IReadOnlyList<AuditEntry>> RecentAsync(
-        AuditOutcome? outcome, int take, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// One page of the entries with <paramref name="outcome"/>, or of all of them,
+    /// newest first with the id as the tie-break (R-7.2); how many match in all;
+    /// and how many the log holds of each outcome, which the outcome filter does
+    /// not narrow.
+    /// </summary>
+    Task<AuditPage> PageAsync(
+        AuditOutcome? outcome, int page, int pageSize, CancellationToken cancellationToken = default);
 }
+
+/// <param name="Total">Of the whole filter, not of the page.</param>
+/// <param name="CountByOutcome">Every outcome's number, whichever one was asked for.</param>
+public sealed record AuditPage(
+    IReadOnlyList<AuditEntry> Entries, int Total, IReadOnlyDictionary<AuditOutcome, int> CountByOutcome);
 
 /// <summary>
 /// What agents were refused, read for the dashboard (P11-7): every denied command an

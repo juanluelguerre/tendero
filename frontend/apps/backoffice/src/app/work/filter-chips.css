@@ -36,3 +36,20 @@
 }
 
 .chip__count { color: var(--text-muted); font-size: var(--text-3xs); }
+
+/* The label reserves the width of its bold self, so choosing a chip does not
+   widen it by the pixel or two the weight adds, and nothing beside it moves. */
+.chip__label {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.chip__label::after {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 600;
+  user-select: none;
+  speak: never;
+}

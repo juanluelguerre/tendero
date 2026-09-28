@@ -78,42 +78,29 @@ export type ReturnPolicy = Schemas['ReturnPolicy'];
 export type ReturnView = Schemas['ReturnView'];
 export type ReturnLineView = Schemas['ReturnLineView'];
 
-/**
- * Narrowed on the client, not promised by the document: both travel as `string`
- * because the server serialises the enum name by hand. Same decision, and same
- * caveat, as `ProductStatus` and `CombinationPolicy`.
- */
-export type OrderStatus =
-  | 'Pending'
-  | 'PaymentAuthorized'
-  | 'PaymentFailed'
-  | 'Confirmed'
-  | 'Shipped'
-  | 'Delivered'
-  | 'Cancelled';
-
-export type ReturnStatus =
-  | 'Requested'
-  | 'Approved'
-  | 'Received'
-  | 'Refunded'
-  | 'Rejected'
-  | 'Cancelled';
+/** From the document (ADR 0043). */
+export type OrderStatus = Schemas['OrderStatus'];
+export type OrderMode = Schemas['OrderMode'];
+export type ReturnStatus = Schemas['ReturnStatus'];
+export type DashboardPeriod = Schemas['DashboardPeriod'];
+export type OrderMove = Schemas['OrderMove'];
+export type ReturnDecision = Schemas['ReturnDecision'];
 
 /**
  * The closed set of return reasons. Closed on purpose: it is the input to the
  * return-reason analysis a later phase promises, and a text box would make that
  * a model guessing at what somebody typed.
  */
+export type ReturnReason = Schemas['ReturnReason'];
+
+/** The set as a list, for a picker; `satisfies` holds it to the document's. */
 export const RETURN_REASONS = [
   'WrongSize',
   'NotAsDescribed',
   'Damaged',
   'WrongItem',
   'ChangedMind',
-] as const;
-
-export type ReturnReason = (typeof RETURN_REASONS)[number];
+] as const satisfies readonly ReturnReason[];
 
 /** A shopper's own orders. A different endpoint from the shopkeeper's list, and
  *  deliberately so: that one is allowed to return everything and this one is not. */

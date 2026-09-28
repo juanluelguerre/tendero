@@ -179,7 +179,7 @@ public sealed class VectorProjectionTests
             .AddVectorLayer(new ConfigurationBuilder().AddInMemoryCollection(settings).Build())
             .BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
 
-    private static (RebuildEmptyVectorIndex Service, RecordingDispatcher Dispatcher) Rebuilder(
+    private static (RebuildVectorIndexAtStartupWorker Service, RecordingDispatcher Dispatcher) Rebuilder(
         IVectorLayer layer, IProductVectorIndexer vectors)
     {
         var dispatcher = new RecordingDispatcher();
@@ -190,14 +190,14 @@ public sealed class VectorProjectionTests
             .AddSingleton<ICommandDispatcher>(dispatcher)
             .BuildServiceProvider();
 
-        return (new RebuildEmptyVectorIndex(
+        return (new RebuildVectorIndexAtStartupWorker(
             services.GetRequiredService<IServiceScopeFactory>(),
             TimeProvider.System,
-            NullLogger<RebuildEmptyVectorIndex>.Instance)
+            NullLogger<RebuildVectorIndexAtStartupWorker>.Instance)
         { RetryEvery = TimeSpan.FromMilliseconds(5) }, dispatcher);
     }
 
-    private static async Task RunAsync(RebuildEmptyVectorIndex service)
+    private static async Task RunAsync(RebuildVectorIndexAtStartupWorker service)
     {
         await service.StartAsync(Ct);
         await service.ExecuteTask!.WaitAsync(TimeSpan.FromSeconds(10), Ct);

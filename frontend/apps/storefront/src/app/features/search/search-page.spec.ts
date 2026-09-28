@@ -11,6 +11,7 @@ import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ProductSearchService } from '../../data-access/product-search.service';
 import { ReturnsPolicy } from '../../data-access/returns-policy.service';
+import { Taxonomy } from '../../data-access/taxonomy';
 import { SearchPage } from './search-page';
 
 /**
@@ -43,8 +44,16 @@ describe('the search page, when the answer is not an exact match', () => {
             // The effect that reads the URL calls this the moment the page is
             // created, so the fixture is read fresh rather than captured once.
             search: () => of(searchResult),
+            // The results are the listing's request since R-7.3 (F-3).
+            list: () => of(searchResult),
             browse: () => of(page([], 0, null)),
           } as unknown as ProductSearchService,
+        },
+        {
+          // The listing's column reads the taxonomy to pick the category level;
+          // an unanswered request would hold `whenStable` open for ever.
+          provide: Taxonomy,
+          useValue: { categories: () => [], menu: () => [] } as unknown as Taxonomy,
         },
         {
           provide: ReturnsPolicy,

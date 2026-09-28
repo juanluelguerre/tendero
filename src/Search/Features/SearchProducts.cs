@@ -1,6 +1,7 @@
 using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.Search.Contracts;
+using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -11,7 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace ElGuerre.Tendero.Search.Features.SearchProducts;
 
 public sealed record SearchProductsQuery(
-    string Q, string Culture, int Page, int PageSize, string? Category = null, string? Sort = null)
+    string Q, string Culture, int Page, int PageSize, string? Category = null, ProductSort Sort = ProductSort.Relevance,
+    SearchFilters? Filters = null)
     : IQuery<SearchResultPage>;
 
 public sealed class SearchProductsValidator : AbstractValidator<SearchProductsQuery>
@@ -31,13 +33,52 @@ public sealed class SearchProductsValidator : AbstractValidator<SearchProductsQu
 
         // A closed set, because a sort the index cannot honour is a promise
         // broken at run time rather than at the door.
-        RuleFor(x => x.Sort).Must(sort => sort is null or "newest")
-            .WithMessage("Supported sorts: newest.");
+        RuleFor(x => x.Sort).IsInEnum()
+            .WithMessage($"Supported sorts: {string.Join(", ", Enum.GetNames<ProductSort>())}.");
         RuleFor(x => x.Culture).Must(c => c is "es" or "en")
             .WithMessage("Supported cultures: es, en.");
         RuleFor(x => x.Page).GreaterThanOrEqualTo(1);
         RuleFor(x => x.PageSize).InclusiveBetween(1, 50);
+
+        RuleFor(x => x.Filters!).SetValidator(new SearchFiltersValidator()).When(x => x.Filters is not null);
     }
+}
+
+/// <summary>
+/// What a filter may carry. Bounded in count and length because every value
+/// becomes a clause of the query, and a URL is something anybody can write.
+/// </summary>
+public sealed partial class SearchFiltersValidator : AbstractValidator<SearchFilters>
+{
+    /// <summary>More choices than a column holds in one facet, and far fewer than would make a query heavy.</summary>
+    public const int MaxChoices = 30;
+
+    public SearchFiltersValidator()
+    {
+        RuleFor(x => x.Brands.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("brand");
+        RuleForEach(x => x.Brands).NotEmpty().MaximumLength(100).OverridePropertyName("brand");
+
+        RuleFor(x => x.Within.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("within");
+        RuleForEach(x => x.Within).NotEmpty().MaximumLength(60).OverridePropertyName("within");
+
+        // "CODE:VALUE", the code as the catalogue writes it — upper case, digits
+        // and underscores — which is also what keeps it from ever meeting one of
+        // the built-in facets' lower-case codes.
+        RuleFor(x => x.Facets.Count).LessThanOrEqualTo(MaxChoices).OverridePropertyName("f");
+        RuleForEach(x => x.Facets).Must(pair => pair is not null && CodeAndValue().IsMatch(pair))
+            .WithMessage("A filter is CODE:VALUE, the code in upper case (COLOR:BLACK, SIZE:42, INDUCTION:true).")
+            .OverridePropertyName("f");
+
+        RuleFor(x => x.MinPrice).GreaterThanOrEqualTo(0).OverridePropertyName("minPrice");
+        RuleFor(x => x.MaxPrice).GreaterThanOrEqualTo(0).OverridePropertyName("maxPrice");
+        RuleFor(x => x.MaxPrice).GreaterThanOrEqualTo(x => x.MinPrice!.Value)
+            .When(x => x.MinPrice is not null && x.MaxPrice is not null)
+            .WithMessage("maxPrice cannot be below minPrice.")
+            .OverridePropertyName("maxPrice");
+    }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^[A-Z0-9_]{1,60}:[^\s:]{1,100}$")]
+    private static partial System.Text.RegularExpressions.Regex CodeAndValue();
 }
 
 public sealed class SearchProductsEndpoint : ICarterModule
@@ -47,11 +88,28 @@ public sealed class SearchProductsEndpoint : ICarterModule
         // GET /api/search?q=zapatillas%20running&culture=es&page=1&pageSize=20
         // GET /api/search?category=KITCHEN            — browse a whole branch
         // GET /api/search                             — browse everything
+        // GET /api/search?category=SHOES&brand=Vertex&brand=Caminante&f=SIZE:42&maxPrice=80&inStock=true&sort=PriceAsc
+        //                                             — narrowed (R-7.3, F-2): within a filter the
+        //                                               choices add up, across filters they narrow
         app.MapGet("/api/search",
             async Task<Ok<SearchResultPage>> (
-                   string? q, string? culture, int? page, int? pageSize, string? category, string? sort,
+                   string? q, string? culture, int? page, int? pageSize, string? category, WireEnum<ProductSort>? sort,
+                   string[]? brand, string[]? within, string[]? f,
+                   decimal? minPrice, decimal? maxPrice, bool? onOffer, bool? newArrivals, bool? inStock,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
+                var filters = new SearchFilters
+                {
+                    Brands = brand ?? [],
+                    Within = within ?? [],
+                    Facets = f ?? [],
+                    MinPrice = minPrice,
+                    MaxPrice = maxPrice,
+                    OnOffer = onOffer ?? false,
+                    NewArrivals = newArrivals ?? false,
+                    InStock = inStock ?? false,
+                };
+
                 // Culture: explicit query parameter > Accept-Language > "es"
                 // (ADR 0013). The chain lives in CultureNegotiation since the
                 // third endpoint that needed it turned up.
@@ -60,7 +118,8 @@ public sealed class SearchProductsEndpoint : ICarterModule
 
                 var result = await dispatcher.SendAsync(
                     new SearchProductsQuery(
-                        q ?? string.Empty, resolved, page ?? 1, pageSize ?? 20, category, sort), ct);
+                        q ?? string.Empty, resolved, page ?? 1, pageSize ?? 20, category, sort?.Value ?? ProductSort.Relevance,
+                        filters.IsEmpty ? null : filters), ct);
 
                 // The other half of the negotiation: the client asks, the server
                 // declares which language it answered in. Vary because the
@@ -92,7 +151,9 @@ public sealed class SearchProductsHandler(
     // dispatch this query, so this line is where all of them went hybrid.
     public async Task<SearchResultPage> HandleAsync(SearchProductsQuery query, CancellationToken ct)
     {
-        var search = new ProductSearchQuery(query.Q, query.Culture, query.Page, query.PageSize, query.Category, query.Sort);
+        var search = new ProductSearchQuery(
+            query.Q, query.Culture, query.Page, query.PageSize, query.Category, query.Sort,
+            query.Filters is { IsEmpty: false } filters ? filters : null);
 
         var page = await hybrid.SearchAsync(search, ct);
         SearchRequests.Record(query, page, actors.Current);

@@ -105,4 +105,66 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
 
         Assert.Equal([waiting], await repository.WaitingAsync(10, ct));
     }
+
+    /// <summary>
+    /// The review queue pages and counts in Postgres (R-7.2), over support that
+    /// lives in the evidence's jsonb: a claim's support is its weakest quote, weak
+    /// is under 0.8 and 0.8 itself is not, four claims tie on support and time and
+    /// the id parts them, and an approved claim is not waiting at all.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task The_review_queue_pages_weakest_first_and_counts_the_weak_over_the_whole_queue()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("knowledge_queue_paging");
+        await using (var migrate = factory.Create())
+            await migrate.Database.MigrateAsync(ct);
+
+        var lamp = ProductId.New();
+        var document = SourceDocument.Describe(lamp, "es", "Flexo LED con tres temperaturas de color y brazo articulado.", Clock);
+        ProductClaim Claim(params double[] supports) => ProductClaim.Propose(
+            lamp,
+            LocalizedText.From("es", "Tiene brazo articulado.").With("en", "It has an articulated arm."),
+            null, null,
+            [.. supports.Select(support => new Evidence(document.Id, document.Locate("brazo articulado")!, support))],
+            new Provenance("chat", "Qwen/Qwen3.5-4B", "851bf6e", "claims-2026-09-26", "run", Clock.GetUtcNow()),
+            Clock);
+
+        var strong = Claim(0.9);
+        var tied = Enumerable.Range(0, 4).Select(_ => Claim(0.5)).ToList();
+        var atTheLine = Claim(ProductClaim.WeakSupport);
+        var underTheLine = Claim(0.79);
+        var thinQuote = Claim(0.95, 0.6);
+        var decided = Claim(0.1);
+        decided.Approve("shopkeeper@tendero", Clock);
+
+        await using (var context = factory.Create())
+        {
+            context.SourceDocuments.Add(document);
+            context.Claims.AddRange([strong, .. tied, atTheLine, underTheLine, thinQuote, decided]);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var repository = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString)
+            .BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<IKnowledgeRepository>();
+
+        var pages = new List<ClaimPage>();
+        for (var page = 1; page <= 4; page++)
+            pages.Add(await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, page, 2, ct));
+
+        // Postgres orders a uuid by its bytes, which is the order of its lower-case text.
+        Assert.Equal(
+            [.. tied.Select(claim => claim.Id).OrderBy(id => id.ToString(), StringComparer.Ordinal),
+             thinQuote.Id, underTheLine.Id, atTheLine.Id, strong.Id],
+            pages.SelectMany(page => page.Claims).Select(claim => claim.Id));
+        Assert.All(pages, page => Assert.Equal(8, page.Total));
+
+        var weak = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.Weak, 2, 4, ct);
+        Assert.Equal([thinQuote.Id, underTheLine.Id], weak.Claims.Select(claim => claim.Id));
+        Assert.Equal(6, weak.Total);
+        Assert.Equal((6, 8), (weak.CountBySupport[ClaimSupportFilter.Weak], weak.CountBySupport[ClaimSupportFilter.All]));
+        Assert.Equal(weak.CountBySupport, pages[0].CountBySupport);
+    }
 }

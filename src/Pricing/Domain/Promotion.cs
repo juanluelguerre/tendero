@@ -135,6 +135,16 @@ public sealed record Promotion(
     public bool IsActiveAt(DateTimeOffset at) =>
         (ValidFrom is null || at >= ValidFrom) && (ValidTo is null || at < ValidTo);
 
+    /// <summary>
+    /// Whether anybody at all gets it right now, without bringing anything:
+    /// running, automatic (no coupon) and for no segment in particular. It is the
+    /// rule the shop window (`ListOffers`) and the "on offer" filter share — a
+    /// discount whose code the reader lacks, or a `vip` price shown to everyone,
+    /// is a tease in either place.
+    /// </summary>
+    public bool IsPublicAt(DateTimeOffset at) =>
+        IsActiveAt(at) && CouponCode is null && Segment is null;
+
     /// <summary>With no segment it serves anyone.</summary>
     public bool Serves(string segment) =>
         Segment is null || string.Equals(Segment, segment, StringComparison.OrdinalIgnoreCase);

@@ -29,7 +29,8 @@ async function signInToTheBackoffice(page: Page): Promise<void> {
     await page.getByRole('link', { name: 'Juan Luis' }).click();
   }
 
-  await expect(page.getByRole('banner').getByRole('button', { name: /sign out|cerrar sesión/i })).toBeVisible();
+  // In once the bar offers the account menu, which holds the way out since the redesign (R-3).
+  await expect(page.getByRole('banner').getByRole('button', { name: /^(account|cuenta):/i })).toBeVisible();
 }
 
 /**
@@ -38,10 +39,12 @@ async function signInToTheBackoffice(page: Page): Promise<void> {
  * move appears rather than assumed to be there.
  */
 async function move(page: Page, orderId: string, label: RegExp): Promise<void> {
-  const row = page.locator('tr', { has: page.locator(`td[title="${orderId}"]`) });
+  // The id is the row's own button since the redesign (R-4.2), titled with the
+  // whole id; and the list opens on what is to ship, so this asks for every order.
+  const row = page.locator('tr', { has: page.locator(`button[title="${orderId}"]`) });
 
   await expect(async () => {
-    await page.goto(`${BACKOFFICE}/orders`);
+    await page.goto(`${BACKOFFICE}/orders?status=all`);
     await expect(row.getByRole('button', { name: label })).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 30_000 });
 

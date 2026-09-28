@@ -252,7 +252,7 @@ the two contexts, exactly as `ProductName` is between Catalog and Ordering.
 contract suite), `IAvailabilityReader`.
 
 **The saga already exists.** Every arrow below is an existing
-`IDomainEventHandler<T>` plus the existing `OutboxProcessor`:
+`IDomainEventHandler<T>` plus the existing `OutboxWorker`:
 
 ```
 Ordering   Order.Place()          → OrderPlaced
@@ -814,7 +814,7 @@ exactly the speculative move the flag rule forbids.
 What *does* land, because it is nearly free and it is a screen: a **dead-letter
 view** of messages that exhausted `MaxAttempts`, with their error and a retry
 button. `SKIP LOCKED` and exponential backoff stay deferred — one replica, and
-the comment in `OutboxProcessor` is still right.
+the comment in `OutboxWorker` is still right.
 
 **Testing tools, and when each becomes mandatory.** Each gets its licence checked
 at the version added, per ADR 0006.

@@ -9,7 +9,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatDate } from '@tendero/shared-util';
 import type { Observable } from 'rxjs';
 import { AccountsService, type AgentTrust } from '../../data-access/accounts.service';
-import { BackofficeUsage, type BackofficeAction } from '../../usage';
+import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../usage';
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { Undo } from '../../work/undo';
 import { WorkPane } from '../../work/work-pane';
@@ -54,16 +54,7 @@ export class AgentsPage {
   protected readonly busy = signal<string | null>(null);
 
   /** The agent the suspension dialog is about. */
-  protected readonly suspending = signal<AgentView | null>(null);
-
-  /**
-   * The trust as the screen names it. The API says it in lower case and the
-   * options and translations use the enum's name, so "verified" matched no
-   * option and the select showed every agent as Known.
-   */
-  protected trustOf(agent: AgentView): AgentTrust {
-    return (agent.trust.charAt(0).toUpperCase() + agent.trust.slice(1)) as AgentTrust;
-  }
+  protected readonly suspending = signal<{ agent: AgentView; via: ActionVia } | null>(null);
 
   protected when(at: string): string {
     return formatDate(at, this.culture.active());
@@ -87,39 +78,40 @@ export class AgentsPage {
 
   protected register(): void {
     const draft = this.draft();
-    this.run('register', 'agent_register', this.accounts.register({ ...draft, agentId: draft.agentId.trim() }), () =>
+    this.run('register', 'agent_register', 'page', this.accounts.register({ ...draft, agentId: draft.agentId.trim() }), () =>
       this.draft.set({ agentId: '', displayName: '', operator: '', trust: 'Known' }),
     );
   }
 
   protected trust(agent: AgentView, trust: string): void {
-    this.run(agent.agentId, 'agent_trust', this.accounts.trust(agent.agentId, trust as AgentTrust));
+    this.run(agent.agentId, 'agent_trust', 'row', this.accounts.trust(agent.agentId, trust as AgentTrust));
   }
 
-  protected askToSuspend(agent: AgentView): void {
-    this.suspending.set(agent);
+  protected askToSuspend(agent: AgentView, via: ActionVia): void {
+    this.suspending.set({ agent, via });
     // After the change detection that gives the dialog this agent's words.
     queueMicrotask(() => this.suspendDialog()?.open());
   }
 
   protected suspend(reason: string | undefined): void {
-    const agent = this.suspending();
-    if (!agent || !reason) return;
-    this.run(agent.agentId, 'agent_suspend', this.accounts.suspend(agent.agentId, reason), () =>
-      this.undo.offerTo(this.transloco.translate('agents.suspended', { agent: agent.displayName }), () => this.reinstate(agent)),
+    const asked = this.suspending();
+    if (!asked || !reason) return;
+    const { agent, via } = asked;
+    this.run(agent.agentId, 'agent_suspend', via, this.accounts.suspend(agent.agentId, reason), () =>
+      this.undo.offerTo(this.transloco.translate('agents.suspended', { agent: agent.displayName }), () => this.reinstate(agent, via)),
     );
   }
 
-  protected reinstate(agent: AgentView): void {
-    this.run(agent.agentId, 'agent_reinstate', this.accounts.reinstate(agent.agentId));
+  protected reinstate(agent: AgentView, via: ActionVia): void {
+    this.run(agent.agentId, 'agent_reinstate', via, this.accounts.reinstate(agent.agentId));
   }
 
   /** One change at a time, the list asked again after it, and a refusal in the server's words. */
-  private run(key: string, action: BackofficeAction, change: Observable<unknown>, done?: () => void): void {
+  private run(key: string, action: BackofficeAction, via: ActionVia, change: Observable<unknown>, done?: () => void): void {
     this.busy.set(key);
     this.refusal.set(null);
 
-    change.pipe(this.usage.reported('agents', action)).subscribe({
+    change.pipe(this.usage.reported('agents', action, via)).subscribe({
       next: () => {
         this.busy.set(null);
         done?.();

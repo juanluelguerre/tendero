@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import type { OrderView, ReturnableLineView, ReturnView } from '@tendero/shared-api';
+import type { OrderView, ReturnableLineView, ReturnReason, ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
@@ -62,7 +62,7 @@ export class OrderPage {
   protected readonly returnOpened = signal(false);
 
   /** Which lines are coming back, and on what terms. */
-  protected readonly picked = signal(new Map<string, { quantity: number; reason: string }>());
+  protected readonly picked = signal(new Map<string, { quantity: number; reason: ReturnReason }>());
 
   /**
    * True only when this page was reached from checkout. The "thank you" belongs
@@ -134,7 +134,7 @@ export class OrderPage {
     });
   }
 
-  protected setReason(sku: string, reason: string): void {
+  protected setReason(sku: string, reason: ReturnReason): void {
     this.picked.update((current) => {
       const next = new Map(current);
       const line = next.get(sku);

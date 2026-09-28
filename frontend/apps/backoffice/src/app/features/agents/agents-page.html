@@ -42,7 +42,7 @@
                 <td>
                   <select
                     class="field field--inline"
-                    [value]="trustOf(agent)"
+                    [value]="agent.trust"
                     [disabled]="busy() === agent.agentId"
                     [attr.aria-label]="t('changeTrust', { agent: agent.displayName })"
                     (click)="$event.stopPropagation()"
@@ -62,11 +62,11 @@
                 </td>
                 <td class="actions">
                   @if (agent.status === 'Suspended') {
-                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); reinstate(agent)">
+                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); reinstate(agent, 'row')">
                       {{ t('reinstate') }}
                     </button>
                   } @else {
-                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); askToSuspend(agent)">
+                    <button class="button button--small button--quiet" type="button" [disabled]="busy() === agent.agentId" (click)="$event.stopPropagation(); askToSuspend(agent, 'row')">
                       {{ t('suspend') }}
                     </button>
                   }
@@ -88,13 +88,13 @@
                 } @else {
                   <span class="tag tag--ok">{{ t('status.Active') }}</span>
                 }
-                <span class="muted">{{ agent.operator }} · {{ t('trust.' + trustOf(agent)) }}</span>
+                <span class="muted">{{ agent.operator }} · {{ t('trust.' + agent.trust) }}</span>
               </span>
             </button>
             @if (agent.status === 'Suspended') {
-              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="reinstate(agent)">{{ t('reinstate') }}</button>
+              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="reinstate(agent, 'row')">{{ t('reinstate') }}</button>
             } @else {
-              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent)">{{ t('suspend') }}</button>
+              <button class="button button--quiet work-card__action" type="button" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent, 'row')">{{ t('suspend') }}</button>
             }
           </li>
         }
@@ -133,7 +133,7 @@
       <dl class="facts">
         <div><dt>{{ t('column.agent') }}</dt><dd class="numeric">{{ agent.agentId }}</dd></div>
         <div><dt>{{ t('column.operator') }}</dt><dd>{{ agent.operator }}</dd></div>
-        <div><dt>{{ t('column.trust') }}</dt><dd>{{ t('trust.' + trustOf(agent)) }}</dd></div>
+        <div><dt>{{ t('column.trust') }}</dt><dd>{{ t('trust.' + agent.trust) }}</dd></div>
         <div><dt>{{ t('column.registered') }}</dt><dd class="numeric">{{ when(agent.registeredAt) }}</dd></div>
         <div>
           <dt>{{ t('column.status') }}</dt>
@@ -149,9 +149,9 @@
       </dl>
 
       @if (agent.status === 'Suspended') {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="reinstate(agent)">{{ t('reinstate') }}</button>
+        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="reinstate(agent, 'pane')">{{ t('reinstate') }}</button>
       } @else {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent)">{{ t('suspend') }}</button>
+        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === agent.agentId" (click)="askToSuspend(agent, 'pane')">{{ t('suspend') }}</button>
         <p class="muted hint">{{ t('suspendHint') }}</p>
       }
     </backoffice-work-pane>
@@ -159,7 +159,7 @@
 
   <backoffice-confirm-dialog
     tone="normal"
-    [heading]="t('suspendTitle', { agent: suspending()?.displayName ?? '' })"
+    [heading]="t('suspendTitle', { agent: suspending()?.agent?.displayName ?? '' })"
     [body]="t('suspendBody')"
     [reasonLabel]="t('reason')"
     [reasonRequired]="true"

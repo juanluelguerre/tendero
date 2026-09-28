@@ -44,7 +44,7 @@ async function firstProduct(page: Page): Promise<{ href: string; name: string }>
   // It waits for the results' own status line, and reads both values at once.
   await expect(page.getByRole('status').filter({ hasText: /zapatillas/i })).toBeVisible();
 
-  const link = page.locator('.results-meta + .grid a.card__link').first();
+  const link = page.locator('.listing__grid a.card__link').first();
   await expect(link).toBeVisible();
 
   return link.evaluate((anchor) => ({
@@ -66,7 +66,11 @@ test.describe('the storefront', () => {
     await page.goto('/es');
     await expect(page).toHaveURL(/\/es$/);
 
-    await page.getByRole('button', { name: 'en', exact: true }).click();
+    // The language lives in the account menu, with the theme, since the author
+    // asked for the backoffice's arrangement (2026-09-28). A guest is told so.
+    await page.getByRole('banner').getByRole('button', { name: /tu cuenta y tus preferencias \(invitado\)/i }).click();
+    await expect(page.locator('#account-menu')).toContainText('Invitado');
+    await page.locator('#account-menu').getByRole('button', { name: 'en', exact: true }).click();
 
     // Not a signal and not localStorage: the address bar is the state, which is
     // what makes a language a thing two people can share a link to.
@@ -201,10 +205,15 @@ test.describe('the storefront', () => {
 
     await add.click();
 
-    // The badge is the confirmation, and the page does not move: a shop that
-    // threw you out of your results after every add is one you buy one thing
-    // from.
+    // The page does not move: a shop that threw you out of your results after
+    // every add is one you buy one thing from. The badge was the only
+    // confirmation until the baseline walkthrough asked for a word beside the
+    // button (R-5.3), and the word leads to the cart.
     await expect(page.locator('.cart__badge')).toBeVisible();
     await expect(page).toHaveURL(/\/p\//);
+    const notice = page.locator('.buy__notice[role=status]');
+    await expect(notice).toContainText(/añadido al carrito|added to your cart/i);
+    await notice.getByRole('link', { name: /ver carrito|view cart/i }).click();
+    await expect(page).toHaveURL(/\/cart$/);
   });
 });

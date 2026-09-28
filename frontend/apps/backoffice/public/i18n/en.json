@@ -28,9 +28,9 @@
     "lede": "Who did what, and what the shop refused. It opens on the refusals, which are the entries worth reading first.",
     "loading": "Loading the audit log...",
     "outcome": {
-      "allowed": "Allowed",
-      "denied": "Denied",
-      "failed": "Failed"
+      "Allowed": "Allowed",
+      "Denied": "Denied",
+      "Failed": "Failed"
     },
     "showPayload": "Show command",
     "guest": "guest",
@@ -78,16 +78,12 @@
     "failed": "Could not load the catalogue.",
     "hint": "Every product, by status. Publish a draft, take a product off sale, or open its variants.",
     "loading": "Loading the catalogue...",
-    "next": "Next",
-    "pageOf": "Page {{page}} of {{pages}}",
-    "pages": "Pages",
-    "previous": "Previous",
     "title": "Products",
     "filterLabel": "Show products",
     "filter": {
-      "active": "On sale",
-      "draft": "Drafts",
-      "archived": "Archived",
+      "Active": "On sale",
+      "Draft": "Drafts",
+      "Archived": "Archived",
       "all": "All"
     },
     "none": "No product here. Try another filter.",
@@ -95,16 +91,18 @@
       "status": "Status"
     },
     "status": {
-      "active": "On sale",
-      "draft": "Draft",
-      "archived": "Archived"
+      "Active": "On sale",
+      "Draft": "Draft",
+      "Archived": "Archived"
     },
     "withdraw": "Take it off sale",
     "withdrawing": "Taking it off sale…",
     "withdrawHint": "It goes back to the review queue, and you can undo it.",
     "withdrawn": "{{name}} is off sale, back in the review queue.",
     "refused": "The catalogue refused that change.",
-    "toReview": "Review the new drafts"
+    "toReview": "Review the new drafts",
+    "findLabel": "Find a product",
+    "find": "Name in any language, or code"
   },
   "nav": {
     "agents": "Registry",
@@ -410,7 +408,18 @@
       "Expired": "Expired"
     },
     "title": "Stock",
-    "unknownProduct": "Not in the catalogue"
+    "unknownProduct": "Not in the catalogue",
+    "filterLabel": "Show",
+    "filter": {
+      "Restock": "To restock",
+      "SoldOut": "Sold out",
+      "All": "All"
+    },
+    "find": "SKU or product name",
+    "findLabel": "Find stock by SKU or product name",
+    "nothingFor": "Nothing matches “{{text}}”.",
+    "nothingToRestock": "Nothing to restock: every SKU has more than enough.",
+    "restockRule": "A SKU to restock has {{count}} or fewer available across every warehouse."
   },
   "variants": {
     "title": "Variants",
@@ -443,8 +452,8 @@
     "reject": "Reject",
     "filterLabel": "Show claims",
     "filter": {
-      "weak": "Weak support",
-      "all": "All"
+      "Weak": "Weak support",
+      "All": "All"
     },
     "none": "No weakly supported claim is waiting. The rest are under All.",
     "nextHint": "Deciding opens the next claim down the list."
@@ -454,9 +463,9 @@
     "hint": "The shop's pulse, from its own data: what sold, what is waiting for you, how the checkout converts and what agents bring. Test orders are left out of every figure but the agents' count of them.",
     "period": {
       "label": "Period",
-      "day": "Last 24 h",
-      "week": "Last 7 days",
-      "month": "Last 30 days"
+      "Day": "Last 24 h",
+      "Week": "Last 7 days",
+      "Month": "Last 30 days"
     },
     "sales": {
       "title": "Sales",
@@ -554,7 +563,7 @@
       "claims": "Claims to review",
       "weakestFirst": "Weakest support first",
       "support": "{{value}}% support",
-      "lowStock": "Low stock",
+      "lowStock": "To restock",
       "available": "{{count}} left"
     }
   },
@@ -643,5 +652,32 @@
     "no": "No",
     "loading": "Loading the product…",
     "failed": "Could not load this product."
+  },
+  "palette": {
+    "title": "Go to, or find",
+    "open": "Go to, or find an order, a product, an agent…",
+    "placeholder": "A screen, an order id, a name, a city, a product…",
+    "results": "Results",
+    "searching": "Searching…",
+    "none": "Nothing matches.",
+    "order": "Order {{id}}",
+    "kind": {
+      "screen": "Screen",
+      "order": "Order",
+      "product": "Product",
+      "agent": "Agent"
+    },
+    "keys": {
+      "move": "↑ ↓ move",
+      "go": "Enter go",
+      "close": "Esc close",
+      "lists": "In the review queue and claims: j and k"
+    }
+  },
+  "pager": {
+    "label": "Pages",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "previous": "Previous",
+    "next": "Next"
   }
 }

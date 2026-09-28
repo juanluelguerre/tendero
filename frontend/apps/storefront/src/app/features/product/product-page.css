@@ -310,3 +310,34 @@
   block-size: 8rem;
   margin-block-start: var(--space-4);
 }
+
+/* ---------- A phone's first screen (the redesign's R-5.1) ----------
+   R-3 made the header's sticky row conditional on the page's one action staying
+   in the first screen at 390×844. Measured on the running shop, Añadir al
+   carrito ended at 931 px with the new header, and had already been below the
+   fold before it, at about 912. A 4:3 image, contained rather than cropped so
+   an illustration keeps its edges, and a title one step smaller bring it back. */
+@media (max-width: 47.99rem) {
+  .gallery__main {
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+  }
+
+  .detail__name { font-size: var(--text-2xl); }
+}
+
+/* What the last Add to cart did (R-5.3). Its height is kept while empty, so the
+   notice arriving does not push the page down under the shopper's finger. */
+.buy__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  min-height: 1.5rem;
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+
+.buy__added { color: var(--positive); font-weight: 600; }
+.buy__notAdded { color: var(--danger); }

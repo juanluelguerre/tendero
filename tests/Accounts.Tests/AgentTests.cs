@@ -81,7 +81,7 @@ public sealed class AgentTests
         var first = await handler.HandleAsync(new RegisterAgentCommand(Claude, "Claude Desktop", "Anthropic", AgentTrust.Known), TestContext.Current.CancellationToken);
         var second = await handler.HandleAsync(new RegisterAgentCommand(Claude, "Other", "Other", AgentTrust.Verified), TestContext.Current.CancellationToken);
 
-        Assert.Equal((AgentChange.Registered, "known", "active"), (first.Change, first.Agent!.Trust, first.Agent.Status));
+        Assert.Equal((AgentChange.Registered, AgentTrust.Known, AgentStatus.Active), (first.Change, first.Agent!.Trust, first.Agent.Status));
         Assert.Equal(AgentChange.AlreadyRegistered, second.Change);
         Assert.Null(((IAuditedResult)first).AuditReason);
         Assert.Equal((AuditOutcome.Denied, "AlreadyRegistered"), (((IAuditedResult)second).AuditOutcome, ((IAuditedResult)second).AuditReason));
@@ -104,7 +104,7 @@ public sealed class AgentTests
         Assert.Equal(
             [AgentChange.Updated, AgentChange.Unchanged, AgentChange.Updated, AgentChange.Updated, AgentChange.NotFound],
             new[] { suspended, again, trusted, reinstated, nobody }.Select(result => result.Change));
-        Assert.Equal(("verified", "active"), (reinstated.Agent!.Trust, reinstated.Agent.Status));
+        Assert.Equal((AgentTrust.Verified, AgentStatus.Active), (reinstated.Agent!.Trust, reinstated.Agent.Status));
         Assert.Equal(3, registry.Saves);
         Assert.Equal(AuditOutcome.Allowed, ((IAuditedResult)again).AuditOutcome);
         Assert.Equal(AuditOutcome.Denied, ((IAuditedResult)nobody).AuditOutcome);

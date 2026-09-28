@@ -109,30 +109,30 @@ public static class WorkerServices
 
         if (builder.Environment.IsDevelopment())
         {
-            builder.Services.AddHostedService<SchemaMigrator>();
+            builder.Services.AddHostedService<MigrateSchemaAtStartupWorker>();
 
             // After the migrator, and hosted services start in registration
             // order: seeding into a schema that does not exist yet is the one
             // ordering constraint here.
-            builder.Services.AddHostedService<StockSeeder>();
+            builder.Services.AddHostedService<SeedStockAtStartupWorker>();
         }
 
         // After the migrator, for the same ordering reason as the seeder: it
         // reads the catalogue, and in development the schema is created a line
         // above. Before the outbox, so the first projections land in an index
         // that already holds the catalogue.
-        builder.Services.AddHostedService<RebuildEmptySearchIndex>();
+        builder.Services.AddHostedService<RebuildSearchIndexAtStartupWorker>();
 
         // In the background rather than in the start-up path: it waits for a
         // layer that may be downloading its model, and nothing waits for it.
-        builder.Services.AddHostedService<RebuildEmptyVectorIndex>();
+        builder.Services.AddHostedService<RebuildVectorIndexAtStartupWorker>();
 
         // After the migrations, like the index rebuilds: the claims layer's tables
         // must exist before the catalogue's descriptions are recorded into them.
-        builder.Services.AddHostedService<RecordEveryDescriptionAtStart>();
+        builder.Services.AddHostedService<RecordDescriptionsAtStartupWorker>();
         builder.Services.AddClaimProposer();
 
-        builder.Services.AddHostedService<OutboxProcessor>();
+        builder.Services.AddHostedService<OutboxWorker>();
 
         return builder;
     }

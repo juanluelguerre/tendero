@@ -15,7 +15,9 @@
            width="720" height="460" />
     }
 
-    <h1 class="hero__title">{{ t('search.heading') }}</h1>
+    <!-- Once the page lists something, the heading says what: the words asked,
+         or the shelf the filters make (*Ofertas* from the header's row). -->
+    <h1 class="hero__title">{{ heading(t) }}</h1>
     <p class="hero__lede muted">{{ t('search.lede') }}</p>
 
     <!--
@@ -75,14 +77,14 @@
     </form>
   </section>
 
-  @switch (state().status) {
+  @switch (mode()) {
     @case ('idle') {
       <!--
         The shop's front, and it lives here rather than on a route of its own
         because `/es` already IS this page: the query is in the URL (P5-13), so a
         separate home route would be a second component answering the same
-        address. Nothing typed means nothing searched, which is exactly when
-        somebody needs to be shown around.
+        address. Nothing typed and nothing filtered means nothing listed, which
+        is exactly when somebody needs to be shown around.
       -->
       <storefront-home-sections />
     }
@@ -91,89 +93,60 @@
       <p class="hint muted" role="status" aria-live="polite">{{ t('search.tooShort') }}</p>
     }
 
-    @case ('searching') {
-      <p class="sr-only" role="status" aria-live="polite">{{ t('search.searching') }}</p>
-      <!-- Skeleton cards, not a spinner: the same shape the answer will have, so
-           the page does not jump when it arrives. -->
-      <ul class="grid" aria-hidden="true">
-        @for (placeholder of placeholders; track placeholder) {
-          <li class="skeleton-card">
-            <div class="skeleton-card__image skeleton"></div>
-            <div class="skeleton-card__body">
-              <div class="skeleton skeleton--line"></div>
-              <div class="skeleton skeleton--line skeleton--short"></div>
-            </div>
-          </li>
-        }
-      </ul>
-    }
-
-    @case ('failed') {
-      <div class="notice notice--danger" role="alert">
-        <h2 class="notice__title">{{ t('search.failedTitle') }}</h2>
-        <p class="muted">{{ t('search.failed') }}</p>
-      </div>
-    }
-
-    @case ('done') {
-      @let done = state();
-      @if (done.status === 'done') {
-        @if (done.total === 0) {
-          <div class="notice">
-            <h2 class="notice__title">{{ t('search.emptyTitle') }}</h2>
-            @if (done.afterLanguageChange) {
-              <!-- The query was written in the other language and re-run against
-                   this one's index. "Try fewer words" would be false advice. -->
-              <p class="muted">{{ t('search.emptyAfterLanguageChange', { query: done.query }) }}</p>
-            } @else {
-              <p class="muted">{{ t('search.empty', { query: done.query }) }}</p>
+    @case ('listing') {
+      @let result = listing.result();
+      @if (result.status === 'failed') {
+        <div class="notice notice--danger" role="alert">
+          <h2 class="notice__title">{{ t('search.failedTitle') }}</h2>
+          <p class="muted">{{ t('search.failed') }}</p>
+        </div>
+      } @else if (result.status === 'ready' && result.total === 0 && !filtered()) {
+        <!-- Nothing sold for these words, and no filter to take off: the
+             listing's column would have nothing in it. -->
+        <div class="notice">
+          <h2 class="notice__title">{{ t('search.emptyTitle') }}</h2>
+          @if (result.afterCultureChange) {
+            <!-- The query was written in the other language and re-run against
+                 this one's index. "Try fewer words" would be false advice. -->
+            <p class="muted">{{ t('search.emptyAfterLanguageChange', { query: queryFromUrl().trim() }) }}</p>
+          } @else {
+            <p class="muted">{{ t('search.empty', { query: queryFromUrl().trim() }) }}</p>
+          }
+        </div>
+      } @else {
+        <!-- The results are the listing the category pages draw too (R-7.3,
+             F-3). What only a search says goes above its products. -->
+        <storefront-listing>
+          @if (result.status === 'ready') {
+            @if (result.answer?.helpTopic === 'returns') {
+              <!-- Above the products, on purpose: a question about returns is
+                   not answered by ranking the catalogue better. -->
+              @let returnDays = returnsWindowDays();
+              @if (returnDays !== null) {
+                <!-- Rendered only once the real window is known: `windowDays`
+                     is null until the request resolves and stays null if it
+                     fails, and a fallback number here is the promise the order
+                     and product pages refuse to make with the very same guard
+                     (`order-page.html`, `product-page.html`). -->
+                <aside class="help-card" aria-labelledby="help-returns-title">
+                  <h2 id="help-returns-title" class="help-card__title">{{ t('search.help.returnsTitle') }}</h2>
+                  <p>{{ t('search.help.returnsBody', { days: returnDays }) }}</p>
+                  <a class="help-card__link" [routerLink]="links.account()">{{ t('search.help.returnsLink') }}</a>
+                </aside>
+              }
             }
-          </div>
-        } @else {
-          @if (done.answer?.helpTopic === 'returns') {
-            <!-- Above the products, on purpose: a question about returns is not
-                 answered by ranking the catalogue better. -->
-            @let returnDays = returnsWindowDays();
-            @if (returnDays !== null) {
-              <!-- Rendered only once the real window is known: `windowDays`
-                   is null until the request resolves and stays null if it
-                   fails, and a fallback number here is the promise the order
-                   and product pages refuse to make with the very same guard
-                   (`order-page.html`, `product-page.html`). -->
-              <aside class="help-card" aria-labelledby="help-returns-title">
-                <h2 id="help-returns-title" class="help-card__title">{{ t('search.help.returnsTitle') }}</h2>
-                <p>{{ t('search.help.returnsBody', { days: returnDays }) }}</p>
-                <a class="help-card__link" [routerLink]="links.account()">{{ t('search.help.returnsLink') }}</a>
-              </aside>
+
+            <!-- No `role="status"` here: the listing's count is already the one
+                 polite live region, and two concurrent ones race a screen
+                 reader against itself. -->
+            @if (result.answer?.match === 'Related') {
+              <div class="notice">
+                <h2 class="notice__title">{{ t('search.related.title', { query: queryFromUrl().trim() }) }}</h2>
+              </div>
+              <h2 class="results-heading">{{ t('search.related.heading') }}</h2>
             }
           }
-
-          <!-- No `role="status"` here: `.results-meta` below is already the
-               one polite live region for this branch, and two concurrent
-               ones race a screen reader against itself. Matches the
-               empty-state notice above, which carries none either. -->
-          @if (done.answer?.match === 'Related') {
-            <div class="notice">
-              <h2 class="notice__title">{{ t('search.related.title', { query: done.query }) }}</h2>
-            </div>
-            <h2 class="results-heading">{{ t('search.related.heading') }}</h2>
-          }
-
-          <div class="results-meta">
-            <p role="status" aria-live="polite">
-              {{ t('search.results', { total: done.total, query: done.query }) }}
-            </p>
-            <span class="numeric took">{{ t('search.took', { ms: done.tookMs }) }}</span>
-          </div>
-
-          <ul class="grid">
-            @for (hit of done.hits; track hit.productId) {
-              <li>
-                <storefront-product-card class="card" [hit]="hit" />
-              </li>
-            }
-          </ul>
-        }
+        </storefront-listing>
       }
     }
   }

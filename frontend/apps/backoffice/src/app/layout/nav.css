@@ -110,6 +110,25 @@
     opacity: 1;
   }
 
+  /* Out of the rail, beside its icon, where the browser can anchor it: the
+     rail scrolls, and a label inside a scroller is clipped by it — it showed
+     cut off, and before the rail hid its sideways overflow it also made the
+     rail scroll sideways. Each link scopes its own anchor name. */
+  @supports (position-area: inline-end) and (anchor-scope: all) {
+    :host(:not(.in-drawer)) .link {
+      anchor-name: --nav-link;
+      anchor-scope: --nav-link;
+    }
+
+    :host(:not(.in-drawer)) .link__label {
+      position: fixed;
+      position-anchor: --nav-link;
+      position-area: inline-end;
+      inset: auto;
+      margin-inline-start: var(--space-2);
+    }
+  }
+
   :host(:not(.in-drawer)) .link__badge {
     position: absolute;
     inset-block-start: 2px;

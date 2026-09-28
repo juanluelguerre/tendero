@@ -2,7 +2,9 @@
 
 **For**: R-0's baseline and R-6's comparison ([`redesign.md`](redesign.md), *Decisions* 3)
 **Participants**: the author (P1) and one person who has never seen Tendero (P2),
-ideally someone who has used a shop's admin
+ideally someone who has used a shop's admin. **As run**: P1 only — the author
+decided on 2026-09-28 not to run P2 (see `redesign.md`, *The baseline
+walkthrough*), so R-6 runs P1 again, the same way
 **Page**: [`tools/walkthrough/index.html`](../../tools/walkthrough/index.html) —
 open it in a browser from disk. Nothing leaves the machine.
 

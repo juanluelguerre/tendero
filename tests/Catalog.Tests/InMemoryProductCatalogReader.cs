@@ -14,16 +14,29 @@ internal sealed class InMemoryProductCatalogReader(params Product[] products) : 
         ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct)
     {
         var typed = text?.Trim() ?? "";
-        var matching = products
-            .Where(p => status is null || p.Status == status)
+        var typedMatches = products
             .Where(p => typed.Length == 0
                 || p.Code.Contains(typed, StringComparison.OrdinalIgnoreCase)
                 || p.Name.Cultures.Any(culture => p.Name.In(culture).Contains(typed, StringComparison.OrdinalIgnoreCase)))
             .ToList();
+        var matching = typedMatches.Where(p => status is null || p.Status == status).ToList();
 
         return Task.FromResult(new ProductPage(
             [.. matching.Skip((page - 1) * pageSize).Take(pageSize)],
-            matching.Count));
+            matching.Count,
+            typedMatches.GroupBy(p => p.Status).ToDictionary(group => group.Key, group => group.Count())));
+    }
+
+    public Task<IReadOnlyList<string>> SkusOfProductsMatchingAsync(string text, CancellationToken ct)
+    {
+        var typed = text.Trim();
+        IReadOnlyList<string> skus = typed.Length == 0
+            ? []
+            : [.. products
+                .Where(p => p.Code.Contains(typed, StringComparison.OrdinalIgnoreCase)
+                    || p.Name.Cultures.Any(culture => p.Name.In(culture).Contains(typed, StringComparison.OrdinalIgnoreCase)))
+                .SelectMany(p => p.Variants.Select(variant => variant.Sku))];
+        return Task.FromResult(skus);
     }
 
     /// <summary>

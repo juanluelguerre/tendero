@@ -44,18 +44,19 @@ test('prepare the shop for the walkthrough', async ({ page }) => {
     .slice(0, Math.max(0, wanted - drafts.length));
   for (const product of candidates) {
     const { status } = await api.post<{ status: string }>(`/api/catalog/products/${product.productId}/withdraw`);
-    expect(status).toBe('draft');
+    expect(status).toBe('Draft');
   }
 
-  const claims = await api.get<unknown[]>('/api/knowledge/claims?limit=50');
-  const orders = (await api.get<{ orders: OrderSummary[] }>('/api/orders')).orders.filter((o) => is(o.status, 'confirmed'));
+  const claims = (await api.get<{ total: number }>('/api/knowledge/claims?pageSize=1')).total;
+  // The server's counts and not a page's rows: the lists page since R-7.2.
+  const confirmed = await api.get<{ orders: OrderSummary[]; total: number }>('/api/orders?status=Confirmed&pageSize=1');
   const returns = (await api.get<ReturnView[]>('/api/returns')).filter((r) => is(r.status, 'requested'));
   const agents = await activeAgent(api);
 
   const report: [string, number, string][] = [
     ['B1 drafts to review', drafts.length + candidates.length, candidates.map((p) => `withdrawn ${p.code}`).join(', ')],
-    ['B2 claims waiting', claims.length, ''],
-    ['B3 confirmed orders', orders.length, orders[0] ? `card: ${orders[0].orderId.slice(0, 8)} (${orders[0].recipientName})` : ''],
+    ['B2 claims waiting', claims, ''],
+    ['B3 confirmed orders', confirmed.total, confirmed.orders[0] ? `card: ${confirmed.orders[0].orderId.slice(0, 8)} (${confirmed.orders[0].recipientName})` : ''],
     ['B4 open returns', returns.length, returns[0] ? `first: #${returns[0].number}` : ''],
     ['B5 active agents', agents.length, agents[0] ? `card: ${agents[0].displayName}` : ''],
   ];

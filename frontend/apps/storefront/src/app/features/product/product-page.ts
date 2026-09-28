@@ -17,7 +17,7 @@ import { ShopLinks } from '../../shop-links';
 import { SpecSource } from '../../specs/spec-source';
 import { specLines, specStatements } from '../../specs/spec-lines';
 import { SpecValue } from '../../specs/spec-value';
-import { arrivedFrom } from './arrived-from';
+import { arrivedFrom, cameFiltered } from './arrived-from';
 import {
   availabilityOf,
   initialSelection,
@@ -99,6 +99,15 @@ export class ProductPage {
   protected readonly selection = signal<Selection>({});
 
   protected readonly adding = signal(false);
+
+  /**
+   * What the last Add to cart did, for the notice beside the button (the
+   * redesign's R-5.3). Only the header's count used to change, away from where
+   * the shopper was looking, and a refusal changed nothing at all: the baseline
+   * walkthrough's P1 asked for a word. The SKU and not a flag, so choosing
+   * another variant takes the notice away rather than claiming it was added.
+   */
+  protected readonly added = signal<{ readonly sku: string; readonly ok: boolean } | null>(null);
   protected readonly broken = signal<ReadonlySet<string>>(new Set());
 
   /** Which image the gallery is showing, by id. Null means the cover. */
@@ -228,7 +237,7 @@ export class ProductPage {
     this.viewed = code;
 
     const previous = this.router.lastSuccessfulNavigation()?.previousNavigation?.finalUrl;
-    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedFrom(previous) });
+    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedFrom(previous), filtered: cameFiltered(previous) });
   }
 
   /**
@@ -370,12 +379,31 @@ export class ProductPage {
     if (!variant || !variant.inStock) return;
 
     this.adding.set(true);
+    this.added.set(null);
 
     try {
       await this.cart.add(variant.sku);
     } finally {
       this.adding.set(false);
     }
+
+    // The store keeps a refusal rather than throwing it; its absence is success.
+    this.added.set({ sku: variant.sku, ok: this.cart.failed() === null });
+  }
+
+  /** The notice, if it is about the variant on screen. */
+  protected notice(): { readonly ok: boolean } | null {
+    const added = this.added();
+    return added && added.sku === this.chosen()?.sku ? added : null;
+  }
+
+  protected cartLink(): string[] {
+    return ['/', this.culture.active(), 'cart'];
+  }
+
+  /** Whether the notice's link is used (`cart_notice_followed`, the tracking plan). */
+  protected noticeFollowed(): void {
+    this.telemetry.trackEvent('cart_notice_followed', {});
   }
 
   /** Whether the shelf is thin enough to be worth saying. The API only sends a

@@ -88,7 +88,7 @@ public sealed class OrderAccessTests
 
         var result = await handler.HandleAsync(
             new ElGuerre.Tendero.Ordering.Features.Returns.RequestReturnCommand(
-                order.Id, [new(order.Lines[0].Sku, 1, nameof(ReturnReason.WrongSize), null)], "es"),
+                order.Id, [new(order.Lines[0].Sku, 1, ReturnReason.WrongSize, null)], "es"),
             Ct);
 
         Assert.Equal(ElGuerre.Tendero.Ordering.Features.Returns.RequestReturnOutcome.UnknownOrder, result.Outcome);

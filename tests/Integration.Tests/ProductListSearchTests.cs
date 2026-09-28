@@ -65,4 +65,80 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
 
         Assert.Equal(3, (await reader.ListAsync(null, "  ", 1, 20, ct)).Total);
     }
+
+    /// <summary>
+    /// The catalogue's half of a stock search (R-7.1): a name matched in any
+    /// culture answers with every SKU of that product, and never with a product
+    /// matched by the JSON's keys.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_name_answers_with_the_skus_of_every_product_it_matches()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("product_skus_by_name");
+        await using (var context = factory.Create())
+            await context.Database.MigrateAsync(ct);
+
+        var backpack = Product.Create(Clock,
+            new LocalizedText(new Dictionary<string, string> { ["es"] = "Mochila urbana", ["en"] = "Urban backpack" }),
+            new Money(49m, "EUR"));
+        backpack.DefineAxes(Clock, ["COLOR"]);
+        backpack.AddVariant(Clock, "PACK-BLACK", new Money(49m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "BLACK" });
+        backpack.AddVariant(Clock, "PACK-GREY", new Money(49m, "EUR"), new Dictionary<string, string> { ["COLOR"] = "GREY" });
+        var lamp = Product.Create(Clock, LocalizedText.From("es", "Flexo articulado"), new Money(74.9m, "EUR"));
+        lamp.AddVariant(Clock, "LAMP-DEFAULT", new Money(74.9m, "EUR"));
+
+        await using (var context = factory.Create())
+        {
+            context.Products.AddRange(backpack, lamp);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var services = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString).BuildServiceProvider();
+        await using var scope = services.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IProductCatalogReader>();
+
+        Assert.Equal(["PACK-BLACK", "PACK-GREY"], (await reader.SkusOfProductsMatchingAsync("backpack", ct)).Order());
+        Assert.Equal(["LAMP-DEFAULT"], await reader.SkusOfProductsMatchingAsync("FLEXO", ct));
+        Assert.Empty(await reader.SkusOfProductsMatchingAsync("es", ct));
+    }
+
+    /// <summary>
+    /// The count per status is the text's, before the status narrows it, so a
+    /// filter chip says what it would show and keeps its size whichever is chosen.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task Counts_each_status_for_the_text_before_narrowing_to_one()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var factory = await postgres.CreateDatabaseAsync("product_list_counts");
+        await using (var context = factory.Create())
+            await context.Database.MigrateAsync(ct);
+
+        var onSale = Product.Create(Clock, LocalizedText.From("es", "Mochila urbana"), new Money(49m, "EUR"));
+        onSale.Publish(Clock);
+        var draft = Product.Create(Clock, LocalizedText.From("es", "Mochila de viaje"), new Money(89m, "EUR"));
+        var other = Product.Create(Clock, LocalizedText.From("es", "Flexo articulado"), new Money(74.9m, "EUR"));
+
+        await using (var context = factory.Create())
+        {
+            context.Products.AddRange(onSale, draft, other);
+            await context.SaveChangesAsync(ct);
+        }
+
+        var services = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString).BuildServiceProvider();
+        await using var scope = services.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IProductCatalogReader>();
+
+        var page = await reader.ListAsync(ProductStatus.Active, "mochila", 1, 20, ct);
+
+        Assert.Equal(onSale.Code, Assert.Single(page.Items).Code);
+        Assert.Equal(1, page.CountByStatus[ProductStatus.Active]);
+        Assert.Equal(1, page.CountByStatus[ProductStatus.Draft]);
+        Assert.False(page.CountByStatus.ContainsKey(ProductStatus.Archived));
+    }
 }

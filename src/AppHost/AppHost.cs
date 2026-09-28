@@ -183,6 +183,10 @@ var vectors = string.Equals(builder.Configuration["Tendero:Vectors"], "true",
 var qdrantKey = builder.AddParameter("qdrant-key", "tendero-dev", secret: true);
 
 var qdrant = builder.AddQdrant("qdrant", apiKey: qdrantKey, grpcPort: qdrantGrpcPort, httpPort: qdrantHttpPort)
+    // 80 to 88 MiB measured on 2026-09-28, after three hours of a walkthrough
+    // and TrafficSim over this catalogue: a hundred 1,024-dimension points. The
+    // limit leaves room for the optimiser and a reindex, not for the host's 31 GB.
+    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", "--cpus=2")
     .WithLifetime(ContainerLifetime.Persistent);
 
 // The embedding model, served by Hugging Face Text Embeddings Inference and
@@ -231,6 +235,13 @@ var embeddings = builder.AddContainer("embeddings", "ghcr.io/huggingface/text-em
     // What was chosen and why, visible in the dashboard's environment list —
     // TEI ignores it, a person reading the resource does not.
     .WithEnvironment("TENDERO_INFERENCE_DEVICE", inference.Description)
+    // Measured on 2026-09-28 on the GPU: 1.2 GiB of RAM fresh, 3.27 GiB after
+    // three hours of a walkthrough and TrafficSim; on the CPU, with the batch
+    // sized below, 3.7 GiB (P8-3). Without a limit Docker offered it the host's
+    // 31 GB, which is the over-provisioning the rule exists to stop.
+    .WithContainerRuntimeArgs(inference.UsesGpu
+        ? ["--memory=4g", "--memory-swap=4g", "--cpus=4"]
+        : ["--memory=4608m", "--memory-swap=4608m", "--cpus=8"])
     .WithLifetime(ContainerLifetime.Persistent);
 
 if (inference.UsesGpu)
@@ -276,6 +287,9 @@ var reranker = builder.AddContainer("reranker", "ghcr.io/huggingface/text-embedd
     .WithHttpHealthCheck("/health", endpointName: "http")
     .WithVolume("tendero-tei-models", "/data")
     .WithEnvironment("TENDERO_INFERENCE_DEVICE", inference.Description)
+    // 2.1 to 2.3 GiB measured on 2026-09-28 on the GPU, the only device it
+    // starts on by itself (below); the limit is that and a quarter more.
+    .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", "--cpus=4")
     .WithLifetime(ContainerLifetime.Persistent);
 
 if (inference.UsesGpu)
@@ -481,6 +495,11 @@ var useKeycloak = string.Equals(issuer, "keycloak", StringComparison.OrdinalIgno
 var keycloakPassword = builder.AddParameter("keycloak-password", "admin", secret: true);
 
 var keycloak = builder.AddKeycloak("keycloak", port: keycloakPort, adminPassword: keycloakPassword)
+    // A JVM sizes its heap from the memory it is shown (Keycloak's image sets
+    // MaxRAMPercentage=70), so with no limit it read the host's 31 GB and grew to
+    // 985 MiB measured on 2026-09-28. Keycloak's own sizing guide starts a
+    // single node at 1,250 MB; this is that, with the heap following it down.
+    .WithContainerRuntimeArgs("--memory=1280m", "--memory-swap=1280m", "--cpus=2")
     // Named for the reason the Postgres volume is: an unnamed one is keyed on
     // this project's path and is left behind by a folder rename.
     .WithDataVolume("tendero-keycloak-data")
@@ -628,7 +647,7 @@ var workers = builder.AddProject<Projects.ElGuerre_Tendero_Workers>("workers")
     .WithReference(database).WaitFor(database)
     .WithEnvironment("ConnectionStrings__elasticsearch", elasticsearchEndpoint)
     // THIS one is a real dependency, and it was the one missing:
-    // SearchIndexInitializer creates products_es/products_en during startup, so
+    // CreateSearchIndexesAtStartupWorker creates products_es/products_en during startup, so
     // if Elasticsearch is not ready the hosted service throws and the process
     // dies without retrying.
     .WithSeedFiles(repositoryRoot)

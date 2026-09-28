@@ -3,6 +3,7 @@ using Carter;
 using ElGuerre.Tendero.Ordering.Domain;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
+using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -32,9 +33,9 @@ public sealed record OrderMandateSummary(string Kind, string Issuer, decimal App
 
 public sealed record OrderSummary(
     string OrderId,
-    string Status,
+    OrderStatus Status,
     /// <summary><c>Live</c>, or <c>Test</c> for a rehearsal a test credential placed (ADR 0038).</summary>
-    string Mode,
+    OrderMode Mode,
     /// <summary>Null unless an agent placed it under a verified mandate (P11-5).</summary>
     OrderMandateSummary? Mandate,
     string Currency,
@@ -80,8 +81,8 @@ public sealed record OrderSummary(
     public static OrderSummary Of(Order order) => new(
         // Flat. OrderId is a record struct and would serialise as {"value":"…"}.
         order.Id.ToString(),
-        order.Status.ToString(),
-        order.Mode.ToString(),
+        order.Status,
+        order.Mode,
         order.Mandate is { } mandate
             ? new OrderMandateSummary(mandate.Kind, mandate.Issuer, mandate.ApprovedTotal, mandate.Currency, mandate.ExpiresAt)
             : null,
@@ -105,16 +106,30 @@ public sealed record OrderSummary(
 }
 
 /// <summary>How many orders match one status, for the list's filter (the redesign's R-4.2).</summary>
-public sealed record OrderStatusCount(string Status, int Count);
+public sealed record OrderStatusCount(OrderStatus Status, int Count);
 
 /// <summary>
-/// The orders that match, newest first, and the count for every status — zero
-/// included, so a filter can say "Cancelled 0" rather than vanish.
+/// A page of the orders that match, newest first, how many match in all, and the
+/// count for every status — zero included, so a filter can say "Cancelled 0"
+/// rather than vanish.
 /// </summary>
-public sealed record ListOrdersResult(IReadOnlyList<OrderSummary> Orders, IReadOnlyList<OrderStatusCount> Counts);
+/// <param name="Total">Of the whole filter, not of the page (R-7.2).</param>
+public sealed record ListOrdersResult(
+    IReadOnlyList<OrderSummary> Orders, int Total, int Page, int PageSize, IReadOnlyList<OrderStatusCount> Counts);
 
 /// <summary>Narrowed by status, and by the start of an id or any part of a name or a city.</summary>
-public sealed record ListOrdersQuery(OrderStatus? Status = null, string? Text = null) : IQuery<ListOrdersResult>;
+public sealed record ListOrdersQuery(
+    OrderStatus? Status = null, string? Text = null, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize)
+    : IQuery<ListOrdersResult>;
+
+public sealed class ListOrdersValidator : AbstractValidator<ListOrdersQuery>
+{
+    public ListOrdersValidator()
+    {
+        RuleFor(query => query.Page).IsAPage();
+        RuleFor(query => query.PageSize).IsAPageSize();
+    }
+}
 
 public sealed class ListOrdersHandler(IOrderReader orders) : IQueryHandler<ListOrdersQuery, ListOrdersResult>
 {
@@ -127,14 +142,19 @@ public sealed class ListOrdersHandler(IOrderReader orders) : IQueryHandler<ListO
         activity?.SetTag("ordering.status_filter", query.Status?.ToString());
         activity?.SetTag("ordering.text_filter", !string.IsNullOrWhiteSpace(query.Text));
 
-        var list = await orders.ListAsync(new OrderListQuery(query.Status, query.Text), cancellationToken);
+        var list = await orders.ListAsync(
+            new OrderListQuery(query.Status, query.Text, query.Page, query.PageSize), cancellationToken);
 
         activity?.SetTag("ordering.order_count", list.Orders.Count);
+        activity?.SetTag("ordering.total", list.Total);
 
         return new ListOrdersResult(
             [.. list.Orders.Select(OrderSummary.Of)],
+            list.Total,
+            query.Page,
+            query.PageSize,
             [.. Enum.GetValues<OrderStatus>().Select(status =>
-                new OrderStatusCount(status.ToString(), list.CountByStatus.GetValueOrDefault(status)))]);
+                new OrderStatusCount(status, list.CountByStatus.GetValueOrDefault(status)))]);
     }
 }
 
@@ -145,7 +165,7 @@ public sealed class ListOrdersHandler(IOrderReader orders) : IQueryHandler<ListO
 /// </summary>
 public enum OrderMove { Ship, Deliver, Cancel }
 
-public sealed record MoveOrderRequest(string Move, string? Reason);
+public sealed record MoveOrderRequest(OrderMove Move, string? Reason);
 
 public sealed record MoveOrderCommand(OrderId OrderId, OrderMove Move, string? Reason)
     : ICommand<MoveOrderResult>;
@@ -222,22 +242,14 @@ public sealed class OrderAdminEndpoints : ICarterModule
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Orders");
 
-        // GET /api/orders?status=Confirmed&q=01a0e
+        // GET /api/orders?status=Confirmed&q=01a0e&page=1&pageSize=20
+        // The status is read by its name, in any case, and a name the set does
+        // not have is the binding's 400 (ADR 0043), so the handler never sees one.
         orders.MapGet("/",
-            async Task<Results<Ok<ListOrdersResult>, BadRequest<string>>> (
-                   string? status, string? q, IQueryDispatcher dispatcher, CancellationToken ct) =>
-            {
-                OrderStatus? wanted = null;
-                if (!string.IsNullOrWhiteSpace(status))
-                {
-                    if (!Enum.TryParse<OrderStatus>(status, ignoreCase: true, out var parsed) || !Enum.IsDefined(parsed))
-                        return TypedResults.BadRequest(
-                            $"A status is one of {string.Join(", ", Enum.GetNames<OrderStatus>())}.");
-                    wanted = parsed;
-                }
-
-                return TypedResults.Ok(await dispatcher.SendAsync(new ListOrdersQuery(wanted, q), ct));
-            })
+            async Task<Ok<ListOrdersResult>> (
+                   WireEnum<OrderStatus>? status, string? q, int? page, int? pageSize, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(
+                    new ListOrdersQuery(status?.Value, q, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct)))
             .WithName("ListOrders");
 
         orders.MapPost("/{orderId:guid}/move",
@@ -245,12 +257,8 @@ public sealed class OrderAdminEndpoints : ICarterModule
                    Guid orderId, MoveOrderRequest request,
                    ICommandDispatcher dispatcher, CancellationToken ct) =>
             {
-                if (!Enum.TryParse<OrderMove>(request.Move, ignoreCase: true, out var move))
-                    return TypedResults.BadRequest(
-                        $"A move is one of {string.Join(", ", Enum.GetNames<OrderMove>())}.");
-
                 var result = await dispatcher.SendAsync(
-                    new MoveOrderCommand(new OrderId(orderId), move, request.Reason), ct);
+                    new MoveOrderCommand(new OrderId(orderId), request.Move, request.Reason), ct);
 
                 return result.Outcome switch
                 {

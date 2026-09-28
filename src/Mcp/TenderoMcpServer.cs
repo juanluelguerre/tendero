@@ -1,8 +1,11 @@
+using System.Text.Json;
 using ElGuerre.Tendero.Mcp.Tools;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 
 namespace ElGuerre.Tendero.Mcp;
@@ -35,6 +38,9 @@ public static class TenderoMcpServer
     private static readonly string Version =
         typeof(TenderoMcpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
+    /// <summary>The SDK's options, with the API's rule for enums first (ADR 0043).</summary>
+    public static readonly JsonSerializerOptions ToolAnswers = AnswerOptions();
+
     public static IServiceCollection AddTenderoMcp(this IServiceCollection services) =>
         services
             // The tools read `Accept-Language` off the request the JSON-RPC call
@@ -55,7 +61,11 @@ public static class TenderoMcpServer
             .WithHttpTransport()
             // The tool set is declared in one type, so what the shop offers an
             // agent is one file to read and one file to change.
-            .WithTools<TenderoTools>()
+            // With the API's rule for enums given explicitly (ADR 0043): these
+            // tools answer with the API's own records, and the SDK serialises
+            // with its options, not ASP.NET's. Its defaults spell an enum the
+            // same way today, which is a default of somebody else's package.
+            .WithTools<TenderoTools>(ToolAnswers)
             // And the UCP catalogue binding, which is a different contract with
             // different shapes under names the specification fixes. Both on one
             // server because MapMcp offers one server per process.
@@ -80,4 +90,12 @@ public static class TenderoMcpServer
             // Describing it as a POST that takes "anything" would make the
             // document less true, not more complete.
             .WithMetadata(new ExcludeFromDescriptionAttribute());
+
+    private static JsonSerializerOptions AnswerOptions()
+    {
+        var options = new JsonSerializerOptions(McpJsonUtilities.DefaultOptions);
+        options.Converters.Insert(0, WireJson.Enums());
+        options.MakeReadOnly();
+        return options;
+    }
 }

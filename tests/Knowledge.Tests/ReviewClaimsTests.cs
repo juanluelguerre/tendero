@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
+using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Xunit;
@@ -42,8 +43,8 @@ public sealed class ReviewClaimsTests
         var queue = await new ListClaimsForReviewHandler(this.knowledge)
             .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken);
 
-        Assert.Equal([0.64, 0.97], queue.Select(claim => claim.Support));
-        var quote = Assert.Single(queue[0].Quotes);
+        Assert.Equal([0.64, 0.97], queue.Items.Select(claim => claim.Support));
+        var quote = Assert.Single(queue.Items[0].Quotes);
         Assert.Equal(("es", "tres temperaturas de color"), (quote.Culture, quote.Text));
         Assert.Equal("Flexo LED con tres temperaturas de color y brazo articulado."[quote.Start..quote.End], quote.Text);
     }
@@ -57,8 +58,8 @@ public sealed class ReviewClaimsTests
 
         Assert.Equal(ReviewOutcome.Approved, result.Outcome);
         Assert.Equal(("Ana Tendera", ClaimStatus.Approved), (claim.ReviewedBy, claim.Status));
-        Assert.Empty(await new ListClaimsForReviewHandler(this.knowledge)
-            .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken));
+        Assert.Empty((await new ListClaimsForReviewHandler(this.knowledge)
+            .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken)).Items);
     }
 
     [Fact]
@@ -92,11 +93,85 @@ public sealed class ReviewClaimsTests
     {
         Propose("brazo articulado", 0.97);
 
-        var queued = Assert.Single(await new ListClaimsForReviewHandler(this.knowledge)
-            .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken));
+        var queued = Assert.Single((await new ListClaimsForReviewHandler(this.knowledge)
+            .HandleAsync(new ListClaimsForReviewQuery(), TestContext.Current.CancellationToken)).Items);
 
         Assert.Equal(("Tiene brazo articulado.", "It has brazo articulado."), (queued.StatementSpanish, queued.StatementEnglish));
     }
+
+    /// <summary>
+    /// The queue pages (R-7.2): the second page starts where the first stopped,
+    /// and the total is the queue's. Five claims proposed out of order, so a page
+    /// taken before the order, or the first page served twice, cannot come out right.
+    /// </summary>
+    [Fact]
+    public async Task The_second_page_continues_the_first_and_the_total_is_the_queues()
+    {
+        foreach (var support in new[] { 0.9, 0.5, 0.7, 0.95, 0.6 })
+            Propose("brazo articulado", support);
+
+        var first = await Queue(new ListClaimsForReviewQuery(Page: 1, PageSize: 2));
+        var second = await Queue(new ListClaimsForReviewQuery(Page: 2, PageSize: 2));
+        var last = await Queue(new ListClaimsForReviewQuery(Page: 3, PageSize: 2));
+
+        Assert.Equal([0.5, 0.6], first.Items.Select(claim => claim.Support));
+        Assert.Equal([0.7, 0.9], second.Items.Select(claim => claim.Support));
+        Assert.Equal([0.95], last.Items.Select(claim => claim.Support));
+        Assert.Equal((5, 2, 2), (second.Total, second.Page, second.PageSize));
+    }
+
+    /// <summary>
+    /// Weak is the server's rule now, so its count cannot be one page's: three weak
+    /// of five, shown two at a time, and every filter counted whichever is shown.
+    /// </summary>
+    [Fact]
+    public async Task Weak_narrows_before_the_page_and_every_filter_is_counted_over_the_queue()
+    {
+        foreach (var support in new[] { 0.9, 0.5, 0.7, 0.95, 0.6 })
+            Propose("brazo articulado", support);
+
+        var weak = await Queue(new ListClaimsForReviewQuery(ClaimSupportFilter.Weak, Page: 2, PageSize: 2));
+        var all = await Queue(new ListClaimsForReviewQuery(ClaimSupportFilter.All, Page: 1, PageSize: 2));
+
+        Assert.Equal([0.7], weak.Items.Select(claim => claim.Support));
+        Assert.Equal(3, weak.Total);
+        Assert.Equal(5, all.Total);
+        Assert.Equal(Enum.GetValues<ClaimSupportFilter>(), weak.Counts.Select(count => count.Support));
+        Assert.Equal(weak.Counts, all.Counts);
+        Assert.Equal([3, 5], all.Counts.Select(count => count.Count));
+        // Each row says whether it is weak, so the screen marks it without a copy of the line.
+        Assert.Equal([true, true], all.Items.Select(claim => claim.IsWeak));
+        var strongest = await Queue(new ListClaimsForReviewQuery(ClaimSupportFilter.All, Page: 3, PageSize: 2));
+        Assert.False(Assert.Single(strongest.Items).IsWeak);
+    }
+
+    /// <summary>The line is the backoffice's old rule exactly: under 0.8 is weak, 0.8 itself is not.</summary>
+    [Theory]
+    [InlineData(0.79, true)]
+    [InlineData(ProductClaim.WeakSupport, false)]
+    [InlineData(0.81, false)]
+    public void Weak_is_support_under_the_line(double support, bool weak) =>
+        Assert.Equal(weak, Propose("brazo articulado", support).IsWeaklySupported);
+
+    [Theory]
+    [InlineData(0, 20)]
+    [InlineData(1, 0)]
+    [InlineData(1, 101)]
+    public void A_page_outside_the_contract_is_refused(int page, int pageSize) =>
+        Assert.False(new ListClaimsForReviewValidator().Validate(new ListClaimsForReviewQuery(Page: page, PageSize: pageSize)).IsValid);
+
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(7, 100)]
+    public void A_page_inside_the_contract_is_accepted(int page, int pageSize) =>
+        Assert.True(new ListClaimsForReviewValidator().Validate(new ListClaimsForReviewQuery(Page: page, PageSize: pageSize)).IsValid);
+
+    [Fact]
+    public void A_support_filter_that_is_not_one_is_refused() =>
+        Assert.False(new ListClaimsForReviewValidator().Validate(new ListClaimsForReviewQuery((ClaimSupportFilter)7)).IsValid);
+
+    private Task<ClaimsForReviewPage> Queue(ListClaimsForReviewQuery query) =>
+        new ListClaimsForReviewHandler(this.knowledge).HandleAsync(query, TestContext.Current.CancellationToken);
 
     private Task<ReviewClaimResult> Review(ProductClaim claim, ReviewDecision decision, string reviewer) =>
         new ReviewClaimHandler(this.knowledge, new Reviewer(reviewer), this.knowledge, this.clock)

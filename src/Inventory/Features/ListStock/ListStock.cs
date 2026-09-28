@@ -19,7 +19,38 @@ namespace ElGuerre.Tendero.Inventory.Features.ListStock;
 /// three are held for an order placed a minute ago. Splitting it into two
 /// endpoints would make the interface ask twice for one answer.
 /// </summary>
-public sealed record ListStockQuery(string Culture) : IQuery<ListStockResult>;
+/// <param name="Filter">Which SKUs: those to restock, those sold out, or all (R-7.1).</param>
+/// <param name="Text">Part of a SKU, matched here because the SKU is this context's.</param>
+/// <param name="Skus">The SKUs whose product the catalogue matched by name or code.
+/// A product's name is the catalogue's, so that half of a search is resolved
+/// there and arrives as SKUs. A row is shown when either half matches it; with
+/// neither, every SKU is.</param>
+/// <param name="Page">A page of SKUs, not of rows: a SKU's warehouses are never
+/// split across two pages (R-7.2).</param>
+public sealed record ListStockQuery(
+    string Culture,
+    StockFilter Filter = StockFilter.All,
+    string? Text = null,
+    IReadOnlyList<string>? Skus = null,
+    int Page = Paging.FirstPage,
+    int PageSize = Paging.DefaultPageSize)
+    : IQuery<ListStockResult>;
+
+public sealed class ListStockValidator : AbstractValidator<ListStockQuery>
+{
+    public ListStockValidator()
+    {
+        RuleFor(query => query.Filter).IsInEnum();
+        RuleFor(query => query.Page).IsAPage();
+        RuleFor(query => query.PageSize).IsAPageSize();
+    }
+}
+
+/// <summary>The stock screen's filters. Each counts SKUs, not rows: a SKU is one
+/// thing to restock however many warehouses hold it.</summary>
+public enum StockFilter { Restock, SoldOut, All }
+
+public sealed record StockFilterCount(StockFilter Filter, int Count);
 
 public sealed record StockRowView(
     string Sku,
@@ -33,14 +64,27 @@ public sealed record StockRowView(
 public sealed record ReservationView(
     string ReservationId,
     string OrderId,
-    string Status,
+    ReservationStatus Status,
     string? Reason,
     IReadOnlyList<string> Lines,
     DateTimeOffset CreatedAt,
     DateTimeOffset ExpiresAt);
 
+/// <param name="Rows">Every warehouse row of the page's SKUs, by SKU.</param>
+/// <param name="Total">How many SKUs the filter and the search matched — the
+/// chosen filter's count — not how many rows are on the page.</param>
+/// <param name="Counts">Every filter's number for the SKUs asked about, whichever
+/// filter is shown, so the chips keep their size (R-7.1).</param>
+/// <param name="RestockAt">The line under which a SKU needs restocking, so the
+/// screen can say it without keeping a copy of the rule.</param>
 public sealed record ListStockResult(
-    IReadOnlyList<StockRowView> Rows, IReadOnlyList<ReservationView> Reservations);
+    IReadOnlyList<StockRowView> Rows,
+    int Total,
+    int Page,
+    int PageSize,
+    IReadOnlyList<ReservationView> Reservations,
+    IReadOnlyList<StockFilterCount> Counts,
+    int RestockAt);
 
 public sealed class ListStockEndpoint : ICarterModule
 {
@@ -48,11 +92,17 @@ public sealed class ListStockEndpoint : ICarterModule
     {
         app.MapGet("/api/inventory/stock",
             async Task<Ok<ListStockResult>> (
-                   string? culture, HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                   string? culture, StockFilter? filter, string? q, string[]? sku, int? page, int? pageSize,
+                   HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 var resolved = CultureNegotiation.Resolve(culture, http.Request.Headers.AcceptLanguage);
 
-                var result = await dispatcher.SendAsync(new ListStockQuery(resolved), ct);
+                // `sku` present but empty is a search that matched nothing, which
+                // is not the same as no search: it answers no rows, not every row.
+                var skus = http.Request.Query.ContainsKey("sku") ? sku ?? [] : null;
+                var result = await dispatcher.SendAsync(new ListStockQuery(
+                    resolved, filter ?? StockFilter.All, q, skus,
+                    page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct);
 
                 http.Response.Headers.ContentLanguage = resolved;
                 http.Response.Headers.Vary = "Accept-Language";
@@ -86,13 +136,53 @@ public sealed class ListStockHandler(
     {
         using var activity = Telemetry.StartActivity("inventory.list_stock");
 
-        var rows = await stock.AllAsync(cancellationToken);
+        activity?.SetTag("inventory.stock_filter", query.Filter.ToString());
+        var text = query.Text?.Trim() is { Length: > 0 } typed ? typed : null;
+        activity?.SetTag("inventory.narrowed", text is not null || query.Skus is not null);
+
+        // The whole table, filtered and paged here: 198 rows in the laboratory
+        // (two warehouses), and a SKU's level is a sum over its rows, which a page
+        // of rows could not give. So it pages in memory, by SKU, after the sums
+        // (R-7.2); paging in SQL waits for a table that does not fit, with this
+        // number recorded.
+        var asked = query.Skus?.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        bool Searched(string sku) =>
+            (text is null && asked is null)
+            || (asked?.Contains(sku) ?? false)
+            || (text is not null && sku.Contains(text, StringComparison.OrdinalIgnoreCase));
+
+        var inScope = (await stock.AllAsync(cancellationToken))
+            .Where(row => Searched(row.Sku))
+            .ToList();
+
+        var available = inScope
+            .GroupBy(row => row.Sku, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.Sum(row => row.Available), StringComparer.OrdinalIgnoreCase);
+
+        bool Shown(string sku) => query.Filter switch
+        {
+            StockFilter.Restock => Restocking.Needed(available[sku]),
+            StockFilter.SoldOut => Restocking.SoldOut(available[sku]),
+            _ => true,
+        };
+
+        // Ordinal, so the order is the same on every machine and two pages never
+        // repeat or skip a SKU; a SKU is unique, so it is its own tie-break.
+        var shown = available.Keys.Where(Shown).Order(StringComparer.Ordinal).ToList();
+        var onPage = shown.Skip(Paging.Offset(query.Page, query.PageSize)).Take(query.PageSize)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        // A stable sort: a SKU's warehouses keep the ledger's order.
+        var rows = inScope.Where(row => onPage.Contains(row.Sku))
+            .OrderBy(row => row.Sku, StringComparer.Ordinal)
+            .ToList();
         var open = (await warehouses.AllAsync(cancellationToken))
             .ToDictionary(warehouse => warehouse.Code, StringComparer.OrdinalIgnoreCase);
 
         var reservations = await stock.RecentReservationsAsync(RecentReservations, cancellationToken);
 
         activity?.SetTag("inventory.row_count", rows.Count);
+        activity?.SetTag("inventory.sku_total", shown.Count);
 
         return new ListStockResult(
         [
@@ -108,6 +198,9 @@ public sealed class ListStockHandler(
                 row.Available,
                 row.UpdatedAt))
         ],
+        shown.Count,
+        query.Page,
+        query.PageSize,
         [
             .. reservations.Select(reservation => new ReservationView(
                 reservation.Id.ToString(),
@@ -115,12 +208,18 @@ public sealed class ListStockHandler(
                 // as {"value":"…"} — the mistake CLAUDE.md warns no unit test
                 // will catch.
                 reservation.OrderId.ToString(),
-                reservation.Status.ToString(),
+                reservation.Status,
                 reservation.Reason,
                 [.. reservation.Lines.Select(line => $"{line.Sku} ×{line.Quantity} · {line.WarehouseCode}")],
                 reservation.CreatedAt,
                 reservation.ExpiresAt))
-        ]);
+        ],
+        [
+            new StockFilterCount(StockFilter.Restock, available.Values.Count(Restocking.Needed)),
+            new StockFilterCount(StockFilter.SoldOut, available.Values.Count(Restocking.SoldOut)),
+            new StockFilterCount(StockFilter.All, available.Count),
+        ],
+        Restocking.At);
     }
 }
 

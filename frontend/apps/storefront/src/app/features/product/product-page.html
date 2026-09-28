@@ -86,10 +86,6 @@
             <h1 class="detail__name">{{ item.name }}</h1>
             <p class="detail__price numeric">{{ price() }}</p>
 
-            @if (item.description) {
-              <p class="detail__description">{{ item.description }}</p>
-            }
-
             <!-- Every option the CATALOGUE defines, not the ones that happen to
                  have a variant. A size that exists in navy and not in black
                  renders disabled: hiding it tells the shopper their size is not
@@ -143,6 +139,21 @@
                   {{ adding() ? t('product.adding') : t('product.addToCart') }}
                 </button>
 
+                <!-- Beside the action, where the eyes are, and it stays: a toast
+                     that fades is gone before a screen reader or a slow reader
+                     is done with it (WCAG 2.2.1). The region is always there, so
+                     what enters it is announced. -->
+                <p class="buy__notice" role="status">
+                  @if (notice(); as said) {
+                    @if (said.ok) {
+                      <span class="buy__added">{{ t('product.added') }}</span>
+                      <a class="quiet" [routerLink]="cartLink()" (click)="noticeFollowed()">{{ t('product.viewCart') }}</a>
+                    } @else {
+                      <span class="buy__notAdded">{{ t('product.notAdded') }}</span>
+                    }
+                  }
+                </p>
+
                 @let left = remaining();
                 @if (left !== null) {
                   <!-- Only when it is a reason to hurry. The server decides the
@@ -156,6 +167,13 @@
                 <p class="buy__sku numeric muted">{{ t('product.sku', { sku: variant.sku }) }}</p>
               }
             </div>
+
+            <!-- After the action, not before it (the redesign's R-5.1): on a phone
+                 the description pushed Añadir al carrito out of the first screen,
+                 and price, options, buy is the order a decision is made in. -->
+            @if (item.description) {
+              <p class="detail__description">{{ item.description }}</p>
+            }
 
             <!-- The promise, and only the part the code will honour.
                  The window runs from DELIVERY because that is what

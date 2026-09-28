@@ -16,6 +16,8 @@ type Schemas = components['schemas'];
  * shows both and recomputes neither.
  */
 export type ClaimForReview = Schemas['ClaimForReview'];
+export type ClaimsForReviewPage = Schemas['ClaimsForReviewPage'];
+export type ClaimSupportFilter = Schemas['ClaimSupportFilter'];
 export type QuoteForReview = Schemas['QuoteForReview'];
 export type ReviewClaimResponse = Schemas['ReviewClaimResponse'];
 
@@ -30,6 +32,7 @@ export type SpecSheet = Schemas['SpecSheet'];
 export type SpecProduct = Schemas['SpecProduct'];
 export type SpecRow = Schemas['SpecRow'];
 export type SpecCell = Schemas['SpecCell'];
+export type FactKind = Schemas['FactKind'];
 export type SpecEvidence = Schemas['SpecEvidence'];
 export type SpecQuote = Schemas['SpecQuote'];
 export type SpecStatement = Schemas['SpecStatement'];

@@ -17,8 +17,10 @@ public interface IProductRepository
 }
 
 /// <summary>A page of products carrying the total of the whole query, not of the
-/// page: a review queue needs to know how many are left.</summary>
-public sealed record ProductPage(IReadOnlyList<Product> Items, int Total);
+/// page: a review queue needs to know how many are left. And how many match the
+/// text in each status, whichever status is shown, so every filter can say its
+/// number and none changes size when another is chosen.</summary>
+public sealed record ProductPage(IReadOnlyList<Product> Items, int Total, IReadOnlyDictionary<ProductStatus, int> CountByStatus);
 
 /// <summary>
 /// The catalogue's read side. Separate from <see cref="IProductRepository"/>
@@ -33,6 +35,13 @@ public interface IProductCatalogReader
     /// the text matches any part of the name in any culture, or the code.
     /// </summary>
     Task<ProductPage> ListAsync(ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct);
+
+    /// <summary>
+    /// The SKUs of every product whose name, in any culture, or code contains the
+    /// text: the catalogue's half of a stock search (R-7.1). The ledger matches
+    /// the SKU itself; only the catalogue knows what the product is called.
+    /// </summary>
+    Task<IReadOnlyList<string>> SkusOfProductsMatchingAsync(string text, CancellationToken ct);
 
     /// <summary>
     /// The product a URL names, by its public code.

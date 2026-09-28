@@ -44,19 +44,17 @@ public sealed record LinkIdentityCommand(
 /// <summary>
 /// What goes over the wire.
 ///
-/// `Outcome` is a STRING and not the enum, and the repository already learned
-/// this once: `PublishProduct` carries a comment saying an enum "comes out as a
-/// number — `"outcome":1` tells an agent nothing and breaks the moment somebody
-/// reorders the members". It was serialising as `0` and `2` here until the same
-/// mistake was made again, which is an argument for a rule rather than a
-/// comment.
+/// `Outcome` is the enum, written by its member name (`Registered`) by the
+/// API's one converter, never as the number whose meaning depends on the order
+/// of the members. It was serialising as `0` and `2` here once, and then as a
+/// hand-built camelCase string; ADR 0043 is the rule that ended both.
 /// </summary>
 public sealed record LinkedIdentity(
     string CustomerId,
     string? DisplayName,
     string Segment,
     string Culture,
-    string Outcome) : IAuditedResult
+    LinkOutcome Outcome) : IAuditedResult
 {
     /// <summary>Every way signing in can end is allowed — registered, linked or
     /// recognised are three facts, not three verdicts. Said explicitly, and
@@ -219,12 +217,10 @@ public sealed class LinkIdentityHandler(
 
     private static LinkedIdentity View(Customer customer, LinkOutcome outcome) =>
         // A flat string for the id, never the record struct: `CustomerId`
-        // serialises as {"value":"…"} and the wire wants an id (CLAUDE.md). And
-        // camelCase for the outcome, so a client reads "registered" rather than
-        // a 0 whose meaning depends on the order of an enum's members.
+        // serialises as {"value":"…"} and the wire wants an id (CLAUDE.md).
         new(customer.Id.Value.ToString(),
             customer.DisplayName,
             customer.Segment,
             customer.Culture,
-            char.ToLowerInvariant(outcome.ToString()[0]) + outcome.ToString()[1..]);
+            outcome);
 }

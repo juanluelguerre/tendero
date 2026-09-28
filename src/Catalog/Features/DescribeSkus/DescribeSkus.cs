@@ -31,7 +31,10 @@ namespace ElGuerre.Tendero.Catalog.Features.DescribeSkus;
 /// It is the same crossing the product page makes, pointed the other way, and
 /// the direction is what makes it safe.
 /// </summary>
-public sealed record DescribeSkusQuery(IReadOnlyList<string> Skus, string Culture)
+/// <param name="Text">Instead of SKUs, a name or a code: the SKUs of every product
+/// that matches it, described (R-7.1). The stock screen's search starts here,
+/// because only the catalogue knows what a product is called.</param>
+public sealed record DescribeSkusQuery(IReadOnlyList<string> Skus, string Culture, string? Text = null)
     : IQuery<DescribeSkusResult>;
 
 public sealed record DescribeSkusResult(IReadOnlyList<SkuDescriptionView> Items);
@@ -55,9 +58,14 @@ public sealed class DescribeSkusValidator : AbstractValidator<DescribeSkusQuery>
     public DescribeSkusValidator()
     {
         RuleFor(query => query.Skus)
-            .NotEmpty().WithMessage("At least one sku is required.")
+            .NotEmpty().WithMessage("At least one sku, or a text, is required.")
+            .When(query => string.IsNullOrWhiteSpace(query.Text));
+        RuleFor(query => query.Skus)
             .Must(skus => skus.Count <= MaximumSkus)
                 .WithMessage($"At most {MaximumSkus} skus per request.");
+        RuleFor(query => query.Skus)
+            .Empty().WithMessage("Ask by skus or by text, not both.")
+            .When(query => !string.IsNullOrWhiteSpace(query.Text));
 
         RuleFor(query => query.Culture).Must(culture => culture is "es" or "en")
             .WithMessage("Supported cultures: es, en.");
@@ -68,17 +76,17 @@ public sealed class DescribeSkusEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // GET /api/catalog/skus?sku=A&sku=B&culture=es
+        // GET /api/catalog/skus?sku=A&sku=B&culture=es, or ?q=mochila
         app.MapGet("/api/catalog/skus",
             async Task<Ok<DescribeSkusResult>> (
-                   string[] sku, string? culture,
+                   string[]? sku, string? q, string? culture,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 var resolved = CultureNegotiation.Resolve(
                     culture, http.Request.Headers.AcceptLanguage);
 
                 var result = await dispatcher.SendAsync(
-                    new DescribeSkusQuery(sku, resolved), ct);
+                    new DescribeSkusQuery(sku ?? [], resolved, q), ct);
 
                 http.Response.Headers.ContentLanguage = resolved;
                 http.Response.Headers.Vary = "Accept-Language";
@@ -106,10 +114,14 @@ public sealed class DescribeSkusHandler(
         DescribeSkusQuery query, CancellationToken cancellationToken)
     {
         using var activity = Telemetry.StartActivity("catalog.describe_skus");
-        activity?.SetTag("catalog.skus", query.Skus.Count);
+        var skus = string.IsNullOrWhiteSpace(query.Text)
+            ? query.Skus
+            : await products.SkusOfProductsMatchingAsync(query.Text, cancellationToken);
+        activity?.SetTag("catalog.skus", skus.Count);
+        activity?.SetTag("catalog.by_text", !string.IsNullOrWhiteSpace(query.Text));
 
         var descriptions = await products.DescribeSkusAsync(
-            query.Skus, query.Culture, cancellationToken);
+            skus, query.Culture, cancellationToken);
 
         var attributes = await definitions.AllAsync(cancellationToken);
 

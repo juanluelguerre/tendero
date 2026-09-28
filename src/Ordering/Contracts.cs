@@ -28,9 +28,9 @@ public sealed record OrderTaxView(string TaxClass, decimal Rate, decimal Base, d
 
 public sealed record OrderView(
     string OrderId,
-    string Status,
+    OrderStatus Status,
     /// <summary><c>Live</c>, or <c>Test</c> for a rehearsal a test credential placed (ADR 0038).</summary>
-    string Mode,
+    OrderMode Mode,
     string Culture,
     string Currency,
     DateTimeOffset CreatedAt,
@@ -55,8 +55,8 @@ public sealed record OrderView(
 {
     public static OrderView From(Order order) => new(
         order.Id.ToString(),
-        order.Status.ToString(),
-        order.Mode.ToString(),
+        order.Status,
+        order.Mode,
         order.Culture,
         order.Currency,
         order.CreatedAt,
@@ -83,7 +83,7 @@ public sealed record OrderView(
         order.Stop?.Detail);
 }
 
-public sealed record ReturnLineView(string Sku, int Quantity, string Reason, string? Comment);
+public sealed record ReturnLineView(string Sku, int Quantity, ReturnReason Reason, string? Comment);
 
 /// <summary>
 /// How many of a SKU the shopper may still send back. It is the answer
@@ -96,7 +96,7 @@ public sealed record ReturnableLineView(string Sku, int Quantity);
 public sealed record ReturnView(
     string ReturnId,
     string OrderId,
-    string Status,
+    ReturnStatus Status,
     string? Resolution,
     decimal? RefundAmount,
     DateTimeOffset CreatedAt,
@@ -112,13 +112,13 @@ public sealed record ReturnView(
     public static ReturnView From(ReturnRequest request) => new(
         request.Id.ToString(),
         request.OrderId.ToString(),
-        request.Status.ToString(),
+        request.Status,
         request.Resolution,
         request.RefundAmount?.Amount,
         request.CreatedAt,
         [
             .. request.Lines.Select(line => new ReturnLineView(
-                line.Sku, line.Quantity, line.Reason.ToString(), line.Comment))
+                line.Sku, line.Quantity, line.Reason, line.Comment))
         ],
         request.Number);
 }

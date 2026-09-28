@@ -39,7 +39,7 @@ public sealed class DashboardFiguresTests
 
         var sales = DashboardFigures.Sales(DashboardPeriod.Week, current, previous);
 
-        Assert.Equal(("week", "EUR"), (sales.Period, sales.Currency));
+        Assert.Equal((DashboardPeriod.Week, "EUR"), (sales.Period, sales.Currency));
         Assert.Equal(new SalesFigures(74.90m, 2, 6, 37.45m), sales.Current);
         Assert.Equal(new SalesFigures(14.95m, 1, 1, 14.95m), sales.Previous);
         Assert.Equal(["C", "A", "B"], sales.BestSellers.Select(seller => seller.Sku));
@@ -126,8 +126,8 @@ public sealed class DashboardFiguresTests
         Assert.Equal((1, 0.1429m), (ops.Cancelled, ops.CancellationRate));
         Assert.Equal(2, ops.OpenReturns);
         // Units per reason, the most first: 3 wrong size (two lines), 1 damaged.
-        // Equal counts are ordered by name: changed_mind before damaged.
-        Assert.Equal([new ReasonCount("wrong_size", 3), new ReasonCount("changed_mind", 1), new ReasonCount("damaged", 1)], ops.OpenReturnsByReason);
+        // Equal counts are ordered by name: ChangedMind before Damaged.
+        Assert.Equal([new ReasonCount(ReturnReason.WrongSize, 3), new ReasonCount(ReturnReason.ChangedMind, 1), new ReasonCount(ReturnReason.Damaged, 1)], ops.OpenReturnsByReason);
         // Refunds inside the window only; returns opened in it against orders placed in it.
         Assert.Equal((30m, 0.5714m), (ops.Refunded, ops.ReturnRate));
     }
@@ -195,15 +195,6 @@ public sealed class DashboardFiguresTests
             [new AgentSalesRow("claude-desktop", 3, 254.70m, 2), new AgentSalesRow("a-small-agent", 1, 9.95m, 1), new AgentSalesRow("b-small-agent", 1, 9.95m, 0)],
             agents.ByAgent);
     }
-
-    [Theory]
-    [InlineData(null, DashboardPeriod.Week)]
-    [InlineData("day", DashboardPeriod.Day)]
-    [InlineData("MONTH", DashboardPeriod.Month)]
-    [InlineData("year", null)]
-    [InlineData("1", null)]
-    public void A_period_is_one_of_three_and_a_week_by_default(string? given, DashboardPeriod? expected) =>
-        Assert.Equal(expected, DashboardPeriods.Parse(given));
 
     /// <summary>
     /// Health against a target (the redesign's R-4.5), on the boundaries that

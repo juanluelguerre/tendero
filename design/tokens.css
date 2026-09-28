@@ -7,6 +7,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
+  /* Native controls (a checkbox's empty box, a select's list, a scrollbar)
+     draw from this, not from the tokens: without it they stay light in the
+     dark theme, a white square on a dark panel. */
+  color-scheme: light;
+
   /* ---------- Colour ----------
      Clay: the awning. Olive: the produce crate. Stone: the counter.
      Ink: the chalkboard. Everything else is state. */
@@ -117,6 +122,7 @@
    storefront and landing stay light. Opt in with data-theme="dark".
    ============================================================ */
 [data-theme='dark'] {
+  color-scheme: dark;
   --bg-page:       #171513;
   --bg-surface:    #201D1B;
   --bg-raised:     #2A2622;

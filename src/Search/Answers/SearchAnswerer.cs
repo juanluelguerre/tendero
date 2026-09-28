@@ -23,7 +23,7 @@ internal sealed class SearchAnswerer(ILexicalFullMatch fullMatch) : ISearchAnswe
 {
     public async Task<SearchAnswer?> AnswerAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(query.Text) || query.Sort is not null)
+        if (string.IsNullOrWhiteSpace(query.Text) || query.Sort is not ProductSort.Relevance)
             return null;
 
         var help = HelpTopics.Match(query.Text, query.Culture);

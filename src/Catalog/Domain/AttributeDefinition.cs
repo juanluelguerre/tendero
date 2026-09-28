@@ -29,7 +29,11 @@ public enum AttributeKind
 /// catalogue stores "azul marino" and nothing knows that in English that is
 /// called "navy blue".
 /// </summary>
-public sealed record AttributeOption(string Code, LocalizedText Label);
+/// <param name="Swatch">What the option looks like, for a filter drawn as swatches:
+/// a colour as `#RRGGBB`. Data about the product, not a style — the storefront
+/// paints it as the option's own colour, beside its name (R-7.3). Null for an
+/// option with no colour to show.</param>
+public sealed record AttributeOption(string Code, LocalizedText Label, string? Swatch = null);
 
 public sealed record AttributeDefinitionChanged(string Code, DateTimeOffset OccurredAt) : IDomainEvent;
 
@@ -126,18 +130,24 @@ public sealed class AttributeDefinition : AggregateRoot
     }
 
     /// <summary>Adds or replaces an option. Idempotent by code.</summary>
-    public void AddOption(TimeProvider clock, string code, LocalizedText label)
+    public void AddOption(TimeProvider clock, string code, LocalizedText label, string? swatch = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
+
+        if (swatch is not null && !IsSwatch(swatch))
+            throw new ArgumentException($"A swatch is a colour as #RRGGBB, not '{swatch}'.", nameof(swatch));
 
         if (Kind != AttributeKind.Option)
             throw new InvalidOperationException($"'{Code}' is {Kind}, so it has no options.");
 
         var normalised = Normalise(code);
         this.options.RemoveAll(option => option.Code == normalised);
-        this.options.Add(new AttributeOption(normalised, label));
+        this.options.Add(new AttributeOption(normalised, label, swatch?.ToUpperInvariant()));
         Touch(clock);
     }
+
+    private static bool IsSwatch(string value) =>
+        value.Length == 7 && value[0] == '#' && value.Skip(1).All(Uri.IsHexDigit);
 
     public void AddAlias(TimeProvider clock, string alias)
     {

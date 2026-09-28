@@ -3,25 +3,24 @@ import { inject, Injectable } from '@angular/core';
 import type {
   AgentSales,
   CheckoutFunnel,
+  DashboardPeriod,
   ListOrdersResult,
   OperationsSummary,
   OrderDetail,
+  OrderStatus,
   OrderSummary,
   ReturnView,
   SalesSummary,
+  OrderMove,
+  ReturnDecision,
 } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
-/** What a shopkeeper can do to an order. The server owns the transition table;
- * this is only the vocabulary. */
-export type OrderMove = 'Ship' | 'Deliver' | 'Cancel';
-
-/** And to a return. Same arrangement. */
-export type ReturnDecision = 'Approve' | 'Reject' | 'Receive' | 'Refund';
-
-/** The window a dashboard figure covers, against the one before it (P11-7). */
-export type DashboardPeriod = 'day' | 'week' | 'month';
+/** What a shopkeeper can do to an order and to a return, and the window a
+ * dashboard figure covers: the document's vocabulary (ADR 0043); the server
+ * owns the rules. */
+export type { DashboardPeriod, OrderMove, ReturnDecision };
 
 /**
  * The only place in the backoffice that knows what the ordering endpoints are
@@ -35,8 +34,8 @@ export class OrderingService {
   private readonly baseUrl = inject(API_BASE_URL);
 
   /** Narrowed by status and by the start or end of an id, or any part of a name or city (R-4.2). */
-  orders(status: string | null = null, text = ''): Observable<ListOrdersResult> {
-    let params = new HttpParams();
+  orders(status: OrderStatus | null = null, text = '', page = 1, pageSize = 20): Observable<ListOrdersResult> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (status) params = params.set('status', status);
     if (text.trim()) params = params.set('q', text.trim());
     return this.http.get<ListOrdersResult>(`${this.baseUrl}/api/orders`, { params });

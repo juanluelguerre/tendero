@@ -25,7 +25,7 @@ public sealed class WithdrawProductTests
         var result = await handler.HandleAsync(new WithdrawProductCommand(product.Id), TestContext.Current.CancellationToken);
 
         Assert.Equal(WithdrawOutcome.Withdrawn, result.Outcome);
-        Assert.Equal("draft", result.Status);
+        Assert.Equal(ProductStatus.Draft, result.Status);
         Assert.Equal(ProductStatus.Draft, product.Status);
         Assert.Equal(1, unitOfWork.SaveCount);
     }
@@ -80,6 +80,8 @@ public sealed class WithdrawProductTests
         var result = await handler.HandleAsync(new WithdrawProductCommand(ProductId.New()), TestContext.Current.CancellationToken);
 
         Assert.Equal(WithdrawOutcome.NotFound, result.Outcome);
+        // No product, so no status: never one made up to fill the field.
+        Assert.Null(result.Status);
         Assert.Equal(0, unitOfWork.SaveCount);
     }
 

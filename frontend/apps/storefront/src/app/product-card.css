@@ -70,6 +70,17 @@
   text-decoration: underline;
 }
 
+/* A finger's 44 px without moving the card: the name keeps its line, and the
+   padding it gains is taken back by the margin (R-5.2). What the padding
+   overlaps is the image above, which leads to the same product. */
+@media (pointer: coarse) {
+  .card__link {
+    display: inline-block;
+    padding-block: 0.75rem;
+    margin-block: -0.75rem;
+  }
+}
+
 .card__link:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
@@ -138,6 +149,10 @@
 
 .card__compare {
   align-self: start;
+  display: inline-flex;
+  align-items: center;
+  /* 24 px, WCAG 2.2's floor; 44 where a finger aims (R-1, S-F4). */
+  min-height: 1.5rem;
   padding: 0;
   border: 0;
   background: none;
@@ -161,4 +176,8 @@
 .card__compare:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .card__compare { min-height: 2.75rem; }
 }

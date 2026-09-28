@@ -26,10 +26,10 @@ public sealed class OutboxOptions
 /// replicas, exponential backoff) arrives when there is a second replica, not
 /// before.
 /// </summary>
-public sealed class OutboxProcessor(
+public sealed class OutboxWorker(
     IServiceScopeFactory scopeFactory,
     IOptions<OutboxOptions> options,
-    ILogger<OutboxProcessor> logger) : BackgroundService
+    ILogger<OutboxWorker> logger) : BackgroundService
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Outbox);
     private static readonly Meter Metrics = new(TelemetrySources.Outbox);
@@ -67,7 +67,7 @@ public sealed class OutboxProcessor(
     ///
     /// Public so the loop that runs in production is the loop under test. The
     /// integration tests used to carry their own copy of it — "the same loop as
-    /// OutboxProcessor, without the timer" — and a copy cannot notice the
+    /// OutboxWorker, without the timer" — and a copy cannot notice the
     /// original losing its retry cap or letting one poisoned message block the
     /// rest.
     /// </summary>

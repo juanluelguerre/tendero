@@ -33,15 +33,16 @@ export function shareOf(part: number, whole: number): number {
   return whole === 0 ? 0 : part / whole;
 }
 
-/** At or under this, summed over the warehouses, a SKU is running low. A laboratory's shelf, not a policy. */
-export const LowStockAt = 5;
-
-/** What a shopper can still buy of each SKU, summed over the warehouses, and the ones at or under the line — lowest first. */
-export function lowStockOf(rows: readonly { sku: string; available: number }[]): { sku: string; available: number }[] {
+/**
+ * What a shopper can still buy of each SKU, summed over the warehouses, lowest
+ * first. Only the presentation: which SKUs need restocking is the server's rule
+ * (Inventory's `Restocking`, R-7.1), and the rows arrive already filtered by it.
+ * The line used to be a constant here, beside the widget that drew it.
+ */
+export function bySkuLowestFirst(rows: readonly { sku: string; available: number }[]): { sku: string; available: number }[] {
   const bySku = new Map<string, number>();
   for (const row of rows) bySku.set(row.sku, (bySku.get(row.sku) ?? 0) + row.available);
   return [...bySku]
     .map(([sku, available]) => ({ sku, available }))
-    .filter((sku) => sku.available <= LowStockAt)
     .sort((a, b) => a.available - b.available || a.sku.localeCompare(b.sku));
 }

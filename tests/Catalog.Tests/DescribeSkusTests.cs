@@ -134,6 +134,33 @@ public sealed class DescribeSkusTests
         Assert.Null(Assert.Single(result.Items).VariantLabel);
     }
 
+    /// <summary>
+    /// The stock screen's search (R-7.1): a product's name, in any culture, finds
+    /// every one of its SKUs, which the ledger alone could never have known.
+    /// </summary>
+    [Fact]
+    public async Task A_name_describes_every_sku_of_the_products_it_matches()
+    {
+        var shirt = AShirt();
+        var coffee = Product.Create(Clock, LocalizedText.From("es", "Cafetera"), new Money(29.90m, "EUR"));
+        coffee.AddVariant(Clock, "COFFEE-DEFAULT", new Money(29.90m, "EUR"));
+
+        var result = await new DescribeSkusHandler(new InMemoryProductCatalogReader(shirt, coffee), new Definitions()).HandleAsync(
+            new DescribeSkusQuery([], "es", Text: "linen"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["SHIRT-BLACK-38", "SHIRT-NAVY-38"], result.Items.Select(item => item.Sku).Order());
+    }
+
+    [Fact]
+    public void Text_alone_is_a_request_and_text_with_skus_is_not()
+    {
+        var validator = new DescribeSkusValidator();
+
+        Assert.True(validator.Validate(new DescribeSkusQuery([], "es", Text: "linen")).IsValid);
+        Assert.False(validator.Validate(new DescribeSkusQuery(["SHIRT-NAVY-38"], "es", Text: "linen")).IsValid);
+        Assert.False(validator.Validate(new DescribeSkusQuery([], "es", Text: "  ")).IsValid);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(201)]

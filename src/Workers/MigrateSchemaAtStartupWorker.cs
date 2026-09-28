@@ -20,9 +20,9 @@ namespace ElGuerre.Tendero.Workers;
 /// startup is a deployment decision and not the process's — and this project has
 /// no deployment target to decide it against yet.
 /// </summary>
-public sealed class SchemaMigrator(
+public sealed class MigrateSchemaAtStartupWorker(
     IServiceScopeFactory scopeFactory,
-    ILogger<SchemaMigrator> logger) : IHostedService
+    ILogger<MigrateSchemaAtStartupWorker> logger) : IHostedService
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {

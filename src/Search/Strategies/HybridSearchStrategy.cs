@@ -81,7 +81,7 @@ internal sealed class HybridSearchStrategy(
 
     public async Task<SearchResultPage> SearchAsync(ProductSearchQuery query, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(query.Text) || query.Sort is not null)
+        if (string.IsNullOrWhiteSpace(query.Text) || query.Sort is not ProductSort.Relevance)
             return await lexical.SearchAsync(query, ct);
 
         using var activity = Telemetry.StartActivity("search.hybrid");
@@ -111,23 +111,43 @@ internal sealed class HybridSearchStrategy(
         }
 
         var depth = Math.Max(settings.LexicalDepth, query.Page * query.PageSize);
-        var candidates = await lexical.SearchAsync(query with { Page = 1, PageSize = depth }, ct);
+        var found = matches.Select(match => match.ProductId).ToList();
 
-        var nearest = matches.Select(match => match.ProductId).ToList();
-        var words = candidates.Hits.Select(hit => hit.ProductId).ToList();
+        // **The union** (the facets spec, "The API"). A page that lists what the
+        // words matched AND what meaning found has to count both, so the lexical
+        // request carries the vector half's ids as a second way to match: its
+        // total and every facet are over the union, narrowed by the filters. The
+        // ids score nothing, so the words' ranking is the one it always was, and
+        // the products only meaning found come after them with a score of zero.
+        var candidates = await lexical.SearchAsync(
+            query with { Page = 1, PageSize = depth, AlsoMatching = found }, ct);
 
-        var fused = ReciprocalRankFusion.Fuse([words, nearest], settings.RrfK);
+        // The words' own ranking is what fuses: a product in the union only
+        // because meaning found it is not a lexical match, and ranking it as one
+        // would count meaning twice.
+        var matchedByWords = candidates.Hits.Where(hit => hit.Score > 0).ToList();
+        var words = matchedByWords.Select(hit => hit.ProductId).ToList();
 
         var byProduct = new Dictionary<string, SearchHit>(StringComparer.Ordinal);
-        foreach (var hit in candidates.Hits)
+        foreach (var hit in matchedByWords)
             byProduct.TryAdd(hit.ProductId, hit);
 
-        var foundByMeaningOnly = fused.Select(item => item.Id).Where(id => !byProduct.ContainsKey(id)).ToList();
+        var filters = query.Filters ?? SearchFilters.None;
+        var foundByMeaningOnly = found.Where(id => !byProduct.ContainsKey(id)).ToList();
         if (foundByMeaningOnly.Count > 0)
         {
-            foreach (var hit in await cards.FindAsync(foundByMeaningOnly, query.Culture, query.Category, ct))
+            foreach (var hit in await cards.FindAsync(foundByMeaningOnly, query.Culture, query.Category, filters, ct))
                 byProduct.TryAdd(hit.ProductId, hit);
         }
+
+        // **Qdrant knows nothing of brands, prices or sizes**, so its nearest list
+        // is unfiltered. With filters it is cut to the products that pass them
+        // BEFORE fusion — a product the filters exclude must not take a rank
+        // another one would have had. Without filters it is fused whole, exactly
+        // as before they existed.
+        var nearest = filters.IsEmpty ? found : [.. found.Where(byProduct.ContainsKey)];
+
+        var fused = ReciprocalRankFusion.Fuse([words, nearest], settings.RrfK);
 
         // An id with no card is a vector nobody can buy — archived, out of the
         // branch, or left behind by a projection that failed — and it is dropped.
@@ -136,7 +156,7 @@ internal sealed class HybridSearchStrategy(
             .Select(item => byProduct[item.Id] with { Score = item.Score })
             .ToList();
 
-        activity?.SetTag("search.hybrid.lexical", candidates.Hits.Count);
+        activity?.SetTag("search.hybrid.lexical", words.Count);
         activity?.SetTag("search.hybrid.vector", nearest.Count);
         activity?.SetTag("search.hybrid.meaning_only", ranked.Count(hit => foundByMeaningOnly.Contains(hit.ProductId)));
 
@@ -146,8 +166,8 @@ internal sealed class HybridSearchStrategy(
             activity?.SetTag(SearchDegradation.NotConfiguredTag, SearchDegradation.RerankStage);
 
         // Exact when lexical returned everything it matched, which is the case at
-        // a hundred products; otherwise the lexical count, raised if meaning
-        // found more than it did.
+        // a hundred products; otherwise the lexical count — the union's, so it
+        // already holds what meaning found.
         var total = candidates.Total <= candidates.Hits.Count
             ? ranked.Count
             : Math.Max(candidates.Total, ranked.Count);
@@ -155,7 +175,8 @@ internal sealed class HybridSearchStrategy(
         var page = ranked.Skip((query.Page - 1) * query.PageSize).Take(query.PageSize).ToList();
 
         activity?.SetTag("search.total", total);
-        return new SearchResultPage(page, total, query.Page, query.PageSize, stopwatch.Elapsed.TotalMilliseconds);
+        return new SearchResultPage(
+            page, total, query.Page, query.PageSize, stopwatch.Elapsed.TotalMilliseconds, Facets: candidates.Facets);
     }
 
     private async Task<List<SearchHit>> RerankAsync(

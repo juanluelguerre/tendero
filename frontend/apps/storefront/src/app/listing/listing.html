@@ -1,0 +1,203 @@
+<ng-container *transloco="let t">
+  @let filters = state.filters();
+  @let applied = state.applied();
+  @let chipList = chips(t);
+
+  <div class="listing" [class.listing--folded]="state.folded()">
+    <!-- What narrowed the list, how much is left and in what order: all of it
+         visible without opening the column (the spec). -->
+    <div class="toolbar">
+      <!-- The desktop's fold. The sliders icon is the one that means "filter"
+           in nearly every shop; the header's departments are navigation and
+           look like it, so the two are never mistaken (R-7.3). -->
+      <button
+        type="button"
+        class="button button--quiet toolbar__fold"
+        aria-controls="listing-filters"
+        [attr.aria-expanded]="!state.folded()"
+        (click)="state.toggleFolded()"
+      >
+        <ng-container *ngTemplateOutlet="sliders" />
+        @if (!state.folded()) {
+          {{ t('listing.hide') }}
+        } @else if (applied > 0) {
+          {{ t('listing.showCount', { count: applied }) }}
+        } @else {
+          {{ t('listing.show') }}
+        }
+      </button>
+
+      <!-- The phone's way to the same filters: a sheet. -->
+      <button
+        #sheetButton
+        type="button"
+        class="button button--quiet toolbar__filters"
+        aria-haspopup="dialog"
+        (click)="openSheet()"
+      >
+        <ng-container *ngTemplateOutlet="sliders" />
+        {{ applied > 0 ? t('listing.openCount', { count: applied }) : t('listing.open') }}
+      </button>
+
+      <!-- The one live region of the listing: the count changes with every
+           choice, and a screen reader hears it once. -->
+      <p class="toolbar__count" role="status" aria-live="polite">
+        {{ count(t) }}
+        @if (searching() && ready(); as done) {
+          <span class="took numeric">{{ t('search.took', { ms: done.tookMs }) }}</span>
+        }
+      </p>
+
+      @if (chipList.length > 0) {
+        <ul class="chips" role="list" [attr.aria-label]="t('listing.chips.label')">
+          @for (chip of chipList; track chip.id) {
+            <li>
+              <button
+                type="button"
+                class="chip"
+                [attr.aria-label]="t('listing.chips.remove', { label: chip.label })"
+                (click)="state.apply(chip.without)"
+              >
+                <span>{{ chip.label }}</span>
+                <svg class="chip__x" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+              </button>
+            </li>
+          }
+          <li>
+            <button type="button" class="clear" (click)="clearAll('toolbar')">{{ t('listing.clearAll') }}</button>
+          </li>
+        </ul>
+      }
+
+      <label class="sort">
+        <span class="sort__label">{{ t('listing.sort.label') }}</span>
+        <select #sortBox class="sort__select" (change)="sortBy(sortBox.value)">
+          <option value="" [selected]="filters.sort === null">
+            {{ searching() ? t('listing.sort.relevance') : t('listing.sort.recommended') }}
+          </option>
+          @for (sort of sorts; track sort) {
+            <option [value]="sort" [selected]="filters.sort === sort">{{ t('listing.sort.' + sort) }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="body">
+      <!-- The desktop's column. Below 64rem it is not drawn at all: the sheet
+           holds the same panel. -->
+      <aside class="column" id="listing-filters" aria-labelledby="listing-filters-title">
+        <h2 id="listing-filters-title" class="sr-only">{{ t('listing.filters') }}</h2>
+        <storefront-filter-panel
+          [facets]="facets()"
+          [filters]="filters"
+          [navigation]="navigation()"
+          [currency]="currency()"
+          (changed)="applyFromColumn($event)"
+        />
+      </aside>
+
+      <section class="results" aria-labelledby="listing-results-title" [attr.aria-busy]="ready()?.busy ? 'true' : null">
+        <h2 id="listing-results-title" class="sr-only">{{ t('listing.results') }}</h2>
+
+        <!-- Whatever the page says above its products. -->
+        <ng-content />
+
+        @if (ready(); as done) {
+          @if (done.hits.length === 0) {
+            <!-- Filters that leave nothing: say so, and offer the way back. -->
+            <div class="blank">
+              <p class="blank__text">{{ t('listing.empty') }}</p>
+              @if (filtered()) {
+                <button type="button" class="button button--quiet" (click)="clearAll('empty')">{{ t('listing.clearAll') }}</button>
+              }
+            </div>
+          } @else {
+            <ul class="listing__grid grid" [class.grid--busy]="done.busy">
+              @for (hit of done.hits; track hit.productId) {
+                <li>
+                  <storefront-product-card class="card" [hit]="hit" />
+                </li>
+              }
+            </ul>
+
+            <!-- Not infinite scroll: a footer nobody can reach is the price of
+                 that, and a button survives the back button. -->
+            @if (hasMore()) {
+              <div class="more">
+                <p class="muted">{{ t('listing.seen', { shown: done.hits.length, total: done.total }) }}</p>
+                <button type="button" class="button button--quiet" [disabled]="state.loadingMore()" (click)="state.loadMore()">
+                  {{ state.loadingMore() ? t('listing.loadingMore') : t('listing.more', { count: nextCount() }) }}
+                </button>
+              </div>
+            }
+          }
+        } @else {
+          <!-- Skeleton cards, not a spinner: the shape the answer will have, so
+               the page does not jump when it arrives. -->
+          <ul class="grid" aria-hidden="true">
+            @for (placeholder of placeholders; track placeholder) {
+              <li class="skeleton-card">
+                <div class="skeleton-card__image skeleton"></div>
+                <div class="skeleton-card__body">
+                  <div class="skeleton skeleton--line"></div>
+                  <div class="skeleton skeleton--line skeleton--short"></div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  </div>
+
+  <!-- The phone's filters: a modal dialog, so the platform traps the focus,
+       closes on Esc and makes the page behind it inert, as the menu drawer does. -->
+  <dialog #sheet class="sheet" aria-labelledby="listing-sheet-title" (close)="sheetClosed()">
+    <div class="sheet__head">
+      <h2 id="listing-sheet-title" class="sheet__title">{{ t('listing.filters') }}</h2>
+      <button type="button" class="sheet__close" [attr.aria-label]="t('listing.sheet.close')" (click)="sheet.close()">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    @if (sheetOpened() && state.pending(); as pending) {
+      <div class="sheet__body">
+        <storefront-filter-panel
+          mode="sheet"
+          [facets]="state.pendingFacets()"
+          [filters]="pending"
+          [navigation]="navigation()"
+          [currency]="currency()"
+          (changed)="choose($event)"
+        />
+      </div>
+
+      <!-- The batch's two ends. *Ver N productos* is this view's one clay
+           action (design/DESIGN.md); N is asked of the API once the taps settle. -->
+      <div class="sheet__foot">
+        <button type="button" class="button button--quiet" (click)="clearPending()">{{ t('listing.clearAll') }}</button>
+        @let total = state.pendingTotal();
+        <button type="button" class="button sheet__apply" (click)="applyPending()">
+          @if (total === null) {
+            {{ t('listing.sheet.applyUnknown') }}
+          } @else if (total === 1) {
+            {{ t('listing.sheet.applyOne') }}
+          } @else {
+            {{ t('listing.sheet.apply', { count: total }) }}
+          }
+        </button>
+      </div>
+    }
+  </dialog>
+
+  <ng-template #sliders>
+    <svg class="sliders" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      <path d="M15 5v4M9 10v4M17 15v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+    </svg>
+  </ng-template>
+</ng-container>

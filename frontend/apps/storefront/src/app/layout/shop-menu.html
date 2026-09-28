@@ -1,0 +1,40 @@
+<ng-container *transloco="let t">
+  @for (department of menu(); track department.category.code) {
+    @let here = department.category.code === current();
+    <section class="department" [class.department--here]="here">
+      <h2 class="department__head">
+        <a
+          class="department__link"
+          [routerLink]="links.category(department.category.code)"
+          [state]="fromMenu"
+          [attr.aria-current]="here ? 'true' : null"
+          (click)="chosen.emit()"
+        >
+          {{ department.category.name }}
+        </a>
+        <span class="department__all">{{ here ? t('menu.here') : t('menu.all') }}</span>
+      </h2>
+
+      <ul class="links" role="list">
+        @for (group of department.groups; track group.category.code) {
+          @if (group.children.length > 0) {
+            <li class="group">
+              <span class="group__head">{{ group.category.name }}</span>
+              <ul class="links" role="list">
+                @for (leaf of group.children; track leaf.code) {
+                  <li>
+                    <a class="link" [routerLink]="links.category(leaf.code)" [state]="fromMenu" (click)="chosen.emit()">{{ leaf.name }}</a>
+                  </li>
+                }
+              </ul>
+            </li>
+          } @else {
+            <li>
+              <a class="link" [routerLink]="links.category(group.category.code)" [state]="fromMenu" (click)="chosen.emit()">{{ group.category.name }}</a>
+            </li>
+          }
+        }
+      </ul>
+    </section>
+  }
+</ng-container>

@@ -43,10 +43,10 @@
                 <td class="numeric"><ng-container *ngTemplateOutlet="supportOf; context: { $implicit: claim }" /></td>
                 <td class="actions">
                   <!-- Quiet, both: one clay action per view, and a queue of rows has many. -->
-                  <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="$event.stopPropagation(); decide(claim, 'approve')">
+                  <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="$event.stopPropagation(); decide(claim, 'approve', 'row')">
                     {{ t('claims.approve') }}
                   </button>
-                  <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="$event.stopPropagation(); decide(claim, 'reject')">
+                  <button type="button" class="button button--small button--quiet" [disabled]="busy() === claim.claimId" (click)="$event.stopPropagation(); decide(claim, 'reject', 'row')">
                     {{ t('claims.reject') }}
                   </button>
                 </td>
@@ -69,6 +69,7 @@
           </li>
         }
       </ul>
+      <backoffice-pager [page]="page()" [pageSize]="pageSize" [total]="total()" (go)="go($event)" />
     }
   </div>
 
@@ -103,10 +104,10 @@
       <p class="provenance">{{ t('claims.proposedBy', { extractor: claim.model ?? claim.extractor }) }}</p>
 
       <div class="pane-actions">
-        <button type="button" class="button pane-primary" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'approve')">
+        <button type="button" class="button pane-primary" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'approve', 'pane')">
           {{ t('claims.approve') }}
         </button>
-        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'reject')">
+        <button type="button" class="button button--quiet pane-primary" [disabled]="busy() === claim.claimId" (click)="decide(claim, 'reject', 'pane')">
           {{ t('claims.reject') }}
         </button>
       </div>
@@ -115,6 +116,6 @@
   }
 
   <ng-template #supportOf let-claim>
-    <span class="support" [class.support--weak]="isWeak(claim)" [attr.title]="t('claims.supportExplained')">{{ percent(claim.support) }}</span>
+    <span class="support" [class.support--weak]="claim.isWeak" [attr.title]="t('claims.supportExplained')">{{ percent(claim.support) }}</span>
   </ng-template>
 </section>

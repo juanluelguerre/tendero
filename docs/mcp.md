@@ -230,7 +230,7 @@ Answers UCP has no capability for, in this shop's own shapes.
 
 | Tool | What it does |
 |---|---|
-| `search_products` | The shop's search, returning its own result page — with `answer`: `match` (`Exact` or `Related`) and `helpTopic` |
+| `search_products` | The shop's search, returning its own result page — with `answer`: `match` (`Exact` or `Related`) and `helpTopic`, and `facets`: what the results can be narrowed by. Takes the storefront's filters and order (see below) |
 | `get_product_detail` | The shop's product view — richer than UCP's for a person |
 | `list_categories` | The category tree, named in the answered language |
 | `list_offers` | The promotions running right now |
@@ -243,9 +243,35 @@ data" with authority is a comparison that guesses (ADR 0018). They are one query
 — the one behind the product page's specs table and the storefront's comparison —
 so an agent and a shopper can never be told different things.
 
+**`search_products` filters as the storefront does** (R-7.3, F-5). Its
+arguments, in the record's camelCase: `brands`, `within` (category codes, for a
+search), `facets` (`CODE:VALUE` pairs such as `COLOR:BLACK`), `minPrice`,
+`maxPrice`, `onOffer`, `newArrivals`, `inStock`, and `sort` — `Newest`,
+`PriceAsc` or `PriceDesc`, unset for `Relevance`. Within a filter the choices
+add up; across filters they narrow. The answer's `facets` say what to send: each
+facet's `code`, each option's `value` and the `count` of products it would leave,
+so an agent narrows from the answer it already holds, never from a label it
+translated.
+
+```bash
+curl -sS -X POST http://localhost:5130/mcp   -H 'Content-Type: application/json'   -H 'Accept: application/json, text/event-stream'   -d '{"jsonrpc":"2.0","id":3,"method":"tools/call",
+       "params":{"name":"search_products",
+                 "arguments":{"category":"SHOES","brands":["Vertex"],
+                              "facets":["COLOR:BLACK"],"maxPrice":100,"sort":"PriceAsc"}}}'
+```
+
 `get_product_detail` was called `get_product` until the UCP binding arrived and
 took that name. Two tools cannot share one on a server; a name we chose yields to
 a name we were given.
+
+**A closed set is spelled as the shop's API spells it: by its C# name**
+(ADR 0043). A product's `status` is `Active` or `Draft`, an attribute's `kind` is
+`LocalizedText`, a spec's `kind` the same. Until 2026-09-28 these tools said
+`active` and `localizedtext`; an agent that matched those strings should match
+the new ones. A spec's `source` is unchanged — `catalogue`, `description` or
+`none` — because it is a set of constants UCP's knowledge extension publishes
+too, not an enum. The UCP tools spell their values as UCP says, and did not
+change.
 
 ## Try the refusals first
 
@@ -296,3 +322,10 @@ this shop settles no payments over UCP yet.
 | **UCP + AP2** | a principal of its own, server to server | bearer token plus a signed mandate |
 
 What separates them is the trust model, not the transport.
+
+The browser's tools (`frontend/apps/storefront/src/app/agent/storefront-tools.ts`)
+filter too, and differently on purpose: `list_filters` reads the facets of the
+list the shopper has on screen and `apply_filter` narrows THAT list, by one
+facet at a time, as a click would — the shopper watches it change and the back
+button undoes it. An external process has no screen to change, so this server's
+`search_products` takes the filters as arguments instead.

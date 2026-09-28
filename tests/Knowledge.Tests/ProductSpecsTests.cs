@@ -238,7 +238,7 @@ public sealed class ProductSpecsTests
     }
 
     private static ProductFact Fact(string code, string label, string? value, string key, decimal? number = null) =>
-        new(code, label, number is null ? "option" : "number", value, number, null, null, key);
+        new(code, label, number is null ? FactKind.Option : FactKind.Number, value, number, null, null, key);
 
     private sealed class FixedFacts : IProductFacts
     {

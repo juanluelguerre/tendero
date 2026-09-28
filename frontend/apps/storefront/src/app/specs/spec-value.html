@@ -6,10 +6,10 @@
     <span class="spec-value--none">{{ t('specs.noData') }}</span>
   } @else {
     @switch (value.kind) {
-      @case ('boolean') {
+      @case ('Boolean') {
         {{ value.flag ? t('product.yes') : t('product.no') }}
       }
-      @case ('number') {
+      @case ('Number') {
         <span class="numeric">{{ value.number }}</span>
         @if (value.unit) {
           <span class="spec-value__unit">{{ value.unit }}</span>

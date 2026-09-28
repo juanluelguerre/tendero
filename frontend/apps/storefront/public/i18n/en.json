@@ -87,7 +87,14 @@
     "continueShopping": "Continue shopping",
     "language": "Language",
     "skipToContent": "Skip to content",
-    "shop": "Shop"
+    "shop": "Shop",
+    "close": "Close the menu",
+    "search": "Search the shop",
+    "searchLabel": "Search the shop",
+    "departments": "Departments",
+    "sectionsOf": "{{name}}: its sections",
+    "offers": "Offers",
+    "newArrivals": "New arrivals"
   },
   "order": {
     "lines": "What you bought",
@@ -156,7 +163,10 @@
     "soldOut": "Sold out",
     "specs": "Details",
     "yes": "Yes",
-    "title": "Product"
+    "title": "Product",
+    "added": "Added to your cart",
+    "viewCart": "View cart",
+    "notAdded": "It could not be added. Please try again."
   },
   "search": {
     "empty": "Nothing for “{{query}}”. Try fewer words.",
@@ -178,8 +188,6 @@
       "title": "Nothing matches “{{query}}” exactly",
       "heading": "The closest things we sell"
     },
-    "results": "{{total}} results for “{{query}}”",
-    "searching": "Searching…",
     "submit": "Search",
     "suggestions": [
       "running shoes",
@@ -199,7 +207,9 @@
     "offersLede": "They apply themselves in the basket. No codes, no small print.",
     "newest": "New in",
     "freeShipping": "Free shipping",
-    "until": "Until {{date}}"
+    "until": "Until {{date}}",
+    "newestPrevious": "Earlier new arrivals",
+    "newestNext": "More new arrivals"
   },
   "category": {
     "breadcrumb": "Where you are",
@@ -207,9 +217,6 @@
     "unknown": "That section does not exist. The link may be wrong.",
     "failed": "We could not load this section.",
     "empty": "Nothing here yet.",
-    "count": "{{count}} products",
-    "more": "Show more products",
-    "loadingMore": "Loading…",
     "title": "Section"
   },
   "specs": {
@@ -236,5 +243,94 @@
     "failed": "We could not load the comparison. Try again in a moment.",
     "attribute": "Feature",
     "note": "\"No data\" means the shop does not know it: we do not make it up."
+  },
+  "menu": {
+    "here": "You are here · all of it",
+    "all": "All of it"
+  },
+  "theme": {
+    "label": "Theme",
+    "system": "As the system",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "accountMenu": {
+    "open": "Your account and preferences ({{name}})",
+    "guest": "Guest"
+  },
+  "listing": {
+    "filters": "Filters",
+    "results": "Results",
+    "loading": "Searching…",
+    "hide": "Hide filters",
+    "show": "Show filters",
+    "showCount": "Show filters ({{count}})",
+    "open": "Filters",
+    "openCount": "Filters ({{count}})",
+    "title": {
+      "query": "Results for “{{query}}”",
+      "offers": "Offers",
+      "newArrivals": "New arrivals",
+      "all": "All products"
+    },
+    "count": {
+      "one": "1 product",
+      "all": "{{total}} products",
+      "page": "{{from}}–{{to}} of {{total}} products",
+      "for": {
+        "one": "1 result for “{{query}}”",
+        "all": "{{total}} results for “{{query}}”",
+        "page": "{{from}}–{{to}} of {{total}} results for “{{query}}”"
+      }
+    },
+    "chips": {
+      "label": "Applied filters",
+      "remove": "Remove the filter {{label}}"
+    },
+    "clearAll": "Clear all",
+    "sort": {
+      "label": "Sort by:",
+      "relevance": "Relevance",
+      "recommended": "Recommended",
+      "price-asc": "Price: low to high",
+      "price-desc": "Price: high to low",
+      "newest": "Newest"
+    },
+    "section": {
+      "department": "Department",
+      "category": "Category",
+      "categories": "Categories",
+      "switches": "Offers and availability"
+    },
+    "brand": {
+      "more": "Show more brands ({{count}})",
+      "fewer": "Show fewer brands",
+      "find": "Find a brand",
+      "none": "No brand by that name."
+    },
+    "price": {
+      "upTo": "Up to {{price}}",
+      "from": "{{price}} and above",
+      "between": "{{min}} – {{max}}",
+      "min": "Min",
+      "max": "Max",
+      "minLabel": "Minimum price",
+      "maxLabel": "Maximum price",
+      "go": "Go",
+      "goLabel": "Apply the price"
+    },
+    "offer": "On offer",
+    "newArrivals": "New arrivals",
+    "inStock": "Available",
+    "empty": "Nothing matches these filters. Take one off to see more.",
+    "seen": "You have seen {{shown}} of {{total}}",
+    "more": "Show {{count}} more",
+    "loadingMore": "Loading…",
+    "sheet": {
+      "close": "Close the filters",
+      "apply": "Show {{count}} products",
+      "applyOne": "Show 1 product",
+      "applyUnknown": "Show products"
+    }
   }
 }

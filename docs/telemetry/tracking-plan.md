@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-28 features: **23** answered by a signal emitted today,
+33 features: **28** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -20,6 +20,7 @@ everything here that is not *planned* is emitted.
 |---|---|---|---|---|
 | Search | What share of typed searches finds nothing, and is it worse for agents than for people? | Where the next relevance work goes: synonyms and golden-set queries for the empty ones, or the MCP tool's description if agents come back empty more often than people. | `tendero.search.requests` | emitted |
 | Browsing by category | Do people browse the taxonomy, or go straight to search? | Whether the category pages earn their place in the navigation. | `tendero.search.requests`, `category_opened` | emitted |
+| Listing filters | Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed? | If under 5 % of category visits (category_opened) use a filter in a month, the column opens folded by default. A facet nobody uses in a month is looked at before it is kept, and brand keeps its first place only if it is among the most used. If phones filter far less than desktops, the sheet's batch is the friction to fix next. If narrowed lists do not lead to products more often, the filters are browsing furniture and the next discovery work goes to search instead. Clearing right after an empty result says the counts are misleading. | `filter_applied`, `filters_cleared`, `product_viewed` | emitted |
 | Product page | How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow? | Where discovery work goes: the search box, the taxonomy or the home page's rows. | `product_viewed`, `tendero.carts.created` | emitted |
 | Specs with their source | Do shoppers open the sentence behind a spec, and do they compare products side by side once they can? | If nobody opens a source, the chip is decoration: keep the table, drop the chip's weight and spend review effort elsewhere. If comparisons are made and followed by a cart, the typed half of claims is worth its model and the next source (manuals, datasheets) is worth adding; if they are not, the comparison goes back to being a nice-to-have. | `spec_source_opened`, `products_compared` | emitted |
 | Cart | How many carts never become an order, and whose? | Whether abandonment work (a saved cart, a reminder) comes before checkout friction. | `tendero.carts.created`, `tendero.checkout.attempts` | emitted |
@@ -28,6 +29,8 @@ everything here that is not *planned* is emitted.
 | Order page | Do shoppers come back to follow an order? | None today. | — No decision depends on the answer: the page is the receipt, and it stays whatever the count is. A signal with no decision does not enter the plan. | none |
 | Returns | Why do things come back? | Wrong size and not-as-described are the product reasoning layer's case (phase 10); damaged and wrong item are the warehouse's. | `tendero.returns.requested` | emitted |
 | Account and guest cart claim | Do guests sign in, and does their cart survive it? | Whether guest checkout stays the default path. | — Not measured yet, and not planned: sign-in is the identity provider's, and the claim is one call with no screen of its own. Revisit when accounts do more than hold orders. | none |
+| Storefront theme choice | Do shoppers change the theme from their system's, and does the dark shop hold the same conversion? | If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else. | `theme_chosen` | emitted |
+| Added-to-cart notice | Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping? | If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action. | `cart_notice_followed` | emitted |
 
 ### Backoffice
 
@@ -45,6 +48,8 @@ everything here that is not *planned* is emitted.
 | Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
 | Backoffice jobs | Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen? | A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence. | `backoffice_view_opened`, `backoffice_action_taken` | emitted |
 | Theme choice | Does anybody change the theme from the system's, and to which? | If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event. | `backoffice_theme_chosen` | emitted |
+| Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
+| Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
 
 ### Agents
 
@@ -89,11 +94,13 @@ browser event, behavioural. A shopper opened a product page. Only with analytics
 
 Answers:
 
+- **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
 - **Product page** — How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `arrived_from` | string | `search`, `category`, `home`, `other`, `direct` | The page before this one, by kind; direct when there was none in this tab. |
+| `arrived_from` | string | `search`, `category`, `listing`, `home`, `other`, `direct` | The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. |
+| `filtered` | boolean | — | Whether the list the shopper came from was narrowed by filters. False for a page that is not a list. |
 
 ### `category_opened`
 
@@ -105,7 +112,33 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `arrived_from` | string | `menu`, `search`, `category`, `home`, `other`, `direct` | How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. |
+| `arrived_from` | string | `menu`, `search`, `category`, `listing`, `home`, `other`, `direct` | How the shopper got there: menu once the storefront has one (R-5), otherwise the kind of page before this one; direct when there was none in this tab. The kind and never the URL. |
+
+### `filter_applied`
+
+browser event, behavioural. A shopper narrowed a list by a facet, or changed a facet's choices (R-7.3, F-6): once per facet a choice changed, when it takes effect — at once in the column, with Ver N productos in the phone's sheet. Only with analytics consent. A browser agent's apply_filter is counted by webmcp_tool_invoked, not here.
+
+Answers:
+
+- **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `facet` | string | — | The facet's code: category, brand, price, offer, new or stock, or an attribute's catalogue code (COLOR, SIZE). Never the value chosen. |
+| `listing` | string | `category`, `search`, `listing` | The kind of list narrowed: a category page, a search's results, or a list made only of filters (Ofertas, Novedades). |
+| `surface` | string | `column`, `sheet` | The desktop's column, which applies each choice, or the phone's sheet, which applies a batch. |
+
+### `filters_cleared`
+
+browser event, behavioural. A shopper took every filter off a list at once (R-7.3, F-6). Only with analytics consent.
+
+Answers:
+
+- **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `surface` | string | `toolbar`, `empty`, `sheet` | Quitar todo beside the chips, the one offered by a list that filters emptied, or the phone's sheet. |
 
 ### `spec_source_opened`
 
@@ -150,12 +183,14 @@ browser event, staff. The shopkeeper did what a screen is for — published, app
 Answers:
 
 - **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+- **Palette and list shortcuts** — Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen it was done on. |
 | `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate` | What was done, from a closed list. |
 | `outcome` | string | `done`, `refused`, `failed` | done; refused when the server said no (a 4xx, a rule); failed when it could not answer. |
+| `via` | string | `row`, `pane`, `page` | Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). |
 
 ### `backoffice_theme_chosen`
 
@@ -168,6 +203,42 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `theme` | string | `system`, `light`, `dark` | What was chosen, not what the system resolved it to. |
+
+### `backoffice_affordance_used`
+
+browser event, staff. A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6), or narrowed a list by searching or filtering it (R-7.1). A staff event under the shop's notice (ADR 0041), never with who they are.
+
+Answers:
+
+- **Palette and list shortcuts** — Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
+- **Stock search and filters** — Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `affordance` | string | `palette`, `keys`, `search`, `filter` | The palette (Ctrl K or /), j and k down a queue, or a list's search box and filter chips (R-7.1). |
+| `target` | string | `screen`, `order`, `product`, `agent`, `next`, `previous`, `stock` | What it reached; never which one. |
+
+### `theme_chosen`
+
+browser event, behavioural. A shopper chose light, dark or the system's theme (the redesign's R-5.1). Behavioural, so it waits for analytics consent.
+
+Answers:
+
+- **Storefront theme choice** — Do shoppers change the theme from their system's, and does the dark shop hold the same conversion?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `theme` | string | `system`, `light`, `dark` | What was chosen, not what the system resolved it to. |
+
+### `cart_notice_followed`
+
+browser event, behavioural. A shopper followed the link in the notice that says a product went into the cart (the redesign's R-5.3, raised by the baseline walkthrough). Behavioural, so it waits for analytics consent.
+
+Answers:
+
+- **Added-to-cart notice** — Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping?
+
+No attributes.
 
 ## Metrics
 

@@ -30,7 +30,7 @@ public sealed class ReviewProductTests
         var review = await Handler(draft).HandleAsync(new ReviewProductQuery(draft.Code, "en"), TestContext.Current.CancellationToken);
 
         Assert.NotNull(review);
-        Assert.Equal("draft", review.Status);
+        Assert.Equal(ProductStatus.Draft, review.Status);
         Assert.Equal(new Dictionary<string, string> { ["es"] = "Camiseta técnica" }, review.Names);
         // No English description falls back to the Spanish one: the gap is what the review is for.
         Assert.False(review.Descriptions.ContainsKey("en"));
@@ -57,6 +57,22 @@ public sealed class ReviewProductTests
     }
 
     [Fact]
+    public async Task Names_a_defined_attribute_by_its_label_in_the_culture_asked_for()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Mochila"), new Money(49m, "EUR"));
+        product.SetAttribute(Clock, new AttributeValue("LITRES", AttributeKind.Number, Number: 22));
+        var litres = AttributeDefinition.Define(Clock, "LITRES",
+            new LocalizedText(new Dictionary<string, string> { ["es"] = "Capacidad", ["en"] = "Capacity" }),
+            AttributeKind.Number);
+        var handler = new ReviewProductHandler(
+            new InMemoryProductCatalogReader(product), new DefinitionsOf(litres), new Categories());
+
+        var review = await handler.HandleAsync(new ReviewProductQuery(product.Code, "en"), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Capacity", Assert.Single(review!.Attributes).Label);
+    }
+
+    [Fact]
     public async Task Answers_nothing_for_a_code_no_product_has()
     {
         var review = await Handler().HandleAsync(new ReviewProductQuery("NOPE", "es"), TestContext.Current.CancellationToken);
@@ -71,6 +87,12 @@ public sealed class ReviewProductTests
     {
         public Task<AttributeDefinitions> AllAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(AttributeDefinitions.Empty);
+    }
+
+    private sealed class DefinitionsOf(params AttributeDefinition[] definitions) : IAttributeDefinitionReader
+    {
+        public Task<AttributeDefinitions> AllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AttributeDefinitions(definitions));
     }
 
     private sealed class Categories : ICategoryReader

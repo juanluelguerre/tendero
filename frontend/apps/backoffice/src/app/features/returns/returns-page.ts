@@ -7,7 +7,7 @@ import type { ReturnView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, without } from '@tendero/shared-util';
 import { OrderingService, type ReturnDecision } from '../../data-access/ordering.service';
-import { BackofficeUsage, type BackofficeAction } from '../../usage';
+import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../usage';
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import { WorkPane } from '../../work/work-pane';
@@ -130,13 +130,13 @@ export class ReturnsPage {
     this.rejectDialog()?.open();
   }
 
-  protected decide(request: ReturnView, decision: ReturnDecision, reason?: string): void {
+  protected decide(request: ReturnView, decision: ReturnDecision, via: ActionVia, reason?: string): void {
     this.busy.set(request.returnId);
     this.refusal.update((current) => without(current, request.returnId));
 
     this.ordering
       .decide(request.returnId, decision, reason)
-      .pipe(this.usage.reported('returns', ReturnActions[decision]))
+      .pipe(this.usage.reported('returns', ReturnActions[decision], via))
       .subscribe({
         next: (updated) => {
           this.requests.update((current) => current.map((row) => (row.returnId === updated.returnId ? updated : row)));

@@ -90,7 +90,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// Testcontainers needs a daemon; asking the socket is faster and more honest
     /// than catching an exception thirty seconds later.
     /// </summary>
-    private static bool DockerIsListening()
+    internal static bool DockerIsListening()
     {
         try
         {

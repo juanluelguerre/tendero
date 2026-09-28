@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import type {
   AttributeDefinitionList,
   AuditLog,
+  AuditOutcome,
   SkuDescriptionList,
   DefineVariantsResponse,
   ImportResult,
@@ -48,6 +49,11 @@ export class CatalogService {
     return this.http.get<SkuDescriptionList>(`${this.baseUrl}/api/catalog/skus`, { params });
   }
 
+  /** The SKUs of every product whose name or code contains the text: the catalogue's half of a stock search (R-7.1). */
+  skusMatching(text: string, culture: string): Observable<SkuDescriptionList> {
+    return this.http.get<SkuDescriptionList>(`${this.baseUrl}/api/catalog/skus`, { params: { q: text, culture } });
+  }
+
   /**
    * The audit log, newest first.
    *
@@ -56,8 +62,8 @@ export class CatalogService {
    * three later features read it. The day the agent activity panel arrives
    * (phase 11), both move to an `accounts.service.ts` together.
    */
-  audit(outcome: string | null, take = 50): Observable<AuditLog> {
-    let params = new HttpParams().set('take', take);
+  audit(outcome: AuditOutcome | null, page = 1, pageSize = 20): Observable<AuditLog> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (outcome) params = params.set('outcome', outcome);
 
     return this.http.get<AuditLog>(`${this.baseUrl}/api/audit`, { params });
@@ -68,6 +74,7 @@ export class CatalogService {
     culture: string,
     page = 1,
     pageSize = 20,
+    text = '',
   ): Observable<ProductListPage> {
     let params = new HttpParams()
       .set('culture', culture)
@@ -77,6 +84,8 @@ export class CatalogService {
     // No parameter at all rather than an empty one: the API rejects an unknown
     // status, and "" is one.
     if (status) params = params.set('status', status);
+    // A name in any culture, or a code (R-4.6).
+    if (text.trim()) params = params.set('q', text.trim());
 
     return this.http.get<ProductListPage>(`${this.baseUrl}/api/catalog/products`, { params });
   }

@@ -57,7 +57,7 @@
                     type="button"
                     class="button button--small button--quiet"
                     [disabled]="publishing().has(item.productId)"
-                    (click)="$event.stopPropagation(); publish(item)"
+                    (click)="$event.stopPropagation(); publish(item, 'row')"
                   >
                     {{ publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
                   </button>
@@ -81,7 +81,7 @@
                 <span class="slug numeric">{{ item.brand ?? '' }}</span>
               </span>
             </button>
-            <button type="button" class="button button--quiet work-card__action" [disabled]="publishing().has(item.productId)" (click)="publish(item)">
+            <button type="button" class="button button--quiet work-card__action" [disabled]="publishing().has(item.productId)" (click)="publish(item, 'row')">
               {{ publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
             </button>
           </li>
@@ -94,7 +94,7 @@
     <backoffice-work-pane [heading]="item.name" (closed)="close()">
       <backoffice-product-review [code]="item.code" />
 
-      <button type="button" class="button pane-primary" [disabled]="publishing().has(item.productId)" (click)="publish(item)">
+      <button type="button" class="button pane-primary" [disabled]="publishing().has(item.productId)" (click)="publish(item, 'pane')">
         {{ publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publishLong') }}
       </button>
       <!-- Defining variants is a catalogue decision, made one product at a time. -->
