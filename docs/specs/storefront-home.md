@@ -87,9 +87,19 @@ choosing between them, and the campaign only says *these, now, under this
 name*. That keeps the combination rules — the part the promotion engine
 proves with properties — untouched.
 
-- **Where it lives: Pricing**, beside the promotions it groups, read from a
-  committed file (`seed/campaigns.sample.json`) as the promotions are. Pricing
-  has no writer yet, and a campaign does not change that (ADR 0014's rule).
+- **Where it lives: Pricing**, beside the promotions it groups — and it is
+  **set up in the backoffice, for specific dates** (the author, 2026-09-28): the
+  shopkeeper creates a campaign, names it in es and en, gives it its window and
+  its priority, chooses the promotions it groups, and can end it early. That
+  makes a campaign **Pricing's first writer**: until now Pricing read committed
+  files and owned no table, which ADR 0014 names as the reason it was not yet a
+  full context. It is one now, with its own lifecycle (Draft → Scheduled →
+  Running → Ended, a `TransitionTable`, invariant 5) and its own actor, the
+  shopkeeper; the decision is recorded as an ADR before it is built. Promotions
+  stay committed files for this slice; a campaign references them by code.
+- **An audit row for every change** (who, what, when), as every backoffice
+  action has, and the dates are validated where they are set: a window that
+  ends before it starts, or in the past, is refused.
 - **What it carries**: a code, a name and a line (es/en, invariant 6), a window,
   a priority, the promotions' codes, and a theme for the card (which drawing,
   which accent) — never a colour value, a token name.
@@ -130,9 +140,10 @@ proves with properties — untouched.
 
 ## Non-goals
 
-- **Not a CMS.** The campaign is a file the shopkeeper edits and commits, as
-  promotions are; a backoffice editor for campaigns is a later slice with its
-  own spec.
+- **Not a CMS.** The backoffice sets a campaign's name, line, dates, priority,
+  promotions and theme — chosen from the drawings and accents the design system
+  has, never uploaded images or free colours. Editing promotions themselves
+  stays out of this slice.
 - **Not personalization.** *Recommended for you* is the vision's standard AI
   (phase 12b and after); the trail is the shopper's own history, shown back.
 - **Not a carousel of banners.** One campaign at a time; a rotating hero is
@@ -170,11 +181,10 @@ proves with properties — untouched.
 1. **The name.** *Tendero Days* is the author's; the alternatives the shop
    could own: *Días Tendero*, *La Semana del Tendero*. English and Spanish
    both need a form (invariant 6): *Tendero Days* reads in both.
-2. **When it runs in the laboratory.** A campaign with fixed dates is dark
-   most of the year. Either the seed carries a campaign that is always near
-   (the first week of every month, a recurring window), or a fixed window
-   plus a clock the demo can move. The first is simpler and shows the card
-   every visit; the second is how a real shop works.
+2. ~~Fixed dates or a recurring window?~~ **Decided by the author,
+   2026-09-28: specific dates, set in the backoffice.** The seed carries one
+   campaign so a fresh shop has something to show, and the demo creates one for
+   this week from the backoffice.
 3. ~~One campaign or several?~~ **Decided by the author, 2026-09-28: several,
    taken into account from the start.** Black Friday is therefore a campaign
    of its own beside Tendero Days, not an edition of it.
@@ -196,7 +206,8 @@ author's approval, and only then the build — in the order below.
 | # | Increment | Size |
 |---|---|:-:|
 | H-0 | The mock-ups, approved | S |
-| H-1 | Pricing's campaigns: the file, the window and order rules, `GET /api/pricing/campaigns`, `?campaign=` on the listing | M |
+| H-1 | Pricing's campaigns: the ADR (Pricing's first writer), the aggregate and its lifecycle, persistence and a migration, the window and order rules, `GET /api/pricing/campaigns`, `?campaign=` on the listing | L |
+| H-1b | The backoffice: a Campaigns list (ADR 0042's list-and-pane) with create, edit, schedule and end early, each with its audit row | M |
 | H-2 | The campaign card — the leading campaign only — with its clock, before and during | M |
 | H-3 | The trail: storage, the row, removal | M |
 | H-4 | Offers as products, best sellers, the promise strip, the new order of the page | M |
