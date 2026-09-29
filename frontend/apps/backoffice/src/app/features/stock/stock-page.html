@@ -1,9 +1,9 @@
 <section *transloco="let t">
   <header class="page-head">
     <h1 class="page-title">{{ t('stock.title') }}</h1>
-    @if (soldOut() > 0) {
-      <span class="tag tag--danger">{{ t('stock.outOfStock', { count: soldOut() }) }}</span>
-    } @else if (rows().length > 0) {
+    @if (store.soldOut() > 0) {
+      <span class="tag tag--danger">{{ t('stock.outOfStock', { count: store.soldOut() }) }}</span>
+    } @else if (store.rows().length > 0) {
       <span class="tag tag--ok">{{ t('stock.allAvailable') }}</span>
     }
   </header>
@@ -11,150 +11,32 @@
 
   <!-- The list's tools, as every list of work has them (ADR 0042): what the
        dashboard's figure opens on, and a search by SKU or by product name. -->
-  <div class="work-tools">
-    <backoffice-filter-chips [options]="filters()" [selected]="filter()" [label]="t('stock.filterLabel')" (chosen)="filterBy($event)" />
+  <div class="worklist-tools">
+    <backoffice-filter-chips [options]="store.filters()" [selected]="store.filter()" [label]="t('stock.filterLabel')" (chosen)="store.filterBy($event)" />
     <label class="find">
       <span class="sr-only">{{ t('stock.findLabel') }}</span>
-      <input type="search" class="find__input" [placeholder]="t('stock.find')" [value]="text()" (input)="text.set($any($event.target).value)" />
+      <input type="search" class="find__input" [placeholder]="t('stock.find')" [value]="store.text()" (input)="store.search($any($event.target).value)" />
     </label>
   </div>
-  @if (filter() === 'Restock' && restockAt() !== null) {
-    <p class="muted restock-rule">{{ t('stock.restockRule', { count: restockAt() }) }}</p>
+  @if (store.filter() === 'Restock' && store.restockAt() !== null) {
+    <p class="muted restock-rule">{{ t('stock.restockRule', { count: store.restockAt() }) }}</p>
   }
 
-  @if (loading()) {
+  @if (store.loading()) {
     <div class="skeleton-list" aria-hidden="true"></div>
     <p class="sr-only" role="status" aria-live="polite">{{ t('stock.loading') }}</p>
-  } @else if (failed()) {
+  } @else if (store.failed()) {
     <p class="failed" role="alert">{{ t('stock.failed') }}</p>
-  } @else if (rows().length === 0) {
+  } @else if (store.rows().length === 0) {
     <div class="empty">
       <p class="empty__text">
-        {{ searching() ? t('stock.nothingFor', { text: text() }) : filter() === 'All' ? t('stock.empty') : t('stock.nothingToRestock') }}
+        {{ store.searching() ? t('stock.nothingFor', { text: store.text() }) : store.filter() === 'All' ? t('stock.empty') : t('stock.nothingToRestock') }}
       </p>
     </div>
   } @else {
     <div class="grid">
-      <!-- The list and its pager are one block: the pager is the list's
-           footer, directly under what it pages (range left, moves right, as
-           the other lists), and the grid's second column stays the holds'. -->
-      <div class="list">
-        <div class="table-wrap">
-          <table class="table">
-            <caption class="sr-only">{{ t('stock.title') }}</caption>
-            <thead>
-              <tr>
-                <th scope="col">{{ t('stock.column.product') }}</th>
-                <th scope="col">{{ t('stock.column.sku') }}</th>
-                <th scope="col">{{ t('stock.column.warehouse') }}</th>
-                <th scope="col" class="numeric">{{ t('stock.column.onHand') }}</th>
-                <th scope="col" class="numeric">{{ t('stock.column.reserved') }}</th>
-                <th scope="col" class="numeric">{{ t('stock.column.available') }}</th>
-                <th scope="col"><span class="sr-only">{{ t('stock.column.action') }}</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (row of rows(); track key(row)) {
-                <tr [class.row--empty]="row.available === 0">
-                  <!-- The name comes from the CATALOGUE, in a second call: the
-                       inventory endpoint cannot supply one, because stock exists
-                       without a catalogue (ADR 0024). It is the boundary showing
-                       through the screen rather than a gap in it. -->
-                  <td class="product">
-                    @let described = describe(row);
-                    @if (described) {
-                      <span class="product__name">{{ described.productName }}</span>
-                      @if (described.variantLabel) {
-                        <span class="product__variant code">{{ described.variantLabel }}</span>
-                      }
-                    } @else {
-                      <!-- Not a blank cell. The catalogue has never heard of this
-                           SKU, and that is a row worth finding: stock can outlive
-                           a product. -->
-                      <span class="product__unknown">{{ t('stock.unknownProduct') }}</span>
-                    }
-                  </td>
-                  <td class="numeric code">{{ row.sku }}</td>
-                  <td>{{ row.warehouseName }}</td>
-                  <td class="numeric">
-                    <!-- The only editable cell on the screen. A count replaces
-                         the number; it does not add to it. -->
-                    <input
-                      class="field field--count numeric"
-                      type="number"
-                      min="0"
-                      step="1"
-                      [attr.aria-label]="t('stock.countLabel', { sku: row.sku, warehouse: row.warehouseName })"
-                      [value]="row.onHand"
-                      [disabled]="saving() === key(row)"
-                      (input)="draft(row, $event)"
-                      (keydown.enter)="save(row)"
-                    />
-                  </td>
-                  <td class="numeric held" [class.held--none]="row.reserved === 0">
-                    {{ row.reserved }}
-                  </td>
-                  <td class="numeric available">{{ row.available }}</td>
-                  <td class="actions">
-                    @if (changed(row)) {
-                      <button
-                        class="button button--small"
-                        type="button"
-                        [disabled]="saving() === key(row)"
-                        (click)="save(row)"
-                      >
-                        {{ saving() === key(row) ? t('stock.saving') : t('stock.save') }}
-                      </button>
-                    } @else if (saved() === key(row)) {
-                      <span class="tag tag--ok">{{ t('stock.saved') }}</span>
-                    }
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-          @if (saveFailed()) {
-            <p class="failed" role="alert">{{ t('stock.saveFailed') }}</p>
-          }
-        </div>
-        <backoffice-pager [page]="page()" [pageSize]="pageSize" [total]="total()" (go)="go($event)" />
-      </div>
-
-      <!-- The panel that explains the grid. Its most interesting row is a
-           refusal: a reservation that never held anything, carrying the
-           sentence inventory answered with. -->
-      <aside class="holds">
-        <h2 class="holds__title">{{ t('stock.reservations') }}</h2>
-
-        @if (reservations().length === 0) {
-          <p class="muted">{{ t('stock.noReservations') }}</p>
-        } @else {
-          <ul class="holds__list">
-            @for (hold of reservations(); track hold.reservationId) {
-              <li class="hold">
-                <div class="hold__head">
-                  <span class="hold__status" [class]="'hold__status--' + hold.status">
-                    {{ t('stock.status.' + hold.status) }}
-                  </span>
-                  <span class="hold__order">{{ shortId(hold) }}</span>
-                </div>
-
-                @if (hold.lines.length > 0) {
-                  <ul class="hold__lines">
-                    @for (line of hold.lines; track line) {
-                      <li class="hold__line">{{ line }}</li>
-                    }
-                  </ul>
-                }
-
-                @if (hold.reason) {
-                  <p class="hold__reason">{{ hold.reason }}</p>
-                }
-              </li>
-            }
-          </ul>
-        }
-      </aside>
+      <backoffice-stock-shelves />
+      <backoffice-stock-holds />
     </div>
   }
 </section>

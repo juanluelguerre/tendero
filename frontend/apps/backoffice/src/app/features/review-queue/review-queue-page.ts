@@ -1,20 +1,9 @@
-import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal, signal } from '@angular/core';
-import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoDirective } from '@jsverse/transloco';
-import type { ProductSummary } from '@tendero/shared-api';
-import { isSessionExpired } from '@tendero/shared-auth';
-import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
-import { ProductReview } from '../../catalogue/product-review';
-import { CatalogService } from '../../data-access/catalog.service';
-import { type ActionVia, BackofficeUsage } from '../../usage';
-import { landing, stepOf } from '../../work/list-keys';
-import { WorkPane } from '../../work/work-pane';
-
-/** The laboratory's whole catalogue fits in one page of the list (the scale rule). */
-const QueueSize = 100;
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { BackofficeUsage } from '../../usage';
+import { landing, stepOf } from '../../worklist/list-keys';
+import { ReviewList } from './review-list/review-list';
+import { ReviewPane } from './review-pane/review-pane';
+import { ReviewQueueStore } from './review-queue.store';
 
 /**
  * The review queue: what is imported, or withdrawn, waits here in Draft, and
@@ -34,86 +23,26 @@ const QueueSize = 100;
  */
 @Component({
   selector: 'backoffice-review-queue-page',
-  imports: [RouterLink, TranslocoDirective, NgTemplateOutlet, WorkPane, ProductReview],
+  imports: [ReviewList, ReviewPane],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-queue-page.html',
   styleUrl: './review-queue-page.css',
   host: { '(document:keydown)': 'key($event)' },
+  providers: [ReviewQueueStore],
 })
 export class ReviewQueuePage {
-  private readonly catalog = inject(CatalogService);
+  protected readonly store = inject(ReviewQueueStore);
   private readonly usage = inject(BackofficeUsage);
-  private readonly culture = inject(CultureStore);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
 
-  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
-  protected readonly selectedCode = computed(() => this.params().get('product'));
-
-  private readonly queue = rxResource({
-    params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) => this.catalog.list('Draft', params.culture, 1, QueueSize),
-  });
-
-  protected readonly drafts = linkedSignal(() => this.queue.value()?.items ?? []);
-  protected readonly loading = computed(() => this.queue.isLoading() && !this.queue.hasValue());
-  protected readonly failed = computed(() => this.queue.status() === 'error' || this.publishFailed());
-
-  protected readonly selected = computed(() => this.drafts().find((item) => item.code === this.selectedCode()) ?? null);
-
-  protected readonly publishing = signal<ReadonlySet<string>>(new Set());
-  private readonly publishFailed = signal(false);
-
-  protected price(item: ProductSummary): string {
-    return formatPrice(item.priceAmount, item.priceCurrency, this.culture.active());
-  }
-
-  protected open(item: ProductSummary): void {
-    void this.router.navigate([], { queryParams: { product: item.code }, queryParamsHandling: 'merge' });
-  }
-
-  /** j and k down the queue, the pane following (R-3, P11). */
+  /** j and k move down and up the queue, the pane following (the redesign's R-3, P5). */
   protected key(event: KeyboardEvent): void {
     const step = stepOf(event, !!document.querySelector('dialog[open]'));
     if (!step) return;
-    const items = this.drafts();
-    const index = landing(items.findIndex((item) => item.code === this.selectedCode()), items.length, step);
+    const items = this.store.drafts();
+    const index = landing(items.findIndex((item) => item.code === this.store.selectedCode()), items.length, step);
     if (index === null) return;
     event.preventDefault();
     this.usage.affordance('keys', step === 1 ? 'next' : 'previous');
-    this.open(items[index]);
-  }
-
-  protected close(): void {
-    void this.router.navigate([], { queryParams: { product: null }, queryParamsHandling: 'merge' });
-  }
-
-  protected publish(item: ProductSummary, via: ActionVia): void {
-    this.publishing.update((ids) => new Set(ids).add(item.productId));
-
-    this.catalog
-      .publish(item.productId)
-      .pipe(this.usage.reported('review', 'publish', via))
-      .subscribe({
-        next: () => {
-          this.settle(item.productId);
-          // It leaves the queue; the pane goes with it.
-          this.drafts.update((items) => items.filter((candidate) => candidate.productId !== item.productId));
-          if (this.selectedCode() === item.code) this.close();
-        },
-        error: (failure: unknown) => {
-          this.settle(item.productId);
-          if (isSessionExpired(failure)) return;
-          this.publishFailed.set(true);
-        },
-      });
-  }
-
-  private settle(productId: string): void {
-    this.publishing.update((ids) => {
-      const next = new Set(ids);
-      next.delete(productId);
-      return next;
-    });
+    this.store.open(items[index]);
   }
 }

@@ -1,0 +1,46 @@
+/* Only what this page adds; the header, table, tags and buttons are the
+   primitives in styles.css, as they are for the review queue. */
+.name { display: block; color: var(--text); font-weight: 600; }
+.code { display: block; margin-block-start: 2px; font-size: var(--text-3xs); color: var(--text-muted); }
+
+.table td:last-child { width: 1%; white-space: nowrap; }
+
+/*
+  The import bar, which moved here with the import (R-4.3). The awning stripe is the system's one decorative device and
+  the only thing allowed to animate (design/DESIGN.md), and this is the job that
+  file assigned it.
+
+  It slides its own repeating gradient rather than growing a filled portion,
+  because the import reports nothing until it finishes: a bar that filled would
+  be inventing a percentage.
+*/
+.importing {
+  margin-block: var(--space-4) var(--space-5);
+  max-width: 32rem;
+}
+
+.importing__bar {
+  background-size: 28px 100%;
+  animation: awning-slide 900ms linear infinite;
+}
+
+.importing__label {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+}
+
+@keyframes awning-slide {
+  from { background-position: 0 0; }
+  to   { background-position: 28px 0; }
+}
+
+/* What the import did. Not a toast: it stays, because the number is the answer
+   to "did that button work" and a message that vanishes answers it once. */
+.imported {
+  margin-block: var(--space-4) var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.imported--failed { color: var(--text); }
+

@@ -1,0 +1,7 @@
+<ng-container *transloco="let t; prefix: 'agents'">
+  @if (agent().status === 'Suspended') {
+    <span class="tag tag--danger">{{ t('status.Suspended') }}</span>
+  } @else {
+    <span class="tag tag--ok">{{ t('status.Active') }}</span>
+  }
+</ng-container>

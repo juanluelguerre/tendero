@@ -1,0 +1,35 @@
+:host { display: block; }
+
+.culture { margin-block-start: var(--space-6); }
+
+.culture__title {
+  margin-block-end: var(--space-3);
+  font-size: var(--text-lg);
+}
+
+/* The summary is four rows and should read as a card, not stretch the width of
+   a query table. On the bordered wrapper, not the table: capping the table
+   left an empty stretch of border beside it, which is how it first looked. */
+.summary { max-width: 44rem; }
+.summary tbody th { font-weight: 600; white-space: nowrap; }
+
+.value { display: block; color: var(--text); font-weight: 600; }
+.threshold { display: block; font-size: var(--text-3xs); color: var(--text-muted); }
+
+.tally {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block: var(--space-4) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.query { color: var(--text); }
+
+/* The sign carries the meaning and the colour repeats it: a delta is readable
+   in monochrome, which is what "colour never alone" asks. */
+.delta { white-space: nowrap; }
+.delta--better { color: var(--positive); }
+.delta--worse { color: var(--danger); font-weight: 600; }
+.delta--same { color: var(--text-muted); }

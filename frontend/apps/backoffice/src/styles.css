@@ -507,18 +507,18 @@ p {
    a list narrowed by filters and a search, the likely action kept on the row,
    and a pane with what the decision needs (R-3, P3 and P6). The pane is its own
    component; these are the parts each list lays out around it. */
-.work-layout { display: grid; gap: var(--space-5); }
+.worklist-layout { display: grid; gap: var(--space-5); }
 
 @media (min-width: 64rem) {
-  .work-layout--with-pane {
+  .worklist-layout--with-pane {
     grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
     align-items: start;
   }
 }
 
-.work-list { min-width: 0; }
+.worklist-list { min-width: 0; }
 
-.work-tools {
+.worklist-tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -568,9 +568,9 @@ p {
   .narrow-only { display: grid; }
 }
 
-.work-cards { gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.worklist-cards { gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 
-.work-card {
+.worklist-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
@@ -581,9 +581,9 @@ p {
   background: var(--bg-surface);
 }
 
-.work-card--selected { border-color: var(--accent); }
+.worklist-card--selected { border-color: var(--accent); }
 
-.work-card__open {
+.worklist-card__open {
   display: grid;
   gap: var(--space-1);
   padding: 0;
@@ -595,10 +595,10 @@ p {
   cursor: pointer;
 }
 
-.work-card__line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.work-card__end { margin-inline-start: auto; }
-.work-card__action { min-height: 2.75rem; }
-.work-card__refusal { grid-column: 1 / -1; color: var(--danger); font-size: var(--text-xs); }
+.worklist-card__line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.worklist-card__end { margin-inline-start: auto; }
+.worklist-card__action { min-height: 2.75rem; }
+.worklist-card__refusal { grid-column: 1 / -1; color: var(--danger); font-size: var(--text-xs); }
 
 /* Inside a pane: a titled section, the one clay action, and what is apart. */
 .pane-section { display: grid; gap: var(--space-1); }

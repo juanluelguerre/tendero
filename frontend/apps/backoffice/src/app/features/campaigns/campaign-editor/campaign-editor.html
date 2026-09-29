@@ -1,0 +1,214 @@
+<ng-container *transloco="let t; prefix: 'campaigns'">
+  <form class="editor" (submit)="$event.preventDefault(); store.save()">
+    @if (!store.editable()) {
+      <p class="note" [id]="id + '-note'">
+        {{ campaign()?.status === 'Scheduled' ? t('readOnly.scheduled') : t('readOnly.ended') }}
+      </p>
+    }
+
+    <fieldset class="fields" [disabled]="!store.editable()" [attr.aria-describedby]="store.editable() ? null : id + '-note'">
+      <legend class="sr-only">{{ t('form.legend') }}</legend>
+
+      @if (store.isNew()) {
+        <label class="field-block">
+          <span class="field-block__label">{{ t('form.code') }}</span>
+          <input
+            class="field numeric"
+            required
+            maxlength="40"
+            autocomplete="off"
+            [attr.aria-describedby]="id + '-code-hint'"
+            [value]="store.form().code"
+            (input)="store.editCode($any($event.target).value)"
+          />
+          <span class="field-block__hint" [id]="id + '-code-hint'">{{ t('form.codeHint') }}</span>
+        </label>
+      }
+
+      <fieldset class="pair">
+        <legend class="field-block__label">{{ t('form.name') }}</legend>
+        <label class="pair__field">
+          <span class="pair__lang">es</span>
+          <input class="field" required maxlength="80" lang="es" [value]="store.form().name.es" (input)="store.editName('es', $any($event.target).value)" />
+        </label>
+        <label class="pair__field">
+          <span class="pair__lang">en</span>
+          <input class="field" required maxlength="80" lang="en" [value]="store.form().name.en" (input)="store.editName('en', $any($event.target).value)" />
+        </label>
+      </fieldset>
+
+      <fieldset class="pair">
+        <legend class="field-block__label">{{ t('form.line') }}</legend>
+        <label class="pair__field">
+          <span class="pair__lang">es</span>
+          <input class="field" required maxlength="200" lang="es" [value]="store.form().line.es" (input)="store.editLine('es', $any($event.target).value)" />
+        </label>
+        <label class="pair__field">
+          <span class="pair__lang">en</span>
+          <input class="field" required maxlength="200" lang="en" [value]="store.form().line.en" (input)="store.editLine('en', $any($event.target).value)" />
+        </label>
+      </fieldset>
+
+      <div class="row row--two">
+        <div class="field-block">
+          <span class="field-block__label" [id]="id + '-kind'">{{ t('form.kind') }}</span>
+          <div class="segmented segmented--fill" role="group" [attr.aria-labelledby]="id + '-kind'">
+            @for (kind of kinds; track kind) {
+              <button type="button" class="segmented__option" [attr.aria-pressed]="store.form().kind === kind" (click)="store.edit({ kind })">
+                {{ t('kind.' + kind) }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <label class="field-block">
+          <span class="field-block__label">{{ t('form.scope') }}</span>
+          <select class="field" [value]="store.form().categoryCode ?? ''" (change)="store.editScope($any($event.target).value)">
+            <option value="" [selected]="!store.form().categoryCode">{{ t('scope.shop') }}</option>
+            @for (scope of store.scopes(); track scope.code) {
+              <option [value]="scope.code" [selected]="scope.code === store.form().categoryCode">{{ scope.label }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <div class="row row--three">
+        <label class="field-block">
+          <span class="field-block__label">{{ t('form.startsAt') }}</span>
+          <input class="field numeric" type="datetime-local" required [value]="store.form().startsAt" (input)="store.edit({ startsAt: $any($event.target).value })" />
+        </label>
+        <label class="field-block">
+          <span class="field-block__label">{{ t('form.endsAt') }}</span>
+          <input class="field numeric" type="datetime-local" required [value]="store.form().endsAt" (input)="store.edit({ endsAt: $any($event.target).value })" />
+        </label>
+        <label class="field-block">
+          <span class="field-block__label">{{ t('form.priority') }}</span>
+          <input
+            class="field numeric"
+            type="number"
+            min="0"
+            max="1000"
+            required
+            [attr.aria-describedby]="id + '-priority-hint'"
+            [value]="store.form().priority"
+            (input)="store.editPriority($any($event.target).value)"
+          />
+        </label>
+      </div>
+      <p class="field-block__hint" [id]="id + '-priority-hint'">{{ t('form.priorityHint') }}</p>
+
+      <fieldset class="promotions">
+        <legend class="field-block__label">{{ t('form.promotions') }}</legend>
+        @for (option of store.options(); track option.code) {
+          <label class="promotion">
+            <input type="checkbox" [checked]="store.form().promotionCodes.includes(option.code)" (change)="store.choose(option.code, $any($event.target).checked)" />
+            <span class="promotion__code numeric">{{ option.code }}</span>
+            <span>{{ option.name }}</span>
+          </label>
+        } @empty {
+          <p class="muted field-block__hint">{{ t('form.noPromotions') }}</p>
+        }
+      </fieldset>
+
+      <fieldset class="image">
+        <legend class="field-block__label">{{ t('form.image') }}</legend>
+        <div class="image__row">
+          @if (imageUrl(); as url) {
+            <img class="image__preview" [src]="url" [alt]="imageAlt()" />
+          } @else {
+            <span class="image__preview image__preview--none" aria-hidden="true"></span>
+          }
+          <div class="image__about">
+            @if (store.form().image; as image) {
+              <span class="numeric image__name">{{ store.fileName() ?? image.imageId.slice(0, 12) }}</span>
+            } @else {
+              <span class="muted">{{ t('form.imageNone') }}</span>
+            }
+            @if (store.editable()) {
+              <span class="image__actions">
+                <label class="linkish image__pick">
+                  {{ store.working() === 'image' ? t('form.imageUploading') : store.form().image ? t('form.imageChange') : t('form.imageUpload') }}
+                  <input class="image__file" type="file" [accept]="imageTypes" (change)="upload($any($event.target))" />
+                </label>
+                @if (store.form().image) {
+                  <button type="button" class="linkish" (click)="store.removeImage()">{{ t('form.imageRemove') }}</button>
+                }
+              </span>
+            }
+          </div>
+        </div>
+        @if (store.form().image; as image) {
+          <label class="pair__field">
+            <span class="pair__lang">{{ t('form.alt') }} · es</span>
+            <input class="field" required maxlength="200" lang="es" [value]="image.alt.es" (input)="store.editAlt('es', $any($event.target).value)" />
+          </label>
+          <label class="pair__field">
+            <span class="pair__lang">{{ t('form.alt') }} · en</span>
+            <input class="field" required maxlength="200" lang="en" [value]="image.alt.en" (input)="store.editAlt('en', $any($event.target).value)" />
+          </label>
+        } @else {
+          <p class="muted field-block__hint">{{ t('form.imageHint') }}</p>
+        }
+      </fieldset>
+    </fieldset>
+
+    @if (store.refusal() !== null) {
+      <p class="failed" role="alert">{{ store.refusal() || t('refused') }}</p>
+    }
+
+    <!-- One clay action: Save while the form says what the server does not know, Schedule once it does. -->
+    @if (store.isNew()) {
+      <div class="pane-actions">
+        <button type="submit" class="button pane-primary" [disabled]="store.working() === 'save'">
+          {{ store.working() === 'save' ? t('saving') : t('create') }}
+        </button>
+      </div>
+    } @else if (campaign()?.status === 'Draft') {
+      <div class="pane-actions">
+        <button type="submit" class="button pane-primary" [class.button--quiet]="!store.dirty()" [disabled]="!store.dirty() || store.working() === 'save'">
+          {{ store.working() === 'save' ? t('saving') : store.dirty() ? t('save') : t('saved') }}
+        </button>
+        <button
+          type="button"
+          class="button pane-primary"
+          [class.button--quiet]="store.dirty()"
+          [disabled]="store.dirty() || store.working() === 'schedule'"
+          [attr.aria-describedby]="store.dirty() ? id + '-schedule-hint' : null"
+          (click)="store.move('schedule')"
+        >
+          {{ store.working() === 'schedule' ? t('scheduling') : t('schedule') }}
+        </button>
+      </div>
+      @if (store.dirty()) {
+        <p class="muted field-block__hint" [id]="id + '-schedule-hint'">{{ t('saveFirst') }}</p>
+      }
+    } @else if (campaign()?.status === 'Scheduled') {
+      <button type="button" class="button button--quiet pane-primary" [disabled]="store.working() === 'unschedule'" (click)="store.move('unschedule')">
+        {{ store.working() === 'unschedule' ? t('unscheduling') : t('unschedule') }}
+      </button>
+    }
+
+    @if (history(); as when) {
+      <p class="history muted">
+        {{ t('history.created', { date: when.created }) }}
+        @if (when.updated) { · {{ t('history.updated', { date: when.updated }) }} }
+        @if (when.ended) { · {{ t('history.ended', { date: when.ended }) }} }
+      </p>
+    }
+
+    @if (store.endable()) {
+      <div class="danger-zone">
+        <button type="button" class="linkish linkish--danger" [disabled]="store.working() === 'end'" (click)="askToEnd()">{{ t('end.open') }}</button>
+        <p class="muted">{{ t('end.consequence') }}</p>
+      </div>
+    }
+  </form>
+
+  <backoffice-confirm-dialog
+    [heading]="t('end.title', { name: displayName() })"
+    [body]="t('end.body')"
+    [keepLabel]="t('end.keep')"
+    [confirmLabel]="t('end.confirm')"
+    (confirmed)="store.end()"
+  />
+</ng-container>

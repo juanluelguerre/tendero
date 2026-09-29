@@ -1,2 +1,4 @@
-.dates { white-space: nowrap; }
-.name { font-weight: 600; }
+/* The page is a frame: the list-and-pane layout is shared by every worklist
+   (styles.css), and what the list and the editor have of their own is in their
+   folders. */
+:host { display: block; }

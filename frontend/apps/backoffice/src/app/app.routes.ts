@@ -3,7 +3,7 @@ import { CanActivateFn, Route, Router } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
 import { backofficeAccess } from './access';
 import { dashboardChildren } from './features/dashboard/dashboard-routes';
-import { Shell } from './layout/shell';
+import { Shell } from './shell/shell';
 
 /**
  * Every screen here is a shopkeeper's, and the API already refuses them to

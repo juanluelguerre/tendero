@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AttributeDefinitionView } from '@tendero/shared-api';
-import { isSessionExpired } from '@tendero/shared-auth';
-import { CatalogService } from '../../data-access/catalog.service';
+import { AttributesStore } from './attributes.store';
 
 /**
  * The attribute definitions, with one column per language.
@@ -23,18 +22,10 @@ import { CatalogService } from '../../data-access/catalog.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './attributes-page.html',
   styleUrl: './attributes-page.css',
+  providers: [AttributesStore],
 })
 export class AttributesPage {
-  private readonly catalog = inject(CatalogService);
-
-  protected readonly items = signal<AttributeDefinitionView[]>([]);
-  protected readonly loading = signal(true);
-  protected readonly failed = signal(false);
-
-  /** Cuantas definiciones tienen alguna etiqueta sin traducir. */
-  protected incomplete(): number {
-    return this.items().filter((definition) => definition.missingCultures.length > 0).length;
-  }
+  protected readonly store = inject(AttributesStore);
 
   /**
    * One culture's raw label, with NO fallback chain. Resolving it here would
@@ -43,20 +34,5 @@ export class AttributesPage {
    */
   protected label(definition: AttributeDefinitionView, culture: string): string {
     return definition.label[culture] ?? '';
-  }
-
-  constructor() {
-    this.catalog.attributeDefinitions().subscribe({
-      next: (result) => {
-        this.items.set(result.items);
-        this.loading.set(false);
-      },
-      error: (failure: unknown) => {
-        if (isSessionExpired(failure)) return;
-
-        this.failed.set(true);
-        this.loading.set(false);
-      },
-    });
   }
 }

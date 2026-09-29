@@ -1,18 +1,18 @@
 <section *transloco="let t">
   <header class="page-head">
     <h1 class="page-title">{{ t('promotions.title') }}</h1>
-    @if (running() > 0) {
-      <span class="tag tag--ok">{{ t('promotions.running', { count: running() }) }}</span>
+    @if (store.running() > 0) {
+      <span class="tag tag--ok">{{ t('promotions.running', { count: store.running() }) }}</span>
     }
   </header>
   <p class="page-hint">{{ t('promotions.hint') }}</p>
 
-  @if (loading()) {
+  @if (store.loading()) {
     <div class="skeleton-list" aria-hidden="true"></div>
     <p class="sr-only" role="status" aria-live="polite">{{ t('promotions.loading') }}</p>
-  } @else if (failed()) {
+  } @else if (store.failed()) {
     <p class="failed" role="alert">{{ t('promotions.failed') }}</p>
-  } @else if (items().length === 0) {
+  } @else if (store.items().length === 0) {
     <div class="empty"><p class="empty__text">{{ t('promotions.empty') }}</p></div>
   } @else {
     <div class="table-wrap">
@@ -29,7 +29,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (promotion of items(); track promotion.code) {
+        @for (promotion of store.items(); track promotion.code) {
           <tr>
             <td class="numeric code">{{ promotion.code }}</td>
             <td>

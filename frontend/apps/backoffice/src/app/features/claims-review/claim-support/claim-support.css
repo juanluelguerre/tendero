@@ -1,0 +1,4 @@
+:host { display: contents; }
+
+.support { font-variant-numeric: tabular-nums; }
+.support--weak { color: var(--warning); font-weight: 600; }

@@ -1,0 +1,108 @@
+<ng-container *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('catalogue.title') }}</h1>
+    <div class="page-actions">
+      <button type="button" class="button button--quiet" [disabled]="store.importing()" (click)="store.importSeed()">
+        {{ store.importing() ? t('reviewQueue.importing') : t('reviewQueue.import') }}
+      </button>
+    </div>
+  </header>
+  <p class="page-hint">{{ t('catalogue.hint') }}</p>
+
+  <!-- The awning stripe as "the loading bar during import", the job
+       design/DESIGN.md gave it. Indeterminate on purpose: the import is one
+       request, so a percentage would be invented. -->
+  @if (store.importing()) {
+    <div class="importing" role="status" aria-live="polite">
+      <div class="awning-rule awning-rule--thin importing__bar"></div>
+      <p class="importing__label muted">{{ t('reviewQueue.importing') }}</p>
+    </div>
+  }
+
+  @if (store.imported(); as result) {
+    <p class="imported" [class.imported--failed]="result.failed > 0" role="status">
+      {{ t('reviewQueue.imported', { created: result.created, updated: result.updated, seconds: seconds(result) }) }}
+      @if (result.failed > 0) {
+        <strong>{{ t('reviewQueue.importFailed', { count: result.failed }) }}</strong>
+      }
+      @if (result.created > 0) {
+        <a class="quiet-link" routerLink="/review">{{ t('catalogue.toReview') }}</a>
+      }
+    </p>
+  }
+
+  @if (store.refusal() !== null) {
+    <p class="failed" role="alert">{{ store.refusal() || t('catalogue.refused') }}</p>
+  }
+
+  <div class="worklist-tools">
+    <backoffice-filter-chips [options]="store.filters()" [selected]="store.statusKey()" [label]="t('catalogue.filterLabel')" (chosen)="store.filterBy($event)" />
+    <label class="find">
+      <span class="sr-only">{{ t('catalogue.findLabel') }}</span>
+      <input type="search" class="find__input" [placeholder]="t('catalogue.find')" [value]="store.text()" (input)="store.search($any($event.target).value)" />
+    </label>
+  </div>
+
+  @if (store.loading()) {
+    <div class="skeleton-list" aria-hidden="true"></div>
+  <p class="sr-only" role="status" aria-live="polite">{{ t('catalogue.loading') }}</p>
+  } @else if (store.failed()) {
+    <p class="failed" role="alert">{{ t('catalogue.failed') }}</p>
+  } @else if (store.products().length === 0) {
+    <div class="empty"><p class="empty__text">{{ t('catalogue.none') }}</p></div>
+  } @else {
+    <div class="table-wrap wide-only">
+      <table class="table">
+        <caption class="sr-only">{{ t('catalogue.title') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('reviewQueue.column.product') }}</th>
+            <th scope="col">{{ t('reviewQueue.column.brand') }}</th>
+            <th scope="col" class="right">{{ t('reviewQueue.column.price') }}</th>
+            <th scope="col">{{ t('catalogue.column.status') }}</th>
+            <th scope="col"><span class="sr-only">{{ t('variants.title') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of store.products(); track item.productId) {
+            <tr class="row" [class.row--selected]="item.code === store.selectedCode()" (click)="store.open(item)">
+              <td>
+                <button type="button" class="row__open" [attr.aria-expanded]="item.code === store.selectedCode()" (click)="$event.stopPropagation(); store.open(item)">
+                  {{ item.name }}
+                </button>
+                <span class="code numeric">{{ item.code }}</span>
+              </td>
+              <td>{{ item.brand ?? '—' }}</td>
+              <td class="right numeric">{{ price(item) }}</td>
+              <td><backoffice-product-status-tags [product]="item" /></td>
+              <td class="right">
+                <a class="quiet-link" [routerLink]="['/products', item.productId, 'variants']" (click)="$event.stopPropagation()">
+                  {{ t('variants.title') }}
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="worklist-cards narrow-only" role="list">
+      @for (item of store.products(); track item.productId) {
+        <li class="worklist-card" [class.worklist-card--selected]="item.code === store.selectedCode()">
+          <button type="button" class="worklist-card__open" (click)="store.open(item)">
+            <span class="worklist-card__line">
+              <span class="name">{{ item.name }}</span>
+              <span class="numeric worklist-card__end">{{ price(item) }}</span>
+            </span>
+            <span class="worklist-card__line">
+              <backoffice-product-status-tags [product]="item" />
+              <span class="code numeric">{{ item.code }}</span>
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+
+    <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
+  }
+</ng-container>

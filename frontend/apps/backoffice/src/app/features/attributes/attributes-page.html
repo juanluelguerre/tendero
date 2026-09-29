@@ -1,18 +1,18 @@
 <section *transloco="let t">
   <header class="page-head">
     <h1 class="page-title">{{ t('attributes.title') }}</h1>
-    @if (incomplete() > 0) {
-      <span class="tag tag--warn">{{ t('attributes.incomplete', { count: incomplete() }) }}</span>
+    @if (store.incomplete() > 0) {
+      <span class="tag tag--warn">{{ t('attributes.incomplete', { count: store.incomplete() }) }}</span>
     } @else {
       <span class="tag tag--ok">es · en</span>
     }
   </header>
   <p class="page-hint">{{ t('attributes.hint') }}</p>
 
-  @if (loading()) {
+  @if (store.loading()) {
     <div class="skeleton-list" aria-hidden="true"></div>
     <p class="sr-only" role="status" aria-live="polite">{{ t('attributes.loading') }}</p>
-  } @else if (failed()) {
+  } @else if (store.failed()) {
     <p class="failed" role="alert">{{ t('attributes.failed') }}</p>
   } @else {
     <div class="table-wrap">
@@ -28,7 +28,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (definition of items(); track definition.code) {
+        @for (definition of store.items(); track definition.code) {
           <tr>
             <td class="numeric code">{{ definition.code }}</td>
             <td [class.missing]="!label(definition, 'es')">{{ label(definition, 'es') }}</td>

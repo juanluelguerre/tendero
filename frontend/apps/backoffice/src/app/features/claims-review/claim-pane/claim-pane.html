@@ -1,0 +1,43 @@
+@if (store.selected(); as claim) {
+  <ng-container *transloco="let t">
+  <backoffice-worklist-pane [heading]="store.productName(claim)" (closed)="closed.emit()">
+    <section class="pane-section">
+      <h3 class="eyebrow">{{ t('claims.column.claim') }}</h3>
+      <p class="statement">{{ statementIn(claim, 'es') }}</p>
+      <p class="statement muted">{{ statementIn(claim, 'en') }}</p>
+      @if (claim.attributeCode) {
+        <span class="attribute code">{{ claim.attributeCode }} = {{ claim.value }}</span>
+      }
+    </section>
+
+    <section class="pane-section">
+      <h3 class="eyebrow">{{ t('claims.column.evidence') }}</h3>
+      <ul class="quotes" role="list">
+        @for (quote of claim.quotes; track quote.culture + quote.start) {
+          <li class="quote">
+            <span class="quote__culture">{{ quote.culture }}</span>
+            <q>{{ quote.text }}</q>
+            <span class="numeric muted">{{ percent(quote.support) }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <p class="pane-support">
+      <span class="muted" [attr.title]="t('claims.supportExplained')">{{ t('claims.column.support') }}</span>
+      <backoffice-claim-support [claim]="claim" />
+    </p>
+    <p class="provenance">{{ t('claims.proposedBy', { extractor: claim.model ?? claim.extractor }) }}</p>
+
+    <div class="pane-actions">
+      <button type="button" class="button pane-primary" [disabled]="store.busy() === claim.claimId" (click)="store.decide(claim, 'approve', 'pane')">
+        {{ t('claims.approve') }}
+      </button>
+      <button type="button" class="button button--quiet pane-primary" [disabled]="store.busy() === claim.claimId" (click)="store.decide(claim, 'reject', 'pane')">
+        {{ t('claims.reject') }}
+      </button>
+    </div>
+    <p class="muted provenance">{{ t('claims.nextHint') }}</p>
+  </backoffice-worklist-pane>
+  </ng-container>
+}

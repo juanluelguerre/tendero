@@ -1,0 +1,9 @@
+<ng-container *transloco="let t; prefix: 'orders'">
+  @if (order().isCaptured) {
+    <span class="tag tag--ok">{{ t('captured') }}</span>
+  } @else if (order().isPaid) {
+    <span class="tag tag--warn">{{ t('paid') }}</span>
+  } @else {
+    <span class="tag tag--danger">{{ t('unpaid') }}</span>
+  }
+</ng-container>
