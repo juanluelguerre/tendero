@@ -592,6 +592,21 @@
       "nothingSold": "Nothing sold in this period.",
       "unitCount": "{{count}} u."
     },
+    "salesByDay": {
+      "current": {
+        "Day": "Today",
+        "Month": "This month",
+        "Week": "This week"
+      },
+      "failed": "The sales by day could not be read.",
+      "loading": "Reading the sales by day…",
+      "previous": {
+        "Day": "The day before",
+        "Month": "The month before",
+        "Week": "The week before"
+      },
+      "title": "Sales by day"
+    },
     "operations": {
       "title": "Orders and health",
       "toOrders": "Orders",

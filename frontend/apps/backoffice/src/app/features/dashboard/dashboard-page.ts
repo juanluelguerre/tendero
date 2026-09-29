@@ -4,6 +4,7 @@ import type { DashboardPeriod } from '../../data-access/ordering.service';
 import { AgentsWidget } from './agents-widget';
 import { FunnelWidget } from './funnel-widget';
 import { OperationsWidget } from './operations-widget';
+import { SalesByDayWidget } from './sales-by-day-widget';
 import { SalesWidget } from './sales-widget';
 import { TasksWidget } from './tasks-widget';
 
@@ -21,7 +22,7 @@ import { TasksWidget } from './tasks-widget';
  */
 @Component({
   selector: 'backoffice-dashboard',
-  imports: [TranslocoDirective, SalesWidget, OperationsWidget, FunnelWidget, AgentsWidget, TasksWidget],
+  imports: [TranslocoDirective, SalesWidget, SalesByDayWidget, OperationsWidget, FunnelWidget, AgentsWidget, TasksWidget],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',

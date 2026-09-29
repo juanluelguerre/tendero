@@ -10,6 +10,7 @@ import type {
   OrderStatus,
   OrderSummary,
   ReturnView,
+  SalesSeries,
   SalesSummary,
   OrderMove,
   ReturnDecision,
@@ -68,6 +69,11 @@ export class OrderingService {
 
   sales(period: DashboardPeriod): Observable<SalesSummary> {
     return this.figure<SalesSummary>('sales', period);
+  }
+
+  /** Sales by hour or by day on the shop's clock (R-9, ADR 0046): the zone is the shop's, not the browser's. */
+  salesSeries(period: DashboardPeriod): Observable<SalesSeries> {
+    return this.figure<SalesSeries>('sales/series', period);
   }
 
   operations(period: DashboardPeriod): Observable<OperationsSummary> {

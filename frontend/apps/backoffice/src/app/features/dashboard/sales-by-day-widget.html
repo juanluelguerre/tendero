@@ -1,0 +1,12 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.salesByDay'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+  </header>
+  @if (series.isLoading() && !series.hasValue()) {
+    <p class="muted" role="status">{{ t('loading') }}</p>
+  } @else if (series.error()) {
+    <p class="failed" role="alert">{{ t('failed') }}</p>
+  } @else if (chart(); as data) {
+    <backoffice-bar-chart [data]="data" [format]="format()" [caption]="t('title')" />
+  }
+</article>

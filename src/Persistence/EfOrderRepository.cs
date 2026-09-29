@@ -114,10 +114,20 @@ internal sealed class EfOrderReader(TenderoDbContext context) : IOrderReader
 /// </summary>
 internal sealed class EfShopHistory(TenderoDbContext context) : IShopHistory
 {
-    public async Task<IReadOnlyList<Order>> OrdersPlacedAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default) =>
-        await context.Orders.AsNoTracking()
-            .Where(order => order.CreatedAt >= from && order.CreatedAt < to)
+    /// <summary>
+    /// Any instant, whatever offset it is written in: the shop's days start at
+    /// Madrid's midnight (+02:00 or +01:00, ADR 0046), and Npgsql writes a
+    /// <c>timestamptz</c> only from UTC — so the port takes the instant and the
+    /// adapter says it in UTC.
+    /// </summary>
+    public async Task<IReadOnlyList<Order>> OrdersPlacedAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default)
+    {
+        var (since, until) = (from.ToUniversalTime(), to.ToUniversalTime());
+
+        return await context.Orders.AsNoTracking()
+            .Where(order => order.CreatedAt >= since && order.CreatedAt < until)
             .ToListAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<Order>> OrdersInAsync(IReadOnlyCollection<OrderStatus> statuses, CancellationToken cancellationToken = default) =>
         await context.Orders.AsNoTracking()

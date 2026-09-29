@@ -592,6 +592,21 @@
       "nothingSold": "No se ha vendido nada en este periodo.",
       "unitCount": "{{count}} ud."
     },
+    "salesByDay": {
+      "current": {
+        "Day": "Hoy",
+        "Month": "Este mes",
+        "Week": "Esta semana"
+      },
+      "failed": "No se han podido leer las ventas por día.",
+      "loading": "Leyendo las ventas por día…",
+      "previous": {
+        "Day": "El día anterior",
+        "Month": "El mes anterior",
+        "Week": "La semana anterior"
+      },
+      "title": "Ventas por día"
+    },
     "operations": {
       "title": "Pedidos y salud",
       "toOrders": "Pedidos",
