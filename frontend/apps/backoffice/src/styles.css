@@ -378,6 +378,22 @@ p {
   .only-s { display: none; }
 }
 
+/* A widget fills its grid cell, so the panels of one row end together. Here
+   and not in the grid's stylesheet: the grid creates its widgets from code,
+   and Angular scopes a component's styles to the elements of its template. */
+.cell > * {
+  display: block;
+  block-size: 100%;
+}
+
+/* On a wall the charts grow with the screen (spec: "each widget spreads its
+   content across the height it is given"): a share of the viewport rather than
+   the fixed height a scrolling page wants. A ranking in rows keeps the height
+   its rows need. */
+.grid--fill {
+  --chart-block-size: max(12.5rem, 26dvh);
+}
+
 /* ---------- Dashboard widgets (P11-7) ----------
    Shared by every widget, and here rather than in each component because a
    widget's frame is the dashboard's, not the widget's own: the same head, the same

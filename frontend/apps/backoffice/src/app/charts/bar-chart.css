@@ -39,6 +39,10 @@
 }
 
 .figures-toggle {
+  /* 24px at least, WCAG 2.2's target size: the accessibility ratchet found it at 18. */
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.5rem;
   padding: 0;
   border: 0;
   background: none;
@@ -91,10 +95,3 @@
   .figures-toggle { display: none; }
 }
 
-/* A chart fills the widget that has a height to give it (a wall), and keeps
-   its own height everywhere else. */
-:host {
-  display: block;
-  flex: 1 1 auto;
-  min-block-size: 0;
-}

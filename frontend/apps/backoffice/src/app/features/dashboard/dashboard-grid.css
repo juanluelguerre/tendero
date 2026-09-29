@@ -15,7 +15,6 @@
   min-width: 0;
 }
 
-.cell > * { display: block; block-size: 100%; }
 
 .cell--S { grid-column: span 3; }
 .cell--M { grid-column: span 6; }
@@ -32,16 +31,11 @@
   .cell--S, .cell--M, .cell--L { grid-column: span 12; }
 }
 
-/* On a wall (R-9): the grid takes the screen's height, its rows share it, and
-   each widget spreads its chart over the height it is given. */
+/* On a wall (R-9): the grid takes the screen's height and its rows share it.
+   How a widget fills its cell is in styles.css: the widget is created from
+   code, so this stylesheet's scoped selectors never reach it. */
 .grid--fill {
   block-size: 100%;
   grid-auto-rows: minmax(0, 1fr);
   padding-block-end: 0;
-  --chart-block-size: 100%;
-}
-
-.grid--fill .cell > * {
-  display: flex;
-  flex-direction: column;
 }
