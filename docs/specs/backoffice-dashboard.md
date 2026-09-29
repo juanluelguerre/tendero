@@ -162,6 +162,34 @@ deleted, and the comparison is kept in the article and the notebook. ECharts
 enters as an **experiment with a removal condition** (ADR 0023's idiom), in an
 ADR of its own, and leaves the lockfile if it loses.
 
+### As measured — the chart engines (2026-09-29)
+
+The same chart — *sales by day*, a week against the week before — behind the same
+contract (`backoffice-bar-chart`), measured from the production build's metafile
+(`tools/chart-engines/measure.mjs`) and the lab page (`/dashboard/lab/charts`,
+`docs/blog/reports/2026-09-29-r9-dashboard/screens/chart-engines-lab.png`).
+
+| | Our own SVG | Apache ECharts 6.1.0 |
+|---|---|---|
+| Library, minified | — | **495.2 KB** in its own lazy chunk |
+| Library, gzip | — | **169.7 KB** |
+| Our own code, minified | 2.5 KB | 1.8 KB (the binding and the options) |
+| Lines of our own code | 107 | 112 |
+| Initial bundle (`main`, 414.4 KB before the charts) | **+1.1 KB** | **+9.7 KB** — Angular's runtime for `@defer`, which ECharts needs to stay out of `main` |
+| Fifty redraws, work applied (`ApplicationRef.tick()`, three runs) | **3.9–7.6 ms** (0.08–0.15 ms each) | **92.8–137.7 ms** (1.86–2.75 ms each) |
+| Axis with values | no (gridlines only) | **yes, for free** (€0 … €1000) |
+| Tooltip | a native `title` per bar | its own, on hover |
+| Tokens test sees its colours | **yes** — CSS custom properties | no — read at run time from the tokens |
+| Screen reader | the contract's table | the contract's table |
+| Keyboard | the table | the table |
+| Accessibility ratchet (dashboard, 3 widths) | clean | clean |
+
+What the timings do not include: the browser's paint, which both engines pay, and
+ECharts' first render (its module loads once, when the chart first enters the
+viewport).
+
+**The author's decision**: pending.
+
 ## The data
 
 Every figure is computed on the server by the context that owns it (the rule
