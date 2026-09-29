@@ -105,7 +105,8 @@ are shared, never copied:
   the view's one clay action; a season on the accent's tint, with no clock; the
   campaign's own image beside the words, or the products it reaches. As a
   category's banner it is smaller, with a link instead of the clay button.
-  The awning runs along its top edge.
+  It carries no awning of its own: it leads the page right under the header's,
+  and two stripes a card apart read as one doubled line, not as the signature.
 - **`CountdownClock`** counts in days, hours and minutes, wakes once a minute on
   the minute, and is read by a screen reader once as a sentence, never as a live
   region.

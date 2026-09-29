@@ -1,9 +1,5 @@
 <section class="campaign" *transloco="let t" [attr.aria-labelledby]="'campaign-' + campaign().code"
          [class.campaign--withAside]="image() || shownProducts().length > 0">
-  <!-- The awning: the shop's signature, and the one thing on the card that is
-       only decoration. -->
-  <div class="awning-rule campaign__awning" aria-hidden="true"></div>
-
   <div class="campaign__words">
     <p class="campaign__when">
       @if (campaign().kind === 'Season') {

@@ -39,14 +39,6 @@
   }
 }
 
-/* The awning across the top edge, as on the shop's front. */
-.campaign__awning {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 0.5rem;
-  border-radius: 0;
-}
-
 .campaign__words {
   display: grid;
   justify-items: start;
