@@ -568,6 +568,11 @@
   "dashboard": {
     "title": "Dashboard",
     "hint": "The shop's pulse, from its own data: what sold, what is waiting for you, how the checkout converts and what agents bring. Test orders are left out of every figure but the agents' count of them.",
+    "lab": {
+      "hint": "R-9's comparison: the same week drawn by both engines. Not a screen of the shop; it leaves with the engine that loses.",
+      "redraw": "Redraw fifty times",
+      "title": "Chart engines"
+    },
     "period": {
       "label": "Period",
       "Day": "Last 24 h",
