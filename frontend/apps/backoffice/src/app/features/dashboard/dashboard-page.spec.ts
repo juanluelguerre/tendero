@@ -135,4 +135,19 @@ describe('the dashboard page', () => {
     expect(shell(harness).querySelector('.wall-head')).toBeNull();
     expect(shell(harness).querySelector('nav.tabs')).not.toBeNull();
   });
+
+  /** WCAG 2.4.3: the button pressed goes away with the head it sits in, so focus moves to the way back rather than to the page's body. */
+  it('keeps the keyboard on the way in and out of the wall', async () => {
+    const harness = await open('/dashboard');
+    document.body.appendChild(harness.fixture.nativeElement);
+    shell(harness).querySelector<HTMLButtonElement>('.full-screen-enter')?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    expect(document.activeElement?.classList.contains('full-screen-leave')).toBe(true);
+
+    active.set(false);
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    expect(document.activeElement?.classList.contains('full-screen-enter')).toBe(true);
+  });
 });

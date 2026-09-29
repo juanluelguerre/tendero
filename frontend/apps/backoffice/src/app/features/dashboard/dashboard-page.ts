@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, type ElementRef, inject, viewChild } from '@angular/core';
+import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, type ElementRef, inject, Injector, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -46,6 +46,7 @@ export class DashboardPage {
   private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
   private readonly wall = viewChild.required<ElementRef<HTMLElement>>('wall');
+  private readonly injector = inject(Injector);
 
   protected readonly fullScreen = inject(FullScreen);
   protected readonly periods: readonly DashboardPeriod[] = ['Day', 'Week', 'Month'];
@@ -68,6 +69,19 @@ export class DashboardPage {
   constructor() {
     // On the wall the figures are asked for again every minute; off it, never on a clock.
     effect(() => (this.fullScreen.active() ? this.refresh.every(WallRefresh) : this.refresh.stop()));
+
+    // The button pressed goes away with the head it sits in (WCAG 2.4.3): the
+    // keyboard lands on the way back — in or out, by the button or by Esc.
+    let wasOnTheWall = untracked(this.fullScreen.active);
+    effect(() => {
+      const onTheWall = this.fullScreen.active();
+      if (onTheWall === wasOnTheWall) return;
+      wasOnTheWall = onTheWall;
+      afterNextRender(
+        () => this.wall().nativeElement.querySelector<HTMLElement>(onTheWall ? '.full-screen-leave' : '.full-screen-enter')?.focus(),
+        { injector: this.injector },
+      );
+    });
   }
 
   protected linkOf(tab: DashboardTab): string[] {
