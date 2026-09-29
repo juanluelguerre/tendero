@@ -218,6 +218,21 @@ public sealed class AuditStepTests
         Assert.True(await dispatcher.SendAsync(new Publish("a-product"), TestContext.Current.CancellationToken));
     }
 
+    /// <summary>
+    /// A command that only records the caller's own passage (a product viewed) is
+    /// run, and leaves no row: the log answers who changed what in the shop, not
+    /// what every customer looked at (<see cref="IUnauditedCommand"/>, R-8).
+    /// </summary>
+    [Fact]
+    public async Task An_unaudited_command_runs_and_leaves_no_row()
+    {
+        var (dispatcher, audit) = Pipeline();
+
+        Assert.True(await dispatcher.SendAsync(new Glance("a-product"), TestContext.Current.CancellationToken));
+
+        Assert.Empty(audit.Entries);
+    }
+
     // ---------- fixtures ----------
 
     private static (ICommandDispatcher, RecordingAuditWriter) Pipeline(
@@ -257,6 +272,7 @@ public sealed class AuditStepTests
     private sealed record Claim([property: AuditRedacted] string CartToken, string Subject)
         : ICommand<bool>;
     private sealed record Look : IQuery<bool>;
+    private sealed record Glance(string Slug) : ICommand<bool>, IUnauditedCommand;
     private sealed record Pay(string Card) : ICommand<Paid>;
 
     /// <summary>A result the way checkout's is: an outcome, and the words.</summary>
@@ -301,6 +317,11 @@ public sealed class AuditStepTests
     private sealed class ClaimHandler : ICommandHandler<Claim, bool>
     {
         public Task<bool> HandleAsync(Claim command, CancellationToken ct) => Task.FromResult(true);
+    }
+
+    private sealed class GlanceHandler : ICommandHandler<Glance, bool>
+    {
+        public Task<bool> HandleAsync(Glance command, CancellationToken ct) => Task.FromResult(true);
     }
 
     private sealed class LookHandler : IQueryHandler<Look, bool>

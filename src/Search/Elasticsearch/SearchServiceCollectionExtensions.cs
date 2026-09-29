@@ -36,6 +36,11 @@ public static class SearchServiceCollectionExtensions
         services.AddScoped<ISearchHitReader, ElasticsearchHitReader>();
         services.AddScoped<ILexicalFullMatch, ElasticsearchFullMatch>();
 
+        // The home's rows read products whole — the trail's cards, the best
+        // sellers' cards, the neighbours of what was viewed (R-8) — and, like the
+        // cards above, answer whether or not the AI layer does.
+        services.AddScoped<IProductProfileReader, ElasticsearchProductProfiles>();
+
         return services;
     }
 

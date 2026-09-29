@@ -241,6 +241,65 @@ public sealed class ProductFacetsIntegrationTests(ElasticsearchFixture elasticse
         Assert.True(textMs < 1000, $"text search took {textMs} ms");
     }
 
+    // ---------- Profiles and suggestions (R-8) ----------
+
+    /// <summary>
+    /// A profile is the whole product from the same documents: every variant read,
+    /// so sold out is no variant in stock and the traits are every variant's; the
+    /// card is a variant somebody can buy, the cheapest.
+    /// </summary>
+    [Fact]
+    public async Task A_profile_is_the_product_read_from_every_variant()
+    {
+        await EnsureSeededAsync();
+
+        var profiles = await Profiles().ByCodesAsync(["PU1SE", "011A", "N0BODY"], "es", Ct);
+
+        var pulse = profiles.Single(profile => profile.Code == "PU1SE");
+        Assert.True(pulse.InStock);
+        Assert.True(pulse.Card.InStock);
+        Assert.Equal(["COLOR:BLACK", "COLOR:RED", "MATERIAL:MESH", "SIZE:40", "SIZE:42"], pulse.Traits);
+        Assert.Equal("SHOES", pulse.Category);
+        Assert.False(profiles.Single(profile => profile.Code == "011A").InStock);
+        Assert.Equal(2, profiles.Count);
+
+        var ids = await ProductIdsAsync();
+        Assert.Equal(["Pulse"], (await Profiles().ByIdsAsync([ids["Pulse"]], "es", Ct)).Select(profile => profile.Card.Name));
+    }
+
+    [Fact]
+    public async Task Neighbours_are_looked_for_in_the_leaf_category_not_the_branch()
+    {
+        await EnsureSeededAsync();
+
+        Assert.Equal(["011A", "CAZ0", "SARTÉN"],
+            (await Profiles().InCategoriesAsync(["COOKWARE"], "es", Ct)).Select(profile => profile.Code).Order(StringComparer.Ordinal));
+        Assert.Empty(await Profiles().InCategoriesAsync(["KITCHEN"], "es", Ct));
+    }
+
+    /// <summary>
+    /// The whole row against the index with no vector layer at all (invariant 8):
+    /// Pulse's neighbours by what they share — Camino (mesh, black, the sizes)
+    /// before Trail (red, the sizes) — Sartén's without the Olla, which cannot be
+    /// bought, and the row taken in turns.
+    /// </summary>
+    [Fact]
+    public async Task Suggestions_fill_from_the_index_by_the_rule_alone()
+    {
+        await EnsureSeededAsync();
+        var handler = new ElGuerre.Tendero.Search.Features.SuggestSimilar.SuggestSimilarHandler(
+            Profiles(), new NoVectorLayer(), Microsoft.Extensions.Options.Options.Create(new HybridSearchOptions()),
+            NullLogger<ElGuerre.Tendero.Search.Features.SuggestSimilar.SuggestSimilarHandler>.Instance);
+
+        var row = await handler.HandleAsync(new ElGuerre.Tendero.Search.Features.SuggestSimilar.SuggestSimilarQuery(["pulse", "SARTÉN"], "es", 8), Ct);
+
+        Assert.Equal(["CAM1N0", "CAZ0", "TRA11"], row.Items.Select(item => item.Product.Code));
+        Assert.Equal(["PU1SE", "SARTÉN", "PU1SE"], row.Items.Select(item => item.BecauseOf));
+        Assert.Equal(ElGuerre.Tendero.Search.Features.SuggestSimilar.SimilarityRanking.Rule, row.RankedBy);
+    }
+
+    private ElasticsearchProductProfiles Profiles() => new(elasticsearch.Client);
+
     private async Task<double> MedianMsAsync(ProductSearchQuery query)
     {
         await SearchAsync(query);
@@ -366,7 +425,10 @@ public sealed class ProductFacetsIntegrationTests(ElasticsearchFixture elasticse
                 CategoryCodes = branch,
                 AvailableFrom = availableFrom,
                 Slug = name.ToLowerInvariant(),
-                Code = name.ToUpperInvariant(),
+                // A code as the catalogue mints one — Crockford's alphabet, so
+                // "Pulse" is PU1SE — because a reader normalises what it is asked
+                // for as the product page does (ProductCode.Normalise).
+                Code = ProductCode.Normalise(name),
                 AxisValues = variant.Colour is null ? [] : [$"COLOR:{variant.Colour}", $"SIZE:{variant.Size}"],
                 FacetValues = facts,
                 PriceAmount = variant.Price,

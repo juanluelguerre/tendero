@@ -163,6 +163,31 @@ public sealed class QdrantVectorLayerTests(QdrantVectorLayerTests.QdrantContaine
         Assert.Contains("mix two vector spaces", refusal.Message);
     }
 
+    /// <summary>
+    /// How alike products are, from the vectors already stored (R-8): one point's
+    /// similarity to each candidate's, in one culture, and a candidate with no
+    /// point simply not answered.
+    /// </summary>
+    [Fact]
+    public async Task Similarity_compares_the_stored_vectors_of_one_culture()
+    {
+        var layer = Layer();
+        var moka = AProduct(Text("Cafetera italiana de aluminio", "Italian aluminium coffee maker"), "KITCHEN");
+        var twin = AProduct(Text("Cafetera italiana de acero", "Italian steel coffee maker"), "KITCHEN");
+        var backpack = AProduct(Text("Mochila urbana", "City backpack"), "KITCHEN");
+        var unindexed = AProduct(Text("Tetera", "Teapot"), "KITCHEN");
+
+        foreach (var product in new[] { moka, twin, backpack })
+            await layer.Vectors.IndexAsync(product, Ct);
+
+        var scores = await layer.Vectors.SimilarityAsync(
+            moka.Id.ToString(), [twin.Id.ToString(), backpack.Id.ToString(), unindexed.Id.ToString()], "en", Ct);
+
+        Assert.Equal(2, scores.Count);
+        Assert.True(scores[twin.Id.ToString()] > scores[backpack.Id.ToString()],
+            $"twin {scores[twin.Id.ToString()]} should be nearer than the backpack {scores[backpack.Id.ToString()]}");
+    }
+
     private TestLayer Layer(string? servedRevision = null)
     {
         // Without Docker the suite skips with the reason rather than failing, like

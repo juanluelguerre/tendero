@@ -212,7 +212,7 @@ not be, and the spec says so rather than faking one.
   the horizon), with two overlapping and the order between them; what each
   reaches reuses `OfferReach` — no second rule.
 - The trail: unit tests for adding, deduplicating, capping, forgetting after
-  30 days and removal; storage throwing is a test, not a comment.
+  90 days and removal; storage throwing is a test, not a comment.
 - e2e: the card with a campaign running and without one; the trail after
   viewing two products and searching once; *Borrar*.
 - Accessibility ratchet on the new home at every width; the countdown is text

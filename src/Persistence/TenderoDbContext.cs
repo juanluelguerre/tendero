@@ -20,6 +20,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
 {
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Agent> Agents => Set<Agent>();
+    public DbSet<BrowsingHistory> BrowsingHistories => Set<BrowsingHistory>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<Cart> Carts => Set<Cart>();
@@ -50,6 +51,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     {
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
         modelBuilder.ApplyConfiguration(new AgentConfiguration());
+        modelBuilder.ApplyConfiguration(new BrowsingHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new ProductConfiguration());
         modelBuilder.ApplyConfiguration(new VariantConfiguration());
         modelBuilder.ApplyConfiguration(new OrderConfiguration());

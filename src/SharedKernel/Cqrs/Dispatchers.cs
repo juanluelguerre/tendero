@@ -139,8 +139,10 @@ internal sealed class CommandHandlerWrapper<TCommand, TResult> : RequestHandlerW
     public override Task<TResult> HandleAsync(object request, IServiceProvider services, CancellationToken ct) =>
         ValidateAndHandleAsync<TCommand, ICommandHandler<TCommand, TResult>>(
             request, services, ct,
-            (handler, command, token) => AuditStep.RecordAsync<TCommand, TResult>(
-                command, services, token, () => handler.HandleAsync(command, token)));
+            (handler, command, token) => command is IUnauditedCommand
+                ? handler.HandleAsync(command, token)
+                : AuditStep.RecordAsync<TCommand, TResult>(
+                    command, services, token, () => handler.HandleAsync(command, token)));
 }
 
 internal sealed class QueryHandlerWrapper<TQuery, TResult> : RequestHandlerWrapper<TResult>

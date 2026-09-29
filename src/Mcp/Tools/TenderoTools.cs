@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Catalog.Features.GetProduct;
 using ElGuerre.Tendero.Catalog.Features.ListCategories;
 using ElGuerre.Tendero.Knowledge.Features.ProductSpecs;
 using ElGuerre.Tendero.Ordering.Features.Returns;
+using ElGuerre.Tendero.Pricing.Features.ListCampaigns;
 using ElGuerre.Tendero.Pricing.Features.ListOffers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
@@ -25,7 +26,8 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 /// nothing here may implement a handler or touch a <c>*.Domain</c> namespace, so
 /// a tool cannot quietly become logic.
 ///
-/// **Seven: the roadmap's five, and the two that stood in for its missing two.**
+/// **Eight: the roadmap's five, the two that stood in for its missing two, and
+/// the shop's campaigns (R-8, H-5).**
 /// <c>get_product_specs</c> and <c>compare_products</c> answer from approved,
 /// source-backed claims, so they waited for <c>Knowledge</c> (phase 10) — a
 /// comparison tool with no claims cannot say "no data" with any authority, which
@@ -250,6 +252,30 @@ public sealed class TenderoTools
         CancellationToken cancellationToken = default) =>
         Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
             new ListOffersQuery(answered), cancellationToken)));
+
+    /// <summary>
+    /// The shop's events and seasons (R-8, H-5): the same query as
+    /// <c>GET /api/pricing/campaigns</c>, so an agent asked "are there deals this
+    /// week?" reads what the home's card is drawn from rather than scraping it.
+    /// </summary>
+    [McpServerTool(Name = "list_campaigns")]
+    [Description("""
+        The shop's campaigns running now or starting within 30 days, the leading one
+        first: each with its name and line in the requested language, its kind (Event
+        or Season), its scope (Shop, or one Category), its phase (Running or Upcoming),
+        its window (startsAt inclusive, endsAt exclusive) and what it holds — each
+        promotion's name and, when one needs a code, the code to type. Browse what a
+        running campaign reaches with search_products and its code as `campaign`.
+        An empty list means no campaign is near.
+        """)]
+    public static Task<Answered<ListCampaignsResult>> ListCampaignsAsync(
+        IQueryDispatcher dispatcher,
+        IHttpContextAccessor requests,
+        [Description("Answer in this language: es or en. Anything else falls back to es.")]
+        string? culture = null,
+        CancellationToken cancellationToken = default) =>
+        Answered.In(Resolve(culture, requests), answered => Refusals.Readable(() => dispatcher.SendAsync(
+            new ListCampaignsQuery(answered), cancellationToken)));
 
     [McpServerTool(Name = "get_return_policy")]
     [Description("""

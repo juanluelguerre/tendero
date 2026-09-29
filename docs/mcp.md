@@ -234,6 +234,7 @@ Answers UCP has no capability for, in this shop's own shapes.
 | `get_product_detail` | The shop's product view — richer than UCP's for a person |
 | `list_categories` | The category tree, named in the answered language |
 | `list_offers` | The promotions running right now |
+| `list_campaigns` | The shop's campaigns running now or starting within 30 days, leading one first — name, line, kind (`Event`/`Season`), scope (`Shop`/`Category`), phase (`Running`/`Upcoming`), window and what each holds (R-8, H-5) |
 | `get_return_policy` | How many days to send something back, from delivery |
 | `get_product_specs` | One product's specs, each value with its source — `catalogue`, or `description` with the exact words a person approved and how well they support it (phase 10) |
 | `compare_products` | Two to four products aligned row by row; a cell whose source is `none` is *no data*, never a guess (phase 10) |
@@ -258,6 +259,19 @@ curl -sS -X POST http://localhost:5130/mcp   -H 'Content-Type: application/json'
        "params":{"name":"search_products",
                  "arguments":{"category":"SHOES","brands":["Vertex"],
                               "facets":["COLOR:BLACK"],"maxPrice":100,"sort":"PriceAsc"}}}'
+```
+
+**`list_campaigns` is `GET /api/pricing/campaigns`**, the same query and the same
+answer (R-8, H-5): an agent asked "are there deals this week?" reads what the
+home's campaign card is drawn from instead of scraping it. Its one argument is
+`culture`. The window is data — `startsAt` inclusive, `endsAt` exclusive — so an
+agent computes "until when" itself, as the card's clock does; a running
+campaign's products are `search_products` with its code as `campaign`. An empty
+`items` means no campaign is near.
+
+```bash
+curl -sS -X POST http://localhost:5130/mcp   -H 'Content-Type: application/json'   -H 'Accept: application/json, text/event-stream'   -d '{"jsonrpc":"2.0","id":4,"method":"tools/call",
+       "params":{"name":"list_campaigns","arguments":{"culture":"en"}}}'
 ```
 
 `get_product_detail` was called `get_product` until the UCP binding arrived and

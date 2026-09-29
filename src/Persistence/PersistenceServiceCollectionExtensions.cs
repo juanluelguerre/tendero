@@ -94,6 +94,12 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAgentRepository>(services => services.GetRequiredService<EfAgentRepository>());
         services.AddScoped<IAgentDirectory>(services => services.GetRequiredService<EfAgentRepository>());
 
+        // A customer's trail (R-8): the aggregate, the page's reader and the
+        // retention sweep, three classes for three reasons to change.
+        services.AddScoped<IBrowsingHistoryRepository, EfBrowsingHistoryRepository>();
+        services.AddScoped<IBrowsingHistoryReader, EfBrowsingHistoryReader>();
+        services.AddScoped<IBrowsingRetention, EfBrowsingRetention>();
+
         // Pricing's first writer (ADR 0044): one adapter, the backoffice's
         // repository and the shop's reader, one instance per scope.
         services.AddScoped<ICampaignRepository, EfCampaignRepository>();

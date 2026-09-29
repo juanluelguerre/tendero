@@ -152,6 +152,74 @@ public sealed class EndpointAuthorizationTests
     }
 
     /// <summary>
+    /// The home's rows (R-8) are the shop window: what sells, what is rising, what
+    /// is like what the shopper viewed, and the cards for all three — public, as
+    /// search is. None of them answers a figure or reads anything about the caller.
+    /// </summary>
+    [Theory]
+    [InlineData("/api/ordering/best-sellers")]
+    [InlineData("/api/ordering/trending")]
+    [InlineData("/api/search/similar")]
+    [InlineData("/api/search/cards")]
+    public void The_homes_rows_are_public_by_decision(string route)
+    {
+        using var factory = new TenderoApiFactory();
+        _ = factory.CreateClient();
+
+        var endpoint = factory.Services
+            .GetRequiredService<EndpointDataSource>()
+            .Endpoints
+            .OfType<RouteEndpoint>()
+            .Single(candidate => candidate.RoutePattern.RawText == route);
+
+        Assert.NotNull(endpoint.Metadata.GetMetadata<IAllowAnonymous>());
+    }
+
+    /// <summary>
+    /// A customer's trail (R-8) is personal data, read and changed only by their
+    /// own session: every route is the shopper's — never anonymous, never an
+    /// agent's — and the handlers scope it to the caller. Several methods share a
+    /// pattern, so each pattern is checked on every endpoint it has.
+    /// </summary>
+    [Theory]
+    [InlineData("/api/accounts/me/history", 2)]
+    [InlineData("/api/accounts/me/history/views", 1)]
+    [InlineData("/api/accounts/me/history/searches", 1)]
+    [InlineData("/api/accounts/me/history/merge", 1)]
+    [InlineData("/api/accounts/me/history/{kind}/{key}", 1)]
+    [InlineData("/api/accounts/me/history/settings", 1)]
+    public void The_trail_is_the_shoppers_own(string route, int endpoints)
+    {
+        using var factory = new TenderoApiFactory();
+        _ = factory.CreateClient();
+
+        var matching = factory.Services
+            .GetRequiredService<EndpointDataSource>()
+            .Endpoints
+            .OfType<RouteEndpoint>()
+            .Where(candidate => candidate.RoutePattern.RawText?.TrimEnd('/') == route)
+            .ToArray();
+
+        Assert.Equal(endpoints, matching.Length);
+        Assert.All(matching, endpoint =>
+        {
+            Assert.Null(endpoint.Metadata.GetMetadata<IAllowAnonymous>());
+            Assert.Contains(SharedKernel.TenderoPolicyNames.Shopper,
+                endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy));
+        });
+    }
+
+    [Fact]
+    public async Task A_stranger_cannot_read_anybodys_trail()
+    {
+        using var factory = new TenderoApiFactory();
+
+        var response = await factory.CreateClient().GetAsync("/api/accounts/me/history", TestContext.Current.CancellationToken);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    /// <summary>
     /// The catalogue list reads the TABLE, drafts included — it is the review
     /// queue's reader — and it was anonymous under a comment saying "the
     /// catalogue is public". The public catalogue is what is Active, and it is

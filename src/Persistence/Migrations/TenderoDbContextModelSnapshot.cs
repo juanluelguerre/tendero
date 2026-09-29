@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260928224504_AddPricingCampaigns";
+    public override string LastMigrationId => "20260928234617_AddBrowsingHistories";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -76,6 +76,44 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasName("pk_agents");
 
                 b.ToTable("agents", "accounts");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.BrowsingHistory", b =>
+            {
+                b.Property<Guid>("CustomerId")
+                    .HasColumnType("uuid")
+                    .HasColumnName("customer_id");
+
+                b.Property<DateTimeOffset>("CreatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("created_at");
+
+                b.Property<bool>("IsEnabled")
+                    .HasColumnType("boolean")
+                    .HasColumnName("is_enabled");
+
+                b.Property<DateTimeOffset>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("updated_at");
+
+                b.Property<string>("searches")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("searches")
+                    .HasDefaultValueSql("'[]'::jsonb");
+
+                b.Property<string>("views")
+                    .IsRequired()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("views")
+                    .HasDefaultValueSql("'[]'::jsonb");
+
+                b.HasKey("CustomerId")
+                    .HasName("pk_browsing_histories");
+
+                b.ToTable("browsing_histories", "accounts");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Customer", b =>

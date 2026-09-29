@@ -1354,6 +1354,53 @@
         }
       }
     },
+    "/api/search/similar": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "operationId": "SuggestSimilarProducts",
+        "parameters": [
+          {
+            "name": "codes",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimilarProductsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/search": {
       "get": {
         "tags": [
@@ -1536,6 +1583,55 @@
         }
       }
     },
+    "/api/search/cards": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "operationId": "GetProductCards",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "codes",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCardsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/search/evaluation": {
       "get": {
         "tags": [
@@ -1549,6 +1645,206 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SearchEvaluation"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/me/history": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "GetBrowsingHistory",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsingHistoryView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ClearBrowsingHistory",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsingHistoryView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/me/history/views": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "RecordProductView",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordViewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsingHistoryView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/me/history/searches": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "RecordSearch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordSearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsingHistoryView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/me/history/merge": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "MergeBrowsingHistory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeHistoryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsingHistoryView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/me/history/{kind}/{key}": {
+      "delete": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "ForgetBrowsingEntry",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "enum": [
+                "View",
+                "Search"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsingHistoryView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/me/history/settings": {
+      "put": {
+        "tags": [
+          "Accounts"
+        ],
+        "operationId": "SetBrowsingHistory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HistorySettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrowsingHistoryView"
                 }
               }
             }
@@ -1772,6 +2068,82 @@
           },
           "404": {
             "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/ordering/best-sellers": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "ListBestSellers",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RankedProducts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ordering/trending": {
+      "get": {
+        "tags": [
+          "Ordering"
+        ],
+        "operationId": "ListTrending",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RankedProducts"
+                }
+              }
+            }
           }
         }
       }
@@ -3374,6 +3746,31 @@
           }
         }
       },
+      "BrowsingHistoryView": {
+        "required": [
+          "enabled",
+          "views",
+          "searches"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "views": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ViewedProduct"
+            }
+          },
+          "searches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PastSearch"
+            }
+          }
+        }
+      },
       "CampaignChange": {
         "enum": [
           "Created",
@@ -4190,6 +4587,17 @@
           null
         ]
       },
+      "HistorySettingsRequest": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        }
+      },
       "IFormFile": {
         "type": "string",
         "format": "binary"
@@ -4614,6 +5022,33 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "MergeHistoryRequest": {
+        "required": [
+          "views",
+          "searches"
+        ],
+        "type": "object",
+        "properties": {
+          "views": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ViewedProduct"
+            }
+          },
+          "searches": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PastSearch"
+            }
           }
         }
       },
@@ -5141,6 +5576,22 @@
           }
         }
       },
+      "PastSearch": {
+        "required": [
+          "text",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "PlaceOrderRequest": {
         "required": [
           "shippingAddress",
@@ -5335,6 +5786,20 @@
               "null",
               "boolean"
             ]
+          }
+        }
+      },
+      "ProductCardsResult": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchHit"
+            }
           }
         }
       },
@@ -6006,6 +6471,41 @@
           }
         }
       },
+      "RankedProduct": {
+        "required": [
+          "rank",
+          "productId"
+        ],
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productId": {
+            "type": "string"
+          }
+        }
+      },
+      "RankedProducts": {
+        "required": [
+          "days",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RankedProduct"
+            }
+          }
+        }
+      },
       "ReasonCount": {
         "required": [
           "reason",
@@ -6057,6 +6557,34 @@
           "at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "RecordSearchRequest": {
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RecordViewRequest": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -6707,6 +7235,45 @@
           }
         }
       },
+      "SimilarProduct": {
+        "required": [
+          "product",
+          "becauseOf"
+        ],
+        "type": "object",
+        "properties": {
+          "product": {
+            "$ref": "#/components/schemas/SearchHit"
+          },
+          "becauseOf": {
+            "type": "string"
+          }
+        }
+      },
+      "SimilarProductsResult": {
+        "required": [
+          "items",
+          "rankedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SimilarProduct"
+            }
+          },
+          "rankedBy": {
+            "$ref": "#/components/schemas/SimilarityRanking"
+          }
+        }
+      },
+      "SimilarityRanking": {
+        "enum": [
+          "Rule",
+          "Embeddings"
+        ]
+      },
       "SkuDescriptionView": {
         "required": [
           "sku",
@@ -7200,6 +7767,22 @@
           },
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "ViewedProduct": {
+        "required": [
+          "code",
+          "at"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

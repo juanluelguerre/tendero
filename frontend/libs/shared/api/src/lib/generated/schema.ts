@@ -548,6 +548,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/similar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SuggestSimilarProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search": {
         parameters: {
             query?: never;
@@ -580,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/search/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetProductCards"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search/evaluation": {
         parameters: {
             query?: never;
@@ -589,6 +621,102 @@ export interface paths {
         };
         get: operations["EvaluateSearch"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetBrowsingHistory"];
+        put?: never;
+        post?: never;
+        delete: operations["ClearBrowsingHistory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/history/views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RecordProductView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/history/searches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RecordSearch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/history/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MergeBrowsingHistory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/history/{kind}/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ForgetBrowsingEntry"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/me/history/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetBrowsingHistory"];
         post?: never;
         delete?: never;
         options?: never;
@@ -654,6 +782,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ReinstateAgent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ordering/best-sellers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListBestSellers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ordering/trending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListTrending"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1106,6 +1266,11 @@ export interface components {
             es: string;
             en: string;
         };
+        BrowsingHistoryView: {
+            enabled: boolean;
+            views: components["schemas"]["ViewedProduct"][];
+            searches: components["schemas"]["PastSearch"][];
+        };
         /** @enum {unknown} */
         CampaignChange: "Created" | "Updated" | "Scheduled" | "Unscheduled" | "Ended" | "Unchanged" | "NotFound" | "AlreadyExists" | "UnknownPromotion" | "UnknownImage" | "WindowClosed" | "NotEditable" | "NotAllowed";
         CampaignChangeResponse: {
@@ -1319,6 +1484,9 @@ export interface components {
         };
         /** @enum {unknown} */
         FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
+        HistorySettingsRequest: {
+            enabled: boolean;
+        };
         /** Format: binary */
         IFormFile: string;
         ImportProductsCommand: {
@@ -1430,6 +1598,10 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+        };
+        MergeHistoryRequest: {
+            views: null | components["schemas"]["ViewedProduct"][];
+            searches: null | components["schemas"]["PastSearch"][];
         };
         MoveOrderRequest: {
             move: components["schemas"]["OrderMove"];
@@ -1573,6 +1745,11 @@ export interface components {
             stopCode?: null | string;
             stopDetail?: null | string;
         };
+        PastSearch: {
+            text: string;
+            /** Format: date-time */
+            at: string;
+        };
         PlaceOrderRequest: {
             shippingAddress: components["schemas"]["AddressRequest"];
             shippingOptionCode: string;
@@ -1622,6 +1799,9 @@ export interface components {
             number: null | number;
             unit: null | string;
             flag: null | boolean;
+        };
+        ProductCardsResult: {
+            items: components["schemas"]["SearchHit"][];
         };
         ProductDetail: {
             productId: string;
@@ -1795,6 +1975,16 @@ export interface components {
             /** Format: double */
             net: number;
         };
+        RankedProduct: {
+            /** Format: int32 */
+            rank: number;
+            productId: string;
+        };
+        RankedProducts: {
+            /** Format: int32 */
+            days: number;
+            items: components["schemas"]["RankedProduct"][];
+        };
         ReasonCount: {
             reason: components["schemas"]["ReturnReason"];
             /** Format: int32 */
@@ -1808,6 +1998,12 @@ export interface components {
             detail: null | string;
             /** Format: date-time */
             at: string;
+        };
+        RecordSearchRequest: {
+            text: null | string;
+        };
+        RecordViewRequest: {
+            code: null | string;
         };
         RegisterAgentRequest: {
             agentId: string;
@@ -1983,6 +2179,16 @@ export interface components {
             currency: string;
             options: components["schemas"]["ShippingOptionView"][];
         };
+        SimilarProduct: {
+            product: components["schemas"]["SearchHit"];
+            becauseOf: string;
+        };
+        SimilarProductsResult: {
+            items: components["schemas"]["SimilarProduct"][];
+            rankedBy: components["schemas"]["SimilarityRanking"];
+        };
+        /** @enum {unknown} */
+        SimilarityRanking: "Rule" | "Embeddings";
         SkuDescriptionView: {
             sku: string;
             productCode: string;
@@ -2111,6 +2317,11 @@ export interface components {
             isConfigured: boolean;
             isAvailable: boolean;
             reason: string;
+        };
+        ViewedProduct: {
+            code: string;
+            /** Format: date-time */
+            at: string;
         };
         /** @enum {unknown} */
         WithdrawOutcome: "Withdrawn" | "AlreadyDraft" | "Archived" | "NotFound";
@@ -3109,6 +3320,30 @@ export interface operations {
             };
         };
     };
+    SuggestSimilarProducts: {
+        parameters: {
+            query?: {
+                codes?: string[];
+                culture?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SimilarProductsResult"];
+                };
+            };
+        };
+    };
     SearchProducts: {
         parameters: {
             query?: {
@@ -3168,6 +3403,30 @@ export interface operations {
             };
         };
     };
+    GetProductCards: {
+        parameters: {
+            query?: {
+                ids?: string[];
+                codes?: string[];
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductCardsResult"];
+                };
+            };
+        };
+    };
     EvaluateSearch: {
         parameters: {
             query?: never;
@@ -3184,6 +3443,165 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchEvaluation"];
+                };
+            };
+        };
+    };
+    GetBrowsingHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+        };
+    };
+    ClearBrowsingHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+        };
+    };
+    RecordProductView: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordViewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+        };
+    };
+    RecordSearch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordSearchRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+        };
+    };
+    MergeBrowsingHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MergeHistoryRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+        };
+    };
+    ForgetBrowsingEntry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "View" | "Search";
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowsingHistoryView"];
+                };
+            };
+        };
+    };
+    SetBrowsingHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HistorySettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowsingHistoryView"];
                 };
             };
         };
@@ -3369,6 +3787,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ListBestSellers: {
+        parameters: {
+            query?: {
+                days?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankedProducts"];
+                };
+            };
+        };
+    };
+    ListTrending: {
+        parameters: {
+            query?: {
+                days?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankedProducts"];
+                };
             };
         };
     };

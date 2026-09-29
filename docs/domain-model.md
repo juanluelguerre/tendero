@@ -814,6 +814,18 @@ classDiagram
         Active
         Suspended
     }
+    class BrowsingHistory {
+        <<aggregate>>
+        +CustomerId CustomerId
+        +bool IsEnabled
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset UpdatedAt
+    }
+    class BrowsingKind {
+        <<enumeration>>
+        View
+        Search
+    }
     class Customer {
         <<aggregate>>
         +CustomerId Id
@@ -825,6 +837,11 @@ classDiagram
         +DateTimeOffset CreatedAt
         +DateTimeOffset UpdatedAt
         +bool IsGuest
+    }
+    class TrailEntry {
+        <<record>>
+        +string Key
+        +DateTimeOffset At
     }
 ```
 

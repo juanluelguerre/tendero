@@ -144,7 +144,7 @@ public sealed class McpTransportTests
             [
                 "cancel_checkout", "compare_products", "complete_checkout", "create_checkout",
                 "get_checkout", "get_product", "get_product_detail", "get_product_specs",
-                "get_return_policy", "list_categories", "list_offers", "lookup_catalog",
+                "get_return_policy", "list_campaigns", "list_categories", "list_offers", "lookup_catalog",
                 "search_catalog", "search_products", "update_checkout"
             ],
             tools.GetProperty("result").GetProperty("tools").EnumerateArray()

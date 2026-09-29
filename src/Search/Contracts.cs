@@ -544,6 +544,11 @@ public sealed record ProductSearchDocument
 
     public static string IndexNameFor(string culture) => $"products_{culture}";
 
+    /// <summary>This variant as a result card, the one mapping every reader of the index shares.</summary>
+    public SearchHit ToHit(double score) => new(
+        ProductId, Code, Name, Slug, Brand, Category, Id, Sku,
+        PriceAmount, PriceFrom, PriceTo, PriceCurrency, ImageId, InStock, score);
+
     /// <summary>
     /// The attributes' searchable text, IN THE INDEX'S CULTURE.
     ///
