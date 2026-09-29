@@ -1,6 +1,6 @@
 # Spec: a home page that sells (campaigns, and where you left off)
 
-**Status**: proposal agreed and mock-ups approved by the author (2026-09-29); H-1 is next (R-8)
+**Status**: built (2026-09-29) on `feature/storefront-home-and-campaigns`; see *As built* and the two follow-ups in the delivery plan (R-8)
 **Slice(s)**: Pricing (a campaign over promotions), Ordering (what sells), the storefront's home, the browser's own memory
 **Article**: *A shop window is a query*
 
