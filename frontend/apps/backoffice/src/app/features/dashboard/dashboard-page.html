@@ -1,4 +1,4 @@
-<section *transloco="let t">
+<section class="dashboard" *transloco="let t">
   <header class="page-head">
     <h1 class="page-title">{{ t('dashboard.title') }}</h1>
     <div class="page-actions">
@@ -7,9 +7,10 @@
           <button
             type="button"
             class="button button--small button--quiet period"
+            [attr.data-period]="option"
             [class.period--active]="option === period()"
             [attr.aria-pressed]="option === period()"
-            (click)="period.set(option)"
+            (click)="choose(option)"
           >
             {{ t('dashboard.period.' + option) }}
           </button>
@@ -19,19 +20,20 @@
   </header>
   <p class="page-hint">{{ t('dashboard.hint') }}</p>
 
-  <div class="grid">
-    <backoffice-key-figures-widget class="grid__wide" [period]="period()" />
-    <backoffice-sales-by-day-widget class="grid__wide" [period]="period()" />
-    <backoffice-tasks-widget />
-    <backoffice-by-channel-widget [period]="period()" />
-    <backoffice-best-sellers-widget [period]="period()" />
-    <backoffice-orders-by-status-widget [period]="period()" />
-    <backoffice-health-widget [period]="period()" />
-    <backoffice-returns-widget [period]="period()" />
-    <backoffice-stock-widget />
-    <backoffice-funnel-widget [period]="period()" />
-    <backoffice-customers-widget [period]="period()" />
-    <backoffice-agent-sales-widget [period]="period()" />
-    <backoffice-refusals-widget [period]="period()" />
-  </div>
+  <nav class="tabs" [attr.aria-label]="t('dashboard.tabs.label')">
+    @for (tab of tabs; track tab) {
+      <a
+        class="tab"
+        [routerLink]="linkOf(tab)"
+        [queryParams]="{ period: queryOfPeriod(period()) }"
+        routerLinkActive="tab--active"
+        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
+        ariaCurrentWhenActive="page"
+      >
+        {{ t('dashboard.tabs.' + tab) }}
+      </a>
+    }
+  </nav>
+
+  <router-outlet />
 </section>

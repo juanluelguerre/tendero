@@ -580,6 +580,21 @@
       "Week": "Últimos 7 días",
       "Month": "Últimos 30 días"
     },
+    "tabs": {
+      "label": "Paneles",
+      "overview": "Resumen",
+      "sales": "Ventas",
+      "operations": "Operaciones",
+      "growth": "Crecimiento",
+      "agents": "Agentes"
+    },
+    "tabTitles": {
+      "overview": "Panel",
+      "sales": "Ventas · Panel",
+      "operations": "Operaciones · Panel",
+      "growth": "Crecimiento · Panel",
+      "agents": "Agentes · Panel"
+    },
     "keyFigures": {
       "title": "Cifras clave",
       "vsPrevious": "Frente al periodo anterior",

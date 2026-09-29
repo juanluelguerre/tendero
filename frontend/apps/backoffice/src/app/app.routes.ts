@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Route, Router } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
 import { backofficeAccess } from './access';
+import { dashboardChildren } from './features/dashboard/dashboard-routes';
 import { Shell } from './layout/shell';
 
 /**
@@ -45,11 +46,13 @@ export const appRoutes: Route[] = [
       // shopkeeper sees is what needs them, not a queue.
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
+        // The Overview and its four tabs (R-9), each with its URL; the children
+        // name only the tabs, so no widget enters the first bundle.
         path: 'dashboard',
-        title: 'dashboard.title',
         canActivate: [shopkeeper],
         loadComponent: () =>
           import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+        children: dashboardChildren,
       },
       {
         path: 'agents',

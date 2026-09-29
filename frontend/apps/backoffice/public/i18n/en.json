@@ -580,6 +580,21 @@
       "Week": "Last 7 days",
       "Month": "Last 30 days"
     },
+    "tabs": {
+      "label": "Dashboards",
+      "overview": "Overview",
+      "sales": "Sales",
+      "operations": "Operations",
+      "growth": "Growth",
+      "agents": "Agents"
+    },
+    "tabTitles": {
+      "overview": "Dashboard",
+      "sales": "Sales · Dashboard",
+      "operations": "Operations · Dashboard",
+      "growth": "Growth · Dashboard",
+      "agents": "Agents · Dashboard"
+    },
     "keyFigures": {
       "title": "Key figures",
       "vsPrevious": "Against the previous period",

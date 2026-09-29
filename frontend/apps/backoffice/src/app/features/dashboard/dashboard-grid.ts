@@ -1,7 +1,7 @@
-import { NgComponentOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
 import { DASHBOARD_WIDGETS, type WidgetPlacement } from './dashboard-widgets';
+import { WidgetOutlet } from './widget-outlet';
 
 /**
  * A dashboard drawn from its placements (R-9): which widget, at which size, in
@@ -11,7 +11,7 @@ import { DASHBOARD_WIDGETS, type WidgetPlacement } from './dashboard-widgets';
  */
 @Component({
   selector: 'backoffice-dashboard-grid',
-  imports: [NgComponentOutlet],
+  imports: [WidgetOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-grid.html',
   styleUrl: './dashboard-grid.css',
