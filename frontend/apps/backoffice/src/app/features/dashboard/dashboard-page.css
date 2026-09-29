@@ -54,10 +54,6 @@
   background: var(--bg-page);
 }
 
-.dashboard:fullscreen > :last-child {
-  flex: 1;
-  min-block-size: 0;
-}
 
 .wall-head {
   display: flex;

@@ -52,6 +52,27 @@ test.describe('the dashboard', () => {
     await expect(page.locator('nav.tabs')).toBeVisible();
   });
 
+  /** The tab fills the monitor (spec): the rows share its height, so no tab's wall scrolls — the fullest ones included. */
+  test('fits every tab on the wall without scrolling', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    for (const tab of ['/dashboard', '/dashboard/sales', '/dashboard/operations', '/dashboard/growth', '/dashboard/agents']) {
+      await page.goto(tab);
+      await page.waitForLoadState('networkidle');
+      await page.locator('.full-screen-enter').click();
+      await expect(page.locator('.wall-head')).toBeVisible();
+      await expect
+        .poll(() => page.locator('section.dashboard').evaluate((wall) => wall.scrollHeight - wall.clientHeight), { message: tab })
+        .toBeLessThanOrEqual(0);
+      // And no widget spills out of its row onto the one below.
+      const spilled = await page.locator('.cell').evaluateAll((cells) =>
+        cells.filter((cell) => cell.scrollHeight > cell.clientHeight + 1).map((cell) => (cell as HTMLElement).dataset['widget']),
+      );
+      expect(spilled, tab).toEqual([]);
+      await page.locator('.full-screen-leave').click();
+      await expect(page.locator('nav.tabs')).toBeVisible();
+    }
+  });
+
   test('on a phone: no full screen, no sideways page, the tabs scroll', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/dashboard');

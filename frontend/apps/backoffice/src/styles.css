@@ -394,6 +394,21 @@ p {
   --chart-block-size: max(12.5rem, 26dvh);
 }
 
+/* A wall is glanced at from across a room, not read: at L the table of figures
+   goes back behind its button there (still read by a screen reader), so the
+   chart has the row. Specific enough to win over the chart's own rule. */
+.grid--fill .cell .figures.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.grid--fill .cell .figures-toggle { display: inline-flex; }
+
 /* ---------- Dashboard widgets (P11-7) ----------
    Shared by every widget, and here rather than in each component because a
    widget's frame is the dashboard's, not the widget's own: the same head, the same

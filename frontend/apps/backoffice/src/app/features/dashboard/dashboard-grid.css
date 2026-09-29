@@ -31,11 +31,13 @@
   .cell--S, .cell--M, .cell--L { grid-column: span 12; }
 }
 
-/* On a wall (R-9): the grid takes the screen's height and its rows share it.
-   How a widget fills its cell is in styles.css: the widget is created from
-   code, so this stylesheet's scoped selectors never reach it. */
+/* On a wall (R-9): the grid takes the screen's height and its rows share
+   what their content leaves — never less than their content, which would let a
+   widget spill over the row below. How a widget fills its cell is in
+   styles.css: the widget is created from code, so this stylesheet's scoped
+   selectors never reach it. */
 .grid--fill {
   block-size: 100%;
-  grid-auto-rows: minmax(0, 1fr);
+  grid-auto-rows: minmax(min-content, 1fr);
   padding-block-end: 0;
 }
