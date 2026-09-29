@@ -1,10 +1,10 @@
 import { afterNextRender, DestroyRef, Directive, effect, ElementRef, inject, input } from '@angular/core';
-import { BarChart } from 'echarts/charts';
+import { BarChart, LineChart } from 'echarts/charts';
 import { AriaComponent, GridComponent, TooltipComponent } from 'echarts/components';
 import * as echarts from 'echarts/core';
 import { SVGRenderer } from 'echarts/renderers';
 
-echarts.use([BarChart, GridComponent, TooltipComponent, AriaComponent, SVGRenderer]);
+echarts.use([BarChart, LineChart, GridComponent, TooltipComponent, AriaComponent, SVGRenderer]);
 
 /**
  * ECharts' binding to Angular, ours (ADR 0045: no `ngx-echarts`): created after

@@ -1,0 +1,6 @@
+:host {
+  display: block;
+  --chart-block-size: 2.5rem;
+}
+
+.placeholder { block-size: var(--chart-block-size); }
