@@ -114,6 +114,31 @@ public sealed class SimilarProductsTests
         Assert.Equal(["BOOTS", "LAMP", "BOOTS", "RUNNER", "LAMP"], row.Select(suggestion => suggestion.BecauseOf));
     }
 
+    /// <summary>A neighbourhood deeper than the rest keeps taking its turns after the others run out.</summary>
+    [Fact]
+    public void The_deepest_neighbourhood_keeps_its_turns_after_the_others_run_out()
+    {
+        var lamp = new Neighbourhood(Profile("LAMP", "DESK_LAMP"), [new Suggestion(Profile("L1", "DESK_LAMP"), "LAMP", 1)]);
+        var boots = new Neighbourhood(Profile("BOOTS", "SHOES"),
+            [new Suggestion(Profile("S1", "SHOES"), "BOOTS", 2), new Suggestion(Profile("S2", "SHOES"), "BOOTS", 1), new Suggestion(Profile("S3", "SHOES"), "BOOTS", 0)]);
+
+        var row = SimilarProducts.Spread([lamp, boots], limit: 10);
+
+        Assert.Equal(["L1", "S1", "S2", "S3"], row.Select(suggestion => suggestion.Product.Code));
+    }
+
+    /// <summary>Two neighbours sharing as much come in the order of their codes, so the row does not reshuffle between two visits.</summary>
+    [Fact]
+    public void Neighbours_sharing_as_much_come_by_code()
+    {
+        var moka = Profile("MOKA", "COFFEE_MAKER", true, "MATERIAL:ALUMINIUM");
+
+        var neighbourhood = Assert.Single(SimilarProducts.Neighbourhoods(
+            [moka], [Profile("ZETA", "COFFEE_MAKER", true, "MATERIAL:ALUMINIUM"), Profile("ALFA", "COFFEE_MAKER", true, "MATERIAL:ALUMINIUM")]));
+
+        Assert.Equal(["ALFA", "ZETA"], neighbourhood.Candidates.Select(candidate => candidate.Product.Code));
+    }
+
     [Fact]
     public void Nothing_viewed_is_an_empty_row()
     {
@@ -154,5 +179,9 @@ public sealed class SimilarProductsTests
         Assert.Equal(("v3", true), (profiles[0].Card.MatchedVariantId, profiles[0].InStock));
         Assert.Equal(["MATERIAL:LEATHER", "SIZE:38", "SIZE:40", "SIZE:42"], profiles[0].Traits);
         Assert.False(profiles[1].InStock);
+
+        // Two in stock at one price: the lowest id is the card, so the same documents always draw it.
+        var tie = ProductProfile.Of([Variant("v9", "mug", 12m, inStock: true), Variant("v5", "mug", 12m, inStock: true)]);
+        Assert.Equal("v5", tie[0].Card.MatchedVariantId);
     }
 }

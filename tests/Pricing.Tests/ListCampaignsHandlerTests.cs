@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Pricing.Domain;
 using ElGuerre.Tendero.Pricing.Features.ListCampaigns;
+using ElGuerre.Tendero.Pricing.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 using static ElGuerre.Tendero.Pricing.Tests.Build;
@@ -62,5 +63,22 @@ public sealed class ListCampaignsHandlerTests
         var draft = Draft("DRAFT");
 
         Assert.Empty((await List(Now, "es", farAway, draft)).Items);
+    }
+
+    /// <summary>The home asks on every visit, and most days nothing is near: that answer costs no read of the promotions.</summary>
+    [Fact]
+    public async Task With_nothing_near_the_promotions_are_not_read()
+    {
+        var handler = new ListCampaignsHandler(new InMemoryCampaigns(Draft("DRAFT")), new UnreadablePromotions(), Clock(Now));
+
+        var result = await handler.HandleAsync(new ListCampaignsQuery("es"), TestContext.Current.CancellationToken);
+
+        Assert.Empty(result.Items);
+    }
+
+    private sealed class UnreadablePromotions : IPromotionReader
+    {
+        public Task<IReadOnlyList<Promotion>> AllAsync(CancellationToken cancellationToken = default) =>
+            throw new InvalidOperationException("Nothing is near; the promotions should not have been read.");
     }
 }

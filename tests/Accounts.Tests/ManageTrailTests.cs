@@ -30,6 +30,7 @@ public sealed class ManageTrailTests
         Assert.Equal(["cafetera italiana"], answer.Searches.Select(search => search.Text));
         Assert.Equal(answer.Views, read.Views);
         Assert.Equal(world.Customer, Assert.Single(world.Store).CustomerId);
+        Assert.Equal(2, world.Saves);
     }
 
     /// <summary>Signed in and not linked yet: nobody to keep a trail for, so nothing is kept — an empty answer, not an error.</summary>
@@ -133,6 +134,38 @@ public sealed class ManageTrailTests
     {
         Assert.Equal(valid, new RecordBrowsingValidator().Validate(new RecordBrowsingCommand(kind, key)).IsValid);
         Assert.Equal(valid, new ForgetBrowsingValidator().Validate(new ForgetBrowsingCommand(kind, key)).IsValid);
+    }
+
+    /// <summary>The search box's own limits, at their edges: two characters and two hundred.</summary>
+    [Theory]
+    [InlineData(TrailKeyRules.MinSearchLength - 1, false)]
+    [InlineData(TrailKeyRules.MinSearchLength, true)]
+    [InlineData(BrowsingHistory.MaxSearchLength, true)]
+    [InlineData(BrowsingHistory.MaxSearchLength + 1, false)]
+    public void A_search_is_as_long_as_the_search_box_accepts(int length, bool valid)
+    {
+        Assert.Equal(valid, TrailKeyRules.IsSearch(new string('a', length)));
+    }
+
+    /// <summary>A refusal names the field the client sent and says what that field must be.</summary>
+    [Theory]
+    [InlineData(BrowsingKind.View, "<script>", "code", TrailKeyRules.CodeMessage)]
+    [InlineData(BrowsingKind.Search, "c", "text", TrailKeyRules.SearchMessage)]
+    public void A_refused_record_names_its_field(BrowsingKind kind, string key, string field, string message)
+    {
+        var error = Assert.Single(new RecordBrowsingValidator().Validate(new RecordBrowsingCommand(kind, key)).Errors);
+
+        Assert.Equal((field, message), (error.PropertyName, error.ErrorMessage));
+    }
+
+    [Theory]
+    [InlineData(BrowsingKind.View, "<script>", TrailKeyRules.CodeMessage)]
+    [InlineData(BrowsingKind.Search, "c", TrailKeyRules.SearchMessage)]
+    public void A_refused_forget_says_what_a_key_of_that_kind_is(BrowsingKind kind, string key, string message)
+    {
+        var error = Assert.Single(new ForgetBrowsingValidator().Validate(new ForgetBrowsingCommand(kind, key)).Errors);
+
+        Assert.Equal(("key", message), (error.PropertyName, error.ErrorMessage));
     }
 
     [Fact]

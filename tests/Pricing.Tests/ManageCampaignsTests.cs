@@ -214,6 +214,25 @@ public sealed class CampaignDetailsValidatorTests
 
         Assert.False(Validator.Validate(Details(image: image)).IsValid);
     }
+
+    /// <summary>Present in both languages is not enough: a blank one is as missing as an absent one.</summary>
+    [Fact]
+    public void A_name_blank_in_one_language_is_refused()
+    {
+        var details = Details() with { Name = Text("Días Tendero", "   ") };
+
+        Assert.Contains(Validator.Validate(details).Errors, error => error.PropertyName == nameof(CampaignDetails.Name));
+    }
+
+    [Theory]
+    [InlineData(CampaignDetailsValidator.MaxName, true)]
+    [InlineData(CampaignDetailsValidator.MaxName + 1, false)]
+    public void A_name_is_at_most_eighty_characters_in_each_language(int length, bool valid)
+    {
+        var details = Details() with { Name = Text(new string('a', length), "Tendero Days") };
+
+        Assert.Equal(valid, Validator.Validate(details).IsValid);
+    }
 }
 
 /// <summary>The file that seeds a fresh shop's calendar is the file that is checked.</summary>
@@ -240,6 +259,23 @@ public sealed class CampaignSeedFileTests
     }
 
     /// <summary>On the day this was written the season runs and Tendero Days is two days away — and leads the moment it opens.</summary>
+    /// <summary>A seed file that says <c>null</c> seeds nothing rather than failing the start.</summary>
+    [Fact]
+    public async Task A_seed_file_that_says_null_seeds_nothing()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllTextAsync(path, "null", TestContext.Current.CancellationToken);
+
+            Assert.Empty(await CampaignSeedFile.LoadAsync(path, TestContext.Current.CancellationToken));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
     [Fact]
     public async Task A_fresh_shop_has_a_season_running_and_an_event_coming()
     {
@@ -264,6 +300,10 @@ public sealed class ImageSignatureTests
     [InlineData(new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }, "image/jpeg")]
     [InlineData(new byte[] { 0x47, 0x49, 0x46, 0x38, 0x39, 0x61 }, null)]
     [InlineData(new byte[] { 0x3C, 0x73, 0x76, 0x67 }, null)]
+    // A RIFF container that is not WebP (a WAVE file) is not an image.
+    [InlineData(new byte[] { 0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x41, 0x56, 0x45 }, null)]
+    // The shortest JPEG signature, and nothing after it.
+    [InlineData(new byte[] { 0xFF, 0xD8, 0xFF }, "image/jpeg")]
     public void An_image_is_recognised_by_its_bytes_and_a_gif_or_svg_is_not(byte[] bytes, string? contentType)
     {
         Assert.Equal(contentType, ImageSignature.ContentTypeOf(bytes));

@@ -37,10 +37,25 @@ public sealed class AttributeDefinitionSwatchTests
         Assert.Null(Assert.Single(colour.Options).Swatch);
     }
 
+    /// <summary>Adding an option again replaces it: one option per code, with the label and swatch last given.</summary>
+    [Fact]
+    public void An_option_added_again_is_replaced_not_repeated()
+    {
+        var colour = Colour();
+
+        colour.AddOption(Clock, "NAVY", LocalizedText.From("es", "azul"), "#000080");
+        colour.AddOption(Clock, "navy", LocalizedText.From("es", "azul marino"), "#233A5E");
+
+        var option = Assert.Single(colour.Options);
+        Assert.Equal(("azul marino", "#233A5E"), (option.Label.In("es"), option.Swatch));
+    }
+
     [Theory]
     [InlineData("233A5E")]
     [InlineData("#233A5")]
     [InlineData("#GGGGGG")]
+    // Five hex digits and one that is not: every digit counts, not one of them.
+    [InlineData("#233A5G")]
     [InlineData("navy")]
     public void Anything_but_a_colour_is_refused(string swatch) =>
         Assert.Throws<ArgumentException>(() => Colour().AddOption(Clock, "X", LocalizedText.From("es", "x"), swatch));

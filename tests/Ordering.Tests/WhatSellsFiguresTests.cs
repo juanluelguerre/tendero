@@ -109,6 +109,16 @@ public sealed class WhatSellsFiguresTests
         Assert.Equal([Id(Lamp), Id(Kettle)], WhatSellsFigures.Trending(week, before, limit: 10).Select(item => item.ProductId));
     }
 
+    /// <summary>Equal growth and equal units: the product's key decides, so the row does not reshuffle between two visits.</summary>
+    [Fact]
+    public void Everything_equal_the_key_decides()
+    {
+        List<Order> week = [Sale(Line(Kettle, 5)), Sale(Line(Lamp, 5))];
+        string[] byKey = [.. new[] { Id(Kettle), Id(Lamp) }.Order(StringComparer.Ordinal)];
+
+        Assert.Equal(byKey, WhatSellsFigures.Trending(week, before: [], limit: 10).Select(item => item.ProductId));
+    }
+
     /// <summary>A rehearsal neither makes a product rise nor lowers the week it is compared against.</summary>
     [Fact]
     public void Test_orders_move_no_trend()

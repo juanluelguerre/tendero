@@ -118,6 +118,15 @@ public sealed class ListProductsTests
         Assert.False(new ListProductsValidator()
             .Validate(new ListProductsQuery((ProductStatus)99, "es", 1, 20)).IsValid);
 
+    /// <summary>The one paging contract (R-7.2): a page from one, a page size from one to a hundred.</summary>
+    [Theory]
+    [InlineData(0, 20, false)]
+    [InlineData(1, 0, false)]
+    [InlineData(1, Paging.MaxPageSize, true)]
+    [InlineData(1, Paging.MaxPageSize + 1, false)]
+    public void A_page_is_asked_for_within_the_paging_contract(int page, int pageSize, bool valid) =>
+        Assert.Equal(valid, new ListProductsValidator().Validate(new ListProductsQuery(null, "es", page, pageSize)).IsValid);
+
     private static ListProductsHandler HandlerOver(params Product[] products) =>
         new(new InMemoryProductCatalogReader(products));
 

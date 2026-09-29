@@ -97,6 +97,33 @@ public sealed class SuggestSimilarHandlerTests
         Assert.Equal(RuleRow, answer.Items.Select(item => item.Product.Code));
     }
 
+    /// <summary>One candidate per product viewed has no order to change: the vector layer is not asked, and the row says the rule ranked it.</summary>
+    [Fact]
+    public async Task With_one_candidate_each_the_vector_layer_is_not_asked()
+    {
+        var similarity = new Similarity(new() { ["id-CMP"] = 0.9 });
+
+        // Both lamps viewed: each one's only neighbour left is CMP.
+        var answer = await Ask(similarity, null, "DSKA", "DSKB");
+
+        Assert.Equal(SimilarityRanking.Rule, answer.RankedBy);
+        Assert.Equal(0, similarity.Calls);
+        Assert.Equal(["CMP"], answer.Items.Select(item => item.Product.Code));
+    }
+
+    /// <summary>One neighbourhood with an order to change is enough for the re-rank, even beside ones that have none.</summary>
+    [Fact]
+    public async Task One_neighbourhood_to_reorder_is_enough_for_the_re_rank()
+    {
+        var similarity = new Similarity(new() { ["id-DRP"] = 0.9, ["id-STX"] = 0.2 });
+
+        var answer = await Ask(similarity, null, "MKPT", "DSKA", "DSKB");
+
+        Assert.Equal(SimilarityRanking.Embeddings, answer.RankedBy);
+        Assert.Equal("DRP", answer.Items[0].Product.Code);
+        Assert.Equal(1, similarity.Calls);
+    }
+
     [Fact]
     public async Task A_code_the_index_does_not_hold_asks_nothing_and_answers_an_empty_row()
     {

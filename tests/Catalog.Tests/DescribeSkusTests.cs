@@ -171,6 +171,16 @@ public sealed class DescribeSkusTests
         Assert.False(new DescribeSkusValidator().Validate(query).IsValid);
     }
 
+    [Theory]
+    [InlineData(1)]
+    [InlineData(200)]
+    public void Up_to_two_hundred_skus_is_one_request(int count)
+    {
+        var query = new DescribeSkusQuery([.. Enumerable.Range(0, count).Select(i => $"SKU-{i}")], "es");
+
+        Assert.True(new DescribeSkusValidator().Validate(query).IsValid);
+    }
+
     private static DescribeSkusHandler HandlerOver(
         Product product, IAttributeDefinitionReader? definitions = null) =>
         new(new InMemoryProductCatalogReader(product), definitions ?? new Definitions());

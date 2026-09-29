@@ -41,6 +41,16 @@ public sealed class CampaignLineupTests
         Assert.Equal(["SOONER", "LATER"], Codes(CampaignLineup.Near([later, sooner], Now)));
     }
 
+    /// <summary>Everything equal, the code decides, so two identical campaigns never swap places between two answers.</summary>
+    [Fact]
+    public void With_everything_equal_the_code_decides()
+    {
+        var second = Scheduled("B_CAMPAIGN");
+        var first = Scheduled("A_CAMPAIGN");
+
+        Assert.Equal(["A_CAMPAIGN", "B_CAMPAIGN"], Codes(CampaignLineup.Near([second, first], Now)));
+    }
+
     /// <summary>Thirty days ahead is announced; a minute beyond is not yet.</summary>
     [Theory]
     [InlineData(0, true)]

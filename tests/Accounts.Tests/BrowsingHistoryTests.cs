@@ -159,6 +159,36 @@ public sealed class BrowsingHistoryTests
         Assert.Equal(now, kept.Single(entry => entry.Key == "B073WXYZ01").At);
     }
 
+    /// <summary>Exactly ninety days old is past the retention, arriving from a browser or already kept.</summary>
+    [Fact]
+    public void A_merge_neither_takes_nor_keeps_an_entry_exactly_ninety_days_old()
+    {
+        var (history, clock) = Fresh();
+        history.Record(clock, BrowsingKind.View, "B073WXYZ01");
+        clock.Advance(BrowsingHistory.Retention);
+        var now = clock.GetUtcNow();
+
+        var merged = history.Merge(clock, BrowsingKind.View,
+            [new TrailEntry("B0EDGE0001", now - BrowsingHistory.Retention), new TrailEntry("B07C0FFEE1", now)]);
+
+        Assert.Equal(1, merged);
+        // Read a minute earlier, the old entry would still be inside the window: it
+        // is absent because the merge dropped it, not because the read filtered it.
+        Assert.Equal(["B07C0FFEE1"], history.Kept(BrowsingKind.View, now.AddMinutes(-1)).Select(entry => entry.Key));
+    }
+
+    /// <summary>Two products viewed at the same instant come back in one order, the code's.</summary>
+    [Fact]
+    public void Entries_at_the_same_instant_are_kept_in_the_order_of_their_keys()
+    {
+        var (history, clock) = Fresh();
+        var now = clock.GetUtcNow();
+
+        history.Merge(clock, BrowsingKind.View, [new TrailEntry("B0BBBBBBB2", now), new TrailEntry("B0AAAAAAA1", now)]);
+
+        Assert.Equal(["B0AAAAAAA1", "B0BBBBBBB2"], Views(history, clock));
+    }
+
     [Fact]
     public void A_blank_key_records_nothing()
     {

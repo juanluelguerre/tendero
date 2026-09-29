@@ -127,4 +127,25 @@ public sealed class ListStockTests
 
     private static int CountOf(ListStockResult result, StockFilter filter) =>
         result.Counts.Single(count => count.Filter == filter).Count;
+
+    /// <summary>The line itself is under it: five available needs restocking, six does not.</summary>
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(Restocking.At, true)]
+    [InlineData(Restocking.At + 1, false)]
+    public void Restocking_is_needed_at_or_under_the_line(int available, bool needed) =>
+        Assert.Equal(needed, Restocking.Needed(available));
+
+    /// <summary>A warehouse no longer in the file still has its rows, shown by its code rather than by nothing.</summary>
+    [Fact]
+    public async Task A_row_is_named_by_its_warehouse_or_by_its_code_when_the_warehouse_is_gone()
+    {
+        var stock = new FakeStock();
+        stock.Put("BAG-01", "MAD", 3);
+        stock.Put("BAG-01", "OLD", 1);
+
+        var result = await List(stock, new ListStockQuery("en", StockFilter.All));
+
+        Assert.Equal(["Madrid", "OLD"], result.Rows.Select(row => row.WarehouseName).Order(StringComparer.Ordinal));
+    }
 }
