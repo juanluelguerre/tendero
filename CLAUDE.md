@@ -219,12 +219,36 @@ node tools/api-map.mjs --schema CartView
   preference: a template inside a `.ts` literal is invisible to every HTML tool
   and a stylesheet inside one is invisible to every CSS tool, including the token
   test.
-- **A component with state is a folder with its SignalStore** (ADR 0047):
-  `<name>/` holds the component's three files, its `<name>.store.ts`
-  (`@ngrx/signals`, provided by the component) and their specs; the component
-  presents, the store reads and derives, and what stores share is a store
-  feature. The dashboard's widgets are the reference; the other screens follow
-  in a plan of their own.
+- **Folders by feature and theme, never by type of code** (Angular's style
+  guide; ADR 0047). A feature keeps its page(s), routes and page store at its
+  root; a component that is a concept of its own lives in a folder named for it
+  (`order-list/`), and many of one kind gather under a folder named for their
+  theme (`widgets/`, `grid/`, `sources/`). Never `components/`, `services/`,
+  `helpers/`, `utils/` or a separate `tests/`: specs sit beside their code, and
+  a file is named for what it holds.
+- **A SignalStore for every state with a life of its own** (`@ngrx/signals`,
+  ADR 0047): the store follows the state, not the component — ask who else
+  reads or changes it. State one component alone uses is that component's
+  store (`<name>.store.ts` beside it, provided by it: each dashboard widget,
+  the orders pane's detail). State several components share is one store in
+  their closest common parent, which they inject (Orders' page store: the open
+  order, the rows, the moves) — never two stores kept in step. A child may
+  inject its parent's store, never the reverse. The component presents —
+  formatting in the reader's culture included — and the store reads and derives.
+- **A `signalStoreFeature` for state and behaviour more than one store needs**
+  (`withDashboardPeriod` in eleven widget stores; the lists of work will share
+  their filters, search and page in the URL), or to split one store that has
+  grown several responsibilities. Not to tidy a store used once. It lives
+  beside the stores that share it, or in `worklist/` when they are in different
+  features.
+- **What a store is not for.** A component with no state of its own gets no
+  store (sign-in, the shell, the nav, a status label). Input that lives only
+  while it is typed — a dialog's reason — stays a component signal. Inside a
+  store, `patchState` is for our own state, a resource for what the server is
+  read for, and `HttpClient` in a method for what it is asked to change. The
+  whole backoffice follows this; `shell/` is the frame round every screen and
+  `worklist/` what the lists of work share (pane, chips, pager, dialog, Undo).
+  The storefront follows in a pass of its own.
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
 
 ## Git Workflow

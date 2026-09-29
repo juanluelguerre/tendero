@@ -19,7 +19,7 @@ was decided there constrains every list of work to come, so it is written down.
    over it below. It carries what the decision needs and the view's one clay
    action. The filter, the search and the open item live in the URL, so a
    dashboard figure or the palette can open the list exactly there.
-2. **The parts are shared, and a new list uses them** (`frontend/apps/backoffice/src/app/work/`):
+2. **The parts are shared, and a new list uses them** (`frontend/apps/backoffice/src/app/worklist/`, `work/` until ADR 0047):
    - `WorkPane` owns the focus, `Esc` and the landmark;
    - `FilterChips` gives a filter with its count;
    - `ConfirmDialog` asks before what cannot be undone;
