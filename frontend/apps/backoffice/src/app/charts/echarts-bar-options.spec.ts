@@ -59,11 +59,57 @@ describe('ECharts options for a bar chart', () => {
   });
 
   /** ADR 0045: a colour reaches ECharts only from the tokens, never written into the options. */
-  it('carries no colour but the ones it is given', () => {
-    const written = JSON.stringify(barOptions(DATA, String, COLOURS, false));
+  it.each(['columns', 'rows', 'share'] as const)('carries no colour but the ones it is given, as %s', (layout) => {
+    const written = JSON.stringify(barOptions(DATA, String, COLOURS, false, layout));
     const given = new Set([...Object.values(COLOURS.series), COLOURS.text, COLOURS.muted, COLOURS.border, COLOURS.surface]);
 
     expect(written.match(/#[0-9a-f]{3,8}\b/gi)).toBeNull();
     expect((written.match(/rgba?\([^)]*\)/g) ?? []).filter((colour) => !given.has(colour))).toEqual([]);
+  });
+});
+
+describe('bars in rows and as a share', () => {
+  const REASONS: BarChartData = {
+    categories: ['Damaged', 'Wrong size', 'Changed mind'],
+    series: [{ key: 'open', label: 'Open returns', role: 'data', values: [5, 3, 1] }],
+  };
+  const CHANNELS: BarChartData = {
+    categories: ['Orders'],
+    series: [
+      { key: 'people', label: 'People', role: 'data', values: [30] },
+      { key: 'agents', label: 'Agents', role: 'agent', values: [10] },
+    ],
+  };
+  type Axis = { type: string; data?: string[]; inverse?: boolean; show?: boolean; max?: number };
+  type Layout = { xAxis: Axis; yAxis: Axis; series: { stack?: string; itemStyle: { borderColor?: string; borderWidth?: number } }[] };
+
+  it('puts the categories on the left, first at the top, when the bars are rows', () => {
+    const options = barOptions(REASONS, String, COLOURS, false, 'rows') as unknown as Layout;
+
+    expect([options.yAxis.type, options.yAxis.data, options.yAxis.inverse, options.xAxis.type]).toEqual([
+      'category', ['Damaged', 'Wrong size', 'Changed mind'], true, 'value',
+    ]);
+  });
+
+  it('stacks the series into one bar whose length is the whole, with no axes to read', () => {
+    const options = barOptions(CHANNELS, String, COLOURS, false, 'share') as unknown as Layout;
+
+    expect(options.series.map((series) => series.stack)).toEqual(['share', 'share']);
+    expect([options.xAxis.max, options.xAxis.show, options.yAxis.show]).toEqual([40, false, false]);
+  });
+
+  /** The dataviz method's spacer: adjacent fills are parted by 2px of the surface, so two segments never read as one. */
+  it('parts the segments of a share with the surface', () => {
+    const options = barOptions(CHANNELS, String, COLOURS, false, 'share') as unknown as Layout;
+
+    expect(options.series.map((series) => [series.itemStyle.borderColor, series.itemStyle.borderWidth])).toEqual([
+      [COLOURS.surface, 2], [COLOURS.surface, 2],
+    ]);
+  });
+
+  it('keeps drawing columns when no layout is named', () => {
+    const options = barOptions(DATA, String, COLOURS, false) as unknown as Layout;
+
+    expect([options.xAxis.type, options.yAxis.type]).toEqual(['category', 'value']);
   });
 });

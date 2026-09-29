@@ -66,6 +66,14 @@ describe('the chart contract', () => {
     expect(table()?.classList.contains('sr-only')).toBe(false);
   });
 
+  it('is as tall as its rows need when the bars are rows', async () => {
+    const fixture = await render();
+    fixture.componentRef.setInput('layout', 'rows');
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).style.getPropertyValue('--chart-block-size')).toBe('calc(2 * 2rem + 1rem)');
+  });
+
   it('draws with ECharts, deferred until the chart is on screen (ADR 0045)', async () => {
     const fixture = await render();
 

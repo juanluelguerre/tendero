@@ -24,3 +24,6 @@ export type ValueFormat = (value: number) => string;
 export function roleColourToken(role: SeriesRole): string {
   return role === 'data' ? '--chart-data' : role === 'agent' ? '--chart-agent' : '--chart-previous';
 }
+
+/** How the bars stand: columns over time, rows for a ranking with long labels, one stacked bar for the parts of a whole. */
+export type BarLayout = 'columns' | 'rows' | 'share';

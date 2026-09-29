@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { type BarChartData, roleColourToken, type ValueFormat } from './chart-contract';
+import { type BarChartData, type BarLayout, roleColourToken, type ValueFormat } from './chart-contract';
 import { barOptions } from './echarts-bar-options';
 import { type ChartBuild, EchartsChart } from './echarts-chart';
 
@@ -19,12 +19,14 @@ let charts = 0;
   imports: [TranslocoDirective, EchartsChart],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bar-chart.html',
+  host: { '[style.--chart-block-size]': 'blockSize()' },
   styleUrl: './bar-chart.css',
 })
 export class BarChart {
   readonly data = input.required<BarChartData>();
   readonly format = input.required<ValueFormat>();
   readonly caption = input.required<string>();
+  readonly layout = input<BarLayout>('columns');
 
   /** Unique per chart, so the button names the table it opens. */
   protected readonly tableId = `chart-figures-${++charts}`;
@@ -33,7 +35,16 @@ export class BarChart {
   protected readonly build = computed<ChartBuild>(() => {
     const data = this.data();
     const format = this.format();
-    return (colours, reducedMotion) => barOptions(data, format, colours, reducedMotion);
+    const layout = this.layout();
+    return (colours, reducedMotion) => barOptions(data, format, colours, reducedMotion, layout);
+  });
+
+  /** A ranking is as tall as its rows and a share is one bar; columns keep the plot's default (or a wall's). */
+  protected readonly blockSize = computed(() => {
+    const layout = this.layout();
+    if (layout === 'share') return '3rem';
+    if (layout === 'rows') return `calc(${this.data().categories.length} * 2rem + 1rem)`;
+    return null;
   });
 
   protected colour(role: BarChartData['series'][number]['role']): string {
