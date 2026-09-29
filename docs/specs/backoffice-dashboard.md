@@ -1,6 +1,6 @@
 # Spec: a dashboard that shows the whole shop at a glance
 
-**Status**: proposed (2026-09-29); option B chosen, the data questions answered by the author the same day; waiting for the spec's approval before the plan (R-9)
+**Status**: approved (2026-09-29); Plan 1 built D-1 and D-2 (the series, the chart engines, ECharts kept) and Plan 2 D-3 to D-6 (the widgets and their size contract, the Overview and four tabs with their URLs, full screen, the phone), both the same day. Waiting for Plan 3 (D-7): the Overview's campaigns, sales by category, Growth's campaigns and search status, and a change and a trend for conversion and the return rate (R-9)
 **Slice(s)**: the backoffice's dashboard; Ordering (the series and the sales figures), Inventory, Pricing, Search and Accounts for their widgets; `frontend/libs` for the charts
 **Article**: *Two engines, one contract* (the chart comparison), and *A dashboard on the wall* (full screen), to be decided with the blog index
 
