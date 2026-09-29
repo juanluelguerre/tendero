@@ -1,0 +1,6 @@
+:host { display: block; }
+
+.plot {
+  inline-size: 100%;
+  block-size: var(--chart-block-size, 12.5rem);
+}

@@ -10,7 +10,7 @@
       (click)="figuresShown.set(!figuresShown())">{{ figuresShown() ? t('hide') : t('show') }}</button>
   </div>
   @defer (on viewport) {
-    <backoffice-echarts-bar-chart [data]="data()" [format]="format()" />
+    <backoffice-echarts-chart [build]="build()" />
   } @placeholder {
     <div class="placeholder"></div>
   }

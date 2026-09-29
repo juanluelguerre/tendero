@@ -27,7 +27,7 @@
 }
 
 .placeholder {
-  block-size: 11rem;
+  block-size: var(--chart-block-size, 12.5rem);
 }
 
 .head {
