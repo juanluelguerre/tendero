@@ -75,6 +75,14 @@
   --danger:         var(--red-600);
   --focus-ring:     var(--accent);
 
+  /* A chart's marks (R-9), validated with the dataviz method's checks in both
+     themes: a series in blue, what an agent did in clay (DESIGN.md: agents are
+     clay), the period before in the muted text colour. Statuses keep theirs and
+     are never a series. */
+  --chart-data:     #2A69B0;
+  --chart-agent:    var(--clay-600);
+  --chart-previous: var(--text-muted);
+
   /* The chalkboard: a surface that stays dark in both themes, for the one
      thing a page leads with — the campaign card of an event (R-8, the
      approved mock-ups). No theme redefines these on purpose: an event is the
@@ -179,6 +187,8 @@
      --positive and --accent already make above. */
   --danger:        #E4655D;   /* 5.04:1 on --bg-surface, 5.48:1 on --bg-page */
   --warning:       #DE8E16;   /* 6.37:1 on --bg-surface, 6.93:1 on --bg-page */
+  --chart-data:    #5E97CF;
+  --chart-agent:   #E0633A;   /* clay's dark step for a mark: the dark accent is too light for one */
 
   /* Added 2026-09-20 with the accessibility pass (ADR 0034). --on-accent is the
      token whose absence produced the worst ratio in the system: a button wrote
