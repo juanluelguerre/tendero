@@ -52,5 +52,10 @@ engine touches no widget.
 
 Colours reach ECharts only from the tokens, read at run time, and the test this ADR
 asked for holds it: `barOptions` carries no colour but the ones it is given
-(`echarts-bar-options.spec.ts`).
+(`echarts-bar-options.spec.ts`). The first version held that only for the bars;
+the whole-branch review found ECharts' own theme still drawing the axes, the grid
+lines and the tooltip — grey text at 3.3:1 in the dark theme. Now the ink, the
+rules, the surface and the typeface come from the tokens too, and the options are
+recomputed when the theme changes (`echarts-bar-chart.spec.ts`), since a colour
+read once in JavaScript does not follow `data-theme` the way `var()` does.
 
