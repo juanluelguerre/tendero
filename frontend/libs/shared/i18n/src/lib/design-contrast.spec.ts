@@ -126,6 +126,10 @@ describe('the design tokens, read on the surfaces they sit on', () => {
     ['--on-accent', '--accent'],
     ['--on-accent', '--accent-hover'],
     ['--accent', '--accent-tint'],
+    // The season card's stronger tint (R-8): its own accent and muted steps, one darker each.
+    ['--text', '--accent-tint-strong'],
+    ['--accent-on-tint-strong', '--accent-tint-strong'],
+    ['--text-muted-on-tint-strong', '--accent-tint-strong'],
     // The chalkboard (R-8's event card): dark in both themes, so its text is its own.
     ['--text-inverse', '--bg-inverse'],
     ['--text-inverse-muted', '--bg-inverse'],
@@ -151,6 +155,17 @@ describe('the design tokens, read on the surfaces they sit on', () => {
     ];
 
     expect(failures(TEXT_BAR, pairs)).toEqual([]);
+  });
+
+  /**
+   * The campaign the home leads with is set on a tint that stands apart from the
+   * page (the author, 2026-09-30): on --accent-tint it read as the same colour,
+   * 1.01:1, and the card blended into the band after it.
+   */
+  it.each(themeNames)('sets the leading campaign apart from the page in the %s theme', (theme) => {
+    const ratio = contrast(resolve(themes[theme], '--accent-tint-strong'), resolve(themes[theme], '--bg-page'));
+
+    expect(ratio).toBeGreaterThanOrEqual(1.2);
   });
 
   it.each(themeNames)('shows a focus ring against every surface in the %s theme', (theme) => {

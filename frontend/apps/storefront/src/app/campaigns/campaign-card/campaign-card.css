@@ -28,7 +28,8 @@
 
 :host(.campaign--season) .campaign {
   --clock-border: var(--border-strong);
-  background: var(--accent-tint);
+  /* Stronger than the agent band's tint, so the lead stands apart (tokens.css). */
+  background: var(--accent-tint-strong);
   color: var(--text);
 }
 
@@ -58,7 +59,7 @@
 }
 
 :host(.campaign--season) .campaign__when {
-  color: var(--accent);
+  color: var(--accent-on-tint-strong);
 }
 
 .campaign__name {
@@ -78,7 +79,7 @@
 }
 
 :host(.campaign--season) .campaign__line {
-  color: var(--text-muted);
+  color: var(--text-muted-on-tint-strong);
 }
 
 .campaign__holds {
@@ -98,7 +99,7 @@
 }
 
 :host(.campaign--season) .campaign__hold {
-  color: var(--accent);
+  color: var(--accent-on-tint-strong);
 }
 
 .campaign__actions {
