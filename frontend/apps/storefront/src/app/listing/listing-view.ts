@@ -265,6 +265,8 @@ export interface ChipWords extends PriceWords {
   readonly newArrivals: string;
   readonly inStock: string;
   money(amount: number): string;
+  /** A campaign's chip, by its name when the shop knows it (R-8). */
+  campaign(code: string): string;
 }
 
 /**
@@ -283,6 +285,7 @@ export function chipsOf(filters: ListingFilters, facets: readonly SearchFacet[],
     facets.find((facet) => facet.kind === kind)?.label ?? fallback;
 
   const chips: Chip[] = [
+    ...(filters.campaign ? [{ id: 'campaign', label: words.campaign(filters.campaign), without: { ...filters, campaign: null } }] : []),
     ...filters.within.map((code) => ({
       id: `within:${code}`,
       label: labelOf('Category', code) ?? code,

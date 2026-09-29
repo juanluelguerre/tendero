@@ -1,0 +1,208 @@
+/*
+  The campaign card (R-8, the approved mock-ups). An event is the chalkboard —
+  `--bg-inverse`, dark in both themes — and a season the light card on the
+  accent's tint. Colours by purpose only (design-tokens.spec.ts).
+*/
+:host {
+  display: block;
+}
+
+.campaign {
+  position: relative;
+  display: grid;
+  /* One column that may shrink: an implicit track sizes to its widest child,
+     and three product cards side by side overflowed a tablet (the ratchet). */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  overflow: hidden;
+  padding: var(--space-7) var(--space-7) var(--space-6);
+  border-radius: var(--radius-lg);
+}
+
+:host(.campaign--event) .campaign {
+  --clock-border: var(--border-inverse);
+  background: var(--bg-inverse);
+  border: 1px solid var(--border-inverse);
+  color: var(--text-inverse);
+}
+
+:host(.campaign--season) .campaign {
+  --clock-border: var(--border-strong);
+  background: var(--accent-tint);
+  color: var(--text);
+}
+
+@media (min-width: 900px) {
+  .campaign--withAside {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+/* The awning across the top edge, as on the shop's front. */
+.campaign__awning {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.5rem;
+  border-radius: 0;
+}
+
+.campaign__words {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-4);
+}
+
+/* The window, as an eyebrow: the one uppercase the system allows. */
+.campaign__when {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+:host(.campaign--event) .campaign__when {
+  color: var(--text-inverse-muted);
+}
+
+:host(.campaign--season) .campaign__when {
+  color: var(--accent);
+}
+
+.campaign__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  line-height: 1;
+}
+
+.campaign__line {
+  max-width: 48ch;
+  font-size: var(--text-lg);
+}
+
+:host(.campaign--event) .campaign__line {
+  color: var(--text-inverse-muted);
+}
+
+:host(.campaign--season) .campaign__line {
+  color: var(--text-muted);
+}
+
+.campaign__holds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.campaign__hold {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+}
+
+:host(.campaign--season) .campaign__hold {
+  color: var(--accent);
+}
+
+.campaign__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-block-start: var(--space-2);
+}
+
+/* On the chalkboard the ring is the light text: the accent would be a ring of
+   clay around a clay button. */
+:host(.campaign--event) :is(a, button):focus-visible {
+  outline-color: var(--text-inverse);
+}
+
+.campaign__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.campaign__image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+}
+
+.campaign__products {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text);
+}
+
+.campaign__product {
+  display: flex;
+}
+
+.campaign__product > * {
+  flex: 1;
+}
+
+/* The banner: a category's campaign at the head of its pages — one line of it. */
+:host(.campaign--banner) .campaign {
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+}
+
+:host(.campaign--banner) .campaign__words {
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+
+:host(.campaign--banner) .campaign__name {
+  font-size: var(--text-2xl);
+}
+
+:host(.campaign--banner) .campaign__line {
+  font-size: var(--text-md);
+}
+
+@media (max-width: 640px) {
+  .campaign {
+    padding: var(--space-6) var(--space-5) var(--space-5);
+  }
+
+  .campaign__name {
+    font-size: var(--text-3xl);
+  }
+
+  .campaign__line {
+    font-size: var(--text-md);
+  }
+
+  .campaign__cta {
+    width: 100%;
+  }
+
+  /* On a phone the words are the card: the products are one tap away. */
+  .campaign__products {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .campaign__link {
+    min-height: 2.75rem;
+  }
+}

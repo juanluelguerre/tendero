@@ -190,27 +190,40 @@
       "heading": "The closest things we sell"
     },
     "submit": "Search",
-    "suggestions": [
-      "running shoes",
-      "coffee maker",
-      "backpack",
-      "kitchen"
-    ],
     "tooShort": "Two letters at least — one matches almost everything.",
-    "took": "{{ms}} ms",
-    "tryLabel": "Try",
-    "returning": "Ordered before?",
-    "seeOrders": "See your orders"
+    "took": "{{ms}} ms"
   },
   "home": {
     "departments": "Around the shop",
     "offers": "Offers",
-    "offersLede": "They apply themselves in the basket. No codes, no small print.",
+    "offersLede": "Products with a lower price right now.",
     "newest": "New in",
     "freeShipping": "Free shipping",
     "until": "Until {{date}}",
     "newestPrevious": "Earlier new arrivals",
-    "newestNext": "More new arrivals"
+    "newestNext": "More new arrivals",
+    "title": "Tendero, the corner shop for people and agents",
+    "offersRules": "Applied in the basket by themselves: {{names}}.",
+    "offersAll": "See all deals",
+    "offerBadge": "Deal",
+    "trail": "Pick up where you left off",
+    "trailLede": "What you viewed and searched in this browser. Only you see it.",
+    "trailLedeAccount": "What you viewed and searched with your account. Only you see it.",
+    "trailClear": "Clear history",
+    "trailManage": "Manage",
+    "trailSearches": "Your searches",
+    "trailSearchRemove": "Remove the search “{{text}}”",
+    "suggested": "You may also like",
+    "suggestedLede": "From what you viewed. Each suggestion says where it comes from.",
+    "because": "Because you viewed {{name}}",
+    "trending": "Trending",
+    "trendingLede": "What is rising most this week against the last.",
+    "rising": "Rising this week",
+    "bestSellers": "Best sellers",
+    "bestSellersLede": "This week, across the shop.",
+    "newestLede": "Just arrived in the shop.",
+    "newestAll": "See all",
+    "newBadge": "New"
   },
   "category": {
     "breadcrumb": "Where you are",
@@ -272,7 +285,8 @@
       "query": "Results for “{{query}}”",
       "offers": "Offers",
       "newArrivals": "New arrivals",
-      "all": "All products"
+      "all": "All products",
+      "campaign": "{{name}}: the deals"
     },
     "count": {
       "one": "1 product",
@@ -332,6 +346,72 @@
       "apply": "Show {{count}} products",
       "applyOne": "Show 1 product",
       "applyUnknown": "Show products"
-    }
+    },
+    "campaign": "Campaign: {{name}}"
+  },
+  "shelf": {
+    "rank": "Number {{rank}}:",
+    "previous": "Previous: {{heading}}",
+    "next": "Next: {{heading}}",
+    "remove": "Remove {{name}} from your history"
+  },
+  "campaign": {
+    "endsIn": "Ends in",
+    "startsIn": "Starts in",
+    "until": "Until {{date}}",
+    "from": "From {{date}}",
+    "holds": "What it holds",
+    "holdWithCode": "{{name}} with code {{code}}",
+    "seeOffers": "See the deals",
+    "seeUpcoming": "See what it will hold",
+    "seeSeason": "See the season",
+    "products": "Products in {{name}}",
+    "notStarted": "{{name}} starts on {{date}}. Its deals will appear here then."
+  },
+  "agentCard": {
+    "title": "Shop with your agent",
+    "lede": "Your assistant can search, compare and fill the basket in this shop. You are still the one who pays.",
+    "address": "MCP address",
+    "copy": "Copy the address",
+    "copied": "Address copied",
+    "howTo": "How to connect it"
+  },
+  "promise": {
+    "label": "The shop promises",
+    "shippingHint": "Worked out at checkout",
+    "returns": "{{days}} days to return",
+    "returnsHint": "From delivery",
+    "payment": "Secure payment",
+    "paymentHint": "Your card details never reach the shop",
+    "agents": "Built for agents",
+    "agentsHint": "MCP, UCP and WebMCP"
+  },
+  "history": {
+    "title": "Your history",
+    "lede": "What you viewed and searched, to pick it up again. Only you see it, and you can clear it or switch it off at any time.",
+    "guestLede": "It is kept in this browser only and never sent to the shop. If you sign in, it moves to your account.",
+    "switch": "Keep my history",
+    "off": "Your history is off: nothing is kept, not even in this browser.",
+    "empty": "Nothing in your history yet.",
+    "views": "Products you viewed",
+    "searches": "Searches",
+    "clear": "Clear all"
+  },
+  "agents": {
+    "title": "Shop with your agent",
+    "lede": "An assistant can do in Tendero what you do: search, compare and fill the basket. Paying is still yours to do.",
+    "canTitle": "What it can do",
+    "canSearch": "Search the catalogue and read every product, with its variants, price and stock.",
+    "canCompare": "Compare products and explain the deals, including the ones that do not apply and why.",
+    "canCart": "Fill your basket. You confirm the purchase.",
+    "mcpTitle": "With your assistant: the MCP server",
+    "mcpBody": "Add this address as an MCP server in your assistant (Claude, VS Code…). It only reads: it cannot buy on its own.",
+    "mcpCommand": "In Claude Code, for example:",
+    "browserTitle": "In your browser: WebMCP",
+    "browserBody": "If your browser has an agent with WebMCP, the shop offers it its tools in this very tab, with your session and your basket. Without one, the shop is as it always is.",
+    "ucpTitle": "For agents that buy: UCP",
+    "ucpBody": "An agent buying on somebody’s behalf identifies itself and brings a signed mandate. Its profile is at this address:",
+    "youPay": "You are still the one who pays",
+    "youPayBody": "No agent pays from your browser without you: payment is confirmed in the shop, in your name."
   }
 }

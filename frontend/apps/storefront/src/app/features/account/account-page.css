@@ -188,3 +188,7 @@
   .order__link { grid-template-columns: auto minmax(0, 1fr); }
   .order__figures { grid-column: 1 / -1; justify-items: start; text-align: start; }
 }
+
+.account__history {
+  margin-block-start: var(--space-7);
+}

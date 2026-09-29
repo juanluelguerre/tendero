@@ -1,0 +1,10 @@
+@let time = left();
+<!-- Read once, as a sentence; not a live region. -->
+<span class="sr-only">{{ spoken() }}</span>
+
+<span class="clock" aria-hidden="true">
+  <span class="clock__label">{{ label() }}</span>
+  <span class="clock__box numeric">{{ time.days }}<small class="clock__unit">d</small></span>
+  <span class="clock__box numeric">{{ pad(time.hours) }}<small class="clock__unit">h</small></span>
+  <span class="clock__box numeric">{{ pad(time.minutes) }}<small class="clock__unit">min</small></span>
+</span>

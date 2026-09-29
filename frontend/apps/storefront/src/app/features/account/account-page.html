@@ -25,6 +25,9 @@
           {{ t('account.signIn') }}
         </button>
       </section>
+
+      <!-- A guest's trail is this browser's, and so are the controls over it (R-8). -->
+      <storefront-trail-history class="account__history" />
     }
 
     @case ('signedIn') {
@@ -115,6 +118,9 @@
             }
           </ul>
         }
+
+        <!-- *Tu historial* (R-8, H-3b): see it, delete it, switch it off. -->
+        <storefront-trail-history class="account__history" />
       }
     }
   }

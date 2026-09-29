@@ -1,58 +1,13 @@
 <ng-container *transloco="let t">
-  <!-- The search band. It is the shop's front door, so it gets the room: a
-       shopkeeper's first act is to listen to what you are looking for. Once
-       there are results it shrinks (see .hero--compact) because from then on
-       what matters is what was found. -->
-  <section class="hero" [class.hero--compact]="hasResults()">
-    <!--
-      The shop front, and it goes away the moment there are results: an
-      illustration next to a list of what somebody asked for is decoration in
-      the way. `alt` is empty because it says nothing the heading beside it does
-      not already say, and it is `aria-hidden` for the same reason.
-    -->
-    @if (!hasResults()) {
-      <img class="hero__art" src="/img/hero-shopfront.svg" alt="" aria-hidden="true"
-           width="720" height="460" />
-    }
-
-    <!-- Once the page lists something, the heading says what: the words asked,
-         or the shelf the filters make (*Ofertas* from the header's row). -->
-    <h1 class="hero__title">{{ heading(t) }}</h1>
-    <p class="hero__lede muted">{{ t('search.lede') }}</p>
-
-    <!--
-      A returning guest could not find an order they had already placed. The
-      account page listed them and the header linked to it behind an unlabelled
-      icon, which is a path you have to already know about.
-
-      Shown only when there is no session and no results: on an idle home it is
-      the answer to "where did my order go", and over a result list it would be
-      an advert. It is not a clay action: one accent per view is the rule, and a
-      way back to an order is not the shop's main call.
-    -->
-    @if (!signedIn() && !hasResults()) {
-      <p class="hero__account">
-        {{ t('search.returning') }}
-        <a class="hero__account-link" [routerLink]="links.account()">{{ t('search.seeOrders') }}</a>
-      </p>
-    }
-
-    <!-- The words are asked in the header's box, the shop's one search, in
-         the same place on every page (the author, the redesign's second
-         walkthrough). What stays here is a way in for somebody who has not
-         typed yet: real queries from the golden set, so the first click is one
-         the gate measures rather than one that happens to look good. -->
-    @if (!hasResults()) {
-      <ul class="suggestions">
-        <li class="suggestions__label eyebrow">{{ t('search.tryLabel') }}</li>
-        @for (suggestion of suggestions(); track suggestion) {
-          <li>
-            <button type="button" class="chip" (click)="submit(suggestion)">{{ suggestion }}</button>
-          </li>
-        }
-      </ul>
-    }
-  </section>
+  <!-- The heading of a list: the words asked, or the shelf the filters make.
+       The home draws its own front (R-8): the header's box is the shop's one
+       search, so the idle page no longer asks *¿Qué estás buscando?*. -->
+  @if (mode() !== 'idle') {
+    <section class="hero hero--compact">
+      <h1 class="hero__title">{{ heading(t) }}</h1>
+      <p class="hero__lede muted">{{ t('search.lede') }}</p>
+    </section>
+  }
 
   @switch (mode()) {
     @case ('idle') {
@@ -94,6 +49,12 @@
         <!-- The results are the listing the category pages draw too (R-7.3,
              F-3). What only a search says goes above its products. -->
         <storefront-listing>
+          @let upcoming = campaign();
+          @if (upcoming && upcoming.phase === 'Upcoming') {
+            <!-- Before the window opens its promotions reach nothing yet, and
+                 an empty list with no reason reads as a broken link. -->
+            <p class="notice">{{ t('campaign.notStarted', { name: upcoming.name, date: campaignStarts() }) }}</p>
+          }
           @if (result.status === 'ready') {
             @if (result.answer?.helpTopic === 'returns') {
               <!-- Above the products, on purpose: a question about returns is

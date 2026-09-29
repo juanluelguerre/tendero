@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-33 features: **28** answered by a signal emitted today,
+37 features: **32** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -31,6 +31,10 @@ everything here that is not *planned* is emitted.
 | Account and guest cart claim | Do guests sign in, and does their cart survive it? | Whether guest checkout stays the default path. | — Not measured yet, and not planned: sign-in is the identity provider's, and the claim is one call with no screen of its own. Revisit when accounts do more than hold orders. | none |
 | Storefront theme choice | Do shoppers change the theme from their system's, and does the dark shop hold the same conversion? | If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else. | `theme_chosen` | emitted |
 | Added-to-cart notice | Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping? | If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action. | `cart_notice_followed` | emitted |
+| Home page modules | Which of the home page's modules do shoppers open, and from which place on the page? | A module nobody opens in a month moves down or goes; the order of the page follows the numbers. | `home_module_opened` | emitted |
+| Campaign card | Do shoppers open the campaign card, before a campaign starts as well as while it runs? | If the before card is not opened, the teaser is not worth its place. | `campaign_card_opened` | emitted |
+| Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
+| Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
 
 ### Backoffice
 
@@ -96,10 +100,11 @@ Answers:
 
 - **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
 - **Product page** — How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
+- **Suggestions and trends** — Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `arrived_from` | string | `search`, `category`, `listing`, `home`, `other`, `direct` | The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. |
+| `arrived_from` | string | `search`, `category`, `listing`, `home`, `trail`, `campaign`, `suggested`, `trending`, `other`, `direct` | The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. From the home page, the row that led here when it says so: trail (Sigue donde lo dejaste), campaign (the campaign card), suggested (Puede que te guste) and trending (Tendencias) — R-8. |
 | `filtered` | boolean | — | Whether the list the shopper came from was narrowed by filters. False for a page that is not a list. |
 
 ### `category_opened`
@@ -239,6 +244,44 @@ Answers:
 - **Added-to-cart notice** — Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping?
 
 No attributes.
+
+### `home_module_opened`
+
+browser event, behavioural. A shopper followed a link inside one of the home page's modules (R-8). Only with analytics consent.
+
+Answers:
+
+- **Home page modules** — Which of the home page's modules do shoppers open, and from which place on the page?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `module` | string | `campaign`, `trail`, `agent`, `offers`, `suggested`, `trending`, `best_sellers`, `new`, `departments` | Which module: the campaign card, Sigue donde lo dejaste, Compra con tu agente, Ofertas, Puede que te guste, Tendencias, Lo más vendido, Novedades or Secciones de la tienda. |
+| `position` | number | — | Where the module was on the page when it was opened, from 1 at the top, counting only the modules drawn — a band that failed or had nothing to show does not take a place. |
+
+### `campaign_card_opened`
+
+browser event, behavioural. A shopper followed the campaign card's call to action or one of its products (R-8). Only with analytics consent.
+
+Answers:
+
+- **Campaign card** — Do shoppers open the campaign card, before a campaign starts as well as while it runs?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `campaign` | string | — | The campaign's code (TENDERO_DAYS): a handful per year, set by the shopkeeper, never a person or a product. |
+| `phase` | string | `before`, `during` | Before the campaign starts (Empieza en…) or while it runs (Termina en…). |
+
+### `trail_cleared`
+
+browser event, behavioural. A shopper removed their browsing trail, one entry or all of it (R-8). Only with analytics consent.
+
+Answers:
+
+- **Browsing trail** — Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `scope` | string | `one`, `all` | One product or one search removed, or the whole trail. |
 
 ## Metrics
 

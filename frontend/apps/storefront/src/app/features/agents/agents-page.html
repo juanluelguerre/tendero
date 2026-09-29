@@ -1,0 +1,39 @@
+<article class="agents" *transloco="let t">
+  <header class="agents__head">
+    <h1 class="agents__title">{{ t('agents.title') }}</h1>
+    <p class="agents__lede">{{ t('agents.lede') }}</p>
+  </header>
+
+  <section class="agents__block" aria-labelledby="agents-can">
+    <h2 id="agents-can">{{ t('agents.canTitle') }}</h2>
+    <ul class="agents__list">
+      <li>{{ t('agents.canSearch') }}</li>
+      <li>{{ t('agents.canCompare') }}</li>
+      <li>{{ t('agents.canCart') }}</li>
+    </ul>
+  </section>
+
+  <section class="agents__block" aria-labelledby="agents-mcp">
+    <h2 id="agents-mcp">{{ t('agents.mcpTitle') }}</h2>
+    <p>{{ t('agents.mcpBody') }}</p>
+    <p><code class="agents__code numeric">{{ addresses.mcp }}</code></p>
+    <p class="muted">{{ t('agents.mcpCommand') }}</p>
+    <pre class="agents__pre numeric"><code>{{ command }}</code></pre>
+  </section>
+
+  <section class="agents__block" aria-labelledby="agents-browser">
+    <h2 id="agents-browser">{{ t('agents.browserTitle') }}</h2>
+    <p>{{ t('agents.browserBody') }}</p>
+  </section>
+
+  <section class="agents__block" aria-labelledby="agents-ucp">
+    <h2 id="agents-ucp">{{ t('agents.ucpTitle') }}</h2>
+    <p>{{ t('agents.ucpBody') }}</p>
+    <p><code class="agents__code numeric">{{ addresses.ucp }}</code></p>
+  </section>
+
+  <section class="agents__block agents__block--pay" aria-labelledby="agents-pay">
+    <h2 id="agents-pay">{{ t('agents.youPay') }}</h2>
+    <p>{{ t('agents.youPayBody') }}</p>
+  </section>
+</article>

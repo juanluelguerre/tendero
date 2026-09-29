@@ -41,6 +41,7 @@ const words: ChipWords = {
   upTo: (max) => `Up to ${max}`,
   from: (min) => `${min} and above`,
   between: (min, max) => `${min} – ${max}`,
+  campaign: (code) => `Campaign: ${code}`,
 };
 
 describe('the sections of the column', () => {
@@ -244,5 +245,15 @@ describe('the applied chips', () => {
 
   it('has none when nothing is applied', () => {
     expect(chipsOf(NoFilters, facets, words)).toEqual([]);
+  });
+});
+
+describe('the chip of a campaign listing (R-8)', () => {
+  it('comes first, by the campaign name, and takes the campaign off', () => {
+    const chips = chipsOf({ ...NoFilters, campaign: 'TENDERO_DAYS', onOffer: true }, [], words);
+
+    expect(chips.map((chip) => chip.label)).toEqual(['Campaign: TENDERO_DAYS', 'On offer']);
+    expect(chips[0].without.campaign).toBeNull();
+    expect(chips[0].without.onOffer).toBe(true);
   });
 });

@@ -272,6 +272,42 @@ Campañas as ADR 0042's list and pane. The products are the seed's own drawings,
 referenced from `seed/images`; the campaign's image (`tendero-days.png`) was
 generated in pen.dev and stands for the one a shopkeeper uploads.
 
+## As built — the storefront (H-2 to H-6, 2026-09-29)
+
+Built as the mock-ups draw it, with these differences and their reasons:
+
+- **The offers row's badge says *Oferta*, not *−25 %*, and no card shows a
+  struck-through price.** A search card (`SearchHit`) carries the list price
+  only; the saving per product is the promotion engine's to compute at the till,
+  and no endpoint answers it per product yet. Printing a figure the page worked
+  out for itself would be the copy invariant 11 forbids. The day `SearchHit`
+  gains the saving, the badge takes it — `ProductCard`'s `badge` input is already
+  the place.
+- **The rows keep *Añadir a la cesta* and *Comparar*** on their cards, which the
+  mock-ups leave out: the home's *Novedades* had them, and taking the shortest
+  way to the cart off the front page is a regression, not a simplification. The
+  campaign card's products and the best-seller lines are quiet (no buttons).
+- **No *Ver más* on *Tendencias* and *Lo más vendido***: neither has a listing to
+  lead to. *Ver todas* stays on *Ofertas* (`?offer=1`) and *Novedades* (`?new=1`).
+- **No *Cómo funciona* and no *Avísame cuando empiece*** on the campaign card:
+  neither has anything behind it yet, and a notification is not a trivial
+  addition. Before a campaign starts, its call to action is *Ver qué incluirá*,
+  and the campaign's listing says when its deals will appear — the server's
+  `?campaign=` reaches nothing until the window opens (ADR 0044).
+- **The free-shipping promise is the shipping promotion's own name** (*Envío
+  gratis desde 50 €*): `OfferView` carries no threshold for free shipping, and the
+  name is the rule's words, not the page's.
+- **The golden-set suggestions and the returning-guest link left the home** with
+  the heading and the drawing: the mock-ups have none, and no test depended on
+  them. The account menu keeps the way to past orders.
+- ***Compra con tu agente* leads to a page, `/:lang/agents`**, not a dialog — it
+  has an address to share and the accessibility ratchet reads it like any page.
+  The MCP address shown is the shop's own origin; the development server forwards
+  `/mcp` and `/.well-known` to the API as it does `/api`.
+- **The trail's controls live in *Tu historial* for a guest too**, on the
+  account page below *Identifícate*: the row offers × per product and search,
+  *Borrar historial* and *Gestionar*, and the switch is in *Tu historial*.
+
 ## Building it, in order
 
 | # | Increment | Size |

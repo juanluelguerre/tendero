@@ -85,3 +85,8 @@
 @media (pointer: coarse) {
   .crumbs a { min-height: 2.75rem; }
 }
+
+/* A category's campaign, between its heading and its sections (R-8). */
+.category__campaign {
+  margin-block-end: var(--space-5);
+}

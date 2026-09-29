@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { aProductInTheCart, checkoutWithAnAddress, payWith } from './journeys';
+import { aProductInTheCart, backofficeUrl, checkoutWithAnAddress, payWith, signInToTheBackoffice } from './journeys';
 
 /**
  * A return, the whole way round, in two applications: a shopper pays in the
@@ -14,24 +14,7 @@ import { aProductInTheCart, checkoutWithAnAddress, payWith } from './journeys';
  * delivered order offers is the one that opens a return.
  */
 
-const BACKOFFICE = process.env['BACKOFFICE_URL'] ?? 'http://localhost:4201';
-
-/** The seeded shopkeeper: see `shopkeeper.spec.ts` for why both issuers are handled. */
-async function signInToTheBackoffice(page: Page): Promise<void> {
-  await page.goto(`${BACKOFFICE}/sign-in`);
-  await page.getByRole('button', { name: /continue/i }).click();
-
-  if (/\/realms\//.test(page.url())) {
-    await page.locator('input[name="username"]').fill('juanlu');
-    await page.locator('input[name="password"]').fill('juanlu');
-    await page.locator('input[type="submit"], button[type="submit"]').first().click();
-  } else {
-    await page.getByRole('link', { name: 'Juan Luis' }).click();
-  }
-
-  // In once the bar offers the account menu, which holds the way out since the redesign (R-3).
-  await expect(page.getByRole('banner').getByRole('button', { name: /^(account|cuenta):/i })).toBeVisible();
-}
+const BACKOFFICE = backofficeUrl;
 
 /**
  * One move on one order's row, once the server offers it. An order is shippable

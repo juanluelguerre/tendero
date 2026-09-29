@@ -54,7 +54,10 @@ if (faro) {
 
 export default [
   {
-    context: ['/api'],
+    // `/mcp` and `/.well-known` too (R-8, H-5): *Compra con tu agente* shows the
+    // shop's own address for its MCP server and UCP profile, and in development
+    // the shop's address is this server's.
+    context: ['/api', '/mcp', '/.well-known'],
     target: api,
     secure: false,
     changeOrigin: true,

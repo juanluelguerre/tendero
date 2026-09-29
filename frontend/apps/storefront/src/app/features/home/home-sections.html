@@ -1,120 +1,94 @@
 <ng-container *transloco="let t">
-  <!--
-    Departments. The taxonomy phase 2 built and nothing ever browsed: sixteen
-    categories with a localized name, a parent and a materialised path, whose
-    only consumer was the search index.
-  -->
-  @if (departments().length > 0) {
-    <section class="band">
-      <h2 class="band__title">{{ t('home.departments') }}</h2>
-
-      <ul class="departments">
-        @for (department of departments(); track department.code) {
-          <li>
-            <a class="department" [routerLink]="links.category(department.code)">
-              <!--
-                An illustration rather than the awning rule the card used to
-                carry. It still carries the awning — every one of these drawings
-                opens with it — so the signature survives at a size where it can
-                be seen (design/DESIGN.md).
-
-                `alt` is empty on purpose: the department's name is the next
-                element and reading "Ropa" twice is worse than reading it once.
-                The picture decorates the link, it does not label it.
-              -->
-              <img class="department__art" [src]="art(department)" alt="" loading="lazy"
-                   width="400" height="300" />
-
-              <span class="department__name">{{ department.name }}</span>
-
-              <!-- A few of the sections inside, because "Hogar" tells you
-                   nothing and "Hogar · Cocina, Iluminación, Textil" tells you
-                   whether to click. -->
-              <span class="department__sections">
-                {{ sectionNames(department) }}
-              </span>
-            </a>
-          </li>
-        }
-      </ul>
-    </section>
-  }
+  <!-- The page's name for a screen reader and a crawler: the header's search is
+       the shop's one question, and the campaign below is the first sentence. -->
+  <h1 class="sr-only">{{ t('home.title') }}</h1>
 
   <!--
-    Offers, from the promotion engine itself rather than a banner somebody
-    typed. What is here is what the till will actually apply: the server filters
-    out anything needing a coupon or a segment, so nothing on this band is a
-    discount the reader cannot have.
+    The modules, in the spec's order. Each is marked with `storefrontHomeModule`
+    (home_module_opened), and each is drawn only when it has something to show:
+    no empty stage, no empty box, no row a failed request left blank.
   -->
-  @if (offers().length > 0) {
-    <section class="band">
-      <h2 class="band__title">{{ t('home.offers') }}</h2>
-      <p class="band__lede muted">{{ t('home.offersLede') }}</p>
+  <div class="home">
+    @if (campaign(); as leading) {
+      <storefront-campaign-card storefrontHomeModule="campaign" [campaign]="leading" [products]="campaignHits()"
+                                (reached)="campaigns.refresh()" />
+    }
 
-      <ul class="offers">
-        @for (offer of offers(); track offer.code) {
-          <li class="offer">
-            <!--
-              A figure, in the mono face the whole shop uses for numbers. Free
-              shipping has no figure, so it gets its own class rather than being
-              stretched across a slot built for two characters — "Envío gratis"
-              at the size of "25%" was three times the width of every card
-              beside it.
-            -->
-            @switch (offer.kind) {
-              @case ('percent-off-line') {
-                <span class="offer__headline numeric">{{ offer.amount }}%</span>
-              }
-              @case ('amount-off-order') {
-                <span class="offer__headline numeric">−{{ offer.amount }} €</span>
-              }
-              @case ('buy-x-get-y') {
-                <span class="offer__headline numeric">{{ offer.amount }}+1</span>
-              }
-              @default {
-                <span class="offer__headline offer__headline--words">{{ t('home.freeShipping') }}</span>
-              }
-            }
-            <span class="offer__name">{{ offer.name }}</span>
-            @if (offer.until) {
-              <span class="offer__until muted">{{ t('home.until', { date: until(offer) }) }}</span>
-            }
-          </li>
-        }
-      </ul>
-    </section>
-  }
+    @if (trail.any()) {
+      <storefront-trail-row storefrontHomeModule="trail" [viewed]="viewed()" />
+    }
 
-  <!--
-    New arrivals, ordered by the date the SOURCE first listed the product — not
-    by when this shop imported it, which is the same second for the whole
-    catalogue and would be sorting by import order while calling it news.
-  -->
-  @if (newest().length > 0) {
-    <section class="band">
-      <div class="band__head">
-        <h2 class="band__title">{{ t('home.newest') }}</h2>
-        <!-- The row said it scrolled only by cutting its last card in half
-             (R-1, S-F5). Now it shows whole cards and says so with two
-             buttons, which stop at the ends. -->
-        <div class="row-controls">
-          <button type="button" class="row-controls__button" aria-controls="newest-row" [attr.aria-label]="t('home.newestPrevious')" [disabled]="atStart()" (click)="page(newestRow, -1)">‹</button>
-          <button type="button" class="row-controls__button" aria-controls="newest-row" [attr.aria-label]="t('home.newestNext')" [disabled]="atEnd()" (click)="page(newestRow, 1)">›</button>
-        </div>
-      </div>
+    <storefront-agent-card storefrontHomeModule="agent" />
 
-      <!--
-        A row you scroll, not a carousel that scrolls itself. Nothing moves on
-        its own: people rarely see past the first slide of a rotating hero, and
-        design/DESIGN.md keeps animation for the awning bar alone.
-      -->
-      <ul class="row" id="newest-row" #newestRow [attr.aria-label]="t('home.newest')" (scroll)="edges(newestRow)">
-        @for (hit of newest(); track hit.productId) {
-          <li class="row__item">
-            <storefront-product-card class="card" [hit]="hit" />
-          </li>
-        }
-      </ul>
-    </section>
-  }
+    @let offerItems = offers(t('home.offerBadge'));
+    @if (offerItems.length > 0) {
+      <storefront-product-row
+        storefrontHomeModule="offers"
+        [heading]="t('home.offers')"
+        [lede]="offerRules() ? t('home.offersLede') + ' ' + t('home.offersRules', { names: offerRules() }) : t('home.offersLede')"
+        [more]="{ label: t('home.offersAll'), commands: links.home(), queryParams: { offer: 1 } }"
+        [items]="offerItems" />
+    }
+
+    @let suggestions = suggested(because(t));
+    @if (suggestions.length > 0) {
+      <storefront-product-row
+        storefrontHomeModule="suggested"
+        [heading]="t('home.suggested')"
+        [lede]="t('home.suggestedLede')"
+        [items]="suggestions"
+        via="suggested" />
+    }
+
+    @let rising = trending(t('home.rising'));
+    @if (rising.length > 0) {
+      <storefront-product-row
+        storefrontHomeModule="trending"
+        [heading]="t('home.trending')"
+        [lede]="t('home.trendingLede')"
+        [items]="rising"
+        via="trending" />
+    }
+
+    @if (bestSellers().length > 0) {
+      <storefront-product-row
+        storefrontHomeModule="best_sellers"
+        [heading]="t('home.bestSellers')"
+        [lede]="t('home.bestSellersLede')"
+        [items]="bestSellers()"
+        layout="line" />
+    }
+
+    @let arrivals = newest(t('home.newBadge'));
+    @if (arrivals.length > 0) {
+      <storefront-product-row
+        storefrontHomeModule="new"
+        [heading]="t('home.newest')"
+        [lede]="t('home.newestLede')"
+        [more]="{ label: t('home.newestAll'), commands: links.home(), queryParams: { new: 1 } }"
+        [items]="arrivals" />
+    }
+
+    @if (departments().length > 0) {
+      <section class="departments" storefrontHomeModule="departments" aria-labelledby="home-departments">
+        <h2 class="departments__title" id="home-departments">{{ t('home.departments') }}</h2>
+        <ul class="departments__list">
+          @for (department of departments(); track department.code) {
+            <li>
+              <a class="department" [routerLink]="links.category(department.code)">
+                <!-- Decorative: the name beside it is the link's label. -->
+                <img class="department__art" [src]="art(department.code)" alt="" loading="lazy" width="400" height="300" />
+                <span class="department__words">
+                  <span class="department__name">{{ department.name }}</span>
+                  <span class="department__sections">{{ department.sections }}</span>
+                </span>
+              </a>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <storefront-promise-strip [freeShipping]="freeShipping()" [returnDays]="returnDays()" />
+  </div>
 </ng-container>

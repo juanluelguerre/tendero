@@ -1,0 +1,32 @@
+<section class="promise" *transloco="let t" [attr.aria-label]="t('promise.label')">
+  <ul class="promise__list">
+    @if (freeShipping(); as shipping) {
+      <li class="promise__item">
+        <svg class="promise__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7" /><circle cx="7" cy="17.5" r="1.5" /><circle cx="17" cy="17.5" r="1.5" />
+        </svg>
+        <span><strong class="promise__title">{{ shipping }}</strong><span class="promise__hint">{{ t('promise.shippingHint') }}</span></span>
+      </li>
+    }
+    @if (returnDays(); as days) {
+      <li class="promise__item">
+        <svg class="promise__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 12a8 8 0 1 0 2.3-5.7" /><path d="M4 4v4h4" />
+        </svg>
+        <span><strong class="promise__title">{{ t('promise.returns', { days }) }}</strong><span class="promise__hint">{{ t('promise.returnsHint') }}</span></span>
+      </li>
+    }
+    <li class="promise__item">
+      <svg class="promise__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
+      </svg>
+      <span><strong class="promise__title">{{ t('promise.payment') }}</strong><span class="promise__hint">{{ t('promise.paymentHint') }}</span></span>
+    </li>
+    <li class="promise__item">
+      <svg class="promise__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="5" y="8" width="14" height="11" rx="3" /><path d="M12 4v4M9 13h.01M15 13h.01M9 16h6" />
+      </svg>
+      <span><strong class="promise__title">{{ t('promise.agents') }}</strong><span class="promise__hint">{{ t('promise.agentsHint') }}</span></span>
+    </li>
+  </ul>
+</section>

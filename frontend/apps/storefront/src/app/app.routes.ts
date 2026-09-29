@@ -52,6 +52,12 @@ const shopRoutes: Route[] = [
     loadComponent: () => import('./features/checkout/continue-checkout-page').then((m) => m.ContinueCheckoutPage),
   },
   {
+    // *Compra con tu agente* (R-8, H-5): how to point an assistant at the shop.
+    path: 'agents',
+    title: 'agents.title',
+    loadComponent: () => import('./features/agents/agents-page').then((m) => m.AgentsPage),
+  },
+  {
     path: 'account',
     title: 'account.title',
     loadComponent: () => import('./features/account/account-page').then((m) => m.AccountPage),

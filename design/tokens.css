@@ -74,6 +74,18 @@
   --danger:         var(--red-600);
   --focus-ring:     var(--accent);
 
+  /* The chalkboard: a surface that stays dark in both themes, for the one
+     thing a page leads with — the campaign card of an event (R-8, the
+     approved mock-ups). No theme redefines these on purpose: an event is the
+     ink board outside the shop in daylight and at night alike, and the
+     dark theme's page (#171513) still sets it off by its border.
+     --text-inverse 14.9:1 and --text-inverse-muted 9.8:1 on it; the focus
+     ring (--accent) 3.1:1 light and 6.1:1 dark (design-contrast.spec.ts). */
+  --bg-inverse:         var(--ink-900);
+  --text-inverse:       var(--stone-100);
+  --text-inverse-muted: var(--stone-300);
+  --border-inverse:     var(--ink-500);  /* decoration: the clock's boxes (2.9:1); the chips use the muted text */
+
   /* ---------- Type ----------
      Display: Bricolage Grotesque — a variable grotesque with real quirk,
        used ONLY for headlines and the wordmark. Never for UI chrome.

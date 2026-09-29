@@ -8,7 +8,9 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime, formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { AccountService } from '../../data-access/account.service';
 import { CartStore } from '../../data-access/cart.service';
+import { CustomerLink } from '../../data-access/customer-link';
 import { ShopLinks } from '../../shop-links';
+import { TrailHistory } from '../../trail/trail-history';
 
 type PageState =
   | { status: 'signedOut' }
@@ -35,7 +37,7 @@ type PageState =
  */
 @Component({
   selector: 'storefront-account-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, TrailHistory],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-page.html',
   styleUrl: './account-page.css',
@@ -44,6 +46,7 @@ export class AccountPage {
   private readonly auth = inject(AuthStore);
   private readonly accounts = inject(AccountService);
   private readonly cart = inject(CartStore);
+  private readonly customer = inject(CustomerLink);
   private readonly culture = inject(CultureStore);
   private readonly images = inject(ProductImageUrls);
 
@@ -88,12 +91,11 @@ export class AccountPage {
    * It runs on every load of this page while signed in, which is safe because
    * both operations are idempotent: linking an identity that is already linked
    * reports `recognised` and writes nothing, and a cart that is already claimed
-   * is the same cart.
+   * is the same cart. The link is `CustomerLink`'s, shared with the trail's
+   * merge at sign-in (R-8), so the tab asks it once.
    */
   private async attach(): Promise<void> {
-    const name = this.auth.identity()?.name ?? '';
-
-    await this.accounts.link(name, this.culture.active());
+    await this.customer.ensure();
 
     // The basket, if there is one. Best-effort on purpose: a cart that belongs
     // to another account comes back 409, and refusing to sign somebody in over a

@@ -1,0 +1,62 @@
+/* A page to read: the prose measure, blocks with room between them. */
+:host {
+  display: block;
+  padding-block: var(--space-7);
+}
+
+.agents {
+  display: grid;
+  gap: var(--space-6);
+  max-width: var(--container-prose);
+}
+
+.agents__title {
+  font-size: var(--text-3xl);
+}
+
+.agents__lede {
+  margin-block-start: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-lg);
+}
+
+.agents__block {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.agents__block h2 {
+  font-size: var(--text-xl);
+}
+
+.agents__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-inline-start: var(--space-5);
+}
+
+.agents__code {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.agents__pre {
+  margin: 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  font-size: var(--text-xs);
+}
+
+.agents__block--pay {
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--accent-tint);
+}

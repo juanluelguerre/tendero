@@ -29,10 +29,13 @@ export interface TrackedEvents {
    *
    * Product page: How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
    * Decides: Where discovery work goes: the search box, the taxonomy or the home page's rows.
+   *
+   * Suggestions and trends: Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone?
+   * Decides: If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off.
    */
   readonly product_viewed: {
-    /** The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. */
-    readonly arrived_from: 'search' | 'category' | 'listing' | 'home' | 'other' | 'direct';
+    /** The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. From the home page, the row that led here when it says so: trail (Sigue donde lo dejaste), campaign (the campaign card), suggested (Puede que te guste) and trending (Tendencias) — R-8. */
+    readonly arrived_from: 'search' | 'category' | 'listing' | 'home' | 'trail' | 'campaign' | 'suggested' | 'trending' | 'other' | 'direct';
     /** Whether the list the shopper came from was narrowed by filters. False for a page that is not a list. */
     readonly filtered: boolean;
   };
@@ -172,6 +175,43 @@ export interface TrackedEvents {
    * Decides: If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action.
    */
   readonly cart_notice_followed: Record<string, never>;
+
+  /**
+   * A shopper followed a link inside one of the home page's modules (R-8). Only with analytics consent.
+   *
+   * Home page modules: Which of the home page's modules do shoppers open, and from which place on the page?
+   * Decides: A module nobody opens in a month moves down or goes; the order of the page follows the numbers.
+   */
+  readonly home_module_opened: {
+    /** Which module: the campaign card, Sigue donde lo dejaste, Compra con tu agente, Ofertas, Puede que te guste, Tendencias, Lo más vendido, Novedades or Secciones de la tienda. */
+    readonly module: 'campaign' | 'trail' | 'agent' | 'offers' | 'suggested' | 'trending' | 'best_sellers' | 'new' | 'departments';
+    /** Where the module was on the page when it was opened, from 1 at the top, counting only the modules drawn — a band that failed or had nothing to show does not take a place. */
+    readonly position: number;
+  };
+
+  /**
+   * A shopper followed the campaign card's call to action or one of its products (R-8). Only with analytics consent.
+   *
+   * Campaign card: Do shoppers open the campaign card, before a campaign starts as well as while it runs?
+   * Decides: If the before card is not opened, the teaser is not worth its place.
+   */
+  readonly campaign_card_opened: {
+    /** The campaign's code (TENDERO_DAYS): a handful per year, set by the shopkeeper, never a person or a product. */
+    readonly campaign: string;
+    /** Before the campaign starts (Empieza en…) or while it runs (Termina en…). */
+    readonly phase: 'before' | 'during';
+  };
+
+  /**
+   * A shopper removed their browsing trail, one entry or all of it (R-8). Only with analytics consent.
+   *
+   * Browsing trail: Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it?
+   * Decides: If many clear it, the trail is felt as surveillance; show less, or ask first.
+   */
+  readonly trail_cleared: {
+    /** One product or one search removed, or the whole trail. */
+    readonly scope: 'one' | 'all';
+  };
 }
 
 /**
@@ -194,4 +234,7 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   backoffice_affordance_used: 'staff',
   theme_chosen: 'behavioural',
   cart_notice_followed: 'behavioural',
+  home_module_opened: 'behavioural',
+  campaign_card_opened: 'behavioural',
+  trail_cleared: 'behavioural',
 };

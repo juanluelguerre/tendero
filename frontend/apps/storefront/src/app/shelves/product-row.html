@@ -1,0 +1,60 @@
+<section class="shelf" *transloco="let t" [attr.aria-labelledby]="id + '-title'">
+  <div class="shelf__head">
+    <div class="shelf__titles">
+      <h2 class="shelf__title" [id]="id + '-title'">{{ heading() }}</h2>
+      @if (lede(); as text) {
+        <p class="shelf__lede muted">{{ text }}</p>
+      }
+    </div>
+
+    <div class="shelf__tools">
+      <ng-content select="[shelfActions]" />
+      @if (more(); as link) {
+        <a class="shelf__more" [routerLink]="link.commands" [queryParams]="link.queryParams">{{ link.label }}</a>
+      }
+      <!-- Hidden when everything fits: two disabled buttons are furniture. -->
+      @if (!(atStart() && atEnd())) {
+        <div class="shelf__controls">
+          <button type="button" class="shelf__button" [attr.aria-controls]="id"
+                  [attr.aria-label]="t('shelf.previous', { heading: heading() })"
+                  [disabled]="atStart()" (click)="page(-1)">‹</button>
+          <button type="button" class="shelf__button" [attr.aria-controls]="id"
+                  [attr.aria-label]="t('shelf.next', { heading: heading() })"
+                  [disabled]="atEnd()" (click)="page(1)">›</button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <ng-content select="[shelfExtras]" />
+
+  @defer (on viewport) {
+    <ul class="shelf__row" [class.shelf__row--line]="layout() === 'line'" [id]="id" #row
+        [attr.aria-label]="heading()" (scroll)="edges(row)">
+      @for (item of items(); track item.hit.productId) {
+        <li class="shelf__item">
+          <storefront-product-card
+            class="shelf__card"
+            [hit]="item.hit"
+            [badge]="item.badge ?? null"
+            [reason]="item.reason ?? null"
+            [rank]="item.rank ?? null"
+            [layout]="layout()"
+            [actions]="layout() === 'tile'"
+            [via]="via()" />
+          @if (removable()) {
+            <button type="button" class="shelf__remove"
+                    [attr.aria-label]="t('shelf.remove', { name: item.hit.name })"
+                    (click)="removed.emit(item.hit)">×</button>
+          }
+        </li>
+      }
+    </ul>
+  } @placeholder {
+    <div class="shelf__row shelf__row--waiting" [class.shelf__row--line]="layout() === 'line'" aria-hidden="true">
+      @for (slot of placeholders; track slot) {
+        <div class="shelf__skeleton skeleton"></div>
+      }
+    </div>
+  }
+</section>
