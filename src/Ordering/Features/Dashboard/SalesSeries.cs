@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using ElGuerre.Tendero.Ordering.Domain;
+using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
+using Microsoft.Extensions.Options;
 using NodaTime;
 
 namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
@@ -107,4 +110,26 @@ public static class SalesSeriesFigures
                 inside.Sum(order => order.Lines.Sum(line => line.Quantity)));
         }),
     ];
+}
+
+/// <summary>The shop's sales by hour or by day; the zone is the shop's, from configuration (ADR 0046).</summary>
+public sealed record GetSalesSeriesQuery(DashboardPeriod Period) : IQuery<SalesSeries>;
+
+public sealed class SalesSeriesHandler(IShopHistory history, TimeProvider clock, IOptions<ShopOptions> shop)
+    : IQueryHandler<GetSalesSeriesQuery, SalesSeries>
+{
+    private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
+
+    public async Task<SalesSeries> HandleAsync(GetSalesSeriesQuery query, CancellationToken cancellationToken)
+    {
+        using var activity = Telemetry.StartActivity("ordering.dashboard.sales_series");
+        activity?.SetTag("dashboard.period", MetricLabels.Of(query.Period));
+
+        var zone = DateTimeZoneProviders.Tzdb[shop.Value.TimeZone];
+        var plan = SeriesPlans.For(query.Period, clock.GetUtcNow(), zone);
+        var orders = await history.OrdersPlacedAsync(plan.From, plan.End, cancellationToken);
+
+        activity?.SetTag("dashboard.series.buckets", plan.Current.Count);
+        return SalesSeriesFigures.Of(query.Period, zone.Id, plan, orders);
+    }
 }

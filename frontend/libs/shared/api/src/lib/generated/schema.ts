@@ -948,6 +948,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/sales/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetSalesSeries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/operations": {
         parameters: {
             query?: never;
@@ -2101,6 +2117,24 @@ export interface components {
             /** Format: double */
             averageOrderValue: number;
         };
+        SalesPoint: {
+            /** Format: date-time */
+            start: string;
+            /** Format: double */
+            revenue: number;
+            /** Format: int32 */
+            orders: number;
+            /** Format: int32 */
+            units: number;
+        };
+        SalesSeries: {
+            period: components["schemas"]["DashboardPeriod"];
+            currency: string;
+            timeZone: string;
+            step: components["schemas"]["SeriesStep"];
+            current: components["schemas"]["SalesPoint"][];
+            previous: components["schemas"]["SalesPoint"][];
+        };
         SalesSummary: {
             period: components["schemas"]["DashboardPeriod"];
             currency: string;
@@ -2163,6 +2197,8 @@ export interface components {
             answer?: null | components["schemas"]["SearchAnswer"];
             facets?: null | components["schemas"]["SearchFacet"][];
         };
+        /** @enum {unknown} */
+        SeriesStep: "Hour" | "Day";
         SetCartLineRequest: {
             /** Format: int32 */
             quantity: number;
@@ -4159,6 +4195,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalesSummary"];
+                };
+            };
+        };
+    };
+    GetSalesSeries: {
+        parameters: {
+            query?: {
+                period?: "Day" | "Week" | "Month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesSeries"];
                 };
             };
         };

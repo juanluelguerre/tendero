@@ -113,6 +113,10 @@ export type LinkedIdentity = Schemas['LinkedIdentity'];
  * figure but the agents' own count of them.
  */
 export type SalesSummary = Schemas['SalesSummary'];
+/** Sales by hour or by day on the shop's clock, and the period before (R-9, ADR 0046). */
+export type SalesSeries = Schemas['SalesSeries'];
+export type SalesPoint = Schemas['SalesPoint'];
+export type SeriesStep = Schemas['SeriesStep'];
 export type SalesFigures = Schemas['SalesFigures'];
 export type BestSeller = Schemas['BestSeller'];
 export type OperationsSummary = Schemas['OperationsSummary'];

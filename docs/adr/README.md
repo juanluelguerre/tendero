@@ -45,6 +45,7 @@
 | [0042](0042-work-is-done-beside-the-list.md) | Work is done beside the list; what can be undone offers Undo, what cannot asks first | proposed |
 | [0043](0043-a-closed-set-is-declared-in-the-contract.md) | A closed set is declared in the contract, spelled as its C# name | accepted |
 | [0044](0044-a-campaign-makes-pricing-a-writer.md) | A campaign makes Pricing a writer | accepted |
+| [0046](0046-a-day-is-the-shops-day.md) | A day is the shop's day (NodaTime, the shop's time zone) | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

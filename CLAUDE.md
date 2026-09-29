@@ -201,6 +201,9 @@ node tools/api-map.mjs --schema CartView
 - A closed set is an enum everywhere it crosses the wire (ADR 0043): in a body
   through `WireJson.Enums()`, in a query string bound as `WireEnum<T>` — by exact
   name in any case, never a number — and the contract tests hold both.
+- **A day is the shop's day** (ADR 0046): times are stored and sent in UTC, and a
+  day is counted in `ShopOptions.TimeZone` with NodaTime — never `TimeZoneInfo`,
+  which cannot resolve an IANA zone under `InvariantGlobalization`.
 - Custom CQRS abstractions (`ICommand`/`IQuery` + dispatchers), NOT MediatR-the-package.
 - FluentValidation per slice; Carter modules for endpoints.
 - A hosted service ends in `Worker`; one that does its job once when the host

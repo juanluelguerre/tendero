@@ -309,6 +309,13 @@ public sealed class DashboardEndpoints : ICarterModule
                 TypedResults.Ok(await dispatcher.SendAsync(new GetSalesSummaryQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .WithName("GetSalesSummary");
 
+        // Sales by hour or by day on the shop's clock (R-9, ADR 0046): the zone is the
+        // shop's configuration, not a parameter, so every reader sees the same Monday.
+        dashboard.MapGet("/sales/series",
+            async Task<Ok<SalesSeries>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetSalesSeriesQuery(period?.Value ?? DashboardPeriods.Default), ct)))
+            .WithName("GetSalesSeries");
+
         dashboard.MapGet("/operations",
             async Task<Ok<OperationsSummary>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(new GetOperationsSummaryQuery(period?.Value ?? DashboardPeriods.Default), ct)))
