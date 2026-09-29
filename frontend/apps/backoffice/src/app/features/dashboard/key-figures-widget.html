@@ -1,0 +1,32 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.keyFigures'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+    <span class="eyebrow">{{ t('vsPrevious') }}</span>
+  </header>
+
+  @if (sales.isLoading() && !sales.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (sales.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else {
+    <dl class="kpis">
+      @for (figure of figures(); track figure.key) {
+        <div class="kpi">
+          <dt class="kpi__label">{{ t(figure.key) }}</dt>
+          <dd class="kpi__value numeric">{{ figure.value }}</dd>
+          @if (figure.change; as change) {
+            <!-- A direction is always said; a percentage only when there was
+                 a previous period to take it from. -->
+            <dd [class]="'kpi__change kpi__change--' + change.direction">
+              <span aria-hidden="true">{{ change.direction === 'up' ? '▲' : change.direction === 'down' ? '▼' : '—' }}</span>
+              {{ changeText(change) ?? t('direction.' + change.direction) }}
+            </dd>
+          }
+          @if (figure.trend; as trend) {
+            <dd class="kpi__trend at-m"><backoffice-sparkline [values]="trend" /></dd>
+          }
+        </div>
+      }
+    </dl>
+  }
+</article>

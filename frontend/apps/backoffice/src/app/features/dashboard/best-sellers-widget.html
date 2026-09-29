@@ -1,0 +1,25 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.bestSellers'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+  </header>
+
+  @if (sales.isLoading() && !sales.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (sales.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else if (sales.value(); as summary) {
+    @if (summary.bestSellers.length === 0) {
+      <p class="muted widget__state">{{ t('nothingSold') }}</p>
+    } @else {
+      <ol class="ranking">
+        @for (seller of summary.bestSellers; track seller.sku) {
+          <li class="ranking__row">
+            <span class="ranking__name" [title]="seller.sku">{{ seller.name }}</span>
+            <span class="numeric muted">{{ t('unitCount', { count: seller.units }) }}</span>
+            <span class="numeric">{{ money(seller.revenue) }}</span>
+          </li>
+        }
+      </ol>
+    }
+  }
+</article>

@@ -580,23 +580,40 @@
       "Week": "Last 7 days",
       "Month": "Last 30 days"
     },
-    "sales": {
-      "title": "Sales",
+    "keyFigures": {
+      "title": "Key figures",
       "vsPrevious": "Against the previous period",
-      "loading": "Loading sales…",
-      "failed": "Sales could not be loaded.",
+      "loading": "Loading the key figures…",
+      "failed": "The key figures could not be loaded.",
       "revenue": "Revenue",
       "orders": "Orders",
       "units": "Units",
       "averageOrder": "Average order",
+      "conversion": "Conversion",
+      "returnRate": "Return rate",
       "direction": {
         "up": "up",
         "down": "down",
         "flat": "no change"
-      },
-      "bestSellers": "Best sellers",
+      }
+    },
+    "bestSellers": {
+      "title": "Best sellers",
+      "loading": "Loading the best sellers…",
+      "failed": "The best sellers could not be loaded.",
       "nothingSold": "Nothing sold in this period.",
       "unitCount": "{{count}} u."
+    },
+    "byChannel": {
+      "title": "By channel",
+      "loading": "Loading the channels…",
+      "failed": "The channels could not be loaded.",
+      "nothingSold": "Nothing sold in this period.",
+      "orders": "Orders",
+      "people": "People",
+      "agents": "Agents",
+      "byAgents": "of orders by agents",
+      "revenueShare": "{{share}} of sales came through agents"
     },
     "salesByDay": {
       "current": {

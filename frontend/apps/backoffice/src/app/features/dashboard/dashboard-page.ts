@@ -2,10 +2,14 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
 import { AgentsWidget } from './agents-widget';
+import { BestSellersWidget } from './best-sellers-widget';
+import { ByChannelWidget } from './by-channel-widget';
+import { DashboardRefresh } from './dashboard-refresh';
+import { DashboardSources } from './dashboard-sources';
 import { FunnelWidget } from './funnel-widget';
+import { KeyFiguresWidget } from './key-figures-widget';
 import { OperationsWidget } from './operations-widget';
 import { SalesByDayWidget } from './sales-by-day-widget';
-import { SalesWidget } from './sales-widget';
 import { TasksWidget } from './tasks-widget';
 
 /**
@@ -22,7 +26,11 @@ import { TasksWidget } from './tasks-widget';
  */
 @Component({
   selector: 'backoffice-dashboard',
-  imports: [TranslocoDirective, SalesWidget, SalesByDayWidget, OperationsWidget, FunnelWidget, AgentsWidget, TasksWidget],
+  imports: [
+    TranslocoDirective, KeyFiguresWidget, SalesByDayWidget, BestSellersWidget, ByChannelWidget,
+    OperationsWidget, FunnelWidget, AgentsWidget, TasksWidget,
+  ],
+  providers: [DashboardSources, DashboardRefresh],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',

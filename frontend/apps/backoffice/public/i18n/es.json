@@ -580,23 +580,40 @@
       "Week": "Últimos 7 días",
       "Month": "Últimos 30 días"
     },
-    "sales": {
-      "title": "Ventas",
+    "keyFigures": {
+      "title": "Cifras clave",
       "vsPrevious": "Frente al periodo anterior",
-      "loading": "Cargando ventas…",
-      "failed": "No se han podido cargar las ventas.",
+      "loading": "Cargando las cifras clave…",
+      "failed": "No se han podido cargar las cifras clave.",
       "revenue": "Facturación",
       "orders": "Pedidos",
       "units": "Unidades",
       "averageOrder": "Pedido medio",
+      "conversion": "Conversión",
+      "returnRate": "Tasa de devolución",
       "direction": {
         "up": "sube",
         "down": "baja",
         "flat": "sin cambios"
-      },
-      "bestSellers": "Más vendidos",
+      }
+    },
+    "bestSellers": {
+      "title": "Más vendidos",
+      "loading": "Cargando los más vendidos…",
+      "failed": "No se han podido cargar los más vendidos.",
       "nothingSold": "No se ha vendido nada en este periodo.",
       "unitCount": "{{count}} ud."
+    },
+    "byChannel": {
+      "title": "Por canal",
+      "loading": "Cargando los canales…",
+      "failed": "No se han podido cargar los canales.",
+      "nothingSold": "No se ha vendido nada en este periodo.",
+      "orders": "Pedidos",
+      "people": "Personas",
+      "agents": "Agentes",
+      "byAgents": "de los pedidos, por agentes",
+      "revenueShare": "{{share}} de las ventas llegó por agentes"
     },
     "salesByDay": {
       "current": {

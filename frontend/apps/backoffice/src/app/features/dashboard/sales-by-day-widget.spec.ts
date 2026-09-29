@@ -7,6 +7,8 @@ import type { SalesSeries } from '@tendero/shared-api';
 import { CultureStore, provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { DashboardRefresh } from './dashboard-refresh';
+import { DashboardSources } from './dashboard-sources';
 import { SalesByDayWidget } from './sales-by-day-widget';
 
 const point = (start: string, revenue: number) => ({ start, revenue, orders: 1, units: 1 });
@@ -29,7 +31,7 @@ describe('the sales by day widget', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh],
     });
     http = TestBed.inject(HttpTestingController);
   });

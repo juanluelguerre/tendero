@@ -20,9 +20,11 @@
   <p class="page-hint">{{ t('dashboard.hint') }}</p>
 
   <div class="grid">
-    <backoffice-sales-widget class="grid__wide" [period]="period()" />
+    <backoffice-key-figures-widget class="grid__wide" [period]="period()" />
     <backoffice-sales-by-day-widget class="grid__wide" [period]="period()" />
     <backoffice-tasks-widget />
+    <backoffice-by-channel-widget [period]="period()" />
+    <backoffice-best-sellers-widget [period]="period()" />
     <backoffice-operations-widget [period]="period()" />
     <backoffice-funnel-widget [period]="period()" />
     <backoffice-agents-widget class="grid__wide" [period]="period()" />

@@ -1,7 +1,7 @@
 :host { display: block; }
 
-/* Four figures side by side on a wide screen, two by two on a tablet, one column
-   on a phone: the grid decides, so no figure is ever cut. */
+/* Six figures across at L, two by two on a phone (spec, the phone): the grid
+   decides from the widget's width, so no figure is ever cut. */
 .kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
@@ -33,3 +33,5 @@
 
 .kpi__change--up { color: var(--positive); }
 .kpi__change--down { color: var(--danger); }
+
+.kpi__trend { margin: var(--space-2) 0 0; }
