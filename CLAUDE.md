@@ -219,6 +219,12 @@ node tools/api-map.mjs --schema CartView
   preference: a template inside a `.ts` literal is invisible to every HTML tool
   and a stylesheet inside one is invisible to every CSS tool, including the token
   test.
+- **A component with state is a folder with its SignalStore** (ADR 0047):
+  `<name>/` holds the component's three files, its `<name>.store.ts`
+  (`@ngrx/signals`, provided by the component) and their specs; the component
+  presents, the store reads and derives, and what stores share is a store
+  feature. The dashboard's widgets are the reference; the other screens follow
+  in a plan of their own.
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
 
 ## Git Workflow
