@@ -568,11 +568,6 @@
   "dashboard": {
     "title": "Panel",
     "hint": "El pulso de la tienda, con sus propios datos: qué se vendió, qué te espera, cómo convierte el checkout y qué aportan los agentes. Los pedidos de prueba quedan fuera de todas las cifras salvo del recuento de los agentes.",
-    "lab": {
-      "hint": "La comparación de R-9: la misma semana dibujada por los dos motores. No es una pantalla de la tienda; se va con el motor que pierda.",
-      "redraw": "Redibujar cincuenta veces",
-      "title": "Motores de gráficos"
-    },
     "period": {
       "label": "Periodo",
       "Day": "Últimas 24 h",

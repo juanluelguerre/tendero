@@ -45,8 +45,8 @@ than one endless page.
    - **Widgets** pair a typed source owned by a context with their charts and a
      **size contract** (S, M, L — 3, 6 or 12 columns of a 12-column grid).
    - **Dashboards** are lists of widgets with their sizes.
-4. **The chart engine is compared, not chosen**: our own SVG against Apache
-   ECharts, behind the same component contract (below).
+4. **The chart engine was compared, then chosen**: our own SVG against Apache
+   ECharts, behind the same component contract; the author kept ECharts (below).
 5. **Real time is R-10**, not R-9, and is compared too: SSE (the author's
    preference) against SignalR, behind a port. R-9's widgets read their data as
    signals so that either can feed them later.
@@ -188,7 +188,7 @@ What the timings do not include: the browser's paint, which both engines pay, an
 ECharts' first render (its module loads once, when the chart first enters the
 viewport).
 
-**The author's decision**: pending.
+**The author's decision (2026-09-29): ECharts**, against the recommendation for our own SVG — a mature, widely known library is more didactic for the series and the book, and it brings the axis with its values, rich tooltips and the chart types a later dashboard may want. The SVG engine, the lab page and the measuring script left in the same change (ADR 0045, *Outcome*).
 
 ## The data
 

@@ -28,4 +28,12 @@ describe('ECharts options for a bar chart', () => {
     expect(options.aria.enabled).toBe(true);
     expect(options.animation).toBe(false);
   });
+
+  /** ADR 0045: a colour reaches ECharts only from the tokens, never written into the options. */
+  it('carries no colour but the ones it is given', () => {
+    const written = JSON.stringify(barOptions(DATA, String, COLOURS, false));
+
+    expect(written.match(/#[0-9a-f]{3,8}\b/gi)).toBeNull();
+    expect(written.match(/rgba?\([^)]*\)/g)?.sort()).toEqual([COLOURS.data, COLOURS.previous].sort());
+  });
 });

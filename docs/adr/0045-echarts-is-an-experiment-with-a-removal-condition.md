@@ -1,6 +1,6 @@
 # 0045 — ECharts is an experiment with a removal condition
 
-**Status**: accepted (the author, 2026-09-29, with R-9's spec)
+**Status**: accepted (the author, 2026-09-29, with R-9's spec) — **decided the same day: ECharts stays**
 
 ## Context
 
@@ -29,3 +29,28 @@ backoffice.
 - Colours reach ECharts through JavaScript, read from the tokens at run time; the
   tokens test does not see them. If ECharts stays, a test must hold that no
   colour reaches it except through `readChartColours`.
+
+## Outcome (2026-09-29)
+
+The comparison ran on *sales by day* behind the same contract; the numbers are in
+`docs/specs/backoffice-dashboard.md`, *As measured — the chart engines*. Our own SVG
+was lighter (2.5 KB against 495 KB minified / 170 KB gzip, and 1.1 KB against 9.7 KB
+more in the initial bundle) and faster to redraw (0.08–0.15 ms against 1.9–2.8 ms),
+and it was the recommendation.
+
+**The author chose ECharts**: using a mature, widely known library is more
+didactic for the series and the book than a chart engine of our own — what it
+teaches applies outside Tendero — and it brings the axis with its values, rich
+tooltips and every chart type a later dashboard may want, among other pros and
+cons the author weighed.
+
+As the removal condition asked, the engine that lost left in the same change: the
+SVG engine, its scale, the lab page and the measuring script (the script stays in
+the history; its numbers in the spec). `CHART_ENGINE` left with them — a seam with
+one side is dead code — and the contract component stays, so a later change of
+engine touches no widget.
+
+Colours reach ECharts only from the tokens, read at run time, and the test this ADR
+asked for holds it: `barOptions` carries no colour but the ones it is given
+(`echarts-bar-options.spec.ts`).
+

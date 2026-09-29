@@ -52,14 +52,6 @@ export const appRoutes: Route[] = [
           import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
       },
       {
-        // R-9's chart comparison, not a screen of the shop: removed with the engine that loses (ADR 0045).
-        path: 'dashboard/lab/charts',
-        title: 'dashboard.lab.title',
-        canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/dashboard/lab/chart-engines-page').then((m) => m.ChartEnginesPage),
-      },
-      {
         path: 'agents',
         title: 'agents.title',
         canActivate: [shopkeeper],

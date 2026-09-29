@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { BarChart } from './bar-chart';
-import { CHART_ENGINE, type BarChartData } from './chart-contract';
+import type { BarChartData } from './chart-contract';
 
 const DATA: BarChartData = {
   categories: ['Mon', 'Tue'],
@@ -12,7 +12,6 @@ const DATA: BarChartData = {
 };
 
 function render() {
-  TestBed.configureTestingModule({ providers: [{ provide: CHART_ENGINE, useValue: 'svg' }] });
   const fixture = TestBed.createComponent(BarChart);
   fixture.componentRef.setInput('data', DATA);
   fixture.componentRef.setInput('format', (value: number) => `€${value}`);
@@ -35,7 +34,14 @@ describe('the chart contract', () => {
     expect([...element.querySelectorAll('.legend li')].map((item) => item.textContent?.trim())).toEqual(['This week', 'Week before']);
   });
 
-  it('draws with the engine it is given', () => {
-    expect(render().querySelector('backoffice-svg-bar-chart')).not.toBeNull();
+  it('draws with ECharts, deferred until the chart is on screen (ADR 0045)', async () => {
+    TestBed.configureTestingModule({});
+    const fixture = TestBed.createComponent(BarChart);
+    fixture.componentRef.setInput('data', DATA);
+    fixture.componentRef.setInput('format', (value: number) => `€${value}`);
+    fixture.componentRef.setInput('caption', 'Sales by day');
+    fixture.detectChanges();
+
+    expect(await fixture.getDeferBlocks()).toHaveLength(1);
   });
 });
