@@ -35,7 +35,9 @@ function inBrowser(contrastSource: string): PageAudit {
   const name = (el: Element): string =>
     (el.getAttribute('aria-label') || el.getAttribute('title') || el.textContent || '').trim() ||
     (el.getAttribute('aria-labelledby') ? 'labelledby' : '') ||
-    [...el.querySelectorAll('img[alt], svg[aria-label]')].map((i) => i.getAttribute('alt') || i.getAttribute('aria-label')).join('').trim();
+    // An image names the link it is in, whether an <img>, an <svg> or an element
+    // that says it is one (`role="img"`, as the storefront's placeholder does).
+    [...el.querySelectorAll('img[alt], svg[aria-label], [role=img][aria-label]')].map((i) => i.getAttribute('alt') || i.getAttribute('aria-label')).join('').trim();
   const describe = (el: Element): string => {
     const text = (el.textContent || '').trim().slice(0, 24);
     const classes = typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
