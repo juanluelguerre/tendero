@@ -1,10 +1,10 @@
 using ElGuerre.Tendero.Ordering.Adapters;
 using ElGuerre.Tendero.Ordering.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
-using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Ordering;
 
