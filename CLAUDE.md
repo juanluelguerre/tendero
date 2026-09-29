@@ -248,7 +248,9 @@ node tools/api-map.mjs --schema CartView
   read for, and `HttpClient` in a method for what it is asked to change. The
   whole backoffice follows this; `shell/` is the frame round every screen and
   `worklist/` what the lists of work share (pane, chips, pager, dialog, Undo).
-  The storefront follows in a pass of its own.
+  The storefront follows it too: its shop-wide state lives in theme folders
+  (`cart/`, `compare/`, `taxonomy/`, `trail/`, `campaigns/`, `listing/`),
+  `data-access/` holds HTTP services only, and each page provides its store.
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
 
 ## Git Workflow
