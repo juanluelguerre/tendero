@@ -1,6 +1,7 @@
 using ElGuerre.Tendero.Catalog.Features.GetProduct;
 using ElGuerre.Tendero.Catalog.Features.ListCategories;
 using ElGuerre.Tendero.Mcp.Tools;
+using ElGuerre.Tendero.Pricing.Features.ListCampaigns;
 using ElGuerre.Tendero.Pricing.Features.ListOffers;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
@@ -76,6 +77,10 @@ public sealed class McpToolsTests
         Assert.Equal(expected, await CultureOf(dispatcher =>
             TenderoTools.ListOffersAsync(dispatcher, NoHeader, asked, TestContext.Current.CancellationToken),
             query => ((ListOffersQuery)query).Culture));
+
+        Assert.Equal(expected, await CultureOf(dispatcher =>
+            TenderoTools.ListCampaignsAsync(dispatcher, NoHeader, asked, TestContext.Current.CancellationToken),
+            query => ((ListCampaignsQuery)query).Culture));
 
         Assert.Equal(expected, await CultureOf(dispatcher =>
             TenderoTools.SearchProductsAsync(dispatcher, NoHeader, "zapatillas", asked,
@@ -201,6 +206,23 @@ public sealed class McpToolsTests
         Assert.Equal(
             Assert.IsType<ListOffersQuery>(dispatcher.Query).Culture,
             answer.Culture);
+    }
+
+    /// <summary>
+    /// <c>list_campaigns</c> is the endpoint's own query, not a second path to the
+    /// same data (R-8, H-5): what an agent reads is what the home's card is drawn
+    /// from, and the answer names the culture it was answered in.
+    /// </summary>
+    [Fact]
+    public async Task Campaigns_are_the_endpoints_query_answered_in_the_callers_language()
+    {
+        var dispatcher = new RecordingDispatcher();
+
+        var answer = await TenderoTools.ListCampaignsAsync(
+            dispatcher, Asking("en-GB"), culture: null, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(new ListCampaignsQuery("en"), Assert.IsType<ListCampaignsQuery>(dispatcher.Query));
+        Assert.Equal("en", answer.Culture);
     }
 
     private static async Task<string> CultureOf(

@@ -51,3 +51,44 @@ export async function payWith(page: Page, card: 'card-ok' | 'card-declined'): Pr
   await page.getByRole('button', { name: /^pay /i }).click();
 }
 
+export const backofficeUrl = process.env['BACKOFFICE_URL'] ?? 'http://localhost:4201';
+
+/**
+ * The seeded shopkeeper, signed in to the backoffice: see `shopkeeper.spec.ts` in
+ * backoffice-e2e for why both issuers are handled. Shared by the return journey
+ * and the category campaign (R-8), which both need the shopkeeper's hand.
+ */
+export async function signInToTheBackoffice(page: Page): Promise<void> {
+  await page.goto(`${backofficeUrl}/sign-in`);
+  await page.getByRole('button', { name: /continue/i }).click();
+
+  if (/\/realms\//.test(page.url())) {
+    await page.locator('input[name="username"]').fill('juanlu');
+    await page.locator('input[name="password"]').fill('juanlu');
+    await page.locator('input[type="submit"], button[type="submit"]').first().click();
+  } else {
+    await page.getByRole('link', { name: 'Juan Luis' }).click();
+  }
+
+  // In once the bar offers the account menu, which holds the way out since the redesign (R-3).
+  await expect(page.getByRole('banner').getByRole('button', { name: /^(account|cuenta):/i })).toBeVisible();
+}
+
+/**
+ * A shopper signed in to the storefront from *Tu cuenta*: the seeded Ana, by the
+ * issuer's own page — the development issuer's link or Keycloak's form.
+ */
+export async function signInToTheShop(page: Page): Promise<void> {
+  await page.goto('/es/account');
+  await page.getByRole('button', { name: 'Identifícate' }).click();
+
+  if (/\/realms\//.test(page.url())) {
+    await page.locator('input[name="username"]').fill('ana');
+    await page.locator('input[name="password"]').fill('ana');
+    await page.locator('input[type="submit"], button[type="submit"]').first().click();
+  } else {
+    await page.getByRole('link', { name: 'Ana Ruiz' }).click();
+  }
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Ana Ruiz' })).toBeVisible();
+}

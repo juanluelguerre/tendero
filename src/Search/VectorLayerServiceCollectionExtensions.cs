@@ -27,6 +27,7 @@ public static class VectorLayerServiceCollectionExtensions
         services.TryAddSingleton<IVectorLayer>(provider => provider.GetRequiredService<NoVectorLayer>());
         services.TryAddScoped<IProductVectorIndexer>(provider => provider.GetRequiredService<NoVectorLayer>());
         services.TryAddScoped<IVectorProductSearch>(provider => provider.GetRequiredService<NoVectorLayer>());
+        services.TryAddScoped<IVectorSimilarity>(provider => provider.GetRequiredService<NoVectorLayer>());
 
         return services;
     }

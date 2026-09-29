@@ -1,0 +1,92 @@
+<section class="work-layout" [class.work-layout--with-pane]="paneOpen()" *transloco="let t; prefix: 'campaigns'">
+  <div class="work-list">
+    <header class="page-head">
+      <h1 class="page-title">{{ t('title') }}</h1>
+      <div class="page-actions">
+        <!-- Clay while it is the view's one action; quiet once a pane holds that. -->
+        <button type="button" class="button" [class.button--quiet]="paneOpen()" [attr.aria-expanded]="creating()" (click)="startNew()">
+          <span aria-hidden="true">+</span> {{ t('new') }}
+        </button>
+      </div>
+    </header>
+    <p class="page-hint">{{ t('hint') }}</p>
+
+    <div class="work-tools">
+      <backoffice-filter-chips [options]="filters()" [selected]="filterKey()" [label]="t('filterLabel')" (chosen)="filterBy($event)" />
+    </div>
+
+    @if (loading()) {
+      <div class="skeleton-list" aria-hidden="true"></div>
+      <p class="sr-only" role="status" aria-live="polite">{{ t('loading') }}</p>
+    } @else if (failed()) {
+      <p class="failed" role="alert">{{ t('failed') }}</p>
+    } @else if (campaigns().length === 0) {
+      <div class="empty"><p class="empty__text">{{ t('empty.' + filterKey()) }}</p></div>
+    } @else {
+      <div class="table-wrap wide-only">
+        <table class="table">
+          <caption class="sr-only">{{ t('title') }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{{ t('column.campaign') }}</th>
+              <th scope="col">{{ t('column.kind') }}</th>
+              <th scope="col">{{ t('column.scope') }}</th>
+              <th scope="col">{{ t('column.dates') }}</th>
+              <th scope="col">{{ t('column.state') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (campaign of campaigns(); track campaign.code) {
+              <tr class="row" [class.row--selected]="campaign.code === selectedCode()" (click)="open(campaign)">
+                <td>
+                  <button type="button" class="row__open" [attr.aria-expanded]="campaign.code === selectedCode()" (click)="$event.stopPropagation(); open(campaign)">
+                    {{ nameOf(campaign) }}
+                  </button>
+                </td>
+                <td class="muted">{{ t('kind.' + campaign.kind) }}</td>
+                <td class="muted">{{ (categoryOf(campaign) ?? t('scope.shop')) }}</td>
+                <td class="numeric dates">{{ windowOf(campaign) }}</td>
+                <td><ng-container *ngTemplateOutlet="stateOf; context: { $implicit: campaign }" /></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="work-cards narrow-only" role="list">
+        @for (campaign of campaigns(); track campaign.code) {
+          <li class="work-card" [class.work-card--selected]="campaign.code === selectedCode()">
+            <button type="button" class="work-card__open" (click)="open(campaign)">
+              <span class="work-card__line">
+                <span class="name">{{ nameOf(campaign) }}</span>
+                <span class="numeric work-card__end">{{ windowOf(campaign) }}</span>
+              </span>
+              <span class="work-card__line">
+                <ng-container *ngTemplateOutlet="stateOf; context: { $implicit: campaign }" />
+                <span class="muted">{{ t('kind.' + campaign.kind) }} · {{ (categoryOf(campaign) ?? t('scope.shop')) }}</span>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (paneOpen()) {
+    <backoffice-work-pane [heading]="selectedName() ?? t('new')" (closed)="close()">
+      <backoffice-campaign-editor [campaign]="selected()" />
+    </backoffice-work-pane>
+  }
+
+  <ng-template #stateOf let-campaign>
+    @let bucket = bucketOf(campaign);
+    <span
+      class="tag"
+      [class.tag--ok]="bucket === 'running'"
+      [class.tag--warn]="bucket === 'drafts'"
+      [class.tag--code]="bucket === 'ended'"
+    >
+      {{ t('state.' + bucket) }}
+    </span>
+  </ng-template>
+</section>

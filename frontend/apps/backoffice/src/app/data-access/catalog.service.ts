@@ -4,6 +4,7 @@ import type {
   AttributeDefinitionList,
   AuditLog,
   AuditOutcome,
+  CategoryList,
   SkuDescriptionList,
   DefineVariantsResponse,
   ImportResult,
@@ -47,6 +48,11 @@ export class CatalogService {
     );
 
     return this.http.get<SkuDescriptionList>(`${this.baseUrl}/api/catalog/skus`, { params });
+  }
+
+  /** The shop's taxonomy in one culture, parents before children: what a campaign's scope is chosen from. */
+  categories(culture: string): Observable<CategoryList> {
+    return this.http.get<CategoryList>(`${this.baseUrl}/api/catalog/categories`, { params: { culture } });
   }
 
   /** The SKUs of every product whose name or code contains the text: the catalogue's half of a stock search (R-7.1). */

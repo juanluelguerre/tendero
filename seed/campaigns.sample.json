@@ -1,0 +1,44 @@
+[
+  {
+    "code": "OTONO_EN_TENDERO",
+    "name": { "es": "Otoño en Tendero", "en": "Autumn at Tendero" },
+    "line": {
+      "es": "La temporada en ropa, camisetas y menaje de cocina",
+      "en": "The season in clothing, shirts and cookware"
+    },
+    "kind": "Season",
+    "startsAt": "2026-09-22T00:00:00+02:00",
+    "endsAt": "2026-11-30T23:59:00+01:00",
+    "priority": 10,
+    "promotionCodes": ["APPAREL10", "SHIRT3X2", "KITCHEN5"],
+    "status": "Scheduled"
+  },
+  {
+    "code": "TENDERO_DAYS",
+    "name": { "es": "Tendero Days", "en": "Tendero Days" },
+    "line": {
+      "es": "Hasta −25 % en ropa y envío gratis desde 50 €",
+      "en": "Up to 25% off clothing and free shipping over €50"
+    },
+    "kind": "Event",
+    "startsAt": "2026-10-01T00:00:00+02:00",
+    "endsAt": "2026-10-07T23:59:00+02:00",
+    "priority": 100,
+    "promotionCodes": ["SUMMER25", "SHIP0"],
+    "status": "Scheduled"
+  },
+  {
+    "code": "BLACK_FRIDAY",
+    "name": { "es": "Black Friday", "en": "Black Friday" },
+    "line": {
+      "es": "Las ofertas del año, del 27 al 30 de noviembre",
+      "en": "The deals of the year, 27 to 30 November"
+    },
+    "kind": "Event",
+    "startsAt": "2026-11-27T00:00:00+01:00",
+    "endsAt": "2026-11-30T23:59:00+01:00",
+    "priority": 200,
+    "promotionCodes": ["BLACKFRIDAY"],
+    "status": "Scheduled"
+  }
+]

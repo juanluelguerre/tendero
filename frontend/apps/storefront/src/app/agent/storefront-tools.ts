@@ -3,10 +3,12 @@ import { firstValueFrom } from 'rxjs';
 import { refuse, say, type ToolDescriptor } from '@tendero/shared-agent';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
+import { CampaignService } from '../data-access/campaign.service';
 import { CartStore } from '../data-access/cart.service';
 import { ProductSearchService } from '../data-access/product-search.service';
 import { ProductService } from '../data-access/product.service';
 import { ActiveListing } from '../listing/active-listing';
+import { describeCampaigns } from './campaign-tool';
 import { chooseFilter, describeFacets, type FilterChoice } from './filter-tool';
 
 /**
@@ -38,12 +40,21 @@ export class StorefrontTools {
   private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);
   private readonly listing = inject(ActiveListing);
+  private readonly campaigns = inject(CampaignService);
 
   /** Enough to answer with, few enough not to fill a model's context. */
   private static readonly MaximumResults = 8;
 
   all(): readonly ToolDescriptor[] {
-    return [this.searchProducts(), this.listFilters(), this.applyFilter(), this.getProduct(), this.addToCart(), this.getCart()];
+    return [
+      this.searchProducts(),
+      this.listFilters(),
+      this.applyFilter(),
+      this.getProduct(),
+      this.addToCart(),
+      this.getCart(),
+      this.listCampaigns(),
+    ];
   }
 
   private searchProducts(): ToolDescriptor {
@@ -302,6 +313,28 @@ export class StorefrontTools {
             .filter(Boolean)
             .join('\n\n'),
         );
+      },
+    };
+  }
+
+  /**
+   * The shop's campaigns (R-8, H-5), from the same service the home's card and a
+   * category's banner read — an agent sees what the shopper sees, in the order
+   * the shop leads with.
+   */
+  private listCampaigns(): ToolDescriptor {
+    return {
+      name: 'list_campaigns',
+      description:
+        "Lists the shop's campaigns running now or starting within 30 days — Tendero Days, " +
+        "a season, a category's week — each with its window, how long is left, what it " +
+        'holds (with any coupon code) and a link to its products. Use it when the shopper ' +
+        'asks whether there are deals or events.',
+      inputSchema: { type: 'object', properties: {} },
+      execute: async () => {
+        const culture = this.culture.active();
+        const list = await firstValueFrom(this.campaigns.list(culture));
+        return say(describeCampaigns(list.items, culture, new Date()));
       },
     };
   }

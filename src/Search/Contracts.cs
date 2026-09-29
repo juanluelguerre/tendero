@@ -261,12 +261,22 @@ public sealed record SearchFilters
     /// <summary>The variant shown can be bought now.</summary>
     public bool InStock { get; init; }
 
+    /// <summary>
+    /// A campaign's code (<c>TENDERO_DAYS</c>): the products its promotions reach
+    /// while it runs — the "on offer" rule narrowed to that campaign's promotions,
+    /// asked of Pricing when the search runs (R-8). A campaign that is not running,
+    /// or does not exist, reaches nothing, so the listing is empty rather than the
+    /// whole shop. An open value, not a closed set: campaigns are the shopkeeper's.
+    /// </summary>
+    public string? Campaign { get; init; }
+
     /// <summary>What "new" means, once: the spec's thirty days.</summary>
     public const int NewArrivalDays = 30;
 
     public bool IsEmpty =>
         Brands.Count == 0 && Within.Count == 0 && Facets.Count == 0
-        && MinPrice is null && MaxPrice is null && !OnOffer && !NewArrivals && !InStock;
+        && MinPrice is null && MaxPrice is null && !OnOffer && !NewArrivals && !InStock
+        && Campaign is null;
 }
 
 /// <summary>
@@ -533,6 +543,11 @@ public sealed record ProductSearchDocument
     public required string Status { get; init; }          // solo "active" es buscable
 
     public static string IndexNameFor(string culture) => $"products_{culture}";
+
+    /// <summary>This variant as a result card, the one mapping every reader of the index shares.</summary>
+    public SearchHit ToHit(double score) => new(
+        ProductId, Code, Name, Slug, Brand, Category, Id, Sku,
+        PriceAmount, PriceFrom, PriceTo, PriceCurrency, ImageId, InStock, score);
 
     /// <summary>
     /// The attributes' searchable text, IN THE INDEX'S CULTURE.

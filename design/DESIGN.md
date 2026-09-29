@@ -83,6 +83,39 @@ sideways shows whole cards on a desktop, with two buttons that stop at the
 ends; on a phone the next card peeking in is the cue. Anything a finger taps is
 at least 44 px tall under a coarse pointer, links included (R-5.2).
 
+The home (R-8, `docs/specs/storefront-home.md`) is a column of modules, each
+drawn only when it has something to show and each failing alone: the campaign
+that leads, *Sigue donde lo dejaste*, *Compra con tu agente*, *Ofertas*, *Puede
+que te guste*, *Tendencias*, *Lo más vendido*, *Novedades*, the departments,
+and *La tienda promete*. It has no heading or drawing of its own — the header's
+search is the one question, and the campaign is the first sentence. Its parts
+are shared, never copied:
+
+- **`ProductRow`** (`storefront/src/app/shelves/`) is every row of products: a
+  heading, an optional line and *Ver todas*, whole cards on a desktop with two
+  buttons that hide when everything fits, the next card peeking on a phone, and
+  its cards deferred until the row nears the screen, with a skeleton in their
+  place. Slots for a row's own actions and for chips above the cards.
+- **`ProductCard`** is the one card, and a row asks more of it through inputs,
+  not copies: a badge on the picture (*Oferta*, *Nuevo*), a reason with its icon
+  (*Porque viste…*, *Sube esta semana*), a rank drawn large and never with a
+  count, a quiet card without its buttons, and a line layout for a ranking.
+- **`CampaignCard`** is a campaign: an event on the chalkboard — `--bg-inverse`,
+  `--ink-950`, a step blacker than the text's ink because at a card's size
+  `--ink-900` reads brown; dark in both themes, the one surface that is —
+  with its window, its clock and the view's one clay action; a season on the
+  accent's tint, with no clock; the campaign's own image beside the words, or
+  the products it reaches. As a category's banner it is smaller, with a link
+  instead of the clay button.
+  It carries no awning of its own: it leads the page right under the header's,
+  and two stripes a card apart read as one doubled line, not as the signature.
+- **`CountdownClock`** counts in days, hours and minutes, wakes once a minute on
+  the minute, and is read by a screen reader once as a sentence, never as a live
+  region.
+- **`PromiseStrip`** and **`AgentCard`** close and open the page quietly: the
+  strip reads its numbers from the rules that hold them, and the agent card sits
+  on the accent's tint with no clay, because the campaign has the view's action.
+
 ### Backoffice
 Dense: body drops to `--text-sm`, tables to `--text-xs`, row height 36px.
 Light or dark as the person chooses in the account menu, following the system

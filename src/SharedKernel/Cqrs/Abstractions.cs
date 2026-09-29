@@ -7,6 +7,18 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// <summary>A write intent that returns a result.</summary>
 public interface ICommand<TResult>;
 
+/// <summary>
+/// A command the audit does not record. The audit log answers "who changed what in
+/// the shop"; a few commands only record the caller's own passage — a product
+/// viewed, a search made — at the rate somebody browses. A row for each would bury
+/// the rows the log exists for under a customer's clicks, and keep a record of
+/// what every customer looked at where it does not belong (R-8, the trail). The
+/// exemption is declared on the command, so it is read in the command's own
+/// file; the commands that change something — forget, clear, switch off, merge —
+/// stay audited.
+/// </summary>
+public interface IUnauditedCommand;
+
 /// <summary>A read intent. Kept separate from ICommand so the dispatcher can
 /// have different policies (caching, read replicas) without touching slices.</summary>
 public interface IQuery<TResult>;

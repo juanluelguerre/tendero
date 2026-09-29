@@ -11,6 +11,7 @@ import { Telemetry } from '@tendero/shared-telemetry';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Campaigns } from '../campaigns/campaigns';
 import { ProductSearchService } from '../data-access/product-search.service';
 import { Taxonomy } from '../data-access/taxonomy';
 import { Listing } from './listing';
@@ -57,6 +58,8 @@ describe('the listing', () => {
         provideTenderoI18n(),
         provideRouter([{ path: '', component: ListingHost }]),
         { provide: API_BASE_URL, useValue: 'http://api' },
+        // The campaigns are a root resource; answered as none, so nothing waits on them.
+        { provide: Campaigns, useValue: { named: () => null, all: () => [], leading: () => null } as unknown as Campaigns },
         {
           provide: Telemetry,
           useValue: { trackEvent: (name: string, attributes: unknown) => events.push([name, attributes]) } as unknown as Telemetry,

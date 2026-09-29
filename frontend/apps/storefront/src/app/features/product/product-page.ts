@@ -17,7 +17,8 @@ import { ShopLinks } from '../../shop-links';
 import { SpecSource } from '../../specs/spec-source';
 import { specLines, specStatements } from '../../specs/spec-lines';
 import { SpecValue } from '../../specs/spec-value';
-import { arrivedFrom, cameFiltered } from './arrived-from';
+import { arrivedVia, cameFiltered } from './arrived-from';
+import { Trail } from '../../trail/trail';
 import {
   availabilityOf,
   initialSelection,
@@ -78,6 +79,7 @@ export class ProductPage {
   private readonly titles = inject(PageTitles);
   private readonly images = inject(ProductImageUrls);
   private readonly telemetry = inject(Telemetry);
+  private readonly trail = inject(Trail);
 
   /** The product last reported as viewed, so an answer in another language is not a second view. */
   private viewed: string | null = null;
@@ -236,8 +238,13 @@ export class ProductPage {
     if (this.viewed === code) return;
     this.viewed = code;
 
-    const previous = this.router.lastSuccessfulNavigation()?.previousNavigation?.finalUrl;
-    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedFrom(previous), filtered: cameFiltered(previous) });
+    const navigation = this.router.lastSuccessfulNavigation();
+    const previous = navigation?.previousNavigation?.finalUrl;
+    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedVia(navigation), filtered: cameFiltered(previous) });
+
+    // *Sigue donde lo dejaste* (R-8): once per product, as the event is. The
+    // trail decides where it is kept, and whether it is kept at all.
+    this.trail.recordView(code);
   }
 
   /**

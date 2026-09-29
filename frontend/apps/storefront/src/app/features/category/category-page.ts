@@ -6,6 +6,9 @@ import { map, type Subscription } from 'rxjs';
 import { CultureStore, PageTitles } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { ShopFrontService, type Category } from '../../data-access/shop-front.service';
+import { CampaignCard } from '../../campaigns/campaign-card';
+import { campaignForCategory, withAncestors } from '../../campaigns/campaign-rules';
+import { Campaigns } from '../../campaigns/campaigns';
 import { Listing } from '../../listing/listing';
 import { hasFilters } from '../../listing/listing-filters';
 import { ListingState } from '../../listing/listing-state';
@@ -36,7 +39,7 @@ type PageState = 'loading' | 'found' | 'unknown' | 'failed';
  */
 @Component({
   selector: 'storefront-category-page',
-  imports: [TranslocoDirective, RouterLink, Listing],
+  imports: [TranslocoDirective, RouterLink, Listing, CampaignCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Its own listing: the filters in the URL, the request, the phone's batch.
   providers: [ListingState],
@@ -50,6 +53,7 @@ export class CategoryPage {
   private readonly titles = inject(PageTitles);
   private readonly router = inject(Router);
   private readonly telemetry = inject(Telemetry);
+  protected readonly campaigns = inject(Campaigns);
 
   /** The listing already reported, so a change of language or of a filter is not a second opening. */
   private reported: string | null = null;
@@ -63,6 +67,19 @@ export class CategoryPage {
 
   /** Its children, so a department offers the sections inside it. */
   protected readonly children = signal<Category[]>([]);
+
+  /** The whole taxonomy as last answered, to walk a category up to its department. */
+  private readonly tree = signal<Category[]>([]);
+
+  /**
+   * The campaign of this branch, as the banner at the head of its pages (R-8):
+   * *Semana del hogar* on Hogar and on everything under it. A category's
+   * campaign never reaches the home; this is where it applies.
+   */
+  protected readonly banner = computed(() => {
+    const category = this.category();
+    return category ? campaignForCategory(this.campaigns.all(), withAncestors(category.code, this.tree())) : null;
+  });
 
   /** The sections again, as the column's links, with the counts the listing's category facet gives them. */
   protected readonly navigation = computed(() => {
@@ -129,6 +146,7 @@ export class CategoryPage {
           );
 
           this.category.set(found ?? null);
+          this.tree.set(result.items);
           // The tab names the section, not "Section".
           if (found) this.titles.name(found.name);
           this.children.set(

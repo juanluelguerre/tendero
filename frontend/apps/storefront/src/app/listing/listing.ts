@@ -3,6 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { CultureStore, DEFAULT_CULTURE, SUPPORTED_CULTURES } from '@tendero/shared-i18n';
+import { Campaigns } from '../campaigns/campaigns';
 import { ProductCard } from '../product-card';
 import { CanonicalLinks } from '../seo/canonical-links';
 import { RobotsMeta } from '../seo/robots-meta';
@@ -44,6 +45,7 @@ export class Listing {
   protected readonly state = inject(ListingState);
   private readonly culture = inject(CultureStore);
   private readonly telemetry = inject(Telemetry);
+  private readonly campaigns = inject(Campaigns);
 
   private readonly sheet = viewChild<ElementRef<HTMLDialogElement>>('sheet');
   private readonly sheetButton = viewChild<ElementRef<HTMLButtonElement>>('sheetButton');
@@ -110,6 +112,7 @@ export class Listing {
       newArrivals: t('listing.newArrivals'),
       inStock: t('listing.inStock'),
       money,
+      campaign: (code) => t('listing.campaign', { name: this.campaigns.named(code)?.name ?? code }),
       upTo: (max) => t('listing.price.upTo', { price: max }),
       from: (min) => t('listing.price.from', { price: min }),
       between: (min, max) => t('listing.price.between', { min, max }),

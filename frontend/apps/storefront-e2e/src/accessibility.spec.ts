@@ -44,8 +44,20 @@ test('the storefront gets no less accessible than R-1 found it', async ({ page }
   test.setTimeout(240_000);
   await page.goto('/es');
   await page.waitForLoadState('networkidle');
+  // The campaign's listing, when a campaign leads (R-8): its heading and its chip.
+  const cta = page.locator('storefront-campaign-card a.campaign__cta');
+  const campaign = (await cta.count())
+    ? new URL((await cta.first().getAttribute('href')) ?? '/es', 'http://shop').searchParams.get('campaign')
+    : null;
   const category = await page.locator('a[href*="/c/"]').first().getAttribute('href');
   const product = await page.locator('a[href*="/p/"]').first().getAttribute('href');
+
+  // A product viewed and a search made, so the home is audited with its trail
+  // row and *Tu historial* with entries in it (R-8) — the states a returning
+  // shopper sees, not only a first visit's.
+  await page.goto(product ?? '/es');
+  await page.goto('/es?q=mochila');
+  await page.waitForLoadState('networkidle');
 
   await hold(
     [
@@ -55,6 +67,8 @@ test('the storefront gets no less accessible than R-1 found it', async ({ page }
       ['product', product ?? '/es'],
       ['cart', '/es/cart'],
       ['account', '/es/account'],
+      ['agents', '/es/agents'],
+      ['campaign', `/es?campaign=${campaign ?? ''}`],
     ],
     page,
   );

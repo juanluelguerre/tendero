@@ -17,6 +17,7 @@ const Paths = {
   orders: 'M6 3h12v18l-3-2-3 2-3-2-3 2z M9 8h6 M9 12h6',
   returns: 'M9 14L4 9l5-5 M4 9h11a5 5 0 0 1 0 10h-3',
   promotions: 'M19 5L5 19 M7 5a2 2 0 1 0 0 4a2 2 0 1 0 0-4 M17 15a2 2 0 1 0 0 4a2 2 0 1 0 0-4',
+  campaigns: 'M4 10v4h3l9 5V5l-9 5z M7 14l1.5 6h2.5l-1.2-5 M19 9.5a3 3 0 0 1 0 5',
   stock: 'M3 10h18v10H3z M7 10V5h10v5 M3 15h18',
   agents: 'M5 9h14v10H5z M12 5v4 M9 14h.01 M15 14h.01 M12 3a1 1 0 1 0 0 2a1 1 0 1 0 0-2',
   audit: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4',

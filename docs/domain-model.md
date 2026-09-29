@@ -176,6 +176,70 @@ classDiagram
         +string Kind
         +string Canonical
     }
+    class Campaign {
+        <<aggregate>>
+        +CampaignCode Code
+        +LocalizedText Name
+        +LocalizedText Line
+        +CampaignKind Kind
+        +string? CategoryCode
+        +CampaignScope Scope
+        +DateTimeOffset StartsAt
+        +DateTimeOffset EndsAt
+        +int Priority
+        +string[] PromotionCodes
+        +ImageId? ImageId
+        +LocalizedText? ImageAlt
+        +CampaignImage? Image
+        +CampaignStatus Status
+        +DateTimeOffset? EndedAt
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset UpdatedAt
+        +bool IsEditable
+    }
+    class CampaignCode {
+        <<record>>
+        +string Value
+    }
+    class CampaignDetails {
+        <<record>>
+        +LocalizedText Name
+        +LocalizedText Line
+        +CampaignKind Kind
+        +string? CategoryCode
+        +DateTimeOffset StartsAt
+        +DateTimeOffset EndsAt
+        +int Priority
+        +string[] PromotionCodes
+        +CampaignImage? Image
+    }
+    class CampaignImage {
+        <<record>>
+        +ImageId Id
+        +LocalizedText Alt
+    }
+    class CampaignKind {
+        <<enumeration>>
+        Event
+        Season
+    }
+    class CampaignPhase {
+        <<enumeration>>
+        Upcoming
+        Running
+        Over
+    }
+    class CampaignScope {
+        <<enumeration>>
+        Shop
+        Category
+    }
+    class CampaignStatus {
+        <<enumeration>>
+        Draft
+        Scheduled
+        Ended
+    }
     class CartItem {
         <<record>>
         +VariantId VariantId
@@ -284,6 +348,7 @@ classDiagram
         +string? CouponCode
         +DateTimeOffset? ValidFrom
         +DateTimeOffset? ValidTo
+        +bool IsForEveryone
     }
     class PromotionCondition {
         <<record>>
@@ -330,6 +395,9 @@ classDiagram
     PromotionEffect <|-- AmountOffOrder
     AppliedDiscount --> RuleReason : Reason
     PromotionEffect <|-- BuyXGetY
+    Campaign --> CampaignCode : Code
+    Campaign --> CampaignImage : Image
+    CampaignDetails --> CampaignImage : Image
     PromotionEffect <|-- FreeShipping
     PromotionEffect <|-- PercentOffLine
     PriceBook "1" --> "*" PriceList : Lists
@@ -340,6 +408,26 @@ classDiagram
     PricedCart "1" --> "*" PricedLine : Lines
     Promotion --> PromotionCondition : Condition
     Promotion --> PromotionEffect : Effect
+```
+
+### Events
+
+| Event | Carries |
+|---|---|
+| `CampaignCreated` | `Code: CampaignCode` |
+| `CampaignEnded` | `Code: CampaignCode`, `From: CampaignStatus` |
+| `CampaignScheduled` | `Code: CampaignCode`, `StartsAt: DateTimeOffset`, `EndsAt: DateTimeOffset` |
+| `CampaignUnscheduled` | `Code: CampaignCode` |
+| `CampaignUpdated` | `Code: CampaignCode` |
+
+### Campaign states
+
+```mermaid
+stateDiagram-v2
+    Draft --> Scheduled
+    Draft --> Ended
+    Scheduled --> Draft
+    Scheduled --> Ended
 ```
 
 ## Inventory
@@ -726,6 +814,18 @@ classDiagram
         Active
         Suspended
     }
+    class BrowsingHistory {
+        <<aggregate>>
+        +CustomerId CustomerId
+        +bool IsEnabled
+        +DateTimeOffset CreatedAt
+        +DateTimeOffset UpdatedAt
+    }
+    class BrowsingKind {
+        <<enumeration>>
+        View
+        Search
+    }
     class Customer {
         <<aggregate>>
         +CustomerId Id
@@ -737,6 +837,11 @@ classDiagram
         +DateTimeOffset CreatedAt
         +DateTimeOffset UpdatedAt
         +bool IsGuest
+    }
+    class TrailEntry {
+        <<record>>
+        +string Key
+        +DateTimeOffset At
     }
 ```
 

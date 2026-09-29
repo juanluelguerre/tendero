@@ -75,6 +75,12 @@ public sealed partial class SearchFiltersValidator : AbstractValidator<SearchFil
             .When(x => x.MinPrice is not null && x.MaxPrice is not null)
             .WithMessage("maxPrice cannot be below minPrice.")
             .OverridePropertyName("maxPrice");
+
+        // A campaign's code as Pricing writes it (TENDERO_DAYS), in any case.
+        RuleFor(x => x.Campaign).Matches("^[A-Za-z0-9_]{1,40}$")
+            .When(x => x.Campaign is not null)
+            .WithMessage("A campaign is its code: letters, digits and underscores (TENDERO_DAYS).")
+            .OverridePropertyName("campaign");
     }
 
     [System.Text.RegularExpressions.GeneratedRegex(@"^[A-Z0-9_]{1,60}:[^\s:]{1,100}$")]
@@ -91,11 +97,12 @@ public sealed class SearchProductsEndpoint : ICarterModule
         // GET /api/search?category=SHOES&brand=Vertex&brand=Caminante&f=SIZE:42&maxPrice=80&inStock=true&sort=PriceAsc
         //                                             — narrowed (R-7.3, F-2): within a filter the
         //                                               choices add up, across filters they narrow
+        // GET /api/search?campaign=TENDERO_DAYS       — what a running campaign's promotions reach (R-8)
         app.MapGet("/api/search",
             async Task<Ok<SearchResultPage>> (
                    string? q, string? culture, int? page, int? pageSize, string? category, WireEnum<ProductSort>? sort,
                    string[]? brand, string[]? within, string[]? f,
-                   decimal? minPrice, decimal? maxPrice, bool? onOffer, bool? newArrivals, bool? inStock,
+                   decimal? minPrice, decimal? maxPrice, bool? onOffer, bool? newArrivals, bool? inStock, string? campaign,
                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
             {
                 var filters = new SearchFilters
@@ -108,6 +115,7 @@ public sealed class SearchProductsEndpoint : ICarterModule
                     OnOffer = onOffer ?? false,
                     NewArrivals = newArrivals ?? false,
                     InStock = inStock ?? false,
+                    Campaign = string.IsNullOrWhiteSpace(campaign) ? null : campaign.Trim(),
                 };
 
                 // Culture: explicit query parameter > Accept-Language > "es"

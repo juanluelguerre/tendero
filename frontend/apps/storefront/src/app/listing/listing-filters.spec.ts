@@ -45,12 +45,13 @@ describe('the listing in the URL', () => {
       newArrivals: true,
       inStock: true,
       sort: 'price-asc',
+      campaign: 'TENDERO_DAYS',
     };
 
     const address = addressOf(filters);
 
     expect(address).toBe(
-      'brand=Vertex&brand=Caminante&within=BAGS&f=COLOR%3ABLACK&f=SIZE%3A42&price=30-59.9&offer=1&new=1&stock=1&sort=price-asc',
+      'brand=Vertex&brand=Caminante&within=BAGS&f=COLOR%3ABLACK&f=SIZE%3A42&price=30-59.9&offer=1&new=1&stock=1&sort=price-asc&campaign=TENDERO_DAYS',
     );
     expect(parseListing(url(address))).toEqual(filters);
   });
@@ -202,5 +203,26 @@ describe('which facets a change narrowed, for filter_applied', () => {
 
   it('does not count a facet taken off, nor an order', () => {
     expect(narrowedFacets({ ...NoFilters, brands: ['Vertex'], onOffer: true }, { ...NoFilters, sort: 'newest' })).toEqual([]);
+  });
+});
+
+describe('a campaign listing (R-8)', () => {
+  it('reads a campaign code, and nothing that is not one', () => {
+    expect(parseListing(url('campaign=tendero_days')).campaign).toBe('TENDERO_DAYS');
+    expect(parseListing(url('campaign=')).campaign).toBeNull();
+    expect(parseListing(url('campaign=%3Cscript%3E')).campaign).toBeNull();
+  });
+
+  it('asks the API for what the campaign reaches, and counts as a filter', () => {
+    const filters = { ...NoFilters, campaign: 'TENDERO_DAYS' };
+
+    expect(searchParams({ query: '', category: null }, filters, 'es', 1, 24)).toEqual({
+      culture: 'es',
+      pageSize: '24',
+      campaign: 'TENDERO_DAYS',
+    });
+    expect(appliedCount(filters)).toBe(1);
+    expect(sameFilters(filters, NoFilters)).toBe(false);
+    expect(clearAll(filters).campaign).toBeNull();
   });
 });

@@ -1,131 +1,205 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatDateTime } from '@tendero/shared-util';
+import { map, of, switchMap } from 'rxjs';
+import { CampaignCard } from '../../campaigns/campaign-card';
+import { Campaigns } from '../../campaigns/campaigns';
 import { ProductSearchService } from '../../data-access/product-search.service';
-import { ShopFrontService, type Category, type Offer } from '../../data-access/shop-front.service';
-import { ProductCard } from '../../product-card';
-import { ShopLinks } from '../../shop-links';
+import { ReturnsPolicy } from '../../data-access/returns-policy.service';
+import { ShopFrontService } from '../../data-access/shop-front.service';
+import { Taxonomy } from '../../data-access/taxonomy';
+import { WhatSellsService } from '../../data-access/what-sells.service';
+import { AgentCard } from '../../shelves/agent-card';
+import { ProductRow, type ShelfItem } from '../../shelves/product-row';
+import { PromiseStrip } from '../../shelves/promise-strip';
 import { departmentArt } from '../../shop-art';
+import { ShopLinks } from '../../shop-links';
+import { Trail } from '../../trail/trail';
+import { TrailRow } from '../../trail/trail-row';
+import {
+  departmentsOf,
+  freeShippingOf,
+  labelled,
+  offerRulesOf,
+  rankedIds,
+  rankedItems,
+  risingItems,
+  suggestionItems,
+} from './home-bands';
+import { HomeModule } from './home-module';
+
+/** How many cards a row asks for: two screens of a desktop row, one of them whole. */
+const RowSize = 10;
+/** *Lo más vendido* is a top five. */
+const TopSize = 5;
 
 /**
- * The front of the shop: what somebody sees before they have typed anything.
+ * The front of the shop, top to bottom (R-8, docs/specs/storefront-home.md; the
+ * approved mock-ups): the campaign that leads, *Sigue donde lo dejaste*, *Compra
+ * con tu agente*, *Ofertas*, *Puede que te guste*, *Tendencias*, *Lo más
+ * vendido*, *Novedades*, the departments and *La tienda promete*.
  *
- * **Three bands, and each one answers a question a shopper actually has** —
- * what do you sell, what is cheap right now, what is new. There is no fourth
- * band of best sellers, and its absence is a decision rather than an oversight:
- * that needs orders, and a ranking computed from three of them is a lie with a
- * chart on it. It arrives when the data does.
+ * **Each band fails alone.** Every one is its own request, as a resource, and a
+ * band whose request failed or answered nothing is simply not drawn — a home
+ * that renders nothing because the rankings are down is a shop that closes over
+ * a chart. The rows' cards load when they come near the screen (`ProductRow`).
  *
- * The reference was Apple rather than Amazon, and the difference is worth
- * stating because it decided the layout. Apple gives one idea a whole band and
- * lets whitespace do the work; Amazon gives you somewhere to go. Apple can do
- * that because it sells ten things — a hundred products across sixteen
- * categories needs the way in that Amazon is good at. So: Apple's restraint,
- * Amazon's findability, and none of Amazon's density.
+ * **The page composes; the rules are elsewhere**: which campaign leads is the
+ * server's order (`leadingCampaign`), what a row says about each product is
+ * `home-bands.ts`, what the trail keeps is `Trail`'s.
  *
  * It renders inside the search page rather than on a route of its own, because
- * `/es` already IS the search page and the query lives in the URL. A separate
- * home route would mean two places that answer the same address.
+ * `/es` already IS the search page and the query lives in the URL. The header's
+ * box is the shop's one search, so the home no longer asks *¿Qué estás
+ * buscando?* — a campaign is a better first sentence than a question the header
+ * already asks (the spec).
  */
 @Component({
   selector: 'storefront-home-sections',
-  imports: [TranslocoDirective, RouterLink, ProductCard],
+  imports: [TranslocoDirective, RouterLink, CampaignCard, TrailRow, AgentCard, ProductRow, PromiseStrip, HomeModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-sections.html',
   styleUrl: './home-sections.css',
 })
 export class HomeSections {
-  private readonly shopFront = inject(ShopFrontService);
   private readonly search = inject(ProductSearchService);
+  private readonly sales = inject(WhatSellsService);
+  private readonly shopFront = inject(ShopFrontService);
   private readonly culture = inject(CultureStore);
+  private readonly taxonomy = inject(Taxonomy);
 
   protected readonly links = inject(ShopLinks);
+  protected readonly campaigns = inject(Campaigns);
+  protected readonly trail = inject(Trail);
+  protected readonly returnDays = inject(ReturnsPolicy).windowDays;
 
-  private readonly categories = signal<Category[]>([]);
+  // ---------- The campaign ----------
 
-  /** Whether the Novedades row is at either end, for its buttons to say so by being disabled. */
-  protected readonly atStart = signal(true);
-  protected readonly atEnd = signal(false);
+  protected readonly campaign = this.campaigns.leading;
 
-  protected readonly offers = signal<Offer[]>([]);
-  protected readonly newest = signal<SearchHit[]>([]);
+  /** What the leading campaign reaches, for its card when it has no picture of its own. */
+  private readonly campaignProducts = rxResource({
+    params: () => {
+      const campaign = this.campaign();
+      return campaign && !campaign.imageId && campaign.phase === 'Running'
+        ? { culture: this.culture.active(), campaign: campaign.code }
+        : undefined;
+    },
+    stream: ({ params }) => this.search.browse({ ...params, pageSize: 3 }).pipe(map((page) => page.hits)),
+  });
 
-  /**
-   * The departments: the roots of the taxonomy, which is exactly what a shop
-   * means by the word. There is no second concept to model — Amazon's
-   * "departments" are its top-level categories, and inventing a parallel one
-   * here would be two trees to keep in step.
-   */
-  protected readonly departments = computed(() =>
-    this.categories().filter((category) => category.depth === 0),
+  protected readonly campaignHits = computed<readonly SearchHit[]>(() =>
+    this.campaignProducts.hasValue() ? this.campaignProducts.value() : [],
+  );
+
+  // ---------- The trail and what it suggests ----------
+
+  private readonly viewedCodes = computed(() => this.trail.shown().views.map((entry) => entry.key));
+
+  private readonly viewedCards = rxResource({
+    params: () => (this.viewedCodes().length ? { culture: this.culture.active(), codes: this.viewedCodes() } : undefined),
+    stream: ({ params }) => this.search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
+  });
+
+  protected readonly viewed = computed<readonly SearchHit[]>(() =>
+    this.viewedCards.hasValue() ? this.viewedCards.value() : [],
+  );
+
+  private readonly similar = rxResource({
+    params: () => (this.viewedCodes().length ? { culture: this.culture.active(), codes: this.viewedCodes() } : undefined),
+    stream: ({ params }) => this.search.similar(params.culture, params.codes, RowSize),
+  });
+
+  /** *Porque viste {{name}}*, in the reader's language. */
+  protected because(t: (key: string, params?: Record<string, unknown>) => string): (name: string) => string {
+    return (name) => t('home.because', { name });
+  }
+
+  /** *Porque viste…*: the template hands in the sentence, in the reader's language. */
+  protected suggested(because: (name: string) => string): ShelfItem[] {
+    return this.similar.hasValue() ? suggestionItems(this.similar.value(), this.viewed(), because) : [];
+  }
+
+  // ---------- Offers ----------
+
+  private readonly offerHits = rxResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: ({ params }) => this.search.browse({ culture: params.culture, onOffer: true, pageSize: RowSize }),
+  });
+
+  private readonly offerRuleList = rxResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: ({ params }) => this.shopFront.offers(params.culture).pipe(map((result) => result.items)),
+  });
+
+  protected offers(badge: string): ShelfItem[] {
+    return this.offerHits.hasValue() ? labelled(this.offerHits.value().hits, badge) : [];
+  }
+
+  /** The promotions' names, as the row's small print; empty when they are not known. */
+  protected readonly offerRules = computed(() => (this.offerRuleList.hasValue() ? offerRulesOf(this.offerRuleList.value()) : ''));
+
+  protected readonly freeShipping = computed(() =>
+    this.offerRuleList.hasValue() ? freeShippingOf(this.offerRuleList.value()) : null,
+  );
+
+  // ---------- What rises, what sells, what is new ----------
+
+  private readonly trendingCards = rxResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: ({ params }) =>
+      this.sales.trending(RowSize).pipe(
+        switchMap((ranked) =>
+          ranked.items.length
+            ? this.search.cards(params.culture, { ids: rankedIds(ranked) }).pipe(map((cards) => rankedItems(ranked, cards.items)))
+            : of([] as ShelfItem[]),
+        ),
+      ),
+  });
+
+  protected trending(rising: string): ShelfItem[] {
+    return this.trendingCards.hasValue() ? risingItems(this.trendingCards.value(), rising) : [];
+  }
+
+  private readonly bestSellerCards = rxResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: ({ params }) =>
+      this.sales.bestSellers(TopSize).pipe(
+        switchMap((ranked) =>
+          ranked.items.length
+            ? this.search.cards(params.culture, { ids: rankedIds(ranked) }).pipe(map((cards) => rankedItems(ranked, cards.items)))
+            : of([] as ShelfItem[]),
+        ),
+      ),
+  });
+
+  protected readonly bestSellers = computed<ShelfItem[]>(() =>
+    this.bestSellerCards.hasValue() ? this.bestSellerCards.value() : [],
   );
 
   /**
-   * A few of the sections inside a department, as one line.
-   *
-   * Built here and not in the template: an arrow function in an Angular
-   * expression is not valid syntax, and pushing the join into the component is
-   * where it belonged anyway — the template says what appears, not how the
-   * string was made.
+   * New arrivals, ordered by the date the SOURCE first listed the product — not
+   * by when this shop imported it, which is the same second for the whole
+   * catalogue and would be sorting by import order while calling it news.
    */
-  protected sectionNames(department: Category): string {
-    return this.categories()
-      .filter((category) => category.parent === department.code)
-      .slice(0, 4)
-      .map((category) => category.name)
-      .join(' · ');
+  private readonly newestHits = rxResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: ({ params }) => this.search.browse({ culture: params.culture, sort: 'Newest', pageSize: RowSize }),
+  });
+
+  protected newest(badge: string): ShelfItem[] {
+    return this.newestHits.hasValue() ? labelled(this.newestHits.value().hits, badge) : [];
   }
 
-  /** The department's illustration. Every root has one; anything else falls
-   *  back to the shop's own mark rather than to a broken tile. */
-  protected art(department: Category): string {
-    return departmentArt(department.code);
-  }
+  // ---------- The departments ----------
 
-  /** The end date in the reader's own format. `04/09/2026` and `09/04/2026` are
-   *  the same day and different months, so the culture decides. */
-  protected until(offer: Offer): string {
-    return offer.until ? formatDateTime(offer.until, this.culture.active()) : '';
-  }
+  /** The roots of the taxonomy, lower and smaller: the header's row already reaches them in one click. */
+  protected readonly departments = computed(() => departmentsOf(this.taxonomy.categories()));
 
-  constructor() {
-    // Re-run on a language switch: the category names, the offer labels and the
-    // product names all come from the server in the requested culture, and a
-    // home page that only retranslated its headings would show English bands
-    // over Spanish rows.
-    effect(() => this.load(this.culture.active()));
-  }
-
-  private load(culture: string): void {
-    // Three independent requests, and a failure in any one of them takes only
-    // its own band away. A home page that renders nothing because the promotions
-    // reader is down is a shop that closes over a discount.
-    this.shopFront.categories(culture).subscribe({
-      next: (result) => this.categories.set(result.items),
-      error: () => this.categories.set([]),
-    });
-
-    this.shopFront.offers(culture).subscribe({
-      next: (result) => this.offers.set(result.items),
-      error: () => this.offers.set([]),
-    });
-
-    this.search.browse({ culture, sort: 'Newest', pageSize: 8 }).subscribe({
-      next: (page) => this.newest.set(page.hits),
-      error: () => this.newest.set([]),
-    });
-  }
-
-  /** A page of the row: as far as it shows, so the next whole cards come in. */
-  protected page(row: HTMLElement, direction: 1 | -1): void {
-    row.scrollBy({ left: direction * row.clientWidth, behavior: 'smooth' });
-  }
-
-  protected edges(row: HTMLElement): void {
-    this.atStart.set(row.scrollLeft <= 1);
-    this.atEnd.set(row.scrollLeft + row.clientWidth >= row.scrollWidth - 1);
+  protected art(code: string): string {
+    return departmentArt(code);
   }
 }

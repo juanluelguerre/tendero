@@ -88,7 +88,7 @@ public sealed class OpenApiDocumentTests
     /// never sent.
     /// </summary>
     private static readonly string[] ClosedSetNames =
-        ["status", "kind", "mode", "outcome", "trust", "decision", "move", "change", "combination", "period", "sort"];
+        ["status", "kind", "mode", "outcome", "trust", "decision", "move", "change", "combination", "period", "sort", "phase", "scope"];
 
     /// <summary>The fields with such a name that are open by design, and why.</summary>
     private static readonly Dictionary<string, string> OpenByDesign = new()

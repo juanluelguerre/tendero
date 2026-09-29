@@ -23,6 +23,7 @@ import type { FacetKind, ProductSort } from '@tendero/shared-api';
  * | `new`    | `1`: listed in the last 30 days | `newArrivals` |
  * | `stock`  | `1`: can be bought now | `inStock` |
  * | `sort`   | `newest`, `price-asc` or `price-desc`; absent is relevance | `sort` |
+ * | `campaign` | a campaign's code: what its promotions reach now (R-8) | `campaign` |
  *
  * Repeated parameters rather than the spec's comma lists: a value is a brand or
  * an option code the shop does not control, and one day one of them holds a
@@ -38,6 +39,7 @@ export const ListingParam = {
   newArrivals: 'new',
   inStock: 'stock',
   sort: 'sort',
+  campaign: 'campaign',
 } as const;
 
 export const ListingSorts = ['price-asc', 'price-desc', 'newest'] as const;
@@ -67,6 +69,8 @@ export interface ListingFilters {
   readonly inStock: boolean;
   /** Null is the default order: relevance on a search, recommended on a category. */
   readonly sort: ListingSort | null;
+  /** A campaign's code: the campaign card's *Ver las ofertas* (R-8, H-2). */
+  readonly campaign: string | null;
 }
 
 export const NoFilters: ListingFilters = {
@@ -79,6 +83,7 @@ export const NoFilters: ListingFilters = {
   newArrivals: false,
   inStock: false,
   sort: null,
+  campaign: null,
 };
 
 /** What a listing lists: words, a place in the taxonomy, both or neither. */
@@ -110,6 +115,7 @@ export function parseListing(params: ReadableParams): ListingFilters {
     newArrivals: isOn(params.get(ListingParam.newArrivals)),
     inStock: isOn(params.get(ListingParam.inStock)),
     sort: (ListingSorts as readonly string[]).includes(sort ?? '') ? (sort as ListingSort) : null,
+    campaign: campaignCode(params.get(ListingParam.campaign)),
   };
 }
 
@@ -128,6 +134,7 @@ export function listingQueryParams(filters: ListingFilters): Params {
     [ListingParam.newArrivals]: filters.newArrivals ? '1' : null,
     [ListingParam.inStock]: filters.inStock ? '1' : null,
     [ListingParam.sort]: filters.sort,
+    [ListingParam.campaign]: filters.campaign,
   };
 }
 
@@ -158,6 +165,7 @@ export function searchParams(
   if (filters.onOffer) params['onOffer'] = 'true';
   if (filters.newArrivals) params['newArrivals'] = 'true';
   if (filters.inStock) params['inStock'] = 'true';
+  if (filters.campaign) params['campaign'] = filters.campaign;
 
   return params;
 }
@@ -222,7 +230,7 @@ export function withSort(filters: ListingFilters, sort: ListingSort | null): Lis
   return { ...filters, sort };
 }
 
-/** *Quitar todo*: every filter off. The order is not a filter, so it stays. */
+/** *Quitar todo*: every filter off — the campaign too, which is a filter like the others. The order is not a filter, so it stays. */
 export function clearAll(filters: ListingFilters): ListingFilters {
   return { ...NoFilters, sort: filters.sort };
 }
@@ -236,7 +244,8 @@ export function appliedCount(filters: ListingFilters): number {
     (filters.minPrice !== null || filters.maxPrice !== null ? 1 : 0) +
     (filters.onOffer ? 1 : 0) +
     (filters.newArrivals ? 1 : 0) +
-    (filters.inStock ? 1 : 0)
+    (filters.inStock ? 1 : 0) +
+    (filters.campaign ? 1 : 0)
   );
 }
 
@@ -283,7 +292,8 @@ export function sameFilters(a: ListingFilters, b: ListingFilters): boolean {
     a.onOffer === b.onOffer &&
     a.newArrivals === b.newArrivals &&
     a.inStock === b.inStock &&
-    a.sort === b.sort
+    a.sort === b.sort &&
+    a.campaign === b.campaign
   );
 }
 
@@ -311,6 +321,12 @@ function priceParam(min: number | null, max: number | null): string | null {
 
 function validPrice(amount: number | null): number | null {
   return amount !== null && Number.isFinite(amount) && amount >= 0 ? amount : null;
+}
+
+/** A campaign's code as the shopkeeper writes them (`TENDERO_DAYS`); anything else is no campaign. */
+function campaignCode(value: string | null): string | null {
+  const code = value?.trim().toUpperCase() ?? '';
+  return /^[A-Z0-9_-]{1,40}$/.test(code) ? code : null;
 }
 
 function isOn(value: string | null): boolean {

@@ -50,6 +50,30 @@ public interface IVectorProductSearch
 public sealed record VectorMatch(string ProductId, double Similarity);
 
 /// <summary>
+/// How alike products are in meaning (R-8, *Puede que te guste*): the similarity
+/// of each candidate's embedding to one product's, in one culture — the vectors
+/// the hybrid search already keeps, compared with each other instead of with a
+/// query.
+///
+/// A port of its own rather than a third method on <see cref="IVectorProductSearch"/>:
+/// the hybrid strategy never asks it, and a search double should not have to
+/// answer a question its caller never puts (ISP). Its failures are the vector
+/// layer's — a <see cref="SearchUnavailableException"/> when it is down, a
+/// <see cref="SearchStageNotConfiguredException"/> when this process has none —
+/// and the caller is expected to survive either (invariant 8).
+/// </summary>
+public interface IVectorSimilarity
+{
+    /// <summary>
+    /// The cosine similarity of each of <paramref name="candidateIds"/> to
+    /// <paramref name="productId"/>. A candidate with no vector is left out, not an
+    /// error: the caller keeps the order it had for it.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, double>> SimilarityAsync(
+        string productId, IReadOnlyCollection<string> candidateIds, string culture, CancellationToken ct = default);
+}
+
+/// <summary>
 /// Whether the vector layer can be used right now, and why not when it cannot.
 ///
 /// **A mismatch is not an exception, it is a status** (P8-3). The model server
@@ -84,7 +108,7 @@ public sealed record VectorLayerStatus(bool IsConfigured, bool IsAvailable, stri
 /// <see cref="SearchStageNotConfiguredException"/>, which the hybrid strategy
 /// treats as a stage to skip rather than a degradation to count.
 /// </summary>
-internal sealed class NoVectorLayer : IVectorLayer, IProductVectorIndexer, IVectorProductSearch
+internal sealed class NoVectorLayer : IVectorLayer, IProductVectorIndexer, IVectorProductSearch, IVectorSimilarity
 {
     public Task<VectorLayerStatus> CheckAsync(CancellationToken ct = default) =>
         Task.FromResult(VectorLayerStatus.NotConfigured);
@@ -104,6 +128,10 @@ internal sealed class NoVectorLayer : IVectorLayer, IProductVectorIndexer, IVect
 
     public Task<IReadOnlyDictionary<string, string>> TextsAsync(
         IReadOnlyCollection<string> productIds, string culture, CancellationToken ct = default) =>
+        throw new SearchStageNotConfiguredException(SearchDegradation.VectorStage);
+
+    public Task<IReadOnlyDictionary<string, double>> SimilarityAsync(
+        string productId, IReadOnlyCollection<string> candidateIds, string culture, CancellationToken ct = default) =>
         throw new SearchStageNotConfiguredException(SearchDegradation.VectorStage);
 
     private static SearchUnavailableException Refusal(string operation) =>

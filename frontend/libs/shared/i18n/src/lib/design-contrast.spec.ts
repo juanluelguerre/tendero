@@ -126,6 +126,9 @@ describe('the design tokens, read on the surfaces they sit on', () => {
     ['--on-accent', '--accent'],
     ['--on-accent', '--accent-hover'],
     ['--accent', '--accent-tint'],
+    // The chalkboard (R-8's event card): dark in both themes, so its text is its own.
+    ['--text-inverse', '--bg-inverse'],
+    ['--text-inverse-muted', '--bg-inverse'],
   ];
 
   function failures(bar: number, pairs: readonly (readonly [string, string, string])[]) {
@@ -151,7 +154,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
   });
 
   it.each(themeNames)('shows a focus ring against every surface in the %s theme', (theme) => {
-    const pairs = SURFACES.map((bg) => [theme, '--focus-ring', bg] as const);
+    const pairs = [...SURFACES, '--bg-inverse'].map((bg) => [theme, '--focus-ring', bg] as const);
 
     expect(failures(INDICATOR_BAR, pairs)).toEqual([]);
   });

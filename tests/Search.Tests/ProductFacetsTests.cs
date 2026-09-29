@@ -1,9 +1,12 @@
 using System.Text;
 using System.Text.Json.Nodes;
 using Elastic.Clients.Elasticsearch;
+using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Offers;
+using ElGuerre.Tendero.Tests;
 using Xunit;
 
 namespace ElGuerre.Tendero.Search.Tests;
@@ -256,6 +259,16 @@ public sealed class ProductFacetsTests
             facets.Select(facet => facet.Label));
     }
 
+    /// <summary>Every built-in facet is named in Spanish too (invariant 6), not only in the language the tests happened to read.</summary>
+    [Fact]
+    public void The_built_in_facets_are_labelled_in_spanish()
+    {
+        var facets = Assemble(Counts(), SearchFilters.None, "es");
+
+        Assert.Equal(["Categoría", "Marca", "Precio", "En oferta", "Novedades", "Disponible"],
+            facets.Take(6).Select(facet => facet.Label));
+    }
+
     [Fact]
     public void Options_carry_the_definitions_labels_and_order_and_brands_come_by_count()
     {
@@ -318,6 +331,159 @@ public sealed class ProductFacetsTests
         Assert.Empty(price.Options);
         Assert.Equal((18.50m, 169m, (decimal?)30m, (decimal?)null), (price.Price!.Min, price.Price.Max, price.Price.ChosenMin, price.Price.ChosenMax));
         Assert.Equal(bands, price.Price.Bands);
+    }
+
+    // ---------- The edges R-7/R-8's Stryker close found untested ----------
+
+    /// <summary>The price filter is the range asked for, both ends inclusive, not merely a filter on the price field.</summary>
+    [Fact]
+    public async Task A_price_filter_is_the_range_asked_for()
+    {
+        var body = await LexicalBody(new ProductSearchQuery("zapatillas", "es", Filters: new SearchFilters { MinPrice = 30, MaxPrice = 80 }));
+
+        var range = body["post_filter"]!.ToJsonString();
+        Assert.Contains("\"gte\":30", range);
+        Assert.Contains("\"lte\":80", range);
+    }
+
+    [Theory]
+    [InlineData("COLOR:RED", "COLOR")]
+    [InlineData("COLOR:", null)]      // a code with no value is not a choice
+    [InlineData(":RED", null)]        // nor a value with no code
+    [InlineData("COLOR", null)]
+    public void A_choice_is_a_code_and_a_value(string pair, string? code) =>
+        Assert.Equal(code, FacetValues.CodeOf(pair));
+
+    [Theory]
+    [InlineData("COLOR", true)]
+    [InlineData("brand", false)]     // the built-in facets are lower case
+    [InlineData("", false)]
+    public void An_attributes_code_starts_upper_case(string facet, bool attribute) =>
+        Assert.Equal(attribute, ProductFilters.IsAttributeCode(facet));
+
+    /// <summary>A code is read literally by the index's regular expression: anything but a letter or a digit is escaped.</summary>
+    [Fact]
+    public void A_codes_prefix_pattern_escapes_what_is_not_a_letter_or_a_digit() =>
+        Assert.Equal(@"SIZE\_EU\.2:.*", FacetAggregations.PrefixPattern("SIZE_EU.2"));
+
+    /// <summary>Categories by how many products each holds, the code breaking a tie; brands the same, their name breaking it.</summary>
+    [Fact]
+    public void Categories_and_brands_come_by_count_and_a_tie_by_name()
+    {
+        var counts = Counts() with
+        {
+            Brands = new OptionCounts(8, new Dictionary<string, long> { ["vertex"] = 4, ["Caminante"] = 4 }),
+        };
+
+        var facets = Assemble(counts, SearchFilters.None, "es");
+
+        Assert.Equal(["APPAREL", "SHOES", "HOME", "KITCHEN"], facets.Single(facet => facet.Code == FacetCodes.Category).Options.Select(option => option.Value));
+        Assert.Equal(["Caminante", "vertex"], facets.Single(facet => facet.Code == FacetCodes.Brand).Options.Select(option => option.Value));
+    }
+
+    /// <summary>A price chosen keeps the price facet even when the results left hold one price — either end alone is a choice.</summary>
+    [Theory]
+    [InlineData(30, null)]
+    [InlineData(null, 80)]
+    public void A_price_chosen_keeps_the_price_facet(int? min, int? max)
+    {
+        var counts = Counts() with { Price = new PriceSpread(49.90m, 49.90m, []) };
+
+        var facets = Assemble(counts, new SearchFilters { MinPrice = min, MaxPrice = max }, "es");
+
+        Assert.Contains(facets, facet => facet.Kind == FacetKind.Price);
+        Assert.DoesNotContain(Assemble(counts, SearchFilters.None, "es"), facet => facet.Kind == FacetKind.Price);
+    }
+
+    /// <summary>Codes the definitions do not know come after the ones they do, in the code's order.</summary>
+    [Fact]
+    public void Codes_nobody_defined_come_last_in_their_own_order()
+    {
+        var counts = Counts() with
+        {
+            Codes = new Dictionary<string, CodeCounts>
+            {
+                ["ZED"] = new(false, new OptionCounts(8, new Dictionary<string, long> { ["ZED:A"] = 2, ["ZED:B"] = 3 })),
+                ["COLOR"] = new(true, new OptionCounts(8, new Dictionary<string, long> { ["COLOR:RED"] = 2, ["COLOR:BLACK"] = 3 })),
+                ["ABC"] = new(false, new OptionCounts(8, new Dictionary<string, long> { ["ABC:Y"] = 2, ["ABC:X"] = 3 })),
+            },
+        };
+
+        var facets = Assemble(counts, SearchFilters.None, "es");
+
+        Assert.Equal(["COLOR", "ABC", "ZED"], facets.Where(facet => facet.Kind is FacetKind.Axis or FacetKind.Attribute).Select(facet => facet.Code));
+        // With no definition to order them, a code's values come by value.
+        Assert.Equal(["ABC:X", "ABC:Y"], facets.Single(facet => facet.Code == "ABC").Options.Select(option => option.Value));
+    }
+
+    /// <summary>The definition decides whether a code is a variant axis; what the index says is only the fallback.</summary>
+    [Fact]
+    public void The_definition_decides_whether_a_code_is_an_axis()
+    {
+        var counts = Counts() with
+        {
+            Codes = new Dictionary<string, CodeCounts>
+            {
+                ["COLOR"] = new(false, new OptionCounts(8, new Dictionary<string, long> { ["COLOR:RED"] = 2, ["COLOR:BLACK"] = 3 })),
+            },
+        };
+
+        Assert.Equal(FacetKind.Axis, Assemble(counts, SearchFilters.None, "es").Single(facet => facet.Code == "COLOR").Kind);
+    }
+
+    /// <summary>Options come in the order the shopkeeper gave them, not the alphabet's; a value the definition lacks comes last.</summary>
+    [Fact]
+    public void Options_come_in_the_order_the_shopkeeper_gave()
+    {
+        var clock = new TestClock();
+        var fit = AttributeDefinition.Define(clock, "FIT", Adapters.Text("corte", "fit"), AttributeKind.Option, isFacet: true);
+        fit.AddOption(clock, "SLIM", Adapters.Text("entallado", "slim"));
+        fit.AddOption(clock, "REGULAR", Adapters.Text("normal", "regular"));
+        fit.AddOption(clock, "LOOSE", Adapters.Text("holgado", "loose"));
+        var counts = Counts() with
+        {
+            Codes = new Dictionary<string, CodeCounts>
+            {
+                ["FIT"] = new(false, new OptionCounts(8, new Dictionary<string, long> { ["FIT:LOOSE"] = 1, ["FIT:REGULAR"] = 3, ["FIT:SLIM"] = 2, ["FIT:OTHER"] = 1 })),
+            },
+        };
+
+        var facets = FacetAssembler.Build(counts, [], ProductFilters.From(SearchFilters.None, OfferScope.Nothing, Today), "es",
+            new AttributeDefinitions([fit]), Adapters.ShopCategories());
+
+        Assert.Equal(["FIT:SLIM", "FIT:REGULAR", "FIT:LOOSE", "FIT:OTHER"], facets.Single(facet => facet.Code == "FIT").Options.Select(option => option.Value));
+    }
+
+    /// <summary>A value no product carries now is not offered, unless it is the one chosen.</summary>
+    [Fact]
+    public void A_value_with_no_products_is_not_offered()
+    {
+        var counts = Counts() with
+        {
+            Codes = new Dictionary<string, CodeCounts>
+            {
+                ["MATERIAL"] = new(false, new OptionCounts(8, new Dictionary<string, long> { ["MATERIAL:CAST_IRON"] = 1, ["MATERIAL:ALUMINIUM"] = 2, ["MATERIAL:GLASS"] = 0 })),
+            },
+        };
+
+        Assert.DoesNotContain(Assemble(counts, SearchFilters.None, "es").Single(facet => facet.Code == "MATERIAL").Options,
+            option => option.Value == "MATERIAL:GLASS");
+    }
+
+    /// <summary>A yes-or-no that narrows nothing is hidden, unless something of it was chosen — even "no", so it can be unchosen.</summary>
+    [Fact]
+    public void A_yes_or_no_that_narrows_nothing_shows_only_when_chosen()
+    {
+        var counts = Counts() with
+        {
+            Codes = new Dictionary<string, CodeCounts>
+            {
+                ["INDUCTION"] = new(false, new OptionCounts(8, new Dictionary<string, long> { ["INDUCTION:true"] = 8 })),
+            },
+        };
+
+        Assert.DoesNotContain(Assemble(counts, SearchFilters.None, "es"), facet => facet.Code == "INDUCTION");
+        Assert.Contains(Assemble(counts, new SearchFilters { Facets = ["INDUCTION:false"] }, "es"), facet => facet.Code == "INDUCTION");
     }
 
     private static FacetCounts Counts() => new(

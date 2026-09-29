@@ -422,7 +422,8 @@ internal sealed partial class ElasticsearchLexicalSearch(
         activity?.SetTag("search.culture", query.Culture);
         activity?.SetTag("search.text", query.Text);
 
-        var filters = ProductFilters.From(query.Filters, await offers.NowAsync(ct), Today(clock));
+        var filters = ProductFilters.From(
+            query.Filters, await offers.NowAsync(ct), Today(clock), await offers.CampaignAskedAsync(query.Filters, ct));
         activity?.SetTag("search.filters", filters.Chosen.Count);
 
         var response = await client.SearchAsync<ProductSearchDocument>(s =>
@@ -706,7 +707,9 @@ internal sealed class ElasticsearchHitReader(
         // to ask Pricing, and the request is the one it was before filters.
         var chosen = filters.IsEmpty
             ? null
-            : ProductFilters.From(filters, await offers.NowAsync(ct), ElasticsearchLexicalSearch.Today(clock)).All();
+            : ProductFilters.From(
+                filters, await offers.NowAsync(ct), ElasticsearchLexicalSearch.Today(clock),
+                await offers.CampaignAskedAsync(filters, ct)).All();
 
         var response = await client.SearchAsync<ProductSearchDocument>(s => s
             .Indices(ProductSearchDocument.IndexNameFor(culture))
@@ -748,20 +751,5 @@ internal sealed class ElasticsearchHitReader(
 /// <summary>A document hit as the search contract's <see cref="SearchHit"/>, in one place for both readers.</summary>
 internal static class SearchHits
 {
-    public static SearchHit From(Hit<ProductSearchDocument> hit) => new(
-        hit.Source!.ProductId,
-        hit.Source.Code,
-        hit.Source.Name,
-        hit.Source.Slug,
-        hit.Source.Brand,
-        hit.Source.Category,
-        hit.Source.Id,
-        hit.Source.Sku,
-        hit.Source.PriceAmount,
-        hit.Source.PriceFrom,
-        hit.Source.PriceTo,
-        hit.Source.PriceCurrency,
-        hit.Source.ImageId,
-        hit.Source.InStock,
-        hit.Score ?? 0d);
+    public static SearchHit From(Hit<ProductSearchDocument> hit) => hit.Source!.ToHit(hit.Score ?? 0d);
 }

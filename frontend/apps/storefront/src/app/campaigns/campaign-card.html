@@ -1,0 +1,55 @@
+<section class="campaign" *transloco="let t" [attr.aria-labelledby]="'campaign-' + campaign().code"
+         [class.campaign--withAside]="image() || shownProducts().length > 0">
+  <div class="campaign__words">
+    <p class="campaign__when">
+      @if (campaign().kind === 'Season') {
+        {{ moment() === 'before' ? t('campaign.from', { date: startDay() }) : t('campaign.until', { date: endDay() }) }}
+      } @else {
+        {{ window() }}
+      }
+    </p>
+
+    <h2 class="campaign__name" [id]="'campaign-' + campaign().code">{{ campaign().name }}</h2>
+    <p class="campaign__line">{{ campaign().line }}</p>
+
+    @if (until(); as target) {
+      <storefront-countdown-clock
+        class="campaign__clock"
+        [until]="target"
+        [label]="moment() === 'before' ? t('campaign.startsIn') : t('campaign.endsIn')"
+        (reached)="reached.emit()" />
+    }
+
+    @if (campaign().holds.length > 0) {
+      <ul class="campaign__holds" [attr.aria-label]="t('campaign.holds')">
+        @for (hold of holds(t); track hold) {
+          <li class="campaign__hold">{{ hold }}</li>
+        }
+      </ul>
+    }
+
+    <p class="campaign__actions">
+      @if (variant() === 'lead') {
+        <a class="button campaign__cta" [routerLink]="links.home()" [queryParams]="listing()">
+          {{ campaign().kind === 'Season' ? t('campaign.seeSeason') : moment() === 'before' ? t('campaign.seeUpcoming') : t('campaign.seeOffers') }}
+        </a>
+      } @else {
+        <a class="campaign__link" [routerLink]="links.home()" [queryParams]="listing()">
+          {{ moment() === 'before' ? t('campaign.seeUpcoming') : t('campaign.seeOffers') }}
+        </a>
+      }
+    </p>
+  </div>
+
+  @if (image(); as source) {
+    <img class="campaign__image" [src]="source" [alt]="campaign().imageAlt ?? ''" width="720" height="400" />
+  } @else if (shownProducts().length > 0) {
+    <ul class="campaign__products" [attr.aria-label]="t('campaign.products', { name: campaign().name })">
+      @for (hit of shownProducts(); track hit.productId) {
+        <li class="campaign__product">
+          <storefront-product-card [hit]="hit" [actions]="false" via="campaign" />
+        </li>
+      }
+    </ul>
+  }
+</section>

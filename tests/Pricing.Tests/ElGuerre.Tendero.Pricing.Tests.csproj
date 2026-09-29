@@ -29,6 +29,8 @@
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../seed/promotions.sample.json" Link="seed/promotions.sample.json"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../seed/campaigns.sample.json" Link="seed/campaigns.sample.json"
+          CopyToOutputDirectory="PreserveNewest" />
     <!-- The catalogue and taxonomy samples come along so the pricing seed can be
          checked AGAINST them: a tariff pointing at a SKU nobody sells, or a
          promotion scoped to a category that does not exist, is a rule that can

@@ -1,57 +1,10 @@
 /* Storefront: roomy and light. Not one hex here — it all comes from the tokens. */
 
-/* ---------- The search band ----------
-   It dominates while there is nothing to show and steps back once there is.
-   Both states are the same element so the input keeps focus and its value
-   across a search — re-rendering it would drop the caret mid-query. */
+/* ---------- The heading of a list ----------
+   What the page lists: the words asked, or the shelf the filters make. The
+   home has its own front since R-8, so this band only ever heads a list. */
 .hero {
   padding-block: var(--space-7) var(--space-6);
-  transition: padding-block var(--dur-base) var(--ease);
-}
-
-/*
-  The illustration sits BESIDE the words, never behind them. A picture under
-  text is a contrast problem that has to be solved again for every image
-  somebody supplies later; beside them, a photograph can replace the drawing and
-  nothing has to be re-checked.
-
-  Below 900px it is gone rather than shrunk: on a phone the search box is the
-  page, and a drawing above it pushes the one thing somebody came to use off
-  the screen.
-*/
-.hero__art {
-  display: none;
-}
-
-@media (min-width: 900px) {
-  .hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 40%);
-    grid-template-areas:
-      'title art'
-      'lede art'
-      'account art'
-      'form art';
-    column-gap: var(--space-6);
-    align-items: start;
-  }
-
-  .hero__title { grid-area: title; }
-  .hero__lede { grid-area: lede; }
-  .hero__account { grid-area: account; }
-  .hero .suggestions { grid-area: form; }
-
-  .hero__art {
-    display: block;
-    grid-area: art;
-    align-self: center;
-    inline-size: 100%;
-    block-size: auto;
-  }
-
-  /* Once there are results the grid has nothing in its second column, so it
-     goes back to being one. */
-  .hero--compact { display: block; }
 }
 
 .hero__title {
@@ -84,36 +37,6 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-/* ---------- Suggestions ---------- */
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin: var(--space-5) 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.suggestions__label { margin-inline-end: var(--space-1); }
-
-.chip {
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--bg-surface);
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-2xs);
-  cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
-}
-
-.chip:hover {
-  border-color: var(--accent);
-  color: var(--accent);
 }
 
 /* A query that was never sent has to say so, or the shop looks broken. */
@@ -175,7 +98,7 @@
   text-underline-offset: 2px;
 }
 
-/* No accent on hover, unlike `.hero__account-link` above: this is an answer
+/* No accent on hover: this is an answer
    rather than an invitation, and clay is kept for the view's one action
    (design/DESIGN.md). A neutral shift is enough feedback. */
 .help-card__link:hover { color: var(--text-muted); }
@@ -183,19 +106,4 @@
 @media (max-width: 640px) {
   .hero { padding-block: var(--space-5) var(--space-4); }
   .hero__title { font-size: var(--text-2xl); }
-}
-
-.hero__account-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.5rem;
-  color: var(--text);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.hero__account-link:hover { color: var(--accent); }
-
-@media (pointer: coarse) {
-  .hero__account-link { min-height: 2.75rem; }
 }

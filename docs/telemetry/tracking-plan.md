@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-33 features: **28** answered by a signal emitted today,
+37 features: **32** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -31,6 +31,10 @@ everything here that is not *planned* is emitted.
 | Account and guest cart claim | Do guests sign in, and does their cart survive it? | Whether guest checkout stays the default path. | — Not measured yet, and not planned: sign-in is the identity provider's, and the claim is one call with no screen of its own. Revisit when accounts do more than hold orders. | none |
 | Storefront theme choice | Do shoppers change the theme from their system's, and does the dark shop hold the same conversion? | If nobody changes it in a month, the switch goes and the system's preference stays; if the dark shop converts worse, its product imagery is looked at before anything else. | `theme_chosen` | emitted |
 | Added-to-cart notice | Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping? | If almost nobody follows it in a month, the notice stays and its link goes: the confirmation is the point, and a link nobody uses is noise beside the one clay action. | `cart_notice_followed` | emitted |
+| Home page modules | Which of the home page's modules do shoppers open, and from which place on the page? | A module nobody opens in a month moves down or goes; the order of the page follows the numbers. | `home_module_opened` | emitted |
+| Campaign card | Do shoppers open the campaign card, before a campaign starts as well as while it runs? | If the before card is not opened, the teaser is not worth its place. | `campaign_card_opened` | emitted |
+| Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
+| Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
 
 ### Backoffice
 
@@ -46,7 +50,7 @@ everything here that is not *planned* is emitted.
 | Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 | Agent registry | Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered? | A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet. | `tendero.checkout.attempts` | emitted |
 | Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
-| Backoffice jobs | Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen? | A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence. | `backoffice_view_opened`, `backoffice_action_taken` | emitted |
+| Backoffice jobs | Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen? | A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence. | `backoffice_view_opened`, `backoffice_action_taken` | emitted |
 | Theme choice | Does anybody change the theme from the system's, and to which? | If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event. | `backoffice_theme_chosen` | emitted |
 | Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
 | Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
@@ -96,10 +100,11 @@ Answers:
 
 - **Listing filters** — Do shoppers narrow a list, by which facets, on which device, and does a narrowed list lead to a product page more often than the same list unnarrowed?
 - **Product page** — How do shoppers reach a product — a search, a category, the home page — and how many product views does a cart follow?
+- **Suggestions and trends** — Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `arrived_from` | string | `search`, `category`, `listing`, `home`, `other`, `direct` | The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. |
+| `arrived_from` | string | `search`, `category`, `listing`, `home`, `trail`, `campaign`, `suggested`, `trending`, `other`, `direct` | The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. From the home page, the row that led here when it says so: trail (Sigue donde lo dejaste), campaign (the campaign card), suggested (Puede que te guste) and trending (Tendencias) — R-8. |
 | `filtered` | boolean | — | Whether the list the shopper came from was narrowed by filters. False for a page that is not a list. |
 
 ### `category_opened`
@@ -170,11 +175,11 @@ browser event, staff. The shopkeeper opened a backoffice screen (R-0 of the rede
 
 Answers:
 
-- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen, by its route; never an id in it. |
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen, by its route; never an id in it. |
 
 ### `backoffice_action_taken`
 
@@ -182,13 +187,13 @@ browser event, staff. The shopkeeper did what a screen is for — published, app
 
 Answers:
 
-- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?
+- **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
 - **Palette and list shortcuts** — Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen it was done on. |
-| `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate` | What was done, from a closed list. |
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen it was done on. |
+| `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate`, `campaign_create`, `campaign_update`, `campaign_schedule`, `campaign_unschedule`, `campaign_end` | What was done, from a closed list. |
 | `outcome` | string | `done`, `refused`, `failed` | done; refused when the server said no (a 4xx, a rule); failed when it could not answer. |
 | `via` | string | `row`, `pane`, `page` | Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). |
 
@@ -239,6 +244,44 @@ Answers:
 - **Added-to-cart notice** — Once a shopper is told a product is in the cart, do they go to the cart from there, or keep shopping?
 
 No attributes.
+
+### `home_module_opened`
+
+browser event, behavioural. A shopper followed a link inside one of the home page's modules (R-8). Only with analytics consent.
+
+Answers:
+
+- **Home page modules** — Which of the home page's modules do shoppers open, and from which place on the page?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `module` | string | `campaign`, `trail`, `agent`, `offers`, `suggested`, `trending`, `best_sellers`, `new`, `departments` | Which module: the campaign card, Sigue donde lo dejaste, Compra con tu agente, Ofertas, Puede que te guste, Tendencias, Lo más vendido, Novedades or Secciones de la tienda. |
+| `position` | number | — | Where the module was on the page when it was opened, from 1 at the top, counting only the modules drawn — a band that failed or had nothing to show does not take a place. |
+
+### `campaign_card_opened`
+
+browser event, behavioural. A shopper followed the campaign card's call to action or one of its products (R-8). Only with analytics consent.
+
+Answers:
+
+- **Campaign card** — Do shoppers open the campaign card, before a campaign starts as well as while it runs?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `campaign` | string | — | The campaign's code (TENDERO_DAYS): a handful per year, set by the shopkeeper, never a person or a product. |
+| `phase` | string | `before`, `during` | Before the campaign starts (Empieza en…) or while it runs (Termina en…). |
+
+### `trail_cleared`
+
+browser event, behavioural. A shopper removed their browsing trail, one entry or all of it (R-8). Only with analytics consent.
+
+Answers:
+
+- **Browsing trail** — Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `scope` | string | `one`, `all` | One product or one search removed, or the whole trail. |
 
 ## Metrics
 

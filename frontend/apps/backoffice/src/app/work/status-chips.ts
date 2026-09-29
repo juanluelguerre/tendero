@@ -46,3 +46,18 @@ export function statusChips(
     { key: 'all', label: labels['all'] ?? 'all', count: total },
   ];
 }
+
+/**
+ * The counts for a list the server answers whole, counted here: one entry per
+ * key the items fall under, in the shape the list endpoints answer, so
+ * `keptCounts` and `statusChips` take it as they take theirs. A key no item
+ * falls under is absent, and `statusChips` says 0 for it.
+ */
+export function countBy<T>(items: readonly T[], keyOf: (item: T) => string): StatusCount[] {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    const key = keyOf(item);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return [...counts].map(([status, count]) => ({ status, count }));
+}

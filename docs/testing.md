@@ -89,11 +89,12 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 
 | project | mutated with | of covered | of total | set |
 |---|---|---:|---:|---|
-| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 82.07 % | 57.06 % | 2026-09-26 · re-derived after layer B left |
+| `src/Search` | `Search.Tests`, `SearchEval.Tests` | 83.21 % | 60.06 % | 2026-09-29 · R-7/R-8 close, first run 79.11 % |
 | `src/Ucp` | `Ucp.Tests`, `Api.Tests` | 70.95 % | 62.50 % | 2026-09-26 |
 | `tools/TrafficSim` | `TrafficSim.Tests` | 87.66 % | 87.10 % | 2026-09-26 · `Model/`, `Scheduling/`, `Queries/` |
 | `src/Knowledge` | `Knowledge.Tests` | 72.33 % | 57.91 % | 2026-09-27 · first run 49.76 % |
-| `src/Accounts` | `Accounts.Tests` | 74.29 % | 50.24 % | 2026-09-27 · phase 11 close, first run 61.43 % |
+| `src/Accounts` | `Accounts.Tests` | 80.08 % | 58.31 % | 2026-09-29 · R-7/R-8 close, first run 75.52 % |
+| `src/Pricing` | `Pricing.Tests` | 83.06 % | 62.59 % | 2026-09-29 · first baseline, first run 81.41 % |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -435,6 +436,150 @@ Reports are in `docs/blog/reports/2026-09-28-redesign/stryker/`.
 - **Not mutated, and why.** The redesign's Angular code has no mutation runner;
   its behaviour is held by the unit specs and the end-to-end tests named in the
   spec, and its hand mutations are listed in the commits that wrote them.
+
+**R-7 and R-8's close (2026-09-29)** — the lists that grow, the shop's filters,
+the home that sells and the campaigns behind it. Whole projects where the phases
+wrote a context's new behaviour (**Pricing**, which became a writer with ADR
+0044; **Accounts**, the customer's trail; **Search**, the facets and the
+suggestions); scoped to the files they touched elsewhere. Every run alone, one
+after the other. Reports are in `docs/blog/reports/2026-09-29-r7-r8/stryker/`.
+
+| project | mutated with | run 1 | run 2 | survivors |
+|---|---|---:|---:|---:|
+| `src/Pricing`, whole | `Pricing.Tests` | 81.41 % | **83.06 %** | 79 → 72 |
+| `src/Accounts`, whole | `Accounts.Tests` | 75.52 % | **80.08 %** | 59 → 48 |
+| `src/Search`, whole | `Search.Tests`, `SearchEval.Tests` | 79.11 % | **83.21 %** | 164 → 132 |
+| `src/Ordering`, scoped | `Ordering.Tests`, `Integration.Tests` | 77.03 % | 83.33 % | 34 → 25 |
+| `src/Inventory`, scoped | `Inventory.Tests`, `Integration.Tests` | 81.82 % | 95.45 % | 4 → 1 |
+| `src/Catalog`, scoped | `Catalog.Tests` | 71.55 % | 75.86 % | 33 → 28 |
+| `src/Api`, scoped | `Api.Tests` | 78.57 % | 100 % | 3 → 0 |
+| `src/SharedKernel`, scoped | its three suites | 75.68 % | — | 9 |
+| `src/Knowledge`, scoped | `Knowledge.Tests` | 71.43 % | — | 20 |
+
+**Search fell under its ratchet, and that was the finding.** Run 1 gave 79.11 %
+against the 82.07 % baseline, and the close could not be called one: `ProductFacets.cs`, the 739 lines R-7.3 wrote,
+held 51 of the 164 survivors. The facets' pure half was tested for its main
+paths and not for its edges. Closed, each with a test and each seen red under a
+hand mutation first:
+
+- **The price filter's bounds** — the request carried a range on `priceAmount`,
+  and nothing read its `gte` and `lte`: an unbounded range passed.
+- **A choice is a code and a value** — `"COLOR:"` and `":RED"` are neither, and
+  `IsAttributeCode("")` answers rather than throws.
+- **The index's prefix pattern** escapes every character that is not a letter or
+  a digit, so a code is read literally.
+- **Order**: categories and brands by count with a tie broken by name, codes the
+  definitions do not know after the ones they do and in their own order, and a
+  code's options in the order the shopkeeper gave — the test data's options were
+  all alphabetical, so no test could tell the definition's order from the
+  alphabet's.
+- **The definition decides an axis**, the index's flag only when there is none.
+- **The price facet stays when either end alone is chosen**, and a band is
+  chosen only by both its ends; a band the aggregation gave no count for counts
+  zero; a percentile that rounds onto the dearest price is not a cut.
+- **A value no product carries is not offered**, and a yes-or-no that narrows
+  nothing is shown only when something of it — even "no" — is chosen.
+- **The built-in facets' Spanish labels**: every test read them in English. The
+  hand mutation that emptied *Marca* stayed green until a test asked in Spanish.
+  Stryker still reports those labels as survivors — they are built once, in a
+  static initialiser, before a mutant is switched on — so they are a **runner
+  artefact now, and were a real gap before**: the survivor looked like noise
+  and the hand mutation said otherwise.
+- **Suggestions** (R-8): the deepest neighbourhood keeps its turns after the
+  others run out (`Max` → `Min` survived because every neighbourhood in the test
+  had two or three), neighbours sharing as much come by code, and two variants
+  in stock at one price draw the card with the lowest id.
+
+**Search, run 2: 83.21 %, the new baseline** (`of total` 60.06 %), 132
+survivors. In the phases' code, classified:
+- **Equivalent**: the price bands' rounding and cutting edges — `max <= min`
+  and `<` meet at an empty range, four cuts take the same four through either
+  branch, the magnitude loops end at the same magnitude whichever way the first
+  one overshoots (the second loop brings it back), and the candidates' order
+  does not matter before an `OrderBy`. Each followed through by hand, not
+  assumed. In `SimilarProducts.Spread`, `row.Count <= limit` and `turn <=
+  deepest` (the inner checks stop both).
+- **Runner artefacts**: the facets' labels (above), and the search validator's
+  every rule — the tests build it once as a `static` field, and a hand
+  mutation that removed the filters' hook turned seven tests red.
+- **Closed after run 2**, each seen red under a hand mutation: the re-rank of
+  the suggestions is skipped when no product viewed has two candidates, and
+  runs when one does beside others that do not (`Count > 1` → `>= 1`, `Any` →
+  `All`).
+- **Written down**: the suggestions' degradation counter (the hybrid search's
+  tests hold `SearchDegradation`; this call site is not asserted).
+
+The other survivors predate the phases and are **written down** as before: the
+adapters' registration extensions (reranker, embeddings, Qdrant), the analysers
+and boosted fields in static initialisers (**runner artefacts**), the reindex
+and the vector projection's logging and batch edges, and the evaluation's
+metrics at their boundaries.
+
+**Pricing's first baseline, 83.06 %.** The phase's code (campaigns) closed its
+real gaps: the lineup's last tie-break by code; a name blank in one language, and
+the longest name; a RIFF file that is not WebP and the shortest JPEG; a seed file
+that says `null`; and the home's most frequent answer — nothing near — reading no
+promotions at all. Left, the campaign's four exception messages (**noise**). The
+other 68 predate the phase and are **written down**, in three groups: the
+fingerprints and canonical forms that key the quote cache (order direction and
+the `"-"` placeholders — a mutated fingerprint is still deterministic, but
+`cat=-` for every category would let two promotions share a key, which is a real
+gap); the rule reasons' wording in both languages, which no test reads; and the
+engine's edges — a buy-X-get-Y with `free > 1` (every test has `free = 1`, where
+`/ free` and `* free` agree), the discount cap at exactly the room left, and the
+shipping promotion on a cart that already ships free.
+
+**Accounts, 80.08 %, the new baseline.** The trail's real gaps: the edge of the
+ninety days when a merge drops what it already kept, the order of two entries at
+one instant, the search's length at 2 and 200, which field and which message a
+refused record or forget names, and that a change is saved. **Equivalent**: the
+clamp to `now` (`>` and `>=` meet at the same instant), the merge's first
+retention filter (the second applies the same bound to everything, and the
+count is taken after it — proved by a hand mutation that stayed green), and an
+ordinal comparer over codes already upper-cased. `IsInEnum` is **held by the
+wire** (ADR 0043: a body refuses a number before a validator sees it). The span
+names are **noise**, and `BrowsingTrail.Empty`'s initialiser a **runner
+artefact**.
+
+**Scoped runs.**
+- **Ordering**: the trends' last tie-break by key, and **the returns validator,
+  which had no test anywhere** — ADR 0043 had removed the handler's own 400s and
+  left it the only gate. Closed. Left: the dashboard's five, classified at phase
+  11's close; the span names (**noise**); `First` over a group that is never
+  empty (**equivalent**); and the returns' audit reason and outcome, which no
+  test reads (**written down**, returns' code).
+- **Inventory**: the restock line at exactly five, and a warehouse no longer in
+  the file named by its code. Left: `IsInEnum` (**held by the wire**).
+- **Catalog**: a swatch with one digit that is not hex (`#233A5G` — the test had
+  `#GGGGGG`, where `All` and `Any` agree), an option added twice, two hundred
+  SKUs as one request, and the listing's paging contract. Left: the swatch
+  refusal's message (**noise**), the meters' texts (**runner artefacts**), the
+  culture rule (**equivalent**: culture negotiation only ever hands `es` or
+  `en`), and the attribute definition's aliases and option lookups, which predate
+  the phases (**written down**).
+- **Api**: an exception that is not a binding's is left to the handler that owns
+  it (a search engine down stays a 503, never a swallowed 500), and the refusal
+  is problem details titled as the caller's mistake. `EnumsAreTheirNames`'s
+  nullable branch, a survivor, went red under a hand mutation against the
+  OpenAPI document test: a **runner artefact** (the document is built once).
+- **SharedKernel**: `WireJson`'s `allowIntegerValues: false` survived, and a hand
+  mutation to `true` turned two tests red — the converter is built once in a
+  static initialiser: a **runner artefact**. The dispatchers' survivors predate
+  the phases: argument guards (**noise**), `??=` on the validation context
+  (**equivalent**), and two that are real and **written down** — two validators
+  failing at once would keep only the last's failures if `failures ??= []` became
+  `=`, and a request that is a record implements `IEquatable<T>`, a second
+  generic interface the wrapper's lookup must not pick.
+- **Knowledge**: nothing in the code R-7 wrote survived (`WeakSupport`, the
+  queue's paging); the 20 are the claim's guards and messages, which predate it.
+
+**What the runs cost, and one that ran twice.** Search took an hour on its own.
+It failed twice before that with `MSB3027`, a DLL "locked by .NET Host": the
+first queue, launched under a monitor and stopped, had left its script running,
+and its Search run held an MTP test server open on `SearchEval.Tests/bin` for an
+hour while the real queue ran beside it. Found by the process's command line and
+its parent, stopped, and its partial reports deleted; every figure above comes
+from a run that had the machine to itself.
 
 ## Property-based (CsCheck)
 

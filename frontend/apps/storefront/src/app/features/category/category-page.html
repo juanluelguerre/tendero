@@ -24,6 +24,11 @@
       </div>
     </header>
 
+    @if (banner(); as campaign) {
+      <storefront-campaign-card class="category__campaign" variant="banner" [campaign]="campaign"
+                                (reached)="campaigns.refresh()" />
+    }
+
     <!-- The sections inside, when there are any. A department is a way in, and
          landing on fifty-five products with no way to narrow them is the same
          problem the shop had before it had categories at all. On a desktop the

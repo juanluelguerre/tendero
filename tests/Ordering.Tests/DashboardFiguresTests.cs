@@ -21,16 +21,6 @@ public sealed class DashboardFiguresTests
     private static Order Sale(params OrderLine[] lines) => OrderBuilder.Default().WithLines(lines).At(Clock).InStatus(OrderStatus.Confirmed);
 
     [Fact]
-    public void A_sale_is_a_live_order_that_was_paid_for_and_not_cancelled()
-    {
-        Assert.True(DashboardFigures.IsSale(OrderBuilder.Default().InStatus(OrderStatus.PaymentAuthorized)));
-        Assert.True(DashboardFigures.IsSale(OrderBuilder.Default().InStatus(OrderStatus.Delivered)));
-        Assert.False(DashboardFigures.IsSale(OrderBuilder.Default().InStatus(OrderStatus.Pending)));
-        Assert.False(DashboardFigures.IsSale(OrderBuilder.Default().InStatus(OrderStatus.Cancelled)));
-        Assert.False(DashboardFigures.IsSale(OrderBuilder.Default().AsTest().InStatus(OrderStatus.Confirmed)));
-    }
-
-    [Fact]
     public void Sales_sum_revenue_orders_and_units_against_the_previous_period_and_rank_what_sold()
     {
         // 2 × 10 + 4.95 shipping, and 1 × 30 + 3 × 5 + 4.95.

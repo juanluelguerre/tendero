@@ -43,18 +43,24 @@
       "CancelCheckoutSessionCommand": "Cancel a checkout",
       "ChangeAgentTrustCommand": "Change an agent's trust",
       "ClaimCartCommand": "Keep a guest's cart on signing in",
+      "ClearBrowsingCommand": "Clear a browsing history",
       "CompleteCheckoutSessionCommand": "Complete a checkout",
       "CountStockCommand": "Count stock",
+      "CreateCampaignCommand": "Create a campaign",
       "DecideReturnCommand": "Decide a return",
       "DefineVariantsCommand": "Define variants",
+      "EndCampaignCommand": "End a campaign",
+      "ForgetBrowsingCommand": "Remove an entry from a browsing history",
       "ImportProductsCommand": "Import products",
       "LinkIdentityCommand": "Link a sign-in to a customer",
+      "MergeBrowsingCommand": "Keep a guest's browsing history on signing in",
       "MoveOrderCommand": "Move an order along",
       "OpenCheckoutSessionCommand": "Open a checkout",
       "PaymentWebhookCommand": "Payment provider's notice",
       "PlaceOrderCommand": "Place an order",
       "ProposeClaimsCommand": "Propose claims from a description",
       "PublishProductCommand": "Publish a product",
+      "RecordBrowsingCommand": "Record a product viewed or a search",
       "RecordClaimApplicationCommand": "Apply an approved claim",
       "RecordDescriptionCommand": "Record a description",
       "RegisterAgentCommand": "Register an agent",
@@ -62,9 +68,13 @@
       "ReinstateAgentCommand": "Reinstate an agent",
       "RequestReturnCommand": "Ask for a return",
       "ReviewClaimCommand": "Decide a claim",
+      "ScheduleCampaignCommand": "Schedule a campaign",
+      "SetBrowsingCommand": "Switch a browsing history on or off",
       "SetCartLineCommand": "Change a cart line",
       "SetProductAttributeCommand": "Set a product attribute",
       "SuspendAgentCommand": "Suspend an agent",
+      "UnscheduleCampaignCommand": "Unschedule a campaign",
+      "UpdateCampaignCommand": "Edit a campaign",
       "UpdateCheckoutSessionCommand": "Update a checkout",
       "WithdrawProductCommand": "Take a product off sale"
     }
@@ -112,6 +122,7 @@
     "language": "Language",
     "orders": "Orders",
     "promotions": "Promotions",
+    "campaigns": "Campaigns",
     "returns": "Returns",
     "reviewQueue": "Review queue",
     "search": "Search quality",
@@ -232,6 +243,102 @@
     "state": {
       "running": "Running",
       "scheduled": "Not running"
+    }
+  },
+  "campaigns": {
+    "title": "Campaigns",
+    "hint": "Events and seasons with dates. The shop shows one at a time: the one running with the highest priority.",
+    "new": "New campaign",
+    "loading": "Loading campaigns…",
+    "failed": "The campaigns could not be loaded.",
+    "refused": "The change could not be made.",
+    "filterLabel": "Filter campaigns",
+    "filter": {
+      "running": "Running",
+      "scheduled": "Scheduled",
+      "drafts": "Drafts",
+      "ended": "Ended",
+      "all": "All"
+    },
+    "empty": {
+      "running": "No campaign is running right now.",
+      "scheduled": "No campaign is scheduled.",
+      "drafts": "There are no drafts.",
+      "ended": "No campaign has ended yet.",
+      "all": "There are no campaigns yet. Create the first with “New campaign”."
+    },
+    "column": {
+      "campaign": "Campaign",
+      "kind": "Kind",
+      "scope": "Scope",
+      "dates": "Dates",
+      "state": "State"
+    },
+    "kind": {
+      "Event": "Event",
+      "Season": "Season"
+    },
+    "scope": {
+      "shop": "The whole shop"
+    },
+    "state": {
+      "running": "Running",
+      "scheduled": "Scheduled",
+      "drafts": "Draft",
+      "ended": "Ended"
+    },
+    "form": {
+      "legend": "Campaign details",
+      "code": "Code",
+      "codeHint": "Upper case with underscores, like TENDERO_DAYS. Taken from the name; it cannot change later.",
+      "name": "Name",
+      "line": "Line",
+      "kind": "Kind",
+      "scope": "Scope",
+      "startsAt": "From",
+      "endsAt": "Until",
+      "priority": "Priority",
+      "priorityHint": "When two campaigns overlap, the shop shows the one with the higher priority (0 to 1000).",
+      "promotions": "Promotions it groups",
+      "noPromotions": "There are no promotions to group.",
+      "image": "Image",
+      "imageNone": "No image: the card shows the campaign's products.",
+      "imageHint": "Optional. WebP, AVIF, PNG or JPEG, up to 2 MB.",
+      "imageUpload": "Upload an image",
+      "imageUploading": "Uploading…",
+      "imageChange": "Change",
+      "imageRemove": "Remove",
+      "alt": "Alt text"
+    },
+    "create": "Create draft",
+    "save": "Save",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "saveFirst": "Save the changes before scheduling it.",
+    "schedule": "Schedule",
+    "scheduling": "Scheduling…",
+    "unschedule": "Unschedule to edit",
+    "unscheduling": "Unscheduling…",
+    "moved": {
+      "schedule": "“{{name}}” is scheduled.",
+      "unschedule": "“{{name}}” is a draft again."
+    },
+    "readOnly": {
+      "scheduled": "Scheduled: the shop is counting on it. To edit it, unschedule it first.",
+      "ended": "Ended: it can no longer be edited or scheduled again."
+    },
+    "history": {
+      "created": "Created on {{date}}",
+      "updated": "changed on {{date}}",
+      "ended": "ended on {{date}}"
+    },
+    "end": {
+      "open": "End now…",
+      "consequence": "It stops showing at once, and this cannot be undone.",
+      "title": "End “{{name}}” now?",
+      "body": "The shop stops showing it as soon as you end it. An ended campaign is not scheduled again: to repeat it, create another.",
+      "keep": "Keep it",
+      "confirm": "End it"
     }
   },
   "returns": {

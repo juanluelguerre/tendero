@@ -9,6 +9,7 @@ import { provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Campaigns } from '../../campaigns/campaigns';
 import { ProductSearchService } from '../../data-access/product-search.service';
 import { ReturnsPolicy } from '../../data-access/returns-policy.service';
 import { Taxonomy } from '../../data-access/taxonomy';
@@ -38,6 +39,8 @@ describe('the search page, when the answer is not an exact match', () => {
         provideTenderoI18n(),
         provideRouter([{ path: '', component: SearchPage }]),
         { provide: API_BASE_URL, useValue: 'http://api' },
+        // The campaigns are a root resource; answered as none, so nothing waits on them.
+        { provide: Campaigns, useValue: { named: () => null, all: () => [], leading: () => null } as unknown as Campaigns },
         {
           provide: ProductSearchService,
           useValue: {

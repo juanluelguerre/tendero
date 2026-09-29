@@ -55,6 +55,7 @@ public static class QdrantServiceCollectionExtensions
         services.AddScoped<QdrantProductVectors>();
         services.AddScoped<IProductVectorIndexer>(provider => provider.GetRequiredService<QdrantProductVectors>());
         services.AddScoped<IVectorProductSearch>(provider => provider.GetRequiredService<QdrantProductVectors>());
+        services.AddScoped<IVectorSimilarity>(provider => provider.GetRequiredService<QdrantProductVectors>());
 
         return services;
     }

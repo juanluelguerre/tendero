@@ -119,6 +119,32 @@ public sealed class PriceBandsTests
         Assert.Equal(0, chosen[1].Count);
     }
 
+    /// <summary>A percentile that rounds onto the dearest price is not a cut: it would leave a band of one price.</summary>
+    [Fact]
+    public void A_cut_on_the_dearest_price_is_left_out()
+    {
+        // 25 survives; 50 is the maximum, so the quarters fill in: 27.5 → 25, 35 → 30, 42.5 → 40.
+        Assert.Equal([25m, 30m, 40m], PriceBands.Boundaries(20m, 50m, [25m, 50m, 50m, 50m]));
+    }
+
+    /// <summary>A band the aggregation gave no count for counts nothing, and is kept only if chosen.</summary>
+    [Fact]
+    public void A_band_without_a_count_counts_nothing()
+    {
+        var bands = FacetAssembler.Bands([(null, 25m), (25m, 50m), (50m, null)], [3], new SearchFilters { MinPrice = 50m });
+
+        Assert.Equal([(3L, false), (0L, true)], bands.Select(band => (band.Count, band.Chosen)));
+    }
+
+    /// <summary>Only the band whose both ends match is chosen: a maximum alone does not choose the band that merely starts open.</summary>
+    [Fact]
+    public void A_band_is_chosen_by_both_its_ends()
+    {
+        var bands = FacetAssembler.Bands([(null, 25m), (25m, 50m), (50m, null)], [3, 2, 1], new SearchFilters { MaxPrice = 50m });
+
+        Assert.Equal([false, false, false], bands.Select(band => band.Chosen));
+    }
+
     [Fact]
     public void The_lowest_band_is_chosen_by_a_maximum_alone()
     {

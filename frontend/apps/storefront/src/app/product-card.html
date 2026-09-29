@@ -7,7 +7,12 @@
        on them went nowhere (UI review, 2026-09-11). Hidden from the keyboard
        and from screen readers, because the name below is the one link they
        need. -->
-  <a class="card__media" [routerLink]="links.product(item.slug, item.code)" tabindex="-1" aria-hidden="true">
+  <a class="card__media" [routerLink]="links.product(item.slug, item.code)" [state]="linkState()" tabindex="-1" aria-hidden="true">
+    @if (badge(); as label) {
+      <!-- Decoration of the picture, so hidden with it; a screen reader gets the
+           same word after the name. -->
+      <span class="card__badge">{{ label }}</span>
+    }
     @if (source) {
       <img
         class="card__image"
@@ -22,12 +27,16 @@
       <storefront-product-image-placeholder
         class="card__image card__image--fallback"
         [alt]="t('product.noImage')"
-        [label]="t('product.noImage')" />
+        [label]="layout() === 'tile' ? t('product.noImage') : ''" />
     }
   </a>
 
+  @if (rank(); as place) {
+    <span class="card__rank numeric" aria-hidden="true">{{ place }}</span>
+  }
+
   <div class="card__body">
-    @if (item.brand) {
+    @if (item.brand && layout() === 'tile') {
       <p class="card__brand eyebrow">{{ item.brand }}</p>
     }
 
@@ -35,16 +44,32 @@
          navigates cannot also hold an add button, and the heading is what a
          screen reader reads out as the destination. -->
     <h3 class="card__name">
-      <a class="card__link" [routerLink]="links.product(item.slug, item.code)">{{ item.name }}</a>
+      <a class="card__link" [routerLink]="links.product(item.slug, item.code)" [state]="linkState()">
+        @if (rank(); as place) {<span class="sr-only">{{ t('shelf.rank', { rank: place }) }} </span>}{{ item.name }}
+        @if (badge(); as label) {<span class="sr-only"> · {{ label }}</span>}
+      </a>
     </h3>
 
     <p class="card__price numeric">{{ price() }}</p>
+
+    @if (reason(); as why) {
+      <p class="card__reason">
+        <svg class="card__reasonIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          @if (why.icon === 'viewed') {
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+          } @else {
+            <path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" />
+          }
+        </svg>
+        <span>{{ why.text }}</span>
+      </p>
+    }
 
     <!-- Only when it cannot be bought. "In stock" on every card is a label, not
          information; the absence is the default and the presence is the news. -->
     @if (!item.inStock) {
       <p class="card__soldOut">{{ t('product.soldOut') }}</p>
-    } @else {
+    } @else if (actions()) {
       <button class="card__add" type="button" [disabled]="adding()" (click)="addToCart()">
         {{ adding() ? '…' : t('product.addToCart') }}
       </button>
@@ -53,6 +78,7 @@
     <!-- A toggle, not a link: the tray at the foot of the page collects the
          picks, and the comparison is its own URL. Quiet, because adding to the
          cart is this card's one accent action. -->
+    @if (actions()) {
     @let picked = compare.has(item.code);
     <button
       class="card__compare"
@@ -62,5 +88,6 @@
       (click)="toggleCompare()">
       {{ picked ? t('compare.picked') : t('compare.pick') }}
     </button>
+    }
   </div>
 </ng-container>

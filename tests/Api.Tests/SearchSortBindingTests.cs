@@ -52,6 +52,44 @@ public sealed class SearchSortBindingTests
         Assert.Null(asked);
     }
 
+    /// <summary>The refusal is problem details, titled as the caller's mistake, not a bare status.</summary>
+    [Fact]
+    public async Task A_refused_order_is_answered_with_problem_details()
+    {
+        using var root = new TenderoApiFactory();
+        using var client = root.CreateClient();
+
+        var response = await client.GetAsync("/api/search?sort=1", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("\"title\":\"The request is not valid.\"", body, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// The binding's handler answers only a binding's failure: any other exception
+    /// goes on to the handler that owns it — here the search engine being down,
+    /// which is a 503 and never a swallowed 500.
+    /// </summary>
+    [Fact]
+    public async Task Another_failure_is_left_to_the_handler_that_owns_it()
+    {
+        using var root = new TenderoApiFactory();
+        using var factory = root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddSingleton<IQueryDispatcher>(new FailingDispatcher())));
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/search", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+    }
+
+    private sealed class FailingDispatcher : IQueryDispatcher
+    {
+        public Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default) =>
+            throw new SearchUnavailableException("lexical", "the test's engine is down");
+    }
+
     private static async Task<(HttpStatusCode Status, SearchProductsQuery? Asked)> Search(string? sort)
     {
         var dispatcher = new RecordingDispatcher();

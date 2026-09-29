@@ -13,7 +13,7 @@ export type AffordanceTarget = TrackedEvents['backoffice_affordance_used']['targ
 
 const Views: readonly BackofficeView[] = [
   'dashboard', 'review', 'catalogue', 'claims', 'attributes', 'search', 'promotions',
-  'stock', 'orders', 'returns', 'agents', 'audit', 'variants',
+  'campaigns', 'stock', 'orders', 'returns', 'agents', 'audit', 'variants',
 ];
 
 /**

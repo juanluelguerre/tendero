@@ -100,6 +100,13 @@ export const appRoutes: Route[] = [
           import('./features/promotions/promotions-page').then((m) => m.PromotionsPage),
       },
       {
+        path: 'campaigns',
+        title: 'campaigns.title',
+        canActivate: [shopkeeper],
+        loadComponent: () =>
+          import('./features/campaigns/campaigns-page').then((m) => m.CampaignsPage),
+      },
+      {
         path: 'stock',
         title: 'stock.title',
         canActivate: [shopkeeper],

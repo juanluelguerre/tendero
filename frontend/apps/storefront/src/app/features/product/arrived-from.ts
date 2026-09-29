@@ -1,8 +1,20 @@
-import type { UrlTree } from '@angular/router';
+import type { Navigation, UrlTree } from '@angular/router';
 import type { TrackedEvents } from '@tendero/shared-telemetry';
 import { hasFilters, parseListing } from '../../listing/listing-filters';
 
 export type ArrivedFrom = TrackedEvents['product_viewed']['arrived_from'];
+
+/**
+ * The home's rows that say so when they lead to a product (R-8): the trail, the
+ * campaign card, *Puede que te guste* and *Tendencias*. Their links carry it in
+ * the navigation's state, `{ via: 'trail' }`, because the URL they leave from is
+ * the home page's for all of them.
+ */
+export const ProductVias = ['trail', 'campaign', 'suggested', 'trending'] as const;
+export type ProductVia = (typeof ProductVias)[number];
+
+/** What the address alone can tell: every kind but the rows'. */
+export type PageKind = Exclude<ArrivedFrom, ProductVia>;
 
 /**
  * Which kind of page led to a product, from the URL of the page before it
@@ -15,7 +27,7 @@ export type ArrivedFrom = TrackedEvents['product_viewed']['arrived_from'];
  * until then), `/:lang/c/:code` a category; nothing before it in this tab is
  * `direct` — a link from outside, a bookmark, a new tab.
  */
-export function arrivedFrom(previous: UrlTree | null | undefined): ArrivedFrom {
+export function arrivedFrom(previous: UrlTree | null | undefined): PageKind {
   if (!previous) return 'direct';
 
   const [, ...path] = previous.root.children['primary']?.segments.map((segment) => segment.path) ?? [];
@@ -26,6 +38,17 @@ export function arrivedFrom(previous: UrlTree | null | undefined): ArrivedFrom {
   }
   if (path[0] === 'c') return 'category';
   return 'other';
+}
+
+/**
+ * How the shopper reached this product: the row that led here when its link
+ * said so (R-8), otherwise the kind of page before this one. Only a value the
+ * tracking plan knows is believed — state is whatever a link put there.
+ */
+export function arrivedVia(navigation: Navigation | null | undefined): ArrivedFrom {
+  const via = navigation?.extras.state?.['via'];
+  if ((ProductVias as readonly unknown[]).includes(via)) return via as ProductVia;
+  return arrivedFrom(navigation?.previousNavigation?.finalUrl);
 }
 
 /**

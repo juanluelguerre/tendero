@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { describe, expect, it } from 'vitest';
-import { keptCounts, statusChips, type StatusCount } from './status-chips';
+import { countBy, keptCounts, statusChips, type StatusCount } from './status-chips';
 
 describe('the status chips', () => {
   const labels = { Draft: 'Borrador', Active: 'Publicado', all: 'Todos' };
@@ -29,5 +29,15 @@ describe('the status chips', () => {
     expect(counts()?.get('Active')).toBe(5);
     answered.set([{ status: 'Active', count: 2 }]);
     expect(counts()?.get('Active')).toBe(2);
+  });
+
+  it('count a list answered whole by the key each item falls under', () => {
+    const items = [{ s: 'Draft' }, { s: 'Active' }, { s: 'Draft' }];
+
+    expect(countBy(items, (item) => item.s)).toEqual([
+      { status: 'Draft', count: 2 },
+      { status: 'Active', count: 1 },
+    ]);
+    expect(countBy([], () => 'x')).toEqual([]);
   });
 });

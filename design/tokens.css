@@ -42,6 +42,7 @@
   --stone-200: #E4E0D9;   /* hairlines, dividers */
   --stone-300: #CBC5BA;   /* disabled borders */
 
+  --ink-950:   #141210;   /* the chalkboard: near-black, warm only in trace */
   --ink-900:   #201D1B;   /* primary text, dark surfaces */
   --ink-700:   #443F3A;
   --ink-500:   #6B655F;   /* secondary text */
@@ -73,6 +74,20 @@
   --warning:        var(--amber-700);
   --danger:         var(--red-600);
   --focus-ring:     var(--accent);
+
+  /* The chalkboard: a surface that stays dark in both themes, for the one
+     thing a page leads with — the campaign card of an event (R-8, the
+     approved mock-ups). No theme redefines these on purpose: an event is the
+     ink board outside the shop in daylight and at night alike, and the
+     dark theme's page (#171513) still sets it off by its border. A step
+     below the text's ink: at a card's size --ink-900 reads brown, and the
+     board is meant to read black, as the mock-up does.
+     --text-inverse 16.6:1 and --text-inverse-muted 10.9:1 on it; the focus
+     ring (--accent) is held by design-contrast.spec.ts. */
+  --bg-inverse:         var(--ink-950);
+  --text-inverse:       var(--stone-100);
+  --text-inverse-muted: var(--stone-300);
+  --border-inverse:     var(--ink-500);  /* decoration: the clock's boxes (3.2:1); the chips use the muted text */
 
   /* ---------- Type ----------
      Display: Bricolage Grotesque — a variable grotesque with real quirk,

@@ -109,6 +109,21 @@ internal static class Jsonb
     private static List<AttributeOption> ReadAttributeOptions(string json) =>
         JsonSerializer.Deserialize<List<AttributeOption>>(json, Options) ?? new List<AttributeOption>();
 
+    /// <summary>
+    /// A customer's trail (R-8): <c>[{"key":"B073WXYZ01","at":"2026-09-29T10:00:00+00:00"}]</c>,
+    /// always read with its trail and never queried on its own — except by the
+    /// retention sweep, which reads <c>at</c> in SQL, so the shape is part of the
+    /// contract with <see cref="EfBrowsingRetention"/>.
+    /// </summary>
+    public static readonly ValueConverter<List<Accounts.Domain.TrailEntry>, string> TrailConverter = new(
+        entries => JsonSerializer.Serialize(entries, Options),
+        json => JsonSerializer.Deserialize<List<Accounts.Domain.TrailEntry>>(json, Options) ?? new List<Accounts.Domain.TrailEntry>());
+
+    public static readonly ValueComparer<List<Accounts.Domain.TrailEntry>> TrailComparer = new(
+        (left, right) => left != null && right != null && left.SequenceEqual(right),
+        entries => entries.Aggregate(0, (hash, entry) => HashCode.Combine(hash, entry.GetHashCode())),
+        entries => new List<Accounts.Domain.TrailEntry>(entries));
+
     public static readonly ValueComparer<List<string>> StringListComparer = new(
         (left, right) => left != null && right != null && left.SequenceEqual(right, StringComparer.Ordinal),
         values => values.Aggregate(0, (hash, value) => HashCode.Combine(hash, value.GetHashCode(StringComparison.Ordinal))),

@@ -6,8 +6,15 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from './data-access/cart.service';
 import { CompareStore } from './data-access/compare.store';
+import type { ProductVia } from './features/product/arrived-from';
 import { ProductImagePlaceholder } from './product-image-placeholder';
 import { ShopLinks } from './shop-links';
+
+/** Why a card is in its row, in one line under the price: *Porque viste…*, *Sube esta semana* (R-8). */
+export interface CardReason {
+  readonly icon: 'viewed' | 'rising';
+  readonly text: string;
+}
 
 /**
  * One product, as a card.
@@ -30,10 +37,32 @@ import { ShopLinks } from './shop-links';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-card.html',
   styleUrl: './product-card.css',
-  host: { '[class.card--soldOut]': '!hit().inStock' },
+  host: {
+    '[class.card--soldOut]': '!hit().inStock',
+    '[class.card--line]': "layout() === 'line'",
+  },
 })
 export class ProductCard {
   readonly hit = input.required<SearchHit>();
+
+  /**
+   * The rows of the home page (R-8) ask more of a card than the listing does,
+   * and they get it as inputs on THIS card rather than as copies of it: a badge,
+   * a reason, a rank, a quieter card without its buttons, and the row that led
+   * to the product for `product_viewed`.
+   */
+  /** A short label on the picture: *Oferta*, *Nuevo*. */
+  readonly badge = input<string | null>(null);
+  /** Why the card is here, with its icon. */
+  readonly reason = input<CardReason | null>(null);
+  /** Its place in a ranking, drawn large and never with a count: *Lo más vendido*. */
+  readonly rank = input<number | null>(null);
+  /** Add to cart and compare; off where the card is a way in rather than a shelf (the campaign card). */
+  readonly actions = input(true);
+  /** A tile, or a line — picture beside the words — for a ranking. */
+  readonly layout = input<'tile' | 'line'>('tile');
+  /** The row that led here, carried in the navigation's state (`arrivedVia`). */
+  readonly via = input<ProductVia | null>(null);
 
   private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);
@@ -46,6 +75,11 @@ export class ProductCard {
   /** The seed points at images that may not be there, so a broken one is the
    *  default path on a fresh clone rather than an error. */
   protected readonly broken = signal(false);
+
+  protected linkState(): { via: ProductVia } | undefined {
+    const via = this.via();
+    return via ? { via } : undefined;
+  }
 
   protected imageUrl(): string | null {
     const id = this.hit().imageId;

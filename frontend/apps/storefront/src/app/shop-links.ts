@@ -23,6 +23,8 @@ export class ShopLinks {
   readonly account = computed(() => ['/', this.culture(), 'account']);
   /** The comparison; the products travel in `?codes=`, so it can be shared (P10-7). */
   readonly compare = computed(() => ['/', this.culture(), 'compare']);
+  /** *Compra con tu agente*: how to point an assistant at the shop (R-8, H-5). */
+  readonly agents = computed(() => ['/', this.culture(), 'agents']);
 
   /**
    * A department or a section. The CODE is in the URL and not the name, for the

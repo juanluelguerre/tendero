@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { arrivedFrom, cameFiltered } from './arrived-from';
+import type { Navigation } from '@angular/router';
+import { arrivedFrom, arrivedVia, cameFiltered } from './arrived-from';
 
 describe('arrivedFrom, the kind of page that led to a product', () => {
   const tree = (url: string) => TestBed.inject(Router).parseUrl(url);
@@ -34,5 +35,23 @@ describe('arrivedFrom, the kind of page that led to a product', () => {
 
   it('is not filtered when nothing came before', () => {
     expect(cameFiltered(null)).toBe(false);
+  });
+
+  describe('from a row of the home page', () => {
+    const navigation = (state: Record<string, unknown> | undefined, previous: string | null): Navigation =>
+      ({
+        extras: { state },
+        previousNavigation: previous ? { finalUrl: tree(previous) } : null,
+      }) as unknown as Navigation;
+
+    it.each(['trail', 'campaign', 'suggested', 'trending'] as const)('reads a link that says %s', (via) => {
+      expect(arrivedVia(navigation({ via }, '/es'))).toBe(via);
+    });
+
+    it('falls back to the page before when the link says nothing, or something unknown', () => {
+      expect(arrivedVia(navigation(undefined, '/es?q=mochila'))).toBe('search');
+      expect(arrivedVia(navigation({ via: 'banner' }, '/es'))).toBe('home');
+      expect(arrivedVia(null)).toBe('direct');
+    });
   });
 });

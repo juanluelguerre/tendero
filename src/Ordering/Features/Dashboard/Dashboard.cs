@@ -118,31 +118,21 @@ public static class DashboardFigures
 
     private const string DefaultCurrency = "EUR";
 
-    /// <summary>
-    /// A sale: a live order whose money was authorised and that was not cancelled —
-    /// read off the state machine (invariant 5), which is where "paid" is decided.
-    /// </summary>
-    public static bool IsSale(Order order) =>
-        order.Mode == OrderMode.Live
-        && order.Status is OrderStatus.PaymentAuthorized or OrderStatus.Confirmed or OrderStatus.Shipped or OrderStatus.Delivered;
-
     public static SalesSummary Sales(DashboardPeriod period, IReadOnlyList<Order> current, IReadOnlyList<Order> previous)
     {
-        var sales = current.Where(IsSale).ToList();
+        var sales = current.Where(SalesRanking.IsSale).ToList();
 
         return new SalesSummary(
             period,
             CurrencyOf(current.Concat(previous)),
             Figures(sales),
-            Figures([.. previous.Where(IsSale)]),
+            Figures([.. previous.Where(SalesRanking.IsSale)]),
+            // The ranking is Ordering's one rule (SalesRanking), which the shop's
+            // public rows read too; the dashboard ranks variants, by SKU.
             [
-                .. sales.SelectMany(order => order.Lines)
-                    .GroupBy(line => line.Sku, StringComparer.OrdinalIgnoreCase)
-                    .Select(group => new BestSeller(group.Key, group.First().ProductName, group.Sum(line => line.Quantity), group.Sum(line => line.Total.Amount)))
-                    .OrderByDescending(seller => seller.Units)
-                    .ThenByDescending(seller => seller.Revenue)
-                    .ThenBy(seller => seller.Sku, StringComparer.Ordinal)
+                .. SalesRanking.Rank(sales, SalesRanking.BySku)
                     .Take(TopRows)
+                    .Select(sold => new BestSeller(sold.Key, sold.Name, sold.Units, sold.Revenue))
             ]);
     }
 
@@ -188,7 +178,7 @@ public static class DashboardFigures
     {
         var checkedOut = carts.Count(cart => cart.Status == CartStatus.CheckedOut);
         var abandoned = carts.Count(cart => cart.Status == CartStatus.Abandoned || cart.HasExpiredAt(now));
-        var buyers = placed.Where(IsSale).Select(order => order.CustomerId).Distinct().ToList();
+        var buyers = placed.Where(SalesRanking.IsSale).Select(order => order.CustomerId).Distinct().ToList();
 
         return new CheckoutFunnel(
             period,
@@ -203,7 +193,7 @@ public static class DashboardFigures
 
     public static AgentSales Agents(DashboardPeriod period, IReadOnlyList<Order> placed)
     {
-        var sales = placed.Where(IsSale).ToList();
+        var sales = placed.Where(SalesRanking.IsSale).ToList();
         var byAgents = sales.Where(order => order.PlacedBy is not null).ToList();
 
         return new AgentSales(
@@ -281,7 +271,7 @@ public sealed class DashboardHandlers(IShopHistory history, TimeProvider clock) 
         var window = DashboardWindow.Ending(now, query.Period);
 
         var placed = await history.OrdersPlacedAsync(window.From, window.To, cancellationToken);
-        var buyers = placed.Where(DashboardFigures.IsSale).Select(order => order.CustomerId).Distinct().ToList();
+        var buyers = placed.Where(SalesRanking.IsSale).Select(order => order.CustomerId).Distinct().ToList();
 
         return DashboardFigures.Funnel(query.Period, now,
             await history.CartsStartedAsync(window.From, window.To, cancellationToken),

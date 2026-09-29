@@ -11,6 +11,7 @@ import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../us
 import { ConfirmDialog } from '../../work/confirm-dialog';
 import { FilterChips, type FilterOption } from '../../work/filter-chips';
 import { WorkPane } from '../../work/work-pane';
+import { refusalOf } from '../../work/refusal';
 
 /** Each decision as the usage event names it (ADR 0041). */
 const ReturnActions = {
@@ -142,11 +143,11 @@ export class ReturnsPage {
           this.requests.update((current) => current.map((row) => (row.returnId === updated.returnId ? updated : row)));
           this.busy.set(null);
         },
-        error: (error: { error?: unknown }) => {
+        error: (error: unknown) => {
           this.busy.set(null);
           this.refusal.update((current) => ({
             ...current,
-            [request.returnId]: typeof error.error === 'string' ? error.error : '',
+            [request.returnId]: refusalOf(error),
           }));
         },
       });

@@ -64,8 +64,36 @@ test.describe('the agent surface', () => {
     // The list IS the contract with every agent that visits, and it lives in one
     // file so a specification change is one edit. A test on it is what makes
     // adding a tool a deliberate act rather than a drift. The two filter tools
-    // were added on purpose with the facets (R-7.3, F-5).
-    expect(names).toEqual(['search_products', 'list_filters', 'apply_filter', 'get_product', 'add_to_cart', 'get_cart']);
+    // were added on purpose with the facets (R-7.3, F-5), and list_campaigns with
+    // the home that sells (R-8, H-5).
+    expect(names).toEqual([
+      'search_products',
+      'list_filters',
+      'apply_filter',
+      'get_product',
+      'add_to_cart',
+      'get_cart',
+      'list_campaigns',
+    ]);
+  });
+
+  /**
+   * "Are there deals this week?" answered from the list the home draws (R-8, H-5),
+   * not scraped from a card: the same service, the same order.
+   */
+  test('lists the campaigns the shop is running or about to run', async ({ page, request }) => {
+    await withAgent(page);
+
+    const result = await call(page, 'list_campaigns', {});
+    const campaigns = ((await (await request.get('/api/pricing/campaigns?culture=es')).json()) as { items: { code: string }[] }).items;
+
+    expect(result.isError).toBe(false);
+    if (campaigns.length === 0) {
+      expect(result.text).toContain('No campaign is running');
+    } else {
+      expect(result.text).toContain(`code ${campaigns[0].code}`);
+      expect(result.text).toContain(`/es?campaign=${campaigns[0].code}`);
+    }
   });
 
   test('searches the shop and answers with a product code', async ({ page }) => {

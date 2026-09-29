@@ -244,7 +244,7 @@
     {
       "name": "Backoffice jobs",
       "area": "backoffice",
-      "question": "Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent — and how long does each take from opening its screen?",
+      "question": "Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?",
       "decision": "A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.",
       "signals": [
         "backoffice_view_opened",
@@ -299,6 +299,42 @@
       ]
     },
     {
+      "name": "Home page modules",
+      "area": "storefront",
+      "question": "Which of the home page's modules do shoppers open, and from which place on the page?",
+      "decision": "A module nobody opens in a month moves down or goes; the order of the page follows the numbers.",
+      "signals": [
+        "home_module_opened"
+      ]
+    },
+    {
+      "name": "Campaign card",
+      "area": "storefront",
+      "question": "Do shoppers open the campaign card, before a campaign starts as well as while it runs?",
+      "decision": "If the before card is not opened, the teaser is not worth its place.",
+      "signals": [
+        "campaign_card_opened"
+      ]
+    },
+    {
+      "name": "Browsing trail",
+      "area": "storefront",
+      "question": "Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it?",
+      "decision": "If many clear it, the trail is felt as surveillance; show less, or ask first.",
+      "signals": [
+        "trail_cleared"
+      ]
+    },
+    {
+      "name": "Suggestions and trends",
+      "area": "storefront",
+      "question": "Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone?",
+      "decision": "If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off.",
+      "signals": [
+        "product_viewed"
+      ]
+    },
+    {
       "name": "Stock search and filters",
       "area": "backoffice",
       "question": "Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which?",
@@ -341,10 +377,14 @@
             "category",
             "listing",
             "home",
+            "trail",
+            "campaign",
+            "suggested",
+            "trending",
             "other",
             "direct"
           ],
-          "description": "The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab."
+          "description": "The page before this one, by kind; listing is a list made only of filters (Ofertas, Novedades), direct when there was none in this tab. From the home page, the row that led here when it says so: trail (Sigue donde lo dejaste), campaign (the campaign card), suggested (Puede que te guste) and trending (Tendencias) — R-8."
         },
         "filtered": {
           "type": "boolean",
@@ -456,6 +496,7 @@
             "attributes",
             "search",
             "promotions",
+            "campaigns",
             "stock",
             "orders",
             "returns",
@@ -482,6 +523,7 @@
             "attributes",
             "search",
             "promotions",
+            "campaigns",
             "stock",
             "orders",
             "returns",
@@ -509,7 +551,12 @@
             "agent_register",
             "agent_trust",
             "agent_suspend",
-            "agent_reinstate"
+            "agent_reinstate",
+            "campaign_create",
+            "campaign_update",
+            "campaign_schedule",
+            "campaign_unschedule",
+            "campaign_end"
           ],
           "description": "What was done, from a closed list."
         },
@@ -600,6 +647,66 @@
       "description": "A shopper followed the link in the notice that says a product went into the cart (the redesign's R-5.3, raised by the baseline walkthrough). Behavioural, so it waits for analytics consent.",
       "consent": "behavioural",
       "attributes": {}
+    },
+    {
+      "name": "home_module_opened",
+      "description": "A shopper followed a link inside one of the home page's modules (R-8). Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "module": {
+          "type": "string",
+          "values": [
+            "campaign",
+            "trail",
+            "agent",
+            "offers",
+            "suggested",
+            "trending",
+            "best_sellers",
+            "new",
+            "departments"
+          ],
+          "description": "Which module: the campaign card, Sigue donde lo dejaste, Compra con tu agente, Ofertas, Puede que te guste, Tendencias, Lo más vendido, Novedades or Secciones de la tienda."
+        },
+        "position": {
+          "type": "number",
+          "description": "Where the module was on the page when it was opened, from 1 at the top, counting only the modules drawn — a band that failed or had nothing to show does not take a place."
+        }
+      }
+    },
+    {
+      "name": "campaign_card_opened",
+      "description": "A shopper followed the campaign card's call to action or one of its products (R-8). Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "campaign": {
+          "type": "string",
+          "description": "The campaign's code (TENDERO_DAYS): a handful per year, set by the shopkeeper, never a person or a product."
+        },
+        "phase": {
+          "type": "string",
+          "values": [
+            "before",
+            "during"
+          ],
+          "description": "Before the campaign starts (Empieza en…) or while it runs (Termina en…)."
+        }
+      }
+    },
+    {
+      "name": "trail_cleared",
+      "description": "A shopper removed their browsing trail, one entry or all of it (R-8). Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "scope": {
+          "type": "string",
+          "values": [
+            "one",
+            "all"
+          ],
+          "description": "One product or one search removed, or the whole trail."
+        }
+      }
     }
   ],
   "metrics": [

@@ -33,7 +33,7 @@ internal sealed class QdrantProductVectors(
     EmbeddingModelDescriptor model,
     QdrantVectorLayer layer,
     IAttributeDefinitionReader attributeDefinitions,
-    ICategoryReader categories) : IProductVectorIndexer, IVectorProductSearch
+    ICategoryReader categories) : IProductVectorIndexer, IVectorProductSearch, IVectorSimilarity
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Search);
 
@@ -184,6 +184,35 @@ internal sealed class QdrantProductVectors(
                 point => point.Payload.TryGetValue(PointFields.Text, out var value) ? value.StringValue : "",
                 StringComparer.Ordinal);
         });
+
+    /// <summary>
+    /// Qdrant's recommendation over the viewed product's own point, narrowed to
+    /// the candidates' points: the score is the collection's distance — cosine —
+    /// between the two stored vectors, so nothing is embedded again. A point
+    /// written by another model is refused here as in a search.
+    /// </summary>
+    public Task<IReadOnlyDictionary<string, double>> SimilarityAsync(
+        string productId, IReadOnlyCollection<string> candidateIds, string culture, CancellationToken ct = default) =>
+        GuardAsync<IReadOnlyDictionary<string, double>>("product similarity", async () =>
+        {
+            await EnsureAvailableAsync("product similarity", ct);
+
+            if (candidateIds.Count == 0)
+                return new Dictionary<string, double>(StringComparer.Ordinal);
+
+            var points = await client.RecommendAsync(
+                model.CollectionName,
+                positive: [PointOf(productId, culture)],
+                filter: Conditions.HasId([.. candidateIds.Select(id => PointOf(id, culture))]),
+                limit: (ulong)candidateIds.Count,
+                payloadSelector: new[] { PointFields.ProductId, PointFields.ModelId, PointFields.ModelRevision },
+                cancellationToken: ct);
+
+            return points.ToDictionary(point => ProductOf(point.Payload), point => (double)point.Score, StringComparer.Ordinal);
+        });
+
+    private static Guid PointOf(string productId, string culture) =>
+        VectorPointId.For(new ProductId(Guid.Parse(productId)), culture);
 
     private async Task DeleteAsync(ProductId productId, CancellationToken ct) =>
         await client.DeleteAsync(

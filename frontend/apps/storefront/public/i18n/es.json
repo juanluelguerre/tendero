@@ -190,27 +190,40 @@
       "heading": "Lo más parecido que vendemos"
     },
     "submit": "Buscar",
-    "suggestions": [
-      "zapatillas running",
-      "cafetera 12 tazas",
-      "mochila",
-      "cocina"
-    ],
     "tooShort": "Con dos letras al menos — con una encuentro casi todo.",
-    "took": "{{ms}} ms",
-    "tryLabel": "Prueba",
-    "returning": "¿Ya has pedido antes?",
-    "seeOrders": "Consulta tus pedidos"
+    "took": "{{ms}} ms"
   },
   "home": {
     "departments": "Secciones de la tienda",
     "offers": "Ofertas",
-    "offersLede": "Se aplican solas en el carrito. Sin códigos y sin letra pequeña.",
+    "offersLede": "Productos con precio rebajado ahora mismo.",
     "newest": "Novedades",
     "freeShipping": "Envío gratis",
     "until": "Hasta el {{date}}",
     "newestPrevious": "Novedades anteriores",
-    "newestNext": "Más novedades"
+    "newestNext": "Más novedades",
+    "title": "Tendero, la tienda de barrio para personas y agentes",
+    "offersRules": "Se aplican solas en la cesta: {{names}}.",
+    "offersAll": "Ver todas las ofertas",
+    "offerBadge": "Oferta",
+    "trail": "Sigue donde lo dejaste",
+    "trailLede": "Lo que viste y buscaste en este navegador. Solo tú lo ves.",
+    "trailLedeAccount": "Lo que viste y buscaste con tu cuenta. Solo tú lo ves.",
+    "trailClear": "Borrar historial",
+    "trailManage": "Gestionar",
+    "trailSearches": "Tus búsquedas",
+    "trailSearchRemove": "Quitar la búsqueda «{{text}}»",
+    "suggested": "Puede que te guste",
+    "suggestedLede": "Por lo que has visto. Cada sugerencia dice de dónde sale.",
+    "because": "Porque viste {{name}}",
+    "trending": "Tendencias",
+    "trendingLede": "Lo que más sube esta semana frente a la anterior.",
+    "rising": "Sube esta semana",
+    "bestSellers": "Lo más vendido",
+    "bestSellersLede": "Esta semana, en toda la tienda.",
+    "newestLede": "Recién llegados a la tienda.",
+    "newestAll": "Ver todas",
+    "newBadge": "Nuevo"
   },
   "category": {
     "breadcrumb": "Dónde estás",
@@ -272,7 +285,8 @@
       "query": "Resultados para «{{query}}»",
       "offers": "Ofertas",
       "newArrivals": "Novedades",
-      "all": "Todos los productos"
+      "all": "Todos los productos",
+      "campaign": "{{name}}: sus ofertas"
     },
     "count": {
       "one": "1 producto",
@@ -332,6 +346,72 @@
       "apply": "Ver {{count}} productos",
       "applyOne": "Ver 1 producto",
       "applyUnknown": "Ver productos"
-    }
+    },
+    "campaign": "Campaña: {{name}}"
+  },
+  "shelf": {
+    "rank": "Puesto {{rank}}:",
+    "previous": "Anteriores: {{heading}}",
+    "next": "Siguientes: {{heading}}",
+    "remove": "Quitar {{name}} de tu historial"
+  },
+  "campaign": {
+    "endsIn": "Termina en",
+    "startsIn": "Empieza en",
+    "until": "Hasta el {{date}}",
+    "from": "Desde el {{date}}",
+    "holds": "Lo que incluye",
+    "holdWithCode": "{{name}} con el código {{code}}",
+    "seeOffers": "Ver las ofertas",
+    "seeUpcoming": "Ver qué incluirá",
+    "seeSeason": "Ver la temporada",
+    "products": "Productos de {{name}}",
+    "notStarted": "{{name}} empieza el {{date}}. Sus ofertas aparecerán aquí entonces."
+  },
+  "agentCard": {
+    "title": "Compra con tu agente",
+    "lede": "Tu asistente puede buscar, comparar y llenar la cesta en esta tienda. Tú sigues siendo quien paga.",
+    "address": "Dirección MCP",
+    "copy": "Copiar la dirección",
+    "copied": "Dirección copiada",
+    "howTo": "Cómo conectarlo"
+  },
+  "promise": {
+    "label": "La tienda promete",
+    "shippingHint": "Se calcula al pagar",
+    "returns": "{{days}} días para devolver",
+    "returnsHint": "Desde que lo recibes",
+    "payment": "Pago seguro",
+    "paymentHint": "Tus datos de pago no pasan por la tienda",
+    "agents": "Hecho para agentes",
+    "agentsHint": "MCP, UCP y WebMCP"
+  },
+  "history": {
+    "title": "Tu historial",
+    "lede": "Lo que viste y buscaste, para retomarlo. Solo tú lo ves, y puedes borrarlo o apagarlo cuando quieras.",
+    "guestLede": "Se guarda solo en este navegador y no se envía a la tienda. Si te identificas, pasa a tu cuenta.",
+    "switch": "Guardar mi historial",
+    "off": "Tu historial está apagado: no se guarda nada, ni en este navegador.",
+    "empty": "Todavía no hay nada en tu historial.",
+    "views": "Productos que viste",
+    "searches": "Búsquedas",
+    "clear": "Borrar todo"
+  },
+  "agents": {
+    "title": "Compra con tu agente",
+    "lede": "Un asistente puede hacer en Tendero lo mismo que tú: buscar, comparar y llenar la cesta. Pagar sigue siendo cosa tuya.",
+    "canTitle": "Lo que puede hacer",
+    "canSearch": "Buscar en el catálogo y leer cada producto, con sus variantes, su precio y su stock.",
+    "canCompare": "Comparar productos y explicar las ofertas, también las que no se aplican y por qué.",
+    "canCart": "Llenar tu cesta. La compra la confirmas tú.",
+    "mcpTitle": "Con tu asistente: el servidor MCP",
+    "mcpBody": "Añade esta dirección como servidor MCP en tu asistente (Claude, VS Code…). Solo lee: no puede comprar por su cuenta.",
+    "mcpCommand": "En Claude Code, por ejemplo:",
+    "browserTitle": "En tu navegador: WebMCP",
+    "browserBody": "Si tu navegador tiene un agente con WebMCP, la tienda le ofrece sus herramientas en esta misma pestaña, con tu sesión y tu cesta. Sin él, la tienda es la de siempre.",
+    "ucpTitle": "Para agentes que compran: UCP",
+    "ucpBody": "Un agente que compra en nombre de alguien se identifica y trae su mandato firmado. Su perfil está en esta dirección:",
+    "youPay": "Tú sigues siendo quien paga",
+    "youPayBody": "Ningún agente paga desde tu navegador sin ti: el pago se confirma en la tienda, a tu nombre."
   }
 }

@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Accounts.Features.ManageTrail;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
 using ElGuerre.Tendero.Inventory;
@@ -94,6 +95,8 @@ public static class WorkerServices
         builder.Services.TryAddSingleton<IPrincipalAccessor, SystemPrincipalAccessor>();
         builder.Services.Configure<StockSeedOptions>(
             builder.Configuration.GetSection(StockSeedOptions.SectionName));
+        builder.Services.Configure<CampaignSeedOptions>(
+            builder.Configuration.GetSection(CampaignSeedOptions.SectionName));
 
         builder.Services.AddLexicalSearch(
             builder.Configuration.GetRequiredConnectionString("elasticsearch"));
@@ -115,6 +118,9 @@ public static class WorkerServices
             // order: seeding into a schema that does not exist yet is the one
             // ordering constraint here.
             builder.Services.AddHostedService<SeedStockAtStartupWorker>();
+
+            // Pricing's calendar (R-8): after the migrator for the same reason.
+            builder.Services.AddHostedService<SeedCampaignsAtStartupWorker>();
         }
 
         // After the migrator, for the same ordering reason as the seeder: it
@@ -131,6 +137,10 @@ public static class WorkerServices
         // must exist before the catalogue's descriptions are recorded into them.
         builder.Services.AddHostedService<RecordDescriptionsAtStartupWorker>();
         builder.Services.AddClaimProposer();
+
+        // A customer's trail is forgotten after ninety days (R-8, docs/privacy.md),
+        // including the trails of customers who never come back to trigger it.
+        builder.Services.AddHostedService<ForgetOldBrowsingWorker>();
 
         builder.Services.AddHostedService<OutboxWorker>();
 

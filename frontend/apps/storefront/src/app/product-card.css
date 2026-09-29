@@ -181,3 +181,91 @@
 @media (pointer: coarse) {
   .card__compare { min-height: 2.75rem; }
 }
+
+/* ---------- What the home's rows add (R-8) ---------- */
+
+.card__media {
+  position: relative;
+}
+
+/* A label on the picture — *Oferta*, *Nuevo* — in the accent, as a figure on a
+   tag is: a word, not an action. */
+.card__badge {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-start: var(--space-2);
+  z-index: 1;
+  padding: 0.125rem var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+}
+
+.card__reason {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  margin-block-start: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+}
+
+.card__reasonIcon {
+  flex: none;
+  width: 0.875rem;
+  height: 0.875rem;
+  margin-block-start: 0.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A ranking: the place large, in the mono face the shop uses for figures. */
+.card__rank {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accent);
+}
+
+/* The line: picture beside the words, for a ranking the eye reads down. */
+:host(.card--line) {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline-start: var(--space-3);
+}
+
+:host(.card--line) .card__media {
+  flex: none;
+  width: 4rem;
+}
+
+:host(.card--line) .card__image {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+
+:host(.card--line) .card__body {
+  padding: var(--space-3) var(--space-3) var(--space-3) 0;
+  min-width: 0;
+}
+
+:host(.card--line) .card__name {
+  font-size: var(--text-sm);
+}
+
+:host(.card--line) .card__price {
+  margin-block-start: var(--space-1);
+  font-size: var(--text-md);
+}
+
+:host(.card--line) .card__rank {
+  order: -1;
+}

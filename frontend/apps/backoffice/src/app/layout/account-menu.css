@@ -83,34 +83,7 @@
 
 .menu__label { font-size: var(--text-xs); color: var(--text-muted); }
 
-.segmented {
-  display: inline-flex;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.segmented__option {
-  display: inline-grid;
-  place-items: center;
-  min-width: 2.75rem;
-  min-height: 2.25rem;
-  padding: 0 var(--space-2);
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.segmented__option:hover { color: var(--text); }
-
-.segmented__option[aria-pressed='true'] {
-  background: var(--accent-tint);
-  color: var(--text);
-  font-weight: 600;
-}
+/* The segmented control itself is shared (styles.css); the menu's choices are short codes. */
+.segmented__option { text-transform: uppercase; }
 
 .menu__signout { align-self: flex-start; }

@@ -1,0 +1,28 @@
+<storefront-product-row
+  *transloco="let t"
+  [heading]="t('home.trail')"
+  [lede]="signedIn() ? t('home.trailLedeAccount') : t('home.trailLede')"
+  [items]="items()"
+  [removable]="true"
+  via="trail"
+  (removed)="trail.forget('View', $event.code)">
+  <span shelfActions class="trail__actions">
+    <a class="trail__manage" [routerLink]="links.account()" fragment="history">{{ t('home.trailManage') }}</a>
+    <button type="button" class="trail__clear" (click)="trail.clear()">{{ t('home.trailClear') }}</button>
+  </span>
+
+  @if (searches().length > 0) {
+    <ul shelfExtras class="trail__searches" [attr.aria-label]="t('home.trailSearches')">
+      <li class="trail__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M4 12a8 8 0 1 0 2.3-5.7" /><path d="M4 4v4h4M12 8v4l3 2" /></svg>
+      </li>
+      @for (search of searches(); track search.key) {
+        <li class="trail__search">
+          <a class="trail__query" [routerLink]="links.home()" [queryParams]="{ q: search.key }">{{ search.key }}</a>
+          <button type="button" class="trail__forget" [attr.aria-label]="t('home.trailSearchRemove', { text: search.key })"
+                  (click)="trail.forget('Search', search.key)">×</button>
+        </li>
+      }
+    </ul>
+  }
+</storefront-product-row>
