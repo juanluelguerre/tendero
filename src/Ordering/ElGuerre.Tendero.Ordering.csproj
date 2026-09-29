@@ -33,6 +33,10 @@
          green. -->
     <PackageReference Include="Carter" />
     <PackageReference Include="FluentValidation" />
+
+    <!-- What day an order was placed on, in the shop's time zone (ADR 0046).
+         Only the dashboard's series uses it. -->
+    <PackageReference Include="NodaTime" />
   </ItemGroup>
 
   <ItemGroup>
