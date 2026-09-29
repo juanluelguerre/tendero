@@ -101,10 +101,12 @@ are shared, never copied:
   (*Porque viste…*, *Sube esta semana*), a rank drawn large and never with a
   count, a quiet card without its buttons, and a line layout for a ranking.
 - **`CampaignCard`** is a campaign: an event on the chalkboard — `--bg-inverse`,
-  dark in both themes, the one surface that is — with its window, its clock and
-  the view's one clay action; a season on the accent's tint, with no clock; the
-  campaign's own image beside the words, or the products it reaches. As a
-  category's banner it is smaller, with a link instead of the clay button.
+  `--ink-950`, a step blacker than the text's ink because at a card's size
+  `--ink-900` reads brown; dark in both themes, the one surface that is —
+  with its window, its clock and the view's one clay action; a season on the
+  accent's tint, with no clock; the campaign's own image beside the words, or
+  the products it reaches. As a category's banner it is smaller, with a link
+  instead of the clay button.
   It carries no awning of its own: it leads the page right under the header's,
   and two stripes a card apart read as one doubled line, not as the signature.
 - **`CountdownClock`** counts in days, hours and minutes, wakes once a minute on
