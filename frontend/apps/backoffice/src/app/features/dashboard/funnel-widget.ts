@@ -8,10 +8,10 @@ import { DashboardSources } from './dashboard-sources';
 import { formatShare, shareOf } from './figures';
 
 /**
- * How the checkout converts (P11-7): carts started, checked out, abandoned, and the
- * buyers who were new against those who came back. Visits are not here — they live
- * in the observability stack, which the dashboard does not depend on — so the top
- * of this funnel is a cart, and it says so.
+ * How the checkout converts (P11-7): carts started, checked out, abandoned and
+ * still open. Visits are not here — they live in the observability stack, which
+ * the dashboard does not depend on — so the top of this funnel is a cart. The
+ * buyers, new and returning, are the Growth tab's customers since R-9.
  */
 @Component({
   selector: 'backoffice-funnel-widget',

@@ -682,25 +682,34 @@
       "started": "Carts started",
       "checkedOut": "Checked out",
       "abandoned": "Abandoned",
-      "stillOpen": "Still open",
+      "stillOpen": "Still open"
+    },
+    "customers": {
+      "title": "Customers",
+      "loading": "Loading…",
+      "failed": "The funnel could not be loaded.",
       "buyers": "Buyers",
       "newCustomers": "New",
       "returningCustomers": "Returning",
+      "nobody": "Nobody bought in this period.",
       "noVisits": "Visits are not counted here: they live in the observability stack, which this page does not depend on."
     },
-    "agents": {
-      "title": "Agents",
+    "agentSales": {
+      "title": "What agents buy",
       "toRegistry": "Registry",
       "loading": "Loading…",
       "failed": "These figures could not be loaded.",
-      "salesHeading": "What they bought",
       "shareOfOrders": "Share of orders",
       "ofOrders": "{{part}} of {{whole}}",
       "shareOfRevenue": "Share of sales",
       "mandated": "With a mandate",
       "rehearsals": "Rehearsals",
-      "ordersCount": "{{count}} orders",
-      "denialsHeading": "What the shop refused them",
+      "ordersCount": "{{count}} orders"
+    },
+    "refusals": {
+      "title": "What the shop refused them",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
       "noDenials": "Nothing refused in this period.",
       "denied": "refused",
       "byRule": "Refusals by rule",

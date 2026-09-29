@@ -682,25 +682,34 @@
       "started": "Carritos iniciados",
       "checkedOut": "Comprados",
       "abandoned": "Abandonados",
-      "stillOpen": "Aún abiertos",
+      "stillOpen": "Aún abiertos"
+    },
+    "customers": {
+      "title": "Clientes",
+      "loading": "Cargando…",
+      "failed": "No se ha podido cargar el embudo.",
       "buyers": "Compradores",
       "newCustomers": "Nuevos",
       "returningCustomers": "Recurrentes",
+      "nobody": "Nadie ha comprado en este periodo.",
       "noVisits": "Las visitas no se cuentan aquí: viven en la pila de observabilidad, de la que esta página no depende."
     },
-    "agents": {
-      "title": "Agentes",
+    "agentSales": {
+      "title": "Qué compran los agentes",
       "toRegistry": "Registro",
       "loading": "Cargando…",
       "failed": "No se han podido cargar estas cifras.",
-      "salesHeading": "Lo que compraron",
       "shareOfOrders": "Parte de los pedidos",
       "ofOrders": "{{part}} de {{whole}}",
       "shareOfRevenue": "Parte de las ventas",
       "mandated": "Con mandato",
       "rehearsals": "Ensayos",
-      "ordersCount": "{{count}} pedidos",
-      "denialsHeading": "Lo que la tienda les rechazó",
+      "ordersCount": "{{count}} pedidos"
+    },
+    "refusals": {
+      "title": "Qué les ha rechazado la tienda",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
       "noDenials": "Nada rechazado en este periodo.",
       "denied": "rechazos",
       "byRule": "Rechazos por regla",

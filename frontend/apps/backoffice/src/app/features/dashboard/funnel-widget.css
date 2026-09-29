@@ -35,11 +35,3 @@
 .step__bar--checkedOut { background: var(--positive); }
 .step__bar--abandoned { background: var(--danger); }
 
-.split {
-  display: flex;
-  gap: var(--space-5);
-  margin: 0;
-}
-
-.split dt { color: var(--text-muted); font-size: var(--text-3xs); }
-.split dd { margin: 0; font-size: var(--text-lg); font-weight: 600; }

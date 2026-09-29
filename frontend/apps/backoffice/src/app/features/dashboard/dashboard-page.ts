@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { AgentsWidget } from './agents-widget';
+import { AgentSalesWidget } from './agent-sales-widget';
 import { BestSellersWidget } from './best-sellers-widget';
 import { ByChannelWidget } from './by-channel-widget';
+import { CustomersWidget } from './customers-widget';
 import { DashboardRefresh } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { FunnelWidget } from './funnel-widget';
 import { HealthWidget } from './health-widget';
 import { KeyFiguresWidget } from './key-figures-widget';
 import { OrdersByStatusWidget } from './orders-by-status-widget';
+import { RefusalsWidget } from './refusals-widget';
 import { ReturnsWidget } from './returns-widget';
 import { SalesByDayWidget } from './sales-by-day-widget';
 import { StockWidget } from './stock-widget';
@@ -31,7 +33,8 @@ import { TasksWidget } from './tasks-widget';
   selector: 'backoffice-dashboard',
   imports: [
     TranslocoDirective, KeyFiguresWidget, SalesByDayWidget, BestSellersWidget, ByChannelWidget,
-    OrdersByStatusWidget, HealthWidget, ReturnsWidget, StockWidget, FunnelWidget, AgentsWidget, TasksWidget,
+    OrdersByStatusWidget, HealthWidget, ReturnsWidget, StockWidget, FunnelWidget,
+    CustomersWidget, AgentSalesWidget, RefusalsWidget, TasksWidget,
   ],
   providers: [DashboardSources, DashboardRefresh],
   changeDetection: ChangeDetectionStrategy.OnPush,
