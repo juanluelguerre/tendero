@@ -1,216 +1,34 @@
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  Injector,
-  linkedSignal,
-  signal,
-  viewChild,
-} from '@angular/core';
-import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { NgTemplateOutlet } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
-import type { OrderStatus, OrderSummary } from '@tendero/shared-api';
-import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, without } from '@tendero/shared-util';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
-import { OrderingService, type OrderMove } from '../../data-access/ordering.service';
-import { type ActionVia, BackofficeUsage, type BackofficeAction } from '../../usage';
-import { ConfirmDialog } from '../../work/confirm-dialog';
-import { FilterChips, type FilterOption } from '../../work/filter-chips';
-import { Pager } from '../../work/pager';
-import { keptCounts, statusChips } from '../../work/status-chips';
-import { WorkPane } from '../../work/work-pane';
-import { refusalOf } from '../../work/refusal';
-
-/** Each move as the usage event names it (ADR 0041). */
-const OrderActions = { Ship: 'order_ship', Deliver: 'order_deliver', Cancel: 'order_cancel' } as const satisfies Record<OrderMove, BackofficeAction>;
-
-/** The filter's statuses in the order a working day meets them: what is to ship first. */
-const Statuses = ['Confirmed', 'Pending', 'PaymentAuthorized', 'PaymentFailed', 'Shipped', 'Delivered', 'Cancelled'] as const satisfies readonly OrderStatus[];
-
-/** The status the list opens on: the job this screen is for is shipping (R-0, B3). */
-const ToShip: OrderStatus = 'Confirmed';
+import { afterNextRender, ChangeDetectionStrategy, Component, inject, Injector } from '@angular/core';
+import { OrderList } from './order-list/order-list';
+import { OrderPane } from './order-pane/order-pane';
+import { OrdersStore } from './orders.store';
 
 /**
- * The URL's status as the API's set, or none. A status typed by hand that the
- * shop does not have lists everything rather than asking for a 400: the address
- * is the person's, the set is the contract's.
- */
-function statusIn(key: string): OrderStatus | null {
-  return (Statuses as readonly string[]).includes(key) ? (key as OrderStatus) : null;
-}
-
-/**
- * The orders, as R-3 drew them (R-4.2): a list narrowed by status and by what is
- * typed, the likely move kept on the row, and a pane beside the list with what
- * the decision needs, where cancelling lives apart and asks first (R-1, B-F3,
- * B-F4, B-F5). The filter, the text and the open order are in the URL, so a
- * dashboard figure or the palette can open the list exactly there.
+ * The orders, as R-3 drew them (R-4.2): the list and, beside it, the open
+ * order's pane — two components on one store (ADR 0047), provided here so it
+ * lives and dies with the page.
  *
  * **The screen does not know the state machine, and that is on purpose.** Which
  * moves are legal comes from `Order.AllowedTransitions` on the server; the
  * buttons are derived from the status it sent, and when one is wrong the server
  * answers 409 with a sentence that the screen shows as it came.
  */
-/** Twenty rows a page, as every list of work (R-7.2). */
-const PageSize = 20;
-
 @Component({
   selector: 'backoffice-orders',
-  imports: [TranslocoDirective, NgTemplateOutlet, WorkPane, FilterChips, Pager, ConfirmDialog],
+  imports: [OrderList, OrderPane],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-page.html',
   styleUrl: './orders-page.css',
+  providers: [OrdersStore],
 })
 export class OrdersPage {
-  private readonly ordering = inject(OrderingService);
-  private readonly usage = inject(BackofficeUsage);
-  private readonly culture = inject(CultureStore);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
+  protected readonly store = inject(OrdersStore);
   private readonly injector = inject(Injector);
 
-  private readonly cancelDialog = viewChild(ConfirmDialog);
-  private readonly filterLabels = translateObjectSignal('orders.filter');
-
-  private readonly params = toSignal(this.route.queryParamMap, { initialValue: this.route.snapshot.queryParamMap });
-
-  /** The status in the URL; none means the job's default, `all` means no filter. */
-  protected readonly statusKey = computed(() => this.params().get('status') ?? ToShip);
-  private readonly status = computed(() => statusIn(this.statusKey()));
-  protected readonly selectedId = computed(() => this.params().get('order'));
-
-  protected readonly text = signal(this.route.snapshot.queryParamMap.get('q') ?? '');
-  private readonly query = toSignal(toObservable(this.text).pipe(debounceTime(250), distinctUntilChanged()), {
-    initialValue: this.text(),
-  });
-
-  /** The page in the URL, as the filter is, so page three can be shared (R-7.2). */
-  protected readonly page = computed(() => Math.max(1, Number(this.params().get('page') ?? 1) || 1));
-  protected readonly pageSize = PageSize;
-
-  private readonly list = rxResource({
-    params: () => ({ status: this.status(), text: this.query(), page: this.page() }),
-    stream: ({ params }) => this.ordering.orders(params.status, params.text, params.page, PageSize),
-  });
-
-  /** How many the filter and the search hold, not the page: the pager says it. */
-  protected readonly total = computed(() => this.list.value()?.total ?? 0);
-
-  /** The rows, replaced one by one as moves come back, until the list is asked again. */
-  protected readonly orders = linkedSignal(() => this.list.value()?.orders ?? []);
-  protected readonly loading = computed(() => this.list.isLoading() && !this.list.hasValue());
-  protected readonly failed = computed(() => this.list.status() === 'error');
-
-  private readonly counts = keptCounts(() => this.list.value()?.counts);
-
-  /** Every status, always, then *All*: a fixed row that does not move under the pointer (`statusChips`). */
-  protected readonly filters = computed<FilterOption[]>(() =>
-    statusChips(Statuses, this.filterLabels() as Record<string, string>, this.counts()),
-  );
-
-  /** The open order's row, kept while a move takes it out of the filtered list. */
-  protected readonly selected = linkedSignal<OrderSummary | null, OrderSummary | null>({
-    source: () => this.orders().find((order) => order.orderId === this.selectedId()) ?? null,
-    computation: (row, previous) =>
-      row ?? (previous?.value?.orderId === this.selectedId() ? previous.value : null),
-  });
-
-  protected readonly detail = rxResource({
-    params: () => {
-      const id = this.selectedId();
-      return id ? { id, culture: this.culture.active() } : undefined;
-    },
-    stream: ({ params }) => this.ordering.order(params.id, params.culture),
-  });
-
-  protected readonly busy = signal<string | null>(null);
-  protected readonly refusal = signal<Record<string, string>>({});
-
-  /** The likely move for a status: what the row and the pane lead with. Cancelling is never it. */
-  protected primaryMove(status: string): OrderMove | null {
-    switch (status) {
-      case 'Confirmed':
-        return 'Ship';
-      case 'Shipped':
-        return 'Deliver';
-      default:
-        return null;
-    }
-  }
-
-  /** Whether the server's table would let this status be cancelled; it still has the last word. */
-  protected cancellable(status: string): boolean {
-    return ['Pending', 'PaymentAuthorized', 'PaymentFailed', 'Confirmed'].includes(status);
-  }
-
-  protected shortId(id: string): string {
-    return id.split('-')[0];
-  }
-
-  protected money(amount: number, currency: string): string {
-    return formatPrice(amount, currency, this.culture.active());
-  }
-
-  /** "2 days ago", in the reader's language. */
-  protected placed(iso: string): string {
-    const minutes = Math.round((Date.parse(iso) - Date.now()) / 60_000);
-    const format = new Intl.RelativeTimeFormat(this.culture.active(), { numeric: 'auto', style: 'short' });
-    if (Math.abs(minutes) < 60) return format.format(minutes, 'minute');
-    if (Math.abs(minutes) < 60 * 24) return format.format(Math.round(minutes / 60), 'hour');
-    return format.format(Math.round(minutes / (60 * 24)), 'day');
-  }
-
-  protected filterBy(status: string): void {
-    void this.router.navigate([], {
-      queryParams: { status: status === ToShip ? null : status, page: null },
-      queryParamsHandling: 'merge',
-    });
-  }
-
-  protected go(page: number): void {
-    void this.router.navigate([], { queryParams: { page: page <= 1 ? null : page }, queryParamsHandling: 'merge' });
-  }
-
-  protected open(order: OrderSummary): void {
-    void this.router.navigate([], { queryParams: { order: order.orderId }, queryParamsHandling: 'merge' });
-  }
-
+  /** Closing the pane puts the keyboard back on the row that opened it. */
   protected close(): void {
-    const id = this.selectedId();
-    void this.router.navigate([], { queryParams: { order: null }, queryParamsHandling: 'merge' });
+    const id = this.store.selectedId();
+    this.store.close();
     afterNextRender(() => document.getElementById(`open-${id}`)?.focus(), { injector: this.injector });
-  }
-
-  protected askToCancel(): void {
-    this.cancelDialog()?.open();
-  }
-
-  protected apply(order: OrderSummary, move: OrderMove, via: ActionVia, reason?: string): void {
-    this.busy.set(order.orderId);
-    this.refusal.update((current) => without(current, order.orderId));
-
-    this.ordering
-      .move(order.orderId, move, reason)
-      .pipe(this.usage.reported('orders', OrderActions[move], via))
-      .subscribe({
-        next: (updated) => {
-          this.orders.update((current) => current.map((row) => (row.orderId === updated.orderId ? updated : row)));
-          this.selected.update((row) => (row?.orderId === updated.orderId ? updated : row));
-          this.busy.set(null);
-          if (this.selectedId() === updated.orderId) this.detail.reload();
-        },
-        error: (error: unknown) => {
-          this.busy.set(null);
-          this.refusal.update((current) => ({
-            ...current,
-            [order.orderId]: refusalOf(error),
-          }));
-        },
-      });
   }
 }

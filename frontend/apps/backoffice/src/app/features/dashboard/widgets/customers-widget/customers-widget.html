@@ -1,0 +1,30 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.customers'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+  </header>
+
+  @if (store.funnel.isLoading() && !store.funnel.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (store.funnel.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else if (store.funnel.value(); as figures) {
+    <dl class="facts">
+      <div class="fact">
+        <dt>{{ t('newCustomers') }}</dt>
+        <dd class="numeric fact__value">{{ figures.newCustomers }}</dd>
+      </div>
+      <div class="fact">
+        <dt>{{ t('returningCustomers') }}</dt>
+        <dd class="numeric fact__value">{{ figures.returningCustomers }}</dd>
+      </div>
+    </dl>
+    @if (store.chart(); as data) {
+      <div class="at-m">
+        <backoffice-bar-chart [data]="data" layout="share" [format]="count" [caption]="t('buyers')" />
+      </div>
+    } @else {
+      <p class="muted widget__state">{{ t('nobody') }}</p>
+    }
+    <p class="muted widget__note">{{ t('noVisits') }}</p>
+  }
+</article>

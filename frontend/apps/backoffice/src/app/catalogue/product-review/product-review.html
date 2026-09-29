@@ -1,0 +1,72 @@
+<ng-container *transloco="let t; prefix: 'productReview'">
+  @if (store.review.value(); as product) {
+    @if (product.imageIds.length > 0) {
+      <ul class="images" role="list">
+        @for (id of product.imageIds; track id; let first = $first) {
+          <li>
+            <img class="image" [class.image--first]="first" [src]="images.of(id)" [alt]="t('image', { name: product.names['es'] || product.names['en'] || product.code })" loading="lazy" />
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="gap" role="note">{{ t('noImages') }}</p>
+    }
+
+    <dl class="facts">
+      <div><dt>{{ t('price') }}</dt><dd class="numeric">{{ price(product.priceAmount, product.priceCurrency) }}</dd></div>
+      <div><dt>{{ t('brand') }}</dt><dd>{{ product.brand ?? '—' }}</dd></div>
+      <div><dt>{{ t('category') }}</dt><dd>{{ product.category ?? '—' }}</dd></div>
+      <div><dt>{{ t('code') }}</dt><dd class="numeric">{{ product.code }}</dd></div>
+    </dl>
+
+    @for (culture of cultures; track culture) {
+      <section class="culture">
+        <h3 class="eyebrow">{{ t('culture.' + culture) }}</h3>
+        @if (product.names[culture]; as name) {
+          <p class="culture__name">{{ name }}</p>
+          @if (product.descriptions[culture]; as description) {
+            <p class="culture__description">{{ description }}</p>
+          } @else {
+            <p class="gap">{{ t('noDescription') }}</p>
+          }
+        } @else {
+          <!-- The finding the review is for: the storefront would fall back to
+               the other language here and nobody would notice. -->
+          <p class="gap gap--strong">{{ t('missing') }}</p>
+        }
+      </section>
+    }
+
+    @if (product.attributes.length > 0) {
+      <section class="culture">
+        <h3 class="eyebrow">{{ t('attributes') }}</h3>
+        <dl class="attributes">
+          @for (attribute of product.attributes; track attribute.code) {
+            <div>
+              <dt>{{ attribute.label }}</dt>
+              <dd>
+                @switch (attribute.kind) {
+                  @case ('Number') {
+                    <span class="numeric">{{ attribute.number }} {{ attribute.unit ?? '' }}</span>
+                  }
+                  @case ('Boolean') {
+                    {{ attribute.flag ? t('yes') : t('no') }}
+                  }
+                  @default {
+                    {{ attribute.value ?? '—' }}
+                  }
+                }
+              </dd>
+            </div>
+          }
+        </dl>
+      </section>
+    }
+  } @else if (store.review.isLoading()) {
+    <div class="skeleton" aria-hidden="true"></div>
+    <div class="skeleton" aria-hidden="true"></div>
+    <p class="sr-only" role="status">{{ t('loading') }}</p>
+  } @else if (store.review.status() === 'error') {
+    <p class="failed" role="alert">{{ t('failed') }}</p>
+  }
+</ng-container>

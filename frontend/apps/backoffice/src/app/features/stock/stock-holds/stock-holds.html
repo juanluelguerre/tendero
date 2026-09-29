@@ -1,0 +1,34 @@
+<ng-container *transloco="let t">
+<aside class="holds">
+  <h2 class="holds__title">{{ t('stock.reservations') }}</h2>
+
+  @if (store.reservations().length === 0) {
+    <p class="muted">{{ t('stock.noReservations') }}</p>
+  } @else {
+    <ul class="holds__list">
+      @for (hold of store.reservations(); track hold.reservationId) {
+        <li class="hold">
+          <div class="hold__head">
+            <span class="hold__status" [class]="'hold__status--' + hold.status">
+              {{ t('stock.status.' + hold.status) }}
+            </span>
+            <span class="hold__order">{{ shortId(hold) }}</span>
+          </div>
+
+          @if (hold.lines.length > 0) {
+            <ul class="hold__lines">
+              @for (line of hold.lines; track line) {
+                <li class="hold__line">{{ line }}</li>
+              }
+            </ul>
+          }
+
+          @if (hold.reason) {
+            <p class="hold__reason">{{ hold.reason }}</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+</aside>
+</ng-container>

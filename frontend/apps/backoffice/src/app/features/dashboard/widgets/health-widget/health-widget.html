@@ -1,0 +1,29 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.health'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+  </header>
+
+  @if (store.operations.isLoading() && !store.operations.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (store.operations.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else if (store.operations.value(); as ops) {
+    <dl class="facts">
+      <div class="fact">
+        <dt><a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{ t('cancellationRate') }}</a></dt>
+        <dd class="numeric fact__value">{{ share(ops.cancellationRate) }}</dd>
+        <!-- Against the target the server holds (R-3, P10): the standing is
+             decided there, and said here in a word as well as a colour. -->
+        <dd
+          class="tag"
+          [class.tag--ok]="ops.cancellationStanding === 'within'"
+          [class.tag--warn]="ops.cancellationStanding === 'near'"
+          [class.tag--danger]="ops.cancellationStanding === 'outside'"
+        >
+          {{ t('standing.' + ops.cancellationStanding, { target: share(ops.cancellationTarget) }) }}
+        </dd>
+        <dd class="muted fact__note">{{ t('cancelled', { count: ops.cancelled }) }}</dd>
+      </div>
+    </dl>
+  }
+</article>

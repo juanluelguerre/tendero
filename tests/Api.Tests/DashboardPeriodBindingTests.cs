@@ -86,4 +86,56 @@ public sealed class DashboardPeriodBindingTests
 
         return (response.StatusCode, dispatcher.Asked);
     }
+
+    // ---------- The sales series (R-9) ----------
+
+    private sealed class RecordingSeriesDispatcher : IQueryDispatcher
+    {
+        public GetSalesSeriesQuery? Asked { get; private set; }
+
+        public Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
+        {
+            Asked = query as GetSalesSeriesQuery;
+            var zone = NodaTime.DateTimeZoneProviders.Tzdb["Europe/Madrid"];
+            var plan = SeriesPlans.For(Asked!.Period, DateTimeOffset.UtcNow, zone);
+            return Task.FromResult((TResult)(object)SalesSeriesFigures.Of(Asked.Period, zone.Id, plan, []));
+        }
+    }
+
+    [Theory]
+    [InlineData(null, DashboardPeriod.Week)]
+    [InlineData("day", DashboardPeriod.Day)]
+    public async Task The_series_reads_its_period_by_name(string? period, DashboardPeriod expected)
+    {
+        var dispatcher = new RecordingSeriesDispatcher();
+        using var root = new TenderoApiFactory();
+        using var factory = root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<IQueryDispatcher>(dispatcher);
+            services.AddSingleton<IPolicyEvaluator, LetEveryoneThrough>();
+        }));
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(
+            period is null ? "/api/dashboard/sales/series" : $"/api/dashboard/sales/series?period={period}",
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(expected, dispatcher.Asked?.Period);
+    }
+
+    /// <summary>A shop time zone nobody has stops the API at startup with a sentence, not the first dashboard request with a 500 (ADR 0046).</summary>
+    [Fact]
+    public void A_shop_time_zone_nobody_has_stops_the_api_at_startup()
+    {
+        using var root = new TenderoApiFactory();
+        // Set after configuration is bound — appsettings.json names the shop's zone and
+        // outranks a test's configuration source — which is the value startup validates.
+        using var factory = root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.PostConfigure<ShopOptions>(shop => shop.TimeZone = "Mars/Olympus")));
+
+        var failure = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
+
+        Assert.Contains("IANA time zone", failure.ToString(), StringComparison.Ordinal);
+    }
 }

@@ -1,0 +1,8 @@
+<ng-container *transloco="let t">
+  <span class="tag" [class.tag--ok]="product().status === 'Active'" [class.tag--warn]="product().status === 'Draft'" [class.tag--code]="product().status === 'Archived'">
+    {{ t('catalogue.status.' + product().status) }}
+  </span>
+  @if (product().missingCultures.length > 0) {
+    <span class="tag tag--warn">{{ t('reviewQueue.missing', { cultures: product().missingCultures.join(', ') }) }}</span>
+  }
+</ng-container>

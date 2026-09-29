@@ -126,7 +126,7 @@ A list of work is a list with a pane beside it (ADR 0042): the likely action on
 the row, the item opened in a pane from 1024 px and in a sheet below, filter
 chips with their counts, and the filter, search and open item in the URL. What
 can be undone offers Undo; what cannot asks first, apart from the likely action.
-On a phone the list is cards. The parts are in `backoffice/src/app/work/`, and
+On a phone the list is cards. The parts are in `backoffice/src/app/worklist/`, and
 a new list uses them. Status
 is colour-coded and always paired with a word, never colour alone:
 

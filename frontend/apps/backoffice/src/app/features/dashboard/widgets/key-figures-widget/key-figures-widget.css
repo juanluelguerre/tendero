@@ -1,0 +1,37 @@
+:host { display: block; }
+
+/* Six figures across at L, two by two on a phone (spec, the phone): the grid
+   decides from the widget's width, so no figure is ever cut. */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.kpi { margin: 0; }
+
+.kpi__label {
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+}
+
+.kpi__value {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.kpi__change {
+  margin: 0;
+  font-size: var(--text-3xs);
+  color: var(--text-muted);
+}
+
+.kpi__change--up,
+.kpi__change--down { font-weight: 600; }
+
+.kpi__change--up { color: var(--positive); }
+.kpi__change--down { color: var(--danger); }
+
+.kpi__trend { margin: var(--space-2) 0 0; }

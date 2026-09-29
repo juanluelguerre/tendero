@@ -1,0 +1,27 @@
+import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { CultureStore } from '@tendero/shared-i18n';
+import { formatDate } from '@tendero/shared-util';
+import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
+import { AgentStatus } from '../agent-status/agent-status';
+import { AgentsStore } from '../agents.store';
+
+/** The open agent beside the registry: who it is, who vouched for it, and Suspend or Reinstate. */
+@Component({
+  selector: 'backoffice-agent-pane',
+  imports: [TranslocoDirective, WorklistPane, AgentStatus],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './agent-pane.html',
+  styleUrl: './agent-pane.css',
+})
+export class AgentPane {
+  protected readonly store = inject(AgentsStore);
+  private readonly culture = inject(CultureStore);
+
+  /** The person closed the pane. */
+  readonly closed = output<void>();
+
+  protected when(at: string): string {
+    return formatDate(at, this.culture.active());
+  }
+}

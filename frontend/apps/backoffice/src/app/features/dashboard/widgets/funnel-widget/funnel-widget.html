@@ -1,0 +1,29 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.funnel'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+  </header>
+
+  @if (store.funnel.isLoading() && !store.funnel.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (store.funnel.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else if (store.funnel.value(); as figures) {
+    <p class="conversion">
+      <span class="numeric conversion__value">{{ share(figures.conversion) }}</span>
+      <span class="muted">{{ t('conversion') }}</span>
+    </p>
+
+    <ul class="steps">
+      @for (step of store.steps(); track step.key) {
+        <li class="step">
+          <span class="step__label">{{ t(step.key) }}</span>
+          <span class="step__track" aria-hidden="true">
+            <span class="step__bar" [class]="'step__bar step__bar--' + step.key" [style.inline-size.%]="step.share * 100"></span>
+          </span>
+          <span class="numeric">{{ step.count }}</span>
+        </li>
+      }
+    </ul>
+
+  }
+</article>

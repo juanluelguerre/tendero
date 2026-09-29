@@ -1,0 +1,76 @@
+@if (store.selected(); as order) {
+  <ng-container *transloco="let t">
+    <!-- The pane: beside the list from 1024 px, a sheet over it below. It holds
+         the view's one clay action, and cancelling lives apart at its foot. -->
+    <backoffice-worklist-pane [heading]="t('orders.paneTitle', { id: shortId(order.orderId) })" (closed)="closed.emit()">
+      <div class="pane-status">
+        <backoffice-order-status-label [order]="order" />
+        <backoffice-order-payment [order]="order" />
+      </div>
+
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('orders.deliverTo') }}</h3>
+        <p class="strong">{{ order.recipientName }}</p>
+        @if (pane.detail.value(); as found) {
+          <p class="muted">{{ found.order.shippingAddress }}</p>
+          <p class="muted">{{ found.order.shippingLabel }}</p>
+        }
+      </section>
+
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('orders.lines') }}</h3>
+        @if (pane.detail.value(); as found) {
+          <ul class="lines" role="list">
+            @for (line of found.order.lines; track line.sku) {
+              <li class="line">
+                <span class="numeric muted">{{ line.quantity }} ×</span>
+                <span>
+                  {{ line.productName }}
+                  @if (line.variantLabel) {
+                    <span class="muted">· {{ line.variantLabel }}</span>
+                  }
+                </span>
+                <span class="numeric">{{ money(line.unitPrice * line.quantity, found.order.currency) }}</span>
+              </li>
+            }
+          </ul>
+          <p class="pane-total">
+            <span class="muted">{{ t('orders.paneTotal') }}</span>
+            <span class="numeric total">{{ money(found.order.total, found.order.currency) }}</span>
+          </p>
+        } @else if (pane.detail.isLoading()) {
+          <div class="skeleton" aria-hidden="true"></div>
+          <p class="sr-only" role="status">{{ t('orders.loading') }}</p>
+        } @else if (pane.detail.status() === 'error') {
+          <p class="failed" role="alert">{{ t('orders.paneFailed') }}</p>
+        }
+      </section>
+
+      @if (store.refusal()[order.orderId] !== undefined) {
+        <p class="failed" role="alert">{{ store.refusal()[order.orderId] || t('orders.refused') }}</p>
+      }
+
+      @if (primaryMove(order.status); as move) {
+        <button type="button" class="button pane-primary" [disabled]="store.busy() === order.orderId" (click)="store.apply(order, move, 'pane')">
+          {{ store.busy() === order.orderId ? t('orders.moving') : t('orders.moveLong.' + move) }}
+        </button>
+      }
+
+      @if (cancellable(order.status)) {
+        <div class="danger-zone">
+          <button type="button" class="linkish linkish--danger" (click)="askToCancel()">{{ t('orders.cancel.open') }}</button>
+          <p class="muted">{{ t('orders.cancel.consequence') }}</p>
+        </div>
+      }
+
+      <backoffice-confirm-dialog
+        [heading]="t('orders.cancel.title', { id: shortId(order.orderId) })"
+        [body]="t('orders.cancel.body')"
+        [reasonLabel]="t('orders.cancel.reason')"
+        [keepLabel]="t('orders.cancel.keep')"
+        [confirmLabel]="t('orders.cancel.confirm')"
+        (confirmed)="store.apply(order, 'Cancel', 'pane', $event)"
+      />
+    </backoffice-worklist-pane>
+  </ng-container>
+}

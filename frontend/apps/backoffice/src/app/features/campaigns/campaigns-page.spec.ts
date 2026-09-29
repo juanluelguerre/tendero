@@ -73,7 +73,7 @@ describe('the campaigns page', () => {
 
   it('creates a new campaign with the code its name gives it', async () => {
     const page = await open('/campaigns?campaign=new', []);
-    const pane = page.querySelector('backoffice-work-pane') as HTMLElement;
+    const pane = page.querySelector('backoffice-worklist-pane') as HTMLElement;
     expect(pane).not.toBeNull();
 
     const pairs = pane.querySelectorAll<HTMLFieldSetElement>('fieldset.pair');
@@ -104,7 +104,7 @@ describe('the campaigns page', () => {
 
   it('opens a scheduled campaign to read, with the way back to a draft and no Save', async () => {
     const page = await open('/campaigns?campaign=TENDERO_DAYS', [campaign('TENDERO_DAYS', 'Scheduled', 'Running')]);
-    const pane = page.querySelector('backoffice-work-pane') as HTMLElement;
+    const pane = page.querySelector('backoffice-worklist-pane') as HTMLElement;
 
     expect((pane.querySelector('fieldset.fields') as HTMLFieldSetElement).disabled).toBe(true);
     expect(pane.querySelector('form.editor button[type=submit]')).toBeNull();
@@ -113,7 +113,7 @@ describe('the campaigns page', () => {
 
   it('shows the server’s refusal in the pane', async () => {
     const page = await open('/campaigns?status=drafts&campaign=HOGAR', [campaign('HOGAR', 'Draft', 'Upcoming')]);
-    const pane = page.querySelector('backoffice-work-pane') as HTMLElement;
+    const pane = page.querySelector('backoffice-worklist-pane') as HTMLElement;
 
     [...pane.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'campaigns.schedule')?.click();
     http

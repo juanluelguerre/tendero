@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { PromotionView } from '@tendero/shared-api';
-import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
-import { PricingService } from '../../data-access/pricing.service';
+import { PromotionsStore } from './promotions.store';
 
 /**
  * The promotions, with the combination column that is the point of the screen.
@@ -24,18 +23,11 @@ import { PricingService } from '../../data-access/pricing.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './promotions-page.html',
   styleUrl: './promotions-page.css',
+  providers: [PromotionsStore],
 })
 export class PromotionsPage {
-  private readonly pricing = inject(PricingService);
+  protected readonly store = inject(PromotionsStore);
   private readonly culture = inject(CultureStore);
-
-  protected readonly items = signal<PromotionView[]>([]);
-  protected readonly loading = signal(true);
-  protected readonly failed = signal(false);
-
-  protected running(): number {
-    return this.items().filter((promotion) => promotion.isActive).length;
-  }
 
   /**
    * The name in the active culture, with the same fallback chain the server's
@@ -48,20 +40,5 @@ export class PromotionsPage {
    */
   protected name(promotion: PromotionView): string {
     return promotion.name[this.culture.active()] ?? promotion.name['en'] ?? promotion.code;
-  }
-
-  constructor() {
-    this.pricing.promotions().subscribe({
-      next: (result) => {
-        this.items.set(result.items);
-        this.loading.set(false);
-      },
-      error: (failure: unknown) => {
-        if (isSessionExpired(failure)) return;
-
-        this.failed.set(true);
-        this.loading.set(false);
-      },
-    });
   }
 }

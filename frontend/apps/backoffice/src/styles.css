@@ -361,6 +361,54 @@ p {
   border: 0;
 }
 
+/* ---------- The size contract (R-9) ----------
+   A widget shows its figure at S, its chart from M, its chart and table at L —
+   decided by its own width, measured on the grid cell it sits in (container
+   `widget`), never by the screen's. In rem, so a wall's larger type (R-9's full
+   screen) moves the thresholds with it. */
+@container widget (width < 20rem) {
+  .at-m, .at-l { display: none; }
+}
+
+@container widget (width < 56rem) {
+  .at-l { display: none; }
+}
+
+@container widget (width >= 20rem) {
+  .only-s { display: none; }
+}
+
+/* A widget fills its grid cell, so the panels of one row end together. Here
+   and not in the grid's stylesheet: the grid creates its widgets from code,
+   and Angular scopes a component's styles to the elements of its template. */
+.cell > * {
+  display: block;
+  block-size: 100%;
+}
+
+/* On a wall the charts grow with the screen (spec: "each widget spreads its
+   content across the height it is given"): a share of the viewport rather than
+   the fixed height a scrolling page wants. A ranking in rows keeps the height
+   its rows need. */
+.grid--fill {
+  --chart-block-size: max(12.5rem, 26dvh);
+}
+
+/* A wall is glanced at from across a room, not read: at L the table of figures
+   goes back behind its button there (still read by a screen reader), so the
+   chart has the row. Specific enough to win over the chart's own rule. */
+.grid--fill .cell .figures.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.grid--fill .cell .figures-toggle { display: inline-flex; }
+
 /* ---------- Dashboard widgets (P11-7) ----------
    Shared by every widget, and here rather than in each component because a
    widget's frame is the dashboard's, not the widget's own: the same head, the same
@@ -407,6 +455,22 @@ p {
 
 .fact__link:hover { color: var(--text); text-decoration: underline; }
 
+/* A widget's figures as label and number (P11-7), shared since R-9 split the
+   operations and agents panels into widgets that all say figures this way. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.fact { margin: 0; }
+.fact dt { color: var(--text-muted); font-size: var(--text-3xs); }
+.fact dd { margin: 0; }
+.fact__value { font-size: var(--text-lg); font-weight: 600; }
+.fact__value--warn { color: var(--warning); }
+.fact__note { font-size: var(--text-3xs); }
+
 .widget__sub { margin: var(--space-2) 0 0; }
 .widget__sub a { display: inline-flex; align-items: center; min-height: 1.5rem; color: inherit; }
 .widget__state { margin: 0; }
@@ -443,18 +507,18 @@ p {
    a list narrowed by filters and a search, the likely action kept on the row,
    and a pane with what the decision needs (R-3, P3 and P6). The pane is its own
    component; these are the parts each list lays out around it. */
-.work-layout { display: grid; gap: var(--space-5); }
+.worklist-layout { display: grid; gap: var(--space-5); }
 
 @media (min-width: 64rem) {
-  .work-layout--with-pane {
+  .worklist-layout--with-pane {
     grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
     align-items: start;
   }
 }
 
-.work-list { min-width: 0; }
+.worklist-list { min-width: 0; }
 
-.work-tools {
+.worklist-tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -504,9 +568,9 @@ p {
   .narrow-only { display: grid; }
 }
 
-.work-cards { gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+.worklist-cards { gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 
-.work-card {
+.worklist-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
@@ -517,9 +581,9 @@ p {
   background: var(--bg-surface);
 }
 
-.work-card--selected { border-color: var(--accent); }
+.worklist-card--selected { border-color: var(--accent); }
 
-.work-card__open {
+.worklist-card__open {
   display: grid;
   gap: var(--space-1);
   padding: 0;
@@ -531,10 +595,10 @@ p {
   cursor: pointer;
 }
 
-.work-card__line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-.work-card__end { margin-inline-start: auto; }
-.work-card__action { min-height: 2.75rem; }
-.work-card__refusal { grid-column: 1 / -1; color: var(--danger); font-size: var(--text-xs); }
+.worklist-card__line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.worklist-card__end { margin-inline-start: auto; }
+.worklist-card__action { min-height: 2.75rem; }
+.worklist-card__refusal { grid-column: 1 / -1; color: var(--danger); font-size: var(--text-xs); }
 
 /* Inside a pane: a titled section, the one clay action, and what is apart. */
 .pane-section { display: grid; gap: var(--space-1); }
@@ -597,4 +661,11 @@ p {
     repeating-linear-gradient(to bottom, transparent 0 0.75rem, var(--bg-raised) 0.75rem 2.25rem, transparent 2.25rem 3rem)
     var(--space-4) 0 / calc(100% - 2 * var(--space-4)) 100% no-repeat,
     var(--bg-surface);
+}
+
+/* A wall is read from further away (R-9, full screen): the type — and every
+   rem, including the size contract's thresholds — grows with the monitor, from
+   the ordinary 16px at 1440 to 24px at most. */
+html:has(.dashboard:fullscreen) {
+  font-size: clamp(100%, 0.25rem + 0.85vw, 150%);
 }

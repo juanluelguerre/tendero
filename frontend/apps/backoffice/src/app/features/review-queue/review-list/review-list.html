@@ -1,0 +1,99 @@
+<ng-container *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('reviewQueue.title') }}</h1>
+  </header>
+  <p class="page-hint">{{ t('reviewQueue.hint') }}</p>
+
+  @if (store.loading()) {
+    <div class="skeleton-list" aria-hidden="true"></div>
+  <p class="sr-only" role="status" aria-live="polite">{{ t('reviewQueue.loading') }}</p>
+  } @else if (store.failed()) {
+    <p class="failed" role="alert">{{ t('reviewQueue.failed') }}</p>
+  } @else if (store.drafts().length === 0) {
+    <div class="empty">
+      <!-- Nothing waiting is not an empty shop: everything may simply be
+           published. No clay here: importing is the products screen's, and
+           it was a developer's action wearing this screen's accent (B-F7). -->
+      <p class="empty__text">{{ t('reviewQueue.empty') }}</p>
+      <a class="quiet-link" routerLink="/catalogue">{{ t('reviewQueue.seeCatalogue') }}</a>
+    </div>
+  } @else {
+    <div class="table-wrap wide-only">
+      <table class="table">
+        <caption class="sr-only">{{ t('reviewQueue.title') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('reviewQueue.column.product') }}</th>
+            <th scope="col">{{ t('reviewQueue.column.brand') }}</th>
+            <th scope="col" class="right">{{ t('reviewQueue.column.price') }}</th>
+            <th scope="col">{{ t('reviewQueue.column.languages') }}</th>
+            <th scope="col"><span class="sr-only">{{ t('reviewQueue.column.action') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of store.drafts(); track item.productId) {
+            <tr class="row" [class.row--selected]="item.code === store.selectedCode()" (click)="store.open(item)">
+              <td>
+                <button
+                  type="button"
+                  class="row__open"
+                  [attr.aria-expanded]="item.code === store.selectedCode()"
+                  (click)="$event.stopPropagation(); store.open(item)"
+                >
+                  {{ item.name }}
+                </button>
+                <span class="slug numeric">{{ item.code }}</span>
+              </td>
+              <td>{{ item.brand ?? '—' }}</td>
+              <td class="right numeric">{{ price(item) }}</td>
+              <td>
+                <ng-container *ngTemplateOutlet="languagesOf; context: { $implicit: item }" />
+              </td>
+              <td class="right">
+                <!-- Quiet: one per row would be many clay buttons in one view
+                     (design/DESIGN.md). The pane's is the view's clay one. -->
+                <button
+                  type="button"
+                  class="button button--small button--quiet"
+                  [disabled]="store.publishing().has(item.productId)"
+                  (click)="$event.stopPropagation(); store.publish(item, 'row')"
+                >
+                  {{ store.publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="worklist-cards narrow-only" role="list">
+      @for (item of store.drafts(); track item.productId) {
+        <li class="worklist-card" [class.worklist-card--selected]="item.code === store.selectedCode()">
+          <button type="button" class="worklist-card__open" (click)="store.open(item)">
+            <span class="worklist-card__line">
+              <span class="name">{{ item.name }}</span>
+              <span class="numeric worklist-card__end">{{ price(item) }}</span>
+            </span>
+            <span class="worklist-card__line">
+              <ng-container *ngTemplateOutlet="languagesOf; context: { $implicit: item }" />
+              <span class="slug numeric">{{ item.brand ?? '' }}</span>
+            </span>
+          </button>
+          <button type="button" class="button button--quiet worklist-card__action" [disabled]="store.publishing().has(item.productId)" (click)="store.publish(item, 'row')">
+            {{ store.publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+
+<ng-template #languagesOf let-item>
+  @if (item.missingCultures.length === 0) {
+    <!-- Colour never alone: always with a word (design/DESIGN.md). -->
+    <span class="tag tag--ok">{{ t('reviewQueue.complete') }}</span>
+  } @else {
+    <span class="tag tag--warn">{{ t('reviewQueue.missing', { cultures: item.missingCultures.join(', ') }) }}</span>
+  }
+</ng-template>
+</ng-container>

@@ -114,6 +114,12 @@
     "findLabel": "Find a product",
     "find": "Name in any language, or code"
   },
+  "charts": {
+    "figures": {
+      "hide": "Hide the figures",
+      "show": "Show the figures"
+    }
+  },
   "nav": {
     "agents": "Registry",
     "attributes": "Attributes",
@@ -574,26 +580,79 @@
       "Week": "Last 7 days",
       "Month": "Last 30 days"
     },
-    "sales": {
-      "title": "Sales",
+    "tabs": {
+      "label": "Dashboards",
+      "overview": "Overview",
+      "sales": "Sales",
+      "operations": "Operations",
+      "growth": "Growth",
+      "agents": "Agents"
+    },
+    "tabTitles": {
+      "overview": "Dashboard",
+      "sales": "Sales · Dashboard",
+      "operations": "Operations · Dashboard",
+      "growth": "Growth · Dashboard",
+      "agents": "Agents · Dashboard"
+    },
+    "fullScreen": {
+      "enter": "Full screen",
+      "leave": "Leave full screen",
+      "updated": "Updated at {{time}}",
+      "everyMinute": "refreshes every minute"
+    },
+    "keyFigures": {
+      "title": "Key figures",
       "vsPrevious": "Against the previous period",
-      "loading": "Loading sales…",
-      "failed": "Sales could not be loaded.",
+      "loading": "Loading the key figures…",
+      "failed": "The key figures could not be loaded.",
       "revenue": "Revenue",
       "orders": "Orders",
       "units": "Units",
       "averageOrder": "Average order",
+      "conversion": "Conversion",
+      "returnRate": "Return rate",
       "direction": {
         "up": "up",
         "down": "down",
         "flat": "no change"
-      },
-      "bestSellers": "Best sellers",
+      }
+    },
+    "bestSellers": {
+      "title": "Best sellers",
+      "loading": "Loading the best sellers…",
+      "failed": "The best sellers could not be loaded.",
       "nothingSold": "Nothing sold in this period.",
       "unitCount": "{{count}} u."
     },
-    "operations": {
-      "title": "Orders and health",
+    "byChannel": {
+      "title": "By channel",
+      "loading": "Loading the channels…",
+      "failed": "The channels could not be loaded.",
+      "nothingSold": "Nothing sold in this period.",
+      "orders": "Orders",
+      "people": "People",
+      "agents": "Agents",
+      "byAgents": "of orders by agents",
+      "revenueShare": "{{share}} of sales came through agents"
+    },
+    "salesByDay": {
+      "current": {
+        "Day": "Last 24 hours",
+        "Month": "Last 30 days",
+        "Week": "Last 7 days"
+      },
+      "failed": "The sales by day could not be read.",
+      "loading": "Reading the sales by day…",
+      "previous": {
+        "Day": "The 24 hours before",
+        "Month": "The 30 days before",
+        "Week": "The 7 days before"
+      },
+      "title": "Sales by day"
+    },
+    "ordersByStatus": {
+      "title": "Orders by status",
       "toOrders": "Orders",
       "loading": "Loading…",
       "failed": "These figures could not be loaded.",
@@ -601,18 +660,40 @@
       "late": "{{count}} late",
       "inProgress": "Being confirmed",
       "paymentFailed": "Payment failed",
+      "cancelledCount": "Cancelled"
+    },
+    "health": {
+      "title": "Health",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
       "cancellationRate": "Cancellation rate",
       "cancelled": "{{count}} cancelled",
-      "returns": "Returns",
-      "openReturns": "Open",
-      "returnRate": "Return rate",
-      "refunded": "Refunded",
-      "byReason": "Open returns by reason",
       "standing": {
         "within": "Within the {{target}} target",
         "near": "Near the {{target}} target",
         "outside": "Over the {{target}} target"
       }
+    },
+    "returns": {
+      "title": "Returns",
+      "toReturns": "Returns",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
+      "openReturns": "Open",
+      "returnRate": "Return rate",
+      "refunded": "Refunded",
+      "byReason": "Open returns by reason",
+      "nothingOpen": "No returns open."
+    },
+    "stock": {
+      "title": "Stock",
+      "toStock": "Stock",
+      "loading": "Loading the stock…",
+      "failed": "The stock could not be loaded.",
+      "restock": "To restock",
+      "soldOut": "Sold out",
+      "lowest": "Lowest first",
+      "available": "{{count}} left"
     },
     "funnel": {
       "title": "Checkout",
@@ -622,25 +703,34 @@
       "started": "Carts started",
       "checkedOut": "Checked out",
       "abandoned": "Abandoned",
-      "stillOpen": "Still open",
+      "stillOpen": "Still open"
+    },
+    "customers": {
+      "title": "Customers",
+      "loading": "Loading…",
+      "failed": "The funnel could not be loaded.",
       "buyers": "Buyers",
       "newCustomers": "New",
       "returningCustomers": "Returning",
+      "nobody": "Nobody bought in this period.",
       "noVisits": "Visits are not counted here: they live in the observability stack, which this page does not depend on."
     },
-    "agents": {
-      "title": "Agents",
+    "agentSales": {
+      "title": "What agents buy",
       "toRegistry": "Registry",
       "loading": "Loading…",
       "failed": "These figures could not be loaded.",
-      "salesHeading": "What they bought",
       "shareOfOrders": "Share of orders",
       "ofOrders": "{{part}} of {{whole}}",
       "shareOfRevenue": "Share of sales",
       "mandated": "With a mandate",
       "rehearsals": "Rehearsals",
-      "ordersCount": "{{count}} orders",
-      "denialsHeading": "What the shop refused them",
+      "ordersCount": "{{count}} orders"
+    },
+    "refusals": {
+      "title": "What the shop refused them",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
       "noDenials": "Nothing refused in this period.",
       "denied": "refused",
       "byRule": "Refusals by rule",

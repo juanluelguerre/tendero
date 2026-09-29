@@ -1,0 +1,33 @@
+/* The pane is laid out by the page's list-and-pane grid, as if it were its child. */
+:host { display: contents; }
+
+.statement { margin: 0; font-weight: 500; }
+
+.attribute {
+  display: inline-block;
+  margin-block-start: var(--space-1);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-3xs);
+}
+
+.provenance { margin: var(--space-1) 0 0; color: var(--text-muted); font-size: var(--text-3xs); }
+
+.quotes { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: var(--text-xs); }
+.quotes li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); }
+
+.quote__culture {
+  display: inline-block;
+  min-inline-size: 2ch;
+  color: var(--text-muted);
+  font-size: var(--text-3xs);
+  text-transform: uppercase;
+}
+
+.pane-support {
+  display: flex;
+  justify-content: space-between;
+  padding-block-start: var(--space-2);
+  border-block-start: 1px solid var(--border);
+}

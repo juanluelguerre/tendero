@@ -114,6 +114,12 @@
     "findLabel": "Buscar un producto",
     "find": "Nombre en cualquier idioma, o código"
   },
+  "charts": {
+    "figures": {
+      "hide": "Ocultar las cifras",
+      "show": "Ver las cifras"
+    }
+  },
   "nav": {
     "agents": "Registro",
     "attributes": "Atributos",
@@ -574,26 +580,79 @@
       "Week": "Últimos 7 días",
       "Month": "Últimos 30 días"
     },
-    "sales": {
-      "title": "Ventas",
+    "tabs": {
+      "label": "Paneles",
+      "overview": "Resumen",
+      "sales": "Ventas",
+      "operations": "Operaciones",
+      "growth": "Crecimiento",
+      "agents": "Agentes"
+    },
+    "tabTitles": {
+      "overview": "Panel",
+      "sales": "Ventas · Panel",
+      "operations": "Operaciones · Panel",
+      "growth": "Crecimiento · Panel",
+      "agents": "Agentes · Panel"
+    },
+    "fullScreen": {
+      "enter": "Pantalla completa",
+      "leave": "Salir de pantalla completa",
+      "updated": "Actualizado a las {{time}}",
+      "everyMinute": "se actualiza cada minuto"
+    },
+    "keyFigures": {
+      "title": "Cifras clave",
       "vsPrevious": "Frente al periodo anterior",
-      "loading": "Cargando ventas…",
-      "failed": "No se han podido cargar las ventas.",
+      "loading": "Cargando las cifras clave…",
+      "failed": "No se han podido cargar las cifras clave.",
       "revenue": "Facturación",
       "orders": "Pedidos",
       "units": "Unidades",
       "averageOrder": "Pedido medio",
+      "conversion": "Conversión",
+      "returnRate": "Tasa de devolución",
       "direction": {
         "up": "sube",
         "down": "baja",
         "flat": "sin cambios"
-      },
-      "bestSellers": "Más vendidos",
+      }
+    },
+    "bestSellers": {
+      "title": "Más vendidos",
+      "loading": "Cargando los más vendidos…",
+      "failed": "No se han podido cargar los más vendidos.",
       "nothingSold": "No se ha vendido nada en este periodo.",
       "unitCount": "{{count}} ud."
     },
-    "operations": {
-      "title": "Pedidos y salud",
+    "byChannel": {
+      "title": "Por canal",
+      "loading": "Cargando los canales…",
+      "failed": "No se han podido cargar los canales.",
+      "nothingSold": "No se ha vendido nada en este periodo.",
+      "orders": "Pedidos",
+      "people": "Personas",
+      "agents": "Agentes",
+      "byAgents": "de los pedidos, por agentes",
+      "revenueShare": "{{share}} de las ventas llegó por agentes"
+    },
+    "salesByDay": {
+      "current": {
+        "Day": "Últimas 24 horas",
+        "Month": "Últimos 30 días",
+        "Week": "Últimos 7 días"
+      },
+      "failed": "No se han podido leer las ventas por día.",
+      "loading": "Leyendo las ventas por día…",
+      "previous": {
+        "Day": "Las 24 horas anteriores",
+        "Month": "Los 30 días anteriores",
+        "Week": "Los 7 días anteriores"
+      },
+      "title": "Ventas por día"
+    },
+    "ordersByStatus": {
+      "title": "Pedidos por estado",
       "toOrders": "Pedidos",
       "loading": "Cargando…",
       "failed": "No se han podido cargar estas cifras.",
@@ -601,18 +660,40 @@
       "late": "{{count}} con retraso",
       "inProgress": "Confirmándose",
       "paymentFailed": "Pago fallido",
+      "cancelledCount": "Cancelados"
+    },
+    "health": {
+      "title": "Salud",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
       "cancellationRate": "Tasa de cancelación",
       "cancelled": "{{count}} cancelados",
-      "returns": "Devoluciones",
-      "openReturns": "Abiertas",
-      "returnRate": "Tasa de devolución",
-      "refunded": "Reembolsado",
-      "byReason": "Devoluciones abiertas por motivo",
       "standing": {
         "within": "Dentro del objetivo del {{target}}",
         "near": "Cerca del objetivo del {{target}}",
         "outside": "Por encima del objetivo del {{target}}"
       }
+    },
+    "returns": {
+      "title": "Devoluciones",
+      "toReturns": "Devoluciones",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
+      "openReturns": "Abiertas",
+      "returnRate": "Tasa de devolución",
+      "refunded": "Reembolsado",
+      "byReason": "Devoluciones abiertas por motivo",
+      "nothingOpen": "No hay devoluciones abiertas."
+    },
+    "stock": {
+      "title": "Stock",
+      "toStock": "Stock",
+      "loading": "Cargando el stock…",
+      "failed": "No se ha podido cargar el stock.",
+      "restock": "Por reponer",
+      "soldOut": "Agotado",
+      "lowest": "Los más bajos primero",
+      "available": "quedan {{count}}"
     },
     "funnel": {
       "title": "Checkout",
@@ -622,25 +703,34 @@
       "started": "Carritos iniciados",
       "checkedOut": "Comprados",
       "abandoned": "Abandonados",
-      "stillOpen": "Aún abiertos",
+      "stillOpen": "Aún abiertos"
+    },
+    "customers": {
+      "title": "Clientes",
+      "loading": "Cargando…",
+      "failed": "No se ha podido cargar el embudo.",
       "buyers": "Compradores",
       "newCustomers": "Nuevos",
       "returningCustomers": "Recurrentes",
+      "nobody": "Nadie ha comprado en este periodo.",
       "noVisits": "Las visitas no se cuentan aquí: viven en la pila de observabilidad, de la que esta página no depende."
     },
-    "agents": {
-      "title": "Agentes",
+    "agentSales": {
+      "title": "Qué compran los agentes",
       "toRegistry": "Registro",
       "loading": "Cargando…",
       "failed": "No se han podido cargar estas cifras.",
-      "salesHeading": "Lo que compraron",
       "shareOfOrders": "Parte de los pedidos",
       "ofOrders": "{{part}} de {{whole}}",
       "shareOfRevenue": "Parte de las ventas",
       "mandated": "Con mandato",
       "rehearsals": "Ensayos",
-      "ordersCount": "{{count}} pedidos",
-      "denialsHeading": "Lo que la tienda les rechazó",
+      "ordersCount": "{{count}} pedidos"
+    },
+    "refusals": {
+      "title": "Qué les ha rechazado la tienda",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
       "noDenials": "Nada rechazado en este periodo.",
       "denied": "rechazos",
       "byRule": "Rechazos por regla",

@@ -1,0 +1,9 @@
+/* On the wall the page's section is a column and this tab takes what the head
+   leaves (spec: the tab fills the monitor). Here, on the tab's own host: the
+   router creates this element from code, so the page's stylesheet cannot reach
+   it — its rule for it never matched (the whole-branch review). */
+:host {
+  display: block;
+  flex: 1 1 0;
+  min-block-size: 0;
+}

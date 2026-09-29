@@ -43,6 +43,11 @@ public sealed class DashboardReadsTests(PostgresFixture postgres)
         Assert.Equal((1, 1), (sales.Current.Orders, sales.Current.Units));
         Assert.Equal(Sku, Assert.Single(sales.BestSellers).Sku);
 
+        // The series asks for the shop's days, whose starts carry Madrid's offset (R-9):
+        // Postgres takes an instant in UTC, and the adapter is where that is said.
+        var series = await agent.AskAsync(new GetSalesSeriesQuery(DashboardPeriod.Week), ct);
+        Assert.Equal((1, 1), (series.Current.Sum(point => point.Orders), series.Current[^1].Orders));
+
         var funnel = await agent.AskAsync(new GetCheckoutFunnelQuery(DashboardPeriod.Day), ct);
         Assert.Equal((1, 1), (funnel.CheckedOut, funnel.NewCustomers));
 

@@ -160,6 +160,19 @@ describe('the design tokens, read on the surfaces they sit on', () => {
   });
 
   /**
+   * A chart's marks (R-9) against every surface a widget sits on, at the 3:1 WCAG
+   * asks of the graphics that carry meaning. The previous period is drawn in the
+   * muted text colour, so it passes on its own rather than by the table beside it.
+   */
+  const MARKS = ['--chart-data', '--chart-agent', '--chart-previous'];
+
+  it.each(themeNames)('draws chart marks a reader can tell from every surface in the %s theme', (theme) => {
+    const pairs = MARKS.flatMap((mark) => SURFACES.map((bg) => [theme, mark, bg] as const));
+
+    expect(failures(INDICATOR_BAR, pairs)).toEqual([]);
+  });
+
+  /**
    * The brand primary is not the interface's accent, and something has to say so.
    *
    * ADR 0034 moved `--accent` to `--clay-600` and left `--clay-500` alone, and the
@@ -195,7 +208,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    */
   const WORDMARKS = [
     ['storefront', 'frontend/apps/storefront/src/app/layout/shell.css', 'brand__wordmark'],
-    ['backoffice', 'frontend/apps/backoffice/src/app/layout/shell.css', 'brand__name'],
+    ['backoffice', 'frontend/apps/backoffice/src/app/shell/shell.css', 'brand__name'],
   ] as const;
 
   it.each(WORDMARKS)(

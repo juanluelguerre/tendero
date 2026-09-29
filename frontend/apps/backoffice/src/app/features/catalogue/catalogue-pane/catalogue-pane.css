@@ -1,0 +1,5 @@
+/* The pane is laid out by the page's list-and-pane grid, as if it were its child. */
+:host { display: contents; }
+
+.hint { font-size: var(--text-xs); }
+.pane-status { display: flex; flex-wrap: wrap; gap: var(--space-2); }

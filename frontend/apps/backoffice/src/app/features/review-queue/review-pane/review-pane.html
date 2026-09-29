@@ -1,0 +1,13 @@
+@if (store.selected(); as item) {
+  <ng-container *transloco="let t">
+  <backoffice-worklist-pane [heading]="item.name" (closed)="closed.emit()">
+    <backoffice-product-review [code]="item.code" />
+
+    <button type="button" class="button pane-primary" [disabled]="store.publishing().has(item.productId)" (click)="store.publish(item, 'pane')">
+      {{ store.publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publishLong') }}
+    </button>
+    <!-- Defining variants is a catalogue decision, made one product at a time. -->
+    <a class="quiet-link" [routerLink]="['/products', item.productId, 'variants']">{{ t('variants.title') }}</a>
+  </backoffice-worklist-pane>
+  </ng-container>
+}

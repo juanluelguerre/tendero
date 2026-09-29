@@ -1,0 +1,7 @@
+<div class="grid" [class.grid--fill]="fill()">
+  @for (cell of cells(); track cell.key) {
+    <div [class]="'cell cell--' + cell.size" [attr.data-widget]="cell.key">
+      <ng-container [backofficeWidgetOutlet]="cell.component" [inputs]="cell.inputs" />
+    </div>
+  }
+</div>

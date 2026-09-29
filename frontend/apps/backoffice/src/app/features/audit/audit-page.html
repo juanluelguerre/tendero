@@ -10,28 +10,28 @@
        successful publishes is a changelog. -->
   <backoffice-filter-chips
     class="filters"
-    [options]="filterOptions()"
-    [selected]="filter() ?? 'all'"
+    [options]="store.filterOptions()"
+    [selected]="store.filter() ?? 'all'"
     [label]="t('audit.filterLabel')"
-    (chosen)="use($event === 'all' ? null : $any($event))"
+    (chosen)="store.use($event === 'all' ? null : $any($event))"
   />
 
-  @if (loading()) {
+  @if (store.loading()) {
     <div class="skeleton-list" aria-hidden="true"></div>
     <p class="sr-only" role="status" aria-live="polite">{{ t('audit.loading') }}</p>
-  } @else if (failed()) {
+  } @else if (store.failed()) {
     <p class="notice notice--danger">{{ t('audit.failed') }}</p>
-  } @else if (entries().length === 0) {
+  } @else if (store.entries().length === 0) {
     <!--
       The empty message names the FILTER, because the screen opens on `denied`
       and a shop that has refused nothing is the normal case. "Nothing recorded
       yet" over a log with two hundred allowed rows in it is a screen lying about
       its own data, and it reads as a feature that does not work.
     -->
-    <p class="muted">{{ t(filter() ? 'audit.emptyFor' : 'audit.empty', { outcome: outcomeLabel(t) }) }}</p>
+    <p class="muted">{{ t(store.filter() ? 'audit.emptyFor' : 'audit.empty', { outcome: outcomeLabel(t) }) }}</p>
 
-    @if (filter()) {
-      <button type="button" class="button button--quiet" (click)="use(null)">
+    @if (store.filter()) {
+      <button type="button" class="button button--quiet" (click)="store.use(null)">
         {{ t('audit.showEverything') }}
       </button>
     }
@@ -52,7 +52,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (entry of entries(); track entry.id) {
+          @for (entry of store.entries(); track entry.id) {
             <tr [class.row--refused]="entry.outcome !== 'Allowed'">
               <td class="numeric when">{{ when(entry.at) }}</td>
               <!-- In the shopkeeper's words; the type stays as its title for whoever needs it (B-F6). -->
@@ -102,13 +102,13 @@
               </td>
               <td class="reason">{{ entry.reason }}</td>
               <td class="numeric">
-                <button type="button" class="linkish" [attr.aria-expanded]="opened() === entry.id" (click)="toggle(entry.id)">
-                  {{ opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
+                <button type="button" class="linkish" [attr.aria-expanded]="store.opened() === entry.id" (click)="store.toggle(entry.id)">
+                  {{ store.opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
                 </button>
               </td>
             </tr>
 
-            @if (opened() === entry.id) {
+            @if (store.opened() === entry.id) {
               <tr class="payload-row">
                 <td colspan="6">
                   <!-- The command as it was sent, with credentials replaced. The
@@ -127,6 +127,6 @@
         </tbody>
       </table>
     </div>
-      <backoffice-pager [page]="page()" [pageSize]="pageSize" [total]="total()" (go)="go($event)" />
+      <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
   }
 </ng-container>

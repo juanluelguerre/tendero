@@ -3,6 +3,8 @@ using ElGuerre.Tendero.Ordering.Ports;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NodaTime;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Ordering;
 
@@ -53,6 +55,15 @@ public static class OrderingServiceCollectionExtensions
         services.TryAddSingleton(TimeProvider.System);
 
         services.Configure<CheckoutOptions>(configuration.GetSection(CheckoutOptions.SectionName));
+
+        // The shop's clock (ADR 0046): checked against NodaTime's zones when the host
+        // starts, because the backend runs with InvariantGlobalization and the
+        // operating system's zones are not there to ask.
+        services.AddOptions<ShopOptions>()
+            .Bind(configuration.GetSection(ShopOptions.SectionName))
+            .Validate(shop => DateTimeZoneProviders.Tzdb.GetZoneOrNull(shop.TimeZone) is not null,
+                "Shop:TimeZone is an IANA time zone, such as Europe/Madrid.")
+            .ValidateOnStart();
         services.Configure<FlatRateShippingOptions>(
             configuration.GetSection(FlatRateShippingOptions.SectionName));
         services.Configure<ZoneRateShippingOptions>(

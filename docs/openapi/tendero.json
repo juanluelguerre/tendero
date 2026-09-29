@@ -2618,6 +2618,40 @@
         }
       }
     },
+    "/api/dashboard/sales/series": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSalesSeries",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesSeries"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dashboard/operations": {
       "get": {
         "tags": [
@@ -6927,6 +6961,70 @@
           }
         }
       },
+      "SalesPoint": {
+        "required": [
+          "start",
+          "revenue",
+          "orders",
+          "units"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SalesSeries": {
+        "required": [
+          "period",
+          "currency",
+          "timeZone",
+          "step",
+          "current",
+          "previous"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/DashboardPeriod"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "step": {
+            "$ref": "#/components/schemas/SeriesStep"
+          },
+          "current": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesPoint"
+            }
+          },
+          "previous": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SalesPoint"
+            }
+          }
+        }
+      },
       "SalesSummary": {
         "required": [
           "period",
@@ -7176,6 +7274,12 @@
             }
           }
         }
+      },
+      "SeriesStep": {
+        "enum": [
+          "Hour",
+          "Day"
+        ]
       },
       "SetCartLineRequest": {
         "required": [

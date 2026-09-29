@@ -25,3 +25,10 @@ export function formatDate(value: string | Date, culture: string): string {
 
   return new Intl.DateTimeFormat(culture, { dateStyle: 'medium' }).format(instant);
 }
+
+/** The clock alone, in the reader's culture: "when it was last updated" on a wall. */
+export function formatTime(value: string | Date, culture: string): string {
+  const instant = typeof value === 'string' ? new Date(value) : value;
+
+  return new Intl.DateTimeFormat(culture, { timeStyle: 'short' }).format(instant);
+}

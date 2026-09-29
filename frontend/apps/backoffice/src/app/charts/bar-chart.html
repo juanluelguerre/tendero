@@ -1,0 +1,32 @@
+<figure class="chart" *transloco="let t; prefix: 'charts.figures'">
+  <figcaption class="sr-only">{{ caption() }}</figcaption>
+  <div class="head">
+    <ul class="legend">
+      @for (series of data().series; track series.key) {
+        <li><span class="swatch" [style.background]="colour(series.role)"></span>{{ series.label }}</li>
+      }
+    </ul>
+    <button type="button" class="figures-toggle" [attr.aria-expanded]="figuresShown()" [attr.aria-controls]="tableId"
+      (click)="figuresShown.set(!figuresShown())">{{ figuresShown() ? t('hide') : t('show') }}</button>
+  </div>
+  @defer (on viewport) {
+    <backoffice-echarts-chart [build]="build()" />
+  } @placeholder {
+    <div class="placeholder"></div>
+  }
+  <table [id]="tableId" class="figures" [class.sr-only]="!figuresShown()">
+    <caption>{{ caption() }}</caption>
+    <thead>
+      <tr><th scope="col"></th>
+        @for (series of data().series; track series.key) { <th scope="col">{{ series.label }}</th> }
+      </tr>
+    </thead>
+    <tbody>
+      @for (category of data().categories; track $index; let row = $index) {
+        <tr><th scope="row">{{ category }}</th>
+          @for (series of data().series; track series.key) { <td>{{ format()(series.values[row]) }}</td> }
+        </tr>
+      }
+    </tbody>
+  </table>
+</figure>
