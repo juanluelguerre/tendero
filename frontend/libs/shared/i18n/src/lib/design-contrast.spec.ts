@@ -207,7 +207,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    * would be lost is a size nobody thought was load-bearing.
    */
   const WORDMARKS = [
-    ['storefront', 'frontend/apps/storefront/src/app/layout/shell.css', 'brand__wordmark'],
+    ['storefront', 'frontend/apps/storefront/src/app/shell/shell.css', 'brand__wordmark'],
     ['backoffice', 'frontend/apps/backoffice/src/app/shell/shell.css', 'brand__name'],
   ] as const;
 

@@ -1,48 +1,21 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
-import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { ProductImagePlaceholder } from '../../product-image-placeholder';
-import { filter, map } from 'rxjs';
 import { CultureStore, DEFAULT_CULTURE, PageTitles } from '@tendero/shared-i18n';
-import type { ProductDetail, VariantView } from '@tendero/shared-api';
+import type { ProductDetail } from '@tendero/shared-api';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
-import { CartStore } from '../../data-access/cart.service';
-import { ProductService } from '../../data-access/product.service';
-import { SpecsService } from '../../data-access/specs.service';
-import { ReturnsPolicy } from '../../data-access/returns-policy.service';
+import { filter } from 'rxjs';
+import { ProductImagePlaceholder } from '../../product-image-placeholder/product-image-placeholder';
+import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { CanonicalLinks } from '../../seo/canonical-links';
 import { ShopLinks } from '../../shop-links';
-import { SpecSource } from '../../specs/spec-source';
-import { specLines, specStatements } from '../../specs/spec-lines';
-import { SpecValue } from '../../specs/spec-value';
+import { SpecSource } from '../../specs/spec-source/spec-source';
+import { SpecValue } from '../../specs/spec-value/spec-value';
+import { TrailStore } from '../../trail/trail.store';
 import { arrivedVia, cameFiltered } from './arrived-from';
-import { Trail } from '../../trail/trail';
-import {
-  availabilityOf,
-  initialSelection,
-  select,
-  sellable,
-  variantFor,
-  type OptionAvailability,
-  type Selection,
-} from './variant-picker';
-
-/**
- * The HTTP status behind a resource error. The response is either the error
- * itself or, when the runtime wraps a non-`Error` value, its `cause`.
- */
-function statusOf(error: unknown): number | undefined {
-  const failure = error as { status?: number; cause?: { status?: number } } | undefined;
-  return failure?.status ?? failure?.cause?.status;
-}
-
-type PageState =
-  | { status: 'loading' }
-  | { status: 'done'; product: ProductDetail }
-  | { status: 'notFound' }
-  | { status: 'failed' };
+import { ProductStore } from './product.store';
 
 /**
  * The product detail page.
@@ -57,29 +30,31 @@ type PageState =
  * was given against the canonical one the API answers with, and quietly replaces
  * the URL when they differ. That is the client half of a 301 — the shopper never
  * sees a 404 and the address bar ends up on the right address.
+ *
+ * What the page shows is its store's (ADR 0047); the page presents it and
+ * keeps the head — the tab's title, the canonical address, the view it reports.
  */
 @Component({
   selector: 'storefront-product-page',
   imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, SpecValue, SpecSource],
+  providers: [ProductStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',
   styleUrl: './product-page.css',
 })
 export class ProductPage {
+  protected readonly store = inject(ProductStore);
+
   /** Every link carries the language segment (P5-13). */
   protected readonly links = inject(ShopLinks);
 
-  private readonly products = inject(ProductService);
-  private readonly specs = inject(SpecsService);
-  private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
   private readonly seo = inject(CanonicalLinks);
   private readonly titles = inject(PageTitles);
   private readonly images = inject(ProductImageUrls);
   private readonly telemetry = inject(Telemetry);
-  private readonly trail = inject(Trail);
+  private readonly trail = inject(TrailStore);
 
   /** The product last reported as viewed, so an answer in another language is not a second view. */
   private viewed: string | null = null;
@@ -93,103 +68,13 @@ export class ProductPage {
    *
    * It is null until the call answers, and stays null if it failed — the block
    * simply does not render. A default of fourteen typed here would be exactly
-   * the copy this store exists to remove.
+   * the copy the policy's store exists to remove.
    */
-  protected readonly returnWindowDays = inject(ReturnsPolicy).windowDays;
-
-  /** Which option is chosen on each axis. */
-  protected readonly selection = signal<Selection>({});
-
-  protected readonly adding = signal(false);
-
-  /**
-   * What the last Add to cart did, for the notice beside the button (the
-   * redesign's R-5.3). Only the header's count used to change, away from where
-   * the shopper was looking, and a refusal changed nothing at all: the baseline
-   * walkthrough's P1 asked for a word. The SKU and not a flag, so choosing
-   * another variant takes the notice away rather than claiming it was added.
-   */
-  protected readonly added = signal<{ readonly sku: string; readonly ok: boolean } | null>(null);
-  protected readonly broken = signal<ReadonlySet<string>>(new Set());
-
-  /** Which image the gallery is showing, by id. Null means the cover. */
-  protected readonly shown = signal<string | null>(null);
-
-  private readonly code = toSignal(
-    this.route.paramMap.pipe(map((params) => params.get('code') ?? '')),
-    { initialValue: '' },
-  );
-
-  private readonly slugFromUrl = toSignal(
-    this.route.paramMap.pipe(map((params) => params.get('slug') ?? '')),
-    { initialValue: '' },
-  );
-
-  /**
-   * The product, as a function of the page's only two inputs: the code in the
-   * URL and the language.
-   *
-   * Reloading on a language change is not optional: the name, the description,
-   * the attribute values and the variant labels are all resolved by the server
-   * in the requested culture, so a switch that only retranslated the chrome
-   * would leave Spanish product copy under English labels.
-   *
-   * It is a resource and not a subscribe inside an effect because a resource
-   * CANCELS the request in flight when its inputs change. The hand-written
-   * version did not, so switching language while a slow answer was on its way
-   * could paint the old language over the new one — the answer that arrived
-   * last won, whichever was asked for last.
-   */
-  private readonly detail = rxResource({
-    params: () => {
-      const code = this.code();
-      return code ? { code, culture: this.culture.active() } : undefined;
-    },
-    stream: ({ params }) => this.products.get(params.code, params.culture),
-  });
-
-  /**
-   * The same product's specs with their sources (P10-8), beside the product and
-   * never in front of it: the page renders from the catalogue first, and the
-   * chips arrive when Knowledge answers — or never, if it does not (invariant 8).
-   */
-  private readonly sheet = rxResource({
-    params: () => {
-      const code = this.code();
-      return code ? { code, culture: this.culture.active() } : undefined;
-    },
-    stream: ({ params }) => this.specs.get([params.code], params.culture),
-  });
-
-  /** A failed sheet is no sheet: the lines fall back to the catalogue's attributes. */
-  private readonly loadedSheet = computed(() => (this.sheet.status() === 'resolved' ? this.sheet.value() : undefined));
-
-  protected readonly specLines = computed(() => {
-    const current = this.state();
-    return current.status === 'done' ? specLines(current.product.attributes, this.loadedSheet()) : [];
-  });
-
-  protected readonly statements = computed(() => specStatements(this.loadedSheet()));
-
-  protected readonly state = computed<PageState>(() => {
-    if (!this.code()) return { status: 'notFound' };
-
-    switch (this.detail.status()) {
-      case 'resolved':
-      case 'local':
-        return { status: 'done', product: this.detail.value() as ProductDetail };
-      case 'error':
-        return { status: statusOf(this.detail.error()) === 404 ? 'notFound' : 'failed' };
-      default:
-        return { status: 'loading' };
-    }
-  });
+  protected readonly returnWindowDays = inject(ReturnsPolicyStore).windowDays;
 
   /** Every finished navigation, so the tab can be renamed after the router
-      names it — see the second effect in the constructor. */
-  private readonly navigated = toSignal(
-    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)),
-  );
+      names it — see the first effect in the constructor. */
+  private readonly navigated = toSignal(this.router.events.pipe(filter((event) => event instanceof NavigationEnd)));
 
   constructor() {
     // The tab says which product, not "Product". After EVERY finished
@@ -199,22 +84,19 @@ export class ProductPage {
     // live — the first version titled every product page "Producto".
     effect(() => {
       this.navigated();
-      const current = this.state();
-
-      if (current.status === 'done') untracked(() => this.titles.name(current.product.name));
+      const product = this.store.product();
+      if (product) untracked(() => this.titles.name(product.name));
     });
 
-    // What the page does with an answer, once per answer: pick the initial
-    // variant, put the address bar on the canonical URL and declare it to
-    // crawlers. Kept out of the resource so that reading the product never has
-    // side effects, and out of the template because navigation is not rendering.
+    // What the page does with an answer, once per answer: report the view, put
+    // the address bar on the canonical URL and declare it to crawlers. Out of
+    // the store, because reading the product never has side effects, and out
+    // of the template because navigation is not rendering.
     effect(() => {
-      const current = this.state();
+      const current = this.store.state();
 
       untracked(() => {
         if (current.status === 'done') {
-          this.selection.set(initialSelection(current.product));
-          this.shown.set(null);
           this.reportView(current.product.code);
           this.canonicalise(current.product);
           this.declare(current.product);
@@ -259,11 +141,8 @@ export class ProductPage {
    * back should leave the page, not walk through the wrong address.
    */
   private canonicalise(product: ProductDetail): void {
-    if (this.slugFromUrl() === product.slug) return;
-
-    void this.router.navigate(this.links.product(product.slug, product.code), {
-      replaceUrl: true,
-    });
+    if (this.store.slugFromUrl() === product.slug) return;
+    void this.router.navigate(this.links.product(product.slug, product.code), { replaceUrl: true });
   }
 
   /**
@@ -280,51 +159,13 @@ export class ProductPage {
    */
   private declare(product: ProductDetail): void {
     const canonical = this.links.productIn(this.culture.active(), product.slug, product.code);
-
     const alternates = product.alternates.map((alternate) => ({
       culture: alternate.culture,
       path: this.links.productIn(alternate.culture, alternate.slug, product.code),
     }));
+    const fallback = product.alternates.find((alternate) => alternate.culture === DEFAULT_CULTURE) ?? product.alternates[0];
 
-    const fallback =
-      product.alternates.find((alternate) => alternate.culture === DEFAULT_CULTURE) ??
-      product.alternates[0];
-
-    this.seo.set(
-      canonical,
-      alternates,
-      fallback ? this.links.productIn(DEFAULT_CULTURE, fallback.slug, product.code) : canonical,
-    );
-  }
-
-  protected readonly product = computed(() => {
-    const current = this.state();
-    return current.status === 'done' ? current.product : null;
-  });
-
-  /** The variants a shopper can choose between — discontinued ones are not on sale. */
-  protected readonly variants = computed(() => {
-    const product = this.product();
-    return product ? sellable(product) : [];
-  });
-
-  /** The one the picker is currently on, or null when the combination is not sold. */
-  protected readonly chosen = computed(() => variantFor(this.variants(), this.selection()));
-
-  protected availability(axis: string, option: string): OptionAvailability {
-    return availabilityOf(this.variants(), this.selection(), axis, option);
-  }
-
-  protected choose(axis: string, option: string): void {
-    this.selection.update((current) => select(this.variants(), current, axis, option));
-
-    // A colour has its own photo; a size does not. Moving the gallery back to
-    // the variant's image is what makes the picker feel connected to it.
-    this.shown.set(this.chosen()?.imageId ?? null);
-  }
-
-  protected isChosen(axis: string, option: string): boolean {
-    return this.selection()[axis] === option;
+    this.seo.set(canonical, alternates, fallback ? this.links.productIn(DEFAULT_CULTURE, fallback.slug, product.code) : canonical);
   }
 
   /**
@@ -333,75 +174,21 @@ export class ProductPage {
    * search card shows, so moving from one to the other never contradicts itself.
    */
   protected price(): string {
-    const product = this.product();
+    const product = this.store.product();
     if (!product) return '';
 
     const culture = this.culture.active();
-    const variant = this.chosen();
-
+    const variant = this.store.chosen();
     if (variant) return formatPrice(variant.priceAmount, variant.priceCurrency, culture);
 
     if (product.priceFrom < product.priceTo) {
-      return `${formatPrice(product.priceFrom, product.priceCurrency, culture)} – ${formatPrice(
-        product.priceTo,
-        product.priceCurrency,
-        culture,
-      )}`;
+      return `${formatPrice(product.priceFrom, product.priceCurrency, culture)} – ${formatPrice(product.priceTo, product.priceCurrency, culture)}`;
     }
-
     return formatPrice(product.priceFrom, product.priceCurrency, culture);
   }
 
-  /** The gallery's images, cover first, with the chosen variant's promoted. */
-  protected readonly gallery = computed(() => {
-    const product = this.product();
-    if (!product) return [];
-
-    const shown = this.shown();
-    const images = [...product.images];
-
-    if (!shown) return images;
-
-    const promoted = images.filter((image) => image.imageId === shown);
-    return promoted.length > 0
-      ? [...promoted, ...images.filter((image) => image.imageId !== shown)]
-      : images;
-  });
-
   protected imageUrl(imageId: string): string {
     return this.images.of(imageId);
-  }
-
-  protected onImageError(imageId: string): void {
-    this.broken.update((ids) => new Set(ids).add(imageId));
-  }
-
-  /**
-   * Adds the chosen variant. The button is disabled without one, so a shopper
-   * cannot buy a combination the shop does not sell — which is the whole reason
-   * the picker distinguishes "not sold" from "sold out".
-   */
-  protected async addToCart(): Promise<void> {
-    const variant = this.chosen();
-    if (!variant || !variant.inStock) return;
-
-    this.adding.set(true);
-    this.added.set(null);
-
-    try {
-      await this.cart.add(variant.sku);
-    } finally {
-      this.adding.set(false);
-    }
-
-    // The store keeps a refusal rather than throwing it; its absence is success.
-    this.added.set({ sku: variant.sku, ok: this.cart.failed() === null });
-  }
-
-  /** The notice, if it is about the variant on screen. */
-  protected notice(): { readonly ok: boolean } | null {
-    const added = this.added();
-    return added && added.sku === this.chosen()?.sku ? added : null;
   }
 
   protected cartLink(): string[] {
@@ -411,15 +198,5 @@ export class ProductPage {
   /** Whether the notice's link is used (`cart_notice_followed`, the tracking plan). */
   protected noticeFollowed(): void {
     this.telemetry.trackEvent('cart_notice_followed', {});
-  }
-
-  /** Whether the shelf is thin enough to be worth saying. The API only sends a
-   *  number when it is, so the page never decides the threshold. */
-  protected remaining(): number | null {
-    return this.chosen()?.remaining ?? null;
-  }
-
-  protected variantOf(sku: string): VariantView | undefined {
-    return this.variants().find((variant) => variant.sku === sku);
   }
 }

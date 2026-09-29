@@ -1,0 +1,47 @@
+<section class="history" id="history" *transloco="let t" aria-labelledby="history-title">
+  <div class="history__head">
+    <div>
+      <h2 class="history__title" id="history-title">{{ t('history.title') }}</h2>
+      <p class="history__lede muted">{{ signedIn() ? t('history.lede') : t('history.guestLede') }}</p>
+    </div>
+
+    <label class="history__switch">
+      <input type="checkbox" role="switch" [checked]="store.kept().enabled" (change)="toggle($event)" />
+      <span>{{ t('history.switch') }}</span>
+    </label>
+  </div>
+
+  @if (!store.kept().enabled) {
+    <p class="muted">{{ t('history.off') }}</p>
+  } @else if (!store.any()) {
+    <p class="muted">{{ t('history.empty') }}</p>
+  } @else {
+    @if (store.viewed().length > 0) {
+      <h3 class="history__subtitle">{{ t('history.views') }}</h3>
+      <ul class="history__views">
+        @for (hit of store.viewed(); track hit.productId) {
+          <li class="history__view">
+            <storefront-product-card class="history__card" [hit]="hit" layout="line" [actions]="false" via="trail" />
+            <button type="button" class="history__remove" [attr.aria-label]="t('shelf.remove', { name: hit.name })"
+                    (click)="trail.forget('View', hit.code)">×</button>
+          </li>
+        }
+      </ul>
+    }
+
+    @if (store.kept().searches.length > 0) {
+      <h3 class="history__subtitle">{{ t('history.searches') }}</h3>
+      <ul class="history__searches">
+        @for (search of store.kept().searches; track search.key) {
+          <li class="history__search">
+            <a class="history__query" [routerLink]="links.home()" [queryParams]="{ q: search.key }">{{ search.key }}</a>
+            <button type="button" class="history__forget" [attr.aria-label]="t('home.trailSearchRemove', { text: search.key })"
+                    (click)="trail.forget('Search', search.key)">×</button>
+          </li>
+        }
+      </ul>
+    }
+
+    <button type="button" class="button button--quiet history__clear" (click)="trail.clear()">{{ t('history.clear') }}</button>
+  }
+</section>

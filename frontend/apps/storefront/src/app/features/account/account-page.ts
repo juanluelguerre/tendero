@@ -1,22 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
-import { ProductImagePlaceholder } from '../../product-image-placeholder';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import type { OrderSummary } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime, formatPrice, ProductImageUrls } from '@tendero/shared-util';
-import { AccountService } from '../../data-access/account.service';
-import { CartStore } from '../../data-access/cart.service';
-import { CustomerLink } from '../../data-access/customer-link';
+import { ProductImagePlaceholder } from '../../product-image-placeholder/product-image-placeholder';
 import { ShopLinks } from '../../shop-links';
-import { TrailHistory } from '../../trail/trail-history';
-
-type PageState =
-  | { status: 'signedOut' }
-  | { status: 'signingIn' }
-  | { status: 'signedIn'; orders: OrderSummary[] }
-  | { status: 'failed' };
+import { TrailHistory } from '../../trail/trail-history/trail-history';
+import { AccountStore } from './account.store';
 
 /**
  * A shopper's account, and their orders.
@@ -33,106 +25,32 @@ type PageState =
  * **Signing in is a redirect now**, so this page no longer lists who exists or
  * handles a password — the issuer does both. What is left here is the half that
  * is genuinely the shop's: attaching the person to a customer, and attaching the
- * basket they were already carrying.
+ * basket they were already carrying — its store's (ADR 0047); the page
+ * presents the orders.
  */
 @Component({
   selector: 'storefront-account-page',
   imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, TrailHistory],
+  providers: [AccountStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-page.html',
   styleUrl: './account-page.css',
 })
 export class AccountPage {
-  private readonly auth = inject(AuthStore);
-  private readonly accounts = inject(AccountService);
-  private readonly cart = inject(CartStore);
-  private readonly customer = inject(CustomerLink);
+  protected readonly store = inject(AccountStore);
+  protected readonly links = inject(ShopLinks);
+  protected readonly identity = inject(AuthStore).identity;
+
   private readonly culture = inject(CultureStore);
   private readonly images = inject(ProductImageUrls);
 
-  protected readonly links = inject(ShopLinks);
-  protected readonly identity = this.auth.identity;
-  protected readonly state = signal<PageState>({ status: 'signingIn' });
-
   constructor() {
-    void this.start();
-  }
-
-  private async start(): Promise<void> {
-    if (this.auth.isSignedIn()) {
-      try {
-        await this.attach();
-      } catch {
-        this.state.set({ status: 'failed' });
-        return;
-      }
-
-      this.loadOrders();
-      return;
-    }
-
-    this.state.set({ status: 'signedOut' });
-  }
-
-  /** Hands the browser to the issuer. Everything after this happens on the way back. */
-  protected signIn(): void {
-    this.state.set({ status: 'signingIn' });
-    this.auth.signIn();
-  }
-
-  /**
-   * What the shop still owes after the redirect, and the order matters.
-   *
-   * The CUSTOMER first — a cart cannot be attached to somebody who does not
-   * exist yet — and only then the basket. The two calls are two contexts:
-   * `Accounts` says who you are, `Ordering` owns the cart, and neither imports
-   * the other.
-   *
-   * It runs on every load of this page while signed in, which is safe because
-   * both operations are idempotent: linking an identity that is already linked
-   * reports `recognised` and writes nothing, and a cart that is already claimed
-   * is the same cart. The link is `CustomerLink`'s, shared with the trail's
-   * merge at sign-in (R-8), so the tab asks it once.
-   */
-  private async attach(): Promise<void> {
-    await this.customer.ensure();
-
-    // The basket, if there is one. Best-effort on purpose: a cart that belongs
-    // to another account comes back 409, and refusing to sign somebody in over a
-    // basket they were not carrying would be absurd.
-    const token = this.cart.token;
-    if (!token) return;
-
-    try {
-      await this.accounts.claimCart(token);
-      await this.cart.load();
-    } catch {
-      // Not this account's basket. Signing in still succeeded.
-    }
-  }
-
-  /** Ends the session at the issuer too, which is what makes it look ended. */
-  protected signOut(): void {
-    this.state.set({ status: 'signedOut' });
-    this.auth.signOut();
-  }
-
-  /**
-   * The images that did not load, keyed by SKU.
-   *
-   * The seed points at pictures that may not be there, so a broken image is the
-   * DEFAULT path on a fresh clone rather than an error — the same reason the
-   * search card carries this and swaps in a labelled tile.
-   */
-  protected readonly broken = signal(new Set<string>());
-
-  protected markBroken(sku: string): void {
-    this.broken.update((current) => new Set(current).add(sku));
+    void this.store.start();
   }
 
   /** Whether this order has anything to show, as opposed to boxes to draw. */
   protected hasImages(order: OrderSummary): boolean {
-    return order.preview.some((line) => line.imageId && !this.broken().has(line.sku));
+    return order.preview.some((line) => line.imageId && !this.store.broken().has(line.sku));
   }
 
   protected imageUrl(imageId: string): string {
@@ -156,12 +74,5 @@ export class AccountPage {
 
   protected when(order: OrderSummary): string {
     return formatDateTime(order.createdAt, this.culture.active());
-  }
-
-  private loadOrders(): void {
-    this.accounts.orders().subscribe({
-      next: (result) => this.state.set({ status: 'signedIn', orders: result.orders }),
-      error: () => this.state.set({ status: 'failed' }),
-    });
   }
 }

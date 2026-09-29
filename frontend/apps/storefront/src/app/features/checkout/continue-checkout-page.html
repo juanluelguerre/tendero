@@ -1,6 +1,6 @@
 <ng-container *transloco="let t">
   <section class="continue" aria-live="polite">
-    @switch (state()) {
+    @switch (store.state()) {
       @case ('taking-over') {
         <p class="continue__text">{{ t('checkout.continue.takingOver') }}</p>
       }

@@ -4,10 +4,10 @@ import { refuse, say, type ToolDescriptor } from '@tendero/shared-agent';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import { CampaignService } from '../data-access/campaign.service';
-import { CartStore } from '../data-access/cart.service';
+import { CartStore } from '../cart/cart.store';
 import { ProductSearchService } from '../data-access/product-search.service';
 import { ProductService } from '../data-access/product.service';
-import { ActiveListing } from '../listing/active-listing';
+import { ActiveListing } from '../listing/active-listing.store';
 import { describeCampaigns } from './campaign-tool';
 import { chooseFilter, describeFacets, type FilterChoice } from './filter-tool';
 

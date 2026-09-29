@@ -9,13 +9,13 @@
     no empty stage, no empty box, no row a failed request left blank.
   -->
   <div class="home">
-    @if (campaign(); as leading) {
-      <storefront-campaign-card storefrontHomeModule="campaign" [campaign]="leading" [products]="campaignHits()"
+    @if (store.campaign(); as leading) {
+      <storefront-campaign-card storefrontHomeModule="campaign" [campaign]="leading" [products]="store.campaignHits()"
                                 (reached)="campaigns.refresh()" />
     }
 
     @if (trail.any()) {
-      <storefront-trail-row storefrontHomeModule="trail" [viewed]="viewed()" />
+      <storefront-trail-row storefrontHomeModule="trail" [viewed]="store.viewed()" />
     }
 
     <storefront-agent-card storefrontHomeModule="agent" />
@@ -25,7 +25,7 @@
       <storefront-product-row
         storefrontHomeModule="offers"
         [heading]="t('home.offers')"
-        [lede]="offerRules() ? t('home.offersLede') + ' ' + t('home.offersRules', { names: offerRules() }) : t('home.offersLede')"
+        [lede]="store.offerRules() ? t('home.offersLede') + ' ' + t('home.offersRules', { names: store.offerRules() }) : t('home.offersLede')"
         [more]="{ label: t('home.offersAll'), commands: links.home(), queryParams: { offer: 1 } }"
         [items]="offerItems" />
     }
@@ -50,12 +50,12 @@
         via="trending" />
     }
 
-    @if (bestSellers().length > 0) {
+    @if (store.bestSellers().length > 0) {
       <storefront-product-row
         storefrontHomeModule="best_sellers"
         [heading]="t('home.bestSellers')"
         [lede]="t('home.bestSellersLede')"
-        [items]="bestSellers()"
+        [items]="store.bestSellers()"
         layout="line" />
     }
 
@@ -69,11 +69,11 @@
         [items]="arrivals" />
     }
 
-    @if (departments().length > 0) {
+    @if (store.departments().length > 0) {
       <section class="departments" storefrontHomeModule="departments" aria-labelledby="home-departments">
         <h2 class="departments__title" id="home-departments">{{ t('home.departments') }}</h2>
         <ul class="departments__list">
-          @for (department of departments(); track department.code) {
+          @for (department of store.departments(); track department.code) {
             <li>
               <a class="department" [routerLink]="links.category(department.code)">
                 <!-- Decorative: the name beside it is the link's label. -->
@@ -89,6 +89,6 @@
       </section>
     }
 
-    <storefront-promise-strip [freeShipping]="freeShipping()" [returnDays]="returnDays()" />
+    <storefront-promise-strip [freeShipping]="store.freeShipping()" [returnDays]="returnDays()" />
   </div>
 </ng-container>

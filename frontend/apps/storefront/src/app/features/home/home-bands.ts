@@ -1,5 +1,5 @@
 import type { CategoryView, OfferView, RankedProducts, SearchHit, SimilarProductsResult } from '@tendero/shared-api';
-import type { ShelfItem } from '../../shelves/product-row';
+import type { ShelfItem } from '../../shelves/product-row/product-row';
 
 /**
  * What the home's bands make of their answers (R-8, H-4), as pure functions: the

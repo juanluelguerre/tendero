@@ -11,22 +11,22 @@ import { Telemetry } from '@tendero/shared-telemetry';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Campaigns } from '../campaigns/campaigns';
+import { CampaignsStore } from '../campaigns/campaigns.store';
 import { ProductSearchService } from '../data-access/product-search.service';
-import { Taxonomy } from '../data-access/taxonomy';
+import { TaxonomyStore } from '../taxonomy/taxonomy.store';
 import { Listing } from './listing';
-import { ListingState } from './listing-state';
+import { ListingStore } from './listing.store';
 
 /** A page that lists one category, as the category page does once it knows the code. */
 @Component({
   selector: 'storefront-listing-host',
   imports: [Listing],
-  providers: [ListingState],
+  providers: [ListingStore],
   template: '<storefront-listing />',
 })
 class ListingHost {
   constructor() {
-    inject(ListingState).place.set({ query: '', category: 'SHOES' });
+    inject(ListingStore).list({ query: '', category: 'SHOES' });
   }
 }
 
@@ -59,12 +59,12 @@ describe('the listing', () => {
         provideRouter([{ path: '', component: ListingHost }]),
         { provide: API_BASE_URL, useValue: 'http://api' },
         // The campaigns are a root resource; answered as none, so nothing waits on them.
-        { provide: Campaigns, useValue: { named: () => null, all: () => [], leading: () => null } as unknown as Campaigns },
+        { provide: CampaignsStore, useValue: { named: () => null, all: () => [], leading: () => null } },
         {
           provide: Telemetry,
           useValue: { trackEvent: (name: string, attributes: unknown) => events.push([name, attributes]) } as unknown as Telemetry,
         },
-        { provide: Taxonomy, useValue: { categories: () => [], menu: () => [] } as unknown as Taxonomy },
+        { provide: TaxonomyStore, useValue: { categories: () => [], menu: () => [] } },
         {
           provide: ProductSearchService,
           useValue: {

@@ -1,40 +1,19 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import type { SearchHit } from '@tendero/shared-api';
-import { CultureStore } from '@tendero/shared-i18n';
-import { map, of, switchMap } from 'rxjs';
-import { CampaignCard } from '../../campaigns/campaign-card';
-import { Campaigns } from '../../campaigns/campaigns';
-import { ProductSearchService } from '../../data-access/product-search.service';
-import { ReturnsPolicy } from '../../data-access/returns-policy.service';
-import { ShopFrontService } from '../../data-access/shop-front.service';
-import { Taxonomy } from '../../data-access/taxonomy';
-import { WhatSellsService } from '../../data-access/what-sells.service';
-import { AgentCard } from '../../shelves/agent-card';
-import { ProductRow, type ShelfItem } from '../../shelves/product-row';
-import { PromiseStrip } from '../../shelves/promise-strip';
+import { CampaignCard } from '../../campaigns/campaign-card/campaign-card';
+import { CampaignsStore } from '../../campaigns/campaigns.store';
+import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
+import { AgentCard } from '../../shelves/agent-card/agent-card';
+import { ProductRow, type ShelfItem } from '../../shelves/product-row/product-row';
+import { PromiseStrip } from '../../shelves/promise-strip/promise-strip';
 import { departmentArt } from '../../shop-art';
 import { ShopLinks } from '../../shop-links';
-import { Trail } from '../../trail/trail';
-import { TrailRow } from '../../trail/trail-row';
-import {
-  departmentsOf,
-  freeShippingOf,
-  labelled,
-  offerRulesOf,
-  rankedIds,
-  rankedItems,
-  risingItems,
-  suggestionItems,
-} from './home-bands';
+import { TrailRow } from '../../trail/trail-row/trail-row';
+import { TrailStore } from '../../trail/trail.store';
+import { labelled, risingItems, suggestionItems } from './home-bands';
 import { HomeModule } from './home-module';
-
-/** How many cards a row asks for: two screens of a desktop row, one of them whole. */
-const RowSize = 10;
-/** *Lo más vendido* is a top five. */
-const TopSize = 5;
+import { HomeStore } from './home.store';
 
 /**
  * The front of the shop, top to bottom (R-8, docs/specs/storefront-home.md; the
@@ -49,7 +28,7 @@ const TopSize = 5;
  *
  * **The page composes; the rules are elsewhere**: which campaign leads is the
  * server's order (`leadingCampaign`), what a row says about each product is
- * `home-bands.ts`, what the trail keeps is `Trail`'s.
+ * `home-bands.ts`, what the trail keeps is `TrailStore`'s.
  *
  * It renders inside the search page rather than on a route of its own, because
  * `/es` already IS the search page and the query lives in the URL. The header's
@@ -60,58 +39,17 @@ const TopSize = 5;
 @Component({
   selector: 'storefront-home-sections',
   imports: [TranslocoDirective, RouterLink, CampaignCard, TrailRow, AgentCard, ProductRow, PromiseStrip, HomeModule],
+  providers: [HomeStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-sections.html',
   styleUrl: './home-sections.css',
 })
 export class HomeSections {
-  private readonly search = inject(ProductSearchService);
-  private readonly sales = inject(WhatSellsService);
-  private readonly shopFront = inject(ShopFrontService);
-  private readonly culture = inject(CultureStore);
-  private readonly taxonomy = inject(Taxonomy);
-
+  protected readonly store = inject(HomeStore);
   protected readonly links = inject(ShopLinks);
-  protected readonly campaigns = inject(Campaigns);
-  protected readonly trail = inject(Trail);
-  protected readonly returnDays = inject(ReturnsPolicy).windowDays;
-
-  // ---------- The campaign ----------
-
-  protected readonly campaign = this.campaigns.leading;
-
-  /** What the leading campaign reaches, for its card when it has no picture of its own. */
-  private readonly campaignProducts = rxResource({
-    params: () => {
-      const campaign = this.campaign();
-      return campaign && !campaign.imageId && campaign.phase === 'Running'
-        ? { culture: this.culture.active(), campaign: campaign.code }
-        : undefined;
-    },
-    stream: ({ params }) => this.search.browse({ ...params, pageSize: 3 }).pipe(map((page) => page.hits)),
-  });
-
-  protected readonly campaignHits = computed<readonly SearchHit[]>(() =>
-    this.campaignProducts.hasValue() ? this.campaignProducts.value() : [],
-  );
-
-  // ---------- The trail and what it suggests ----------
-
-  private readonly viewedCodes = computed(() => this.trail.shown().views.map((entry) => entry.key));
-
-  private readonly viewedCards = rxResource({
-    params: () => (this.viewedCodes().length ? { culture: this.culture.active(), codes: this.viewedCodes() } : undefined),
-    stream: ({ params }) => this.search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
-  });
-
-  protected readonly viewed = computed<readonly SearchHit[]>(() =>
-    this.viewedCards.hasValue() ? this.viewedCards.value() : [],
-  );
-
-  private readonly similar = rxResource({
-    params: () => (this.viewedCodes().length ? { culture: this.culture.active(), codes: this.viewedCodes() } : undefined),
-    stream: ({ params }) => this.search.similar(params.culture, params.codes, RowSize),
-  });
+  protected readonly campaigns = inject(CampaignsStore);
+  protected readonly trail = inject(TrailStore);
+  protected readonly returnDays = inject(ReturnsPolicyStore).windowDays;
 
   /** *Porque viste {{name}}*, in the reader's language. */
   protected because(t: (key: string, params?: Record<string, unknown>) => string): (name: string) => string {
@@ -120,84 +58,21 @@ export class HomeSections {
 
   /** *Porque viste…*: the template hands in the sentence, in the reader's language. */
   protected suggested(because: (name: string) => string): ShelfItem[] {
-    return this.similar.hasValue() ? suggestionItems(this.similar.value(), this.viewed(), because) : [];
+    const similar = this.store.similar();
+    return similar ? suggestionItems(similar, this.store.viewed(), because) : [];
   }
-
-  // ---------- Offers ----------
-
-  private readonly offerHits = rxResource({
-    params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) => this.search.browse({ culture: params.culture, onOffer: true, pageSize: RowSize }),
-  });
-
-  private readonly offerRuleList = rxResource({
-    params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) => this.shopFront.offers(params.culture).pipe(map((result) => result.items)),
-  });
 
   protected offers(badge: string): ShelfItem[] {
-    return this.offerHits.hasValue() ? labelled(this.offerHits.value().hits, badge) : [];
+    return labelled(this.store.offerHits(), badge);
   }
-
-  /** The promotions' names, as the row's small print; empty when they are not known. */
-  protected readonly offerRules = computed(() => (this.offerRuleList.hasValue() ? offerRulesOf(this.offerRuleList.value()) : ''));
-
-  protected readonly freeShipping = computed(() =>
-    this.offerRuleList.hasValue() ? freeShippingOf(this.offerRuleList.value()) : null,
-  );
-
-  // ---------- What rises, what sells, what is new ----------
-
-  private readonly trendingCards = rxResource({
-    params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) =>
-      this.sales.trending(RowSize).pipe(
-        switchMap((ranked) =>
-          ranked.items.length
-            ? this.search.cards(params.culture, { ids: rankedIds(ranked) }).pipe(map((cards) => rankedItems(ranked, cards.items)))
-            : of([] as ShelfItem[]),
-        ),
-      ),
-  });
 
   protected trending(rising: string): ShelfItem[] {
-    return this.trendingCards.hasValue() ? risingItems(this.trendingCards.value(), rising) : [];
+    return risingItems(this.store.trendingItems(), rising);
   }
-
-  private readonly bestSellerCards = rxResource({
-    params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) =>
-      this.sales.bestSellers(TopSize).pipe(
-        switchMap((ranked) =>
-          ranked.items.length
-            ? this.search.cards(params.culture, { ids: rankedIds(ranked) }).pipe(map((cards) => rankedItems(ranked, cards.items)))
-            : of([] as ShelfItem[]),
-        ),
-      ),
-  });
-
-  protected readonly bestSellers = computed<ShelfItem[]>(() =>
-    this.bestSellerCards.hasValue() ? this.bestSellerCards.value() : [],
-  );
-
-  /**
-   * New arrivals, ordered by the date the SOURCE first listed the product — not
-   * by when this shop imported it, which is the same second for the whole
-   * catalogue and would be sorting by import order while calling it news.
-   */
-  private readonly newestHits = rxResource({
-    params: () => ({ culture: this.culture.active() }),
-    stream: ({ params }) => this.search.browse({ culture: params.culture, sort: 'Newest', pageSize: RowSize }),
-  });
 
   protected newest(badge: string): ShelfItem[] {
-    return this.newestHits.hasValue() ? labelled(this.newestHits.value().hits, badge) : [];
+    return labelled(this.store.newestHits(), badge);
   }
-
-  // ---------- The departments ----------
-
-  /** The roots of the taxonomy, lower and smaller: the header's row already reaches them in one click. */
-  protected readonly departments = computed(() => departmentsOf(this.taxonomy.categories()));
 
   protected art(code: string): string {
     return departmentArt(code);

@@ -10,14 +10,14 @@ import { Telemetry } from '@tendero/shared-telemetry';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable, of, throwError } from 'rxjs';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Campaigns } from '../../campaigns/campaigns';
+import { CampaignsStore } from '../../campaigns/campaigns.store';
 import { ProductSearchService } from '../../data-access/product-search.service';
-import { ReturnsPolicy } from '../../data-access/returns-policy.service';
+import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopFrontService } from '../../data-access/shop-front.service';
-import { Taxonomy } from '../../data-access/taxonomy';
+import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
 import { WhatSellsService } from '../../data-access/what-sells.service';
 import { EmptyTrail } from '../../trail/trail-rules';
-import { Trail } from '../../trail/trail';
+import { TrailStore } from '../../trail/trail.store';
 import { HomeSections } from './home-sections';
 
 /**
@@ -49,19 +49,19 @@ describe('the home page', () => {
         { provide: API_BASE_URL, useValue: 'http://api' },
         { provide: Telemetry, useValue: { trackEvent: (n: string, a: unknown) => events.push([n, a]) } as unknown as Telemetry },
         {
-          provide: Campaigns,
-          useValue: { leading: () => campaigns[0] ?? null, all: () => campaigns, refresh: () => undefined } as unknown as Campaigns,
+          provide: CampaignsStore,
+          useValue: { leading: () => campaigns[0] ?? null, all: () => campaigns, refresh: () => undefined },
         },
         {
-          provide: Trail,
-          useValue: { any: signal(false), shown: signal(EmptyTrail), kept: signal(EmptyTrail) } as unknown as Trail,
+          provide: TrailStore,
+          useValue: { any: signal(false), shown: signal(EmptyTrail), kept: signal(EmptyTrail) },
         },
-        { provide: ReturnsPolicy, useValue: { windowDays: () => 14 } as unknown as ReturnsPolicy },
+        { provide: ReturnsPolicyStore, useValue: { windowDays: () => 14 } },
         {
-          provide: Taxonomy,
+          provide: TaxonomyStore,
           useValue: {
             categories: () => (failing.has('departments') ? [] : [{ code: 'HOME', parent: null, name: 'Hogar', path: ['Hogar'], depth: 0 }]),
-          } as unknown as Taxonomy,
+          },
         },
         {
           provide: ShopFrontService,

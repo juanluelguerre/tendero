@@ -1,5 +1,5 @@
 <ng-container *transloco="let t">
-  @switch (state().status) {
+  @switch (store.state().status) {
     @case ('loading') {
       <p class="sr-only" role="status" aria-live="polite">{{ t('product.loading') }}</p>
       <!-- The shape the answer will have, so the page does not jump when it
@@ -30,7 +30,7 @@
     }
 
     @case ('done') {
-      @let item = product();
+      @let item = store.product();
       @if (item) {
         <!-- The whole branch, not the leaf: "Hogar › Cocina › Menaje" is where
              the shopper is, and the leaf alone does not say it. -->
@@ -46,13 +46,13 @@
 
         <article class="product">
           <section class="gallery">
-            @let images = gallery();
-            @if (images.length > 0 && !broken().has(images[0].imageId)) {
+            @let images = store.gallery();
+            @if (images.length > 0 && !store.broken().has(images[0].imageId)) {
               <img
                 class="gallery__main"
                 [src]="imageUrl(images[0].imageId)"
                 [alt]="images[0].alt ?? item.name"
-                (error)="onImageError(images[0].imageId)"
+                (error)="store.imageFailed(images[0].imageId)"
               />
             } @else {
               <storefront-product-image-placeholder
@@ -69,7 +69,7 @@
                       type="button"
                       class="thumb"
                       [class.thumb--current]="image.imageId === images[0].imageId"
-                      (click)="shown.set(image.imageId)"
+                      (click)="store.show(image.imageId)"
                     >
                       <img [src]="imageUrl(image.imageId)" [alt]="image.alt ?? item.name" />
                     </button>
@@ -95,16 +95,16 @@
                 <legend class="axis__label eyebrow">{{ axis.label }}</legend>
                 <ul class="axis__options">
                   @for (option of axis.options; track option.code) {
-                    @let state = availability(axis.code, option.code);
+                    @let state = store.availability(axis.code, option.code);
                     <li>
                       <button
                         type="button"
                         class="option"
-                        [class.option--chosen]="isChosen(axis.code, option.code)"
+                        [class.option--chosen]="store.isChosen(axis.code, option.code)"
                         [class.option--soldOut]="state === 'soldOut'"
                         [disabled]="state === 'unavailable'"
-                        [attr.aria-pressed]="isChosen(axis.code, option.code)"
-                        (click)="choose(axis.code, option.code)"
+                        [attr.aria-pressed]="store.isChosen(axis.code, option.code)"
+                        (click)="store.choose(axis.code, option.code)"
                       >
                         {{ option.label }}
                         <!-- Colour never carries meaning alone (design/DESIGN.md):
@@ -122,7 +122,7 @@
               </fieldset>
             }
 
-            @let variant = chosen();
+            @let variant = store.chosen();
             <div class="buy">
               @if (!variant) {
                 <p class="buy__unavailable">{{ t('product.combinationNotSold') }}</p>
@@ -133,10 +133,10 @@
                 <button
                   type="button"
                   class="button buy__add"
-                  [disabled]="adding()"
-                  (click)="addToCart()"
+                  [disabled]="store.adding()"
+                  (click)="store.addToCart()"
                 >
-                  {{ adding() ? t('product.adding') : t('product.addToCart') }}
+                  {{ store.adding() ? t('product.adding') : t('product.addToCart') }}
                 </button>
 
                 <!-- Beside the action, where the eyes are, and it stays: a toast
@@ -144,7 +144,7 @@
                      is done with it (WCAG 2.2.1). The region is always there, so
                      what enters it is announced. -->
                 <p class="buy__notice" role="status">
-                  @if (notice(); as said) {
+                  @if (store.notice(); as said) {
                     @if (said.ok) {
                       <span class="buy__added">{{ t('product.added') }}</span>
                       <a class="quiet" [routerLink]="cartLink()" (click)="noticeFollowed()">{{ t('product.viewCart') }}</a>
@@ -154,7 +154,7 @@
                   }
                 </p>
 
-                @let left = remaining();
+                @let left = store.remaining();
                 @if (left !== null) {
                   <!-- Only when it is a reason to hurry. The server decides the
                        threshold and sends nothing above it, so the page cannot
@@ -193,11 +193,11 @@
               </section>
             }
 
-            @if (specLines().length > 0 || statements().length > 0) {
+            @if (store.specLines().length > 0 || store.statements().length > 0) {
               <section class="specs">
                 <h2 class="specs__title">{{ t('product.specs') }}</h2>
                 <dl class="specs__list">
-                  @for (line of specLines(); track line.code) {
+                  @for (line of store.specLines(); track line.code) {
                     <div class="specs__row">
                       <dt class="specs__key">{{ line.label }}</dt>
                       <dd class="specs__value">
@@ -210,10 +210,10 @@
 
                 <!-- What an approved claim says that is not a value: a sentence
                      with its source, never promoted to a row. -->
-                @if (statements().length > 0) {
+                @if (store.statements().length > 0) {
                   <h3 class="specs__subtitle">{{ t('specs.alsoSays') }}</h3>
                   <ul class="specs__statements">
-                    @for (statement of statements(); track $index) {
+                    @for (statement of store.statements(); track $index) {
                       <li class="specs__statement">
                         {{ statement.text }}
                         <storefront-spec-source source="description" [evidence]="statement.evidence" />

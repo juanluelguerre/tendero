@@ -1,15 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import type { OrderView, ReturnableLineView, ReturnReason, ReturnView } from '@tendero/shared-api';
+import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
+import type { ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
-import { OrderService } from '../../data-access/order.service';
-import { ReturnsPolicy } from '../../data-access/returns-policy.service';
+import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
-import { type ReturnableLine, returnableLines } from './returnable';
+import { OrderStore } from './order.store';
 
 /**
  * The order, and the way back.
@@ -21,76 +20,34 @@ import { type ReturnableLine, returnableLines } from './returnable';
  * The return form only appears once the order is **Delivered**. That is not a UI
  * preference: `ReturnRequest.Open` refuses anything else, and offering a form
  * the server will reject is how an interface teaches people not to trust it.
+ *
+ * The order and the return being put together are its store's (ADR 0047);
+ * the page presents them.
  */
 @Component({
   selector: 'storefront-order',
   imports: [TranslocoDirective, FormsModule, RouterLink],
+  providers: [OrderStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-page.html',
   styleUrl: './order-page.css',
 })
 export class OrderPage {
+  protected readonly store = inject(OrderStore);
+
   /** Every link carries the language segment (P5-13). */
   protected readonly links = inject(ShopLinks);
 
-  private readonly orders = inject(OrderService);
   private readonly culture = inject(CultureStore);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly transloco = inject(TranslocoService);
 
   protected readonly reasons = RETURN_REASONS;
 
   /** Days from delivery, published by the API so this page cannot disagree
       with the rule that refuses a late return. */
-  protected readonly returnWindowDays = inject(ReturnsPolicy).windowDays;
-
-  protected readonly order = signal<OrderView | null>(null);
-  protected readonly returns = signal<ReturnView[]>([]);
-
-  /** How many of each SKU the server says may still come back. */
-  private readonly returnable = signal<ReturnableLineView[]>([]);
-
-  /** The lines the form offers: only what is left, never the whole order. */
-  protected readonly returnableLines = computed(() => {
-    const order = this.order();
-    return order ? returnableLines(order, this.returnable()) : [];
-  });
-  protected readonly loading = signal(true);
-  protected readonly sending = signal(false);
-  protected readonly returnMessage = signal<string | null>(null);
-  protected readonly returnOpened = signal(false);
-
-  /** Which lines are coming back, and on what terms. */
-  protected readonly picked = signal(new Map<string, { quantity: number; reason: ReturnReason }>());
-
-  /**
-   * True only when this page was reached from checkout. The "thank you" belongs
-   * to the moment, not to the URL: coming back to an order a week later should
-   * not be congratulated for it.
-   */
-  protected readonly justPlaced = signal(false);
-
-  constructor() {
-    const state = this.router.getCurrentNavigation()?.extras.state as { order?: OrderView } | undefined;
-
-    if (state?.order) {
-      // Checkout already has the order; asking for it again would be a round
-      // trip to learn what we were just told.
-      this.order.set(state.order);
-      this.justPlaced.set(true);
-      this.loading.set(false);
-    }
-
-    // Loaded anyway, and not only when the navigation state is empty. A refresh
-    // has to work — a confirmation page that vanishes on F5 is a page people
-    // screenshot instead — and the returns against the order only exist server
-    // side.
-    void this.load();
-  }
+  protected readonly returnWindowDays = inject(ReturnsPolicyStore).windowDays;
 
   protected money(amount: number): string {
-    return formatPrice(amount, this.order()?.currency ?? 'EUR', this.culture.active());
+    return formatPrice(amount, this.store.order()?.currency ?? 'EUR', this.culture.active());
   }
 
   /** The first segment. A full GUID is unreadable and the URL has the rest. */
@@ -98,121 +55,7 @@ export class OrderPage {
     return id.split('-')[0];
   }
 
-  protected canReturn(): boolean {
-    return this.order()?.status === 'Delivered';
-  }
-
-  protected quantityOf(sku: string): number {
-    return this.picked().get(sku)?.quantity ?? 1;
-  }
-
-  protected reasonOf(sku: string): string {
-    return this.picked().get(sku)?.reason ?? RETURN_REASONS[0];
-  }
-
-  protected toggle(line: ReturnableLine): void {
-    this.picked.update((current) => {
-      const next = new Map(current);
-
-      if (next.has(line.sku)) next.delete(line.sku);
-      else next.set(line.sku, { quantity: 1, reason: RETURN_REASONS[0] });
-
-      return next;
-    });
-  }
-
-  protected setQuantity(sku: string, quantity: number): void {
-    const left = this.returnableLines().find((line) => line.sku === sku)?.left ?? 1;
-
-    this.picked.update((current) => {
-      const next = new Map(current);
-      const line = next.get(sku);
-
-      if (line) next.set(sku, { ...line, quantity: Math.min(left, Math.max(1, Number(quantity) || 1)) });
-
-      return next;
-    });
-  }
-
-  protected setReason(sku: string, reason: ReturnReason): void {
-    this.picked.update((current) => {
-      const next = new Map(current);
-      const line = next.get(sku);
-
-      if (line) next.set(sku, { ...line, reason });
-
-      return next;
-    });
-  }
-
   protected describe(request: ReturnView): string {
     return request.lines.map((line) => `${line.sku} ×${line.quantity}`).join(' · ');
-  }
-
-  protected async requestReturn(): Promise<void> {
-    const order = this.order();
-    if (!order) return;
-
-    this.sending.set(true);
-    this.returnMessage.set(null);
-
-    try {
-      const opened = await this.orders.requestReturn(
-        order.orderId,
-        {
-          lines: [...this.picked().entries()].map(([sku, line]) => ({
-            sku,
-            quantity: line.quantity,
-            reason: line.reason,
-            comment: null,
-          })),
-        },
-        this.culture.active(),
-      );
-
-      this.returns.update((current) => [opened, ...current]);
-      this.picked.set(new Map());
-
-      // What is left to return changed, and only the server knows by how much.
-      void this.load();
-      this.returnOpened.set(true);
-      this.returnMessage.set(this.transloco.translate('order.returnOpened'));
-    } catch (error) {
-      const failure = error as { status?: number; error?: unknown };
-
-      this.returnOpened.set(false);
-      this.returnMessage.set(
-        failure.status === 409
-          ? this.transloco.translate('order.returnClosed')
-          : this.transloco.translate('order.returnFailed', {
-              reason: typeof failure.error === 'string' ? failure.error : '',
-            }),
-      );
-    } finally {
-      this.sending.set(false);
-    }
-  }
-
-  private async load(): Promise<void> {
-    const id = this.route.snapshot.paramMap.get('id');
-
-    if (!id) {
-      this.loading.set(false);
-      return;
-    }
-
-    try {
-      const detail = await this.orders.get(id, this.culture.active());
-
-      this.order.set(detail.order);
-      this.returns.set(detail.returns);
-      this.returnable.set(detail.returnable);
-    } catch {
-      // A 404 is the honest answer to a URL somebody typed wrong, and the
-      // template says so. Only the freshly-placed case has an order to keep.
-      if (!this.justPlaced()) this.order.set(null);
-    } finally {
-      this.loading.set(false);
-    }
   }
 }
