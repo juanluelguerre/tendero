@@ -424,6 +424,22 @@ p {
 
 .fact__link:hover { color: var(--text); text-decoration: underline; }
 
+/* A widget's figures as label and number (P11-7), shared since R-9 split the
+   operations and agents panels into widgets that all say figures this way. */
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: var(--space-3) var(--space-4);
+  margin: 0;
+}
+
+.fact { margin: 0; }
+.fact dt { color: var(--text-muted); font-size: var(--text-3xs); }
+.fact dd { margin: 0; }
+.fact__value { font-size: var(--text-lg); font-weight: 600; }
+.fact__value--warn { color: var(--warning); }
+.fact__note { font-size: var(--text-3xs); }
+
 .widget__sub { margin: var(--space-2) 0 0; }
 .widget__sub a { display: inline-flex; align-items: center; min-height: 1.5rem; color: inherit; }
 .widget__state { margin: 0; }

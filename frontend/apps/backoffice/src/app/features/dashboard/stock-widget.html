@@ -1,0 +1,36 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.stock'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+    <a class="widget__link" routerLink="/stock">{{ t('toStock') }}</a>
+  </header>
+
+  @if (stock.isLoading() && !stock.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (stock.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else {
+    <dl class="facts">
+      <div class="fact">
+        <dt><a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">{{ t('restock') }}</a></dt>
+        <dd class="numeric fact__value" [class.fact__value--warn]="restock() > 0">{{ restock() }}</dd>
+      </div>
+      <div class="fact">
+        <dt><a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'SoldOut' }">{{ t('soldOut') }}</a></dt>
+        <dd class="numeric fact__value" [class.fact__value--warn]="soldOut() > 0">{{ soldOut() }}</dd>
+      </div>
+    </dl>
+    @if (lowest().length > 0) {
+      <div class="at-m">
+        <h3 class="eyebrow widget__sub">{{ t('lowest') }}</h3>
+        <ol class="ranking">
+          @for (row of lowest(); track row.sku) {
+            <li class="ranking__row">
+              <span class="ranking__name numeric">{{ row.sku }}</span>
+              <span class="numeric">{{ t('available', { count: row.available }) }}</span>
+            </li>
+          }
+        </ol>
+      </div>
+    }
+  }
+</article>

@@ -630,8 +630,8 @@
       },
       "title": "Ventas por día"
     },
-    "operations": {
-      "title": "Pedidos y salud",
+    "ordersByStatus": {
+      "title": "Pedidos por estado",
       "toOrders": "Pedidos",
       "loading": "Cargando…",
       "failed": "No se han podido cargar estas cifras.",
@@ -639,18 +639,40 @@
       "late": "{{count}} con retraso",
       "inProgress": "Confirmándose",
       "paymentFailed": "Pago fallido",
+      "cancelledCount": "Cancelados"
+    },
+    "health": {
+      "title": "Salud",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
       "cancellationRate": "Tasa de cancelación",
       "cancelled": "{{count}} cancelados",
-      "returns": "Devoluciones",
-      "openReturns": "Abiertas",
-      "returnRate": "Tasa de devolución",
-      "refunded": "Reembolsado",
-      "byReason": "Devoluciones abiertas por motivo",
       "standing": {
         "within": "Dentro del objetivo del {{target}}",
         "near": "Cerca del objetivo del {{target}}",
         "outside": "Por encima del objetivo del {{target}}"
       }
+    },
+    "returns": {
+      "title": "Devoluciones",
+      "toReturns": "Devoluciones",
+      "loading": "Cargando…",
+      "failed": "No se han podido cargar estas cifras.",
+      "openReturns": "Abiertas",
+      "returnRate": "Tasa de devolución",
+      "refunded": "Reembolsado",
+      "byReason": "Devoluciones abiertas por motivo",
+      "nothingOpen": "No hay devoluciones abiertas."
+    },
+    "stock": {
+      "title": "Stock",
+      "toStock": "Stock",
+      "loading": "Cargando el stock…",
+      "failed": "No se ha podido cargar el stock.",
+      "restock": "Por reponer",
+      "soldOut": "Agotado",
+      "lowest": "Los más bajos primero",
+      "available": "quedan {{count}}"
     },
     "funnel": {
       "title": "Checkout",

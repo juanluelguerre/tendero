@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import type { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { CultureStore, provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { DashboardRefresh } from './dashboard-refresh';
@@ -22,6 +23,7 @@ export function setUpWidgets(): void {
       provideHttpClient(),
       provideHttpClientTesting(),
       provideTenderoI18n(),
+      provideRouter([]),
       { provide: API_BASE_URL, useValue: 'http://api' },
       DashboardSources,
       DashboardRefresh,

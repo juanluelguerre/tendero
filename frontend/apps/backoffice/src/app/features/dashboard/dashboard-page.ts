@@ -7,9 +7,12 @@ import { ByChannelWidget } from './by-channel-widget';
 import { DashboardRefresh } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { FunnelWidget } from './funnel-widget';
+import { HealthWidget } from './health-widget';
 import { KeyFiguresWidget } from './key-figures-widget';
-import { OperationsWidget } from './operations-widget';
+import { OrdersByStatusWidget } from './orders-by-status-widget';
+import { ReturnsWidget } from './returns-widget';
 import { SalesByDayWidget } from './sales-by-day-widget';
+import { StockWidget } from './stock-widget';
 import { TasksWidget } from './tasks-widget';
 
 /**
@@ -28,7 +31,7 @@ import { TasksWidget } from './tasks-widget';
   selector: 'backoffice-dashboard',
   imports: [
     TranslocoDirective, KeyFiguresWidget, SalesByDayWidget, BestSellersWidget, ByChannelWidget,
-    OperationsWidget, FunnelWidget, AgentsWidget, TasksWidget,
+    OrdersByStatusWidget, HealthWidget, ReturnsWidget, StockWidget, FunnelWidget, AgentsWidget, TasksWidget,
   ],
   providers: [DashboardSources, DashboardRefresh],
   changeDetection: ChangeDetectionStrategy.OnPush,

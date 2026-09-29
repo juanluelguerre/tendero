@@ -630,8 +630,8 @@
       },
       "title": "Sales by day"
     },
-    "operations": {
-      "title": "Orders and health",
+    "ordersByStatus": {
+      "title": "Orders by status",
       "toOrders": "Orders",
       "loading": "Loading…",
       "failed": "These figures could not be loaded.",
@@ -639,18 +639,40 @@
       "late": "{{count}} late",
       "inProgress": "Being confirmed",
       "paymentFailed": "Payment failed",
+      "cancelledCount": "Cancelled"
+    },
+    "health": {
+      "title": "Health",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
       "cancellationRate": "Cancellation rate",
       "cancelled": "{{count}} cancelled",
-      "returns": "Returns",
-      "openReturns": "Open",
-      "returnRate": "Return rate",
-      "refunded": "Refunded",
-      "byReason": "Open returns by reason",
       "standing": {
         "within": "Within the {{target}} target",
         "near": "Near the {{target}} target",
         "outside": "Over the {{target}} target"
       }
+    },
+    "returns": {
+      "title": "Returns",
+      "toReturns": "Returns",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
+      "openReturns": "Open",
+      "returnRate": "Return rate",
+      "refunded": "Refunded",
+      "byReason": "Open returns by reason",
+      "nothingOpen": "No returns open."
+    },
+    "stock": {
+      "title": "Stock",
+      "toStock": "Stock",
+      "loading": "Loading the stock…",
+      "failed": "The stock could not be loaded.",
+      "restock": "To restock",
+      "soldOut": "Sold out",
+      "lowest": "Lowest first",
+      "available": "{{count}} left"
     },
     "funnel": {
       "title": "Checkout",
