@@ -31,3 +31,17 @@
 @media (max-width: 40rem) {
   .cell--S, .cell--M, .cell--L { grid-column: span 12; }
 }
+
+/* On a wall (R-9): the grid takes the screen's height, its rows share it, and
+   each widget spreads its chart over the height it is given. */
+.grid--fill {
+  block-size: 100%;
+  grid-auto-rows: minmax(0, 1fr);
+  padding-block-end: 0;
+  --chart-block-size: 100%;
+}
+
+.grid--fill .cell > * {
+  display: flex;
+  flex-direction: column;
+}

@@ -90,3 +90,11 @@
 
   .figures-toggle { display: none; }
 }
+
+/* A chart fills the widget that has a height to give it (a wall), and keeps
+   its own height everywhere else. */
+:host {
+  display: block;
+  flex: 1 1 auto;
+  min-block-size: 0;
+}

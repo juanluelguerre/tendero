@@ -631,3 +631,10 @@ p {
     var(--space-4) 0 / calc(100% - 2 * var(--space-4)) 100% no-repeat,
     var(--bg-surface);
 }
+
+/* A wall is read from further away (R-9, full screen): the type — and every
+   rem, including the size contract's thresholds — grows with the monitor, from
+   the ordinary 16px at 1440 to 24px at most. */
+html:has(.dashboard:fullscreen) {
+  font-size: clamp(100%, 0.25rem + 0.85vw, 150%);
+}

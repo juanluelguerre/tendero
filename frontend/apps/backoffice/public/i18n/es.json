@@ -595,6 +595,12 @@
       "growth": "Crecimiento · Panel",
       "agents": "Agentes · Panel"
     },
+    "fullScreen": {
+      "enter": "Pantalla completa",
+      "leave": "Salir de pantalla completa",
+      "updated": "Actualizado a las {{time}}",
+      "everyMinute": "se actualiza cada minuto"
+    },
     "keyFigures": {
       "title": "Cifras clave",
       "vsPrevious": "Frente al periodo anterior",

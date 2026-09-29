@@ -35,3 +35,41 @@
   border-block-end-color: var(--text);
   font-weight: 600;
 }
+
+/* The button is for a monitor: from 1440 up, never on a phone (spec, full screen). */
+.full-screen-enter { display: none; }
+
+@media (min-width: 90rem) {
+  .full-screen-enter { display: inline-flex; }
+}
+
+/* On the wall the section is the whole screen: its own background, its rows
+   sharing the height, the head reduced to what a glance from across a room needs. */
+.dashboard:fullscreen {
+  display: flex;
+  flex-direction: column;
+  block-size: 100dvh;
+  padding: var(--space-5);
+  overflow: auto;
+  background: var(--bg-page);
+}
+
+.dashboard:fullscreen > :last-child {
+  flex: 1;
+  min-block-size: 0;
+}
+
+.wall-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-5);
+  margin-block-end: var(--space-4);
+}
+
+.wall-head__title {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.full-screen-leave { margin-inline-start: auto; }

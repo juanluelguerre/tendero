@@ -1,15 +1,17 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { Component, input } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { CultureStore, provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from './dashboard-page';
+import { DashboardRefresh } from './dashboard-refresh';
 import { dashboardChildren } from './dashboard-routes';
 import { DASHBOARD_WIDGETS, type WidgetDefinition, type WidgetKey } from './dashboard-widgets';
+import { FullScreen } from './full-screen';
 import { English } from './widget-testing';
 
 @Component({ selector: 'backoffice-stub-widget', template: '{{ period() }}' })
@@ -24,6 +26,19 @@ const Keys: WidgetKey[] = [
 const Stubs = Object.fromEntries(Keys.map((key) => [key, { component: StubWidget, takesPeriod: true }])) as Record<WidgetKey, WidgetDefinition>;
 
 describe('the dashboard page', () => {
+  const active = signal(false);
+  const fake = {
+    supported: true,
+    active: active.asReadonly(),
+    enter: vi.fn(async () => active.set(true)),
+    leave: vi.fn(async () => active.set(false)),
+  };
+
+  afterEach(() => {
+    active.set(false);
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
@@ -32,6 +47,7 @@ describe('the dashboard page', () => {
         provideTenderoI18n(),
         { provide: API_BASE_URL, useValue: 'http://api' },
         provideRouter([{ path: 'dashboard', component: DashboardPage, children: dashboardChildren }]),
+        { provide: FullScreen, useValue: fake },
       ],
     });
     TestBed.overrideComponent(DashboardPage, { add: { providers: [{ provide: DASHBOARD_WIDGETS, useValue: Stubs }] } });
@@ -76,5 +92,47 @@ describe('the dashboard page', () => {
     shell(harness).querySelector<HTMLAnchorElement>('nav.tabs a[href^="/dashboard/agents"]')?.click();
     await harness.fixture.whenStable();
     expect(TestBed.inject(Router).url).toBe('/dashboard/agents?period=day');
+  });
+
+  it('puts its own section on the screen, and shows the tab, the period, the time and the way out there', async () => {
+    const harness = await open('/dashboard/operations?period=day');
+    const element = shell(harness);
+    element.querySelector<HTMLButtonElement>('.full-screen-enter')?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    const head = element.querySelector('.wall-head');
+
+    expect(fake.enter).toHaveBeenCalledWith(element.querySelector('section.dashboard'));
+    expect(head?.textContent).toContain('Operations');
+    expect(head?.textContent).toContain('Last 24 h');
+    expect(head?.textContent).toContain('refreshes every minute');
+    expect(head?.querySelector('.full-screen-leave')).not.toBeNull();
+    expect(element.querySelector('nav.tabs')).toBeNull();
+  });
+
+  it('refreshes every minute on the wall, and only there', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    const harness = await open('/dashboard');
+    const refresh = harness.fixture.debugElement.query((node) => node.componentInstance instanceof DashboardPage).injector.get(DashboardRefresh);
+    const before = refresh.at();
+    vi.advanceTimersByTime(120_000);
+    expect(refresh.at()).toBe(before);
+
+    active.set(true);
+    harness.detectChanges();
+    vi.advanceTimersByTime(60_000);
+    expect(refresh.at()).toBeGreaterThan(before);
+  });
+
+  /** Review focus 3: leaving by Esc is the browser's event; the page comes back and the tick stops. */
+  it('leaves the wall when the browser does', async () => {
+    const harness = await open('/dashboard');
+    active.set(true);
+    harness.detectChanges();
+    active.set(false);
+    harness.detectChanges();
+
+    expect(shell(harness).querySelector('.wall-head')).toBeNull();
+    expect(shell(harness).querySelector('nav.tabs')).not.toBeNull();
   });
 });

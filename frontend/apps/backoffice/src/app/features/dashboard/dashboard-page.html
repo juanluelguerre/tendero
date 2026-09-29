@@ -1,39 +1,56 @@
-<section class="dashboard" *transloco="let t">
-  <header class="page-head">
-    <h1 class="page-title">{{ t('dashboard.title') }}</h1>
-    <div class="page-actions">
-      <div class="periods" role="group" [attr.aria-label]="t('dashboard.period.label')">
-        @for (option of periods; track option) {
-          <button
-            type="button"
-            class="button button--small button--quiet period"
-            [attr.data-period]="option"
-            [class.period--active]="option === period()"
-            [attr.aria-pressed]="option === period()"
-            (click)="choose(option)"
-          >
-            {{ t('dashboard.period.' + option) }}
+<section class="dashboard" #wall *transloco="let t">
+  @if (fullScreen.active()) {
+    <!-- On the wall: what a glance from across the room needs, and the way out. -->
+    <header class="wall-head">
+      <h1 class="wall-head__title">{{ t('dashboard.tabs.' + tab()) }}</h1>
+      <span>{{ t('dashboard.period.' + period()) }}</span>
+      <span class="muted">{{ t('dashboard.fullScreen.updated', { time: updated() }) }} · {{ t('dashboard.fullScreen.everyMinute') }}</span>
+      <button type="button" class="button button--small button--quiet full-screen-leave" (click)="leaveWall()">
+        {{ t('dashboard.fullScreen.leave') }}
+      </button>
+    </header>
+  } @else {
+    <header class="page-head">
+      <h1 class="page-title">{{ t('dashboard.title') }}</h1>
+      <div class="page-actions">
+        <div class="periods" role="group" [attr.aria-label]="t('dashboard.period.label')">
+          @for (option of periods; track option) {
+            <button
+              type="button"
+              class="button button--small button--quiet period"
+              [attr.data-period]="option"
+              [class.period--active]="option === period()"
+              [attr.aria-pressed]="option === period()"
+              (click)="choose(option)"
+            >
+              {{ t('dashboard.period.' + option) }}
+            </button>
+          }
+        </div>
+        @if (fullScreen.supported) {
+          <button type="button" class="button button--small button--quiet full-screen-enter" (click)="enterWall()">
+            {{ t('dashboard.fullScreen.enter') }}
           </button>
         }
       </div>
-    </div>
-  </header>
-  <p class="page-hint">{{ t('dashboard.hint') }}</p>
+    </header>
+    <p class="page-hint">{{ t('dashboard.hint') }}</p>
 
-  <nav class="tabs" [attr.aria-label]="t('dashboard.tabs.label')">
-    @for (tab of tabs; track tab) {
-      <a
-        class="tab"
-        [routerLink]="linkOf(tab)"
-        [queryParams]="{ period: queryOfPeriod(period()) }"
-        routerLinkActive="tab--active"
-        [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
-        ariaCurrentWhenActive="page"
-      >
-        {{ t('dashboard.tabs.' + tab) }}
-      </a>
-    }
-  </nav>
+    <nav class="tabs" [attr.aria-label]="t('dashboard.tabs.label')">
+      @for (tab of tabs; track tab) {
+        <a
+          class="tab"
+          [routerLink]="linkOf(tab)"
+          [queryParams]="{ period: queryOfPeriod(period()) }"
+          routerLinkActive="tab--active"
+          [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
+          ariaCurrentWhenActive="page"
+        >
+          {{ t('dashboard.tabs.' + tab) }}
+        </a>
+      }
+    </nav>
+  }
 
   <router-outlet />
 </section>

@@ -595,6 +595,12 @@
       "growth": "Growth · Dashboard",
       "agents": "Agents · Dashboard"
     },
+    "fullScreen": {
+      "enter": "Full screen",
+      "leave": "Leave full screen",
+      "updated": "Updated at {{time}}",
+      "everyMinute": "refreshes every minute"
+    },
     "keyFigures": {
       "title": "Key figures",
       "vsPrevious": "Against the previous period",
