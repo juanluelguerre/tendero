@@ -1,6 +1,6 @@
 # Spec: a dashboard that shows the whole shop at a glance
 
-**Status**: proposed (2026-09-29), mock-ups drawn and option B chosen by the author; waiting for the spec's review before the plan (R-9)
+**Status**: proposed (2026-09-29); option B chosen, the data questions answered by the author the same day; waiting for the spec's approval before the plan (R-9)
 **Slice(s)**: the backoffice's dashboard; Ordering (the series and the sales figures), Inventory, Pricing, Search and Accounts for their widgets; `frontend/libs` for the charts
 **Article**: *Two engines, one contract* (the chart comparison), and *A dashboard on the wall* (full screen), to be decided with the blog index
 
@@ -169,23 +169,74 @@ the redesign kept). What exists and what does not:
 
 | Widget | Source | Exists today |
 |---|---|---|
-| Key figures (totals and change) | Ordering, `GET /api/dashboard/sales`, `/funnel`, `/operations` | yes |
+| Key figures (totals and change), and **units per order** | Ordering, `GET /api/dashboard/sales`, `/funnel`, `/operations` | yes; units per order is new |
 | Key figures' sparklines, Sales by day | Ordering, **a daily series** of revenue, orders and units, for the period and the one before | **no** — the new endpoint R-9 needs first |
-| By channel (people and agents) | Ordering, `Order.PlacedBy` | yes; **MCP against UCP is not recorded** on the order |
-| By category | an order line does not carry its category | **no** |
+| By channel (people, agents over MCP, agents over UCP) | Ordering, `Order.PlacedBy` and **the surface, recorded on the order from R-9** | people against agents yes; the surface is new |
+| By category | **the category, snapshotted into `OrderLine` from R-9** | new; the orders placed before have none and are counted apart |
 | Best sellers | Ordering, `SalesRanking` | yes |
 | Orders by status, late | Ordering, the orders list's counts | yes |
-| Health (cancellation against target) | Ordering, `/operations` | yes |
+| Health: cancellation, **order defect rate**, **late shipment rate**, each against its target | Ordering | cancellation yes; the defect and late rates are new |
 | Checkout funnel | Ordering, `/funnel` | yes |
 | Returns by reason | Ordering, `/operations` | yes |
-| Stock (to restock, sold out) | Inventory, `Restocking` | yes; **coverage in days needs a sales velocity** from Ordering |
+| Stock: to restock, sold out, **coverage in days** | Inventory, with **the units sold per SKU per day from an Ordering read port** | to restock and sold out yes; coverage is new |
+| **Sell-through** by product | Ordering (sold) and Inventory (left) | new |
 | Waiting for you | the existing tasks widget's sources | yes |
-| Campaigns against their baseline | Pricing (the window) and Ordering (the sales in it) | **no** — the baseline is new |
+| Campaigns against their baseline | Pricing (the window) and Ordering (the sales in it and the baseline) | the baseline is new |
 | Customers, new and returning by day | Ordering / Accounts | totals yes, **series no** |
-| Search: top queries, no results | no aggregate of searches is stored | **no** |
+| Search: top queries, no results | no aggregate of searches is stored | **deferred** (the author, 2026-09-29) — the backlog, with its privacy note |
+| **Search status**: words, meaning, reranking | **Search's own health checks through its ports**, their last change of state | new; the API has only `self` today |
 | Search: NDCG | Search, `/api/search/evaluation` | yes |
 | What agents buy, by day | Ordering, `/agent-sales` | totals yes, **series no** |
 | Refusals by reason | Ordering, `/agent-denials` | yes |
+
+### Definitions
+
+**Stock coverage** — *at the pace the shop sells, how many days until a SKU
+runs out* (Amazon's *days of supply*, Zalando's *weeks of cover*):
+
+```
+coverage (days) = units available ÷ units sold per day
+units sold per day = units sold in the last 28 days ÷ 28
+```
+
+A backpack with 18 available and 42 sold in 28 days sells 1.5 a day: 12 days.
+Four whole weeks, so no weekday counts twice and one strong day does not skew
+the pace; **available**, not on hand, so what orders already reserve is not
+counted; test orders are left out. A SKU that sold nothing in 28 days has **no
+sales** — not an infinite coverage, and a signal of its own; a sold-out SKU has
+0 and is already *sold out*; a product on sale for fewer than 28 days divides by
+the days it has been on sale. The widget shows how many SKUs have **fewer than
+14 days**, the median coverage per warehouse, and the closest to running out.
+Inventory owns the stock and Ordering the pace: Ordering answers the units sold
+per SKU per day through a read port, and Inventory composes the figure.
+
+**A campaign's baseline** — *what the campaign added over what the shop would
+have sold anyway*. For each day of the campaign, the baseline is the average of
+the **same weekday** over the **four weeks before it opened** (a Saturday against
+the four Saturdays before, since weekends sell more); the uplift is what was sold
+that day less its baseline. A Saturday that sold €330 against €240, €270, €250
+and €280 the four Saturdays before has a baseline of €260 and an uplift of +€70
+(+27 %). The widget says what it cannot: it is an **estimate, not a proof**
+(weather, a mention elsewhere); with **fewer than four weeks of history** there is
+no baseline and it says so rather than inventing one; two campaigns that
+**overlap** are not told apart; test orders are left out. Ordering computes it
+over the window Pricing gives it — dates in, figures out.
+
+**Order defect rate** — orders with a return for *damaged* or *not as described*,
+or cancelled by the shop, over the orders of the period; target **below 1 %**
+(Amazon's *Account Health*). **Late shipment rate** — orders shipped after their
+promised date over the orders shipped; target **below 4 %**. **Sell-through** —
+units sold over units sold plus units left, by product, for the period: what
+moves and what sits. **Units per order** — units over orders.
+
+**Search status** — each stage of search (words, meaning, reranking) with its
+state and **since when**, said as what the shopper gets: *"Meaning: down since
+11:40 — searches answer with words only"*. Search registers a health check per
+stage **through its ports** (no new dependency); the API remembers each stage's
+last change of state and serves them to the dashboard, authenticated — never
+through the open `/health`. It is not Grafana: no latency, no memory, only
+whether search answers in full. The count of degraded searches is an
+OpenTelemetry metric the shop does not read, and waits for R-10.
 
 ## Evidence of use
 
@@ -212,22 +263,22 @@ Staff events, under the shop's notice (ADR 0041), never with who.
 - Figures from the observability stack (visits, latencies): the dashboard reads
   the shop's own data and does not depend on Grafana being up.
 
-## Open questions
+## The author's answers (2026-09-29)
 
-1. **By category.** Snapshot the category into `OrderLine` when an order is
-   placed, as the name and price already are (invariant 1: a crossing carries
-   values) — or leave the widget out of R-9? Snapshotting is the pattern; it
-   needs a migration and it cannot fill the orders already placed.
-2. **MCP against UCP.** Record the surface an agent's order came through, on the
-   order, or keep *By channel* at people against agents?
-3. **Top queries and searches with no results.** Search would keep an anonymous
-   daily count per normalised query — no customer, no session — or the widget
-   waits. A privacy note (`docs/privacy.md`) comes with it either way.
-4. **Stock coverage.** Days of cover need the units sold per day per SKU from
-   Ordering: an Ordering read port Inventory's widget asks, or the widget shows
-   to restock and sold out only.
-5. **The campaign's baseline.** The average of the four weeks before the
-   campaign opened, by day — computed by Ordering over Pricing's window.
+1. **By category**: the category is snapshotted into `OrderLine` when an order
+   is placed, as its name and price already are (invariant 1). A migration; the
+   orders placed before have none and the widget counts them apart.
+2. **MCP against UCP**: the surface an agent's order came through is recorded
+   on the order.
+3. **Top queries and searches with no results**: deferred to the backlog, with
+   its privacy note.
+4. **Stock coverage**: computed, as *Definitions* says.
+5. **The campaign's baseline**: computed, as *Definitions* says.
+6. **More of what the large back offices measure**: the order defect rate and
+   the late shipment rate against their targets in *Health*, sell-through in
+   *Sales*, units per order in the key figures. Visits stay in the observability
+   stack and margin has no cost prices to compute it from.
+7. **Search status** in *Operations*, from Search's own health checks.
 
 ## Building it, in order
 
@@ -241,7 +292,10 @@ Staff events, under the shop's notice (ADR 0041), never with who.
 - **D-4**: the Overview and the tabs, with their URLs and the period in the URL.
 - **D-5**: full screen: the button, the wall density, the minute's refresh.
 - **D-6**: the phone.
-- **D-7**: the widgets whose data the open questions decide.
+- **D-7**: the new data: the category and the surface on the order (a
+  migration), coverage through Ordering's read port, the campaign's baseline,
+  the defect and late rates, sell-through, units per order, and Search's health
+  checks with their widget.
 - **D-8**: the events, the after captures, Stryker, the notebook and the book.
 
 ## The mock-ups (2026-09-29)
