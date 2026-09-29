@@ -1,0 +1,34 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.returns'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+    <a class="widget__link" routerLink="/returns">{{ t('toReturns') }}</a>
+  </header>
+
+  @if (store.operations.isLoading() && !store.operations.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (store.operations.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else if (store.operations.value(); as ops) {
+    <dl class="facts">
+      <div class="fact">
+        <dt><a class="fact__link" routerLink="/returns">{{ t('openReturns') }}</a></dt>
+        <dd class="numeric fact__value">{{ ops.openReturns }}</dd>
+      </div>
+      <div class="fact">
+        <dt>{{ t('returnRate') }}</dt>
+        <dd class="numeric fact__value">{{ share(ops.returnRate) }}</dd>
+      </div>
+      <div class="fact">
+        <dt>{{ t('refunded') }}</dt>
+        <dd class="numeric fact__value">{{ money(ops.refunded, ops.currency) }}</dd>
+      </div>
+    </dl>
+    @if (store.chart(); as data) {
+      <div class="at-m">
+        <backoffice-bar-chart [data]="data" layout="rows" [format]="count" [caption]="t('byReason')" />
+      </div>
+    } @else {
+      <p class="muted widget__state">{{ t('nothingOpen') }}</p>
+    }
+  }
+</article>

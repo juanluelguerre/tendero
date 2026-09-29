@@ -1,5 +1,5 @@
 import type { Routes } from '@angular/router';
-import { DashboardTabs, pathOfTab } from './dashboard-tabs';
+import { DashboardTabs, pathOfTab } from './tabs/dashboard-tabs';
 
 /**
  * One route per tab under /dashboard (spec: each tab has its URL, so each can
@@ -11,5 +11,5 @@ export const dashboardChildren: Routes = DashboardTabs.map((tab) => ({
   pathMatch: 'full' as const,
   title: `dashboard.tabTitles.${tab}`,
   data: { tab },
-  loadComponent: () => import('./dashboard-tab-page').then((m) => m.DashboardTabPage),
+  loadComponent: () => import('./tabs/dashboard-tab-page').then((m) => m.DashboardTabPage),
 }));

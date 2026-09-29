@@ -7,10 +7,10 @@ import { formatTime } from '@tendero/shared-util';
 import { filter, map, startWith } from 'rxjs';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
 import { injectDashboardPeriod, queryOfPeriod } from './dashboard-period';
-import { DashboardRefresh } from './dashboard-refresh';
-import { DashboardSources } from './dashboard-sources';
-import { type DashboardTab, DashboardTabs } from './dashboard-tabs';
-import { provideDashboardWidgets } from './dashboard-widget-registry';
+import { DashboardRefresh } from './sources/dashboard-refresh';
+import { DashboardSources } from './sources/dashboard-sources';
+import { type DashboardTab, DashboardTabs } from './tabs/dashboard-tabs';
+import { provideDashboardWidgets } from './widgets/dashboard-widget-registry';
 import { FullScreen } from './full-screen';
 
 /** A minute, until R-10's live source replaces the clock. */

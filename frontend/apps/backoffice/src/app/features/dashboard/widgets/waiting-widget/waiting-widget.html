@@ -1,0 +1,58 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.tasks'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+  </header>
+
+  <ul class="tasks">
+    <li class="task">
+      <a class="task__head" routerLink="/review">
+        <span>{{ t('drafts') }}</span>
+        <span class="numeric task__count">{{ store.drafts.value()?.total ?? '—' }}</span>
+      </a>
+      @if (store.drafts.error()) {
+        <p class="failed task__note" role="alert">{{ t('failed') }}</p>
+      }
+    </li>
+
+    <li class="task">
+      <a class="task__head" routerLink="/claims">
+        <span>{{ t('claims') }}</span>
+        <span class="numeric task__count">{{ store.claims.value()?.total ?? '—' }}</span>
+      </a>
+      @if (store.claims.error()) {
+        <p class="failed task__note" role="alert">{{ t('failed') }}</p>
+      } @else if (store.weakestClaims().length > 0) {
+        <p class="eyebrow task__note">{{ t('weakestFirst') }}</p>
+        <ul class="task__items">
+          @for (claim of store.weakestClaims(); track claim.claimId) {
+            <li class="task__item">
+              <span class="task__text">{{ statement(claim) }}</span>
+              <span class="numeric muted">{{ t('support', { value: (claim.support * 100).toFixed(0) }) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </li>
+
+    <li class="task">
+      <a class="task__head" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">
+        <span>{{ t('lowStock') }}</span>
+        <span class="numeric task__count" [class.task__count--warn]="store.restockCount() > 0">
+          {{ store.stock.hasValue() ? store.restockCount() : '—' }}
+        </span>
+      </a>
+      @if (store.stock.error()) {
+        <p class="failed task__note" role="alert">{{ t('failed') }}</p>
+      } @else if (store.lowStock().length > 0) {
+        <ul class="task__items">
+          @for (row of store.lowStock().slice(0, shown); track row.sku) {
+            <li class="task__item">
+              <span class="task__text numeric">{{ row.sku }}</span>
+              <span class="numeric">{{ t('available', { count: row.available }) }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </li>
+  </ul>
+</article>

@@ -8,11 +8,11 @@ import { CultureStore, provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from './dashboard-page';
-import { DashboardRefresh } from './dashboard-refresh';
+import { DashboardRefresh } from './sources/dashboard-refresh';
 import { dashboardChildren } from './dashboard-routes';
-import { DASHBOARD_WIDGETS, type WidgetDefinition, type WidgetKey } from './dashboard-widgets';
+import { DASHBOARD_WIDGETS, type WidgetDefinition, type WidgetKey } from './widgets/dashboard-widgets';
 import { FullScreen } from './full-screen';
-import { English } from './widget-testing';
+import { English } from './widgets/widget-testing';
 
 @Component({ selector: 'backoffice-stub-widget', template: '{{ period() }}' })
 class StubWidget {
