@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { bySkuLowestFirst } from './figures';
 
@@ -24,12 +23,11 @@ const Shown = 5;
 })
 export class StockWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
 
-  protected readonly stock = rxResource({
-    params: () => ({ culture: this.culture.active(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.stock(params.culture, params.at),
+  protected readonly stock = refreshedResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: (params, at) => this.sources.stock(params.culture, at),
   });
 
   private readonly counts = computed(() => this.stock.value()?.counts ?? []);

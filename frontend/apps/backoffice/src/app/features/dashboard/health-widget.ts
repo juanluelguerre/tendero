@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { formatShare } from './figures';
 
@@ -23,14 +22,13 @@ import { formatShare } from './figures';
 })
 export class HealthWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly operations = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.operations(params.period, params.at),
+  protected readonly operations = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.operations(params.period, at),
   });
 
   protected share(rate: number): string {

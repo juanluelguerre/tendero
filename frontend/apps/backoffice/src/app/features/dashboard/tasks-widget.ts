@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { CatalogService } from '../../data-access/catalog.service';
 import { KnowledgeService } from '../../data-access/knowledge.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { bySkuLowestFirst } from './figures';
 
@@ -29,22 +28,21 @@ export class TasksWidget {
   private readonly catalog = inject(CatalogService);
   private readonly knowledge = inject(KnowledgeService);
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
 
-  protected readonly drafts = rxResource({
-    params: () => ({ culture: this.culture.active(), at: this.refresh.at() }),
-    stream: ({ params }) => this.catalog.list('Draft', params.culture, 1, 1),
+  protected readonly drafts = refreshedResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: (params) => this.catalog.list('Draft', params.culture, 1, 1),
   });
 
-  protected readonly claims = rxResource({
-    params: () => ({ at: this.refresh.at() }),
+  protected readonly claims = refreshedResource({
+    params: () => ({}),
     stream: () => this.knowledge.claims('All', 1, Shown),
   });
 
-  protected readonly stock = rxResource({
-    params: () => ({ culture: this.culture.active(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.stock(params.culture, params.at),
+  protected readonly stock = refreshedResource({
+    params: () => ({ culture: this.culture.active() }),
+    stream: (params, at) => this.sources.stock(params.culture, at),
   });
 
   /** The server's first page is the weakest first: the queue's own order. */

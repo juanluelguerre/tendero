@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import { Sparkline } from '../../charts/sparkline';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { type Change, formatChange, formatShare } from './figures';
 import { keyFigures } from './key-figures';
@@ -26,17 +25,16 @@ import { keyFigures } from './key-figures';
 })
 export class KeyFiguresWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
 
   readonly period = input.required<DashboardPeriod>();
 
-  private readonly params = () => ({ period: this.period(), at: this.refresh.at() });
+  private readonly params = () => ({ period: this.period() });
 
-  protected readonly sales = rxResource({ params: this.params, stream: ({ params }) => this.sources.sales(params.period, params.at) });
-  private readonly series = rxResource({ params: this.params, stream: ({ params }) => this.sources.series(params.period, params.at) });
-  private readonly funnel = rxResource({ params: this.params, stream: ({ params }) => this.sources.funnel(params.period, params.at) });
-  private readonly operations = rxResource({ params: this.params, stream: ({ params }) => this.sources.operations(params.period, params.at) });
+  protected readonly sales = refreshedResource({ params: this.params, stream: (params, at) => this.sources.sales(params.period, at) });
+  private readonly series = refreshedResource({ params: this.params, stream: (params, at) => this.sources.series(params.period, at) });
+  private readonly funnel = refreshedResource({ params: this.params, stream: (params, at) => this.sources.funnel(params.period, at) });
+  private readonly operations = refreshedResource({ params: this.params, stream: (params, at) => this.sources.operations(params.period, at) });
 
   protected readonly figures = computed(() => {
     const culture = this.culture.active();

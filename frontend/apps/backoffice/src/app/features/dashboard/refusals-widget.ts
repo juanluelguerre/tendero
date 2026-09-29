@@ -1,12 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime } from '@tendero/shared-util';
 import { BarChart } from '../../charts/bar-chart';
 import type { BarChartData } from '../../charts/chart-contract';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 
 /**
@@ -24,7 +23,6 @@ import { DashboardSources } from './dashboard-sources';
 })
 export class RefusalsWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
   /** The rules' words as a signal, so the rows follow a change of language. */
   private readonly rules = translateObjectSignal('dashboard.refusals.rule');
@@ -32,9 +30,9 @@ export class RefusalsWidget {
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly denials = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.agentDenials(params.period, params.at),
+  protected readonly denials = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.agentDenials(params.period, at),
   });
 
   protected readonly chart = computed<BarChartData | null>(() => {

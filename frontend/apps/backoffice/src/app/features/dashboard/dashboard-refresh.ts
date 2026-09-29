@@ -1,4 +1,6 @@
-import { DestroyRef, inject, Injectable, signal } from '@angular/core';
+import { DestroyRef, effect, inject, Injectable, type ResourceRef, signal, untracked } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
+import type { Observable } from 'rxjs';
 
 /**
  * When the dashboard's figures were asked for (R-9). Every widget puts this
@@ -30,4 +32,33 @@ export class DashboardRefresh {
     clearInterval(this.tick);
     this.tick = undefined;
   }
+}
+
+/**
+ * A widget's read that follows the dashboard's clock (R-9). The instant is not
+ * one of its params: a new param makes a resource drop its value and show
+ * "Loading…", so a wall refreshed every minute blinked every minute (the
+ * whole-branch review). A new instant reloads instead, which keeps the figures
+ * on screen until the new ones arrive; a new period is a new question, and
+ * starts from empty as it should.
+ */
+export function refreshedResource<P extends object, T>(options: {
+  params: () => P;
+  stream: (params: P, at: number) => Observable<T>;
+}): ResourceRef<T | undefined> {
+  const refresh = inject(DashboardRefresh);
+  const resource = rxResource<T, P>({
+    params: options.params,
+    stream: ({ params }) => options.stream(params, untracked(refresh.at)),
+  });
+
+  let asked = untracked(refresh.at);
+  effect(() => {
+    const at = refresh.at();
+    if (at === asked) return;
+    asked = at;
+    untracked(() => resource.reload());
+  });
+
+  return resource;
 }

@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { BarChart } from '../../charts/bar-chart';
 import type { BarChartData } from '../../charts/chart-contract';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { formatShare, shareOf } from './figures';
 
@@ -23,16 +22,15 @@ import { formatShare, shareOf } from './figures';
 })
 export class ByChannelWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
   /** A signal of the words, so the legend follows a change of language. */
   private readonly words = translateObjectSignal('dashboard.byChannel');
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly sales = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.agentSales(params.period, params.at),
+  protected readonly sales = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.agentSales(params.period, at),
   });
 
   protected readonly chart = computed<BarChartData | null>(() => {

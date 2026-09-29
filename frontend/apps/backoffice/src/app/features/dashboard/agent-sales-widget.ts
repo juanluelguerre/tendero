@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { formatShare, shareOf } from './figures';
 
@@ -24,14 +23,13 @@ import { formatShare, shareOf } from './figures';
 })
 export class AgentSalesWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly sales = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.agentSales(params.period, params.at),
+  protected readonly sales = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.agentSales(params.period, at),
   });
 
   protected share(part: number, whole: number): string {

@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { BarChart } from '../../charts/bar-chart';
 import type { BarChartData } from '../../charts/chart-contract';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 
 /**
@@ -22,15 +21,14 @@ import { DashboardSources } from './dashboard-sources';
 })
 export class OrdersByStatusWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   /** A signal of the words, so the rows' labels follow a change of language. */
   private readonly words = translateObjectSignal('dashboard.ordersByStatus');
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly operations = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.operations(params.period, params.at),
+  protected readonly operations = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.operations(params.period, at),
   });
 
   protected readonly chart = computed<BarChartData | null>(() => {

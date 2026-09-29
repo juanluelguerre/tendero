@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 import { formatShare, shareOf } from './figures';
 
@@ -22,14 +21,13 @@ import { formatShare, shareOf } from './figures';
 })
 export class FunnelWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly funnel = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.funnel(params.period, params.at),
+  protected readonly funnel = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.funnel(params.period, at),
   });
 
   /** The steps as bars, each as wide as its share of the carts started. */

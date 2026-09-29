@@ -1,8 +1,9 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ByChannelWidget } from './by-channel-widget';
-import { openWidget, setUpWidgets } from './widget-testing';
+import { DashboardRefresh } from './dashboard-refresh';
+import { openWidget, openWidgetFixture, setUpWidgets } from './widget-testing';
 
 const AGENTS = (orders: number, agentOrders: number) => ({
   period: 'Week',
@@ -20,7 +21,10 @@ const open = (body: object) => openWidget(ByChannelWidget, { '/api/dashboard/age
 
 describe('the by channel widget', () => {
   beforeEach(setUpWidgets);
-  afterEach(() => TestBed.inject(HttpTestingController).match(() => true));
+  afterEach(() => {
+    TestBed.inject(HttpTestingController).match(() => true);
+    vi.restoreAllMocks();
+  });
 
   it('shares the orders between people and agents', async () => {
     const element = await open(AGENTS(40, 10));
@@ -35,5 +39,20 @@ describe('the by channel widget', () => {
 
     expect(element.querySelector('backoffice-bar-chart')).toBeNull();
     expect(element.textContent).toContain('Nothing sold in this period.');
+  });
+
+  /** A wall refreshes every minute: its figures stay while the new ones are asked for, never a blink of "Loading…". */
+  it('keeps its figures on screen while a refresh asks again', async () => {
+    const fixture = await openWidgetFixture(ByChannelWidget, { '/api/dashboard/agent-sales': AGENTS(40, 10) });
+    const later = Date.now() + 60_000;
+    vi.spyOn(Date, 'now').mockReturnValue(later);
+    TestBed.inject(DashboardRefresh).refresh();
+    fixture.detectChanges();
+    TestBed.tick();
+    const element = fixture.nativeElement as HTMLElement;
+
+    TestBed.inject(HttpTestingController).expectOne((req) => req.url === 'http://api/api/dashboard/agent-sales');
+    expect(element.textContent).not.toContain('Loading');
+    expect([...element.querySelectorAll('table td')].map((cell) => cell.textContent?.trim())).toEqual(['30', '10']);
   });
 });

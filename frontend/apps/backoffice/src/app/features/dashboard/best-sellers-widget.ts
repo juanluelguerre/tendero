@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 
 /**
@@ -21,14 +20,13 @@ import { DashboardSources } from './dashboard-sources';
 })
 export class BestSellersWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   private readonly culture = inject(CultureStore);
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly sales = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.sales(params.period, params.at),
+  protected readonly sales = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.sales(params.period, at),
   });
 
   protected money(amount: number): string {

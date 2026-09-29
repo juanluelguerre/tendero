@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import type { Type } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { CultureStore, provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
@@ -34,6 +34,15 @@ export function setUpWidgets(): void {
 
 /** Renders a widget and answers its requests: `answers` maps an API path (`/api/dashboard/sales`) to its body. */
 export async function openWidget(component: Type<unknown>, answers: Record<string, object>, inputs: Record<string, unknown> = { period: 'Week' }): Promise<HTMLElement> {
+  return (await openWidgetFixture(component, answers, inputs)).nativeElement as HTMLElement;
+}
+
+/** The same, returning the fixture, for a spec that goes on after the first answers. */
+export async function openWidgetFixture(
+  component: Type<unknown>,
+  answers: Record<string, object>,
+  inputs: Record<string, unknown> = { period: 'Week' },
+): Promise<ComponentFixture<unknown>> {
   const fixture = TestBed.createComponent(component);
   for (const [name, value] of Object.entries(inputs)) fixture.componentRef.setInput(name, value);
   const http = TestBed.inject(HttpTestingController);
@@ -49,5 +58,5 @@ export async function openWidget(component: Type<unknown>, answers: Record<strin
   }
 
   fixture.detectChanges();
-  return fixture.nativeElement as HTMLElement;
+  return fixture;
 }

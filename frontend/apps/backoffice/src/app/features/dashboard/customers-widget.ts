@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { BarChart } from '../../charts/bar-chart';
 import type { BarChartData } from '../../charts/chart-contract';
 import type { DashboardPeriod } from '../../data-access/ordering.service';
-import { DashboardRefresh } from './dashboard-refresh';
+import { refreshedResource } from './dashboard-refresh';
 import { DashboardSources } from './dashboard-sources';
 
 /**
@@ -22,15 +21,14 @@ import { DashboardSources } from './dashboard-sources';
 })
 export class CustomersWidget {
   private readonly sources = inject(DashboardSources);
-  private readonly refresh = inject(DashboardRefresh);
   /** A signal of the words, so the legend follows a change of language. */
   private readonly words = translateObjectSignal('dashboard.customers');
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly funnel = rxResource({
-    params: () => ({ period: this.period(), at: this.refresh.at() }),
-    stream: ({ params }) => this.sources.funnel(params.period, params.at),
+  protected readonly funnel = refreshedResource({
+    params: () => ({ period: this.period() }),
+    stream: (params, at) => this.sources.funnel(params.period, at),
   });
 
   protected readonly chart = computed<BarChartData | null>(() => {
