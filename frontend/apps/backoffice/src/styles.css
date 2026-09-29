@@ -361,6 +361,23 @@ p {
   border: 0;
 }
 
+/* ---------- The size contract (R-9) ----------
+   A widget shows its figure at S, its chart from M, its chart and table at L —
+   decided by its own width, measured on the grid cell it sits in (container
+   `widget`), never by the screen's. In rem, so a wall's larger type (R-9's full
+   screen) moves the thresholds with it. */
+@container widget (width < 20rem) {
+  .at-m, .at-l { display: none; }
+}
+
+@container widget (width < 56rem) {
+  .at-l { display: none; }
+}
+
+@container widget (width >= 20rem) {
+  .only-s { display: none; }
+}
+
 /* ---------- Dashboard widgets (P11-7) ----------
    Shared by every widget, and here rather than in each component because a
    widget's frame is the dashboard's, not the widget's own: the same head, the same

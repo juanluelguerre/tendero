@@ -74,3 +74,19 @@
 .figures th[scope='row'] {
   text-align: start;
 }
+
+/* At L the table is shown without asking (spec, accessibility): the widget's
+   cell is the container, so the chart knows its own width. */
+@container widget (width >= 56rem) {
+  .figures.sr-only {
+    position: static;
+    inline-size: auto;
+    block-size: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+  }
+
+  .figures-toggle { display: none; }
+}
