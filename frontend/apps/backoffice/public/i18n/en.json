@@ -114,6 +114,12 @@
     "findLabel": "Find a product",
     "find": "Name in any language, or code"
   },
+  "charts": {
+    "figures": {
+      "hide": "Hide the figures",
+      "show": "Show the figures"
+    }
+  },
   "nav": {
     "agents": "Registry",
     "attributes": "Attributes",
@@ -594,16 +600,16 @@
     },
     "salesByDay": {
       "current": {
-        "Day": "Today",
-        "Month": "This month",
-        "Week": "This week"
+        "Day": "Last 24 hours",
+        "Month": "Last 30 days",
+        "Week": "Last 7 days"
       },
       "failed": "The sales by day could not be read.",
       "loading": "Reading the sales by day…",
       "previous": {
-        "Day": "The day before",
-        "Month": "The month before",
-        "Week": "The week before"
+        "Day": "The 24 hours before",
+        "Month": "The 30 days before",
+        "Week": "The 7 days before"
       },
       "title": "Sales by day"
     },

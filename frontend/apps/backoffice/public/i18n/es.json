@@ -114,6 +114,12 @@
     "findLabel": "Buscar un producto",
     "find": "Nombre en cualquier idioma, o código"
   },
+  "charts": {
+    "figures": {
+      "hide": "Ocultar las cifras",
+      "show": "Ver las cifras"
+    }
+  },
   "nav": {
     "agents": "Registro",
     "attributes": "Atributos",
@@ -594,16 +600,16 @@
     },
     "salesByDay": {
       "current": {
-        "Day": "Hoy",
-        "Month": "Este mes",
-        "Week": "Esta semana"
+        "Day": "Últimas 24 horas",
+        "Month": "Últimos 30 días",
+        "Week": "Últimos 7 días"
       },
       "failed": "No se han podido leer las ventas por día.",
       "loading": "Leyendo las ventas por día…",
       "previous": {
-        "Day": "El día anterior",
-        "Month": "El mes anterior",
-        "Week": "La semana anterior"
+        "Day": "Las 24 horas anteriores",
+        "Month": "Los 30 días anteriores",
+        "Week": "Los 7 días anteriores"
       },
       "title": "Ventas por día"
     },

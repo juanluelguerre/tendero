@@ -1,16 +1,20 @@
-<figure class="chart">
+<figure class="chart" *transloco="let t; prefix: 'charts.figures'">
   <figcaption class="sr-only">{{ caption() }}</figcaption>
-  <ul class="legend">
-    @for (series of data().series; track series.key) {
-      <li><span class="swatch" [style.background]="colour(series.role)"></span>{{ series.label }}</li>
-    }
-  </ul>
+  <div class="head">
+    <ul class="legend">
+      @for (series of data().series; track series.key) {
+        <li><span class="swatch" [style.background]="colour(series.role)"></span>{{ series.label }}</li>
+      }
+    </ul>
+    <button type="button" class="figures-toggle" [attr.aria-expanded]="figuresShown()" [attr.aria-controls]="tableId"
+      (click)="figuresShown.set(!figuresShown())">{{ figuresShown() ? t('hide') : t('show') }}</button>
+  </div>
   @defer (on viewport) {
     <backoffice-echarts-bar-chart [data]="data()" [format]="format()" />
   } @placeholder {
     <div class="placeholder"></div>
   }
-  <table class="sr-only">
+  <table [id]="tableId" class="figures" [class.sr-only]="!figuresShown()">
     <caption>{{ caption() }}</caption>
     <thead>
       <tr><th scope="col"></th>

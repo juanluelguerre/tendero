@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import { BarChart } from '../../charts/bar-chart';
@@ -18,7 +18,8 @@ import { toBarChart } from './sales-series';
 export class SalesByDayWidget {
   private readonly ordering = inject(OrderingService);
   private readonly culture = inject(CultureStore);
-  private readonly transloco = inject(TranslocoService);
+  /** A signal of the words, so the legend follows a change of language rather than keeping the first. */
+  private readonly words = translateObjectSignal('dashboard.salesByDay');
 
   readonly period = input.required<DashboardPeriod>();
 
@@ -30,10 +31,9 @@ export class SalesByDayWidget {
   protected readonly chart = computed(() => {
     const series = this.series.value();
     if (!series) return null;
-    const labels = {
-      current: this.transloco.translate(`dashboard.salesByDay.current.${series.period}`),
-      previous: this.transloco.translate(`dashboard.salesByDay.previous.${series.period}`),
-    };
+    // Until the language arrives there are no words yet; the signal fills them in when it does.
+    const words = this.words() as Partial<Record<'current' | 'previous', Record<string, string>>>;
+    const labels = { current: words.current?.[series.period] ?? '', previous: words.previous?.[series.period] ?? '' };
     return toBarChart(series, this.culture.active(), labels);
   });
 
