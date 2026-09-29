@@ -1,0 +1,17 @@
+<svg class="plot" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  @for (y of gridlines(); track y) {
+    <line class="gridline" x1="0" x2="100" [attr.y1]="y" [attr.y2]="y" vector-effect="non-scaling-stroke" />
+  }
+  @for (bar of bars(); track bar.key + bar.x) {
+    <rect [attr.data-series]="bar.key" [attr.data-value]="bar.value"
+          [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"
+          [attr.style]="'fill: ' + bar.colour">
+      <title>{{ bar.title }}</title>
+    </rect>
+  }
+</svg>
+<ol class="categories" aria-hidden="true">
+  @for (category of data().categories; track $index) {
+    <li>{{ category }}</li>
+  }
+</ol>

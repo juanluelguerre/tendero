@@ -1,0 +1,35 @@
+<figure class="chart">
+  <figcaption class="sr-only">{{ caption() }}</figcaption>
+  <ul class="legend">
+    @for (series of data().series; track series.key) {
+      <li><span class="swatch" [style.background]="colour(series.role)"></span>{{ series.label }}</li>
+    }
+  </ul>
+  @switch (engine) {
+    @case ('echarts') {
+      @defer (on viewport) {
+        <backoffice-echarts-bar-chart [data]="data()" [format]="format()" />
+      } @placeholder {
+        <div class="placeholder"></div>
+      }
+    }
+    @default {
+      <backoffice-svg-bar-chart [data]="data()" [format]="format()" />
+    }
+  }
+  <table class="sr-only">
+    <caption>{{ caption() }}</caption>
+    <thead>
+      <tr><th scope="col"></th>
+        @for (series of data().series; track series.key) { <th scope="col">{{ series.label }}</th> }
+      </tr>
+    </thead>
+    <tbody>
+      @for (category of data().categories; track $index; let row = $index) {
+        <tr><th scope="row">{{ category }}</th>
+          @for (series of data().series; track series.key) { <td>{{ format()(series.values[row] ?? 0) }}</td> }
+        </tr>
+      }
+    </tbody>
+  </table>
+</figure>
