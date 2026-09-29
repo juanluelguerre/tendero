@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { CartStore } from '../../data-access/cart.service';
-import { OrderService } from '../../data-access/order.service';
 import { ShopLinks } from '../../shop-links';
+import { ContinueCheckoutStore } from './continue-checkout.store';
 
 /**
  * Where an agent sends its person when the shop cannot take the agent's payment
@@ -17,30 +16,16 @@ import { ShopLinks } from '../../shop-links';
 @Component({
   selector: 'storefront-continue-checkout-page',
   imports: [TranslocoDirective, RouterLink],
+  providers: [ContinueCheckoutStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './continue-checkout-page.html',
   styleUrl: './continue-checkout-page.css',
 })
-export class ContinueCheckoutPage implements OnInit {
+export class ContinueCheckoutPage {
+  protected readonly store = inject(ContinueCheckoutStore);
   protected readonly links = inject(ShopLinks);
-  protected readonly state = signal<'taking-over' | 'gone' | 'failed'>('taking-over');
 
-  private readonly orders = inject(OrderService);
-  private readonly cart = inject(CartStore);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
-
-  async ngOnInit(): Promise<void> {
-    const sessionId = this.route.snapshot.paramMap.get('sessionId') ?? '';
-
-    try {
-      const handOff = await this.orders.handOff(sessionId);
-      await this.cart.adopt(handOff.cartToken);
-      // In the language the agent checked out in: the basket's names and the
-      // order's language follow it.
-      await this.router.navigate(['/', handOff.culture, 'checkout'], { replaceUrl: true });
-    } catch (error) {
-      this.state.set((error as { status?: number })?.status === 404 ? 'gone' : 'failed');
-    }
+  constructor() {
+    void this.store.takeOver();
   }
 }

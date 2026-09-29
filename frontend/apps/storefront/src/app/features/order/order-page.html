@@ -1,7 +1,7 @@
 <section *transloco="let t" class="order">
-  @if (order(); as order) {
+  @if (store.order(); as order) {
     <header class="order__head">
-      @if (justPlaced()) {
+      @if (store.justPlaced()) {
         <p class="order__thanks">{{ t('order.placed') }}</p>
       }
       <h1 class="order__title">{{ t('order.reference', { id: shortId(order.orderId) }) }}</h1>
@@ -48,7 +48,7 @@
           </ul>
         </section>
 
-        @if (canReturn()) {
+        @if (store.canReturn()) {
           <section class="panel">
             <h2 class="panel__title">{{ t('order.returnTitle') }}</h2>
             <!-- The window is the SERVER's number (`ReturnRequest.Window`),
@@ -61,30 +61,30 @@
               <p class="panel__hint">{{ t('order.returnHint', { days: returnDays }) }}</p>
             }
 
-            @if (returnMessage(); as message) {
-              <p class="notice" [class.notice--bad]="!returnOpened()"
-                 [class.notice--good]="returnOpened()" role="status">{{ message }}</p>
+            @if (store.returnMessage(); as message) {
+              <p class="notice" [class.notice--bad]="!store.returnOpened()"
+                 [class.notice--good]="store.returnOpened()" role="status">{{ message }}</p>
             }
 
             <!-- Only what is left to return, as the server counts it
                  (`ReturnRequest.Returnable`). Listing every line of the order
                  is how one shirt was returned twice through this page. -->
-            @if (returnableLines().length === 0) {
+            @if (store.returnableLines().length === 0) {
               <p class="panel__hint">{{ t('order.nothingLeftToReturn') }}</p>
             } @else {
             <ul class="returnables">
-              @for (line of returnableLines(); track line.sku) {
+              @for (line of store.returnableLines(); track line.sku) {
                 <li class="returnable">
                   <label class="returnable__pick">
                     <input
                       type="checkbox"
-                      [checked]="picked().has(line.sku)"
-                      (change)="toggle(line)"
+                      [checked]="store.picked().has(line.sku)"
+                      (change)="store.toggle(line)"
                     />
                     <span>{{ line.productName }}</span>
                   </label>
 
-                  @if (picked().has(line.sku)) {
+                  @if (store.picked().has(line.sku)) {
                     <div class="returnable__detail">
                       <label class="row">
                         <span class="row__label">{{ t('order.returnQuantity') }}</span>
@@ -93,8 +93,8 @@
                           type="number"
                           min="1"
                           [max]="line.left"
-                          [ngModel]="quantityOf(line.sku)"
-                          (ngModelChange)="setQuantity(line.sku, $event)"
+                          [ngModel]="store.quantityOf(line.sku)"
+                          (ngModelChange)="store.setQuantity(line.sku, $event)"
                           [name]="'quantity-' + line.sku"
                         />
                       </label>
@@ -103,8 +103,8 @@
                         <span class="row__label">{{ t('order.returnReason') }}</span>
                         <select
                           class="field select"
-                          [ngModel]="reasonOf(line.sku)"
-                          (ngModelChange)="setReason(line.sku, $event)"
+                          [ngModel]="store.reasonOf(line.sku)"
+                          (ngModelChange)="store.setReason(line.sku, $event)"
                           [name]="'reason-' + line.sku"
                         >
                           @for (reason of reasons; track reason) {
@@ -121,8 +121,8 @@
             <button
               class="button"
               type="button"
-              [disabled]="picked().size === 0 || sending()"
-              (click)="requestReturn()"
+              [disabled]="store.picked().size === 0 || store.sending()"
+              (click)="store.requestReturn()"
             >
               {{ t('order.returnSubmit') }}
             </button>
@@ -132,11 +132,11 @@
           <p class="muted">{{ t('order.returnNotDelivered') }}</p>
         }
 
-        @if (returns().length > 0) {
+        @if (store.returns().length > 0) {
           <section class="panel">
             <h2 class="panel__title">{{ t('order.returns') }}</h2>
             <ul class="returns">
-              @for (request of returns(); track request.returnId) {
+              @for (request of store.returns(); track request.returnId) {
                 <li class="return">
                   <span class="return__number numeric">#{{ request.number }}</span>
                   <span class="chip chip--{{ request.status }}">
@@ -195,7 +195,7 @@
         <a class="quiet" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
       </aside>
     </div>
-  } @else if (loading()) {
+  } @else if (store.loading()) {
     <p class="muted" role="status" aria-live="polite">{{ t('order.loading') }}</p>
   } @else {
     <div class="blank">

@@ -1,0 +1,106 @@
+import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
+import type { SearchHit } from '@tendero/shared-api';
+import { CultureStore } from '@tendero/shared-i18n';
+import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { CartStore } from '../cart/cart.store';
+import { CompareStore } from '../compare/compare.store';
+import type { ProductVia } from '../features/product/arrived-from';
+import { ProductImagePlaceholder } from '../product-image-placeholder/product-image-placeholder';
+import { ShopLinks } from '../shop-links';
+
+/** Why a card is in its row, in one line under the price: *Porque viste…*, *Sube esta semana* (R-8). */
+export interface CardReason {
+  readonly icon: 'viewed' | 'rising';
+  readonly text: string;
+}
+
+/**
+ * One product, as a card.
+ *
+ * It was inside the search page, which was fine while search was the only way
+ * into the catalogue. It is not any more: a home page shows rows of these, a
+ * category page shows a grid of them, and a card copied into three templates is
+ * three cards that drift — the sold-out rule gets fixed in one of them, the
+ * placeholder in another.
+ *
+ * **It owns adding to the cart**, and that is the part worth keeping together.
+ * The SKU comes from the search hit, which is the winning VARIANT (ADR 0015) —
+ * a card that only knew a product id would have to guess which size somebody
+ * meant, and that guess would then have to be repeated everywhere a card
+ * appears.
+ */
+@Component({
+  selector: 'storefront-product-card',
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './product-card.html',
+  styleUrl: './product-card.css',
+  host: {
+    '[class.card--soldOut]': '!hit().inStock',
+    '[class.card--line]': "layout() === 'line'",
+  },
+})
+export class ProductCard {
+  readonly hit = input.required<SearchHit>();
+
+  /**
+   * The rows of the home page (R-8) ask more of a card than the listing does,
+   * and they get it as inputs on THIS card rather than as copies of it: a badge,
+   * a reason, a rank, a quieter card without its buttons, and the row that led
+   * to the product for `product_viewed`.
+   */
+  /** A short label on the picture: *Oferta*, *Nuevo*. */
+  readonly badge = input<string | null>(null);
+  /** Why the card is here, with its icon. */
+  readonly reason = input<CardReason | null>(null);
+  /** Its place in a ranking, drawn large and never with a count: *Lo más vendido*. */
+  readonly rank = input<number | null>(null);
+  /** Add to cart and compare; off where the card is a way in rather than a shelf (the campaign card). */
+  readonly actions = input(true);
+  /** A tile, or a line — picture beside the words — for a ranking. */
+  readonly layout = input<'tile' | 'line'>('tile');
+  /** The row that led here, carried in the navigation's state (`arrivedVia`). */
+  readonly via = input<ProductVia | null>(null);
+
+  private readonly cart = inject(CartStore);
+  private readonly culture = inject(CultureStore);
+  private readonly images = inject(ProductImageUrls);
+
+  protected readonly links = inject(ShopLinks);
+  protected readonly compare = inject(CompareStore);
+  protected readonly adding = signal(false);
+
+  /** The seed points at images that may not be there, so a broken one is the
+   *  default path on a fresh clone rather than an error. */
+  protected readonly broken = signal(false);
+
+  protected linkState(): { via: ProductVia } | undefined {
+    const via = this.via();
+    return via ? { via } : undefined;
+  }
+
+  protected imageUrl(): string | null {
+    const id = this.hit().imageId;
+    return id && !this.broken() ? this.images.of(id) : null;
+  }
+
+  /** Picks the product for the comparison tray, or takes it out (P10-7). */
+  protected toggleCompare(): void {
+    this.compare.toggle({ code: this.hit().code, name: this.hit().name });
+  }
+
+  protected price(): string {
+    return formatPrice(this.hit().priceAmount, this.hit().priceCurrency, this.culture.active());
+  }
+
+  protected async addToCart(): Promise<void> {
+    this.adding.set(true);
+    try {
+      await this.cart.add(this.hit().matchedSku, 1);
+    } finally {
+      this.adding.set(false);
+    }
+  }
+}

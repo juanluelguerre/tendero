@@ -4,7 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { AppliedDiscount, CartLineView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
-import { CartStore } from '../../data-access/cart.service';
+import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
 
 /**

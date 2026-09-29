@@ -9,10 +9,10 @@ import { provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { of } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Campaigns } from '../../campaigns/campaigns';
+import { CampaignsStore } from '../../campaigns/campaigns.store';
 import { ProductSearchService } from '../../data-access/product-search.service';
-import { ReturnsPolicy } from '../../data-access/returns-policy.service';
-import { Taxonomy } from '../../data-access/taxonomy';
+import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
+import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
 import { SearchPage } from './search-page';
 
 /**
@@ -40,7 +40,7 @@ describe('the search page, when the answer is not an exact match', () => {
         provideRouter([{ path: '', component: SearchPage }]),
         { provide: API_BASE_URL, useValue: 'http://api' },
         // The campaigns are a root resource; answered as none, so nothing waits on them.
-        { provide: Campaigns, useValue: { named: () => null, all: () => [], leading: () => null } as unknown as Campaigns },
+        { provide: CampaignsStore, useValue: { named: () => null, all: () => [], leading: () => null } },
         {
           provide: ProductSearchService,
           useValue: {
@@ -55,15 +55,15 @@ describe('the search page, when the answer is not an exact match', () => {
         {
           // The listing's column reads the taxonomy to pick the category level;
           // an unanswered request would hold `whenStable` open for ever.
-          provide: Taxonomy,
-          useValue: { categories: () => [], menu: () => [] } as unknown as Taxonomy,
+          provide: TaxonomyStore,
+          useValue: { categories: () => [], menu: () => [] },
         },
         {
-          provide: ReturnsPolicy,
+          provide: ReturnsPolicyStore,
           // Read fresh at call time, same reason as `searchResult` above: a
           // test can set it to `null` — unresolved or failed — after this
           // module is configured.
-          useValue: { windowDays: () => returnsWindowDays } as unknown as ReturnsPolicy,
+          useValue: { windowDays: () => returnsWindowDays },
         },
       ],
     });
@@ -126,7 +126,7 @@ describe('the search page, when the answer is not an exact match', () => {
   });
 
   /**
-   * `ReturnsPolicy.windowDays` is `null` until its request resolves, and
+   * `ReturnsPolicyStore.windowDays` is `null` until its request resolves, and
    * stays `null` if it fails — the storefront's own rule, already proven in
    * `returns-policy.spec.ts`. A page that printed the number anyway would say
    * "You have null days…", which is worse than saying nothing.

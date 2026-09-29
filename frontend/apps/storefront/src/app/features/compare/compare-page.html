@@ -2,7 +2,7 @@
   <section class="compare">
     <h1 class="compare__title">{{ t('compare.title') }}</h1>
 
-    @let current = state();
+    @let current = store.state();
     @switch (current.status) {
       @case ('tooFew') {
         <p class="compare__empty">{{ t('compare.tooFew') }}</p>
@@ -31,7 +31,7 @@
                         class="compare__drop"
                         type="button"
                         [attr.aria-label]="t('compare.remove', { name: product.name })"
-                        (click)="drop(product.code)">×</button>
+                        (click)="store.drop(product.code)">×</button>
                     </th>
                   }
                 </tr>

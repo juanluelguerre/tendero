@@ -1,5 +1,5 @@
 <ng-container *transloco="let t">
-  @switch (state().status) {
+  @switch (store.state().status) {
     @case ('signingIn') {
       <p class="muted" role="status" aria-live="polite">{{ t('account.loading') }}</p>
     }
@@ -21,7 +21,7 @@
         <!-- One button, and it leaves. Who may sign in and what they have to
              type is the issuer's business, which is what stops the shop from
              ever handling a credential. -->
-        <button type="button" class="button" (click)="signIn()">
+        <button type="button" class="button" (click)="store.signIn()">
           {{ t('account.signIn') }}
         </button>
       </section>
@@ -31,11 +31,11 @@
     }
 
     @case ('signedIn') {
-      @let session = state();
+      @let session = store.state();
       @if (session.status === 'signedIn') {
         <header class="head">
           <h1 class="head__title">{{ identity()?.name }}</h1>
-          <button type="button" class="quiet" (click)="signOut()">{{ t('account.signOut') }}</button>
+          <button type="button" class="quiet" (click)="store.signOut()">{{ t('account.signOut') }}</button>
         </header>
 
         <h2 class="orders__title">{{ t('account.orders') }}</h2>
@@ -67,9 +67,9 @@
                   @if (hasImages(order)) {
                     <span class="order__thumbs">
                       @for (line of order.preview; track line.sku) {
-                        @if (line.imageId && !broken().has(line.sku)) {
+                        @if (line.imageId && !store.broken().has(line.sku)) {
                           <img class="order__thumb" [src]="imageUrl(line.imageId)" alt=""
-                               loading="lazy" (error)="markBroken(line.sku)" />
+                               loading="lazy" (error)="store.imageFailed(line.sku)" />
                         } @else {
                           <!-- The same labelled tile the rest of the shop uses:
                                the seed points at images that may not exist, so

@@ -3,15 +3,15 @@ import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { CultureStore, DEFAULT_CULTURE, SUPPORTED_CULTURES } from '@tendero/shared-i18n';
-import { Campaigns } from '../campaigns/campaigns';
-import { ProductCard } from '../product-card';
+import { CampaignsStore } from '../campaigns/campaigns.store';
+import { ProductCard } from '../product-card/product-card';
 import { CanonicalLinks } from '../seo/canonical-links';
 import { RobotsMeta } from '../seo/robots-meta';
 import { ShopLinks } from '../shop-links';
-import { FilterPanel } from './filter-panel';
+import { FilterPanel } from './filter-panel/filter-panel';
 import { clearAll, hasFilters, ListingSorts, narrowedFacets, withSort, type ListingFilters, type ListingSort } from './listing-filters';
 import { listingIndexing } from './listing-indexing';
-import { ListingPageSize, ListingState } from './listing-state';
+import { ListingPageSize, ListingStore } from './listing.store';
 import { chipsOf, sayablePrice, type CategoryLink, type Chip } from './listing-view';
 
 /** The template's `t`, handed to the methods that word things, so a language switch rewords them. */
@@ -42,10 +42,10 @@ export class Listing {
   /** A category page's sections, drawn as links in the column; null on a search. */
   readonly navigation = input<readonly CategoryLink[] | null>(null);
 
-  protected readonly state = inject(ListingState);
+  protected readonly state = inject(ListingStore);
   private readonly culture = inject(CultureStore);
   private readonly telemetry = inject(Telemetry);
-  private readonly campaigns = inject(Campaigns);
+  private readonly campaigns = inject(CampaignsStore);
 
   private readonly sheet = viewChild<ElementRef<HTMLDialogElement>>('sheet');
   private readonly sheetButton = viewChild<ElementRef<HTMLButtonElement>>('sheetButton');
@@ -180,18 +180,18 @@ export class Listing {
 
   /** A modal dialog, like the menu drawer: the platform traps the focus, Esc closes it and the page behind is inert. */
   protected openSheet(): void {
-    this.state.pending.set(this.state.filters());
+    this.state.batch(this.state.filters());
     this.sheetOpened.set(true);
     this.sheet()?.nativeElement.showModal();
   }
 
   protected choose(filters: ListingFilters): void {
-    this.state.pending.set(filters);
+    this.state.batch(filters);
   }
 
   protected clearPending(): void {
     const pending = this.state.pending();
-    if (pending) this.state.pending.set(clearAll(pending));
+    if (pending) this.state.batch(clearAll(pending));
   }
 
   /** *Ver N productos*: the batch becomes one navigation, one step for the back button. */
@@ -209,7 +209,7 @@ export class Listing {
 
   /** Closed by Esc, the cross or applying: an unapplied batch is dropped, and the focus goes back where it came from. */
   protected sheetClosed(): void {
-    this.state.pending.set(null);
+    this.state.batch(null);
     this.sheetButton()?.nativeElement.focus();
   }
 }

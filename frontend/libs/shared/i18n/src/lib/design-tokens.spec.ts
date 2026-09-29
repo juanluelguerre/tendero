@@ -100,7 +100,7 @@ describe('the design tokens', () => {
     'frontend/apps/backoffice/src/app/shell/palette/palette.css': 'a scrim: ink over the page, dark in both themes',
     'frontend/apps/backoffice/src/app/shell/shell.css': 'a scrim: ink over the page, dark in both themes',
     'frontend/apps/backoffice/src/app/worklist/confirm-dialog/confirm-dialog.css': 'a scrim: ink over the page, dark in both themes',
-    'frontend/apps/storefront/src/app/layout/shell.css': 'a scrim: ink over the page, dark in both themes',
+    'frontend/apps/storefront/src/app/shell/shell.css': 'a scrim: ink over the page, dark in both themes',
     'frontend/apps/storefront/src/app/listing/listing.css': 'a scrim: ink over the page, dark in both themes',
   };
 

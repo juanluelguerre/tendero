@@ -102,7 +102,13 @@ guide.
    lists of work share (the pane, the filter chips, the pager, the confirm
    dialog, Undo). The dashboard and Orders were the reference; every other
    feature followed screen by screen, each with its store specs and a hand
-   mutation. The storefront follows in a pass of its own.
+   mutation. The storefront followed in a pass of its own: the state every
+   page shares lives in root theme folders (`cart/`, `compare/`, `taxonomy/`,
+   `returns/`, `campaigns/`, `trail/`, `listing/`), `data-access/` keeps HTTP
+   services only, and each page provides its store — a listing page provides
+   two, `ListingStore` and its own, which tells the listing what to list. A
+   live object (the listing the browser agent reads) is held in a signal of its
+   own, never in a store's state, which is frozen.
 
 ## Consequences
 
@@ -111,5 +117,5 @@ guide.
 - Stores are tested without a DOM (`TestBed.inject(Store)` with the providers
   its component has), and the component specs keep testing what the reader sees.
 - R-10's live source joins a widget in its store, not in its component.
-- The whole backoffice follows it; until the storefront's pass runs, the
-  storefront does not.
+- Both frontends follow it. The initial bundles grew by what `@ngrx/signals`
+  weighs once it is in main: 3.2 kB in the backoffice, 1.7 kB in the storefront.

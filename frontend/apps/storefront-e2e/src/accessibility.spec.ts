@@ -50,7 +50,14 @@ test('the storefront gets no less accessible than R-1 found it', async ({ page }
     ? new URL((await cta.first().getAttribute('href')) ?? '/es', 'http://shop').searchParams.get('campaign')
     : null;
   const category = await page.locator('a[href*="/c/"]').first().getAttribute('href');
-  const product = await page.locator('a[href*="/p/"]').first().getAttribute('href');
+  // The rows draw their cards as they come near the screen, and a campaign with
+  // a picture of its own shows none above the fold: scrolled to, as a person would.
+  const productLink = page.locator('a[href*="/p/"]').first();
+  for (let step = 0; step < 20 && !(await productLink.count()); step++) {
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(200);
+  }
+  const product = await productLink.getAttribute('href');
 
   // A product viewed and a search made, so the home is audited with its trail
   // row and *Tu historial* with entries in it (R-8) — the states a returning

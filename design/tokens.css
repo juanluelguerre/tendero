@@ -68,6 +68,15 @@
   --accent:         var(--clay-600);
   --accent-hover:   var(--clay-700);
   --accent-tint:    var(--clay-50);
+  /* Added 2026-09-30. The season campaign the home leads with sat on
+     --accent-tint, 1.01:1 against the page and the same as the agent band under
+     it, so it did not lead (the author). One step darker stands apart at 1.24:1;
+     the accent and the muted text step down with it, because on this tint
+     --accent is 3.84:1 and --text-muted 4.11:1, under AA's 4.5:1. Measured:
+     --text 11.97, --accent-on-tint-strong 5.11, --text-muted-on-tint-strong 7.43. */
+  --accent-tint-strong:         var(--clay-100);
+  --accent-on-tint-strong:      var(--clay-700);
+  --text-muted-on-tint-strong:  var(--ink-700);
   --danger-tint:    var(--red-50);    /* a message that something failed, behind its text */
   --on-accent:      var(--stone-0);
   --positive:       var(--olive-600);
@@ -168,6 +177,11 @@
   --accent:        #F07A50;
   --accent-hover:  #F59570;
   --accent-tint:   #3A2115;
+  /* The season campaign's tint, a step above --accent-tint: 1.42:1 against the
+     page; --text 11.4, --accent 4.64, --text-muted 5.04 on it (2026-09-30). */
+  --accent-tint-strong:        #4A2A1A;
+  --accent-on-tint-strong:     var(--accent);
+  --text-muted-on-tint-strong: var(--text-muted);
   /* Added 2026-09-28. A failed search's box used --red-50 straight from the
      palette, which no theme redefines: a pale pink under the dark theme's light
      text, the title invisible and the line beside it faint (the author, the

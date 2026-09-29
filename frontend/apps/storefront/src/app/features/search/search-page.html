@@ -2,14 +2,14 @@
   <!-- The heading of a list: the words asked, or the shelf the filters make.
        The home draws its own front (R-8): the header's box is the shop's one
        search, so the idle page no longer asks *¿Qué estás buscando?*. -->
-  @if (mode() !== 'idle') {
+  @if (store.mode() !== 'idle') {
     <section class="hero hero--compact">
       <h1 class="hero__title">{{ heading(t) }}</h1>
       <p class="hero__lede muted">{{ t('search.lede') }}</p>
     </section>
   }
 
-  @switch (mode()) {
+  @switch (store.mode()) {
     @case ('idle') {
       <!--
         The shop's front, and it lives here rather than on a route of its own
@@ -32,7 +32,7 @@
           <h2 class="notice__title">{{ t('search.failedTitle') }}</h2>
           <p class="muted">{{ t('search.failed') }}</p>
         </div>
-      } @else if (result.status === 'ready' && result.total === 0 && !filtered()) {
+      } @else if (result.status === 'ready' && result.total === 0 && !store.filtered()) {
         <!-- Nothing sold for these words, and no filter to take off: the
              listing's column would have nothing in it. -->
         <div class="notice">
@@ -40,16 +40,16 @@
           @if (result.afterCultureChange) {
             <!-- The query was written in the other language and re-run against
                  this one's index. "Try fewer words" would be false advice. -->
-            <p class="muted">{{ t('search.emptyAfterLanguageChange', { query: queryFromUrl().trim() }) }}</p>
+            <p class="muted">{{ t('search.emptyAfterLanguageChange', { query: store.queryFromUrl().trim() }) }}</p>
           } @else {
-            <p class="muted">{{ t('search.empty', { query: queryFromUrl().trim() }) }}</p>
+            <p class="muted">{{ t('search.empty', { query: store.queryFromUrl().trim() }) }}</p>
           }
         </div>
       } @else {
         <!-- The results are the listing the category pages draw too (R-7.3,
              F-3). What only a search says goes above its products. -->
         <storefront-listing>
-          @let upcoming = campaign();
+          @let upcoming = store.campaign();
           @if (upcoming && upcoming.phase === 'Upcoming') {
             <!-- Before the window opens its promotions reach nothing yet, and
                  an empty list with no reason reads as a broken link. -->
@@ -79,7 +79,7 @@
                  reader against itself. -->
             @if (result.answer?.match === 'Related') {
               <div class="notice">
-                <h2 class="notice__title">{{ t('search.related.title', { query: queryFromUrl().trim() }) }}</h2>
+                <h2 class="notice__title">{{ t('search.related.title', { query: store.queryFromUrl().trim() }) }}</h2>
               </div>
               <h2 class="results-heading">{{ t('search.related.heading') }}</h2>
             }

@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, RedirectFunction, Route, Router } from '@angular/router';
 import { Culture, CultureStore, SUPPORTED_CULTURES } from '@tendero/shared-i18n';
-import { Shell } from './layout/shell';
+import { Shell } from './shell/shell';
 
 /**
  * The shop, under whichever language segment led to it.

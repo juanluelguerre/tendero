@@ -1,13 +1,13 @@
 <section *transloco="let t" class="checkout">
   <h1 class="checkout__title">{{ t('checkout.title') }}</h1>
 
-  @if (store.isEmpty()) {
+  @if (cart.isEmpty()) {
     <div class="blank">
       <p class="blank__text">{{ t('cart.empty') }}</p>
       <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
     </div>
   } @else {
-    @if (problem(); as message) {
+    @if (store.problem(); as message) {
       <p #notice class="notice notice--bad" role="alert" tabindex="-1">{{ message }}</p>
     }
 
@@ -20,32 +20,32 @@
           <div class="grid">
             <label class="row row--wide">
               <span class="row__label">{{ t('checkout.recipientName') }}</span>
-              <input class="field" name="recipientName" [(ngModel)]="address.recipientName" (change)="addressChanged()" autocomplete="name" required />
+              <input class="field" name="recipientName" [ngModel]="store.address().recipientName" (ngModelChange)="store.edit({ recipientName: $event })" (change)="store.addressChanged()" autocomplete="name" required />
             </label>
 
             <label class="row row--wide">
               <span class="row__label">{{ t('checkout.line1') }}</span>
-              <input class="field" name="line1" [(ngModel)]="address.line1" (change)="addressChanged()" autocomplete="address-line1" />
+              <input class="field" name="line1" [ngModel]="store.address().line1" (ngModelChange)="store.edit({ line1: $event })" (change)="store.addressChanged()" autocomplete="address-line1" />
             </label>
 
             <label class="row row--wide">
               <span class="row__label">{{ t('checkout.line2') }}</span>
-              <input class="field" name="line2" [(ngModel)]="address.line2" (change)="addressChanged()" autocomplete="address-line2" />
+              <input class="field" name="line2" [ngModel]="store.address().line2" (ngModelChange)="store.edit({ line2: $event })" (change)="store.addressChanged()" autocomplete="address-line2" />
             </label>
 
             <label class="row">
               <span class="row__label">{{ t('checkout.postalCode') }}</span>
-              <input class="field" name="postalCode" [(ngModel)]="address.postalCode" (change)="addressChanged()" autocomplete="postal-code" />
+              <input class="field" name="postalCode" [ngModel]="store.address().postalCode" (ngModelChange)="store.edit({ postalCode: $event })" (change)="store.addressChanged()" autocomplete="postal-code" />
             </label>
 
             <label class="row">
               <span class="row__label">{{ t('checkout.city') }}</span>
-              <input class="field" name="city" [(ngModel)]="address.city" (change)="addressChanged()" autocomplete="address-level2" />
+              <input class="field" name="city" [ngModel]="store.address().city" (ngModelChange)="store.edit({ city: $event })" (change)="store.addressChanged()" autocomplete="address-level2" />
             </label>
 
             <label class="row">
               <span class="row__label">{{ t('checkout.region') }}</span>
-              <input class="field" name="region" [(ngModel)]="address.region" (change)="addressChanged()" autocomplete="address-level1" />
+              <input class="field" name="region" [ngModel]="store.address().region" (ngModelChange)="store.edit({ region: $event })" (change)="store.addressChanged()" autocomplete="address-level1" />
             </label>
 
             <label class="row">
@@ -57,8 +57,8 @@
                 name="countryCode"
                 maxlength="2"
                 autocomplete="country"
-                [(ngModel)]="address.countryCode"
-                (change)="addressChanged()"
+                [ngModel]="store.address().countryCode" (ngModelChange)="store.edit({ countryCode: $event })"
+                (change)="store.addressChanged()"
               />
             </label>
           </div>
@@ -66,23 +66,23 @@
           <!-- No button to press to learn the shipping (R-1, S-F3): the options and
                the total follow the address as it is written, and this says so
                while they are on their way. -->
-          <p class="rating muted" role="status" aria-live="polite">{{ rating() ? t('checkout.loadingOptions') : '' }}</p>
+          <p class="rating muted" role="status" aria-live="polite">{{ store.rating() ? t('checkout.loadingOptions') : '' }}</p>
         </fieldset>
 
         <!-- 2 · How -->
-        @if (options().length > 0) {
+        @if (store.options().length > 0) {
           <fieldset class="step">
             <legend class="step__title">{{ t('checkout.delivery') }}</legend>
 
             <div class="options">
-              @for (option of options(); track option.code) {
-                <label class="option" [class.option--picked]="option.code === chosen()?.code">
+              @for (option of store.options(); track option.code) {
+                <label class="option" [class.option--picked]="option.code === store.chosen()?.code">
                   <input
                     type="radio"
                     name="shipping"
                     [value]="option.code"
-                    [checked]="option.code === chosen()?.code"
-                    (change)="choose(option)"
+                    [checked]="option.code === store.chosen()?.code"
+                    (change)="store.choose(option)"
                   />
                   <span class="option__body">
                     <span class="option__label">{{ option.label }}</span>
@@ -94,7 +94,7 @@
                       </span>
                     }
                   </span>
-                  <span class="option__price numeric">{{ money(option.amount) }}</span>
+                  <span class="option__price numeric">{{ store.money(option.amount) }}</span>
                 </label>
               }
             </div>
@@ -108,13 +108,13 @@
 
           <div class="options">
             @for (card of cards; track card) {
-              <label class="option" [class.option--picked]="card === instrument()">
+              <label class="option" [class.option--picked]="card === store.instrument()">
                 <input
                   type="radio"
                   name="instrument"
                   [value]="card"
-                  [checked]="card === instrument()"
-                  (change)="instrument.set(card)"
+                  [checked]="card === store.instrument()"
+                  (change)="store.chooseInstrument(card)"
                 />
                 <span class="option__body">
                   <span class="option__label">{{ t(cardKey(card)) }}</span>
@@ -127,44 +127,44 @@
       </div>
 
       <aside class="summary">
-        @if (store.quote(); as quote) {
+        @if (cart.quote(); as quote) {
           <dl class="totals">
             <div class="totals__row">
               <dt>{{ t('cart.subtotal') }}</dt>
-              <dd class="numeric">{{ money(quote.subtotal) }}</dd>
+              <dd class="numeric">{{ store.money(quote.subtotal) }}</dd>
             </div>
 
             @if (quote.discountTotal > 0) {
               <div class="totals__row totals__row--off">
                 <dt>{{ t('cart.discounts') }}</dt>
-                <dd class="numeric">−{{ money(quote.discountTotal) }}</dd>
+                <dd class="numeric">−{{ store.money(quote.discountTotal) }}</dd>
               </div>
             }
 
             <div class="totals__row">
               <dt>{{ t('cart.shipping') }}</dt>
               <dd class="numeric">
-                {{ chosen() ? money(quote.shipping) : t('cart.shippingAtCheckout') }}
+                {{ store.chosen() ? store.money(quote.shipping) : t('cart.shippingAtCheckout') }}
               </dd>
             </div>
 
             <div class="totals__row totals__row--total">
               <dt>{{ t('cart.total') }}</dt>
-              <dd class="numeric">{{ money(quote.total) }}</dd>
+              <dd class="numeric">{{ store.money(quote.total) }}</dd>
             </div>
 
             @if (quote.taxTotal > 0) {
-              <p class="totals__tax">{{ t('cart.tax') }} · {{ money(quote.taxTotal) }}</p>
+              <p class="totals__tax">{{ t('cart.tax') }} · {{ store.money(quote.taxTotal) }}</p>
             }
           </dl>
 
           <button
             class="button button--block"
             type="button"
-            [disabled]="paying() || !chosen() || !address.recipientName.trim()"
-            (click)="pay()"
+            [disabled]="store.paying() || !store.chosen() || !store.address().recipientName.trim()"
+            (click)="store.pay()"
           >
-            {{ paying() ? t('checkout.paying') : t('checkout.pay', { total: money(quote.total) }) }}
+            {{ store.paying() ? t('checkout.paying') : t('checkout.pay', { total: store.money(quote.total) }) }}
           </button>
         } @else {
           <p class="muted">{{ t('cart.noQuote') }}</p>

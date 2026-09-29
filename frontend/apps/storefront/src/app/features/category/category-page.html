@@ -1,10 +1,10 @@
 <section *transloco="let t" class="category">
-  @if (category(); as current) {
+  @if (store.category(); as current) {
     <header class="category__head">
       <!-- The department's picture, not the section's. It says which part of
            the shop you are standing in, which is what the crumb beside it says
            in words. Decorative, so it carries an empty `alt`. -->
-      @if (art(); as illustration) {
+      @if (store.art(); as illustration) {
         <img class="category__art" [src]="illustration" alt="" width="400" height="300" />
       }
 
@@ -24,7 +24,7 @@
       </div>
     </header>
 
-    @if (banner(); as campaign) {
+    @if (store.banner(); as campaign) {
       <storefront-campaign-card class="category__campaign" variant="banner" [campaign]="campaign"
                                 (reached)="campaigns.refresh()" />
     }
@@ -34,9 +34,9 @@
          problem the shop had before it had categories at all. On a desktop the
          column lists them with their counts; this row is the phone's, where the
          column is a sheet behind a button. -->
-    @if (children().length > 0) {
+    @if (store.children().length > 0) {
       <ul class="sections">
-        @for (child of children(); track child.code) {
+        @for (child of store.children(); track child.code) {
           <li>
             <a class="section" [routerLink]="links.category(child.code)">{{ child.name }}</a>
           </li>
@@ -45,7 +45,7 @@
     }
   }
 
-  @switch (state()) {
+  @switch (store.state()) {
     @case ('loading') {
       <p class="muted" role="status" aria-live="polite">{{ t('category.loading') }}</p>
     }
@@ -71,7 +71,7 @@
         <p class="muted">{{ t('category.empty') }}</p>
       } @else {
         <!-- The same listing as the search results (R-7.3, F-3). -->
-        <storefront-listing [navigation]="navigation()" />
+        <storefront-listing [navigation]="store.navigation()" />
       }
     }
   }
