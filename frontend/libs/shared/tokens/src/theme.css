@@ -136,3 +136,16 @@
     cursor: pointer;
   }
 }
+
+/* ---------- What a modal dialog does not hold still ----------
+   The platform traps the focus inside a modal <dialog> and leaves the page
+   behind it free to scroll: on a phone, a thumb on the dimmed products beside
+   the filter sheet moved them (R-6's second walkthrough). While any modal is
+   open the page holds still — the storefront's sheet and drawer, the
+   backoffice's palette and confirmations alike. `scrollbar-gutter: stable` on
+   both apps' root keeps the width from jumping when the scrollbar goes. */
+@layer base {
+  html:has(dialog:modal) {
+    overflow: hidden;
+  }
+}
