@@ -7,7 +7,7 @@
   </header>
 
   @if (store.failed(); as problem) {
-    <p class="notice notice--bad" role="alert">{{ t('cart.failed') }}</p>
+    <lib-notice class="mb-4" tone="bad" live="assertive">{{ t('cart.failed') }}</lib-notice>
   }
 
   @if (store.isEmpty()) {

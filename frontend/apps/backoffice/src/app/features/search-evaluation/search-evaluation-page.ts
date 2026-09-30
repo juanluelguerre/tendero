@@ -3,6 +3,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchEvaluation } from '@tendero/shared-api';
 import { CultureEvaluation } from './culture-evaluation/culture-evaluation';
 import { SearchEvaluationStore } from './search-evaluation.store';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * The search evaluation panel (P8-11): the golden sets the CI gate commits, asked
@@ -29,7 +30,7 @@ import { SearchEvaluationStore } from './search-evaluation.store';
  */
 @Component({
   selector: 'backoffice-search-evaluation',
-  imports: [TranslocoDirective, CultureEvaluation],
+  imports: [TranslocoDirective, CultureEvaluation, Notice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './search-evaluation-page.html',
   styleUrl: './search-evaluation-page.css',

@@ -9,6 +9,7 @@ import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
 import { HomeSections } from '../home/home-sections';
 import { SearchStore } from './search.store';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * The storefront's home is the search: the first thing a shopkeeper does is
@@ -20,7 +21,7 @@ import { SearchStore } from './search.store';
  */
 @Component({
   selector: 'storefront-search-page',
-  imports: [TranslocoDirective, RouterLink, HomeSections, Listing],
+  imports: [TranslocoDirective, RouterLink, HomeSections, Listing, Notice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Its own listing — the filters in the URL, the request, the phone's batch —
   // and its own words, which tell the listing what to list.

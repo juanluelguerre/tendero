@@ -23,26 +23,6 @@
   letter-spacing: var(--tracking-tight);
 }
 
-/* ---------- Status chips ----------
-   Colour never carries meaning alone (design/DESIGN.md): every chip has the
-   word in it, and the colour only makes the word findable. */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px var(--space-3);
-  border: 1px solid currentColor;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.chip--Pending, .chip--Requested { color: var(--text-muted); }
-.chip--PaymentAuthorized, .chip--Confirmed, .chip--Approved { color: var(--warning); }
-.chip--Shipped, .chip--Received { color: var(--accent); }
-.chip--Delivered, .chip--Refunded { color: var(--positive); }
-.chip--PaymentFailed, .chip--Cancelled, .chip--Rejected { color: var(--danger); }
-
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;

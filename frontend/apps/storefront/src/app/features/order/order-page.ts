@@ -9,6 +9,7 @@ import { formatPrice, orderReference } from '@tendero/shared-util';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
 import { OrderStore } from './order.store';
+import { Notice, orderStatusTone, returnStatusTone, StatusPill } from '@tendero/shared-ui';
 
 /**
  * The order, and the way back.
@@ -26,7 +27,7 @@ import { OrderStore } from './order.store';
  */
 @Component({
   selector: 'storefront-order',
-  imports: [TranslocoDirective, FormsModule, RouterLink],
+  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill],
   providers: [OrderStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-page.html',
@@ -52,6 +53,8 @@ export class OrderPage {
 
   /** A full Guid is unreadable; its random end is what a person reads, and what finds it. */
   protected readonly shortId = orderReference;
+  protected readonly orderTone = orderStatusTone;
+  protected readonly returnTone = returnStatusTone;
 
   protected describe(request: ReturnView): string {
     return request.lines.map((line) => `${line.sku} ×${line.quantity}`).join(' · ');

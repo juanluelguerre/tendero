@@ -53,7 +53,7 @@
           @if (upcoming && upcoming.phase === 'Upcoming') {
             <!-- Before the window opens its promotions reach nothing yet, and
                  an empty list with no reason reads as a broken link. -->
-            <p class="notice">{{ t('campaign.notStarted', { name: upcoming.name, date: campaignStarts() }) }}</p>
+            <lib-notice class="mt-5">{{ t('campaign.notStarted', { name: upcoming.name, date: campaignStarts() }) }}</lib-notice>
           }
           @if (result.status === 'ready') {
             @if (result.answer?.helpTopic === 'returns') {

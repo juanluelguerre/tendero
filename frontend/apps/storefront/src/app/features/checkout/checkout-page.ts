@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, effect, type ElementRef, inject, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
 import { CheckoutCards, CheckoutStore } from './checkout.store';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * Address, delivery, payment. One page, three steps, in the order the shop
@@ -22,7 +23,7 @@ import { CheckoutCards, CheckoutStore } from './checkout.store';
  */
 @Component({
   selector: 'storefront-checkout',
-  imports: [TranslocoDirective, FormsModule, RouterLink],
+  imports: [TranslocoDirective, FormsModule, RouterLink, Notice],
   providers: [CheckoutStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './checkout-page.html',
@@ -38,7 +39,7 @@ export class CheckoutPage {
   protected readonly cards = CheckoutCards;
 
   /** The notice above the form, when there is one. */
-  private readonly notice = viewChild<ElementRef<HTMLElement>>('notice');
+  private readonly notice = viewChild('notice', { read: ElementRef });
 
   constructor() {
     void this.store.start();

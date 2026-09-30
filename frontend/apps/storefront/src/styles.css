@@ -144,9 +144,6 @@
     font-size: var(--text-sm);
   }
 
-  .notice--bad { border-inline-start-color: var(--danger); }
-  .notice--warn { border-inline-start-color: var(--warning); }
-  .notice--good { border-inline-start-color: var(--positive); }
 
   /* ---------- Empty states ----------
      "Nothing here yet — do this" and not "no records found". */

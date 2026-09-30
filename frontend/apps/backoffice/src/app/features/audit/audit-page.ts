@@ -6,6 +6,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime } from '@tendero/shared-util';
 import { actorOf } from './audit-actor';
 import { AuditStore, PageSize } from './audit.store';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * Who did what, and what the shop refused.
@@ -27,7 +28,7 @@ import { AuditStore, PageSize } from './audit.store';
  */
 @Component({
   selector: 'backoffice-audit',
-  imports: [TranslocoDirective, FilterChips, Pager],
+  imports: [TranslocoDirective, FilterChips, Pager, Notice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-page.html',
   styleUrl: './audit-page.css',

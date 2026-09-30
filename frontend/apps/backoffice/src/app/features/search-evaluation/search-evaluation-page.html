@@ -46,17 +46,17 @@
     </p>
 
     @if (measured.judgedProductsInCatalogue === 0) {
-      <p class="notice notice--warn" role="alert">{{ t('searchEvaluation.noJudged') }}</p>
+      <lib-notice class="mb-4 max-w-[76ch]" tone="warn" live="assertive">{{ t('searchEvaluation.noJudged') }}</lib-notice>
     }
 
     @if (!measured.vectorLayer.isConfigured) {
-      <p class="notice">{{ t('searchEvaluation.notConfigured') }}</p>
+      <lib-notice class="mb-4 max-w-[76ch]">{{ t('searchEvaluation.notConfigured') }}</lib-notice>
     } @else if (!measured.vectorLayer.isAvailable) {
       <!-- The server's own words for why, as the orders screen shows a refusal. -->
-      <p class="notice notice--warn">
+      <lib-notice class="mb-4 max-w-[76ch]" tone="warn">
         {{ t('searchEvaluation.degraded') }}
         <code class="reason">{{ measured.vectorLayer.reason }}</code>
-      </p>
+      </lib-notice>
     }
 
     @for (view of store.cultures(); track view.culture) {

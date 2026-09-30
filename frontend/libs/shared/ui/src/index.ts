@@ -3,3 +3,5 @@
 // surviving storage that refuses.
 export * from './lib/theme';
 export * from './lib/copy-text/copy-text';
+export * from './lib/notice/notice';
+export * from './lib/status-pill/status-pill';

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * The door, and it no longer decides who may come through it.
@@ -24,7 +25,7 @@ import { AuthStore } from '@tendero/shared-auth';
  */
 @Component({
   selector: 'backoffice-sign-in',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, Notice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sign-in-page.html',
   styleUrl: './sign-in-page.css',

@@ -8,7 +8,7 @@
     </div>
   } @else {
     @if (store.problem(); as message) {
-      <p #notice class="notice notice--bad" role="alert" tabindex="-1">{{ message }}</p>
+      <lib-notice #notice class="mb-4" tone="bad" live="assertive" tabindex="-1">{{ message }}</lib-notice>
     }
 
     <div class="layout">

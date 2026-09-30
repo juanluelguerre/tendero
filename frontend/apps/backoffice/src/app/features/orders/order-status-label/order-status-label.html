@@ -1,14 +1,14 @@
 <ng-container *transloco="let t; prefix: 'orders'">
-  <span class="status" [class]="'status--' + order().status">{{ t('status.' + order().status) }}</span>
+  <lib-status-pill [tone]="tone()">{{ t('status.' + order().status) }}</lib-status-pill>
   <!-- A rehearsal a test credential placed (ADR 0038): never shipped, its
        stock already given back. Said beside the status so nobody prepares a
        parcel for it. -->
   @if (order().mode === 'Test') {
-    <span class="tag tag--code" [title]="t('testHint')">{{ t('test') }}</span>
+    <span class="tag tag--code ms-2" [title]="t('testHint')">{{ t('test') }}</span>
   }
   <!-- Placed by an agent under a mandate a platform signed (P11-5). -->
   @if (order().mandate; as mandate) {
-    <span class="tag tag--code" [title]="t('mandateHint', { issuer: mandate.issuer })">{{ t('mandate') }}</span>
+    <span class="tag tag--code ms-2" [title]="t('mandateHint', { issuer: mandate.issuer })">{{ t('mandate') }}</span>
   }
   @if (order().stopCode) {
     <span class="reason" [title]="order().stopDetail ?? ''">

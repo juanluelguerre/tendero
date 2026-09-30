@@ -11,6 +11,7 @@ import { ListingStore } from '../../listing/listing.store';
 import { ShopLinks } from '../../shop-links';
 import { CategoryStore } from './category.store';
 import { openedVia } from './opened-via';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * Everything in one branch of the taxonomy.
@@ -34,7 +35,7 @@ import { openedVia } from './opened-via';
  */
 @Component({
   selector: 'storefront-category-page',
-  imports: [TranslocoDirective, RouterLink, Listing, CampaignCard],
+  imports: [TranslocoDirective, RouterLink, Listing, CampaignCard, Notice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Its own listing — the filters in the URL, the request, the phone's batch —
   // and its own branch, which tells the listing what to list.

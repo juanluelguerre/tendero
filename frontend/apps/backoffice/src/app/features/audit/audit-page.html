@@ -20,7 +20,7 @@
     <div class="skeleton-list" aria-hidden="true"></div>
     <p class="sr-only" role="status" aria-live="polite">{{ t('audit.loading') }}</p>
   } @else if (store.failed()) {
-    <p class="notice notice--danger">{{ t('audit.failed') }}</p>
+    <lib-notice class="mb-4" tone="bad" live="assertive">{{ t('audit.failed') }}</lib-notice>
   } @else if (store.entries().length === 0) {
     <!--
       The empty message names the FILTER, because the screen opens on `denied`

@@ -1,0 +1,11 @@
+<span
+  class="whitespace-nowrap rounded-sm border border-current"
+  [class]="size() === 'md' ? 'inline-flex items-center px-3 py-[2px] text-xs font-semibold' : 'inline-block px-2 py-px text-3xs'"
+  [class.text-muted]="tone() === 'muted'"
+  [class.text-warning]="tone() === 'warn'"
+  [class.text-body]="tone() === 'neutral'"
+  [class.text-positive]="tone() === 'good'"
+  [class.text-danger]="tone() === 'bad'"
+  [attr.data-tone]="tone()"
+  [attr.data-size]="size()"
+><ng-content /></span>

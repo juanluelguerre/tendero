@@ -60,13 +60,13 @@
     }
 
     @case ('failed') {
-      <p class="notice notice--danger" role="alert">{{ t('category.failed') }}</p>
+      <lib-notice class="mb-4" tone="bad" live="assertive">{{ t('category.failed') }}</lib-notice>
     }
 
     @case ('found') {
       @let result = listing.result();
       @if (result.status === 'failed') {
-        <p class="notice notice--danger" role="alert">{{ t('category.failed') }}</p>
+        <lib-notice class="mb-4" tone="bad" live="assertive">{{ t('category.failed') }}</lib-notice>
       } @else if (result.status === 'ready' && result.total === 0 && !filtered()) {
         <p class="muted">{{ t('category.empty') }}</p>
       } @else {

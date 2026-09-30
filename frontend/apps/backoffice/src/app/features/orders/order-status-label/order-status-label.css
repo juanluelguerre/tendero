@@ -1,27 +1,6 @@
 /* Laid out by whoever places it: a table cell, a card line or the pane's head. */
 :host { display: contents; }
 
-/* Colour never carries meaning alone: every one of these has the word in
-   it, and the colour only makes the word findable in a column. */
-.status {
-  display: inline-block;
-  padding: 1px var(--space-2);
-  border: 1px solid currentColor;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-3xs);
-  white-space: nowrap;
-}
-
-.status--Pending { color: var(--text-muted); }
-.status--PaymentAuthorized, .status--Confirmed { color: var(--warning); }
-/* Not clay: design/DESIGN.md keeps the accent for what an AGENT did. A shipped
-   order is in transit, neither done nor waiting, and reads in the text colour. */
-.status--Shipped { color: var(--text); }
-.status--Delivered { color: var(--positive); }
-.status--PaymentFailed, .status--Cancelled { color: var(--danger); }
-
-.status + .tag { margin-inline-start: var(--space-2); }
-
 /* Why an order stopped, under its status: one size down, read second. */
 .reason {
   display: block;

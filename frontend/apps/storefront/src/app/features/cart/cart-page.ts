@@ -6,6 +6,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * The basket, and what it costs right now.
@@ -23,7 +24,7 @@ import { ShopLinks } from '../../shop-links';
  */
 @Component({
   selector: 'storefront-cart',
-  imports: [TranslocoDirective, RouterLink],
+  imports: [TranslocoDirective, RouterLink, Notice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cart-page.html',
   styleUrl: './cart-page.css',

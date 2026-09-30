@@ -1,0 +1,5 @@
+/* Its size and margins are its place's: the text inherits the page's size, and
+   whoever places it gives it room. */
+:host {
+  display: block;
+}

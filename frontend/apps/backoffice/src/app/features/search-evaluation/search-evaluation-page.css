@@ -29,20 +29,7 @@
   font-size: var(--text-xs);
 }
 
-.notice {
-  max-width: 76ch;
-  margin-block-end: var(--space-4);
-  padding: var(--space-3);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
 
-.notice--warn {
-  border-color: var(--warning);
-  color: var(--text);
-}
 
 .reason {
   display: block;

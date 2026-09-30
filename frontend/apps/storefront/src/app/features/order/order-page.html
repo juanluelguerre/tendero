@@ -5,9 +5,9 @@
         <p class="order__thanks">{{ t('order.placed') }}</p>
       }
       <h1 class="order__title">{{ t('order.reference', { id: shortId(order.orderId) }) }}</h1>
-      <span class="chip" [class]="'chip--' + order.status">
+      <lib-status-pill [tone]="orderTone(order.status)" size="md">
         {{ t('order.status.' + order.status) }}
-      </span>
+      </lib-status-pill>
 
       <!--
         A shop that says no has to say why where the no is read. Before this,
@@ -62,8 +62,7 @@
             }
 
             @if (store.returnMessage(); as message) {
-              <p class="notice" [class.notice--bad]="!store.returnOpened()"
-                 [class.notice--good]="store.returnOpened()" role="status">{{ message }}</p>
+              <lib-notice class="mb-4" [tone]="store.returnOpened() ? 'good' : 'bad'" live="polite">{{ message }}</lib-notice>
             }
 
             <!-- Only what is left to return, as the server counts it
@@ -139,9 +138,9 @@
               @for (request of store.returns(); track request.returnId) {
                 <li class="return">
                   <span class="return__number numeric">#{{ request.number }}</span>
-                  <span class="chip chip--{{ request.status }}">
+                  <lib-status-pill [tone]="returnTone(request.status)" size="md">
                     {{ t('order.returnStatus.' + request.status) }}
-                  </span>
+                  </lib-status-pill>
                   <span class="return__lines numeric">
                     {{ describe(request) }}
                   </span>
