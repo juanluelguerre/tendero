@@ -120,6 +120,11 @@ internal sealed class EfShopHistory(TenderoDbContext context) : IShopHistory
     /// <c>timestamptz</c> only from UTC — so the port takes the instant and the
     /// adapter says it in UTC.
     /// </summary>
+    public async Task<DateTimeOffset?> FirstLiveOrderAtAsync(CancellationToken cancellationToken = default) =>
+        await context.Orders.AsNoTracking()
+            .Where(order => order.Mode == OrderMode.Live)
+            .MinAsync(order => (DateTimeOffset?)order.CreatedAt, cancellationToken);
+
     public async Task<IReadOnlyList<Order>> OrdersPlacedAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default)
     {
         var (since, until) = (from.ToUniversalTime(), to.ToUniversalTime());

@@ -31,4 +31,7 @@ public interface IShopHistory
     /// <summary>Which of <paramref name="customers"/> had placed an order before <paramref name="before"/>: new against returning.</summary>
     Task<IReadOnlySet<CustomerId>> CustomersWhoOrderedBeforeAsync(
         IReadOnlyCollection<CustomerId> customers, DateTimeOffset before, CancellationToken cancellationToken = default);
+
+    /// <summary>When the shop's first live order was placed, or null before any: how far back a baseline can reach (R-9, D-7).</summary>
+    Task<DateTimeOffset?> FirstLiveOrderAtAsync(CancellationToken cancellationToken = default);
 }

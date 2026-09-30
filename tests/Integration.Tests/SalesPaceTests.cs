@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Ordering;
+using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -34,5 +35,9 @@ public sealed class SalesPaceTests(PostgresFixture postgres)
             pace.SoldAsync([Sku, "NOT-SOLD"], DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddMinutes(1), ct));
 
         Assert.Equal((2, 0, true), (sold[Sku].Units, sold["NOT-SOLD"].Units, sold[Sku].OnSaleSince is not null));
+
+        // How far back a campaign's baseline can reach: the shop's first live order.
+        var first = await shop.ReadAsync<IShopHistory, DateTimeOffset?>(history => history.FirstLiveOrderAtAsync(ct));
+        Assert.NotNull(first);
     }
 }
