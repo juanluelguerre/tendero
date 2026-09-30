@@ -302,7 +302,9 @@ jobs:
           # answers 401 forever — and the gate waited ten minutes for a stack
           # that had been up the whole time.
           probe=http://localhost:4201/api/orders/0191d2a4-5c3e-7000-8000-000000000000
-          for _ in $(seq 1 120); do
+          # Sixty attempts of at most fifteen seconds: the gate gives up, and says
+          # why, before the job's own limit cancels it and says nothing.
+          for _ in $(seq 1 60); do
             # A limit per attempt: a request that hangs would otherwise hold the
             # loop, and its ten minutes, forever.
             if [ "$(curl -s -o /dev/null --max-time 10 -w '%{http_code}' "$probe" || true)" = "404" ]; then
@@ -322,6 +324,13 @@ jobs:
             echo "the backoffice never came up"
           fi
 
+          # The AppHost's log ends where the dashboard starts; what each container
+          # did is Docker's to tell — a container Docker refused never appears as
+          # running, and its reason is in `docker ps -a` and its own log.
+          docker ps -a --format '{{.Names}}	{{.Status}}'
+          for name in $(docker ps -a --filter status=exited --filter status=created --format '{{.Names}}'); do
+            echo "--- $name"; docker logs --tail 30 "$name" 2>&1
+          done
           tail -100 "$RUNNER_TEMP/aspire.log"
           exit 1
 
