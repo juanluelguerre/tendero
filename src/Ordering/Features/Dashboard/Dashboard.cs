@@ -420,6 +420,11 @@ public sealed class DashboardEndpoints : ICarterModule
             async Task<Ok<AgentSales>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(new GetAgentSalesQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .WithName("GetAgentSales");
+
+        dashboard.MapGet("/mix",
+            async Task<Ok<SalesMix>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetSalesMixQuery(period?.Value ?? DashboardPeriods.Default), ct)))
+            .WithName("GetSalesMix");
     }
 
 }
