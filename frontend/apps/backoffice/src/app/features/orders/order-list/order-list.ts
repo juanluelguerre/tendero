@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, orderReference } from '@tendero/shared-util';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
 import { Pager } from '../../../worklist/pager/pager';
-import { placedAgo, shortId } from '../order-display';
+import { placedAgo } from '../order-display';
 import { primaryMove } from '../order-moves';
 import { OrderPayment } from '../order-payment/order-payment';
 import { OrderStatusLabel } from '../order-status-label/order-status-label';
@@ -28,7 +28,7 @@ export class OrderList {
 
   protected readonly pageSize = PageSize;
   protected readonly primaryMove = primaryMove;
-  protected readonly shortId = shortId;
+  protected readonly shortId = orderReference;
 
   protected money(amount: number, currency: string): string {
     return formatPrice(amount, currency, this.culture.active());

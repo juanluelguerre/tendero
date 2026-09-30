@@ -2,7 +2,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, orderReference } from '@tendero/shared-util';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
 import { nextDecision } from '../return-decisions';
 import { ReturnStatusLabel } from '../return-status-label/return-status-label';
@@ -26,9 +26,8 @@ export class ReturnList {
 
   protected readonly nextDecision = nextDecision;
 
-  protected shortId(id: string): string {
-    return id.split('-')[0];
-  }
+  /** A full Guid is unreadable; its random end is what a person reads, and what finds it. */
+  protected readonly shortId = orderReference;
 
   protected money(amount: number): string {
     return formatPrice(amount, 'EUR', this.culture.active());

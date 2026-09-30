@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, output, viewChild } from '@
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, orderReference } from '@tendero/shared-util';
 import { ConfirmDialog } from '../../../worklist/confirm-dialog/confirm-dialog';
 import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
 import { nextDecision, rejectable } from '../return-decisions';
@@ -32,9 +32,8 @@ export class ReturnPane {
   protected readonly nextDecision = nextDecision;
   protected readonly rejectable = rejectable;
 
-  protected shortId(id: string): string {
-    return id.split('-')[0];
-  }
+  /** A full Guid is unreadable; its random end is what a person reads, and what finds it. */
+  protected readonly shortId = orderReference;
 
   protected money(amount: number): string {
     return formatPrice(amount, 'EUR', this.culture.active());

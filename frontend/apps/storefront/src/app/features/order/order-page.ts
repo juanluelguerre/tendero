@@ -5,7 +5,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, orderReference } from '@tendero/shared-util';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
 import { OrderStore } from './order.store';
@@ -50,10 +50,8 @@ export class OrderPage {
     return formatPrice(amount, this.store.order()?.currency ?? 'EUR', this.culture.active());
   }
 
-  /** The first segment. A full GUID is unreadable and the URL has the rest. */
-  protected shortId(id: string): string {
-    return id.split('-')[0];
-  }
+  /** A full Guid is unreadable; its random end is what a person reads, and what finds it. */
+  protected readonly shortId = orderReference;
 
   protected describe(request: ReturnView): string {
     return request.lines.map((line) => `${line.sku} ×${line.quantity}`).join(' · ');
