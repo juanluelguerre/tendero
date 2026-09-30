@@ -76,7 +76,13 @@ public static class HostingExtensions
     /// </summary>
     public static WebApplication MapDefaultEndpoints(this WebApplication app)
     {
-        app.MapHealthChecks("/health");
+        // The process's health, without the checks that report through a route of
+        // their own (HealthTags.Private): search's stages are the shopkeeper's
+        // business, and one switched off is not an unhealthy API (R-9, D-7).
+        app.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            Predicate = registration => !registration.Tags.Contains(HealthTags.Private)
+        });
         app.MapHealthChecks("/alive", new HealthCheckOptions
         {
             Predicate = registration => registration.Tags.Contains(LiveTag)
