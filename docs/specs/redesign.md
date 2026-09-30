@@ -1,6 +1,6 @@
 # Spec: the redesign, run as a lifecycle — R-0, define before designing
 
-**Status**: built (R-0 to R-3 written 2026-09-27; R-4.1 to R-4.7, R-5.1 and R-5.2 built 2026-09-27/28). The baseline walkthrough ran 2026-09-28 (P1); R-6 is P1 again on the redesign
+**Status**: built (R-0 to R-3 written 2026-09-27; R-4.1 to R-4.7, R-5.1 and R-5.2 built 2026-09-27/28). The baseline walkthrough ran 2026-09-28 (P1); R-6, P1 again on the redesign, ran 2026-09-30 — qualitative, every task done and two errors found and fixed
 **Slice(s)**: `frontend/apps/backoffice`, `frontend/apps/storefront`, `design/`, `docs/telemetry/tracking-plan.json`
 **Article**: *A redesign with a before and an after* (working title)
 
@@ -268,6 +268,33 @@ participant, the author (P1), desktop first. The results are in
   against the returns pane R-4.3 built.
 - **W-4 · B3 at a phone: the orders list had to be reached or refreshed**
   (severity 2). R-4.2's *To ship* filter and badge are what R-6 checks it against.
+
+### The second walkthrough, R-6 (2026-09-30)
+
+*Run on `develop` after R-4, R-5 and R-7/R-8, with the same kit, the same nine
+tasks in the same order, and the same participant, P1, desktop first and then B3,
+S1 and S4 at the phone. **Not recorded in the page**: no times, interaction
+counts, SEQ or SUS were written down, so there is no table to set beside the
+baseline's.*
+
+What P1 reported, in their words afterwards:
+- **Every task done, faster and with fewer interactions than at the baseline**,
+  S1 at a desktop included — the task the baseline failed (SEQ 2), now reached
+  through the header's departments (R-7).
+- **Two errors, both fixed the same day** with a browser test that failed first:
+  the checkout's step headings sat across their panels' top edge (a `<legend>` is
+  drawn on its fieldset's border), and on a phone the products behind the open
+  filter sheet still scrolled (a modal dialog traps the focus, not the scroll —
+  fixed once, for every modal in both apps).
+- W-3 and W-4 did not come up again: the returns pane and the orders' *To ship*
+  filter carried B4 and B3 without comment.
+
+**How to read it.** This is a qualitative after, n = 1, by the person who built
+the shop and ran the baseline three days earlier; it can say *no loss and two
+errors found*, and it cannot say *how much faster*. The article reports it as
+that and nothing more. The automated half — the minimum interaction cost on both
+interfaces — is the comparison that stays measurable, and it is the one to run
+before the article is written.
 
 
 
