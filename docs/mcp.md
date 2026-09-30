@@ -43,6 +43,35 @@ transport is HTTP, so the header the client sets reaches the tools. Every tool
 also takes an explicit `culture`, which wins over the header — an agent that
 wants one answer in English asks for it per call.
 
+### "Not authenticated", and why Authenticate does not help
+
+`claude mcp list` (or `/mcp` inside a session) shows the server as connected and
+**not authenticated**, and that is the correct state: everything on `/mcp` but
+UCP's five checkout tools is anonymous. **Do not press Authenticate.** It starts
+an OAuth flow with dynamic client registration, and neither the development
+issuer nor the shop offers one — invariant 10: Tendero validates tokens and is
+never an authorization server. Finding no registration endpoint, the client
+falls back to `/register` on the server's own origin, and the answer is a 404
+from whatever serves that origin (Vite's dev server, through `localhost:4200`).
+
+For the checkout tools, give the client an agent's token as a header — the same
+token the REST example below uses, from the development issuer:
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:5130/dev-issuer/connect/token   -d grant_type=password -d username=claude-desktop-test | jq -r .access_token)
+claude mcp add --transport http tendero http://localhost:5130/mcp   -H "Authorization: Bearer $TOKEN"
+```
+
+The development issuer mints its signing key per process, so a restarted API
+refuses yesterday's token: add the server again with a fresh one.
+
+**On the 2026-07-28 protocol** a client lists the tools without a handshake, and
+the MCP SDK then infers each tool's `outputSchema` from its return type. The
+checkout tools return JSON (a UCP checkout, or UCP's error response), whose
+inferred schema is `true` — not an object schema — and Claude Code refused the
+whole list over it ("expected object, received boolean"). They declare an
+object now, and `McpTransportTests` asks `tools/list` the way that protocol does.
+
 ## VS Code
 
 `.vscode/mcp.json` in the workspace:

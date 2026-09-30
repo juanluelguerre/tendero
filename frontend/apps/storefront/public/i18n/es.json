@@ -412,6 +412,10 @@
     "ucpTitle": "Para agentes que compran: UCP",
     "ucpBody": "Un agente que compra en nombre de alguien se identifica y trae su mandato firmado. Su perfil está en esta dirección:",
     "youPay": "Tú sigues siendo quien paga",
-    "youPayBody": "Ningún agente paga desde tu navegador sin ti: el pago se confirma en la tienda, a tu nombre."
+    "youPayBody": "Ningún agente paga desde tu navegador sin ti: el pago se confirma en la tienda, a tu nombre.",
+    "copyMcp": "Copiar la dirección del servidor MCP",
+    "copyCommand": "Copiar el comando",
+    "copyUcp": "Copiar la dirección del perfil UCP",
+    "copied": "Copiado"
   }
 }

@@ -412,6 +412,10 @@
     "ucpTitle": "For agents that buy: UCP",
     "ucpBody": "An agent buying on somebody’s behalf identifies itself and brings a signed mandate. Its profile is at this address:",
     "youPay": "You are still the one who pays",
-    "youPayBody": "No agent pays from your browser without you: payment is confirmed in the shop, in your name."
+    "youPayBody": "No agent pays from your browser without you: payment is confirmed in the shop, in your name.",
+    "copyMcp": "Copy the MCP server’s address",
+    "copyCommand": "Copy the command",
+    "copyUcp": "Copy the UCP profile’s address",
+    "copied": "Copied"
   }
 }

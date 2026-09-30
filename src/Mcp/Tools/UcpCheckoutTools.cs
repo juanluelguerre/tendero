@@ -30,7 +30,7 @@ namespace ElGuerre.Tendero.Mcp.Tools;
 [McpServerToolType]
 public sealed class UcpCheckoutTools
 {
-    [McpServerTool(Name = "create_checkout", UseStructuredContent = true)]
+    [McpServerTool(Name = "create_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
     [Description("""
         UCP: open a checkout session for line items (item.id is a variant SKU from the
         catalogue tools). Returns the checkout with its status and messages. Requires an
@@ -47,7 +47,7 @@ public sealed class UcpCheckoutTools
         RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
             operations.CreateAsync(checkout, culture(checkout.Context?.Language), call, cancellationToken));
 
-    [McpServerTool(Name = "get_checkout", UseStructuredContent = true)]
+    [McpServerTool(Name = "get_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
     [Description("UCP: the current state of a checkout session this agent opened.")]
     public static Task<JsonElement> GetCheckoutAsync(
         UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
@@ -59,7 +59,7 @@ public sealed class UcpCheckoutTools
         RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
             operations.GetAsync(Id(id), culture(null), call, cancellationToken));
 
-    [McpServerTool(Name = "update_checkout", UseStructuredContent = true)]
+    [McpServerTool(Name = "update_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
     [Description("""
         UCP: replace a checkout session's line items, buyer, fulfillment and discount codes —
         a full replacement, not a patch.
@@ -75,7 +75,7 @@ public sealed class UcpCheckoutTools
         RunAsync(requests, principals, profiles, options, meta, requireKey: false, cancellationToken, (call, culture, _) =>
             operations.UpdateAsync(Id(id), checkout, culture(checkout.Context?.Language), call, cancellationToken));
 
-    [McpServerTool(Name = "complete_checkout", UseStructuredContent = true)]
+    [McpServerTool(Name = "complete_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
     [Description("""
         UCP: place the order, paying with exactly one instrument from a payment handler the
         checkout offered. Requires `meta.idempotency-key`: a retry with the same key never
@@ -92,7 +92,7 @@ public sealed class UcpCheckoutTools
         RunAsync(requests, principals, profiles, options, meta, requireKey: true, cancellationToken, (call, culture, key) =>
             operations.CompleteAsync(Id(id), checkout, key, culture(null), call, cancellationToken));
 
-    [McpServerTool(Name = "cancel_checkout", UseStructuredContent = true)]
+    [McpServerTool(Name = "cancel_checkout", UseStructuredContent = true, OutputSchemaType = typeof(UcpCheckoutAnswer))]
     [Description("UCP: cancel a checkout session that is still open. Requires `meta.idempotency-key`.")]
     public static Task<JsonElement> CancelCheckoutAsync(
         UcpCheckoutOperations operations, IHttpContextAccessor requests, IPrincipalAccessor principals,
@@ -148,3 +148,15 @@ public sealed class UcpCheckoutTools
     private static Guid Id(string id) =>
         Guid.TryParse(id, out var parsed) ? parsed : throw new McpException($"'{id}' is not a checkout session id.");
 }
+
+/// <summary>
+/// What a checkout tool answers, as its declared output: an object — a UCP
+/// checkout, or UCP's error response saying there is none. Its shape is UCP's
+/// own schemas' to describe, and both answers are built as JSON, so the tools
+/// return a <see cref="JsonElement"/>. That type's inferred schema is <c>true</c>,
+/// which is not an object schema: a 2026-07-28 client refused the whole tool
+/// list over it. This says the one thing both answers share, and nothing a
+/// client would then reject an error response for.
+/// </summary>
+public sealed class UcpCheckoutAnswer;
+

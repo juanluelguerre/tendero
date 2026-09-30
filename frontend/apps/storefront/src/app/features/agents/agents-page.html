@@ -16,9 +16,9 @@
   <section class="agents__block" aria-labelledby="agents-mcp">
     <h2 id="agents-mcp">{{ t('agents.mcpTitle') }}</h2>
     <p>{{ t('agents.mcpBody') }}</p>
-    <p><code class="agents__code numeric">{{ addresses.mcp }}</code></p>
+    <lib-copy-text [value]="addresses.mcp" [copyLabel]="t('agents.copyMcp')" [copiedLabel]="t('agents.copied')" />
     <p class="muted">{{ t('agents.mcpCommand') }}</p>
-    <pre class="agents__pre numeric"><code>{{ command }}</code></pre>
+    <lib-copy-text [value]="command" [copyLabel]="t('agents.copyCommand')" [copiedLabel]="t('agents.copied')" block />
   </section>
 
   <section class="agents__block" aria-labelledby="agents-browser">
@@ -29,7 +29,7 @@
   <section class="agents__block" aria-labelledby="agents-ucp">
     <h2 id="agents-ucp">{{ t('agents.ucpTitle') }}</h2>
     <p>{{ t('agents.ucpBody') }}</p>
-    <p><code class="agents__code numeric">{{ addresses.ucp }}</code></p>
+    <lib-copy-text [value]="addresses.ucp" [copyLabel]="t('agents.copyUcp')" [copiedLabel]="t('agents.copied')" />
   </section>
 
   <section class="agents__block agents__block--pay" aria-labelledby="agents-pay">

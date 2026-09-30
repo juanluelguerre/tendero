@@ -1,0 +1,14 @@
+<span class="copy" [class.copy--block]="block()">
+  @if (block()) {
+    <pre class="copy__text numeric"><code>{{ value() }}</code></pre>
+  } @else {
+    <code class="copy__text numeric">{{ value() }}</code>
+  }
+  <button type="button" class="copy__button" [attr.aria-label]="copyLabel()" [attr.title]="copyLabel()" (click)="copy()">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a1 1 0 0 1 1-1h9" />
+    </svg>
+  </button>
+  <!-- Said once when it happens; empty otherwise. -->
+  <span class="copy__status" role="status">{{ copied() ? copiedLabel() : '' }}</span>
+</span>

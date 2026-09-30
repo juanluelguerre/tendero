@@ -36,24 +36,7 @@
   padding-inline-start: var(--space-5);
 }
 
-.agents__code {
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg-surface);
-  font-size: var(--text-sm);
-  overflow-wrap: anywhere;
-}
 
-.agents__pre {
-  margin: 0;
-  padding: var(--space-4);
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-surface);
-  font-size: var(--text-xs);
-}
 
 .agents__block--pay {
   padding: var(--space-5);

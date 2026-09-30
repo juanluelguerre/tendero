@@ -164,6 +164,27 @@ test('on a phone, closing the sheet with Esc drops the unapplied choices', async
   await expect(open).toBeFocused();
 });
 
+/**
+ * A modal sheet holds the page still (R-6's second walkthrough): the platform
+ * traps the focus inside a modal dialog but not the scroll, and a thumb on the
+ * dimmed products behind the sheet moved them.
+ */
+test('on a phone, the products behind the open sheet do not scroll', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(Category);
+  await listed(page);
+  await page.getByRole('button', { name: /^Filtros/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Filtros' })).toBeVisible();
+
+  const before = await page.evaluate(() => window.scrollY);
+  // Over the dimmed page, above the sheet.
+  await page.mouse.move(195, 60);
+  await page.mouse.wheel(0, 600);
+  await page.waitForTimeout(300);
+
+  expect(await page.evaluate(() => window.scrollY)).toBe(before);
+});
+
 test('Ofertas in the departments row lists everything on offer', async ({ page }) => {
   await desktop(page);
   await page.goto('/es/cart');
