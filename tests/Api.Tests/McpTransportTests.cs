@@ -154,6 +154,65 @@ public sealed class McpTransportTests
     }
 
     /// <summary>
+    /// The specification wants a tool's `outputSchema` to be an object schema,
+    /// and a client validates `tools/list` against it: Claude Code refused the
+    /// whole list — "expected object, received boolean" — because the five
+    /// checkout tools return a `JsonElement`, whose inferred schema is `true`.
+    /// </summary>
+    [Fact]
+    public async Task Every_output_schema_is_an_object_schema()
+    {
+        using var factory = new TenderoApiFactory();
+        using var client = Connect(factory);
+
+        var tools = await ListToolsAs(client, "2026-07-28");
+
+        var notAnObject = tools.GetProperty("result").GetProperty("tools").EnumerateArray()
+            .Where(tool => tool.TryGetProperty("outputSchema", out var schema)
+                && (schema.ValueKind != JsonValueKind.Object
+                    || !schema.TryGetProperty("type", out var type) || type.GetString() != "object"))
+            .Select(tool => tool.GetProperty("name").GetString())
+            .ToArray();
+
+        Assert.Empty(notAnObject);
+    }
+
+    /// <summary>
+    /// `tools/list` as a client on the 2026-07-28 protocol asks it — Claude Code
+    /// does: no handshake, the version and the method in headers, and who the
+    /// client is in the request's own `_meta`. The SDK answers the older versions
+    /// with a different shape, which is why the handshake's test did not see it.
+    /// </summary>
+    private static async Task<JsonElement> ListToolsAs(HttpClient client, string protocol)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/mcp")
+        {
+            Content = JsonContent.Create(new
+            {
+                jsonrpc = "2.0",
+                id = 2,
+                method = "tools/list",
+                @params = new Dictionary<string, object>
+                {
+                    ["_meta"] = new Dictionary<string, object>
+                    {
+                        ["io.modelcontextprotocol/protocolVersion"] = protocol,
+                        ["io.modelcontextprotocol/clientCapabilities"] = new { },
+                        ["io.modelcontextprotocol/clientInfo"] = new { name = "tendero-tests", version = "1.0.0" },
+                    },
+                },
+            }),
+        };
+        request.Headers.Add("MCP-Protocol-Version", protocol);
+        request.Headers.Add("Mcp-Method", "tools/list");
+
+        var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        return JsonDocument.Parse(JsonRpcPayload(body)).RootElement.Clone();
+    }
+
+    /// <summary>
     /// One tool, end to end, with no database and no Elasticsearch: the returns
     /// window is a constant read through a handler, so this exercises the whole
     /// path — JSON-RPC in, dispatcher, handler, answer out — on infrastructure
