@@ -423,10 +423,12 @@ database a new password its volume does not know.
 |---|---|
 | `https` | the default stack |
 | `https-vectors` | plus the vector layer: search by meaning, similar products, the reranker on a GPU |
+| `https-knowledge` | plus the claims models: the extractor and the support scorer |
+| `https-advanced` | plus both: every AI stage on — their containers' memory limits add up to about 14 GB on a CPU |
 | `https-observability` | plus the Grafana stack |
 | `http` | the default stack, with the dashboard over plain HTTP |
 
-The rarer switches (claims, Keycloak, the tools) are not profiles on purpose —
+The rarer switches (Keycloak, the tools) are not profiles on purpose —
 every combination would be one more entry in the drop-down. Set them in user
 secrets, and they apply under whichever profile you pick. A profile's
 environment variables win over user secrets, so a profile can also turn one off
