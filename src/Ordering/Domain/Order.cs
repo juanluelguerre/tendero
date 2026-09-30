@@ -47,7 +47,15 @@ public sealed record OrderLine(
     string? ImageId,
 
     Money UnitPrice,
-    int Quantity)
+    int Quantity,
+
+    /// <summary>
+    /// The category the product was sold in, snapshotted like its name (R-9,
+    /// D-7): the dashboard's sales by category read it, and a product moved to
+    /// another category later does not move last month's sales with it. Null on
+    /// a line sold before it was recorded, or of a product with no category.
+    /// </summary>
+    string? CategoryCode = null)
 {
     public Money Total => UnitPrice * Quantity;
 }
@@ -215,6 +223,23 @@ public sealed class Order : AggregateRoot
     public AgentId? PlacedBy { get; private set; }
 
     /// <summary>
+    /// The way the order came in — the storefront, MCP or UCP (R-9, D-7). Null
+    /// on an order placed before it was recorded; the dashboard counts those
+    /// apart and never as the web.
+    /// </summary>
+    public OrderChannel? Channel { get; private set; }
+
+    /// <summary>
+    /// When the order was confirmed and when it shipped, recorded as each
+    /// happens (R-9, D-7), because a late shipment is measured between the two
+    /// and <see cref="UpdatedAt"/> only knows the last change. Null until then,
+    /// and on an order that moved before they were recorded.
+    /// </summary>
+    public DateTimeOffset? ConfirmedAt { get; private set; }
+
+    public DateTimeOffset? ShippedAt { get; private set; }
+
+    /// <summary>
     /// What came off, frozen as codes and labels. Backed by a list for the same
     /// reason the lines are: EF maps a private collection into one JSON column,
     /// and the aggregate keeps the only way to add to it.
@@ -293,7 +318,8 @@ public sealed class Order : AggregateRoot
         OrderId? id = null,
         string? contactEmail = null,
         OrderMandate? mandate = null,
-        AgentId? placedBy = null)
+        AgentId? placedBy = null,
+        OrderChannel? channel = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idempotencyKey);
         ArgumentNullException.ThrowIfNull(shippingAddress);
@@ -352,6 +378,7 @@ public sealed class Order : AggregateRoot
             ContactEmail = string.IsNullOrWhiteSpace(contactEmail) ? null : contactEmail.Trim(),
             Mandate = mandate,
             PlacedBy = placedBy,
+            Channel = channel,
             IdempotencyKey = idempotencyKey,
             Culture = SharedKernel.Culture.Normalize(culture),
             Currency = currency,
@@ -410,8 +437,11 @@ public sealed class Order : AggregateRoot
         TransitionTo(clock, OrderStatus.PaymentFailed, now => new OrderPaymentFailed(Id, reason, now));
     }
 
-    public void Confirm(TimeProvider clock) =>
+    public void Confirm(TimeProvider clock)
+    {
         TransitionTo(clock, OrderStatus.Confirmed, now => new OrderConfirmed(Id, now));
+        ConfirmedAt = UpdatedAt;
+    }
 
     /// <summary>
     /// A test order is never shipped: it is not a transition the table lacks —
@@ -425,6 +455,7 @@ public sealed class Order : AggregateRoot
             throw new InvalidOperationException($"Order {Id} is a test order; a test order is never shipped.");
 
         TransitionTo(clock, OrderStatus.Shipped, now => new OrderShipped(Id, now));
+        ShippedAt = UpdatedAt;
     }
 
     /// <summary>

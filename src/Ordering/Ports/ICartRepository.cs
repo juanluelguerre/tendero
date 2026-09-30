@@ -44,7 +44,10 @@ public sealed record PurchasableVariant(
     LocalizedText ProductName,
     LocalizedText? VariantLabel,
     string? ImageId,
-    string Currency);
+    string Currency,
+    // The catalogue's category of the product, which the order line snapshots
+    // (R-9, D-7). Null for a product filed under none.
+    string? CategoryCode = null);
 
 /// <summary>
 /// Resolves a SKU into something that can be put in a basket.
