@@ -38,8 +38,6 @@ public static class SalesMixFigures
 {
     private static readonly OrderChannel[] Channels = [OrderChannel.Web, OrderChannel.Mcp, OrderChannel.Ucp];
 
-    private const string DefaultCurrency = "EUR";
-
     public static SalesMix Of(DashboardPeriod period, IReadOnlyList<Order> placed)
     {
         var sales = placed.Where(SalesRanking.IsSale).ToList();
@@ -52,7 +50,7 @@ public static class SalesMixFigures
 
         return new SalesMix(
             period,
-            sales.Select(order => order.Currency).FirstOrDefault() ?? DefaultCurrency,
+            DashboardCurrency.Of(sales),
             [.. Channels.Select(channel => Through(channel))],
             Through(null),
             [

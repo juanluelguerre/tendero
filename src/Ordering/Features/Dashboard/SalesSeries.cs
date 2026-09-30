@@ -93,8 +93,6 @@ public static class SeriesPlans
 
 public static class SalesSeriesFigures
 {
-    private const string DefaultCurrency = "EUR";
-
     /// <summary>The sales in each of <paramref name="plan"/>'s buckets; an empty bucket is a zero.</summary>
     /// <param name="orderedBefore">
     /// The buyers who had bought before the series begins: they are returning on
@@ -105,7 +103,7 @@ public static class SalesSeriesFigures
         IReadOnlySet<CustomerId>? orderedBefore = null)
     {
         var sales = orders.Where(SalesRanking.IsSale).ToArray();
-        var currency = sales.Select(order => order.Currency).FirstOrDefault() ?? DefaultCurrency;
+        var currency = DashboardCurrency.Of(sales);
 
         // Oldest first, across both periods: a buyer's first day is the earliest.
         var seen = new HashSet<CustomerId>(orderedBefore ?? new HashSet<CustomerId>());

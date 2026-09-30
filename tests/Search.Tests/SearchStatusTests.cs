@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Search.Contracts;
 using ElGuerre.Tendero.Search.Health;
+using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Xunit;
 
@@ -78,4 +79,73 @@ public sealed class SearchStatusTests
 
         Assert.Equal(nameof(StageState.Off), result.Data[SearchHealth.StateKey]);
     }
+
+    private sealed class FixedLayer(VectorLayerStatus status) : IVectorLayer
+    {
+        public Task<VectorLayerStatus> CheckAsync(CancellationToken ct = default) => Task.FromResult(status);
+    }
+
+    private sealed class Reranker(bool answers) : IReranker
+    {
+        public Task<IReadOnlyList<double>> ScoreAsync(string query, IReadOnlyList<string> texts, CancellationToken ct = default) =>
+            answers ? Task.FromResult<IReadOnlyList<double>>([1d]) : throw new HttpRequestException("connection refused");
+    }
+
+    [Theory]
+    [InlineData(true, nameof(StageState.Up))]
+    [InlineData(false, nameof(StageState.Down))]
+    public async Task Meaning_switched_on_is_up_when_it_answers_and_down_when_it_does_not(bool available, string state)
+    {
+        var check = new MeaningHealthCheck(new FixedLayer(new VectorLayerStatus(IsConfigured: true, available, "the vector store")));
+
+        var result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(state, result.Data[SearchHealth.StateKey]);
+    }
+
+    [Theory]
+    [InlineData(true, nameof(StageState.Up))]
+    [InlineData(false, nameof(StageState.Down))]
+    public async Task Reranking_is_up_when_it_scores_and_down_when_it_does_not(bool answers, string state)
+    {
+        var check = new RerankingHealthCheck(new Reranker(answers));
+
+        var result = await check.CheckHealthAsync(new HealthCheckContext(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(state, result.Data[SearchHealth.StateKey]);
+    }
+
+    /// <summary>
+    /// The publisher reads every round of checks: each search check lands on its
+    /// stage, one with no state it can read is down, and the other checks of the
+    /// API are none of its business.
+    /// </summary>
+    [Fact]
+    public async Task Each_check_lands_on_its_stage_and_the_rest_are_left_alone()
+    {
+        var memory = new SearchStatusMemory();
+        var publisher = new SearchStatusPublisher(memory, new TestClock(First));
+        var report = new HealthReport(
+            new Dictionary<string, HealthReportEntry>
+            {
+                ["search-words"] = Entry(SearchHealth.Result(StageState.Up)),
+                ["search-meaning"] = Entry(SearchHealth.Result(StageState.Off, "switched off")),
+                ["search-reranking"] = Entry(HealthCheckResult.Unhealthy("timed out")),
+                ["postgres"] = Entry(HealthCheckResult.Unhealthy("not ours")),
+            },
+            TimeSpan.Zero);
+
+        await publisher.PublishAsync(report, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            [
+                new StageStatus(SearchStage.Words, StageState.Up, First, null),
+                new StageStatus(SearchStage.Meaning, StageState.Off, First, "switched off"),
+                new StageStatus(SearchStage.Reranking, StageState.Down, First, "timed out"),
+            ],
+            memory.Current().Stages);
+    }
+
+    private static HealthReportEntry Entry(HealthCheckResult result) =>
+        new(result.Status, result.Description, TimeSpan.Zero, result.Exception, result.Data);
 }

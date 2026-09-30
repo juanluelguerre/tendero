@@ -48,8 +48,6 @@ public static class CampaignBaseline
 {
     public const int Weeks = 4;
 
-    private const string DefaultCurrency = "EUR";
-
     /// <summary>How far back the orders have to be read for a window opening at <paramref name="from"/>.</summary>
     public static DateTimeOffset HistoryFrom(DateTimeZone zone, DateTimeOffset from) =>
         zone.AtStartOfDay(LocalDateOf(zone, from).PlusWeeks(-Weeks)).ToDateTimeOffset();
@@ -97,7 +95,7 @@ public static class CampaignBaseline
         decimal? baseline = hasBaseline ? happened.Sum(day => day.Baseline ?? 0m) : null;
 
         return new CampaignUplift(
-            sales.Select(order => order.Currency).FirstOrDefault() ?? DefaultCurrency,
+            DashboardCurrency.Of(sales),
             zone.Id,
             hasBaseline,
             sold,

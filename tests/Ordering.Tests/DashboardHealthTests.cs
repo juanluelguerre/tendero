@@ -62,6 +62,32 @@ public sealed class DashboardHealthTests
         Assert.Equal((2, 0.2m, "outside"), (ops.Defects, ops.DefectRate, ops.DefectStanding));
     }
 
+    /// <summary>
+    /// A return the shop rejected said nothing was wrong; one line damaged among
+    /// others is still a damaged parcel.
+    /// </summary>
+    [Fact]
+    public void A_rejected_return_is_no_defect_and_one_damaged_line_among_others_is()
+    {
+        var clock = new TestClock(Start);
+        var rejected = OrderBuilder.Default().WithLines(Line("PAN", 1)).At(clock).InStatus(OrderStatus.Delivered);
+        var mixed = OrderBuilder.Default().WithLines(Line("PAN", 1), Line("MUG", 1)).At(clock).InStatus(OrderStatus.Delivered);
+        clock.Advance(TimeSpan.FromHours(2));
+        var refused = ReturnRequest.Open(clock, rejected, [new(rejected.Lines[0].VariantId, "PAN", 1, ReturnReason.Damaged, null)], earlier: []);
+        refused.Reject(clock, "The photo shows the pan as it was sold.");
+        var returns = new[]
+        {
+            refused,
+            ReturnRequest.Open(clock, mixed,
+                [new(mixed.Lines[0].VariantId, "PAN", 1, ReturnReason.ChangedMind, null), new(mixed.Lines[1].VariantId, "MUG", 1, ReturnReason.Damaged, null)],
+                earlier: []),
+        };
+
+        var ops = DashboardFigures.Operations(DashboardPeriod.Week, Window(clock), placed: [rejected, mixed], inHand: [], returns: returns);
+
+        Assert.Equal(1, ops.Defects);
+    }
+
     [Fact]
     public void A_period_with_no_orders_has_no_defect_rate_rather_than_zero()
     {
@@ -110,6 +136,52 @@ public sealed class DashboardHealthTests
             placed: [], inHand: [], returns: [], shipped: [recorded, unrecorded]);
 
         Assert.Equal((1, 1, 0m), (ops.ShippedCounted, ops.ShippedBeforeMoments, ops.LateShipmentRate));
+    }
+
+    /// <summary>
+    /// The window is its start up to its end: a shipment at the first instant is in
+    /// it, one at the end is the next window's — for the orders with their moments
+    /// and for those counted apart, windowed by their last change.
+    /// </summary>
+    [Fact]
+    public void A_shipment_at_the_window_s_start_is_in_it_and_one_at_its_end_is_not()
+    {
+        var clock = new TestClock(Start);
+        Order ShippedAt(DateTimeOffset at, bool recorded)
+        {
+            var order = OrderBuilder.Default().At(clock).InStatus(OrderStatus.PaymentAuthorized);
+            order.Confirm(clock);
+            order.Ship(new TestClock(at));
+            return recorded ? order : Unrecorded(order);
+        }
+        var window = new DashboardWindow(Start.AddDays(1), Start.AddDays(8), Start.AddDays(-6));
+        List<Order> shipped =
+        [
+            ShippedAt(window.From, recorded: true),
+            ShippedAt(window.To, recorded: true),
+            ShippedAt(window.From, recorded: false),
+            ShippedAt(window.To, recorded: false),
+        ];
+
+        var ops = DashboardFigures.Operations(DashboardPeriod.Week, window, placed: [], inHand: [], returns: [], shipped: shipped);
+
+        Assert.Equal((1, 1), (ops.ShippedCounted, ops.ShippedBeforeMoments));
+    }
+
+    /// <summary>An order that knows when it shipped but not when it was confirmed has no lead time to measure: it is counted apart too.</summary>
+    [Fact]
+    public void An_order_with_only_one_of_its_moments_is_counted_apart()
+    {
+        var clock = new TestClock(Start);
+        var halfRecorded = OrderBuilder.Default().At(clock).InStatus(OrderStatus.PaymentAuthorized);
+        halfRecorded.Confirm(clock);
+        clock.Advance(TimeSpan.FromHours(5));
+        halfRecorded.Ship(clock);
+        typeof(Order).GetProperty(nameof(Order.ConfirmedAt))!.SetValue(halfRecorded, null);
+
+        var ops = DashboardFigures.Operations(DashboardPeriod.Week, Window(clock), placed: [], inHand: [], returns: [], shipped: [halfRecorded]);
+
+        Assert.Equal((0, 1), (ops.ShippedCounted, ops.ShippedBeforeMoments));
     }
 
     /// <summary>An order as the database holds one placed before the moments existed.</summary>

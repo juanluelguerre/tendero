@@ -151,15 +151,13 @@ public static class DashboardFigures
 
     private const int TopRows = 5;
 
-    private const string DefaultCurrency = "EUR";
-
     public static SalesSummary Sales(DashboardPeriod period, IReadOnlyList<Order> current, IReadOnlyList<Order> previous)
     {
         var sales = current.Where(SalesRanking.IsSale).ToList();
 
         return new SalesSummary(
             period,
-            CurrencyOf(current.Concat(previous)),
+            DashboardCurrency.Of(current.Concat(previous)),
             Figures(sales),
             Figures([.. previous.Where(SalesRanking.IsSale)]),
             // The ranking is Ordering's one rule (SalesRanking), which the shop's
@@ -186,7 +184,7 @@ public static class DashboardFigures
 
         return new OperationsSummary(
             period,
-            CurrencyOf(placed),
+            DashboardCurrency.Of(placed),
             toShip.Count,
             toShip.Count(order => order.UpdatedAt <= window.To - LateAfter),
             working.Count(order => order.Status is OrderStatus.Pending or OrderStatus.PaymentAuthorized),
@@ -278,7 +276,7 @@ public static class DashboardFigures
 
         return new AgentSales(
             period,
-            CurrencyOf(placed),
+            DashboardCurrency.Of(placed),
             sales.Count,
             sales.Sum(order => order.Total.Amount),
             byAgents.Count,
@@ -313,9 +311,6 @@ public static class DashboardFigures
     private static decimal? RateOrNone(int part, int whole) => whole == 0 ? null : Rate(part, whole);
 
     private static string? StandingOrNone(decimal? rate, decimal target) => rate is { } value ? Standing(value, target) : null;
-
-    private static string CurrencyOf(IEnumerable<Order> orders) =>
-        orders.Select(order => order.Currency).FirstOrDefault() ?? DefaultCurrency;
 }
 
 public sealed class DashboardHandlers(IShopHistory history, TimeProvider clock) :

@@ -44,6 +44,51 @@ public sealed class CampaignBaselineTests
         Assert.True(uplift.HasBaseline);
     }
 
+    /// <summary>
+    /// The totals are sums over the days that ended, and the uplift is what was sold
+    /// over what was expected: Thursday 300 against 100 and Friday 100 against 50.
+    /// </summary>
+    [Fact]
+    public void The_totals_add_up_the_days_that_ended_and_the_uplift_is_sold_less_baseline()
+    {
+        List<Order> orders = [Sold(Noon(10, 1), 300m), Sold(Noon(10, 2), 100m), Sold(Noon(9, 24), 400m), Sold(Noon(9, 25), 200m)];
+
+        var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo);
+
+        Assert.Equal((400m, 150m, 250m), (uplift.Sold, uplift.Baseline, uplift.Uplift));
+    }
+
+    /// <summary>A day is its own midnight up to the next one: an order at midnight opens the day, it does not close the one before.</summary>
+    [Fact]
+    public void An_order_at_midnight_belongs_to_the_day_it_opens()
+    {
+        List<Order> orders = [Sold(Opens, 10m), Sold(Opens.AddDays(1), 20m)];
+
+        var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo);
+
+        Assert.Equal([10m, 20m], uplift.Days.Take(2).Select(day => day.Sold));
+    }
+
+    [Fact]
+    public void A_first_order_exactly_four_weeks_before_the_opening_is_history_enough()
+    {
+        var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), [], firstOrderAt: Opens.AddDays(-28));
+
+        Assert.True(uplift.HasBaseline);
+    }
+
+    /// <summary>At midnight exactly, the day that ended is whole and the one that began is under way — not still to come.</summary>
+    [Fact]
+    public void At_midnight_the_day_before_has_ended_and_the_new_one_is_under_way()
+    {
+        var saturday = Opens.AddDays(2);
+
+        var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: saturday, [], firstOrderAt: LongAgo);
+
+        // Friday has ended, Saturday is under way, Sunday is still to come: (Future, Partial).
+        Assert.Equal([(false, false), (false, true), (true, false)], uplift.Days.Skip(1).Take(3).Select(day => (day.Future, day.Partial)));
+    }
+
     [Fact]
     public void With_fewer_than_four_weeks_of_history_there_is_no_baseline()
     {

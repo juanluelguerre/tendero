@@ -154,6 +154,18 @@ public sealed class SalesSeriesTests
         Assert.Equal(0, series.Current[2].Orders);
     }
 
+    [Fact]
+    public void A_bucket_counts_the_units_of_every_line()
+    {
+        var now = new DateTimeOffset(2026, 10, 14, 8, 0, 0, TimeSpan.Zero);
+        var plan = SeriesPlans.For(DashboardPeriod.Week, now, Madrid);
+        var order = OrderBuilder.Default().WithLines(Line(10m, 1), Line(10m, 2)).At(new TestClock(plan.Current[3])).InStatus(OrderStatus.Confirmed);
+
+        var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, [order]);
+
+        Assert.Equal(3, series.Current[3].Units);
+    }
+
     /// <summary>
     /// What agents bought and who bought, day by day (R-9, D-7): a buyer is new on
     /// the first day they appear in the two periods, unless they had ordered before

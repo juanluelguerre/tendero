@@ -61,6 +61,16 @@ public sealed class SalesMixTests
     }
 
     [Fact]
+    public void Categories_that_sold_the_same_rank_by_their_code()
+    {
+        List<Order> orders = [Sale(OrderChannel.Web, Line(20m, 1, "TEXTILES"), Line(20m, 1, "BAGS"))];
+
+        var mix = SalesMixFigures.Of(DashboardPeriod.Week, orders);
+
+        Assert.Equal(["BAGS", "TEXTILES"], mix.ByCategory.Select(row => row.CategoryCode));
+    }
+
+    [Fact]
     public void Test_orders_and_unpaid_ones_are_not_in_the_mix()
     {
         List<Order> orders =
