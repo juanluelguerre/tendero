@@ -12,16 +12,7 @@
 
   <div class="agent__address">
     <span class="agent__label eyebrow" id="agent-card-address">{{ t('agentCard.address') }}</span>
-    <span class="agent__field">
-      <code class="agent__url numeric">{{ mcp }}</code>
-      <button type="button" class="agent__copy" [attr.aria-label]="t('agentCard.copy')" (click)="copy()">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a1 1 0 0 1 1-1h9" />
-        </svg>
-      </button>
-      <!-- Said once when it happens; empty otherwise. -->
-      <span class="sr-only" role="status">{{ copied() ? t('agentCard.copied') : '' }}</span>
-    </span>
+    <lib-copy-text class="agent__field" [value]="mcp" [copyLabel]="t('agentCard.copy')" [copiedLabel]="t('agentCard.copied')" />
   </div>
 
   <a class="agent__how" [routerLink]="howTo()">{{ t('agentCard.howTo') }}</a>
