@@ -24,6 +24,9 @@ jobs:
   backend:
     name: Build · tests · architecture rules
     runs-on: ubuntu-latest
+    # About seven minutes today. A job with no limit runs for six hours when it
+    # hangs, and on GitHub Free those are minutes the account pays for.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
 
@@ -82,6 +85,8 @@ jobs:
   search-quality:
     name: Search relevance gate (NDCG@10)
     runs-on: ubuntu-latest
+    # About three minutes today.
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -171,6 +176,8 @@ jobs:
   frontend:
     name: Frontend lint and tests
     runs-on: ubuntu-latest
+    # About two minutes today.
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -227,6 +234,10 @@ jobs:
   end-to-end:
     name: End-to-end (browser)
     runs-on: ubuntu-latest
+    # About five and a half minutes when it passed. On 2026-09-29 it sat in
+    # "Bring up the stack" for over a quarter of an hour, and was cancelled by
+    # hand: the gate's curl had no time limit, and neither had the job.
+    timeout-minutes: 25
     # The thinnest layer of the pyramid, and the only one that needs the whole
     # stack. It is a separate job so the fast checks stay fast: the backend and
     # frontend jobs answer in a couple of minutes and this one has to bring up
@@ -292,7 +303,9 @@ jobs:
           # that had been up the whole time.
           probe=http://localhost:4201/api/orders/0191d2a4-5c3e-7000-8000-000000000000
           for _ in $(seq 1 120); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' "$probe" || true)" = "404" ]; then
+            # A limit per attempt: a request that hangs would otherwise hold the
+            # loop, and its ten minutes, forever.
+            if [ "$(curl -s -o /dev/null --max-time 10 -w '%{http_code}' "$probe" || true)" = "404" ]; then
               echo "the stack is up and the API answers through the backoffice"
               exit 0
             fi
@@ -303,7 +316,7 @@ jobs:
 
           # Which half is missing, because "it did not come up" sends whoever
           # reads this to the wrong log otherwise.
-          if curl -sf -o /dev/null http://localhost:4201; then
+          if curl -sf -o /dev/null --max-time 10 http://localhost:4201; then
             echo "the backoffice serves, but the API never answered through it"
           else
             echo "the backoffice never came up"
@@ -320,13 +333,15 @@ jobs:
       # afterwards — including by an agent, which can read it instead of
       # guessing from a stack.
       - name: Keep the report
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: frontend/apps/backoffice-e2e/playwright-report/
           retention-days: 7
 
+      # On a timeout too: a job cancelled by its limit is the one whose log is
+      # most needed, and `failure()` alone does not run for it.
       - name: Keep the stack's log
-        if: failure()
+        if: failure() || cancelled()
         run: tail -200 "$RUNNER_TEMP/aspire.log"
