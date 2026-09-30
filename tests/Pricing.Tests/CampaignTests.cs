@@ -38,6 +38,24 @@ public sealed class CampaignTests
         Assert.Equal(CampaignScope.Shop, Draft().Scope);
     }
 
+    /// <summary>
+    /// A window may be written in the shop's own offset — the seed file writes
+    /// Madrid's — and is kept as the same instants in UTC (ADR 0046): Postgres
+    /// stores a timestamptz only at offset zero, and the seed's +01:00 stopped the
+    /// workers on every empty database.
+    /// </summary>
+    [Fact]
+    public void A_window_written_in_another_offset_is_kept_as_the_same_instants_in_utc()
+    {
+        var madrid = TimeSpan.FromHours(2);
+        var startsAt = DayAfter.ToOffset(madrid);
+        var endsAt = DayAfter.AddDays(7).ToOffset(madrid);
+
+        var campaign = Draft(details: Details(startsAt: startsAt, endsAt: endsAt));
+
+        Assert.Equal((DayAfter, DayAfter.AddDays(7), TimeSpan.Zero, TimeSpan.Zero), (campaign.StartsAt, campaign.EndsAt, campaign.StartsAt.Offset, campaign.EndsAt.Offset));
+    }
+
     [Fact]
     public void A_window_that_ends_before_it_starts_is_refused()
     {
