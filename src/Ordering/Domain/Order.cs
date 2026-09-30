@@ -55,9 +55,21 @@ public sealed record OrderLine(
     /// another category later does not move last month's sales with it. Null on
     /// a line sold before it was recorded, or of a product with no category.
     /// </summary>
-    string? CategoryCode = null)
+    string? CategoryCode = null,
+
+    /// <summary>
+    /// The category's path of codes as it was, <c>HOME/KITCHEN/COOKWARE</c>, so a
+    /// figure about a department reaches everything under it — as a promotion on a
+    /// department does (Pricing's <c>PathContains</c>). Snapshotted with the code.
+    /// </summary>
+    string? CategoryPath = null)
 {
     public Money Total => UnitPrice * Quantity;
+
+    /// <summary>Whether this line was sold in <paramref name="category"/> or anywhere under it.</summary>
+    public bool IsIn(string category) =>
+        string.Equals(CategoryCode, category, StringComparison.OrdinalIgnoreCase)
+        || (CategoryPath?.Split('/').Contains(category, StringComparer.OrdinalIgnoreCase) ?? false);
 }
 
 public sealed record OrderPlaced(OrderId OrderId, DateTimeOffset OccurredAt) : IDomainEvent;

@@ -43,7 +43,7 @@ internal sealed class EfCartRepository(TenderoDbContext context) : ICartReposito
 /// reason.
 /// </summary>
 internal sealed class EfPurchasableReader(
-    TenderoDbContext context, IAttributeDefinitionReader definitions) : IPurchasableReader
+    TenderoDbContext context, IAttributeDefinitionReader definitions, ICategoryReader categories) : IPurchasableReader
 {
     public async Task<IReadOnlyDictionary<string, PurchasableVariant>> FindBySkusAsync(
         IReadOnlyCollection<string> skus, CancellationToken cancellationToken = default)
@@ -53,6 +53,7 @@ internal sealed class EfPurchasableReader(
 
         var wanted = skus.Select(sku => sku.Trim()).ToArray();
         var attributes = await definitions.AllAsync(cancellationToken);
+        var tree = await categories.AllAsync(cancellationToken);
 
         var products = await context.Products
             .AsNoTracking()
@@ -75,8 +76,10 @@ internal sealed class EfPurchasableReader(
                 Label(variant, attributes),
                 (variant.Image ?? product.PrimaryImage?.Id)?.ToString(),
                 variant.Price.Currency,
-                // The order line snapshots it, as it does the name (R-9, D-7).
-                product.Category)
+                // The order line snapshots it, as it does the name (R-9, D-7), and
+                // its path, so a department's figure reaches everything under it.
+                product.Category,
+                product.Category is null ? null : tree.ByCode(product.Category)?.Path)
         ).ToDictionary(item => item.Sku, StringComparer.OrdinalIgnoreCase);
     }
 

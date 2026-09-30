@@ -44,8 +44,8 @@ public sealed class OrderSnapshotTests(PostgresFixture postgres)
         var stored = await shop.OrderAsync(placed.Order.Id, ct);
 
         Assert.Equal(
-            (OrderChannel.Mcp, "COOKWARE", true, true),
-            (stored!.Channel, stored.Lines[0].CategoryCode, stored.ConfirmedAt is not null, stored.ShippedAt is not null));
+            (OrderChannel.Mcp, "COOKWARE", "HOME/KITCHEN/COOKWARE", true, true),
+            (stored!.Channel, stored.Lines[0].CategoryCode, stored.Lines[0].CategoryPath, stored.ConfirmedAt is not null, stored.ShippedAt is not null));
     }
 
     private sealed class FixedActor(Actor actor) : IActorAccessor

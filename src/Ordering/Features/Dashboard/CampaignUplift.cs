@@ -14,22 +14,26 @@ namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 
 /// <summary>
 /// A day of the campaign: what it sold and the baseline it is measured against.
-/// A day still to come is <paramref name="Future"/> — not a day that sold nothing.
+/// A day still to come is <paramref name="Future"/> — not a day that sold nothing —
+/// and today is <paramref name="Partial"/>: half a day against a whole day's
+/// baseline, drawn apart and counted in no total until it ends.
 /// </summary>
-public sealed record UpliftDay(DateTimeOffset Start, decimal Sold, decimal? Baseline, bool Future);
+public sealed record UpliftDay(DateTimeOffset Start, decimal Sold, decimal? Baseline, bool Future, bool Partial);
 
 /// <summary>
 /// What a campaign added over what the shop would have sold anyway (R-9, D-7):
 /// each day against the average of the same weekday over the four weeks before it
-/// opened. The totals are over the days that have happened. With fewer than four
+/// opened. The totals are over the days that have ended. With fewer than four
 /// weeks of history there is no baseline, and it says so rather than inventing
 /// one. An estimate, not a proof: weather, a mention elsewhere and a campaign that
 /// overlaps are not told apart. Sales are the lines' price times quantity —
 /// before shipping and the order's discounts — and only the category's lines
 /// when the campaign is a category's.
 /// </summary>
+/// <param name="TimeZone">The zone the days were counted in — the shop's (ADR 0046) — so no reader assumes one.</param>
 public sealed record CampaignUplift(
     string Currency,
+    string TimeZone,
     bool HasBaseline,
     decimal Sold,
     decimal? Baseline,
@@ -64,7 +68,8 @@ public static class CampaignBaseline
             return sales
                 .Where(order => order.CreatedAt >= start && order.CreatedAt < end)
                 .SelectMany(order => order.Lines)
-                .Where(line => category is null || string.Equals(line.CategoryCode, category, StringComparison.OrdinalIgnoreCase))
+                // A campaign on a department reaches its whole branch, as its promotions do.
+                .Where(line => category is null || line.IsIn(category))
                 .Sum(line => line.Total.Amount);
         }
 
@@ -83,15 +88,17 @@ public static class CampaignBaseline
         {
             var start = zone.AtStartOfDay(day).ToDateTimeOffset();
             var future = start > now;
-            days.Add(new UpliftDay(start, future ? 0m : SoldOn(day), BaselineOf(day), future));
+            var partial = !future && zone.AtStartOfDay(day.PlusDays(1)).ToDateTimeOffset() > now;
+            days.Add(new UpliftDay(start, future ? 0m : SoldOn(day), BaselineOf(day), future, partial));
         }
 
-        var happened = days.Where(day => !day.Future).ToList();
+        var happened = days.Where(day => !day.Future && !day.Partial).ToList();
         var sold = happened.Sum(day => day.Sold);
         decimal? baseline = hasBaseline ? happened.Sum(day => day.Baseline ?? 0m) : null;
 
         return new CampaignUplift(
             sales.Select(order => order.Currency).FirstOrDefault() ?? DefaultCurrency,
+            zone.Id,
             hasBaseline,
             sold,
             baseline,

@@ -153,11 +153,17 @@ internal sealed class EfShopHistory(TenderoDbContext context) : IShopHistory
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlySet<CustomerId>> CustomersWhoOrderedBeforeAsync(
-        IReadOnlyCollection<CustomerId> customers, DateTimeOffset before, CancellationToken cancellationToken = default) =>
-        (await context.Orders.AsNoTracking()
-            .Where(order => customers.Contains(order.CustomerId) && order.CreatedAt < before && order.Mode == OrderMode.Live)
+        IReadOnlyCollection<CustomerId> customers, DateTimeOffset before, CancellationToken cancellationToken = default)
+    {
+        // In UTC, as OrdersPlacedAsync asks: the series passes the start of the
+        // shop's day, +02:00 in a Madrid summer, and Npgsql writes only UTC to a
+        // timestamptz (R-9, D-7).
+        var until = before.ToUniversalTime();
+        return (await context.Orders.AsNoTracking()
+            .Where(order => customers.Contains(order.CustomerId) && order.CreatedAt < until && order.Mode == OrderMode.Live)
             .Select(order => order.CustomerId)
             .Distinct()
             .ToListAsync(cancellationToken))
-        .ToHashSet();
+            .ToHashSet();
+    }
 }

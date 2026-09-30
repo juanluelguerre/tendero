@@ -419,7 +419,7 @@ public sealed class CheckoutSessionsHandler(
             lines.Add(new CartLine(
                 purchasable.ProductId, purchasable.VariantId, purchasable.Sku,
                 purchasable.ProductName, purchasable.VariantLabel, purchasable.ImageId, quantity,
-                purchasable.CategoryCode));
+                purchasable.CategoryCode, purchasable.CategoryPath));
         }
 
         return (lines, known.Values.FirstOrDefault()?.Currency, issues);

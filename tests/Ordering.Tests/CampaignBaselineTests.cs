@@ -23,9 +23,9 @@ public sealed class CampaignBaselineTests
 
     private static readonly DateTimeOffset LongAgo = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
-    private static Order Sold(DateTimeOffset at, decimal amount, string? category = null) =>
+    private static Order Sold(DateTimeOffset at, decimal amount, string? category = null, string? path = null) =>
         OrderBuilder.Default()
-            .WithLines(new OrderLine(ProductId.New(), VariantId.New(), "SKU", "Product", null, null, new Money(amount, "EUR"), 1, category))
+            .WithLines(new OrderLine(ProductId.New(), VariantId.New(), "SKU", "Product", null, null, new Money(amount, "EUR"), 1, category, path))
             .At(new TestClock(at))
             .InStatus(OrderStatus.Confirmed);
 
@@ -60,9 +60,28 @@ public sealed class CampaignBaselineTests
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), [Sold(Noon(9, 5), 280m)], firstOrderAt: LongAgo);
 
         Assert.Equal([false, false, false, true, true, true, true], uplift.Days.Select(day => day.Future));
-        // The totals are over the days that have happened, Thursday to Saturday:
-        // Saturday's baseline is 280 over its four Saturdays, and the days to come add nothing.
-        Assert.Equal(70m, uplift.Baseline);
+        // The totals are over the days that have ended, Thursday and Friday: Saturday
+        // is under way (its baseline would be 280 over its four Saturdays), and the
+        // days to come add nothing.
+        Assert.Equal(0m, uplift.Baseline);
+    }
+
+    /// <summary>
+    /// Today is under way: half a day's sales against a whole day's baseline would read
+    /// as a campaign failing every morning. It is drawn as partial and counted in no
+    /// total until it ends (the branch's review, 2026-09-30).
+    /// </summary>
+    [Fact]
+    public void Today_is_partial_and_counts_in_no_total_until_it_ends()
+    {
+        List<Order> orders = [Sold(Noon(10, 2), 100m), Sold(Noon(10, 3), 40m), Sold(Noon(9, 26), 400m)];
+
+        var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo);
+
+        Assert.Equal([false, false, true, false, false, false, false], uplift.Days.Select(day => day.Partial));
+        // The zone the days were counted in travels with them, as the sales series' does (ADR 0046).
+        Assert.Equal("Europe/Madrid", uplift.TimeZone);
+        Assert.Equal((100m, 0m), (uplift.Sold, uplift.Baseline));
     }
 
     /// <summary>Sunday 25 October 2026 lasts 25 hours in Madrid: still one Sunday, matched to the four before.</summary>
@@ -86,6 +105,21 @@ public sealed class CampaignBaselineTests
         List<Order> orders = [Sold(Noon(10, 2), 50m, "COOKWARE"), Sold(Noon(10, 2), 80m, "MUGS")];
 
         var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo, category: "COOKWARE");
+
+        Assert.Equal(50m, uplift.Sold);
+    }
+
+    /// <summary>
+    /// A campaign on a department reaches everything under it, as its promotions do
+    /// (Pricing's PathContains): a pan filed under COOKWARE sells in HOME's campaign.
+    /// Found by the branch's review, 2026-09-30.
+    /// </summary>
+    [Fact]
+    public void A_category_campaign_counts_everything_under_its_category()
+    {
+        List<Order> orders = [Sold(Noon(10, 2), 50m, "COOKWARE", "HOME/KITCHEN/COOKWARE"), Sold(Noon(10, 2), 80m, "SHIRT", "APPAREL/SPORTSWEAR/SHIRT")];
+
+        var uplift = CampaignBaseline.Of(Madrid, Opens, Closes, now: Noon(10, 3), orders, firstOrderAt: LongAgo, category: "HOME");
 
         Assert.Equal(50m, uplift.Sold);
     }

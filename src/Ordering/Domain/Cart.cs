@@ -47,8 +47,9 @@ public sealed record CartLine(
     LocalizedText? VariantLabel,
     string? ImageId,
     int Quantity,
-    // The product's category, carried to the order line it becomes (R-9, D-7).
-    string? CategoryCode = null)
+    // The product's category and its path, carried to the order line it becomes (R-9, D-7).
+    string? CategoryCode = null,
+    string? CategoryPath = null)
 {
     public CartLine WithQuantity(int quantity) => this with { Quantity = quantity };
 }

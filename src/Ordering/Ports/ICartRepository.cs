@@ -46,8 +46,9 @@ public sealed record PurchasableVariant(
     string? ImageId,
     string Currency,
     // The catalogue's category of the product, which the order line snapshots
-    // (R-9, D-7). Null for a product filed under none.
-    string? CategoryCode = null);
+    // (R-9, D-7), and its path of codes. Null for a product filed under none.
+    string? CategoryCode = null,
+    string? CategoryPath = null);
 
 /// <summary>
 /// Resolves a SKU into something that can be put in a basket.

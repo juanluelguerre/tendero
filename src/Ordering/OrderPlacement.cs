@@ -268,7 +268,8 @@ public sealed class OrderPlacement(
                     // the cart carries none, on purpose.
                     unitPrices[line.Sku],
                     line.Quantity,
-                    line.CategoryCode))
+                    line.CategoryCode,
+                    line.CategoryPath))
             ],
             request.ShippingAddress,
             // Billing defaults to shipping and is still its OWN copy: "the same
