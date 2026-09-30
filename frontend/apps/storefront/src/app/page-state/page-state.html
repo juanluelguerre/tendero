@@ -1,0 +1,17 @@
+<div
+  class="rounded-lg border p-6 text-center"
+  [class.border-hairline]="tone() === 'info'"
+  [class.bg-surface]="tone() === 'info'"
+  [class.border-danger]="tone() === 'bad'"
+  [class.bg-(--danger-tint)]="tone() === 'bad'"
+  [attr.data-tone]="tone()"
+>
+  @if (heading(); as words) {
+    @if (level() === 1) {
+      <h1 class="mb-2 text-lg">{{ words }}</h1>
+    } @else {
+      <h2 class="mb-2 text-lg">{{ words }}</h2>
+    }
+  }
+  <ng-content />
+</div>

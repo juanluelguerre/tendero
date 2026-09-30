@@ -16,6 +16,7 @@ import { SpecValue } from '../../specs/spec-value/spec-value';
 import { TrailStore } from '../../trail/trail.store';
 import { arrivedVia, cameFiltered } from './arrived-from';
 import { ProductStore } from './product.store';
+import { PageState } from '../../page-state/page-state';
 
 /**
  * The product detail page.
@@ -36,7 +37,7 @@ import { ProductStore } from './product.store';
  */
 @Component({
   selector: 'storefront-product-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, SpecValue, SpecSource],
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, SpecValue, SpecSource, PageState],
   providers: [ProductStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',

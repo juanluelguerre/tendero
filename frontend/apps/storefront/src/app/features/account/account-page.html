@@ -5,10 +5,9 @@
     }
 
     @case ('failed') {
-      <div class="notice">
-        <h1 class="notice__title">{{ t('account.failedTitle') }}</h1>
+      <storefront-page-state class="mb-4" [level]="1" [heading]="t('account.failedTitle')">
         <p class="muted">{{ t('account.failed') }}</p>
-      </div>
+      </storefront-page-state>
     }
 
     @case ('signedOut') {

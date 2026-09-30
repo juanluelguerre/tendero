@@ -1,19 +1,30 @@
-<section class="agent" *transloco="let t" aria-labelledby="agent-card-title">
-  <span class="agent__icon" aria-hidden="true">
+<!-- An invitation, on the accent's tint; the campaign above keeps the clay action. -->
+<section
+  class="grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-center gap-5 rounded-lg bg-accent-tint px-6 py-5 max-tab:grid-cols-[auto_minmax(0,1fr)] max-tab:p-5"
+  *transloco="let t"
+  aria-labelledby="agent-card-title"
+>
+  <span class="grid size-[3rem] place-items-center rounded-full bg-surface" aria-hidden="true">
     <svg viewBox="0 0 24 24" focusable="false">
       <rect x="5" y="8" width="14" height="11" rx="3" /><path d="M12 4v4M9 13h.01M15 13h.01M9 16h6" />
     </svg>
   </span>
 
-  <div class="agent__words">
-    <h2 class="agent__title" id="agent-card-title">{{ t('agentCard.title') }}</h2>
-    <p class="agent__lede">{{ t('agentCard.lede') }}</p>
+  <div>
+    <h2 class="text-lg" id="agent-card-title">{{ t('agentCard.title') }}</h2>
+    <p class="mt-1 text-sm text-muted">{{ t('agentCard.lede') }}</p>
   </div>
 
-  <div class="agent__address">
-    <span class="agent__label eyebrow" id="agent-card-address">{{ t('agentCard.address') }}</span>
-    <lib-copy-text class="agent__field" [value]="mcp" [copyLabel]="t('agentCard.copy')" [copiedLabel]="t('agentCard.copied')" />
+  <div class="grid gap-1 max-tab:col-span-full">
+    <span class="eyebrow" id="agent-card-address">{{ t('agentCard.address') }}</span>
+    <lib-copy-text [value]="mcp" [copyLabel]="t('agentCard.copy')" [copiedLabel]="t('agentCard.copied')" />
   </div>
 
-  <a class="agent__how" [routerLink]="howTo()">{{ t('agentCard.howTo') }}</a>
+  <!-- Aligned with the address box, not with the label above it. -->
+  <a
+    class="inline-flex min-h-[2.75rem] items-center self-end rounded-md border border-hairline-strong bg-surface px-4 text-sm font-semibold text-body no-underline hover:border-muted max-tab:col-span-full max-tab:justify-self-start"
+    [routerLink]="howTo()"
+  >
+    {{ t('agentCard.howTo') }}
+  </a>
 </section>

@@ -9,6 +9,7 @@ import { ProductImagePlaceholder } from '../../product-image-placeholder/product
 import { ShopLinks } from '../../shop-links';
 import { TrailHistory } from '../../trail/trail-history/trail-history';
 import { AccountStore } from './account.store';
+import { PageState } from '../../page-state/page-state';
 
 /**
  * A shopper's account, and their orders.
@@ -30,7 +31,7 @@ import { AccountStore } from './account.store';
  */
 @Component({
   selector: 'storefront-account-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, TrailHistory],
+  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, TrailHistory, PageState],
   providers: [AccountStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-page.html',

@@ -3,7 +3,7 @@
   @if (value.source === 'none') {
     <!-- No data, said as such: a comparison that left the cell blank would let
          the eye fill it in, and one that guessed would be lying. -->
-    <span class="spec-value--none">{{ t('specs.noData') }}</span>
+    <span class="text-muted italic">{{ t('specs.noData') }}</span>
   } @else {
     @switch (value.kind) {
       @case ('Boolean') {
@@ -12,7 +12,7 @@
       @case ('Number') {
         <span class="numeric">{{ value.number }}</span>
         @if (value.unit) {
-          <span class="spec-value__unit">{{ value.unit }}</span>
+          <span class="ms-1 text-muted">{{ value.unit }}</span>
         }
       }
       @default {

@@ -15,18 +15,16 @@
     }
 
     @case ('notFound') {
-      <div class="notice">
-        <h1 class="notice__title">{{ t('product.notFoundTitle') }}</h1>
+      <storefront-page-state class="mb-4" [level]="1" [heading]="t('product.notFoundTitle')">
         <p class="muted">{{ t('product.notFound') }}</p>
         <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
-      </div>
+      </storefront-page-state>
     }
 
     @case ('failed') {
-      <div class="notice">
-        <h1 class="notice__title">{{ t('product.failedTitle') }}</h1>
+      <storefront-page-state class="mb-4" [level]="1" [heading]="t('product.failedTitle')">
         <p class="muted">{{ t('product.failed') }}</p>
-      </div>
+      </storefront-page-state>
     }
 
     @case ('done') {

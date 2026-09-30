@@ -1,0 +1,5 @@
+/* Styled with utilities in the template (ADR 0049). Its margins are its place's:
+   whoever puts it on a page gives it room. */
+:host {
+  display: block;
+}

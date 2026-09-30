@@ -11,8 +11,26 @@
 
   So the host is the caller's to shape, and everything inside it is ours.
 -->
-<div class="ph">
-  <svg class="ph__mark" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+<!--
+  Rows sized to content and the block centred, rather than `place-items`, which
+  centres each row inside its own share of the box — in the product page gallery
+  that put the mark near the top and the words near the bottom with a void
+  between them.
+
+  Stone rather than clay. It is an absence, and the accent belongs to the one
+  action on the view (design/DESIGN.md) — a grid of terracotta tiles would shout
+  louder than the products that DO have a picture. White is wrong for a related
+  reason: an empty white square reads as a photograph that failed to load, which
+  is exactly the wrong thing to say.
+-->
+<div class="grid size-full auto-rows-max content-center justify-items-center gap-3 bg-raised text-muted">
+  <!-- A share of the BOX, not of the font size. Sizing it in `em` tied it to
+       whatever text size the surrounding card happened to use, which came out at
+       about fifty pixels inside a tile of two hundred and forty — a stamp in a
+       corner rather than a placeholder. A proportion scales with whatever it is
+       dropped into — a result card, the gallery, a 48-pixel thumbnail — without
+       any of them being told a number. -->
+  <svg class="aspect-square h-auto w-[46%] max-w-[200px]" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
     <defs>
       <clipPath [attr.id]="clipId"><path d="M34 30 L92 30 L110 64 L16 64 Z" /></clipPath>
     </defs>
@@ -32,6 +50,6 @@
   </svg>
 
   @if (label()) {
-    <span class="ph__label">{{ label() }}</span>
+    <span class="max-w-[22ch] text-center text-xs text-balance">{{ label() }}</span>
   }
 </div>
