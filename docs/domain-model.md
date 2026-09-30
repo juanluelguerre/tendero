@@ -522,6 +522,7 @@ classDiagram
         +string? ImageId
         +int Quantity
         +string? CategoryCode
+        +string? CategoryPath
     }
     class CartStatus {
         <<enumeration>>
@@ -621,6 +622,7 @@ classDiagram
         +Money UnitPrice
         +int Quantity
         +string? CategoryCode
+        +string? CategoryPath
         +Money Total
     }
     class OrderMandate {
