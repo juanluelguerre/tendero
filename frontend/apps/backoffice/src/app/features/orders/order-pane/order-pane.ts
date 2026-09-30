@@ -1,10 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, orderReference } from '@tendero/shared-util';
 import { ConfirmDialog } from '../../../worklist/confirm-dialog/confirm-dialog';
 import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
-import { shortId } from '../order-display';
 import { cancellable, primaryMove } from '../order-moves';
 import { OrderPayment } from '../order-payment/order-payment';
 import { OrderStatusLabel } from '../order-status-label/order-status-label';
@@ -36,7 +35,7 @@ export class OrderPane {
 
   protected readonly primaryMove = primaryMove;
   protected readonly cancellable = cancellable;
-  protected readonly shortId = shortId;
+  protected readonly shortId = orderReference;
 
   protected money(amount: number, currency: string): string {
     return formatPrice(amount, currency, this.culture.active());

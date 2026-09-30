@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { orderReference } from '@tendero/shared-util';
 import { activeAgent, allProducts, is, type ProductSummary, shopkeeperApi } from './laboratory';
 
 /**
@@ -46,7 +47,7 @@ test('prepare the shop for the walkthrough', async ({ page }) => {
   const report: [string, number, string][] = [
     ['B1 drafts to review', drafts.length + candidates.length, candidates.map((p) => `withdrawn ${p.code}`).join(', ')],
     ['B2 claims waiting', claims, ''],
-    ['B3 confirmed orders', confirmed.total, confirmed.orders[0] ? `card: ${confirmed.orders[0].orderId.slice(0, 8)} (${confirmed.orders[0].recipientName})` : ''],
+    ['B3 confirmed orders', confirmed.total, confirmed.orders[0] ? `card: ${orderReference(confirmed.orders[0].orderId)} (${confirmed.orders[0].recipientName})` : ''],
     ['B4 open returns', returns.length, returns[0] ? `first: #${returns[0].number}` : ''],
     ['B5 active agents', agents.length, agents[0] ? `card: ${agents[0].displayName}` : ''],
   ];

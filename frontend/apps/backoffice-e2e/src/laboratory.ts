@@ -17,7 +17,6 @@ import { signIn } from './session';
  */
 
 export interface ProductSummary { productId: string; code: string; name: string; category: string | null; status: string }
-interface OrderSummary { orderId: string; status: string; recipientName: string; createdAt: string }
 interface AgentView { agentId: string; displayName: string; status: string }
 interface StockRow { sku: string; available: number }
 

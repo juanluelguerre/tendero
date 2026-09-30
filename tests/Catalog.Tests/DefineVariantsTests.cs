@@ -89,6 +89,24 @@ public sealed class DefineVariantsTests
         Assert.Contains(result.Errors, error => error.ErrorMessage.Contains("more than", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// A product with no external id names its SKUs after its own id, and after
+    /// the id's random end: the start of a version-7 Guid is a timestamp, so two
+    /// products created within a minute began the same and their SKUs collided.
+    /// </summary>
+    [Fact]
+    public async Task Two_products_created_together_get_different_skus_without_a_prefix()
+    {
+        Product Unlinked() => Product.Create(Clock, LocalizedText.From("es", "Camiseta técnica"), new Money(24.90m, "EUR"));
+        var (first, second) = (Unlinked(), Unlinked());
+        var command = (Product product) => new DefineVariantsCommand(product.Id, [new VariantAxis("SIZE", ["M"])], null);
+
+        await HandlerOver(first, out _).HandleAsync(command(first), TestContext.Current.CancellationToken);
+        await HandlerOver(second, out _).HandleAsync(command(second), TestContext.Current.CancellationToken);
+
+        Assert.NotEqual(first.Variants.Single().Sku, second.Variants.Single().Sku);
+    }
+
     private static Product AProduct()
     {
         var product = Product.Create(

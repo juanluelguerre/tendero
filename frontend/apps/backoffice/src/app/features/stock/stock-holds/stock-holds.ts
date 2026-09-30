@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReservationRow } from '@tendero/shared-api';
+import { orderReference } from '@tendero/shared-util';
 import { StockStore } from '../stock.store';
 
 /**
@@ -24,6 +25,6 @@ export class StockHolds {
    * one hover away in the title.
    */
   protected shortId(hold: ReservationRow): string {
-    return hold.orderId.split('-')[0];
+    return orderReference(hold.orderId);
   }
 }

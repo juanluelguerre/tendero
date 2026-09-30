@@ -167,11 +167,13 @@ public sealed class DefineVariantsHandler(
     /// <summary>
     /// The product's external id if it has one, and its id otherwise. The SKU is
     /// what other contexts read, so it is worth being recognisable at a glance.
+    /// Of the id, its random end: a version-7 Guid starts with a timestamp, and
+    /// two products created within a minute would share their first eight.
     /// </summary>
     private static string DefaultPrefix(Product product) =>
         product.ExternalReferences.Count > 0
             ? product.ExternalReferences[0].ExternalId
-            : product.Id.Value.ToString("N")[..8].ToUpperInvariant();
+            : product.Id.Value.ToString("N")[^8..].ToUpperInvariant();
 
     /// <summary>The cartesian product of the axes, in the declared order.</summary>
     private static IEnumerable<Dictionary<string, string>> Combinations(IReadOnlyList<VariantAxis> axes)

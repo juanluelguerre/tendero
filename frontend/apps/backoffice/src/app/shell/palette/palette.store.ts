@@ -8,6 +8,7 @@ import { AccountsService } from '../../data-access/accounts.service';
 import { CatalogService } from '../../data-access/catalog.service';
 import { OrderingService } from '../../data-access/ordering.service';
 import { Navigation } from '../nav/navigation';
+import { orderReference } from '@tendero/shared-util';
 import { looksLikeId, matches, type PaletteOption, step } from './palette-search';
 
 /** Enough to choose from; the list is one Enter away for more. */
@@ -72,7 +73,7 @@ export const PaletteStore = signalStore(
       const orders: PaletteOption[] = (store._orders.value() ?? []).map((order) => ({
         id: `order-${order.orderId}`,
         kind: 'order',
-        label: t('palette.order', { id: order.orderId.split('-')[0] }),
+        label: t('palette.order', { id: orderReference(order.orderId) }),
         detail: `${order.recipientName} · ${order.city} · ${t('orders.status.' + order.status)}`,
         route: '/orders',
         queryParams: { status: 'all', order: order.orderId },
