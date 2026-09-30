@@ -11,7 +11,17 @@ namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 public enum SeriesStep { Hour, Day }
 
 /// <summary>What sold in one bucket, which starts at <paramref name="Start"/> and ends where the next one starts.</summary>
-public sealed record SalesPoint(DateTimeOffset Start, decimal Revenue, int Orders, int Units);
+/// <param name="AgentOrders">Paid orders an agent placed in the bucket, and <paramref name="AgentRevenue"/> theirs (R-9, D-7).</param>
+/// <param name="NewCustomers">Buyers seen for the first time in the bucket; <paramref name="ReturningCustomers"/> those who had bought before.</param>
+public sealed record SalesPoint(
+    DateTimeOffset Start,
+    decimal Revenue,
+    int Orders,
+    int Units,
+    int AgentOrders,
+    decimal AgentRevenue,
+    int NewCustomers,
+    int ReturningCustomers);
 
 /// <summary>
 /// Sales by hour or by day (R-9), for the period and the one before it, bucketed in
@@ -83,31 +93,47 @@ public static class SeriesPlans
 
 public static class SalesSeriesFigures
 {
-    private const string DefaultCurrency = "EUR";
-
     /// <summary>The sales in each of <paramref name="plan"/>'s buckets; an empty bucket is a zero.</summary>
-    public static SalesSeries Of(DashboardPeriod period, string timeZone, SeriesPlan plan, IReadOnlyList<Order> orders)
+    /// <param name="orderedBefore">
+    /// The buyers who had bought before the series begins: they are returning on
+    /// the first day they appear in it, and everybody else is new on theirs.
+    /// </param>
+    public static SalesSeries Of(
+        DashboardPeriod period, string timeZone, SeriesPlan plan, IReadOnlyList<Order> orders,
+        IReadOnlySet<CustomerId>? orderedBefore = null)
     {
         var sales = orders.Where(SalesRanking.IsSale).ToArray();
-        var currency = sales.Select(order => order.Currency).FirstOrDefault() ?? DefaultCurrency;
+        var currency = DashboardCurrency.Of(sales);
 
-        return new SalesSeries(period, currency, timeZone, plan.Step,
-            Points(plan.Current, plan.End, sales),
-            Points(plan.Previous, plan.Current[0], sales));
+        // Oldest first, across both periods: a buyer's first day is the earliest.
+        var seen = new HashSet<CustomerId>(orderedBefore ?? new HashSet<CustomerId>());
+        var previous = Points(plan.Previous, plan.Current[0], sales, seen);
+        var current = Points(plan.Current, plan.End, sales, seen);
+
+        return new SalesSeries(period, currency, timeZone, plan.Step, current, previous);
     }
 
-    private static SalesPoint[] Points(IReadOnlyList<DateTimeOffset> starts, DateTimeOffset end, IReadOnlyList<Order> sales) =>
+    private static SalesPoint[] Points(
+        IReadOnlyList<DateTimeOffset> starts, DateTimeOffset end, IReadOnlyList<Order> sales, HashSet<CustomerId> seen) =>
     [
         .. starts.Select((start, index) =>
         {
             var until = index + 1 < starts.Count ? starts[index + 1] : end;
             var inside = sales.Where(order => order.CreatedAt >= start && order.CreatedAt < until).ToArray();
+            var agents = inside.Where(order => order.PlacedBy is not null).ToArray();
+            var buyers = inside.Select(order => order.CustomerId).Distinct().ToArray();
+            var returning = buyers.Count(seen.Contains);
+            seen.UnionWith(buyers);
 
             return new SalesPoint(
                 start,
                 inside.Sum(order => order.Total.Amount),
                 inside.Length,
-                inside.Sum(order => order.Lines.Sum(line => line.Quantity)));
+                inside.Sum(order => order.Lines.Sum(line => line.Quantity)),
+                agents.Length,
+                agents.Sum(order => order.Total.Amount),
+                buyers.Length - returning,
+                returning);
         }),
     ];
 }
@@ -130,6 +156,8 @@ public sealed class SalesSeriesHandler(IShopHistory history, TimeProvider clock,
         var orders = await history.OrdersPlacedAsync(plan.From, plan.End, cancellationToken);
 
         activity?.SetTag("dashboard.series.buckets", plan.Current.Count);
-        return SalesSeriesFigures.Of(query.Period, zone.Id, plan, orders);
+        var buyers = orders.Where(SalesRanking.IsSale).Select(order => order.CustomerId).Distinct().ToList();
+        return SalesSeriesFigures.Of(query.Period, zone.Id, plan, orders,
+            await history.CustomersWhoOrderedBeforeAsync(buyers, plan.From, cancellationToken));
     }
 }

@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { CountedStock, StockFilter, StockList } from '@tendero/shared-api';
+import type { CountedStock, StockFilter, StockHealth, StockList } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
@@ -21,6 +21,14 @@ export class InventoryService {
    * matched by name (R-7.1): `skus` present and empty is a search that found no
    * product, which is not the same as no search.
    */
+  /**
+   * The stock at the shop's pace, for the dashboard (R-9, D-7): coverage over the
+   * last four weeks, and the period's sell-through.
+   */
+  stockHealth(period: 'Day' | 'Week' | 'Month'): Observable<StockHealth> {
+    return this.http.get<StockHealth>(`${this.baseUrl}/api/dashboard/stock`, { params: new HttpParams().set('period', period) });
+  }
+
   stock(
     culture: string,
     filter: StockFilter = 'All',

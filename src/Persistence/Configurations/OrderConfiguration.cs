@@ -43,6 +43,14 @@ internal sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.CreatedAt);
         builder.Property(o => o.UpdatedAt);
 
+        // The facts the dashboard reads, recorded when they happen (R-9, D-7).
+        // Null on an order older than them, and never back-filled: an order whose
+        // channel nobody recorded is counted apart, not guessed as the web.
+        builder.Property(o => o.Channel).HasConversion<string>().HasMaxLength(10);
+        builder.HasIndex(o => new { o.Channel, o.CreatedAt });
+        builder.Property(o => o.ConfirmedAt);
+        builder.Property(o => o.ShippedAt);
+
         // A snapshot, not a live FK to the product: the name already resolved in
         // the buyer's culture and the price frozen (ADR 0002). They are never
         // queried on their own from the domain, so they travel with the order in

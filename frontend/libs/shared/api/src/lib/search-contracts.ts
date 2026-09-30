@@ -51,3 +51,9 @@ export type SearchEvaluation = Schemas['SearchEvaluation'];
 export type CultureEvaluation = Schemas['CultureEvaluation'];
 export type StrategyScore = Schemas['StrategyScore'];
 export type QueryEvaluation = Schemas['QueryEvaluation'];
+
+/** Search's stages, their state and since when, for the dashboard (R-9, D-7). */
+export type SearchStatus = Schemas['SearchStatus'];
+export type StageStatus = Schemas['StageStatus'];
+export type SearchStage = Schemas['SearchStage'];
+export type StageState = Schemas['StageState'];

@@ -1,31 +1,28 @@
 import { computed, inject } from '@angular/core';
 import { signalStore, withComputed, withProps } from '@ngrx/signals';
-import { CultureStore } from '@tendero/shared-i18n';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
-import { bySkuLowestFirst } from '../figures';
-
-const Shown = 5;
 
 /**
- * The stock's state (ADR 0047): what to restock and what is sold out, as
- * Inventory counts them by its own rule, and the lowest first. Stock is now,
- * not a window: no period here.
+ * The stock's state (ADR 0047): what to restock and what is sold out, and — at
+ * the shop's pace over the last four weeks (R-9, D-7) — what runs out in fewer
+ * than fourteen days, what did not sell at all, and the closest to running out.
+ * Coverage is not a window, so the widget takes no period and asks for the
+ * default one; the period's sell-through is a widget of its own.
  */
 export const StockStore = signalStore(
   withProps(() => {
     const sources = inject(DashboardSources);
-    const culture = inject(CultureStore);
     return {
-      stock: refreshedResource({ params: () => ({ culture: culture.active() }), stream: (params, at) => sources.stock(params.culture, at) }),
+      stock: refreshedResource({ params: () => ({ period: 'Week' as const }), stream: (params, at) => sources.stockHealth(params.period, at) }),
     };
   }),
-  withComputed((store) => {
-    const counts = computed(() => store.stock.value()?.counts ?? []);
-    return {
-      restock: computed(() => counts().find((count) => count.filter === 'Restock')?.count ?? 0),
-      soldOut: computed(() => counts().find((count) => count.filter === 'SoldOut')?.count ?? 0),
-      lowest: computed(() => bySkuLowestFirst(store.stock.value()?.rows ?? []).slice(0, Shown)),
-    };
-  }),
+  withComputed((store) => ({
+    restock: computed(() => store.stock.value()?.toRestock ?? 0),
+    soldOut: computed(() => store.stock.value()?.soldOut ?? 0),
+    soon: computed(() => store.stock.value()?.underTwoWeeks ?? 0),
+    noSales: computed(() => store.stock.value()?.noSales ?? 0),
+    closest: computed(() => store.stock.value()?.closest ?? []),
+    warehouses: computed(() => store.stock.value()?.warehouses ?? []),
+  })),
 );

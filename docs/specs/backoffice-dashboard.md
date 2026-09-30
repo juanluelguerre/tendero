@@ -1,6 +1,6 @@
 # Spec: a dashboard that shows the whole shop at a glance
 
-**Status**: approved (2026-09-29); Plan 1 built D-1 and D-2 (the series, the chart engines, ECharts kept) and Plan 2 D-3 to D-6 (the widgets and their size contract, the Overview and four tabs with their URLs, full screen, the phone), both the same day. Waiting for Plan 3 (D-7): the Overview's campaigns, sales by category, Growth's campaigns and search status, and a change and a trend for conversion and the return rate (R-9)
+**Status**: approved (2026-09-29); Plan 1 built D-1 and D-2 (the series, the chart engines, ECharts kept) and Plan 2 D-3 to D-6 (the widgets and their size contract, the Overview and four tabs with their URLs, full screen, the phone), both the same day. Plan 3 built D-7 on 2026-09-30 (`docs/superpowers/plans/2026-09-30-dashboard-new-data.md`, ADR 0048): the order records its channel, its confirmed and shipped moments and each line's category; units per order, the defect and late shipment rates, the sales mix, customers and agents by day, stock coverage and sell-through, a campaign's baseline and search's status, with four new widgets. Plan 4 closed D-8 the same day: the tabs and the wall in the tracking plan (and a screen counted once per route), the after captures, Stryker scoped to what R-9 wrote (`docs/testing.md`, *R-9's close*), the notebook and the book
 **Slice(s)**: the backoffice's dashboard; Ordering (the series and the sales figures), Inventory, Pricing, Search and Accounts for their widgets; `frontend/libs` for the charts
 **Article**: *Two engines, one contract* (the chart comparison), and *A dashboard on the wall* (full screen), to be decided with the blog index
 
@@ -197,24 +197,24 @@ the redesign kept). What exists and what does not:
 
 | Widget | Source | Exists today |
 |---|---|---|
-| Key figures (totals and change), and **units per order** | Ordering, `GET /api/dashboard/sales`, `/funnel`, `/operations` | yes; units per order is new |
+| Key figures (totals and change), and **units per order** | Ordering, `GET /api/dashboard/sales`, `/funnel`, `/operations` | yes (units per order since D-7) |
 | Key figures' sparklines, Sales by day | Ordering, **a daily series** of revenue, orders and units, for the period and the one before | **no** — the new endpoint R-9 needs first |
-| By channel (people, agents over MCP, agents over UCP) | Ordering, `Order.PlacedBy` and **the surface, recorded on the order from R-9** | people against agents yes; the surface is new |
-| By category | **the category, snapshotted into `OrderLine` from R-9** | new; the orders placed before have none and are counted apart |
+| By channel (people, agents over MCP, agents over UCP) | Ordering, `GET /api/dashboard/mix`: **the channel recorded on the order** (ADR 0048) | yes since D-7; older orders counted apart |
+| By category | Ordering, `GET /api/dashboard/mix`: **the category snapshotted into `OrderLine`** (ADR 0048) | yes since D-7; lines before it counted apart |
 | Best sellers | Ordering, `SalesRanking` | yes |
 | Orders by status, late | Ordering, the orders list's counts | yes |
-| Health: cancellation, **order defect rate**, **late shipment rate**, each against its target | Ordering | cancellation yes; the defect and late rates are new |
+| Health: cancellation, **order defect rate**, **late shipment rate**, each against its target | Ordering, `/operations` | yes since D-7; late shipments from the moments the order records |
 | Checkout funnel | Ordering, `/funnel` | yes |
 | Returns by reason | Ordering, `/operations` | yes |
-| Stock: to restock, sold out, **coverage in days** | Inventory, with **the units sold per SKU per day from an Ordering read port** | to restock and sold out yes; coverage is new |
-| **Sell-through** by product | Ordering (sold) and Inventory (left) | new |
+| Stock: to restock, sold out, **coverage in days** | Inventory, `GET /api/dashboard/stock`, with the pace through its own port `ISalesPace` | yes since D-7 |
+| **Sell-through** by product | Inventory, `GET /api/dashboard/stock` (sold through `ISalesPace`, left from its stock) | yes since D-7, by SKU |
 | Waiting for you | the existing tasks widget's sources | yes |
-| Campaigns against their baseline | Pricing (the window) and Ordering (the sales in it and the baseline) | the baseline is new |
-| Customers, new and returning by day | Ordering / Accounts | totals yes, **series no** |
+| Campaigns against their baseline | Pricing (the window) and Ordering, `GET /api/dashboard/uplift` | yes since D-7 |
+| Customers, new and returning by day | Ordering, the daily series | yes since D-7 |
 | Search: top queries, no results | no aggregate of searches is stored | **deferred** (the author, 2026-09-29) — the backlog, with its privacy note |
-| **Search status**: words, meaning, reranking | **Search's own health checks through its ports**, their last change of state | new; the API has only `self` today |
+| **Search status**: words, meaning, reranking | Search's private health checks, `GET /api/dashboard/search-status` | yes since D-7 |
 | Search: NDCG | Search, `/api/search/evaluation` | yes |
-| What agents buy, by day | Ordering, `/agent-sales` | totals yes, **series no** |
+| What agents buy, by day | Ordering, `/agent-sales` and the daily series | yes since D-7 |
 | Refusals by reason | Ordering, `/agent-denials` | yes |
 
 ### Definitions

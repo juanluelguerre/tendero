@@ -64,6 +64,18 @@ public sealed class EndpointAuthorizationTests
     }
 
     /// <summary>
+    /// The dashboard's reads added with R-9's D-7 are the shopkeeper's: what sells,
+    /// through which channel, what runs out and which system is down are commercial
+    /// information, and search's status is never the open /health's.
+    /// </summary>
+    [Theory]
+    [InlineData("/api/dashboard/mix")]
+    [InlineData("/api/dashboard/stock")]
+    [InlineData("/api/dashboard/uplift")]
+    [InlineData("/api/dashboard/search-status")]
+    public void The_dashboards_new_reads_are_the_shopkeepers(string route) => Writes_to_the_catalogue_require_the_shopkeeper(route);
+
+    /// <summary>
     /// The opposite of the one above: that what writes to the catalogue is NOT
     /// anonymous. An `.AllowAnonymous()` put on publish by mistake would sail
     /// through the test above.

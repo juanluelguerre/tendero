@@ -30,6 +30,7 @@ internal sealed class OrderBuilder
     private TimeProvider clock = Clock;
     private CustomerId? customer;
     private AgentId? placedBy;
+    private OrderChannel? channel;
     private OrderMandate? mandate;
 
     /// <summary>
@@ -88,6 +89,12 @@ internal sealed class OrderBuilder
     {
         this.placedBy = new AgentId(agent);
         this.mandate = mandate;
+        return this;
+    }
+
+    public OrderBuilder Through(OrderChannel channel)
+    {
+        this.channel = channel;
         return this;
     }
 
@@ -171,7 +178,8 @@ internal sealed class OrderBuilder
             this.culture,
             this.mode,
             mandate: this.mandate is { } approved ? approved with { ApprovedTotal = totals.Total.Amount } : null,
-            placedBy: this.placedBy);
+            placedBy: this.placedBy,
+            channel: this.channel);
     }
 
     /// <summary>

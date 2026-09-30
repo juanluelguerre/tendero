@@ -48,6 +48,7 @@
 | [0045](0045-echarts-is-an-experiment-with-a-removal-condition.md) | ECharts is an experiment with a removal condition — decided: ECharts stays | accepted |
 | [0046](0046-a-day-is-the-shops-day.md) | A day is the shop's day (NodaTime, the shop's time zone) | accepted |
 | [0047](0047-folders-by-theme-and-a-signal-store-per-state.md) | Folders by theme, and a SignalStore for every state with a life of its own (NgRx SignalStore, tier 1) | accepted |
+| [0048](0048-an-order-records-what-the-dashboard-reads-when-it-happens.md) | An order records what the dashboard reads when it happens — its channel, its confirmed and shipped moments, each line's category — and older orders are counted apart | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

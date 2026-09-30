@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
+import { BarChart } from '../../../../charts/bar-chart';
 import { formatShare, shareOf } from '../figures';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { AgentSalesStore } from './agent-sales.store';
@@ -10,7 +11,7 @@ import { AgentSalesStore } from './agent-sales.store';
 /** What agents buy (P11-7, a widget of its own since R-9): their share of orders and sales, mandates, rehearsals and the agents that bought most. */
 @Component({
   selector: 'backoffice-agent-sales-widget',
-  imports: [TranslocoDirective, RouterLink],
+  imports: [TranslocoDirective, RouterLink, BarChart],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-sales-widget.html',
   styleUrl: './agent-sales-widget.css',
@@ -19,6 +20,9 @@ import { AgentSalesStore } from './agent-sales.store';
 export class AgentSalesWidget {
   protected readonly store = inject(AgentSalesStore);
   private readonly culture = inject(CultureStore);
+
+  /** What agents bought each day, in the reader's money. */
+  protected readonly amount = (value: number): string => formatPrice(value, this.store.sales.value()?.currency ?? 'EUR', this.culture.active());
 
   protected share(part: number, whole: number): string {
     return formatShare(shareOf(part, whole), this.culture.active());

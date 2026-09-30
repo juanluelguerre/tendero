@@ -1,4 +1,5 @@
 using System.Net;
+using ElGuerre.Tendero.Inventory.Features.StockHealth;
 using ElGuerre.Tendero.Ordering.Features.Dashboard;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Authentication;
@@ -137,5 +138,44 @@ public sealed class DashboardPeriodBindingTests
         var failure = Assert.ThrowsAny<Exception>(() => factory.CreateClient());
 
         Assert.Contains("IANA time zone", failure.ToString(), StringComparison.Ordinal);
+    }
+
+    // ---------- The reads added with D-7 (R-9) ----------
+
+    private sealed class AnyPeriodDispatcher : IQueryDispatcher
+    {
+        public DashboardPeriod? Asked { get; private set; }
+
+        public Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default)
+        {
+            object result = query switch
+            {
+                GetSalesMixQuery mix => SalesMixFigures.Of((Asked = mix.Period).Value, []),
+                GetStockHealthQuery stock => new StockHealth((Asked = stock.Period).Value, 0, 0, 0, 0, [], [], [], []),
+                _ => throw new NotSupportedException(query.GetType().Name),
+            };
+            return Task.FromResult((TResult)result);
+        }
+    }
+
+    [Theory]
+    [InlineData("/api/dashboard/mix", null, DashboardPeriod.Week)]
+    [InlineData("/api/dashboard/mix", "month", DashboardPeriod.Month)]
+    [InlineData("/api/dashboard/stock", null, DashboardPeriod.Week)]
+    [InlineData("/api/dashboard/stock", "DAY", DashboardPeriod.Day)]
+    public async Task The_new_reads_take_their_period_by_name(string route, string? period, DashboardPeriod expected)
+    {
+        var dispatcher = new AnyPeriodDispatcher();
+        using var root = new TenderoApiFactory();
+        using var factory = root.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton<IQueryDispatcher>(dispatcher);
+            services.AddSingleton<IPolicyEvaluator, LetEveryoneThrough>();
+        }));
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(period is null ? route : $"{route}?period={period}", TestContext.Current.CancellationToken);
+
+        Assert.Equal((HttpStatusCode.OK, expected), (response.StatusCode, dispatcher.Asked));
     }
 }

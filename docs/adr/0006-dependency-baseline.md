@@ -87,6 +87,15 @@ is the default from .NET 11 RC1 — the version to revisit when the SDK moves.
 `BAAI/bge-m3` at revision `5617a9f` (MIT) and `BAAI/bge-reranker-v2-m3` at
 revision `953dc6f` (Apache-2.0), both read on 2026-09-14.
 
+**Aspire 13.6.0, 2026-09-30.** `Aspire.AppHost.Sdk`, `Aspire.Hosting.AppHost`,
+`.PostgreSQL`, `.Qdrant` and `.JavaScript` at 13.6.0 and `Aspire.Hosting.Keycloak`
+at `13.6.0-preview.1.26479.8`: each MIT in its nuspec, each depending on exactly
+`Aspire.Hosting` 13.6.0. `Aspire.Hosting.Qdrant` keeps the server at
+`qdrant/qdrant:v1.18.0` and moves `Qdrant.Client` to 1.19.0 (Apache-2.0, the same
+`Grpc.Net.Client` 2.71.0 and `Google.Protobuf` 3.31.0 chain), so Search moved
+with it and replaced the client's now obsolete `SearchAsync` and `RecommendAsync`
+with `QueryAsync`.
+
 ## Known friction with the preview line
 
 Two things bite in day-to-day work and are worth writing down once:

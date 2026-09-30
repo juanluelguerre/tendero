@@ -30,8 +30,8 @@ public sealed class DashboardFiguresTests
         var sales = DashboardFigures.Sales(DashboardPeriod.Week, current, previous);
 
         Assert.Equal((DashboardPeriod.Week, "EUR"), (sales.Period, sales.Currency));
-        Assert.Equal(new SalesFigures(74.90m, 2, 6, 37.45m), sales.Current);
-        Assert.Equal(new SalesFigures(14.95m, 1, 1, 14.95m), sales.Previous);
+        Assert.Equal(new SalesFigures(74.90m, 2, 6, 37.45m, 3m), sales.Current);
+        Assert.Equal(new SalesFigures(14.95m, 1, 1, 14.95m, 1m), sales.Previous);
         Assert.Equal(["C", "A", "B"], sales.BestSellers.Select(seller => seller.Sku));
         Assert.Equal(new BestSeller("C", "C", 3, 15m), sales.BestSellers[0]);
     }
@@ -43,7 +43,7 @@ public sealed class DashboardFiguresTests
         var window = DashboardWindow.Ending(Clock.GetUtcNow(), DashboardPeriod.Day);
         var operations = DashboardFigures.Operations(DashboardPeriod.Day, window, [], [], []);
 
-        Assert.Equal(new SalesFigures(0m, 0, 0, 0m), sales.Current);
+        Assert.Equal(new SalesFigures(0m, 0, 0, 0m, 0m), sales.Current);
         Assert.Empty(sales.BestSellers);
         Assert.Equal((0m, 0m, "EUR"), (operations.CancellationRate, operations.ReturnRate, operations.Currency));
     }

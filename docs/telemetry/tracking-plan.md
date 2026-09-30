@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-37 features: **32** answered by a signal emitted today,
+38 features: **33** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -50,6 +50,7 @@ everything here that is not *planned* is emitted.
 | Approved claims reach the catalogue | Does an approved typed claim become a catalogue attribute, or does Catalog refuse what Knowledge's vetting let through? | Any refusal means the vetting and Catalog disagree on the vocabulary — a value vetting accepted that the definition does not: fix the vetting, never loosen the definition. Unchanged at a high rate means the extractor mostly restates attributes the import already set, and the typed half of the prompt is worth less than it costs. | `tendero.knowledge.claims.applied` | emitted |
 | Agent registry | Do the agents that buy here come from operators the shop knows, or does money arrive through agents nobody registered? | A growing share of placed orders from untrusted agents means the registry is not keeping up with who shops here: register the regular ones, and let the agent policy (P11-6) limit what an unknown agent may spend. Nothing from known agents means the registry is not worth its screen yet. | `tendero.checkout.attempts` | emitted |
 | Shopkeeper dashboard | Does the shopkeeper start the day on the dashboard, and over which period do they read it? | If the dashboard is opened less than the review queue it replaced as the home, the home goes back to the queue. A period nobody chooses is removed; widgets are reordered by what gets read, which is the v2 the task records. | — Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time. | none |
+| Dashboard tabs and the wall | Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own? | A tab unopened for a month folds into the Overview or goes. If no tab is put on the screen whole in a month, the wall's density and its minute's refresh stay as they are and real time (R-10) is not built for walls. | `backoffice_view_opened`, `backoffice_affordance_used` | emitted |
 | Backoffice jobs | Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen? | A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence. | `backoffice_view_opened`, `backoffice_action_taken` | emitted |
 | Theme choice | Does anybody change the theme from the system's, and to which? | If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event. | `backoffice_theme_chosen` | emitted |
 | Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
@@ -175,11 +176,12 @@ browser event, staff. The shopkeeper opened a backoffice screen (R-0 of the rede
 
 Answers:
 
+- **Dashboard tabs and the wall** — Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own?
 - **Backoffice jobs** — Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen, by its route; never an id in it. |
+| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). |
 
 ### `backoffice_action_taken`
 
@@ -215,13 +217,14 @@ browser event, staff. A staff member reached something through the command palet
 
 Answers:
 
+- **Dashboard tabs and the wall** — Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own?
 - **Palette and list shortcuts** — Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
 - **Stock search and filters** — Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `affordance` | string | `palette`, `keys`, `search`, `filter` | The palette (Ctrl K or /), j and k down a queue, or a list's search box and filter chips (R-7.1). |
-| `target` | string | `screen`, `order`, `product`, `agent`, `next`, `previous`, `stock` | What it reached; never which one. |
+| `affordance` | string | `palette`, `keys`, `search`, `filter`, `full_screen` | The palette (Ctrl K or /), j and k down a queue, a list's search box and filter chips (R-7.1), or a dashboard tab put on the screen whole (R-9). |
+| `target` | string | `screen`, `order`, `product`, `agent`, `next`, `previous`, `stock`, `tab` | What it reached; never which one. |
 
 ### `theme_chosen`
 

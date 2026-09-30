@@ -107,8 +107,8 @@ public sealed class SalesSeriesTests
         var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, orders);
 
         // 2 × 10 + 4.95 shipping, and 30 + 4.95.
-        Assert.Equal(new SalesPoint(plan.Current[5], 59.90m, 2, 3), series.Current[5]);
-        Assert.Equal(new SalesPoint(plan.Previous[5], 14.95m, 1, 1), series.Previous[5]);
+        Assert.Equal(new SalesPoint(plan.Current[5], 59.90m, 2, 3, 0, 0m, 2, 0), series.Current[5]);
+        Assert.Equal(new SalesPoint(plan.Previous[5], 14.95m, 1, 1, 0, 0m, 1, 0), series.Previous[5]);
         Assert.Equal(("EUR", "Europe/Madrid", SeriesStep.Day), (series.Currency, series.TimeZone, series.Step));
     }
 
@@ -138,7 +138,7 @@ public sealed class SalesSeriesTests
         var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, []);
 
         Assert.Equal(plan.Current, series.Current.Select(point => point.Start));
-        Assert.All(series.Current.Concat(series.Previous), point => Assert.Equal(new SalesPoint(point.Start, 0m, 0, 0), point));
+        Assert.All(series.Current.Concat(series.Previous), point => Assert.Equal(new SalesPoint(point.Start, 0m, 0, 0, 0, 0m, 0, 0), point));
         Assert.Equal("EUR", series.Currency);
     }
 
@@ -152,5 +152,51 @@ public sealed class SalesSeriesTests
 
         Assert.Equal(1, series.Current[3].Orders);
         Assert.Equal(0, series.Current[2].Orders);
+    }
+
+    [Fact]
+    public void A_bucket_counts_the_units_of_every_line()
+    {
+        var now = new DateTimeOffset(2026, 10, 14, 8, 0, 0, TimeSpan.Zero);
+        var plan = SeriesPlans.For(DashboardPeriod.Week, now, Madrid);
+        var order = OrderBuilder.Default().WithLines(Line(10m, 1), Line(10m, 2)).At(new TestClock(plan.Current[3])).InStatus(OrderStatus.Confirmed);
+
+        var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, [order]);
+
+        Assert.Equal(3, series.Current[3].Units);
+    }
+
+    /// <summary>
+    /// What agents bought and who bought, day by day (R-9, D-7): a buyer is new on
+    /// the first day they appear in the two periods, unless they had ordered before
+    /// the series began, and returning on every day after.
+    /// </summary>
+    [Fact]
+    public void A_series_point_counts_what_agents_bought_and_who_bought_for_the_first_time()
+    {
+        var now = new DateTimeOffset(2026, 10, 14, 8, 0, 0, TimeSpan.Zero);
+        var plan = SeriesPlans.For(DashboardPeriod.Week, now, Madrid);
+        var ana = CustomerId.New();
+        var luis = CustomerId.New();
+        var regular = CustomerId.New();
+        Order By(CustomerId who, DateTimeOffset at, string? agent = null)
+        {
+            var builder = OrderBuilder.Default().ForCustomer(who).WithLines(Line(10m, 1)).At(new TestClock(at));
+            return (agent is null ? builder : builder.PlacedBy(agent)).InStatus(OrderStatus.Confirmed);
+        }
+        var monday = new DateTimeOffset(2026, 10, 12, 10, 0, 0, TimeSpan.Zero);
+        var tuesday = monday.AddDays(1);
+        List<Order> orders =
+        [
+            By(ana, monday),
+            By(regular, monday),
+            By(ana, tuesday, agent: "agent-1"),
+            By(luis, tuesday, agent: "agent-1"),
+        ];
+
+        var series = SalesSeriesFigures.Of(DashboardPeriod.Week, "Europe/Madrid", plan, orders, orderedBefore: new HashSet<CustomerId> { regular });
+
+        Assert.Equal((0, 0m, 1, 1), (series.Current[4].AgentOrders, series.Current[4].AgentRevenue, series.Current[4].NewCustomers, series.Current[4].ReturningCustomers));
+        Assert.Equal((2, 29.90m, 1, 1), (series.Current[5].AgentOrders, series.Current[5].AgentRevenue, series.Current[5].NewCustomers, series.Current[5].ReturningCustomers));
     }
 }

@@ -374,6 +374,11 @@ p {
   .at-l { display: none; }
 }
 
+/* A list read at S and M that gives its place to a chart at L (R-9, D-7: by category). */
+@container widget (width >= 56rem) {
+  .below-l { display: none; }
+}
+
 @container widget (width >= 20rem) {
   .only-s { display: none; }
 }

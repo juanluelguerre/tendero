@@ -29,6 +29,11 @@
         <dd class="numeric fact__value muted">{{ agentSales.rehearsals }}</dd>
       </div>
     </dl>
+    @if (store.byDay(); as data) {
+      <div class="at-m">
+        <backoffice-bar-chart [data]="data" layout="columns" [format]="amount" [caption]="t('byDay')" />
+      </div>
+    }
     @if (agentSales.byAgent.length > 0) {
       <ol class="ranking at-m">
         @for (row of agentSales.byAgent; track row.agentId) {
