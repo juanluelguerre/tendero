@@ -74,7 +74,9 @@ internal sealed class EfPurchasableReader(
                 product.Name,
                 Label(variant, attributes),
                 (variant.Image ?? product.PrimaryImage?.Id)?.ToString(),
-                variant.Price.Currency)
+                variant.Price.Currency,
+                // The order line snapshots it, as it does the name (R-9, D-7).
+                product.Category)
         ).ToDictionary(item => item.Sku, StringComparer.OrdinalIgnoreCase);
     }
 

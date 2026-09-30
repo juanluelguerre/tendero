@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260928234617_AddBrowsingHistories";
+    public override string LastMigrationId => "20260930064255_OrderChannelMomentsAndCategory";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -672,6 +672,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     {
                         b1.IsRequired();
 
+                        b1.Property<string>("CategoryCode")
+                            .HasJsonPropertyName("categoryCode");
+
                         b1.Property<string>("ImageId")
                             .HasJsonPropertyName("imageId");
 
@@ -854,6 +857,15 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("uuid")
                     .HasColumnName("id");
 
+                b.Property<string>("Channel")
+                    .HasMaxLength(10)
+                    .HasColumnType("character varying(10)")
+                    .HasColumnName("channel");
+
+                b.Property<DateTimeOffset?>("ConfirmedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("confirmed_at");
+
                 b.Property<string>("ContactEmail")
                     .HasMaxLength(320)
                     .HasColumnType("character varying(320)")
@@ -897,6 +909,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasMaxLength(100)
                     .HasColumnType("character varying(100)")
                     .HasColumnName("placed_by");
+
+                b.Property<DateTimeOffset?>("ShippedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("shipped_at");
 
                 b.Property<string>("Status")
                     .IsRequired()
@@ -1143,6 +1159,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     {
                         b1.IsRequired();
 
+                        b1.Property<string>("CategoryCode")
+                            .HasJsonPropertyName("categoryCode");
+
                         b1.Property<string>("ImageId")
                             .HasJsonPropertyName("imageId");
 
@@ -1205,6 +1224,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("IdempotencyKey")
                     .IsUnique()
                     .HasDatabaseName("ix_orders_idempotency_key");
+
+                b.HasIndex("Channel", "CreatedAt")
+                    .HasDatabaseName("ix_orders_channel_created_at");
 
                 b.HasIndex("PlacedBy", "CreatedAt")
                     .HasDatabaseName("ix_orders_placed_by_created_at");

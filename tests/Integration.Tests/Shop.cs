@@ -45,14 +45,15 @@ internal sealed class Shop : IAsyncDisposable
     }
 
     /// <param name="settings">Configuration on top of the seed's — the shop's rules for agents, say (P11-6).</param>
-    public static async Task<Shop> OpenAsync(PostgresFixture postgres, string name, IPrincipalAccessor? principal = null, IReadOnlyDictionary<string, string?>? settings = null)
+    /// <param name="actor">Who is acting and through which surface; the worker's internal one when not given.</param>
+    public static async Task<Shop> OpenAsync(PostgresFixture postgres, string name, IPrincipalAccessor? principal = null, IReadOnlyDictionary<string, string?>? settings = null, IActorAccessor? actor = null)
     {
         var factory = await postgres.CreateDatabaseAsync(name.ToLowerInvariant());
 
         await using (var context = factory.Create())
             await context.Database.MigrateAsync();
 
-        var shop = Compose(factory, principal, settings);
+        var shop = Compose(factory, principal, settings, actor);
         await shop.ImportAndPublishAsync();
         return shop;
     }
@@ -61,7 +62,7 @@ internal sealed class Shop : IAsyncDisposable
     public static Task<Shop> OpenOnAsync(TenderoDbContextFactory factory, IPrincipalAccessor principal) =>
         Task.FromResult(Compose(factory, principal));
 
-    private static Shop Compose(TenderoDbContextFactory factory, IPrincipalAccessor? principal, IReadOnlyDictionary<string, string?>? settings = null)
+    private static Shop Compose(TenderoDbContextFactory factory, IPrincipalAccessor? principal, IReadOnlyDictionary<string, string?>? settings = null, IActorAccessor? actor = null)
     {
         static string Seed(string file) => Path.Combine(AppContext.BaseDirectory, "TestData", file);
 
@@ -90,6 +91,7 @@ internal sealed class Shop : IAsyncDisposable
         services.AddInventory(configuration);
         services.AddOrdering(configuration);
         services.AddSingleton(principal ?? new SystemPrincipalAccessor());
+        if (actor is not null) services.AddSingleton(actor);
 
         return new Shop(services.BuildServiceProvider(validateScopes: true), factory);
     }
