@@ -1,46 +1,44 @@
-/* Tendero — the bridge between the tokens and Tailwind 4.
+/* Tendero — Tailwind 4 over the design tokens, utility-first (ADR 0049).
  *
- * It replaces design/tailwind-preset.js, which was v3 format. Tailwind 4 is
- * configured from CSS with @theme, which fits much better here: the tokens ARE
- * custom properties already, so the JS preset's indirection disappears and one
- * genuine source of truth is left.
- *
- * Every entry points at its token; changing design/tokens.css moves both apps,
- * dark mode included. Never write a hex here. */
+ * The theme IS design/tokens.css and nothing else: Tailwind's own palette,
+ * spacing and breakpoints are cleared, and every utility — `bg-surface`,
+ * `text-muted`, `p-5`, `rounded-lg`, `md:` — names a token. The tokens stay the
+ * single source (ADR 0033), dark mode stays their [data-theme='dark'] override,
+ * and the no-hex test keeps its meaning: a utility can only name a token.
+ * Never write a hex here. */
 
+/* The cascade, in order: Tailwind's reset (`base`), then what everything composes
+   (`components`: the design tokens' element rules — body, headings, focus,
+   eyebrow — then the shared base and each app's primitives), then the utilities,
+   which win over all of it, as utility-first needs. Tailwind is imported before
+   the tokens so its layer order is declared first; the typefaces before both,
+   because an @import of a URL only survives as the first rule. The tokens' custom
+   properties are not in a layer. */
+@import './fonts.css';
+@import 'tailwindcss' source(none);
 @import './tokens.css';
-@import 'tailwindcss';
+@import './base.css';
 
-/* The backoffice turns dark mode on with <html data-theme="dark">. */
+/* It reads the templates, and nothing else: TS, specs and markdown once gave it
+   utilities nobody wrote (`.h-84`, `.sepia`, `.ring`). Paths are from this file. */
+@source '../../../../apps/*/src/**/*.html';
+@source '../../*/src/**/*.html';
+
+/* The backoffice and the storefront both turn dark mode on with <html data-theme="dark">. */
 @custom-variant dark ([data-theme='dark'] &);
 
+/* Nothing of Tailwind's own theme survives: the utilities below are all there is. */
 @theme {
-  /* ---------- Color ---------- */
-  --color-clay-50: var(--clay-50);
-  --color-clay-100: var(--clay-100);
-  --color-clay-500: var(--clay-500);
-  --color-clay-600: var(--clay-600);
-  --color-clay-700: var(--clay-700);
-  --color-clay-800: var(--clay-800);
+  --*: initial;
+}
 
-  --color-olive-50: var(--olive-50);
-  --color-olive-500: var(--olive-500);
-  --color-olive-600: var(--olive-600);
-  --color-olive-700: var(--olive-700);
-
-  --color-stone-0: var(--stone-0);
-  --color-stone-50: var(--stone-50);
-  --color-stone-100: var(--stone-100);
-  --color-stone-200: var(--stone-200);
-  --color-stone-300: var(--stone-300);
-
-  --color-ink-400: var(--ink-400);
-  --color-ink-500: var(--ink-500);
-  --color-ink-700: var(--ink-700);
-  --color-ink-900: var(--ink-900);
-
-  /* Semantic: use THESE in components, not the palette ones. They are the only
-     ones that follow the dark theme. */
+/* `inline`: a utility takes the token's value itself (`var(--bg-surface)`), and
+   `reference`: the theme's variables are not written out, because the tokens
+   already are them. It used to write `--font-display: var(--font-display)`,
+   which resolved only by luck of the cascade. */
+@theme inline reference {
+  /* ---------- Colour: the semantic names first; they are the ones that follow
+     the dark theme. The palette is there for the rare fixed tint. ---------- */
   --color-page: var(--bg-page);
   --color-surface: var(--bg-surface);
   --color-raised: var(--bg-raised);
@@ -55,8 +53,31 @@
   --color-positive: var(--positive);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-focus: var(--focus-ring);
+  --color-transparent: transparent;
+  --color-current: currentColor;
 
-  /* ---------- Tipografia ---------- */
+  --color-clay-50: var(--clay-50);
+  --color-clay-100: var(--clay-100);
+  --color-clay-500: var(--clay-500);
+  --color-clay-600: var(--clay-600);
+  --color-clay-700: var(--clay-700);
+  --color-clay-800: var(--clay-800);
+  --color-olive-50: var(--olive-50);
+  --color-olive-500: var(--olive-500);
+  --color-olive-600: var(--olive-600);
+  --color-olive-700: var(--olive-700);
+  --color-stone-0: var(--stone-0);
+  --color-stone-50: var(--stone-50);
+  --color-stone-100: var(--stone-100);
+  --color-stone-200: var(--stone-200);
+  --color-stone-300: var(--stone-300);
+  --color-ink-400: var(--ink-400);
+  --color-ink-500: var(--ink-500);
+  --color-ink-700: var(--ink-700);
+  --color-ink-900: var(--ink-900);
+
+  /* ---------- Type ---------- */
   --font-display: var(--font-display);
   --font-sans: var(--font-body);
   --font-mono: var(--font-mono);
@@ -65,12 +86,18 @@
   --text-2xs: var(--text-2xs);
   --text-xs: var(--text-xs);
   --text-sm: var(--text-sm);
-  --text-base: var(--text-md);
+  --text-md: var(--text-md);
   --text-lg: var(--text-lg);
   --text-xl: var(--text-xl);
   --text-2xl: var(--text-2xl);
   --text-3xl: var(--text-3xl);
   --text-4xl: var(--text-4xl);
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
 
   --leading-tight: var(--leading-tight);
   --leading-snug: var(--leading-snug);
@@ -79,18 +106,41 @@
   --tracking-tight: var(--tracking-tight);
   --tracking-wide: var(--tracking-wide);
 
-  /* ---------- Forma ---------- */
+  /* ---------- Space: the tokens' own steps, named, and only those. `p-5` is
+     --space-5 (1.5rem), not Tailwind's 1.25rem; a step between two is not a
+     step the design has. ---------- */
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-1: var(--space-1);
+  --spacing-2: var(--space-2);
+  --spacing-3: var(--space-3);
+  --spacing-4: var(--space-4);
+  --spacing-5: var(--space-5);
+  --spacing-6: var(--space-6);
+  --spacing-7: var(--space-7);
+  --spacing-8: var(--space-8);
+  --spacing-9: var(--space-9);
+
+  /* ---------- Shape, depth, motion, measure ---------- */
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
   --radius-full: var(--radius-full);
-
   --shadow-pop: var(--shadow-pop);
-
-  /* ---------- Movimiento y layout ---------- */
   --ease-brand: var(--ease);
   --container-prose: var(--container-prose);
   --container-app: var(--container-app);
+
+  /* ---------- Breakpoints: the widths the CSS already turned on (2026-09-30),
+     so a template that moves to `sm:` or `lg:` lands where its stylesheet did.
+     All in rem, as Tailwind sorts them. ---------- */
+  --breakpoint-xs: 35rem;   /* 560px */
+  --breakpoint-sm: 40rem;   /* 640px */
+  --breakpoint-md: 48rem;   /* 768px */
+  --breakpoint-tab: 56.25rem; /* 900px, the storefront's tablet turn */
+  --breakpoint-lg: 64rem;   /* 1024px */
+  --breakpoint-xl: 75rem;   /* 1200px */
+  --breakpoint-2xl: 90rem;  /* 1440px */
 }
 
 /* ---------- The system's only decorative element ----------
@@ -113,11 +163,12 @@
 }
 
 /* Commerce is read in columns: prices, SKUs, totals and metrics go in mono with
-   tabular figures so that a column of prices genuinely lines up. */
+   tabular figures so that a column of prices genuinely lines up. The utility says
+   that and no more: the tokens' `.numeric` adds its -0.01em in `components`, where
+   a table header's wide tracking still wins over it, as it always did. */
 @utility numeric {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
 }
 
 /* ---------- What the preflight takes away ----------

@@ -4,8 +4,6 @@
    Import once per app; never hardcode a hex outside this file.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
-
 :root {
   /* Native controls (a checkbox's empty box, a select's list, a scrollbar)
      draw from this, not from the tokens: without it they stay light in the
@@ -162,8 +160,9 @@
 }
 
 /* ============================================================
-   Dark mode — backoffice only by default (data work at night),
-   storefront and landing stay light. Opt in with data-theme="dark".
+   Dark mode — opted into with data-theme="dark" on <html>. Both apps
+   offer light, dark or the system's (the redesign's R-3 and R-5.1); the
+   landing stays light.
    ============================================================ */
 [data-theme='dark'] {
   color-scheme: dark;
@@ -220,89 +219,100 @@
 }
 
 /* ============================================================
-   THE SIGNATURE: the awning stripe.
-   Lifted straight from the logo, it is the one decorative device
-   allowed in the whole system — and it always means "this is Tendero".
-   Used for: section dividers, active tab underline, loading bars,
-   the docs sidebar edge, and the top rule of the landing hero.
-   Never as a background fill, never rotated.
+   The rules below are in a layer, `components`, and the custom
+   properties above are not. In the apps, Tailwind has declared its
+   layers before this file is read, so these land after its reset and
+   before its utilities (frontend/libs/shared/tokens/src/theme.css, ADR
+   0049): a utility on a heading wins over them. On a page without
+   Tailwind — the landing — they lose only to its own unlayered CSS.
+   The typefaces are design/fonts.css, loaded before this file.
    ============================================================ */
-.awning-rule {
-  height: 6px;
-  border: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--clay-500) 0 14px,
-    var(--clay-100) 14px 28px
-  );
-  border-radius: var(--radius-full);
-}
+@layer components {
+  /* ============================================================
+     THE SIGNATURE: the awning stripe.
+     Lifted straight from the logo, it is the one decorative device
+     allowed in the whole system — and it always means "this is Tendero".
+     Used for: section dividers, active tab underline, loading bars,
+     the docs sidebar edge, and the top rule of the landing hero.
+     Never as a background fill, never rotated.
+     ============================================================ */
+  .awning-rule {
+    height: 6px;
+    border: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--clay-500) 0 14px,
+      var(--clay-100) 14px 28px
+    );
+    border-radius: var(--radius-full);
+  }
 
-.awning-rule--thin { height: 3px; }
+  .awning-rule--thin { height: 3px; }
 
-.awning-rule--muted {
-  background: repeating-linear-gradient(
-    90deg,
-    var(--stone-200) 0 14px,
-    var(--stone-100) 14px 28px
-  );
-}
+  .awning-rule--muted {
+    background: repeating-linear-gradient(
+      90deg,
+      var(--stone-200) 0 14px,
+      var(--stone-100) 14px 28px
+    );
+  }
 
-/* ============================================================
-   Base
-   ============================================================ */
-*, *::before, *::after { box-sizing: border-box; }
+  /* ============================================================
+     Base
+     ============================================================ */
+  *, *::before, *::after { box-sizing: border-box; }
 
-body {
-  margin: 0;
-  background: var(--bg-page);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: var(--text-md);
-  line-height: var(--leading-body);
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    margin: 0;
+    background: var(--bg-page);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: var(--text-md);
+    line-height: var(--leading-body);
+    -webkit-font-smoothing: antialiased;
+  }
 
-h1, h2, h3 {
-  font-family: var(--font-display);
-  font-weight: 800;
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
-  margin: 0 0 var(--space-3);
-}
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    margin: 0 0 var(--space-3);
+  }
 
-h1 { font-size: var(--text-3xl); }
-h2 { font-size: var(--text-xl); }
-h3 { font-size: var(--text-lg); font-weight: 600; }
+  h1 { font-size: var(--text-3xl); }
+  h2 { font-size: var(--text-xl); }
+  h3 { font-size: var(--text-lg); font-weight: 600; }
 
-/* Prices, SKUs, metrics, latencies — the receipt voice.
-   Tabular figures so columns of numbers line up. */
-.numeric,
-.price,
-.metric {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
+  /* Prices, SKUs, metrics, latencies — the receipt voice.
+     Tabular figures so columns of numbers line up. */
+  .numeric,
+  .price,
+  .metric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
 
-/* Eyebrows and micro-labels: the only uppercase in the system. */
-.eyebrow {
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-wide);
-  color: var(--text-muted);
-}
+  /* Eyebrows and micro-labels: the only uppercase in the system. */
+  .eyebrow {
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--text-muted);
+  }
 
-:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
-}
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

@@ -1,0 +1,3 @@
+/* The typefaces, from the single source (design/fonts.css). Imported first by
+   theme.css: an @import of a URL is only kept as the stylesheet's first rule. */
+@import '../../../../../design/fonts.css';
