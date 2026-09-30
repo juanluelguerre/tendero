@@ -22,6 +22,7 @@ class StubWidget {
 const Keys: WidgetKey[] = [
   'keyFigures', 'salesByDay', 'bestSellers', 'byChannel', 'waiting', 'health', 'ordersByStatus',
   'funnel', 'returns', 'stock', 'customers', 'agentSales', 'refusals',
+  'byCategory', 'sellThrough', 'campaigns', 'searchStatus',
 ];
 const Stubs = Object.fromEntries(Keys.map((key) => [key, { component: StubWidget, takesPeriod: true }])) as Record<WidgetKey, WidgetDefinition>;
 
@@ -70,7 +71,7 @@ describe('the dashboard page', () => {
     expect(element.querySelector('nav.tabs a[aria-current="page"]')?.getAttribute('href')).toBe('/dashboard/sales?period=month');
     expect(element.querySelector('.period[aria-pressed="true"]')?.getAttribute('data-period')).toBe('Month');
     expect([...element.querySelectorAll<HTMLElement>('.cell')].map((cell) => cell.dataset['widget'])).toEqual([
-      'keyFigures', 'salesByDay', 'byChannel', 'bestSellers',
+      'keyFigures', 'salesByDay', 'byChannel', 'bestSellers', 'byCategory', 'sellThrough',
     ]);
     expect(element.querySelector('.cell')?.textContent?.trim()).toBe('Month');
   });

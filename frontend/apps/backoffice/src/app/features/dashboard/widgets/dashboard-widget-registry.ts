@@ -1,7 +1,9 @@
 import type { Provider } from '@angular/core';
 import { AgentSalesWidget } from './agent-sales-widget/agent-sales-widget';
 import { BestSellersWidget } from './best-sellers-widget/best-sellers-widget';
+import { ByCategoryWidget } from './by-category-widget/by-category-widget';
 import { ByChannelWidget } from './by-channel-widget/by-channel-widget';
+import { CampaignsWidget } from './campaigns-widget/campaigns-widget';
 import { CustomersWidget } from './customers-widget/customers-widget';
 import { DASHBOARD_WIDGETS, type WidgetDefinition, type WidgetKey } from './dashboard-widgets';
 import { FunnelWidget } from './funnel-widget/funnel-widget';
@@ -11,6 +13,8 @@ import { OrdersByStatusWidget } from './orders-by-status-widget/orders-by-status
 import { RefusalsWidget } from './refusals-widget/refusals-widget';
 import { ReturnsWidget } from './returns-widget/returns-widget';
 import { SalesByDayWidget } from './sales-by-day-widget/sales-by-day-widget';
+import { SearchStatusWidget } from './search-status-widget/search-status-widget';
+import { SellThroughWidget } from './sell-through-widget/sell-through-widget';
 import { StockWidget } from './stock-widget/stock-widget';
 import { WaitingWidget } from './waiting-widget/waiting-widget';
 
@@ -30,6 +34,11 @@ export function provideDashboardWidgets(): Provider {
     customers: { component: CustomersWidget, takesPeriod: true },
     agentSales: { component: AgentSalesWidget, takesPeriod: true },
     refusals: { component: RefusalsWidget, takesPeriod: true },
+    byCategory: { component: ByCategoryWidget, takesPeriod: true },
+    sellThrough: { component: SellThroughWidget, takesPeriod: true },
+    // A campaign is measured over its own window, and search's status is now.
+    campaigns: { component: CampaignsWidget, takesPeriod: false },
+    searchStatus: { component: SearchStatusWidget, takesPeriod: false },
   };
   return { provide: DASHBOARD_WIDGETS, useValue: widgets };
 }

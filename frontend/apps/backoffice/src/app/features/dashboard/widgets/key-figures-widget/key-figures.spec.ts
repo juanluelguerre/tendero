@@ -2,8 +2,8 @@ import type { CheckoutFunnel, OperationsSummary, SalesSeries, SalesSummary } fro
 import { describe, expect, it } from 'vitest';
 import { keyFigures } from './key-figures';
 
-const say = { money: (amount: number) => `€${amount}`, share: (ratio: number) => `${Math.round(ratio * 100)}%` };
-const figures = (revenue: number, orders: number, units: number, averageOrderValue: number) => ({ revenue, orders, units, averageOrderValue });
+const say = { money: (amount: number) => `€${amount}`, share: (ratio: number) => `${Math.round(ratio * 100)}%`, decimal: (value: number) => value.toFixed(2) };
+const figures = (revenue: number, orders: number, units: number, averageOrderValue: number) => ({ revenue, orders, units, averageOrderValue, unitsPerOrder: Math.round((units / orders) * 100) / 100 });
 const SALES = { period: 'Week', currency: 'EUR', current: figures(900, 9, 12, 100), previous: figures(600, 6, 9, 100), bestSellers: [] } as unknown as SalesSummary;
 const point = (revenue: number, orders: number, units: number) => ({ start: '2026-10-12T00:00:00+02:00', revenue, orders, units });
 const SERIES = { current: [point(300, 3, 4), point(0, 0, 0), point(600, 6, 8)], previous: [] } as unknown as SalesSeries;
@@ -18,6 +18,8 @@ describe('the key figures', () => {
       ['units', '12', 'up', [4, 0, 8]],
       // A day with no orders has no average: 0 on the line, never NaN.
       ['averageOrder', '€100', 'flat', [100, 0, 100]],
+      // How full a basket is (R-9, D-7): 12 units in 9 orders, against 9 in 6.
+      ['unitsPerOrder', '1.33', 'down', [4 / 3, 0, 8 / 6]],
     ]);
   });
 

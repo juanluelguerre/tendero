@@ -18,9 +18,9 @@
         <dd class="numeric fact__value">{{ figures.returningCustomers }}</dd>
       </div>
     </dl>
-    @if (store.chart(); as data) {
+    @if (store.byDay(); as data) {
       <div class="at-m">
-        <backoffice-bar-chart [data]="data" layout="share" [format]="count" [caption]="t('buyers')" />
+        <backoffice-bar-chart [data]="data" layout="columns" [format]="count" [caption]="t('byDay')" />
       </div>
     } @else {
       <p class="muted widget__state">{{ t('nobody') }}</p>

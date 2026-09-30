@@ -1,0 +1,39 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.sellThrough'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+  </header>
+
+  @if (store.stock.isLoading() && !store.stock.hasValue()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (store.stock.error()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else {
+    <h3 class="eyebrow widget__sub">{{ t('moves') }}</h3>
+    @if (store.moves().length > 0) {
+      <ol class="ranking">
+        @for (row of store.moves(); track row.sku) {
+          <li class="ranking__row">
+            <span class="ranking__name numeric">{{ row.sku }}</span>
+            <span class="muted">{{ t('soldLeft', { sold: row.sold, left: row.left }) }}</span>
+            <span class="numeric">{{ share(row.rate) }}</span>
+          </li>
+        }
+      </ol>
+    } @else {
+      <p class="muted">{{ t('nothingSold') }}</p>
+    }
+    <!-- What sits, from L: at S and M a wall reads what moves, and fits its row. -->
+    <div class="at-l">
+      <h3 class="eyebrow widget__sub">{{ t('sits') }}</h3>
+      <ol class="ranking">
+        @for (row of store.sits(); track row.sku) {
+          <li class="ranking__row">
+            <span class="ranking__name numeric">{{ row.sku }}</span>
+            <span class="muted">{{ t('soldLeft', { sold: row.sold, left: row.left }) }}</span>
+            <span class="numeric">{{ share(row.rate) }}</span>
+          </li>
+        }
+      </ol>
+    </div>
+  }
+</article>

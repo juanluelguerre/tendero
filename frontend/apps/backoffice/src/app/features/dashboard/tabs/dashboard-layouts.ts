@@ -14,26 +14,34 @@ export const DashboardLayouts = {
     { widget: 'salesByDay', size: 'M' },
     { widget: 'waiting', size: 'S' },
     { widget: 'health', size: 'S' },
-    // Campaigns (M) arrives with its baseline in Plan 3, and Live (S) with R-10.
+    { widget: 'campaigns', size: 'M' },
     { widget: 'byChannel', size: 'S' },
+    // Live (S) arrives with R-10.
   ],
   sales: [
     { widget: 'keyFigures', size: 'L' },
     { widget: 'salesByDay', size: 'L' },
-    { widget: 'byChannel', size: 'M' },
-    { widget: 'bestSellers', size: 'M' },
-    // By category arrives with the category on the order line, in Plan 3.
+    // Four at S in one row since D-7 added two: with the two L rows above,
+    // four M would need a fourth row, and the tab would not fit its wall. At S
+    // each shows its figure or its short list — what a wall is read for.
+    { widget: 'byChannel', size: 'S' },
+    { widget: 'bestSellers', size: 'S' },
+    { widget: 'byCategory', size: 'S' },
+    { widget: 'sellThrough', size: 'S' },
   ],
   operations: [
     { widget: 'ordersByStatus', size: 'M' },
     { widget: 'health', size: 'S' },
     { widget: 'funnel', size: 'S' },
-    { widget: 'returns', size: 'M' },
+    // Returns at S on Operations since search status joined the tab: on a wall
+    // its three figures are what is read, and the seven widgets fit two rows.
+    { widget: 'returns', size: 'S' },
     { widget: 'stock', size: 'S' },
     { widget: 'waiting', size: 'S' },
+    { widget: 'searchStatus', size: 'S' },
   ],
   growth: [
-    // Campaigns against their baseline and Search's status arrive in Plan 3.
+    { widget: 'campaigns', size: 'M' },
     { widget: 'customers', size: 'M' },
   ],
   agents: [

@@ -11,7 +11,16 @@ import { DashboardRefresh } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { SalesByDayWidget } from './sales-by-day-widget';
 
-const point = (start: string, revenue: number) => ({ start, revenue, orders: 1, units: 1 });
+const point = (start: string, revenue: number) => ({
+  start,
+  revenue,
+  orders: 1,
+  units: 1,
+  agentOrders: 0,
+  agentRevenue: 0,
+  newCustomers: 1,
+  returningCustomers: 0,
+});
 
 const WEEK: SalesSeries = {
   period: 'Week',

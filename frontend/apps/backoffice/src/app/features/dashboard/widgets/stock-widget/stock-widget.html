@@ -18,19 +18,46 @@
         <dt><a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'SoldOut' }">{{ t('soldOut') }}</a></dt>
         <dd class="numeric fact__value" [class.fact__value--warn]="store.soldOut() > 0">{{ store.soldOut() }}</dd>
       </div>
+      <div class="fact at-m">
+        <dt>{{ t('soon') }}</dt>
+        <dd class="numeric fact__value" [class.fact__value--warn]="store.soon() > 0">{{ store.soon() }}</dd>
+      </div>
+      <div class="fact at-m">
+        <dt>{{ t('noSales') }}</dt>
+        <dd class="numeric fact__value">{{ store.noSales() }}</dd>
+      </div>
     </dl>
-    @if (store.lowest().length > 0) {
+    @if (store.closest().length > 0) {
       <div class="at-m">
-        <h3 class="eyebrow widget__sub">{{ t('lowest') }}</h3>
+        <h3 class="eyebrow widget__sub">{{ t('closest') }}</h3>
         <ol class="ranking">
-          @for (row of store.lowest(); track row.sku) {
+          @for (row of store.closest(); track row.sku) {
             <li class="ranking__row">
               <span class="ranking__name numeric">{{ row.sku }}</span>
-              <span class="numeric">{{ t('available', { count: row.available }) }}</span>
+              <span class="numeric">{{ t('covers', { days: days(row.days), available: row.available }) }}</span>
             </li>
           }
         </ol>
       </div>
     }
+    @if (store.warehouses().length > 0) {
+      <div class="at-m">
+        <!-- Each warehouse's median cover as if it sold alone at the shop's pace:
+             orders record no warehouse, so its share of the pace is not known. -->
+        <h3 class="eyebrow widget__sub">{{ t('byWarehouse') }}</h3>
+        <ul class="ranking">
+          @for (warehouse of store.warehouses(); track warehouse.warehouseCode) {
+            <li class="ranking__row numeric">
+              @if (warehouse.medianDays !== null) {
+                {{ t('warehouseDays', { code: warehouse.warehouseCode, days: days(warehouse.medianDays) }) }}
+              } @else {
+                {{ t('warehouseNoSales', { code: warehouse.warehouseCode }) }}
+              }
+            </li>
+          }
+        </ul>
+      </div>
+    }
+    <p class="muted widget__note">{{ t('pace') }}</p>
   }
 </article>

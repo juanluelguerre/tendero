@@ -2,7 +2,16 @@ import type { SalesSeries } from '@tendero/shared-api';
 import { describe, expect, it } from 'vitest';
 import { toBarChart } from './sales-series';
 
-const point = (start: string, revenue: number) => ({ start, revenue, orders: 1, units: 1 });
+const point = (start: string, revenue: number) => ({
+  start,
+  revenue,
+  orders: 1,
+  units: 1,
+  agentOrders: 0,
+  agentRevenue: 0,
+  newCustomers: 1,
+  returningCustomers: 0,
+});
 
 const WEEK: SalesSeries = {
   period: 'Week',

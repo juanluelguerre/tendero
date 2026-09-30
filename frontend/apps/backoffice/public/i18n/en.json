@@ -616,7 +616,8 @@
         "up": "up",
         "down": "down",
         "flat": "no change"
-      }
+      },
+      "unitsPerOrder": "Units per order"
     },
     "bestSellers": {
       "title": "Best sellers",
@@ -634,7 +635,10 @@
       "people": "People",
       "agents": "Agents",
       "byAgents": "of orders by agents",
-      "revenueShare": "{{share}} of sales came through agents"
+      "revenueShare": "{{share}} of sales came through agents",
+      "agentsBy": "Agents: {{mcp}} over MCP · {{ucp}} over UCP",
+      "unrecorded": "{{count}} earlier orders have no channel recorded and are left out",
+      "nothingRecorded": "Nothing sold through a recorded channel in this period."
     },
     "salesByDay": {
       "current": {
@@ -672,7 +676,19 @@
         "within": "Within the {{target}} target",
         "near": "Near the {{target}} target",
         "outside": "Over the {{target}} target"
-      }
+      },
+      "rate": {
+        "cancellation": "Cancellation rate",
+        "defect": "Order defect rate",
+        "lateShipment": "Late shipment rate"
+      },
+      "count": {
+        "cancellation": "{{count}} cancelled",
+        "defect": "{{count}} with a defect",
+        "lateShipment": "{{count}} shipped late"
+      },
+      "noData": "No data",
+      "apart": "{{count}} shipped before this was recorded, not counted"
     },
     "returns": {
       "title": "Returns",
@@ -693,7 +709,15 @@
       "restock": "To restock",
       "soldOut": "Sold out",
       "lowest": "Lowest first",
-      "available": "{{count}} left"
+      "available": "{{count}} left",
+      "soon": "Run out in under 14 days",
+      "noSales": "No sales in 4 weeks",
+      "closest": "Closest to running out",
+      "covers": "{{days}} days · {{available}} left",
+      "pace": "At the pace of the last four weeks.",
+      "byWarehouse": "Median cover, each warehouse on its own",
+      "warehouseDays": "{{code}}: {{days}} days",
+      "warehouseNoSales": "{{code}}: no sales"
     },
     "funnel": {
       "title": "Checkout",
@@ -713,7 +737,8 @@
       "newCustomers": "New",
       "returningCustomers": "Returning",
       "nobody": "Nobody bought in this period.",
-      "noVisits": "Visits are not counted here: they live in the observability stack, which this page does not depend on."
+      "noVisits": "Visits are not counted here: they live in the observability stack, which this page does not depend on.",
+      "byDay": "Buyers by day"
     },
     "agentSales": {
       "title": "What agents buy",
@@ -725,7 +750,8 @@
       "shareOfRevenue": "Share of sales",
       "mandated": "With a mandate",
       "rehearsals": "Rehearsals",
-      "ordersCount": "{{count}} orders"
+      "ordersCount": "{{count}} orders",
+      "byDay": "Bought by agents, by day"
     },
     "refusals": {
       "title": "What the shop refused them",
@@ -762,6 +788,66 @@
       "support": "{{value}}% support",
       "lowStock": "To restock",
       "available": "{{count}} left"
+    },
+    "byCategory": {
+      "title": "By category",
+      "loading": "Loading the categories…",
+      "failed": "The categories could not be loaded.",
+      "nothingSold": "Nothing sold in this period.",
+      "others": "Others",
+      "uncategorised": "No category recorded",
+      "lines": "What each line sold for, before shipping and discounts."
+    },
+    "sellThrough": {
+      "title": "Sell-through",
+      "loading": "Loading…",
+      "failed": "These figures could not be loaded.",
+      "moves": "What moves",
+      "sits": "What sits",
+      "soldLeft": "{{sold}} sold · {{left}} left",
+      "nothingSold": "Nothing sold in this period."
+    },
+    "campaigns": {
+      "title": "Campaigns",
+      "toCampaigns": "Campaigns",
+      "loading": "Loading the campaign…",
+      "failed": "The campaign could not be measured.",
+      "none": "No campaign is running or has ended yet.",
+      "sold": "Sold",
+      "baseline": "Baseline",
+      "uplift": "{{change}} against the baseline",
+      "byDay": "Sold against the baseline, by day",
+      "noBaseline": "Fewer than four weeks of history: there is no baseline to measure against.",
+      "estimate": "An estimate, not a proof: the same weekday over the four weeks before it opened.",
+      "phase": {
+        "Upcoming": "upcoming",
+        "Running": "running",
+        "Over": "ended"
+      }
+    },
+    "searchStatus": {
+      "title": "Search",
+      "loading": "Loading…",
+      "failed": "The status could not be read.",
+      "checking": "Checking each stage…",
+      "whole": "Searches answer in full.",
+      "degraded": "Searches answer, with less.",
+      "since": "since {{at}}",
+      "stage": {
+        "Words": "Words",
+        "Meaning": "Meaning",
+        "Reranking": "Reranking"
+      },
+      "state": {
+        "Up": "Up",
+        "Down": "Down",
+        "Off": "Off"
+      },
+      "means": {
+        "Words": "Without words there is no search: the index does not answer.",
+        "Meaning": "Searches answer with words only.",
+        "Reranking": "Results are not reordered by relevance."
+      }
     }
   },
   "agents": {
