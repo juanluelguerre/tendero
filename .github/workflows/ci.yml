@@ -24,8 +24,24 @@ jobs:
   backend:
     name: Build · tests · architecture rules
     runs-on: ubuntu-latest
+    # About seven minutes today. A job with no limit runs for six hours when it
+    # hangs, and on GitHub Free those are minutes the account pays for.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+
+      # **The runner's disk ran out.** From 2026-09-30 the test step died with
+      # "No space left on device": the solution's build, the Testcontainers images
+      # (Elasticsearch, Qdrant, Text Embeddings Inference and its model) and the
+      # test outputs outgrew the fourteen gigabytes a hosted runner leaves free.
+      # The runner carries toolchains nobody here uses — Android, GHC, Swift,
+      # CodeQL, about twenty-five gigabytes — and deleting them takes seconds.
+      - name: Free the runner's disk
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup /usr/share/swift /opt/hostedtoolcache/CodeQL
+          df -h /
+
 
       # global.json pins 11.0.0 with allowPrerelease; `dotnet-quality: preview`
       # is what lets the installer actually resolve a preview SDK
@@ -79,9 +95,17 @@ jobs:
       - name: The committed domain model is unchanged
         run: git diff --exit-code -- docs/domain-model.md
 
+      # What the job used, so the next time the disk runs short there is a number
+      # to compare instead of a guess.
+      - name: Disk left
+        if: always()
+        run: df -h /
+
   search-quality:
     name: Search relevance gate (NDCG@10)
     runs-on: ubuntu-latest
+    # About three minutes today.
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: write
@@ -171,6 +195,8 @@ jobs:
   frontend:
     name: Frontend lint and tests
     runs-on: ubuntu-latest
+    # About two minutes today.
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -227,6 +253,10 @@ jobs:
   end-to-end:
     name: End-to-end (browser)
     runs-on: ubuntu-latest
+    # About five and a half minutes when it passed. On 2026-09-29 it sat in
+    # "Bring up the stack" for over a quarter of an hour, and was cancelled by
+    # hand: the gate's curl had no time limit, and neither had the job.
+    timeout-minutes: 25
     # The thinnest layer of the pyramid, and the only one that needs the whole
     # stack. It is a separate job so the fast checks stay fast: the backend and
     # frontend jobs answer in a couple of minutes and this one has to bring up
@@ -235,6 +265,19 @@ jobs:
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v7
+
+      # **The runner's disk ran out.** From 2026-09-30 the test step died (the backend job's) with
+      # "No space left on device": the solution's build, the Testcontainers images
+      # (Elasticsearch, Qdrant, Text Embeddings Inference and its model) and the
+      # test outputs outgrew the fourteen gigabytes a hosted runner leaves free.
+      # The runner carries toolchains nobody here uses — Android, GHC, Swift,
+      # CodeQL, about twenty-five gigabytes — and deleting them takes seconds.
+      - name: Free the runner's disk
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup /usr/share/swift /opt/hostedtoolcache/CodeQL
+          df -h /
+
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -291,8 +334,12 @@ jobs:
           # answers 401 forever — and the gate waited ten minutes for a stack
           # that had been up the whole time.
           probe=http://localhost:4201/api/orders/0191d2a4-5c3e-7000-8000-000000000000
-          for _ in $(seq 1 120); do
-            if [ "$(curl -s -o /dev/null -w '%{http_code}' "$probe" || true)" = "404" ]; then
+          # Sixty attempts of at most fifteen seconds: the gate gives up, and says
+          # why, before the job's own limit cancels it and says nothing.
+          for _ in $(seq 1 60); do
+            # A limit per attempt: a request that hangs would otherwise hold the
+            # loop, and its ten minutes, forever.
+            if [ "$(curl -s -o /dev/null --max-time 10 -w '%{http_code}' "$probe" || true)" = "404" ]; then
               echo "the stack is up and the API answers through the backoffice"
               exit 0
             fi
@@ -303,12 +350,19 @@ jobs:
 
           # Which half is missing, because "it did not come up" sends whoever
           # reads this to the wrong log otherwise.
-          if curl -sf -o /dev/null http://localhost:4201; then
+          if curl -sf -o /dev/null --max-time 10 http://localhost:4201; then
             echo "the backoffice serves, but the API never answered through it"
           else
             echo "the backoffice never came up"
           fi
 
+          # The AppHost's log ends where the dashboard starts; what each container
+          # did is Docker's to tell — a container Docker refused never appears as
+          # running, and its reason is in `docker ps -a` and its own log.
+          docker ps -a --format '{{.Names}}	{{.Status}}'
+          for name in $(docker ps -a --filter status=exited --filter status=created --format '{{.Names}}'); do
+            echo "--- $name"; docker logs --tail 30 "$name" 2>&1
+          done
           tail -100 "$RUNNER_TEMP/aspire.log"
           exit 1
 
@@ -320,13 +374,15 @@ jobs:
       # afterwards — including by an agent, which can read it instead of
       # guessing from a stack.
       - name: Keep the report
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: frontend/apps/backoffice-e2e/playwright-report/
           retention-days: 7
 
+      # On a timeout too: a job cancelled by its limit is the one whose log is
+      # most needed, and `failure()` alone does not run for it.
       - name: Keep the stack's log
-        if: failure()
+        if: failure() || cancelled()
         run: tail -200 "$RUNNER_TEMP/aspire.log"

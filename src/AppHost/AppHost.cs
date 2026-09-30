@@ -74,10 +74,20 @@ const int faroPort = 38027;
 // move to another drive, which is what `tendero-tei-models` below already does.
 // Every container carries a memory and CPU limit sized from a measurement (the
 // rule since 2026-09-26): the peak under load, plus a margin, never a round guess.
+//
+// **The CPUs are capped at the ones the machine has**, because Docker refuses a
+// container that asks for more — "range of CPUs is from 0.01 to 2.00" — and
+// does not start it. GitHub's runner for a private repository has two, so from
+// 2026-09-27 Elasticsearch's four kept it from starting, the API waited for it
+// forever, and the end-to-end job hung for three days of merges. A laptop with
+// fewer cores than the measurement would have met the same wall.
+static string Cpus(int measured) =>
+    "--cpus=" + Math.Min(measured, Environment.ProcessorCount).ToString(CultureInfo.InvariantCulture);
+
 // Postgres peaked at 49 MB serving the catalogue and the claims layer at once.
 var postgres = builder.AddPostgres("postgres", port: postgresPort)
     .WithDataVolume("tendero-postgres-data") // the imported catalogue survives a restart
-    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", "--cpus=2");
+    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", Cpus(2));
 
 // Aspire's own helper — no new package, it ships with Aspire.Hosting.PostgreSQL,
 // which the AppHost already references. It wires the connection for you, so
@@ -102,7 +112,7 @@ var elasticsearch = builder.AddContainer("elasticsearch", "docker.elastic.co/ela
     .WithEnvironment("xpack.security.enabled", "false")
     .WithEnvironment("ES_JAVA_OPTS", "-Xms1g -Xmx1g")
     // A 1 GB heap held 1.66 GB of container memory under load: the limit is 2.
-    .WithContainerRuntimeArgs("--memory=2g", "--memory-swap=2g", "--cpus=4")
+    .WithContainerRuntimeArgs("--memory=2g", "--memory-swap=2g", Cpus(4))
     .WithHttpEndpoint(targetPort: 9200, port: elasticsearchPort, name: "http")
     // Without a health check, WaitFor(elasticsearch) has nothing to wait for.
     .WithHttpHealthCheck("/_cluster/health", endpointName: "http")
@@ -186,7 +196,7 @@ var qdrant = builder.AddQdrant("qdrant", apiKey: qdrantKey, grpcPort: qdrantGrpc
     // 80 to 88 MiB measured on 2026-09-28, after three hours of a walkthrough
     // and TrafficSim over this catalogue: a hundred 1,024-dimension points. The
     // limit leaves room for the optimiser and a reindex, not for the host's 31 GB.
-    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", "--cpus=2")
+    .WithContainerRuntimeArgs("--memory=512m", "--memory-swap=512m", Cpus(2))
     .WithLifetime(ContainerLifetime.Persistent);
 
 // The embedding model, served by Hugging Face Text Embeddings Inference and
@@ -240,8 +250,8 @@ var embeddings = builder.AddContainer("embeddings", "ghcr.io/huggingface/text-em
     // sized below, 3.7 GiB (P8-3). Without a limit Docker offered it the host's
     // 31 GB, which is the over-provisioning the rule exists to stop.
     .WithContainerRuntimeArgs(inference.UsesGpu
-        ? ["--memory=4g", "--memory-swap=4g", "--cpus=4"]
-        : ["--memory=4608m", "--memory-swap=4608m", "--cpus=8"])
+        ? ["--memory=4g", "--memory-swap=4g", Cpus(4)]
+        : ["--memory=4608m", "--memory-swap=4608m", Cpus(8)])
     .WithLifetime(ContainerLifetime.Persistent);
 
 if (inference.UsesGpu)
@@ -289,7 +299,7 @@ var reranker = builder.AddContainer("reranker", "ghcr.io/huggingface/text-embedd
     .WithEnvironment("TENDERO_INFERENCE_DEVICE", inference.Description)
     // 2.1 to 2.3 GiB measured on 2026-09-28 on the GPU, the only device it
     // starts on by itself (below); the limit is that and a quarter more.
-    .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", "--cpus=4")
+    .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", Cpus(4))
     .WithLifetime(ContainerLifetime.Persistent);
 
 if (inference.UsesGpu)
@@ -328,7 +338,7 @@ var extractorModel = builder.AddContainer("extractor-model", "ghcr.io/ggml-org/l
     .WithArgs("/scripts/prepare-extractor.sh")
     .WithBindMount(Path.Combine(builder.AppHostDirectory, "scripts"), "/scripts", isReadOnly: true)
     .WithVolume("tendero-extractor-models", "/models")
-    .WithContainerRuntimeArgs("--memory=5g", "--memory-swap=5g", "--cpus=8");
+    .WithContainerRuntimeArgs("--memory=5g", "--memory-swap=5g", Cpus(8));
 
 // Qwen3.5-4B at 8 bits, the extractor P10-0 chose: precision 0.92, recall 0.80,
 // ~30 s a product on the CPU — a worker's pace, never a request's. Served with
@@ -343,7 +353,7 @@ var extractor = builder.AddContainer("extractor", "ghcr.io/ggml-org/llama.cpp", 
     .WithHttpEndpoint(targetPort: 8080, port: extractorPort, name: "http")
     .WithHttpHealthCheck("/health", endpointName: "http")
     .WithVolume("tendero-extractor-models", "/models", isReadOnly: true)
-    .WithContainerRuntimeArgs("--memory=6g", "--memory-swap=6g", "--cpus=12")
+    .WithContainerRuntimeArgs("--memory=6g", "--memory-swap=6g", Cpus(12))
     .WaitForCompletion(extractorModel);
 
 // The support scorer: an NLI model on the model server the stack already runs.
@@ -360,7 +370,7 @@ var support = builder.AddContainer("support", "ghcr.io/huggingface/text-embeddin
     .WithHttpEndpoint(targetPort: 80, port: supportPort, name: "http")
     .WithHttpHealthCheck("/health", endpointName: "http")
     .WithVolume("tendero-tei-models", "/data")
-    .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", "--cpus=8");
+    .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", Cpus(8));
 
 if (!knowledge)
 {
@@ -499,7 +509,7 @@ var keycloak = builder.AddKeycloak("keycloak", port: keycloakPort, adminPassword
     // MaxRAMPercentage=70), so with no limit it read the host's 31 GB and grew to
     // 985 MiB measured on 2026-09-28. Keycloak's own sizing guide starts a
     // single node at 1,250 MB; this is that, with the heap following it down.
-    .WithContainerRuntimeArgs("--memory=1280m", "--memory-swap=1280m", "--cpus=2")
+    .WithContainerRuntimeArgs("--memory=1280m", "--memory-swap=1280m", Cpus(2))
     // Named for the reason the Postgres volume is: an unnamed one is keyed on
     // this project's path and is left behind by a folder rename.
     .WithDataVolume("tendero-keycloak-data")

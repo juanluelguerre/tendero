@@ -56,5 +56,14 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  /**
+   * The laboratory first: a stack brought up from nothing has no catalogue, no
+   * orders, no agents and no claims, and eight specs had nothing to act on in
+   * CI. `laboratory.setup.ts` makes what is missing through the shop's own API,
+   * and does nothing where it is there already.
+   */
+  projects: [
+    { name: 'laboratory', testMatch: /laboratory\.setup\.ts/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, dependencies: ['laboratory'] },
+  ],
 });

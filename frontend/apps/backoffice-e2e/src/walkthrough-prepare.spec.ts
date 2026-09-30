@@ -1,5 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
-import { signIn } from './session';
+import { expect, test } from '@playwright/test';
+import { activeAgent, allProducts, is, type ProductSummary, shopkeeperApi } from './laboratory';
 
 /**
  * Gets the laboratory shop ready for the redesign's walkthrough
@@ -15,12 +15,8 @@ import { signIn } from './session';
  */
 test.skip(!process.env['WALKTHROUGH_PREPARE'], 'changes the shop; set WALKTHROUGH_PREPARE=1 to run it');
 
-interface ProductSummary { productId: string; code: string; name: string; category: string | null; status: string }
 interface OrderSummary { orderId: string; status: string; recipientName: string; createdAt: string }
 interface ReturnView { number: number; status: string }
-interface AgentView { agentId: string; displayName: string; status: string }
-
-const is = (status: string, expected: string) => status.toLowerCase() === expected.toLowerCase();
 
 /** S1 asks for the backpacks, so none of them is taken off sale. */
 const kept = (product: ProductSummary) => !/backpack|mochila/i.test(`${product.category} ${product.name}`);
@@ -30,13 +26,7 @@ test('prepare the shop for the walkthrough', async ({ page }) => {
   const api = await shopkeeperApi(page);
   const wanted = Number(process.env['WALKTHROUGH_DRAFTS'] ?? 3);
 
-  // A hundred per page is the endpoint's ceiling; the laboratory fits in two.
-  const products: ProductSummary[] = [];
-  for (let page = 1; ; page++) {
-    const { items, total } = await api.get<{ items: ProductSummary[]; total: number }>(`/api/catalog/products?pageSize=100&page=${page}`);
-    products.push(...items);
-    if (items.length === 0 || products.length >= total) break;
-  }
+  const products = await allProducts(api);
   const drafts = products.filter((p) => is(p.status, 'draft'));
   const candidates = products
     .filter((p) => is(p.status, 'active') && kept(p))
@@ -65,55 +55,3 @@ test('prepare the shop for the walkthrough', async ({ page }) => {
   const missing = report.filter(([, n]) => n === 0).map(([job]) => job);
   expect(missing, 'Nothing to act on — run TrafficSim for longer, then prepare again').toEqual([]);
 });
-
-/**
- * B5 needs an agent on sale's side of the door. A suspended one is reinstated,
- * and with none registered, the development issuer's agent is — the one whose
- * token MCP and UCP clients carry in the laboratory. Both are the shop's own
- * operations, as the backoffice's Agents screen performs them.
- */
-async function activeAgent(api: ShopkeeperApi): Promise<AgentView[]> {
-  const all = await api.get<AgentView[]>('/api/agents');
-  const active = all.filter((a) => is(a.status, 'active'));
-  if (active.length > 0) return active;
-
-  const suspended = all.find((a) => is(a.status, 'suspended'));
-  if (suspended) await api.post(`/api/agents/${suspended.agentId}/reinstate`);
-  else await api.post('/api/agents', { agentId: 'claude-desktop', displayName: 'Claude Desktop', operator: 'Anthropic' });
-  return (await api.get<AgentView[]>('/api/agents')).filter((a) => is(a.status, 'active'));
-}
-
-type ShopkeeperApi = Awaited<ReturnType<typeof shopkeeperApi>>;
-
-/**
- * Signs in through the screen, as the specs do, and borrows the token the app
- * sends: the preparation acts as the shopkeeper, not around them.
- */
-async function shopkeeperApi(page: Page) {
-  let authorization: string | undefined;
-  let origin: string | undefined;
-  page.on('request', (request) => {
-    const header = request.headers()['authorization'];
-    if (!authorization && header && request.url().includes('/api/')) {
-      authorization = header;
-      origin = new URL(request.url()).origin;
-    }
-  });
-  await signIn(page);
-  await page.goto('/orders');
-  await expect.poll(() => authorization, { message: 'the backoffice never called the API with a token' }).toBeTruthy();
-
-  const headers = () => ({ authorization: authorization ?? '', accept: 'application/json' });
-  return {
-    async get<T>(path: string): Promise<T> {
-      const response = await page.request.get(`${origin}${path}`, { headers: headers() });
-      expect(response.ok(), `GET ${path}: ${response.status()}`).toBeTruthy();
-      return response.json();
-    },
-    async post<T>(path: string, data?: unknown): Promise<T> {
-      const response = await page.request.post(`${origin}${path}`, { headers: headers(), data });
-      expect(response.ok(), `POST ${path}: ${response.status()}`).toBeTruthy();
-      return response.json();
-    },
-  };
-}

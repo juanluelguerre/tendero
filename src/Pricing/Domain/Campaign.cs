@@ -373,8 +373,10 @@ public sealed class Campaign : AggregateRoot
         Line = details.Line;
         Kind = details.Kind;
         CategoryCode = string.IsNullOrWhiteSpace(details.CategoryCode) ? null : details.CategoryCode.Trim().ToUpperInvariant();
-        StartsAt = details.StartsAt;
-        EndsAt = details.EndsAt;
+        // The same instants at offset zero: a window may be written in the shop's own
+        // offset (the seed file's +01:00), and a time is stored in UTC (ADR 0046).
+        StartsAt = details.StartsAt.ToUniversalTime();
+        EndsAt = details.EndsAt.ToUniversalTime();
         Priority = details.Priority;
         this.promotionCodes = [.. codes];
         ImageId = details.Image?.Id;

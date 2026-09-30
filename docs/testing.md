@@ -811,6 +811,34 @@ Three rules keep it honest:
    the obvious optimisation and does not work: the development issuer mints its
    signing key per process, so a saved token dies with the next restart.
 
+### The laboratory each run needs, made by the run
+
+The specs act on a shop, and a stack brought up from nothing has the stock seed
+and nothing else. For a month they ran against the author's laboratory, where
+TrafficSim had filled everything, and **eight of them failed in CI for that
+reason alone** — no product on sale, no order, no agent, no claim — while locally
+they passed. A spec that passes only where somebody happened to leave data is
+testing the machine, not the shop.
+
+So Playwright's `laboratory` project runs first
+(`apps/backoffice-e2e/src/laboratory.setup.ts`) and makes the least every spec
+needs, **only where it is missing**: the seed catalogue imported, three products
+with stock published, 21 guest orders — more than a page, so the pager has a
+page two — waited for until the stock saga confirms one, an active agent, and
+two claims, which the workers propose by rules when no model runs. Everything
+goes through the API a person would use, never the database, so the outbox, the
+index and the audit see it. On a laboratory that has it all it is a few reads
+(2.9 s); from nothing, 34 s.
+
+**Proved against an empty database before it reached CI**, by pointing
+Postgres at a scratch volume for one run: 25 passed, and 25 again on the second
+run over the same data. That run is also what found why CI's workers had
+processed nothing since 2026-09-28: the campaign seed wrote its windows at
+Madrid's +01:00, Npgsql stores a `timestamptz` only at offset zero, and the
+workers died at startup on every empty database — only on an empty one, because
+the seed runs when there are no campaigns yet. A campaign now keeps its window
+in UTC whatever offset it was written in (`CampaignTests`).
+
 ### Writing them with an agent, running them in CI
 
 The two are different jobs and only one of them produces an artifact.
