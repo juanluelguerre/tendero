@@ -1,34 +1,44 @@
 <ng-container *transloco="let t">
-  <section class="compare">
-    <h1 class="compare__title">{{ t('compare.title') }}</h1>
+  <section class="pt-6 pb-8">
+    <h1 class="mb-5 text-2xl tracking-tight">{{ t('compare.title') }}</h1>
 
     @let current = store.state();
     @switch (current.status) {
       @case ('tooFew') {
-        <p class="compare__empty">{{ t('compare.tooFew') }}</p>
-        <a class="compare__back" [routerLink]="links.home()">{{ t('compare.backToShop') }}</a>
+        <p class="text-muted">{{ t('compare.tooFew') }}</p>
+        <a class="text-body" [routerLink]="links.home()">{{ t('compare.backToShop') }}</a>
       }
       @case ('loading') {
-        <p class="compare__empty" aria-live="polite">{{ t('compare.loading') }}</p>
+        <p class="text-muted" aria-live="polite">{{ t('compare.loading') }}</p>
       }
       @case ('failed') {
-        <p class="compare__empty" role="alert">{{ t('compare.failed') }}</p>
+        <p class="text-muted" role="alert">{{ t('compare.failed') }}</p>
       }
       @case ('done') {
         @if (current.status === 'done') {
           @let sheet = current.sheet;
           <!-- The table scrolls inside its frame on a phone, never the page;
                the attribute column stays put while the products slide. -->
-          <div class="compare__frame" tabindex="0" role="region" [attr.aria-label]="t('compare.title')">
-            <table class="compare__table">
+          <div
+            class="overflow-x-auto rounded-lg border border-hairline bg-surface"
+            tabindex="0"
+            role="region"
+            [attr.aria-label]="t('compare.title')"
+          >
+            <table class="w-full min-w-[36rem] border-collapse text-sm">
               <thead>
                 <tr>
-                  <th scope="col" class="compare__corner">{{ t('compare.attribute') }}</th>
+                  <th
+                    scope="col"
+                    class="sticky start-0 z-1 w-[10rem] border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
+                  >
+                    {{ t('compare.attribute') }}
+                  </th>
                   @for (product of sheet.products; track product.code) {
-                    <th scope="col" class="compare__product">
-                      <a class="compare__productLink" [routerLink]="links.product(product.slug, product.code)">{{ product.name }}</a>
+                    <th scope="col" class="border-b border-hairline px-4 py-3 text-start align-top font-semibold">
+                      <a class="text-body" [routerLink]="links.product(product.slug, product.code)">{{ product.name }}</a>
                       <button
-                        class="compare__drop"
+                        class="ms-2 px-1 text-muted"
                         type="button"
                         [attr.aria-label]="t('compare.remove', { name: product.name })"
                         (click)="store.drop(product.code)">×</button>
@@ -39,26 +49,37 @@
               <tbody>
                 @for (row of sheet.rows; track row.attributeCode) {
                   <tr>
-                    <th scope="row" class="compare__attribute">{{ row.label }}</th>
+                    <th
+                      scope="row"
+                      class="sticky start-0 z-1 w-[10rem] border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
+                    >
+                      {{ row.label }}
+                    </th>
                     @for (cell of row.cells; track $index) {
-                      <td class="compare__cell" [class.compare__cell--none]="cell.source === 'none'">
+                      <!-- No data is a fact about the product, so the cell looks different on purpose. -->
+                      <td class="border-b border-hairline px-4 py-3 text-start align-top" [class.bg-raised]="cell.source === 'none'">
                         <storefront-spec-value [cell]="cell" />
-                        <storefront-spec-source class="compare__source" [source]="cell.source" [evidence]="cell.evidence" />
+                        <storefront-spec-source class="mt-1 block" [source]="cell.source" [evidence]="cell.evidence" />
                       </td>
                     }
                   </tr>
                 }
                 <tr>
-                  <th scope="row" class="compare__attribute">{{ t('specs.alsoSays') }}</th>
+                  <th
+                    scope="row"
+                    class="sticky start-0 z-1 w-[10rem] border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
+                  >
+                    {{ t('specs.alsoSays') }}
+                  </th>
                   @for (product of sheet.products; track product.code) {
-                    <td class="compare__cell">
+                    <td class="border-b border-hairline px-4 py-3 text-start align-top">
                       @for (statement of statementsOf(sheet, product.productId); track $index) {
-                        <p class="compare__statement">
+                        <p class="mb-2">
                           {{ statement.text }}
                           <storefront-spec-source source="description" [evidence]="statement.evidence" />
                         </p>
                       } @empty {
-                        <span class="compare__nothing">—</span>
+                        <span class="text-muted">—</span>
                       }
                     </td>
                   }
@@ -66,7 +87,7 @@
               </tbody>
             </table>
           </div>
-          <p class="compare__note">{{ t('compare.note') }}</p>
+          <p class="mt-3 text-xs text-muted">{{ t('compare.note') }}</p>
         }
       }
     }
