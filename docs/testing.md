@@ -581,6 +581,65 @@ hour while the real queue ran beside it. Found by the process's command line and
 its parent, stopped, and its partial reports deleted; every figure above comes
 from a run that had the machine to itself.
 
+**R-9's close (2026-09-30)** — the dashboard: the daily series, the sales mix,
+the defect and late shipment rates, stock coverage and sell-through, the
+campaign's baseline and search's status. No context was rewritten whole, so
+every run is **scoped to the files the phase wrote**
+(`-m 'Features/Dashboard/*.cs'` and the like) and sets no baseline. Every run
+alone, one after the other. Reports are in
+`docs/blog/reports/2026-09-29-r9-dashboard/stryker/`.
+
+| project | mutated with | run 1 | run 2 | survivors |
+|---|---|---:|---:|---:|
+| `src/Ordering`, scoped (`Features/Dashboard/`, `Order.cs`, `OrderChannel.cs`) | `Ordering.Tests`, `Integration.Tests` | 82.18 % | **88.48 %** | 49 → 31 |
+| `src/Inventory`, scoped (`StockHealth.cs`) | `Inventory.Tests`, `Integration.Tests` | 63.79 % | **94.83 %** | 21 → 3 |
+| `src/Search`, scoped (`Health/`, `GetSearchStatus.cs`, the Qdrant and Elasticsearch adapters) | `Search.Tests`, `SearchEval.Tests` | 76.00 % | **88.57 %** | 6 → 4 |
+| `src/SharedKernel`, scoped (`ShopOptions.cs`, `HealthTags.cs`) | its three suites | 0 % | — | 1 |
+
+**The tests the dashboard had were written for its main paths, and Stryker
+found the rest.** Closed, each with a test the survivor itself proved red:
+
+- **The campaign's totals were never read.** The test of a Saturday's uplift of
+  70 computed `Sold - Baseline` itself and never asserted `Uplift`: `sold -
+  expected` survived as `sold + expected`, and the totals' sums survived as
+  `Max`. Now a test reads the three totals over two ended days, 400 − 150 = 250.
+- **The edges of the shop's day**: an order at midnight opens its day, a first
+  order exactly four weeks before the opening is history enough, and at midnight
+  the day before has ended while the new one is under way — not still to come.
+- **A defect that is not one, and one hidden among others**: a return the shop
+  rejected was never tested as *no defect*, although the comment said so, and a
+  return with one damaged line among others was never tested as one.
+- **The late shipment window's edges**, for the orders with their moments and
+  for those counted apart; and **an order with only one of its moments**, which
+  has no lead time and is counted apart too.
+- **Stock**: a SKU in two warehouses covers what both hold (`Sum` survived as
+  `Max`); a warehouse's median over an even count meets in the middle and leaves
+  a sold-out SKU out; fourteen days is not *under two weeks*; a sold-out SKU is
+  not one that *sits*; the fastest list holds only what sold and the slowest only
+  what is left, and ties go by SKU.
+- **Search's publisher had no test at all**: each check's name lands on its
+  stage, one with no state is down, and the API's other checks are left alone;
+  meaning and reranking are up when they answer and down when they do not.
+- **The currency was four copies**, each surviving a mutant that always answered
+  euros, because the laboratory sells in euros only. One `DashboardCurrency` now,
+  with a test in dollars.
+
+**Left, and what each is.**
+- **Equivalent**: a day still to come sells nothing whether or not it is asked
+  (`future ? 0m : SoldOn(day)`); `Days` is only ever called with stock above
+  zero, so its `<= 0` guard cannot tell `<` from `<=`; and a median of two or
+  three values is the same sorted either way.
+- **Noise**: the span names, the span helper's body, the reranker's probe text
+  and its two reasons.
+- **Held by other suites**: the endpoints' mapping, by `Api.Tests` (the routes'
+  policy and period); the Qdrant and Elasticsearch adapters, by
+  `Integration.Tests` against real containers — why Search's `of total` is 28 %.
+- **Held by configuration**: `ShopOptions`' default zone, which `appsettings.json`
+  sets.
+- **Predate R-9**: `Order.cs`'s guards, messages, taxes and payment (20, run 2 had
+  no timeouts where run 1 had four), and the dashboard's returns windows and the
+  currency's `Concat`, classified at phase 11's close.
+
 ## Property-based (CsCheck)
 
 Value objects carry the invariants worth generating inputs for:

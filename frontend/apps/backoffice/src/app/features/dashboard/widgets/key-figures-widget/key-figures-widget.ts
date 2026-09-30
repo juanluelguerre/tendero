@@ -27,6 +27,7 @@ export class KeyFiguresWidget {
     return keyFigures(this.store.sources(), {
       money: (amount) => formatPrice(amount, currency, culture),
       share: (ratio) => formatShare(ratio, culture),
+      decimal: (value) => new Intl.NumberFormat(culture, { maximumFractionDigits: 2 }).format(value),
     });
   });
 

@@ -109,6 +109,7 @@ public sealed class OrderPlacement(
     IShippingRateProviderRegistry shipping,
     IPaymentProviderRegistry payments,
     IPrincipalAccessor principal,
+    IActorAccessor actor,
     IAgentPolicy agentPolicy,
     IAgentActivity agentActivity,
     IOptions<CheckoutOptions> options,
@@ -266,7 +267,9 @@ public sealed class OrderPlacement(
                     // The price pricing just quoted, not one the cart carried:
                     // the cart carries none, on purpose.
                     unitPrices[line.Sku],
-                    line.Quantity))
+                    line.Quantity,
+                    line.CategoryCode,
+                    line.CategoryPath))
             ],
             request.ShippingAddress,
             // Billing defaults to shipping and is still its OWN copy: "the same
@@ -282,7 +285,9 @@ public sealed class OrderPlacement(
             orderId,
             request.ContactEmail,
             request.Mandate is { } approved ? OrderMandate.From(approved) : null,
-            principal.Current.Agent);
+            principal.Current.Agent,
+            // The storefront, MCP or UCP — known now and never again (R-9, D-7).
+            OrderChannels.From(actor.Current.Surface));
 
         order.AuthorizePayment(clock, new OrderPayment(provider.Key, authorization.AuthorizationId!, null));
         orders.Add(order);

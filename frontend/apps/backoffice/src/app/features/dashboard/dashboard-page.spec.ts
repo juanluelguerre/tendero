@@ -11,6 +11,7 @@ import { DashboardPage } from './dashboard-page';
 import { DashboardRefresh } from './sources/dashboard-refresh';
 import { dashboardChildren } from './dashboard-routes';
 import { DASHBOARD_WIDGETS, type WidgetDefinition, type WidgetKey } from './widgets/dashboard-widgets';
+import { BackofficeUsage } from '../../usage';
 import { FullScreen } from './full-screen';
 import { English } from './widgets/widget-testing';
 
@@ -22,6 +23,7 @@ class StubWidget {
 const Keys: WidgetKey[] = [
   'keyFigures', 'salesByDay', 'bestSellers', 'byChannel', 'waiting', 'health', 'ordersByStatus',
   'funnel', 'returns', 'stock', 'customers', 'agentSales', 'refusals',
+  'byCategory', 'sellThrough', 'campaigns', 'searchStatus',
 ];
 const Stubs = Object.fromEntries(Keys.map((key) => [key, { component: StubWidget, takesPeriod: true }])) as Record<WidgetKey, WidgetDefinition>;
 
@@ -33,9 +35,11 @@ describe('the dashboard page', () => {
     enter: vi.fn(async () => active.set(true)),
     leave: vi.fn(async () => active.set(false)),
   };
+  const usage = { affordance: vi.fn() };
 
   afterEach(() => {
     active.set(false);
+    usage.affordance.mockClear();
     vi.useRealTimers();
   });
 
@@ -48,6 +52,7 @@ describe('the dashboard page', () => {
         { provide: API_BASE_URL, useValue: 'http://api' },
         provideRouter([{ path: 'dashboard', component: DashboardPage, children: dashboardChildren }]),
         { provide: FullScreen, useValue: fake },
+        { provide: BackofficeUsage, useValue: usage },
       ],
     });
     TestBed.overrideComponent(DashboardPage, { add: { providers: [{ provide: DASHBOARD_WIDGETS, useValue: Stubs }] } });
@@ -70,7 +75,7 @@ describe('the dashboard page', () => {
     expect(element.querySelector('nav.tabs a[aria-current="page"]')?.getAttribute('href')).toBe('/dashboard/sales?period=month');
     expect(element.querySelector('.period[aria-pressed="true"]')?.getAttribute('data-period')).toBe('Month');
     expect([...element.querySelectorAll<HTMLElement>('.cell')].map((cell) => cell.dataset['widget'])).toEqual([
-      'keyFigures', 'salesByDay', 'byChannel', 'bestSellers',
+      'keyFigures', 'salesByDay', 'byChannel', 'bestSellers', 'byCategory', 'sellThrough',
     ]);
     expect(element.querySelector('.cell')?.textContent?.trim()).toBe('Month');
   });
@@ -108,6 +113,18 @@ describe('the dashboard page', () => {
     expect(head?.textContent).toContain('refreshes every minute');
     expect(head?.querySelector('.full-screen-leave')).not.toBeNull();
     expect(element.querySelector('nav.tabs')).toBeNull();
+  });
+
+  it('counts a tab put on a wall, and not the way back (spec, Evidence of use)', async () => {
+    const harness = await open('/dashboard/sales');
+    const element = shell(harness);
+    element.querySelector<HTMLButtonElement>('.full-screen-enter')?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    element.querySelector<HTMLButtonElement>('.full-screen-leave')?.click();
+    await harness.fixture.whenStable();
+
+    expect(usage.affordance.mock.calls).toEqual([['full_screen', 'tab']]);
   });
 
   it('refreshes every minute on the wall, and only there', async () => {

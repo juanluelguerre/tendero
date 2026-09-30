@@ -200,7 +200,9 @@ public sealed class AddToCartHandler(
                 purchasable.ProductName,
                 purchasable.VariantLabel,
                 purchasable.ImageId,
-                command.Quantity));
+                command.Quantity,
+                purchasable.CategoryCode,
+                purchasable.CategoryPath));
         }
         catch (InvalidOperationException exception)
         {

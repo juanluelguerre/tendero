@@ -18,6 +18,7 @@ using ElGuerre.Tendero.Pricing.Features.QuoteCart;
 using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.Search.Elasticsearch;
 using ElGuerre.Tendero.Search.Features.SearchProducts;
+using ElGuerre.Tendero.Search.Health;
 using ElGuerre.Tendero.ServiceDefaults;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Ucp;
@@ -60,6 +61,11 @@ builder.Services.AddLexicalSearch(
 // answers every search, and degrades to lexical by itself when a stage is missing
 // or failing. Lexical search above is required; none of this is.
 builder.Services.AddHybridSearch(builder.Configuration);
+
+// Each stage's health through its own port, and the memory of when it last
+// changed, for the dashboard's search status (R-9, D-7). Private checks: the
+// open /health leaves them out.
+builder.Services.AddSearchStatus();
 
 // The development issuer is registered BEFORE authentication and only in
 // Development. Its own AddDevIssuer throws when the environment is not

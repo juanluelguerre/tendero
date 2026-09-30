@@ -1,7 +1,7 @@
 import type { CheckoutFunnel, OperationsSummary, SalesSeries, SalesSummary } from '@tendero/shared-api';
 import { type Change, changeOf } from '../figures';
 
-export type KeyFigureKey = 'revenue' | 'orders' | 'units' | 'averageOrder' | 'conversion' | 'returnRate';
+export type KeyFigureKey = 'revenue' | 'orders' | 'units' | 'averageOrder' | 'unitsPerOrder' | 'conversion' | 'returnRate';
 
 export interface KeyFigure {
   readonly key: KeyFigureKey;
@@ -22,6 +22,8 @@ export interface KeyFigureSources {
 export interface KeyFigureFormats {
   readonly money: (amount: number) => string;
   readonly share: (ratio: number) => string;
+  /** A figure with decimals that is not money: units per order. */
+  readonly decimal: (value: number) => string;
 }
 
 /**
@@ -46,6 +48,13 @@ export function keyFigures(sources: KeyFigureSources, say: KeyFigureFormats): Ke
         value: say.money(current.averageOrderValue),
         change: changeOf(current.averageOrderValue, previous.averageOrderValue),
         trend: trend((point) => (point.orders === 0 ? 0 : point.revenue / point.orders)),
+      },
+      {
+        // How full a basket is, beside how dear (R-9, D-7).
+        key: 'unitsPerOrder',
+        value: say.decimal(current.unitsPerOrder),
+        change: changeOf(current.unitsPerOrder, previous.unitsPerOrder),
+        trend: trend((point) => (point.orders === 0 ? 0 : point.units / point.orders)),
       },
     );
   }

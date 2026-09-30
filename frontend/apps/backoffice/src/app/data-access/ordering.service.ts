@@ -1,6 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type {
+  CampaignUplift,
+  SalesMix,
   AgentSales,
   CheckoutFunnel,
   DashboardPeriod,
@@ -86,6 +88,22 @@ export class OrderingService {
 
   agentSales(period: DashboardPeriod): Observable<AgentSales> {
     return this.figure<AgentSales>('agent-sales', period);
+  }
+
+  /** Where the period's sales came from and what they were (R-9, D-7). */
+  mix(period: DashboardPeriod): Observable<SalesMix> {
+    return this.figure<SalesMix>('mix', period);
+  }
+
+  /**
+   * A campaign's days against its baseline (R-9, D-7). Dates in, figures out:
+   * the window is Pricing's, read from the campaign calendar, and Ordering is
+   * asked with it.
+   */
+  uplift(from: string, to: string, category: string | null): Observable<CampaignUplift> {
+    let params = new HttpParams().set('from', from).set('to', to);
+    if (category) params = params.set('category', category);
+    return this.http.get<CampaignUplift>(`${this.baseUrl}/api/dashboard/uplift`, { params });
   }
 
   private figure<T>(name: string, period: DashboardPeriod): Observable<T> {

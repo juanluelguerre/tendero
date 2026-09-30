@@ -24,7 +24,9 @@ public sealed class SalesSeriesHandlerTests
         public Task<IReadOnlyList<Order>> OrdersInAsync(IReadOnlyCollection<OrderStatus> statuses, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<Cart>> CartsStartedAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<IReadOnlyList<ReturnRequest>> ReturnsOpenOrChangedSinceAsync(DateTimeOffset since, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<IReadOnlySet<CustomerId>> CustomersWhoOrderedBeforeAsync(IReadOnlyCollection<CustomerId> customers, DateTimeOffset before, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<DateTimeOffset?> FirstLiveOrderAtAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
+        public Task<IReadOnlySet<CustomerId>> CustomersWhoOrderedBeforeAsync(IReadOnlyCollection<CustomerId> customers, DateTimeOffset before, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlySet<CustomerId>>(new HashSet<CustomerId>());
     }
 
     [Fact]

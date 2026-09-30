@@ -27,6 +27,12 @@ export type ReservationRow = Schemas['ReservationView'];
 
 export type StockList = Schemas['ListStockResult'];
 
+/** The stock as the dashboard reads it: coverage at the shop's pace and sell-through (R-9, D-7). */
+export type StockHealth = Schemas['StockHealth'];
+export type SkuCoverage = Schemas['SkuCoverage'];
+export type SkuSellThrough = Schemas['SkuSellThrough'];
+export type WarehouseCoverage = Schemas['WarehouseCoverage'];
+
 /** The counted row, flat, so the grid can replace the one it is showing. */
 export type CountedStock = Schemas['CountStockResponse'];
 

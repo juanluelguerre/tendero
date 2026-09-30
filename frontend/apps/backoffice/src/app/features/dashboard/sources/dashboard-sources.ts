@@ -2,15 +2,24 @@ import { inject, Injectable } from '@angular/core';
 import type {
   AgentDenialsSummary,
   AgentSales,
+  CampaignUplift,
+  CategoryList,
   CheckoutFunnel,
+  ManagedCampaignView,
   OperationsSummary,
+  SalesMix,
   SalesSeries,
   SalesSummary,
+  SearchStatus,
+  StockHealth,
   StockList,
 } from '@tendero/shared-api';
 import { type Observable, shareReplay } from 'rxjs';
 import { AccountsService } from '../../../data-access/accounts.service';
+import { CatalogService } from '../../../data-access/catalog.service';
 import { InventoryService } from '../../../data-access/inventory.service';
+import { PricingService } from '../../../data-access/pricing.service';
+import { SearchService } from '../../../data-access/search.service';
 import { type DashboardPeriod, OrderingService } from '../../../data-access/ordering.service';
 
 /**
@@ -25,6 +34,9 @@ export class DashboardSources {
   private readonly ordering = inject(OrderingService);
   private readonly accounts = inject(AccountsService);
   private readonly inventory = inject(InventoryService);
+  private readonly search = inject(SearchService);
+  private readonly catalog = inject(CatalogService);
+  private readonly pricing = inject(PricingService);
   private readonly kept = new Map<string, Observable<unknown>>();
   private keptAt = Number.NaN;
 
@@ -55,6 +67,32 @@ export class DashboardSources {
   /** What to restock, by Inventory's own rule: read by the stock widget and by what is waiting for you. */
   stock(culture: string, at: number): Observable<StockList> {
     return this.shared(`stock:${culture}`, at, () => this.inventory.stock(culture, 'Restock'));
+  }
+
+  mix(period: DashboardPeriod, at: number): Observable<SalesMix> {
+    return this.shared(`mix:${period}`, at, () => this.ordering.mix(period));
+  }
+
+  stockHealth(period: DashboardPeriod, at: number): Observable<StockHealth> {
+    return this.shared(`stockHealth:${period}`, at, () => this.inventory.stockHealth(period));
+  }
+
+  uplift(from: string, to: string, category: string | null, at: number): Observable<CampaignUplift> {
+    return this.shared(`uplift:${from}:${to}:${category ?? ''}`, at, () => this.ordering.uplift(from, to, category));
+  }
+
+  /** The categories' names in the reader's language, for the rows by category. */
+  categories(culture: string, at: number): Observable<CategoryList> {
+    return this.shared(`categories:${culture}`, at, () => this.catalog.categories(culture));
+  }
+
+  /** The campaign calendar, Pricing's: the window a campaign's baseline is asked for. */
+  campaigns(at: number): Observable<ManagedCampaignView[]> {
+    return this.shared('campaigns', at, () => this.pricing.campaigns());
+  }
+
+  searchStatus(at: number): Observable<SearchStatus> {
+    return this.shared('searchStatus', at, () => this.search.status());
   }
 
   private shared<T>(key: string, at: number, read: () => Observable<T>): Observable<T> {

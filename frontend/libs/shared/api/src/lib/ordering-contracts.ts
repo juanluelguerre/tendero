@@ -124,3 +124,11 @@ export type CheckoutFunnel = Schemas['CheckoutFunnel'];
 export type AgentSales = Schemas['AgentSales'];
 export type AgentSalesRow = Schemas['AgentSalesRow'];
 export type OrderMandateSummary = Schemas['OrderMandateSummary'];
+/** Where the period's sales came from and what they were: channel and category (R-9, D-7). */
+export type SalesMix = Schemas['SalesMix'];
+export type ChannelSales = Schemas['ChannelSales'];
+export type CategorySales = Schemas['CategorySales'];
+export type OrderChannel = Schemas['OrderChannel'];
+/** A campaign's days against the same weekday over the four weeks before it (R-9, D-7). */
+export type CampaignUplift = Schemas['CampaignUplift'];
+export type UpliftDay = Schemas['UpliftDay'];

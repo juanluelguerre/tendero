@@ -616,7 +616,8 @@
         "up": "sube",
         "down": "baja",
         "flat": "sin cambios"
-      }
+      },
+      "unitsPerOrder": "Unidades por pedido"
     },
     "bestSellers": {
       "title": "Más vendidos",
@@ -634,7 +635,10 @@
       "people": "Personas",
       "agents": "Agentes",
       "byAgents": "de los pedidos, por agentes",
-      "revenueShare": "{{share}} de las ventas llegó por agentes"
+      "revenueShare": "{{share}} de las ventas llegó por agentes",
+      "agentsBy": "Agentes: {{mcp}} por MCP · {{ucp}} por UCP",
+      "unrecorded": "{{count}} pedidos anteriores no tienen canal registrado y quedan fuera",
+      "nothingRecorded": "No se vendió nada por un canal registrado en este periodo."
     },
     "salesByDay": {
       "current": {
@@ -672,7 +676,19 @@
         "within": "Dentro del objetivo del {{target}}",
         "near": "Cerca del objetivo del {{target}}",
         "outside": "Por encima del objetivo del {{target}}"
-      }
+      },
+      "rate": {
+        "cancellation": "Tasa de cancelación",
+        "defect": "Pedidos con incidencia",
+        "lateShipment": "Envíos con retraso"
+      },
+      "count": {
+        "cancellation": "{{count}} cancelados",
+        "defect": "{{count}} con incidencia",
+        "lateShipment": "{{count}} enviados tarde"
+      },
+      "noData": "Sin datos",
+      "apart": "{{count}} enviados antes de registrarse esto, no se cuentan"
     },
     "returns": {
       "title": "Devoluciones",
@@ -693,7 +709,15 @@
       "restock": "Por reponer",
       "soldOut": "Agotado",
       "lowest": "Los más bajos primero",
-      "available": "quedan {{count}}"
+      "available": "quedan {{count}}",
+      "soon": "Se agotan en menos de 14 días",
+      "noSales": "Sin ventas en 4 semanas",
+      "closest": "Los más cerca de agotarse",
+      "covers": "{{days}} días · quedan {{available}}",
+      "pace": "Al ritmo de las últimas cuatro semanas.",
+      "byWarehouse": "Cobertura mediana, cada almacén por sí solo",
+      "warehouseDays": "{{code}}: {{days}} días",
+      "warehouseNoSales": "{{code}}: sin ventas"
     },
     "funnel": {
       "title": "Checkout",
@@ -713,7 +737,8 @@
       "newCustomers": "Nuevos",
       "returningCustomers": "Recurrentes",
       "nobody": "Nadie ha comprado en este periodo.",
-      "noVisits": "Las visitas no se cuentan aquí: viven en la pila de observabilidad, de la que esta página no depende."
+      "noVisits": "Las visitas no se cuentan aquí: viven en la pila de observabilidad, de la que esta página no depende.",
+      "byDay": "Compradores por día"
     },
     "agentSales": {
       "title": "Qué compran los agentes",
@@ -725,7 +750,8 @@
       "shareOfRevenue": "Parte de las ventas",
       "mandated": "Con mandato",
       "rehearsals": "Ensayos",
-      "ordersCount": "{{count}} pedidos"
+      "ordersCount": "{{count}} pedidos",
+      "byDay": "Lo que compran los agentes, por día"
     },
     "refusals": {
       "title": "Qué les ha rechazado la tienda",
@@ -762,6 +788,66 @@
       "support": "{{value}} % de respaldo",
       "lowStock": "Por reponer",
       "available": "quedan {{count}}"
+    },
+    "byCategory": {
+      "title": "Por categoría",
+      "loading": "Cargando las categorías…",
+      "failed": "No se pudieron cargar las categorías.",
+      "nothingSold": "No se vendió nada en este periodo.",
+      "others": "Otras",
+      "uncategorised": "Sin categoría registrada",
+      "lines": "Lo que vendió cada línea, antes del envío y los descuentos."
+    },
+    "sellThrough": {
+      "title": "Rotación",
+      "loading": "Cargando…",
+      "failed": "No se pudieron cargar estas cifras.",
+      "moves": "Lo que se mueve",
+      "sits": "Lo que no sale",
+      "soldLeft": "{{sold}} vendidas · quedan {{left}}",
+      "nothingSold": "No se vendió nada en este periodo."
+    },
+    "campaigns": {
+      "title": "Campañas",
+      "toCampaigns": "Campañas",
+      "loading": "Cargando la campaña…",
+      "failed": "No se pudo medir la campaña.",
+      "none": "No hay ninguna campaña en marcha ni terminada todavía.",
+      "sold": "Vendido",
+      "baseline": "Referencia",
+      "uplift": "{{change}} sobre la referencia",
+      "byDay": "Vendido frente a la referencia, por día",
+      "noBaseline": "Menos de cuatro semanas de historia: no hay referencia con la que medir.",
+      "estimate": "Una estimación, no una prueba: el mismo día de la semana en las cuatro semanas antes de empezar.",
+      "phase": {
+        "Upcoming": "próxima",
+        "Running": "en marcha",
+        "Over": "terminada"
+      }
+    },
+    "searchStatus": {
+      "title": "Búsqueda",
+      "loading": "Cargando…",
+      "failed": "No se pudo leer el estado.",
+      "checking": "Comprobando cada etapa…",
+      "whole": "Las búsquedas responden completas.",
+      "degraded": "Las búsquedas responden, con menos.",
+      "since": "desde {{at}}",
+      "stage": {
+        "Words": "Palabras",
+        "Meaning": "Significado",
+        "Reranking": "Reordenación"
+      },
+      "state": {
+        "Up": "Activa",
+        "Down": "Caída",
+        "Off": "Apagada"
+      },
+      "means": {
+        "Words": "Sin palabras no hay búsqueda: el índice no responde.",
+        "Meaning": "Las búsquedas responden solo por palabras.",
+        "Reranking": "Los resultados no se reordenan por relevancia."
+      }
     }
   },
   "agents": {

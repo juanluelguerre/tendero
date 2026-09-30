@@ -1,0 +1,40 @@
+<article class="widget panel" *transloco="let t; prefix: 'dashboard.campaigns'">
+  <header class="widget__head">
+    <h2 class="widget__title">{{ t('title') }}</h2>
+    <a class="widget__link" routerLink="/campaigns">{{ t('toCampaigns') }}</a>
+  </header>
+
+  @if (store.loading()) {
+    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
+  } @else if (store.failed()) {
+    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
+  } @else if (!store.campaign()) {
+    <p class="muted widget__state">{{ t('none') }}</p>
+  } @else if (store.uplift.value(); as figures) {
+    <!-- The separator inside the text: whitespace between two elements is not kept. -->
+    <p class="widget__sub"><strong>{{ name() }}</strong><span class="muted"> · {{ t('phase.' + store.campaign()!.phase) }}</span></p>
+    <dl class="facts">
+      <div class="fact">
+        <dt>{{ t('sold') }}</dt>
+        <dd class="numeric fact__value">{{ money(figures.sold) }}</dd>
+      </div>
+      @if (figures.hasBaseline && figures.baseline !== null) {
+        <div class="fact">
+          <dt>{{ t('baseline') }}</dt>
+          <dd class="numeric fact__value">{{ money(figures.baseline) }}</dd>
+          @if (uplift(); as change) {
+            <dd class="muted fact__note">{{ t('uplift', { change: change }) }}</dd>
+          }
+        </div>
+      }
+    </dl>
+    @if (!figures.hasBaseline) {
+      <p class="muted widget__note">{{ t('noBaseline') }}</p>
+    } @else if (chart(); as data) {
+      <div class="at-m">
+        <backoffice-bar-chart [data]="data" layout="columns" [format]="money" [caption]="t('byDay')" />
+      </div>
+    }
+    <p class="muted widget__note">{{ t('estimate') }}</p>
+  }
+</article>

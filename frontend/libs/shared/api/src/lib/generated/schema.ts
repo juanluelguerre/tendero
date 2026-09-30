@@ -260,6 +260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetStockHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/inventory/stock": {
         parameters: {
             query?: never;
@@ -452,6 +468,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/uplift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetCampaignUplift"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/checkout-sessions/{id}/handoff": {
         parameters: {
             query?: never;
@@ -540,6 +572,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["ListCampaigns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/search-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetSearchStatus"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1012,6 +1060,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/mix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetSalesMix"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/checkout/shipping-options": {
         parameters: {
             query?: never;
@@ -1330,6 +1394,18 @@ export interface components {
         CampaignScope: "Shop" | "Category";
         /** @enum {unknown} */
         CampaignStatus: "Draft" | "Scheduled" | "Ended";
+        CampaignUplift: {
+            currency: string;
+            timeZone: string;
+            hasBaseline: boolean;
+            /** Format: double */
+            sold: number;
+            /** Format: double */
+            baseline: null | number;
+            /** Format: double */
+            uplift: null | number;
+            days: components["schemas"]["UpliftDay"][];
+        };
         CampaignView: {
             code: string;
             name: string;
@@ -1369,6 +1445,13 @@ export interface components {
             expiresAt: string;
             lines: components["schemas"]["CartLineView"][];
         };
+        CategorySales: {
+            categoryCode: null | string;
+            /** Format: int32 */
+            units: number;
+            /** Format: double */
+            revenue: number;
+        };
         CategoryStep: {
             code: string;
             name: string;
@@ -1383,6 +1466,13 @@ export interface components {
         };
         ChangeAgentTrustRequest: {
             trust: components["schemas"]["AgentTrust"];
+        };
+        ChannelSales: {
+            channel: null | components["schemas"]["OrderChannel"];
+            /** Format: int32 */
+            orders: number;
+            /** Format: double */
+            revenue: number;
         };
         CheckoutFunnel: {
             period: components["schemas"]["DashboardPeriod"];
@@ -1660,7 +1750,27 @@ export interface components {
             refunded: number;
             /** Format: double */
             returnRate: number;
+            /** Format: int32 */
+            defects: number;
+            /** Format: double */
+            defectRate: null | number;
+            /** Format: double */
+            defectTarget: number;
+            defectStanding: null | string;
+            /** Format: int32 */
+            lateShipments: number;
+            /** Format: int32 */
+            shippedCounted: number;
+            /** Format: int32 */
+            shippedBeforeMoments: number;
+            /** Format: double */
+            lateShipmentRate: null | number;
+            /** Format: double */
+            lateShipmentTarget: number;
+            lateShipmentStanding: null | string;
         };
+        /** @enum {unknown} */
+        OrderChannel: "Web" | "Mcp" | "Ucp" | null;
         OrderDetail: {
             order: components["schemas"]["OrderView"];
             returns: components["schemas"]["ReturnView"][];
@@ -2116,6 +2226,15 @@ export interface components {
             units: number;
             /** Format: double */
             averageOrderValue: number;
+            /** Format: double */
+            unitsPerOrder: number;
+        };
+        SalesMix: {
+            period: components["schemas"]["DashboardPeriod"];
+            currency: string;
+            byChannel: components["schemas"]["ChannelSales"][];
+            unrecorded: components["schemas"]["ChannelSales"];
+            byCategory: components["schemas"]["CategorySales"][];
         };
         SalesPoint: {
             /** Format: date-time */
@@ -2126,6 +2245,14 @@ export interface components {
             orders: number;
             /** Format: int32 */
             units: number;
+            /** Format: int32 */
+            agentOrders: number;
+            /** Format: double */
+            agentRevenue: number;
+            /** Format: int32 */
+            newCustomers: number;
+            /** Format: int32 */
+            returningCustomers: number;
         };
         SalesSeries: {
             period: components["schemas"]["DashboardPeriod"];
@@ -2198,6 +2325,11 @@ export interface components {
             facets?: null | components["schemas"]["SearchFacet"][];
         };
         /** @enum {unknown} */
+        SearchStage: "Words" | "Meaning" | "Reranking";
+        SearchStatus: {
+            stages: components["schemas"]["StageStatus"][];
+        };
+        /** @enum {unknown} */
         SeriesStep: "Hour" | "Day";
         SetCartLineRequest: {
             /** Format: int32 */
@@ -2225,12 +2357,30 @@ export interface components {
         };
         /** @enum {unknown} */
         SimilarityRanking: "Rule" | "Embeddings";
+        SkuCoverage: {
+            sku: string;
+            /** Format: int32 */
+            available: number;
+            /** Format: double */
+            perDay: number;
+            /** Format: double */
+            days: number;
+        };
         SkuDescriptionView: {
             sku: string;
             productCode: string;
             productName: string;
             variantLabel: null | string;
             slug: string;
+        };
+        SkuSellThrough: {
+            sku: string;
+            /** Format: int32 */
+            sold: number;
+            /** Format: int32 */
+            left: number;
+            /** Format: double */
+            rate: number;
         };
         SpecCell: {
             source: string;
@@ -2273,11 +2423,35 @@ export interface components {
             evidence: components["schemas"]["SpecEvidence"];
         };
         /** @enum {unknown} */
+        StageState: "Up" | "Down" | "Off";
+        StageStatus: {
+            stage: components["schemas"]["SearchStage"];
+            state: components["schemas"]["StageState"];
+            /** Format: date-time */
+            since: string;
+            reason: null | string;
+        };
+        /** @enum {unknown} */
         StockFilter: "Restock" | "SoldOut" | "All";
         StockFilterCount: {
             filter: components["schemas"]["StockFilter"];
             /** Format: int32 */
             count: number;
+        };
+        StockHealth: {
+            period: components["schemas"]["DashboardPeriod"];
+            /** Format: int32 */
+            toRestock: number;
+            /** Format: int32 */
+            soldOut: number;
+            /** Format: int32 */
+            underTwoWeeks: number;
+            /** Format: int32 */
+            noSales: number;
+            warehouses: components["schemas"]["WarehouseCoverage"][];
+            closest: components["schemas"]["SkuCoverage"][];
+            fastest: components["schemas"]["SkuSellThrough"][];
+            slowest: components["schemas"]["SkuSellThrough"][];
         };
         StockRowView: {
             sku: string;
@@ -2320,6 +2494,16 @@ export interface components {
         TelemetryConfiguration: {
             adapter: string;
         };
+        UpliftDay: {
+            /** Format: date-time */
+            start: string;
+            /** Format: double */
+            sold: number;
+            /** Format: double */
+            baseline: null | number;
+            future: boolean;
+            partial: boolean;
+        };
         VariantAxisRequest: {
             code: string;
             options: string[];
@@ -2358,6 +2542,11 @@ export interface components {
             code: string;
             /** Format: date-time */
             at: string;
+        };
+        WarehouseCoverage: {
+            warehouseCode: string;
+            /** Format: double */
+            medianDays: null | number;
         };
         /** @enum {unknown} */
         WithdrawOutcome: "Withdrawn" | "AlreadyDraft" | "Archived" | "NotFound";
@@ -2805,6 +2994,28 @@ export interface operations {
             };
         };
     };
+    GetStockHealth: {
+        parameters: {
+            query?: {
+                period?: "Day" | "Week" | "Month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockHealth"];
+                };
+            };
+        };
+    };
     ListStock: {
         parameters: {
             query?: {
@@ -3193,6 +3404,39 @@ export interface operations {
             };
         };
     };
+    GetCampaignUplift: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                category?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignUplift"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                };
+            };
+        };
+    };
     HandOffCheckoutSession: {
         parameters: {
             query?: never;
@@ -3352,6 +3596,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListCampaignsResult"];
+                };
+            };
+        };
+    };
+    GetSearchStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchStatus"];
                 };
             };
         };
@@ -4283,6 +4547,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AgentSales"];
+                };
+            };
+        };
+    };
+    GetSalesMix: {
+        parameters: {
+            query?: {
+                period?: "Day" | "Week" | "Month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalesMix"];
                 };
             };
         };

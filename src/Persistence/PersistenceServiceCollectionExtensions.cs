@@ -62,6 +62,8 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IOrderReader, EfOrderReader>();
         services.AddScoped<IAgentActivity, EfAgentActivity>();
         services.AddScoped<IShopHistory, EfShopHistory>();
+        // The pace Inventory reads for coverage and sell-through (R-9, D-7).
+        services.AddScoped<ISalesPace, EfSalesPace>();
         services.AddScoped<ICartRepository, EfCartRepository>();
         services.AddScoped<ICheckoutSessionRepository, EfCheckoutSessionRepository>();
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();

@@ -604,6 +604,40 @@
         }
       }
     },
+    "/api/dashboard/stock": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetStockHealth",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockHealth"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/inventory/stock": {
       "get": {
         "tags": [
@@ -1145,6 +1179,63 @@
         }
       }
     },
+    "/api/dashboard/uplift": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetCampaignUplift",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CampaignUplift"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/checkout-sessions/{id}/handoff": {
       "get": {
         "tags": [
@@ -1347,6 +1438,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ListCampaignsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/search-status": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSearchStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchStatus"
                 }
               }
             }
@@ -2754,6 +2865,40 @@
         }
       }
     },
+    "/api/dashboard/mix": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetSalesMix",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesMix"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/checkout/shipping-options": {
       "post": {
         "tags": [
@@ -3980,6 +4125,53 @@
           "Ended"
         ]
       },
+      "CampaignUplift": {
+        "required": [
+          "currency",
+          "timeZone",
+          "hasBaseline",
+          "sold",
+          "baseline",
+          "uplift",
+          "days"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "hasBaseline": {
+            "type": "boolean"
+          },
+          "sold": {
+            "type": "number",
+            "format": "double"
+          },
+          "baseline": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "uplift": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpliftDay"
+            }
+          }
+        }
+      },
       "CampaignView": {
         "required": [
           "code",
@@ -4136,6 +4328,30 @@
           }
         }
       },
+      "CategorySales": {
+        "required": [
+          "categoryCode",
+          "units",
+          "revenue"
+        ],
+        "type": "object",
+        "properties": {
+          "categoryCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "CategoryStep": {
         "required": [
           "code",
@@ -4193,6 +4409,34 @@
         "properties": {
           "trust": {
             "$ref": "#/components/schemas/AgentTrust"
+          }
+        }
+      },
+      "ChannelSales": {
+        "required": [
+          "channel",
+          "orders",
+          "revenue"
+        ],
+        "type": "object",
+        "properties": {
+          "channel": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OrderChannel"
+              }
+            ]
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -5168,7 +5412,17 @@
           "openReturns",
           "openReturnsByReason",
           "refunded",
-          "returnRate"
+          "returnRate",
+          "defects",
+          "defectRate",
+          "defectTarget",
+          "defectStanding",
+          "lateShipments",
+          "shippedCounted",
+          "shippedBeforeMoments",
+          "lateShipmentRate",
+          "lateShipmentTarget",
+          "lateShipmentStanding"
         ],
         "type": "object",
         "properties": {
@@ -5226,8 +5480,66 @@
           "returnRate": {
             "type": "number",
             "format": "double"
+          },
+          "defects": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "defectRate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "defectTarget": {
+            "type": "number",
+            "format": "double"
+          },
+          "defectStanding": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lateShipments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shippedCounted": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shippedBeforeMoments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lateShipmentRate": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "lateShipmentTarget": {
+            "type": "number",
+            "format": "double"
+          },
+          "lateShipmentStanding": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
+      },
+      "OrderChannel": {
+        "enum": [
+          "Web",
+          "Mcp",
+          "Ucp",
+          null
+        ]
       },
       "OrderDetail": {
         "required": [
@@ -6939,7 +7251,8 @@
           "revenue",
           "orders",
           "units",
-          "averageOrderValue"
+          "averageOrderValue",
+          "unitsPerOrder"
         ],
         "type": "object",
         "properties": {
@@ -6958,6 +7271,43 @@
           "averageOrderValue": {
             "type": "number",
             "format": "double"
+          },
+          "unitsPerOrder": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "SalesMix": {
+        "required": [
+          "period",
+          "currency",
+          "byChannel",
+          "unrecorded",
+          "byCategory"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/DashboardPeriod"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "byChannel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChannelSales"
+            }
+          },
+          "unrecorded": {
+            "$ref": "#/components/schemas/ChannelSales"
+          },
+          "byCategory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategorySales"
+            }
           }
         }
       },
@@ -6966,7 +7316,11 @@
           "start",
           "revenue",
           "orders",
-          "units"
+          "units",
+          "agentOrders",
+          "agentRevenue",
+          "newCustomers",
+          "returningCustomers"
         ],
         "type": "object",
         "properties": {
@@ -6983,6 +7337,22 @@
             "format": "int32"
           },
           "units": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "agentOrders": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "agentRevenue": {
+            "type": "number",
+            "format": "double"
+          },
+          "newCustomers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "returningCustomers": {
             "type": "integer",
             "format": "int32"
           }
@@ -7275,6 +7645,27 @@
           }
         }
       },
+      "SearchStage": {
+        "enum": [
+          "Words",
+          "Meaning",
+          "Reranking"
+        ]
+      },
+      "SearchStatus": {
+        "required": [
+          "stages"
+        ],
+        "type": "object",
+        "properties": {
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageStatus"
+            }
+          }
+        }
+      },
       "SeriesStep": {
         "enum": [
           "Hour",
@@ -7378,6 +7769,32 @@
           "Embeddings"
         ]
       },
+      "SkuCoverage": {
+        "required": [
+          "sku",
+          "available",
+          "perDay",
+          "days"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "available": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "perDay": {
+            "type": "number",
+            "format": "double"
+          },
+          "days": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "SkuDescriptionView": {
         "required": [
           "sku",
@@ -7405,6 +7822,32 @@
           },
           "slug": {
             "type": "string"
+          }
+        }
+      },
+      "SkuSellThrough": {
+        "required": [
+          "sku",
+          "sold",
+          "left",
+          "rate"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "sold": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "left": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rate": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -7596,6 +8039,40 @@
           }
         }
       },
+      "StageState": {
+        "enum": [
+          "Up",
+          "Down",
+          "Off"
+        ]
+      },
+      "StageStatus": {
+        "required": [
+          "stage",
+          "state",
+          "since",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/SearchStage"
+          },
+          "state": {
+            "$ref": "#/components/schemas/StageState"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "StockFilter": {
         "enum": [
           "Restock",
@@ -7616,6 +8093,65 @@
           "count": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "StockHealth": {
+        "required": [
+          "period",
+          "toRestock",
+          "soldOut",
+          "underTwoWeeks",
+          "noSales",
+          "warehouses",
+          "closest",
+          "fastest",
+          "slowest"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/DashboardPeriod"
+          },
+          "toRestock": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "soldOut": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "underTwoWeeks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noSales": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warehouses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WarehouseCoverage"
+            }
+          },
+          "closest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkuCoverage"
+            }
+          },
+          "fastest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkuSellThrough"
+            }
+          },
+          "slowest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkuSellThrough"
+            }
           }
         }
       },
@@ -7739,6 +8275,39 @@
         "properties": {
           "adapter": {
             "type": "string"
+          }
+        }
+      },
+      "UpliftDay": {
+        "required": [
+          "start",
+          "sold",
+          "baseline",
+          "future",
+          "partial"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sold": {
+            "type": "number",
+            "format": "double"
+          },
+          "baseline": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "future": {
+            "type": "boolean"
+          },
+          "partial": {
+            "type": "boolean"
           }
         }
       },
@@ -7887,6 +8456,25 @@
           "at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "WarehouseCoverage": {
+        "required": [
+          "warehouseCode",
+          "medianDays"
+        ],
+        "type": "object",
+        "properties": {
+          "warehouseCode": {
+            "type": "string"
+          },
+          "medianDays": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },

@@ -521,6 +521,8 @@ classDiagram
         +LocalizedText? VariantLabel
         +string? ImageId
         +int Quantity
+        +string? CategoryCode
+        +string? CategoryPath
     }
     class CartStatus {
         <<enumeration>>
@@ -586,6 +588,9 @@ classDiagram
         +string? ContactEmail
         +OrderMandate? Mandate
         +AgentId? PlacedBy
+        +OrderChannel? Channel
+        +DateTimeOffset? ConfirmedAt
+        +DateTimeOffset? ShippedAt
         +OrderDiscount[] Discounts
         +OrderTax[] Taxes
         +OrderPayment? Payment
@@ -593,6 +598,12 @@ classDiagram
         +OrderLine[] Lines
         +Money LinesTotal
         +Money Total
+    }
+    class OrderChannel {
+        <<enumeration>>
+        Web
+        Mcp
+        Ucp
     }
     class OrderDiscount {
         <<record>>
@@ -610,6 +621,8 @@ classDiagram
         +string? ImageId
         +Money UnitPrice
         +int Quantity
+        +string? CategoryCode
+        +string? CategoryPath
         +Money Total
     }
     class OrderMandate {

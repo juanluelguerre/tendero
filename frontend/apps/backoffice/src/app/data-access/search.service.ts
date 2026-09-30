@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { SearchEvaluation } from '@tendero/shared-api';
+import type { SearchEvaluation, SearchStatus } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
@@ -14,6 +14,11 @@ import { Observable } from 'rxjs';
 export class SearchService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = inject(API_BASE_URL);
+
+  /** Each stage of search, its state and since when, from the checks the API keeps (R-9, D-7). */
+  status(): Observable<SearchStatus> {
+    return this.http.get<SearchStatus>(`${this.baseUrl}/api/dashboard/search-status`);
+  }
 
   /** Every golden query, asked of lexical and of hybrid. Seconds, not milliseconds. */
   evaluation(): Observable<SearchEvaluation> {
