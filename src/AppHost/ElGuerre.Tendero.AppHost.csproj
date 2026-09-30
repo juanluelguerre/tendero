@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="13.5.3" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.6.0" />
 
   <!-- "dotnet run" on this project brings everything up: the infrastructure in
        Docker and both .NET services, with the Aspire dashboard in front. -->

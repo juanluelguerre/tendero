@@ -155,10 +155,10 @@ internal sealed class QdrantProductVectors(
             if (!string.IsNullOrWhiteSpace(category))
                 filter &= Conditions.MatchKeyword(PointFields.CategoryCodes, category);
 
-            var points = await client.SearchAsync(
+            var points = await client.QueryAsync(
                 model.CollectionName,
-                Checked(query[0].Vector),
-                filter,
+                query: Checked(query[0].Vector).ToArray(),
+                filter: filter,
                 limit: (ulong)limit,
                 payloadSelector: new[] { PointFields.ProductId, PointFields.ModelId, PointFields.ModelRevision },
                 cancellationToken: ct);
@@ -186,7 +186,7 @@ internal sealed class QdrantProductVectors(
         });
 
     /// <summary>
-    /// Qdrant's recommendation over the viewed product's own point, narrowed to
+    /// Qdrant's nearest points to the viewed product's own point, narrowed to
     /// the candidates' points: the score is the collection's distance — cosine —
     /// between the two stored vectors, so nothing is embedded again. A point
     /// written by another model is refused here as in a search.
@@ -200,9 +200,11 @@ internal sealed class QdrantProductVectors(
             if (candidateIds.Count == 0)
                 return new Dictionary<string, double>(StringComparer.Ordinal);
 
-            var points = await client.RecommendAsync(
+            // A query by the viewed product's point id: Qdrant looks its vector up
+            // and ranks by it, which is the recommendation over one positive.
+            var points = await client.QueryAsync(
                 model.CollectionName,
-                positive: [PointOf(productId, culture)],
+                query: PointOf(productId, culture),
                 filter: Conditions.HasId([.. candidateIds.Select(id => PointOf(id, culture))]),
                 limit: (ulong)candidateIds.Count,
                 payloadSelector: new[] { PointFields.ProductId, PointFields.ModelId, PointFields.ModelRevision },

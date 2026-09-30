@@ -167,9 +167,9 @@ var vectors = string.Equals(builder.Configuration["Tendero:Vectors"], "true",
     StringComparison.OrdinalIgnoreCase);
 
 // Qdrant through its Aspire integration: MIT, and its only Aspire dependency is
-// exactly the Aspire.Hosting 13.5.3 the AppHost resolves — the check Keycloak
+// exactly the Aspire.Hosting 13.6.0 the AppHost resolves — the check Keycloak
 // passed and Elasticsearch did not (ADR 0006). It pins the server image to
-// v1.18.0 and brings Qdrant.Client 1.18.1 with it, which is the version Search
+// v1.18.0 and brings Qdrant.Client 1.19.0 with it, which is the version Search
 // has to use too.
 //
 // The API key is committed for the reason the Keycloak password is: a generated
