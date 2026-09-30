@@ -30,6 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # **The runner's disk ran out.** From 2026-09-30 the test step died with
+      # "No space left on device": the solution's build, the Testcontainers images
+      # (Elasticsearch, Qdrant, Text Embeddings Inference and its model) and the
+      # test outputs outgrew the fourteen gigabytes a hosted runner leaves free.
+      # The runner carries toolchains nobody here uses — Android, GHC, Swift,
+      # CodeQL, about twenty-five gigabytes — and deleting them takes seconds.
+      - name: Free the runner's disk
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup /usr/share/swift /opt/hostedtoolcache/CodeQL
+          df -h /
+
+
       # global.json pins 11.0.0 with allowPrerelease; `dotnet-quality: preview`
       # is what lets the installer actually resolve a preview SDK
       # (initial-plan.md §8).
@@ -81,6 +94,12 @@ jobs:
       # UPDATE_DOMAIN_MODEL left set would rewrite it and pass.
       - name: The committed domain model is unchanged
         run: git diff --exit-code -- docs/domain-model.md
+
+      # What the job used, so the next time the disk runs short there is a number
+      # to compare instead of a guess.
+      - name: Disk left
+        if: always()
+        run: df -h /
 
   search-quality:
     name: Search relevance gate (NDCG@10)
@@ -246,6 +265,19 @@ jobs:
     needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v7
+
+      # **The runner's disk ran out.** From 2026-09-30 the test step died (the backend job's) with
+      # "No space left on device": the solution's build, the Testcontainers images
+      # (Elasticsearch, Qdrant, Text Embeddings Inference and its model) and the
+      # test outputs outgrew the fourteen gigabytes a hosted runner leaves free.
+      # The runner carries toolchains nobody here uses — Android, GHC, Swift,
+      # CodeQL, about twenty-five gigabytes — and deleting them takes seconds.
+      - name: Free the runner's disk
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup /usr/share/swift /opt/hostedtoolcache/CodeQL
+          df -h /
+
 
       - uses: actions/setup-dotnet@v6
         with:
