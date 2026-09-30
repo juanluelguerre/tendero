@@ -1,50 +1,79 @@
 # AppHost
 
-`dotnet run --project src/AppHost` levanta toda la pila y abre el dashboard de
-Aspire en http://localhost:15130.
+`dotnet run --project src/AppHost` brings up the whole stack and opens the Aspire
+dashboard at http://localhost:15130. What each resource is for, which switch
+starts it and which switches to use for which job are in the root
+[README](../../README.md#the-local-stack-aspire); this page keeps the reasons
+behind how `AppHost.cs` declares them.
 
-## Qué arranca hoy
+## Declared always, started by a switch
 
-| Recurso | Puerto | Para qué |
-|---|---|---|
-| **Postgres 18** (`tendero-db`) | 35432 | Fuente de verdad. Con volumen: el catálogo importado sobrevive a un reinicio. |
-| **Elasticsearch 9.5.0** | 39200 | Búsqueda léxica BM25, un índice por idioma. Contenedor persistente y **sin volumen** a propósito: el índice es una proyección que `POST /api/search/reindex` reconstruye (ADR 0012). |
-| **api** | 5130 | Los endpoints de los slices (Carter), el documento OpenAPI y, en Development, el emisor OIDC de desarrollo bajo `/dev-issuer`. |
-| **workers** | — | Procesador del outbox, creación de índices, migraciones. |
-| **storefront** · **backoffice** | 4200 · 4201 | Las dos apps Angular, servidas por Vite con la URL de la API inyectada: el proxy de desarrollo es el único sitio con un `localhost` de reserva. |
+Every resource is in the dashboard on every run, including the ones that do not
+start: a resource created only behind an environment variable is invisible to
+whoever launches from Visual Studio or Rider, and a resource nobody can see is
+one nobody uses. The optional ones carry `WithExplicitStart`, so a *Start*
+button is one click away.
 
-Y cuatro recursos **declarados siempre y arrancados a demanda** (`WithExplicitStart`,
-botón *Start* en el dashboard), porque un recurso creado sólo detrás de una
-variable de entorno es invisible para quien lanza desde Visual Studio o Rider:
+What a switch adds is the wiring. `Tendero__Vectors`, `Tendero__Knowledge`,
+`Tendero__Observability` and `Tendero__Issuer=keycloak` decide, at AppHost start,
+both whether their containers start **and** whether the API and the workers are
+handed their addresses — one value, so the two cannot disagree. Starting a
+container by hand gives you its own UI and wires nothing: each service's
+configuration was fixed when it started.
 
-| Recurso | Puerto | Para qué |
-|---|---|---|
-| **Keycloak** | 38443 | El segundo emisor OIDC, con el realm de `keycloak/` importado. La API lo usa cuando `Authentication:Authority` apunta a él — dos variables de entorno, ningún flag de compilación (`P7-8`). Con volumen y persistente. |
-| **pgweb** | 35433 | Mirar la base de datos sin un gigabyte de consola. |
-| **elasticvue** | 39201 | Mirar los índices. Corre en el navegador y habla con Elasticsearch directamente, así que el CORS de Elasticsearch nombra su origen y no `*`. |
-| **observability** | 33000 (Grafana) · 34317/34318 (OTLP) · 38027 (Faro) | La pila de Grafana (`grafana/otel-lgtm`: colector, Prometheus, Tempo, Loki). Con `Tendero__Observability=true` —o el perfil `https-observability`— arranca sola y los servicios exportan a su colector, que lo reenvía **también** al dashboard de Aspire: el modo completo añade, no quita (ADR 0036). Arrancarla a mano desde el dashboard no redirige nada: el destino de la telemetría se fija al arrancar cada servicio. Datos en el volumen `tendero-observability-data`; Grafana sin login. |
+Nothing waits for an optional layer (invariant 8). A missing or slow vector
+layer is a search that degrades to lexical, a missing model is claims proposed by
+rules alone, a missing collector is a few seconds of dropped spans — never a
+service that refuses to start.
 
-Todos los puertos fijos están **fuera de su valor por defecto** a propósito: 5432
-y 9200 son los servicios de trabajo de alguien. Y todos los contenedores llevan
-la etiqueta de proyecto de Compose, para que Docker Desktop los agrupe bajo
-`tendero` en vez de listar ocho contenedores sueltos.
+## Ports, volumes and limits
 
-El primer arranque descarga las imágenes (unos 2,5 GB entre Postgres y
-Elasticsearch); a partir de ahí es instantáneo.
+- **Fixed ports, off their defaults, below 49152.** A person connects to these
+  (a database client, a bookmark, a saved elasticvue cluster), so they cannot
+  change per run; 5432 and 9200 are somebody's work services; and Windows
+  reserves blocks inside 49152–65535 that move on every restart, which once left
+  the stack unable to start. The numbers kept their tails (55432 became 35432).
+- **Named volumes.** `WithDataVolume()` with no name hashes the AppHost's path,
+  and renaming the folder once left the catalogue attached to nothing.
+  Elasticsearch and Qdrant have no volume on purpose: both are projections
+  rebuilt from Postgres, and a stale vector volume would keep points from a model
+  revision that may no longer be the configured one.
+- **Every container has a memory and CPU limit** sized from a measurement — the
+  peak under load plus a margin — with the figure beside it in `AppHost.cs`.
+- **One group in Docker Desktop.** Every container carries the Compose project
+  label `tendero`. Use the group to see them; start and stop them from the Aspire
+  dashboard, because Docker Desktop's project actions assume a compose file that
+  does not exist.
 
-## Qué NO arranca, y por qué
+## The frontends are not reinstalled on every start
 
-Ollama y Redis están en la arquitectura objetivo (`docs/architecture.md`) pero
-**no se declaran aquí todavía**: ninguna línea de código los lee. Entran en el
-mismo PR que los consuma, como entraron la capa vectorial (fase 8, detrás de
-`Tendero__Vectors`) y la pila de Grafana (fase 9b, detrás de
-`Tendero__Observability`). Un flag protege comportamiento que existe, y hasta
-entonces no existe (el artículo *The feature flag you did not need*).
+Both Angular apps are Vite resources with `.WithNpm(install: false)`. With the
+installer on, two `npm install`s over one `node_modules` contended for the same
+lock: the backoffice answered after 312 s, where the dev server alone starts in
+4. `npm ci` in `frontend/` is a prerequisite, like `dotnet restore`; the
+`*-installer` resources stay listed and unstarted.
 
-## Elasticsearch no es una integración de Aspire
+## Elasticsearch is not an Aspire integration
 
-Es un `AddContainer` normal a propósito: el paquete de hosting publicado no
-declara licencia y fija el cliente Elastic 8.x, que chocaría con el 9.x que usa
-`ElGuerre.Tendero.Search`. Keycloak, en cambio, sí es la integración oficial:
-pasó las dos comprobaciones que aquella no pasó (`P7-5`). Está razonado en
-`docs/adr/0006-dependency-baseline.md`.
+It is a plain `AddContainer` on purpose: the published hosting package declared
+no licence and pinned the 8.x Elastic client, which would clash with the 9.x
+that `ElGuerre.Tendero.Search` uses. Keycloak, Postgres and Qdrant, on the other
+hand, are the official integrations, each checked at its exact version — MIT, and
+depending on exactly the `Aspire.Hosting` the AppHost resolves. The reasoning is
+in `docs/adr/0006-dependency-baseline.md`.
+
+## What is not declared yet
+
+Ollama and Redis are in the target architecture (`docs/architecture.md`) and not
+here: no line of code reads them. They arrive with the change that consumes
+them, as the vector layer (phase 8), the Grafana stack (phase 9b) and the claims
+models (phase 10) did.
+
+## Upgrading Aspire
+
+The SDK in `ElGuerre.Tendero.AppHost.csproj` and the `Aspire.Hosting.*` versions
+in `Directory.Packages.props` move together. Check each package's licence and
+its Aspire dependency at the exact version (ADR 0006), and what each integration
+pins: `Aspire.Hosting.Qdrant` pins `Qdrant.Client`, and Search must use exactly
+that version or `-warnaserror` fails on the downgrade. `Aspire.Hosting.Keycloak`
+is only ever published as a preview.

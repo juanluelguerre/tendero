@@ -6,6 +6,7 @@
   <a href="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml"><img src="https://github.com/juanluelguerre/tendero/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
   <a href="docs/search-evaluation.md"><img src="https://img.shields.io/badge/NDCG%4010-0.692%20es%20%C2%B7%200.748%20en-D85A30" alt="Search quality"></a>
   <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-11%20(preview)-512BD4?logo=dotnet" alt=".NET 11"></a>
+  <a href="https://aspire.dev"><img src="https://img.shields.io/badge/Aspire-13.6-512BD4" alt="Aspire 13.6"></a>
   <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" alt="Angular 22"></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white" alt="TypeScript 6.0"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
@@ -33,8 +34,8 @@
 customer, recommends what actually fits, and remembers what you bought last
 time. This project builds that shopkeeper as software — an AI-native ecommerce
 platform in **.NET 11 + Aspire** and **Angular 22**, with a fully self-hosted AI
-stack (Text Embeddings Inference, Qdrant, Elasticsearch, and Ollama once a
-generative model arrives) that runs on Docker at zero cost.
+stack (Text Embeddings Inference, Qdrant, Elasticsearch and llama.cpp) that runs
+on Docker at zero cost.
 
 Most AI demos are Python notebooks. Tendero explores what **production-grade AI
 engineering looks like in .NET**: hybrid search with regression tests, an
@@ -45,9 +46,21 @@ code for a blog series on AI architecture.
 **Home page: [tendero.elguerre.com](https://tendero.elguerre.com)** — what Tendero is for, a
 41-second film, and its architecture at two zoom levels.
 
-### What runs today
+**Contents** ·
+[What runs today](#what-runs-today) ·
+[Architecture](#architecture-at-a-glance) ·
+[Getting started](#getting-started) ·
+[The local stack](#the-local-stack-aspire) ·
+[The API contract](#the-api-contract-from-c-to-typescript) ·
+[Everyday commands](#everyday-commands) ·
+[Project structure](#project-structure) ·
+[Testing](#testing-strategy) ·
+[Roadmap](#roadmap)
 
-Phases 0–11 of [the board](docs/delivery-plan.md) are in. That means the shop works end to end, on a hundred-product
+## What runs today
+
+Phases 0–11 of [the board](docs/delivery-plan.md) are in, and so is most of a
+redesign of both frontends. The shop works end to end on a hundred-product
 catalogue; a browser agent can shop in it, and an external agent can read its
 catalogue and **buy** over MCP or UCP:
 
@@ -59,32 +72,33 @@ catalogue and **buy** over MCP or UCP:
 > 4 → 2. Deliver it, send one back, and receiving puts the shelf at 3 before a
 > euro moves.
 
-**1,274 backend tests (1,253 green, 21 skipped with a reason), 142 frontend tests
-and 20 browser specs**, with lexical search relevance at **NDCG@10 0.692 es / 0.748
-en** on a golden set of 52 queries per culture across eight query types, and a
-CI gate that fails a regression. Earlier figures — 0.927 / 0.935, and 0.943 /
-0.937 over six products — were measured on smaller golden sets and are not
-comparable; [docs/search-evaluation.md](docs/search-evaluation.md) says why.
+- **Search.** Lexical search (BM25, one index per language) is the permanent
+  fallback. **Hybrid search** — `bge-m3` embeddings in Qdrant, fused with BM25
+  and reranked — degrades to it byte for byte, and with the reranker scores
+  0.831 es / 0.843 en against lexical's **0.692 / 0.748**, on a golden set of 52
+  queries per culture that a CI gate holds. It stays off by default: it still
+  shows ten products for queries the shop has nothing for, and the reranker
+  needs a GPU. [docs/search-evaluation.md](docs/search-evaluation.md) has the
+  numbers and why the older ones are not comparable.
+- **Product claims with a source** (phase 10). A small local model reads each
+  description and proposes what it states, every claim quoting the exact words
+  it rests on and scored for support by an NLI model. A person approves or
+  rejects, and only then does the catalogue change.
+- **Agents at the till** (phase 11). An agent opens a UCP checkout session it
+  owns; with AP2 negotiated, the shop signs the checkout and the platform signs a
+  mandate once the person consents. The shop verifies it, charges exactly what
+  was approved, and applies its own rules on top: suspended agents place
+  nothing, a cap per order follows how far the shop trusts the agent, and there
+  is a ceiling on orders per hour.
+- **The redesign.** The backoffice is organised by job — a side rail, one
+  index-and-pane pattern for every list, a command palette — and its home is a
+  dashboard of the whole shop at a glance: tabs per area, a full-screen wall,
+  and every figure computed by the context that owns it (ADR 0048). The
+  storefront gained its department menu, campaigns and a wider layout.
 
-The first half of the AI work is built. **Hybrid search** — `bge-m3` embeddings
-in Qdrant, fused with BM25 and reranked — degrades to lexical search byte for
-byte, and with the reranker scores 0.831 es / 0.843 en; it stays off by default,
-because it still shows ten products for queries the shop has nothing for, and the
-reranker needs a GPU. The **MCP server** and **UCP's catalogue capability** ship
-too, read-only. And **product claims with a source** are in (phase 10): a
-small local model reads each description and proposes what it states, every claim
-quoting the exact words it rests on and scored for support by an NLI model; a
-person approves or rejects, and only then does the catalogue change. The product
-page shows each spec with where it came from, a comparison says *"sin dato"* rather
-than guess, and two MCP tools give agents the same answer. **Agents at the till** are phase 11. An agent opens a UCP checkout session it
-owns. With AP2 negotiated, the shop signs every checkout, and the platform signs a
-mandate over it once the person consents. The shop verifies the mandate, charges
-exactly what was approved and freezes that scope onto the order. On top of the
-person's limits it applies its own: suspended agents place nothing, a cap per
-order depends on how far the shop trusts the agent, and there is a ceiling on orders
-per hour. A test credential rehearses the whole flow without moving money, and
-the backoffice's home is a dashboard that shows what agents bought and what they
-were refused. What is left is the backoffice copilot (phase 12).
+**2,030 backend tests (2,007 green, 23 skipped with a reason), 555 frontend
+tests and 62 browser tests** (2026-09-30). What is next is the backoffice
+copilot (phase 12).
 
 ## Architecture at a glance
 
@@ -112,7 +126,8 @@ flowchart TB
 ```
 
 Dotted edges are designed and not built; the phase each one lands in is on the
-arrow. What is solid runs today.
+arrow. What is solid runs today. The C4 view of the same system, held to the
+AppHost by a script, is in [docs/c4/](docs/c4/README.md).
 
 Key principles:
 
@@ -132,19 +147,18 @@ Key principles:
   connector, the `fake` payment provider and a development OIDC issuer are the
   defaults — clone and run, no sign-ups.
 - **Three agent surfaces, three trust models.** WebMCP runs in the shopper's
-  tab and inherits their session (shipped, phase 6); the MCP server's own tools
-  and UCP's catalogue are read-only and open (shipped, phase 9); UCP + AP2 is server to
-  server with its own principal and a signed mandate (shipped, phase 11, ADRs 0039,
-  0040 and 0022). Not alternatives — each answers a different
-  question.
+  tab and inherits their session; the MCP server's own tools and UCP's catalogue
+  are read-only and open; UCP + AP2 is server to server with its own principal
+  and a signed mandate (ADRs 0039, 0040 and 0022). Not alternatives — each
+  answers a different question.
 - **The identity provider is a port.** The API only ever validates tokens
   (OIDC discovery, JWKS, signed JWT); a development issuer signs them on a fresh
-  clone and Keycloak does with two environment variables, behind one contract
-  suite (ADR 0017).
-- **Lexical search (BM25) is the permanent fallback.** AI layers degrade
-  gracefully; the store never stops searching.
-- **Search quality is a CI gate**: a curated golden set is scored with NDCG@10
-  on every PR, and a regression fails it.
+  clone and Keycloak does with one switch, behind one contract suite (ADR 0017).
+- **Every AI feature has a non-AI path, and the degradation is tested.** Lexical
+  search answers when the vector layer is down; claims come from rules when no
+  model runs; the shop is unchanged in a browser without WebMCP.
+- **OpenAPI is the single source of the API's shape** — the frontends' types are
+  generated from it, never written by hand ([below](#the-api-contract-from-c-to-typescript)).
 - **Multilanguage by design** (es/en): per-culture indexes with native
   analyzers, `LocalizedText` everywhere user-facing, and an explicit `?culture=`
   that beats `Accept-Language` because an agent has no browser locale
@@ -152,6 +166,7 @@ Key principles:
 
 Full plan: [docs/initial-plan.md](docs/initial-plan.md) ·
 Architecture: [docs/architecture.md](docs/architecture.md) ·
+Domain model, generated from the code: [docs/domain-model.md](docs/domain-model.md) ·
 ADRs: [docs/adr/](docs/adr/) ·
 Design system: [design/DESIGN.md](design/DESIGN.md) ·
 Glossary: [docs/glossary.md](docs/glossary.md) — NDCG@10, BM25, UCP, the outbox
@@ -165,7 +180,11 @@ and the rest of the terms this README uses without stopping to define them
 |---|---|
 | **.NET 11 SDK, preview** | `global.json` pins a prerelease floor. `11.0.100` plus `allowPrerelease` resolves *nothing* on a preview-only machine: roll-forward only rolls up, and a preview sorts below its own release. |
 | **Node 24** (`.nvmrc`) | Angular 22 requires `^22.22.3 \|\| ^24.15.0 \|\| >=26.0.0`. Node 22.21 fails. |
-| **Docker** | Postgres and Elasticsearch, roughly 2.5 GB on the first run. Keycloak, pgweb and elasticvue are declared too and start on demand from the dashboard, and so is the vector layer: Qdrant, and Text Embeddings Inference serving `bge-m3` — 2.2 GB of weights on its first start; it runs on your NVIDIA GPU when Docker can reach one (about 1.3 GB of VRAM) and on the CPU otherwise (about 3.7 GiB of RAM). `Tendero__Vectors=true` starts it with everything else; without it, search stays lexical. |
+| **Docker** | Every backing service is a container. The default stack pulls Postgres and Elasticsearch, about 2.5 GB the first time; the optional layers below pull more, and each says how much. Docker Desktop on Windows needs at least 4 GB for its WSL2 backend: Elasticsearch alone asks for a 1 GB heap. |
+| **An NVIDIA GPU** — optional | Only for search by meaning at full speed and for the reranker. Without one, the embeddings run on the CPU and the reranker stays off; nothing else changes. |
+
+The Aspire CLI is **not** required: the AppHost is an ordinary project, started
+with `dotnet run` or F5.
 
 The repository runs on **Linux and Windows**. Nothing in the code assumes a
 platform — every path is built with `Path.Combine` — but the setup commands
@@ -197,164 +216,335 @@ the script, and Rider and Visual Studio keep resolving the release SDK next to
 it. winget installs the same build into `C:\Program Files\dotnet` beside the
 10.x SDKs, so `global.json` picks it up everywhere, including the IDE.
 
-Docker Desktop on Windows needs at least 4 GB allocated to its WSL2 backend:
-Elasticsearch alone asks for a 1 GB heap.
-
-### Run everything
+### Run it
 
 ```bash
-git clone https://github.com/{owner}/tendero.git
+git clone https://github.com/juanluelguerre/tendero.git
 cd tendero
-(cd frontend && npm ci)
+(cd frontend && npm ci)          # once, and again when package-lock.json changes
+dotnet tool restore              # EF tools and Stryker, pinned
 
 dotnet run --project src/AppHost
 ```
 
-One command brings up Postgres, Elasticsearch, the API, the outbox worker and
-**both Angular apps**, with the Aspire dashboard in front. The frontends get the
-API address injected, so no URL is hardcoded anywhere in application code.
-Every fixed port is deliberately off its default — 5432 and 9200 are somebody's
-work services — and Keycloak, pgweb and elasticvue are declared but only start
-when you press *Start* on the dashboard (`src/AppHost/README.md`).
+The `npm ci` is a prerequisite in the way `dotnet restore` is: the AppHost does
+not install packages on every start, because two installers over one
+`node_modules` took five minutes per start where the dev servers alone take four
+seconds.
 
-**Two observability modes.** By default every service reports to the Aspire
-dashboard. `Tendero__Observability=true` — or the `https-observability` launch
-profile in Visual Studio — adds the Grafana stack: the services report to its
-collector, which keeps Tempo, Prometheus and Loki and forwards everything to the
-Aspire dashboard too, so nothing you had goes away (ADR 0036). The image is about
-0.9 GB on first pull.
+The Aspire dashboard opens at **http://localhost:15130** (the console prints a
+login link with its token). The workers apply the migrations and create the
+search indexes at start; when the API is healthy, open:
 
 | | |
 |---|---|
 | Storefront | http://localhost:4200 |
 | Backoffice | http://localhost:4201 |
+| API · OpenAPI document | http://localhost:5130 · `/openapi/v1.json` |
 | Aspire dashboard | http://localhost:15130 |
-| Grafana, with `Tendero__Observability=true` | http://localhost:33000 |
-| Postgres · Elasticsearch | 35432 · 39200 |
 
-Then import the sample catalogue and search it — through the storefront's own
-dev-server proxy, which is the same path the browser uses:
+In Visual Studio or Rider, start **`ElGuerre.Tendero.AppHost`** with the `https`
+profile, or `https-observability` for the Grafana stack.
+
+### First steps in the shop
+
+A fresh database has no products. Import the sample catalogue and publish it:
 
 ```bash
 curl -X POST http://localhost:4200/api/catalog/import \
      -H 'Content-Type: application/json' -d '{"source":"seed"}'
-
-curl "http://localhost:4200/api/search?q=zapatillas%20running&culture=es"
 ```
 
-Imported products land as `Draft`, and **only `Active` is indexed**: importing
-never publishes, because the review stage is the point. Publish them from the
-backoffice review queue at http://localhost:4201/review, or over HTTP:
+Imported products land as `Draft`, and **only `Active` products are indexed and
+sold**: importing never publishes, because the review stage is the point
+(ADR 0012). Publish them from the backoffice's review queue, signed in as the
+shopkeeper.
+
+The development issuer signs a token for any of its seeded identities — no
+passwords, only on Development:
+
+| Who | Role | Where |
+|---|---|---|
+| `juanlu` | shopkeeper | the backoffice |
+| `ana` | shopper | the storefront's account and orders |
+| `claude-desktop` · `claude-desktop-test` | agent (the second one places test orders) | MCP and UCP, see [docs/mcp.md](docs/mcp.md) |
+
+If search ever comes back empty — Elasticsearch runs **without a volume** on
+purpose, so a recreated container loses its documents while Postgres keeps the
+catalogue — rebuild the index from Postgres instead of reimporting:
 
 ```bash
-# what is waiting for review
-curl "http://localhost:4201/api/catalog/products?status=draft&culture=es"
-
-curl -X POST http://localhost:4201/api/catalog/products/{id}/publish
+curl -X POST http://localhost:4200/api/search/reindex
 ```
 
-If the index ever comes back empty — Elasticsearch runs without a volume on
-purpose, so recreating its container loses the documents while Postgres keeps
-the catalogue — rebuild it from Postgres instead of reimporting:
+To give the shop some life, start **`traffic-sim`** from the dashboard:
+simulated shoppers in headless browsers and agents over MCP and UCP, from one
+declared model and one seed (ADR 0037).
 
-```bash
-curl -X POST http://localhost:4200/api/search/reindex   # {"indexed":100,"removed":0,…}
+## The local stack (Aspire)
+
+`src/AppHost/AppHost.cs` declares every process and container Tendero runs on.
+**Everything is declared always**, so the dashboard lists the whole system even
+from an IDE that sets no variables; what changes is what **starts by itself**.
+Each optional layer has one switch, read when the AppHost starts, and that
+switch decides both things at once: whether the containers start, and whether
+the API and the workers are handed their addresses. Starting a container by hand
+from the dashboard gives you its own UI, but wires nothing to it — restart with
+the switch for that.
+
+```mermaid
+flowchart LR
+    subgraph always [Starts by default]
+        direction TB
+        storefront([storefront · :4200])
+        backoffice([backoffice · :4201])
+        api[api · :5130]
+        workers[workers]
+        postgres[(postgres · tendero-db · :35432)]
+        elasticsearch[(elasticsearch · :39200)]
+    end
+
+    subgraph vectors [Tendero__Vectors=true]
+        direction TB
+        qdrant[(qdrant · :36333)]
+        embeddings[embeddings · bge-m3 · :38081]
+        reranker[reranker · GPU only · :38082]
+    end
+
+    subgraph knowledge [Tendero__Knowledge=true]
+        direction TB
+        extractorModel[extractor-model · prepares the GGUF once]
+        extractor[extractor · Qwen3.5-4B · :38083]
+        support[support · NLI · :38084]
+    end
+
+    subgraph ops [Other switches]
+        direction TB
+        keycloak[keycloak · :38443 · Tendero__Issuer=keycloak]
+        observability[observability · Grafana :33000 · Tendero__Observability=true]
+        pgweb[pgweb · :35433 · Tendero__Tools=true]
+        elasticvue[elasticvue · :39201 · Tendero__Tools=true]
+    end
+
+    trafficSim[traffic-sim · always by hand]
+
+    storefront --> api
+    backoffice --> api
+    api --> postgres
+    api --> elasticsearch
+    workers --> postgres
+    workers --> elasticsearch
+    api -.-> qdrant
+    api -.-> embeddings
+    api -.-> reranker
+    workers -.-> qdrant
+    workers -.-> embeddings
+    extractorModel -.-> extractor
+    workers -.-> extractor
+    workers -.-> support
+    api -.-> keycloak
+    api -.->|OTLP| observability
+    workers -.->|OTLP| observability
+    pgweb -.-> postgres
+    elasticvue -.-> elasticsearch
+    trafficSim -.-> storefront
+    trafficSim -.-> api
 ```
 
-### The search quality gate
+Solid edges are always wired; dotted ones only under their switch. **Nothing
+waits for an optional layer**: a vector layer or a model that is missing or
+slow means search degrades to lexical and claims come from rules, never a
+service that refuses to start.
+
+### What each resource is for
+
+| Resource | Image / project | Starts | What it is for |
+|---|---|---|---|
+| **postgres** · `tendero-db` | `postgres:18.3` | always | The source of truth for every context. A named volume (`tendero-postgres-data`), so the catalogue, orders and customers survive a restart. |
+| **elasticsearch** | `elasticsearch:9.5.0` | always | Lexical search, one index per culture with native analyzers. A plain container, not an Aspire integration: that package declared no licence and pinned the 8.x client (ADR 0006). No volume: the index is a projection rebuilt from Postgres. |
+| **api** | `ElGuerre.Tendero.Api` | always | Every endpoint (Carter vertical slices), the OpenAPI document, the MCP server at `/mcp`, UCP's discovery and checkout, and in Development the OIDC development issuer. |
+| **workers** | `ElGuerre.Tendero.Workers` | always | Migrates the database and creates the search indexes at start, then drains the outbox: the stock saga, indexing, vectors and claims. Every side effect runs here, never inside a request. |
+| **storefront** · **backoffice** | Vite dev servers (`npm run serve:*`) | always | The two Angular apps, with the API's address injected by Aspire into their proxy — no URL is written in application code. The `*-installer` children stay unstarted on purpose (see `npm ci` above). |
+| **qdrant** | `qdrant/qdrant` | `Tendero__Vectors` | The vector store for search by meaning and for similar products. |
+| **embeddings** | Text Embeddings Inference, `bge-m3` pinned by revision | `Tendero__Vectors` | Turns product texts and queries into vectors. On the GPU when Docker can reach one (1.3 GB of VRAM), on the CPU otherwise (3.7 GiB of RAM); 2.2 GB of weights on its first start. `Tendero__Inference__Device=auto\|cpu\|gpu` overrides the choice. |
+| **reranker** | TEI, `bge-reranker-v2-m3` | `Tendero__Vectors` **and** a GPU | Reorders the head of a hybrid search. On a CPU it takes ten seconds against a budget of 800 ms, so there it never starts. |
+| **extractor-model** | `llama.cpp:full` | `Tendero__Knowledge` | Runs once: downloads Qwen3.5-4B at its checked revision, converts and quantizes it into a volume, and verifies its SHA-256. About 9 GB downloaded the first time. |
+| **extractor** | `llama.cpp:server` | `Tendero__Knowledge` | Reads each product's description and proposes claims, each quoting its evidence. About 30 s a product on a CPU — a worker's pace. |
+| **support** | TEI, an NLI model | `Tendero__Knowledge` | Scores how well the quoted evidence supports each claim, in 0.07 s. |
+| **keycloak** | `keycloak:26.6` | `Tendero__Issuer=keycloak` | The real identity provider, with the committed realm in `keycloak/` imported. With the switch the API trusts it instead of the development issuer — one configuration value, no code path (ADR 0017). Admin console: `admin` / `admin`. |
+| **observability** | `grafana/otel-lgtm` | `Tendero__Observability` | Grafana, Tempo, Prometheus and Loki behind one collector, which forwards everything to the Aspire dashboard too: the full mode adds, never takes away (ADR 0036). Grafana without sign-in at http://localhost:33000. About 0.9 GB. |
+| **pgweb** | `sosedoff/pgweb` | `Tendero__Tools` | A SQL box over the database, already connected. |
+| **elasticvue** | `cars10/elasticvue` | `Tendero__Tools` | A browser for the search indexes. |
+| **traffic-sim** | `ElGuerre.Tendero.TrafficSim` | by hand, from the dashboard | Simulated shoppers and agents (ADR 0037). Reproducible from `Parameters:traffic-sim-seed`; a simulated day lasts an hour. |
+
+Every fixed port is deliberately **off its default** — 5432 and 9200 are
+somebody's work services — and below 49152, where Windows reserves ports that
+move on every restart. Every container carries a memory and CPU limit sized from
+a measurement, and a Compose label so Docker Desktop groups them under
+`tendero`. [src/AppHost/README.md](src/AppHost/README.md) has the reasons.
+
+### Which switches for which job
 
 ```bash
-docker run -d --name tendero-es -p 9200:9200 \
-  -e discovery.type=single-node -e xpack.security.enabled=false \
-  docker.elastic.co/elasticsearch/elasticsearch:9.5.0
-
-dotnet run --project tools/SearchEval          # report
-dotnet run --project tools/SearchEval -- --ci  # exits 1 below the thresholds
+dotnet run --project src/AppHost                                   # PowerShell: $env:Tendero__Vectors="true"; dotnet run …
+Tendero__Vectors=true dotnet run --project src/AppHost
 ```
 
-### Everything else
+| You want to… | Start with | Costs on first start |
+|---|---|---|
+| work on the shop, the backoffice or the API | nothing | ~2.5 GB of images |
+| work on search by meaning, similar products or ranking | `Tendero__Vectors=true` | 2.2 GB of weights; a GPU for the reranker |
+| work on product claims (phase 10) | `Tendero__Knowledge=true` | ~9 GB to prepare the model, 6 GB of RAM to serve it |
+| see traces, metrics and logs across a flow | `Tendero__Observability=true`, or the `https-observability` profile | ~0.9 GB |
+| try the real identity provider, or edit the realm | `Tendero__Issuer=keycloak` | ~0.5 GB; the API waits for Keycloak, about a minute |
+| look inside the database or the indexes | `Tendero__Tools=true`, or press *Start* on `pgweb` / `elasticvue` | small |
+| compare the two browser telemetry adapters | `Parameters:browser-telemetry=otel\|faro\|noop` | — |
 
-```bash
-dotnet build Tendero.slnx            # warnings become errors when CI is set
-                                     #   bash:       CI=true dotnet build …
-                                     #   PowerShell: $env:CI="true"; dotnet build …
-dotnet test Tendero.slnx             # unit, contract and architecture tests
-cd frontend && npx nx run-many -t lint test build
+The switches combine. With none of them, every AI stage is off and the shop runs
+on its non-AI paths — which is exactly what a default F5 should be.
+
+## The API contract: from C# to TypeScript
+
+**The API's shape has one source, and it is the running API.** No DTO is ever
+written twice: the C# records a slice returns define the OpenAPI document, the
+document is committed, and the frontends' TypeScript types are generated from it.
+Two tests, one on each side, make it impossible for the three to drift.
+
+```mermaid
+flowchart LR
+    A["C# record returned by a slice<br/>e.g. SalesMix"] -->|ASP.NET Core OpenAPI| B["the document the API serves<br/>/openapi/v1.json"]
+    B -->|OpenApiDocumentTests<br/>UPDATE_OPENAPI=1| C["docs/openapi/tendero.json<br/>committed"]
+    C -->|npm run generate:api-types<br/>openapi-typescript| D["libs/shared/api/.../generated/schema.ts<br/>committed, never edited"]
+    D -->|named per context| E["libs/shared/api<br/>export type SalesMix = Schemas['SalesMix']"]
+    E --> F["data-access services<br/>and stores in both apps"]
 ```
 
-The browser specs need the stack running and Chromium installed once:
+When you change anything a response returns, run the two commands in this order:
 
 ```bash
-cd frontend && npx playwright install chromium
-npx nx e2e storefront-e2e     # the shopper, and the browser agent
-npx nx e2e backoffice-e2e     # the shopkeeper
+UPDATE_OPENAPI=1 dotnet test tests/Api.Tests   # the API regenerates docs/openapi/tendero.json
+cd frontend && npm run generate:api-types       # the types follow the document
+```
+
+- **Without the first**, `OpenApiDocumentTests` fails: it boots the API in
+  process, asks it for its document and compares it with the committed one. CI
+  also asserts the file is unchanged after the tests, so a run with the variable
+  left set cannot rewrite it and pass.
+- **Without the second**, the frontend CI job regenerates the types and fails on
+  any difference.
+- **A type reaches a component through `libs/shared/api`**, which names each
+  schema once per context (`ordering-contracts.ts`, `search-contracts.ts`…).
+  Nobody imports from `generated/`, and nobody writes an interface that mirrors a
+  C# record.
+- **The same document backs UCP's capability schemas**, so an agent and a
+  browser read the same contract.
+
+To ask what an endpoint takes or returns, ask the document rather than reading
+the code — through its map, because the whole thing is large:
+
+```bash
+node tools/api-map.mjs                    # one line per operation
+node tools/api-map.mjs dashboard          # filtered by path, tag or operation id
+node tools/api-map.mjs --schema SalesMix  # one schema
+```
+
+Two limits worth knowing: an enum crosses the wire by name, never as a number
+(ADR 0043), and a strongly-typed id is flattened to a string before it leaves an
+endpoint. Authorization is not in the document — each Carter module states its
+policy, and `EndpointAuthorizationTests` holds every route to one.
+
+## Everyday commands
+
+```bash
+dotnet build -warnaserror Tendero.slnx         # warnings are errors, always
+dotnet test                                    # unit, property, contract, architecture, API
+dotnet test --filter Category=Integration      # Testcontainers: needs Docker, skips without it
+dotnet format --no-restore --verify-no-changes --severity error   # what CI checks
+
+cd frontend
+npx nx run-many -t lint test build             # boundaries, tokens, unit tests, builds
+npx playwright install chromium                # once
+npx nx e2e storefront-e2e                      # needs the stack up
+npx nx e2e backoffice-e2e
 ```
 
 `npx nx` when you type it, `nx` inside a `package.json` script — Nx is a local
-dependency, and the prefix is about who resolves the command. The reasoning is
-in [frontend/README.md](frontend/README.md).
+dependency, and the prefix is about who resolves the command
+([frontend/README.md](frontend/README.md)).
+
+Generated documents, each with its own regenerate-and-diff in CI:
+
+```bash
+UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # docs/domain-model.md
+node tools/c4.mjs              # docs/c4: validates the model against the AppHost, redraws it
+node tools/tracking-plan.mjs   # docs/telemetry: the events and the browser's event types
+```
+
+**The search quality gate** runs against a disposable Elasticsearch, never one
+you work with:
+
+```bash
+docker run -d --name tendero-es -p 39210:9200 \
+  -e discovery.type=single-node -e xpack.security.enabled=false \
+  docker.elastic.co/elasticsearch/elasticsearch:9.5.0
+
+dotnet run --project tools/SearchEval -- --elasticsearch http://localhost:39210        # report
+dotnet run --project tools/SearchEval -- --elasticsearch http://localhost:39210 --ci   # exits 1 below the thresholds
+```
+
+**Mutation testing** runs at every phase close, not per pull request:
+`dotnet tool run dotnet-stryker --config-file stryker-config.json
+--skip-version-check` from a project's folder ([docs/testing.md](docs/testing.md)).
 
 ## Project structure
 
 ```
 src/
-  AppHost/                 # Aspire orchestration
-  SharedKernel/            # Money, LocalizedText, Address, ids, AggregateRoot, CQRS
-  Catalog/                 # products, variants, attributes, categories, connectors
-  Pricing/                 # price lists, promotions, tax — references SharedKernel ONLY
-  Inventory/               # warehouses, stock, reservations — SharedKernel only too
-  Ordering/                # cart, checkout, orders, payments, returns, the stock saga
-  Accounts/                # customers and guests, the guest claim, the audit log's reader
-  Search/                  # Project Rastro: indexing, lexical and hybrid search, the answer
-  Knowledge/               # claims with source, support and approval (phase 10, ADR 0018)
-  Ucp/                     # UCP + MCP server for AI agents (phase 9; a README today)
-  DevIssuer/               # OIDC discovery, JWKS and signed tokens, Development only
-  Api/  Workers/           # composition roots: HTTP endpoints, outbox processor
-  Persistence/             # the only project that knows EF Core exists
+  AppHost/                 # Aspire: every resource, its switch and its limits
   ServiceDefaults/         # OTel, health checks, service discovery
+  SharedKernel/            # Money, LocalizedText, ids, AggregateRoot, CQRS, transition tables
+  Catalog/                 # products, variants, attributes, categories, connectors
+  Pricing/                 # price lists, promotions, campaigns, tax — SharedKernel only
+  Inventory/               # warehouses, stock, reservations — SharedKernel only too
+  Ordering/                # cart, checkout, orders, payments, returns, the stock saga, the dashboard's figures
+  Accounts/                # customers and guests, agents, the audit log's reader
+  Knowledge/               # claims with source, support and approval (ADR 0018)
+  Search/                  # lexical and hybrid search, indexing, vectors, search status
+  Mcp/  Ucp/               # the agent surfaces: MCP tools, UCP discovery and checkout, AP2
+  DevIssuer/               # OIDC discovery, JWKS and signed tokens, Development only
+  Api/  Workers/           # composition roots: HTTP endpoints, the outbox processor
+  Persistence/             # the only project that knows EF Core exists
 frontend/                  # Nx workspace
-  apps/storefront/         # light, roomy: home, search, product page, cart, checkout, orders, account
-  apps/backoffice/         # dense, dark: review, attributes, promotions, stock, orders, returns, audit
+  apps/storefront/         # light, roomy: home, search, product, cart, checkout, orders, account
+  apps/backoffice/         # dense, dark: dashboard, review, catalogue, promotions, stock, orders, returns, agents, audit
   apps/*-e2e/              # Playwright — the thinnest layer of the pyramid
-  libs/shared/             # tokens, ui, util, api, i18n, auth, agent, telemetry — boundaries enforced by lint
+  libs/shared/             # tokens, ui, util, api, i18n, auth, agent, telemetry, a11y
 keycloak/                  # the committed realm: users, roles and clients for a fresh clone
-brand/                     # logo, icons, brand guide
-design/                    # tokens.css — the single source of truth for four surfaces
-seed/                      # sample dataset (ABO-style schema, es/en)
-tools/SearchEval/          # quality gates: search (NDCG@10, recall), claims, support
-tools/TrafficSim/          # simulated shoppers and agents from a declared model (ADR 0037)
-landing-page/              # the landing and its film (Netlify) — private until the two repositories converge
-docs/                      # plan, architecture, ADRs, analysis, testing, blog
+brand/  design/            # logo and brand guide; tokens.css, the single source of every colour
+seed/                      # the sample catalogue and its prices, stock and campaigns (es/en)
+tools/                     # SearchEval (quality gates), TrafficSim, api-map, c4, tracking-plan
+docs/                      # board, architecture, ADRs, specs, OpenAPI, C4, testing, telemetry
 tests/                     # unit, contract, architecture, integration, API
 ```
 
-## Testing strategy
+Backend features are vertical slices under each context's `Features/`, and
+frontend features are folders by theme with a SignalStore for every state with a
+life of its own (ADR 0047).
 
-**783 backend tests, 61 frontend tests and 20 browser specs**, and the table
-below is what each layer is for. Only tools actually in the repository are
-listed: NSubstitute, Bogus and Verify are still prescribed by `docs/testing.md`
-and still absent, and Respawn was declined — a fresh database per test turned
-out cheaper than a reset.
+## Testing strategy
 
 | Layer | Tools | What it protects |
 |---|---|---|
 | Unit | xUnit v3 | Domain invariants and every transition table, walked in full |
 | Property-based | CsCheck | The promotion engine over thousands of generated carts — it found a real bug |
-| Contract | xUnit abstract suites | Every connector, allocation strategy, tax calculator, shipping rate, payment provider and identity issuer honours its port |
-| Architecture | NetArchTest.Rules | Domain never references infra; slices stay independent; `Pricing` and `Inventory` see only the SharedKernel |
-| Integration | Testcontainers | A real Postgres: the outbox drain, the migration baseline, and the commerce loop end to end |
+| Contract | xUnit abstract suites, UCP's JSON Schemas | UCP's answers against UCP's own schemas; every connector, allocation strategy, tax calculator, shipping rate, payment provider and identity issuer honours its port |
+| Architecture | NetArchTest.Rules | Domain never references infra; slices stay independent; `Pricing` and `Inventory` see only the SharedKernel; the Elasticsearch client stays in its adapter |
+| Integration | Testcontainers | A real Postgres, Elasticsearch and Qdrant: the outbox drain, the migrations, the commerce loop end to end |
 | API in process | `WebApplicationFactory` | The OpenAPI document equals the committed one; every endpoint states who may call it; every handler resolves; the OIDC contract against both issuers |
-| Frontend | vitest | The culture store, the agent tools and their degradation, and not one hex outside `design/tokens.css` across every stylesheet in the repo |
+| Frontend | Vitest | Stores, widgets, agent tools and their degradation, and not one hex outside `design/tokens.css` across every stylesheet in the repo |
 | Search quality | Golden set + NDCG@10 in CI | Relevance never regresses silently |
-| End-to-end | Playwright | The browser: the route guard, the token interceptor, and a table that never keeps its own copy of a state machine |
-
-```bash
-dotnet test                                   # unit, property, contract, architecture
-dotnet test --filter Category=Integration     # spins up containers
-dotnet run --project tools/SearchEval         # relevance report
-cd frontend && npx nx run-many -t lint test   # boundaries, tokens, unit tests
-npx nx e2e storefront-e2e backoffice-e2e      # needs the stack up
-```
+| End-to-end | Playwright | The browser: sign-in, the shopper's and the shopkeeper's paths, the browser agent, accessibility |
+| Mutation | Stryker.NET, and a hand mutation per new test | Each test fails when the code it guards is broken, not only when it is absent |
 
 More: [docs/testing.md](docs/testing.md) · [docs/search-evaluation.md](docs/search-evaluation.md)
 
@@ -369,23 +559,20 @@ deferred with its measured number — is
 | 0 | CI, OpenAPI contract, migrations, Testcontainers, the identity port | ✅ |
 | 1 | Variants: the indexed unit is the variant, the returned one the product | ✅ |
 | 2 | Localized attributes and taxonomy | ✅ **es 0.860 → 0.943, en 0.720 → 0.937**, measured over the first six products |
-| 3 | Price lists, promotions with combination rules, tax | ✅ 73 pricing tests |
+| 3 | Price lists, promotions with combination rules, tax | ✅ |
 | 4 | Inventory: two warehouses, reservations, the stock saga on the outbox | ✅ |
 | 5 | Cart, checkout, payments, returns, the product page | ✅ |
 | 6 | WebMCP in the storefront | ✅ the cheapest differentiator — the agent inherits the shopper's session |
-| 7 | Accounts, audit, and swapping the dev issuer for Keycloak | ✅ the swap was two environment variables; Token Exchange waits for phase 11 |
+| 7 | Accounts, audit, and swapping the dev issuer for Keycloak | ✅ the swap was two environment variables |
 | 8 | **Project Rastro**: embeddings, hybrid search, evals | ✅ built and degradable; hybrid + reranker beats lexical, and stays off by default |
-| 9 | Read-only MCP server and the UCP manifest | ✅ eight MCP tools; UCP's catalogue over MCP and REST, validated against UCP's own schemas |
-| 9b | Seeing it run: the Grafana stack behind a switch (Aspire kept), browser telemetry, a seeded traffic simulator | ✅ a tracking plan a test holds to the code; OpenTelemetry chosen over Faro on measured numbers |
-| 10 | Knowledge: product claims with source and confidence | ✅ **done** — nine models measured before one was chosen: Qwen3.5-4B extracts (precision 0.92, recall 0.80), an NLI model scores support; a review queue, approved claims reaching the catalogue through its own command, specs with source chips, comparisons that say "no data", `get_product_specs` and `compare_products` over MCP, and quality gates (rules in CI, the models at phase close) |
-| 11 | UCP transactional, AP2 and Know Your Agent | ✅ **the headline** — checkout over REST and MCP, AP2 mandates verified against terms the shop signed, the shop's own rules for agents, test orders, the backoffice dashboard |
+| 9 | Read-only MCP server and the UCP manifest | ✅ UCP's catalogue over MCP and REST, validated against UCP's own schemas |
+| 9b | Seeing it run: the Grafana stack behind a switch, browser telemetry, a seeded traffic simulator | ✅ a tracking plan a test holds to the code |
+| 10 | Knowledge: product claims with source and confidence | ✅ nine models measured before one was chosen; a review queue, specs with source chips, comparisons that say "no data" |
+| 11 | UCP transactional, AP2 and Know Your Agent | ✅ **the headline** — checkout over REST and MCP, AP2 mandates verified against terms the shop signed, the shop's own rules for agents, test orders |
+| R | The redesign: backoffice by job, storefront navigation, the dashboard | 🚧 measured against a baseline walkthrough |
 | 12 | **Steward**, the backoffice copilot, and the AI observability panel | 🔜 |
 | 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
 | 13 | Multimodal search and the kit solver | 🔜 |
-
-The numbering changed on 2026-09-02: `initial-plan.md` §7 had four phases, the
-review that produced `docs/analysis/` reordered the work by **what it evidences**
-rather than by what is cheap, and the board is the one that is maintained.
 
 ## Blog series
 
