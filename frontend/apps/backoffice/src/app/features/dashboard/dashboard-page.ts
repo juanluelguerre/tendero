@@ -11,6 +11,7 @@ import { DashboardRefresh } from './sources/dashboard-refresh';
 import { DashboardSources } from './sources/dashboard-sources';
 import { type DashboardTab, DashboardTabs } from './tabs/dashboard-tabs';
 import { provideDashboardWidgets } from './widgets/dashboard-widget-registry';
+import { BackofficeUsage } from '../../usage';
 import { FullScreen } from './full-screen';
 
 /** A minute, until R-10's live source replaces the clock. */
@@ -47,6 +48,7 @@ export class DashboardPage {
   private readonly culture = inject(CultureStore);
   private readonly wall = viewChild.required<ElementRef<HTMLElement>>('wall');
   private readonly injector = inject(Injector);
+  private readonly usage = inject(BackofficeUsage);
 
   protected readonly fullScreen = inject(FullScreen);
   protected readonly periods: readonly DashboardPeriod[] = ['Day', 'Week', 'Month'];
@@ -93,6 +95,8 @@ export class DashboardPage {
   }
 
   protected enterWall(): void {
+    // Does anybody put a tab on a monitor of its own? Which one is the view already counted.
+    this.usage.affordance('full_screen', 'tab');
     void this.fullScreen.enter(this.wall().nativeElement);
   }
 

@@ -4,6 +4,8 @@ import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
 import { type MonoTypeOperatorFunction, tap } from 'rxjs';
 
 export type BackofficeView = TrackedEvents['backoffice_view_opened']['view'];
+/** The screen an action is taken on: the dashboard as a whole, its tabs being views only. */
+export type ActionView = TrackedEvents['backoffice_action_taken']['view'];
 export type BackofficeAction = TrackedEvents['backoffice_action_taken']['action'];
 export type ActionOutcome = TrackedEvents['backoffice_action_taken']['outcome'];
 /** Where an action was pressed: the list's row, the pane beside it, or the page itself. */
@@ -12,20 +14,22 @@ export type Affordance = TrackedEvents['backoffice_affordance_used']['affordance
 export type AffordanceTarget = TrackedEvents['backoffice_affordance_used']['target'];
 
 const Views: readonly BackofficeView[] = [
-  'dashboard', 'review', 'catalogue', 'claims', 'attributes', 'search', 'promotions',
+  'dashboard', 'dashboard.sales', 'dashboard.operations', 'dashboard.growth', 'dashboard.agents', 'review', 'catalogue', 'claims', 'attributes', 'search', 'promotions',
   'campaigns', 'stock', 'orders', 'returns', 'agents', 'audit', 'variants',
 ];
 
 /**
  * The screen a URL is, by its route and never by an id in it:
- * `/products/0199…/variants` is `variants`. Null for anything that is not one of
- * the shopkeeper's screens (the sign-in door), which is not measured.
+ * `/products/0199…/variants` is `variants`, and a dashboard tab is its own view,
+ * `/dashboard/sales` is `dashboard.sales` (R-9: which tabs are watched). Null for
+ * anything that is not one of the shopkeeper's screens (the sign-in door), which
+ * is not measured.
  */
 export function viewOf(url: string): BackofficeView | null {
   const segments = url.split(/[?#]/)[0].split('/').filter(Boolean);
   if (segments[0] === 'products' && segments[2] === 'variants') return 'variants';
-  const first = (segments[0] ?? 'dashboard') as BackofficeView;
-  return Views.includes(first) ? first : null;
+  const view = (segments[0] === 'dashboard' && segments[1] ? `dashboard.${segments[1]}` : (segments[0] ?? 'dashboard')) as BackofficeView;
+  return Views.includes(view) ? view : null;
 }
 
 /** done when the server did it; refused when it said no (a 4xx: a rule, a transition); failed otherwise. */
@@ -41,8 +45,17 @@ export function outcomeOf(failure: unknown): ActionOutcome {
 @Injectable({ providedIn: 'root' })
 export class BackofficeUsage {
   private readonly telemetry = inject(Telemetry);
+  private lastPath: string | null = null;
 
+  /**
+   * A screen opened, once per route: the same path with another query — a
+   * dashboard's period, a list's filter — is the screen already open, not a
+   * second opening, and would count it twice.
+   */
   opened(url: string): void {
+    const path = url.split(/[?#]/)[0];
+    if (path === this.lastPath) return;
+    this.lastPath = path;
     const view = viewOf(url);
     if (view) this.telemetry.trackEvent('backoffice_view_opened', { view });
   }
@@ -57,7 +70,7 @@ export class BackofficeUsage {
    * pressed: pipe it onto the call that does it,
    * `this.catalog.publish(id).pipe(this.usage.reported('review', 'publish', 'row'))`.
    */
-  reported<T>(view: BackofficeView, action: BackofficeAction, via: ActionVia): MonoTypeOperatorFunction<T> {
+  reported<T>(view: ActionView, action: BackofficeAction, via: ActionVia): MonoTypeOperatorFunction<T> {
     return tap<T>({
       next: () => this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: 'done' }),
       error: (failure: unknown) => this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: outcomeOf(failure) }),

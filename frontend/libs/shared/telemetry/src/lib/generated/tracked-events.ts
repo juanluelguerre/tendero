@@ -102,12 +102,15 @@ export interface TrackedEvents {
   /**
    * The shopkeeper opened a backoffice screen (R-0 of the redesign). A staff event: sent by default under the shop's notice to staff, and never with who they are.
    *
+   * Dashboard tabs and the wall: Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own?
+   * Decides: A tab unopened for a month folds into the Overview or goes. If no tab is put on the screen whole in a month, the wall's density and its minute's refresh stay as they are and real time (R-10) is not built for walls.
+   *
    * Backoffice jobs: Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?
    * Decides: A job whose time does not fall after the redesign goes back to R-3; a job that is refused more than it is done points at a screen that invites the wrong action. The before and after are the redesign article's evidence.
    */
   readonly backoffice_view_opened: {
-    /** The screen, by its route; never an id in it. */
-    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
+    /** The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). */
+    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
   };
 
   /**
@@ -144,6 +147,9 @@ export interface TrackedEvents {
   /**
    * A staff member reached something through the command palette or a list shortcut rather than by pointing (the redesign's R-4.6), or narrowed a list by searching or filtering it (R-7.1). A staff event under the shop's notice (ADR 0041), never with who they are.
    *
+   * Dashboard tabs and the wall: Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own?
+   * Decides: A tab unopened for a month folds into the Overview or goes. If no tab is put on the screen whole in a month, the wall's density and its minute's refresh stay as they are and real time (R-10) is not built for walls.
+   *
    * Palette and list shortcuts: Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row?
    * Decides: R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3.
    *
@@ -151,10 +157,10 @@ export interface TrackedEvents {
    * Decides: If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count.
    */
   readonly backoffice_affordance_used: {
-    /** The palette (Ctrl K or /), j and k down a queue, or a list's search box and filter chips (R-7.1). */
-    readonly affordance: 'palette' | 'keys' | 'search' | 'filter';
+    /** The palette (Ctrl K or /), j and k down a queue, a list's search box and filter chips (R-7.1), or a dashboard tab put on the screen whole (R-9). */
+    readonly affordance: 'palette' | 'keys' | 'search' | 'filter' | 'full_screen';
     /** What it reached; never which one. */
-    readonly target: 'screen' | 'order' | 'product' | 'agent' | 'next' | 'previous' | 'stock';
+    readonly target: 'screen' | 'order' | 'product' | 'agent' | 'next' | 'previous' | 'stock' | 'tab';
   };
 
   /**

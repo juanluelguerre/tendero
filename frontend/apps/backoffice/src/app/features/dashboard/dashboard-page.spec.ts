@@ -11,6 +11,7 @@ import { DashboardPage } from './dashboard-page';
 import { DashboardRefresh } from './sources/dashboard-refresh';
 import { dashboardChildren } from './dashboard-routes';
 import { DASHBOARD_WIDGETS, type WidgetDefinition, type WidgetKey } from './widgets/dashboard-widgets';
+import { BackofficeUsage } from '../../usage';
 import { FullScreen } from './full-screen';
 import { English } from './widgets/widget-testing';
 
@@ -34,9 +35,11 @@ describe('the dashboard page', () => {
     enter: vi.fn(async () => active.set(true)),
     leave: vi.fn(async () => active.set(false)),
   };
+  const usage = { affordance: vi.fn() };
 
   afterEach(() => {
     active.set(false);
+    usage.affordance.mockClear();
     vi.useRealTimers();
   });
 
@@ -49,6 +52,7 @@ describe('the dashboard page', () => {
         { provide: API_BASE_URL, useValue: 'http://api' },
         provideRouter([{ path: 'dashboard', component: DashboardPage, children: dashboardChildren }]),
         { provide: FullScreen, useValue: fake },
+        { provide: BackofficeUsage, useValue: usage },
       ],
     });
     TestBed.overrideComponent(DashboardPage, { add: { providers: [{ provide: DASHBOARD_WIDGETS, useValue: Stubs }] } });
@@ -109,6 +113,18 @@ describe('the dashboard page', () => {
     expect(head?.textContent).toContain('refreshes every minute');
     expect(head?.querySelector('.full-screen-leave')).not.toBeNull();
     expect(element.querySelector('nav.tabs')).toBeNull();
+  });
+
+  it('counts a tab put on a wall, and not the way back (spec, Evidence of use)', async () => {
+    const harness = await open('/dashboard/sales');
+    const element = shell(harness);
+    element.querySelector<HTMLButtonElement>('.full-screen-enter')?.click();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+    element.querySelector<HTMLButtonElement>('.full-screen-leave')?.click();
+    await harness.fixture.whenStable();
+
+    expect(usage.affordance.mock.calls).toEqual([['full_screen', 'tab']]);
   });
 
   it('refreshes every minute on the wall, and only there', async () => {

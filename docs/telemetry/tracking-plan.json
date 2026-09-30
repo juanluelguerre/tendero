@@ -242,6 +242,16 @@
       "gap": "Reading is not a write, so there is no audit row, and the question is answered by what is already measured: every widget asks its own endpoint, so http.server.request.duration by route (/api/dashboard/*) and its period query parameter in the span count the openings per figure. A business counter would count the same requests a second time."
     },
     {
+      "name": "Dashboard tabs and the wall",
+      "area": "backoffice",
+      "question": "Which parts of the shop does the shopkeeper watch — which of the dashboard's tabs are opened — and does anybody put a tab on a monitor of its own?",
+      "decision": "A tab unopened for a month folds into the Overview or goes. If no tab is put on the screen whole in a month, the wall's density and its minute's refresh stay as they are and real time (R-10) is not built for walls.",
+      "signals": [
+        "backoffice_view_opened",
+        "backoffice_affordance_used"
+      ]
+    },
+    {
       "name": "Backoffice jobs",
       "area": "backoffice",
       "question": "Does the shopkeeper finish their jobs — publish, review a claim, ship, decide a return, suspend an agent, set up a campaign — and how long does each take from opening its screen?",
@@ -490,6 +500,10 @@
           "type": "string",
           "values": [
             "dashboard",
+            "dashboard.sales",
+            "dashboard.operations",
+            "dashboard.growth",
+            "dashboard.agents",
             "review",
             "catalogue",
             "claims",
@@ -504,7 +518,7 @@
             "audit",
             "variants"
           ],
-          "description": "The screen, by its route; never an id in it."
+          "description": "The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9)."
         }
       }
     },
@@ -607,9 +621,10 @@
             "palette",
             "keys",
             "search",
-            "filter"
+            "filter",
+            "full_screen"
           ],
-          "description": "The palette (Ctrl K or /), j and k down a queue, or a list's search box and filter chips (R-7.1)."
+          "description": "The palette (Ctrl K or /), j and k down a queue, a list's search box and filter chips (R-7.1), or a dashboard tab put on the screen whole (R-9)."
         },
         "target": {
           "type": "string",
@@ -620,7 +635,8 @@
             "agent",
             "next",
             "previous",
-            "stock"
+            "stock",
+            "tab"
           ],
           "description": "What it reached; never which one."
         }
