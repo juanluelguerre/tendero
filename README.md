@@ -244,7 +244,7 @@ search indexes at start; when the API is healthy, open:
 | Aspire dashboard | http://localhost:15130 |
 
 In Visual Studio or Rider, start **`ElGuerre.Tendero.AppHost`** with the `https`
-profile, or `https-observability` for the Grafana stack.
+profile; the others are in [Which switches for which job](#which-switches-for-which-job).
 
 ### First steps in the shop
 
@@ -293,66 +293,57 @@ from the dashboard gives you its own UI, but wires nothing to it — restart wit
 the switch for that.
 
 ```mermaid
-flowchart LR
-    subgraph always [Starts by default]
-        direction TB
-        storefront([storefront · :4200])
-        backoffice([backoffice · :4201])
-        api[api · :5130]
-        workers[workers]
-        postgres[(postgres · tendero-db · :35432)]
-        elasticsearch[(elasticsearch · :39200)]
+flowchart TB
+    trafficSim[["traffic-sim<br/>started by hand"]]
+
+    subgraph apps ["Angular apps · always"]
+        storefront(["storefront · :4200"])
+        backoffice(["backoffice · :4201"])
     end
 
-    subgraph vectors [Tendero__Vectors=true]
-        direction TB
-        qdrant[(qdrant · :36333)]
-        embeddings[embeddings · bge-m3 · :38081]
-        reranker[reranker · GPU only · :38082]
+    subgraph services [".NET services · always"]
+        api["api · :5130"]
+        workers["workers"]
     end
 
-    subgraph knowledge [Tendero__Knowledge=true]
-        direction TB
-        extractorModel[extractor-model · prepares the GGUF once]
-        extractor[extractor · Qwen3.5-4B · :38083]
-        support[support · NLI · :38084]
+    subgraph stores ["Stores · always"]
+        postgres[("postgres · tendero-db<br/>:35432")]
+        elasticsearch[("elasticsearch<br/>:39200")]
     end
 
-    subgraph ops [Other switches]
-        direction TB
-        keycloak[keycloak · :38443 · Tendero__Issuer=keycloak]
-        observability[observability · Grafana :33000 · Tendero__Observability=true]
-        pgweb[pgweb · :35433 · Tendero__Tools=true]
-        elasticvue[elasticvue · :39201 · Tendero__Tools=true]
+    subgraph vectors ["Vector layer · Tendero__Vectors"]
+        qdrant[("qdrant · :36333")]
+        embeddings["embeddings · bge-m3<br/>:38081"]
+        reranker["reranker · GPU only<br/>:38082"]
     end
 
-    trafficSim[traffic-sim · always by hand]
+    subgraph knowledge ["Claims models · Tendero__Knowledge"]
+        extractorModel["extractor-model<br/>prepares the model once"]
+        extractor["extractor · Qwen3.5-4B<br/>:38083"]
+        support["support · NLI<br/>:38084"]
+    end
 
-    storefront --> api
-    backoffice --> api
-    api --> postgres
-    api --> elasticsearch
-    workers --> postgres
-    workers --> elasticsearch
-    api -.-> qdrant
-    api -.-> embeddings
-    api -.-> reranker
-    workers -.-> qdrant
-    workers -.-> embeddings
+    subgraph tools ["Browsing tools · Tendero__Tools"]
+        pgweb["pgweb · :35433"]
+        elasticvue["elasticvue · :39201"]
+    end
+
+    keycloak["keycloak · :38443<br/>Tendero__Issuer=keycloak"]
+    observability["observability · Grafana :33000<br/>Tendero__Observability"]
+
+    trafficSim -.-> apps
+    apps --> api
+    services --> stores
+    services -.-> vectors
+    workers -.-> knowledge
     extractorModel -.-> extractor
-    workers -.-> extractor
-    workers -.-> support
     api -.-> keycloak
-    api -.->|OTLP| observability
-    workers -.->|OTLP| observability
-    pgweb -.-> postgres
-    elasticvue -.-> elasticsearch
-    trafficSim -.-> storefront
-    trafficSim -.-> api
+    services -.->|OTLP| observability
+    tools -.-> stores
 ```
 
-Solid edges are always wired; dotted ones only under their switch. **Nothing
-waits for an optional layer**: a vector layer or a model that is missing or
+Solid edges are always wired; dotted ones only under their switch, and an edge
+to a group means every resource in it. **Nothing waits for an optional layer**: a vector layer or a model that is missing or
 slow means search degrades to lexical and claims come from rules, never a
 service that refuses to start.
 
@@ -385,20 +376,75 @@ a measurement, and a Compose label so Docker Desktop groups them under
 
 ### Which switches for which job
 
-```bash
-dotnet run --project src/AppHost                                   # PowerShell: $env:Tendero__Vectors="true"; dotnet run …
-Tendero__Vectors=true dotnet run --project src/AppHost
-```
-
-| You want to… | Start with | Costs on first start |
+| You want to… | Switch | Costs on first start |
 |---|---|---|
 | work on the shop, the backoffice or the API | nothing | ~2.5 GB of images |
-| work on search by meaning, similar products or ranking | `Tendero__Vectors=true` | 2.2 GB of weights; a GPU for the reranker |
-| work on product claims (phase 10) | `Tendero__Knowledge=true` | ~9 GB to prepare the model, 6 GB of RAM to serve it |
-| see traces, metrics and logs across a flow | `Tendero__Observability=true`, or the `https-observability` profile | ~0.9 GB |
-| try the real identity provider, or edit the realm | `Tendero__Issuer=keycloak` | ~0.5 GB; the API waits for Keycloak, about a minute |
-| look inside the database or the indexes | `Tendero__Tools=true`, or press *Start* on `pgweb` / `elasticvue` | small |
+| work on search by meaning, similar products or ranking | `Tendero:Vectors=true` | 2.2 GB of weights; a GPU for the reranker |
+| work on product claims (phase 10) | `Tendero:Knowledge=true` | ~9 GB to prepare the model, 6 GB of RAM to serve it |
+| see traces, metrics and logs across a flow | `Tendero:Observability=true` | ~0.9 GB |
+| try the real identity provider, or edit the realm | `Tendero:Issuer=keycloak` | ~0.5 GB; the API waits for Keycloak, about a minute |
+| look inside the database or the indexes | `Tendero:Tools=true`, or press *Start* on `pgweb` / `elasticvue` | small |
 | compare the two browser telemetry adapters | `Parameters:browser-telemetry=otel\|faro\|noop` | — |
+| run the embeddings on a given device | `Tendero:Inference:Device=auto\|cpu\|gpu` | — |
+
+They are ordinary .NET configuration keys, read by the AppHost when it starts,
+so any source of configuration sets them. In an environment variable the colon
+becomes a double underscore (`Tendero__Vectors`).
+
+**From a terminal**, for one run:
+
+```bash
+Tendero__Vectors=true dotnet run --project src/AppHost              # bash
+$env:Tendero__Vectors="true"; dotnet run --project src/AppHost     # PowerShell
+dotnet run --project src/AppHost -- --Tendero:Vectors=true         # any shell
+```
+
+**For every run on your machine, whatever launches it** — Visual Studio, VS Code,
+Rider or the terminal — put them in the AppHost's user secrets. They are a JSON
+file in your user profile (`%APPDATA%\Microsoft\UserSecrets\tendero-apphost\` on
+Windows, `~/.microsoft/usersecrets/tendero-apphost/` elsewhere), outside the
+repository, so nobody else's stack changes and there is nothing to commit:
+
+```bash
+dotnet user-secrets set Tendero:Vectors true --project src/AppHost      # on from now on
+dotnet user-secrets set Tendero:Knowledge true --project src/AppHost    # they add up
+dotnet user-secrets list --project src/AppHost                          # what is set
+dotnet user-secrets remove Tendero:Vectors --project src/AppHost        # off again
+```
+
+Use `remove`, never `clear`: Aspire keeps its own generated values in the same
+file (the Postgres password among them), and clearing it would give the
+database a new password its volume does not know.
+
+**Visual Studio and Rider** offer the launch profiles in
+`src/AppHost/Properties/launchSettings.json` in the run drop-down:
+
+| Profile | Starts |
+|---|---|
+| `https` | the default stack |
+| `https-vectors` | plus the vector layer: search by meaning, similar products, the reranker on a GPU |
+| `https-observability` | plus the Grafana stack |
+| `http` | the default stack, with the dashboard over plain HTTP |
+
+The rarer switches (claims, Keycloak, the tools) are not profiles on purpose —
+every combination would be one more entry in the drop-down. Set them in user
+secrets, and they apply under whichever profile you pick. A profile's
+environment variables win over user secrets, so a profile can also turn one off
+for a run (`"Tendero__Vectors": "false"`).
+
+**VS Code**, with the [Aspire extension](https://aspire.dev/get-started/aspire-vscode-extension/),
+launches the AppHost from a `.vscode/launch.json` configuration of type
+`aspire`, which takes the switches in `env`:
+
+```json
+{
+  "type": "aspire",
+  "request": "launch",
+  "name": "Tendero: vectors",
+  "program": "${workspaceFolder}/src/AppHost",
+  "env": { "Tendero__Vectors": "true" }
+}
+```
 
 The switches combine. With none of them, every AI stage is off and the shop runs
 on its non-AI paths — which is exactly what a default F5 should be.
@@ -515,21 +561,23 @@ src/
   Api/  Workers/           # composition roots: HTTP endpoints, the outbox processor
   Persistence/             # the only project that knows EF Core exists
 frontend/                  # Nx workspace
-  apps/storefront/         # light, roomy: home, search, product, cart, checkout, orders, account
-  apps/backoffice/         # dense, dark: dashboard, review, catalogue, promotions, stock, orders, returns, agents, audit
+  apps/storefront/         # the shop: home, departments, search, product, compare, cart, checkout, orders, account
+  apps/backoffice/         # the shopkeeper's: dashboard, review queues, catalogue, promotions, campaigns, stock, orders, returns, agents, audit
   apps/*-e2e/              # Playwright — the thinnest layer of the pyramid
   libs/shared/             # tokens, ui, util, api, i18n, auth, agent, telemetry, a11y
 keycloak/                  # the committed realm: users, roles and clients for a fresh clone
-brand/  design/            # logo and brand guide; tokens.css, the single source of every colour
+brand/  design/            # logo and brand guide; DESIGN.md and tokens.css, the single source of every colour, light and dark
 seed/                      # the sample catalogue and its prices, stock and campaigns (es/en)
-tools/                     # SearchEval (quality gates), TrafficSim, api-map, c4, tracking-plan
+tools/                     # SearchEval (quality gates), TrafficSim, SeedImages (the product illustrations), api-map, c4, tracking-plan
 docs/                      # board, architecture, ADRs, specs, OpenAPI, C4, testing, telemetry
 tests/                     # unit, contract, architecture, integration, API
 ```
 
 Backend features are vertical slices under each context's `Features/`, and
 frontend features are folders by theme with a SignalStore for every state with a
-life of its own (ADR 0047).
+life of its own (ADR 0047). Both apps follow the reader's light or dark
+preference, and each has its own density: the shop is roomy, the backoffice
+dense.
 
 ## Testing strategy
 
