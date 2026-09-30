@@ -18,7 +18,13 @@ namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 
 // ---------- Sales ----------
 
-public sealed record SalesFigures(decimal Revenue, int Orders, int Units, decimal AverageOrderValue);
+public sealed record SalesFigures(
+    decimal Revenue,
+    int Orders,
+    int Units,
+    decimal AverageOrderValue,
+    /// <summary>Units over orders (R-9, D-7): how full a basket is, beside how dear.</summary>
+    decimal UnitsPerOrder);
 
 public sealed record BestSeller(string Sku, string Name, int Units, decimal Revenue);
 
@@ -51,7 +57,25 @@ public sealed record OperationsSummary(
     IReadOnlyList<ReasonCount> OpenReturnsByReason,
     decimal Refunded,
     /// <summary>Returns opened in the period against orders placed in it, 0 to 1.</summary>
-    decimal ReturnRate);
+    decimal ReturnRate,
+    /// <summary>
+    /// Orders of the period the shopper was let down by (R-9, D-7): a return for
+    /// damaged or not as described, or cancelled by the shop.
+    /// </summary>
+    int Defects,
+    /// <summary>Defects over the live orders of the period, 0 to 1; null when there were none to divide by.</summary>
+    decimal? DefectRate,
+    decimal DefectTarget,
+    string? DefectStanding,
+    /// <summary>Shipped in the period more than <see cref="DashboardFigures.LateAfter"/> after being confirmed.</summary>
+    int LateShipments,
+    /// <summary>Shipped in the period with both moments recorded: what the late rate divides by.</summary>
+    int ShippedCounted,
+    /// <summary>Shipped before the shop recorded when: counted apart, never as on time.</summary>
+    int ShippedBeforeMoments,
+    decimal? LateShipmentRate,
+    decimal LateShipmentTarget,
+    string? LateShipmentStanding);
 
 public sealed record GetOperationsSummaryQuery(DashboardPeriod Period) : IQuery<OperationsSummary>;
 
@@ -101,11 +125,22 @@ public static class DashboardFigures
     /// <summary>
     /// The cancellation rate a shop holds itself to: Seller Central's published
     /// account-health target, borrowed until the shop has one of its own (the
-    /// redesign's R-3, P10). The late-shipment target R-3 also named waits for
-    /// what it needs — the moment each order shipped, a status history the shop
-    /// does not keep yet — rather than being drawn from something else.
+    /// redesign's R-3, P10).
     /// </summary>
     public const decimal CancellationTarget = 0.025m;
+
+    /// <summary>The order defect rate a shop holds itself to: below 1 %, Seller Central's account health (R-9, D-7).</summary>
+    public const decimal DefectTarget = 0.01m;
+
+    /// <summary>
+    /// The late shipment rate a shop holds itself to: below 4 % (R-9, D-7). The
+    /// target R-3 named and left waiting for the moment each order shipped,
+    /// which the order records now.
+    /// </summary>
+    public const decimal LateShipmentTarget = 0.04m;
+
+    /// <summary>A return for these is the shop's fault, not the shopper's change of mind.</summary>
+    private static readonly ReturnReason[] DefectReasons = [ReturnReason.Damaged, ReturnReason.NotAsDescribed];
 
     /// <summary>Near is the last fifth of the way to the target: time to look, before it is a problem.</summary>
     private const decimal NearFrom = 0.8m;
@@ -138,9 +173,11 @@ public static class DashboardFigures
 
     public static OperationsSummary Operations(
         DashboardPeriod period, DashboardWindow window, IReadOnlyList<Order> placed, IReadOnlyList<Order> inHand,
-        IReadOnlyList<ReturnRequest> returns)
+        IReadOnlyList<ReturnRequest> returns, IReadOnlyList<Order>? shipped = null)
     {
         var live = placed.Where(order => order.Mode == OrderMode.Live).ToList();
+        var defects = Defects(live, returns);
+        var shipping = Shipping(window, shipped ?? []);
         var working = inHand.Where(order => order.Mode == OrderMode.Live).ToList();
         var toShip = working.Where(order => order.Status == OrderStatus.Confirmed).ToList();
         var open = returns.Where(request => request.Status is ReturnStatus.Requested or ReturnStatus.Approved or ReturnStatus.Received).ToList();
@@ -170,7 +207,50 @@ public static class DashboardFigures
             returns
                 .Where(request => request.Status == ReturnStatus.Refunded && request.UpdatedAt >= window.From && request.UpdatedAt < window.To)
                 .Sum(request => request.RefundAmount?.Amount ?? 0m),
-            Rate(opened, live.Count));
+            Rate(opened, live.Count),
+            defects,
+            RateOrNone(defects, live.Count),
+            DefectTarget,
+            StandingOrNone(RateOrNone(defects, live.Count), DefectTarget),
+            shipping.Late,
+            shipping.Counted,
+            shipping.BeforeMoments,
+            RateOrNone(shipping.Late, shipping.Counted),
+            LateShipmentTarget,
+            StandingOrNone(RateOrNone(shipping.Late, shipping.Counted), LateShipmentTarget));
+    }
+
+    /// <summary>
+    /// The live orders of the period with a defect: stopped by the shop, or with a
+    /// return for a defect reason that stands — one the shop rejected or the
+    /// shopper withdrew said nothing was wrong.
+    /// </summary>
+    private static int Defects(IReadOnlyList<Order> live, IReadOnlyList<ReturnRequest> returns)
+    {
+        var returnedForADefect = returns
+            .Where(request => request.Status is not (ReturnStatus.Rejected or ReturnStatus.Cancelled))
+            .Where(request => request.Lines.Any(line => DefectReasons.Contains(line.Reason)))
+            .Select(request => request.OrderId)
+            .ToHashSet();
+
+        return live.Count(order => order.Stop?.Code == OrderStop.ShopCancelled || returnedForADefect.Contains(order.Id));
+    }
+
+    /// <summary>
+    /// The live orders shipped in the window, late or not; and those that shipped
+    /// before the moments were recorded — windowed by their last change, the only
+    /// time they have — which are counted apart.
+    /// </summary>
+    private static (int Late, int Counted, int BeforeMoments) Shipping(DashboardWindow window, IReadOnlyList<Order> shipped)
+    {
+        var live = shipped.Where(order => order.Mode == OrderMode.Live).ToList();
+        var recorded = live
+            .Where(order => order.ShippedAt is { } at && order.ConfirmedAt is not null && at >= window.From && at < window.To)
+            .ToList();
+        var before = live.Count(order =>
+            (order.ShippedAt is null || order.ConfirmedAt is null) && order.UpdatedAt >= window.From && order.UpdatedAt < window.To);
+
+        return (recorded.Count(order => order.ShippedAt - order.ConfirmedAt > LateAfter), recorded.Count, before);
     }
 
     public static CheckoutFunnel Funnel(
@@ -221,12 +301,18 @@ public static class DashboardFigures
             revenue,
             sales.Count,
             sales.Sum(order => order.Lines.Sum(line => line.Quantity)),
-            sales.Count == 0 ? 0m : Math.Round(revenue / sales.Count, Money.Decimals, MidpointRounding.AwayFromZero));
+            sales.Count == 0 ? 0m : Math.Round(revenue / sales.Count, Money.Decimals, MidpointRounding.AwayFromZero),
+            sales.Count == 0 ? 0m : Math.Round((decimal)sales.Sum(order => order.Lines.Sum(line => line.Quantity)) / sales.Count, 2, MidpointRounding.AwayFromZero));
     }
 
     /// <summary>A share, 0 to 1, to four places; nothing over nothing is zero, not a division error.</summary>
     private static decimal Rate(int part, int whole) =>
         whole == 0 ? 0m : Math.Round((decimal)part / whole, 4, MidpointRounding.AwayFromZero);
+
+    /// <summary>A rate with nothing to divide by is no rate — *no data*, not 0 %.</summary>
+    private static decimal? RateOrNone(int part, int whole) => whole == 0 ? null : Rate(part, whole);
+
+    private static string? StandingOrNone(decimal? rate, decimal target) => rate is { } value ? Standing(value, target) : null;
 
     private static string CurrencyOf(IEnumerable<Order> orders) =>
         orders.Select(order => order.Currency).FirstOrDefault() ?? DefaultCurrency;
@@ -239,6 +325,9 @@ public sealed class DashboardHandlers(IShopHistory history, TimeProvider clock) 
     IQueryHandler<GetAgentSalesQuery, AgentSales>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Ordering);
+
+    /// <summary>Orders that have left: what the late shipment rate is counted over.</summary>
+    private static readonly OrderStatus[] Shipped = [OrderStatus.Shipped, OrderStatus.Delivered];
 
     private static readonly OrderStatus[] InHand =
         [OrderStatus.Pending, OrderStatus.PaymentAuthorized, OrderStatus.PaymentFailed, OrderStatus.Confirmed];
@@ -261,7 +350,8 @@ public sealed class DashboardHandlers(IShopHistory history, TimeProvider clock) 
         return DashboardFigures.Operations(query.Period, window,
             await history.OrdersPlacedAsync(window.From, window.To, cancellationToken),
             await history.OrdersInAsync(InHand, cancellationToken),
-            await history.ReturnsOpenOrChangedSinceAsync(window.From, cancellationToken));
+            await history.ReturnsOpenOrChangedSinceAsync(window.From, cancellationToken),
+            await history.OrdersInAsync(Shipped, cancellationToken));
     }
 
     public async Task<CheckoutFunnel> HandleAsync(GetCheckoutFunnelQuery query, CancellationToken cancellationToken)
