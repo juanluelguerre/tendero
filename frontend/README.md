@@ -54,20 +54,50 @@ Inside each app: `layout/` (its own shell, which is **not** shared),
 `data-access/` (the only folder that talks HTTP) and, in the storefront,
 `agent/` (the tools it offers a browser agent).
 
-## A component is three files
+## A component is two files, three when its styles have something to say
 
 ```
 cart-page.ts      the class
 cart-page.html    the template
-cart-page.css     the styles
+cart-page.css     only what utilities cannot say: keyframes, generated content, a :host that depends on something
 ```
 
-Same name, three extensions, which is what the current Angular style guide
+Same name, different extensions, which is what the current Angular style guide
 describes. The old "extract anything over three lines" rule is gone from it, and
-the reason this repository keeps the split anyway is concrete rather than
-stylistic: a template in a `.ts` literal is invisible to every HTML tool, and a
-stylesheet in one is invisible to every CSS tool — including the test that
-enforces the first rule below.
+the reason this repository never inlines a template or a stylesheet is concrete
+rather than stylistic: a template in a `.ts` literal is invisible to every HTML
+tool, and a stylesheet in one is invisible to every CSS tool — including the test
+that enforces the first rule below. Most looks are Tailwind utilities in the
+template (ADR 0049), so a `.css` emptied by them is deleted, not kept as a comment.
+
+## Where an `effect` belongs
+
+`effect` is neither deprecated nor bad practice in Angular 22. It has one job,
+and Angular's signals guide names it: keeping something that is **not** a signal
+in step with signals — the DOM, the document's head, the router, a chart
+library, a timer, `localStorage`. The same guide advises against using it to
+**propagate state** from one signal to another: that costs an extra change
+detection pass, risks circular updates and `ExpressionChangedAfterItHasBeenChecked`,
+and leaves a moment in which the derived value is stale.
+
+So components keep their effects for the outside world, and **a store has
+none** (ADR 0051). NgRx has a tool for each thing a store once did with one:
+
+| A store used to…                                                              | What went wrong with an `effect`                                                                                                                        | It now uses                                                                                                                                              |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| reset state when another signal changes (orders' rows, a product's selection) | it writes state from a side effect: one pass late, and stale in between                                                                                 | `withLinkedState` — the state is _derived_, there is no in-between                                                                                       |
+| reload when a signal changes (the order pane, the trail, the dashboard)       | an effect tracks **everything** it reads, including inside the methods it calls, so it reruns on dependencies nobody meant; a test needs `flushEffects` | `signalMethod` — only its argument is tracked, its body runs untracked, and a test simply calls it                                                       |
+| send requests as things change (the listing, the cart)                        | an effect has no concurrency semantics: two quick cart changes could overtake each other                                                                | `rxMethod` — `switchMap` where only the latest question's answer may show (the listing), `concatMap` where a write must not overtake the last (the cart) |
+
+The last row is the one that was a real bug rather than style. `signalMethod` is
+itself built on an `effect`; the point is not to avoid the primitive but to use
+the bounded tool that says what it is for.
+
+"No `effect` in a store" is stricter than either guide — neither forbids it — and
+is kept absolute on purpose: an absolute rule is checked in review at a glance,
+and a "prefer not to, unless…" is not. The day a store genuinely has to sync with
+something outside signals, `signalMethod` is the answer, and this section is
+what to amend.
 
 ## The two apps do not know about each other
 

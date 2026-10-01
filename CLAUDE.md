@@ -295,7 +295,10 @@ node tools/api-map.mjs --schema CartView
     the cart), `signalMethod` to feed a signal into a method;
   - a service in `data-access/` for every call, never `HttpClient` in a store.
   A component keeps `effect` for what is outside signals — the DOM, the
-  document's head, the router, a chart library, a timer.
+  document's head, the router, a chart library, a timer. `effect` is not
+  deprecated: Angular's guide keeps it for exactly that and advises against
+  propagating state with it; the store rule is deliberately stricter, and
+  `frontend/README.md` ("Where an `effect` belongs") says why, tool by tool.
   The whole backoffice follows this; `shell/` is the frame round every screen and
   `worklist/` what the lists of work share (pane, chips, pager, dialog, Undo).
   The storefront follows it too: its shop-wide state lives in theme folders
