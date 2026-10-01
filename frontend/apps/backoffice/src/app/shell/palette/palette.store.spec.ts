@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PaletteStore } from './palette.store';
 
 const Api = 'http://api/api';
@@ -14,6 +14,7 @@ describe('the palette store', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -27,7 +28,10 @@ describe('the palette store', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.match(() => true));
+  afterEach(() => {
+    http.match(() => true);
+    vi.useRealTimers();
+  });
 
   const records = () =>
     http.match(
@@ -36,7 +40,17 @@ describe('the palette store', () => {
         req.url.startsWith(`${Api}/catalog/products`) ||
         req.url.includes('/agents'),
     );
-  const debounce = () => new Promise((resolve) => setTimeout(resolve, 250));
+  /**
+   * The search waits 200ms after the last key. It waited 250ms of real time
+   * here, and under a loaded machine that 50ms margin was not enough: the
+   * debounce starts only when the query's effect has run, so the requests were
+   * not out yet and the test failed one run in many. The clock is fake now, and
+   * moves the debounce's exact length after the effect has run.
+   */
+  const debounce = async () => {
+    TestBed.tick();
+    await vi.advanceTimersByTimeAsync(200);
+  };
 
   it('asks nothing while it is closed, whatever is typed', async () => {
     const store = TestBed.inject(PaletteStore);
