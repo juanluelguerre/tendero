@@ -18,7 +18,7 @@
             >
               {{ t('stock.status.' + hold.status) }}
             </span>
-            <span class="font-mono text-3xs text-muted">{{ shortId(hold) }}</span>
+            <span class="font-mono text-3xs text-muted" [title]="hold.orderId">{{ shortId(hold) }}</span>
           </div>
 
           @if (hold.lines.length > 0) {

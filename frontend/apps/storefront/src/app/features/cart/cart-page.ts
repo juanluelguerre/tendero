@@ -8,6 +8,7 @@ import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
 import { Notice } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
+import { ProductImage } from '../../product-image/product-image';
 
 /**
  * The basket, and what it costs right now.
@@ -25,7 +26,7 @@ import { Totals } from '../../totals/totals';
  */
 @Component({
   selector: 'storefront-cart',
-  imports: [TranslocoDirective, RouterLink, Notice, Totals],
+  imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cart-page.html',
   styleUrl: './cart-page.css',

@@ -84,6 +84,8 @@ export const ClaimsReviewStore = signalStore(
         return (['Weak', 'All'] as const).map((key) => ({ key, label: labels[key] ?? key, count: counts?.get(key) ?? null }));
       }),
       selected: computed(() => claims().find((claim) => claim.claimId === store.selectedId()) ?? null),
+      /** The weak queue is empty and claims wait under All: the page points there rather than saying there is nothing. */
+      othersWaiting: computed(() => store.filterKey() === 'Weak' && (store._counts()?.get('All') ?? 0) > 0),
     };
   }),
   withMethods((store) => {

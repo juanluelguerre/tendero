@@ -20,9 +20,9 @@ export class StockHolds {
   protected readonly store = inject(StockStore);
 
   /**
-   * Order ids are GUIDs and the panel is 300px wide. The first segment is enough
-   * to match a row against an order somebody is looking at, and the full id is
-   * one hover away in the title.
+   * Order ids are GUIDs and the panel is 300px wide. The reference the orders
+   * screen shows — the id's random end — is enough to match a row against an
+   * order somebody is looking at, and the full id is one hover away in the title.
    */
   protected shortId(hold: ReservationRow): string {
     return orderReference(hold.orderId);

@@ -35,7 +35,8 @@
                 <button type="button" class="row__open" [attr.aria-expanded]="agent.agentId === store.selectedId()" (click)="$event.stopPropagation(); store.open(agent)">
                   {{ agent.displayName }}
                 </button>
-                <span class="numeric muted text-3xs">{{ agent.agentId }}</span>
+                <!-- Its own line under the name: side by side they read as one word. -->
+                <span class="block numeric muted text-3xs">{{ agent.agentId }}</span>
               </td>
               <td>{{ agent.operator }}</td>
               <td>

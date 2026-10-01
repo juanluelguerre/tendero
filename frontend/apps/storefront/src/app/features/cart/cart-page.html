@@ -25,24 +25,15 @@
           <li
             class="grid grid-cols-[72px_minmax(0,1fr)_auto_auto_auto] items-center gap-4 rounded-lg border border-hairline bg-surface p-3 max-xs:grid-cols-[56px_minmax(0,1fr)_auto] max-xs:gap-y-3"
           >
-            @let source = imageUrl(line);
-            @if (source) {
-              <img
-                class="size-[72px] rounded-md bg-raised object-cover max-xs:size-[56px]"
-                [src]="source"
-                [alt]="line.productName"
-                loading="lazy"
-              />
-            } @else {
-              <!-- A deliberate default state and not a gap: a line with no photo
-                   has to look like a decision. Same rule the search card follows. -->
-              <div
-                class="grid size-[72px] place-items-center rounded-md bg-raised font-display text-xl text-muted max-xs:size-[56px]"
-                aria-hidden="true"
-              >
-                {{ line.productName.charAt(0) }}
-              </div>
-            }
+            <!-- The same picture, and the same deliberate placeholder when it has none or
+                 it fails, as the product's card and page: a cart line that showed a
+                 letter here, or the browser's broken-image icon, read as another shop. -->
+            <storefront-product-image
+              class="size-[72px] overflow-hidden rounded-md bg-raised object-cover max-xs:size-[56px]"
+              [src]="imageUrl(line)"
+              [alt]="line.productName"
+              loading="lazy"
+            />
 
             <div class="min-w-0">
               <p class="font-semibold">{{ line.productName }}</p>

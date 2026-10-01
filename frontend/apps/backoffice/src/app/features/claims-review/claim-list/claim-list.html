@@ -14,7 +14,7 @@
     [empty]="store.claims().length === 0"
     [loadingText]="t('claims.loading')"
     [failedText]="t('claims.failed')"
-    [emptyText]="t('claims.empty')"
+    [emptyText]="store.othersWaiting() ? t('claims.none') : t('claims.empty')"
   >
     <div class="table-wrap wide-only">
       <table class="table">
