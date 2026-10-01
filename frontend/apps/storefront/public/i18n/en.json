@@ -183,5 +183,9 @@
     "count": "{{count}} products",
     "more": "Show more products",
     "loadingMore": "Loading…"
+  },
+  "notFound": {
+    "title": "That page does not exist",
+    "text": "The link may be wrong, or the page may be gone."
   }
 }
