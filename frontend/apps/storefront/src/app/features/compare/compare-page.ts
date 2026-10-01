@@ -1,4 +1,4 @@
-import { Component, effect, inject, untracked } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SpecSheet, SpecStatement } from '@tendero/shared-api';
@@ -8,6 +8,7 @@ import { SpecSource } from '../../specs/spec-source/spec-source';
 import { SpecValue } from '../../specs/spec-value/spec-value';
 import { ComparisonStore } from './comparison.store';
 import { Icon } from '@tendero/shared-ui';
+import { signalMethod } from '@ngrx/signals';
 
 /**
  * Two to four products side by side (P10-7): the same rows the product page
@@ -30,19 +31,17 @@ export class ComparePage {
 
   private readonly telemetry = inject(Telemetry);
 
-  /** The codes last reported, so a language switch is not a second comparison. */
-  private reported = '';
-
   constructor() {
-    effect(() => {
-      const current = this.store.state();
-      if (current.status !== 'done') return;
-
-      const key = current.sheet.products.map((product) => product.code).join(',');
-      if (key === this.reported) return;
-      this.reported = key;
-      untracked(() => this.telemetry.trackEvent('products_compared', { products: current.sheet.products.length }));
-    });
+    // Once per set of products compared: the computed's own equality is what keeps a
+    // re-read of the same set from counting twice.
+    signalMethod<string | null>((compared) => {
+      if (compared) this.telemetry.trackEvent('products_compared', { products: compared.split(',').length });
+    })(
+      computed(() => {
+        const current = this.store.state();
+        return current.status === 'done' ? current.sheet.products.map((product) => product.code).join(',') : null;
+      }),
+    );
   }
 
   /** One product's sentences, which are not aligned: two sentences are not a row. */

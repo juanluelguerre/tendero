@@ -1,5 +1,14 @@
-import { computed, effect, inject, untracked } from '@angular/core';
-import { patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState } from '@ngrx/signals';
+import { computed, inject } from '@angular/core';
+import {
+  patchState,
+  signalMethod,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { BrowsingHistoryView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { Telemetry } from '@tendero/shared-telemetry';
@@ -161,13 +170,11 @@ export const TrailStore = signalStore(
   }),
   withHooks({
     onInit(store) {
-      effect(() => {
-        const signedIn = store._signedIn();
-        untracked(() => {
-          if (signedIn) void store._startAccount();
-          else patchState(store, { _account: null });
-        });
-      });
+      // Signing in brings the account's trail; signing out forgets it here.
+      signalMethod<boolean>((signedIn) => {
+        if (signedIn) void store._startAccount();
+        else patchState(store, { _account: null });
+      })(store._signedIn);
     },
   }),
 );

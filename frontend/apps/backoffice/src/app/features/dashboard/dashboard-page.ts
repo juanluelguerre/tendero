@@ -23,6 +23,7 @@ import { type DashboardTab, DashboardTabs } from './tabs/dashboard-tabs';
 import { provideDashboardWidgets } from './widgets/dashboard-widget-registry';
 import { BackofficeUsage } from '../../usage';
 import { FullScreen } from './full-screen';
+import { signalMethod } from '@ngrx/signals';
 
 /** A minute, until R-10's live source replaces the clock. */
 const WallRefresh = 60_000;
@@ -79,7 +80,9 @@ export class DashboardPage {
 
   constructor() {
     // On the wall the figures are asked for again every minute; off it, never on a clock.
-    effect(() => (this.fullScreen.active() ? this.refresh.every(WallRefresh) : this.refresh.stop()));
+    signalMethod<boolean>((onTheWall) => (onTheWall ? this.refresh.every(WallRefresh) : this.refresh.stop()))(
+      this.fullScreen.active,
+    );
 
     // The button pressed goes away with the head it sits in (WCAG 2.4.3): the
     // keyboard lands on the way back — in or out, by the button or by Esc.
