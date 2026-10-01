@@ -184,7 +184,7 @@ export class ProductPage {
    * variant, and the product's range before it has — which is the same thing the
    * search card shows, so moving from one to the other never contradicts itself.
    */
-  protected price(): string {
+  protected readonly price = computed(() => {
     const product = this.store.product();
     if (!product) return '';
 
@@ -196,7 +196,7 @@ export class ProductPage {
       return `${formatPrice(product.priceFrom, product.priceCurrency, culture)} – ${formatPrice(product.priceTo, product.priceCurrency, culture)}`;
     }
     return formatPrice(product.priceFrom, product.priceCurrency, culture);
-  }
+  });
 
   protected imageUrl(imageId: string): string {
     return this.images.of(imageId);

@@ -90,7 +90,8 @@
                   <span class="grid min-w-0 gap-1">
                     <span class="truncate font-semibold">{{ names(order) }}</span>
                     <span class="muted text-sm">
-                      {{ when(order) }} · {{ t('account.lineCount', { count: order.lineCount }) }}
+                      {{ order.createdAt | dateTime: culture.active() }} ·
+                      {{ t('account.lineCount', { count: order.lineCount }) }}
                     </span>
                   </span>
 
@@ -98,7 +99,9 @@
                     class="grid justify-items-end gap-1 text-end max-sm:col-span-full max-sm:justify-items-start max-sm:text-start"
                   >
                     <span class="text-sm text-muted">{{ t('order.status.' + order.status) }}</span>
-                    <span class="numeric font-semibold">{{ price(order) }}</span>
+                    <span class="numeric font-semibold">{{
+                      order.total | price: order.currency : culture.active()
+                    }}</span>
                   </span>
                 </a>
 

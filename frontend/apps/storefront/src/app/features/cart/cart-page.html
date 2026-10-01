@@ -69,8 +69,10 @@
               </button>
             </div>
 
+            <!-- What the line comes to, from the quote: a dash until the quote has it. -->
+            @let net = netBySku().get(line.sku);
             <p class="min-w-col-md text-end numeric font-semibold max-xs:col-2 max-xs:text-start">
-              {{ lineTotal(line.sku) }}
+              {{ net === undefined ? '—' : (net | price: store.quote()?.currency ?? 'EUR' : culture.active()) }}
             </p>
 
             <button
@@ -111,7 +113,9 @@
                     discount.label
                   }}</span>
                   @if (discount.outcome === 'Applied') {
-                    <span class="numeric text-positive">−{{ money(discount.amount) }}</span>
+                    <span class="numeric text-positive"
+                      >−{{ discount.amount | price: store.quote()?.currency ?? 'EUR' : culture.active() }}</span
+                    >
                   } @else {
                     <span class="text-xs text-muted">{{ t('cart.suppressed') }}</span>
                   }

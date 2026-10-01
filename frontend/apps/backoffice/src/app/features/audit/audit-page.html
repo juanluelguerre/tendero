@@ -66,7 +66,7 @@
               class="data-refused:shadow-[inset_2px_0_0_0_var(--color-warning)]"
               [attr.data-refused]="entry.outcome !== 'Allowed' || null"
             >
-              <td class="numeric whitespace-nowrap">{{ when(entry.at) }}</td>
+              <td class="numeric whitespace-nowrap">{{ entry.at | dateTime: culture.active() }}</td>
               <!-- In the shopkeeper's words; the type stays as its title for whoever needs it (B-F6). -->
               <td class="text-xs whitespace-nowrap" [title]="entry.commandType">
                 {{ t('audit.commands.' + entry.commandType) }}

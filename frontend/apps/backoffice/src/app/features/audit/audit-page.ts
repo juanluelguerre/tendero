@@ -3,11 +3,11 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { FilterChips } from '../../worklist/filter-chips/filter-chips';
 import { Pager } from '../../worklist/pager/pager';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatDateTime, shortId } from '@tendero/shared-util';
+import { shortId } from '@tendero/shared-util';
 import { actorOf } from './audit-actor';
 import { WorklistPageSize } from '../../worklist/with-worklist-url';
 import { AuditStore } from './audit.store';
-import { CopyText, StatusPill } from '@tendero/shared-ui';
+import { CopyText, DateTimePipe, StatusPill } from '@tendero/shared-ui';
 import { ListState } from '../../worklist/list-state/list-state';
 
 /**
@@ -31,13 +31,13 @@ import { ListState } from '../../worklist/list-state/list-state';
  */
 @Component({
   selector: 'backoffice-audit',
-  imports: [TranslocoDirective, FilterChips, Pager, ListState, StatusPill, CopyText],
+  imports: [TranslocoDirective, FilterChips, Pager, ListState, StatusPill, CopyText, DateTimePipe],
   templateUrl: './audit-page.html',
   providers: [AuditStore],
 })
 export class AuditPage {
   protected readonly store = inject(AuditStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
 
   protected readonly pageSize = WorklistPageSize;
   protected readonly actorOf = actorOf;
@@ -62,12 +62,6 @@ export class AuditPage {
    */
   protected short(value: string | null | undefined): string {
     return value ? shortId(value) : '';
-  }
-
-  /** 04/09/2026 and 09/04/2026 are the same instant and different days, so the
-   *  reader's culture decides. */
-  protected when(at: string): string {
-    return formatDateTime(at, this.culture.active());
   }
 
   /** The command as JSON, indented. It arrives as a string because the server

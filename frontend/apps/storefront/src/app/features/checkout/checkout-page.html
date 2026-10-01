@@ -161,7 +161,9 @@
                       </span>
                     }
                   </span>
-                  <span class="numeric font-semibold">{{ store.money(option.amount) }}</span>
+                  <span class="numeric font-semibold">{{
+                    option.amount | price: store.currency() : culture.active()
+                  }}</span>
                 </label>
               }
             </div>
@@ -215,7 +217,11 @@
             [disabled]="store.paying() || !store.chosen() || !store.address().recipientName.trim()"
             (click)="store.pay()"
           >
-            {{ store.paying() ? t('checkout.paying') : t('checkout.pay', { total: store.money(quote.total) }) }}
+            {{
+              store.paying()
+                ? t('checkout.paying')
+                : t('checkout.pay', { total: (quote.total | price: store.currency() : culture.active()) })
+            }}
           </button>
         } @else {
           <p class="muted">{{ t('cart.noQuote') }}</p>

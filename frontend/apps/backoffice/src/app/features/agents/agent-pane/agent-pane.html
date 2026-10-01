@@ -19,7 +19,7 @@
         </div>
         <div>
           <dt>{{ t('column.registered') }}</dt>
-          <dd class="numeric">{{ when(agent.registeredAt) }}</dd>
+          <dd class="numeric">{{ agent.registeredAt | day: culture.active() }}</dd>
         </div>
         <div>
           <dt>{{ t('column.status') }}</dt>

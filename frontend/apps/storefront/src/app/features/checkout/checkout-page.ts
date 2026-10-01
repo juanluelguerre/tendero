@@ -1,3 +1,4 @@
+import { CultureStore } from '@tendero/shared-i18n';
 import { Component, effect, ElementRef, inject, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -5,7 +6,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
 import { CheckoutCards, CheckoutStore } from './checkout.store';
-import { Notice } from '@tendero/shared-ui';
+import { Notice, PricePipe } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
 import { Summary } from '../../summary/summary';
 
@@ -25,11 +26,12 @@ import { Summary } from '../../summary/summary';
  */
 @Component({
   selector: 'storefront-checkout',
-  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, Totals, Summary],
+  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, Totals, Summary, PricePipe],
   providers: [CheckoutStore],
   templateUrl: './checkout-page.html',
 })
 export class CheckoutPage {
+  protected readonly culture = inject(CultureStore);
   protected readonly store = inject(CheckoutStore);
   protected readonly cart = inject(CartStore);
 

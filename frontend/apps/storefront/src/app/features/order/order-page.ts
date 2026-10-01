@@ -5,11 +5,11 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, orderReference } from '@tendero/shared-util';
+import { orderReference } from '@tendero/shared-util';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
 import { OrderStore } from './order.store';
-import { Notice, orderStatusTone, returnStatusTone, StatusPill } from '@tendero/shared-ui';
+import { Notice, PricePipe, StatusPill, orderStatusTone, returnStatusTone } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
 import { Summary } from '../../summary/summary';
 
@@ -29,7 +29,7 @@ import { Summary } from '../../summary/summary';
  */
 @Component({
   selector: 'storefront-order',
-  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill, Totals, Summary],
+  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill, Totals, Summary, PricePipe],
   providers: [OrderStore],
   templateUrl: './order-page.html',
 })
@@ -39,17 +39,13 @@ export class OrderPage {
   /** Every link carries the language segment (P5-13). */
   protected readonly links = inject(ShopLinks);
 
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
 
   protected readonly reasons = RETURN_REASONS;
 
   /** Days from delivery, published by the API so this page cannot disagree
       with the rule that refuses a late return. */
   protected readonly returnWindowDays = inject(ReturnsPolicyStore).windowDays;
-
-  protected money(amount: number): string {
-    return formatPrice(amount, this.store.order()?.currency ?? 'EUR', this.culture.active());
-  }
 
   /** A full Guid is unreadable; its random end is what a person reads, and what finds it. */
   protected readonly shortId = orderReference;

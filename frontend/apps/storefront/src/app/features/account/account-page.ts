@@ -1,10 +1,11 @@
+import { DateTimePipe, PricePipe } from '@tendero/shared-ui';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { OrderSummary } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatDateTime, formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { ProductImageUrls } from '@tendero/shared-util';
 import { ProductImage } from '../../product-image/product-image';
 import { ShopLinks } from '../../shop-links';
 import { TrailHistory } from '../../trail/trail-history/trail-history';
@@ -31,7 +32,7 @@ import { PageState } from '../../page-state/page-state';
  */
 @Component({
   selector: 'storefront-account-page',
-  imports: [TranslocoDirective, RouterLink, ProductImage, TrailHistory, PageState],
+  imports: [TranslocoDirective, RouterLink, ProductImage, TrailHistory, PageState, PricePipe, DateTimePipe],
   providers: [AccountStore],
   templateUrl: './account-page.html',
 })
@@ -40,7 +41,7 @@ export class AccountPage {
   protected readonly links = inject(ShopLinks);
   protected readonly identity = inject(AuthStore).identity;
 
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
   private readonly images = inject(ProductImageUrls);
 
   constructor() {
@@ -65,13 +66,5 @@ export class AccountPage {
   protected names(order: OrderSummary): string {
     const shown = order.preview.map((line) => line.name).join(', ');
     return order.lineCount > order.preview.length ? `${shown}…` : shown;
-  }
-
-  protected price(order: OrderSummary): string {
-    return formatPrice(order.total, order.currency, this.culture.active());
-  }
-
-  protected when(order: OrderSummary): string {
-    return formatDateTime(order.createdAt, this.culture.active());
   }
 }

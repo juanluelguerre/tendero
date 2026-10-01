@@ -50,7 +50,7 @@
                 </span>
                 <span class="numeric text-muted">×{{ line.quantity }}</span>
                 <span class="min-w-col-md text-end numeric font-semibold">{{
-                  money(line.unitPrice * line.quantity)
+                  line.unitPrice * line.quantity | price: store.order()?.currency ?? 'EUR' : culture.active()
                 }}</span>
               </li>
             }
@@ -159,7 +159,9 @@
                     {{ describe(request) }}
                   </span>
                   @if (request.refundAmount) {
-                    <span class="numeric font-semibold text-positive">{{ money(request.refundAmount) }}</span>
+                    <span class="numeric font-semibold text-positive">{{
+                      request.refundAmount | price: store.order()?.currency ?? 'EUR' : culture.active()
+                    }}</span>
                   }
                   @if (request.resolution) {
                     <p class="col-span-full text-xs text-muted">{{ request.resolution }}</p>

@@ -1,9 +1,10 @@
+import { PricePipe } from '@tendero/shared-ui';
 import { Component, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../cart/cart.store';
 import { CompareStore } from '../compare/compare.store';
 import type { ProductVia } from '../features/product/arrived-from';
@@ -33,7 +34,7 @@ export interface CardReason {
  */
 @Component({
   selector: 'storefront-product-card',
-  imports: [TranslocoDirective, RouterLink, ProductImage],
+  imports: [TranslocoDirective, RouterLink, ProductImage, PricePipe],
   templateUrl: './product-card.html',
   styleUrl: './product-card.css',
   host: {
@@ -65,7 +66,7 @@ export class ProductCard {
   readonly priority = input(false);
 
   private readonly cart = inject(CartStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
   private readonly images = inject(ProductImageUrls);
 
   protected readonly links = inject(ShopLinks);
@@ -85,10 +86,6 @@ export class ProductCard {
   /** Picks the product for the comparison tray, or takes it out (P10-7). */
   protected toggleCompare(): void {
     this.compare.toggle({ code: this.hit().code, name: this.hit().name });
-  }
-
-  protected price(): string {
-    return formatPrice(this.hit().priceAmount, this.hit().priceCurrency, this.culture.active());
   }
 
   protected async addToCart(): Promise<void> {

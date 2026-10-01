@@ -1,7 +1,7 @@
+import { PricePipe } from '@tendero/shared-ui';
 import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
 
 /**
  * Where the delivery stands in a total.
@@ -25,7 +25,7 @@ export type ShippingState = 'at-checkout' | 'to-choose' | 'charged';
  */
 @Component({
   selector: 'storefront-totals',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, PricePipe],
   templateUrl: './totals.html',
   host: { class: 'block' },
 })
@@ -40,9 +40,5 @@ export class Totals {
   readonly total = input.required<number>();
   readonly taxTotal = input(0);
 
-  private readonly culture = inject(CultureStore);
-
-  protected money(amount: number): string {
-    return formatPrice(amount, this.currency(), this.culture.active());
-  }
+  protected readonly culture = inject(CultureStore);
 }

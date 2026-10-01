@@ -3,10 +3,10 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AppliedDiscount, CartLineView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
-import { Icon, Notice } from '@tendero/shared-ui';
+import { Icon, Notice, PricePipe } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
 import { ProductImage } from '../../product-image/product-image';
 import { Summary } from '../../summary/summary';
@@ -27,7 +27,7 @@ import { Summary } from '../../summary/summary';
  */
 @Component({
   selector: 'storefront-cart',
-  imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage, Icon, Summary],
+  imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage, Icon, Summary, PricePipe],
   templateUrl: './cart-page.html',
 })
 export class CartPage {
@@ -35,11 +35,16 @@ export class CartPage {
   protected readonly links = inject(ShopLinks);
 
   protected readonly store = inject(CartStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
   private readonly images = inject(ProductImageUrls);
 
   /** Line net, from the quote — never multiplied on the client. */
-  private readonly netBySku = computed(
+  /**
+   * What each line comes to, taken from the quote rather than computed here.
+   * A client that multiplied price by quantity would disagree with the server
+   * the first time a `BuyXGetY` promotion touched the line.
+   */
+  protected readonly netBySku = computed(
     () => new Map((this.store.quote()?.lines ?? []).map((line) => [line.sku, line.net])),
   );
 
@@ -54,20 +59,6 @@ export class CartPage {
 
   protected imageUrl(line: CartLineView): string | null {
     return line.imageId ? this.images.of(line.imageId) : null;
-  }
-
-  /**
-   * What this line comes to, taken from the quote rather than computed here.
-   * A client that multiplied price by quantity would disagree with the server
-   * the first time a `BuyXGetY` promotion touched the line.
-   */
-  protected lineTotal(sku: string): string {
-    const net = this.netBySku().get(sku);
-    return net === undefined ? '—' : this.money(net);
-  }
-
-  protected money(amount: number): string {
-    return formatPrice(amount, this.store.quote()?.currency ?? 'EUR', this.culture.active());
   }
 
   protected change(line: CartLineView, by: number): void {

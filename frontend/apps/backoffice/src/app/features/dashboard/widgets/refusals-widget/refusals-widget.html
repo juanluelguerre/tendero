@@ -24,7 +24,7 @@
             <li class="latest__row flex flex-wrap items-baseline gap-2 text-xs">
               <span class="numeric">{{ denial.agentId }}</span>
               <span class="tag tag--warn">{{ t('rule.' + denial.reason) }}</span>
-              <span class="muted ms-auto text-3xs">{{ when(denial.at) }}</span>
+              <span class="muted ms-auto text-3xs">{{ denial.at | dateTime: culture.active() }}</span>
               @if (denial.detail) {
                 <span class="muted basis-full text-3xs">{{ denial.detail }}</span>
               }

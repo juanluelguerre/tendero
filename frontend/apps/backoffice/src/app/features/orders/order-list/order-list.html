@@ -73,7 +73,7 @@
               <td><backoffice-order-status-label [order]="order" /></td>
               <td><backoffice-order-payment [order]="order" /></td>
               <td class="muted">{{ placed(order.createdAt) }}</td>
-              <td class="numeric font-semibold">{{ money(order.total, order.currency) }}</td>
+              <td class="numeric font-semibold">{{ order.total | price: order.currency : culture.active() }}</td>
               <td class="text-end whitespace-nowrap">
                 @if (primaryMove(order.status); as move) {
                   <button
@@ -111,7 +111,9 @@
           >
             <span class="worklist-card__line">
               <span class="numeric font-semibold text-body">{{ shortId(order.orderId) }}</span>
-              <span class="worklist-card__end numeric font-semibold">{{ money(order.total, order.currency) }}</span>
+              <span class="worklist-card__end numeric font-semibold">{{
+                order.total | price: order.currency : culture.active()
+              }}</span>
             </span>
             <span class="worklist-card__line">
               <backoffice-order-status-label [order]="order" />

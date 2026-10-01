@@ -1,9 +1,9 @@
+import { PricePipe } from '@tendero/shared-ui';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ImportResult, ProductSummary } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
 import { Find } from '../../../worklist/find/find';
 import { ListState } from '../../../worklist/list-state/list-state';
@@ -18,19 +18,15 @@ import { ProductStatusTags } from '../product-status-tags/product-status-tags';
  */
 @Component({
   selector: 'backoffice-catalogue-list',
-  imports: [RouterLink, TranslocoDirective, FilterChips, Pager, ProductStatusTags, Find, ListState],
+  imports: [RouterLink, TranslocoDirective, FilterChips, Pager, ProductStatusTags, Find, ListState, PricePipe],
   templateUrl: './catalogue-list.html',
   styleUrl: './catalogue-list.css',
 })
 export class CatalogueList {
   protected readonly store = inject(CatalogueStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
 
   protected readonly pageSize = this.store.pageSize;
-
-  protected price(item: ProductSummary): string {
-    return formatPrice(item.priceAmount, item.priceCurrency, this.culture.active());
-  }
 
   protected seconds(result: ImportResult): string {
     return result.elapsedSeconds.toFixed(1);

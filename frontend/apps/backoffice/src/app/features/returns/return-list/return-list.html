@@ -64,7 +64,9 @@
               <td class="numeric" [title]="request.orderId">{{ shortId(request.orderId) }}</td>
               <td><ng-container *ngTemplateOutlet="whatOf; context: { $implicit: request }" /></td>
               <td><backoffice-return-status-label [request]="request" /></td>
-              <td class="numeric font-semibold">{{ request.refundAmount ? money(request.refundAmount) : '—' }}</td>
+              <td class="numeric font-semibold">
+                {{ request.refundAmount ? (request.refundAmount | price: 'EUR' : culture.active()) : '—' }}
+              </td>
               <td class="text-end whitespace-nowrap">
                 @if (nextDecision(request); as decision) {
                   <button
@@ -104,7 +106,7 @@
               <span class="numeric font-semibold">#{{ request.number }}</span>
               <backoffice-return-status-label [request]="request" />
               <span class="worklist-card__end numeric">{{
-                request.refundAmount ? money(request.refundAmount) : ''
+                request.refundAmount ? (request.refundAmount | price: 'EUR' : culture.active()) : ''
               }}</span>
             </span>
             <ng-container *ngTemplateOutlet="whatOf; context: { $implicit: request }" />

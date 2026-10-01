@@ -1,7 +1,8 @@
+import { formatPrice } from '@tendero/shared-util';
+import { PricePipe } from '@tendero/shared-ui';
 import { Component, computed, inject } from '@angular/core';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { BarChartData } from '../../../../charts/chart-contract';
 import { changeOf, formatChange } from '../figures';
@@ -16,18 +17,19 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
  */
 @Component({
   selector: 'backoffice-campaigns-widget',
-  imports: [TranslocoDirective, BarChart, WidgetFrame],
+  imports: [TranslocoDirective, BarChart, WidgetFrame, PricePipe],
   templateUrl: './campaigns-widget.html',
   host: { class: 'block' },
   providers: [CampaignsStore],
 })
 export class CampaignsWidget {
   protected readonly store = inject(CampaignsStore);
-  private readonly culture = inject(CultureStore);
-  private readonly words = translateObjectSignal('dashboard.campaigns');
+  protected readonly culture = inject(CultureStore);
 
+  /** The chart's axis and figures: a function the chart calls, where a template would use the price pipe. */
   protected readonly money = (amount: number): string =>
     formatPrice(amount, this.store.uplift.value()?.currency ?? 'EUR', this.culture.active());
+  private readonly words = translateObjectSignal('dashboard.campaigns');
 
   protected readonly name = computed(() => {
     const campaign = this.store.campaign();

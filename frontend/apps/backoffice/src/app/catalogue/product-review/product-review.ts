@@ -1,8 +1,9 @@
+import { PricePipe } from '@tendero/shared-ui';
 import { NgOptimizedImage } from '@angular/common';
 import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { ProductImageUrls } from '@tendero/shared-util';
 import { ProductReviewStore } from './product-review.store';
 
 /** The cultures a product is written in, in the order the review shows them. */
@@ -17,14 +18,14 @@ const Cultures = ['es', 'en'] as const;
  */
 @Component({
   selector: 'backoffice-product-review',
-  imports: [TranslocoDirective, NgOptimizedImage],
+  imports: [TranslocoDirective, NgOptimizedImage, PricePipe],
   templateUrl: './product-review.html',
   host: { class: 'grid gap-4' },
   providers: [ProductReviewStore],
 })
 export class ProductReview {
   protected readonly store = inject(ProductReviewStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
   protected readonly images = inject(ProductImageUrls);
 
   readonly code = input.required<string>();
@@ -33,9 +34,5 @@ export class ProductReview {
 
   constructor() {
     this.store.follow(this.code);
-  }
-
-  protected price(amount: number, currency: string): string {
-    return formatPrice(amount, currency, this.culture.active());
   }
 }
