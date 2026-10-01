@@ -6,7 +6,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
-import { Notice } from '@tendero/shared-ui';
+import { Icon, Notice } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
 import { ProductImage } from '../../product-image/product-image';
 
@@ -26,7 +26,7 @@ import { ProductImage } from '../../product-image/product-image';
  */
 @Component({
   selector: 'storefront-cart',
-  imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage],
+  imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cart-page.html',
 })

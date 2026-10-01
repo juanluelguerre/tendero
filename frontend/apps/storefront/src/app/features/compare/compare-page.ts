@@ -7,6 +7,7 @@ import { ShopLinks } from '../../shop-links';
 import { SpecSource } from '../../specs/spec-source/spec-source';
 import { SpecValue } from '../../specs/spec-value/spec-value';
 import { ComparisonStore } from './comparison.store';
+import { Icon } from '@tendero/shared-ui';
 
 /**
  * Two to four products side by side (P10-7): the same rows the product page
@@ -19,7 +20,7 @@ import { ComparisonStore } from './comparison.store';
  */
 @Component({
   selector: 'storefront-compare-page',
-  imports: [TranslocoDirective, RouterLink, SpecValue, SpecSource],
+  imports: [TranslocoDirective, RouterLink, SpecValue, SpecSource, Icon],
   providers: [ComparisonStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './compare-page.html',

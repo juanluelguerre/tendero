@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CompareStore } from '../compare.store';
 import { ShopLinks } from '../../shop-links';
+import { Icon } from '@tendero/shared-ui';
 
 /**
  * The products picked for comparison, at the foot of every page until they are
@@ -12,7 +13,7 @@ import { ShopLinks } from '../../shop-links';
  */
 @Component({
   selector: 'storefront-compare-tray',
-  imports: [TranslocoDirective, RouterLink],
+  imports: [TranslocoDirective, RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './compare-tray.html',
   // The host is what sticks: a sticky element cannot leave its

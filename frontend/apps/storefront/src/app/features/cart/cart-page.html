@@ -76,12 +76,12 @@
 
             <button
               type="button"
-              class="size-[32px] rounded-md border border-transparent text-lg leading-[1] text-muted enabled:hover:border-hairline enabled:hover:text-danger disabled:opacity-40 max-xs:col-[3] max-xs:row-[1]"
+              class="inline-grid size-[32px] place-items-center rounded-md border border-transparent text-muted enabled:hover:border-hairline enabled:hover:text-danger disabled:opacity-40 max-xs:col-[3] max-xs:row-[1]"
               [attr.aria-label]="t('cart.remove', { name: line.productName })"
               [disabled]="store.busy()"
               (click)="remove(line)"
             >
-              ×
+              <lib-icon name="remove" [stroke]="2" />
             </button>
           </li>
         }

@@ -9,12 +9,12 @@
             >
               <span class="truncate">{{ item.name }}</span>
               <button
-                class="px-1 text-muted"
+                class="inline-flex px-1 text-muted"
                 type="button"
                 [attr.aria-label]="t('compare.remove', { name: item.name })"
                 (click)="compare.toggle(item)"
               >
-                ×
+                <lib-icon class="size-[14px]" name="remove" [stroke]="2" />
               </button>
             </li>
           }

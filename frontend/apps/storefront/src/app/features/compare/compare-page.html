@@ -40,12 +40,12 @@
                         product.name
                       }}</a>
                       <button
-                        class="ms-2 px-1 text-muted"
+                        class="ms-2 inline-flex px-1 align-middle text-muted"
                         type="button"
                         [attr.aria-label]="t('compare.remove', { name: product.name })"
                         (click)="store.drop(product.code)"
                       >
-                        ×
+                        <lib-icon class="size-[14px]" name="remove" [stroke]="2" />
                       </button>
                     </th>
                   }

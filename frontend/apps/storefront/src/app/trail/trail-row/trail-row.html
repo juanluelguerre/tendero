@@ -42,7 +42,7 @@
             [attr.aria-label]="t('home.trailSearchRemove', { text: search.key })"
             (click)="trail.forget('Search', search.key)"
           >
-            ×
+            <lib-icon class="size-[16px]" name="remove" [stroke]="2" />
           </button>
         </li>
       }

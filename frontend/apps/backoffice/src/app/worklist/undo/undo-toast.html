@@ -7,18 +7,18 @@
     <span class="text-sm">{{ offer.message }}</span>
     <button
       type="button"
-      class="min-h-[2.75rem] min-w-[2.75rem] rounded-md font-semibold text-body underline hover:bg-surface"
+      class="inline-grid min-h-[2.75rem] min-w-[2.75rem] place-items-center rounded-md font-semibold text-body underline hover:bg-surface"
       (click)="undo.take()"
     >
       {{ t('undo.take') }}
     </button>
     <button
       type="button"
-      class="min-h-[2.75rem] min-w-[2.75rem] rounded-md text-muted hover:bg-surface"
+      class="inline-grid min-h-[2.75rem] min-w-[2.75rem] place-items-center rounded-md text-muted hover:bg-surface"
       [attr.aria-label]="t('undo.dismiss')"
       (click)="undo.dismiss()"
     >
-      ×
+      <lib-icon name="close" />
     </button>
   </div>
 }
