@@ -1,12 +1,12 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // Plain functions, no Angular: no compiler plugin and no DOM.
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/libs/shared/util',
-  plugins: [nxViteTsPaths()],
+  plugins: [tsconfigPaths({ root: '../../../' })],
   test: {
     name: 'shared-util',
     watch: false,
