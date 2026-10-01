@@ -18,14 +18,8 @@
         <!-- The whole branch, which is what the API returns beside the name: a
              breadcrumb that had to walk parents itself would be the client
              keeping its own copy of the tree. -->
-        <!-- The crumb's links reach 24 px, and 44 where a finger aims (R-1, S-F4). -->
-        <nav class="flex flex-wrap items-center gap-2 text-sm text-muted" [attr.aria-label]="t('category.breadcrumb')">
-          <a class="inline-flex min-h-[1.5rem] items-center text-inherit hover:text-accent pointer-coarse:min-h-[2.75rem]" [routerLink]="links.home()">{{ t('nav.shop') }}</a>
-          @for (name of current.path; track $index) {
-            <span aria-hidden="true">›</span>
-            <span>{{ name }}</span>
-          }
-        </nav>
+        <storefront-crumbs [label]="t('category.breadcrumb')" [steps]="current.path"
+                           [start]="{ label: t('nav.shop'), commands: links.home() }" />
 
         <h1 class="mt-3 font-display text-2xl">{{ current.name }}</h1>
       </div>

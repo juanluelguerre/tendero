@@ -19,8 +19,9 @@ interface AccountState {
    * The images that did not load, keyed by SKU.
    *
    * The seed points at pictures that may not be there, so a broken image is the
-   * DEFAULT path on a fresh clone rather than an error — the same reason the
-   * search card carries this and swaps in a labelled tile.
+   * DEFAULT path on a fresh clone rather than an error. Each picture swaps in
+   * the placeholder by itself (`product-image/`); the set is kept here because
+   * an order whose every picture failed draws no strip at all.
    */
   readonly broken: ReadonlySet<string>;
 }

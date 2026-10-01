@@ -7,7 +7,7 @@ import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../cart/cart.store';
 import { CompareStore } from '../compare/compare.store';
 import type { ProductVia } from '../features/product/arrived-from';
-import { ProductImagePlaceholder } from '../product-image-placeholder/product-image-placeholder';
+import { ProductImage } from '../product-image/product-image';
 import { ShopLinks } from '../shop-links';
 
 /** Why a card is in its row, in one line under the price: *Porque viste…*, *Sube esta semana* (R-8). */
@@ -33,12 +33,11 @@ export interface CardReason {
  */
 @Component({
   selector: 'storefront-product-card',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
+  imports: [TranslocoDirective, RouterLink, ProductImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-card.html',
   styleUrl: './product-card.css',
   host: {
-    '[class.card--soldOut]': '!hit().inStock',
     '[class.card--line]': "layout() === 'line'",
   },
 })
@@ -72,10 +71,6 @@ export class ProductCard {
   protected readonly compare = inject(CompareStore);
   protected readonly adding = signal(false);
 
-  /** The seed points at images that may not be there, so a broken one is the
-   *  default path on a fresh clone rather than an error. */
-  protected readonly broken = signal(false);
-
   protected linkState(): { via: ProductVia } | undefined {
     const via = this.via();
     return via ? { via } : undefined;
@@ -83,7 +78,7 @@ export class ProductCard {
 
   protected imageUrl(): string | null {
     const id = this.hit().imageId;
-    return id && !this.broken() ? this.images.of(id) : null;
+    return id ? this.images.of(id) : null;
   }
 
   /** Picks the product for the comparison tray, or takes it out (P10-7). */

@@ -74,19 +74,15 @@
                   @if (hasImages(order)) {
                     <span class="flex gap-1">
                       @for (line of order.preview; track line.sku) {
-                        @if (line.imageId && !store.broken().has(line.sku)) {
-                          <img class="size-[48px] rounded-sm border border-hairline bg-surface object-cover" [src]="imageUrl(line.imageId)" alt=""
-                               loading="lazy" (error)="store.imageFailed(line.sku)" />
-                        } @else {
-                          <!-- The same labelled tile the rest of the shop uses:
-                               the seed points at images that may not exist, so
-                               this is the DEFAULT path on a fresh clone rather
-                               than an error state. A flat raised surface rather
-                               than a broken-image glyph. -->
-                          <storefront-product-image-placeholder
-                            class="size-[48px] rounded-sm border border-hairline bg-raised"
-                            [alt]="t('product.noImage')" />
-                        }
+                        <!-- The same tile the rest of the shop uses when a picture
+                             is missing; the store hears of each failure too,
+                             because a strip of nothing but tiles is not drawn. -->
+                        <storefront-product-image
+                          class="size-[48px] rounded-sm border border-hairline bg-surface object-cover"
+                          [src]="line.imageId ? imageUrl(line.imageId) : null"
+                          alt=""
+                          loading="lazy"
+                          (failed)="store.imageFailed(line.sku)" />
                       }
                     </span>
                   }

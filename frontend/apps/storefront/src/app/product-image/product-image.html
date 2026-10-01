@@ -1,0 +1,9 @@
+<ng-container *transloco="let t">
+  @let source = src();
+  @if (source && !broken()) {
+    <img class="size-full [object-fit:inherit]" [src]="source" [alt]="alt()" [loading]="loading()" (error)="fail()" />
+  } @else {
+    <!-- A default state, not a gap: a product with no picture has to look deliberate. -->
+    <storefront-product-image-placeholder class="size-full" [alt]="t('product.noImage')" [label]="labelled() ? t('product.noImage') : ''" />
+  }
+</ng-container>

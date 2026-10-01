@@ -32,7 +32,6 @@ interface ProductState {
    * another variant takes the notice away rather than claiming it was added.
    */
   readonly added: { readonly sku: string; readonly ok: boolean } | null;
-  readonly broken: ReadonlySet<string>;
 }
 
 /**
@@ -42,7 +41,7 @@ interface ProductState {
  * title, the canonical address — and this reads and derives.
  */
 export const ProductStore = signalStore(
-  withState<ProductState>({ selection: {}, shown: null, adding: false, added: null, broken: new Set<string>() }),
+  withState<ProductState>({ selection: {}, shown: null, adding: false, added: null }),
   withProps(() => {
     const route = inject(ActivatedRoute);
     const products = inject(ProductService);
@@ -141,9 +140,6 @@ export const ProductStore = signalStore(
     /** A thumbnail pressed: its image goes in front. */
     show(imageId: string): void {
       patchState(store, { shown: imageId });
-    },
-    imageFailed(imageId: string): void {
-      patchState(store, (state) => ({ broken: new Set(state.broken).add(imageId) }));
     },
     /**
      * Adds the chosen variant. The button is disabled without one, so a shopper

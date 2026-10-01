@@ -1,0 +1,6 @@
+/* Styled with utilities in the template (ADR 0049). The host is the caller's box:
+   it is a block, and what it holds is clipped to its radius. */
+:host {
+  display: block;
+  overflow: hidden;
+}

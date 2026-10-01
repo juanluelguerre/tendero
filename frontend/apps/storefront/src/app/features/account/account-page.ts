@@ -5,7 +5,7 @@ import type { OrderSummary } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime, formatPrice, ProductImageUrls } from '@tendero/shared-util';
-import { ProductImagePlaceholder } from '../../product-image-placeholder/product-image-placeholder';
+import { ProductImage } from '../../product-image/product-image';
 import { ShopLinks } from '../../shop-links';
 import { TrailHistory } from '../../trail/trail-history/trail-history';
 import { AccountStore } from './account.store';
@@ -31,7 +31,7 @@ import { PageState } from '../../page-state/page-state';
  */
 @Component({
   selector: 'storefront-account-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, TrailHistory, PageState],
+  imports: [TranslocoDirective, RouterLink, ProductImage, TrailHistory, PageState],
   providers: [AccountStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-page.html',

@@ -1,0 +1,4 @@
+/* Styled with utilities in the template (ADR 0049). */
+:host {
+  display: block;
+}

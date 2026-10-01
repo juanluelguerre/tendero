@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -7,7 +7,8 @@ import type { ProductDetail } from '@tendero/shared-api';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { filter } from 'rxjs';
-import { ProductImagePlaceholder } from '../../product-image-placeholder/product-image-placeholder';
+import { Crumbs } from '../../crumbs/crumbs';
+import { ProductImage } from '../../product-image/product-image';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { CanonicalLinks } from '../../seo/canonical-links';
 import { ShopLinks } from '../../shop-links';
@@ -37,7 +38,7 @@ import { PageState } from '../../page-state/page-state';
  */
 @Component({
   selector: 'storefront-product-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, SpecValue, SpecSource, PageState],
+  imports: [TranslocoDirective, RouterLink, Crumbs, ProductImage, SpecValue, SpecSource, PageState],
   providers: [ProductStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',
@@ -72,6 +73,9 @@ export class ProductPage {
    * the copy the policy's store exists to remove.
    */
   protected readonly returnWindowDays = inject(ReturnsPolicyStore).windowDays;
+
+  /** The branch's names, root first, for the crumbs. */
+  protected readonly crumbs = computed(() => this.store.product()?.category.map((step) => step.name) ?? []);
 
   /** Every finished navigation, so the tab can be renamed after the router
       names it — see the first effect in the constructor. */
