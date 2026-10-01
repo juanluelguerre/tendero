@@ -1,7 +1,15 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { ProductDetail, VariantView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { map } from 'rxjs';
@@ -25,10 +33,6 @@ export type ProductPageState =
   { status: 'loading' } | { status: 'done'; product: ProductDetail } | { status: 'notFound' } | { status: 'failed' };
 
 interface ProductState {
-  /** Which option is chosen on each axis. */
-  readonly selection: Selection;
-  /** Which image the gallery is showing, by id. Null means the cover. */
-  readonly shown: string | null;
   readonly adding: boolean;
   /**
    * What the last Add to cart did, for the notice beside the button (the
@@ -47,7 +51,7 @@ interface ProductState {
  * title, the canonical address — and this reads and derives.
  */
 export const ProductStore = signalStore(
-  withState<ProductState>({ selection: {}, shown: null, adding: false, added: null }),
+  withState<ProductState>({ adding: false, added: null }),
   withProps(() => {
     const route = inject(ActivatedRoute);
     const products = inject(ProductService);
@@ -87,7 +91,7 @@ export const ProductStore = signalStore(
       ),
     };
   }),
-  withComputed(({ _code, _detail, _sheet, selection, shown }) => {
+  withComputed(({ _code, _detail, _sheet }) => {
     const state = computed<ProductPageState>(() => {
       if (!_code()) return { status: 'notFound' };
       switch (_detail.status()) {
@@ -117,13 +121,33 @@ export const ProductStore = signalStore(
       state,
       product,
       variants,
-      /** The one the picker is currently on, or null when the combination is not sold. */
-      chosen: computed(() => variantFor(variants(), selection())),
       specLines: computed(() => {
         const current = product();
         return current ? specLines(current.attributes, loadedSheet()) : [];
       }),
       statements: computed(() => specStatements(loadedSheet())),
+    };
+  }),
+  // What the shopper picks, reset with each product: each answer opens on the
+  // variant it can sell, with the cover in front. State linked to the product,
+  // where an effect used to patch it after every answer.
+  withLinkedState(({ product }) => ({
+    /** Which option is chosen on each axis. */
+    selection: (): Selection => {
+      const current = product();
+      return current ? initialSelection(current) : {};
+    },
+    /** Which image the gallery is showing, by id. Null means the cover. */
+    shown: (): string | null => {
+      product();
+      return null;
+    },
+  })),
+  withComputed(({ variants, selection, shown, product, added }) => {
+    const chosen = computed(() => variantFor(variants(), selection()));
+    return {
+      /** The one the picker is currently on, or null when the combination is not sold. */
+      chosen,
       /** The gallery's images, cover first, with the chosen variant's promoted. */
       gallery: computed(() => {
         const current = product();
@@ -134,6 +158,14 @@ export const ProductStore = signalStore(
         const promoted = images.filter((image) => image.imageId === promotedId);
         return promoted.length > 0 ? [...promoted, ...images.filter((image) => image.imageId !== promotedId)] : images;
       }),
+      /** The notice, if it is about the variant on screen. */
+      notice: computed(() => {
+        const last = added();
+        return last && last.sku === chosen()?.sku ? last : null;
+      }),
+      /** Whether the shelf is thin enough to be worth saying. The API only sends a
+       *  number when it is, so the page never decides the threshold. */
+      remaining: computed(() => chosen()?.remaining ?? null),
     };
   }),
   withMethods((store) => ({
@@ -171,27 +203,8 @@ export const ProductStore = signalStore(
       // The cart keeps a refusal rather than throwing it; its absence is success.
       patchState(store, { added: { sku: variant.sku, ok: store._cart.failed() === null } });
     },
-    /** The notice, if it is about the variant on screen. */
-    notice(): { readonly sku: string; readonly ok: boolean } | null {
-      const added = store.added();
-      return added && added.sku === store.chosen()?.sku ? added : null;
-    },
-    /** Whether the shelf is thin enough to be worth saying. The API only sends a
-     *  number when it is, so the page never decides the threshold. */
-    remaining(): number | null {
-      return store.chosen()?.remaining ?? null;
-    },
     variantOf(sku: string): VariantView | undefined {
       return store.variants().find((variant) => variant.sku === sku);
     },
   })),
-  withHooks({
-    /** Each answer opens on the variant it can sell, with the cover in front. */
-    onInit(store) {
-      effect(() => {
-        const product = store.product();
-        if (product) untracked(() => patchState(store, { selection: initialSelection(product), shown: null }));
-      });
-    },
-  }),
 );
