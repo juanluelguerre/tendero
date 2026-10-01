@@ -5,6 +5,8 @@ import type { ImportResult, ProductSummary } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
+import { Find } from '../../../worklist/find/find';
+import { ListState } from '../../../worklist/list-state/list-state';
 import { Pager } from '../../../worklist/pager/pager';
 import { CatalogueStore, PageSize } from '../catalogue.store';
 import { ProductStatusTags } from '../product-status-tags/product-status-tags';
@@ -16,7 +18,7 @@ import { ProductStatusTags } from '../product-status-tags/product-status-tags';
  */
 @Component({
   selector: 'backoffice-catalogue-list',
-  imports: [RouterLink, TranslocoDirective, FilterChips, Pager, ProductStatusTags],
+  imports: [RouterLink, TranslocoDirective, FilterChips, Pager, ProductStatusTags, Find, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogue-list.html',
   styleUrl: './catalogue-list.css',

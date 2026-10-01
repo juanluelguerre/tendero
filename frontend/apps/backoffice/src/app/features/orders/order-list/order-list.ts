@@ -3,6 +3,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, orderReference } from '@tendero/shared-util';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
+import { Find } from '../../../worklist/find/find';
+import { ListState } from '../../../worklist/list-state/list-state';
 import { Pager } from '../../../worklist/pager/pager';
 import { placedAgo } from '../order-display';
 import { primaryMove } from '../order-moves';
@@ -17,7 +19,7 @@ import { OrdersStore, PageSize } from '../orders.store';
  */
 @Component({
   selector: 'backoffice-order-list',
-  imports: [TranslocoDirective, FilterChips, Pager, OrderStatusLabel, OrderPayment],
+  imports: [TranslocoDirective, FilterChips, Pager, OrderStatusLabel, OrderPayment, Find, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-list.html',
   styleUrl: './order-list.css',

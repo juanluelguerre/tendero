@@ -11,10 +11,11 @@
     <span class="tag tag--code ms-2" [title]="t('mandateHint', { issuer: mandate.issuer })">{{ t('mandate') }}</span>
   }
   @if (order().stopCode) {
-    <span class="reason" [title]="order().stopDetail ?? ''">
+    <!-- Why an order stopped, under its status: one size down, read second. -->
+    <span class="mt-1 block text-xs text-muted" [title]="order().stopDetail ?? ''">
       {{ t('stop.' + order().stopCode) }}
       @if (order().stopDetail) {
-        <span class="reason__detail">{{ order().stopDetail }}</span>
+        <span class="block font-mono tabular-nums">{{ order().stopDetail }}</span>
       }
     </span>
   }

@@ -223,7 +223,10 @@
     "deliverTo": "Deliver to",
     "lines": "Lines",
     "paneTotal": "Total, VAT and shipping included",
-    "paneFailed": "Could not load this order's lines."
+    "paneFailed": "Could not load this order's lines.",
+    "paneId": "Order id",
+    "copyId": "Copy the order id",
+    "copied": "Id copied"
   },
   "promotions": {
     "title": "Promotions",
@@ -887,7 +890,9 @@
     "suspendTitle": "Suspend {{agent}}?",
     "suspendBody": "It stops buying at once, and is told why. You can reinstate it at any time.",
     "suspendHint": "It stops buying at once. Reinstating undoes it.",
-    "suspended": "{{agent}} is suspended."
+    "suspended": "{{agent}} is suspended.",
+    "copyId": "Copy the agent id",
+    "copied": "Id copied"
   },
   "staffUsage": {
     "title": "How the backoffice is used",

@@ -1,49 +1,56 @@
 <ng-container *transloco="let t; prefix: 'productReview'">
   @if (store.review.value(); as product) {
     @if (product.imageIds.length > 0) {
-      <ul class="images" role="list">
+      <ul class="grid grid-cols-4 gap-2" role="list">
         @for (id of product.imageIds; track id; let first = $first) {
-          <li>
-            <img class="image" [class.image--first]="first" [src]="images.of(id)" [alt]="t('image', { name: product.names['es'] || product.names['en'] || product.code })" loading="lazy" />
+          <!-- The first image is the one the shop leads with, so it leads here too. -->
+          <li class="first:col-span-full">
+            <img
+              class="block w-full rounded-md border border-hairline bg-raised object-contain"
+              [class]="first ? 'aspect-4/3' : 'aspect-square'"
+              [src]="images.of(id)"
+              [alt]="t('image', { name: product.names['es'] || product.names['en'] || product.code })"
+              loading="lazy"
+            />
           </li>
         }
       </ul>
     } @else {
-      <p class="gap" role="note">{{ t('noImages') }}</p>
+      <p class="text-xs text-muted italic" role="note">{{ t('noImages') }}</p>
     }
 
-    <dl class="facts">
-      <div><dt>{{ t('price') }}</dt><dd class="numeric">{{ price(product.priceAmount, product.priceCurrency) }}</dd></div>
-      <div><dt>{{ t('brand') }}</dt><dd>{{ product.brand ?? '—' }}</dd></div>
-      <div><dt>{{ t('category') }}</dt><dd>{{ product.category ?? '—' }}</dd></div>
-      <div><dt>{{ t('code') }}</dt><dd class="numeric">{{ product.code }}</dd></div>
+    <dl class="m-0 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+      <div><dt class="text-muted">{{ t('price') }}</dt><dd class="numeric">{{ price(product.priceAmount, product.priceCurrency) }}</dd></div>
+      <div><dt class="text-muted">{{ t('brand') }}</dt><dd>{{ product.brand ?? '—' }}</dd></div>
+      <div><dt class="text-muted">{{ t('category') }}</dt><dd>{{ product.category ?? '—' }}</dd></div>
+      <div><dt class="text-muted">{{ t('code') }}</dt><dd class="numeric">{{ product.code }}</dd></div>
     </dl>
 
     @for (culture of cultures; track culture) {
-      <section class="culture">
+      <section class="grid gap-1">
         <h3 class="eyebrow">{{ t('culture.' + culture) }}</h3>
         @if (product.names[culture]; as name) {
-          <p class="culture__name">{{ name }}</p>
+          <p class="font-semibold">{{ name }}</p>
           @if (product.descriptions[culture]; as description) {
-            <p class="culture__description">{{ description }}</p>
+            <p class="text-xs text-muted">{{ description }}</p>
           } @else {
-            <p class="gap">{{ t('noDescription') }}</p>
+            <p class="text-xs text-muted italic">{{ t('noDescription') }}</p>
           }
         } @else {
           <!-- The finding the review is for: the storefront would fall back to
                the other language here and nobody would notice. -->
-          <p class="gap gap--strong">{{ t('missing') }}</p>
+          <p class="text-xs font-semibold text-warning">{{ t('missing') }}</p>
         }
       </section>
     }
 
     @if (product.attributes.length > 0) {
-      <section class="culture">
+      <section class="grid gap-1">
         <h3 class="eyebrow">{{ t('attributes') }}</h3>
-        <dl class="attributes">
+        <dl class="m-0 grid gap-x-4 gap-y-2 text-xs">
           @for (attribute of product.attributes; track attribute.code) {
-            <div>
-              <dt>{{ attribute.label }}</dt>
+            <div class="flex justify-between gap-3">
+              <dt class="text-muted">{{ attribute.label }}</dt>
               <dd>
                 @switch (attribute.kind) {
                   @case ('Number') {

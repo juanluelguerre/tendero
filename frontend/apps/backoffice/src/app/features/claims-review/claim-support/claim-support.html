@@ -1,1 +1,7 @@
-<span class="support" [class.support--weak]="claim().isWeak" [attr.title]="t('claims.supportExplained')" *transloco="let t">{{ percent(claim().support) }}</span>
+<span
+  class="tabular-nums"
+  [class.text-warning]="claim().isWeak"
+  [class.font-semibold]="claim().isWeak"
+  [attr.title]="t('claims.supportExplained')"
+  *transloco="let t"
+>{{ percent(claim().support) }}</span>

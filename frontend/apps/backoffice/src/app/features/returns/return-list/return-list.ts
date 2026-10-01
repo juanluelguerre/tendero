@@ -4,6 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, orderReference } from '@tendero/shared-util';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
+import { ListState } from '../../../worklist/list-state/list-state';
 import { nextDecision } from '../return-decisions';
 import { ReturnStatusLabel } from '../return-status-label/return-status-label';
 import { ReturnsStore } from '../returns.store';
@@ -15,7 +16,7 @@ import { ReturnsStore } from '../returns.store';
  */
 @Component({
   selector: 'backoffice-return-list',
-  imports: [TranslocoDirective, NgTemplateOutlet, FilterChips, ReturnStatusLabel],
+  imports: [TranslocoDirective, NgTemplateOutlet, FilterChips, ReturnStatusLabel, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './return-list.html',
   styleUrl: './return-list.css',

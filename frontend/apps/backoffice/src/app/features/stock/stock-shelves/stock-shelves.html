@@ -1,5 +1,5 @@
 <ng-container *transloco="let t">
-<div class="list">
+<div>
   <div class="table-wrap">
     <table class="table">
       <caption class="sr-only">{{ t('stock.title') }}</caption>
@@ -16,32 +16,38 @@
       </thead>
       <tbody>
         @for (row of store.rows(); track shelfOf(row)) {
-          <tr [class.row--empty]="row.available === 0">
+          <tr>
             <!-- The name comes from the CATALOGUE, in a second call: the
                  inventory endpoint cannot supply one, because stock exists
                  without a catalogue (ADR 0024). It is the boundary showing
-                 through the screen rather than a gap in it. -->
-            <td class="product">
+                 through the screen rather than a gap in it.
+
+                 The product column leads the row because it is what somebody
+                 scans for. The SKU stays, in mono, because it is what is
+                 printed on the box — the two answer different questions and
+                 neither replaces the other. -->
+            <td class="min-w-[14rem]">
               @let described = store.describe(row);
               @if (described) {
-                <span class="product__name">{{ described.productName }}</span>
+                <!-- `product__name` is a hook: the end-to-end search by name reads it. -->
+                <span class="product__name block">{{ described.productName }}</span>
                 @if (described.variantLabel) {
-                  <span class="product__variant code">{{ described.variantLabel }}</span>
+                  <span class="block text-2xs font-medium text-muted">{{ described.variantLabel }}</span>
                 }
               } @else {
                 <!-- Not a blank cell. The catalogue has never heard of this
                      SKU, and that is a row worth finding: stock can outlive
                      a product. -->
-                <span class="product__unknown">{{ t('stock.unknownProduct') }}</span>
+                <span class="text-xs text-warning">{{ t('stock.unknownProduct') }}</span>
               }
             </td>
-            <td class="numeric code">{{ row.sku }}</td>
+            <td class="numeric font-medium text-body">{{ row.sku }}</td>
             <td>{{ row.warehouseName }}</td>
             <td class="numeric">
               <!-- The only editable cell on the screen. A count replaces
                    the number; it does not add to it. -->
               <input
-                class="field field--count numeric"
+                class="field numeric w-[4.5rem] py-[2px] text-end"
                 type="number"
                 min="0"
                 step="1"
@@ -52,11 +58,16 @@
                 (keydown.enter)="store.save(row)"
               />
             </td>
-            <td class="numeric held" [class.held--none]="row.reserved === 0">
+            <!-- Two of the three numbers carry meaning on sight: what is spoken
+                 for, and what is left. A zero available is the whole reason to
+                 open this screen. Zero held is deliberately NOT amber: colouring
+                 every row's zero made the whole column read as an alert, and
+                 colour that is always on carries no information. -->
+            <td class="numeric" [class.text-warning]="row.reserved !== 0" [class.text-muted]="row.reserved === 0">
               {{ row.reserved }}
             </td>
-            <td class="numeric available">{{ row.available }}</td>
-            <td class="actions">
+            <td class="numeric font-medium" [class.text-body]="row.available !== 0" [class.text-danger]="row.available === 0">{{ row.available }}</td>
+            <td class="w-[5.5rem] text-end">
               @if (store.changed(row)) {
                 <button
                   class="button button--small"

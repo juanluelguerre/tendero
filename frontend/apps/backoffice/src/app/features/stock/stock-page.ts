@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { FilterChips } from '../../worklist/filter-chips/filter-chips';
+import { Find } from '../../worklist/find/find';
+import { ListState } from '../../worklist/list-state/list-state';
 import { StockHolds } from './stock-holds/stock-holds';
 import { StockShelves } from './stock-shelves/stock-shelves';
 import { StockStore } from './stock.store';
@@ -29,7 +31,7 @@ import { StockStore } from './stock.store';
  */
 @Component({
   selector: 'backoffice-stock',
-  imports: [TranslocoDirective, FilterChips, StockShelves, StockHolds],
+  imports: [TranslocoDirective, FilterChips, StockShelves, StockHolds, Find, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-page.html',
   styleUrl: './stock-page.css',

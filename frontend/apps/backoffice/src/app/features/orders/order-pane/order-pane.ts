@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
+import { CopyText } from '@tendero/shared-ui';
 import { formatPrice, orderReference } from '@tendero/shared-util';
 import { ConfirmDialog } from '../../../worklist/confirm-dialog/confirm-dialog';
 import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
@@ -17,7 +18,7 @@ import { OrderPaneStore } from './order-pane.store';
  */
 @Component({
   selector: 'backoffice-order-pane',
-  imports: [TranslocoDirective, WorklistPane, ConfirmDialog, OrderStatusLabel, OrderPayment],
+  imports: [TranslocoDirective, WorklistPane, ConfirmDialog, OrderStatusLabel, OrderPayment, CopyText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-pane.html',
   styleUrl: './order-pane.css',

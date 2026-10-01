@@ -1,12 +1,3 @@
-/* Laid out by whoever places it: a table cell, a card line or the pane's head. */
+/* Styled with utilities in the template (ADR 0049). Laid out by whoever places
+   it: a table cell, a card line or the pane's head. */
 :host { display: contents; }
-
-/* Why an order stopped, under its status: one size down, read second. */
-.reason {
-  display: block;
-  margin-block-start: var(--space-1);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-}
-
-.reason__detail { display: block; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }

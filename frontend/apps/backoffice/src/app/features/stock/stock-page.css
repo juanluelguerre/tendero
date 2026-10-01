@@ -1,16 +1,1 @@
-/* The shelves and their explanation, side by side while there is room. The
-   panel drops under the table below 1100px rather than being scrolled
-   horizontally with it: it is prose, not columns. */
-.grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: var(--space-5);
-  align-items: start;
-}
-
-@media (max-width: 1100px) {
-  .grid { grid-template-columns: minmax(0, 1fr); }
-}
-
-/* The rule the filter applies, said where it is applied (R-7.1). */
-.restock-rule { margin: calc(-1 * var(--space-2)) 0 var(--space-4); font-size: var(--text-xs); }
+/* Styled with utilities in the template (ADR 0049). */

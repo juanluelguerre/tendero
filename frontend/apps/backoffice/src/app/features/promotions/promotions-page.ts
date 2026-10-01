@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { PromotionView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
+import { ListState } from '../../worklist/list-state/list-state';
 import { PromotionsStore } from './promotions.store';
 
 /**
@@ -19,7 +20,7 @@ import { PromotionsStore } from './promotions.store';
  */
 @Component({
   selector: 'backoffice-promotions',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './promotions-page.html',
   styleUrl: './promotions-page.css',

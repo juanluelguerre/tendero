@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { ListState } from '../../../worklist/list-state/list-state';
 import { AgentStatus } from '../agent-status/agent-status';
 import { AgentsStore, AgentTrusts } from '../agents.store';
 
@@ -10,7 +11,7 @@ import { AgentsStore, AgentTrusts } from '../agents.store';
  */
 @Component({
   selector: 'backoffice-agent-list',
-  imports: [TranslocoDirective, AgentStatus],
+  imports: [TranslocoDirective, AgentStatus, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-list.html',
   styleUrl: './agent-list.css',

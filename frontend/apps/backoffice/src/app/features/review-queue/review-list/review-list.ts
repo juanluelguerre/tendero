@@ -5,6 +5,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { ProductSummary } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
+import { ListState } from '../../../worklist/list-state/list-state';
 import { ReviewQueueStore } from '../review-queue.store';
 
 /**
@@ -14,7 +15,7 @@ import { ReviewQueueStore } from '../review-queue.store';
  */
 @Component({
   selector: 'backoffice-review-list',
-  imports: [RouterLink, TranslocoDirective, NgTemplateOutlet],
+  imports: [RouterLink, TranslocoDirective, NgTemplateOutlet, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-list.html',
   styleUrl: './review-list.css',

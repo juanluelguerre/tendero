@@ -3,6 +3,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { ClaimForReview } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
+import { ListState } from '../../../worklist/list-state/list-state';
 import { Pager } from '../../../worklist/pager/pager';
 import { statementIn } from '../claim-statement';
 import { ClaimSupport } from '../claim-support/claim-support';
@@ -16,7 +17,7 @@ import { ClaimsReviewStore, PageSize } from '../claims-review.store';
  */
 @Component({
   selector: 'backoffice-claim-list',
-  imports: [TranslocoDirective, FilterChips, Pager, ClaimSupport],
+  imports: [TranslocoDirective, FilterChips, Pager, ClaimSupport, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-list.html',
   styleUrl: './claim-list.css',

@@ -1,15 +1,2 @@
-/* What the claims list has of its own; the table, cards, chips and pager are shared (styles.css, worklist/). */
-.product { font-weight: 500; white-space: nowrap; }
-.statement { margin: 0; font-weight: 500; }
-
-.attribute {
-  display: inline-block;
-  margin-block-start: var(--space-1);
-  padding: 1px var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-3xs);
-}
-
-.actions { text-align: end; white-space: nowrap; }
-.actions .button + .button { margin-inline-start: var(--space-2); }
+/* Styled with utilities in the template (ADR 0049). The table, cards, chips and
+   pager are shared (styles.css, worklist/). */

@@ -3,14 +3,14 @@
     <!-- The pane: beside the list from 1024 px, a sheet over it below. It holds
          the view's one clay action, and cancelling lives apart at its foot. -->
     <backoffice-worklist-pane [heading]="t('orders.paneTitle', { id: shortId(order.orderId) })" (closed)="closed.emit()">
-      <div class="pane-status">
+      <div class="flex flex-wrap items-center gap-2">
         <backoffice-order-status-label [order]="order" />
         <backoffice-order-payment [order]="order" />
       </div>
 
       <section class="pane-section">
         <h3 class="eyebrow">{{ t('orders.deliverTo') }}</h3>
-        <p class="strong">{{ order.recipientName }}</p>
+        <p class="font-semibold">{{ order.recipientName }}</p>
         @if (pane.detail.value(); as found) {
           <p class="muted">{{ found.order.shippingAddress }}</p>
           <p class="muted">{{ found.order.shippingLabel }}</p>
@@ -20,9 +20,9 @@
       <section class="pane-section">
         <h3 class="eyebrow">{{ t('orders.lines') }}</h3>
         @if (pane.detail.value(); as found) {
-          <ul class="lines" role="list">
+          <ul class="grid gap-1 text-xs" role="list">
             @for (line of found.order.lines; track line.sku) {
-              <li class="line">
+              <li class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2">
                 <span class="numeric muted">{{ line.quantity }} ×</span>
                 <span>
                   {{ line.productName }}
@@ -34,9 +34,9 @@
               </li>
             }
           </ul>
-          <p class="pane-total">
+          <p class="flex justify-between border-t border-hairline pt-2">
             <span class="muted">{{ t('orders.paneTotal') }}</span>
-            <span class="numeric total">{{ money(found.order.total, found.order.currency) }}</span>
+            <span class="numeric font-semibold">{{ money(found.order.total, found.order.currency) }}</span>
           </p>
         } @else if (pane.detail.isLoading()) {
           <div class="skeleton" aria-hidden="true"></div>
@@ -44,6 +44,13 @@
         } @else if (pane.detail.status() === 'error') {
           <p class="failed" role="alert">{{ t('orders.paneFailed') }}</p>
         }
+      </section>
+
+      <!-- The whole id, which the list and the heading shorten: what support
+           asks for and what the logs are searched by, so it is copied, not typed. -->
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('orders.paneId') }}</h3>
+        <lib-copy-text [value]="order.orderId" [copyLabel]="t('orders.copyId')" [copiedLabel]="t('orders.copied')" />
       </section>
 
       @if (store.refusal()[order.orderId] !== undefined) {

@@ -223,7 +223,10 @@
     "deliverTo": "Entregar a",
     "lines": "Líneas",
     "paneTotal": "Total, IVA y envío incluidos",
-    "paneFailed": "No se han podido cargar las líneas de este pedido."
+    "paneFailed": "No se han podido cargar las líneas de este pedido.",
+    "paneId": "Id del pedido",
+    "copyId": "Copiar el id del pedido",
+    "copied": "Id copiado"
   },
   "promotions": {
     "title": "Promociones",
@@ -887,7 +890,9 @@
     "suspendTitle": "¿Suspender a {{agent}}?",
     "suspendBody": "Deja de comprar al instante, y se le dice por qué. Puedes readmitirlo cuando quieras.",
     "suspendHint": "Deja de comprar al instante. Readmitirlo lo deshace.",
-    "suspended": "{{agent}} está suspendido."
+    "suspended": "{{agent}} está suspendido.",
+    "copyId": "Copiar el id del agente",
+    "copied": "Id copiado"
   },
   "staffUsage": {
     "title": "Cómo se usa el backoffice",

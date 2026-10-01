@@ -491,18 +491,7 @@
     margin-block-end: var(--space-4);
   }
 
-  .find { flex: 1 1 14rem; display: flex; }
-
-  .find__input {
-    width: 100%;
-    min-height: 2.5rem;
-    padding-inline: var(--space-3);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-md);
-    background: var(--bg-raised);
-    color: var(--text);
-    font: inherit;
-  }
+  /* The search box is a component of its own now: worklist/find. */
 
   .row { cursor: pointer; }
   .row--selected td { background: var(--accent-tint); }

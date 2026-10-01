@@ -1,7 +1,7 @@
 @if (store.selected(); as item) {
   <ng-container *transloco="let t">
   <backoffice-worklist-pane [heading]="item.name" (closed)="closed.emit()">
-    <div class="pane-status"><backoffice-product-status-tags [product]="item" /></div>
+    <div class="flex flex-wrap gap-2"><backoffice-product-status-tags [product]="item" /></div>
     <backoffice-product-review [code]="item.code" />
 
     @if (item.status === 'Draft') {
@@ -13,7 +13,7 @@
       <button type="button" class="button button--quiet pane-primary" [disabled]="store.busy() === item.productId" (click)="store.withdraw(item)">
         {{ store.busy() === item.productId ? t('catalogue.withdrawing') : t('catalogue.withdraw') }}
       </button>
-      <p class="muted hint">{{ t('catalogue.withdrawHint') }}</p>
+      <p class="muted text-xs">{{ t('catalogue.withdrawHint') }}</p>
     }
     <a class="quiet-link" [routerLink]="['/products', item.productId, 'variants']">{{ t('variants.title') }}</a>
   </backoffice-worklist-pane>

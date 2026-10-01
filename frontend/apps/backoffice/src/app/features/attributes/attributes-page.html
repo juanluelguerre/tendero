@@ -9,12 +9,12 @@
   </header>
   <p class="page-hint">{{ t('attributes.hint') }}</p>
 
-  @if (store.loading()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-    <p class="sr-only" role="status" aria-live="polite">{{ t('attributes.loading') }}</p>
-  } @else if (store.failed()) {
-    <p class="failed" role="alert">{{ t('attributes.failed') }}</p>
-  } @else {
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [loadingText]="t('attributes.loading')"
+    [failedText]="t('attributes.failed')"
+  >
     <div class="table-wrap">
     <table class="table">
       <caption class="sr-only">{{ t('attributes.title') }}</caption>
@@ -30,11 +30,16 @@
       <tbody>
         @for (definition of store.items(); track definition.code) {
           <tr>
-            <td class="numeric code">{{ definition.code }}</td>
-            <td [class.missing]="!label(definition, 'es')">{{ label(definition, 'es') }}</td>
-            <td [class.missing]="!label(definition, 'en')">{{ label(definition, 'en') }}</td>
+            <td class="numeric font-medium text-body">{{ definition.code }}</td>
+            <!-- A missing label is the fact this screen exists for, so it is
+                 loud: a dash in the danger colour, not an empty cell somebody
+                 has to notice. -->
+            <td [class.missing]="!label(definition, 'es')" [class.text-danger]="!label(definition, 'es')">{{ label(definition, 'es') }}</td>
+            <td [class.missing]="!label(definition, 'en')" [class.text-danger]="!label(definition, 'en')">{{ label(definition, 'en') }}</td>
             <td><span class="tag tag--code">{{ definition.kind }}</span></td>
-            <td class="options">
+            <!-- The option count and the completeness tag are two facts, not
+                 one word: without the gap they read as "5es · en". -->
+            <td class="flex items-center gap-2">
               @if (definition.options.length > 0) {
                 <span class="numeric">{{ definition.options.length }}</span>
               }
@@ -49,5 +54,5 @@
       </tbody>
     </table>
     </div>
-  }
+  </backoffice-list-state>
 </section>

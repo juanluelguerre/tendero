@@ -1,3 +1,6 @@
+/* Styled with utilities in the template (ADR 0049). What stays is the host's
+   frame, because the pane itself is the landmark: beside the list from 1024 px,
+   a sheet over it below. */
 :host {
   display: flex;
   flex-direction: column;
@@ -8,39 +11,6 @@
   background: var(--bg-surface);
 }
 
-.head { display: flex; align-items: center; gap: var(--space-3); }
-
-.head__title {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--text-lg);
-}
-
-.head__title:focus { outline: none; }
-.head__title:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-
-.head__back,
-.head__close {
-  display: inline-grid;
-  place-items: center;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding-inline: var(--space-2);
-  border: 0;
-  border-radius: var(--radius-md);
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
-.head__back:hover,
-.head__close:hover {
-  background: var(--bg-raised);
-  color: var(--text);
-}
-
 /* Beside the list, keeping its place while the list scrolls. */
 @media (min-width: 64rem) {
   :host {
@@ -49,8 +19,6 @@
     max-height: calc(100dvh - 3.5rem - var(--space-6));
     overflow-y: auto;
   }
-
-  .head__back { display: none; }
 }
 
 /* Below 1024 px a sheet over the list, and Back returns to it. */
@@ -63,6 +31,4 @@
     border: 0;
     border-radius: 0;
   }
-
-  .head__close { display: none; }
 }

@@ -1,0 +1,2 @@
+/* Laid out by the list that places it, as if its states were the list's own children. */
+:host { display: contents; }

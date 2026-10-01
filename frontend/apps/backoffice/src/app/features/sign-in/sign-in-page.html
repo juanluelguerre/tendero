@@ -1,8 +1,11 @@
-<div class="stage" *transloco="let t">
-  <section class="panel card">
-    <img class="card__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true"
+<!-- Centred in what is left of the viewport under the bar, not floated in the
+     middle of a dark page: with no tabs and no data, a card is the only thing
+     that tells you where to look. -->
+<div class="grid min-h-[60dvh] place-items-center py-6" *transloco="let t">
+  <section class="panel w-full max-w-[26rem] p-6">
+    <img class="mb-4 block size-[36px]" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true"
          width="36" height="36" />
-    <h1 class="card__title">{{ t('signIn.title') }}</h1>
+    <h1 class="text-lg">{{ t('signIn.title') }}</h1>
 
     <!-- Why they are here, when the answer is not "they arrived". A session that
          ended without anybody pressing anything is the one case where the door
@@ -20,7 +23,7 @@
         {{ t('signIn.signOut') }}
       </button>
     } @else if (issuer) {
-      <p class="muted card__hint">{{ t('signIn.hint') }}</p>
+      <p class="muted mt-2 mb-5 text-xs">{{ t('signIn.hint') }}</p>
 
       <!-- The one clay action on this view, and the only thing it does is leave.
            Who may sign in, and what they have to type, belongs to the issuer. -->
@@ -31,7 +34,7 @@
       <!-- Naming the issuer is not decoration: you are about to be sent to
            another origin, and a page that hands you off without saying where is
            a page that has trained you to ignore that. -->
-      <p class="muted card__issuer">{{ t('signIn.via.' + issuer) }}</p>
+      <p class="muted">{{ t('signIn.via.' + issuer) }}</p>
     } @else {
       <p class="failed" role="alert">{{ t('signIn.noIssuer') }}</p>
     }

@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -10,7 +11,7 @@ import type { CultureView } from '../evaluation-view';
  */
 @Component({
   selector: 'backoffice-culture-evaluation',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './culture-evaluation.html',
   styleUrl: './culture-evaluation.css',

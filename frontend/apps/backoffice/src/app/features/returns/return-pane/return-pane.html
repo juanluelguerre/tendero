@@ -1,7 +1,7 @@
 @if (store.selected(); as request) {
   <ng-container *transloco="let t">
   <backoffice-worklist-pane [heading]="t('returns.paneTitle', { number: request.number, id: shortId(request.orderId) })" (closed)="closed.emit()">
-    <div class="pane-status">
+    <div class="flex flex-wrap items-center gap-3">
       <backoffice-return-status-label [request]="request" />
       <a class="quiet-link" routerLink="/orders" [queryParams]="{ status: 'all', order: request.orderId }">
         {{ t('returns.openOrder') }}
@@ -10,13 +10,14 @@
 
     <section class="pane-section">
       <h3 class="eyebrow">{{ t('returns.column.what') }}</h3>
-      <ul class="lines" role="list">
+      <ul class="grid gap-2 text-xs" role="list">
         @for (line of request.lines; track line.sku) {
-          <li class="line">
+          <li class="flex flex-wrap items-baseline gap-2">
             <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
-            <span class="reason" [class.reason--damaged]="line.reason === 'Damaged'">{{ t('returns.reason.' + line.reason) }}</span>
+            <span [class.text-muted]="line.reason !== 'Damaged'" [class.text-danger]="line.reason === 'Damaged'">{{ t('returns.reason.' + line.reason) }}</span>
             @if (line.comment) {
-              <q class="line__comment">{{ line.comment }}</q>
+              <!-- The customer's own words, when they gave any: quoted, and read second. -->
+              <q class="basis-full text-muted italic">{{ line.comment }}</q>
             }
           </li>
         }
@@ -24,9 +25,9 @@
     </section>
 
     @if (request.refundAmount) {
-      <p class="pane-total">
+      <p class="flex justify-between border-t border-hairline pt-2">
         <span class="muted">{{ t('returns.column.refund') }}</span>
-        <span class="numeric strong">{{ money(request.refundAmount) }}</span>
+        <span class="numeric font-semibold">{{ money(request.refundAmount) }}</span>
       </p>
     }
 

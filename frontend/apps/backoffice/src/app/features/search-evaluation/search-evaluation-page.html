@@ -28,9 +28,9 @@
   } @else if (store.status() === 'running') {
     <!-- Indeterminate, like the import bar: the endpoint reports nothing until it
          has asked every query, so a percentage would be invented. -->
-    <div class="running" role="status" aria-live="polite">
+    <div class="mt-4 mb-5 max-w-[32rem]" role="status" aria-live="polite">
       <div class="awning-rule awning-rule--thin running__bar"></div>
-      <p class="running__label muted">{{ t('searchEvaluation.running') }}</p>
+      <p class="muted mt-2 text-xs">{{ t('searchEvaluation.running') }}</p>
     </div>
   } @else if (store.status() === 'failed') {
     <div class="empty">
@@ -40,7 +40,7 @@
   }
 
   @if (store.result(); as measured) {
-    <p class="took muted" role="status">
+    <p class="muted mb-4 text-xs" role="status">
       {{ t('searchEvaluation.took', { queries: queryCount(measured), seconds: seconds(measured) }) }}
       · {{ t('searchEvaluation.judged', { count: measured.judgedProductsInCatalogue }) }}
     </p>
@@ -52,10 +52,11 @@
     @if (!measured.vectorLayer.isConfigured) {
       <lib-notice class="mb-4 max-w-[76ch]">{{ t('searchEvaluation.notConfigured') }}</lib-notice>
     } @else if (!measured.vectorLayer.isAvailable) {
-      <!-- The server's own words for why, as the orders screen shows a refusal. -->
+      <!-- The server's own words for why, as the orders screen shows a refusal.
+           `reason` is a hook: the page's spec reads the words by it. -->
       <lib-notice class="mb-4 max-w-[76ch]" tone="warn">
         {{ t('searchEvaluation.degraded') }}
-        <code class="reason">{{ measured.vectorLayer.reason }}</code>
+        <code class="reason mt-2 block font-mono text-3xs text-muted">{{ measured.vectorLayer.reason }}</code>
       </lib-notice>
     }
 

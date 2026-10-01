@@ -1,33 +1,56 @@
-<section class="variants" *transloco="let t">
-  <h1>{{ t('variants.title') }}</h1>
-  <p class="hint">{{ t('variants.hint') }}</p>
+<section class="flex max-w-[40rem] flex-col gap-3" *transloco="let t">
+  <h1 class="m-0 font-display text-lg">{{ t('variants.title') }}</h1>
+  <p class="m-0 text-xs text-muted">{{ t('variants.hint') }}</p>
 
   @for (axis of store.axes(); track $index) {
-    <div class="axis">
-      <label>
+    <div class="flex gap-2">
+      <label class="flex flex-col gap-1 text-xs">
         <span>{{ t('variants.axisCode') }}</span>
-        <input [ngModel]="axis.code" (ngModelChange)="store.edit($index, 'code', $event)" [name]="'code' + $index" placeholder="COLOR" />
+        <input
+          class="rounded-sm border border-hairline bg-surface p-2"
+          [ngModel]="axis.code"
+          (ngModelChange)="store.edit($index, 'code', $event)"
+          [name]="'code' + $index"
+          placeholder="COLOR"
+        />
       </label>
-      <label class="grow">
+      <label class="flex flex-1 flex-col gap-1 text-xs">
         <span>{{ t('variants.axisOptions') }}</span>
-        <input [ngModel]="axis.options" (ngModelChange)="store.edit($index, 'options', $event)" [name]="'options' + $index" placeholder="NAVY, BLACK" />
+        <input
+          class="rounded-sm border border-hairline bg-surface p-2"
+          [ngModel]="axis.options"
+          (ngModelChange)="store.edit($index, 'options', $event)"
+          [name]="'options' + $index"
+          placeholder="NAVY, BLACK"
+        />
       </label>
     </div>
   }
 
-  <div class="actions">
-    <button type="button" class="secondary" (click)="store.addAxis()">{{ t('variants.addAxis') }}</button>
-    <span class="preview numeric">{{ t('variants.willCreate', { count: store.combinations() }) }}</span>
-    <button type="button" [disabled]="store.busy() || store.combinations() === 0" (click)="generate()">
+  <div class="flex items-center gap-3">
+    <button
+      type="button"
+      class="rounded-sm border border-hairline px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+      (click)="store.addAxis()"
+    >
+      {{ t('variants.addAxis') }}
+    </button>
+    <span class="numeric ms-auto text-xs text-muted">{{ t('variants.willCreate', { count: store.combinations() }) }}</span>
+    <button
+      type="button"
+      class="rounded-sm border border-accent bg-accent px-3 py-2 text-on-accent disabled:cursor-not-allowed disabled:opacity-60"
+      [disabled]="store.busy() || store.combinations() === 0"
+      (click)="generate()"
+    >
       {{ store.busy() ? t('variants.generating') : t('variants.generate') }}
     </button>
   </div>
 
   @if (store.created() !== null) {
-    <p class="done" role="status">{{ t('variants.created', { count: store.created() }) }}</p>
+    <p class="m-0 text-sm text-positive" role="status">{{ t('variants.created', { count: store.created() }) }}</p>
   }
   @if (store.failed()) {
-    <p class="failed" role="alert">{{ store.failed() }}</p>
+    <p class="m-0 text-sm text-danger" role="alert">{{ store.failed() }}</p>
   }
 
   <a routerLink="/review">{{ t('variants.back') }}</a>

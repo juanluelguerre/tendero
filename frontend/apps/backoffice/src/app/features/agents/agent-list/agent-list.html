@@ -8,14 +8,14 @@
     <p class="failed" role="alert">{{ store.refusal() || t('failed') }}</p>
   }
 
-  @if (store.agents.isLoading() && !store.agents.hasValue()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-    <p class="sr-only" role="status" aria-live="polite">{{ t('loading') }}</p>
-  } @else if (store.agents.error()) {
-    <p class="failed" role="alert">{{ t('failed') }}</p>
-  } @else if (store.agents.value()?.length === 0) {
-    <div class="empty"><p class="empty__text">{{ t('empty') }}</p></div>
-  } @else {
+  <backoffice-list-state
+    [loading]="store.agents.isLoading() && !store.agents.hasValue()"
+    [failed]="!!store.agents.error()"
+    [empty]="store.agents.value()?.length === 0"
+    [loadingText]="t('loading')"
+    [failedText]="t('failed')"
+    [emptyText]="t('empty')"
+  >
     <div class="table-wrap wide-only">
       <table class="table">
         <caption class="sr-only">{{ t('title') }}</caption>
@@ -35,12 +35,12 @@
                 <button type="button" class="row__open" [attr.aria-expanded]="agent.agentId === store.selectedId()" (click)="$event.stopPropagation(); store.open(agent)">
                   {{ agent.displayName }}
                 </button>
-                <span class="numeric muted agent__id">{{ agent.agentId }}</span>
+                <span class="numeric muted text-3xs">{{ agent.agentId }}</span>
               </td>
               <td>{{ agent.operator }}</td>
               <td>
                 <select
-                  class="field field--inline"
+                  class="field w-auto min-w-[8rem]"
                   [value]="agent.trust"
                   [disabled]="store.busy() === agent.agentId"
                   [attr.aria-label]="t('changeTrust', { agent: agent.displayName })"
@@ -53,7 +53,7 @@
                 </select>
               </td>
               <td><backoffice-agent-status [agent]="agent" /></td>
-              <td class="actions">
+              <td>
                 @if (agent.status === 'Suspended') {
                   <button class="button button--small button--quiet" type="button" [disabled]="store.busy() === agent.agentId" (click)="$event.stopPropagation(); store.reinstate(agent, 'row')">
                     {{ t('reinstate') }}
@@ -74,7 +74,7 @@
       @for (agent of store.agents.value(); track agent.agentId) {
         <li class="worklist-card" [class.worklist-card--selected]="agent.agentId === store.selectedId()">
           <button type="button" class="worklist-card__open" (click)="store.open(agent)">
-            <span class="agent__name">{{ agent.displayName }}</span>
+            <span class="block font-medium">{{ agent.displayName }}</span>
             <span class="worklist-card__line">
               <backoffice-agent-status [agent]="agent" />
               <span class="muted">{{ agent.operator }} · {{ t('trust.' + agent.trust) }}</span>
@@ -88,5 +88,5 @@
         </li>
       }
     </ul>
-  }
+  </backoffice-list-state>
 </ng-container>
