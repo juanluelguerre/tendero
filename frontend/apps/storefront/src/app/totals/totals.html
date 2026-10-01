@@ -1,0 +1,39 @@
+<dl *transloco="let t" class="grid gap-2">
+  <div class="flex justify-between gap-4">
+    <dt>{{ t('cart.subtotal') }}</dt>
+    <dd class="numeric">{{ money(subtotal()) }}</dd>
+  </div>
+
+  @if (discountTotal() > 0) {
+    <div class="flex justify-between gap-4 text-positive">
+      <dt>{{ t('cart.discounts') }}</dt>
+      <dd class="numeric">−{{ money(discountTotal()) }}</dd>
+    </div>
+  }
+
+  @switch (shippingState()) {
+    @case ('at-checkout') {
+      <div class="flex justify-between gap-4 text-sm text-muted">
+        <dt>{{ shippingLabel() ?? t('cart.shipping') }}</dt>
+        <dd>{{ t('cart.shippingAtCheckout') }}</dd>
+      </div>
+    }
+    @default {
+      <div class="flex justify-between gap-4">
+        <dt>{{ shippingLabel() ?? t('cart.shipping') }}</dt>
+        <dd class="numeric">
+          {{ shippingState() === 'charged' ? money(shipping()) : t('cart.shippingAtCheckout') }}
+        </dd>
+      </div>
+    }
+  }
+
+  <div class="flex justify-between gap-4 border-t border-hairline pt-3 text-md font-bold">
+    <dt>{{ t('cart.total') }}</dt>
+    <dd class="numeric">{{ money(total()) }}</dd>
+  </div>
+
+  @if (taxTotal() > 0) {
+    <p class="text-xs text-muted">{{ t('cart.tax') }} · {{ money(taxTotal()) }}</p>
+  }
+</dl>

@@ -6,6 +6,7 @@ import { CartStore } from '../../cart/cart.store';
 import { ShopLinks } from '../../shop-links';
 import { CheckoutCards, CheckoutStore } from './checkout.store';
 import { Notice } from '@tendero/shared-ui';
+import { Totals } from '../../totals/totals';
 
 /**
  * Address, delivery, payment. One page, three steps, in the order the shop
@@ -23,7 +24,7 @@ import { Notice } from '@tendero/shared-ui';
  */
 @Component({
   selector: 'storefront-checkout',
-  imports: [TranslocoDirective, FormsModule, RouterLink, Notice],
+  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, Totals],
   providers: [CheckoutStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './checkout-page.html',

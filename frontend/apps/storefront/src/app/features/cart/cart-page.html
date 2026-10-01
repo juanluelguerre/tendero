@@ -1,8 +1,8 @@
-<section *transloco="let t" class="cart">
-  <header class="cart__head">
-    <h1 class="cart__title">{{ t('cart.title') }}</h1>
+<section *transloco="let t" class="pt-6 pb-8">
+  <header class="mb-5 flex items-baseline gap-3">
+    <h1 class="text-2xl">{{ t('cart.title') }}</h1>
     @if (!store.isEmpty()) {
-      <span class="cart__count">{{ items(t) }}</span>
+      <span class="text-sm text-muted">{{ items(t) }}</span>
     }
   </header>
 
@@ -17,50 +17,69 @@
       <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
     </div>
   } @else {
-    <div class="layout">
-      <ul class="lines">
+    <!-- The cart: lines on the left, what they cost on the right, one column on
+         a tablet or a phone. -->
+    <div class="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6 max-tab:grid-cols-[minmax(0,1fr)]">
+      <ul class="grid gap-3">
         @for (line of store.cart()!.lines; track line.sku) {
-          <li class="line">
+          <li
+            class="grid grid-cols-[72px_minmax(0,1fr)_auto_auto_auto] items-center gap-4 rounded-lg border border-hairline bg-surface p-3 max-xs:grid-cols-[56px_minmax(0,1fr)_auto] max-xs:gap-y-3"
+          >
             @let source = imageUrl(line);
             @if (source) {
-              <img class="line__image" [src]="source" [alt]="line.productName" loading="lazy" />
+              <img
+                class="size-[72px] rounded-md bg-raised object-cover max-xs:size-[56px]"
+                [src]="source"
+                [alt]="line.productName"
+                loading="lazy"
+              />
             } @else {
-              <div class="line__image line__image--blank" aria-hidden="true">
+              <!-- A deliberate default state and not a gap: a line with no photo
+                   has to look like a decision. Same rule the search card follows. -->
+              <div
+                class="grid size-[72px] place-items-center rounded-md bg-raised font-display text-xl text-muted max-xs:size-[56px]"
+                aria-hidden="true"
+              >
                 {{ line.productName.charAt(0) }}
               </div>
             }
 
-            <div class="line__body">
-              <p class="line__name">{{ line.productName }}</p>
+            <div class="min-w-0">
+              <p class="font-semibold">{{ line.productName }}</p>
               @if (line.variantLabel) {
-                <p class="line__variant">{{ line.variantLabel }}</p>
+                <p class="mt-[2px] text-sm text-muted">{{ line.variantLabel }}</p>
               }
-              <p class="line__sku numeric">{{ line.sku }}</p>
+              <p class="mt-[2px] text-xs text-muted numeric">{{ line.sku }}</p>
             </div>
 
-            <div class="stepper" role="group" [attr.aria-label]="t('cart.quantity', { name: line.productName })">
+            <!-- The stepper: this is the control people press most on a phone. -->
+            <div
+              class="flex items-center overflow-hidden rounded-md border border-hairline-strong max-xs:col-[3] max-xs:row-[2]"
+              role="group"
+              [attr.aria-label]="t('cart.quantity', { name: line.productName })"
+            >
               <button
                 type="button"
-                class="stepper__button"
+                class="size-[40px] bg-surface text-lg leading-[1] text-body enabled:hover:bg-raised disabled:opacity-40"
                 [attr.aria-label]="t('cart.decrease')"
                 [disabled]="store.busy()"
                 (click)="change(line, -1)"
               >−</button>
-              <span class="stepper__value numeric">{{ line.quantity }}</span>
+              <span class="min-w-[2.5rem] text-center font-semibold numeric">{{ line.quantity }}</span>
               <button
                 type="button"
-                class="stepper__button"
+                class="size-[40px] bg-surface text-lg leading-[1] text-body enabled:hover:bg-raised disabled:opacity-40"
                 [attr.aria-label]="t('cart.increase')"
                 [disabled]="store.busy()"
                 (click)="change(line, 1)"
               >+</button>
             </div>
 
-            <p class="line__price numeric">{{ lineTotal(line.sku) }}</p>
+            <p class="min-w-[5rem] text-end font-semibold numeric max-xs:col-[2] max-xs:text-start">{{ lineTotal(line.sku) }}</p>
 
             <button
               type="button"
-              class="line__remove"
+              class="size-[32px] rounded-md border border-transparent text-lg leading-[1] text-muted enabled:hover:border-hairline enabled:hover:text-danger disabled:opacity-40 max-xs:col-[3] max-xs:row-[1]"
               [attr.aria-label]="t('cart.remove', { name: line.productName })"
               [disabled]="store.busy()"
               (click)="remove(line)"
@@ -69,51 +88,41 @@
         }
       </ul>
 
-      <aside class="summary">
+      <!-- The summary sticks because the total is the thing a shopper checks
+           while editing the lines, and scrolling to find it is how a basket gets
+           abandoned. Unstuck on a tablet or a phone, where it sits under the
+           lines and sticking it would cover them. -->
+      <aside
+        class="sticky top-[calc(var(--header-h)+var(--space-4))] grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static"
+      >
         @if (store.quote(); as quote) {
-          <dl class="totals">
-            <div class="totals__row">
-              <dt>{{ t('cart.subtotal') }}</dt>
-              <dd class="numeric">{{ money(quote.subtotal) }}</dd>
-            </div>
-
-            @if (quote.discountTotal > 0) {
-              <div class="totals__row totals__row--off">
-                <dt>{{ t('cart.discounts') }}</dt>
-                <dd class="numeric">−{{ money(quote.discountTotal) }}</dd>
-              </div>
-            }
-
-            <div class="totals__row totals__row--muted">
-              <dt>{{ t('cart.shipping') }}</dt>
-              <dd>{{ t('cart.shippingAtCheckout') }}</dd>
-            </div>
-
-            <div class="totals__row totals__row--total">
-              <dt>{{ t('cart.total') }}</dt>
-              <dd class="numeric">{{ money(quote.total) }}</dd>
-            </div>
-
-            @if (quote.taxTotal > 0) {
-              <p class="totals__tax">{{ t('cart.tax') }} · {{ money(quote.taxTotal) }}</p>
-            }
-          </dl>
+          <storefront-totals
+            [currency]="quote.currency"
+            [subtotal]="quote.subtotal"
+            [discountTotal]="quote.discountTotal"
+            shippingState="at-checkout"
+            [total]="quote.total"
+            [taxTotal]="quote.taxTotal"
+          />
 
           <!-- The point of the screen. A suppressed promotion comes back
                with its reason, and saying so is the difference between a
-               promotions engine and magic. -->
+               promotions engine and magic: a discount that was suppressed and
+               a discount of zero look identical in a total, and only one of
+               them is something a shopper can act on. -->
           @if (quote.discounts.length > 0) {
-            <ul class="promos">
+            <ul class="grid gap-3 border-t border-hairline pt-3">
               @for (discount of quote.discounts; track discount.promotionCode) {
-                <li class="promo" [class.promo--off]="discount.outcome !== 'Applied'">
-                  <span class="promo__label">{{ discount.label }}</span>
+                @let off = discount.outcome !== 'Applied';
+                <li class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 text-sm">
+                  <span class="font-medium" [class.text-muted]="off" [class.line-through]="off">{{ discount.label }}</span>
                   @if (discount.outcome === 'Applied') {
-                    <span class="promo__amount numeric">−{{ money(discount.amount) }}</span>
+                    <span class="text-positive numeric">−{{ money(discount.amount) }}</span>
                   } @else {
-                    <span class="promo__amount">{{ t('cart.suppressed') }}</span>
+                    <span class="text-xs text-muted">{{ t('cart.suppressed') }}</span>
                   }
                   @if (discount.reason) {
-                    <p class="promo__reason">{{ discount.reason }}</p>
+                    <p class="col-span-full text-xs text-muted">{{ discount.reason }}</p>
                   }
                 </li>
               }

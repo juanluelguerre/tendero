@@ -10,6 +10,7 @@ import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
 import { OrderStore } from './order.store';
 import { Notice, orderStatusTone, returnStatusTone, StatusPill } from '@tendero/shared-ui';
+import { Totals } from '../../totals/totals';
 
 /**
  * The order, and the way back.
@@ -27,7 +28,7 @@ import { Notice, orderStatusTone, returnStatusTone, StatusPill } from '@tendero/
  */
 @Component({
   selector: 'storefront-order',
-  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill],
+  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill, Totals],
   providers: [OrderStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-page.html',
