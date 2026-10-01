@@ -11,6 +11,7 @@ import { ShopLinks } from '../../shop-links';
 import { OrderStore } from './order.store';
 import { Notice, orderStatusTone, returnStatusTone, StatusPill } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
+import { Summary } from '../../summary/summary';
 
 /**
  * The order, and the way back.
@@ -28,7 +29,7 @@ import { Totals } from '../../totals/totals';
  */
 @Component({
   selector: 'storefront-order',
-  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill, Totals],
+  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill, Totals, Summary],
   providers: [OrderStore],
   templateUrl: './order-page.html',
 })

@@ -197,8 +197,7 @@
         </fieldset>
       </div>
 
-      <!-- Sticks beside the steps, as the cart's does; unstuck once it sits under them. -->
-      <aside class="sticky top-sticky grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static">
+      <storefront-summary>
         @if (cart.quote(); as quote) {
           <storefront-totals
             [currency]="quote.currency"
@@ -223,7 +222,7 @@
         }
 
         <a class="quiet" [routerLink]="links.cart()">{{ t('cart.title') }}</a>
-      </aside>
+      </storefront-summary>
     </div>
   }
 </section>

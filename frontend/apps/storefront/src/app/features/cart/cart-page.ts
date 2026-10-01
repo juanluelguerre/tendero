@@ -9,6 +9,7 @@ import { ShopLinks } from '../../shop-links';
 import { Icon, Notice } from '@tendero/shared-ui';
 import { Totals } from '../../totals/totals';
 import { ProductImage } from '../../product-image/product-image';
+import { Summary } from '../../summary/summary';
 
 /**
  * The basket, and what it costs right now.
@@ -26,7 +27,7 @@ import { ProductImage } from '../../product-image/product-image';
  */
 @Component({
   selector: 'storefront-cart',
-  imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage, Icon],
+  imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage, Icon, Summary],
   templateUrl: './cart-page.html',
 })
 export class CartPage {

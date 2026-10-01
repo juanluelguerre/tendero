@@ -87,11 +87,7 @@
         }
       </ul>
 
-      <!-- The summary sticks because the total is the thing a shopper checks
-           while editing the lines, and scrolling to find it is how a basket gets
-           abandoned. Unstuck on a tablet or a phone, where it sits under the
-           lines and sticking it would cover them. -->
-      <aside class="sticky top-sticky grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static">
+      <storefront-summary>
         @if (store.quote(); as quote) {
           <storefront-totals
             [currency]="quote.currency"
@@ -134,7 +130,7 @@
         <!-- The one clay action on the page (design/DESIGN.md). -->
         <a class="button flex w-full" [routerLink]="links.checkout()">{{ t('cart.checkout') }}</a>
         <a class="quiet" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
-      </aside>
+      </storefront-summary>
     </div>
   }
 </section>

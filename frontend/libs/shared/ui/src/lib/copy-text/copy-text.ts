@@ -13,7 +13,6 @@ import { booleanAttribute, Component, input, signal } from '@angular/core';
 @Component({
   selector: 'lib-copy-text',
   templateUrl: './copy-text.html',
-  styleUrl: './copy-text.css',
   host: { class: 'block min-w-0' },
 })
 export class CopyText {

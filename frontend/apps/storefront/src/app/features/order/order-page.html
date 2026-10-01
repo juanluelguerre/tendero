@@ -171,8 +171,7 @@
         }
       </div>
 
-      <!-- Sticks beside the panels, as the cart's does; unstuck once it sits under them. -->
-      <aside class="sticky top-sticky grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static">
+      <storefront-summary>
         <storefront-totals
           [currency]="order.currency"
           [subtotal]="order.subtotal"
@@ -189,7 +188,7 @@
         </div>
 
         <a class="quiet" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
-      </aside>
+      </storefront-summary>
     </div>
   } @else if (store.loading()) {
     <p class="muted" role="status" aria-live="polite">{{ t('order.loading') }}</p>
