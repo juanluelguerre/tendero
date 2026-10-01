@@ -83,6 +83,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 dotnet run --project tools/SearchEval         # golden set NDCG report
 dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42  # simulated shoppers and agents (ADR 0037); also a resource in Aspire
 npx nx serve storefront|backoffice            # from frontend/
+npm run format                                # from frontend/: Prettier, Tailwind classes sorted; CI runs format:check
 UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
 node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
 node tools/tracking-plan.mjs                   # docs/telemetry/tracking-plan.json → its .md and the browser's event types

@@ -7,6 +7,8 @@
     "serve:backoffice": "nx serve backoffice",
     "build:storefront": "nx build storefront",
     "build:backoffice": "nx build backoffice",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "generate:api-types": "npx --yes openapi-typescript@7.13.0 ../docs/openapi/tendero.json -o libs/shared/api/src/lib/generated/schema.ts"
   },
   "private": true,
@@ -81,6 +83,7 @@
     "nx": "23.1.1",
     "postcss": "^8.5.26",
     "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "supertest": "^7.1.4",
     "tailwindcss": "^4.3.3",
     "ts-node": "10.9.1",

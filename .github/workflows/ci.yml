@@ -216,6 +216,11 @@ jobs:
 
       - run: npm ci
 
+      # Formatting is its own gate, as `dotnet format` is the backend's: lint never
+      # checked it, and 519 files had drifted before this ran (2026-10-01).
+      - name: The code is formatted the way .prettierrc says
+        run: npm run format:check
+
       # `lint` is not a formatting pass here: it carries
       # @nx/enforce-module-boundaries, which is the TypeScript twin of the
       # NetArchTest rules (ADR 0010). Until this ran, the boundary between the
