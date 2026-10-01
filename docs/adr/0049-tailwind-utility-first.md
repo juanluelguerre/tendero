@@ -56,8 +56,8 @@ internals, a complex selector, an animation — and many end up empty.
 
 ## Consequences
 
-- The three-files convention stands (ADR 0047 and `CLAUDE.md`): a component's
-  `.css` is still there, and usually short or empty.
+- The three-files convention became two-or-three (amended 2026-10-01, below): a
+  component's `.css` exists only when it holds something utilities cannot say.
 - BEM names disappear from templates as they migrate; a class that remains is a
   hook for a test or a stylesheet, and says so.
 - Templates get longer. That is the trade Tailwind makes, and why point 4 matters.
@@ -76,8 +76,8 @@ inside the test so the shop's data never moved.
 - **Component CSS**: storefront 4,038 lines to 229, backoffice 2,019 to 516
   (the widget frame's size contract, 89 lines of container queries, among
   them); global `styles.css` 294 to 215 and 676 to 422; `libs/shared/ui` 109.
-- **What stays in CSS**, and is allowed to: `:host` (a template cannot style
-  its own host), keyframes, generated content (`::after` with `attr()`), anchor
+- **What stays in CSS**, and is allowed to: a `:host` that depends on a state,
+  a query or a context (see *The host*, below), keyframes, generated content (`::after` with `attr()`), anchor
   positioning and `@supports`, container queries (the theme defines no
   `--container-*`), and a rule a test reads from the stylesheet itself
   (`design-contrast.spec.ts` reads the wordmark's).
@@ -107,3 +107,41 @@ inside the test so the shop's data never moved.
   old `max-width: 640px` rules no longer apply at exactly 640px (likewise
   480, 560, 900, 1100, 1200).
 
+
+## Amendment (2026-10-01): the host, and the empty stylesheets
+
+The migration left 25 stylesheets holding only a comment and 68 holding only
+`:host { display: … }` — the rule above kept them so that every component stayed
+three files. The author called them noise, and they were: a reader opened a file
+to learn that a component is a block.
+
+> **⚠ Where the host's look goes** — the rule, also in `CLAUDE.md`:
+>
+> - **Fixed → `host: { class: '…' }`** in the decorator, as Angular's style guide
+>   prefers the `host` property, and as Spartan/ng and most Angular-with-Tailwind
+>   code do. Those are the only classes written in TS; Tailwind does not read TS
+>   (point 2), so each is listed in `theme.css`'s `@source inline(…)`.
+> - **`:host` in the `.css` only when it depends on something**: a state
+>   (`:host(.in-drawer)`, `:host(:hover)`), a media or container query, a context
+>   (`:host-context(.grid--fill)`), or a layered default a caller must be able to
+>   override (`lib-icon`).
+> - **Never `style` in the host metadata.** It beats every class, so the caller
+>   can no longer place the component with a utility, and it has no states.
+
+**Why not `:host` everywhere**, which also works: it keeps a file per component
+for one declaration, and an unlayered `:host` wins over the caller's utilities on
+the same element, while a host class competes with them as an equal. The cost
+of the choice is the list in `theme.css`, which nobody would keep in step by
+hand — so `design-host-classes.spec.ts` fails when a component's host class is
+missing from it, or when a component stylesheet holds nothing but comments.
+Measured: removing `contents` from the list turned it red on the panes that use
+it; a comment-only `totals.css` turned it red on that file.
+
+- **What moved**: 93 stylesheets deleted (25 empty, 68 `:host` only) and the
+  unconditional `:host` of 7 mixed ones, whose stylesheets keep the rest
+  (anchoring, `::after`, the wordmark a test reads). The `:host` rules that
+  depend on a state or a query stayed: the backoffice's nav, shell and worklist
+  pane, the storefront's product card, shop menu and filter chips.
+- **Checked against the callers**: no template puts a `display`, `position` or
+  `overflow` utility on one of these hosts, so no two utilities of one property
+  meet on an element, where Tailwind's order and not the author's would decide.

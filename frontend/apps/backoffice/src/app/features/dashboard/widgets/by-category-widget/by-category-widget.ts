@@ -17,7 +17,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './by-category-widget.html',
-  styleUrl: './by-category-widget.css',
+  host: { class: 'block' },
   providers: [ByCategoryStore],
 })
 export class ByCategoryWidget {

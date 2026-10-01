@@ -14,7 +14,11 @@ import { FullScreen } from '../full-screen';
   imports: [DashboardGrid],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-tab-page.html',
-  styleUrl: './dashboard-tab-page.css',
+  // On the wall the page's section is a column and this tab takes what the head leaves
+  // (spec: the tab fills the monitor). Here, on the tab's own host: the router creates
+  // this element from code, so the page's stylesheet cannot reach it — its rule for it
+  // never matched (the whole-branch review).
+  host: { class: 'block flex-1 min-h-0' },
 })
 export class DashboardTabPage {
   private readonly tab = toSignal(inject(ActivatedRoute).data.pipe(map((data) => data['tab'] as DashboardTab)), { requireSync: true });

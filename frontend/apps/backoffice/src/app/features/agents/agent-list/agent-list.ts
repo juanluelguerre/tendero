@@ -15,7 +15,6 @@ import { valueOf } from '@tendero/shared-util';
   imports: [TranslocoDirective, AgentStatus, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-list.html',
-  styleUrl: './agent-list.css',
 })
 export class AgentList {
   /** A resource read without throwing when its request failed (Angular 22). */

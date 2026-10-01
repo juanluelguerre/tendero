@@ -13,7 +13,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, RouterLink, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './health-widget.html',
-  styleUrl: './health-widget.css',
+  host: { class: 'block' },
   providers: [HealthStore],
 })
 export class HealthWidget {

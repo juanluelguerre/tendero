@@ -12,7 +12,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, RouterLink, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-by-status-widget.html',
-  styleUrl: './orders-by-status-widget.css',
+  host: { class: 'block' },
   providers: [OrdersByStatusStore],
 })
 export class OrdersByStatusWidget {

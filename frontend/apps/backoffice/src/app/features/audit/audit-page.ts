@@ -33,7 +33,6 @@ import { ListState } from '../../worklist/list-state/list-state';
   imports: [TranslocoDirective, FilterChips, Pager, ListState, StatusPill, CopyText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-page.html',
-  styleUrl: './audit-page.css',
   providers: [AuditStore],
 })
 export class AuditPage {

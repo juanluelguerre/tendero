@@ -12,7 +12,7 @@ import { StaffUsage } from '@tendero/shared-telemetry';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './staff-notice.html',
-  styleUrl: './staff-notice.css',
+  host: { class: 'block' },
 })
 export class StaffNotice {
   protected readonly usage = inject(StaffUsage);

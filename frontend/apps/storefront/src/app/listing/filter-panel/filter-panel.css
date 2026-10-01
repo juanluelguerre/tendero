@@ -1,10 +1,7 @@
-/* Styled with utilities in the template (ADR 0049). What stays: the host's
-   display, and the label that reserves the width of its bold self — an
+/* The label that reserves the width of its bold self — an
    invisible copy of its words, set in the weight a choice gives them, so
    choosing it does not widen it by the pixel the weight adds and nothing beside
    it moves (the backoffice's chips found this first). */
-:host { display: block; }
-
 .check__label::after {
   content: attr(data-label);
   height: 0;

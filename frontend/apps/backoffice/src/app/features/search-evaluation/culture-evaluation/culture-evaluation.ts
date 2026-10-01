@@ -14,7 +14,7 @@ import type { CultureView } from '../evaluation-view';
   imports: [TranslocoDirective, NgTemplateOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './culture-evaluation.html',
-  styleUrl: './culture-evaluation.css',
+  host: { class: 'block' },
 })
 export class CultureEvaluation {
   private readonly culture = inject(CultureStore);

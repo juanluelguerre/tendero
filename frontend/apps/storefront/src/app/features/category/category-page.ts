@@ -43,7 +43,6 @@ import { Crumbs } from '../../crumbs/crumbs';
   // and its own branch, which tells the listing what to list.
   providers: [ListingStore, CategoryStore],
   templateUrl: './category-page.html',
-  styleUrl: './category-page.css',
 })
 export class CategoryPage {
   protected readonly store = inject(CategoryStore);

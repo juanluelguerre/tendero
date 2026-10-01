@@ -15,7 +15,7 @@ let switches = 0;
   imports: [Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './theme-switch.html',
-  styleUrl: './theme-switch.css',
+  host: { class: 'block' },
 })
 export class ThemeSwitch {
   readonly label = input.required<string>();

@@ -14,7 +14,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-sales-widget.html',
-  styleUrl: './agent-sales-widget.css',
+  host: { class: 'block' },
   providers: [AgentSalesStore],
 })
 export class AgentSalesWidget {

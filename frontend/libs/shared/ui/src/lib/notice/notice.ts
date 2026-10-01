@@ -16,7 +16,9 @@ export type NoticeTone = 'info' | 'good' | 'warn' | 'bad';
   selector: 'lib-notice',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notice.html',
-  styleUrl: './notice.css',
+  // Its size and margins are its place's: the text inherits the page's size, and whoever
+  // places it gives it room.
+  host: { class: 'block' },
 })
 export class Notice {
   readonly tone = input<NoticeTone>('info');

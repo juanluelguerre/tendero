@@ -15,7 +15,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, RouterLink, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './returns-widget.html',
-  styleUrl: './returns-widget.css',
+  host: { class: 'block' },
   providers: [ReturnsStore],
 })
 export class ReturnsWidget {

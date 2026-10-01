@@ -22,7 +22,7 @@ import { TrailStore } from '../trail.store';
   imports: [TranslocoDirective, RouterLink, ProductRow, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './trail-row.html',
-  styleUrl: './trail-row.css',
+  host: { class: 'block' },
 })
 export class TrailRow {
   /** The viewed products' cards, in the trail's order. */

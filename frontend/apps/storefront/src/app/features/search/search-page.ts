@@ -28,7 +28,6 @@ import { PageState } from '../../page-state/page-state';
   // and its own words, which tell the listing what to list.
   providers: [ListingStore, SearchStore],
   templateUrl: './search-page.html',
-  styleUrl: './search-page.css',
 })
 export class SearchPage {
   protected readonly store = inject(SearchStore);

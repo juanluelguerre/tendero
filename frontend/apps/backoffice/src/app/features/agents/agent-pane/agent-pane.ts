@@ -13,7 +13,8 @@ import { AgentsStore } from '../agents.store';
   imports: [TranslocoDirective, WorklistPane, AgentStatus, CopyText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-pane.html',
-  styleUrl: './agent-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child.
+  host: { class: 'contents' },
 })
 export class AgentPane {
   protected readonly store = inject(AgentsStore);

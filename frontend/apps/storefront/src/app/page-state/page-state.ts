@@ -22,7 +22,8 @@ export type PageStateTone = 'info' | 'bad';
   selector: 'storefront-page-state',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './page-state.html',
-  styleUrl: './page-state.css',
+  // Its margins are its place's: whoever puts it on a page gives it room.
+  host: { class: 'block' },
 })
 export class PageState {
   readonly heading = input<string>();

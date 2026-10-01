@@ -20,6 +20,7 @@ import { BackofficeUsage } from '../../usage';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
+  host: { class: 'inline-flex' },
 })
 export class AccountMenu {
   private readonly auth = inject(AuthStore);

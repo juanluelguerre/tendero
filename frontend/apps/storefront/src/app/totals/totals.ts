@@ -28,7 +28,7 @@ export type ShippingState = 'at-checkout' | 'to-choose' | 'charged';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './totals.html',
-  styleUrl: './totals.css',
+  host: { class: 'block' },
 })
 export class Totals {
   readonly currency = input.required<string>();

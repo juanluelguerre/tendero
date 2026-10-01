@@ -13,7 +13,7 @@ let switches = 0;
   selector: 'lib-culture-switch',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './culture-switch.html',
-  styleUrl: './culture-switch.css',
+  host: { class: 'block' },
 })
 export class CultureSwitch<TCulture extends string = string> {
   readonly label = input.required<string>();

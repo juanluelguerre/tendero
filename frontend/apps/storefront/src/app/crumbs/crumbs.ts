@@ -24,7 +24,7 @@ export interface CrumbLink {
   imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './crumbs.html',
-  styleUrl: './crumbs.css',
+  host: { class: 'block' },
 })
 export class Crumbs {
   /** The navigation landmark's name: *Ruta de navegación*. */

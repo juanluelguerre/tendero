@@ -34,6 +34,7 @@ import { CountdownClock } from '../countdown-clock/countdown-clock';
   templateUrl: './campaign-card.html',
   styleUrl: './campaign-card.css',
   host: {
+    class: 'block',
     '[class.campaign--event]': "campaign().kind !== 'Season'",
     '[class.campaign--season]': "campaign().kind === 'Season'",
     '[class.campaign--banner]': "variant() === 'banner'",

@@ -1,3 +1,0 @@
-/* Styled with utilities in the template (ADR 0049); what stays is the host's
-   own room above the listing, which a template cannot give itself. */
-:host { display: block; margin-block-start: var(--space-4); }

@@ -18,7 +18,7 @@ import { AgentAddresses } from '../../shelves/agent-addresses';
   imports: [TranslocoDirective, CopyText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agents-page.html',
-  styleUrl: './agents-page.css',
+  host: { class: 'block' },
 })
 export class AgentsPage {
   protected readonly addresses = inject(AgentAddresses);

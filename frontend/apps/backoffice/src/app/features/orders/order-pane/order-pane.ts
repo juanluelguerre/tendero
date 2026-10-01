@@ -21,7 +21,9 @@ import { OrderPaneStore } from './order-pane.store';
   imports: [TranslocoDirective, WorklistPane, ConfirmDialog, OrderStatusLabel, OrderPayment, CopyText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-pane.html',
-  styleUrl: './order-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child; the
+  // pane itself is shared (worklist/).
+  host: { class: 'contents' },
   providers: [OrderPaneStore],
 })
 export class OrderPane {

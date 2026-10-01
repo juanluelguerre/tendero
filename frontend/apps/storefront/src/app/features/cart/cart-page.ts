@@ -29,7 +29,6 @@ import { ProductImage } from '../../product-image/product-image';
   imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cart-page.html',
-  styleUrl: './cart-page.css',
 })
 export class CartPage {
   /** Every link carries the language segment (P5-13). */

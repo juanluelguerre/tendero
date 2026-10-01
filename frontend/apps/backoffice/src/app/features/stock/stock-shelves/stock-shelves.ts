@@ -13,7 +13,7 @@ import { PageSize, shelfOf, StockStore } from '../stock.store';
   imports: [TranslocoDirective, Pager],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-shelves.html',
-  styleUrl: './stock-shelves.css',
+  host: { class: 'block min-w-0' },
 })
 export class StockShelves {
   protected readonly store = inject(StockStore);

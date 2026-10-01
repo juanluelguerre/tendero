@@ -1,12 +1,4 @@
-/* Styled with utilities in the template (ADR 0049); what stays is the host's
-   column, which a template cannot give itself, and the wordmark, which a test
-   reads from this file. */
-:host {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-}
-
+/* What stays here is the wordmark, which a test reads from this file (ADR 0049). */
 /*
   The wordmark is BRAND, not action: brand/BRAND.md sets it in Terracotta
   #D85A30, so it names --brand (an alias of --clay-500) and not the --accent

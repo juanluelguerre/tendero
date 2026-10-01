@@ -1,7 +1,4 @@
-/* Styled with utilities in the template (ADR 0049); what stays is the
-   anchoring, which has no utility. */
-:host { display: inline-flex; }
-
+/* The anchoring, which has no utility (ADR 0049). */
 .trigger {
   anchor-name: --account;
 }

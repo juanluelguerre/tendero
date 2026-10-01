@@ -20,7 +20,6 @@ import { ClaimsReviewStore, PageSize } from '../claims-review.store';
   imports: [TranslocoDirective, FilterChips, Pager, ClaimSupport, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-list.html',
-  styleUrl: './claim-list.css',
 })
 export class ClaimList {
   protected readonly store = inject(ClaimsReviewStore);

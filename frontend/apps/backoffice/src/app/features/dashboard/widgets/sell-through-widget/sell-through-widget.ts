@@ -15,7 +15,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sell-through-widget.html',
-  styleUrl: './sell-through-widget.css',
+  host: { class: 'block' },
   providers: [SellThroughStore],
 })
 export class SellThroughWidget {

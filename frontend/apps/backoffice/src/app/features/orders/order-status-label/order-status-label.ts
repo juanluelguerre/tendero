@@ -13,7 +13,8 @@ import { orderStatusTone, StatusPill } from '@tendero/shared-ui';
   imports: [TranslocoDirective, StatusPill],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-status-label.html',
-  styleUrl: './order-status-label.css',
+  // Laid out by whoever places it: a table cell, a card line or the pane's head.
+  host: { class: 'contents' },
 })
 export class OrderStatusLabel {
   readonly order = input.required<OrderSummary>();

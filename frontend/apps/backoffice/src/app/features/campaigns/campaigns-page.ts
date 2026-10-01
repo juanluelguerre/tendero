@@ -23,7 +23,9 @@ import { CampaignsStore } from './campaigns.store';
   providers: [CampaignsStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaigns-page.html',
-  styleUrl: './campaigns-page.css',
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the editor have of their own is in their folders.
+  host: { class: 'block' },
 })
 export class CampaignsPage {
   protected readonly store = inject(CampaignsStore);

@@ -19,7 +19,7 @@ import { AgentAddresses } from '../agent-addresses';
   imports: [TranslocoDirective, RouterLink, CopyText, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-card.html',
-  styleUrl: './agent-card.css',
+  host: { class: 'block' },
 })
 export class AgentCard {
   protected readonly links = inject(ShopLinks);

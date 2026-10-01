@@ -1,4 +1,0 @@
-/* The page is a frame: the list-and-pane layout is shared by every list of
-   work (styles.css), and what the list and the pane have of their own is in
-   their folders. */
-:host { display: block; }

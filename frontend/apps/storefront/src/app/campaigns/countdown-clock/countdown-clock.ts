@@ -19,7 +19,7 @@ import { nextChangeIn, spokenTimeLeft, timeLeft } from '../campaign-rules';
   selector: 'storefront-countdown-clock',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './countdown-clock.html',
-  styleUrl: './countdown-clock.css',
+  host: { class: 'block' },
 })
 export class CountdownClock {
   /** The moment counted to, as the server sent it. */

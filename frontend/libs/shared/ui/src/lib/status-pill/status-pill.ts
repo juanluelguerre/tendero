@@ -42,7 +42,9 @@ export function returnStatusTone(status: ReturnStatus): StatusTone {
   selector: 'lib-status-pill',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './status-pill.html',
-  styleUrl: './status-pill.css',
+  // The pill is the span inside; the host takes no box of its own, so a pill sits in a
+  // table cell or a heading exactly as a bare span would.
+  host: { class: 'contents' },
 })
 export class StatusPill {
   readonly tone = input.required<StatusTone>();

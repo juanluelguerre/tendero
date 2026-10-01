@@ -26,8 +26,9 @@ import { ReviewQueueStore } from './review-queue.store';
   imports: [ReviewList, ReviewPane],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-queue-page.html',
-  styleUrl: './review-queue-page.css',
-  host: { '(document:keydown)': 'key($event)' },
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the pane have of their own is in their folders.
+  host: { class: 'block', '(document:keydown)': 'key($event)' },
   providers: [ReviewQueueStore],
 })
 export class ReviewQueuePage {

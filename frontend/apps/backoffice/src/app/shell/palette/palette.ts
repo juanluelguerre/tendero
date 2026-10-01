@@ -21,7 +21,6 @@ import { PaletteStore } from './palette.store';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './palette.html',
-  styleUrl: './palette.css',
   providers: [PaletteStore],
 })
 export class Palette {

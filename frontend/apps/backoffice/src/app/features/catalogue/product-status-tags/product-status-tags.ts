@@ -8,7 +8,8 @@ import type { ProductSummary } from '@tendero/shared-api';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-status-tags.html',
-  styleUrl: './product-status-tags.css',
+  // Laid out by whoever places it; the tags are the shared ones (styles.css).
+  host: { class: 'contents' },
 })
 export class ProductStatusTags {
   readonly product = input.required<ProductSummary>();

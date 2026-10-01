@@ -19,7 +19,7 @@ const Cultures = ['es', 'en'] as const;
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-review.html',
-  styleUrl: './product-review.css',
+  host: { class: 'grid gap-4' },
   providers: [ProductReviewStore],
 })
 export class ProductReview {

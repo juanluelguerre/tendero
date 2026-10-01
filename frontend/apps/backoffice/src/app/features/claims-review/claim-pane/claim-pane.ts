@@ -15,7 +15,8 @@ import { ClaimsReviewStore } from '../claims-review.store';
   imports: [TranslocoDirective, WorklistPane, ClaimSupport],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-pane.html',
-  styleUrl: './claim-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child.
+  host: { class: 'contents' },
 })
 export class ClaimPane {
   protected readonly store = inject(ClaimsReviewStore);

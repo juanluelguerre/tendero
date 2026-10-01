@@ -16,7 +16,6 @@ import { AnalyticsConsent } from '@tendero/shared-telemetry';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './consent-banner.html',
-  styleUrl: './consent-banner.css',
 })
 export class ConsentBanner {
   protected readonly consent = inject(AnalyticsConsent);

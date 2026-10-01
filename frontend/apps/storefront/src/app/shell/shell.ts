@@ -36,7 +36,8 @@ import { AccountMenu } from './account-menu/account-menu';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
-  host: { '(document:click)': 'clickedAt($event)', '(document:keydown.escape)': 'closeMenu(true)' },
+  // The host is the page's column, which its template cannot give itself.
+  host: { class: 'flex flex-col min-h-dvh', '(document:click)': 'clickedAt($event)', '(document:keydown.escape)': 'closeMenu(true)' },
 })
 export class Shell {
   private readonly cultureStore = inject(CultureStore);

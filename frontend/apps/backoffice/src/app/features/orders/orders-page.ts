@@ -18,7 +18,9 @@ import { OrdersStore } from './orders.store';
   imports: [OrderList, OrderPane],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-page.html',
-  styleUrl: './orders-page.css',
+  // The page is a frame: the list-and-pane layout is shared by every list of work
+  // (styles.css), and what the list and the pane have of their own is in their folders.
+  host: { class: 'block' },
   providers: [OrdersStore],
 })
 export class OrdersPage {

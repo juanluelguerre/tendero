@@ -14,7 +14,7 @@ import { StockStore } from '../stock.store';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-holds.html',
-  styleUrl: './stock-holds.css',
+  host: { class: 'block' },
 })
 export class StockHolds {
   protected readonly store = inject(StockStore);

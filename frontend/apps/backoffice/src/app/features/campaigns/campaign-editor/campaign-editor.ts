@@ -30,7 +30,7 @@ let editors = 0;
   imports: [TranslocoDirective, ConfirmDialog],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaign-editor.html',
-  styleUrl: './campaign-editor.css',
+  host: { class: 'block' },
   providers: [CampaignEditorStore],
 })
 export class CampaignEditor {

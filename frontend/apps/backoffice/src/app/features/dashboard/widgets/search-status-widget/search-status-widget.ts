@@ -14,7 +14,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './search-status-widget.html',
-  styleUrl: './search-status-widget.css',
+  host: { class: 'block' },
   providers: [SearchStatusStore],
 })
 export class SearchStatusWidget {

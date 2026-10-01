@@ -14,7 +14,6 @@ import { WidgetOutlet } from './widget-outlet';
   imports: [WidgetOutlet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-grid.html',
-  styleUrl: './dashboard-grid.css',
 })
 export class DashboardGrid {
   private readonly widgets = inject(DASHBOARD_WIDGETS);

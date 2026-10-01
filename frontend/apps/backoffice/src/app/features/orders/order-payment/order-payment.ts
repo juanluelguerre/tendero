@@ -8,7 +8,9 @@ import type { OrderSummary } from '@tendero/shared-api';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-payment.html',
-  styleUrl: './order-payment.css',
+  // Laid out by whoever places it: a table cell or the pane's head. The tags are the
+  // shared ones (styles.css).
+  host: { class: 'contents' },
 })
 export class OrderPayment {
   readonly order = input.required<OrderSummary>();

@@ -28,7 +28,6 @@ import { Totals } from '../../totals/totals';
   providers: [CheckoutStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './checkout-page.html',
-  styleUrl: './checkout-page.css',
 })
 export class CheckoutPage {
   protected readonly store = inject(CheckoutStore);

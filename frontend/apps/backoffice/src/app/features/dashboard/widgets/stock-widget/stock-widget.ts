@@ -16,7 +16,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, RouterLink, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-widget.html',
-  styleUrl: './stock-widget.css',
+  host: { class: 'block' },
   providers: [StockStore],
 })
 export class StockWidget {

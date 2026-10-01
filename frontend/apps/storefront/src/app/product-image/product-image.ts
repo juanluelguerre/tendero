@@ -24,7 +24,9 @@ import { ProductImagePlaceholder } from '../product-image-placeholder/product-im
   imports: [TranslocoDirective, ProductImagePlaceholder],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-image.html',
-  styleUrl: './product-image.css',
+  // The host is the caller's box: it is a block, and what it holds is clipped to its
+  // radius.
+  host: { class: 'block overflow-hidden' },
 })
 export class ProductImage {
   /** The picture's address, or null when the product has none. */

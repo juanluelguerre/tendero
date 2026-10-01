@@ -17,6 +17,8 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-state.html',
   styleUrl: './list-state.css',
+  // Laid out by the list that places it, as if its states were the list's own children.
+  host: { class: 'contents' },
 })
 export class ListState {
   readonly loading = input.required<boolean>();

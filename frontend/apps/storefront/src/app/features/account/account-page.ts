@@ -35,7 +35,6 @@ import { PageState } from '../../page-state/page-state';
   providers: [AccountStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-page.html',
-  styleUrl: './account-page.css',
 })
 export class AccountPage {
   protected readonly store = inject(AccountStore);

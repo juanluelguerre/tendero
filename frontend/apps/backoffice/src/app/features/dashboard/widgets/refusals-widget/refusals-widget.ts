@@ -13,7 +13,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './refusals-widget.html',
-  styleUrl: './refusals-widget.css',
+  host: { class: 'block' },
   providers: [RefusalsStore],
 })
 export class RefusalsWidget {

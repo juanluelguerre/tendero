@@ -15,7 +15,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, Sparkline, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './key-figures-widget.html',
-  styleUrl: './key-figures-widget.css',
+  host: { class: 'block' },
   providers: [KeyFiguresStore],
 })
 export class KeyFiguresWidget {

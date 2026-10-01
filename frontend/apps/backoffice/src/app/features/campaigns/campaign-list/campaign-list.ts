@@ -19,7 +19,6 @@ import { CampaignsStore } from '../campaigns.store';
   imports: [TranslocoDirective, NgTemplateOutlet, FilterChips, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaign-list.html',
-  styleUrl: './campaign-list.css',
 })
 export class CampaignList {
   protected readonly store = inject(CampaignsStore);

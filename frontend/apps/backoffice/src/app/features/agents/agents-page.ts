@@ -20,7 +20,10 @@ import { AgentsStore } from './agents.store';
   imports: [TranslocoDirective, ConfirmDialog, AgentList, AgentRegister, AgentPane],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agents-page.html',
-  styleUrl: './agents-page.css',
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list, the form and the pane have of their own is in their
+  // folders.
+  host: { class: 'block' },
   providers: [AgentsStore],
 })
 export class AgentsPage {

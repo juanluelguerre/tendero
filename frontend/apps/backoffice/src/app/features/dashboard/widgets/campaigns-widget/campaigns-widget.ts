@@ -19,7 +19,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaigns-widget.html',
-  styleUrl: './campaigns-widget.css',
+  host: { class: 'block' },
   providers: [CampaignsStore],
 })
 export class CampaignsWidget {

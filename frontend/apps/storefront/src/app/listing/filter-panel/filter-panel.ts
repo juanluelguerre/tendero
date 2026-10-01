@@ -38,7 +38,7 @@ let panels = 0;
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './filter-panel.html',
   styleUrl: './filter-panel.css',
-  host: { '[class.in-sheet]': "mode() === 'sheet'" },
+  host: { class: 'block', '[class.in-sheet]': "mode() === 'sheet'" },
 })
 export class FilterPanel {
   readonly facets = input.required<readonly SearchFacet[]>();

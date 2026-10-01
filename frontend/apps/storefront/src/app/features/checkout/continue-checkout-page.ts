@@ -19,7 +19,6 @@ import { ContinueCheckoutStore } from './continue-checkout.store';
   providers: [ContinueCheckoutStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './continue-checkout-page.html',
-  styleUrl: './continue-checkout-page.css',
 })
 export class ContinueCheckoutPage {
   protected readonly store = inject(ContinueCheckoutStore);

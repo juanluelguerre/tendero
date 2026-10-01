@@ -23,7 +23,6 @@ import { PromotionsStore } from './promotions.store';
   imports: [TranslocoDirective, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './promotions-page.html',
-  styleUrl: './promotions-page.css',
   providers: [PromotionsStore],
 })
 export class PromotionsPage {

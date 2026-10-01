@@ -13,7 +13,7 @@ import { percent } from '../claim-statement';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-support.html',
-  styleUrl: './claim-support.css',
+  host: { class: 'contents' },
 })
 export class ClaimSupport {
   readonly claim = input.required<ClaimForReview>();

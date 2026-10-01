@@ -11,7 +11,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customers-widget.html',
-  styleUrl: './customers-widget.css',
+  host: { class: 'block' },
   providers: [CustomersStore],
 })
 export class CustomersWidget {

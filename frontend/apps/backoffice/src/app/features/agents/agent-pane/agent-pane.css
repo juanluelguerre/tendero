@@ -1,3 +1,0 @@
-/* Styled with utilities in the template (ADR 0049). The pane is laid out by the
-   page's list-and-pane grid, as if it were its child. */
-:host { display: contents; }

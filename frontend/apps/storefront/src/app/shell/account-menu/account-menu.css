@@ -1,8 +1,6 @@
 /* The backoffice's account menu (its account-menu.css), with the shop's round
-   trigger: the same shape as the basket beside it. Styled with utilities in the
-   template (ADR 0049); what stays is the anchoring, which has no utility. */
-:host { display: inline-flex; }
-
+   trigger: the same shape as the basket beside it. What stays here is the
+   anchoring, which has no utility (ADR 0049). */
 .trigger {
   anchor-name: --account;
 }

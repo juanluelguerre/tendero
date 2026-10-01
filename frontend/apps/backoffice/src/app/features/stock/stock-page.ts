@@ -34,7 +34,6 @@ import { StockStore } from './stock.store';
   imports: [TranslocoDirective, FilterChips, StockShelves, StockHolds, Find, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-page.html',
-  styleUrl: './stock-page.css',
   providers: [StockStore],
 })
 export class StockPage {

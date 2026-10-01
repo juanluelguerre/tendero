@@ -22,7 +22,6 @@ import { OrdersStore, PageSize } from '../orders.store';
   imports: [TranslocoDirective, FilterChips, Pager, OrderStatusLabel, OrderPayment, Find, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-list.html',
-  styleUrl: './order-list.css',
 })
 export class OrderList {
   protected readonly store = inject(OrdersStore);

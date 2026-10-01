@@ -1,5 +1,0 @@
-/* Styled with utilities in the template (ADR 0049); the host keeps the text
-   colour, so what is not a span inherits it. */
-:host {
-  color: var(--text);
-}

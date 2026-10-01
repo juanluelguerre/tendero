@@ -15,7 +15,8 @@ import { ReviewQueueStore } from '../review-queue.store';
   imports: [RouterLink, TranslocoDirective, WorklistPane, ProductReview],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-pane.html',
-  styleUrl: './review-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child.
+  host: { class: 'contents' },
 })
 export class ReviewPane {
   protected readonly store = inject(ReviewQueueStore);

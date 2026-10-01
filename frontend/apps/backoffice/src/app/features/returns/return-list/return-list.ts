@@ -19,7 +19,6 @@ import { ReturnsStore } from '../returns.store';
   imports: [TranslocoDirective, NgTemplateOutlet, FilterChips, ReturnStatusLabel, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './return-list.html',
-  styleUrl: './return-list.css',
 })
 export class ReturnList {
   protected readonly store = inject(ReturnsStore);

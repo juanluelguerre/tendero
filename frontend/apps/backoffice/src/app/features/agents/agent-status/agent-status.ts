@@ -8,7 +8,8 @@ import type { AgentView } from '@tendero/shared-api';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-status.html',
-  styleUrl: './agent-status.css',
+  // Laid out by whoever places it; the tags are the shared ones (styles.css).
+  host: { class: 'contents' },
 })
 export class AgentStatus {
   readonly agent = input.required<AgentView>();

@@ -24,6 +24,12 @@
 @source '../../../../apps/*/src/**/*.html';
 @source '../../*/src/**/*.html';
 
+/* The one place a class is written in TS: a component's own element, styled in
+   its `host: { class: '…' }` metadata, because a template cannot reach its host.
+   The scan above never reads TS, so those utilities are named here, and
+   design-host-classes.spec.ts fails when a component uses one this list lacks. */
+@source inline('block contents flex inline-flex grid flex-col flex-1 gap-4 min-h-0 min-h-dvh min-w-0 mt-4 overflow-hidden fixed sticky inset-x-0 bottom-0 bottom-5 z-5 z-10 justify-center pointer-events-none text-body [--chart-block-size:2.5rem]');
+
 /* The backoffice and the storefront both turn dark mode on with <html data-theme="dark">. */
 @custom-variant dark ([data-theme='dark'] &);
 

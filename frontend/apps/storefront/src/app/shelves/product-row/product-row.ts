@@ -55,7 +55,7 @@ let rows = 0;
   imports: [TranslocoDirective, RouterLink, ProductCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-row.html',
-  styleUrl: './product-row.css',
+  host: { class: 'block' },
 })
 export class ProductRow {
   readonly heading = input.required<string>();

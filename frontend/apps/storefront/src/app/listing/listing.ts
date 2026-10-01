@@ -37,7 +37,8 @@ type Translate = (key: string, params?: Record<string, unknown>) => string;
   imports: [TranslocoDirective, NgTemplateOutlet, ProductCard, FilterPanel, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './listing.html',
-  styleUrl: './listing.css',
+  // The host's own room above the listing, which its template cannot give itself.
+  host: { class: 'block mt-4' },
 })
 export class Listing {
   /** A category page's sections, drawn as links in the column; null on a search. */

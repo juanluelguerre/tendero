@@ -28,7 +28,6 @@ import { Notice } from '@tendero/shared-ui';
   imports: [TranslocoDirective, Notice],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sign-in-page.html',
-  styleUrl: './sign-in-page.css',
 })
 export class SignInPage {
   private readonly auth = inject(AuthStore);

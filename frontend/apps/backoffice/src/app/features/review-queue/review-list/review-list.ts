@@ -18,7 +18,6 @@ import { ReviewQueueStore } from '../review-queue.store';
   imports: [RouterLink, TranslocoDirective, NgTemplateOutlet, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-list.html',
-  styleUrl: './review-list.css',
 })
 export class ReviewList {
   protected readonly store = inject(ReviewQueueStore);

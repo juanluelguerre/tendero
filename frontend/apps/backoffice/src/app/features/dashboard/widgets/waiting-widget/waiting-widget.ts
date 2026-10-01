@@ -12,7 +12,7 @@ import { valueOf } from '@tendero/shared-util';
   imports: [TranslocoDirective, RouterLink, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './waiting-widget.html',
-  styleUrl: './waiting-widget.css',
+  host: { class: 'block' },
   providers: [WaitingStore],
 })
 export class WaitingWidget {

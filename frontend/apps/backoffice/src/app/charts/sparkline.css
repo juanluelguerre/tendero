@@ -1,5 +1,0 @@
-/* A sparkline's height, which its plot reads; the placeholder is in the template (ADR 0049). */
-:host {
-  display: block;
-  --chart-block-size: 2.5rem;
-}

@@ -42,7 +42,7 @@ import { HomeStore } from './home.store';
   providers: [HomeStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-sections.html',
-  styleUrl: './home-sections.css',
+  host: { class: 'block' },
 })
 export class HomeSections {
   protected readonly store = inject(HomeStore);

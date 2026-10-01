@@ -23,7 +23,6 @@ import { ComparisonStore } from './comparison.store';
   providers: [ComparisonStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './compare-page.html',
-  styleUrl: './compare-page.css',
 })
 export class ComparePage {
   protected readonly store = inject(ComparisonStore);

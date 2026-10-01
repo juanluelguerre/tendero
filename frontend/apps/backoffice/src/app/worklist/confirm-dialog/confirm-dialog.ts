@@ -13,7 +13,6 @@ let dialogs = 0;
   selector: 'backoffice-confirm-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './confirm-dialog.html',
-  styleUrl: './confirm-dialog.css',
 })
 export class ConfirmDialog {
   readonly heading = input.required<string>();

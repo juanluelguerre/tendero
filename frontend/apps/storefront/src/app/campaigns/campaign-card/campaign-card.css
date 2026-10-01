@@ -1,8 +1,3 @@
-/* Styled with utilities in the template (ADR 0049). */
-:host {
-  display: block;
-}
-
 /* On the chalkboard the ring is the light text: the accent would be a ring of
    clay around a clay button. Every link and button in it, the product cards'
    included, which a utility on one element cannot reach. */

@@ -42,7 +42,6 @@ import { PageState } from '../../page-state/page-state';
   providers: [ProductStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',
-  styleUrl: './product-page.css',
 })
 export class ProductPage {
   protected readonly store = inject(ProductStore);

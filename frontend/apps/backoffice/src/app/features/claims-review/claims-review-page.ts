@@ -21,8 +21,9 @@ import { ClaimsReviewStore } from './claims-review.store';
   imports: [ClaimList, ClaimPane],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claims-review-page.html',
-  styleUrl: './claims-review-page.css',
-  host: { '(document:keydown)': 'key($event)' },
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the pane have of their own is in their folders.
+  host: { class: 'block', '(document:keydown)': 'key($event)' },
   providers: [ClaimsReviewStore],
 })
 export class ClaimsReviewPage {

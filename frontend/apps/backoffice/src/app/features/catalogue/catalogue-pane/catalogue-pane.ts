@@ -16,7 +16,8 @@ import { ProductStatusTags } from '../product-status-tags/product-status-tags';
   imports: [RouterLink, TranslocoDirective, WorklistPane, ProductReview, ProductStatusTags],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogue-pane.html',
-  styleUrl: './catalogue-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child.
+  host: { class: 'contents' },
 })
 export class CataloguePane {
   protected readonly store = inject(CatalogueStore);

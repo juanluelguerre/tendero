@@ -22,7 +22,7 @@ import { TrailHistoryStore } from './trail-history.store';
   providers: [TrailHistoryStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './trail-history.html',
-  styleUrl: './trail-history.css',
+  host: { class: 'block' },
 })
 export class TrailHistory {
   protected readonly store = inject(TrailHistoryStore);

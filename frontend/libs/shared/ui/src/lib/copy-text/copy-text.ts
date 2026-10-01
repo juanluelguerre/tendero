@@ -15,6 +15,7 @@ import { booleanAttribute, ChangeDetectionStrategy, Component, input, signal } f
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './copy-text.html',
   styleUrl: './copy-text.css',
+  host: { class: 'block min-w-0' },
 })
 export class CopyText {
   readonly value = input.required<string>();

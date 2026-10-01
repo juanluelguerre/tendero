@@ -9,7 +9,8 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   selector: 'backoffice-find',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './find.html',
-  styleUrl: './find.css',
+  // The label is the tools row's flex item, so the host steps out of the way.
+  host: { class: 'contents' },
 })
 export class Find {
   readonly label = input.required<string>();

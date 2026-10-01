@@ -219,17 +219,34 @@ node tools/api-map.mjs --schema CartView
   `text-muted`, `p-5`, `max-sm:`); the theme is `design/tokens.css` and nothing
   else, so a utility can only name a token, and spacing is the tokens' own named
   steps (`p-5` is `--space-5`). A token with no utility is `bg-(--danger-tint)`.
-  A component's `.css` keeps only what utilities cannot say (`:host`, keyframes,
-  generated content, anchoring, container queries). Classes are literal in the
-  template — Tailwind reads `.html` only, never a class name built in TS. Each
+  A component's `.css` keeps only what utilities cannot say (keyframes,
+  generated content, anchoring, container queries, a `:host` that depends on
+  something). Classes are literal in the template — Tailwind reads `.html` only,
+  never a class name built in TS; the one exception is the host's, below. Each
   app's tiny, much-repeated primitives (`.button`, `.field`, `.table`, `.tag`…)
   stay as component classes in its `styles.css`; anything longer that repeats
   becomes a component (`libs/shared/ui` across apps), never `@apply`.
-- **An Angular component is three files** — `name.ts`, `name.html`, `name.css` —
-  which is what the current Angular style guide describes. Not a style
-  preference: a template inside a `.ts` literal is invisible to every HTML tool
-  and a stylesheet inside one is invisible to every CSS tool, including the token
-  test. A `.css` emptied by utilities stays, with a one-line comment saying so.
+- **⚠ The host's own look.** A template cannot reach its component's element, and
+  a custom element is `inline` until told otherwise. Where it goes:
+  - **Fixed look → `host: { class: 'block' }`** in the decorator (Angular's style
+    guide prefers the `host` property). Tailwind does not read TS, so each such
+    utility is listed in `theme.css`'s `@source inline(…)`, and
+    `design-host-classes.spec.ts` fails when one is missing.
+  - **`:host` in the `.css` only when it depends on something**: a state
+    (`:host(.in-drawer)`, `:host(:hover)`), a media or container query, the
+    context (`:host-context(…)`), or a layered default the caller must be able to
+    override (`lib-icon`).
+  - **Never a `style` in the host metadata**: it beats every class, so whoever
+    places the component can no longer adjust it, and it has no states.
+  - Never style a child component's element from the parent's stylesheet:
+    encapsulation makes that rule match nothing when the element is created
+    from code (the dashboard's tab did exactly that).
+- **An Angular component is `name.ts` + `name.html`, and `name.css` only when it
+  has something to say** — the current Angular style guide's layout. A template
+  inside a `.ts` literal is invisible to every HTML tool and a stylesheet inside
+  one to every CSS tool, including the token test, so neither is ever inline. A
+  `.css` emptied by utilities is deleted with its `styleUrl` (the same spec
+  fails on one that holds only comments).
 - **Folders by feature and theme, never by type of code** (Angular's style
   guide; ADR 0047). A feature keeps its page(s), routes and page store at its
   root; a component that is a concept of its own lives in a folder named for it

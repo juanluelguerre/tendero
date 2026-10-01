@@ -20,7 +20,6 @@ import { DefineVariantsStore } from './define-variants.store';
   imports: [FormsModule, RouterLink, TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './define-variants-page.html',
-  styleUrl: './define-variants-page.css',
   providers: [DefineVariantsStore],
 })
 export class DefineVariantsPage {

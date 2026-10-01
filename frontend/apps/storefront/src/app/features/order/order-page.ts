@@ -32,7 +32,6 @@ import { Totals } from '../../totals/totals';
   providers: [OrderStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-page.html',
-  styleUrl: './order-page.css',
 })
 export class OrderPage {
   protected readonly store = inject(OrderStore);

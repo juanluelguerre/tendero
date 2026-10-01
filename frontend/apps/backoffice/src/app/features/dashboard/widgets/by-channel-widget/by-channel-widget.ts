@@ -13,7 +13,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './by-channel-widget.html',
-  styleUrl: './by-channel-widget.css',
+  host: { class: 'block' },
   providers: [ByChannelStore],
 })
 export class ByChannelWidget {

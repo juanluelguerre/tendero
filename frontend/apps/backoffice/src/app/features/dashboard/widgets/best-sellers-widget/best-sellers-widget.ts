@@ -12,7 +12,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './best-sellers-widget.html',
-  styleUrl: './best-sellers-widget.css',
+  host: { class: 'block' },
   providers: [BestSellersStore],
 })
 export class BestSellersWidget {

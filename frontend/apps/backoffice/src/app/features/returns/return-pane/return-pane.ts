@@ -19,7 +19,8 @@ import { ReturnsStore } from '../returns.store';
   imports: [TranslocoDirective, RouterLink, WorklistPane, ConfirmDialog, ReturnStatusLabel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './return-pane.html',
-  styleUrl: './return-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child.
+  host: { class: 'contents' },
 })
 export class ReturnPane {
   protected readonly store = inject(ReturnsStore);

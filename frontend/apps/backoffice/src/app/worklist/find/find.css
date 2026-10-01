@@ -1,3 +1,0 @@
-/* Styled with utilities in the template (ADR 0049). The label is the tools row's
-   flex item, so the host steps out of the way. */
-:host { display: contents; }

@@ -13,7 +13,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sales-by-day-widget.html',
-  styleUrl: './sales-by-day-widget.css',
+  host: { class: 'block' },
   providers: [SalesByDayStore],
 })
 export class SalesByDayWidget {

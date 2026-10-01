@@ -18,7 +18,8 @@ export type ChartBuild = (colours: ChartColours, reducedMotion: boolean) => ECha
   imports: [EchartsDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './echarts-chart.html',
-  styleUrl: './echarts-chart.css',
+  // A block; its plot's height is the chart's to set.
+  host: { class: 'block' },
 })
 export class EchartsChart {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;

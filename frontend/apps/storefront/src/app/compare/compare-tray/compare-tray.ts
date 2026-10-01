@@ -15,7 +15,10 @@ import { ShopLinks } from '../../shop-links';
   imports: [TranslocoDirective, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './compare-tray.html',
-  styleUrl: './compare-tray.css',
+  // The host is what sticks: a sticky element cannot leave its
+  // parent, and the component's own element is that parent — inline by default, so the
+  // tray stuck to nothing until the host became the sticky box.
+  host: { class: 'block sticky bottom-0 z-10' },
 })
 export class CompareTray {
   protected readonly compare = inject(CompareStore);

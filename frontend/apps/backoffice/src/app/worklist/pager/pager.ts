@@ -36,7 +36,6 @@ export function rangeOf(page: number, pageSize: number, total: number): PageRang
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pager.html',
-  styleUrl: './pager.css',
 })
 export class Pager {
   readonly page = input.required<number>();

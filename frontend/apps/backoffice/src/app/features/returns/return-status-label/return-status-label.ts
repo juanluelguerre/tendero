@@ -9,7 +9,7 @@ import { returnStatusTone, StatusPill } from '@tendero/shared-ui';
   imports: [TranslocoDirective, StatusPill],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './return-status-label.html',
-  styleUrl: './return-status-label.css',
+  host: { class: 'contents' },
 })
 export class ReturnStatusLabel {
   readonly request = input.required<ReturnView>();

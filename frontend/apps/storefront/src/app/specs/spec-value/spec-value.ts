@@ -12,7 +12,8 @@ import type { SpecCell } from '@tendero/shared-api';
   imports: [TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './spec-value.html',
-  styleUrl: './spec-value.css',
+  // The host keeps the text colour, so what is not a span inherits it.
+  host: { class: 'text-body' },
 })
 export class SpecValue {
   readonly cell = input.required<SpecCell>();

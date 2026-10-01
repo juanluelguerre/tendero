@@ -12,7 +12,7 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   imports: [TranslocoDirective, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './funnel-widget.html',
-  styleUrl: './funnel-widget.css',
+  host: { class: 'block' },
   providers: [FunnelStore],
 })
 export class FunnelWidget {
