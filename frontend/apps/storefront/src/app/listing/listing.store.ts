@@ -1,10 +1,35 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalMethod,
+  signalStore,
+  withComputed,
+  withHooks,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import type { SearchAnswer, SearchFacet, SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { debounceTime, filter, firstValueFrom, map, Subject, timeout, type Subscription } from 'rxjs';
+import {
+  catchError,
+  debounceTime,
+  EMPTY,
+  exhaustMap,
+  filter,
+  finalize,
+  firstValueFrom,
+  map,
+  pipe,
+  Subject,
+  switchMap,
+  takeUntil,
+  tap,
+  timeout,
+} from 'rxjs';
 import { ProductSearchService } from '../data-access/product-search.service';
 import { ActiveListing } from './active-listing.store';
 import {
@@ -63,6 +88,17 @@ interface ListingStoreState {
    * applied with *Ver N productos*.
    */
   readonly pending: ListingFilters | null;
+  /** The page the rows reach: what the next *Load more* asks for. */
+  readonly _page: number;
+  /** The question the rows answer: what tells a new one from the same one asked again. */
+  readonly _asked: { readonly place: ListingPlace; readonly key: string; readonly culture: string } | null;
+}
+
+/** One question: what to list, narrowed how, in which language. */
+interface ListingQuestion {
+  readonly place: ListingPlace | null;
+  readonly filters: ListingFilters;
+  readonly culture: string;
 }
 
 /**
@@ -83,6 +119,8 @@ export const ListingStore = signalStore(
     loadingMore: false,
     folded: readFolded(),
     pending: null,
+    _page: 1,
+    _asked: null,
   })),
   withProps(({ pending }) => {
     const route = inject(ActivatedRoute);
@@ -96,13 +134,8 @@ export const ListingStore = signalStore(
       }),
       /** Every answer, with the question it answers: what `applyAndSettle` waits on. */
       _answers: new Subject<{ readonly key: string; readonly result: ListingResult }>(),
-      /** The question being answered and the requests in flight: bookkeeping, not state anybody draws. */
-      _asking: {
-        page: 1,
-        asked: null as { place: ListingPlace; key: string; culture: string } | null,
-        inFlight: undefined as Subscription | undefined,
-        appending: undefined as Subscription | undefined,
-      },
+      /** A new question: the page being appended to the old answer is no longer wanted. */
+      _newQuestion: new Subject<void>(),
       /** The batch once the taps settle. */
       _settled: toSignal(toObservable(pending).pipe(debounceTime(PreviewDelayMs)), { initialValue: null }),
     };
@@ -156,8 +189,6 @@ export const ListingStore = signalStore(
     };
   }),
   withMethods((store) => {
-    const asking = store._asking;
-
     /** A choice made: a navigation, so it is in the history and in the address. */
     const apply = (filters: ListingFilters): void => {
       void store._router.navigate([], {
@@ -167,11 +198,12 @@ export const ListingStore = signalStore(
       });
     };
 
+    const keyOf = (place: ListingPlace, filters: ListingFilters) =>
+      JSON.stringify({ place, filters: listingQueryParams(filters) });
+
     return {
-      /** What the page lists; null lists nothing. */
-      list(place: ListingPlace | null): void {
-        patchState(store, { place });
-      },
+      /** What the page lists; null lists nothing. A page hands in a signal, and the listing follows it. */
+      list: signalMethod<ListingPlace | null>((place) => patchState(store, { place })),
       apply,
       /**
        * A choice made and its answer awaited: the browser agent's `apply_filter`
@@ -182,7 +214,7 @@ export const ListingStore = signalStore(
       async applyAndSettle(filters: ListingFilters, waitMs = 10_000): Promise<ListingResult> {
         if (sameFilters(filters, store.filters())) return store.result();
 
-        const before = asking.asked?.key;
+        const before = store._asked()?.key;
         // Listening before navigating: the answer cannot come before the question,
         // and an answer to the question already in flight is not this one.
         const answer = firstValueFrom(
@@ -212,88 +244,105 @@ export const ListingStore = signalStore(
       /**
        * The next page, appended. A department of fifty-five products that shows
        * twenty-four and stops is a shop with thirty-one things you cannot reach.
+       * `exhaustMap`: a press while a page is still coming is the same press.
        */
-      loadMore(): void {
-        const current = store.result();
-        const place = store.place();
-        if (current.status !== 'ready' || !place || store.loadingMore()) return;
+      loadMore: rxMethod<void>(
+        pipe(
+          exhaustMap(() => {
+            const current = store.result();
+            const place = store.place();
+            if (current.status !== 'ready' || !place) return EMPTY;
+            const next = store._page() + 1;
+            patchState(store, { loadingMore: true });
 
-        const next = asking.page + 1;
-        patchState(store, { loadingMore: true });
+            return store._search
+              .list(searchParams(place, store.filters(), store._culture.active(), next, ListingPageSize))
+              .pipe(
+                // A new question makes the page this one would append to obsolete.
+                takeUntil(store._newQuestion),
+                tap((page) =>
+                  patchState(store, {
+                    _page: next,
+                    result: { ...current, hits: [...current.hits, ...page.hits], total: page.total },
+                  }),
+                ),
+                // Nothing is lost and nothing is claimed: the rows already read stay,
+                // and the button comes back so it can be tried again.
+                catchError(() => EMPTY),
+                finalize(() => patchState(store, { loadingMore: false })),
+              );
+          }),
+        ),
+      ),
+      /**
+       * Asks the search whenever the question changes. `switchMap` is the rule the
+       * spec holds: a newer question cancels the older one's request, so only the
+       * latest answer is ever shown, whatever order the answers arrive in.
+       */
+      _ask: rxMethod<ListingQuestion>(
+        pipe(
+          // The same question asked again (a navigation that changed nothing) is not a new one.
+          filter(({ place, filters, culture }) => {
+            const asked = store._asked();
+            return !(place && asked?.key === keyOf(place, filters) && asked.culture === culture);
+          }),
+          tap(() => {
+            store._newQuestion.next();
+            patchState(store, { loadingMore: false });
+          }),
+          switchMap(({ place, filters, culture }) => {
+            if (!place) {
+              patchState(store, { _asked: null, result: { status: 'idle' } });
+              return EMPTY;
+            }
 
-        asking.appending = store._search
-          .list(searchParams(place, store.filters(), store._culture.active(), next, ListingPageSize))
-          .subscribe({
-            next: (page) => {
-              asking.page = next;
-              patchState(store, {
-                loadingMore: false,
-                result: { ...current, hits: [...current.hits, ...page.hits], total: page.total },
-              });
-            },
-            // Nothing is lost and nothing is claimed: the rows already read stay,
-            // and the button comes back so it can be tried again.
-            error: () => patchState(store, { loadingMore: false }),
-          });
-      },
-      _fetch(place: ListingPlace | null, filters: ListingFilters, culture: string): void {
-        asking.appending?.unsubscribe();
-        patchState(store, { loadingMore: false });
-
-        if (!place) {
-          asking.inFlight?.unsubscribe();
-          asking.asked = null;
-          patchState(store, { result: { status: 'idle' } });
-          return;
-        }
-
-        const key = JSON.stringify({ place, filters: listingQueryParams(filters) });
-        const previous = asking.asked;
-        if (previous?.key === key && previous.culture === culture) return;
-
-        const afterCultureChange = previous?.key === key;
-        // The same place narrowed differently keeps its rows on screen while the
-        // answer comes, and its facets' shape; a new place starts from nothing.
-        const samePlace =
-          previous !== null &&
-          previous.culture === culture &&
-          previous.place.query === place.query &&
-          previous.place.category === place.category;
-        asking.asked = { place, key, culture };
-        asking.page = 1;
-
-        const current = store.result();
-        patchState(store, {
-          result: current.status === 'ready' && samePlace ? { ...current, busy: true } : { status: 'loading' },
-        });
-
-        const answered = () => store._answers.next({ key, result: store.result() });
-        asking.inFlight?.unsubscribe();
-        asking.inFlight = store._search.list(searchParams(place, filters, culture, 1, ListingPageSize)).subscribe({
-          next: (page) => {
-            const before = store.result();
-            const facets = page.facets ?? [];
+            const asked = store._asked();
+            const key = keyOf(place, filters);
+            const afterCultureChange = asked?.key === key;
+            // The same place narrowed differently keeps its rows on screen while the
+            // answer comes, and its facets' shape; a new place starts from nothing.
+            const samePlace =
+              asked !== null &&
+              asked.culture === culture &&
+              asked.place.query === place.query &&
+              asked.place.category === place.category;
+            const current = store.result();
             patchState(store, {
-              result: {
-                status: 'ready',
-                hits: page.hits,
-                total: page.total,
-                facets: before.status === 'ready' && samePlace ? keepShape(before.facets, facets) : facets,
-                tookMs: page.tookMs,
-                // The schema marks it optional as well as nullable: a browse answers with neither.
-                answer: page.answer ?? null,
-                afterCultureChange,
-                busy: false,
-              },
+              _asked: { place, key, culture },
+              _page: 1,
+              result: current.status === 'ready' && samePlace ? { ...current, busy: true } : { status: 'loading' },
             });
-            answered();
-          },
-          error: () => {
-            patchState(store, { result: { status: 'failed' } });
-            answered();
-          },
-        });
-      },
+
+            const answered = () => store._answers.next({ key, result: store.result() });
+            return store._search.list(searchParams(place, filters, culture, 1, ListingPageSize)).pipe(
+              tap((page) => {
+                const before = store.result();
+                const facets = page.facets ?? [];
+                patchState(store, {
+                  result: {
+                    status: 'ready',
+                    hits: page.hits,
+                    total: page.total,
+                    facets: before.status === 'ready' && samePlace ? keepShape(before.facets, facets) : facets,
+                    tookMs: page.tookMs,
+                    // The schema marks it optional as well as nullable: a browse answers with neither.
+                    answer: page.answer ?? null,
+                    afterCultureChange,
+                    busy: false,
+                  },
+                });
+                answered();
+              }),
+              // A failure is said in the state; the stream that asked lives on for the next question.
+              catchError(() => {
+                patchState(store, { result: { status: 'failed' } });
+                answered();
+                return EMPTY;
+              }),
+            );
+          }),
+        ),
+      ),
     };
   }),
   withHooks((store) => {
@@ -301,17 +350,18 @@ export const ListingStore = signalStore(
     return {
       onInit(): void {
         active.attach(store);
-        effect(() => {
-          const place = store.place();
-          const filters = store.filters();
-          const culture = store._culture.active();
-          untracked(() => store._fetch(place, filters, culture));
-        });
+        // A language switch asks again as well, and the listing says when an answer came from one.
+        store._ask(
+          computed<ListingQuestion>(() => ({
+            place: store.place(),
+            filters: store.filters(),
+            culture: store._culture.active(),
+          })),
+        );
       },
+      // The requests end with the store's injector: rxMethod unsubscribes them itself.
       onDestroy(): void {
         active.detach(store);
-        store._asking.inFlight?.unsubscribe();
-        store._asking.appending?.unsubscribe();
       },
     };
   }),

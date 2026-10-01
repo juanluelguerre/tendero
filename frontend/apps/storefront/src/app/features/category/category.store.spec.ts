@@ -10,6 +10,7 @@ import { ShopFrontService, type Category } from '../../data-access/shop-front.se
 import type { ListingPlace } from '../../listing/listing-filters';
 import { ListingStore } from '../../listing/listing.store';
 import { CategoryStore } from './category.store';
+import { signalMethod } from '@ngrx/signals';
 
 const category = (code: string, parent: string | null, depth: number): Category =>
   ({ code, parent, name: code, path: [], depth }) as unknown as Category;
@@ -45,7 +46,12 @@ describe('the category store', () => {
         { provide: CampaignsStore, useValue: { all: campaigns } },
         {
           provide: ListingStore,
-          useValue: { list: (place: ListingPlace | null) => listed.push(place), result: signal({ status: 'idle' }) },
+          // A factory, so the signalMethod is made where it can follow a signal: in an injection context.
+          useFactory: () => ({
+            // As the real one is: a signalMethod, following the signal the page hands it.
+            list: signalMethod<ListingPlace | null>((place) => listed.push(place)),
+            result: signal({ status: 'idle' }),
+          }),
         },
       ],
     });

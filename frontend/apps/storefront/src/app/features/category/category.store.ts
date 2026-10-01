@@ -1,4 +1,4 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, inject, linkedSignal } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { signalStore, withComputed, withHooks, withProps } from '@ngrx/signals';
@@ -7,6 +7,7 @@ import { map } from 'rxjs';
 import { campaignForCategory, withAncestors } from '../../campaigns/campaign-rules';
 import { CampaignsStore } from '../../campaigns/campaigns.store';
 import { ShopFrontService, type Category } from '../../data-access/shop-front.service';
+import type { ListingPlace } from '../../listing/listing-filters';
 import { ListingStore } from '../../listing/listing.store';
 import { childLinks } from '../../listing/listing-view';
 import { departmentArt, rootOf } from '../../shop-art';
@@ -92,16 +93,21 @@ export const CategoryStore = signalStore(
     };
   }),
   withHooks({
-    /** The branch, once known, is what the listing lists; a code nobody recognises lists nothing. */
+    /**
+     * The branch, once known, is what the listing lists; a code nobody recognises
+     * lists nothing; while the taxonomy loads, what was listed stays.
+     */
     onInit(store) {
-      effect(() => {
-        const state = store.state();
-        const found = store.category();
-        untracked(() => {
-          if (state === 'found' && found) store._listing.list({ query: '', category: found.code });
-          else if (state === 'unknown') store._listing.list(null);
-        });
-      });
+      store._listing.list(
+        linkedSignal<{ state: string; code: string | null }, ListingPlace | null>({
+          source: () => ({ state: store.state(), code: store.category()?.code ?? null }),
+          computation: ({ state, code }, previous) => {
+            if (state === 'found' && code) return { query: '', category: code };
+            if (state === 'unknown') return null;
+            return previous?.value ?? null;
+          },
+        }),
+      );
     },
   }),
 );

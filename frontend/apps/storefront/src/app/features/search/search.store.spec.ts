@@ -10,6 +10,7 @@ import type { ListingResult } from '../../listing/listing.store';
 import { ListingStore } from '../../listing/listing.store';
 import { TrailStore } from '../../trail/trail.store';
 import { SearchStore } from './search.store';
+import { signalMethod } from '@ngrx/signals';
 
 const EmptyFilters = parseListing(convertToParamMap({}));
 
@@ -45,7 +46,13 @@ describe('the search store', () => {
         { provide: ActivatedRoute, useValue: { queryParamMap: query } },
         {
           provide: ListingStore,
-          useValue: { list: (place: ListingPlace | null) => listed.push(place), filters, result },
+          // A factory, so the signalMethod is made where it can follow a signal: in an injection context.
+          useFactory: () => ({
+            // As the real one is: a signalMethod, following the signal the page hands it.
+            list: signalMethod<ListingPlace | null>((place) => listed.push(place)),
+            filters,
+            result,
+          }),
         },
         { provide: TrailStore, useValue: { recordSearch: (text: string) => remembered.push(text) } },
         {
@@ -100,6 +107,20 @@ describe('the search store', () => {
     result.set(ready());
     TestBed.tick();
     result.set({ ...ready(), total: 3 } as ListingResult);
+    TestBed.tick();
+
+    expect(remembered).toEqual(['mochila']);
+  });
+
+  /** Narrowing the same words keeps the rows marked busy until the answer: the same search, not a second. */
+  it('remembers the same words once, however often their list is refreshed', () => {
+    query.next(convertToParamMap({ q: 'mochila' }));
+    opened();
+    result.set(ready());
+    TestBed.tick();
+    result.set(ready(true));
+    TestBed.tick();
+    result.set(ready());
     TestBed.tick();
 
     expect(remembered).toEqual(['mochila']);
