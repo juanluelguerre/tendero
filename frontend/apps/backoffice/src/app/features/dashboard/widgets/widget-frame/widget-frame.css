@@ -1,0 +1,89 @@
+/* What the dashboard's widgets share, and only they: it left styles.css (ADR 0049)
+   for the dashboard, whose chunk brings it. Not scoped — see widget-frame.ts —
+   and in `components`, where it sat before, so a utility on an element wins. */
+@layer components {
+  /* The frame lays out as if its panel were the widget's own child. */
+  backoffice-widget-frame { display: contents; }
+
+  /* A widget fills its grid cell, so the panels of one row end together. Here
+     and not in the grid's stylesheet: the grid creates its widgets from code,
+     and Angular scopes a component's styles to the elements of its template. */
+  .cell > * {
+    display: block;
+    block-size: 100%;
+  }
+
+  /* ---------- The size contract (R-9) ----------
+     A widget shows its figure at S, its chart from M, its chart and table at L —
+     decided by its own width, measured on the grid cell it sits in (container
+     `widget`), never by the screen's. In rem, so a wall's larger type (R-9's full
+     screen) moves the thresholds with it. In CSS: the theme names no container
+     sizes, and these are the contract's, not a scale's. */
+  @container widget (width < 20rem) {
+    .at-m, .at-l { display: none; }
+  }
+
+  @container widget (width < 56rem) {
+    .at-l { display: none; }
+  }
+
+  /* A list read at S and M that gives its place to a chart at L (R-9, D-7: by category). */
+  @container widget (width >= 56rem) {
+    .below-l { display: none; }
+  }
+
+  @container widget (width >= 20rem) {
+    .only-s { display: none; }
+  }
+
+  /* ---------- A widget's figures and rankings (P11-7) ----------
+     The figures as label and number, shared since R-9 split the operations and
+     agents panels into widgets that all say figures this way; the grid they sit
+     in, `.facts`, stays in styles.css, because the agent pane lays its facts out
+     the same way. Small primitives used two dozen times across the widgets: a
+     class each, as `.tag` is, rather than the same utilities copied. */
+  .fact { margin: 0; }
+  .fact dt { color: var(--text-muted); font-size: var(--text-3xs); }
+  .fact dd { margin: 0; }
+  .fact__value { font-size: var(--text-lg); font-weight: 600; }
+  .fact__value--warn { color: var(--warning); }
+  .fact__note { font-size: var(--text-3xs); }
+
+  /* Every figure is a way into acting on it (R-3, P9): its label opens the list
+     behind it, already filtered. Quiet until pointed at, and 24 px tall. */
+  .fact__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .fact__link:hover { color: var(--text); text-decoration: underline; }
+
+  .ranking {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .ranking__row {
+    /* A grid row is as wide as its content unless told otherwise, and an
+       unbreakable name is exactly the content that pushes it past the panel. */
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .ranking__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

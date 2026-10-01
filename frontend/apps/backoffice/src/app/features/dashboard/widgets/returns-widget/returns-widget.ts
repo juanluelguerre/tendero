@@ -7,11 +7,12 @@ import { BarChart } from '../../../../charts/bar-chart';
 import { formatShare } from '../figures';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { ReturnsStore } from './returns.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** Returns (spec, Operations): open, the return rate, what was refunded, and from M the open ones ranked by reason. */
 @Component({
   selector: 'backoffice-returns-widget',
-  imports: [TranslocoDirective, RouterLink, BarChart],
+  imports: [TranslocoDirective, RouterLink, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './returns-widget.html',
   styleUrl: './returns-widget.css',

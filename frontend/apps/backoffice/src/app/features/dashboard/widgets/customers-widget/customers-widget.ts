@@ -3,11 +3,12 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { CustomersStore } from './customers.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** Who bought (spec, Growth's Customers): new against returning, as figures and as one share. */
 @Component({
   selector: 'backoffice-customers-widget',
-  imports: [TranslocoDirective, BarChart],
+  imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customers-widget.html',
   styleUrl: './customers-widget.css',

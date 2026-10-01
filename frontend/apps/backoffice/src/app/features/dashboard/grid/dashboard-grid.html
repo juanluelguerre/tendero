@@ -1,6 +1,26 @@
-<div class="grid" [class.grid--fill]="fill()">
+<!-- Twelve columns: S, M and L take 3, 6 and 12 (spec, the size contract). The
+     grid follows the screen; what each widget shows follows its own width.
+     On a wall (R-9) the grid takes the screen's height and its rows share what
+     their content leaves — never less than their content, which would let a
+     widget spill over the row below — and the charts grow with the screen (spec:
+     "each widget spreads its content across the height it is given"): a share
+     of the viewport rather than the fixed height a scrolling page wants. -->
+<div
+  class="grid grid-cols-12 gap-4"
+  [class.grid--fill]="fill()"
+  [class]="fill() ? 'h-full auto-rows-[minmax(min-content,1fr)] [--chart-block-size:max(12.5rem,26dvh)]' : 'pb-6'"
+>
   @for (cell of cells(); track cell.key) {
-    <div [class]="'cell cell--' + cell.size" [attr.data-widget]="cell.key">
+    <!-- A cell is the container its widget measures itself against. min-w-0,
+         because a grid item is as wide as its content by default and a best
+         seller's name is long (found at 390 px in P11-7). A laptop: two S side
+         by side, an M across; a phone: one widget under another, each at the
+         phone's width (spec, the phone). `cell--S/M/L` name the size for the spec. -->
+    <div
+      class="cell @container/widget min-w-0"
+      [class]="cell.size === 'S' ? 'cell--S col-span-3 max-xl:col-span-6 max-sm:col-span-12' : cell.size === 'M' ? 'cell--M col-span-6 max-xl:col-span-12' : 'cell--L col-span-12'"
+      [attr.data-widget]="cell.key"
+    >
       <ng-container [backofficeWidgetOutlet]="cell.component" [inputs]="cell.inputs" />
     </div>
   }

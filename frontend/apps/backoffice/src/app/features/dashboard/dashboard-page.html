@@ -1,11 +1,11 @@
 <section class="dashboard" #wall *transloco="let t">
   @if (fullScreen.active()) {
     <!-- On the wall: what a glance from across the room needs, and the way out. -->
-    <header class="wall-head">
-      <h1 class="wall-head__title">{{ t('dashboard.tabs.' + tab()) }}</h1>
+    <header class="wall-head mb-4 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+      <h1 class="text-xl">{{ t('dashboard.tabs.' + tab()) }}</h1>
       <span>{{ t('dashboard.period.' + period()) }}</span>
       <span class="muted">{{ t('dashboard.fullScreen.updated', { time: updated() }) }} · {{ t('dashboard.fullScreen.everyMinute') }}</span>
-      <button type="button" class="button button--small button--quiet full-screen-leave" (click)="leaveWall()">
+      <button type="button" class="button button--small button--quiet full-screen-leave ms-auto" (click)="leaveWall()">
         {{ t('dashboard.fullScreen.leave') }}
       </button>
     </header>
@@ -13,13 +13,13 @@
     <header class="page-head">
       <h1 class="page-title">{{ t('dashboard.title') }}</h1>
       <div class="page-actions">
-        <div class="periods" role="group" [attr.aria-label]="t('dashboard.period.label')">
+        <div class="inline-flex gap-1" role="group" [attr.aria-label]="t('dashboard.period.label')">
           @for (option of periods; track option) {
             <button
               type="button"
               class="button button--small button--quiet period"
               [attr.data-period]="option"
-              [class.period--active]="option === period()"
+              [class]="option === period() ? 'border-muted font-semibold text-body' : ''"
               [attr.aria-pressed]="option === period()"
               (click)="choose(option)"
             >
@@ -28,7 +28,8 @@
           }
         </div>
         @if (fullScreen.supported) {
-          <button type="button" class="button button--small button--quiet full-screen-enter" (click)="enterWall()">
+          <!-- The button is for a monitor: from 1440 up, never on a phone (spec, full screen). -->
+          <button type="button" class="button button--small button--quiet full-screen-enter hidden 2xl:inline-flex" (click)="enterWall()">
             {{ t('dashboard.fullScreen.enter') }}
           </button>
         }
@@ -36,13 +37,18 @@
     </header>
     <p class="page-hint">{{ t('dashboard.hint') }}</p>
 
-    <nav class="tabs" [attr.aria-label]="t('dashboard.tabs.label')">
+    <!-- On a phone the tabs scroll sideways rather than wrap (spec, the phone). -->
+    <nav
+      class="tabs mb-4 flex gap-1 overflow-x-auto border-b border-hairline [scrollbar-width:thin]"
+      [attr.aria-label]="t('dashboard.tabs.label')"
+    >
       @for (tab of tabs; track tab) {
+        <!-- The open tab is said by aria-current, and drawn from it. -->
         <a
-          class="tab"
+          class="inline-flex min-h-[2.75rem] flex-none items-center border-b-2 border-transparent px-3 whitespace-nowrap text-muted no-underline hover:text-body aria-[current=page]:border-body aria-[current=page]:font-semibold aria-[current=page]:text-body"
           [routerLink]="linkOf(tab)"
           [queryParams]="{ period: queryOfPeriod(period()) }"
-          routerLinkActive="tab--active"
+          routerLinkActive
           [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
           ariaCurrentWhenActive="page"
         >

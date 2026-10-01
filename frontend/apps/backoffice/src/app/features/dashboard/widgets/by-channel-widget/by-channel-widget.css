@@ -1,9 +1,2 @@
+/* Styled with utilities in the template (ADR 0049). */
 :host { display: block; }
-
-.share-figure { margin: 0; color: var(--text-muted); }
-
-.share-figure__value {
-  color: var(--text);
-  font-size: var(--text-xl);
-  font-weight: 600;
-}

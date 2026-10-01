@@ -1,32 +1,35 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.keyFigures'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-    <span class="eyebrow">{{ t('vsPrevious') }}</span>
-  </header>
-
-  @if (store.sales.isLoading() && !store.sales.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.sales.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else {
-    <dl class="kpis">
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.keyFigures'"
+  [heading]="t('title')"
+  [resource]="store.sales"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <span frame-aside class="eyebrow">{{ t('vsPrevious') }}</span>
+  <ng-template>
+    <!-- Six figures across at L, two by two on a phone (spec, the phone): the grid
+         decides from the widget's width, so no figure is ever cut. -->
+    <dl class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-4">
       @for (figure of figures(); track figure.key) {
-        <div class="kpi">
-          <dt class="kpi__label">{{ t(figure.key) }}</dt>
-          <dd class="kpi__value numeric">{{ figure.value }}</dd>
+        <div>
+          <dt class="text-3xs text-muted">{{ t(figure.key) }}</dt>
+          <dd class="numeric text-xl font-semibold">{{ figure.value }}</dd>
           @if (figure.change; as change) {
             <!-- A direction is always said; a percentage only when there was
                  a previous period to take it from. -->
-            <dd [class]="'kpi__change kpi__change--' + change.direction">
+            <dd
+              class="text-3xs"
+              [class]="change.direction === 'up' ? 'font-semibold text-positive' : change.direction === 'down' ? 'font-semibold text-danger' : 'text-muted'"
+            >
               <span aria-hidden="true">{{ change.direction === 'up' ? '▲' : change.direction === 'down' ? '▼' : '—' }}</span>
               {{ changeText(change) ?? t('direction.' + change.direction) }}
             </dd>
           }
           @if (figure.trend; as trend) {
-            <dd class="kpi__trend at-m"><backoffice-sparkline [values]="trend" /></dd>
+            <dd class="at-m mt-2"><backoffice-sparkline [values]="trend" /></dd>
           }
         </div>
       }
     </dl>
-  }
-</article>
+  </ng-template>
+</backoffice-widget-frame>

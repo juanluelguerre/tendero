@@ -1,6 +1,2 @@
+/* Styled with utilities in the template (ADR 0049); its plot's height is the chart's to set. */
 :host { display: block; }
-
-.plot {
-  inline-size: 100%;
-  block-size: var(--chart-block-size, 12.5rem);
-}

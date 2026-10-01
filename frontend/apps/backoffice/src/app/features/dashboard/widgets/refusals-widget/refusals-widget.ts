@@ -5,11 +5,12 @@ import { formatDateTime } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { RefusalsStore } from './refusals.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** What the shop refused agents (P11-7, a widget of its own since R-9): how many, by rule, and the latest few with their agent. */
 @Component({
   selector: 'backoffice-refusals-widget',
-  imports: [TranslocoDirective, BarChart],
+  imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './refusals-widget.html',
   styleUrl: './refusals-widget.css',

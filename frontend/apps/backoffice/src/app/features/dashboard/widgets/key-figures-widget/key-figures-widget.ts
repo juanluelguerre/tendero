@@ -7,11 +7,12 @@ import { type Change, formatChange, formatShare } from '../figures';
 import { keyFigures } from './key-figures';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { KeyFiguresStore } from './key-figures.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** The figures a shopkeeper asks first (spec, the Overview): each with how it moved against the period before and its trend where the server has a series. */
 @Component({
   selector: 'backoffice-key-figures-widget',
-  imports: [TranslocoDirective, Sparkline],
+  imports: [TranslocoDirective, Sparkline, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './key-figures-widget.html',
   styleUrl: './key-figures-widget.css',

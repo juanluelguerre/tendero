@@ -5,11 +5,12 @@ import { formatPrice } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { SalesByDayStore } from './sales-by-day.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** Sales by hour or by day against the period before, on the shop's clock (R-9, ADR 0046). */
 @Component({
   selector: 'backoffice-sales-by-day-widget',
-  imports: [TranslocoDirective, BarChart],
+  imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sales-by-day-widget.html',
   styleUrl: './sales-by-day-widget.css',

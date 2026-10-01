@@ -1,27 +1,27 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.byCategory'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-  </header>
-
-  @if (store.mix.isLoading() && !store.mix.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.mix.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else if (chart(); as data) {
-    <!-- The chart from L, where its axis has room; a list below it, read rather than seen. -->
-    <div class="at-l">
-      <backoffice-bar-chart [data]="data" layout="rows" [format]="money" [caption]="t('title')" />
-    </div>
-    <ol class="ranking below-l">
-      @for (row of store.rows(); track row.key) {
-        <li class="ranking__row">
-          <span class="ranking__name">{{ row.label }}</span>
-          <span class="numeric">{{ money(row.revenue) }}</span>
-        </li>
-      }
-    </ol>
-    <p class="muted widget__note">{{ t('lines') }}</p>
-  } @else {
-    <p class="muted widget__state">{{ t('nothingSold') }}</p>
-  }
-</article>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.byCategory'"
+  [heading]="t('title')"
+  [resource]="store.mix"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    @if (chart(); as data) {
+      <!-- The chart from L, where its axis has room; a list below it, read rather than seen. -->
+      <div class="at-l">
+        <backoffice-bar-chart [data]="data" layout="rows" [format]="money" [caption]="t('title')" />
+      </div>
+      <ol class="ranking below-l">
+        @for (row of store.rows(); track row.key) {
+          <li class="ranking__row">
+            <span class="ranking__name">{{ row.label }}</span>
+            <span class="numeric">{{ money(row.revenue) }}</span>
+          </li>
+        }
+      </ol>
+      <p class="muted text-3xs">{{ t('lines') }}</p>
+    } @else {
+      <p class="muted">{{ t('nothingSold') }}</p>
+    }
+  </ng-template>
+</backoffice-widget-frame>

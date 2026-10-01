@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
@@ -7,6 +6,7 @@ import { BarChart } from '../../../../charts/bar-chart';
 import type { BarChartData } from '../../../../charts/chart-contract';
 import { changeOf, formatChange } from '../figures';
 import { CampaignsStore } from './campaigns.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /**
  * A campaign against its baseline (spec, Overview and Growth; R-9, D-7): what it
@@ -16,7 +16,7 @@ import { CampaignsStore } from './campaigns.store';
  */
 @Component({
   selector: 'backoffice-campaigns-widget',
-  imports: [TranslocoDirective, RouterLink, BarChart],
+  imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaigns-widget.html',
   styleUrl: './campaigns-widget.css',

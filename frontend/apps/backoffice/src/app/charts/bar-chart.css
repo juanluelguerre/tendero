@@ -1,83 +1,5 @@
-.chart {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
-}
-
-.legend {
-  display: flex;
-  gap: var(--space-4);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: var(--text-muted);
-  font-size: var(--text-2xs);
-}
-
-.legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.swatch {
-  inline-size: 0.625rem;
-  block-size: 0.625rem;
-  border-radius: 2px;
-}
-
-.placeholder {
-  block-size: var(--chart-block-size, 12.5rem);
-}
-
-.head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
-}
-
-.figures-toggle {
-  /* 24px at least, WCAG 2.2's target size: the accessibility ratchet found it at 18. */
-  display: inline-flex;
-  align-items: center;
-  min-block-size: 1.5rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-2xs);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.figures-toggle:hover {
-  color: var(--text);
-}
-
-.figures {
-  border-collapse: collapse;
-  font-size: var(--text-2xs);
-  font-variant-numeric: tabular-nums;
-}
-
-.figures caption {
-  text-align: start;
-  color: var(--text-muted);
-}
-
-.figures th,
-.figures td {
-  padding: var(--space-1) var(--space-2);
-  border-block-end: 1px solid var(--border);
-  text-align: end;
-}
-
-.figures th[scope='row'] {
-  text-align: start;
-}
+/* Styled with utilities in the template (ADR 0049), but for what the chart
+   decides from its own width, which only a container query says. */
 
 /* At L the table is shown without asking (spec, accessibility): the widget's
    cell is the container, so the chart knows its own width. */
@@ -95,3 +17,19 @@
   .figures-toggle { display: none; }
 }
 
+/* A wall is glanced at from across a room, not read: at L the table of figures
+   goes back behind its button there (still read by a screen reader), so the
+   chart has the row. More specific than the rule above, and in the same
+   stylesheet: from styles.css, in a layer, it lost to it — the wall's Sales
+   tab drew its table and scrolled. */
+:host-context(.grid--fill) .figures.sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:host-context(.grid--fill) .figures-toggle { display: inline-flex; }

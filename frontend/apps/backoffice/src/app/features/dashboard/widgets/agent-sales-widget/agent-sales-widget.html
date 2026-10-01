@@ -1,49 +1,50 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.agentSales'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-    <a class="widget__link" routerLink="/agents">{{ t('toRegistry') }}</a>
-  </header>
-
-  @if (store.sales.isLoading() && !store.sales.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.sales.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else if (store.sales.value(); as agentSales) {
-    <dl class="facts">
-      <div class="fact">
-        <dt>{{ t('shareOfOrders') }}</dt>
-        <dd class="numeric fact__value">{{ share(agentSales.agentOrders, agentSales.orders) }}</dd>
-        <dd class="muted fact__note">{{ t('ofOrders', { part: agentSales.agentOrders, whole: agentSales.orders }) }}</dd>
-      </div>
-      <div class="fact">
-        <dt>{{ t('shareOfRevenue') }}</dt>
-        <dd class="numeric fact__value">{{ share(agentSales.agentRevenue, agentSales.revenue) }}</dd>
-        <dd class="muted fact__note">{{ money(agentSales.agentRevenue, agentSales.currency) }}</dd>
-      </div>
-      <div class="fact">
-        <dt>{{ t('mandated') }}</dt>
-        <dd class="numeric fact__value">{{ agentSales.mandated }}</dd>
-      </div>
-      <div class="fact">
-        <dt>{{ t('rehearsals') }}</dt>
-        <dd class="numeric fact__value muted">{{ agentSales.rehearsals }}</dd>
-      </div>
-    </dl>
-    @if (store.byDay(); as data) {
-      <div class="at-m">
-        <backoffice-bar-chart [data]="data" layout="columns" [format]="amount" [caption]="t('byDay')" />
-      </div>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.agentSales'"
+  [heading]="t('title')"
+  link="/agents"
+  [linkText]="t('toRegistry')"
+  [resource]="store.sales"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    @if (store.sales.value(); as agentSales) {
+      <dl class="facts">
+        <div class="fact">
+          <dt>{{ t('shareOfOrders') }}</dt>
+          <dd class="numeric fact__value">{{ share(agentSales.agentOrders, agentSales.orders) }}</dd>
+          <dd class="muted fact__note">{{ t('ofOrders', { part: agentSales.agentOrders, whole: agentSales.orders }) }}</dd>
+        </div>
+        <div class="fact">
+          <dt>{{ t('shareOfRevenue') }}</dt>
+          <dd class="numeric fact__value">{{ share(agentSales.agentRevenue, agentSales.revenue) }}</dd>
+          <dd class="muted fact__note">{{ money(agentSales.agentRevenue, agentSales.currency) }}</dd>
+        </div>
+        <div class="fact">
+          <dt>{{ t('mandated') }}</dt>
+          <dd class="numeric fact__value">{{ agentSales.mandated }}</dd>
+        </div>
+        <div class="fact">
+          <dt>{{ t('rehearsals') }}</dt>
+          <dd class="numeric fact__value muted">{{ agentSales.rehearsals }}</dd>
+        </div>
+      </dl>
+      @if (store.byDay(); as data) {
+        <div class="at-m">
+          <backoffice-bar-chart [data]="data" layout="columns" [format]="amount" [caption]="t('byDay')" />
+        </div>
+      }
+      @if (agentSales.byAgent.length > 0) {
+        <ol class="ranking at-m">
+          @for (row of agentSales.byAgent; track row.agentId) {
+            <li class="ranking__row">
+              <span class="ranking__name numeric">{{ row.agentId }}</span>
+              <span class="muted">{{ t('ordersCount', { count: row.orders }) }}</span>
+              <span class="numeric">{{ money(row.revenue, agentSales.currency) }}</span>
+            </li>
+          }
+        </ol>
+      }
     }
-    @if (agentSales.byAgent.length > 0) {
-      <ol class="ranking at-m">
-        @for (row of agentSales.byAgent; track row.agentId) {
-          <li class="ranking__row">
-            <span class="ranking__name numeric">{{ row.agentId }}</span>
-            <span class="muted">{{ t('ordersCount', { count: row.orders }) }}</span>
-            <span class="numeric">{{ money(row.revenue, agentSales.currency) }}</span>
-          </li>
-        }
-      </ol>
-    }
-  }
-</article>
+  </ng-template>
+</backoffice-widget-frame>

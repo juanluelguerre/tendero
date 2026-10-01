@@ -6,6 +6,7 @@ import { BarChart } from '../../../../charts/bar-chart';
 import type { BarChartData } from '../../../../charts/chart-contract';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { ByCategoryStore } from './by-category.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /**
  * Sales by category (spec, Sales; R-9, D-7): the categories the period's lines
@@ -13,7 +14,7 @@ import { ByCategoryStore } from './by-category.store';
  */
 @Component({
   selector: 'backoffice-by-category-widget',
-  imports: [TranslocoDirective, BarChart],
+  imports: [TranslocoDirective, BarChart, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './by-category-widget.html',
   styleUrl: './by-category-widget.css',

@@ -1,14 +1,12 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.sellThrough'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-  </header>
-
-  @if (store.stock.isLoading() && !store.stock.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.stock.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else {
-    <h3 class="eyebrow widget__sub">{{ t('moves') }}</h3>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.sellThrough'"
+  [heading]="t('title')"
+  [resource]="store.stock"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    <h3 class="eyebrow mt-2 mb-0">{{ t('moves') }}</h3>
     @if (store.moves().length > 0) {
       <ol class="ranking">
         @for (row of store.moves(); track row.sku) {
@@ -24,7 +22,7 @@
     }
     <!-- What sits, from L: at S and M a wall reads what moves, and fits its row. -->
     <div class="at-l">
-      <h3 class="eyebrow widget__sub">{{ t('sits') }}</h3>
+      <h3 class="eyebrow mt-2 mb-0">{{ t('sits') }}</h3>
       <ol class="ranking">
         @for (row of store.sits(); track row.sku) {
           <li class="ranking__row">
@@ -35,5 +33,5 @@
         }
       </ol>
     </div>
-  }
-</article>
+  </ng-template>
+</backoffice-widget-frame>

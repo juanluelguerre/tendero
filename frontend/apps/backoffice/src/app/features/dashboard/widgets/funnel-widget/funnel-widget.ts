@@ -4,11 +4,12 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatShare } from '../figures';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { FunnelStore } from './funnel.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** How the checkout converts (P11-7): carts started, checked out, abandoned and still open. Visits live in the observability stack, which the dashboard does not depend on. */
 @Component({
   selector: 'backoffice-funnel-widget',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './funnel-widget.html',
   styleUrl: './funnel-widget.css',

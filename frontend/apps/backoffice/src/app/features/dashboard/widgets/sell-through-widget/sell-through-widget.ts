@@ -4,6 +4,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { formatShare } from '../figures';
 import { SellThroughStore } from './sell-through.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /**
  * Sell-through (spec, Sales; R-9, D-7): what moves and what sits in the period,
@@ -11,7 +12,7 @@ import { SellThroughStore } from './sell-through.store';
  */
 @Component({
   selector: 'backoffice-sell-through-widget',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sell-through-widget.html',
   styleUrl: './sell-through-widget.css',

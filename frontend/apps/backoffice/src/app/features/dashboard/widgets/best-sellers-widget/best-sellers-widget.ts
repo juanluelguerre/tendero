@@ -4,11 +4,12 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { BestSellersStore } from './best-sellers.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** What sold most (P11-7, a widget of its own since R-9): a list, not a chart — a name is read, not seen. */
 @Component({
   selector: 'backoffice-best-sellers-widget',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, WidgetFrame],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './best-sellers-widget.html',
   styleUrl: './best-sellers-widget.css',
