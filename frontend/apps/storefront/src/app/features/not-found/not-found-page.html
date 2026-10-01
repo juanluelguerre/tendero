@@ -1,0 +1,6 @@
+<ng-container *transloco="let t">
+  <storefront-page-state class="mb-4" [level]="1" [heading]="t('notFound.title')">
+    <p class="muted">{{ t('notFound.text') }}</p>
+    <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
+  </storefront-page-state>
+</ng-container>
