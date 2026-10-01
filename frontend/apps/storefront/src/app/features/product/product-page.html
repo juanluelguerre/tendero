@@ -58,6 +58,7 @@
               [src]="cover ? imageUrl(cover.imageId) : null"
               [alt]="cover?.alt ?? item.name"
               [labelled]="true"
+              [priority]="true"
             />
 
             @if (images.length > 1) {

@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, effect, inject, Injector, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -40,6 +41,7 @@ import { WaitingStore } from './waiting.store';
     CultureSwitch,
     UndoToast,
     Palette,
+    NgOptimizedImage,
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.css',

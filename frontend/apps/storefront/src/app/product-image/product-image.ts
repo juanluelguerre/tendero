@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, input, linkedSignal, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProductImagePlaceholder } from '../product-image-placeholder/product-image-placeholder';
@@ -21,11 +22,11 @@ import { ProductImagePlaceholder } from '../product-image-placeholder/product-im
  */
 @Component({
   selector: 'storefront-product-image',
-  imports: [TranslocoDirective, ProductImagePlaceholder],
+  imports: [TranslocoDirective, ProductImagePlaceholder, NgOptimizedImage],
   templateUrl: './product-image.html',
   // The host is the caller's box: it is a block, and what it holds is clipped to its
   // radius.
-  host: { class: 'block overflow-hidden' },
+  host: { class: 'relative block overflow-hidden' },
 })
 export class ProductImage {
   /** The picture's address, or null when the product has none. */
@@ -34,7 +35,12 @@ export class ProductImage {
   readonly alt = input.required<string>();
   /** Whether the placeholder writes *Sin imagen* under its mark; a thumbnail has no room for it. */
   readonly labelled = input(false);
-  readonly loading = input<'eager' | 'lazy'>('eager');
+  /**
+   * The picture that decides how fast the page looks loaded (its LCP): fetched
+   * first and never lazily. Every other picture loads as it nears the screen,
+   * which is NgOptimizedImage's default.
+   */
+  readonly priority = input(false);
 
   /** The picture did not load: for an owner that decides more than this box (the order history's strip). */
   readonly failed = output<void>();

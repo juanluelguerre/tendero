@@ -17,6 +17,7 @@
       <storefront-campaign-card
         storefrontHomeModule="campaign"
         [campaign]="leading"
+        [priority]="true"
         [products]="store.campaignHits()"
         (reached)="campaigns.refresh()"
       />
@@ -96,15 +97,11 @@
                 class="flex h-full items-center gap-4 rounded-lg border border-hairline bg-surface p-3 text-inherit no-underline transition-[border-color] duration-(--dur-fast) ease-brand hover:border-hairline-strong"
                 [routerLink]="links.category(department.code)"
               >
-                <!-- Decorative: the name beside it is the link's label. -->
-                <img
-                  class="size-thumb-xl flex-none rounded-md bg-accent-tint object-cover"
-                  [src]="art(department.code)"
-                  alt=""
-                  loading="lazy"
-                  width="400"
-                  height="300"
-                />
+                <!-- Decorative: the name beside it is the link's label. A 4:3 drawing
+                     cropped to a square tile: the tile is its box, and it fills it. -->
+                <span class="relative size-thumb-xl flex-none overflow-hidden rounded-md bg-accent-tint">
+                  <img class="object-cover" [ngSrc]="art(department.code)" fill alt="" />
+                </span>
                 <span class="grid min-w-0 gap-1">
                   <span class="font-display text-md font-extrabold">{{ department.name }}</span>
                   <span class="text-xs text-muted">{{ department.sections }}</span>

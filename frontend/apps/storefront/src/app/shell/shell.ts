@@ -1,4 +1,4 @@
-import { NgTemplateOutlet } from '@angular/common';
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, DOCUMENT, type ElementRef, inject, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -42,6 +42,7 @@ import { AccountMenu } from './account-menu/account-menu';
     ShopMenu,
     AccountMenu,
     Icon,
+    NgOptimizedImage,
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.css',

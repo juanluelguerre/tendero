@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -38,7 +39,17 @@ import { HomeStore } from './home.store';
  */
 @Component({
   selector: 'storefront-home-sections',
-  imports: [TranslocoDirective, RouterLink, CampaignCard, TrailRow, AgentCard, ProductRow, PromiseStrip, HomeModule],
+  imports: [
+    TranslocoDirective,
+    RouterLink,
+    CampaignCard,
+    TrailRow,
+    AgentCard,
+    ProductRow,
+    PromiseStrip,
+    HomeModule,
+    NgOptimizedImage,
+  ],
   providers: [HomeStore],
   templateUrl: './home-sections.html',
   host: { class: 'block' },

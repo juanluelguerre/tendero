@@ -81,7 +81,6 @@
                           class="size-thumb-sm rounded-sm border border-hairline bg-surface object-cover"
                           [src]="line.imageId ? imageUrl(line.imageId) : null"
                           alt=""
-                          loading="lazy"
                           (failed)="store.imageFailed(line.sku)"
                         />
                       }

@@ -187,8 +187,10 @@
           @if (imageUrl(); as url) {
             <img
               class="h-thumb-md w-banner flex-none rounded-sm bg-raised object-cover"
-              [src]="url"
+              [ngSrc]="url"
               [alt]="imageAlt()"
+              width="88"
+              height="56"
             />
           } @else {
             <span class="h-thumb-md w-banner flex-none rounded-sm bg-raised" aria-hidden="true"></span>

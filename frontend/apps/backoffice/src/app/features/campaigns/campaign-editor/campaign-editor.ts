@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject, input, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ManagedCampaignView } from '@tendero/shared-api';
@@ -27,7 +28,7 @@ let editors = 0;
  */
 @Component({
   selector: 'backoffice-campaign-editor',
-  imports: [TranslocoDirective, ConfirmDialog],
+  imports: [TranslocoDirective, ConfirmDialog, NgOptimizedImage],
   templateUrl: './campaign-editor.html',
   host: { class: 'block' },
   providers: [CampaignEditorStore],

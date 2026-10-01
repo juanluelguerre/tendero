@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -29,7 +30,7 @@ import { CountdownClock } from '../countdown-clock/countdown-clock';
  */
 @Component({
   selector: 'storefront-campaign-card',
-  imports: [TranslocoDirective, RouterLink, CountdownClock, ProductCard],
+  imports: [TranslocoDirective, RouterLink, CountdownClock, ProductCard, NgOptimizedImage],
   templateUrl: './campaign-card.html',
   styleUrl: './campaign-card.css',
   host: {
@@ -46,6 +47,8 @@ export class CampaignCard {
   readonly variant = input<'lead' | 'banner'>('lead');
   /** What the campaign reaches, drawn when it has no image of its own (up to three). */
   readonly products = input<readonly SearchHit[]>([]);
+  /** The card the page leads with: its picture is the page's largest, fetched first (NgOptimizedImage). */
+  readonly priority = input(false);
 
   /** The clock reached zero: the owner asks again what leads now. */
   readonly reached = output<void>();

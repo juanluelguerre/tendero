@@ -4,13 +4,16 @@
       <ul class="grid grid-cols-4 gap-2" role="list">
         @for (id of product.imageIds; track id; let first = $first) {
           <!-- The first image is the one the shop leads with, so it leads here too. -->
-          <li class="first:col-span-full">
+          <!-- The item is the picture's box; the picture fills it (NgOptimizedImage's `fill`). -->
+          <li
+            class="relative w-full overflow-hidden rounded-md border border-hairline bg-raised first:col-span-full"
+            [class]="first ? 'aspect-4/3' : 'aspect-square'"
+          >
             <img
-              class="block w-full rounded-md border border-hairline bg-raised object-contain"
-              [class]="first ? 'aspect-4/3' : 'aspect-square'"
-              [src]="images.of(id)"
+              class="object-contain"
+              [ngSrc]="images.of(id)"
+              fill
               [alt]="t('image', { name: product.names['es'] || product.names['en'] || product.code })"
-              loading="lazy"
             />
           </li>
         }

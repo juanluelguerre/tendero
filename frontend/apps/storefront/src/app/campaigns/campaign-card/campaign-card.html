@@ -108,7 +108,8 @@
   @if (image(); as source) {
     <img
       class="campaign__image aspect-16/9 h-auto w-full rounded-lg object-cover"
-      [src]="source"
+      [ngSrc]="source"
+      [priority]="priority()"
       [alt]="campaign().imageAlt ?? ''"
       width="720"
       height="400"

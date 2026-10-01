@@ -61,6 +61,8 @@ export class ProductCard {
   readonly layout = input<'tile' | 'line'>('tile');
   /** The row that led here, carried in the navigation's state (`arrivedVia`). */
   readonly via = input<ProductVia | null>(null);
+  /** The first row of a listing: its pictures are what the page is judged loaded by (LCP), fetched first. */
+  readonly priority = input(false);
 
   private readonly cart = inject(CartStore);
   private readonly culture = inject(CultureStore);

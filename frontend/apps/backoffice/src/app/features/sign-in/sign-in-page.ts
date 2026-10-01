@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -25,7 +26,7 @@ import { Notice } from '@tendero/shared-ui';
  */
 @Component({
   selector: 'backoffice-sign-in',
-  imports: [TranslocoDirective, Notice],
+  imports: [TranslocoDirective, Notice, NgOptimizedImage],
   templateUrl: './sign-in-page.html',
 })
 export class SignInPage {

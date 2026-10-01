@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -16,7 +17,7 @@ const Cultures = ['es', 'en'] as const;
  */
 @Component({
   selector: 'backoffice-product-review',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, NgOptimizedImage],
   templateUrl: './product-review.html',
   host: { class: 'grid gap-4' },
   providers: [ProductReviewStore],

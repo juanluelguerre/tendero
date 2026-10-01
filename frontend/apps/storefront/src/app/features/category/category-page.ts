@@ -1,3 +1,4 @@
+import { NgOptimizedImage } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -39,7 +40,7 @@ import { signalMethod } from '@ngrx/signals';
  */
 @Component({
   selector: 'storefront-category-page',
-  imports: [TranslocoDirective, RouterLink, Listing, CampaignCard, Notice, PageState, Crumbs],
+  imports: [TranslocoDirective, RouterLink, Listing, CampaignCard, Notice, PageState, Crumbs, NgOptimizedImage],
   // Its own listing — the filters in the URL, the request, the phone's batch —
   // and its own branch, which tells the listing what to list.
   providers: [ListingStore, CategoryStore],
