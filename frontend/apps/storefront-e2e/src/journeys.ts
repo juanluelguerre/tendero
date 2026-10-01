@@ -36,11 +36,11 @@ export async function aProductInTheCart(page: Page): Promise<void> {
 
 export async function checkoutWithAnAddress(page: Page): Promise<void> {
   await page.goto('/en/checkout');
-  await page.locator("input[name='recipientName']").fill('Ana Test');
-  await page.locator("input[name='line1']").fill('Calle Mayor 1');
-  await page.locator("input[name='postalCode']").fill('28013');
-  await page.locator("input[name='city']").fill('Madrid');
-  await page.locator("input[name='city']").press('Tab');
+  await page.locator("input[name='address.recipientName']").fill('Ana Test');
+  await page.locator("input[name='address.line1']").fill('Calle Mayor 1');
+  await page.locator("input[name='address.postalCode']").fill('28013');
+  await page.locator("input[name='address.city']").fill('Madrid');
+  await page.locator("input[name='address.city']").press('Tab');
 
   // The delivery options arrive once there is somewhere to deliver to.
   await page.locator("input[name='shipping']").first().check();

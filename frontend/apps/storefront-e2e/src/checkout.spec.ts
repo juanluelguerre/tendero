@@ -63,7 +63,7 @@ test.describe('the checkout', () => {
   test('a checkout left half way keeps the cart for when the shopper comes back', async ({ page }) => {
     await aProductInTheCart(page);
     await page.goto('/en/checkout');
-    await page.locator("input[name='recipientName']").fill('Ana Test');
+    await page.locator("input[name='address.recipientName']").fill('Ana Test');
 
     await page.goto('/en');
     await page.reload();

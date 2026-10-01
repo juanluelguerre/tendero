@@ -79,7 +79,7 @@ describe('the checkout store', () => {
     name = null;
     const store = await opened();
     const before = store.options().length;
-    store.edit({ recipientName: 'Luis' });
+    store.addressForm.recipientName().value.set('Luis');
     await store.addressChanged();
 
     expect([before, store.options().length]).toEqual([0, 2]);

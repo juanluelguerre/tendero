@@ -88,14 +88,15 @@
               <p class="-mt-2 mb-4 text-sm text-muted">{{ t('order.nothingLeftToReturn') }}</p>
             } @else {
               <ul class="grid gap-3">
-                @for (line of store.returnableLines(); track line.sku) {
+                @for (line of store.returnableLines(); track line.sku; let index = $index) {
+                  @let row = store.returnForm[index];
                   <li class="rounded-md border border-hairline p-3">
                     <label class="returnable__pick flex cursor-pointer items-center gap-3 font-medium">
-                      <input type="checkbox" [checked]="store.picked().has(line.sku)" (change)="store.toggle(line)" />
+                      <input type="checkbox" [formField]="row.picked" />
                       <span>{{ line.productName }}</span>
                     </label>
 
-                    @if (store.picked().has(line.sku)) {
+                    @if (row.picked().value()) {
                       <div
                         class="returnable__detail mt-3 flex flex-wrap gap-3 border-t border-dashed border-hairline pt-3"
                       >
@@ -104,22 +105,14 @@
                           <input
                             class="field w-col-md numeric"
                             type="number"
-                            min="1"
-                            [max]="line.left"
-                            [ngModel]="store.quantityOf(line.sku)"
-                            (ngModelChange)="store.setQuantity(line.sku, $event)"
-                            [name]="'quantity-' + line.sku"
+                            [formField]="row.quantity"
+                            [attr.aria-invalid]="row.quantity().invalid()"
                           />
                         </label>
 
                         <label class="grid min-w-col-xl flex-1 gap-2">
                           <span class="text-xs text-muted">{{ t('order.returnReason') }}</span>
-                          <select
-                            class="field select"
-                            [ngModel]="store.reasonOf(line.sku)"
-                            (ngModelChange)="store.setReason(line.sku, $event)"
-                            [name]="'reason-' + line.sku"
-                          >
+                          <select class="field select" [formField]="row.reason">
                             @for (reason of reasons; track reason) {
                               <option [value]="reason">{{ t('order.reason.' + reason) }}</option>
                             }
@@ -131,12 +124,7 @@
                 }
               </ul>
 
-              <button
-                class="button"
-                type="button"
-                [disabled]="store.picked().size === 0 || store.sending()"
-                (click)="store.requestReturn()"
-              >
+              <button class="button" type="button" [disabled]="!store.canSend()" (click)="store.requestReturn()">
                 {{ t('order.returnSubmit') }}
               </button>
             }

@@ -25,12 +25,16 @@ describe('the define variants store', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
+  /** Typed as a person types it: into the form's fields (Signal Forms), one axis at a time. */
+  function type(axis: number, code: string, options: string) {
+    store.axesForm[axis].code().value.set(code);
+    store.axesForm[axis].options().value.set(options);
+  }
+
   function draft() {
-    store.edit(0, 'code', ' COLOR ');
-    store.edit(0, 'options', 'NAVY, BLACK,');
+    type(0, ' COLOR ', 'NAVY, BLACK,');
     store.addAxis();
-    store.edit(1, 'code', 'SIZE');
-    store.edit(1, 'options', 'S,M,L');
+    type(1, 'SIZE', 'S,M,L');
     store.addAxis();
   }
 

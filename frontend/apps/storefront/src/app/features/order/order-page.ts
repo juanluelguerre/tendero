@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReturnView } from '@tendero/shared-api';
@@ -29,7 +29,7 @@ import { Summary } from '../../summary/summary';
  */
 @Component({
   selector: 'storefront-order',
-  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill, Totals, Summary, PricePipe],
+  imports: [TranslocoDirective, RouterLink, Notice, StatusPill, Totals, Summary, PricePipe, FormField],
   providers: [OrderStore],
   templateUrl: './order-page.html',
 })

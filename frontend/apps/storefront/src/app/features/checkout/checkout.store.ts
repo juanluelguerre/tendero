@@ -1,6 +1,7 @@
-import { computed, inject } from '@angular/core';
+import { computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
+import { form, maxLength, pattern, required } from '@angular/forms/signals';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import type { AddressRequest, ShippingOptionView } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
@@ -21,8 +22,22 @@ import { checkoutProblem } from './checkout-problem';
  */
 export const CheckoutCards = ['card-ok', 'card-declined', 'card-unreachable', 'card-capture-fails'] as const;
 
+/**
+ * The address as the form edits it: every field a string, since an input holds
+ * text, the optional ones empty rather than null. `address` turns it into the
+ * API's request.
+ */
+interface AddressDraft {
+  recipientName: string;
+  line1: string;
+  line2: string;
+  city: string;
+  region: string;
+  postalCode: string;
+  countryCode: string;
+}
+
 interface CheckoutState {
-  readonly address: AddressRequest;
   readonly options: readonly ShippingOptionView[];
   readonly chosen: ShippingOptionView | null;
   readonly instrument: string;
@@ -44,7 +59,20 @@ interface CheckoutState {
  */
 export const CheckoutStore = signalStore(
   withState<CheckoutState>(() => ({
-    /**
+    options: [],
+    chosen: null,
+    instrument: CheckoutCards[0],
+    rating: false,
+    paying: false,
+    problem: null,
+  })),
+  // The address is a Signal Form (ADR 0051): its model a writable signal in the
+  // store's props — a form writes its model, which the store's frozen state is
+  // not for — and its inputs bound to `addressForm` with `[formField]`. What the
+  // server needs before it can price delivery is the schema's, so "is the
+  // address complete?" is the form's validity, not a check written by hand.
+  withProps(() => {
+    /*
      * The address is prefilled with somewhere the shop actually delivers,
      * because this is a demo catalogue and making a reviewer type an address to
      * see a checkout is a way to lose them. A real shop starts empty, or from
@@ -55,23 +83,33 @@ export const CheckoutStore = signalStore(
      * while her account showed one (UI review, 2026-09-11). It is the signed-in
      * person's name, or whatever a guest types.
      */
-    address: {
+    const draft = signal<AddressDraft>({
       recipientName: inject(AuthStore).identity()?.name ?? '',
       line1: 'Calle Mayor 1',
-      line2: null,
+      line2: '',
       city: 'Madrid',
-      region: null,
+      region: '',
       postalCode: '28013',
       countryCode: 'ES',
-      phone: null,
-    },
-    options: [],
-    chosen: null,
-    instrument: CheckoutCards[0],
-    rating: false,
-    paying: false,
-    problem: null,
-  })),
+    });
+    // Named, so each input's `name` is `address.<field>`: stable for autofill and for the browser suites.
+    const addressForm = form(
+      draft,
+      (address) => {
+        required(address.recipientName);
+        // A name of spaces is no name: the server refuses it as one.
+        pattern(address.recipientName, /\S/);
+        required(address.line1);
+        required(address.city);
+        required(address.postalCode);
+        required(address.countryCode);
+        maxLength(address.countryCode, 2);
+        pattern(address.countryCode, /^[A-Za-z]{2}$/);
+      },
+      { name: 'address' },
+    );
+    return { _draft: draft, addressForm };
+  }),
   withProps(() => ({
     _cart: inject(CartStore),
     _orders: inject(OrderService),
@@ -86,8 +124,20 @@ export const CheckoutStore = signalStore(
      */
     _idempotencyKey: crypto.randomUUID(),
   })),
-  withComputed(({ _cart }) => ({
+  withComputed(({ _cart, _draft }) => ({
     currency: computed(() => _cart.quote()?.currency ?? 'EUR'),
+    /** The address as the API takes it: the optional fields null when empty. */
+    address: computed<AddressRequest>(() => {
+      const draft = _draft();
+      return {
+        ...draft,
+        recipientName: draft.recipientName.trim(),
+        line2: draft.line2 || null,
+        region: draft.region || null,
+        countryCode: draft.countryCode.toUpperCase(),
+        phone: null,
+      };
+    }),
   })),
   withMethods((store) => {
     const money = (amount: number): string => formatPrice(amount, store.currency(), store._culture.active());
@@ -115,8 +165,8 @@ export const CheckoutStore = signalStore(
       // and asking with a blank name answered 400 — which this page reads as
       // "we do not deliver there" (found live, 2026-09-11, the day the name
       // stopped being prefilled for guests).
+      if (!store.addressForm().valid()) return;
       const address = store.address();
-      if (!address.recipientName.trim() || !address.line1 || !address.city || !address.postalCode) return;
 
       patchState(store, { rating: true, problem: null });
       try {
@@ -149,9 +199,6 @@ export const CheckoutStore = signalStore(
       async start(): Promise<void> {
         await store._cart.load();
         if (!store._cart.isEmpty()) await loadOptions();
-      },
-      edit(change: Partial<AddressRequest>): void {
-        patchState(store, (state) => ({ address: { ...state.address, ...change } }));
       },
       /**
        * Any field of the address, once it has changed: the options and the total

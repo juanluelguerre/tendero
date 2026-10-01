@@ -1,5 +1,6 @@
-import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
+import { computed, inject, signal } from '@angular/core';
+import { form } from '@angular/forms/signals';
+import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CatalogService } from '../../data-access/catalog.service';
 
@@ -18,21 +19,29 @@ function optionsOf(options: string): string[] {
 
 /**
  * Defining a product's variants (ADR 0047): the axes being drafted, how many
- * variants they would make, and what the server answered. The drafts are
- * immutable: an edit replaces its axis, so the count follows every keystroke.
+ * variants they would make, and what the server answered.
+ *
+ * The axes are a Signal Form (ADR 0051): the draft is input that lives while it
+ * is typed, so its model is a writable signal in the store's props — a form
+ * writes its model, which the store's frozen state is not for — and the inputs
+ * bind to `axesForm` with `[formField]`. The count reads the model, so it
+ * follows every keystroke.
  */
 export const DefineVariantsStore = signalStore(
   withState({
-    axes: [{ code: '', options: '' }] as readonly AxisDraft[],
     busy: false,
     created: null as number | null,
     failed: null as string | null,
   }),
-  withComputed(({ axes }) => ({
+  withProps(() => {
+    const axes = signal<AxisDraft[]>([{ code: '', options: '' }]);
+    return { _axes: axes, axesForm: form(axes) };
+  }),
+  withComputed(({ _axes }) => ({
     /** How many variants would come out. Shown BEFORE you press, because the
      *  cartesian product grows faster than intuition expects. */
     combinations: computed(() => {
-      const counts = axes()
+      const counts = _axes()
         .map((axis) => optionsOf(axis.options).length)
         .filter((count) => count > 0);
       return counts.length === 0 ? 0 : counts.reduce((total, count) => total * count, 1);
@@ -40,16 +49,11 @@ export const DefineVariantsStore = signalStore(
   })),
   withMethods((store, catalog = inject(CatalogService)) => ({
     addAxis(): void {
-      patchState(store, (state) => ({ axes: [...state.axes, { code: '', options: '' }] }));
-    },
-    edit(index: number, field: keyof AxisDraft, value: string): void {
-      patchState(store, (state) => ({
-        axes: state.axes.map((axis, at) => (at === index ? { ...axis, [field]: value } : axis)),
-      }));
+      store._axes.update((axes) => [...axes, { code: '', options: '' }]);
     },
     generate(productId: string): void {
       const axes = store
-        .axes()
+        ._axes()
         .filter((axis) => axis.code.trim() && optionsOf(axis.options).length > 0)
         .map((axis) => ({ code: axis.code.trim(), options: optionsOf(axis.options) }));
 

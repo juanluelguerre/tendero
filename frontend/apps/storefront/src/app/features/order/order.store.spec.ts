@@ -75,23 +75,33 @@ describe('the order store', () => {
     expect([atOnce, reads, store.order()?.status]).toEqual([['Placed', true, false], 1, 'Delivered']);
   });
 
-  it('offers back only what is left of each line, and keeps a quantity within it', async () => {
+  /**
+   * The return is a Signal Form: a line is picked by its checkbox, its quantity
+   * typed into its field. More than is left is invalid and is not sent — it used
+   * to be clamped in silence, which changed what the shopper had typed.
+   */
+  it('offers back only what is left of each line, and does not send more than that', async () => {
     const store = opened();
     await settled();
-    const [mug] = store.returnableLines();
-    store.toggle(mug);
-    store.setQuantity('MUG', 9);
+    store.returnForm[0].picked().value.set(true);
+    store.returnForm[0].quantity().value.set(9);
+    const tooMany = [store.returnForm().valid(), store.canSend()];
+    store.returnForm[0].quantity().value.set(2);
 
-    expect([store.returnableLines().map((line) => line.sku), store.quantityOf('MUG')]).toEqual([['MUG'], 2]);
+    expect([store.returnableLines().map((line) => line.sku), tooMany, store.canSend()]).toEqual([
+      ['MUG'],
+      [false, false],
+      true,
+    ]);
   });
 
   it('sends the lines picked, then clears them and says the return is open', async () => {
     const store = opened();
     await settled();
-    store.toggle(store.returnableLines()[0]);
+    store.returnForm[0].picked().value.set(true);
     await store.requestReturn();
 
-    expect([sent, store.picked().size, store.returns().length, store.returnMessage(), store.returnOpened()]).toEqual([
+    expect([sent, store.pickedCount(), store.returns().length, store.returnMessage(), store.returnOpened()]).toEqual([
       [{ lines: [{ sku: 'MUG', quantity: 1, reason: 'WrongSize', comment: null }] }],
       0,
       1,
@@ -105,7 +115,7 @@ describe('the order store', () => {
     returning = () => Promise.reject({ status: 409 });
     const store = opened();
     await settled();
-    store.toggle(store.returnableLines()[0]);
+    store.returnForm[0].picked().value.set(true);
     await store.requestReturn();
 
     expect([store.returnMessage(), store.returnOpened()]).toEqual(['order.returnClosed', false]);

@@ -32,12 +32,9 @@
               <span class="text-sm font-medium text-muted">{{ t('checkout.recipientName') }}</span>
               <input
                 class="field"
-                name="recipientName"
-                [ngModel]="store.address().recipientName"
-                (ngModelChange)="store.edit({ recipientName: $event })"
+                [formField]="store.addressForm.recipientName"
                 (change)="store.addressChanged()"
                 autocomplete="name"
-                required
               />
             </label>
 
@@ -45,9 +42,7 @@
               <span class="text-sm font-medium text-muted">{{ t('checkout.line1') }}</span>
               <input
                 class="field"
-                name="line1"
-                [ngModel]="store.address().line1"
-                (ngModelChange)="store.edit({ line1: $event })"
+                [formField]="store.addressForm.line1"
                 (change)="store.addressChanged()"
                 autocomplete="address-line1"
               />
@@ -57,9 +52,7 @@
               <span class="text-sm font-medium text-muted">{{ t('checkout.line2') }}</span>
               <input
                 class="field"
-                name="line2"
-                [ngModel]="store.address().line2"
-                (ngModelChange)="store.edit({ line2: $event })"
+                [formField]="store.addressForm.line2"
                 (change)="store.addressChanged()"
                 autocomplete="address-line2"
               />
@@ -69,9 +62,7 @@
               <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
               <input
                 class="field"
-                name="postalCode"
-                [ngModel]="store.address().postalCode"
-                (ngModelChange)="store.edit({ postalCode: $event })"
+                [formField]="store.addressForm.postalCode"
                 (change)="store.addressChanged()"
                 autocomplete="postal-code"
               />
@@ -81,9 +72,7 @@
               <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
               <input
                 class="field"
-                name="city"
-                [ngModel]="store.address().city"
-                (ngModelChange)="store.edit({ city: $event })"
+                [formField]="store.addressForm.city"
                 (change)="store.addressChanged()"
                 autocomplete="address-level2"
               />
@@ -93,9 +82,7 @@
               <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
               <input
                 class="field"
-                name="region"
-                [ngModel]="store.address().region"
-                (ngModelChange)="store.edit({ region: $event })"
+                [formField]="store.addressForm.region"
                 (change)="store.addressChanged()"
                 autocomplete="address-level1"
               />
@@ -107,11 +94,8 @@
                    look up (a rate, a tax rule, a market). -->
               <input
                 class="field numeric"
-                name="countryCode"
-                maxlength="2"
                 autocomplete="country"
-                [ngModel]="store.address().countryCode"
-                (ngModelChange)="store.edit({ countryCode: $event })"
+                [formField]="store.addressForm.countryCode"
                 (change)="store.addressChanged()"
               />
             </label>

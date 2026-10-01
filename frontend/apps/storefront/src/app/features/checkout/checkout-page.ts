@@ -1,6 +1,6 @@
 import { CultureStore } from '@tendero/shared-i18n';
 import { Component, effect, ElementRef, inject, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CartStore } from '../../cart/cart.store';
@@ -26,7 +26,7 @@ import { Summary } from '../../summary/summary';
  */
 @Component({
   selector: 'storefront-checkout',
-  imports: [TranslocoDirective, FormsModule, RouterLink, Notice, Totals, Summary, PricePipe],
+  imports: [TranslocoDirective, RouterLink, Notice, Totals, Summary, PricePipe, FormField],
   providers: [CheckoutStore],
   templateUrl: './checkout-page.html',
 })

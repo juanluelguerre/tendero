@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormField } from '@angular/forms/signals';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { DefineVariantsStore } from './define-variants.store';
@@ -17,7 +17,7 @@ import { DefineVariantsStore } from './define-variants.store';
  */
 @Component({
   selector: 'backoffice-define-variants',
-  imports: [FormsModule, RouterLink, TranslocoDirective],
+  imports: [FormField, RouterLink, TranslocoDirective],
   templateUrl: './define-variants-page.html',
   providers: [DefineVariantsStore],
 })

@@ -2,25 +2,17 @@
   <h1 class="m-0 font-display text-lg">{{ t('variants.title') }}</h1>
   <p class="m-0 text-xs text-muted">{{ t('variants.hint') }}</p>
 
-  @for (axis of store.axes(); track $index) {
+  @for (axis of store.axesForm; track $index) {
     <div class="flex gap-2">
       <label class="flex flex-col gap-1 text-xs">
         <span>{{ t('variants.axisCode') }}</span>
-        <input
-          class="rounded-sm border border-hairline bg-surface p-2"
-          [ngModel]="axis.code"
-          (ngModelChange)="store.edit($index, 'code', $event)"
-          [name]="'code' + $index"
-          placeholder="COLOR"
-        />
+        <input class="rounded-sm border border-hairline bg-surface p-2" [formField]="axis.code" placeholder="COLOR" />
       </label>
       <label class="flex flex-1 flex-col gap-1 text-xs">
         <span>{{ t('variants.axisOptions') }}</span>
         <input
           class="rounded-sm border border-hairline bg-surface p-2"
-          [ngModel]="axis.options"
-          (ngModelChange)="store.edit($index, 'options', $event)"
-          [name]="'options' + $index"
+          [formField]="axis.options"
           placeholder="NAVY, BLACK"
         />
       </label>
