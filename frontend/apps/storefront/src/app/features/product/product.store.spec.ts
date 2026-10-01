@@ -75,6 +75,19 @@ describe('the product store', () => {
     expect(missing).toBe('notFound');
   });
 
+  /**
+   * A code that is not a code — a link copied short, an address typed by hand —
+   * is refused by the API as malformed (400). For the shopper it is a product
+   * that does not exist; "try again in a moment" would never come true.
+   */
+  it('says a malformed code is not found, not a failure', () => {
+    answer = () => throwError(() => ({ status: 400 }));
+    const malformed = opened().state().status;
+
+    TestBed.resetTestingModule();
+    expect(malformed).toBe('notFound');
+  });
+
   /** The specs are Knowledge's, beside the product: without them the lines fall back to the catalogue's (invariant 8). */
   it('draws the product when Knowledge does not answer', () => {
     const store = opened();

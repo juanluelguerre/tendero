@@ -11,6 +11,7 @@ import { ProductService } from '../../data-access/product.service';
 import { SpecsService } from '../../data-access/specs.service';
 import { specLines, specStatements } from '../../specs/spec-lines';
 import { availabilityOf, initialSelection, select, sellable, variantFor, type OptionAvailability, type Selection } from './variant-picker';
+import { valueOf } from '@tendero/shared-util';
 
 export type ProductPageState =
   | { status: 'loading' }
@@ -83,9 +84,11 @@ export const ProductStore = signalStore(
       switch (_detail.status()) {
         case 'resolved':
         case 'local':
-          return { status: 'done', product: _detail.value() as ProductDetail };
+          return { status: 'done', product: valueOf(_detail) as ProductDetail };
         case 'error':
-          return { status: statusOf(_detail.error()) === 404 ? 'notFound' : 'failed' };
+          // 404: no such product; 400: no such code — a link copied short. Either
+          // way the shopper is told it does not exist, never to try again.
+          return { status: [400, 404].includes(statusOf(_detail.error()) ?? 0) ? 'notFound' : 'failed' };
         default:
           return { status: 'loading' };
       }
@@ -95,7 +98,7 @@ export const ProductStore = signalStore(
       return current.status === 'done' ? current.product : null;
     });
     /** A failed sheet is no sheet: the lines fall back to the catalogue's attributes. */
-    const loadedSheet = computed(() => (_sheet.status() === 'resolved' ? _sheet.value() : undefined));
+    const loadedSheet = computed(() => (_sheet.status() === 'resolved' ? valueOf(_sheet) : undefined));
     /** The variants a shopper can choose between — discontinued ones are not on sale. */
     const variants = computed(() => {
       const current = product();
