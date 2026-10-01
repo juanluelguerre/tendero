@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 /** Which rows a page shows, counted from one, and how many pages there are. */
@@ -34,7 +34,6 @@ export function rangeOf(page: number, pageSize: number, total: number): PageRang
 @Component({
   selector: 'backoffice-pager',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pager.html',
 })
 export class Pager {

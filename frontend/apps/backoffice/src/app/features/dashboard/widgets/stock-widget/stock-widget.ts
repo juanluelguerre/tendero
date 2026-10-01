@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -14,7 +14,6 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
 @Component({
   selector: 'backoffice-stock-widget',
   imports: [TranslocoDirective, RouterLink, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-widget.html',
   host: { class: 'block' },
   providers: [StockStore],

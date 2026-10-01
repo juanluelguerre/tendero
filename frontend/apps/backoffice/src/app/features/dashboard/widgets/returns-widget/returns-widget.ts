@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -13,7 +13,6 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
 @Component({
   selector: 'backoffice-returns-widget',
   imports: [TranslocoDirective, RouterLink, BarChart, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './returns-widget.html',
   host: { class: 'block' },
   providers: [ReturnsStore],

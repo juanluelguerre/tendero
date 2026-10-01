@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -30,7 +30,6 @@ import { Totals } from '../../totals/totals';
   selector: 'storefront-order',
   imports: [TranslocoDirective, FormsModule, RouterLink, Notice, StatusPill, Totals],
   providers: [OrderStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-page.html',
 })
 export class OrderPage {

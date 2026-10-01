@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output, viewChild } from '@angular/core';
+import { Component, inject, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { CopyText } from '@tendero/shared-ui';
@@ -19,7 +19,6 @@ import { OrderPaneStore } from './order-pane.store';
 @Component({
   selector: 'backoffice-order-pane',
   imports: [TranslocoDirective, WorklistPane, ConfirmDialog, OrderStatusLabel, OrderPayment, CopyText],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-pane.html',
   // The pane is laid out by the page's list-and-pane grid, as if it were its child; the
   // pane itself is shared (worklist/).

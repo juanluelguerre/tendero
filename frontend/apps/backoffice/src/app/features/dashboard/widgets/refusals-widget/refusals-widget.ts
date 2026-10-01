@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime } from '@tendero/shared-util';
@@ -11,7 +11,6 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
 @Component({
   selector: 'backoffice-refusals-widget',
   imports: [TranslocoDirective, BarChart, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './refusals-widget.html',
   host: { class: 'block' },
   providers: [RefusalsStore],

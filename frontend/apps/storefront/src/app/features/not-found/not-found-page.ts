@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageState } from '../../page-state/page-state';
@@ -16,7 +16,6 @@ import { ShopLinks } from '../../shop-links';
 @Component({
   selector: 'storefront-not-found-page',
   imports: [TranslocoDirective, RouterLink, PageState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './not-found-page.html',
   host: { class: 'block' },
 })

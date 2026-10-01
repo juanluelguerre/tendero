@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, linkedSignal, output } from '@angular/core';
+import { Component, input, linkedSignal, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProductImagePlaceholder } from '../product-image-placeholder/product-image-placeholder';
 
@@ -22,7 +22,6 @@ import { ProductImagePlaceholder } from '../product-image-placeholder/product-im
 @Component({
   selector: 'storefront-product-image',
   imports: [TranslocoDirective, ProductImagePlaceholder],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-image.html',
   // The host is the caller's box: it is a block, and what it holds is clipped to its
   // radius.

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -23,7 +23,6 @@ import { PageState } from '../../page-state/page-state';
 @Component({
   selector: 'storefront-search-page',
   imports: [TranslocoDirective, RouterLink, HomeSections, Listing, Notice, PageState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   // Its own listing — the filters in the URL, the request, the phone's batch —
   // and its own words, which tell the listing what to list.
   providers: [ListingStore, SearchStore],

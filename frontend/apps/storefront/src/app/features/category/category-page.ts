@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageTitles } from '@tendero/shared-i18n';
@@ -38,7 +38,6 @@ import { Crumbs } from '../../crumbs/crumbs';
 @Component({
   selector: 'storefront-category-page',
   imports: [TranslocoDirective, RouterLink, Listing, CampaignCard, Notice, PageState, Crumbs],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   // Its own listing — the filters in the URL, the request, the phone's batch —
   // and its own branch, which tells the listing what to list.
   providers: [ListingStore, CategoryStore],

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, viewChild } from '@angular/core';
+import { Component, effect, inject, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ConfirmDialog } from '../../worklist/confirm-dialog/confirm-dialog';
 import { AgentList } from './agent-list/agent-list';
@@ -18,7 +18,6 @@ import { AgentsStore } from './agents.store';
 @Component({
   selector: 'backoffice-agents',
   imports: [TranslocoDirective, ConfirmDialog, AgentList, AgentRegister, AgentPane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agents-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list, the form and the pane have of their own is in their

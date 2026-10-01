@@ -1,4 +1,4 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, inject, Injector } from '@angular/core';
+import { afterNextRender, Component, inject, Injector } from '@angular/core';
 import { OrderList } from './order-list/order-list';
 import { OrderPane } from './order-pane/order-pane';
 import { OrdersStore } from './orders.store';
@@ -16,7 +16,6 @@ import { OrdersStore } from './orders.store';
 @Component({
   selector: 'backoffice-orders',
   imports: [OrderList, OrderPane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-page.html',
   // The page is a frame: the list-and-pane layout is shared by every list of work
   // (styles.css), and what the list and the pane have of their own is in their folders.

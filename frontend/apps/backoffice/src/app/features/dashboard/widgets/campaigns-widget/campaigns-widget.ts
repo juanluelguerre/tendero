@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, valueOf } from '@tendero/shared-util';
@@ -17,7 +17,6 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
 @Component({
   selector: 'backoffice-campaigns-widget',
   imports: [TranslocoDirective, BarChart, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaigns-widget.html',
   host: { class: 'block' },
   providers: [CampaignsStore],

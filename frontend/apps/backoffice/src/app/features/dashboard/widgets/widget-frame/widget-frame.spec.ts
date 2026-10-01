@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, resource } from '@angular/core';
+import { Component, resource } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it } from 'vitest';
@@ -7,7 +7,6 @@ import { WidgetFrame } from './widget-frame';
 /** A widget as the dashboard's are written: its figure read from the resource, inside the frame's template. */
 @Component({
   imports: [WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <backoffice-widget-frame
       heading="Orders"

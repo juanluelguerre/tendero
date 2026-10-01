@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { OrderSummary } from '@tendero/shared-api';
 
@@ -6,7 +6,6 @@ import type { OrderSummary } from '@tendero/shared-api';
 @Component({
   selector: 'backoffice-order-payment',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-payment.html',
   // Laid out by whoever places it: a table cell or the pane's head. The tags are the
   // shared ones (styles.css).

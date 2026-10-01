@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AttributeDefinitionView } from '@tendero/shared-api';
 import { ListState } from '../../worklist/list-state/list-state';
@@ -20,7 +20,6 @@ import { AttributesStore } from './attributes.store';
 @Component({
   selector: 'backoffice-attributes',
   imports: [TranslocoDirective, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './attributes-page.html',
   styleUrl: './attributes-page.css',
   providers: [AttributesStore],

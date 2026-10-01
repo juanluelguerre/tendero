@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReservationRow } from '@tendero/shared-api';
 import { orderReference } from '@tendero/shared-util';
@@ -12,7 +12,6 @@ import { StockStore } from '../stock.store';
 @Component({
   selector: 'backoffice-stock-holds',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-holds.html',
   host: { class: 'block' },
 })

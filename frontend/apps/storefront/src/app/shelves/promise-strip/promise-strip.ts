@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Icon } from '@tendero/shared-ui';
 
@@ -14,7 +14,6 @@ import { Icon } from '@tendero/shared-ui';
 @Component({
   selector: 'storefront-promise-strip',
   imports: [TranslocoDirective, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './promise-strip.html',
   host: { class: 'block' },
 })

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { FilterChips } from '../../worklist/filter-chips/filter-chips';
 import { Find } from '../../worklist/find/find';
@@ -32,7 +32,6 @@ import { StockStore } from './stock.store';
 @Component({
   selector: 'backoffice-stock',
   imports: [TranslocoDirective, FilterChips, StockShelves, StockHolds, Find, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-page.html',
   providers: [StockStore],
 })

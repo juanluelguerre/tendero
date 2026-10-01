@@ -1,13 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  Injector,
-  untracked,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, effect, inject, Injector, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
@@ -50,7 +41,6 @@ import { WaitingStore } from './waiting.store';
     UndoToast,
     Palette,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   host: { '[class.with-rail]': 'canUseBackoffice()', '(document:keydown)': 'shortcut($event)' },

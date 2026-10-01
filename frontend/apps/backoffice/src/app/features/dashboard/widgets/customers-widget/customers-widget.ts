@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
@@ -9,7 +9,6 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
 @Component({
   selector: 'backoffice-customers-widget',
   imports: [TranslocoDirective, BarChart, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './customers-widget.html',
   host: { class: 'block' },
   providers: [CustomersStore],

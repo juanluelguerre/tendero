@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output, viewChild } from '@angular/core';
+import { Component, inject, output, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -17,7 +17,6 @@ import { ReturnsStore } from '../returns.store';
 @Component({
   selector: 'backoffice-return-pane',
   imports: [TranslocoDirective, RouterLink, WorklistPane, ConfirmDialog, ReturnStatusLabel],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './return-pane.html',
   // The pane is laid out by the page's list-and-pane grid, as if it were its child.
   host: { class: 'contents' },

@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, orderReference } from '@tendero/shared-util';
@@ -17,7 +17,6 @@ import { ReturnsStore } from '../returns.store';
 @Component({
   selector: 'backoffice-return-list',
   imports: [TranslocoDirective, NgTemplateOutlet, FilterChips, ReturnStatusLabel, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './return-list.html',
 })
 export class ReturnList {

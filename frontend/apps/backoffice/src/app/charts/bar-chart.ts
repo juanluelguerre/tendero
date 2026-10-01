@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { Component, computed, input, signal } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { type BarChartData, type BarLayout, roleColourToken, type ValueFormat } from './chart-contract';
 import { barOptions } from './echarts-bar-options';
@@ -17,7 +17,6 @@ let charts = 0;
 @Component({
   selector: 'backoffice-bar-chart',
   imports: [TranslocoDirective, EchartsChart],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bar-chart.html',
   host: { '[style.--chart-block-size]': 'blockSize()' },
   styleUrl: './bar-chart.css',

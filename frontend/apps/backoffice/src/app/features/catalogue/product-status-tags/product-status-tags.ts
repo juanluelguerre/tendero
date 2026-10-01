@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ProductSummary } from '@tendero/shared-api';
 
@@ -6,7 +6,6 @@ import type { ProductSummary } from '@tendero/shared-api';
 @Component({
   selector: 'backoffice-product-status-tags',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-status-tags.html',
   // Laid out by whoever places it; the tags are the shared ones (styles.css).
   host: { class: 'contents' },

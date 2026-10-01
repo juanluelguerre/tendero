@@ -1,13 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  inject,
-  input,
-  linkedSignal,
-  output,
-  signal,
-} from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -44,7 +35,6 @@ let panels = 0;
 @Component({
   selector: 'storefront-filter-panel',
   imports: [TranslocoDirective, RouterLink, NgTemplateOutlet, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './filter-panel.html',
   styleUrl: './filter-panel.css',
   host: { class: 'block', '[class.in-sheet]': "mode() === 'sheet'" },

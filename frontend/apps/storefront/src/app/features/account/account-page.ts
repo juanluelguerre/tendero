@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { OrderSummary } from '@tendero/shared-api';
@@ -33,7 +33,6 @@ import { PageState } from '../../page-state/page-state';
   selector: 'storefront-account-page',
   imports: [TranslocoDirective, RouterLink, ProductImage, TrailHistory, PageState],
   providers: [AccountStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-page.html',
 })
 export class AccountPage {

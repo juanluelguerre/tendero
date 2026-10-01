@@ -1,4 +1,4 @@
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ApplicationConfig, provideAppInitializer, provideBrowserGlobalErrorListeners, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
@@ -21,7 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideOAuthClient(),
     provideAppInitializer(() => inject(AuthStore).bootstrap()),
 
-    provideHttpClient(withFetch(), withInterceptors([tenderoAuthInterceptor])),
+    provideHttpClient(withInterceptors([tenderoAuthInterceptor])),
     provideTenderoI18n(),
     provideTranslatedTitles(),
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
@@ -34,7 +34,6 @@ export interface CardReason {
 @Component({
   selector: 'storefront-product-card',
   imports: [TranslocoDirective, RouterLink, ProductImage],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-card.html',
   styleUrl: './product-card.css',
   host: {

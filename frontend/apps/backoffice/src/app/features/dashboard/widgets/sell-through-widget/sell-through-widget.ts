@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
@@ -13,7 +13,6 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
 @Component({
   selector: 'backoffice-sell-through-widget',
   imports: [TranslocoDirective, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sell-through-widget.html',
   host: { class: 'block' },
   providers: [SellThroughStore],

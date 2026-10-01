@@ -1,5 +1,4 @@
 import {
-  ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
@@ -54,7 +53,6 @@ type Translate = (key: string, params?: Record<string, unknown>) => string;
 @Component({
   selector: 'storefront-listing',
   imports: [TranslocoDirective, NgTemplateOutlet, ProductCard, FilterPanel, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './listing.html',
   // The host's own room above the listing, which its template cannot give itself.
   host: { class: 'block mt-4' },

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import type { OrderStatus, ReturnStatus } from '@tendero/shared-api';
 
 /** What a status says at a glance. The word is always there; the tone only makes it findable. */
@@ -50,7 +50,6 @@ export function returnStatusTone(status: ReturnStatus): StatusTone {
  */
 @Component({
   selector: 'lib-status-pill',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './status-pill.html',
   // The pill is the span inside; the host takes no box of its own, so a pill sits in a
   // table cell or a heading exactly as a bare span would.

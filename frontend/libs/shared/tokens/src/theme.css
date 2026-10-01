@@ -32,8 +32,9 @@
   'block contents flex inline-flex grid flex-col flex-1 gap-4 min-h-0 min-h-dvh min-w-0 mt-4 overflow-hidden fixed sticky inset-x-0 bottom-0 bottom-5 z-5 z-10 justify-center pointer-events-none text-body [--chart-block-size:2.5rem]'
 );
 
-/* The backoffice and the storefront both turn dark mode on with <html data-theme="dark">. */
-@custom-variant dark ([data-theme='dark'] &);
+/* No `dark:` variant: dark mode is the tokens' own `[data-theme='dark']` override,
+   so `bg-surface` is already right in both themes and no template says `dark:`.
+   One was declared here and never used (the review of 2026-10-01). */
 
 /* Nothing of Tailwind's own theme survives: the utilities below are all there is. */
 @theme {

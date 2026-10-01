@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ManagedCampaignView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -17,7 +17,6 @@ import { CampaignsStore } from '../campaigns.store';
 @Component({
   selector: 'backoffice-campaign-list',
   imports: [TranslocoDirective, NgTemplateOutlet, FilterChips, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaign-list.html',
 })
 export class CampaignList {

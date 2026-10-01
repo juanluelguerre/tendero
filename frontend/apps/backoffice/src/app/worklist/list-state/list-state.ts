@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /**
  * The three states every list of work passes through before it is a list —
@@ -14,7 +14,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'backoffice-list-state',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './list-state.html',
   styleUrl: './list-state.css',
   // Laid out by the list that places it, as if its states were the list's own children.

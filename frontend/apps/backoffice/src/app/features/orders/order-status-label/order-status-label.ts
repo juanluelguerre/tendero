@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { OrderSummary } from '@tendero/shared-api';
 import { orderStatusTone, StatusPill } from '@tendero/shared-ui';
@@ -11,7 +11,6 @@ import { orderStatusTone, StatusPill } from '@tendero/shared-ui';
 @Component({
   selector: 'backoffice-order-status-label',
   imports: [TranslocoDirective, StatusPill],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-status-label.html',
   // Laid out by whoever places it: a table cell, a card line or the pane's head.
   host: { class: 'contents' },

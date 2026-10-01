@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { BackofficeUsage } from '../../usage';
 import { landing, stepOf } from '../../worklist/list-keys';
 import { ReviewList } from './review-list/review-list';
@@ -24,7 +24,6 @@ import { ReviewQueueStore } from './review-queue.store';
 @Component({
   selector: 'backoffice-review-queue-page',
   imports: [ReviewList, ReviewPane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-queue-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list and the pane have of their own is in their folders.

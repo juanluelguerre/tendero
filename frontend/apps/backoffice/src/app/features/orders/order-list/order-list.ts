@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, orderReference } from '@tendero/shared-util';
@@ -20,7 +20,6 @@ import { OrdersStore, PageSize } from '../orders.store';
 @Component({
   selector: 'backoffice-order-list',
   imports: [TranslocoDirective, FilterChips, Pager, OrderStatusLabel, OrderPayment, Find, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-list.html',
 })
 export class OrderList {

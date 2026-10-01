@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { StaffUsage } from '@tendero/shared-telemetry';
 
@@ -10,7 +10,6 @@ import { StaffUsage } from '@tendero/shared-telemetry';
 @Component({
   selector: 'backoffice-staff-notice',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './staff-notice.html',
   host: { class: 'block' },
 })

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
@@ -26,7 +26,6 @@ export type ShippingState = 'at-checkout' | 'to-choose' | 'charged';
 @Component({
   selector: 'storefront-totals',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './totals.html',
   host: { class: 'block' },
 })

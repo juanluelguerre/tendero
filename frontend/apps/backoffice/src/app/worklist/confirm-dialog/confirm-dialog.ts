@@ -1,13 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  type ElementRef,
-  input,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, type ElementRef, input, output, signal, viewChild } from '@angular/core';
 
 let dialogs = 0;
 
@@ -20,7 +11,6 @@ let dialogs = 0;
  */
 @Component({
   selector: 'backoffice-confirm-dialog',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './confirm-dialog.html',
 })
 export class ConfirmDialog {

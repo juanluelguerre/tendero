@@ -1,15 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-  untracked,
-} from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { CultureStore } from '@tendero/shared-i18n';
 import { nextChangeIn, spokenTimeLeft, timeLeft } from '../campaign-rules';
 
@@ -28,7 +17,6 @@ import { nextChangeIn, spokenTimeLeft, timeLeft } from '../campaign-rules';
  */
 @Component({
   selector: 'storefront-countdown-clock',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './countdown-clock.html',
   host: { class: 'block' },
 })

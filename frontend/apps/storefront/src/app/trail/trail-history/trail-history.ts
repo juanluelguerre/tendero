@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
@@ -21,7 +21,6 @@ import { Icon } from '@tendero/shared-ui';
   selector: 'storefront-trail-history',
   imports: [TranslocoDirective, RouterLink, ProductCard, Icon],
   providers: [TrailHistoryStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './trail-history.html',
   host: { class: 'block' },
 })

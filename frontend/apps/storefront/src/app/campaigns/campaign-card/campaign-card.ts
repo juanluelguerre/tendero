@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { CampaignView, SearchHit } from '@tendero/shared-api';
@@ -30,7 +30,6 @@ import { CountdownClock } from '../countdown-clock/countdown-clock';
 @Component({
   selector: 'storefront-campaign-card',
   imports: [TranslocoDirective, RouterLink, CountdownClock, ProductCard],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaign-card.html',
   styleUrl: './campaign-card.css',
   host: {

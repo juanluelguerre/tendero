@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
@@ -20,7 +20,6 @@ import { TrailStore } from '../trail.store';
 @Component({
   selector: 'storefront-trail-row',
   imports: [TranslocoDirective, RouterLink, ProductRow, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './trail-row.html',
   host: { class: 'block' },
 })

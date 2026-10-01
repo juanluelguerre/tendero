@@ -1,4 +1,4 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { booleanAttribute, Component, input, output } from '@angular/core';
 
 let switches = 0;
 
@@ -11,7 +11,6 @@ let switches = 0;
  */
 @Component({
   selector: 'lib-culture-switch',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './culture-switch.html',
   host: { class: 'block' },
 })

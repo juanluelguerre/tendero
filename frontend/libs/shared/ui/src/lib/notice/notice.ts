@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 export type NoticeTone = 'info' | 'good' | 'warn' | 'bad';
 
@@ -14,7 +14,6 @@ export type NoticeTone = 'info' | 'good' | 'warn' | 'bad';
  */
 @Component({
   selector: 'lib-notice',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './notice.html',
   // Its size and margins are its place's: the text inherits the page's size, and whoever
   // places it gives it room.

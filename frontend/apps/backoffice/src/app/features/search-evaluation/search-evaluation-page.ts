@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchEvaluation } from '@tendero/shared-api';
 import { CultureEvaluation } from './culture-evaluation/culture-evaluation';
@@ -31,7 +31,6 @@ import { Notice } from '@tendero/shared-ui';
 @Component({
   selector: 'backoffice-search-evaluation',
   imports: [TranslocoDirective, CultureEvaluation, Notice],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './search-evaluation-page.html',
   styleUrl: './search-evaluation-page.css',
   providers: [SearchEvaluationStore],

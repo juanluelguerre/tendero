@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AgentsStore, AgentTrusts } from '../agents.store';
 
@@ -10,7 +10,6 @@ import { AgentsStore, AgentTrusts } from '../agents.store';
 @Component({
   selector: 'backoffice-agent-register',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-register.html',
   host: { class: 'block' },
 })

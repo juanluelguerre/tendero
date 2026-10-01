@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ImportResult, ProductSummary } from '@tendero/shared-api';
@@ -19,7 +19,6 @@ import { ProductStatusTags } from '../product-status-tags/product-status-tags';
 @Component({
   selector: 'backoffice-catalogue-list',
   imports: [RouterLink, TranslocoDirective, FilterChips, Pager, ProductStatusTags, Find, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogue-list.html',
   styleUrl: './catalogue-list.css',
 })

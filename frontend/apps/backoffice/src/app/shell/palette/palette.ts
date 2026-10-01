@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, type ElementRef, inject, viewChild } from '@angular/core';
+import { Component, type ElementRef, inject, viewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { BackofficeUsage } from '../../usage';
@@ -19,7 +19,6 @@ import { PaletteStore } from './palette.store';
 @Component({
   selector: 'backoffice-palette',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './palette.html',
   providers: [PaletteStore],
 })

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { BarChart } from '../../../../charts/bar-chart';
@@ -10,7 +10,6 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
 @Component({
   selector: 'backoffice-orders-by-status-widget',
   imports: [TranslocoDirective, RouterLink, BarChart, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './orders-by-status-widget.html',
   host: { class: 'block' },
   providers: [OrdersByStatusStore],

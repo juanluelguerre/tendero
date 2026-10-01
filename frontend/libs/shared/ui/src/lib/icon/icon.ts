@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 /**
  * Both apps' line icons, drawn here rather than installed: a few dozen strokes
@@ -58,7 +58,6 @@ export type IconName = keyof typeof Paths;
 
 @Component({
   selector: 'lib-icon',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './icon.html',
   styleUrl: './icon.css',
 })

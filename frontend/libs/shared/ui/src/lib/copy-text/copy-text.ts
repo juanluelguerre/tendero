@@ -1,4 +1,4 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, input, signal } from '@angular/core';
+import { booleanAttribute, Component, input, signal } from '@angular/core';
 
 /**
  * Something a person copies — an address, a command — shown and copyable in one
@@ -12,7 +12,6 @@ import { booleanAttribute, ChangeDetectionStrategy, Component, input, signal } f
  */
 @Component({
   selector: 'lib-copy-text',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './copy-text.html',
   styleUrl: './copy-text.css',
   host: { class: 'block min-w-0' },

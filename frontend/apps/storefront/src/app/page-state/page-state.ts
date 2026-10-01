@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 export type PageStateTone = 'info' | 'bad';
 
@@ -20,7 +20,6 @@ export type PageStateTone = 'info' | 'bad';
  */
 @Component({
   selector: 'storefront-page-state',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './page-state.html',
   // Its margins are its place's: whoever puts it on a page gives it room.
   host: { class: 'block' },

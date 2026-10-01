@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -10,7 +10,6 @@ import { valueOf } from '@tendero/shared-util';
 @Component({
   selector: 'backoffice-waiting-widget',
   imports: [TranslocoDirective, RouterLink, WidgetFrame],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './waiting-widget.html',
   host: { class: 'block' },
   providers: [WaitingStore],

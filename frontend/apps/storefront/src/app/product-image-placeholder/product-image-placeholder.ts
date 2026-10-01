@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /**
  * What a product with no picture shows.
@@ -23,7 +23,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
  */
 @Component({
   selector: 'storefront-product-image-placeholder',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-image-placeholder.html',
   // The host carries nothing but a promise to fill whatever the caller sized; the
   // template says why its layout is not on the host.

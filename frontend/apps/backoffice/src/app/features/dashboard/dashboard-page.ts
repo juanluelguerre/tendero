@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   computed,
   effect,
@@ -47,7 +46,6 @@ const WallRefresh = 60_000;
 @Component({
   selector: 'backoffice-dashboard',
   imports: [TranslocoDirective, RouterLink, RouterLinkActive, RouterOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
   providers: [DashboardSources, DashboardRefresh, provideDashboardWidgets()],

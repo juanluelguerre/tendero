@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AppliedDiscount, CartLineView } from '@tendero/shared-api';
@@ -27,7 +27,6 @@ import { ProductImage } from '../../product-image/product-image';
 @Component({
   selector: 'storefront-cart',
   imports: [TranslocoDirective, RouterLink, Notice, Totals, ProductImage, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './cart-page.html',
 })
 export class CartPage {

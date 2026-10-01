@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
@@ -17,7 +17,6 @@ import { ShopLinks } from '../../shop-links';
 @Component({
   selector: 'storefront-shop-menu',
   imports: [RouterLink, TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shop-menu.html',
   styleUrl: './shop-menu.css',
   host: { '[class.in-drawer]': "mode() === 'drawer'" },

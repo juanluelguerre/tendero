@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReturnView } from '@tendero/shared-api';
 import { returnStatusTone, StatusPill } from '@tendero/shared-ui';
@@ -7,7 +7,6 @@ import { returnStatusTone, StatusPill } from '@tendero/shared-ui';
 @Component({
   selector: 'backoffice-return-status-label',
   imports: [TranslocoDirective, StatusPill],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './return-status-label.html',
   host: { class: 'contents' },
 })

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { UndoStore } from './undo.store';
 import { Icon } from '@tendero/shared-ui';
@@ -7,7 +7,6 @@ import { Icon } from '@tendero/shared-ui';
 @Component({
   selector: 'backoffice-undo-toast',
   imports: [TranslocoDirective, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './undo-toast.html',
   // The host's place: fixed at the foot of the viewport, centred, and
   // letting the pointer through everywhere but the toast.

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { Icon } from '../icon/icon';
 import { type ThemeChoice, ThemeChoices } from '../theme';
 
@@ -13,7 +13,6 @@ let switches = 0;
 @Component({
   selector: 'lib-theme-switch',
   imports: [Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './theme-switch.html',
   host: { class: 'block' },
 })

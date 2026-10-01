@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -18,7 +18,6 @@ import { DefineVariantsStore } from './define-variants.store';
 @Component({
   selector: 'backoffice-define-variants',
   imports: [FormsModule, RouterLink, TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './define-variants-page.html',
   providers: [DefineVariantsStore],
 })

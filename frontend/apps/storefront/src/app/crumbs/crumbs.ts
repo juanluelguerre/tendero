@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 /** The crumb that leads somewhere: its words and where they go. */
@@ -22,7 +22,6 @@ export interface CrumbLink {
 @Component({
   selector: 'storefront-crumbs',
   imports: [RouterLink],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './crumbs.html',
   host: { class: 'block' },
 })

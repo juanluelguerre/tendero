@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CampaignCard } from '../../campaigns/campaign-card/campaign-card';
@@ -40,7 +40,6 @@ import { HomeStore } from './home.store';
   selector: 'storefront-home-sections',
   imports: [TranslocoDirective, RouterLink, CampaignCard, TrailRow, AgentCard, ProductRow, PromiseStrip, HomeModule],
   providers: [HomeStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-sections.html',
   host: { class: 'block' },
 })

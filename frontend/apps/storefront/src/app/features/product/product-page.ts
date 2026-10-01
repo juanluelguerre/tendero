@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -40,7 +40,6 @@ import { PageState } from '../../page-state/page-state';
   selector: 'storefront-product-page',
   imports: [TranslocoDirective, RouterLink, Crumbs, ProductImage, SpecValue, SpecSource, PageState],
   providers: [ProductStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',
 })
 export class ProductPage {

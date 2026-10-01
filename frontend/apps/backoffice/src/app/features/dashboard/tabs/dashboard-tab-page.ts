@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
@@ -12,7 +12,6 @@ import { FullScreen } from '../full-screen';
 @Component({
   selector: 'backoffice-dashboard-tab',
   imports: [DashboardGrid],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-tab-page.html',
   // On the wall the page's section is a column and this tab takes what the head leaves
   // (spec: the tab fills the monitor). Here, on the tab's own host: the router creates

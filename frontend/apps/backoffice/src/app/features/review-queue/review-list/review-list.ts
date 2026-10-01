@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ProductSummary } from '@tendero/shared-api';
@@ -16,7 +16,6 @@ import { ReviewQueueStore } from '../review-queue.store';
 @Component({
   selector: 'backoffice-review-list',
   imports: [RouterLink, TranslocoDirective, NgTemplateOutlet, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-list.html',
 })
 export class ReviewList {

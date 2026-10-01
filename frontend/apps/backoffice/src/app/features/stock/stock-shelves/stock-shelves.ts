@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Pager } from '../../../worklist/pager/pager';
 import { PageSize, shelfOf, StockStore } from '../stock.store';
@@ -11,7 +11,6 @@ import { PageSize, shelfOf, StockStore } from '../stock.store';
 @Component({
   selector: 'backoffice-stock-shelves',
   imports: [TranslocoDirective, Pager],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-shelves.html',
   host: { class: 'block min-w-0' },
 })

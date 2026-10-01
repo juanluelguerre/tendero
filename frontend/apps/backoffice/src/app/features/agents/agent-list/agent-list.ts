@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ListState } from '../../../worklist/list-state/list-state';
 import { AgentStatus } from '../agent-status/agent-status';
@@ -13,7 +13,6 @@ import { valueOf } from '@tendero/shared-util';
 @Component({
   selector: 'backoffice-agent-list',
   imports: [TranslocoDirective, AgentStatus, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-list.html',
 })
 export class AgentList {

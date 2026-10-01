@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import { Component, effect, inject, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SpecSheet, SpecStatement } from '@tendero/shared-api';
@@ -22,7 +22,6 @@ import { Icon } from '@tendero/shared-ui';
   selector: 'storefront-compare-page',
   imports: [TranslocoDirective, RouterLink, SpecValue, SpecSource, Icon],
   providers: [ComparisonStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './compare-page.html',
 })
 export class ComparePage {

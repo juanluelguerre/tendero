@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, viewChild } from '@angular/core';
+import { Component, effect, ElementRef, inject, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -26,7 +26,6 @@ import { Totals } from '../../totals/totals';
   selector: 'storefront-checkout',
   imports: [TranslocoDirective, FormsModule, RouterLink, Notice, Totals],
   providers: [CheckoutStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './checkout-page.html',
 })
 export class CheckoutPage {

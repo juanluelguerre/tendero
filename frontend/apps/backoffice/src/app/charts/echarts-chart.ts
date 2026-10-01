@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, input } from '@angular/core';
+import { Component, computed, ElementRef, inject, input } from '@angular/core';
 import { ThemeStore } from '@tendero/shared-ui';
 import type { EChartsCoreOption } from 'echarts/core';
 import { type ChartColours, readChartColours } from './chart-colours';
@@ -16,7 +16,6 @@ export type ChartBuild = (colours: ChartColours, reducedMotion: boolean) => ECha
 @Component({
   selector: 'backoffice-echarts-chart',
   imports: [EchartsDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './echarts-chart.html',
   // A block; its plot's height is the chart's to set.
   host: { class: 'block' },

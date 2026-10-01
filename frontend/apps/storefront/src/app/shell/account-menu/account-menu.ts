@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, type ElementRef, inject, viewChild } from '@angular/core';
+import { Component, computed, type ElementRef, inject, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
@@ -22,7 +22,6 @@ import { CultureSwitch, type ThemeChoice, ThemeStore, ThemeSwitch } from '@tende
 @Component({
   selector: 'storefront-account-menu',
   imports: [TranslocoDirective, RouterLink, CultureSwitch, ThemeSwitch],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
   host: { class: 'inline-flex' },

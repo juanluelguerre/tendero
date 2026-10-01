@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
@@ -26,7 +26,6 @@ import { Notice } from '@tendero/shared-ui';
 @Component({
   selector: 'backoffice-sign-in',
   imports: [TranslocoDirective, Notice],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sign-in-page.html',
 })
 export class SignInPage {

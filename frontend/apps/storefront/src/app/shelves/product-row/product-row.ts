@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   effect,
   type ElementRef,
@@ -54,7 +53,6 @@ let rows = 0;
 @Component({
   selector: 'storefront-product-row',
   imports: [TranslocoDirective, RouterLink, ProductCard, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-row.html',
   host: { class: 'block' },
 })

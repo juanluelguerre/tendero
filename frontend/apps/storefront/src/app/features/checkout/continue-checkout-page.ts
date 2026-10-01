@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ShopLinks } from '../../shop-links';
@@ -17,7 +17,6 @@ import { ContinueCheckoutStore } from './continue-checkout.store';
   selector: 'storefront-continue-checkout-page',
   imports: [TranslocoDirective, RouterLink],
   providers: [ContinueCheckoutStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './continue-checkout-page.html',
 })
 export class ContinueCheckoutPage {

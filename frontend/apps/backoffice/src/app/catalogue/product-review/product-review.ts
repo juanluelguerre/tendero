@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice, ProductImageUrls, valueOf } from '@tendero/shared-util';
@@ -17,7 +17,6 @@ const Cultures = ['es', 'en'] as const;
 @Component({
   selector: 'backoffice-product-review',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-review.html',
   host: { class: 'grid gap-4' },
   providers: [ProductReviewStore],

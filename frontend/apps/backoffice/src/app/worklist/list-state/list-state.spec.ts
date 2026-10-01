@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { ListState } from './list-state';
@@ -6,7 +6,6 @@ import { ListState } from './list-state';
 /** A list as a screen places it: its rows projected, an action for when there are none. */
 @Component({
   imports: [ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <backoffice-list-state
       [loading]="loading()"

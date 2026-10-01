@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import type { DashboardPeriod } from '../../../data-access/ordering.service';
 import { DASHBOARD_WIDGETS, type WidgetPlacement } from '../widgets/dashboard-widgets';
 import { WidgetOutlet } from './widget-outlet';
@@ -12,7 +12,6 @@ import { WidgetOutlet } from './widget-outlet';
 @Component({
   selector: 'backoffice-dashboard-grid',
   imports: [WidgetOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-grid.html',
 })
 export class DashboardGrid {

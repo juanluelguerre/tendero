@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
+import { Component, computed, inject, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
 import { type Culture, CultureStore } from '@tendero/shared-i18n';
@@ -17,7 +17,6 @@ import { BackofficeUsage } from '../../usage';
 @Component({
   selector: 'backoffice-account-menu',
   imports: [TranslocoDirective, Icon, CultureSwitch, ThemeSwitch],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
   host: { class: 'inline-flex' },

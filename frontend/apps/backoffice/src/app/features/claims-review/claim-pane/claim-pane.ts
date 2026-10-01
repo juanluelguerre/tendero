@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
 import { percent, statementIn } from '../claim-statement';
@@ -13,7 +13,6 @@ import { ClaimsReviewStore } from '../claims-review.store';
 @Component({
   selector: 'backoffice-claim-pane',
   imports: [TranslocoDirective, WorklistPane, ClaimSupport],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-pane.html',
   // The pane is laid out by the page's list-and-pane grid, as if it were its child.
   host: { class: 'contents' },

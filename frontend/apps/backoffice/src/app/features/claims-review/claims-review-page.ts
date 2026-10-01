@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { BackofficeUsage } from '../../usage';
 import { landing, stepOf } from '../../worklist/list-keys';
 import { ClaimList } from './claim-list/claim-list';
@@ -19,7 +19,6 @@ import { ClaimsReviewStore } from './claims-review.store';
 @Component({
   selector: 'backoffice-claims-review-page',
   imports: [ClaimList, ClaimPane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claims-review-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list and the pane have of their own is in their folders.

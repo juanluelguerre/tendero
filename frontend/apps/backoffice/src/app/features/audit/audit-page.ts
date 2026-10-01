@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { FilterChips } from '../../worklist/filter-chips/filter-chips';
 import { Pager } from '../../worklist/pager/pager';
@@ -31,7 +31,6 @@ import { ListState } from '../../worklist/list-state/list-state';
 @Component({
   selector: 'backoffice-audit',
   imports: [TranslocoDirective, FilterChips, Pager, ListState, StatusPill, CopyText],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-page.html',
   providers: [AuditStore],
 })

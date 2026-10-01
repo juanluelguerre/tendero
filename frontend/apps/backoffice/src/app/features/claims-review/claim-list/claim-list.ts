@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ClaimForReview } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -18,7 +18,6 @@ import { ClaimsReviewStore, PageSize } from '../claims-review.store';
 @Component({
   selector: 'backoffice-claim-list',
   imports: [TranslocoDirective, FilterChips, Pager, ClaimSupport, ListState],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-list.html',
 })
 export class ClaimList {

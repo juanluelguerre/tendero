@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CopyText } from '@tendero/shared-ui';
 import { AgentAddresses } from '../../shelves/agent-addresses';
@@ -16,7 +16,6 @@ import { AgentAddresses } from '../../shelves/agent-addresses';
 @Component({
   selector: 'storefront-agents-page',
   imports: [TranslocoDirective, CopyText],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agents-page.html',
   host: { class: 'block' },
 })
