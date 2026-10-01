@@ -7,6 +7,7 @@ import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
 import { bucketLabels } from '../sales-by-day-widget/sales-series';
+import { valueOf } from '@tendero/shared-util';
 
 /**
  * Customers' state (ADR 0047): the period's buyers, new and returning, from the
@@ -27,7 +28,7 @@ export const CustomersStore = signalStore(
   withComputed((store) => ({
     /** Null when nobody bought in the period: a chart of zeros says nothing a sentence would not. */
     byDay: computed<BarChartData | null>(() => {
-      const series = store._series.value();
+      const series = valueOf(store._series);
       if (!series || series.current.every((point) => point.newCustomers + point.returningCustomers === 0)) return null;
       const words = store._words() as Partial<Record<string, string>>;
       return {

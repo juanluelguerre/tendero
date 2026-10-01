@@ -8,6 +8,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { CatalogService } from '../../data-access/catalog.service';
 import { readStatus } from '../../read-status';
 import { type ActionVia, BackofficeUsage } from '../../usage';
+import { valueOf } from '@tendero/shared-util';
 
 /** The whole queue on one page: it is a laboratory's handful of drafts. */
 const QueueSize = 100;
@@ -39,7 +40,7 @@ export const ReviewQueueStore = signalStore(
       _queue: queue,
       _queueStatus: readStatus(queue),
       /** The drafts, less those published since the queue was read. */
-      drafts: linkedSignal(() => queue.value()?.items ?? []),
+      drafts: linkedSignal(() => valueOf(queue)?.items ?? []),
     };
   }),
   withComputed((store) => {

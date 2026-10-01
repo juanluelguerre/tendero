@@ -13,6 +13,7 @@ import { BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
 import { keptCounts, statusChips } from '../../worklist/filter-chips/status-chips';
 import { UndoStore } from '../../worklist/undo/undo.store';
+import { valueOf } from '@tendero/shared-util';
 
 /** Twenty rows a page, as every worklist (R-7.2). */
 export const PageSize = 20;
@@ -69,18 +70,18 @@ export const CatalogueStore = signalStore(
       _list: list,
       ...readStatus(list),
       /** The products, their status replaced one by one as changes come back. */
-      products: linkedSignal(() => list.value()?.items ?? []),
+      products: linkedSignal(() => valueOf(list)?.items ?? []),
       /**
        * How many match the text in each status, kept while the next answer loads.
        * Every chip says its number whichever is chosen: when only the chosen one
        * did, a click moved a count from one chip to another, the row changed width
        * and the search box beside it jumped (the author, 2026-09-28).
        */
-      _counts: keptCounts(() => list.value()?.counts),
+      _counts: keptCounts(() => valueOf(list)?.counts),
     };
   }),
   withComputed((store) => {
-    const total = computed(() => store._list.value()?.total ?? 0);
+    const total = computed(() => valueOf(store._list)?.total ?? 0);
     return {
       total,
       _pages: computed(() => Math.max(1, Math.ceil(total() / PageSize))),

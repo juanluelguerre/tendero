@@ -7,6 +7,7 @@ import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
 import { shareOf } from '../figures';
+import { valueOf } from '@tendero/shared-util';
 
 function through(mix: SalesMix | undefined, channel: 'Web' | 'Mcp' | 'Ucp') {
   return mix?.byChannel.find((row) => row.channel === channel) ?? { orders: 0, revenue: 0 };
@@ -30,9 +31,9 @@ export const ByChannelStore = signalStore(
     };
   }),
   withComputed((store) => {
-    const web = computed(() => through(store.mix.value(), 'Web'));
+    const web = computed(() => through(valueOf(store.mix), 'Web'));
     const agents = computed(() => {
-      const [mcp, ucp] = [through(store.mix.value(), 'Mcp'), through(store.mix.value(), 'Ucp')];
+      const [mcp, ucp] = [through(valueOf(store.mix), 'Mcp'), through(valueOf(store.mix), 'Ucp')];
       return { orders: mcp.orders + ucp.orders, revenue: mcp.revenue + ucp.revenue };
     });
     return {
@@ -48,8 +49,8 @@ export const ByChannelStore = signalStore(
           ],
         };
       }),
-      agentsBy: computed(() => ({ mcp: through(store.mix.value(), 'Mcp').orders, ucp: through(store.mix.value(), 'Ucp').orders })),
-      unrecorded: computed(() => store.mix.value()?.unrecorded.orders ?? 0),
+      agentsBy: computed(() => ({ mcp: through(valueOf(store.mix), 'Mcp').orders, ucp: through(valueOf(store.mix), 'Ucp').orders })),
+      unrecorded: computed(() => valueOf(store.mix)?.unrecorded.orders ?? 0),
       agentShare: computed(() => shareOf(agents().orders, web().orders + agents().orders)),
       revenueShare: computed(() => shareOf(agents().revenue, web().revenue + agents().revenue)),
     };

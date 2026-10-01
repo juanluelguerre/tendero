@@ -862,6 +862,7 @@
     "hint": "Los agentes que la tienda conoce. Un agente que nadie registró no se rechaza: compra como no confiable, con topes más estrictos. Registrarlo es responder por él; una suspensión necesita un motivo, para poder levantarla.",
     "loading": "Cargando agentes…",
     "failed": "No se ha podido hacer el cambio.",
+    "loadFailed": "No se han podido cargar los agentes.",
     "empty": "Todavía no hay ningún agente registrado.",
     "register": {
       "title": "Registrar un agente",

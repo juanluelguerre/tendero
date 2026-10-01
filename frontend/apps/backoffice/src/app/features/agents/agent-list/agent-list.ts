@@ -3,6 +3,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { ListState } from '../../../worklist/list-state/list-state';
 import { AgentStatus } from '../agent-status/agent-status';
 import { AgentsStore, AgentTrusts } from '../agents.store';
+import { valueOf } from '@tendero/shared-util';
 
 /**
  * The registered agents (P11-2): each with its operator, its trust — changed in
@@ -17,6 +18,9 @@ import { AgentsStore, AgentTrusts } from '../agents.store';
   styleUrl: './agent-list.css',
 })
 export class AgentList {
+  /** A resource read without throwing when its request failed (Angular 22). */
+  protected readonly valueOf = valueOf;
+
   protected readonly store = inject(AgentsStore);
   protected readonly trusts = AgentTrusts;
 }

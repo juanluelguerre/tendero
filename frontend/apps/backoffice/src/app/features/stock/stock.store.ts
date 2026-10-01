@@ -6,7 +6,7 @@ import { patchState, signalStore, withComputed, withHooks, withMethods, withProp
 import type { SkuDescription, StockFilter, StockList, StockRow } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
-import { without } from '@tendero/shared-util';
+import { valueOf, without } from '@tendero/shared-util';
 import { catchError, debounceTime, distinctUntilChanged, map, type Observable, of, switchMap } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
 import { InventoryService } from '../../data-access/inventory.service';
@@ -96,7 +96,7 @@ export const StockStore = signalStore(
      */
     const naming = rxResource({
       params: () => {
-        const skus = [...new Set((list.value()?.rows ?? []).map((row) => row.sku))];
+        const skus = [...new Set((valueOf(list)?.rows ?? []).map((row) => row.sku))];
         return skus.length === 0 ? undefined : { skus, culture: store._culture.active() };
       },
       stream: ({ params }) =>
@@ -108,11 +108,11 @@ export const StockStore = signalStore(
       _naming: naming,
       ...readStatus(list),
       /** The rows, replaced one by one as counts come back, until the list is asked again. */
-      rows: linkedSignal(() => list.value()?.rows ?? []),
+      rows: linkedSignal(() => valueOf(list)?.rows ?? []),
       /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
       _counts: linkedSignal<ReadonlyMap<StockFilter, number> | undefined, ReadonlyMap<StockFilter, number> | null>({
         source: () => {
-          const answered = list.value();
+          const answered = valueOf(list);
           return answered && new Map(answered.counts.map((entry) => [entry.filter, entry.count]));
         },
         computation: (counts, previous) => counts ?? previous?.value ?? null,
@@ -120,9 +120,9 @@ export const StockStore = signalStore(
     };
   }),
   withComputed((store) => ({
-    reservations: computed(() => store._list.value()?.reservations ?? []),
-    restockAt: computed(() => store._list.value()?.restockAt ?? null),
-    total: computed(() => store._list.value()?.total ?? 0),
+    reservations: computed(() => valueOf(store._list)?.reservations ?? []),
+    restockAt: computed(() => valueOf(store._list)?.restockAt ?? null),
+    total: computed(() => valueOf(store._list)?.total ?? 0),
     filters: computed<FilterOption[]>(() => {
       const labels = store._labels() as Record<string, string>;
       const counts = store._counts();
@@ -130,7 +130,7 @@ export const StockStore = signalStore(
     }),
     soldOut: computed(() => store._counts()?.get('SoldOut') ?? 0),
     _descriptions: computed<Record<string, SkuDescription>>(() =>
-      Object.fromEntries((store._naming.value()?.items ?? []).map((item) => [item.sku, item])),
+      Object.fromEntries((valueOf(store._naming)?.items ?? []).map((item) => [item.sku, item])),
     ),
   })),
   withMethods((store) => {

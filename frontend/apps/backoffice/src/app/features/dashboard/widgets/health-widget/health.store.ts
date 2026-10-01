@@ -3,6 +3,7 @@ import { signalStore, withComputed, withProps } from '@ngrx/signals';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
+import { valueOf } from '@tendero/shared-util';
 
 /** One rate against its target: its standing the server decided, and what it counted. */
 export interface HealthRate {
@@ -31,7 +32,7 @@ export const HealthStore = signalStore(
   }),
   withComputed((store) => ({
     rates: computed<HealthRate[]>(() => {
-      const ops = store.operations.value();
+      const ops = valueOf(store.operations);
       if (!ops) return [];
       return [
         { key: 'cancellation', rate: ops.cancellationRate, target: ops.cancellationTarget, standing: ops.cancellationStanding, count: ops.cancelled, apart: 0 },

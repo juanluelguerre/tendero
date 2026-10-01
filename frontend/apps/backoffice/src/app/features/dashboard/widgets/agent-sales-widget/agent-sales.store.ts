@@ -7,6 +7,7 @@ import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
 import { bucketLabels } from '../sales-by-day-widget/sales-series';
+import { valueOf } from '@tendero/shared-util';
 
 /**
  * What agents buy (ADR 0047): the period's totals and each agent's share, and
@@ -26,7 +27,7 @@ export const AgentSalesStore = signalStore(
   withComputed((store) => ({
     /** Null until the series answers, or when agents bought nothing in the period. */
     byDay: computed<BarChartData | null>(() => {
-      const series = store._series.value();
+      const series = valueOf(store._series);
       if (!series || series.current.every((point) => point.agentRevenue === 0)) return null;
       const words = store._words() as Partial<Record<string, string>>;
       return {

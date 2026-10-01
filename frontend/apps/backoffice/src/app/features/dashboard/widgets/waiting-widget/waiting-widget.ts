@@ -4,6 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { ClaimsShown, WaitingStore } from './waiting.store';
 import { WidgetFrame } from '../widget-frame/widget-frame';
+import { valueOf } from '@tendero/shared-util';
 
 /** What is waiting for the shopkeeper (P11-7): drafts to publish, claims to review, stock to restock — each leading to the screen that acts on it. */
 @Component({
@@ -15,6 +16,9 @@ import { WidgetFrame } from '../widget-frame/widget-frame';
   providers: [WaitingStore],
 })
 export class WaitingWidget {
+  /** A resource read without throwing when its request failed (Angular 22). */
+  protected readonly valueOf = valueOf;
+
   protected readonly store = inject(WaitingStore);
   private readonly culture = inject(CultureStore);
 

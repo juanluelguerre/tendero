@@ -6,6 +6,7 @@ import type { AuditOutcome } from '@tendero/shared-api';
 import { CatalogService } from '../../data-access/catalog.service';
 import { readStatus } from '../../read-status';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
+import { valueOf } from '@tendero/shared-util';
 
 export type AuditFilter = AuditOutcome | null;
 
@@ -45,7 +46,7 @@ export const AuditStore = signalStore(
        */
       counts: linkedSignal<Counts | undefined, Counts | null>({
         source: () => {
-          const answered = log.value()?.counts;
+          const answered = valueOf(log)?.counts;
           if (!answered) return undefined;
           const byOutcome = new Map(answered.map((entry) => [entry.outcome as string, entry.count]));
           return { byOutcome, all: [...byOutcome.values()].reduce((sum, count) => sum + count, 0) };
@@ -55,8 +56,8 @@ export const AuditStore = signalStore(
     };
   }),
   withComputed((store) => ({
-    entries: computed(() => store._log.value()?.entries ?? []),
-    total: computed(() => store._log.value()?.total ?? 0),
+    entries: computed(() => valueOf(store._log)?.entries ?? []),
+    total: computed(() => valueOf(store._log)?.total ?? 0),
     filterOptions: computed<FilterOption[]>(() => {
       const labels = store._labels() as Record<string, string>;
       const counts = store.counts();

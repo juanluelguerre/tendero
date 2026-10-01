@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { translateObjectSignal } from '@jsverse/transloco';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import type { ReturnView } from '@tendero/shared-api';
-import { without } from '@tendero/shared-util';
+import { valueOf, without } from '@tendero/shared-util';
 import { OrderingService, type ReturnDecision } from '../../data-access/ordering.service';
 import { readStatus } from '../../read-status';
 import { type ActionVia, BackofficeUsage } from '../../usage';
@@ -42,7 +42,7 @@ export const ReturnsStore = signalStore(
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
       ...readStatus(queue),
       /** The requests, replaced one by one as decisions come back. */
-      requests: linkedSignal(() => queue.value() ?? []),
+      requests: linkedSignal(() => valueOf(queue) ?? []),
     };
   }),
   withComputed((store) => {

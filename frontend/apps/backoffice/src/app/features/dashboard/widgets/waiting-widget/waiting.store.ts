@@ -6,6 +6,7 @@ import { KnowledgeService } from '../../../../data-access/knowledge.service';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { bySkuLowestFirst } from '../figures';
+import { valueOf } from '@tendero/shared-util';
 
 /** How many claims the widget names: the weakest first, the queue's own order. */
 export const ClaimsShown = 3;
@@ -29,14 +30,14 @@ export const WaitingStore = signalStore(
   }),
   withComputed((store) => ({
     /** The server's first page is the weakest first: the queue's own order. */
-    weakestClaims: computed(() => store.claims.value()?.items ?? []),
+    weakestClaims: computed(() => valueOf(store.claims)?.items ?? []),
     /**
      * The SKUs to restock, by the server's rule, and how many (R-7.1). Per SKU,
      * across warehouses: counted per warehouse row, a SKU stocked in only one
      * warehouse read as empty in the other, and 144 "low" rows said nothing a
      * shopkeeper could act on.
      */
-    lowStock: computed(() => bySkuLowestFirst(store.stock.value()?.rows ?? [])),
-    restockCount: computed(() => store.stock.value()?.counts.find((count) => count.filter === 'Restock')?.count ?? 0),
+    lowStock: computed(() => bySkuLowestFirst(valueOf(store.stock)?.rows ?? [])),
+    restockCount: computed(() => valueOf(store.stock)?.counts.find((count) => count.filter === 'Restock')?.count ?? 0),
   })),
 );

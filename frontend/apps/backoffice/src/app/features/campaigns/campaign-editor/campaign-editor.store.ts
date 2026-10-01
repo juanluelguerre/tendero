@@ -4,6 +4,7 @@ import type { ManagedCampaignView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { blankForm, type CampaignForm, codeFrom, differs, formOf, toggled } from '../campaign-form';
 import { type CampaignWork, CampaignsStore, NewCampaign } from '../campaigns.store';
+import { valueOf } from '@tendero/shared-util';
 
 type Culture = 'es' | 'en';
 
@@ -63,14 +64,14 @@ export const CampaignEditorStore = signalStore(
       /** The promotions a campaign can carry, named in the reader's language. */
       options: computed(() => {
         const culture = store._culture.active();
-        return (store._calendar.promotions.value() ?? []).map((promotion) => ({
+        return (valueOf(store._calendar.promotions) ?? []).map((promotion) => ({
           code: promotion.code,
           name: promotion.name[culture] ?? promotion.name['en'] ?? Object.values(promotion.name)[0] ?? promotion.code,
         }));
       }),
       /** The categories a campaign can be scoped to, each with its trail. */
       scopes: computed(() =>
-        (store._calendar.categories.value() ?? []).map((category) => {
+        (valueOf(store._calendar.categories) ?? []).map((category) => {
           const trail = category.path[category.path.length - 1] === category.name ? category.path : [...category.path, category.name];
           return { code: category.code, label: trail.join(' › ') };
         }),

@@ -52,6 +52,20 @@ describe('the orders store', () => {
     expect([request.request.params.get('status'), request.request.params.get('page')]).toEqual(['Confirmed', '1']);
   });
 
+  /**
+   * A list the server could not answer says so. In Angular 22 reading a failed
+   * resource's value throws, and every figure derived from it threw with it: the
+   * screen stayed on "Loading" for good (found on 2026-10-01 by answering 500).
+   */
+  it('says the list failed, and its figures read empty rather than throw', async () => {
+    const store = await at('/');
+    listed()[0].flush('boom', { status: 500, statusText: 'Server Error' });
+    await new Promise((settled) => setTimeout(settled));
+    TestBed.tick();
+
+    expect([store.failed(), store.loading(), store.orders(), store.total()]).toEqual([true, false, [], 0]);
+  });
+
   /** A status typed by hand that the shop does not have lists everything, rather than asking for a 400. */
   it('lists every order for a status the shop does not have', async () => {
     await at('/?status=Nope');

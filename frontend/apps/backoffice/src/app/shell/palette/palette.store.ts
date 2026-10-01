@@ -8,7 +8,7 @@ import { AccountsService } from '../../data-access/accounts.service';
 import { CatalogService } from '../../data-access/catalog.service';
 import { OrderingService } from '../../data-access/ordering.service';
 import { Navigation } from '../nav/navigation';
-import { orderReference } from '@tendero/shared-util';
+import { orderReference, valueOf } from '@tendero/shared-util';
 import { looksLikeId, matches, type PaletteOption, step } from './palette-search';
 
 /** Enough to choose from; the list is one Enter away for more. */
@@ -70,7 +70,7 @@ export const PaletteStore = signalStore(
 
       if (query.length < RecordsFrom) return screens;
 
-      const orders: PaletteOption[] = (store._orders.value() ?? []).map((order) => ({
+      const orders: PaletteOption[] = (valueOf(store._orders) ?? []).map((order) => ({
         id: `order-${order.orderId}`,
         kind: 'order',
         label: t('palette.order', { id: orderReference(order.orderId) }),
@@ -79,7 +79,7 @@ export const PaletteStore = signalStore(
         queryParams: { status: 'all', order: order.orderId },
       }));
 
-      const products: PaletteOption[] = (store._products.value()?.items ?? []).map((product) => ({
+      const products: PaletteOption[] = (valueOf(store._products)?.items ?? []).map((product) => ({
         id: `product-${product.productId}`,
         kind: 'product',
         label: product.name,
@@ -88,7 +88,7 @@ export const PaletteStore = signalStore(
         queryParams: { status: 'all', product: product.code },
       }));
 
-      const agents: PaletteOption[] = (store._agents.value() ?? [])
+      const agents: PaletteOption[] = (valueOf(store._agents) ?? [])
         .filter((agent) => matches(`${agent.displayName} ${agent.agentId}`, query))
         .slice(0, PerKind)
         .map((agent) => ({

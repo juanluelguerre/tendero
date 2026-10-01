@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { translateObjectSignal } from '@jsverse/transloco';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import type { OrderStatus, OrderSummary } from '@tendero/shared-api';
-import { without } from '@tendero/shared-util';
+import { valueOf, without } from '@tendero/shared-util';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { OrderingService, type OrderMove } from '../../data-access/ordering.service';
 import { type ActionVia, BackofficeUsage } from '../../usage';
@@ -72,10 +72,10 @@ export const OrdersStore = signalStore(
       stream: ({ params }) => store._ordering.orders(params.status, params.text, params.page, PageSize),
     });
     /** The rows, replaced one by one as moves come back, until the list is asked again. */
-    const orders = linkedSignal(() => list.value()?.orders ?? []);
+    const orders = linkedSignal(() => valueOf(list)?.orders ?? []);
     return {
       _list: list,
-      _counts: keptCounts(() => list.value()?.counts),
+      _counts: keptCounts(() => valueOf(list)?.counts),
       orders,
       /** The open order's row, kept while a move takes it out of the filtered list. */
       selected: linkedSignal<OrderSummary | null, OrderSummary | null>({
@@ -86,7 +86,7 @@ export const OrdersStore = signalStore(
   }),
   withComputed((store) => ({
     /** How many the filter and the search hold, not the page: the pager says it. */
-    total: computed(() => store._list.value()?.total ?? 0),
+    total: computed(() => valueOf(store._list)?.total ?? 0),
     loading: computed(() => store._list.isLoading() && !store._list.hasValue()),
     failed: computed(() => store._list.status() === 'error'),
     /** Every status, always, then *All*: a fixed row that does not move under the pointer (`statusChips`). */

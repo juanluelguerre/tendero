@@ -11,7 +11,7 @@
       <section class="pane-section">
         <h3 class="eyebrow">{{ t('orders.deliverTo') }}</h3>
         <p class="font-semibold">{{ order.recipientName }}</p>
-        @if (pane.detail.value(); as found) {
+        @if (valueOf(pane.detail); as found) {
           <p class="muted">{{ found.order.shippingAddress }}</p>
           <p class="muted">{{ found.order.shippingLabel }}</p>
         }
@@ -19,7 +19,7 @@
 
       <section class="pane-section">
         <h3 class="eyebrow">{{ t('orders.lines') }}</h3>
-        @if (pane.detail.value(); as found) {
+        @if (valueOf(pane.detail); as found) {
           <ul class="grid gap-1 text-xs" role="list">
             @for (line of found.order.lines; track line.sku) {
               <li class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2">

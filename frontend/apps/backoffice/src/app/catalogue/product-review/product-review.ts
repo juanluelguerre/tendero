@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { formatPrice, ProductImageUrls, valueOf } from '@tendero/shared-util';
 import { ProductReviewStore } from './product-review.store';
 
 /** The cultures a product is written in, in the order the review shows them. */
@@ -23,6 +23,9 @@ const Cultures = ['es', 'en'] as const;
   providers: [ProductReviewStore],
 })
 export class ProductReview {
+  /** A resource read without throwing when its request failed (Angular 22). */
+  protected readonly valueOf = valueOf;
+
   protected readonly store = inject(ProductReviewStore);
   private readonly culture = inject(CultureStore);
   protected readonly images = inject(ProductImageUrls);

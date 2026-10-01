@@ -10,6 +10,7 @@ import { AccountsService, type AgentTrust } from '../../data-access/accounts.ser
 import { type ActionVia, type BackofficeAction, BackofficeUsage } from '../../usage';
 import { refusalOf } from '../../worklist/refusal';
 import { UndoStore } from '../../worklist/undo/undo.store';
+import { valueOf } from '@tendero/shared-util';
 
 /** The trust a shopkeeper can give an agent, in the order the selects offer them. */
 export const AgentTrusts: readonly AgentTrust[] = ['Known', 'Verified'];
@@ -50,7 +51,7 @@ export const AgentsStore = signalStore(
     const selectedId = computed(() => store._params().get('agent'));
     return {
       selectedId,
-      selected: computed(() => store.agents.value()?.find((agent) => agent.agentId === selectedId()) ?? null),
+      selected: computed(() => valueOf(store.agents)?.find((agent) => agent.agentId === selectedId()) ?? null),
     };
   }),
   withMethods((store) => {

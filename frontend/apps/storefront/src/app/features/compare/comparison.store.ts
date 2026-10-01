@@ -9,6 +9,7 @@ import { CompareStore, MAX_COMPARED } from '../../compare/compare.store';
 import { SpecsService } from '../../data-access/specs.service';
 import { statusOf } from '../../failure-status';
 import { ShopLinks } from '../../shop-links';
+import { valueOf } from '@tendero/shared-util';
 
 /** The codes a comparison URL carries, cleaned: trimmed, upper-cased, unique, at most four. */
 export function codesFrom(query: string | null): string[] {
@@ -57,7 +58,7 @@ export const ComparisonStore = signalStore(
       switch (_sheet.status()) {
         case 'resolved':
         case 'local': {
-          const sheet = _sheet.value() as SpecSheet;
+          const sheet = valueOf(_sheet) as SpecSheet;
           // Some codes may name products a shopper cannot see: fewer than two left is not a comparison.
           return sheet.products.length < 2 ? { status: 'tooFew' } : { status: 'done', sheet };
         }

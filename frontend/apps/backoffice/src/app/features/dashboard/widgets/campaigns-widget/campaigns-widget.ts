@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, valueOf } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { BarChartData } from '../../../../charts/chart-contract';
 import { changeOf, formatChange } from '../figures';
@@ -27,7 +27,7 @@ export class CampaignsWidget {
   private readonly culture = inject(CultureStore);
   private readonly words = translateObjectSignal('dashboard.campaigns');
 
-  protected readonly money = (amount: number): string => formatPrice(amount, this.store.uplift.value()?.currency ?? 'EUR', this.culture.active());
+  protected readonly money = (amount: number): string => formatPrice(amount, valueOf(this.store.uplift)?.currency ?? 'EUR', this.culture.active());
 
   protected readonly name = computed(() => {
     const campaign = this.store.campaign();
@@ -38,13 +38,13 @@ export class CampaignsWidget {
 
   /** The uplift as a change against the baseline: +27 %, in the reader's culture. */
   protected readonly uplift = computed(() => {
-    const figures = this.store.uplift.value();
+    const figures = valueOf(this.store.uplift);
     return figures?.baseline != null ? formatChange(changeOf(figures.sold, figures.baseline), this.culture.active()) : null;
   });
 
   /** The days that have ended, sold against their baseline: today, under way, would read as a fall. */
   protected readonly chart = computed<BarChartData | null>(() => {
-    const figures = this.store.uplift.value();
+    const figures = valueOf(this.store.uplift);
     const days = figures?.days.filter((day) => !day.future && !day.partial) ?? [];
     if (!figures?.hasBaseline || days.length === 0) return null;
     // In the zone the server counted the days in (ADR 0046): never one assumed here.

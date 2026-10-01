@@ -7,7 +7,7 @@
       <li class="min-w-0">
         <a class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline" routerLink="/review">
           <span>{{ t('drafts') }}</span>
-          <span class="task__count numeric text-lg font-semibold">{{ store.drafts.value()?.total ?? '—' }}</span>
+          <span class="task__count numeric text-lg font-semibold">{{ valueOf(store.drafts)?.total ?? '—' }}</span>
         </a>
         @if (store.drafts.error()) {
           <p class="failed mt-1" role="alert">{{ t('failed') }}</p>
@@ -17,7 +17,7 @@
       <li class="min-w-0">
         <a class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline" routerLink="/claims">
           <span>{{ t('claims') }}</span>
-          <span class="task__count numeric text-lg font-semibold">{{ store.claims.value()?.total ?? '—' }}</span>
+          <span class="task__count numeric text-lg font-semibold">{{ valueOf(store.claims)?.total ?? '—' }}</span>
         </a>
         @if (store.claims.error()) {
           <p class="failed mt-1" role="alert">{{ t('failed') }}</p>

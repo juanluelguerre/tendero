@@ -9,6 +9,7 @@ import { InventoryService } from '../data-access/inventory.service';
 import { KnowledgeService } from '../data-access/knowledge.service';
 import { OrderingService } from '../data-access/ordering.service';
 import type { WaitingKind } from './nav/navigation';
+import { valueOf } from '@tendero/shared-util';
 
 /**
  * How much work waits on each screen, for the rail's badges (ADR 0047: the rail
@@ -51,7 +52,7 @@ export const WaitingStore = signalStore(
   withComputed((store) => ({
     /** The figure for a kind, or null when it has not loaded or failed. */
     of: computed(() => {
-      const figures = store._figures.value();
+      const figures = valueOf(store._figures);
       return (kind: WaitingKind): number | null => {
         if (!figures) return null;
         switch (kind) {

@@ -5,6 +5,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
+import { valueOf } from '@tendero/shared-util';
 
 /** A row of sales by category: named in the reader's language, or the rest together, or the lines with none. */
 export interface CategoryRow {
@@ -36,9 +37,9 @@ export const ByCategoryStore = signalStore(
   }),
   withComputed((store) => ({
     rows: computed<CategoryRow[]>(() => {
-      const mix = store.mix.value();
+      const mix = valueOf(store.mix);
       if (!mix) return [];
-      const names = new Map((store._categories.value()?.items ?? []).map((category) => [category.code, category.name]));
+      const names = new Map((valueOf(store._categories)?.items ?? []).map((category) => [category.code, category.name]));
       const words = store._words() as Partial<Record<'others' | 'uncategorised', string>>;
       const known = mix.byCategory.flatMap((row) => (row.categoryCode === null ? [] : [{ ...row, code: row.categoryCode }]));
       const rest = known.slice(Shown);

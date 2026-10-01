@@ -17,6 +17,7 @@ import { refusalOf } from '../../worklist/refusal';
 import { UndoStore } from '../../worklist/undo/undo.store';
 import { type CampaignForm, createRequestOf, detailsOf } from './campaign-form';
 import { type CampaignBucket, bucketOf, CampaignBuckets, inCulture } from './campaign-state';
+import { valueOf } from '@tendero/shared-util';
 
 /** What is being done to a campaign: its buttons wait for it. */
 export interface CampaignWork {
@@ -67,13 +68,13 @@ export const CampaignsStore = signalStore(
       }),
       /** The counts per chip, from status and phase together, kept while the calendar is read again. */
       _counts: keptCounts(() => {
-        const answered = campaigns.value();
+        const answered = valueOf(campaigns);
         return answered && countBy(answered, bucketOf);
       }),
     };
   }),
   withComputed((store) => {
-    const all = computed(() => store._campaigns.value() ?? []);
+    const all = computed(() => valueOf(store._campaigns) ?? []);
     const filterKey = computed(() => store._params().get('status') ?? DefaultFilter);
     const selectedCode = computed(() => store._params().get('campaign'));
     const creating = computed(() => selectedCode() === NewCampaign);
@@ -86,7 +87,7 @@ export const CampaignsStore = signalStore(
       paneOpen: computed(() => creating() || selected() !== null),
       filters: computed<FilterOption[]>(() => statusChips(CampaignBuckets, store._labels() as Record<string, string>, store._counts())),
       campaigns: computed(() => (filterKey() === 'all' ? all() : all().filter((campaign) => bucketOf(campaign) === filterKey()))),
-      categoryNames: computed(() => new Map((store.categories.value() ?? []).map((category) => [category.code, category.name]))),
+      categoryNames: computed(() => new Map((valueOf(store.categories) ?? []).map((category) => [category.code, category.name]))),
     };
   }),
   withMethods((store) => {

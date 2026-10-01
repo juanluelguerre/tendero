@@ -12,6 +12,7 @@ import { type ClaimDecision, KnowledgeService } from '../../data-access/knowledg
 import { readStatus } from '../../read-status';
 import { type ActionVia, BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
+import { valueOf } from '@tendero/shared-util';
 
 /** Twenty rows a page, as every worklist (R-7.2). */
 export const PageSize = 20;
@@ -63,7 +64,7 @@ export const ClaimsReviewStore = signalStore(
       /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
       _counts: linkedSignal<ReadonlyMap<string, number> | undefined, ReadonlyMap<string, number> | null>({
         source: () => {
-          const page = queue.value()?.claims;
+          const page = valueOf(queue)?.claims;
           return page && new Map(page.counts.map((entry) => [entry.support, entry.count]));
         },
         computation: (counts, previous) => counts ?? previous?.value ?? null,
@@ -71,12 +72,12 @@ export const ClaimsReviewStore = signalStore(
     };
   }),
   withComputed((store) => {
-    const claims = computed(() => store._queue.value()?.claims.items ?? []);
-    const names = computed(() => new Map((store._queue.value()?.products.items ?? []).map((product) => [product.productId, product.name])));
+    const claims = computed(() => valueOf(store._queue)?.claims.items ?? []);
+    const names = computed(() => new Map((valueOf(store._queue)?.products.items ?? []).map((product) => [product.productId, product.name])));
     return {
       claims,
       _names: names,
-      total: computed(() => store._queue.value()?.claims.total ?? 0),
+      total: computed(() => valueOf(store._queue)?.claims.total ?? 0),
       filters: computed<FilterOption[]>(() => {
         const labels = store._labels() as Record<string, string>;
         const counts = store._counts();

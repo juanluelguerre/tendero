@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
+import { formatPrice, valueOf } from '@tendero/shared-util';
 import { Sparkline } from '../../../../charts/sparkline';
 import { type Change, formatChange, formatShare } from '../figures';
 import { keyFigures } from './key-figures';
@@ -24,7 +24,7 @@ export class KeyFiguresWidget {
 
   protected readonly figures = computed(() => {
     const culture = this.culture.active();
-    const currency = this.store.sales.value()?.currency ?? 'EUR';
+    const currency = valueOf(this.store.sales)?.currency ?? 'EUR';
     return keyFigures(this.store.sources(), {
       money: (amount) => formatPrice(amount, currency, culture),
       share: (ratio) => formatShare(ratio, culture),

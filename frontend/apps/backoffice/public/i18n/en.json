@@ -862,6 +862,7 @@
     "hint": "The agents the shop knows. An agent nobody registered is not refused: it shops as untrusted, under tighter caps. Registering one is vouching for it; a suspension needs a reason, so it can be lifted.",
     "loading": "Loading agents…",
     "failed": "The change could not be made.",
+    "loadFailed": "Could not load the agents.",
     "empty": "No agent is registered yet.",
     "register": {
       "title": "Register an agent",
