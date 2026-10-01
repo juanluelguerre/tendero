@@ -5,7 +5,7 @@ import { provideRouter, Router } from '@angular/router';
 import type { StockRow } from '@tendero/shared-api';
 import { provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StockStore } from './stock.store';
 
 const Stock = 'http://api/api/inventory/stock';
@@ -51,6 +51,27 @@ describe('the stock store', () => {
     await new Promise((resolve) => setTimeout(resolve));
     return store;
   }
+
+  /**
+   * What is typed goes into the URL once it settles, replacing the entry rather
+   * than adding one per keystroke, and starts again from the first page.
+   */
+  it('puts the search into the URL once the typing settles', async () => {
+    // RxJS's debounce keeps time with setInterval; the helper's waits stay real.
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    try {
+      const store = await at('/?page=3');
+      store.search('bolsa');
+      TestBed.tick();
+      await vi.advanceTimersByTimeAsync(250);
+      TestBed.tick();
+      await new Promise((resolve) => setTimeout(resolve));
+    } finally {
+      vi.useRealTimers();
+    }
+
+    expect(TestBed.inject(Router).url).toBe('/?q=bolsa');
+  });
 
   /** `restock` is a link a person could type: read in any case, as the server reads it. */
   it('reads the filter in any case, and opens on everything without one', async () => {

@@ -1,8 +1,16 @@
-import { computed, inject, linkedSignal } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { translateObjectSignal } from '@jsverse/transloco';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { ReturnView } from '@tendero/shared-api';
 import { without } from '@tendero/shared-util';
 import { OrderingService, type ReturnDecision } from '../../data-access/ordering.service';
@@ -41,11 +49,14 @@ export const ReturnsStore = signalStore(
       _usage: inject(BackofficeUsage),
       _labels: translateObjectSignal('returns.filter'),
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
+      _queue: queue,
       ...readStatus(queue),
-      /** The requests, replaced one by one as decisions come back. */
-      requests: linkedSignal(() => queue.value() ?? []),
     };
   }),
+  withLinkedState(({ _queue }) => ({
+    /** The requests, replaced one by one as decisions come back: state, changed with patchState. */
+    requests: () => _queue.value() ?? [],
+  })),
   withComputed((store) => {
     const statusKey = computed(() => store._params().get('status') ?? Waiting);
     const selectedId = computed(() => store._params().get('return'));
@@ -92,10 +103,10 @@ export const ReturnsStore = signalStore(
           .pipe(store._usage.reported('returns', ReturnActions[decision], via))
           .subscribe({
             next: (updated) => {
-              store.requests.update((current) =>
-                current.map((row) => (row.returnId === updated.returnId ? updated : row)),
-              );
-              patchState(store, { busy: null });
+              patchState(store, (state) => ({
+                busy: null,
+                requests: state.requests.map((row) => (row.returnId === updated.returnId ? updated : row)),
+              }));
             },
             error: (error: unknown) => {
               patchState(store, (state) => ({

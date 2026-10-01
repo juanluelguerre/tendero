@@ -74,6 +74,40 @@ describe('the orders store', () => {
     expect([store.failed(), store.loading(), store.orders(), store.total()]).toEqual([true, false, [], 0]);
   });
 
+  /**
+   * An expired session is not the list's failure: the interceptor sends the
+   * person to the door, which says why. Orders said "failed" here while every
+   * other list said nothing (the review of 2026-10-01).
+   */
+  it('says nothing failed when the session expired', async () => {
+    const store = await at('/');
+    listed()[0].flush('', { status: 401, statusText: 'Unauthorized' });
+    await new Promise((settled) => setTimeout(settled));
+    TestBed.tick();
+
+    expect(store.failed()).toBe(false);
+  });
+
+  /**
+   * The rows and the open order are state (`withLinkedState`): a move changes
+   * them through the store, with patchState, and nothing outside can set them.
+   * They were public writable signals until the review of 2026-10-01. NgRx
+   * protects state by its type, not at runtime, so this is a type test: if the
+   * store let a component write them, the directives below would be unused and
+   * the file would not compile.
+   */
+  it('lets only the store change its rows and its open order', async () => {
+    const store = await at('/');
+    const fromOutside = () => {
+      // @ts-expect-error -- state: only the store changes the rows
+      store.orders.set([]);
+      // @ts-expect-error -- state: only the store changes the open order
+      store.selected.set(null);
+    };
+
+    expect(fromOutside).toBeTypeOf('function');
+  });
+
   /** A status typed by hand that the shop does not have lists everything, rather than asking for a 400. */
   it('lists every order for a status the shop does not have', async () => {
     await at('/?status=Nope');

@@ -1,17 +1,23 @@
 import { computed, inject, linkedSignal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { translateObjectSignal, translateSignal } from '@jsverse/transloco';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { AuditOutcome } from '@tendero/shared-api';
 import { CatalogService } from '../../data-access/catalog.service';
 import { readStatus } from '../../read-status';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
+import { WorklistPageSize } from '../../worklist/with-worklist-url';
 import { extendResource } from '@ngrx/signals/resource';
 
 export type AuditFilter = AuditOutcome | null;
-
-/** Twenty rows a page, as every worklist (R-7.2). */
-export const PageSize = 20;
 
 /** The chips, in the order a shopkeeper looks: what was refused first, then everything. */
 const Filters: readonly AuditFilter[] = ['Denied', 'Failed', 'Allowed', null];
@@ -33,7 +39,7 @@ export const AuditStore = signalStore(
     const log = extendResource(
       rxResource({
         params: () => ({ filter: store.filter(), page: store.page() }),
-        stream: ({ params }) => catalog.audit(params.filter, params.page, PageSize),
+        stream: ({ params }) => catalog.audit(params.filter, params.page, WorklistPageSize),
       }),
     );
     return {
@@ -41,22 +47,24 @@ export const AuditStore = signalStore(
       ...readStatus(log),
       _labels: translateObjectSignal('audit.outcome'),
       _everything: translateSignal('audit.all'),
-      /**
-       * Every chip says its number, whichever is chosen, and all of them the log's:
-       * it used to be the chosen one's, counted from the rows it had — which was
-       * the page's once the log had more than one. Kept while the next page loads.
-       */
-      counts: linkedSignal<Counts | undefined, Counts | null>({
-        source: () => {
-          const answered = log.value()?.counts;
-          if (!answered) return undefined;
-          const byOutcome = new Map(answered.map((entry) => [entry.outcome as string, entry.count]));
-          return { byOutcome, all: [...byOutcome.values()].reduce((sum, count) => sum + count, 0) };
-        },
-        computation: (latest, previous) => latest ?? previous?.value ?? null,
-      }),
     };
   }),
+  withLinkedState(({ _log }) => ({
+    /**
+     * Every chip says its number, whichever is chosen, and all of them the log's:
+     * it used to be the chosen one's, counted from the rows it had — which was
+     * the page's once the log had more than one. Kept while the next page loads.
+     */
+    counts: linkedSignal<Counts | undefined, Counts | null>({
+      source: () => {
+        const answered = _log.value()?.counts;
+        if (!answered) return undefined;
+        const byOutcome = new Map(answered.map((entry) => [entry.outcome as string, entry.count]));
+        return { byOutcome, all: [...byOutcome.values()].reduce((sum, count) => sum + count, 0) };
+      },
+      computation: (latest, previous) => latest ?? previous?.value ?? null,
+    }),
+  })),
   withComputed((store) => ({
     entries: computed(() => store._log.value()?.entries ?? []),
     total: computed(() => store._log.value()?.total ?? 0),

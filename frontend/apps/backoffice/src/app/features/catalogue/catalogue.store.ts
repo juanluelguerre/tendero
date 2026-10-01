@@ -1,8 +1,16 @@
-import { computed, inject, linkedSignal } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoService, translateObjectSignal } from '@jsverse/transloco';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { ImportResult, ProductStatus, ProductSummary } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -13,10 +21,8 @@ import { BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
 import { keptCounts, statusChips } from '../../worklist/filter-chips/status-chips';
 import { UndoStore } from '../../worklist/undo/undo.store';
+import { withWorklistUrl } from '../../worklist/with-worklist-url';
 import { extendResource } from '@ngrx/signals/resource';
-
-/** Twenty rows a page, as every worklist (R-7.2). */
-export const PageSize = 20;
 
 /** The statuses a product can be in, in the chips' order: what is on sale first. */
 const Statuses: readonly ProductStatus[] = ['Active', 'Draft', 'Archived'];
@@ -41,17 +47,15 @@ export const CatalogueStore = signalStore(
      */
     imported: null as ImportResult | null,
   })),
+  withWorklistUrl(),
   withProps((store) => {
-    const route = inject(ActivatedRoute);
     return {
-      _router: inject(Router),
       _catalog: inject(CatalogService),
       _culture: inject(CultureStore),
       _usage: inject(BackofficeUsage),
       _undo: inject(UndoStore),
       _translate: inject(TranslocoService),
       _labels: translateObjectSignal('catalogue.filter'),
-      _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
       _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), {
         initialValue: store.text(),
       }),
@@ -60,7 +64,6 @@ export const CatalogueStore = signalStore(
   withComputed((store) => ({
     statusKey: computed(() => store._params().get('status') ?? 'Active'),
     selectedCode: computed(() => store._params().get('product')),
-    page: computed(() => Math.max(1, Number(store._params().get('page') ?? 1) || 1)),
   })),
   withProps((store) => {
     const list = extendResource(
@@ -76,7 +79,7 @@ export const CatalogueStore = signalStore(
             params.status === 'all' ? null : (params.status as ProductStatus),
             params.culture,
             params.page,
-            PageSize,
+            store.pageSize,
             params.text,
           ),
       }),
@@ -84,8 +87,6 @@ export const CatalogueStore = signalStore(
     return {
       _list: list,
       ...readStatus(list),
-      /** The products, their status replaced one by one as changes come back. */
-      products: linkedSignal(() => list.value()?.items ?? []),
       /**
        * How many match the text in each status, kept while the next answer loads.
        * Every chip says its number whichever is chosen: when only the chosen one
@@ -95,11 +96,15 @@ export const CatalogueStore = signalStore(
       _counts: keptCounts(() => list.value()?.counts),
     };
   }),
+  // A change replaces a row's status; a new answer replaces the rows. State, so changed with patchState.
+  withLinkedState(({ _list }) => ({
+    /** The products, their status replaced one by one as changes come back. */
+    products: () => _list.value()?.items ?? [],
+  })),
   withComputed((store) => {
     const total = computed(() => store._list.value()?.total ?? 0);
     return {
       total,
-      _pages: computed(() => Math.max(1, Math.ceil(total() / PageSize))),
       filters: computed<FilterOption[]>(() =>
         statusChips(Statuses, store._labels() as Record<string, string>, store._counts()),
       ),
@@ -107,8 +112,7 @@ export const CatalogueStore = signalStore(
     };
   }),
   withMethods((store) => {
-    const navigate = (queryParams: Record<string, string | number | null>) =>
-      void store._router.navigate([], { queryParams, queryParamsHandling: 'merge' });
+    const navigate = store._navigate;
 
     /** One change: busy while it goes, the row's status from the server's answer. */
     const change = (
@@ -122,9 +126,9 @@ export const CatalogueStore = signalStore(
         next: (answer) => {
           patchState(store, { busy: null });
           const status = answer.status ?? fallback;
-          store.products.update((items) =>
-            items.map((row) => (row.productId === item.productId ? { ...row, status } : row)),
-          );
+          patchState(store, (state) => ({
+            products: state.products.map((row) => (row.productId === item.productId ? { ...row, status } : row)),
+          }));
           done?.();
         },
         error: (failure: unknown) => {
@@ -148,10 +152,6 @@ export const CatalogueStore = signalStore(
       },
       filterBy(status: string): void {
         navigate({ status: status === 'Active' ? null : status, page: null });
-      },
-      /** A page past the last is the last. */
-      go(page: number): void {
-        navigate({ page: page <= 1 ? null : Math.min(page, store._pages()) });
       },
       open(item: ProductSummary): void {
         navigate({ product: item.code });

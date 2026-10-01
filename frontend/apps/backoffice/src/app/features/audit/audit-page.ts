@@ -5,7 +5,8 @@ import { Pager } from '../../worklist/pager/pager';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatDateTime, shortId } from '@tendero/shared-util';
 import { actorOf } from './audit-actor';
-import { AuditStore, PageSize } from './audit.store';
+import { WorklistPageSize } from '../../worklist/with-worklist-url';
+import { AuditStore } from './audit.store';
 import { CopyText, StatusPill } from '@tendero/shared-ui';
 import { ListState } from '../../worklist/list-state/list-state';
 
@@ -38,7 +39,7 @@ export class AuditPage {
   protected readonly store = inject(AuditStore);
   private readonly culture = inject(CultureStore);
 
-  protected readonly pageSize = PageSize;
+  protected readonly pageSize = WorklistPageSize;
   protected readonly actorOf = actorOf;
 
   /**

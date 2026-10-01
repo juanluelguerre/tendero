@@ -1,11 +1,13 @@
 import { Component, computed, input, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 
-/** Which rows a page shows, counted from one, and how many pages there are. */
+/** Which rows a page shows, counted from one, how many pages there are, and which one is shown. */
 export interface PageRange {
   readonly from: number;
   readonly to: number;
   readonly pages: number;
+  /** The page shown: the one asked for, or the last when the list no longer reaches it. */
+  readonly current: number;
 }
 
 /**
@@ -20,6 +22,7 @@ export function rangeOf(page: number, pageSize: number, total: number): PageRang
     from: total === 0 ? 0 : (current - 1) * pageSize + 1,
     to: Math.min(current * pageSize, total),
     pages,
+    current,
   };
 }
 

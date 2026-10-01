@@ -8,7 +8,7 @@ import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
 import { Find } from '../../../worklist/find/find';
 import { ListState } from '../../../worklist/list-state/list-state';
 import { Pager } from '../../../worklist/pager/pager';
-import { CatalogueStore, PageSize } from '../catalogue.store';
+import { CatalogueStore } from '../catalogue.store';
 import { ProductStatusTags } from '../product-status-tags/product-status-tags';
 
 /**
@@ -26,7 +26,7 @@ export class CatalogueList {
   protected readonly store = inject(CatalogueStore);
   private readonly culture = inject(CultureStore);
 
-  protected readonly pageSize = PageSize;
+  protected readonly pageSize = this.store.pageSize;
 
   protected price(item: ProductSummary): string {
     return formatPrice(item.priceAmount, item.priceCurrency, this.culture.active());

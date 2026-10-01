@@ -10,7 +10,7 @@ import { placedAgo } from '../order-display';
 import { primaryMove } from '../order-moves';
 import { OrderPayment } from '../order-payment/order-payment';
 import { OrderStatusLabel } from '../order-status-label/order-status-label';
-import { OrdersStore, PageSize } from '../orders.store';
+import { OrdersStore } from '../orders.store';
 
 /**
  * The orders, narrowed by status and by what is typed (R-4.2): a table from a
@@ -26,7 +26,7 @@ export class OrderList {
   protected readonly store = inject(OrdersStore);
   private readonly culture = inject(CultureStore);
 
-  protected readonly pageSize = PageSize;
+  protected readonly pageSize = this.store.pageSize;
   protected readonly primaryMove = primaryMove;
   protected readonly shortId = orderReference;
 

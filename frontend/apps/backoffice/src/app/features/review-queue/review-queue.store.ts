@@ -1,7 +1,15 @@
-import { computed, inject, linkedSignal } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { ProductSummary } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -41,10 +49,12 @@ export const ReviewQueueStore = signalStore(
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
       _queue: queue,
       _queueStatus: readStatus(queue),
-      /** The drafts, less those published since the queue was read. */
-      drafts: linkedSignal(() => queue.value()?.items ?? []),
     };
   }),
+  withLinkedState(({ _queue }) => ({
+    /** The drafts, less those published since the queue was read: state, changed with patchState. */
+    drafts: () => _queue.value()?.items ?? [],
+  })),
   withComputed((store) => {
     const selectedCode = computed(() => store._params().get('product'));
     return {
@@ -81,7 +91,9 @@ export const ReviewQueueStore = signalStore(
             next: () => {
               settle(item.productId);
               // It leaves the queue; the pane goes with it.
-              store.drafts.update((items) => items.filter((candidate) => candidate.productId !== item.productId));
+              patchState(store, (state) => ({
+                drafts: state.drafts.filter((candidate) => candidate.productId !== item.productId),
+              }));
               if (store.selectedCode() === item.code) navigate(null);
             },
             error: (failure: unknown) => {

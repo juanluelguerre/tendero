@@ -45,15 +45,6 @@ describe('the catalogue store', () => {
     return store;
   }
 
-  /** A page past the last is the last: forty-five products make three pages. */
-  it('never goes past the last page', async () => {
-    const store = await at('/');
-    store.go(9);
-    await new Promise((resolve) => setTimeout(resolve));
-
-    expect(TestBed.inject(Router).url).toBe('/?page=3');
-  });
-
   /** Withdrawing offers Undo, which is publishing it again — on the server. */
   it('withdraws a product, shows its new status, and offers to publish it again', async () => {
     const store = await at('/?product=A');

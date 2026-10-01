@@ -7,7 +7,7 @@ import { ListState } from '../../../worklist/list-state/list-state';
 import { Pager } from '../../../worklist/pager/pager';
 import { statementIn } from '../claim-statement';
 import { ClaimSupport } from '../claim-support/claim-support';
-import { ClaimsReviewStore, PageSize } from '../claims-review.store';
+import { ClaimsReviewStore } from '../claims-review.store';
 
 /**
  * The claims a model proposed, weakest support first (phase 10): the sentence in
@@ -24,7 +24,7 @@ export class ClaimList {
   protected readonly store = inject(ClaimsReviewStore);
   private readonly culture = inject(CultureStore);
 
-  protected readonly pageSize = PageSize;
+  protected readonly pageSize = this.store.pageSize;
 
   protected statement(claim: ClaimForReview): string {
     return statementIn(claim, this.culture.active());

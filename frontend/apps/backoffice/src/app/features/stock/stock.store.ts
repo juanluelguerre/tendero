@@ -1,8 +1,18 @@
-import { computed, effect, inject, linkedSignal } from '@angular/core';
+import { computed, inject, linkedSignal } from '@angular/core';
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { translateObjectSignal } from '@jsverse/transloco';
-import { patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalMethod,
+  signalStore,
+  withComputed,
+  withHooks,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { SkuDescription, StockFilter, StockList, StockRow } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -13,13 +23,11 @@ import { InventoryService } from '../../data-access/inventory.service';
 import { readStatus } from '../../read-status';
 import { BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
+import { withWorklistUrl } from '../../worklist/with-worklist-url';
 import { extendResource } from '@ngrx/signals/resource';
 
 /** The chips, in the order the job meets them: what to restock first. */
 const Filters: readonly StockFilter[] = ['Restock', 'SoldOut', 'All'];
-
-/** Twenty rows a page, as every worklist (R-7.2). */
-export const PageSize = 20;
 
 /** A row's identity: a SKU on a shelf of one warehouse. */
 export function shelfOf(row: StockRow): string {
@@ -46,16 +54,14 @@ export const StockStore = signalStore(
     saved: null as string | null,
     saveFailed: false,
   })),
+  withWorklistUrl(),
   withProps((store) => {
-    const route = inject(ActivatedRoute);
     return {
-      _router: inject(Router),
       _inventory: inject(InventoryService),
       _catalog: inject(CatalogService),
       _culture: inject(CultureStore),
       _usage: inject(BackofficeUsage),
       _labels: translateObjectSignal('stock.filter'),
-      _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
       _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), {
         initialValue: store.text(),
       }),
@@ -67,7 +73,6 @@ export const StockStore = signalStore(
       const asked = store._params().get('filter')?.toLowerCase();
       return Filters.find((filter) => filter.toLowerCase() === asked) ?? 'All';
     }),
-    page: computed(() => Math.max(1, Number(store._params().get('page') ?? 1) || 1)),
     searching: computed(() => store._query().trim().length > 0),
   })),
   withProps((store) => {
@@ -99,11 +104,11 @@ export const StockStore = signalStore(
                     params.filter,
                     { text: params.text, skus },
                     params.page,
-                    PageSize,
+                    store.pageSize,
                   ),
                 ),
               )
-            : store._inventory.stock(params.culture, params.filter, undefined, params.page, PageSize),
+            : store._inventory.stock(params.culture, params.filter, undefined, params.page, store.pageSize),
       }),
     );
 
@@ -125,22 +130,21 @@ export const StockStore = signalStore(
       }),
     );
 
-    return {
-      _list: list,
-      _naming: naming,
-      ...readStatus(list),
-      /** The rows, replaced one by one as counts come back, until the list is asked again. */
-      rows: linkedSignal(() => list.value()?.rows ?? []),
-      /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
-      _counts: linkedSignal<ReadonlyMap<StockFilter, number> | undefined, ReadonlyMap<StockFilter, number> | null>({
-        source: () => {
-          const answered = list.value();
-          return answered && new Map(answered.counts.map((entry) => [entry.filter, entry.count]));
-        },
-        computation: (counts, previous) => counts ?? previous?.value ?? null,
-      }),
-    };
+    return { _list: list, _naming: naming, ...readStatus(list) };
   }),
+  // What a count changes and a new answer replaces: state, changed with patchState.
+  withLinkedState(({ _list }) => ({
+    /** The rows, replaced one by one as counts come back, until the list is asked again. */
+    rows: () => _list.value()?.rows ?? [],
+    /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
+    _counts: linkedSignal<ReadonlyMap<StockFilter, number> | undefined, ReadonlyMap<StockFilter, number> | null>({
+      source: () => {
+        const answered = _list.value();
+        return answered && new Map(answered.counts.map((entry) => [entry.filter, entry.count]));
+      },
+      computation: (counts, previous) => counts ?? previous?.value ?? null,
+    }),
+  })),
   withComputed((store) => ({
     reservations: computed(() => store._list.value()?.reservations ?? []),
     restockAt: computed(() => store._list.value()?.restockAt ?? null),
@@ -156,8 +160,7 @@ export const StockStore = signalStore(
     ),
   })),
   withMethods((store) => {
-    const navigate = (queryParams: Record<string, string | number | null>, replaceUrl = false) =>
-      void store._router.navigate([], { queryParams, queryParamsHandling: 'merge', replaceUrl });
+    const navigate = store._navigate;
 
     return {
       search(text: string): void {
@@ -166,9 +169,6 @@ export const StockStore = signalStore(
       filterBy(filter: string): void {
         store._usage.affordance('filter', 'stock');
         navigate({ filter: filter === 'All' ? null : filter, page: null });
-      },
-      go(page: number): void {
-        navigate({ page: page <= 1 ? null : page });
       },
       /**
        * The product a row is holding, or null when the catalogue has never heard
@@ -196,14 +196,16 @@ export const StockStore = signalStore(
             // The server's numbers, not the typed one: `available` is derived from
             // holds this screen does not track, and a count that collided with a
             // reservation would otherwise show a total nobody stored.
-            store.rows.update((rows) =>
-              rows.map((candidate) =>
+            patchState(store, (state) => ({
+              rows: state.rows.map((candidate) =>
                 shelfOf(candidate) === shelf
                   ? { ...candidate, onHand: counted.onHand, available: counted.available }
                   : candidate,
               ),
-            );
-            patchState(store, (state) => ({ drafts: without(state.drafts, shelf), saving: null, saved: shelf }));
+              drafts: without(state.drafts, shelf),
+              saving: null,
+              saved: shelf,
+            }));
           },
           error: (failure: unknown) => {
             if (isSessionExpired(failure)) return;
@@ -217,16 +219,12 @@ export const StockStore = signalStore(
     onInit(store) {
       // The search goes into the URL too, replacing the entry rather than adding
       // one per keystroke, and is measured once per search actually run (R-7.1).
-      effect(() => {
-        const q = store._query().trim();
+      // It follows what is typed, not the URL: the back button is not a keystroke.
+      signalMethod<string>((q) => {
         if ((store._params().get('q') ?? '') === q) return;
-        void store._router.navigate([], {
-          queryParams: { q: q || null, page: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
+        store._navigate({ q: q || null, page: null }, true);
         if (q) store._usage.affordance('search', 'stock');
-      });
+      })(computed(() => store._query().trim()));
     },
   }),
 );
