@@ -1,7 +1,7 @@
 # 0049 — Tailwind, utility-first, over a theme that is the design tokens
 
 **Status**: accepted (the author chose it on 2026-09-30, after a survey of how
-both apps used Tailwind; being built on `refactor/tailwind-utility-first`)
+both apps used Tailwind); built on `refactor/tailwind-utility-first`, 2026-10-01
 
 ## Context
 
@@ -63,3 +63,47 @@ internals, a complex selector, an animation — and many end up empty.
 - Templates get longer. That is the trade Tailwind makes, and why point 4 matters.
 - Raw media queries become the theme's breakpoints, defined from the widths the
   CSS already used (640px, 64rem, 39.99rem), so the migration does not move them.
+
+## As built (2026-10-01)
+
+Eleven commits: the base, the first two shared components, then nine batches
+(six storefront, three backoffice), each checked against 92 screenshots of both
+apps — 1440 and 390, both themes, panes, a confirmation, the palette, the
+drawers, the checkout, the account — taken before it, plus 20 to 50 extra
+before/after captures of the states each batch touched, every write answered
+inside the test so the shop's data never moved.
+
+- **Component CSS**: storefront 4,038 lines to 229, backoffice 2,019 to 516
+  (the widget frame's size contract, 89 lines of container queries, among
+  them); global `styles.css` 294 to 215 and 676 to 422; `libs/shared/ui` 109.
+- **What stays in CSS**, and is allowed to: `:host` (a template cannot style
+  its own host), keyframes, generated content (`::after` with `attr()`), anchor
+  positioning and `@supports`, container queries (the theme defines no
+  `--container-*`), and a rule a test reads from the stylesheet itself
+  (`design-contrast.spec.ts` reads the wordmark's).
+- **The apps' primitives stay classes** (`.button`, `.field`, `.select`,
+  `.table`, `.tag`, `.panel`, `.page-head`, `.worklist-*`, `.pane-*`), in
+  `@layer components`: tiny and repeated on every screen, which is where
+  Tailwind's own guidance keeps a component class.
+- **Shared components it produced**: `lib-notice`, `lib-status-pill`,
+  `lib-icon` (the backoffice's set, moved and merged with the storefront's
+  inline SVGs), `lib-culture-switch`, `lib-theme-switch`, `lib-copy-text`;
+  storefront `page-state`, `totals`, `crumbs`, `product-image`; backoffice
+  `list-state`, `find`, `widget-frame`. Each with a spec that failed first.
+- **One `ViewEncapsulation.None`**, the repository's first: the widget frame's
+  size contract has to reach elements in seventeen widgets' templates. Its
+  rules sit in `@layer components`, so utilities still win.
+- **What the layers broke, and what the screenshots did not see**: the wall's
+  rule that hides a chart's figures table moved into a layer and lost to the
+  chart's unlayered container query; the dashboard's own browser spec caught
+  it a batch later, not the screenshots, which have no 1920 wall. The full
+  end-to-end suites of both apps ran at the end.
+- **What it found that was already broken**: two failure notices with no styles
+  (their classes lived in another page's stylesheet), the audit's outcome pill
+  (classes no stylesheet defined), text skeletons 0px tall, a gallery skeleton
+  that did not animate, a reference whose `numeric` a later `font: inherit`
+  silently overruled, a list region announced with its text already in it.
+- **Accepted, and said in each commit**: `max-sm:` is `width < 40rem`, so the
+  old `max-width: 640px` rules no longer apply at exactly 640px (likewise
+  480, 560, 900, 1100, 1200).
+

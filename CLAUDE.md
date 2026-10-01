@@ -214,11 +214,22 @@ node tools/api-map.mjs --schema CartView
 - UI: tokens from `design/tokens.css` only — never hardcode a hex in components,
   and a test enforces it across every `.css` in the repository.
   One clay accent action per view. Agent-driven actions are always clay.
+- **Tailwind, utility-first, over a theme that is the tokens** (ADR 0049). A
+  component's look is written in its template with utilities (`bg-surface`,
+  `text-muted`, `p-5`, `max-sm:`); the theme is `design/tokens.css` and nothing
+  else, so a utility can only name a token, and spacing is the tokens' own named
+  steps (`p-5` is `--space-5`). A token with no utility is `bg-(--danger-tint)`.
+  A component's `.css` keeps only what utilities cannot say (`:host`, keyframes,
+  generated content, anchoring, container queries). Classes are literal in the
+  template — Tailwind reads `.html` only, never a class name built in TS. Each
+  app's tiny, much-repeated primitives (`.button`, `.field`, `.table`, `.tag`…)
+  stay as component classes in its `styles.css`; anything longer that repeats
+  becomes a component (`libs/shared/ui` across apps), never `@apply`.
 - **An Angular component is three files** — `name.ts`, `name.html`, `name.css` —
   which is what the current Angular style guide describes. Not a style
   preference: a template inside a `.ts` literal is invisible to every HTML tool
   and a stylesheet inside one is invisible to every CSS tool, including the token
-  test.
+  test. A `.css` emptied by utilities stays, with a one-line comment saying so.
 - **Folders by feature and theme, never by type of code** (Angular's style
   guide; ADR 0047). A feature keeps its page(s), routes and page store at its
   root; a component that is a concept of its own lives in a folder named for it
