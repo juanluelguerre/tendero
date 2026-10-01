@@ -125,12 +125,6 @@
     border-color: var(--border-strong);
   }
 
-  /* Full width, for a summary panel where the action IS the panel's last line. */
-  .button--block {
-    display: flex;
-    width: 100%;
-  }
-
   /* ---------- Empty states ----------
      "Nothing here yet — do this" and not "no records found". */
   .blank {
@@ -143,7 +137,6 @@
   }
 
   .blank__text { margin: 0; font-size: var(--text-md); font-weight: 600; }
-  .blank__hint { margin: 0; color: var(--text-muted); }
 
   /* A link that reads as a link and not as a second button: one clay action per
      view, and the way back is never it. */
@@ -193,13 +186,6 @@
     background-size: 0.3rem 0.3rem;
     background-repeat: no-repeat;
     cursor: pointer;
-  }
-
-  /* ---------- Surfaces ---------- */
-  .surface {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
   }
 
   /* ---------- Skeletons ----------

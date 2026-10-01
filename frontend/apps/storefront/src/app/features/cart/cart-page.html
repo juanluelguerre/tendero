@@ -13,7 +13,7 @@
   @if (store.isEmpty()) {
     <div class="blank">
       <p class="blank__text">{{ t('cart.empty') }}</p>
-      <p class="blank__hint">{{ t('cart.emptyHint') }}</p>
+      <p class="text-muted">{{ t('cart.emptyHint') }}</p>
       <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
     </div>
   } @else {
@@ -133,7 +133,7 @@
         }
 
         <!-- The one clay action on the page (design/DESIGN.md). -->
-        <a class="button button--block" [routerLink]="links.checkout()">{{ t('cart.checkout') }}</a>
+        <a class="button flex w-full" [routerLink]="links.checkout()">{{ t('cart.checkout') }}</a>
         <a class="quiet" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
       </aside>
     </div>

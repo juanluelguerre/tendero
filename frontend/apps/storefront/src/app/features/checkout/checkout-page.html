@@ -155,7 +155,7 @@
           />
 
           <button
-            class="button button--block"
+            class="button flex w-full"
             type="button"
             [disabled]="store.paying() || !store.chosen() || !store.address().recipientName.trim()"
             (click)="store.pay()"
