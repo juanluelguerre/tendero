@@ -3,16 +3,22 @@
   @let applied = state.applied();
   @let chipList = chips(t);
 
+  <!-- `listing--folded` is what the column and the grid read below, and what
+       the unit test reads. -->
   <div class="listing" [class.listing--folded]="state.folded()">
     <!-- What narrowed the list, how much is left and in what order: all of it
-         visible without opening the column (the spec). -->
-    <div class="toolbar">
+         visible without opening the column (the spec). A phone: the filters and
+         the order side by side, the chips below them in a row that scrolls
+         sideways, then the count (the mock-ups, 390). -->
+    <div
+      class="grid grid-cols-2 items-center gap-3 [grid-template-areas:'filters_sort'_'chips_chips'_'count_count'] lg:flex lg:flex-wrap lg:gap-x-4 lg:gap-y-3"
+    >
       <!-- The desktop's fold. The sliders icon is the one that means "filter"
            in nearly every shop; the header's departments are navigation and
            look like it, so the two are never mistaken (R-7.3). -->
       <button
         type="button"
-        class="button button--quiet toolbar__fold"
+        class="button button--quiet toolbar__fold hidden min-h-[2.75rem] px-4 lg:inline-flex"
         aria-controls="listing-filters"
         [attr.aria-expanded]="!state.folded()"
         (click)="state.toggleFolded()"
@@ -31,7 +37,7 @@
       <button
         #sheetButton
         type="button"
-        class="button button--quiet toolbar__filters"
+        class="button button--quiet toolbar__filters min-h-[2.75rem] px-4 [grid-area:filters] lg:hidden"
         aria-haspopup="dialog"
         (click)="openSheet()"
       >
@@ -41,39 +47,59 @@
 
       <!-- The one live region of the listing: the count changes with every
            choice, and a screen reader hears it once. -->
-      <p class="toolbar__count" role="status" aria-live="polite">
+      <p class="toolbar__count text-sm text-muted [grid-area:count]" role="status" aria-live="polite">
         {{ count(t) }}
         @if (searching() && ready(); as done) {
-          <span class="took numeric">{{ t('search.took', { ms: done.tookMs }) }}</span>
+          <span class="numeric ms-2 text-2xs">{{ t('search.took', { ms: done.tookMs }) }}</span>
         }
       </p>
 
       @if (chipList.length > 0) {
-        <ul class="chips" role="list" [attr.aria-label]="t('listing.chips.label')">
+        <ul
+          class="chips flex min-w-0 list-none items-center gap-2 overflow-x-auto px-0 py-[2px] [grid-area:chips] lg:flex-wrap lg:overflow-visible"
+          role="list"
+          [attr.aria-label]="t('listing.chips.label')"
+        >
           @for (chip of chipList; track chip.id) {
-            <li>
+            <li class="flex-none">
               <button
                 type="button"
-                class="chip"
+                class="chip inline-flex min-h-[2.25rem] cursor-pointer items-center gap-2 rounded-full border border-accent bg-accent-tint px-3 text-sm font-semibold text-body hover:border-accent-hover pointer-coarse:min-h-[2.75rem]"
                 [attr.aria-label]="t('listing.chips.remove', { label: chip.label })"
                 (click)="state.apply(chip.without)"
               >
                 <span>{{ chip.label }}</span>
-                <svg class="chip__x" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <svg class="size-[14px]" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                   <path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 </svg>
               </button>
             </li>
           }
-          <li>
-            <button type="button" class="clear" (click)="clearAll('toolbar')">{{ t('listing.clearAll') }}</button>
+          <li class="flex-none">
+            <button
+              type="button"
+              class="min-h-[2.25rem] cursor-pointer bg-transparent px-2 text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-[2.75rem]"
+              (click)="clearAll('toolbar')"
+            >
+              {{ t('listing.clearAll') }}
+            </button>
           </li>
         </ul>
       }
 
-      <label class="sort">
-        <span class="sort__label">{{ t('listing.sort.label') }}</span>
-        <select #sortBox class="select sort__select" (change)="sortBy(sortBox.value)">
+      <label class="flex min-w-0 items-center gap-2 [grid-area:sort] lg:ms-auto">
+        <!-- On a phone the select names itself by its value, as the mock-up draws
+             it; the label is still there for a screen reader. -->
+        <span
+          class="absolute size-px overflow-hidden whitespace-nowrap [clip-path:inset(50%)] lg:static lg:size-auto lg:overflow-visible lg:text-sm lg:text-muted lg:[clip-path:none]"
+        >
+          {{ t('listing.sort.label') }}
+        </span>
+        <select
+          #sortBox
+          class="select min-h-[2.75rem] w-full rounded-md border border-hairline-strong bg-surface ps-3 text-sm text-body lg:w-auto"
+          (change)="sortBy(sortBox.value)"
+        >
           <option value="" [selected]="filters.sort === null">
             {{ searching() ? t('listing.sort.relevance') : t('listing.sort.recommended') }}
           </option>
@@ -84,10 +110,11 @@
       </label>
     </div>
 
-    <div class="body">
+    <!-- Folding pays in columns, not in whitespace: the grid takes the room. -->
+    <div class="mt-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-6 lg:in-[.listing--folded]:grid-cols-1">
       <!-- The desktop's column. Below 64rem it is not drawn at all: the sheet
            holds the same panel. -->
-      <aside class="column" id="listing-filters" aria-labelledby="listing-filters-title">
+      <aside class="hidden lg:block lg:in-[.listing--folded]:hidden" id="listing-filters" aria-labelledby="listing-filters-title">
         <h2 id="listing-filters-title" class="sr-only">{{ t('listing.filters') }}</h2>
         <storefront-filter-panel
           [facets]="facets()"
@@ -98,7 +125,7 @@
         />
       </aside>
 
-      <section class="results" aria-labelledby="listing-results-title" [attr.aria-busy]="ready()?.busy ? 'true' : null">
+      <section class="min-w-0" aria-labelledby="listing-results-title" [attr.aria-busy]="ready()?.busy ? 'true' : null">
         <h2 id="listing-results-title" class="sr-only">{{ t('listing.results') }}</h2>
 
         <!-- Whatever the page says above its products. -->
@@ -114,10 +141,18 @@
               }
             </div>
           } @else {
-            <ul class="listing__grid grid" [class.grid--busy]="done.busy">
+            <!-- The grid fills whatever width it is given: four cards beside the
+                 column, five with it folded away, without a breakpoint per count;
+                 two to a row on a phone, as the mock-up has it — one card a screen
+                 is a shop you scroll through, not one you browse. A newer answer
+                 on its way dims the rows, which stay, so nothing jumps. -->
+            <ul
+              class="listing__grid grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0 transition-opacity duration-(--dur-fast) ease-brand max-[30rem]:grid-cols-2 max-[30rem]:gap-3"
+              [class.opacity-60]="done.busy"
+            >
               @for (hit of done.hits; track hit.productId) {
-                <li>
-                  <storefront-product-card class="card" [hit]="hit" />
+                <li class="flex">
+                  <storefront-product-card class="flex-1" [hit]="hit" />
                 </li>
               }
             </ul>
@@ -125,7 +160,7 @@
             <!-- Not infinite scroll: a footer nobody can reach is the price of
                  that, and a button survives the back button. -->
             @if (hasMore()) {
-              <div class="more">
+              <div class="mt-6 grid justify-items-center gap-3 text-sm">
                 <p class="muted">{{ t('listing.seen', { shown: done.hits.length, total: done.total }) }}</p>
                 <button type="button" class="button button--quiet" [disabled]="state.loadingMore()" (click)="state.loadMore()">
                   {{ state.loadingMore() ? t('listing.loadingMore') : t('listing.more', { count: nextCount() }) }}
@@ -136,13 +171,16 @@
         } @else {
           <!-- Skeleton cards, not a spinner: the shape the answer will have, so
                the page does not jump when it arrives. -->
-          <ul class="grid" aria-hidden="true">
+          <ul
+            class="grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0 max-[30rem]:grid-cols-2 max-[30rem]:gap-3"
+            aria-hidden="true"
+          >
             @for (placeholder of placeholders; track placeholder) {
-              <li class="skeleton-card">
-                <div class="skeleton-card__image skeleton"></div>
-                <div class="skeleton-card__body">
-                  <div class="skeleton skeleton--line"></div>
-                  <div class="skeleton skeleton--line skeleton--short"></div>
+              <li class="flex flex-col overflow-hidden rounded-lg border border-hairline bg-surface">
+                <div class="skeleton aspect-4/3 w-full"></div>
+                <div class="grid gap-2 p-4">
+                  <div class="skeleton h-[1em]"></div>
+                  <div class="skeleton h-[1em] w-[40%]"></div>
                 </div>
               </li>
             }
@@ -153,19 +191,30 @@
   </div>
 
   <!-- The phone's filters: a modal dialog, so the platform traps the focus,
-       closes on Esc and makes the page behind it inert, as the menu drawer does. -->
-  <dialog #sheet class="sheet" aria-labelledby="listing-sheet-title" (close)="sheetClosed()">
-    <div class="sheet__head">
-      <h2 id="listing-sheet-title" class="sheet__title">{{ t('listing.filters') }}</h2>
-      <button type="button" class="sheet__close" [attr.aria-label]="t('listing.sheet.close')" (click)="sheet.close()">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+       closes on Esc and makes the page behind it inert, as the menu drawer does.
+       It rises from the bottom, the page dimmed behind it. -->
+  <dialog
+    #sheet
+    class="top-auto bottom-0 max-h-[92dvh] w-full max-w-full flex-col rounded-t-lg bg-surface text-body shadow-pop backdrop:bg-ink-900/40 open:flex"
+    aria-labelledby="listing-sheet-title"
+    (close)="sheetClosed()"
+  >
+    <div class="flex min-h-[3.5rem] items-center justify-between border-b border-hairline ps-4 pe-2">
+      <h2 id="listing-sheet-title" class="text-lg">{{ t('listing.filters') }}</h2>
+      <button
+        type="button"
+        class="inline-grid size-[2.75rem] cursor-pointer place-items-center rounded-md bg-transparent text-body"
+        [attr.aria-label]="t('listing.sheet.close')"
+        (click)="sheet.close()"
+      >
+        <svg class="size-[22px]" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
         </svg>
       </button>
     </div>
 
     @if (sheetOpened() && state.pending(); as pending) {
-      <div class="sheet__body">
+      <div class="sheet__body flex-1 overflow-y-auto px-4 pb-4">
         <storefront-filter-panel
           mode="sheet"
           [facets]="state.pendingFacets()"
@@ -177,8 +226,9 @@
       </div>
 
       <!-- The batch's two ends. *Ver N productos* is this view's one clay
-           action (design/DESIGN.md); N is asked of the API once the taps settle. -->
-      <div class="sheet__foot">
+           action (design/DESIGN.md); N is asked of the API once the taps settle.
+           The footer stays where the thumb is, however long the filters. -->
+      <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3 border-t border-hairline bg-surface px-4 py-3 whitespace-nowrap">
         <button type="button" class="button button--quiet" (click)="clearPending()">{{ t('listing.clearAll') }}</button>
         @let total = state.pendingTotal();
         <button type="button" class="button sheet__apply" (click)="applyPending()">
@@ -195,7 +245,7 @@
   </dialog>
 
   <ng-template #sliders>
-    <svg class="sliders" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg class="size-[20px] flex-none" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
       <path d="M15 5v4M9 10v4M17 15v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
     </svg>
