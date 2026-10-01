@@ -23,37 +23,82 @@
              group's accessible name; what follows it clears it. -->
         <!-- 1 · Where -->
         <fieldset class="step rounded-lg border border-hairline bg-surface p-5">
-          <legend class="float-start mb-4 w-full font-display text-md font-extrabold">{{ t('checkout.address') }}</legend>
+          <legend class="float-start mb-4 w-full font-display text-md font-extrabold">
+            {{ t('checkout.address') }}
+          </legend>
 
           <div class="clear-both mb-4 grid grid-cols-2 gap-4 max-xs:grid-cols-1">
             <label class="col-span-full grid gap-2">
               <span class="text-sm font-medium text-muted">{{ t('checkout.recipientName') }}</span>
-              <input class="field" name="recipientName" [ngModel]="store.address().recipientName" (ngModelChange)="store.edit({ recipientName: $event })" (change)="store.addressChanged()" autocomplete="name" required />
+              <input
+                class="field"
+                name="recipientName"
+                [ngModel]="store.address().recipientName"
+                (ngModelChange)="store.edit({ recipientName: $event })"
+                (change)="store.addressChanged()"
+                autocomplete="name"
+                required
+              />
             </label>
 
             <label class="col-span-full grid gap-2">
               <span class="text-sm font-medium text-muted">{{ t('checkout.line1') }}</span>
-              <input class="field" name="line1" [ngModel]="store.address().line1" (ngModelChange)="store.edit({ line1: $event })" (change)="store.addressChanged()" autocomplete="address-line1" />
+              <input
+                class="field"
+                name="line1"
+                [ngModel]="store.address().line1"
+                (ngModelChange)="store.edit({ line1: $event })"
+                (change)="store.addressChanged()"
+                autocomplete="address-line1"
+              />
             </label>
 
             <label class="col-span-full grid gap-2">
               <span class="text-sm font-medium text-muted">{{ t('checkout.line2') }}</span>
-              <input class="field" name="line2" [ngModel]="store.address().line2" (ngModelChange)="store.edit({ line2: $event })" (change)="store.addressChanged()" autocomplete="address-line2" />
+              <input
+                class="field"
+                name="line2"
+                [ngModel]="store.address().line2"
+                (ngModelChange)="store.edit({ line2: $event })"
+                (change)="store.addressChanged()"
+                autocomplete="address-line2"
+              />
             </label>
 
             <label class="grid gap-2">
               <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
-              <input class="field" name="postalCode" [ngModel]="store.address().postalCode" (ngModelChange)="store.edit({ postalCode: $event })" (change)="store.addressChanged()" autocomplete="postal-code" />
+              <input
+                class="field"
+                name="postalCode"
+                [ngModel]="store.address().postalCode"
+                (ngModelChange)="store.edit({ postalCode: $event })"
+                (change)="store.addressChanged()"
+                autocomplete="postal-code"
+              />
             </label>
 
             <label class="grid gap-2">
               <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
-              <input class="field" name="city" [ngModel]="store.address().city" (ngModelChange)="store.edit({ city: $event })" (change)="store.addressChanged()" autocomplete="address-level2" />
+              <input
+                class="field"
+                name="city"
+                [ngModel]="store.address().city"
+                (ngModelChange)="store.edit({ city: $event })"
+                (change)="store.addressChanged()"
+                autocomplete="address-level2"
+              />
             </label>
 
             <label class="grid gap-2">
               <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
-              <input class="field" name="region" [ngModel]="store.address().region" (ngModelChange)="store.edit({ region: $event })" (change)="store.addressChanged()" autocomplete="address-level1" />
+              <input
+                class="field"
+                name="region"
+                [ngModel]="store.address().region"
+                (ngModelChange)="store.edit({ region: $event })"
+                (change)="store.addressChanged()"
+                autocomplete="address-level1"
+              />
             </label>
 
             <label class="grid gap-2">
@@ -65,7 +110,8 @@
                 name="countryCode"
                 maxlength="2"
                 autocomplete="country"
-                [ngModel]="store.address().countryCode" (ngModelChange)="store.edit({ countryCode: $event })"
+                [ngModel]="store.address().countryCode"
+                (ngModelChange)="store.edit({ countryCode: $event })"
                 (change)="store.addressChanged()"
               />
             </label>
@@ -76,7 +122,9 @@
                while they are on their way. -->
           <!-- It keeps its line while the options are on their way, so the form does
                not jump when they arrive. -->
-          <p class="mt-2 min-h-[1.5rem] text-xs muted" role="status" aria-live="polite">{{ store.rating() ? t('checkout.loadingOptions') : '' }}</p>
+          <p class="muted mt-2 min-h-[1.5rem] text-xs" role="status" aria-live="polite">
+            {{ store.rating() ? t('checkout.loadingOptions') : '' }}
+          </p>
         </fieldset>
 
         <!-- 2 · How. In a radio row the whole row is the target, not the 16px
@@ -85,11 +133,15 @@
              whose radio is checked. -->
         @if (store.options().length > 0) {
           <fieldset class="step rounded-lg border border-hairline bg-surface p-5">
-            <legend class="float-start mb-4 w-full font-display text-md font-extrabold">{{ t('checkout.delivery') }}</legend>
+            <legend class="float-start mb-4 w-full font-display text-md font-extrabold">
+              {{ t('checkout.delivery') }}
+            </legend>
 
             <div class="clear-both grid gap-2">
               @for (option of store.options(); track option.code) {
-                <label class="grid min-h-[56px] cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-hairline px-4 py-3 transition-[border-color,background] duration-(--dur-fast) ease-brand hover:border-hairline-strong has-checked:border-accent has-checked:bg-raised">
+                <label
+                  class="grid min-h-[56px] cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-hairline px-4 py-3 transition-[border-color,background] duration-(--dur-fast) ease-brand hover:border-hairline-strong has-checked:border-accent has-checked:bg-raised"
+                >
                   <input
                     type="radio"
                     name="shipping"
@@ -101,13 +153,15 @@
                     <span class="font-medium">{{ option.label }}</span>
                     @if (option.estimatedDays) {
                       <span class="text-xs text-muted">
-                        {{ option.estimatedDays === 1
+                        {{
+                          option.estimatedDays === 1
                             ? t('checkout.deliveryOneDay')
-                            : t('checkout.deliveryDays', { days: option.estimatedDays }) }}
+                            : t('checkout.deliveryDays', { days: option.estimatedDays })
+                        }}
                       </span>
                     }
                   </span>
-                  <span class="font-semibold numeric">{{ store.money(option.amount) }}</span>
+                  <span class="numeric font-semibold">{{ store.money(option.amount) }}</span>
                 </label>
               }
             </div>
@@ -116,12 +170,16 @@
 
         <!-- 3 · Pay -->
         <fieldset class="step rounded-lg border border-hairline bg-surface p-5">
-          <legend class="float-start mb-4 w-full font-display text-md font-extrabold">{{ t('checkout.payment') }}</legend>
+          <legend class="float-start mb-4 w-full font-display text-md font-extrabold">
+            {{ t('checkout.payment') }}
+          </legend>
           <p class="clear-both mb-4 text-sm text-muted">{{ t('checkout.paymentHint') }}</p>
 
           <div class="clear-both grid gap-2">
             @for (card of cards; track card) {
-              <label class="grid min-h-[56px] cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-hairline px-4 py-3 transition-[border-color,background] duration-(--dur-fast) ease-brand hover:border-hairline-strong has-checked:border-accent has-checked:bg-raised">
+              <label
+                class="grid min-h-[56px] cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-hairline px-4 py-3 transition-[border-color,background] duration-(--dur-fast) ease-brand hover:border-hairline-strong has-checked:border-accent has-checked:bg-raised"
+              >
                 <input
                   type="radio"
                   name="instrument"
@@ -131,7 +189,7 @@
                 />
                 <span class="grid min-w-0 gap-[2px]">
                   <span class="font-medium">{{ t(cardKey(card)) }}</span>
-                  <span class="text-xs text-muted numeric">{{ card }}</span>
+                  <span class="numeric text-xs text-muted">{{ card }}</span>
                 </span>
               </label>
             }

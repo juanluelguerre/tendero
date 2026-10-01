@@ -81,7 +81,16 @@ test.describe('the backoffice', () => {
   test('every tab reaches the screen it names', async ({ page }) => {
     await signIn(page);
 
-    for (const path of ['/catalogue', '/stock', '/orders', '/returns', '/attributes', '/promotions', '/campaigns', '/audit']) {
+    for (const path of [
+      '/catalogue',
+      '/stock',
+      '/orders',
+      '/returns',
+      '/attributes',
+      '/promotions',
+      '/campaigns',
+      '/audit',
+    ]) {
       await page.goto(path);
 
       // A heading, not a URL: a route that resolves to a blank component would
@@ -100,7 +109,10 @@ test.describe('the backoffice', () => {
     await signIn(page);
     await page.goto('/orders?status=Confirmed');
 
-    const confirmed = page.getByRole('row').filter({ has: page.getByText(/^(Confirmed|Confirmado)$/) }).first();
+    const confirmed = page
+      .getByRole('row')
+      .filter({ has: page.getByText(/^(Confirmed|Confirmado)$/) })
+      .first();
     const first = confirmed.getByRole('button', { name: /^(Open order|Abrir el pedido) / });
     await expect(first).toBeVisible();
     await first.click();
@@ -136,7 +148,11 @@ test.describe('the backoffice', () => {
 
     const suspend = /^\s*(Suspend|Suspender)\s*$/;
     const reinstate = /^\s*(Reinstate|Rehabilitar)\s*$/;
-    const row = page.getByRole('table').getByRole('row').filter({ has: page.getByRole('button', { name: /^\s*(Suspend|Suspender|Reinstate|Rehabilitar)\s*$/ }) }).first();
+    const row = page
+      .getByRole('table')
+      .getByRole('row')
+      .filter({ has: page.getByRole('button', { name: /^\s*(Suspend|Suspender|Reinstate|Rehabilitar)\s*$/ }) })
+      .first();
     await expect(row).toBeVisible();
 
     // The walkthrough's B5 leaves its agent suspended, as walkthrough-prepare
@@ -154,7 +170,10 @@ test.describe('the backoffice', () => {
     await expect(row.getByText(/^\s*(Suspended|Suspendido)\s*$/)).toBeVisible();
     await expect(row.getByRole('button', { name: reinstate })).toBeVisible();
 
-    await page.getByRole('status').getByRole('button', { name: /^(Undo|Deshacer)$/ }).click();
+    await page
+      .getByRole('status')
+      .getByRole('button', { name: /^(Undo|Deshacer)$/ })
+      .click();
     await expect(row.getByText(/^\s*(Active|Activo)\s*$/)).toBeVisible();
   });
 
@@ -185,12 +204,21 @@ test.describe('the backoffice', () => {
     // Saved, it opens among the drafts, under its own name.
     const pane = page.getByRole('complementary', { name });
     await expect(pane.getByRole('button', { name: /^(Schedule|Programar)$/ })).toBeEnabled();
-    await expect(page.getByRole('table').getByRole('row').filter({ hasText: name }).getByText(/^\s*(Draft|Borrador)\s*$/)).toBeVisible();
+    await expect(
+      page
+        .getByRole('table')
+        .getByRole('row')
+        .filter({ hasText: name })
+        .getByText(/^\s*(Draft|Borrador)\s*$/),
+    ).toBeVisible();
 
     await pane.getByRole('button', { name: /^(Schedule|Programar)$/ }).click();
     await expect(pane.getByRole('button', { name: /^(Unschedule to edit|Desprogramar para editar)$/ })).toBeVisible();
 
-    await page.getByRole('group', { name: /^(Filter campaigns|Filtrar campañas)$/ }).getByRole('button', { name: /^(Scheduled|Programadas)/ }).click();
+    await page
+      .getByRole('group', { name: /^(Filter campaigns|Filtrar campañas)$/ })
+      .getByRole('button', { name: /^(Scheduled|Programadas)/ })
+      .click();
     const row = page.getByRole('table').getByRole('row').filter({ hasText: name });
     await expect(row.getByText(/^\s*(Scheduled|Programada)\s*$/)).toBeVisible();
 
@@ -242,7 +270,12 @@ test.describe('the backoffice', () => {
 
     await page.keyboard.press('Control+k');
     await input.fill('mochila');
-    await expect(palette.getByRole('option').filter({ hasText: /Product|Producto/ }).first()).toBeVisible();
+    await expect(
+      palette
+        .getByRole('option')
+        .filter({ hasText: /Product|Producto/ })
+        .first(),
+    ).toBeVisible();
   });
 
   /** j and k down a queue worked item by item, the pane following (R-4.6). */
@@ -317,7 +350,10 @@ test.describe('the backoffice', () => {
     // A SKU the catalogue names — some seed SKUs belong to no product, which
     // the screen shows as such — found by its product's first word, then by
     // part of the SKU itself.
-    const named = page.locator('tr').filter({ has: page.locator('.product__name') }).first();
+    const named = page
+      .locator('tr')
+      .filter({ has: page.locator('.product__name') })
+      .first();
     await expect(named).toBeVisible();
     const sku = (await named.locator('td').nth(1).innerText()).trim();
     const word = (await named.locator('.product__name').innerText()).trim().split(/\s+/)[0];
@@ -351,7 +387,8 @@ test.describe('the backoffice', () => {
 
     // The ids on the page, not its text: a page two that repeated page one would
     // still say 21–40, because the range is the pager's arithmetic.
-    const ids = () => page.locator('tbody tr button[title]').evaluateAll((buttons) => buttons.map((b) => b.getAttribute('title')));
+    const ids = () =>
+      page.locator('tbody tr button[title]').evaluateAll((buttons) => buttons.map((b) => b.getAttribute('title')));
     const firstPage = await ids();
     await pager.getByRole('button', { name: /next|siguiente/i }).click();
     await expect(page).toHaveURL(/page=2/);

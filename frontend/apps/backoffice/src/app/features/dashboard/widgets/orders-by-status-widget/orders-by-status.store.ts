@@ -13,7 +13,10 @@ export const OrdersByStatusStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      operations: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.operations(params.period, at) }),
+      operations: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.operations(params.period, at),
+      }),
       /** The words as a signal, so the rows' labels follow a change of language. */
       _words: translateObjectSignal('dashboard.ordersByStatus'),
     };
@@ -24,8 +27,20 @@ export const OrdersByStatusStore = signalStore(
       if (!ops) return null;
       const words = store._words() as Partial<Record<string, string>>;
       return {
-        categories: [words['toShip'] ?? '', words['inProgress'] ?? '', words['paymentFailed'] ?? '', words['cancelledCount'] ?? ''],
-        series: [{ key: 'orders', label: words['title'] ?? '', role: 'data', values: [ops.toShip, ops.inProgress, ops.paymentFailed, ops.cancelled] }],
+        categories: [
+          words['toShip'] ?? '',
+          words['inProgress'] ?? '',
+          words['paymentFailed'] ?? '',
+          words['cancelledCount'] ?? '',
+        ],
+        series: [
+          {
+            key: 'orders',
+            label: words['title'] ?? '',
+            role: 'data',
+            values: [ops.toShip, ops.inProgress, ops.paymentFailed, ops.cancelled],
+          },
+        ],
       };
     }),
   })),

@@ -12,7 +12,10 @@ test.describe('the dashboard', () => {
   test('keeps its tab and its period in the URL', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto('/dashboard/sales?period=month');
-    await expect(page.locator('nav.tabs a[aria-current="page"]')).toHaveAttribute('href', '/dashboard/sales?period=month');
+    await expect(page.locator('nav.tabs a[aria-current="page"]')).toHaveAttribute(
+      'href',
+      '/dashboard/sales?period=month',
+    );
     await page.locator('nav.tabs a[href^="/dashboard/operations"]').click();
     await expect(page).toHaveURL(/\/dashboard\/operations\?period=month$/);
     await expect(page.locator('.period[aria-pressed="true"]')).toHaveAttribute('data-period', 'Month');
@@ -55,18 +58,30 @@ test.describe('the dashboard', () => {
   /** The tab fills the monitor (spec): the rows share its height, so no tab's wall scrolls — the fullest ones included. */
   test('fits every tab on the wall without scrolling', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
-    for (const tab of ['/dashboard', '/dashboard/sales', '/dashboard/operations', '/dashboard/growth', '/dashboard/agents']) {
+    for (const tab of [
+      '/dashboard',
+      '/dashboard/sales',
+      '/dashboard/operations',
+      '/dashboard/growth',
+      '/dashboard/agents',
+    ]) {
       await page.goto(tab);
       await page.waitForLoadState('networkidle');
       await page.locator('.full-screen-enter').click();
       await expect(page.locator('.wall-head')).toBeVisible();
       await expect
-        .poll(() => page.locator('section.dashboard').evaluate((wall) => wall.scrollHeight - wall.clientHeight), { message: tab })
+        .poll(() => page.locator('section.dashboard').evaluate((wall) => wall.scrollHeight - wall.clientHeight), {
+          message: tab,
+        })
         .toBeLessThanOrEqual(0);
       // And no widget spills out of its row onto the one below.
-      const spilled = await page.locator('.cell').evaluateAll((cells) =>
-        cells.filter((cell) => cell.scrollHeight > cell.clientHeight + 1).map((cell) => (cell as HTMLElement).dataset['widget']),
-      );
+      const spilled = await page
+        .locator('.cell')
+        .evaluateAll((cells) =>
+          cells
+            .filter((cell) => cell.scrollHeight > cell.clientHeight + 1)
+            .map((cell) => (cell as HTMLElement).dataset['widget']),
+        );
       expect(spilled, tab).toEqual([]);
       await page.locator('.full-screen-leave').click();
       await expect(page.locator('nav.tabs')).toBeVisible();
@@ -79,7 +94,9 @@ test.describe('the dashboard', () => {
     await expect(page.locator('nav.tabs')).toBeVisible();
     await expect(page.locator('.full-screen-enter')).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-    const tabs = await page.locator('nav.tabs').evaluate((nav) => [nav.scrollWidth > nav.clientWidth, getComputedStyle(nav).overflowX]);
+    const tabs = await page
+      .locator('nav.tabs')
+      .evaluate((nav) => [nav.scrollWidth > nav.clientWidth, getComputedStyle(nav).overflowX]);
     expect(tabs).toEqual([true, 'auto']);
   });
 });

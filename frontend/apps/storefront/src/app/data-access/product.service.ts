@@ -23,9 +23,6 @@ export class ProductService {
   get(code: string, culture: string): Observable<ProductDetail> {
     const params = new HttpParams().set('culture', culture);
 
-    return this.http.get<ProductDetail>(
-      `${this.baseUrl}/api/catalog/products/${encodeURIComponent(code)}`,
-      { params },
-    );
+    return this.http.get<ProductDetail>(`${this.baseUrl}/api/catalog/products/${encodeURIComponent(code)}`, { params });
   }
 }

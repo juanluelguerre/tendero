@@ -20,10 +20,22 @@
     }
 
     <dl class="m-0 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-      <div><dt class="text-muted">{{ t('price') }}</dt><dd class="numeric">{{ price(product.priceAmount, product.priceCurrency) }}</dd></div>
-      <div><dt class="text-muted">{{ t('brand') }}</dt><dd>{{ product.brand ?? '—' }}</dd></div>
-      <div><dt class="text-muted">{{ t('category') }}</dt><dd>{{ product.category ?? '—' }}</dd></div>
-      <div><dt class="text-muted">{{ t('code') }}</dt><dd class="numeric">{{ product.code }}</dd></div>
+      <div>
+        <dt class="text-muted">{{ t('price') }}</dt>
+        <dd class="numeric">{{ price(product.priceAmount, product.priceCurrency) }}</dd>
+      </div>
+      <div>
+        <dt class="text-muted">{{ t('brand') }}</dt>
+        <dd>{{ product.brand ?? '—' }}</dd>
+      </div>
+      <div>
+        <dt class="text-muted">{{ t('category') }}</dt>
+        <dd>{{ product.category ?? '—' }}</dd>
+      </div>
+      <div>
+        <dt class="text-muted">{{ t('code') }}</dt>
+        <dd class="numeric">{{ product.code }}</dd>
+      </div>
     </dl>
 
     @for (culture of cultures; track culture) {

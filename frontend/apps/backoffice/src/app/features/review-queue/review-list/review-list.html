@@ -19,14 +19,20 @@
 
     <div class="table-wrap wide-only">
       <table class="table">
-        <caption class="sr-only">{{ t('reviewQueue.title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('reviewQueue.title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('reviewQueue.column.product') }}</th>
             <th scope="col">{{ t('reviewQueue.column.brand') }}</th>
             <th scope="col" class="right">{{ t('reviewQueue.column.price') }}</th>
             <th scope="col">{{ t('reviewQueue.column.languages') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('reviewQueue.column.action') }}</span></th>
+            <th scope="col">
+              <span class="sr-only">{{ t('reviewQueue.column.action') }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -41,7 +47,7 @@
                 >
                   {{ item.name }}
                 </button>
-                <span class="numeric mt-[2px] block text-3xs text-muted">{{ item.code }}</span>
+                <span class="mt-[2px] block numeric text-3xs text-muted">{{ item.code }}</span>
               </td>
               <td>{{ item.brand ?? '—' }}</td>
               <td class="right numeric">{{ price(item) }}</td>
@@ -74,14 +80,19 @@
           <button type="button" class="worklist-card__open" (click)="store.open(item)">
             <span class="worklist-card__line">
               <span class="block font-semibold text-body">{{ item.name }}</span>
-              <span class="numeric worklist-card__end">{{ price(item) }}</span>
+              <span class="worklist-card__end numeric">{{ price(item) }}</span>
             </span>
             <span class="worklist-card__line">
               <ng-container *ngTemplateOutlet="languagesOf; context: { $implicit: item }" />
-              <span class="numeric mt-[2px] block text-3xs text-muted">{{ item.brand ?? '' }}</span>
+              <span class="mt-[2px] block numeric text-3xs text-muted">{{ item.brand ?? '' }}</span>
             </span>
           </button>
-          <button type="button" class="button button--quiet worklist-card__action" [disabled]="store.publishing().has(item.productId)" (click)="store.publish(item, 'row')">
+          <button
+            type="button"
+            class="button button--quiet worklist-card__action"
+            [disabled]="store.publishing().has(item.productId)"
+            (click)="store.publish(item, 'row')"
+          >
             {{ store.publishing().has(item.productId) ? t('reviewQueue.publishing') : t('reviewQueue.publish') }}
           </button>
         </li>
@@ -89,12 +100,12 @@
     </ul>
   </backoffice-list-state>
 
-<ng-template #languagesOf let-item>
-  @if (item.missingCultures.length === 0) {
-    <!-- Colour never alone: always with a word (design/DESIGN.md). -->
-    <span class="tag tag--ok">{{ t('reviewQueue.complete') }}</span>
-  } @else {
-    <span class="tag tag--warn">{{ t('reviewQueue.missing', { cultures: item.missingCultures.join(', ') }) }}</span>
-  }
-</ng-template>
+  <ng-template #languagesOf let-item>
+    @if (item.missingCultures.length === 0) {
+      <!-- Colour never alone: always with a word (design/DESIGN.md). -->
+      <span class="tag tag--ok">{{ t('reviewQueue.complete') }}</span>
+    } @else {
+      <span class="tag tag--warn">{{ t('reviewQueue.missing', { cultures: item.missingCultures.join(', ') }) }}</span>
+    }
+  </ng-template>
 </ng-container>

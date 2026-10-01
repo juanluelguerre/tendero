@@ -14,8 +14,12 @@
   -->
   <div class="mt-5 mb-7 grid grid-cols-[minmax(0,1fr)] gap-7 max-sm:gap-6">
     @if (store.campaign(); as leading) {
-      <storefront-campaign-card storefrontHomeModule="campaign" [campaign]="leading" [products]="store.campaignHits()"
-                                (reached)="campaigns.refresh()" />
+      <storefront-campaign-card
+        storefrontHomeModule="campaign"
+        [campaign]="leading"
+        [products]="store.campaignHits()"
+        (reached)="campaigns.refresh()"
+      />
     }
 
     @if (trail.any()) {
@@ -29,9 +33,14 @@
       <storefront-product-row
         storefrontHomeModule="offers"
         [heading]="t('home.offers')"
-        [lede]="store.offerRules() ? t('home.offersLede') + ' ' + t('home.offersRules', { names: store.offerRules() }) : t('home.offersLede')"
+        [lede]="
+          store.offerRules()
+            ? t('home.offersLede') + ' ' + t('home.offersRules', { names: store.offerRules() })
+            : t('home.offersLede')
+        "
         [more]="{ label: t('home.offersAll'), commands: links.home(), queryParams: { offer: 1 } }"
-        [items]="offerItems" />
+        [items]="offerItems"
+      />
     }
 
     @let suggestions = suggested(because(t));
@@ -41,7 +50,8 @@
         [heading]="t('home.suggested')"
         [lede]="t('home.suggestedLede')"
         [items]="suggestions"
-        via="suggested" />
+        via="suggested"
+      />
     }
 
     @let rising = trending(t('home.rising'));
@@ -51,7 +61,8 @@
         [heading]="t('home.trending')"
         [lede]="t('home.trendingLede')"
         [items]="rising"
-        via="trending" />
+        via="trending"
+      />
     }
 
     @if (store.bestSellers().length > 0) {
@@ -60,7 +71,8 @@
         [heading]="t('home.bestSellers')"
         [lede]="t('home.bestSellersLede')"
         [items]="store.bestSellers()"
-        layout="line" />
+        layout="line"
+      />
     }
 
     @let arrivals = newest(t('home.newBadge'));
@@ -70,7 +82,8 @@
         [heading]="t('home.newest')"
         [lede]="t('home.newestLede')"
         [more]="{ label: t('home.newestAll'), commands: links.home(), queryParams: { new: 1 } }"
-        [items]="arrivals" />
+        [items]="arrivals"
+      />
     }
 
     @if (store.departments().length > 0) {
@@ -81,9 +94,17 @@
             <li>
               <a
                 class="flex h-full items-center gap-4 rounded-lg border border-hairline bg-surface p-3 text-inherit no-underline transition-[border-color] duration-(--dur-fast) ease-brand hover:border-hairline-strong"
-                [routerLink]="links.category(department.code)">
+                [routerLink]="links.category(department.code)"
+              >
                 <!-- Decorative: the name beside it is the link's label. -->
-                <img class="size-[4.5rem] flex-none rounded-md bg-accent-tint object-cover" [src]="art(department.code)" alt="" loading="lazy" width="400" height="300" />
+                <img
+                  class="size-[4.5rem] flex-none rounded-md bg-accent-tint object-cover"
+                  [src]="art(department.code)"
+                  alt=""
+                  loading="lazy"
+                  width="400"
+                  height="300"
+                />
                 <span class="grid min-w-0 gap-1">
                   <span class="font-display text-md font-extrabold">{{ department.name }}</span>
                   <span class="text-xs text-muted">{{ department.sections }}</span>

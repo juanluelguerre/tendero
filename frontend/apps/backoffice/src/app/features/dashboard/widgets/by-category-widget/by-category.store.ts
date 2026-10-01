@@ -31,7 +31,10 @@ export const ByCategoryStore = signalStore(
     const culture = inject(CultureStore);
     return {
       mix: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.mix(params.period, at) }),
-      _categories: refreshedResource({ params: () => ({ culture: culture.active() }), stream: (params, at) => sources.categories(params.culture, at) }),
+      _categories: refreshedResource({
+        params: () => ({ culture: culture.active() }),
+        stream: (params, at) => sources.categories(params.culture, at),
+      }),
       _words: translateObjectSignal('dashboard.byCategory'),
     };
   }),
@@ -39,9 +42,13 @@ export const ByCategoryStore = signalStore(
     rows: computed<CategoryRow[]>(() => {
       const mix = valueOf(store.mix);
       if (!mix) return [];
-      const names = new Map((valueOf(store._categories)?.items ?? []).map((category) => [category.code, category.name]));
+      const names = new Map(
+        (valueOf(store._categories)?.items ?? []).map((category) => [category.code, category.name]),
+      );
       const words = store._words() as Partial<Record<'others' | 'uncategorised', string>>;
-      const known = mix.byCategory.flatMap((row) => (row.categoryCode === null ? [] : [{ ...row, code: row.categoryCode }]));
+      const known = mix.byCategory.flatMap((row) =>
+        row.categoryCode === null ? [] : [{ ...row, code: row.categoryCode }],
+      );
       const rest = known.slice(Shown);
       const none = mix.byCategory.find((row) => row.categoryCode === null);
 
@@ -52,9 +59,15 @@ export const ByCategoryStore = signalStore(
         revenue: row.revenue,
       }));
       if (rest.length > 0) {
-        rows.push({ key: 'others', label: words.others ?? '', units: rest.reduce((sum, row) => sum + row.units, 0), revenue: rest.reduce((sum, row) => sum + row.revenue, 0) });
+        rows.push({
+          key: 'others',
+          label: words.others ?? '',
+          units: rest.reduce((sum, row) => sum + row.units, 0),
+          revenue: rest.reduce((sum, row) => sum + row.revenue, 0),
+        });
       }
-      if (none) rows.push({ key: 'uncategorised', label: words.uncategorised ?? '', units: none.units, revenue: none.revenue });
+      if (none)
+        rows.push({ key: 'uncategorised', label: words.uncategorised ?? '', units: none.units, revenue: none.revenue });
       return rows;
     }),
   })),

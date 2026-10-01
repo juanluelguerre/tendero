@@ -12,7 +12,15 @@ import { OrdersStore } from './orders.store';
 const Orders = 'http://api/api/orders';
 
 const order = (orderId: string, status: string): OrderSummary =>
-  ({ orderId, status, recipientName: 'Ana', city: 'Madrid', total: 50, currency: 'EUR', createdAt: '2026-09-29T10:00:00Z' }) as unknown as OrderSummary;
+  ({
+    orderId,
+    status,
+    recipientName: 'Ana',
+    city: 'Madrid',
+    total: 50,
+    currency: 'EUR',
+    createdAt: '2026-09-29T10:00:00Z',
+  }) as unknown as OrderSummary;
 
 /** The orders page's state without its screen (ADR 0047): the URL in, the list and the moves out. */
 describe('the orders store', () => {
@@ -81,7 +89,9 @@ describe('the orders store', () => {
     store.apply(order('a', 'Confirmed'), 'Ship', 'row');
     http.expectOne(`${Orders}/a/move`).flush(order('a', 'Shipped'));
     store.apply(order('b', 'Confirmed'), 'Ship', 'row');
-    http.expectOne(`${Orders}/b/move`).flush('Cannot ship an order that is not paid.', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${Orders}/b/move`)
+      .flush('Cannot ship an order that is not paid.', { status: 409, statusText: 'Conflict' });
 
     expect(store.orders().map((row) => row.status)).toEqual(['Shipped', 'Confirmed']);
     expect(store.refusal()).toEqual({ b: 'Cannot ship an order that is not paid.' });

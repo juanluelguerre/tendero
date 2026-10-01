@@ -10,7 +10,8 @@ import { CartStore } from '../../cart/cart.store';
 import { OrderService } from '../../data-access/order.service';
 import { CheckoutStore } from './checkout.store';
 
-const option = (code: string, amount: number): ShippingOptionView => ({ code, amount }) as unknown as ShippingOptionView;
+const option = (code: string, amount: number): ShippingOptionView =>
+  ({ code, amount }) as unknown as ShippingOptionView;
 
 /** Address, delivery, payment (ADR 0047): the checkout's own state, over the shop's one cart. */
 describe('the checkout store', () => {
@@ -66,7 +67,11 @@ describe('the checkout store', () => {
   it('prices delivery to the address it opens with, and chooses the cheapest', async () => {
     const store = await opened();
 
-    expect([store.options().map((each) => each.code), store.chosen()?.code, quoted]).toEqual([['STANDARD', 'EXPRESS'], 'STANDARD', [4.9]]);
+    expect([store.options().map((each) => each.code), store.chosen()?.code, quoted]).toEqual([
+      ['STANDARD', 'EXPRESS'],
+      'STANDARD',
+      [4.9],
+    ]);
   });
 
   /** A guest's name is theirs to type: the shop does not ask the server with a blank one. */
@@ -95,7 +100,11 @@ describe('the checkout store', () => {
     placing = async () => ({ orderId: 'O-1' });
     await store.pay();
 
-    expect([placed[0].idempotencyKey === placed[1].idempotencyKey, cleared, went]).toEqual([true, 1, [['/', 'es', 'orders', 'O-1']]]);
+    expect([placed[0].idempotencyKey === placed[1].idempotencyKey, cleared, went]).toEqual([
+      true,
+      1,
+      [['/', 'es', 'orders', 'O-1']],
+    ]);
   });
 
   /** The price moved between the quote and the till: the page re-quotes, so the next press agrees to what is on screen. */

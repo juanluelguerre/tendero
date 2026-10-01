@@ -8,7 +8,11 @@ import type { BackofficeAction } from '../../usage';
  */
 
 /** Each move as the usage event names it (ADR 0041). */
-export const OrderActions = { Ship: 'order_ship', Deliver: 'order_deliver', Cancel: 'order_cancel' } as const satisfies Record<OrderMove, BackofficeAction>;
+export const OrderActions = {
+  Ship: 'order_ship',
+  Deliver: 'order_deliver',
+  Cancel: 'order_cancel',
+} as const satisfies Record<OrderMove, BackofficeAction>;
 
 /** The likely move for a status: what the row and the pane lead with. Cancelling is never it. */
 export function primaryMove(status: string): OrderMove | null {

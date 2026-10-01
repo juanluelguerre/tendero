@@ -40,7 +40,14 @@ describe('the sales by day widget', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -62,7 +69,10 @@ describe('the sales by day widget', () => {
     http.expectOne((req) => req.url === 'http://api/api/dashboard/sales/series').flush(WEEK);
     await fixture.whenStable();
     fixture.detectChanges();
-    const legend = () => [...(fixture.nativeElement as HTMLElement).querySelectorAll('.legend li')].map((item) => item.textContent?.trim());
+    const legend = () =>
+      [...(fixture.nativeElement as HTMLElement).querySelectorAll('.legend li')].map((item) =>
+        item.textContent?.trim(),
+      );
 
     expect(legend()).toEqual(['Last 7 days', 'The 7 days before']);
 
@@ -81,7 +91,8 @@ describe('the sales by day widget', () => {
    */
   it('names a window that ends now, in both languages', () => {
     const labels = (language: string) =>
-      JSON.parse(readFileSync(join(process.cwd(), 'apps', 'backoffice', 'public', 'i18n', `${language}.json`), 'utf-8')).dashboard.salesByDay;
+      JSON.parse(readFileSync(join(process.cwd(), 'apps', 'backoffice', 'public', 'i18n', `${language}.json`), 'utf-8'))
+        .dashboard.salesByDay;
 
     expect([labels('en').current, labels('en').previous]).toEqual([
       { Day: 'Last 24 hours', Month: 'Last 30 days', Week: 'Last 7 days' },

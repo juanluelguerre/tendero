@@ -117,7 +117,9 @@
     text-transform: uppercase;
     color: var(--text-muted);
   }
-  .failed { color: var(--danger); }
+  .failed {
+    color: var(--danger);
+  }
 
   /* ---------- Buttons ---------- */
   .button {
@@ -138,8 +140,13 @@
     transition: background var(--dur-fast) var(--ease);
   }
 
-  .button:hover:not(:disabled) { background: var(--accent-hover); }
-  .button:disabled { opacity: 0.55; cursor: default; }
+  .button:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+  .button:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
 
   /* Inside a 36px table row. The clay stays: a save is the one accent action on
      the screen it appears on, and it appears on one row at a time. */
@@ -193,8 +200,12 @@
     background-image:
       linear-gradient(to left, var(--bg-surface) 40%, transparent),
       linear-gradient(to left, color-mix(in srgb, var(--ink-900) 45%, transparent), transparent);
-    background-position: right center, right center;
-    background-size: 3rem 100%, 1.5rem 100%;
+    background-position:
+      right center,
+      right center;
+    background-size:
+      3rem 100%,
+      1.5rem 100%;
     background-repeat: no-repeat;
     background-attachment: local, scroll;
   }
@@ -226,11 +237,17 @@
     white-space: nowrap;
   }
 
-  .table tbody tr:last-child td { border-block-end: 0; }
+  .table tbody tr:last-child td {
+    border-block-end: 0;
+  }
 
-  .table tbody tr:hover td { background: var(--bg-raised); }
+  .table tbody tr:hover td {
+    background: var(--bg-raised);
+  }
 
-  .table .right { text-align: end; }
+  .table .right {
+    text-align: end;
+  }
 
   /* ---------- Tags ----------
      Colour never carries meaning alone (design/DESIGN.md): every tag has a word
@@ -245,12 +262,23 @@
     white-space: nowrap;
   }
 
-  .tag + .tag { margin-inline-start: var(--space-2); }
+  .tag + .tag {
+    margin-inline-start: var(--space-2);
+  }
 
-  .tag--ok { color: var(--positive); }
-  .tag--warn { color: var(--warning); }
-  .tag--danger { color: var(--danger); }
-  .tag--code { color: var(--text-muted); font-family: var(--font-mono); }
+  .tag--ok {
+    color: var(--positive);
+  }
+  .tag--warn {
+    color: var(--warning);
+  }
+  .tag--danger {
+    color: var(--danger);
+  }
+  .tag--code {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
 
   /* ---------- Empty state ----------
      "Nothing here yet — import a catalog to get started", never "No records
@@ -299,7 +327,10 @@
      a list narrowed by filters and a search, the likely action kept on the row,
      and a pane with what the decision needs (R-3, P3 and P6). The pane is its own
      component; these are the parts each list lays out around it. */
-  .worklist-layout { display: grid; gap: var(--space-5); }
+  .worklist-layout {
+    display: grid;
+    gap: var(--space-5);
+  }
 
   @media (min-width: 64rem) {
     .worklist-layout--with-pane {
@@ -308,7 +339,9 @@
     }
   }
 
-  .worklist-list { min-width: 0; }
+  .worklist-list {
+    min-width: 0;
+  }
 
   .worklist-tools {
     display: flex;
@@ -320,8 +353,12 @@
 
   /* The search box is a component of its own now: worklist/find. */
 
-  .row { cursor: pointer; }
-  .row--selected td { background: var(--accent-tint); }
+  .row {
+    cursor: pointer;
+  }
+  .row--selected td {
+    background: var(--accent-tint);
+  }
 
   /* The row's name is the button that opens it, so the keyboard reaches every
      row; the rest of the row answers the mouse. */
@@ -338,18 +375,31 @@
     cursor: pointer;
   }
 
-  .row__open:hover { text-decoration: underline; }
+  .row__open:hover {
+    text-decoration: underline;
+  }
 
   /* A table from a tablet up; cards on a phone, where a row's action was past a
      sideways scroll (R-1, B-F4). */
-  .narrow-only { display: none; }
-
-  @media (max-width: 39.99rem) {
-    .wide-only { display: none; }
-    .narrow-only { display: grid; }
+  .narrow-only {
+    display: none;
   }
 
-  .worklist-cards { gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
+  @media (max-width: 39.99rem) {
+    .wide-only {
+      display: none;
+    }
+    .narrow-only {
+      display: grid;
+    }
+  }
+
+  .worklist-cards {
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
 
   .worklist-card {
     display: grid;
@@ -362,7 +412,9 @@
     background: var(--bg-surface);
   }
 
-  .worklist-card--selected { border-color: var(--accent); }
+  .worklist-card--selected {
+    border-color: var(--accent);
+  }
 
   .worklist-card__open {
     display: grid;
@@ -376,14 +428,28 @@
     cursor: pointer;
   }
 
-  .worklist-card__line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-  .worklist-card__end { margin-inline-start: auto; }
-  .worklist-card__action { min-height: 2.75rem; }
+  .worklist-card__line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .worklist-card__end {
+    margin-inline-start: auto;
+  }
+  .worklist-card__action {
+    min-height: 2.75rem;
+  }
 
   /* Inside a pane: a titled section, the one clay action, and what is apart.
      Two actions side by side share the row (`flex-1` on each, in its template). */
-  .pane-section { display: grid; gap: var(--space-1); }
-  .pane-primary { min-height: 2.75rem; }
+  .pane-section {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .pane-primary {
+    min-height: 2.75rem;
+  }
 
   /* Apart, quiet and red: never beside the likely action, and it asks first. */
   .danger-zone {
@@ -407,11 +473,21 @@
     cursor: pointer;
   }
 
-  .linkish--danger { color: var(--danger); }
+  .linkish--danger {
+    color: var(--danger);
+  }
 
   /* A secondary way somewhere: quiet until pointed at. */
-  .quiet-link { display: inline-flex; align-items: center; min-height: 1.5rem; font-size: var(--text-xs); color: var(--text-muted); }
-  .quiet-link:hover { color: var(--text); }
+  .quiet-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+  .quiet-link:hover {
+    color: var(--text);
+  }
 
   /* A wall is read from further away (R-9, full screen): the type — and every
      rem, including the size contract's thresholds — grows with the monitor, from

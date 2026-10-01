@@ -1,26 +1,42 @@
 <!-- A strip, not a band: it closes the page quietly, in the surface's colours.
      Its four icons are drawn alike: a stroke in the accent, nothing filled. -->
-<section class="rounded-lg border border-hairline bg-surface p-5" *transloco="let t" [attr.aria-label]="t('promise.label')">
+<section
+  class="rounded-lg border border-hairline bg-surface p-5"
+  *transloco="let t"
+  [attr.aria-label]="t('promise.label')"
+>
   <ul class="grid list-none grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-4 p-0">
     @if (freeShipping(); as shipping) {
       <li class="flex items-start gap-3">
         <lib-icon class="mt-[0.15em] size-[1.25rem] text-accent" name="shipping" [stroke]="1.75" />
-        <span><strong class="block text-sm font-semibold">{{ shipping }}</strong><span class="block text-2xs text-muted">{{ t('promise.shippingHint') }}</span></span>
+        <span
+          ><strong class="block text-sm font-semibold">{{ shipping }}</strong
+          ><span class="block text-2xs text-muted">{{ t('promise.shippingHint') }}</span></span
+        >
       </li>
     }
     @if (returnDays(); as days) {
       <li class="flex items-start gap-3">
         <lib-icon class="mt-[0.15em] size-[1.25rem] text-accent" name="reload" [stroke]="1.75" />
-        <span><strong class="block text-sm font-semibold">{{ t('promise.returns', { days }) }}</strong><span class="block text-2xs text-muted">{{ t('promise.returnsHint') }}</span></span>
+        <span
+          ><strong class="block text-sm font-semibold">{{ t('promise.returns', { days }) }}</strong
+          ><span class="block text-2xs text-muted">{{ t('promise.returnsHint') }}</span></span
+        >
       </li>
     }
     <li class="flex items-start gap-3">
       <lib-icon class="mt-[0.15em] size-[1.25rem] text-accent" name="lock" [stroke]="1.75" />
-      <span><strong class="block text-sm font-semibold">{{ t('promise.payment') }}</strong><span class="block text-2xs text-muted">{{ t('promise.paymentHint') }}</span></span>
+      <span
+        ><strong class="block text-sm font-semibold">{{ t('promise.payment') }}</strong
+        ><span class="block text-2xs text-muted">{{ t('promise.paymentHint') }}</span></span
+      >
     </li>
     <li class="flex items-start gap-3">
       <lib-icon class="mt-[0.15em] size-[1.25rem] text-accent" name="bot" [stroke]="1.75" />
-      <span><strong class="block text-sm font-semibold">{{ t('promise.agents') }}</strong><span class="block text-2xs text-muted">{{ t('promise.agentsHint') }}</span></span>
+      <span
+        ><strong class="block text-sm font-semibold">{{ t('promise.agents') }}</strong
+        ><span class="block text-2xs text-muted">{{ t('promise.agentsHint') }}</span></span
+      >
     </li>
   </ul>
 </section>

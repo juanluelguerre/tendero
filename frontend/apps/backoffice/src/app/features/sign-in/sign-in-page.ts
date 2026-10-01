@@ -44,8 +44,7 @@ export class SignInPage {
    * signing key per process, so every restart of the API ends every session in
    * every browser).
    */
-  protected readonly expired =
-    this.route.snapshot.queryParamMap.get('reason') === 'expired';
+  protected readonly expired = this.route.snapshot.queryParamMap.get('reason') === 'expired';
 
   /**
    * Somebody who IS signed in, as somebody the backoffice is not for — a
@@ -56,7 +55,8 @@ export class SignInPage {
    * ordinary door.
    */
   protected readonly wrongRole = computed(() =>
-    this.route.snapshot.queryParamMap.get('reason') === 'role' ? this.auth.identity() : null);
+    this.route.snapshot.queryParamMap.get('reason') === 'role' ? this.auth.identity() : null,
+  );
 
   /** Named so the screen can say who is about to ask for your password. */
   protected readonly issuer = this.auth.issuer();

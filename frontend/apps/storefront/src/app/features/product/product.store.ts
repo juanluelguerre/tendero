@@ -10,14 +10,19 @@ import { statusOf } from '../../failure-status';
 import { ProductService } from '../../data-access/product.service';
 import { SpecsService } from '../../data-access/specs.service';
 import { specLines, specStatements } from '../../specs/spec-lines';
-import { availabilityOf, initialSelection, select, sellable, variantFor, type OptionAvailability, type Selection } from './variant-picker';
+import {
+  availabilityOf,
+  initialSelection,
+  select,
+  sellable,
+  variantFor,
+  type OptionAvailability,
+  type Selection,
+} from './variant-picker';
 import { valueOf } from '@tendero/shared-util';
 
 export type ProductPageState =
-  | { status: 'loading' }
-  | { status: 'done'; product: ProductDetail }
-  | { status: 'notFound' }
-  | { status: 'failed' };
+  { status: 'loading' } | { status: 'done'; product: ProductDetail } | { status: 'notFound' } | { status: 'failed' };
 
 interface ProductState {
   /** Which option is chosen on each axis. */

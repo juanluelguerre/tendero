@@ -25,7 +25,11 @@ export function formatShare(share: number, culture: string): string {
 /** A change as a signed percentage, "+25 %" / "−10 %", or null when there is none to state. */
 export function formatChange(change: Change, culture: string): string | null {
   if (change.ratio === null) return null;
-  return new Intl.NumberFormat(culture, { style: 'percent', maximumFractionDigits: 1, signDisplay: 'exceptZero' }).format(change.ratio);
+  return new Intl.NumberFormat(culture, {
+    style: 'percent',
+    maximumFractionDigits: 1,
+    signDisplay: 'exceptZero',
+  }).format(change.ratio);
 }
 
 /** One part of a whole, 0 when the whole is nothing. */
@@ -39,7 +43,9 @@ export function shareOf(part: number, whole: number): number {
  * (Inventory's `Restocking`, R-7.1), and the rows arrive already filtered by it.
  * The line used to be a constant here, beside the widget that drew it.
  */
-export function bySkuLowestFirst(rows: readonly { sku: string; available: number }[]): { sku: string; available: number }[] {
+export function bySkuLowestFirst(
+  rows: readonly { sku: string; available: number }[],
+): { sku: string; available: number }[] {
   const bySku = new Map<string, number>();
   for (const row of rows) bySku.set(row.sku, (bySku.get(row.sku) ?? 0) + row.available);
   return [...bySku]

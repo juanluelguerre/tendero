@@ -65,16 +65,15 @@ describe('the refusal copy', () => {
     expect(codes).toContain('out_of_stock');
   });
 
-  it.each(
-    surfaces.flatMap(({ app, section }) =>
-      cultures.map((culture) => ({ app, section, culture })),
-    ),
-  )('says why in $app/$culture', ({ app, section, culture }) => {
-    const path = join(repository, 'frontend/apps', app, 'public/i18n', `${culture}.json`);
-    const stop = JSON.parse(readFileSync(path, 'utf8'))[section]?.['stop'] ?? {};
+  it.each(surfaces.flatMap(({ app, section }) => cultures.map((culture) => ({ app, section, culture }))))(
+    'says why in $app/$culture',
+    ({ app, section, culture }) => {
+      const path = join(repository, 'frontend/apps', app, 'public/i18n', `${culture}.json`);
+      const stop = JSON.parse(readFileSync(path, 'utf8'))[section]?.['stop'] ?? {};
 
-    for (const code of codes) {
-      expect(stop[code], `${app}/${culture} has no words for "${code}"`).toBeTruthy();
-    }
-  });
+      for (const code of codes) {
+        expect(stop[code], `${app}/${culture} has no words for "${code}"`).toBeTruthy();
+      }
+    },
+  );
 });

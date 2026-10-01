@@ -14,7 +14,12 @@ describe('the waiting store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -50,7 +55,9 @@ describe('the waiting store', () => {
     answer();
     await settle();
 
-    expect((['drafts', 'claims', 'toShip', 'openReturns', 'lowStock', 'refusals'] as const).map((kind) => store.of()(kind))).toEqual([4, 7, 3, 2, 5, 1]);
+    expect(
+      (['drafts', 'claims', 'toShip', 'openReturns', 'lowStock', 'refusals'] as const).map((kind) => store.of()(kind)),
+    ).toEqual([4, 7, 3, 2, 5, 1]);
   });
 
   /** A badge that cannot load is no badge, never an error in the navigation. */

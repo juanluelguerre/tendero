@@ -15,7 +15,7 @@
         <h1 class="text-2xl">{{ t('account.title') }}</h1>
         <!-- The shop works without this, and it says so. Nothing here is a
              prerequisite for buying anything. -->
-        <p class="mt-3 max-w-[52ch] muted">{{ t('account.lede') }}</p>
+        <p class="muted mt-3 max-w-[52ch]">{{ t('account.lede') }}</p>
 
         <!-- One button, and it leaves. Who may sign in and what they have to
              type is the issuer's business, which is what stops the shop from
@@ -82,21 +82,24 @@
                           [src]="line.imageId ? imageUrl(line.imageId) : null"
                           alt=""
                           loading="lazy"
-                          (failed)="store.imageFailed(line.sku)" />
+                          (failed)="store.imageFailed(line.sku)"
+                        />
                       }
                     </span>
                   }
 
                   <span class="grid min-w-0 gap-1">
                     <span class="truncate font-semibold">{{ names(order) }}</span>
-                    <span class="text-sm muted">
+                    <span class="muted text-sm">
                       {{ when(order) }} · {{ t('account.lineCount', { count: order.lineCount }) }}
                     </span>
                   </span>
 
-                  <span class="grid justify-items-end gap-1 text-end max-sm:col-span-full max-sm:justify-items-start max-sm:text-start">
+                  <span
+                    class="grid justify-items-end gap-1 text-end max-sm:col-span-full max-sm:justify-items-start max-sm:text-start"
+                  >
                     <span class="text-sm text-muted">{{ t('order.status.' + order.status) }}</span>
-                    <span class="font-semibold numeric">{{ price(order) }}</span>
+                    <span class="numeric font-semibold">{{ price(order) }}</span>
                   </span>
                 </a>
 
@@ -104,7 +107,7 @@
                      that vanished, so the reason belongs here as much as on the
                      order itself. Same weight as the line count above it. -->
                 @if (order.stopCode) {
-                  <span class="block text-xs muted">{{ t('order.stop.' + order.stopCode) }}</span>
+                  <span class="muted block text-xs">{{ t('order.stop.' + order.stopCode) }}</span>
                 }
 
                 <!--
@@ -118,8 +121,12 @@
                   row would make four of them (design/DESIGN.md).
                 -->
                 @if (order.status === 'Delivered') {
-                  <a class="mt-2 inline-block text-sm text-body underline underline-offset-2 hover:text-accent" [routerLink]="links.order(order.orderId)"
-                     [fragment]="'return'">{{ t('account.requestReturn') }}</a>
+                  <a
+                    class="mt-2 inline-block text-sm text-body underline underline-offset-2 hover:text-accent"
+                    [routerLink]="links.order(order.orderId)"
+                    [fragment]="'return'"
+                    >{{ t('account.requestReturn') }}</a
+                  >
                 }
               </li>
             }

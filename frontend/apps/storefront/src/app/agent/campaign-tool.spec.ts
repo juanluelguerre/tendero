@@ -26,7 +26,9 @@ describe('list_campaigns, as an agent reads it', () => {
     );
 
     expect(text).toContain('2 campaign(s)');
-    expect(text).toContain('Tendero Days — code TENDERO_DAYS, event for the whole shop, running until 2026-10-07T16:12:00Z (4 d 6 h 12 min left)');
+    expect(text).toContain(
+      'Tendero Days — code TENDERO_DAYS, event for the whole shop, running until 2026-10-07T16:12:00Z (4 d 6 h 12 min left)',
+    );
     expect(text).toContain('Holds: Envío gratis desde 50 €. Its products: /en?campaign=TENDERO_DAYS');
     expect(text).toContain('starts 2026-10-04T10:00:00Z (in 1 d 0 h 0 min)');
     expect(text).toContain('Black Friday (coupon BF2026)');

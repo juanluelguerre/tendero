@@ -1,4 +1,15 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, type ElementRef, inject, Injector, untracked, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  type ElementRef,
+  inject,
+  Injector,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -80,7 +91,10 @@ export class DashboardPage {
       if (onTheWall === wasOnTheWall) return;
       wasOnTheWall = onTheWall;
       afterNextRender(
-        () => this.wall().nativeElement.querySelector<HTMLElement>(onTheWall ? '.full-screen-leave' : '.full-screen-enter')?.focus(),
+        () =>
+          this.wall()
+            .nativeElement.querySelector<HTMLElement>(onTheWall ? '.full-screen-leave' : '.full-screen-enter')
+            ?.focus(),
         { injector: this.injector },
       );
     });
@@ -91,7 +105,11 @@ export class DashboardPage {
   }
 
   protected choose(period: DashboardPeriod): void {
-    void this.router.navigate([], { relativeTo: this.route.firstChild ?? this.route, queryParams: { period: queryOfPeriod(period) }, queryParamsHandling: 'merge' });
+    void this.router.navigate([], {
+      relativeTo: this.route.firstChild ?? this.route,
+      queryParams: { period: queryOfPeriod(period) },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected enterWall(): void {

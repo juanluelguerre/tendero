@@ -18,25 +18,36 @@
   >
     <div class="table-wrap wide-only">
       <table class="table">
-        <caption class="sr-only">{{ t('title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('column.agent') }}</th>
             <th scope="col">{{ t('column.operator') }}</th>
             <th scope="col">{{ t('column.trust') }}</th>
             <th scope="col">{{ t('column.status') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('column.action') }}</span></th>
+            <th scope="col">
+              <span class="sr-only">{{ t('column.action') }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           @for (agent of valueOf(store.agents); track agent.agentId) {
             <tr class="row" [class.row--selected]="agent.agentId === store.selectedId()" (click)="store.open(agent)">
               <td>
-                <button type="button" class="row__open" [attr.aria-expanded]="agent.agentId === store.selectedId()" (click)="$event.stopPropagation(); store.open(agent)">
+                <button
+                  type="button"
+                  class="row__open"
+                  [attr.aria-expanded]="agent.agentId === store.selectedId()"
+                  (click)="$event.stopPropagation(); store.open(agent)"
+                >
                   {{ agent.displayName }}
                 </button>
                 <!-- Its own line under the name: side by side they read as one word. -->
-                <span class="block numeric muted text-3xs">{{ agent.agentId }}</span>
+                <span class="muted block numeric text-3xs">{{ agent.agentId }}</span>
               </td>
               <td>{{ agent.operator }}</td>
               <td>
@@ -56,11 +67,21 @@
               <td><backoffice-agent-status [agent]="agent" /></td>
               <td>
                 @if (agent.status === 'Suspended') {
-                  <button class="button button--small button--quiet" type="button" [disabled]="store.busy() === agent.agentId" (click)="$event.stopPropagation(); store.reinstate(agent, 'row')">
+                  <button
+                    class="button button--small button--quiet"
+                    type="button"
+                    [disabled]="store.busy() === agent.agentId"
+                    (click)="$event.stopPropagation(); store.reinstate(agent, 'row')"
+                  >
                     {{ t('reinstate') }}
                   </button>
                 } @else {
-                  <button class="button button--small button--quiet" type="button" [disabled]="store.busy() === agent.agentId" (click)="$event.stopPropagation(); store.askToSuspend(agent, 'row')">
+                  <button
+                    class="button button--small button--quiet"
+                    type="button"
+                    [disabled]="store.busy() === agent.agentId"
+                    (click)="$event.stopPropagation(); store.askToSuspend(agent, 'row')"
+                  >
                     {{ t('suspend') }}
                   </button>
                 }
@@ -82,9 +103,23 @@
             </span>
           </button>
           @if (agent.status === 'Suspended') {
-            <button class="button button--quiet worklist-card__action" type="button" [disabled]="store.busy() === agent.agentId" (click)="store.reinstate(agent, 'row')">{{ t('reinstate') }}</button>
+            <button
+              class="button button--quiet worklist-card__action"
+              type="button"
+              [disabled]="store.busy() === agent.agentId"
+              (click)="store.reinstate(agent, 'row')"
+            >
+              {{ t('reinstate') }}
+            </button>
           } @else {
-            <button class="button button--quiet worklist-card__action" type="button" [disabled]="store.busy() === agent.agentId" (click)="store.askToSuspend(agent, 'row')">{{ t('suspend') }}</button>
+            <button
+              class="button button--quiet worklist-card__action"
+              type="button"
+              [disabled]="store.busy() === agent.agentId"
+              (click)="store.askToSuspend(agent, 'row')"
+            >
+              {{ t('suspend') }}
+            </button>
           }
         </li>
       }

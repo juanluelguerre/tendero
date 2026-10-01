@@ -55,7 +55,9 @@ export const StockStore = signalStore(
       _usage: inject(BackofficeUsage),
       _labels: translateObjectSignal('stock.filter'),
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
-      _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), { initialValue: store.text() }),
+      _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), {
+        initialValue: store.text(),
+      }),
     };
   }),
   withComputed((store) => ({
@@ -76,7 +78,12 @@ export const StockStore = signalStore(
      * and any whose SKU contains the text (R-7.1).
      */
     const list = rxResource({
-      params: () => ({ culture: store._culture.active(), filter: store.filter(), text: store._query().trim(), page: store.page() }),
+      params: () => ({
+        culture: store._culture.active(),
+        filter: store.filter(),
+        text: store._query().trim(),
+        page: store.page(),
+      }),
       stream: ({ params }): Observable<StockList> =>
         params.text
           ? store._catalog.skusMatching(params.text, params.culture).pipe(
@@ -84,7 +91,15 @@ export const StockStore = signalStore(
               // A catalogue that cannot answer leaves the SKU half of the search
               // working: the shelf does not depend on the catalogue being up.
               catchError(() => of<string[]>([])),
-              switchMap((skus) => store._inventory.stock(params.culture, params.filter, { text: params.text, skus }, params.page, PageSize)),
+              switchMap((skus) =>
+                store._inventory.stock(
+                  params.culture,
+                  params.filter,
+                  { text: params.text, skus },
+                  params.page,
+                  PageSize,
+                ),
+              ),
             )
           : store._inventory.stock(params.culture, params.filter, undefined, params.page, PageSize),
     });
@@ -100,7 +115,9 @@ export const StockStore = signalStore(
         return skus.length === 0 ? undefined : { skus, culture: store._culture.active() };
       },
       stream: ({ params }) =>
-        store._catalog.describeSkus(params.skus, params.culture).pipe(catchError(() => of({ items: [] as SkuDescription[] }))),
+        store._catalog
+          .describeSkus(params.skus, params.culture)
+          .pipe(catchError(() => of({ items: [] as SkuDescription[] }))),
     });
 
     return {
@@ -175,7 +192,11 @@ export const StockStore = signalStore(
             // holds this screen does not track, and a count that collided with a
             // reservation would otherwise show a total nobody stored.
             store.rows.update((rows) =>
-              rows.map((candidate) => (shelfOf(candidate) === shelf ? { ...candidate, onHand: counted.onHand, available: counted.available } : candidate)),
+              rows.map((candidate) =>
+                shelfOf(candidate) === shelf
+                  ? { ...candidate, onHand: counted.onHand, available: counted.available }
+                  : candidate,
+              ),
             );
             patchState(store, (state) => ({ drafts: without(state.drafts, shelf), saving: null, saved: shelf }));
           },
@@ -194,7 +215,11 @@ export const StockStore = signalStore(
       effect(() => {
         const q = store._query().trim();
         if ((store._params().get('q') ?? '') === q) return;
-        void store._router.navigate([], { queryParams: { q: q || null, page: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        void store._router.navigate([], {
+          queryParams: { q: q || null, page: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
         if (q) store._usage.affordance('search', 'stock');
       });
     },

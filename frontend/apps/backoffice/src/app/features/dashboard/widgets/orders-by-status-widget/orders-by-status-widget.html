@@ -11,23 +11,37 @@
     @if (store.operations.value(); as ops) {
       <dl class="facts">
         <div class="fact">
-          <dt><a class="fact__link" routerLink="/orders">{{ t('toShip') }}</a></dt>
-          <dd class="numeric fact__value">{{ ops.toShip }}</dd>
+          <dt>
+            <a class="fact__link" routerLink="/orders">{{ t('toShip') }}</a>
+          </dt>
+          <dd class="fact__value numeric">{{ ops.toShip }}</dd>
           @if (ops.lateToShip > 0) {
             <dd class="tag tag--danger">{{ t('late', { count: ops.lateToShip }) }}</dd>
           }
         </div>
         <div class="fact">
-          <dt><a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentAuthorized' }">{{ t('inProgress') }}</a></dt>
-          <dd class="numeric fact__value">{{ ops.inProgress }}</dd>
+          <dt>
+            <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentAuthorized' }">{{
+              t('inProgress')
+            }}</a>
+          </dt>
+          <dd class="fact__value numeric">{{ ops.inProgress }}</dd>
         </div>
         <div class="fact">
-          <dt><a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentFailed' }">{{ t('paymentFailed') }}</a></dt>
-          <dd class="numeric fact__value" [class.fact__value--warn]="ops.paymentFailed > 0">{{ ops.paymentFailed }}</dd>
+          <dt>
+            <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentFailed' }">{{
+              t('paymentFailed')
+            }}</a>
+          </dt>
+          <dd class="fact__value numeric" [class.fact__value--warn]="ops.paymentFailed > 0">{{ ops.paymentFailed }}</dd>
         </div>
         <div class="fact">
-          <dt><a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{ t('cancelledCount') }}</a></dt>
-          <dd class="numeric fact__value">{{ ops.cancelled }}</dd>
+          <dt>
+            <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{
+              t('cancelledCount')
+            }}</a>
+          </dt>
+          <dd class="fact__value numeric">{{ ops.cancelled }}</dd>
         </div>
       </dl>
       @if (store.chart(); as data) {

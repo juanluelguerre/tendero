@@ -3,7 +3,9 @@
    and in `components`, where it sat before, so a utility on an element wins. */
 @layer components {
   /* The frame lays out as if its panel were the widget's own child. */
-  backoffice-widget-frame { display: contents; }
+  backoffice-widget-frame {
+    display: contents;
+  }
 
   /* A widget fills its grid cell, so the panels of one row end together. Here
      and not in the grid's stylesheet: the grid creates its widgets from code,
@@ -20,20 +22,29 @@
      screen) moves the thresholds with it. In CSS: the theme names no container
      sizes, and these are the contract's, not a scale's. */
   @container widget (width < 20rem) {
-    .at-m, .at-l { display: none; }
+    .at-m,
+    .at-l {
+      display: none;
+    }
   }
 
   @container widget (width < 56rem) {
-    .at-l { display: none; }
+    .at-l {
+      display: none;
+    }
   }
 
   /* A list read at S and M that gives its place to a chart at L (R-9, D-7: by category). */
   @container widget (width >= 56rem) {
-    .below-l { display: none; }
+    .below-l {
+      display: none;
+    }
   }
 
   @container widget (width >= 20rem) {
-    .only-s { display: none; }
+    .only-s {
+      display: none;
+    }
   }
 
   /* ---------- A widget's figures and rankings (P11-7) ----------
@@ -42,12 +53,26 @@
      in, `.facts`, stays in styles.css, because the agent pane lays its facts out
      the same way. Small primitives used two dozen times across the widgets: a
      class each, as `.tag` is, rather than the same utilities copied. */
-  .fact { margin: 0; }
-  .fact dt { color: var(--text-muted); font-size: var(--text-3xs); }
-  .fact dd { margin: 0; }
-  .fact__value { font-size: var(--text-lg); font-weight: 600; }
-  .fact__value--warn { color: var(--warning); }
-  .fact__note { font-size: var(--text-3xs); }
+  .fact {
+    margin: 0;
+  }
+  .fact dt {
+    color: var(--text-muted);
+    font-size: var(--text-3xs);
+  }
+  .fact dd {
+    margin: 0;
+  }
+  .fact__value {
+    font-size: var(--text-lg);
+    font-weight: 600;
+  }
+  .fact__value--warn {
+    color: var(--warning);
+  }
+  .fact__note {
+    font-size: var(--text-3xs);
+  }
 
   /* Every figure is a way into acting on it (R-3, P9): its label opens the list
      behind it, already filtered. Quiet until pointed at, and 24 px tall. */
@@ -59,7 +84,10 @@
     text-decoration: none;
   }
 
-  .fact__link:hover { color: var(--text); text-decoration: underline; }
+  .fact__link:hover {
+    color: var(--text);
+    text-decoration: underline;
+  }
 
   .ranking {
     margin: 0;

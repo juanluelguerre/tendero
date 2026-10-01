@@ -62,11 +62,16 @@ describe('the campaigns page', () => {
     ]);
 
     expect(counts(page)).toEqual([1, 2, 1, 2, 6]);
-    expect([...page.querySelectorAll('tbody .row__open')].map((row) => row.textContent?.trim())).toEqual(['TENDERO_DAYS']);
+    expect([...page.querySelectorAll('tbody .row__open')].map((row) => row.textContent?.trim())).toEqual([
+      'TENDERO_DAYS',
+    ]);
   });
 
   it('shows the drafts when that is the filter in the URL', async () => {
-    const page = await open('/campaigns?status=drafts', [campaign('HOGAR', 'Draft', 'Upcoming'), campaign('TENDERO_DAYS', 'Scheduled', 'Running')]);
+    const page = await open('/campaigns?status=drafts', [
+      campaign('HOGAR', 'Draft', 'Upcoming'),
+      campaign('TENDERO_DAYS', 'Scheduled', 'Running'),
+    ]);
 
     expect([...page.querySelectorAll('tbody .row__open')].map((row) => row.textContent?.trim())).toEqual(['HOGAR']);
   });
@@ -108,7 +113,9 @@ describe('the campaigns page', () => {
 
     expect((pane.querySelector('fieldset.fields') as HTMLFieldSetElement).disabled).toBe(true);
     expect(pane.querySelector('form.editor button[type=submit]')).toBeNull();
-    expect([...pane.querySelectorAll('button')].map((button) => button.textContent?.trim())).toContain('campaigns.unschedule');
+    expect([...pane.querySelectorAll('button')].map((button) => button.textContent?.trim())).toContain(
+      'campaigns.unschedule',
+    );
   });
 
   it('shows the server’s refusal in the pane', async () => {
@@ -118,10 +125,12 @@ describe('the campaigns page', () => {
     [...pane.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'campaigns.schedule')?.click();
     http
       .expectOne(`${Calendar}/HOGAR/schedule`)
-      .flush("The window closes at 2026-01-01, which has already passed.", { status: 400, statusText: 'Bad Request' });
+      .flush('The window closes at 2026-01-01, which has already passed.', { status: 400, statusText: 'Bad Request' });
     TestBed.tick();
 
-    expect(pane.querySelector('[role=alert]')?.textContent?.trim()).toBe('The window closes at 2026-01-01, which has already passed.');
+    expect(pane.querySelector('[role=alert]')?.textContent?.trim()).toBe(
+      'The window closes at 2026-01-01, which has already passed.',
+    );
   });
 });
 
@@ -131,7 +140,11 @@ function type(input: HTMLInputElement, value: string): void {
   TestBed.tick();
 }
 
-function campaign(code: string, status: ManagedCampaignView['status'], phase: ManagedCampaignView['phase']): ManagedCampaignView {
+function campaign(
+  code: string,
+  status: ManagedCampaignView['status'],
+  phase: ManagedCampaignView['phase'],
+): ManagedCampaignView {
   return {
     code,
     name: { es: code, en: code },

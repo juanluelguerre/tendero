@@ -3,8 +3,14 @@
      that tells you where to look. -->
 <div class="grid min-h-[60dvh] place-items-center py-6" *transloco="let t">
   <section class="panel w-full max-w-[26rem] p-6">
-    <img class="mb-4 block size-[36px]" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true"
-         width="36" height="36" />
+    <img
+      class="mb-4 block size-[36px]"
+      src="brand/tendero-icon-backoffice.svg"
+      alt=""
+      aria-hidden="true"
+      width="36"
+      height="36"
+    />
     <h1 class="text-lg">{{ t('signIn.title') }}</h1>
 
     <!-- Why they are here, when the answer is not "they arrived". A session that
@@ -18,7 +24,9 @@
       <!-- Signed in, and not as somebody this backoffice is for. Offering
            "continue to sign in" here would send them to the issuer as the same
            person and straight back to this page. -->
-      <lib-notice class="mt-3" tone="warn" live="polite">{{ t('signIn.wrongRole', { name: who.name, role: who.role }) }}</lib-notice>
+      <lib-notice class="mt-3" tone="warn" live="polite">{{
+        t('signIn.wrongRole', { name: who.name, role: who.role })
+      }}</lib-notice>
       <button type="button" class="button" (click)="signOut()">
         {{ t('signIn.signOut') }}
       </button>

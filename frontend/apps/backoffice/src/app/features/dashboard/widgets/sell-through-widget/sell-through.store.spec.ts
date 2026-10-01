@@ -15,7 +15,14 @@ describe('the sell-through store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, SellThroughStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        SellThroughStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -25,7 +32,13 @@ describe('the sell-through store', () => {
     TestBed.runInInjectionContext(() => store.followPeriod(signal<DashboardPeriod>('Month')));
     TestBed.tick();
     http.expectOne('http://api/api/dashboard/stock?period=Month').flush({
-      period: 'Month', toRestock: 0, soldOut: 0, underTwoWeeks: 0, noSales: 0, warehouses: [], closest: [],
+      period: 'Month',
+      toRestock: 0,
+      soldOut: 0,
+      underTwoWeeks: 0,
+      noSales: 0,
+      warehouses: [],
+      closest: [],
       fastest: [{ sku: 'PAN', sold: 3, left: 0, rate: 1 }],
       slowest: [{ sku: 'MUG', sold: 0, left: 5, rate: 0 }],
     });

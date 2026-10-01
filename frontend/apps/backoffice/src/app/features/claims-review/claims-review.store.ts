@@ -40,7 +40,9 @@ export const ClaimsReviewStore = signalStore(
   }),
   withComputed((store) => ({
     // Read in any case: a link saved before the filter took the enum's name said `all`.
-    filterKey: computed<ClaimSupportFilter>(() => (store._params().get('support')?.toLowerCase() === 'all' ? 'All' : 'Weak')),
+    filterKey: computed<ClaimSupportFilter>(() =>
+      store._params().get('support')?.toLowerCase() === 'all' ? 'All' : 'Weak',
+    ),
     page: computed(() => Math.max(1, Number(store._params().get('page') ?? 1) || 1)),
     selectedId: computed(() => store._params().get('claim')),
   })),
@@ -73,7 +75,9 @@ export const ClaimsReviewStore = signalStore(
   }),
   withComputed((store) => {
     const claims = computed(() => valueOf(store._queue)?.claims.items ?? []);
-    const names = computed(() => new Map((valueOf(store._queue)?.products.items ?? []).map((product) => [product.productId, product.name])));
+    const names = computed(
+      () => new Map((valueOf(store._queue)?.products.items ?? []).map((product) => [product.productId, product.name])),
+    );
     return {
       claims,
       _names: names,
@@ -81,7 +85,11 @@ export const ClaimsReviewStore = signalStore(
       filters: computed<FilterOption[]>(() => {
         const labels = store._labels() as Record<string, string>;
         const counts = store._counts();
-        return (['Weak', 'All'] as const).map((key) => ({ key, label: labels[key] ?? key, count: counts?.get(key) ?? null }));
+        return (['Weak', 'All'] as const).map((key) => ({
+          key,
+          label: labels[key] ?? key,
+          count: counts?.get(key) ?? null,
+        }));
       }),
       selected: computed(() => claims().find((claim) => claim.claimId === store.selectedId()) ?? null),
       /** The weak queue is empty and claims wait under All: the page points there rather than saying there is nothing. */

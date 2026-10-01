@@ -27,10 +27,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   templateUrl: './product-image-placeholder.html',
   // The host carries nothing but a promise to fill whatever the caller sized; the
   // template says why its layout is not on the host.
-  host: { class: 'block overflow-hidden',
-    role: 'img',
-    '[attr.aria-label]': 'alt()',
-  },
+  host: { class: 'block overflow-hidden', role: 'img', '[attr.aria-label]': 'alt()' },
 })
 export class ProductImagePlaceholder {
   /**

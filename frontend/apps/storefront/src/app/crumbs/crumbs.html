@@ -3,12 +3,18 @@
     @if (start(); as link) {
       <!-- The crumb's link reaches 24 px, and 44 where a finger aims (R-1, S-F4). -->
       <li>
-        <a class="inline-flex min-h-[1.5rem] items-center text-inherit hover:text-accent pointer-coarse:min-h-[2.75rem]" [routerLink]="link.commands">{{ link.label }}</a>
+        <a
+          class="inline-flex min-h-[1.5rem] items-center text-inherit hover:text-accent pointer-coarse:min-h-[2.75rem]"
+          [routerLink]="link.commands"
+          >{{ link.label }}</a
+        >
       </li>
     }
     @for (step of steps(); track $index) {
       <!-- The separator travels with the step it introduces, so a wrapped line
-           never starts with one; it is decoration, so a screen reader skips it. -->
+           never starts with one; it is decoration, so a screen reader skips it. On one
+           line, or the formatter's line break is a space after the separator. -->
+      <!-- prettier-ignore -->
       <li>@if (start() || !$first) {<span class="me-2" aria-hidden="true">›</span>}{{ step }}</li>
     }
   </ol>

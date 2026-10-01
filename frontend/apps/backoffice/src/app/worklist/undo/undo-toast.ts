@@ -10,7 +10,11 @@ import { UndoStore } from './undo.store';
   templateUrl: './undo-toast.html',
   // The host's place: fixed at the foot of the viewport, centred, and
   // letting the pointer through everywhere but the toast.
-  host: { class: 'fixed inset-x-0 bottom-5 z-5 flex justify-center pointer-events-none', role: 'status', 'aria-live': 'polite' },
+  host: {
+    class: 'fixed inset-x-0 bottom-5 z-5 flex justify-center pointer-events-none',
+    role: 'status',
+    'aria-live': 'polite',
+  },
 })
 export class UndoToast {
   protected readonly undo = inject(UndoStore);

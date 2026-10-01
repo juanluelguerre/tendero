@@ -94,7 +94,11 @@ export const CheckoutStore = signalStore(
 
     /** One sentence a shopper can act on — see `checkoutProblem`. */
     const describe = (error: unknown): string =>
-      checkoutProblem(error as { status?: number; error?: unknown }, (key, params) => store._transloco.translate(key, params), money);
+      checkoutProblem(
+        error as { status?: number; error?: unknown },
+        (key, params) => store._transloco.translate(key, params),
+        money,
+      );
 
     /**
      * Choosing re-quotes, because `FreeShipping` is a promotion effect and the

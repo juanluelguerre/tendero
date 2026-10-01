@@ -49,7 +49,10 @@ export const ByChannelStore = signalStore(
           ],
         };
       }),
-      agentsBy: computed(() => ({ mcp: through(valueOf(store.mix), 'Mcp').orders, ucp: through(valueOf(store.mix), 'Ucp').orders })),
+      agentsBy: computed(() => ({
+        mcp: through(valueOf(store.mix), 'Mcp').orders,
+        ucp: through(valueOf(store.mix), 'Ucp').orders,
+      })),
       unrecorded: computed(() => valueOf(store.mix)?.unrecorded.orders ?? 0),
       agentShare: computed(() => shareOf(agents().orders, web().orders + agents().orders)),
       revenueShare: computed(() => shareOf(agents().revenue, web().revenue + agents().revenue)),

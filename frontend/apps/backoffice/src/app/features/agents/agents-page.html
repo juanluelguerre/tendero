@@ -1,4 +1,8 @@
-<section class="worklist-layout" [class.worklist-layout--with-pane]="store.selected()" *transloco="let t; prefix: 'agents'">
+<section
+  class="worklist-layout"
+  [class.worklist-layout--with-pane]="store.selected()"
+  *transloco="let t; prefix: 'agents'"
+>
   <div class="worklist-list">
     <backoffice-agent-list />
     <backoffice-agent-register />

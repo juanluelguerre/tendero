@@ -21,11 +21,20 @@ export class CultureEvaluation {
 
   readonly view = input.required<CultureView>();
 
-  private readonly decimals = computed(() => new Intl.NumberFormat(this.culture.active(), { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
-  private readonly signedDecimals = computed(
-    () => new Intl.NumberFormat(this.culture.active(), { minimumFractionDigits: 3, maximumFractionDigits: 3, signDisplay: 'exceptZero' }),
+  private readonly decimals = computed(
+    () => new Intl.NumberFormat(this.culture.active(), { minimumFractionDigits: 3, maximumFractionDigits: 3 }),
   );
-  private readonly wholeNumbers = computed(() => new Intl.NumberFormat(this.culture.active(), { maximumFractionDigits: 0 }));
+  private readonly signedDecimals = computed(
+    () =>
+      new Intl.NumberFormat(this.culture.active(), {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+        signDisplay: 'exceptZero',
+      }),
+  );
+  private readonly wholeNumbers = computed(
+    () => new Intl.NumberFormat(this.culture.active(), { maximumFractionDigits: 0 }),
+  );
 
   protected score(value: number | null): string {
     return value === null ? '—' : this.decimals().format(value);

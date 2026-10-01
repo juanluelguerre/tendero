@@ -79,8 +79,7 @@ describe('the search page, when the answer is not an exact match', () => {
     const harness = await RouterTestingHarness.create(`/?q=${encodeURIComponent(query)}`);
 
     // `*transloco` renders nothing until its language file arrives.
-    for (const translations of http.match((req) => req.url.includes('/i18n/')))
-      translations.flush(TRANSLATIONS);
+    for (const translations of http.match((req) => req.url.includes('/i18n/'))) translations.flush(TRANSLATIONS);
 
     harness.detectChanges();
     await harness.fixture.whenStable();
@@ -92,11 +91,7 @@ describe('the search page, when the answer is not an exact match', () => {
   }
 
   it('shows the notice and the heading when nothing matches exactly', async () => {
-    searchResult = page(
-      [hit('a'), hit('b')],
-      2,
-      { match: 'Related', helpTopic: null },
-    );
+    searchResult = page([hit('a'), hit('b')], 2, { match: 'Related', helpTopic: null });
 
     const element = await open('regalo abuela');
 
@@ -106,11 +101,7 @@ describe('the search page, when the answer is not an exact match', () => {
   });
 
   it('shows the returns card above the products for a question about returns', async () => {
-    searchResult = page(
-      [hit('a')],
-      1,
-      { match: 'Related', helpTopic: 'returns' },
-    );
+    searchResult = page([hit('a')], 1, { match: 'Related', helpTopic: 'returns' });
 
     const element = await open('how do returns work');
 
@@ -133,11 +124,7 @@ describe('the search page, when the answer is not an exact match', () => {
    */
   it('says nothing about returns while the window is not known yet', async () => {
     returnsWindowDays = null;
-    searchResult = page(
-      [hit('a')],
-      1,
-      { match: 'Related', helpTopic: 'returns' },
-    );
+    searchResult = page([hit('a')], 1, { match: 'Related', helpTopic: 'returns' });
 
     const element = await open('how do returns work');
 
@@ -147,11 +134,7 @@ describe('the search page, when the answer is not an exact match', () => {
   });
 
   it('shows nothing extra for an exact answer', async () => {
-    searchResult = page(
-      [hit('a'), hit('b')],
-      2,
-      { match: 'Exact', helpTopic: null },
-    );
+    searchResult = page([hit('a'), hit('b')], 2, { match: 'Exact', helpTopic: null });
 
     const element = await open('zapatillas running mujer');
 
@@ -168,8 +151,7 @@ const TRANSLATIONS = {
   search: {
     help: {
       returnsTitle: 'Looking for returns?',
-      returnsBody:
-        'You have {{days}} days from delivery to send something back. Start a return from your orders.',
+      returnsBody: 'You have {{days}} days from delivery to send something back. Start a return from your orders.',
       returnsLink: 'Go to my orders',
     },
     related: {

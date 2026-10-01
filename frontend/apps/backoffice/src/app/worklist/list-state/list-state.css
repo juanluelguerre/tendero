@@ -7,7 +7,12 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background:
-    repeating-linear-gradient(to bottom, transparent 0 0.75rem, var(--bg-raised) 0.75rem 2.25rem, transparent 2.25rem 3rem)
-    var(--space-4) 0 / calc(100% - 2 * var(--space-4)) 100% no-repeat,
+    repeating-linear-gradient(
+        to bottom,
+        transparent 0 0.75rem,
+        var(--bg-raised) 0.75rem 2.25rem,
+        transparent 2.25rem 3rem
+      )
+      var(--space-4) 0 / calc(100% - 2 * var(--space-4)) 100% no-repeat,
     var(--bg-surface);
 }

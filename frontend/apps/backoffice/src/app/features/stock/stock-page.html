@@ -12,8 +12,18 @@
   <!-- The list's tools, as every list of work has them (ADR 0042): what the
        dashboard's figure opens on, and a search by SKU or by product name. -->
   <div class="worklist-tools">
-    <backoffice-filter-chips [options]="store.filters()" [selected]="store.filter()" [label]="t('stock.filterLabel')" (chosen)="store.filterBy($event)" />
-    <backoffice-find [label]="t('stock.findLabel')" [placeholder]="t('stock.find')" [value]="store.text()" (searched)="store.search($event)" />
+    <backoffice-filter-chips
+      [options]="store.filters()"
+      [selected]="store.filter()"
+      [label]="t('stock.filterLabel')"
+      (chosen)="store.filterBy($event)"
+    />
+    <backoffice-find
+      [label]="t('stock.findLabel')"
+      [placeholder]="t('stock.find')"
+      [value]="store.text()"
+      (searched)="store.search($event)"
+    />
   </div>
   @if (store.filter() === 'Restock' && store.restockAt() !== null) {
     <!-- The rule the filter applies, said where it is applied (R-7.1). -->
@@ -26,7 +36,13 @@
     [empty]="store.rows().length === 0"
     [loadingText]="t('stock.loading')"
     [failedText]="t('stock.failed')"
-    [emptyText]="store.searching() ? t('stock.nothingFor', { text: store.text() }) : store.filter() === 'All' ? t('stock.empty') : t('stock.nothingToRestock')"
+    [emptyText]="
+      store.searching()
+        ? t('stock.nothingFor', { text: store.text() })
+        : store.filter() === 'All'
+          ? t('stock.empty')
+          : t('stock.nothingToRestock')
+    "
   >
     <!-- The shelves and their explanation, side by side while there is room.
          The panel drops under the table below 1100px rather than being

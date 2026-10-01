@@ -15,7 +15,9 @@ export interface StatusCount {
  * chips that depends on them moves under the pointer. Null only before the
  * first answer.
  */
-export function keptCounts(counts: () => readonly StatusCount[] | undefined): Signal<ReadonlyMap<string, number> | null> {
+export function keptCounts(
+  counts: () => readonly StatusCount[] | undefined,
+): Signal<ReadonlyMap<string, number> | null> {
   return linkedSignal<ReadonlyMap<string, number> | undefined, ReadonlyMap<string, number> | null>({
     source: () => {
       const answered = counts();
@@ -42,7 +44,11 @@ export function statusChips(
 ): FilterOption[] {
   const total = counts ? [...counts.values()].reduce((sum, count) => sum + count, 0) : null;
   return [
-    ...statuses.map((status) => ({ key: status, label: labels[status] ?? status, count: counts ? (counts.get(status) ?? 0) : null })),
+    ...statuses.map((status) => ({
+      key: status,
+      label: labels[status] ?? status,
+      count: counts ? (counts.get(status) ?? 0) : null,
+    })),
     { key: 'all', label: labels['all'] ?? 'all', count: total },
   ];
 }

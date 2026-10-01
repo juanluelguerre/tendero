@@ -21,7 +21,9 @@ import { FullScreen } from '../full-screen';
   host: { class: 'block flex-1 min-h-0' },
 })
 export class DashboardTabPage {
-  private readonly tab = toSignal(inject(ActivatedRoute).data.pipe(map((data) => data['tab'] as DashboardTab)), { requireSync: true });
+  private readonly tab = toSignal(inject(ActivatedRoute).data.pipe(map((data) => data['tab'] as DashboardTab)), {
+    requireSync: true,
+  });
 
   protected readonly period = injectDashboardPeriod();
   protected readonly layout = computed(() => DashboardLayouts[this.tab()]);

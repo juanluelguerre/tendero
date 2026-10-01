@@ -35,7 +35,8 @@ describe('the cart store', () => {
     const adding = store.add('SKU-1', 2);
     http.expectOne('http://api/api/cart/lines?culture=es').flush(answer, { headers: { 'X-Cart-Token': token } });
     await new Promise((settled) => setTimeout(settled));
-    if (answer.lines.length) http.expectOne('http://api/api/pricing/quote?culture=es').flush({ currency: 'EUR', lines: [] });
+    if (answer.lines.length)
+      http.expectOne('http://api/api/pricing/quote?culture=es').flush({ currency: 'EUR', lines: [] });
     await adding;
   }
 
@@ -43,7 +44,12 @@ describe('the cart store', () => {
     const store = TestBed.inject(CartStore);
     await added(store, cart([{ sku: 'SKU-1', quantity: 2 }]));
 
-    expect([store.token(), localStorage.getItem('tendero.cart'), store.itemCount(), store.quote()?.currency]).toEqual(['T-1', 'T-1', 2, 'EUR']);
+    expect([store.token(), localStorage.getItem('tendero.cart'), store.itemCount(), store.quote()?.currency]).toEqual([
+      'T-1',
+      'T-1',
+      2,
+      'EUR',
+    ]);
   });
 
   /** The quote endpoint refuses a basket with no lines, and asking anyway would paint an error over it. */
@@ -57,7 +63,9 @@ describe('the cart store', () => {
   it('keeps the server’s refusal to say beside the button, rather than throwing it', async () => {
     const store = TestBed.inject(CartStore);
     const adding = store.add('SKU-1');
-    http.expectOne('http://api/api/cart/lines?culture=es').flush('Out of stock', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne('http://api/api/cart/lines?culture=es')
+      .flush('Out of stock', { status: 409, statusText: 'Conflict' });
     await adding;
 
     expect([store.failed(), store.busy()]).toEqual(['Out of stock', false]);
@@ -68,7 +76,12 @@ describe('the cart store', () => {
     await added(store, cart([{ sku: 'SKU-1', quantity: 1 }]));
     store.clear();
 
-    expect([store.token(), localStorage.getItem('tendero.cart'), store.cart(), store.quote()]).toEqual([null, null, null, null]);
+    expect([store.token(), localStorage.getItem('tendero.cart'), store.cart(), store.quote()]).toEqual([
+      null,
+      null,
+      null,
+      null,
+    ]);
   });
 
   it('starts from the token this browser kept', () => {

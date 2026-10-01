@@ -7,6 +7,10 @@
 }
 
 @keyframes awning-slide {
-  from { background-position: 0 0; }
-  to   { background-position: 28px 0; }
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 28px 0;
+  }
 }

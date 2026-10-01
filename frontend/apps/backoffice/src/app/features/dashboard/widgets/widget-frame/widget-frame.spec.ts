@@ -18,14 +18,18 @@ import { WidgetFrame } from './widget-frame';
       failedText="The figures could not be loaded"
     >
       <span frame-aside class="aside">this week</span>
-      <ng-template><p class="figure">{{ figures.value() }}</p></ng-template>
+      <ng-template
+        ><p class="figure">{{ figures.value() }}</p></ng-template
+      >
     </backoffice-widget-frame>
   `,
 })
 class AWidget {
   /** The server's answer, given by the test when it chooses. */
   answer!: { resolve: (value: number) => void; reject: (error: Error) => void };
-  readonly figures = resource({ loader: () => new Promise<number>((resolve, reject) => (this.answer = { resolve, reject })) });
+  readonly figures = resource({
+    loader: () => new Promise<number>((resolve, reject) => (this.answer = { resolve, reject })),
+  });
 }
 
 async function render() {
@@ -59,14 +63,20 @@ describe('the frame a widget sits in', () => {
   it('says it is loading until the read first holds a value', async () => {
     const { element } = await render();
 
-    expect([element.querySelector('[role="status"]')?.textContent?.trim(), element.querySelector('.figure')]).toEqual(['Loading the figures', null]);
+    expect([element.querySelector('[role="status"]')?.textContent?.trim(), element.querySelector('.figure')]).toEqual([
+      'Loading the figures',
+      null,
+    ]);
   });
 
   it('shows the figures once they arrive', async () => {
     const { fixture, element } = await render();
     await answered(fixture, (answer) => answer.resolve(42));
 
-    expect([element.querySelector('[role="status"]'), element.querySelector('.figure')?.textContent]).toEqual([null, '42']);
+    expect([element.querySelector('[role="status"]'), element.querySelector('.figure')?.textContent]).toEqual([
+      null,
+      '42',
+    ]);
   });
 
   /** A failed resource throws when its value is read: the figures' template must not even be created. */

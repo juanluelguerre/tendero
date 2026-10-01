@@ -33,7 +33,15 @@ describe('the by-category store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, ByCategoryStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        ByCategoryStore,
+      ],
     });
     TestBed.inject(CultureStore).use('en');
     http = TestBed.inject(HttpTestingController);
@@ -43,11 +51,14 @@ describe('the by-category store', () => {
     const store = TestBed.inject(ByCategoryStore);
     TestBed.runInInjectionContext(() => store.followPeriod(signal<DashboardPeriod>('Week')));
     TestBed.tick();
-    for (const request of http.match((req) => req.url.includes('/i18n/'))) request.flush({ dashboard: { byCategory: { others: 'Others', uncategorised: 'No category' } } });
+    for (const request of http.match((req) => req.url.includes('/i18n/')))
+      request.flush({ dashboard: { byCategory: { others: 'Others', uncategorised: 'No category' } } });
     http.expectOne('http://api/api/dashboard/mix?period=Week').flush(MIX);
-    http.expectOne((req) => req.url === 'http://api/api/catalog/categories').flush({
-      items: [{ code: 'COOKWARE', parent: null, name: 'Cookware', path: [], depth: 0 }],
-    });
+    http
+      .expectOne((req) => req.url === 'http://api/api/catalog/categories')
+      .flush({
+        items: [{ code: 'COOKWARE', parent: null, name: 'Cookware', path: [], depth: 0 }],
+      });
     await TestBed.inject(ApplicationRef).whenStable();
 
     expect(store.rows().map((row) => [row.label, row.revenue])).toEqual([

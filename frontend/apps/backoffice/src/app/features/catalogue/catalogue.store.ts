@@ -52,7 +52,9 @@ export const CatalogueStore = signalStore(
       _translate: inject(TranslocoService),
       _labels: translateObjectSignal('catalogue.filter'),
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
-      _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), { initialValue: store.text() }),
+      _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), {
+        initialValue: store.text(),
+      }),
     };
   }),
   withComputed((store) => ({
@@ -62,9 +64,20 @@ export const CatalogueStore = signalStore(
   })),
   withProps((store) => {
     const list = rxResource({
-      params: () => ({ status: store.statusKey(), page: store.page(), culture: store._culture.active(), text: store._query() }),
+      params: () => ({
+        status: store.statusKey(),
+        page: store.page(),
+        culture: store._culture.active(),
+        text: store._query(),
+      }),
       stream: ({ params }) =>
-        store._catalog.list(params.status === 'all' ? null : (params.status as ProductStatus), params.culture, params.page, PageSize, params.text),
+        store._catalog.list(
+          params.status === 'all' ? null : (params.status as ProductStatus),
+          params.culture,
+          params.page,
+          PageSize,
+          params.text,
+        ),
     });
     return {
       _list: list,
@@ -85,7 +98,9 @@ export const CatalogueStore = signalStore(
     return {
       total,
       _pages: computed(() => Math.max(1, Math.ceil(total() / PageSize))),
-      filters: computed<FilterOption[]>(() => statusChips(Statuses, store._labels() as Record<string, string>, store._counts())),
+      filters: computed<FilterOption[]>(() =>
+        statusChips(Statuses, store._labels() as Record<string, string>, store._counts()),
+      ),
       selected: computed(() => store.products().find((item) => item.code === store.selectedCode()) ?? null),
     };
   }),
@@ -94,13 +109,20 @@ export const CatalogueStore = signalStore(
       void store._router.navigate([], { queryParams, queryParamsHandling: 'merge' });
 
     /** One change: busy while it goes, the row's status from the server's answer. */
-    const change = (item: ProductSummary, request: Observable<{ status: ProductStatus }>, fallback: ProductStatus, done?: () => void) => {
+    const change = (
+      item: ProductSummary,
+      request: Observable<{ status: ProductStatus }>,
+      fallback: ProductStatus,
+      done?: () => void,
+    ) => {
       patchState(store, { busy: item.productId, refusal: null });
       request.subscribe({
         next: (answer) => {
           patchState(store, { busy: null });
           const status = answer.status ?? fallback;
-          store.products.update((items) => items.map((row) => (row.productId === item.productId ? { ...row, status } : row)));
+          store.products.update((items) =>
+            items.map((row) => (row.productId === item.productId ? { ...row, status } : row)),
+          );
           done?.();
         },
         error: (failure: unknown) => {
@@ -112,7 +134,11 @@ export const CatalogueStore = signalStore(
     };
 
     const publish = (item: ProductSummary) =>
-      change(item, store._catalog.publish(item.productId).pipe(store._usage.reported('catalogue', 'publish', 'pane')), 'Active');
+      change(
+        item,
+        store._catalog.publish(item.productId).pipe(store._usage.reported('catalogue', 'publish', 'pane')),
+        'Active',
+      );
 
     return {
       search(text: string): void {
@@ -134,8 +160,14 @@ export const CatalogueStore = signalStore(
       publish,
       /** Withdrawing offers Undo, which is publishing it again — on the server, audited like any other. */
       withdraw(item: ProductSummary): void {
-        change(item, store._catalog.withdraw(item.productId).pipe(store._usage.reported('catalogue', 'withdraw', 'pane')), 'Draft', () =>
-          store._undo.offerTo(store._translate.translate('catalogue.withdrawn', { name: item.name }), () => publish({ ...item, status: 'Draft' })),
+        change(
+          item,
+          store._catalog.withdraw(item.productId).pipe(store._usage.reported('catalogue', 'withdraw', 'pane')),
+          'Draft',
+          () =>
+            store._undo.offerTo(store._translate.translate('catalogue.withdrawn', { name: item.name }), () =>
+              publish({ ...item, status: 'Draft' }),
+            ),
         );
       },
       importSeed(): void {

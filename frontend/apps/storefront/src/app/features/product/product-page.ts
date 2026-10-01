@@ -126,7 +126,10 @@ export class ProductPage {
 
     const navigation = this.router.lastSuccessfulNavigation();
     const previous = navigation?.previousNavigation?.finalUrl;
-    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedVia(navigation), filtered: cameFiltered(previous) });
+    this.telemetry.trackEvent('product_viewed', {
+      arrived_from: arrivedVia(navigation),
+      filtered: cameFiltered(previous),
+    });
 
     // *Sigue donde lo dejaste* (R-8): once per product, as the event is. The
     // trail decides where it is kept, and whether it is kept at all.
@@ -167,9 +170,14 @@ export class ProductPage {
       culture: alternate.culture,
       path: this.links.productIn(alternate.culture, alternate.slug, product.code),
     }));
-    const fallback = product.alternates.find((alternate) => alternate.culture === DEFAULT_CULTURE) ?? product.alternates[0];
+    const fallback =
+      product.alternates.find((alternate) => alternate.culture === DEFAULT_CULTURE) ?? product.alternates[0];
 
-    this.seo.set(canonical, alternates, fallback ? this.links.productIn(DEFAULT_CULTURE, fallback.slug, product.code) : canonical);
+    this.seo.set(
+      canonical,
+      alternates,
+      fallback ? this.links.productIn(DEFAULT_CULTURE, fallback.slug, product.code) : canonical,
+    );
   }
 
   /**

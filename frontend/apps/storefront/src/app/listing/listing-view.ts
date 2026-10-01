@@ -14,7 +14,11 @@ import { isChosen, toggleOption, withPrice, type ListingFilters } from './listin
 const SwitchKinds: readonly SearchFacet['kind'][] = ['Offer', 'New', 'InStock'];
 
 export type FacetSection =
-  | { readonly kind: 'category' | 'brand' | 'price' | 'swatches' | 'sizes' | 'checks' | 'flag'; readonly id: string; readonly facet: SearchFacet }
+  | {
+      readonly kind: 'category' | 'brand' | 'price' | 'swatches' | 'sizes' | 'checks' | 'flag';
+      readonly id: string;
+      readonly facet: SearchFacet;
+    }
   | { readonly kind: 'switches'; readonly id: string; readonly facets: readonly SearchFacet[] };
 
 /**
@@ -51,7 +55,11 @@ export function sectionsOf(facets: readonly SearchFacet[]): FacetSection[] {
       case 'Axis':
       case 'Attribute':
         sections.push({
-          kind: facet.options.some((option) => safeSwatch(option.swatch)) ? 'swatches' : facet.kind === 'Axis' ? 'sizes' : 'checks',
+          kind: facet.options.some((option) => safeSwatch(option.swatch))
+            ? 'swatches'
+            : facet.kind === 'Axis'
+              ? 'sizes'
+              : 'checks',
           id,
           facet,
         });
@@ -208,9 +216,7 @@ export function keepShape(previous: readonly SearchFacet[], next: readonly Searc
     if (!old || facet.kind === 'Price' || SwitchKinds.includes(facet.kind) || facet.kind === 'Flag') return facet;
 
     const fresh = new Map(facet.options.map((option) => [option.value, option]));
-    const kept = old.options.map(
-      (option) => fresh.get(option.value) ?? { ...option, count: 0, chosen: false },
-    );
+    const kept = old.options.map((option) => fresh.get(option.value) ?? { ...option, count: 0, chosen: false });
     const added = facet.options.filter((option) => !old.options.some((item) => item.value === option.value));
     return { ...facet, options: [...kept, ...added] };
   });
@@ -278,14 +284,17 @@ export interface ChipWords extends PriceWords {
  */
 export function chipsOf(filters: ListingFilters, facets: readonly SearchFacet[], words: ChipWords): Chip[] {
   const labelOf = (kind: SearchFacet['kind'], value: string) =>
-    facets.find((facet) => facet.kind === kind && facet.options.some((option) => option.value === value))
+    facets
+      .find((facet) => facet.kind === kind && facet.options.some((option) => option.value === value))
       ?.options.find((option) => option.value === value)?.label;
 
   const switchLabel = (kind: SearchFacet['kind'], fallback: string) =>
     facets.find((facet) => facet.kind === kind)?.label ?? fallback;
 
   const chips: Chip[] = [
-    ...(filters.campaign ? [{ id: 'campaign', label: words.campaign(filters.campaign), without: { ...filters, campaign: null } }] : []),
+    ...(filters.campaign
+      ? [{ id: 'campaign', label: words.campaign(filters.campaign), without: { ...filters, campaign: null } }]
+      : []),
     ...filters.within.map((code) => ({
       id: `within:${code}`,
       label: labelOf('Category', code) ?? code,
@@ -306,9 +315,24 @@ export function chipsOf(filters: ListingFilters, facets: readonly SearchFacet[],
     });
   }
 
-  if (filters.onOffer) chips.push({ id: 'offer', label: switchLabel('Offer', words.onOffer), without: toggleOption(filters, 'Offer', 'true') });
-  if (filters.newArrivals) chips.push({ id: 'new', label: switchLabel('New', words.newArrivals), without: toggleOption(filters, 'New', 'true') });
-  if (filters.inStock) chips.push({ id: 'stock', label: switchLabel('InStock', words.inStock), without: toggleOption(filters, 'InStock', 'true') });
+  if (filters.onOffer)
+    chips.push({
+      id: 'offer',
+      label: switchLabel('Offer', words.onOffer),
+      without: toggleOption(filters, 'Offer', 'true'),
+    });
+  if (filters.newArrivals)
+    chips.push({
+      id: 'new',
+      label: switchLabel('New', words.newArrivals),
+      without: toggleOption(filters, 'New', 'true'),
+    });
+  if (filters.inStock)
+    chips.push({
+      id: 'stock',
+      label: switchLabel('InStock', words.inStock),
+      without: toggleOption(filters, 'InStock', 'true'),
+    });
 
   // Axes, attributes and flags in the column's order, then any the facets no longer name.
   const order = facets.flatMap((facet) => facet.options.map((option) => option.value));
@@ -316,7 +340,11 @@ export function chipsOf(filters: ListingFilters, facets: readonly SearchFacet[],
   for (const pair of values) {
     chips.push({
       id: `f:${pair}`,
-      label: labelOf('Axis', pair) ?? labelOf('Attribute', pair) ?? labelOf('Flag', pair) ?? pair.slice(pair.indexOf(':') + 1),
+      label:
+        labelOf('Axis', pair) ??
+        labelOf('Attribute', pair) ??
+        labelOf('Flag', pair) ??
+        pair.slice(pair.indexOf(':') + 1),
       without: toggleOption(filters, 'Attribute', pair),
     });
   }
@@ -331,5 +359,9 @@ function rank(order: readonly string[], value: string): number {
 
 /** Case and accents folded, so "cami" finds "Caminante" and "nordw" finds "Nordwind". */
 function fold(text: string): string {
-  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim();
 }

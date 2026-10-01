@@ -41,11 +41,17 @@ describe('the campaigns store', () => {
   });
 
   it('leads with the first shop-wide campaign and finds any by its code, in any case', () => {
-    answers.push(() => of({ items: [campaign('KITCHEN_WEEK', { scope: 'Category', categoryCode: 'KITCHEN' }), campaign('OTONO')] }));
+    answers.push(() =>
+      of({ items: [campaign('KITCHEN_WEEK', { scope: 'Category', categoryCode: 'KITCHEN' }), campaign('OTONO')] }),
+    );
     const store = TestBed.inject(CampaignsStore);
     TestBed.tick();
 
-    expect([store.leading()?.code, store.named('kitchen_week')?.code, store.named('NONE')]).toEqual(['OTONO', 'KITCHEN_WEEK', null]);
+    expect([store.leading()?.code, store.named('kitchen_week')?.code, store.named('NONE')]).toEqual([
+      'OTONO',
+      'KITCHEN_WEEK',
+      null,
+    ]);
   });
 
   /** A campaign is never worth an error on a page: a failed read is an empty list, and a settled one. */
@@ -58,7 +64,10 @@ describe('the campaigns store', () => {
   });
 
   it('asks again when a clock reaches zero, because the phase has changed', async () => {
-    answers.push(() => of({ items: [campaign('SOON', { phase: 'Upcoming' })] }), () => of({ items: [campaign('SOON')] }));
+    answers.push(
+      () => of({ items: [campaign('SOON', { phase: 'Upcoming' })] }),
+      () => of({ items: [campaign('SOON')] }),
+    );
     const store = TestBed.inject(CampaignsStore);
     TestBed.tick();
     store.refresh();

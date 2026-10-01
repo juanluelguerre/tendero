@@ -8,7 +8,9 @@
     <strong class="text-body">{{ t('title') }}.</strong> {{ t('notice') }}
   </p>
   <div class="flex gap-2">
-    <button type="button" class="button button--small button--quiet" (click)="usage.switchOff()">{{ t('switchOff') }}</button>
+    <button type="button" class="button button--small button--quiet" (click)="usage.switchOff()">
+      {{ t('switchOff') }}
+    </button>
     <button type="button" class="button button--small" (click)="usage.acknowledge()">{{ t('understood') }}</button>
   </div>
 </aside>

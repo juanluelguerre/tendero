@@ -26,7 +26,8 @@ describe('the trail history store', () => {
           provide: ProductSearchService,
           useValue: {
             cards: (_culture: string, which: { codes: string[] }) => (
-              asked.push(which.codes), of({ items: which.codes.map((code) => ({ code }) as SearchHit) })
+              asked.push(which.codes),
+              of({ items: which.codes.map((code) => ({ code }) as SearchHit) })
             ),
           },
         },
@@ -42,7 +43,13 @@ describe('the trail history store', () => {
   });
 
   it('reads the products the trail names as cards, in its order', () => {
-    kept.set({ ...EmptyTrail, views: [{ key: 'B', at: '2026-09-29T10:00:00Z' }, { key: 'A', at: '2026-09-28T10:00:00Z' }] });
+    kept.set({
+      ...EmptyTrail,
+      views: [
+        { key: 'B', at: '2026-09-29T10:00:00Z' },
+        { key: 'A', at: '2026-09-28T10:00:00Z' },
+      ],
+    });
     const store = TestBed.inject(TrailHistoryStore);
     TestBed.tick();
 

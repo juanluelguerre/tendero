@@ -98,7 +98,9 @@
     font: inherit;
     font-weight: 600;
     cursor: pointer;
-    transition: background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+    transition:
+      background var(--dur-fast) var(--ease),
+      transform var(--dur-fast) var(--ease);
   }
 
   .button:hover {
@@ -136,7 +138,11 @@
     border-radius: var(--radius-lg);
   }
 
-  .blank__text { margin: 0; font-size: var(--text-md); font-weight: 600; }
+  .blank__text {
+    margin: 0;
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
 
   /* A link that reads as a link and not as a second button: one clay action per
      view, and the way back is never it. */
@@ -150,10 +156,15 @@
     text-decoration: none;
   }
 
-  .quiet:hover { color: var(--text); text-decoration: underline; }
+  .quiet:hover {
+    color: var(--text);
+    text-decoration: underline;
+  }
 
   @media (pointer: coarse) {
-    .quiet { min-height: 2.75rem; }
+    .quiet {
+      min-height: 2.75rem;
+    }
   }
 
   /* ---------- Fields ---------- */
@@ -193,12 +204,7 @@
      skeleton says "here is what is coming", and it stops the page jumping when it
      arrives. */
   .skeleton {
-    background: linear-gradient(
-      90deg,
-      var(--bg-raised) 0%,
-      var(--bg-page) 50%,
-      var(--bg-raised) 100%
-    );
+    background: linear-gradient(90deg, var(--bg-raised) 0%, var(--bg-page) 50%, var(--bg-raised) 100%);
     background-size: 200% 100%;
     animation: skeleton-sweep 1.2s var(--ease) infinite;
     border-radius: var(--radius-sm);

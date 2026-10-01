@@ -14,7 +14,9 @@
         @for (stage of store.stages(); track stage.stage) {
           <li class="ranking__row">
             <span class="ranking__name">{{ t('stage.' + stage.stage) }}</span>
-            <span class="tag" [class.tag--ok]="stage.state === 'Up'" [class.tag--danger]="stage.state === 'Down'">{{ t('state.' + stage.state) }}</span>
+            <span class="tag" [class.tag--ok]="stage.state === 'Up'" [class.tag--danger]="stage.state === 'Down'">{{
+              t('state.' + stage.state)
+            }}</span>
             <span class="muted numeric">{{ t('since', { at: since(stage.since) }) }}</span>
           </li>
         }

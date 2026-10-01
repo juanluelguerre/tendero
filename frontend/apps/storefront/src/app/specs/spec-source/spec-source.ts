@@ -29,7 +29,6 @@ export class SpecSource {
 
   protected readonly id = `spec-source-${next++}`;
 
-
   /**
    * Support as a whole percentage — the NLI model's measure, not the extractor's
    * say-so — rounded DOWN: 0.996 read "100 %" in the first live run, which is a

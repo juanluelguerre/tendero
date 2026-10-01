@@ -9,9 +9,18 @@
           <dt>{{ t('column.agent') }}</dt>
           <dd><lib-copy-text [value]="agent.agentId" [copyLabel]="t('copyId')" [copiedLabel]="t('copied')" /></dd>
         </div>
-        <div><dt>{{ t('column.operator') }}</dt><dd>{{ agent.operator }}</dd></div>
-        <div><dt>{{ t('column.trust') }}</dt><dd>{{ t('trust.' + agent.trust) }}</dd></div>
-        <div><dt>{{ t('column.registered') }}</dt><dd class="numeric">{{ when(agent.registeredAt) }}</dd></div>
+        <div>
+          <dt>{{ t('column.operator') }}</dt>
+          <dd>{{ agent.operator }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('column.trust') }}</dt>
+          <dd>{{ t('trust.' + agent.trust) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('column.registered') }}</dt>
+          <dd class="numeric">{{ when(agent.registeredAt) }}</dd>
+        </div>
         <div>
           <dt>{{ t('column.status') }}</dt>
           <dd>
@@ -24,9 +33,23 @@
       </dl>
 
       @if (agent.status === 'Suspended') {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="store.busy() === agent.agentId" (click)="store.reinstate(agent, 'pane')">{{ t('reinstate') }}</button>
+        <button
+          type="button"
+          class="button button--quiet pane-primary"
+          [disabled]="store.busy() === agent.agentId"
+          (click)="store.reinstate(agent, 'pane')"
+        >
+          {{ t('reinstate') }}
+        </button>
       } @else {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="store.busy() === agent.agentId" (click)="store.askToSuspend(agent, 'pane')">{{ t('suspend') }}</button>
+        <button
+          type="button"
+          class="button button--quiet pane-primary"
+          [disabled]="store.busy() === agent.agentId"
+          (click)="store.askToSuspend(agent, 'pane')"
+        >
+          {{ t('suspend') }}
+        </button>
         <p class="muted">{{ t('suspendHint') }}</p>
       }
     </backoffice-worklist-pane>

@@ -47,7 +47,10 @@ describe('the home page', () => {
         provideTenderoI18n(),
         provideRouter([]),
         { provide: API_BASE_URL, useValue: 'http://api' },
-        { provide: Telemetry, useValue: { trackEvent: (n: string, a: unknown) => events.push([n, a]) } as unknown as Telemetry },
+        {
+          provide: Telemetry,
+          useValue: { trackEvent: (n: string, a: unknown) => events.push([n, a]) } as unknown as Telemetry,
+        },
         {
           provide: CampaignsStore,
           useValue: { leading: () => campaigns[0] ?? null, all: () => campaigns, refresh: () => undefined },
@@ -60,13 +63,21 @@ describe('the home page', () => {
         {
           provide: TaxonomyStore,
           useValue: {
-            categories: () => (failing.has('departments') ? [] : [{ code: 'HOME', parent: null, name: 'Hogar', path: ['Hogar'], depth: 0 }]),
+            categories: () =>
+              failing.has('departments')
+                ? []
+                : [{ code: 'HOME', parent: null, name: 'Hogar', path: ['Hogar'], depth: 0 }],
           },
         },
         {
           provide: ShopFrontService,
           useValue: {
-            offers: () => answer('rules', { items: [{ code: 'SHIP0', name: 'Envío gratis desde 50 €', kind: 'free-shipping', amount: null, until: null }] }),
+            offers: () =>
+              answer('rules', {
+                items: [
+                  { code: 'SHIP0', name: 'Envío gratis desde 50 €', kind: 'free-shipping', amount: null, until: null },
+                ],
+              }),
           } as unknown as ShopFrontService,
         },
         {
@@ -80,7 +91,10 @@ describe('the home page', () => {
           provide: ProductSearchService,
           useValue: {
             browse: (options: { onOffer?: boolean; campaign?: string }) =>
-              answer(options.onOffer ? 'offers' : options.campaign ? 'campaignProducts' : 'newest', page([hit('a'), hit('b')])),
+              answer(
+                options.onOffer ? 'offers' : options.campaign ? 'campaignProducts' : 'newest',
+                page([hit('a'), hit('b')]),
+              ),
             cards: () => of({ items: [hit('a'), hit('b')] }),
             similar: () => of({ items: [], rankedBy: 'Rule' }),
           } as unknown as ProductSearchService,
@@ -149,7 +163,9 @@ describe('the home page', () => {
     // With Ctrl held the router leaves the page alone (a new tab's gesture), and the
     // browser's own default is cancelled at the document: the click still counts.
     element.ownerDocument.addEventListener('click', (click) => click.preventDefault(), { once: true });
-    element.querySelector('[storefrontHomeModule="departments"] a')?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+    element
+      .querySelector('[storefrontHomeModule="departments"] a')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
 
     // Campaign 1, agent 2, offers 3, trending 4, best sellers 5, new 6, departments 7.
     expect(events).toContainEqual(['home_module_opened', { module: 'departments', position: 7 }]);
@@ -171,7 +187,13 @@ const TRANSLATIONS = {
 };
 
 function ranked(): RankedProducts {
-  return { days: 7, items: [{ rank: 1, productId: 'a' }, { rank: 2, productId: 'b' }] };
+  return {
+    days: 7,
+    items: [
+      { rank: 1, productId: 'a' },
+      { rank: 2, productId: 'b' },
+    ],
+  };
 }
 
 function campaign(): CampaignView {

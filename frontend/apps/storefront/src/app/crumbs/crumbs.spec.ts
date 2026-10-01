@@ -26,7 +26,9 @@ describe('the crumbs', () => {
     return fixture;
   }
   const items = (fixture: ReturnType<typeof render>) =>
-    [...(fixture.nativeElement as HTMLElement).querySelectorAll('nav[aria-label="Breadcrumb"] li')].map((li) => li.textContent?.trim());
+    [...(fixture.nativeElement as HTMLElement).querySelectorAll('nav[aria-label="Breadcrumb"] li')].map((li) =>
+      li.textContent?.trim(),
+    );
 
   it('lists the branch, root first, with a separator between steps and none before the first', () => {
     expect(items(render())).toEqual(['Hogar', '›Cocina', '›Menaje']);

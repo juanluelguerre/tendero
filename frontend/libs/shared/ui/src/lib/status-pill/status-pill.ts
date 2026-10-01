@@ -11,25 +11,35 @@ export type StatusTone = 'muted' | 'warn' | 'neutral' | 'good' | 'bad';
  */
 export function orderStatusTone(status: OrderStatus): StatusTone {
   switch (status) {
-    case 'Pending': return 'muted';
+    case 'Pending':
+      return 'muted';
     case 'PaymentAuthorized':
-    case 'Confirmed': return 'warn';
-    case 'Shipped': return 'neutral';
-    case 'Delivered': return 'good';
+    case 'Confirmed':
+      return 'warn';
+    case 'Shipped':
+      return 'neutral';
+    case 'Delivered':
+      return 'good';
     case 'PaymentFailed':
-    case 'Cancelled': return 'bad';
+    case 'Cancelled':
+      return 'bad';
   }
 }
 
 /** A return's status as a tone: received is on its way to a refund, and neutral like a shipment. */
 export function returnStatusTone(status: ReturnStatus): StatusTone {
   switch (status) {
-    case 'Requested': return 'muted';
-    case 'Approved': return 'warn';
-    case 'Received': return 'neutral';
-    case 'Refunded': return 'good';
+    case 'Requested':
+      return 'muted';
+    case 'Approved':
+      return 'warn';
+    case 'Received':
+      return 'neutral';
+    case 'Refunded':
+      return 'good';
     case 'Rejected':
-    case 'Cancelled': return 'bad';
+    case 'Cancelled':
+      return 'bad';
   }
 }
 

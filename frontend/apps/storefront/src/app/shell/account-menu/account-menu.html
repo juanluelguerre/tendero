@@ -7,11 +7,21 @@
     [attr.aria-label]="t('accountMenu.open', { name: who?.name ?? t('accountMenu.guest') })"
   >
     @if (who) {
-      <span class="inline-grid size-[2rem] place-items-center rounded-full bg-accent-tint text-2xs font-semibold text-body" aria-hidden="true">{{ initials() }}</span>
+      <span
+        class="inline-grid size-[2rem] place-items-center rounded-full bg-accent-tint text-2xs font-semibold text-body"
+        aria-hidden="true"
+        >{{ initials() }}</span
+      >
     } @else {
       <svg class="size-[22px]" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <circle cx="12" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6" />
-        <path d="M4.5 20a7.5 7.5 0 0 1 15 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        <path
+          d="M4.5 20a7.5 7.5 0 0 1 15 0"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+        />
       </svg>
     }
   </button>

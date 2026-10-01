@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, type ElementRef, input, output, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  type ElementRef,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 
 let dialogs = 0;
 

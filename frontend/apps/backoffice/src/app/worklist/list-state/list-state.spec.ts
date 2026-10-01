@@ -16,7 +16,13 @@ import { ListState } from './list-state';
       failedText="The orders could not be loaded"
       emptyText="No orders yet"
     >
-      <table><tbody><tr><td>A-1</td></tr></tbody></table>
+      <table>
+        <tbody>
+          <tr>
+            <td>A-1</td>
+          </tr>
+        </tbody>
+      </table>
       <a empty-action href="/catalogue">See the catalogue</a>
     </backoffice-list-state>
   `,
@@ -39,13 +45,21 @@ describe('the states of a list', () => {
   it('says it is loading in a region that stays, and shows the shape of rows', async () => {
     const { fixture, element, status } = await render();
     const region = status();
-    const whileLoading = [region?.textContent?.trim(), !!element.querySelector('.skeleton-list'), !!element.querySelector('table')];
+    const whileLoading = [
+      region?.textContent?.trim(),
+      !!element.querySelector('.skeleton-list'),
+      !!element.querySelector('table'),
+    ];
 
     fixture.componentInstance.loading.set(false);
     await fixture.whenStable();
 
     // The same element, emptied: a live region is announced when its words change, not when it arrives.
-    expect([whileLoading, status() === region, region?.textContent?.trim()]).toEqual([['Loading orders', true, false], true, '']);
+    expect([whileLoading, status() === region, region?.textContent?.trim()]).toEqual([
+      ['Loading orders', true, false],
+      true,
+      '',
+    ]);
   });
 
   it('shows the rows once loaded, and none of the states', async () => {
@@ -53,7 +67,10 @@ describe('the states of a list', () => {
     fixture.componentInstance.loading.set(false);
     await fixture.whenStable();
 
-    expect([element.querySelector('td')?.textContent, element.querySelector('.skeleton-list, [role="alert"], .empty')]).toEqual(['A-1', null]);
+    expect([
+      element.querySelector('td')?.textContent,
+      element.querySelector('.skeleton-list, [role="alert"], .empty'),
+    ]).toEqual(['A-1', null]);
   });
 
   it('alerts a failure, in place of the rows', async () => {
@@ -62,7 +79,10 @@ describe('the states of a list', () => {
     fixture.componentInstance.failed.set(true);
     await fixture.whenStable();
 
-    expect([element.querySelector('[role="alert"]')?.textContent?.trim(), element.querySelector('table')]).toEqual(['The orders could not be loaded', null]);
+    expect([element.querySelector('[role="alert"]')?.textContent?.trim(), element.querySelector('table')]).toEqual([
+      'The orders could not be loaded',
+      null,
+    ]);
   });
 
   it('says there is nothing, with the screen’s way elsewhere', async () => {
@@ -72,10 +92,10 @@ describe('the states of a list', () => {
     await fixture.whenStable();
 
     const empty = element.querySelector('.empty');
-    expect([empty?.querySelector('.empty__text')?.textContent, empty?.querySelector('a')?.textContent, element.querySelector('table')]).toEqual([
-      'No orders yet',
-      'See the catalogue',
-      null,
-    ]);
+    expect([
+      empty?.querySelector('.empty__text')?.textContent,
+      empty?.querySelector('a')?.textContent,
+      element.querySelector('table'),
+    ]).toEqual(['No orders yet', 'See the catalogue', null]);
   });
 });

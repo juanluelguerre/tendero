@@ -28,7 +28,7 @@
         >
           <strong>{{ t('order.stop.' + order.stopCode) }}</strong>
           @if (order.stopDetail) {
-            <span class="text-muted numeric">{{ order.stopDetail }}</span>
+            <span class="numeric text-muted">{{ order.stopDetail }}</span>
           }
         </p>
       }
@@ -46,10 +46,12 @@
                   @if (line.variantLabel) {
                     <span class="text-sm text-muted">{{ line.variantLabel }}</span>
                   }
-                  <span class="text-xs text-muted numeric">{{ line.sku }}</span>
+                  <span class="numeric text-xs text-muted">{{ line.sku }}</span>
                 </span>
-                <span class="text-muted numeric">×{{ line.quantity }}</span>
-                <span class="min-w-[5rem] text-end font-semibold numeric">{{ money(line.unitPrice * line.quantity) }}</span>
+                <span class="numeric text-muted">×{{ line.quantity }}</span>
+                <span class="min-w-[5rem] text-end numeric font-semibold">{{
+                  money(line.unitPrice * line.quantity)
+                }}</span>
               </li>
             }
           </ul>
@@ -69,7 +71,9 @@
             }
 
             @if (store.returnMessage(); as message) {
-              <lib-notice class="mb-4" [tone]="store.returnOpened() ? 'good' : 'bad'" live="polite">{{ message }}</lib-notice>
+              <lib-notice class="mb-4" [tone]="store.returnOpened() ? 'good' : 'bad'" live="polite">{{
+                message
+              }}</lib-notice>
             }
 
             <!-- Each line unfolds its own quantity and reason when it is picked.
@@ -83,60 +87,58 @@
             @if (store.returnableLines().length === 0) {
               <p class="-mt-2 mb-4 text-sm text-muted">{{ t('order.nothingLeftToReturn') }}</p>
             } @else {
-            <ul class="grid gap-3">
-              @for (line of store.returnableLines(); track line.sku) {
-                <li class="rounded-md border border-hairline p-3">
-                  <label class="returnable__pick flex cursor-pointer items-center gap-3 font-medium">
-                    <input
-                      type="checkbox"
-                      [checked]="store.picked().has(line.sku)"
-                      (change)="store.toggle(line)"
-                    />
-                    <span>{{ line.productName }}</span>
-                  </label>
+              <ul class="grid gap-3">
+                @for (line of store.returnableLines(); track line.sku) {
+                  <li class="rounded-md border border-hairline p-3">
+                    <label class="returnable__pick flex cursor-pointer items-center gap-3 font-medium">
+                      <input type="checkbox" [checked]="store.picked().has(line.sku)" (change)="store.toggle(line)" />
+                      <span>{{ line.productName }}</span>
+                    </label>
 
-                  @if (store.picked().has(line.sku)) {
-                    <div class="returnable__detail mt-3 flex flex-wrap gap-3 border-t border-dashed border-hairline pt-3">
-                      <label class="grid gap-2">
-                        <span class="text-xs text-muted">{{ t('order.returnQuantity') }}</span>
-                        <input
-                          class="field w-[5rem] numeric"
-                          type="number"
-                          min="1"
-                          [max]="line.left"
-                          [ngModel]="store.quantityOf(line.sku)"
-                          (ngModelChange)="store.setQuantity(line.sku, $event)"
-                          [name]="'quantity-' + line.sku"
-                        />
-                      </label>
+                    @if (store.picked().has(line.sku)) {
+                      <div
+                        class="returnable__detail mt-3 flex flex-wrap gap-3 border-t border-dashed border-hairline pt-3"
+                      >
+                        <label class="grid gap-2">
+                          <span class="text-xs text-muted">{{ t('order.returnQuantity') }}</span>
+                          <input
+                            class="field w-[5rem] numeric"
+                            type="number"
+                            min="1"
+                            [max]="line.left"
+                            [ngModel]="store.quantityOf(line.sku)"
+                            (ngModelChange)="store.setQuantity(line.sku, $event)"
+                            [name]="'quantity-' + line.sku"
+                          />
+                        </label>
 
-                      <label class="grid min-w-[12rem] flex-1 gap-2">
-                        <span class="text-xs text-muted">{{ t('order.returnReason') }}</span>
-                        <select
-                          class="field select"
-                          [ngModel]="store.reasonOf(line.sku)"
-                          (ngModelChange)="store.setReason(line.sku, $event)"
-                          [name]="'reason-' + line.sku"
-                        >
-                          @for (reason of reasons; track reason) {
-                            <option [value]="reason">{{ t('order.reason.' + reason) }}</option>
-                          }
-                        </select>
-                      </label>
-                    </div>
-                  }
-                </li>
-              }
-            </ul>
+                        <label class="grid min-w-[12rem] flex-1 gap-2">
+                          <span class="text-xs text-muted">{{ t('order.returnReason') }}</span>
+                          <select
+                            class="field select"
+                            [ngModel]="store.reasonOf(line.sku)"
+                            (ngModelChange)="store.setReason(line.sku, $event)"
+                            [name]="'reason-' + line.sku"
+                          >
+                            @for (reason of reasons; track reason) {
+                              <option [value]="reason">{{ t('order.reason.' + reason) }}</option>
+                            }
+                          </select>
+                        </label>
+                      </div>
+                    }
+                  </li>
+                }
+              </ul>
 
-            <button
-              class="button"
-              type="button"
-              [disabled]="store.picked().size === 0 || store.sending()"
-              (click)="store.requestReturn()"
-            >
-              {{ t('order.returnSubmit') }}
-            </button>
+              <button
+                class="button"
+                type="button"
+                [disabled]="store.picked().size === 0 || store.sending()"
+                (click)="store.requestReturn()"
+              >
+                {{ t('order.returnSubmit') }}
+              </button>
             }
           </section>
         } @else if (order.status !== 'Cancelled') {
@@ -149,15 +151,15 @@
             <ul class="grid gap-3">
               @for (request of store.returns(); track request.returnId) {
                 <li class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 text-sm">
-                  <span class="text-xs text-muted numeric">#{{ request.number }}</span>
+                  <span class="numeric text-xs text-muted">#{{ request.number }}</span>
                   <lib-status-pill [tone]="returnTone(request.status)" size="md">
                     {{ t('order.returnStatus.' + request.status) }}
                   </lib-status-pill>
-                  <span class="text-xs text-muted numeric">
+                  <span class="numeric text-xs text-muted">
                     {{ describe(request) }}
                   </span>
                   @if (request.refundAmount) {
-                    <span class="font-semibold text-positive numeric">{{ money(request.refundAmount) }}</span>
+                    <span class="numeric font-semibold text-positive">{{ money(request.refundAmount) }}</span>
                   }
                   @if (request.resolution) {
                     <p class="col-span-full text-xs text-muted">{{ request.resolution }}</p>
@@ -184,7 +186,7 @@
         />
 
         <div class="border-t border-hairline pt-3">
-          <p class="mb-1 eyebrow">{{ t('order.shippingTo') }}</p>
+          <p class="eyebrow mb-1">{{ t('order.shippingTo') }}</p>
           <p class="text-sm">{{ order.shippingAddress }}</p>
         </div>
 

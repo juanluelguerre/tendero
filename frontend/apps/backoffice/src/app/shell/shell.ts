@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, Injector, untracked, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  Injector,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
@@ -29,7 +38,18 @@ import { WaitingStore } from './waiting.store';
  */
 @Component({
   selector: 'backoffice-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon, CultureSwitch, UndoToast, Palette],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    TranslocoDirective,
+    StaffNotice,
+    Nav,
+    AccountMenu,
+    Icon,
+    CultureSwitch,
+    UndoToast,
+    Palette,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
@@ -67,7 +87,10 @@ export class Shell {
 
     // R-0's measurement: every screen the shopkeeper opens, by its route (ADR 0041).
     this.router.events
-      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed())
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
       .subscribe((event) => {
         if (!this.canUseBackoffice()) return;
         this.usage.opened(event.urlAfterRedirects);
@@ -136,5 +159,8 @@ export class Shell {
 
 /** Whether a key press is somebody writing: then a / is a character, not a command. */
 function isTyping(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+  );
 }

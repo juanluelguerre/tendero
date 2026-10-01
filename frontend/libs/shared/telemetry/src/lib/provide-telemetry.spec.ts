@@ -61,7 +61,14 @@ describe('TelemetryStartup: every way it can fail ends in the no-op', () => {
   });
 
   it('stays on the no-op when the SDK fails to start', async () => {
-    loaders['otel'] = () => Promise.resolve(adapter('otel', { start: () => { throw new Error('no provider'); } }));
+    loaders['otel'] = () =>
+      Promise.resolve(
+        adapter('otel', {
+          start: () => {
+            throw new Error('no provider');
+          },
+        }),
+      );
     expect(await start((request) => request.flush({ adapter: 'otel' }))).toBe('noop');
   });
 });

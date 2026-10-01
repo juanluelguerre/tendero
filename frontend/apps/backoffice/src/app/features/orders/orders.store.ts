@@ -14,7 +14,15 @@ import { keptCounts, statusChips } from '../../worklist/filter-chips/status-chip
 import { OrderActions } from './order-moves';
 
 /** The filter's statuses in the order a working day meets them: what is to ship first. */
-const Statuses = ['Confirmed', 'Pending', 'PaymentAuthorized', 'PaymentFailed', 'Shipped', 'Delivered', 'Cancelled'] as const satisfies readonly OrderStatus[];
+const Statuses = [
+  'Confirmed',
+  'Pending',
+  'PaymentAuthorized',
+  'PaymentFailed',
+  'Shipped',
+  'Delivered',
+  'Cancelled',
+] as const satisfies readonly OrderStatus[];
 
 /** The status the list opens on: the job this screen is for is shipping (R-0, B3). */
 const ToShip: OrderStatus = 'Confirmed';
@@ -56,7 +64,9 @@ export const OrdersStore = signalStore(
       _usage: inject(BackofficeUsage),
       _labels: translateObjectSignal('orders.filter'),
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
-      _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), { initialValue: store.text() }),
+      _query: toSignal(toObservable(store.text).pipe(debounceTime(250), distinctUntilChanged()), {
+        initialValue: store.text(),
+      }),
     };
   }),
   withComputed((store) => ({
@@ -80,7 +90,8 @@ export const OrdersStore = signalStore(
       /** The open order's row, kept while a move takes it out of the filtered list. */
       selected: linkedSignal<OrderSummary | null, OrderSummary | null>({
         source: () => orders().find((order) => order.orderId === store.selectedId()) ?? null,
-        computation: (row, previous) => row ?? (previous?.value?.orderId === store.selectedId() ? previous.value : null),
+        computation: (row, previous) =>
+          row ?? (previous?.value?.orderId === store.selectedId() ? previous.value : null),
       }),
     };
   }),
@@ -90,7 +101,9 @@ export const OrdersStore = signalStore(
     loading: computed(() => store._list.isLoading() && !store._list.hasValue()),
     failed: computed(() => store._list.status() === 'error'),
     /** Every status, always, then *All*: a fixed row that does not move under the pointer (`statusChips`). */
-    filters: computed<FilterOption[]>(() => statusChips(Statuses, store._labels() as Record<string, string>, store._counts())),
+    filters: computed<FilterOption[]>(() =>
+      statusChips(Statuses, store._labels() as Record<string, string>, store._counts()),
+    ),
   })),
   withMethods((store) => {
     const navigate = (queryParams: Record<string, string | number | null>) =>
@@ -125,7 +138,10 @@ export const OrdersStore = signalStore(
               patchState(store, { busy: null });
             },
             error: (error: unknown) => {
-              patchState(store, (state) => ({ busy: null, refusal: { ...state.refusal, [order.orderId]: refusalOf(error) } }));
+              patchState(store, (state) => ({
+                busy: null,
+                refusal: { ...state.refusal, [order.orderId]: refusalOf(error) },
+              }));
             },
           });
       },

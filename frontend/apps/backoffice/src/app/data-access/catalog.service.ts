@@ -42,10 +42,7 @@ export class CatalogService {
    * them, which is what a screen is for.
    */
   describeSkus(skus: readonly string[], culture: string): Observable<SkuDescriptionList> {
-    const params = skus.reduce(
-      (query, sku) => query.append('sku', sku),
-      new HttpParams().set('culture', culture),
-    );
+    const params = skus.reduce((query, sku) => query.append('sku', sku), new HttpParams().set('culture', culture));
 
     return this.http.get<SkuDescriptionList>(`${this.baseUrl}/api/catalog/skus`, { params });
   }
@@ -75,17 +72,8 @@ export class CatalogService {
     return this.http.get<AuditLog>(`${this.baseUrl}/api/audit`, { params });
   }
 
-  list(
-    status: ProductStatus | null,
-    culture: string,
-    page = 1,
-    pageSize = 20,
-    text = '',
-  ): Observable<ProductListPage> {
-    let params = new HttpParams()
-      .set('culture', culture)
-      .set('page', page)
-      .set('pageSize', pageSize);
+  list(status: ProductStatus | null, culture: string, page = 1, pageSize = 20, text = ''): Observable<ProductListPage> {
+    let params = new HttpParams().set('culture', culture).set('page', page).set('pageSize', pageSize);
 
     // No parameter at all rather than an empty one: the API rejects an unknown
     // status, and "" is one.
@@ -97,10 +85,7 @@ export class CatalogService {
   }
 
   publish(productId: string): Observable<PublishProductResponse> {
-    return this.http.post<PublishProductResponse>(
-      `${this.baseUrl}/api/catalog/products/${productId}/publish`,
-      null,
-    );
+    return this.http.post<PublishProductResponse>(`${this.baseUrl}/api/catalog/products/${productId}/publish`, null);
   }
 
   /** Back to the review queue: the inverse of publishing (ADR 0012's addendum). */
@@ -125,14 +110,11 @@ export class CatalogService {
    * sizes", and retiring the combinations that do not exist afterwards costs
    * less than creating them one by one.
    */
-  defineVariants(
-    productId: string,
-    axes: { code: string; options: string[] }[],
-  ): Observable<DefineVariantsResponse> {
-    return this.http.post<DefineVariantsResponse>(
-      `${this.baseUrl}/api/catalog/products/${productId}/variants`,
-      { axes, skuPrefix: null },
-    );
+  defineVariants(productId: string, axes: { code: string; options: string[] }[]): Observable<DefineVariantsResponse> {
+    return this.http.post<DefineVariantsResponse>(`${this.baseUrl}/api/catalog/products/${productId}/variants`, {
+      axes,
+      skuPrefix: null,
+    });
   }
 
   /** The attribute definitions, with their label in every culture. */

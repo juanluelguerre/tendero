@@ -10,7 +10,11 @@
          first looked. -->
     <div class="table-wrap max-w-[44rem]">
       <table class="table">
-        <caption class="sr-only">{{ t('searchEvaluation.culture.' + view().culture) }}</caption>
+        <caption class="sr-only">
+          {{
+            t('searchEvaluation.culture.' + view().culture)
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('searchEvaluation.column.measure') }}</th>
@@ -23,33 +27,52 @@
           <tr>
             <th class="font-semibold whitespace-nowrap" scope="row">{{ t('searchEvaluation.measure.ndcg') }}</th>
             <td class="right">
-              <span class="numeric block font-semibold text-body">{{ score(view().lexical.ndcgAt10) }}</span>
-              <span class="numeric block text-3xs text-muted">{{ t('searchEvaluation.threshold', { value: score(view().lexical.thresholdNdcgAt10) }) }}</span>
+              <span class="block numeric font-semibold text-body">{{ score(view().lexical.ndcgAt10) }}</span>
+              <span class="block numeric text-3xs text-muted">{{
+                t('searchEvaluation.threshold', { value: score(view().lexical.thresholdNdcgAt10) })
+              }}</span>
             </td>
             <td class="right">
-              <span class="numeric block font-semibold text-body">{{ score(view().hybrid.ndcgAt10) }}</span>
-              <span class="numeric block text-3xs text-muted">{{ t('searchEvaluation.threshold', { value: score(view().hybrid.thresholdNdcgAt10) }) }}</span>
+              <span class="block numeric font-semibold text-body">{{ score(view().hybrid.ndcgAt10) }}</span>
+              <span class="block numeric text-3xs text-muted">{{
+                t('searchEvaluation.threshold', { value: score(view().hybrid.thresholdNdcgAt10) })
+              }}</span>
             </td>
-            <ng-container *ngTemplateOutlet="delta; context: { $implicit: view().ndcg.trend, text: difference(view().ndcg.delta) }" />
+            <ng-container
+              *ngTemplateOutlet="delta; context: { $implicit: view().ndcg.trend, text: difference(view().ndcg.delta) }"
+            />
           </tr>
           <tr>
             <th class="font-semibold whitespace-nowrap" scope="row">{{ t('searchEvaluation.measure.recall') }}</th>
             <td class="right">
-              <span class="numeric block font-semibold text-body">{{ score(view().lexical.recallAt50) }}</span>
-              <span class="numeric block text-3xs text-muted">{{ t('searchEvaluation.threshold', { value: score(view().lexical.thresholdRecallAt50) }) }}</span>
+              <span class="block numeric font-semibold text-body">{{ score(view().lexical.recallAt50) }}</span>
+              <span class="block numeric text-3xs text-muted">{{
+                t('searchEvaluation.threshold', { value: score(view().lexical.thresholdRecallAt50) })
+              }}</span>
             </td>
             <td class="right">
-              <span class="numeric block font-semibold text-body">{{ score(view().hybrid.recallAt50) }}</span>
-              <span class="numeric block text-3xs text-muted">{{ t('searchEvaluation.threshold', { value: score(view().hybrid.thresholdRecallAt50) }) }}</span>
+              <span class="block numeric font-semibold text-body">{{ score(view().hybrid.recallAt50) }}</span>
+              <span class="block numeric text-3xs text-muted">{{
+                t('searchEvaluation.threshold', { value: score(view().hybrid.thresholdRecallAt50) })
+              }}</span>
             </td>
-            <ng-container *ngTemplateOutlet="delta; context: { $implicit: view().recall.trend, text: difference(view().recall.delta) }" />
+            <ng-container
+              *ngTemplateOutlet="
+                delta;
+                context: { $implicit: view().recall.trend, text: difference(view().recall.delta) }
+              "
+            />
           </tr>
           <!-- Latency has no colour: slower is a cost, not a regression, and
                the budgets that bound it live in the strategy, not here. -->
           <tr>
             <th class="font-semibold whitespace-nowrap" scope="row">{{ t('searchEvaluation.measure.latency') }}</th>
-            <td class="right numeric">{{ t('searchEvaluation.ms', { value: milliseconds(view().lexical.meanMilliseconds) }) }}</td>
-            <td class="right numeric">{{ t('searchEvaluation.ms', { value: milliseconds(view().hybrid.meanMilliseconds) }) }}</td>
+            <td class="right numeric">
+              {{ t('searchEvaluation.ms', { value: milliseconds(view().lexical.meanMilliseconds) }) }}
+            </td>
+            <td class="right numeric">
+              {{ t('searchEvaluation.ms', { value: milliseconds(view().hybrid.meanMilliseconds) }) }}
+            </td>
             <td></td>
           </tr>
           <tr>
@@ -85,8 +108,16 @@
     <!-- `queries`, `delta` and `delta--*` are hooks: the page's spec reads the
          rows and their trends by them. -->
     <div class="table-wrap">
-      <table class="table queries">
-        <caption class="sr-only">{{ t('searchEvaluation.culture.' + view().culture) }} · {{ t('searchEvaluation.column.query') }}</caption>
+      <table class="queries table">
+        <caption class="sr-only">
+          {{
+            t('searchEvaluation.culture.' + view().culture)
+          }}
+          ·
+          {{
+            t('searchEvaluation.column.query')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('searchEvaluation.column.query') }}</th>
@@ -113,7 +144,7 @@
        readable in monochrome, which is what "colour never alone" asks. -->
   <ng-template #delta let-trend let-text="text">
     <td
-      class="right numeric delta whitespace-nowrap"
+      class="right delta numeric whitespace-nowrap"
       [class.delta--better]="trend === 'better'"
       [class.delta--worse]="trend === 'worse'"
       [class.delta--same]="trend === 'same'"
@@ -121,6 +152,8 @@
       [class.text-danger]="trend === 'worse'"
       [class.font-semibold]="trend === 'worse'"
       [class.text-muted]="trend === 'same'"
-    >{{ text }}</td>
+    >
+      {{ text }}
+    </td>
   </ng-template>
 </ng-container>

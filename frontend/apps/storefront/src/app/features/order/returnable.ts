@@ -15,7 +15,5 @@ export type ReturnableLine = OrderLineView & { left: number };
 export function returnableLines(order: OrderView, returnable: ReturnableLineView[]): ReturnableLine[] {
   const left = new Map(returnable.map((line) => [line.sku, line.quantity]));
 
-  return order.lines
-    .map((line) => ({ ...line, left: left.get(line.sku) ?? 0 }))
-    .filter((line) => line.left > 0);
+  return order.lines.map((line) => ({ ...line, left: left.get(line.sku) ?? 0 })).filter((line) => line.left > 0);
 }

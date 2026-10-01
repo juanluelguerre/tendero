@@ -29,13 +29,20 @@ describe('the account store', () => {
         AccountStore,
         {
           provide: AuthStore,
-          useValue: { isSignedIn: () => signedIn, signIn: () => calls.push('signIn'), signOut: () => calls.push('signOut') },
+          useValue: {
+            isSignedIn: () => signedIn,
+            signIn: () => calls.push('signIn'),
+            signOut: () => calls.push('signOut'),
+          },
         },
         { provide: CustomerLink, useValue: { ensure: () => link() } },
         { provide: CartStore, useValue: { token: () => token, load: async () => void calls.push('load') } },
         {
           provide: AccountService,
-          useValue: { claimCart: () => claim(), orders: () => (calls.push('orders'), of({ orders: [{ orderId: 'O-1' }] })) },
+          useValue: {
+            claimCart: () => claim(),
+            orders: () => (calls.push('orders'), of({ orders: [{ orderId: 'O-1' }] })),
+          },
         },
       ],
     });
@@ -48,7 +55,10 @@ describe('the account store', () => {
   it('links the customer, claims the basket carried in, then lists the orders', async () => {
     const store = await opened();
 
-    expect([calls, store.state()]).toEqual([['link', 'claim', 'load', 'orders'], { status: 'signedIn', orders: [{ orderId: 'O-1' }] }]);
+    expect([calls, store.state()]).toEqual([
+      ['link', 'claim', 'load', 'orders'],
+      { status: 'signedIn', orders: [{ orderId: 'O-1' }] },
+    ]);
   });
 
   /** A basket that is another account's comes back 409; refusing to sign somebody in over it would be absurd. */

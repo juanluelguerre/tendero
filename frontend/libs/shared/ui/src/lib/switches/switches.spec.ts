@@ -8,7 +8,13 @@ import { ThemeSwitch } from './theme-switch';
 @Component({
   imports: [CultureSwitch, ThemeSwitch],
   template: `
-    <lib-culture-switch label="Idioma" [labelVisible]="labelVisible()" [cultures]="cultures" [active]="culture()" (chosen)="culture.set($event)" />
+    <lib-culture-switch
+      label="Idioma"
+      [labelVisible]="labelVisible()"
+      [cultures]="cultures"
+      [active]="culture()"
+      (chosen)="culture.set($event)"
+    />
     <lib-theme-switch label="Tema" [names]="names" [choice]="theme()" (chosen)="theme.set($event)" />
   `,
 })
@@ -32,7 +38,8 @@ describe('the account switches', () => {
     return fixture;
   }
   const element = (fixture: ReturnType<typeof render>) => fixture.nativeElement as HTMLElement;
-  const group = (fixture: ReturnType<typeof render>, selector: string) => element(fixture).querySelector(`${selector} [role="group"]`) as HTMLElement;
+  const group = (fixture: ReturnType<typeof render>, selector: string) =>
+    element(fixture).querySelector(`${selector} [role="group"]`) as HTMLElement;
   const pressed = (fixture: ReturnType<typeof render>, selector: string) =>
     [...group(fixture, selector).querySelectorAll('button')].map((button) => button.getAttribute('aria-pressed'));
 
@@ -59,7 +66,11 @@ describe('the account switches', () => {
     fixture.componentInstance.labelVisible.set(false);
     fixture.detectChanges();
 
-    expect([shown, named(fixture), element(fixture).querySelectorAll('lib-culture-switch span').length]).toEqual(['Idioma', 'Idioma', 0]);
+    expect([shown, named(fixture), element(fixture).querySelectorAll('lib-culture-switch span').length]).toEqual([
+      'Idioma',
+      'Idioma',
+      0,
+    ]);
   });
 
   it('gives each theme its name in the reader language, and says the one chosen', () => {

@@ -6,7 +6,12 @@ import { ProductImage } from './product-image';
 
 @Component({
   imports: [ProductImage],
-  template: `<storefront-product-image [src]="src()" alt="Mochila" [labelled]="labelled()" (failed)="failures = failures + 1" />`,
+  template: `<storefront-product-image
+    [src]="src()"
+    alt="Mochila"
+    [labelled]="labelled()"
+    (failed)="failures = failures + 1"
+  />`,
 })
 class Host {
   readonly src = signal<string | null>('/api/images/a');
@@ -36,7 +41,8 @@ describe('a product image', () => {
     return fixture;
   }
   const element = (fixture: ReturnType<typeof render>) => fixture.nativeElement as HTMLElement;
-  const placeholder = (fixture: ReturnType<typeof render>) => element(fixture).querySelector('storefront-product-image-placeholder');
+  const placeholder = (fixture: ReturnType<typeof render>) =>
+    element(fixture).querySelector('storefront-product-image-placeholder');
 
   it('shows the picture with its words', () => {
     const fixture = render();

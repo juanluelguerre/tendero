@@ -10,7 +10,9 @@
       @if (refused.total === 0) {
         <p class="muted">{{ t('noDenials') }}</p>
       } @else {
-        <p class="mb-2"><span class="numeric text-lg font-semibold">{{ refused.total }}</span> {{ t('denied') }}</p>
+        <p class="mb-2">
+          <span class="numeric text-lg font-semibold">{{ refused.total }}</span> {{ t('denied') }}
+        </p>
         @if (store.chart(); as data) {
           <div class="at-m">
             <backoffice-bar-chart [data]="data" layout="rows" [format]="count" [caption]="t('byRule')" />

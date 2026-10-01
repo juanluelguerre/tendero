@@ -48,7 +48,9 @@ export const HomeStore = signalStore(
           ranking(size).pipe(
             switchMap((ranked) =>
               ranked.items.length
-                ? search.cards(params.culture, { ids: rankedIds(ranked) }).pipe(map((cards) => rankedItems(ranked, cards.items)))
+                ? search
+                    .cards(params.culture, { ids: rankedIds(ranked) })
+                    .pipe(map((cards) => rankedItems(ranked, cards.items)))
                 : of([] as ShelfItem[]),
             ),
           ),
@@ -70,9 +72,13 @@ export const HomeStore = signalStore(
       }),
       _viewedCards: rxResource({
         params: withViews,
-        stream: ({ params }) => search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
+        stream: ({ params }) =>
+          search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
       }),
-      _similar: rxResource({ params: withViews, stream: ({ params }) => search.similar(params.culture, params.codes, RowSize) }),
+      _similar: rxResource({
+        params: withViews,
+        stream: ({ params }) => search.similar(params.culture, params.codes, RowSize),
+      }),
       _offerHits: rxResource({
         params: byCulture,
         stream: ({ params }) => search.browse({ culture: params.culture, onOffer: true, pageSize: RowSize }),
@@ -96,7 +102,9 @@ export const HomeStore = signalStore(
     };
   }),
   withComputed((store) => ({
-    campaignHits: computed<readonly SearchHit[]>(() => (store._campaignProducts.hasValue() ? store._campaignProducts.value() : [])),
+    campaignHits: computed<readonly SearchHit[]>(() =>
+      store._campaignProducts.hasValue() ? store._campaignProducts.value() : [],
+    ),
     /** *Sigue donde lo dejaste*: the trail's products, as cards. */
     viewed: computed<readonly SearchHit[]>(() => (store._viewedCards.hasValue() ? store._viewedCards.value() : [])),
     /** What the trail suggests, before the page words it; null when it is not known. */

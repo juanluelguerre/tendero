@@ -11,15 +11,24 @@
            the shop you are standing in, which is what the crumb beside it says
            in words. Decorative, so it carries an empty `alt`. -->
       @if (store.art(); as illustration) {
-        <img class="aspect-[4/3] h-auto w-full rounded-lg border border-hairline object-cover max-sm:hidden" [src]="illustration" alt="" width="400" height="300" />
+        <img
+          class="aspect-[4/3] h-auto w-full rounded-lg border border-hairline object-cover max-sm:hidden"
+          [src]="illustration"
+          alt=""
+          width="400"
+          height="300"
+        />
       }
 
       <div>
         <!-- The whole branch, which is what the API returns beside the name: a
              breadcrumb that had to walk parents itself would be the client
              keeping its own copy of the tree. -->
-        <storefront-crumbs [label]="t('category.breadcrumb')" [steps]="current.path"
-                           [start]="{ label: t('nav.shop'), commands: links.home() }" />
+        <storefront-crumbs
+          [label]="t('category.breadcrumb')"
+          [steps]="current.path"
+          [start]="{ label: t('nav.shop'), commands: links.home() }"
+        />
 
         <h1 class="mt-3 font-display text-2xl">{{ current.name }}</h1>
       </div>
@@ -27,8 +36,7 @@
 
     @if (store.banner(); as campaign) {
       <!-- A category's campaign, between its heading and its sections (R-8). -->
-      <storefront-campaign-card class="mb-5" variant="banner" [campaign]="campaign"
-                                (reached)="campaigns.refresh()" />
+      <storefront-campaign-card class="mb-5" variant="banner" [campaign]="campaign" (reached)="campaigns.refresh()" />
     }
 
     <!-- The sections inside, when there are any. A department is a way in, and
@@ -42,7 +50,11 @@
       <ul class="mt-4 flex list-none flex-wrap gap-2 p-0 lg:hidden">
         @for (child of store.children(); track child.code) {
           <li>
-            <a class="inline-block rounded-full border border-hairline bg-surface px-3 py-2 text-sm text-inherit no-underline hover:border-hairline-strong" [routerLink]="links.category(child.code)">{{ child.name }}</a>
+            <a
+              class="inline-block rounded-full border border-hairline bg-surface px-3 py-2 text-sm text-inherit no-underline hover:border-hairline-strong"
+              [routerLink]="links.category(child.code)"
+              >{{ child.name }}</a
+            >
           </li>
         }
       </ul>

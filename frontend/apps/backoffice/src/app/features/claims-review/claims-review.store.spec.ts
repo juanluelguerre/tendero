@@ -20,7 +20,14 @@ describe('the claims review store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, ClaimsReviewStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        ClaimsReviewStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -28,8 +35,14 @@ describe('the claims review store', () => {
   afterEach(() => http.match(() => true));
 
   function answer() {
-    http.match((req) => req.url === Claims).forEach((req) => req.flush({ items: [claim('c1'), claim('c2')], total: 2, counts: [{ support: 'Weak', count: 2 }] }));
-    http.match((req) => req.url === Products).forEach((req) => req.flush({ items: [{ productId: 'p1', name: 'Mochila' }], total: 1 }));
+    http
+      .match((req) => req.url === Claims)
+      .forEach((req) =>
+        req.flush({ items: [claim('c1'), claim('c2')], total: 2, counts: [{ support: 'Weak', count: 2 }] }),
+      );
+    http
+      .match((req) => req.url === Products)
+      .forEach((req) => req.flush({ items: [{ productId: 'p1', name: 'Mochila' }], total: 1 }));
   }
 
   async function at(url: string) {
@@ -60,7 +73,18 @@ describe('the claims review store', () => {
     await TestBed.inject(Router).navigateByUrl('/');
     const store = TestBed.inject(ClaimsReviewStore);
     TestBed.tick();
-    http.match((req) => req.url === Claims).forEach((req) => req.flush({ items: [], total: 0, counts: [{ support: 'Weak', count: 0 }, { support: 'All', count: 3 }] }));
+    http
+      .match((req) => req.url === Claims)
+      .forEach((req) =>
+        req.flush({
+          items: [],
+          total: 0,
+          counts: [
+            { support: 'Weak', count: 0 },
+            { support: 'All', count: 3 },
+          ],
+        }),
+      );
     http.match((req) => req.url === Products).forEach((req) => req.flush({ items: [], total: 0 }));
     await TestBed.inject(ApplicationRef).whenStable();
 

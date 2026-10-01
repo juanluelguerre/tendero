@@ -1,13 +1,24 @@
 <!-- Only when there is more than a page: a list that fits says so by showing
      everything, and a pager under it would be a control with nothing to do. -->
 @if (total() > pageSize()) {
-  <nav class="mt-4 flex flex-wrap items-center justify-between gap-3" *transloco="let t; prefix: 'pager'" [attr.aria-label]="t('label')">
-    <span class="numeric text-xs text-muted" role="status">{{ t('range', { from: range().from, to: range().to, total: total() }) }}</span>
+  <nav
+    class="mt-4 flex flex-wrap items-center justify-between gap-3"
+    *transloco="let t; prefix: 'pager'"
+    [attr.aria-label]="t('label')"
+  >
+    <span class="numeric text-xs text-muted" role="status">{{
+      t('range', { from: range().from, to: range().to, total: total() })
+    }}</span>
     <span class="flex gap-2">
       <button type="button" class="button button--quiet" [disabled]="page() <= 1" (click)="go.emit(page() - 1)">
         {{ t('previous') }}
       </button>
-      <button type="button" class="button button--quiet" [disabled]="page() >= range().pages" (click)="go.emit(page() + 1)">
+      <button
+        type="button"
+        class="button button--quiet"
+        [disabled]="page() >= range().pages"
+        (click)="go.emit(page() + 1)"
+      >
         {{ t('next') }}
       </button>
     </span>

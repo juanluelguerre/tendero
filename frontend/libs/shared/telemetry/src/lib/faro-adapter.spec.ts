@@ -44,7 +44,13 @@ function read(item: TransportItem): Emitted[] {
       // Ours only: Faro's own session and view events are what the comparison
       // counts, not what the port promises.
       return payload['domain'] === EVENT_DOMAIN
-        ? [{ kind: 'event', name: String(payload['name']), attributes: (payload['attributes'] as Record<string, unknown>) ?? {} }]
+        ? [
+            {
+              kind: 'event',
+              name: String(payload['name']),
+              attributes: (payload['attributes'] as Record<string, unknown>) ?? {},
+            },
+          ]
         : [];
     case 'exception':
       return [
@@ -140,7 +146,12 @@ describe('The Faro adapter scrubs every URL it sends', () => {
                   {
                     name: 'HTTP GET',
                     attributes: [
-                      { key: 'url.full', value: { stringValue: 'http://localhost:4200/api/orders/0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b?x=1' } },
+                      {
+                        key: 'url.full',
+                        value: {
+                          stringValue: 'http://localhost:4200/api/orders/0199a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b?x=1',
+                        },
+                      },
                     ],
                   },
                 ],
@@ -157,4 +168,3 @@ describe('The Faro adapter scrubs every URL it sends', () => {
     expect(span?.attributes?.[0]?.value.stringValue).toBe('http://localhost:4200/api/orders/:id');
   });
 });
-

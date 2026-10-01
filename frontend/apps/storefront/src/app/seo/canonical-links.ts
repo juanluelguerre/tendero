@@ -47,9 +47,7 @@ export class CanonicalLinks {
     head.appendChild(this.link('canonical', `${origin}${canonical}`));
 
     for (const alternate of alternates) {
-      head.appendChild(
-        this.link('alternate', `${origin}${alternate.path}`, alternate.culture),
-      );
+      head.appendChild(this.link('alternate', `${origin}${alternate.path}`, alternate.culture));
     }
 
     head.appendChild(this.link('alternate', `${origin}${xDefault}`, 'x-default'));
@@ -61,9 +59,7 @@ export class CanonicalLinks {
    * is the canonical URL of a product, which is worse than saying nothing.
    */
   clear(): void {
-    this.document.head
-      .querySelectorAll(`link[${CanonicalLinks.Marker}]`)
-      .forEach((element) => element.remove());
+    this.document.head.querySelectorAll(`link[${CanonicalLinks.Marker}]`).forEach((element) => element.remove());
   }
 
   private link(rel: string, href: string, hreflang?: string): HTMLLinkElement {

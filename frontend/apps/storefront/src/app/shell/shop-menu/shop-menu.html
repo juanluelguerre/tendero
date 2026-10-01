@@ -38,7 +38,8 @@
                       [routerLink]="links.category(leaf.code)"
                       [state]="fromMenu"
                       (click)="chosen.emit()"
-                    >{{ leaf.name }}</a>
+                      >{{ leaf.name }}</a
+                    >
                   </li>
                 }
               </ul>
@@ -50,7 +51,8 @@
                 [routerLink]="links.category(group.category.code)"
                 [state]="fromMenu"
                 (click)="chosen.emit()"
-              >{{ group.category.name }}</a>
+                >{{ group.category.name }}</a
+              >
             </li>
           }
         }

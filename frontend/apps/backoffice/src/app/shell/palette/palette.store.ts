@@ -30,8 +30,13 @@ export const PaletteStore = signalStore(
     const ordering = inject(OrderingService);
     const catalog = inject(CatalogService);
     const accounts = inject(AccountsService);
-    const asked = toSignal(toObservable(store.query).pipe(debounceTime(200), distinctUntilChanged()), { initialValue: '' });
-    const search = () => (store.isOpen() && asked().trim().length >= RecordsFrom ? { q: asked().trim(), culture: culture.active() } : undefined);
+    const asked = toSignal(toObservable(store.query).pipe(debounceTime(200), distinctUntilChanged()), {
+      initialValue: '',
+    });
+    const search = () =>
+      store.isOpen() && asked().trim().length >= RecordsFrom
+        ? { q: asked().trim(), culture: culture.active() }
+        : undefined;
 
     return {
       _culture: culture,
@@ -101,7 +106,9 @@ export const PaletteStore = signalStore(
         }));
 
       // An id is what nobody types by accident: then orders lead.
-      return looksLikeId(query) ? [...orders, ...products, ...agents, ...screens] : [...screens, ...orders, ...products, ...agents];
+      return looksLikeId(query)
+        ? [...orders, ...products, ...agents, ...screens]
+        : [...screens, ...orders, ...products, ...agents];
     }),
     loading: computed(() => store._orders.isLoading() || store._products.isLoading()),
   })),

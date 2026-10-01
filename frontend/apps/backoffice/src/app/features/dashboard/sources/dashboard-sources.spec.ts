@@ -14,7 +14,12 @@ describe('the dashboard sources', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), DashboardSources, { provide: API_BASE_URL, useValue: 'http://api' }],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        DashboardSources,
+        { provide: API_BASE_URL, useValue: 'http://api' },
+      ],
     });
     http = TestBed.inject(HttpTestingController);
     sources = TestBed.inject(DashboardSources);

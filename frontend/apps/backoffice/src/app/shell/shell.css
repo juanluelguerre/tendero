@@ -14,7 +14,9 @@
 }
 
 @media (min-width: 48rem) {
-  :host(.with-rail) { grid-template-columns: auto minmax(0, 1fr); }
+  :host(.with-rail) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
 }
 
 /* Brand text: --brand and never the --accent alias, and large enough to be held

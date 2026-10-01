@@ -55,10 +55,17 @@ export const AgentsStore = signalStore(
     };
   }),
   withMethods((store) => {
-    const navigate = (agent: string | null) => void store._router.navigate([], { queryParams: { agent }, queryParamsHandling: 'merge' });
+    const navigate = (agent: string | null) =>
+      void store._router.navigate([], { queryParams: { agent }, queryParamsHandling: 'merge' });
 
     /** One change: busy while it goes, the registry read again when it is done, the server's sentence when it refuses. */
-    const run = (key: string, action: BackofficeAction, via: ActionVia, change: Observable<unknown>, done?: () => void) => {
+    const run = (
+      key: string,
+      action: BackofficeAction,
+      via: ActionVia,
+      change: Observable<unknown>,
+      done?: () => void,
+    ) => {
       patchState(store, { busy: key, refusal: null });
       change.pipe(store._usage.reported('agents', action, via)).subscribe({
         next: () => {
@@ -92,8 +99,12 @@ export const AgentsStore = signalStore(
       },
       register(): void {
         const draft = store.draft();
-        run('register', 'agent_register', 'page', store._accounts.register({ ...draft, agentId: draft.agentId.trim() }), () =>
-          patchState(store, { draft: EmptyDraft }),
+        run(
+          'register',
+          'agent_register',
+          'page',
+          store._accounts.register({ ...draft, agentId: draft.agentId.trim() }),
+          () => patchState(store, { draft: EmptyDraft }),
         );
       },
       trust(agent: AgentView, trust: string): void {
@@ -108,7 +119,9 @@ export const AgentsStore = signalStore(
         if (!asked || !reason) return;
         const { agent, via } = asked;
         run(agent.agentId, 'agent_suspend', via, store._accounts.suspend(agent.agentId, reason), () =>
-          store._undo.offerTo(store._translate.translate('agents.suspended', { agent: agent.displayName }), () => reinstate(agent, via)),
+          store._undo.offerTo(store._translate.translate('agents.suspended', { agent: agent.displayName }), () =>
+            reinstate(agent, via),
+          ),
         );
       },
       reinstate,

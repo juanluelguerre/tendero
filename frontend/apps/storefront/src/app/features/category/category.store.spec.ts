@@ -14,7 +14,12 @@ import { CategoryStore } from './category.store';
 const category = (code: string, parent: string | null, depth: number): Category =>
   ({ code, parent, name: code, path: [], depth }) as unknown as Category;
 
-const taxonomy = [category('HOME', null, 0), category('KITCHEN', 'HOME', 1), category('TEXTILES', 'HOME', 1), category('BAGS', null, 0)];
+const taxonomy = [
+  category('HOME', null, 0),
+  category('KITCHEN', 'HOME', 1),
+  category('TEXTILES', 'HOME', 1),
+  category('BAGS', null, 0),
+];
 
 /** A category page's own state (ADR 0047): the branch the URL names, and what it tells the listing to list. */
 describe('the category store', () => {
@@ -38,7 +43,10 @@ describe('the category store', () => {
         { provide: CultureStore, useValue: { active: signal('es') } },
         { provide: ShopFrontService, useValue: { categories: () => answer() } },
         { provide: CampaignsStore, useValue: { all: campaigns } },
-        { provide: ListingStore, useValue: { list: (place: ListingPlace | null) => listed.push(place), result: signal({ status: 'idle' }) } },
+        {
+          provide: ListingStore,
+          useValue: { list: (place: ListingPlace | null) => listed.push(place), result: signal({ status: 'idle' }) },
+        },
       ],
     });
     const store = TestBed.inject(CategoryStore);

@@ -74,8 +74,7 @@ describe('the stylesheets', () => {
   }
 
   const files = stylesheets(repository).map(
-    (path) =>
-      [relative(repository, path).replaceAll('\\', '/'), readFileSync(path, 'utf8')] as const,
+    (path) => [relative(repository, path).replaceAll('\\', '/'), readFileSync(path, 'utf8')] as const,
   );
 
   /** Comments may discuss a token by name without defining or using it. */
@@ -86,9 +85,7 @@ describe('the stylesheets', () => {
    * Tailwind bridge's `@theme` block, and the handful a component declares for
    * itself. A definition is a custom property followed by a colon.
    */
-  const defined = new Set(
-    files.flatMap(([, css]) => [...code(css).matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1])),
-  );
+  const defined = new Set(files.flatMap(([, css]) => [...code(css).matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1])));
 
   it('only read custom properties that exist, unless they name a fallback', () => {
     const offenders = files.flatMap(([name, css]) =>
@@ -107,7 +104,14 @@ describe('the stylesheets', () => {
     const offenders = files.flatMap(([name, css]) =>
       [...code(css).matchAll(/var\(/g)]
         .filter((m) => !/^\s*--[\w-]+\s*[,)]/.test(code(css).slice(m.index + 4)))
-        .map((m) => `${name}: ${code(css).slice(m.index, m.index + 60).split('\n')[0]}`),
+        .map(
+          (m) =>
+            `${name}: ${
+              code(css)
+                .slice(m.index, m.index + 60)
+                .split('\n')[0]
+            }`,
+        ),
     );
 
     expect(offenders).toEqual([]);
@@ -118,10 +122,7 @@ describe('the stylesheets', () => {
       code(css)
         .split(/[;{}]/)
         .filter((declaration) => declaration.includes('var('))
-        .filter(
-          (declaration) =>
-            (declaration.match(/\(/g) ?? []).length !== (declaration.match(/\)/g) ?? []).length,
-        )
+        .filter((declaration) => (declaration.match(/\(/g) ?? []).length !== (declaration.match(/\)/g) ?? []).length)
         .map((declaration) => `${name}: ${declaration.trim().slice(0, 80)}`),
     );
 

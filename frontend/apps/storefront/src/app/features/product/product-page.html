@@ -4,7 +4,10 @@
       <p class="sr-only" role="status" aria-live="polite">{{ t('product.loading') }}</p>
       <!-- The shape the answer will have, so the page does not jump when it
            arrives. Same argument as the search grid's skeleton cards. -->
-      <div class="grid grid-cols-[1fr] gap-6 pb-8 tab:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] tab:items-start tab:gap-7" aria-hidden="true">
+      <div
+        class="grid grid-cols-[1fr] gap-6 pb-8 tab:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] tab:items-start tab:gap-7"
+        aria-hidden="true"
+      >
         <div class="skeleton aspect-square w-full rounded-lg border border-hairline max-md:aspect-4/3"></div>
         <div>
           <div class="skeleton h-[1em]"></div>
@@ -37,7 +40,9 @@
         }
 
         <!-- The page the shopper decides on: roomy, one column, two from a tablet. -->
-        <article class="grid grid-cols-[1fr] gap-6 pb-8 tab:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] tab:items-start tab:gap-7">
+        <article
+          class="grid grid-cols-[1fr] gap-6 pb-8 tab:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] tab:items-start tab:gap-7"
+        >
           <section>
             @let images = store.gallery();
             @let cover = images.length > 0 ? images[0] : null;
@@ -52,7 +57,8 @@
               class="aspect-square w-full rounded-lg border border-hairline bg-surface object-cover max-md:aspect-4/3 max-md:object-contain"
               [src]="cover ? imageUrl(cover.imageId) : null"
               [alt]="cover?.alt ?? item.name"
-              [labelled]="true" />
+              [labelled]="true"
+            />
 
             @if (images.length > 1) {
               <ul class="mt-3 flex gap-3">
@@ -66,7 +72,11 @@
                       [class.border-hairline-strong]="current"
                       (click)="store.show(image.imageId)"
                     >
-                      <storefront-product-image class="size-[64px] object-cover" [src]="imageUrl(image.imageId)" [alt]="image.alt ?? item.name" />
+                      <storefront-product-image
+                        class="size-[64px] object-cover"
+                        [src]="imageUrl(image.imageId)"
+                        [alt]="image.alt ?? item.name"
+                      />
                     </button>
                   </li>
                 }
@@ -133,7 +143,9 @@
                  end-to-end tests' hooks. -->
             <div class="mt-6 flex flex-col items-start gap-2">
               @if (!variant) {
-                <p class="buy__unavailable rounded-md bg-raised px-4 py-3 text-sm text-muted">{{ t('product.combinationNotSold') }}</p>
+                <p class="buy__unavailable rounded-md bg-raised px-4 py-3 text-sm text-muted">
+                  {{ t('product.combinationNotSold') }}
+                </p>
               } @else if (!variant.inStock) {
                 <p class="buy__soldOut rounded-md bg-raised px-4 py-3 text-sm text-muted">{{ t('product.soldOut') }}</p>
               } @else {
@@ -157,7 +169,9 @@
                   @if (store.notice(); as said) {
                     @if (said.ok) {
                       <span class="font-semibold text-positive">{{ t('product.added') }}</span>
-                      <a class="quiet" [routerLink]="cartLink()" (click)="noticeFollowed()">{{ t('product.viewCart') }}</a>
+                      <a class="quiet" [routerLink]="cartLink()" (click)="noticeFollowed()">{{
+                        t('product.viewCart')
+                      }}</a>
                     } @else {
                       <span class="text-danger">{{ t('product.notAdded') }}</span>
                     }
@@ -174,7 +188,7 @@
               }
 
               @if (variant) {
-                <p class="numeric muted text-xs">{{ t('product.sku', { sku: variant.sku }) }}</p>
+                <p class="muted numeric text-xs">{{ t('product.sku', { sku: variant.sku }) }}</p>
               }
             </div>
 
@@ -209,7 +223,9 @@
                 <h2 class="mb-4 text-lg">{{ t('product.specs') }}</h2>
                 <dl class="grid gap-2">
                   @for (line of store.specLines(); track line.code) {
-                    <div class="grid grid-cols-[minmax(0,12rem)_minmax(0,1fr)] gap-4 border-b border-hairline py-2 text-sm">
+                    <div
+                      class="grid grid-cols-[minmax(0,12rem)_minmax(0,1fr)] gap-4 border-b border-hairline py-2 text-sm"
+                    >
                       <dt class="text-muted">{{ line.label }}</dt>
                       <dd class="flex flex-wrap items-baseline gap-2 text-body">
                         <storefront-spec-value [cell]="line.cell" />

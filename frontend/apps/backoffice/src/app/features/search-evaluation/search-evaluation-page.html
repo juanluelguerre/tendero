@@ -46,7 +46,9 @@
     </p>
 
     @if (measured.judgedProductsInCatalogue === 0) {
-      <lib-notice class="mb-4 max-w-[76ch]" tone="warn" live="assertive">{{ t('searchEvaluation.noJudged') }}</lib-notice>
+      <lib-notice class="mb-4 max-w-[76ch]" tone="warn" live="assertive">{{
+        t('searchEvaluation.noJudged')
+      }}</lib-notice>
     }
 
     @if (!measured.vectorLayer.isConfigured) {

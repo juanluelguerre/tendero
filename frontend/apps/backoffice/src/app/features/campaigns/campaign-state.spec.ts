@@ -36,8 +36,12 @@ describe("a campaign's window, as the list shows it", () => {
   });
 
   it('names both months when it crosses one, in the reader’s culture', () => {
-    expect(windowOf('2026-09-22T00:00:00Z', '2026-11-30T23:59:00Z', 'es', now, 'UTC')).toMatch(/^22 sept?\.?\s[–-]\s30 nov/);
-    expect(windowOf('2026-09-22T00:00:00Z', '2026-11-30T23:59:00Z', 'en', now, 'UTC')).toMatch(/^Sep 22\s?[–-]\s?Nov 30/);
+    expect(windowOf('2026-09-22T00:00:00Z', '2026-11-30T23:59:00Z', 'es', now, 'UTC')).toMatch(
+      /^22 sept?\.?\s[–-]\s30 nov/,
+    );
+    expect(windowOf('2026-09-22T00:00:00Z', '2026-11-30T23:59:00Z', 'en', now, 'UTC')).toMatch(
+      /^Sep 22\s?[–-]\s?Nov 30/,
+    );
   });
 
   it('says the year only when it is needed', () => {

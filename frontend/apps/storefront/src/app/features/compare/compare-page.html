@@ -36,12 +36,17 @@
                   </th>
                   @for (product of sheet.products; track product.code) {
                     <th scope="col" class="border-b border-hairline px-4 py-3 text-start align-top font-semibold">
-                      <a class="text-body" [routerLink]="links.product(product.slug, product.code)">{{ product.name }}</a>
+                      <a class="text-body" [routerLink]="links.product(product.slug, product.code)">{{
+                        product.name
+                      }}</a>
                       <button
                         class="ms-2 px-1 text-muted"
                         type="button"
                         [attr.aria-label]="t('compare.remove', { name: product.name })"
-                        (click)="store.drop(product.code)">×</button>
+                        (click)="store.drop(product.code)"
+                      >
+                        ×
+                      </button>
                     </th>
                   }
                 </tr>
@@ -57,7 +62,10 @@
                     </th>
                     @for (cell of row.cells; track $index) {
                       <!-- No data is a fact about the product, so the cell looks different on purpose. -->
-                      <td class="border-b border-hairline px-4 py-3 text-start align-top" [class.bg-raised]="cell.source === 'none'">
+                      <td
+                        class="border-b border-hairline px-4 py-3 text-start align-top"
+                        [class.bg-raised]="cell.source === 'none'"
+                      >
                         <storefront-spec-value [cell]="cell" />
                         <storefront-spec-source class="mt-1 block" [source]="cell.source" [evidence]="cell.evidence" />
                       </td>

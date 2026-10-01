@@ -88,12 +88,7 @@ export function initialSelection(product: ProductDetail): Selection {
  * clicked never moves. A shop that quietly changes what you just pressed is
  * worse than one that changes the rest.
  */
-export function select(
-  variants: VariantView[],
-  selection: Selection,
-  axis: string,
-  option: string,
-): Selection {
+export function select(variants: VariantView[], selection: Selection, axis: string, option: string): Selection {
   const candidate = { ...selection, [axis]: option };
 
   if (variantFor(variants, candidate)) return candidate;

@@ -7,7 +7,13 @@ import { SearchEvaluationStore } from './search-evaluation.store';
 
 const Evaluation = 'http://api/api/search/evaluation';
 
-const score = (ndcg: number | null) => ({ ndcgAt10: ndcg, recallAt50: 0.9, meanMilliseconds: 12, thresholdNdcgAt10: 0.8, thresholdRecallAt50: 0.8 });
+const score = (ndcg: number | null) => ({
+  ndcgAt10: ndcg,
+  recallAt50: 0.9,
+  meanMilliseconds: 12,
+  thresholdNdcgAt10: 0.8,
+  thresholdRecallAt50: 0.8,
+});
 
 /** The search evaluation's state (ADR 0047): nothing until asked, then running, then the measure or the failure. */
 describe('the search evaluation store', () => {
@@ -15,7 +21,12 @@ describe('the search evaluation store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, SearchEvaluationStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        SearchEvaluationStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -51,12 +62,12 @@ describe('the search evaluation store', () => {
       ],
     });
 
-    expect([running, store.status(), store.cultures()[0].rows.map((row) => row.query), store.cultures()[0].ndcg.trend]).toEqual([
-      'running',
-      'ready',
-      ['botas', 'mochila'],
-      'better',
-    ]);
+    expect([
+      running,
+      store.status(),
+      store.cultures()[0].rows.map((row) => row.query),
+      store.cultures()[0].ndcg.trend,
+    ]).toEqual(['running', 'ready', ['botas', 'mochila'], 'better']);
   });
 
   it('says it failed when the server does', () => {

@@ -59,9 +59,7 @@ describe('the mockups', () => {
   })();
 
   const palette = new Set(
-    [...(readFileSync(join(repository, TOKENS), 'utf8').match(HEX) ?? [])].map((hex) =>
-      hex.toLowerCase(),
-    ),
+    [...(readFileSync(join(repository, TOKENS), 'utf8').match(HEX) ?? [])].map((hex) => hex.toLowerCase()),
   );
 
   /** Values a person has looked at and allowed, each with the reason it exists. */
@@ -84,11 +82,7 @@ describe('the mockups', () => {
         ? readdirSync(directory).flatMap((entry) => {
             const path = join(directory, entry);
 
-            return statSync(path).isDirectory()
-              ? walk(path)
-              : path.endsWith(extension)
-                ? [path]
-                : [];
+            return statSync(path).isDirectory() ? walk(path) : path.endsWith(extension) ? [path] : [];
           })
         : [];
 
@@ -109,8 +103,7 @@ describe('the mockups', () => {
         typeof variable.value === 'string'
           ? [variable.value]
           : // A themed value is an array of {value, theme} entries.
-            (variable.value as { value?: string }[] | undefined)?.map((entry) => entry.value ?? '') ??
-            [],
+            ((variable.value as { value?: string }[] | undefined)?.map((entry) => entry.value ?? '') ?? []),
       )
       .filter(Boolean)
       .map((value) => value.toLowerCase());

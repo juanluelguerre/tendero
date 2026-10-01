@@ -4,16 +4,11 @@
   "projectType": "application",
   "prefix": "app",
   "sourceRoot": "apps/storefront/src",
-  "tags": [
-    "scope:storefront",
-    "type:app"
-  ],
+  "tags": ["scope:storefront", "type:app"],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
-      "outputs": [
-        "{options.outputPath}"
-      ],
+      "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
         "outputPath": "dist/apps/storefront",
@@ -25,9 +20,7 @@
             "input": "apps/storefront/public"
           }
         ],
-        "styles": [
-          "apps/storefront/src/styles.css"
-        ]
+        "styles": ["apps/storefront/src/styles.css"]
       },
       "configurations": {
         "production": {

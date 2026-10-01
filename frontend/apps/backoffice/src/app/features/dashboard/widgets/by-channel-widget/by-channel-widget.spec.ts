@@ -30,7 +30,10 @@ describe('the by channel widget', () => {
   it('shares the orders between people and agents, and says agents by MCP and UCP', async () => {
     const element = await open(MIX(30, 7, 3));
 
-    expect([...element.querySelectorAll('.legend li')].map((item) => item.textContent?.trim())).toEqual(['People', 'Agents']);
+    expect([...element.querySelectorAll('.legend li')].map((item) => item.textContent?.trim())).toEqual([
+      'People',
+      'Agents',
+    ]);
     expect([...element.querySelectorAll('table td')].map((cell) => cell.textContent?.trim())).toEqual(['30', '10']);
     expect(element.textContent).toContain('Agents: 7 over MCP · 3 over UCP');
   });

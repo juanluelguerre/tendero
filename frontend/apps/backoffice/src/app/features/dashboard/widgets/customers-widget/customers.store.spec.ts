@@ -37,7 +37,15 @@ describe('the customers store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, CustomersStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        CustomersStore,
+      ],
     });
     TestBed.inject(CultureStore).use('en');
     http = TestBed.inject(HttpTestingController);
@@ -52,6 +60,12 @@ describe('the customers store', () => {
     http.expectOne('http://api/api/dashboard/sales/series?period=Week').flush(SERIES);
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect([store.byDay()?.categories.length, store.byDay()?.series.map((series) => series.values)]).toEqual([2, [[3, 0], [1, 2]]]);
+    expect([store.byDay()?.categories.length, store.byDay()?.series.map((series) => series.values)]).toEqual([
+      2,
+      [
+        [3, 0],
+        [1, 2],
+      ],
+    ]);
   });
 });

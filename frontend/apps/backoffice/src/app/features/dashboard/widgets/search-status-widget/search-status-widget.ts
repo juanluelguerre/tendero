@@ -25,6 +25,9 @@ export class SearchStatusWidget {
   protected since(at: string): string {
     const when = new Date(at);
     const today = when.toDateString() === new Date().toDateString();
-    return new Intl.DateTimeFormat(this.culture.active(), today ? { timeStyle: 'short' } : { dateStyle: 'short', timeStyle: 'short' }).format(when);
+    return new Intl.DateTimeFormat(
+      this.culture.active(),
+      today ? { timeStyle: 'short' } : { dateStyle: 'short', timeStyle: 'short' },
+    ).format(when);
   }
 }

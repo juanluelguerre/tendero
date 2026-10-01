@@ -10,20 +10,24 @@
   <ng-template>
     <dl class="facts">
       <div class="fact">
-        <dt><a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">{{ t('restock') }}</a></dt>
-        <dd class="numeric fact__value" [class.fact__value--warn]="store.restock() > 0">{{ store.restock() }}</dd>
+        <dt>
+          <a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">{{ t('restock') }}</a>
+        </dt>
+        <dd class="fact__value numeric" [class.fact__value--warn]="store.restock() > 0">{{ store.restock() }}</dd>
       </div>
       <div class="fact">
-        <dt><a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'SoldOut' }">{{ t('soldOut') }}</a></dt>
-        <dd class="numeric fact__value" [class.fact__value--warn]="store.soldOut() > 0">{{ store.soldOut() }}</dd>
+        <dt>
+          <a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'SoldOut' }">{{ t('soldOut') }}</a>
+        </dt>
+        <dd class="fact__value numeric" [class.fact__value--warn]="store.soldOut() > 0">{{ store.soldOut() }}</dd>
       </div>
       <div class="fact at-m">
         <dt>{{ t('soon') }}</dt>
-        <dd class="numeric fact__value" [class.fact__value--warn]="store.soon() > 0">{{ store.soon() }}</dd>
+        <dd class="fact__value numeric" [class.fact__value--warn]="store.soon() > 0">{{ store.soon() }}</dd>
       </div>
       <div class="fact at-m">
         <dt>{{ t('noSales') }}</dt>
-        <dd class="numeric fact__value">{{ store.noSales() }}</dd>
+        <dd class="fact__value numeric">{{ store.noSales() }}</dd>
       </div>
     </dl>
     @if (store.closest().length > 0) {

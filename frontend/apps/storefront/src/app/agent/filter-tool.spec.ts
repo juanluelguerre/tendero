@@ -5,29 +5,40 @@ import { chooseFilter, describeFacets } from './filter-tool';
 
 const facets: SearchFacet[] = [
   {
-    code: 'brand', kind: 'Brand', label: 'Marca',
+    code: 'brand',
+    kind: 'Brand',
+    label: 'Marca',
     options: [
       { value: 'Caminante', label: 'Caminante', count: 7, chosen: false },
       { value: 'Vertex', label: 'Vertex', count: 6, chosen: true },
     ],
   },
   {
-    code: 'price', kind: 'Price', label: 'Precio', options: [],
+    code: 'price',
+    kind: 'Price',
+    label: 'Precio',
+    options: [],
     price: { min: 30, max: 160, chosenMin: null, chosenMax: null, bands: [] },
   },
   {
-    code: 'offer', kind: 'Offer', label: 'En oferta',
+    code: 'offer',
+    kind: 'Offer',
+    label: 'En oferta',
     options: [{ value: 'true', label: 'En oferta', count: 3, chosen: false }],
   },
   {
-    code: 'COLOR', kind: 'Axis', label: 'Color',
+    code: 'COLOR',
+    kind: 'Axis',
+    label: 'Color',
     options: [
       { value: 'COLOR:BLACK', label: 'negro', count: 4, chosen: false },
       { value: 'COLOR:WHITE', label: 'blanco', count: 2, chosen: false },
     ],
   },
   {
-    code: 'category', kind: 'Category', label: 'Categorías',
+    code: 'category',
+    kind: 'Category',
+    label: 'Categorías',
     options: [{ value: 'BAGS', label: 'Bolsas', count: 5, chosen: false }],
   },
 ];
@@ -52,7 +63,10 @@ describe('what list_filters tells an agent', () => {
 
 describe('what apply_filter does', () => {
   it("replaces a facet's choices with the values sent", () => {
-    const outcome = chooseFilter({ ...NoFilters, brands: ['Vertex'] }, facets, shoes, { facet: 'brand', values: ['Caminante'] });
+    const outcome = chooseFilter({ ...NoFilters, brands: ['Vertex'] }, facets, shoes, {
+      facet: 'brand',
+      values: ['Caminante'],
+    });
 
     expect(outcome).toEqual({ ok: true, filters: { ...NoFilters, brands: ['Caminante'] } });
   });
@@ -93,7 +107,10 @@ describe('what apply_filter does', () => {
   it('refuses an option the facet does not have, and a label in place of a value', () => {
     const outcome = chooseFilter(NoFilters, facets, shoes, { facet: 'COLOR', values: ['negro'] });
 
-    expect(outcome).toEqual({ ok: false, reason: 'COLOR has no option "negro". Its options: COLOR:BLACK, COLOR:WHITE.' });
+    expect(outcome).toEqual({
+      ok: false,
+      reason: 'COLOR has no option "negro". Its options: COLOR:BLACK, COLOR:WHITE.',
+    });
   });
 
   it('refuses a negative price', () => {

@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  linkedSignal,
+  output,
+  signal,
+} from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -111,7 +120,12 @@ export class FilterPanel {
       from: (min: string) => this.transloco.translate('listing.price.from', { price: min }),
       between: (min: string, max: string) => this.transloco.translate('listing.price.between', { min, max }),
     };
-    return priceLabel(band.from, band.to, (amount) => sayablePrice(amount, this.currency(), this.culture.active()), words);
+    return priceLabel(
+      band.from,
+      band.to,
+      (amount) => sayablePrice(amount, this.currency(), this.culture.active()),
+      words,
+    );
   }
 
   // ---------- Choosing ----------

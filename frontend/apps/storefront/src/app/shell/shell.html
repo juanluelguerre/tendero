@@ -36,7 +36,14 @@
         <!-- The icon, not the full lockup: the wordmark beside it already uses
              real Bricolage, and the text embedded in the SVG only has Inter to
              fall back on. Empty alt because the name is right next to it. -->
-        <img class="size-[40px] max-md:size-[32px]" src="brand/tendero-icon-shop.svg" alt="" aria-hidden="true" width="40" height="40" />
+        <img
+          class="size-[40px] max-md:size-[32px]"
+          src="brand/tendero-icon-shop.svg"
+          alt=""
+          aria-hidden="true"
+          width="40"
+          height="40"
+        />
         <span class="flex flex-col leading-tight">
           <span class="brand__wordmark">{{ t('brand.name') }}</span>
           <span class="text-2xs text-muted max-md:hidden">{{ t('brand.tagline') }}</span>
@@ -63,13 +70,20 @@
           [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'"
         >
           <svg class="size-[22px]" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            <path
+              d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
             <circle cx="10" cy="19.5" r="1.4" fill="currentColor" />
             <circle cx="17" cy="19.5" r="1.4" fill="currentColor" />
           </svg>
           @if (cart.itemCount() > 0) {
             <span
-              class="cart__badge numeric absolute end-0 top-[2px] grid h-[18px] min-w-[18px] place-items-center rounded-[9px] bg-accent px-[4px] text-[11px] leading-none font-bold text-on-accent"
+              class="cart__badge absolute end-0 top-[2px] grid h-[18px] min-w-[18px] place-items-center rounded-[9px] bg-accent px-[4px] numeric text-[11px] leading-none font-bold text-on-accent"
               >{{ cart.itemCount() }}</span
             >
           }
@@ -192,7 +206,12 @@
       </button>
     </div>
     @if (drawerOpened()) {
-      <storefront-shop-menu class="flex-1 overflow-y-auto px-4 py-3" mode="drawer" [current]="department()" (chosen)="drawer.close()" />
+      <storefront-shop-menu
+        class="flex-1 overflow-y-auto px-4 py-3"
+        mode="drawer"
+        [current]="department()"
+        (chosen)="drawer.close()"
+      />
     }
   </dialog>
 

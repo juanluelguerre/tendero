@@ -29,7 +29,15 @@ describe('the by-channel store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, ByChannelStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        ByChannelStore,
+      ],
     });
     TestBed.inject(CultureStore).use('en');
     http = TestBed.inject(HttpTestingController);
@@ -48,7 +56,11 @@ describe('the by-channel store', () => {
   it('shares the orders between the storefront and agents, and agents between MCP and UCP', async () => {
     const store = await answered(MIX);
 
-    expect([store.chart()?.series.map((series) => series.values[0]), store.agentsBy(), store.agentShare()]).toEqual([[6, 4], { mcp: 3, ucp: 1 }, 0.4]);
+    expect([store.chart()?.series.map((series) => series.values[0]), store.agentsBy(), store.agentShare()]).toEqual([
+      [6, 4],
+      { mcp: 3, ucp: 1 },
+      0.4,
+    ]);
   });
 
   /** Orders placed before the channel was recorded are their own line — never counted as the storefront's. */

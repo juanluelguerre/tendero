@@ -6,7 +6,11 @@
       popovertarget="account-menu"
       [attr.aria-label]="t('account.open', { name: who.name, role: who.role })"
     >
-      <span class="inline-grid size-[1.75rem] place-items-center rounded-full bg-accent-tint text-3xs font-semibold text-body" aria-hidden="true">{{ initials() }}</span>
+      <span
+        class="inline-grid size-[1.75rem] place-items-center rounded-full bg-accent-tint text-3xs font-semibold text-body"
+        aria-hidden="true"
+        >{{ initials() }}</span
+      >
       <!-- The role as words, not a tag: the button is already the box, and a box
            inside it read as a second control (the author, the second walkthrough). -->
       <span class="font-mono text-2xs text-muted">{{ who.role }}</span>
@@ -22,11 +26,20 @@
         <strong>{{ who.name }}</strong>
       </p>
 
-      <lib-culture-switch [label]="t('nav.language')" [cultures]="cultures" [active]="culture()" (chosen)="use($event)" />
+      <lib-culture-switch
+        [label]="t('nav.language')"
+        [cultures]="cultures"
+        [active]="culture()"
+        (chosen)="use($event)"
+      />
 
       <lib-theme-switch
         [label]="t('account.theme')"
-        [names]="{ system: t('account.themes.system'), light: t('account.themes.light'), dark: t('account.themes.dark') }"
+        [names]="{
+          system: t('account.themes.system'),
+          light: t('account.themes.light'),
+          dark: t('account.themes.dark'),
+        }"
         [choice]="themeChoice()"
         (chosen)="choose($event)"
       />

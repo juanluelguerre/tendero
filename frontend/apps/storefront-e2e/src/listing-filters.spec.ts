@@ -24,7 +24,9 @@ async function listed(page: Page): Promise<void> {
   await expect(page.locator('.toolbar__count[role="status"]')).toContainText(/\d/);
 }
 
-test('on a desktop, a category narrows by brand, colour and price, and the URL, the count and the chips follow', async ({ page }) => {
+test('on a desktop, a category narrows by brand, colour and price, and the URL, the count and the chips follow', async ({
+  page,
+}) => {
   await desktop(page);
   await page.goto(Category);
   await listed(page);
@@ -67,7 +69,10 @@ test('on a desktop, a category narrows by brand, colour and price, and the URL, 
   await expect(chips).toHaveCount(applied);
 
   // A chip takes its one filter off.
-  await page.locator('.chips').getByRole('button', { name: `Quitar el filtro ${brandName}` }).click();
+  await page
+    .locator('.chips')
+    .getByRole('button', { name: `Quitar el filtro ${brandName}` })
+    .click();
   await expect(page).not.toHaveURL(/[?&]brand=/);
   await expect(chips).toHaveCount(applied - 1);
 
@@ -196,10 +201,15 @@ test('Ofertas in the departments row lists everything on offer', async ({ page }
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ofertas');
   await listed(page);
   await expect(page.locator('.chips .chip')).toHaveText([/oferta/i]);
-  await expect(page.locator('#listing-filters').getByRole('switch', { name: /oferta/i })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#listing-filters').getByRole('switch', { name: /oferta/i })).toHaveAttribute(
+    'aria-checked',
+    'true',
+  );
 });
 
-test('a filtered category names the unfiltered one as canonical, and a search keeps itself out of the index', async ({ page }) => {
+test('a filtered category names the unfiltered one as canonical, and a search keeps itself out of the index', async ({
+  page,
+}) => {
   await page.goto(`${Category}?brand=Vertex&sort=price-asc`);
   await listed(page);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/es\/c\/SHOES$/);

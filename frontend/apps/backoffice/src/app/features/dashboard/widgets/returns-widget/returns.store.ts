@@ -18,7 +18,10 @@ export const ReturnsStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      operations: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.operations(params.period, at) }),
+      operations: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.operations(params.period, at),
+      }),
       _reasons: translateObjectSignal('returns.reason'),
       _words: translateObjectSignal('dashboard.returns'),
     };
@@ -32,7 +35,14 @@ export const ReturnsStore = signalStore(
       const words = store._words() as Partial<Record<string, string>>;
       return {
         categories: ops.openReturnsByReason.map((row) => reasons[row.reason] ?? row.reason),
-        series: [{ key: 'open', label: words['openReturns'] ?? '', role: 'data', values: ops.openReturnsByReason.map((row) => row.count) }],
+        series: [
+          {
+            key: 'open',
+            label: words['openReturns'] ?? '',
+            role: 'data',
+            values: ops.openReturnsByReason.map((row) => row.count),
+          },
+        ],
       };
     }),
   })),

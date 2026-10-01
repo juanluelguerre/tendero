@@ -11,7 +11,12 @@
       [label]="t('orders.filterLabel')"
       (chosen)="store.filterBy($event)"
     />
-    <backoffice-find [label]="t('orders.findLabel')" [placeholder]="t('orders.find')" [value]="store.text()" (searched)="store.search($event)" />
+    <backoffice-find
+      [label]="t('orders.findLabel')"
+      [placeholder]="t('orders.find')"
+      [value]="store.text()"
+      (searched)="store.search($event)"
+    />
   </div>
 
   <backoffice-list-state
@@ -26,7 +31,11 @@
          past a sideways scroll (R-1, B-F4). -->
     <div class="table-wrap wide-only">
       <table class="table">
-        <caption class="sr-only">{{ t('orders.title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('orders.title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('orders.column.order') }}</th>
@@ -35,7 +44,9 @@
             <th scope="col">{{ t('orders.column.payment') }}</th>
             <th scope="col">{{ t('orders.column.placed') }}</th>
             <th scope="col" class="numeric">{{ t('orders.column.total') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('orders.column.action') }}</span></th>
+            <th scope="col">
+              <span class="sr-only">{{ t('orders.column.action') }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -79,7 +90,9 @@
             @if (store.refusal()[order.orderId] !== undefined) {
               <!-- The server's own sentence, under the row it belongs to. -->
               <tr>
-                <td class="py-2 text-xs text-danger" colspan="7" role="alert">{{ store.refusal()[order.orderId] || t('orders.refused') }}</td>
+                <td class="py-2 text-xs text-danger" colspan="7" role="alert">
+                  {{ store.refusal()[order.orderId] || t('orders.refused') }}
+                </td>
               </tr>
             }
           }
@@ -90,10 +103,15 @@
     <ul class="worklist-cards narrow-only" role="list">
       @for (order of store.orders(); track order.orderId) {
         <li class="worklist-card" [class.worklist-card--selected]="order.orderId === store.selectedId()">
-          <button type="button" class="worklist-card__open" [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })" (click)="store.open(order)">
+          <button
+            type="button"
+            class="worklist-card__open"
+            [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })"
+            (click)="store.open(order)"
+          >
             <span class="worklist-card__line">
               <span class="numeric font-semibold text-body">{{ shortId(order.orderId) }}</span>
-              <span class="numeric worklist-card__end font-semibold">{{ money(order.total, order.currency) }}</span>
+              <span class="worklist-card__end numeric font-semibold">{{ money(order.total, order.currency) }}</span>
             </span>
             <span class="worklist-card__line">
               <backoffice-order-status-label [order]="order" />
@@ -112,7 +130,9 @@
             </button>
           }
           @if (store.refusal()[order.orderId] !== undefined) {
-            <p class="col-span-full text-xs text-danger" role="alert">{{ store.refusal()[order.orderId] || t('orders.refused') }}</p>
+            <p class="col-span-full text-xs text-danger" role="alert">
+              {{ store.refusal()[order.orderId] || t('orders.refused') }}
+            </p>
           }
         </li>
       }

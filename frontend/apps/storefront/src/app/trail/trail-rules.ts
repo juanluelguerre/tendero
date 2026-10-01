@@ -75,9 +75,7 @@ export function sameKey(kind: TrailKind, a: string, b: string): boolean {
 /** The entries still inside the 90 days, most recent first. */
 export function stillKept(entries: readonly TrailEntry[], now: Date): TrailEntry[] {
   const oldest = now.getTime() - TrailLimits.retentionDays * DayMs;
-  return entries
-    .filter((entry) => Date.parse(entry.at) > oldest)
-    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+  return entries.filter((entry) => Date.parse(entry.at) > oldest).sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
 }
 
 /**
@@ -142,8 +140,13 @@ export function readTrail(stored: string | null, now: Date): TrailSnapshot {
 
   const entries = (kind: TrailKind, raw: unknown) => {
     const valid = (Array.isArray(raw) ? raw : [])
-      .filter((entry): entry is TrailEntry =>
-        !!entry && typeof entry.key === 'string' && typeof entry.at === 'string' && !Number.isNaN(Date.parse(entry.at)))
+      .filter(
+        (entry): entry is TrailEntry =>
+          !!entry &&
+          typeof entry.key === 'string' &&
+          typeof entry.at === 'string' &&
+          !Number.isNaN(Date.parse(entry.at)),
+      )
       .map((entry) => ({ key: normaliseKey(kind, entry.key), at: entry.at }))
       .filter((entry) => entry.key.length > 0);
     // Oldest first through `withEntry`'s own rule would lose the stored times, so

@@ -15,7 +15,11 @@ export function contrastOf(foreground: string, background: string): number {
       const alpha = full.length === 8 ? parseInt(full.slice(6, 8), 16) / 255 : 1;
       return [parseInt(full.slice(0, 2), 16), parseInt(full.slice(2, 4), 16), parseInt(full.slice(4, 6), 16), alpha];
     }
-    const parts = text.replace(/^rgba?\(|\)$/g, '').split(/[\s,/]+/).filter(Boolean).map(Number);
+    const parts = text
+      .replace(/^rgba?\(|\)$/g, '')
+      .split(/[\s,/]+/)
+      .filter(Boolean)
+      .map(Number);
     return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0, parts[3] ?? 1];
   };
   const luminance = ([r, g, b]: [number, number, number, number]): number => {

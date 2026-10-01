@@ -1,5 +1,14 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, DOCUMENT, type ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DOCUMENT,
+  type ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -32,12 +41,26 @@ import { AccountMenu } from './account-menu/account-menu';
  */
 @Component({
   selector: 'storefront-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, NgTemplateOutlet, ConsentBanner, CompareTray, ShopMenu, AccountMenu, Icon],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    TranslocoDirective,
+    NgTemplateOutlet,
+    ConsentBanner,
+    CompareTray,
+    ShopMenu,
+    AccountMenu,
+    Icon,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   // The host is the page's column, which its template cannot give itself.
-  host: { class: 'flex flex-col min-h-dvh', '(document:click)': 'clickedAt($event)', '(document:keydown.escape)': 'closeMenu(true)' },
+  host: {
+    class: 'flex flex-col min-h-dvh',
+    '(document:click)': 'clickedAt($event)',
+    '(document:keydown.escape)': 'closeMenu(true)',
+  },
 })
 export class Shell {
   private readonly cultureStore = inject(CultureStore);
@@ -106,7 +129,10 @@ export class Shell {
 
     // A navigation is an answer: whatever was open to find it closes.
     this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd), takeUntilDestroyed())
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
       .subscribe(() => this.openDepartment.set(null));
   }
 
@@ -141,7 +167,6 @@ export class Shell {
     const q = text.trim();
     void this.router.navigate(['/', this.culture()], { queryParams: q ? { q } : {} });
   }
-
 
   /** Links have to carry the language segment, so they are built from it. */
   protected readonly home = computed(() => ['/', this.culture()]);

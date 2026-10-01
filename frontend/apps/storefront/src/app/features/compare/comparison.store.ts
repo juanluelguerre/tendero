@@ -21,10 +21,7 @@ export function codesFrom(query: string | null): string[] {
 }
 
 export type ComparisonState =
-  | { status: 'tooFew' }
-  | { status: 'loading' }
-  | { status: 'failed' }
-  | { status: 'done'; sheet: SpecSheet };
+  { status: 'tooFew' } | { status: 'loading' } | { status: 'failed' } | { status: 'done'; sheet: SpecSheet };
 
 /**
  * The comparison page's own state (P10-7; ADR 0047): the products the URL
@@ -37,7 +34,9 @@ export const ComparisonStore = signalStore(
     const route = inject(ActivatedRoute);
     const specs = inject(SpecsService);
     const culture = inject(CultureStore);
-    const codes = toSignal(route.queryParamMap.pipe(map((params) => codesFrom(params.get('codes')))), { initialValue: [] as string[] });
+    const codes = toSignal(route.queryParamMap.pipe(map((params) => codesFrom(params.get('codes')))), {
+      initialValue: [] as string[],
+    });
     return {
       _compare: inject(CompareStore),
       _router: inject(Router),

@@ -14,7 +14,16 @@ import { SearchStore } from './search.store';
 const EmptyFilters = parseListing(convertToParamMap({}));
 
 const ready = (busy = false): ListingResult =>
-  ({ status: 'ready', hits: [], total: 0, facets: [], tookMs: 1, answer: null, afterCultureChange: false, busy }) as ListingResult;
+  ({
+    status: 'ready',
+    hits: [],
+    total: 0,
+    facets: [],
+    tookMs: 1,
+    answer: null,
+    afterCultureChange: false,
+    busy,
+  }) as ListingResult;
 
 /** The home is the search (ADR 0047): what the URL asks for, what the listing lists, what the trail remembers. */
 describe('the search store', () => {
@@ -34,7 +43,10 @@ describe('the search store', () => {
       providers: [
         SearchStore,
         { provide: ActivatedRoute, useValue: { queryParamMap: query } },
-        { provide: ListingStore, useValue: { list: (place: ListingPlace | null) => listed.push(place), filters, result } },
+        {
+          provide: ListingStore,
+          useValue: { list: (place: ListingPlace | null) => listed.push(place), filters, result },
+        },
         { provide: TrailStore, useValue: { recordSearch: (text: string) => remembered.push(text) } },
         {
           provide: CampaignsStore,
@@ -70,7 +82,13 @@ describe('the search store', () => {
     filters.set({ ...EmptyFilters, onOffer: true });
     TestBed.tick();
 
-    expect([store.mode(), listed]).toEqual(['listing', [{ query: 'mochila', category: null }, { query: '', category: null }]]);
+    expect([store.mode(), listed]).toEqual([
+      'listing',
+      [
+        { query: 'mochila', category: null },
+        { query: '', category: null },
+      ],
+    ]);
   });
 
   /** *Sigue donde lo dejaste*: words that were answered, once — not every keystroke, and not while a newer answer is on its way. */

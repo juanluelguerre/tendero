@@ -14,7 +14,7 @@
           @for (seller of summary.bestSellers; track seller.sku) {
             <li class="ranking__row">
               <span class="ranking__name" [title]="seller.sku">{{ seller.name }}</span>
-              <span class="numeric muted">{{ t('unitCount', { count: seller.units }) }}</span>
+              <span class="muted numeric">{{ t('unitCount', { count: seller.units }) }}</span>
               <span class="numeric">{{ money(seller.revenue) }}</span>
             </li>
           }

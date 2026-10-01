@@ -23,7 +23,12 @@ const option = (value: string, count: number, extra: Partial<FacetOption> = {}):
   ...extra,
 });
 
-const facet = (code: string, kind: SearchFacet['kind'], options: FacetOption[], extra: Partial<SearchFacet> = {}): SearchFacet => ({
+const facet = (
+  code: string,
+  kind: SearchFacet['kind'],
+  options: FacetOption[],
+  extra: Partial<SearchFacet> = {},
+): SearchFacet => ({
   code,
   kind,
   label: code,
@@ -31,7 +36,13 @@ const facet = (code: string, kind: SearchFacet['kind'], options: FacetOption[], 
   ...extra,
 });
 
-const category = (code: string, parent: string | null, depth: number): CategoryView => ({ code, parent, name: `Name of ${code}`, path: [], depth });
+const category = (code: string, parent: string | null, depth: number): CategoryView => ({
+  code,
+  parent,
+  name: `Name of ${code}`,
+  path: [],
+  depth,
+});
 
 const words: ChipWords = {
   onOffer: 'On offer',
@@ -61,7 +72,14 @@ describe('the sections of the column', () => {
     const sections = sectionsOf(facets);
 
     expect(sections.map((section) => section.kind)).toEqual([
-      'category', 'brand', 'price', 'switches', 'swatches', 'sizes', 'checks', 'flag',
+      'category',
+      'brand',
+      'price',
+      'switches',
+      'swatches',
+      'sizes',
+      'checks',
+      'flag',
     ]);
     const switches = sections[3];
     expect(switches.kind === 'switches' && switches.facets.map((item) => item.code)).toEqual(['offer', 'stock']);
@@ -85,7 +103,8 @@ describe('the sections of the column', () => {
 });
 
 describe('brand, at the scale of hundreds', () => {
-  const many = (count: number) => Array.from({ length: count }, (_, index) => option(`Brand ${index + 1}`, 100 - index));
+  const many = (count: number) =>
+    Array.from({ length: count }, (_, index) => option(`Brand ${index + 1}`, 100 - index));
 
   it('shows the seven with most results and says how many more there are', () => {
     const view = brandsToShow(many(12), NoFilters, false, '');
@@ -126,7 +145,11 @@ describe('the category, on a search', () => {
   ];
 
   it('offers the departments the results are in', () => {
-    const level = categoryLevel(facet('category', 'Category', [option('BAGS', 7), option('APPAREL', 1), option('BACKPACK', 5)]), shop, NoFilters);
+    const level = categoryLevel(
+      facet('category', 'Category', [option('BAGS', 7), option('APPAREL', 1), option('BACKPACK', 5)]),
+      shop,
+      NoFilters,
+    );
     expect(level.depth).toBe(0);
     expect(level.options.map((item) => item.value)).toEqual(['BAGS', 'APPAREL']);
   });
@@ -174,16 +197,26 @@ describe('nothing moves under the pointer', () => {
 
     const kept = keepShape(before, after)[0].options;
 
-    expect(kept.map((item) => [item.value, item.count])).toEqual([['A', 2], ['B', 0], ['C', 1]]);
+    expect(kept.map((item) => [item.value, item.count])).toEqual([
+      ['A', 2],
+      ['B', 0],
+      ['C', 1],
+    ]);
   });
 
   it('adds an option it had not seen at the end', () => {
-    const kept = keepShape([facet('brand', 'Brand', [option('A', 5)])], [facet('brand', 'Brand', [option('B', 1), option('A', 5)])]);
+    const kept = keepShape(
+      [facet('brand', 'Brand', [option('A', 5)])],
+      [facet('brand', 'Brand', [option('B', 1), option('A', 5)])],
+    );
     expect(kept[0].options.map((item) => item.value)).toEqual(['A', 'B']);
   });
 
   it('does not keep a facet the server dropped: its counts are unknown, not zero', () => {
-    const kept = keepShape([facet('brand', 'Brand', [option('A', 5)]), facet('SIZE', 'Axis', [option('SIZE:42', 1)])], [facet('SIZE', 'Axis', [option('SIZE:42', 1)])]);
+    const kept = keepShape(
+      [facet('brand', 'Brand', [option('A', 5)]), facet('SIZE', 'Axis', [option('SIZE:42', 1)])],
+      [facet('SIZE', 'Axis', [option('SIZE:42', 1)])],
+    );
     expect(kept.map((item) => item.code)).toEqual(['SIZE']);
   });
 });
@@ -211,7 +244,7 @@ describe('the applied chips', () => {
     facet('COLOR', 'Axis', [option('COLOR:BLACK', 2, { label: 'Negro' })]),
   ];
 
-  it('names every applied filter as the column names it, in the column\'s order', () => {
+  it("names every applied filter as the column names it, in the column's order", () => {
     let filters = toggleOption(NoFilters, 'Axis', 'COLOR:BLACK');
     filters = toggleOption(filters, 'Axis', 'SIZE:42');
     filters = toggleOption(filters, 'Brand', 'Vertex');
@@ -222,11 +255,23 @@ describe('the applied chips', () => {
 
     const chips = chipsOf(filters, facets, words);
 
-    expect(chips.map((chip) => chip.label)).toEqual(['Bags', 'Vertex', '30 € – 60 €', 'En oferta', 'In stock', '42', 'Negro']);
+    expect(chips.map((chip) => chip.label)).toEqual([
+      'Bags',
+      'Vertex',
+      '30 € – 60 €',
+      'En oferta',
+      'In stock',
+      '42',
+      'Negro',
+    ]);
   });
 
   it('takes off exactly one filter per chip', () => {
-    const filters = toggleOption(toggleOption(withPrice(NoFilters, 30, null), 'Brand', 'Vertex'), 'Axis', 'COLOR:BLACK');
+    const filters = toggleOption(
+      toggleOption(withPrice(NoFilters, 30, null), 'Brand', 'Vertex'),
+      'Axis',
+      'COLOR:BLACK',
+    );
 
     const chips = chipsOf(filters, facets, words);
     const price = chips.find((chip) => chip.id === 'price');
@@ -239,7 +284,11 @@ describe('the applied chips', () => {
   });
 
   it('still offers a chip for a value no facet names any more, so it can be taken off', () => {
-    const chips = chipsOf(toggleOption(toggleOption(NoFilters, 'Attribute', 'MATERIAL:WOOL'), 'Brand', 'Gone'), [], words);
+    const chips = chipsOf(
+      toggleOption(toggleOption(NoFilters, 'Attribute', 'MATERIAL:WOOL'), 'Brand', 'Gone'),
+      [],
+      words,
+    );
     expect(chips.map((chip) => chip.label)).toEqual(['Gone', 'WOOL']);
   });
 

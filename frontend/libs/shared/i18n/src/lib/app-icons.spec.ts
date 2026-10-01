@@ -45,10 +45,7 @@ describe('the app icons', () => {
 
   /** Every `rel="icon"` href an app's index.html declares, base-relative. */
   function declaredIcons(app: string): string[] {
-    const html = readFileSync(
-      join(repository, 'frontend', 'apps', app, 'src', 'index.html'),
-      'utf8',
-    );
+    const html = readFileSync(join(repository, 'frontend', 'apps', app, 'src', 'index.html'), 'utf8');
 
     return [...html.matchAll(/<link[^>]*rel="[^"]*icon[^"]*"[^>]*>/gi)]
       .map((tag) => /href="([^"]+)"/i.exec(tag[0])?.[1])
@@ -66,9 +63,7 @@ describe('the app icons', () => {
       // `<base href="/">` makes these resolve against the app root, which is
       // what `public/` is served as.
       const onDisk = join(repository, 'frontend', 'apps', app, 'public', href);
-      expect(existsSync(onDisk), `${app}: index.html names ${href}, which does not exist`).toBe(
-        true,
-      );
+      expect(existsSync(onDisk), `${app}: index.html names ${href}, which does not exist`).toBe(true);
     }
   });
 

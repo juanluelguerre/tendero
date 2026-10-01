@@ -24,5 +24,7 @@ export class Notice {
   readonly tone = input<NoticeTone>('info');
   readonly live = input<'polite' | 'assertive' | null>(null);
 
-  protected readonly role = computed(() => (this.live() === 'assertive' ? 'alert' : this.live() === 'polite' ? 'status' : null));
+  protected readonly role = computed(() =>
+    this.live() === 'assertive' ? 'alert' : this.live() === 'polite' ? 'status' : null,
+  );
 }

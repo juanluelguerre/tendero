@@ -8,7 +8,17 @@
      light card without a variant of its own. -->
 <span class="flex flex-wrap items-center gap-2" aria-hidden="true">
   <span class="me-1 text-sm opacity-85">{{ label() }}</span>
-  @for (part of [{ value: time.days, unit: 'd' }, { value: pad(time.hours), unit: 'h' }, { value: pad(time.minutes), unit: 'min' }]; track part.unit) {
-    <span class="numeric inline-flex min-w-[3.25rem] items-baseline gap-[0.2em] rounded-md border border-[color:var(--clock-border,var(--border-strong))] px-3 py-2 text-xl leading-none font-medium max-sm:min-w-[2.75rem] max-sm:text-lg">{{ part.value }}<small class="text-2xs opacity-80">{{ part.unit }}</small></span>
+  @for (
+    part of [
+      { value: time.days, unit: 'd' },
+      { value: pad(time.hours), unit: 'h' },
+      { value: pad(time.minutes), unit: 'min' },
+    ];
+    track part.unit
+  ) {
+    <span
+      class="inline-flex min-w-[3.25rem] items-baseline gap-[0.2em] rounded-md border border-[color:var(--clock-border,var(--border-strong))] px-3 py-2 numeric text-xl leading-none font-medium max-sm:min-w-[2.75rem] max-sm:text-lg"
+      >{{ part.value }}<small class="text-2xs opacity-80">{{ part.unit }}</small></span
+    >
   }
 </span>

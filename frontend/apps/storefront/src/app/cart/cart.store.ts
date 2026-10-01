@@ -49,7 +49,14 @@ interface CartState {
  */
 export const CartStore = signalStore(
   { providedIn: 'root' },
-  withState<CartState>(() => ({ cart: null, quote: null, busy: false, failed: null, token: readToken(), _shipping: 0 })),
+  withState<CartState>(() => ({
+    cart: null,
+    quote: null,
+    busy: false,
+    failed: null,
+    token: readToken(),
+    _shipping: 0,
+  })),
   withProps(() => ({
     _http: inject(HttpClient),
     _baseUrl: inject(API_BASE_URL),
@@ -95,7 +102,10 @@ export const CartStore = signalStore(
         const quote = await firstValueFrom(
           store._http.post<PriceQuote>(
             `${store._baseUrl}/api/pricing/quote`,
-            { lines: cart.lines.map((line) => ({ sku: line.sku, quantity: line.quantity })), shipping: store._shipping() },
+            {
+              lines: cart.lines.map((line) => ({ sku: line.sku, quantity: line.quantity })),
+              shipping: store._shipping(),
+            },
             { params: params() },
           ),
         );
@@ -132,7 +142,13 @@ export const CartStore = signalStore(
     const load = async (): Promise<void> => {
       if (!store.token()) return;
       await run(() =>
-        firstValueFrom(store._http.get<CartView>(`${store._baseUrl}/api/cart`, { headers: headers(), params: params(), observe: 'response' })),
+        firstValueFrom(
+          store._http.get<CartView>(`${store._baseUrl}/api/cart`, {
+            headers: headers(),
+            params: params(),
+            observe: 'response',
+          }),
+        ),
       );
     };
 

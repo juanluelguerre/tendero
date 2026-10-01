@@ -16,8 +16,16 @@ import { activeAgent, allProducts, is, type ProductSummary, shopkeeperApi } from
  */
 test.skip(!process.env['WALKTHROUGH_PREPARE'], 'changes the shop; set WALKTHROUGH_PREPARE=1 to run it');
 
-interface OrderSummary { orderId: string; status: string; recipientName: string; createdAt: string }
-interface ReturnView { number: number; status: string }
+interface OrderSummary {
+  orderId: string;
+  status: string;
+  recipientName: string;
+  createdAt: string;
+}
+interface ReturnView {
+  number: number;
+  status: string;
+}
 
 /** S1 asks for the backpacks, so none of them is taken off sale. */
 const kept = (product: ProductSummary) => !/backpack|mochila/i.test(`${product.category} ${product.name}`);
@@ -47,7 +55,13 @@ test('prepare the shop for the walkthrough', async ({ page }) => {
   const report: [string, number, string][] = [
     ['B1 drafts to review', drafts.length + candidates.length, candidates.map((p) => `withdrawn ${p.code}`).join(', ')],
     ['B2 claims waiting', claims, ''],
-    ['B3 confirmed orders', confirmed.total, confirmed.orders[0] ? `card: ${orderReference(confirmed.orders[0].orderId)} (${confirmed.orders[0].recipientName})` : ''],
+    [
+      'B3 confirmed orders',
+      confirmed.total,
+      confirmed.orders[0]
+        ? `card: ${orderReference(confirmed.orders[0].orderId)} (${confirmed.orders[0].recipientName})`
+        : '',
+    ],
     ['B4 open returns', returns.length, returns[0] ? `first: #${returns[0].number}` : ''],
     ['B5 active agents', agents.length, agents[0] ? `card: ${agents[0].displayName}` : ''],
   ];

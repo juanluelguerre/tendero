@@ -19,9 +19,17 @@
                  a previous period to take it from. -->
             <dd
               class="text-3xs"
-              [class]="change.direction === 'up' ? 'font-semibold text-positive' : change.direction === 'down' ? 'font-semibold text-danger' : 'text-muted'"
+              [class]="
+                change.direction === 'up'
+                  ? 'font-semibold text-positive'
+                  : change.direction === 'down'
+                    ? 'font-semibold text-danger'
+                    : 'text-muted'
+              "
             >
-              <span aria-hidden="true">{{ change.direction === 'up' ? '▲' : change.direction === 'down' ? '▼' : '—' }}</span>
+              <span aria-hidden="true">{{
+                change.direction === 'up' ? '▲' : change.direction === 'down' ? '▼' : '—'
+              }}</span>
               {{ changeText(change) ?? t('direction.' + change.direction) }}
             </dd>
           }

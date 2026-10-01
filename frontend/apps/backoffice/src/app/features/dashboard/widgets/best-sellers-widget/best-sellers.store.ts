@@ -10,7 +10,10 @@ export const BestSellersStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      sales: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.sales(params.period, at) }),
+      sales: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.sales(params.period, at),
+      }),
     };
   }),
 );

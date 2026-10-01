@@ -5,7 +5,9 @@ import { PageState, type PageStateTone } from './page-state';
 
 @Component({
   imports: [PageState],
-  template: `<storefront-page-state [heading]="heading()" [tone]="tone()" [level]="level()"><p>Try fewer words.</p></storefront-page-state>`,
+  template: `<storefront-page-state [heading]="heading()" [tone]="tone()" [level]="level()"
+    ><p>Try fewer words.</p></storefront-page-state
+  >`,
 })
 class Host {
   readonly heading = signal<string | undefined>('Nothing matches «mochila»');

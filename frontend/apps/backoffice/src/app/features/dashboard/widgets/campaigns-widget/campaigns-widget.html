@@ -13,16 +13,19 @@
       <p class="muted">{{ t('none') }}</p>
     } @else if (store.uplift.value(); as figures) {
       <!-- The separator inside the text: whitespace between two elements is not kept. -->
-      <p class="mt-2"><strong>{{ name() }}</strong><span class="muted"> · {{ t('phase.' + store.campaign()!.phase) }}</span></p>
+      <p class="mt-2">
+        <strong>{{ name() }}</strong
+        ><span class="muted"> · {{ t('phase.' + store.campaign()!.phase) }}</span>
+      </p>
       <dl class="facts">
         <div class="fact">
           <dt>{{ t('sold') }}</dt>
-          <dd class="numeric fact__value">{{ money(figures.sold) }}</dd>
+          <dd class="fact__value numeric">{{ money(figures.sold) }}</dd>
         </div>
         @if (figures.hasBaseline && figures.baseline !== null) {
           <div class="fact">
             <dt>{{ t('baseline') }}</dt>
-            <dd class="numeric fact__value">{{ money(figures.baseline) }}</dd>
+            <dd class="fact__value numeric">{{ money(figures.baseline) }}</dd>
             @if (uplift(); as change) {
               <dd class="muted fact__note">{{ t('uplift', { change: change }) }}</dd>
             }

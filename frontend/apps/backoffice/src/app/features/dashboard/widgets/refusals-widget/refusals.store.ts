@@ -13,7 +13,10 @@ export const RefusalsStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      denials: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.agentDenials(params.period, at) }),
+      denials: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.agentDenials(params.period, at),
+      }),
       /** The rules' words as a signal, so the rows follow a change of language. */
       _rules: translateObjectSignal('dashboard.refusals.rule'),
       _words: translateObjectSignal('dashboard.refusals'),
@@ -27,7 +30,14 @@ export const RefusalsStore = signalStore(
       const words = store._words() as Partial<Record<string, string>>;
       return {
         categories: denials.byReason.map((row) => rules[row.reason] ?? rules['denied'] ?? row.reason),
-        series: [{ key: 'refused', label: words['denied'] ?? '', role: 'data', values: denials.byReason.map((row) => row.count) }],
+        series: [
+          {
+            key: 'refused',
+            label: words['denied'] ?? '',
+            role: 'data',
+            values: denials.byReason.map((row) => row.count),
+          },
+        ],
       };
     }),
   })),

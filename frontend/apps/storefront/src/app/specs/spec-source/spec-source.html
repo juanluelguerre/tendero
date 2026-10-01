@@ -20,14 +20,17 @@
     >
       <p class="mb-2 text-2xs tracking-wide text-muted uppercase">{{ t('specs.quoteTitle') }}</p>
       @for (quote of proof.quotes; track $index) {
-        <blockquote class="mb-2 text-md leading-snug" [attr.lang]="quote.culture || null">“{{ quote.text }}”</blockquote>
+        <blockquote class="mb-2 text-md leading-snug" [attr.lang]="quote.culture || null">
+          “{{ quote.text }}”
+        </blockquote>
       }
       <p class="mt-3 text-sm">{{ t('specs.support', { percent: percent() }) }}</p>
       <p class="mt-1 text-2xs text-muted">{{ t('specs.supportNote') }}</p>
     </div>
   } @else if (source() === 'catalogue') {
     <span
-      class="inline-flex min-h-[1.5rem] items-center rounded-full border border-hairline bg-raised px-2 text-2xs leading-[1.6] whitespace-nowrap text-muted pointer-coarse:min-h-[2.75rem]">
+      class="inline-flex min-h-[1.5rem] items-center rounded-full border border-hairline bg-raised px-2 text-2xs leading-[1.6] whitespace-nowrap text-muted pointer-coarse:min-h-[2.75rem]"
+    >
       {{ t('specs.fromCatalogue') }}
     </span>
   }

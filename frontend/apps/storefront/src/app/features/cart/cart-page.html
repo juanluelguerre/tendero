@@ -40,7 +40,7 @@
               @if (line.variantLabel) {
                 <p class="mt-[2px] text-sm text-muted">{{ line.variantLabel }}</p>
               }
-              <p class="mt-[2px] text-xs text-muted numeric">{{ line.sku }}</p>
+              <p class="mt-[2px] numeric text-xs text-muted">{{ line.sku }}</p>
             </div>
 
             <!-- The stepper: this is the control people press most on a phone. -->
@@ -55,18 +55,24 @@
                 [attr.aria-label]="t('cart.decrease')"
                 [disabled]="store.busy()"
                 (click)="change(line, -1)"
-              >−</button>
-              <span class="min-w-[2.5rem] text-center font-semibold numeric">{{ line.quantity }}</span>
+              >
+                −
+              </button>
+              <span class="min-w-[2.5rem] text-center numeric font-semibold">{{ line.quantity }}</span>
               <button
                 type="button"
                 class="size-[40px] bg-surface text-lg leading-[1] text-body enabled:hover:bg-raised disabled:opacity-40"
                 [attr.aria-label]="t('cart.increase')"
                 [disabled]="store.busy()"
                 (click)="change(line, 1)"
-              >+</button>
+              >
+                +
+              </button>
             </div>
 
-            <p class="min-w-[5rem] text-end font-semibold numeric max-xs:col-[2] max-xs:text-start">{{ lineTotal(line.sku) }}</p>
+            <p class="min-w-[5rem] text-end numeric font-semibold max-xs:col-[2] max-xs:text-start">
+              {{ lineTotal(line.sku) }}
+            </p>
 
             <button
               type="button"
@@ -74,7 +80,9 @@
               [attr.aria-label]="t('cart.remove', { name: line.productName })"
               [disabled]="store.busy()"
               (click)="remove(line)"
-            >×</button>
+            >
+              ×
+            </button>
           </li>
         }
       </ul>
@@ -106,9 +114,11 @@
               @for (discount of quote.discounts; track discount.promotionCode) {
                 @let off = discount.outcome !== 'Applied';
                 <li class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 text-sm">
-                  <span class="font-medium" [class.text-muted]="off" [class.line-through]="off">{{ discount.label }}</span>
+                  <span class="font-medium" [class.text-muted]="off" [class.line-through]="off">{{
+                    discount.label
+                  }}</span>
                   @if (discount.outcome === 'Applied') {
-                    <span class="text-positive numeric">−{{ money(discount.amount) }}</span>
+                    <span class="numeric text-positive">−{{ money(discount.amount) }}</span>
                   } @else {
                     <span class="text-xs text-muted">{{ t('cart.suppressed') }}</span>
                   }

@@ -27,7 +27,8 @@ export class CampaignsWidget {
   private readonly culture = inject(CultureStore);
   private readonly words = translateObjectSignal('dashboard.campaigns');
 
-  protected readonly money = (amount: number): string => formatPrice(amount, valueOf(this.store.uplift)?.currency ?? 'EUR', this.culture.active());
+  protected readonly money = (amount: number): string =>
+    formatPrice(amount, valueOf(this.store.uplift)?.currency ?? 'EUR', this.culture.active());
 
   protected readonly name = computed(() => {
     const campaign = this.store.campaign();
@@ -39,7 +40,9 @@ export class CampaignsWidget {
   /** The uplift as a change against the baseline: +27 %, in the reader's culture. */
   protected readonly uplift = computed(() => {
     const figures = valueOf(this.store.uplift);
-    return figures?.baseline != null ? formatChange(changeOf(figures.sold, figures.baseline), this.culture.active()) : null;
+    return figures?.baseline != null
+      ? formatChange(changeOf(figures.sold, figures.baseline), this.culture.active())
+      : null;
   });
 
   /** The days that have ended, sold against their baseline: today, under way, would read as a fall. */
@@ -48,13 +51,22 @@ export class CampaignsWidget {
     const days = figures?.days.filter((day) => !day.future && !day.partial) ?? [];
     if (!figures?.hasBaseline || days.length === 0) return null;
     // In the zone the server counted the days in (ADR 0046): never one assumed here.
-    const format = new Intl.DateTimeFormat(this.culture.active(), { day: 'numeric', month: 'short', timeZone: figures.timeZone });
+    const format = new Intl.DateTimeFormat(this.culture.active(), {
+      day: 'numeric',
+      month: 'short',
+      timeZone: figures.timeZone,
+    });
     const words = this.words() as Partial<Record<'sold' | 'baseline', string>>;
     return {
       categories: days.map((day) => format.format(new Date(day.start)).replace('.', '')),
       series: [
         { key: 'sold', label: words.sold ?? '', role: 'data', values: days.map((day) => day.sold) },
-        { key: 'baseline', label: words.baseline ?? '', role: 'previous', values: days.map((day) => day.baseline ?? 0) },
+        {
+          key: 'baseline',
+          label: words.baseline ?? '',
+          role: 'previous',
+          values: days.map((day) => day.baseline ?? 0),
+        },
       ],
     };
   });

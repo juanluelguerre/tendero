@@ -18,7 +18,9 @@
       aria-autocomplete="list"
       aria-controls="palette-options"
       [attr.aria-expanded]="store.options().length > 0"
-      [attr.aria-activedescendant]="store.options()[store.active()] ? 'palette-' + store.options()[store.active()].id : null"
+      [attr.aria-activedescendant]="
+        store.options()[store.active()] ? 'palette-' + store.options()[store.active()].id : null
+      "
       [attr.aria-label]="t('palette.title')"
       [placeholder]="t('palette.placeholder')"
       [value]="store.query()"
@@ -40,7 +42,9 @@
         (keydown.enter)="go(option)"
         (mousemove)="store.activate(index)"
       >
-        <span class="text-3xs font-semibold tracking-wide text-muted uppercase">{{ t('palette.kind.' + option.kind) }}</span>
+        <span class="text-3xs font-semibold tracking-wide text-muted uppercase">{{
+          t('palette.kind.' + option.kind)
+        }}</span>
         <span class="truncate font-semibold">{{ option.label }}</span>
         <span class="truncate text-xs text-muted">{{ option.detail }}</span>
       </li>

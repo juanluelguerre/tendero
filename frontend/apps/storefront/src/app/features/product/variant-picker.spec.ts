@@ -97,13 +97,9 @@ describe('the variant picker', () => {
   it('disables a combination that is not sold, holding the other axis fixed', () => {
     const variants = sellable(aShirt());
 
-    expect(availabilityOf(variants, { COLOR: 'NAVY_BLUE', SIZE: '38' }, 'COLOR', 'BLACK')).toBe(
-      'available',
-    );
+    expect(availabilityOf(variants, { COLOR: 'NAVY_BLUE', SIZE: '38' }, 'COLOR', 'BLACK')).toBe('available');
 
-    expect(availabilityOf(variants, { COLOR: 'NAVY_BLUE', SIZE: '40' }, 'COLOR', 'BLACK')).toBe(
-      'unavailable',
-    );
+    expect(availabilityOf(variants, { COLOR: 'NAVY_BLUE', SIZE: '40' }, 'COLOR', 'BLACK')).toBe('unavailable');
   });
 
   /**
@@ -114,13 +110,9 @@ describe('the variant picker', () => {
   it('tells sold out apart from not sold', () => {
     const variants = sellable(aShirt());
 
-    expect(availabilityOf(variants, { COLOR: 'NAVY_BLUE', SIZE: '38' }, 'SIZE', '40')).toBe(
-      'soldOut',
-    );
+    expect(availabilityOf(variants, { COLOR: 'NAVY_BLUE', SIZE: '38' }, 'SIZE', '40')).toBe('soldOut');
 
-    expect(availabilityOf(variants, { COLOR: 'BLACK', SIZE: '38' }, 'SIZE', '40')).toBe(
-      'unavailable',
-    );
+    expect(availabilityOf(variants, { COLOR: 'BLACK', SIZE: '38' }, 'SIZE', '40')).toBe('unavailable');
   });
 
   it('resolves a full selection to one variant', () => {
@@ -161,16 +153,12 @@ describe('the variant picker', () => {
    */
   it('ignores discontinued variants entirely', () => {
     const product = aShirt();
-    product.variants.push(
-      variant('BLACK-40', { COLOR: 'BLACK', SIZE: '40' }, { inStock: true, discontinued: true }),
-    );
+    product.variants.push(variant('BLACK-40', { COLOR: 'BLACK', SIZE: '40' }, { inStock: true, discontinued: true }));
 
     const variants = sellable(product);
 
     expect(variants).toHaveLength(3);
-    expect(availabilityOf(variants, { COLOR: 'BLACK', SIZE: '38' }, 'SIZE', '40')).toBe(
-      'unavailable',
-    );
+    expect(availabilityOf(variants, { COLOR: 'BLACK', SIZE: '38' }, 'SIZE', '40')).toBe('unavailable');
   });
 
   /** A product with one implicit default variant has no picker to render. */

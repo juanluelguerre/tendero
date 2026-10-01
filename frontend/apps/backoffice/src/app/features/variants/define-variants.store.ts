@@ -43,7 +43,9 @@ export const DefineVariantsStore = signalStore(
       patchState(store, (state) => ({ axes: [...state.axes, { code: '', options: '' }] }));
     },
     edit(index: number, field: keyof AxisDraft, value: string): void {
-      patchState(store, (state) => ({ axes: state.axes.map((axis, at) => (at === index ? { ...axis, [field]: value } : axis)) }));
+      patchState(store, (state) => ({
+        axes: state.axes.map((axis, at) => (at === index ? { ...axis, [field]: value } : axis)),
+      }));
     },
     generate(productId: string): void {
       const axes = store
@@ -65,7 +67,10 @@ export const DefineVariantsStore = signalStore(
           // The server's 409 carries the domain's reason; showing it is more useful
           // than a "something went wrong" that forces you to open the console.
           const conflict = error as { error?: unknown };
-          patchState(store, { busy: false, failed: typeof conflict.error === 'string' ? conflict.error : 'Could not define the variants.' });
+          patchState(store, {
+            busy: false,
+            failed: typeof conflict.error === 'string' ? conflict.error : 'Could not define the variants.',
+          });
         },
       });
     },

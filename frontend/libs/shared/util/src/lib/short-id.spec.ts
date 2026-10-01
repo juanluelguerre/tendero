@@ -4,7 +4,10 @@ import { shortId } from './short-id';
 /** A long id shortened to what tells it apart: its random end, never its timestamp start. */
 describe('a short id', () => {
   it('is the random end of a version-7 Guid, so two minted together read apart', () => {
-    expect([shortId('01a0f3c3-5c3e-7000-8000-00000000a1b2'), shortId('01a0f3c3-5c3e-7000-8000-00000000c3d4')]).toEqual(['0000a1b2', '0000c3d4']);
+    expect([shortId('01a0f3c3-5c3e-7000-8000-00000000a1b2'), shortId('01a0f3c3-5c3e-7000-8000-00000000c3d4')]).toEqual([
+      '0000a1b2',
+      '0000c3d4',
+    ]);
   });
 
   it('is eight characters of a dashless trace id, not the whole of it', () => {

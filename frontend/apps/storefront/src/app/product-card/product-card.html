@@ -7,13 +7,23 @@
        on them went nowhere (UI review, 2026-09-11). Hidden from the keyboard
        and from screen readers, because the name below is the one link they
        need. -->
-  <a class="relative block" [class.flex-none]="line" [class.w-8]="line"
-     [routerLink]="links.product(item.slug, item.code)" [state]="linkState()" tabindex="-1" aria-hidden="true">
+  <a
+    class="relative block"
+    [class.flex-none]="line"
+    [class.w-8]="line"
+    [routerLink]="links.product(item.slug, item.code)"
+    [state]="linkState()"
+    tabindex="-1"
+    aria-hidden="true"
+  >
     @if (badge(); as label) {
       <!-- Decoration of the picture, so hidden with it; a screen reader gets the
            same word after the name. A label on the picture — *Oferta*, *Nuevo* —
            in the accent, as a figure on a tag is: a word, not an action. -->
-      <span class="absolute start-2 top-2 z-1 rounded-sm bg-accent px-2 py-[0.125rem] text-2xs font-semibold text-on-accent">{{ label }}</span>
+      <span
+        class="absolute start-2 top-2 z-1 rounded-sm bg-accent px-2 py-[0.125rem] text-2xs font-semibold text-on-accent"
+        >{{ label }}</span
+      >
     }
     <!-- What cannot be bought is drawn faded, so a shelf reads at a glance. -->
     <storefront-product-image
@@ -27,12 +37,15 @@
       [src]="imageUrl()"
       [alt]="item.name"
       [labelled]="!line"
-      loading="lazy" />
+      loading="lazy"
+    />
   </a>
 
   @if (rank(); as place) {
     <!-- A ranking: the place large, in the mono face the shop uses for figures. -->
-    <span class="numeric text-2xl leading-none font-semibold text-accent" [class.-order-1]="line" aria-hidden="true">{{ place }}</span>
+    <span class="numeric text-2xl leading-none font-semibold text-accent" [class.-order-1]="line" aria-hidden="true">{{
+      place
+    }}</span>
   }
 
   <div class="flex flex-col gap-1" [class.p-4]="!line" [class.min-w-0]="line" [class.py-3]="line" [class.pe-3]="line">
@@ -47,7 +60,9 @@
       <!-- `card__link` is the end-to-end tests' hook. A finger's 44 px without
            moving the card: the name keeps its line, and the padding it gains is
            taken back by the margin (R-5.2). What the padding overlaps is the
-           image above, which leads to the same product. -->
+           image above, which leads to the same product. Its blocks stay inline: the
+           formatter's line breaks would be spaces around the name. -->
+      <!-- prettier-ignore -->
       <a class="card__link text-inherit no-underline hover:underline pointer-coarse:-my-3 pointer-coarse:inline-block pointer-coarse:py-3"
          [routerLink]="links.product(item.slug, item.code)" [state]="linkState()">
         @if (rank(); as place) {<span class="sr-only">{{ t('shelf.rank', { rank: place }) }} </span>}{{ item.name }}
@@ -55,18 +70,31 @@
       </a>
     </h3>
 
-    <p class="numeric font-medium"
-       [class.mt-2]="!line" [class.text-lg]="!line" [class.mt-1]="line" [class.text-md]="line"
-       [class.text-muted]="!item.inStock">{{ price() }}</p>
+    <p
+      class="numeric font-medium"
+      [class.mt-2]="!line"
+      [class.text-lg]="!line"
+      [class.mt-1]="line"
+      [class.text-md]="line"
+      [class.text-muted]="!item.inStock"
+    >
+      {{ price() }}
+    </p>
 
     @if (reason(); as why) {
       <p class="mt-1 flex items-start gap-1 text-2xs leading-snug text-muted">
-        <svg class="mt-[0.1em] size-[0.875rem] flex-none fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]"
-             viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <svg
+          class="mt-[0.1em] size-[0.875rem] flex-none fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
           @if (why.icon === 'viewed') {
-            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+            <circle cx="12" cy="12" r="3" />
           } @else {
-            <path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" />
+            <path d="M3 17l6-6 4 4 8-8" />
+            <path d="M15 7h6v6" />
           }
         </svg>
         <span>{{ why.text }}</span>
@@ -80,7 +108,10 @@
     } @else if (actions()) {
       <button
         class="mt-3 min-h-[40px] w-full rounded-md border border-hairline-strong bg-surface text-sm font-semibold text-body transition-[background,border-color,color] duration-(--dur-fast) ease-brand hover:enabled:border-accent hover:enabled:bg-accent hover:enabled:text-on-accent disabled:cursor-default disabled:opacity-60"
-        type="button" [disabled]="adding()" (click)="addToCart()">
+        type="button"
+        [disabled]="adding()"
+        (click)="addToCart()"
+      >
         {{ adding() ? '…' : t('product.addToCart') }}
       </button>
     }
@@ -90,15 +121,16 @@
          cart is this card's one accent action. 24 px, WCAG 2.2's floor; 44
          where a finger aims (R-1, S-F4). -->
     @if (actions()) {
-    @let picked = compare.has(item.code);
-    <button
-      class="inline-flex min-h-[1.5rem] items-center self-start text-xs text-muted underline underline-offset-[0.2em] aria-pressed:text-body disabled:cursor-not-allowed disabled:no-underline pointer-coarse:min-h-[2.75rem]"
-      type="button"
-      [attr.aria-pressed]="picked"
-      [disabled]="!picked && compare.full()"
-      (click)="toggleCompare()">
-      {{ picked ? t('compare.picked') : t('compare.pick') }}
-    </button>
+      @let picked = compare.has(item.code);
+      <button
+        class="inline-flex min-h-[1.5rem] items-center self-start text-xs text-muted underline underline-offset-[0.2em] disabled:cursor-not-allowed disabled:no-underline aria-pressed:text-body pointer-coarse:min-h-[2.75rem]"
+        type="button"
+        [attr.aria-pressed]="picked"
+        [disabled]="!picked && compare.full()"
+        (click)="toggleCompare()"
+      >
+        {{ picked ? t('compare.picked') : t('compare.pick') }}
+      </button>
     }
   </div>
 </ng-container>

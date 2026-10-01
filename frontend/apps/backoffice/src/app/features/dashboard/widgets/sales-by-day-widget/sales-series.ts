@@ -6,12 +6,21 @@ import type { BarChartData } from '../../../../charts/chart-contract';
  * culture and in the shop's zone, which the server bucketed it in (ADR 0046) — an hour for a day, a
  * weekday for a week, a date for a month.
  */
-export function toBarChart(series: SalesSeries, culture: string, labels: { current: string; previous: string }): BarChartData {
+export function toBarChart(
+  series: SalesSeries,
+  culture: string,
+  labels: { current: string; previous: string },
+): BarChartData {
   return {
     categories: bucketLabels(series, culture),
     series: [
       { key: 'current', label: labels.current, role: 'data', values: series.current.map((point) => point.revenue) },
-      { key: 'previous', label: labels.previous, role: 'previous', values: series.previous.map((point) => point.revenue) },
+      {
+        key: 'previous',
+        label: labels.previous,
+        role: 'previous',
+        values: series.previous.map((point) => point.revenue),
+      },
     ],
   };
 }

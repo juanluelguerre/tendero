@@ -14,7 +14,9 @@
     white-space: normal;
   }
 
-  .figures-toggle { display: none; }
+  .figures-toggle {
+    display: none;
+  }
 }
 
 /* A wall is glanced at from across a room, not read: at L the table of figures
@@ -32,4 +34,6 @@
   white-space: nowrap;
 }
 
-:host-context(.grid--fill) .figures-toggle { display: inline-flex; }
+:host-context(.grid--fill) .figures-toggle {
+  display: inline-flex;
+}

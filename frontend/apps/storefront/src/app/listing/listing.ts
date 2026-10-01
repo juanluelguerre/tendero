@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, type ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  type ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Telemetry } from '@tendero/shared-telemetry';
@@ -10,7 +21,15 @@ import { CanonicalLinks } from '../seo/canonical-links';
 import { RobotsMeta } from '../seo/robots-meta';
 import { ShopLinks } from '../shop-links';
 import { FilterPanel } from './filter-panel/filter-panel';
-import { clearAll, hasFilters, ListingSorts, narrowedFacets, withSort, type ListingFilters, type ListingSort } from './listing-filters';
+import {
+  clearAll,
+  hasFilters,
+  ListingSorts,
+  narrowedFacets,
+  withSort,
+  type ListingFilters,
+  type ListingSort,
+} from './listing-filters';
 import { listingIndexing } from './listing-indexing';
 import { ListingPageSize, ListingStore } from './listing.store';
 import { chipsOf, sayablePrice, type CategoryLink, type Chip } from './listing-view';

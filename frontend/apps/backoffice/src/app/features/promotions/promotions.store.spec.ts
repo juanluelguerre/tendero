@@ -10,7 +10,12 @@ import { PromotionsStore } from './promotions.store';
 describe('the promotions store', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, PromotionsStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        PromotionsStore,
+      ],
     });
   });
 

@@ -13,13 +13,15 @@
           <div class="fact" [class.at-m]="rate.key !== 'cancellation'">
             <dt>
               @if (rate.key === 'cancellation') {
-                <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{ t('rate.' + rate.key) }}</a>
+                <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{
+                  t('rate.' + rate.key)
+                }}</a>
               } @else {
                 {{ t('rate.' + rate.key) }}
               }
             </dt>
             @if (rate.rate !== null && rate.standing) {
-              <dd class="numeric fact__value">{{ share(rate.rate) }}</dd>
+              <dd class="fact__value numeric">{{ share(rate.rate) }}</dd>
               <!-- Against the target the server holds: the standing is decided
                    there, and said here in a word as well as a colour. -->
               <dd

@@ -11,16 +11,18 @@
     @if (store.operations.value(); as ops) {
       <dl class="facts">
         <div class="fact">
-          <dt><a class="fact__link" routerLink="/returns">{{ t('openReturns') }}</a></dt>
-          <dd class="numeric fact__value">{{ ops.openReturns }}</dd>
+          <dt>
+            <a class="fact__link" routerLink="/returns">{{ t('openReturns') }}</a>
+          </dt>
+          <dd class="fact__value numeric">{{ ops.openReturns }}</dd>
         </div>
         <div class="fact">
           <dt>{{ t('returnRate') }}</dt>
-          <dd class="numeric fact__value">{{ share(ops.returnRate) }}</dd>
+          <dd class="fact__value numeric">{{ share(ops.returnRate) }}</dd>
         </div>
         <div class="fact">
           <dt>{{ t('refunded') }}</dt>
-          <dd class="numeric fact__value">{{ money(ops.refunded, ops.currency) }}</dd>
+          <dd class="fact__value numeric">{{ money(ops.refunded, ops.currency) }}</dd>
         </div>
       </dl>
       @if (store.chart(); as data) {

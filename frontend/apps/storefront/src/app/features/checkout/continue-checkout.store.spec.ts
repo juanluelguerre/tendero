@@ -24,7 +24,10 @@ describe('the continue-checkout store', () => {
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ sessionId: 'S-1' }) } } },
         { provide: OrderService, useValue: { handOff: () => handOff() } },
         { provide: CartStore, useValue: { adopt: async (token: string) => void adopted.push(token) } },
-        { provide: Router, useValue: { navigate: async (commands: unknown[], extras: unknown) => void went.push([commands, extras]) } },
+        {
+          provide: Router,
+          useValue: { navigate: async (commands: unknown[], extras: unknown) => void went.push([commands, extras]) },
+        },
       ],
     });
     const store = TestBed.inject(ContinueCheckoutStore);
@@ -35,7 +38,11 @@ describe('the continue-checkout store', () => {
   it('takes the cart over and goes on to checkout, replacing this address', async () => {
     const store = await opened();
 
-    expect([adopted, went, store.state()]).toEqual([['T-9'], [[['/', 'en', 'checkout'], { replaceUrl: true }]], 'taking-over']);
+    expect([adopted, went, store.state()]).toEqual([
+      ['T-9'],
+      [[['/', 'en', 'checkout'], { replaceUrl: true }]],
+      'taking-over',
+    ]);
   });
 
   it('says a hand-off that no longer exists is gone, and anything else failed', async () => {

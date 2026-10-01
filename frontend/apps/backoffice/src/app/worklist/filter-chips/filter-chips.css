@@ -11,7 +11,11 @@
 }
 
 @media (min-width: 64rem) {
-  :host { flex-wrap: wrap; overflow: visible; mask-image: none; }
+  :host {
+    flex-wrap: wrap;
+    overflow: visible;
+    mask-image: none;
+  }
 }
 
 /* An invisible copy of the words in the weight a choice gives them, so choosing

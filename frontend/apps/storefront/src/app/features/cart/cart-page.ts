@@ -39,8 +39,8 @@ export class CartPage {
   private readonly images = inject(ProductImageUrls);
 
   /** Line net, from the quote — never multiplied on the client. */
-  private readonly netBySku = computed(() =>
-    new Map((this.store.quote()?.lines ?? []).map((line) => [line.sku, line.net])),
+  private readonly netBySku = computed(
+    () => new Map((this.store.quote()?.lines ?? []).map((line) => [line.sku, line.net])),
   );
 
   constructor() {

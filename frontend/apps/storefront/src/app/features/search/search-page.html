@@ -55,7 +55,9 @@
           @if (upcoming && upcoming.phase === 'Upcoming') {
             <!-- Before the window opens its promotions reach nothing yet, and
                  an empty list with no reason reads as a broken link. -->
-            <lib-notice class="mt-5">{{ t('campaign.notStarted', { name: upcoming.name, date: campaignStarts() }) }}</lib-notice>
+            <lib-notice class="mt-5">{{
+              t('campaign.notStarted', { name: upcoming.name, date: campaignStarts() })
+            }}</lib-notice>
           }
           @if (result.status === 'ready') {
             @if (result.answer?.helpTopic === 'returns') {
@@ -72,10 +74,15 @@
                      answer, not an invitation, and a clay card would compete with
                      a product's Add to cart (design/DESIGN.md); a neutral shift is
                      enough feedback. `help-card` is the spec's hook. -->
-                <aside class="help-card mb-5 rounded-lg border border-hairline bg-surface p-5" aria-labelledby="help-returns-title">
+                <aside
+                  class="help-card mb-5 rounded-lg border border-hairline bg-surface p-5"
+                  aria-labelledby="help-returns-title"
+                >
                   <h2 id="help-returns-title" class="mb-2 text-md">{{ t('search.help.returnsTitle') }}</h2>
                   <p>{{ t('search.help.returnsBody', { days: returnDays }) }}</p>
-                  <a class="text-body underline underline-offset-2 hover:text-muted" [routerLink]="links.account()">{{ t('search.help.returnsLink') }}</a>
+                  <a class="text-body underline underline-offset-2 hover:text-muted" [routerLink]="links.account()">{{
+                    t('search.help.returnsLink')
+                  }}</a>
                 </aside>
               }
             }
@@ -84,7 +91,10 @@
                  polite live region, and two concurrent ones race a screen
                  reader against itself. -->
             @if (result.answer?.match === 'Related') {
-              <storefront-page-state class="mt-5" [heading]="t('search.related.title', { query: store.queryFromUrl().trim() })" />
+              <storefront-page-state
+                class="mt-5"
+                [heading]="t('search.related.title', { query: store.queryFromUrl().trim() })"
+              />
               <!-- Not a page state: it introduces the grid rather than
                    replacing it, so it reads as a section title and not as a
                    message. -->

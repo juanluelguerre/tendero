@@ -1,7 +1,5 @@
 <ng-container *transloco="let t">
-  @let filters = state.filters();
-  @let applied = state.applied();
-  @let chipList = chips(t);
+  @let filters = state.filters(); @let applied = state.applied(); @let chipList = chips(t);
 
   <!-- `listing--folded` is what the column and the grid read below, and what
        the unit test reads. -->
@@ -50,7 +48,7 @@
       <p class="toolbar__count text-sm text-muted [grid-area:count]" role="status" aria-live="polite">
         {{ count(t) }}
         @if (searching() && ready(); as done) {
-          <span class="numeric ms-2 text-2xs">{{ t('search.took', { ms: done.tookMs }) }}</span>
+          <span class="ms-2 numeric text-2xs">{{ t('search.took', { ms: done.tookMs }) }}</span>
         }
       </p>
 
@@ -102,18 +100,28 @@
             {{ searching() ? t('listing.sort.relevance') : t('listing.sort.recommended') }}
           </option>
           @for (sort of sorts; track sort) {
-            <option [value]="sort" [selected]="filters.sort === sort">{{ t('listing.sort.' + sort) }}</option>
+            <option [value]="sort" [selected]="filters.sort === sort">
+              {{ t('listing.sort.' + sort) }}
+            </option>
           }
         </select>
       </label>
     </div>
 
     <!-- Folding pays in columns, not in whitespace: the grid takes the room. -->
-    <div class="mt-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-6 lg:in-[.listing--folded]:grid-cols-1">
+    <div
+      class="mt-4 lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-6 lg:in-[.listing--folded]:grid-cols-1"
+    >
       <!-- The desktop's column. Below 64rem it is not drawn at all: the sheet
            holds the same panel. -->
-      <aside class="hidden lg:block lg:in-[.listing--folded]:hidden" id="listing-filters" aria-labelledby="listing-filters-title">
-        <h2 id="listing-filters-title" class="sr-only">{{ t('listing.filters') }}</h2>
+      <aside
+        class="hidden lg:block lg:in-[.listing--folded]:hidden"
+        id="listing-filters"
+        aria-labelledby="listing-filters-title"
+      >
+        <h2 id="listing-filters-title" class="sr-only">
+          {{ t('listing.filters') }}
+        </h2>
         <storefront-filter-panel
           [facets]="facets()"
           [filters]="filters"
@@ -124,7 +132,9 @@
       </aside>
 
       <section class="min-w-0" aria-labelledby="listing-results-title" [attr.aria-busy]="ready()?.busy ? 'true' : null">
-        <h2 id="listing-results-title" class="sr-only">{{ t('listing.results') }}</h2>
+        <h2 id="listing-results-title" class="sr-only">
+          {{ t('listing.results') }}
+        </h2>
 
         <!-- Whatever the page says above its products. -->
         <ng-content />
@@ -135,7 +145,9 @@
             <div class="blank">
               <p class="blank__text">{{ t('listing.empty') }}</p>
               @if (filtered()) {
-                <button type="button" class="button button--quiet" (click)="clearAll('empty')">{{ t('listing.clearAll') }}</button>
+                <button type="button" class="button button--quiet" (click)="clearAll('empty')">
+                  {{ t('listing.clearAll') }}
+                </button>
               }
             </div>
           } @else {
@@ -159,8 +171,15 @@
                  that, and a button survives the back button. -->
             @if (hasMore()) {
               <div class="mt-6 grid justify-items-center gap-3 text-sm">
-                <p class="muted">{{ t('listing.seen', { shown: done.hits.length, total: done.total }) }}</p>
-                <button type="button" class="button button--quiet" [disabled]="state.loadingMore()" (click)="state.loadMore()">
+                <p class="muted">
+                  {{ t('listing.seen', { shown: done.hits.length, total: done.total }) }}
+                </p>
+                <button
+                  type="button"
+                  class="button button--quiet"
+                  [disabled]="state.loadingMore()"
+                  (click)="state.loadMore()"
+                >
                   {{ state.loadingMore() ? t('listing.loadingMore') : t('listing.more', { count: nextCount() }) }}
                 </button>
               </div>
@@ -198,7 +217,9 @@
     (close)="sheetClosed()"
   >
     <div class="flex min-h-[3.5rem] items-center justify-between border-b border-hairline ps-4 pe-2">
-      <h2 id="listing-sheet-title" class="text-lg">{{ t('listing.filters') }}</h2>
+      <h2 id="listing-sheet-title" class="text-lg">
+        {{ t('listing.filters') }}
+      </h2>
       <button
         type="button"
         class="inline-grid size-[2.75rem] cursor-pointer place-items-center rounded-md bg-transparent text-body"
@@ -224,8 +245,12 @@
       <!-- The batch's two ends. *Ver N productos* is this view's one clay
            action (design/DESIGN.md); N is asked of the API once the taps settle.
            The footer stays where the thumb is, however long the filters. -->
-      <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3 border-t border-hairline bg-surface px-4 py-3 whitespace-nowrap">
-        <button type="button" class="button button--quiet" (click)="clearPending()">{{ t('listing.clearAll') }}</button>
+      <div
+        class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3 border-t border-hairline bg-surface px-4 py-3 whitespace-nowrap"
+      >
+        <button type="button" class="button button--quiet" (click)="clearPending()">
+          {{ t('listing.clearAll') }}
+        </button>
         @let total = state.pendingTotal();
         <button type="button" class="button sheet__apply" (click)="applyPending()">
           @if (total === null) {
@@ -242,7 +267,13 @@
 
   <ng-template #sliders>
     <svg class="size-[20px] flex-none" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+      <path
+        d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      />
       <path d="M15 5v4M9 10v4M17 15v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
     </svg>
   </ng-template>

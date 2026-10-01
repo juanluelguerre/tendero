@@ -54,14 +54,27 @@ describe('ECharts options for a bar chart', () => {
 
     expect(options.textStyle).toEqual({ color: COLOURS.text, fontFamily: COLOURS.font });
     expect([options.xAxis.axisLabel.color, options.yAxis.axisLabel.color]).toEqual([COLOURS.muted, COLOURS.muted]);
-    expect([options.xAxis.axisLine.lineStyle.color, options.yAxis.splitLine.lineStyle.color]).toEqual([COLOURS.border, COLOURS.border]);
-    expect(options.tooltip).toMatchObject({ backgroundColor: COLOURS.surface, borderColor: COLOURS.border, textStyle: { color: COLOURS.text } });
+    expect([options.xAxis.axisLine.lineStyle.color, options.yAxis.splitLine.lineStyle.color]).toEqual([
+      COLOURS.border,
+      COLOURS.border,
+    ]);
+    expect(options.tooltip).toMatchObject({
+      backgroundColor: COLOURS.surface,
+      borderColor: COLOURS.border,
+      textStyle: { color: COLOURS.text },
+    });
   });
 
   /** ADR 0045: a colour reaches ECharts only from the tokens, never written into the options. */
   it.each(['columns', 'rows', 'share'] as const)('carries no colour but the ones it is given, as %s', (layout) => {
     const written = JSON.stringify(barOptions(DATA, String, COLOURS, false, layout));
-    const given = new Set([...Object.values(COLOURS.series), COLOURS.text, COLOURS.muted, COLOURS.border, COLOURS.surface]);
+    const given = new Set([
+      ...Object.values(COLOURS.series),
+      COLOURS.text,
+      COLOURS.muted,
+      COLOURS.border,
+      COLOURS.surface,
+    ]);
 
     expect(written.match(/#[0-9a-f]{3,8}\b/gi)).toBeNull();
     expect((written.match(/rgba?\([^)]*\)/g) ?? []).filter((colour) => !given.has(colour))).toEqual([]);
@@ -81,13 +94,20 @@ describe('bars in rows and as a share', () => {
     ],
   };
   type Axis = { type: string; data?: string[]; inverse?: boolean; show?: boolean; max?: number };
-  type Layout = { xAxis: Axis; yAxis: Axis; series: { stack?: string; itemStyle: { borderColor?: string; borderWidth?: number } }[] };
+  type Layout = {
+    xAxis: Axis;
+    yAxis: Axis;
+    series: { stack?: string; itemStyle: { borderColor?: string; borderWidth?: number } }[];
+  };
 
   it('puts the categories on the left, first at the top, when the bars are rows', () => {
     const options = barOptions(REASONS, String, COLOURS, false, 'rows') as unknown as Layout;
 
     expect([options.yAxis.type, options.yAxis.data, options.yAxis.inverse, options.xAxis.type]).toEqual([
-      'category', ['Damaged', 'Wrong size', 'Changed mind'], true, 'value',
+      'category',
+      ['Damaged', 'Wrong size', 'Changed mind'],
+      true,
+      'value',
     ]);
   });
 
@@ -103,7 +123,8 @@ describe('bars in rows and as a share', () => {
     const options = barOptions(CHANNELS, String, COLOURS, false, 'share') as unknown as Layout;
 
     expect(options.series.map((series) => [series.itemStyle.borderColor, series.itemStyle.borderWidth])).toEqual([
-      [COLOURS.surface, 2], [COLOURS.surface, 2],
+      [COLOURS.surface, 2],
+      [COLOURS.surface, 2],
     ]);
   });
 

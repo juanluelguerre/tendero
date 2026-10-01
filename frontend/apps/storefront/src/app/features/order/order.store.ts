@@ -132,7 +132,12 @@ export const OrderStore = signalStore(
           const opened = await store._orders.requestReturn(
             order.orderId,
             {
-              lines: [...store.picked().entries()].map(([sku, line]) => ({ sku, quantity: line.quantity, reason: line.reason, comment: null })),
+              lines: [...store.picked().entries()].map(([sku, line]) => ({
+                sku,
+                quantity: line.quantity,
+                reason: line.reason,
+                comment: null,
+              })),
             },
             store._culture.active(),
           );
@@ -148,7 +153,9 @@ export const OrderStore = signalStore(
             returnMessage:
               failure.status === 409
                 ? store._transloco.translate('order.returnClosed')
-                : store._transloco.translate('order.returnFailed', { reason: typeof failure.error === 'string' ? failure.error : '' }),
+                : store._transloco.translate('order.returnFailed', {
+                    reason: typeof failure.error === 'string' ? failure.error : '',
+                  }),
           });
         } finally {
           patchState(store, { sending: false });

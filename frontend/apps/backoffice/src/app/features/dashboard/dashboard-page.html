@@ -4,7 +4,10 @@
     <header class="wall-head mb-4 flex flex-wrap items-baseline gap-x-5 gap-y-2">
       <h1 class="text-xl">{{ t('dashboard.tabs.' + tab()) }}</h1>
       <span>{{ t('dashboard.period.' + period()) }}</span>
-      <span class="muted">{{ t('dashboard.fullScreen.updated', { time: updated() }) }} · {{ t('dashboard.fullScreen.everyMinute') }}</span>
+      <span class="muted"
+        >{{ t('dashboard.fullScreen.updated', { time: updated() }) }} ·
+        {{ t('dashboard.fullScreen.everyMinute') }}</span
+      >
       <button type="button" class="button button--small button--quiet full-screen-leave ms-auto" (click)="leaveWall()">
         {{ t('dashboard.fullScreen.leave') }}
       </button>
@@ -29,7 +32,11 @@
         </div>
         @if (fullScreen.supported) {
           <!-- The button is for a monitor: from 1440 up, never on a phone (spec, full screen). -->
-          <button type="button" class="button button--small button--quiet full-screen-enter hidden 2xl:inline-flex" (click)="enterWall()">
+          <button
+            type="button"
+            class="button button--small button--quiet full-screen-enter hidden 2xl:inline-flex"
+            (click)="enterWall()"
+          >
             {{ t('dashboard.fullScreen.enter') }}
           </button>
         }
@@ -39,7 +46,7 @@
 
     <!-- On a phone the tabs scroll sideways rather than wrap (spec, the phone). -->
     <nav
-      class="tabs mb-4 flex gap-1 overflow-x-auto border-b border-hairline [scrollbar-width:thin]"
+      class="tabs mb-4 flex [scrollbar-width:thin] gap-1 overflow-x-auto border-b border-hairline"
       [attr.aria-label]="t('dashboard.tabs.label')"
     >
       @for (tab of tabs; track tab) {
@@ -49,7 +56,12 @@
           [routerLink]="linkOf(tab)"
           [queryParams]="{ period: queryOfPeriod(period()) }"
           routerLinkActive
-          [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
+          [routerLinkActiveOptions]="{
+            paths: 'exact',
+            queryParams: 'ignored',
+            fragment: 'ignored',
+            matrixParams: 'ignored',
+          }"
           ariaCurrentWhenActive="page"
         >
           {{ t('dashboard.tabs.' + tab) }}

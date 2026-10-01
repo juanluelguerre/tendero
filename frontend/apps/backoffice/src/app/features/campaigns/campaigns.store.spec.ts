@@ -11,7 +11,11 @@ import { CampaignsStore } from './campaigns.store';
 
 const Calendar = 'http://api/api/pricing/campaign-calendar';
 
-function campaign(code: string, status: ManagedCampaignView['status'], phase: ManagedCampaignView['phase']): ManagedCampaignView {
+function campaign(
+  code: string,
+  status: ManagedCampaignView['status'],
+  phase: ManagedCampaignView['phase'],
+): ManagedCampaignView {
   return {
     code,
     name: { es: code, en: code },
@@ -38,7 +42,14 @@ describe('the campaigns store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, CampaignsStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        CampaignsStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -49,7 +60,9 @@ describe('the campaigns store', () => {
     await TestBed.inject(Router).navigateByUrl(url);
     const store = TestBed.inject(CampaignsStore);
     TestBed.tick();
-    http.match(Calendar).forEach((req) => req.flush([campaign('ON', 'Scheduled', 'Running'), campaign('DRAFT', 'Draft', 'Upcoming')]));
+    http
+      .match(Calendar)
+      .forEach((req) => req.flush([campaign('ON', 'Scheduled', 'Running'), campaign('DRAFT', 'Draft', 'Upcoming')]));
     http.match('http://api/api/pricing/promotions').forEach((req) => req.flush({ items: [] }));
     http.match((req) => req.url === 'http://api/api/catalog/categories').forEach((req) => req.flush({ items: [] }));
     await new Promise((resolve) => setTimeout(resolve));

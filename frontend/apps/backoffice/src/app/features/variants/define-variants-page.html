@@ -35,7 +35,9 @@
     >
       {{ t('variants.addAxis') }}
     </button>
-    <span class="numeric ms-auto text-xs text-muted">{{ t('variants.willCreate', { count: store.combinations() }) }}</span>
+    <span class="ms-auto numeric text-xs text-muted">{{
+      t('variants.willCreate', { count: store.combinations() })
+    }}</span>
     <button
       type="button"
       class="rounded-sm border border-accent bg-accent px-3 py-2 text-on-accent disabled:cursor-not-allowed disabled:opacity-60"

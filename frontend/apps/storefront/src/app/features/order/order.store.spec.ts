@@ -9,7 +9,15 @@ import { OrderService } from '../../data-access/order.service';
 import { OrderStore } from './order.store';
 
 const order = (status = 'Delivered'): OrderView =>
-  ({ orderId: 'O-1', status, currency: 'EUR', lines: [{ sku: 'MUG', quantity: 3 }, { sku: 'TEA', quantity: 1 }] }) as unknown as OrderView;
+  ({
+    orderId: 'O-1',
+    status,
+    currency: 'EUR',
+    lines: [
+      { sku: 'MUG', quantity: 3 },
+      { sku: 'TEA', quantity: 1 },
+    ],
+  }) as unknown as OrderView;
 
 /** The order page's own state (ADR 0047): the order, what can still go back, and the return being put together. */
 describe('the order store', () => {
@@ -30,13 +38,23 @@ describe('the order store', () => {
       providers: [
         OrderStore,
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: 'O-1' }) } } },
-        { provide: Router, useValue: { getCurrentNavigation: () => (handedOver ? { extras: { state: { order: handedOver } } } : null) } },
+        {
+          provide: Router,
+          useValue: { getCurrentNavigation: () => (handedOver ? { extras: { state: { order: handedOver } } } : null) },
+        },
         { provide: CultureStore, useValue: { active: signal('es') } },
         { provide: TranslocoService, useValue: { translate: (key: string) => key } },
         {
           provide: OrderService,
           useValue: {
-            get: async () => (reads++, { order: order(), returns: sent.map(() => ({ returnId: 'R-1', lines: [] })), returnable: [{ sku: 'MUG', quantity: 2 }] }),
+            get: async () => (
+              reads++,
+              {
+                order: order(),
+                returns: sent.map(() => ({ returnId: 'R-1', lines: [] })),
+                returnable: [{ sku: 'MUG', quantity: 2 }],
+              }
+            ),
             requestReturn: async (_id: string, request: unknown) => (sent.push(request), returning()),
           },
         },

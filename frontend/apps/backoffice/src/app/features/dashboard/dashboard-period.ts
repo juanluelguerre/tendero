@@ -24,5 +24,7 @@ export function queryOfPeriod(period: DashboardPeriod): PeriodQuery {
 
 /** The dashboard's period, from the current route's query: the shell and every tab read the same one. */
 export function injectDashboardPeriod(): Signal<DashboardPeriod> {
-  return toSignal(inject(ActivatedRoute).queryParamMap.pipe(map((query) => periodFromQuery(query.get('period')))), { requireSync: true });
+  return toSignal(inject(ActivatedRoute).queryParamMap.pipe(map((query) => periodFromQuery(query.get('period')))), {
+    requireSync: true,
+  });
 }

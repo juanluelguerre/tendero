@@ -36,13 +36,15 @@ const Paths = {
   chevron: 'M6 9l6 6 6-6',
 
   // ---------- The theme: the storefront's drawing, which the backoffice now shares
-  system: 'M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v8.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 5 4.5z M9 20h6 M12 16v4',
+  system:
+    'M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v8.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 5 4.5z M9 20h6 M12 16v4',
   light:
     'M8 12a4 4 0 1 0 8 0a4 4 0 1 0-8 0 M12 2.5v2.5 M12 19v2.5 M2.5 12H5 M19 12h2.5 M5.3 5.3l1.8 1.8 M16.9 16.9l1.8 1.8 M5.3 18.7l1.8-1.8 M16.9 7.1l1.8-1.8',
   dark: 'M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z',
 
   // ---------- The shop's promises and its agents
-  shipping: 'M3 7h11v9H3z M14 10h4l3 3v3h-7 M5.5 17.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0 M15.5 17.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0',
+  shipping:
+    'M3 7h11v9H3z M14 10h4l3 3v3h-7 M5.5 17.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0 M15.5 17.5a1.5 1.5 0 1 0 3 0a1.5 1.5 0 1 0-3 0',
   /** Coming back: a return within its days. */
   reload: 'M4 12a8 8 0 1 0 2.3-5.7 M4 4v4h4',
   /** Coming back, with the clock's hands: what was seen before. */

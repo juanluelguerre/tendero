@@ -15,7 +15,9 @@ import { DashboardSources } from '../sources/dashboard-sources';
  * the dashboard's shared reads, and the answers its endpoints give — so a spec
  * says what the server answered and what the shopkeeper reads, and nothing else.
  */
-export const English = JSON.parse(readFileSync(join(process.cwd(), 'apps', 'backoffice', 'public', 'i18n', 'en.json'), 'utf-8'));
+export const English = JSON.parse(
+  readFileSync(join(process.cwd(), 'apps', 'backoffice', 'public', 'i18n', 'en.json'), 'utf-8'),
+);
 
 export function setUpWidgets(): void {
   TestBed.configureTestingModule({
@@ -33,7 +35,11 @@ export function setUpWidgets(): void {
 }
 
 /** Renders a widget and answers its requests: `answers` maps an API path (`/api/dashboard/sales`) to its body. */
-export async function openWidget(component: Type<unknown>, answers: Record<string, object>, inputs: Record<string, unknown> = { period: 'Week' }): Promise<HTMLElement> {
+export async function openWidget(
+  component: Type<unknown>,
+  answers: Record<string, object>,
+  inputs: Record<string, unknown> = { period: 'Week' },
+): Promise<HTMLElement> {
   return (await openWidgetFixture(component, answers, inputs)).nativeElement as HTMLElement;
 }
 

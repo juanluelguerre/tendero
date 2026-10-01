@@ -15,14 +15,21 @@ describe('the product review store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, ProductReviewStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        ProductReviewStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => http.match(() => true));
 
-  const reviews = () => http.match((req) => req.url.endsWith('/review')).map((req) => req.request.url.slice(Products.length));
+  const reviews = () =>
+    http.match((req) => req.url.endsWith('/review')).map((req) => req.request.url.slice(Products.length));
 
   it('asks nothing until it is given a product', () => {
     TestBed.inject(ProductReviewStore);

@@ -33,7 +33,13 @@ export function inCulture(text: BilingualText, culture: string): string {
  * is not in this one — because a calendar of this season's campaigns reads
  * the same year on every row.
  */
-export function windowOf(startsAt: string, endsAt: string, culture: string, now: Date = new Date(), timeZone?: string): string {
+export function windowOf(
+  startsAt: string,
+  endsAt: string,
+  culture: string,
+  now: Date = new Date(),
+  timeZone?: string,
+): string {
   const start = new Date(startsAt);
   const end = new Date(endsAt);
   const year = (instant: Date) => Number(new Intl.DateTimeFormat('en', { year: 'numeric', timeZone }).format(instant));

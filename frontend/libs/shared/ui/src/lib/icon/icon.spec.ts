@@ -24,7 +24,8 @@ describe('an icon', () => {
     fixture.detectChanges();
     return fixture;
   }
-  const svg = (fixture: ReturnType<typeof render>) => (fixture.nativeElement as HTMLElement).querySelector('lib-icon svg') as SVGElement;
+  const svg = (fixture: ReturnType<typeof render>) =>
+    (fixture.nativeElement as HTMLElement).querySelector('lib-icon svg') as SVGElement;
 
   it('draws the path its name gives, and another when the name changes', () => {
     const fixture = render();
@@ -32,7 +33,10 @@ describe('an icon', () => {
     fixture.componentInstance.name.set('menu');
     fixture.detectChanges();
 
-    expect([close, svg(fixture).querySelector('path')?.getAttribute('d')]).toEqual(['M6 6l12 12 M18 6L6 18', 'M4 6h16 M4 12h16 M4 18h16']);
+    expect([close, svg(fixture).querySelector('path')?.getAttribute('d')]).toEqual([
+      'M6 6l12 12 M18 6L6 18',
+      'M4 6h16 M4 12h16 M4 18h16',
+    ]);
   });
 
   it('is drawn at the weight it is given, in the colour of the text beside it', () => {
@@ -47,6 +51,9 @@ describe('an icon', () => {
   it('is hidden from assistive technology and from the tab order', () => {
     const fixture = render();
 
-    expect([svg(fixture).getAttribute('aria-hidden'), svg(fixture).getAttribute('focusable')]).toEqual(['true', 'false']);
+    expect([svg(fixture).getAttribute('aria-hidden'), svg(fixture).getAttribute('focusable')]).toEqual([
+      'true',
+      'false',
+    ]);
   });
 });

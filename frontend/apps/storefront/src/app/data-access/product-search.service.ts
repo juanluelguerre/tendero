@@ -44,7 +44,10 @@ export class ProductSearchService {
    * any that can no longer be shown (R-8): what sells and what rises arrive as
    * ids, the trail as codes, and both are drawn with the listing's own card.
    */
-  cards(culture: string, which: { ids?: readonly string[]; codes?: readonly string[] }): Observable<ProductCardsResult> {
+  cards(
+    culture: string,
+    which: { ids?: readonly string[]; codes?: readonly string[] },
+  ): Observable<ProductCardsResult> {
     const params: Record<string, string | string[]> = { culture };
     if (which.ids?.length) params['ids'] = [...which.ids];
     if (which.codes?.length) params['codes'] = [...which.codes];

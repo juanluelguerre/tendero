@@ -96,10 +96,12 @@ describe('the design tokens', () => {
   const THEMELESS: Record<string, string> = {
     'frontend/libs/shared/tokens/src/theme.css': 'the bridge that maps the palette into Tailwind',
     'frontend/apps/backoffice/src/styles.css': "the light theme's state colours, defined from the palette",
-    'frontend/apps/backoffice/src/app/shell/nav/nav.css': 'the awning stripes of the current page: brand, the same in both themes',
+    'frontend/apps/backoffice/src/app/shell/nav/nav.css':
+      'the awning stripes of the current page: brand, the same in both themes',
     'frontend/apps/backoffice/src/app/shell/palette/palette.css': 'a scrim: ink over the page, dark in both themes',
     'frontend/apps/backoffice/src/app/shell/shell.css': 'a scrim: ink over the page, dark in both themes',
-    'frontend/apps/backoffice/src/app/worklist/confirm-dialog/confirm-dialog.css': 'a scrim: ink over the page, dark in both themes',
+    'frontend/apps/backoffice/src/app/worklist/confirm-dialog/confirm-dialog.css':
+      'a scrim: ink over the page, dark in both themes',
     'frontend/apps/storefront/src/app/shell/shell.css': 'a scrim: ink over the page, dark in both themes',
     'frontend/apps/storefront/src/app/listing/listing.css': 'a scrim: ink over the page, dark in both themes',
   };

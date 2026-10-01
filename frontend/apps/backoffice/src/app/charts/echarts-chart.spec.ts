@@ -4,7 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ChartBuild } from './echarts-chart';
 import { EchartsChart } from './echarts-chart';
 
-const motion = (matches: boolean) => () => ({ matches, addEventListener: () => undefined, removeEventListener: () => undefined });
+const motion = (matches: boolean) => () => ({
+  matches,
+  addEventListener: () => undefined,
+  removeEventListener: () => undefined,
+});
 
 describe('the ECharts host', () => {
   // jsdom has no matchMedia; the host asks it whether the reader wants motion.
@@ -23,7 +27,8 @@ describe('the ECharts host', () => {
     return fixture;
   }
 
-  const optionsOf = (fixture: ReturnType<typeof render>) => (fixture.componentInstance as unknown as { options: () => unknown }).options();
+  const optionsOf = (fixture: ReturnType<typeof render>) =>
+    (fixture.componentInstance as unknown as { options: () => unknown }).options();
 
   it('builds its options from the colours of the tokens where it sits', () => {
     const fixture = render((colours) => ({ colour: colours.series.data }));

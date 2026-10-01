@@ -11,10 +11,7 @@
  * not talk to the API whatsoever. Nobody noticed because its only page was an
  * empty state that made no requests.
  */
-const api =
-  process.env['services__api__http__0'] ??
-  process.env['services__api__https__0'] ??
-  'http://localhost:5130';
+const api = process.env['services__api__http__0'] ?? process.env['services__api__https__0'] ?? 'http://localhost:5130';
 
 /**
  * /otlp: the browser's telemetry (ADR 0036), posted to the page's own origin and

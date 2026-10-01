@@ -62,9 +62,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
   function declarations(pattern: RegExp): Record<string, string> {
     const body = css.match(pattern)?.[1] ?? '';
 
-    return Object.fromEntries(
-      [...body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]),
-    );
+    return Object.fromEntries([...body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
   }
 
   const root = declarations(/:root\s*\{([\s\S]*?)\n\}/);

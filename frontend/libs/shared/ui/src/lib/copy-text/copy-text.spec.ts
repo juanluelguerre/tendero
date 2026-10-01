@@ -7,7 +7,13 @@ import { CopyText } from './copy-text';
   imports: [CopyText],
   template: `
     <lib-copy-text value="http://localhost:4200/mcp" copyLabel="Copiar la dirección" copiedLabel="Copiada" />
-    <lib-copy-text class="command" value="claude mcp add --transport http tendero http://localhost:4200/mcp" copyLabel="Copiar el comando" copiedLabel="Copiado" block />
+    <lib-copy-text
+      class="command"
+      value="claude mcp add --transport http tendero http://localhost:4200/mcp"
+      copyLabel="Copiar el comando"
+      copiedLabel="Copiado"
+      block
+    />
   `,
 })
 class Host {}
@@ -51,7 +57,10 @@ describe('a text to copy', () => {
   });
 
   it('says nothing when the browser refuses the clipboard, and the text is still there to select', async () => {
-    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText: async () => Promise.reject(new Error('denied')) } });
+    vi.stubGlobal('navigator', {
+      ...navigator,
+      clipboard: { writeText: async () => Promise.reject(new Error('denied')) },
+    });
     const fixture = render();
     const host = first(fixture.nativeElement);
 

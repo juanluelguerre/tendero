@@ -18,7 +18,13 @@
          phone's width (spec, the phone). `cell--S/M/L` name the size for the spec. -->
     <div
       class="cell @container/widget min-w-0"
-      [class]="cell.size === 'S' ? 'cell--S col-span-3 max-xl:col-span-6 max-sm:col-span-12' : cell.size === 'M' ? 'cell--M col-span-6 max-xl:col-span-12' : 'cell--L col-span-12'"
+      [class]="
+        cell.size === 'S'
+          ? 'cell--S col-span-3 max-xl:col-span-6 max-sm:col-span-12'
+          : cell.size === 'M'
+            ? 'cell--M col-span-6 max-xl:col-span-12'
+            : 'cell--L col-span-12'
+      "
       [attr.data-widget]="cell.key"
     >
       <ng-container [backofficeWidgetOutlet]="cell.component" [inputs]="cell.inputs" />

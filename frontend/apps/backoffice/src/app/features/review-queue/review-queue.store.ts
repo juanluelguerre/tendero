@@ -53,7 +53,8 @@ export const ReviewQueueStore = signalStore(
     };
   }),
   withMethods((store) => {
-    const navigate = (product: string | null) => void store._router.navigate([], { queryParams: { product }, queryParamsHandling: 'merge' });
+    const navigate = (product: string | null) =>
+      void store._router.navigate([], { queryParams: { product }, queryParamsHandling: 'merge' });
     const settle = (productId: string) =>
       patchState(store, (state) => {
         const publishing = new Set(state.publishing);

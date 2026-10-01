@@ -5,7 +5,10 @@
   <ng-template>
     <ul class="grid gap-4">
       <li class="min-w-0">
-        <a class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline" routerLink="/review">
+        <a
+          class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline"
+          routerLink="/review"
+        >
           <span>{{ t('drafts') }}</span>
           <span class="task__count numeric text-lg font-semibold">{{ valueOf(store.drafts)?.total ?? '—' }}</span>
         </a>
@@ -15,7 +18,10 @@
       </li>
 
       <li class="min-w-0">
-        <a class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline" routerLink="/claims">
+        <a
+          class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline"
+          routerLink="/claims"
+        >
           <span>{{ t('claims') }}</span>
           <span class="task__count numeric text-lg font-semibold">{{ valueOf(store.claims)?.total ?? '—' }}</span>
         </a>
@@ -27,7 +33,7 @@
             @for (claim of store.weakestClaims(); track claim.claimId) {
               <li class="flex min-w-0 items-baseline gap-2 text-xs">
                 <span class="min-w-0 flex-1 truncate">{{ statement(claim) }}</span>
-                <span class="numeric muted">{{ t('support', { value: (claim.support * 100).toFixed(0) }) }}</span>
+                <span class="muted numeric">{{ t('support', { value: (claim.support * 100).toFixed(0) }) }}</span>
               </li>
             }
           </ul>
@@ -35,7 +41,11 @@
       </li>
 
       <li class="min-w-0">
-        <a class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">
+        <a
+          class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline"
+          routerLink="/stock"
+          [queryParams]="{ filter: 'Restock' }"
+        >
           <span>{{ t('lowStock') }}</span>
           <span class="task__count numeric text-lg font-semibold" [class.text-warning]="store.restockCount() > 0">
             {{ store.stock.hasValue() ? store.restockCount() : '—' }}
@@ -47,7 +57,7 @@
           <ul class="mt-2 grid gap-1">
             @for (row of store.lowStock().slice(0, shown); track row.sku) {
               <li class="flex min-w-0 items-baseline gap-2 text-xs">
-                <span class="numeric min-w-0 flex-1 truncate">{{ row.sku }}</span>
+                <span class="min-w-0 flex-1 truncate numeric">{{ row.sku }}</span>
                 <span class="numeric">{{ t('available', { count: row.available }) }}</span>
               </li>
             }

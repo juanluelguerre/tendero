@@ -114,8 +114,6 @@ describe('the agent surface', () => {
 
   it('detects the capability from the navigator it is given', () => {
     expect(supportsModelContext({} as Navigator)).toBe(false);
-    expect(
-      supportsModelContext({ modelContext: { provideContext: () => undefined } } as Navigator),
-    ).toBe(true);
+    expect(supportsModelContext({ modelContext: { provideContext: () => undefined } } as Navigator)).toBe(true);
   });
 });

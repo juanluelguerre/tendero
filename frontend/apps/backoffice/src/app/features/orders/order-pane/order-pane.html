@@ -2,7 +2,10 @@
   <ng-container *transloco="let t">
     <!-- The pane: beside the list from 1024 px, a sheet over it below. It holds
          the view's one clay action, and cancelling lives apart at its foot. -->
-    <backoffice-worklist-pane [heading]="t('orders.paneTitle', { id: shortId(order.orderId) })" (closed)="closed.emit()">
+    <backoffice-worklist-pane
+      [heading]="t('orders.paneTitle', { id: shortId(order.orderId) })"
+      (closed)="closed.emit()"
+    >
       <div class="flex flex-wrap items-center gap-2">
         <backoffice-order-status-label [order]="order" />
         <backoffice-order-payment [order]="order" />
@@ -23,7 +26,7 @@
           <ul class="grid gap-1 text-xs" role="list">
             @for (line of found.order.lines; track line.sku) {
               <li class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2">
-                <span class="numeric muted">{{ line.quantity }} ×</span>
+                <span class="muted numeric">{{ line.quantity }} ×</span>
                 <span>
                   {{ line.productName }}
                   @if (line.variantLabel) {
@@ -58,14 +61,21 @@
       }
 
       @if (primaryMove(order.status); as move) {
-        <button type="button" class="button pane-primary" [disabled]="store.busy() === order.orderId" (click)="store.apply(order, move, 'pane')">
+        <button
+          type="button"
+          class="button pane-primary"
+          [disabled]="store.busy() === order.orderId"
+          (click)="store.apply(order, move, 'pane')"
+        >
           {{ store.busy() === order.orderId ? t('orders.moving') : t('orders.moveLong.' + move) }}
         </button>
       }
 
       @if (cancellable(order.status)) {
         <div class="danger-zone">
-          <button type="button" class="linkish linkish--danger" (click)="askToCancel()">{{ t('orders.cancel.open') }}</button>
+          <button type="button" class="linkish linkish--danger" (click)="askToCancel()">
+            {{ t('orders.cancel.open') }}
+          </button>
           <p class="muted">{{ t('orders.cancel.consequence') }}</p>
         </div>
       }

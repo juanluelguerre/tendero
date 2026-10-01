@@ -11,7 +11,8 @@ import { ReviewQueueStore } from './review-queue.store';
 
 const Products = 'http://api/api/catalog/products';
 
-const draft = (code: string) => ({ productId: `id-${code}`, code, name: code, missingCultures: [] }) as unknown as ProductSummary;
+const draft = (code: string) =>
+  ({ productId: `id-${code}`, code, name: code, missingCultures: [] }) as unknown as ProductSummary;
 
 /** The review queue's shared state (ADR 0047): the drafts, the open one, and what is being published. */
 describe('the review queue store', () => {
@@ -19,7 +20,14 @@ describe('the review queue store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, ReviewQueueStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        ReviewQueueStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -30,7 +38,9 @@ describe('the review queue store', () => {
     await TestBed.inject(Router).navigateByUrl(url);
     const store = TestBed.inject(ReviewQueueStore);
     TestBed.tick();
-    http.match((req) => req.url === Products).forEach((req) => req.flush({ items: [draft('A'), draft('B')], total: 2 }));
+    http
+      .match((req) => req.url === Products)
+      .forEach((req) => req.flush({ items: [draft('A'), draft('B')], total: 2 }));
     await TestBed.inject(ApplicationRef).whenStable();
     return store;
   }
@@ -49,7 +59,12 @@ describe('the review queue store', () => {
     http.expectOne(`${Products}/id-B/publish`).flush({});
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect([publishing, store.publishing().has('id-B'), store.drafts().map((item) => item.code), TestBed.inject(Router).url]).toEqual([true, false, ['A'], '/']);
+    expect([
+      publishing,
+      store.publishing().has('id-B'),
+      store.drafts().map((item) => item.code),
+      TestBed.inject(Router).url,
+    ]).toEqual([true, false, ['A'], '/']);
   });
 
   it('says it failed when publishing does, and keeps the draft', async () => {

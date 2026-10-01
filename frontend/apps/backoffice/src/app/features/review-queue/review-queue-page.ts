@@ -40,7 +40,11 @@ export class ReviewQueuePage {
     const step = stepOf(event, !!document.querySelector('dialog[open]'));
     if (!step) return;
     const items = this.store.drafts();
-    const index = landing(items.findIndex((item) => item.code === this.store.selectedCode()), items.length, step);
+    const index = landing(
+      items.findIndex((item) => item.code === this.store.selectedCode()),
+      items.length,
+      step,
+    );
     if (index === null) return;
     event.preventDefault();
     this.usage.affordance('keys', step === 1 ? 'next' : 'previous');

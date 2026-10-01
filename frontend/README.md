@@ -20,11 +20,11 @@ Nx is a **local** dependency, not a global one. That single fact decides which
 of the two you write, and getting it backwards is the sort of thing that costs
 ten minutes and reads like a broken machine:
 
-| Where | Write | Why |
-|---|---|---|
-| A terminal, by hand | `npx nx run-many -t lint` | `npx` resolves the binary out of `node_modules/.bin`. Without it the shell looks on `PATH`, finds nothing, and says `nx: command not found` — or worse, finds a **globally installed Nx of a different version** and runs that against this workspace |
-| Inside `package.json` scripts | `nx run-many -t lint` | npm already puts `node_modules/.bin` on `PATH` for the script it is running, so `npx` is redundant there |
-| A CI step | `npx nx …` | A runner's shell is a terminal like any other |
+| Where                         | Write                     | Why                                                                                                                                                                                                                                                   |
+| ----------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A terminal, by hand           | `npx nx run-many -t lint` | `npx` resolves the binary out of `node_modules/.bin`. Without it the shell looks on `PATH`, finds nothing, and says `nx: command not found` — or worse, finds a **globally installed Nx of a different version** and runs that against this workspace |
+| Inside `package.json` scripts | `nx run-many -t lint`     | npm already puts `node_modules/.bin` on `PATH` for the script it is running, so `npx` is redundant there                                                                                                                                              |
+| A CI step                     | `npx nx …`                | A runner's shell is a terminal like any other                                                                                                                                                                                                         |
 
 The same rule applies to `playwright`, `tsc` and every other local binary. The
 short version: **the prefix is about who is resolving the command, not about
@@ -73,11 +73,11 @@ enforces the first rule below.
 
 Not by convention: by a lint rule that breaks the build.
 
-| from | may import from |
-|---|---|
-| `scope:storefront` | `scope:shared` — and nothing else |
-| `scope:backoffice` | `scope:shared` — and nothing else |
-| `scope:shared` | `scope:shared` — it does not know the apps exist |
+| from               | may import from                                  |
+| ------------------ | ------------------------------------------------ |
+| `scope:storefront` | `scope:shared` — and nothing else                |
+| `scope:backoffice` | `scope:shared` — and nothing else                |
+| `scope:shared`     | `scope:shared` — it does not know the apps exist |
 
 It is the TypeScript twin of the backend's NetArchTest rules. There is no
 mutation tooling here; what there is, is the habit of checking a new rule by
@@ -86,8 +86,8 @@ rule, the Pricing confinement rule and the design-token rule were each verified
 the day they were written.
 
 **What is shared and what is duplicated**: what is hard because of its
-*behaviour* is shared (a DatePicker is calendar logic, keyboard handling and
-accessibility); what is hard because of its *identity* is duplicated (the two
+_behaviour_ is shared (a DatePicker is calendar logic, keyboard handling and
+accessibility); what is hard because of its _identity_ is duplicated (the two
 layouts share nothing but the word). Argued in `docs/adr/0010`.
 
 ## Rules that are not negotiable
@@ -97,7 +97,7 @@ layouts share nothing but the word). Argued in `docs/adr/0010`.
   `.css` in the repository — and it only became possible once the styles left
   the TypeScript files.
 - **Not one user-facing literal outside the Transloco files**, and always in es
-  *and* en. Each app has its own: the shop's voice and the backoffice's are not
+  _and_ en. Each app has its own: the shop's voice and the backoffice's are not
   the same.
 - **Not one backend URL in the code.** The dev server proxies to the address
   Aspire injects; `proxy.conf.mjs` is the only place with a fallback localhost.

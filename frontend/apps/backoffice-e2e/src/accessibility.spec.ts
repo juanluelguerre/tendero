@@ -10,8 +10,19 @@ import { signIn } from './session';
  */
 const Screens = [
   ...[
-    'dashboard', 'review', 'catalogue', 'claims', 'attributes', 'search',
-    'promotions', 'campaigns', 'stock', 'orders', 'returns', 'agents', 'audit',
+    'dashboard',
+    'review',
+    'catalogue',
+    'claims',
+    'attributes',
+    'search',
+    'promotions',
+    'campaigns',
+    'stock',
+    'orders',
+    'returns',
+    'agents',
+    'audit',
   ].map((screen) => [screen, `/${screen}`] as const),
   // The dashboard's four tabs (R-9), each a URL of its own; the Overview is `dashboard` above.
   ...['sales', 'operations', 'growth', 'agents'].map((tab) => [`dashboard-${tab}`, `/dashboard/${tab}`] as const),
@@ -52,7 +63,8 @@ async function hold(pages: readonly (readonly [string, string])[], page: Page): 
   }
 
   const { added, fixed } = compareToBaseline([...new Set(found)].sort(), baseline.filter(mine));
-  if (fixed.length) console.log(`Fixed since the baseline (remove them with UPDATE_A11Y_BASELINE=1):\n  ${fixed.join('\n  ')}`);
+  if (fixed.length)
+    console.log(`Fixed since the baseline (remove them with UPDATE_A11Y_BASELINE=1):\n  ${fixed.join('\n  ')}`);
   expect(added, 'New accessibility findings — fix them, or say why in the baseline').toEqual([]);
 }
 

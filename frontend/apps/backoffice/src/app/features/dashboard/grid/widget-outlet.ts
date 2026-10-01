@@ -1,4 +1,14 @@
-import { type ComponentRef, DestroyRef, Directive, effect, inject, input, type Type, untracked, ViewContainerRef } from '@angular/core';
+import {
+  type ComponentRef,
+  DestroyRef,
+  Directive,
+  effect,
+  inject,
+  input,
+  type Type,
+  untracked,
+  ViewContainerRef,
+} from '@angular/core';
 
 /**
  * Draws one widget where it sits and hands it its inputs (R-9). Angular's

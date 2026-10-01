@@ -22,7 +22,8 @@ export class AgentSalesWidget {
   private readonly culture = inject(CultureStore);
 
   /** What agents bought each day, in the reader's money. */
-  protected readonly amount = (value: number): string => formatPrice(value, valueOf(this.store.sales)?.currency ?? 'EUR', this.culture.active());
+  protected readonly amount = (value: number): string =>
+    formatPrice(value, valueOf(this.store.sales)?.currency ?? 'EUR', this.culture.active());
 
   protected share(part: number, whole: number): string {
     return formatShare(shareOf(part, whole), this.culture.active());

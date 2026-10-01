@@ -27,7 +27,10 @@ export const HealthStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      operations: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.operations(params.period, at) }),
+      operations: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.operations(params.period, at),
+      }),
     };
   }),
   withComputed((store) => ({
@@ -35,8 +38,22 @@ export const HealthStore = signalStore(
       const ops = valueOf(store.operations);
       if (!ops) return [];
       return [
-        { key: 'cancellation', rate: ops.cancellationRate, target: ops.cancellationTarget, standing: ops.cancellationStanding, count: ops.cancelled, apart: 0 },
-        { key: 'defect', rate: ops.defectRate ?? null, target: ops.defectTarget, standing: ops.defectStanding ?? null, count: ops.defects, apart: 0 },
+        {
+          key: 'cancellation',
+          rate: ops.cancellationRate,
+          target: ops.cancellationTarget,
+          standing: ops.cancellationStanding,
+          count: ops.cancelled,
+          apart: 0,
+        },
+        {
+          key: 'defect',
+          rate: ops.defectRate ?? null,
+          target: ops.defectTarget,
+          standing: ops.defectStanding ?? null,
+          count: ops.defects,
+          apart: 0,
+        },
         {
           key: 'lateShipment',
           rate: ops.lateShipmentRate ?? null,

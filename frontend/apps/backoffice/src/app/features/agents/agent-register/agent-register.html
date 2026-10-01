@@ -6,15 +6,30 @@
   <h2 class="col-span-full m-0 text-md">{{ t('register.title') }}</h2>
   <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('register.agentId') }}</span>
-    <input class="field" required [value]="store.draft().agentId" (input)="store.edit('agentId', $any($event.target).value)" />
+    <input
+      class="field"
+      required
+      [value]="store.draft().agentId"
+      (input)="store.edit('agentId', $any($event.target).value)"
+    />
   </label>
   <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('register.displayName') }}</span>
-    <input class="field" required [value]="store.draft().displayName" (input)="store.edit('displayName', $any($event.target).value)" />
+    <input
+      class="field"
+      required
+      [value]="store.draft().displayName"
+      (input)="store.edit('displayName', $any($event.target).value)"
+    />
   </label>
   <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('register.operator') }}</span>
-    <input class="field" required [value]="store.draft().operator" (input)="store.edit('operator', $any($event.target).value)" />
+    <input
+      class="field"
+      required
+      [value]="store.draft().operator"
+      (input)="store.edit('operator', $any($event.target).value)"
+    />
   </label>
   <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('column.trust') }}</span>
@@ -24,5 +39,7 @@
       }
     </select>
   </label>
-  <button class="button justify-self-start" type="submit" [disabled]="store.busy() === 'register'">{{ t('register.submit') }}</button>
+  <button class="button justify-self-start" type="submit" [disabled]="store.busy() === 'register'">
+    {{ t('register.submit') }}
+  </button>
 </form>

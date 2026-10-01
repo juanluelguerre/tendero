@@ -26,13 +26,17 @@ export class ByCategoryWidget {
 
   readonly period = input.required<DashboardPeriod>();
 
-  protected readonly money = (amount: number): string => formatPrice(amount, valueOf(this.store.mix)?.currency ?? 'EUR', this.culture.active());
+  protected readonly money = (amount: number): string =>
+    formatPrice(amount, valueOf(this.store.mix)?.currency ?? 'EUR', this.culture.active());
 
   protected readonly chart = computed<BarChartData | null>(() => {
     const rows = this.store.rows();
     return rows.length === 0
       ? null
-      : { categories: rows.map((row) => row.label), series: [{ key: 'revenue', label: '', role: 'data', values: rows.map((row) => row.revenue) }] };
+      : {
+          categories: rows.map((row) => row.label),
+          series: [{ key: 'revenue', label: '', role: 'data', values: rows.map((row) => row.revenue) }],
+        };
   });
 
   constructor() {

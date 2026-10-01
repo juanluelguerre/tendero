@@ -14,7 +14,12 @@ describe('the define variants store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, DefineVariantsStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DefineVariantsStore,
+      ],
     });
     store = TestBed.inject(DefineVariantsStore);
     http = TestBed.inject(HttpTestingController);

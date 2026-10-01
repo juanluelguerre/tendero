@@ -1,6 +1,10 @@
 <div class="flex items-center justify-between gap-3">
   <span class="text-xs text-muted" [id]="id">{{ label() }}</span>
-  <div class="inline-flex overflow-hidden rounded-md border border-hairline-strong" role="group" [attr.aria-labelledby]="id">
+  <div
+    class="inline-flex overflow-hidden rounded-md border border-hairline-strong"
+    role="group"
+    [attr.aria-labelledby]="id"
+  >
     @for (option of choices; track option) {
       <button
         type="button"

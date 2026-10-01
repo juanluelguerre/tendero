@@ -40,7 +40,11 @@
          it scrolled the whole page sideways by 520 px (R-1, B-F2). -->
     <div class="table-wrap">
       <table class="table">
-        <caption class="sr-only">{{ t('audit.title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('audit.title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('audit.column.when') }}</th>
@@ -48,7 +52,9 @@
             <th scope="col">{{ t('audit.column.who') }}</th>
             <th scope="col">{{ t('audit.column.outcome') }}</th>
             <th scope="col">{{ t('audit.column.reason') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('audit.column.payload') }}</span></th>
+            <th scope="col">
+              <span class="sr-only">{{ t('audit.column.payload') }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -56,10 +62,15 @@
             <!-- A refused row is marked on the LEFT EDGE as well as by its pill,
                  because a pill is easy to miss when you are scanning forty rows
                  for the one that matters. -->
-            <tr class="data-refused:shadow-[inset_2px_0_0_0_var(--warning)]" [attr.data-refused]="entry.outcome !== 'Allowed' || null">
+            <tr
+              class="data-refused:shadow-[inset_2px_0_0_0_var(--warning)]"
+              [attr.data-refused]="entry.outcome !== 'Allowed' || null"
+            >
               <td class="when numeric whitespace-nowrap">{{ when(entry.at) }}</td>
               <!-- In the shopkeeper's words; the type stays as its title for whoever needs it (B-F6). -->
-              <td class="text-xs whitespace-nowrap" [title]="entry.commandType">{{ t('audit.commands.' + entry.commandType) }}</td>
+              <td class="text-xs whitespace-nowrap" [title]="entry.commandType">
+                {{ t('audit.commands.' + entry.commandType) }}
+              </td>
               <td class="flex flex-col gap-1">
                 <!-- An agent is a principal, not a customer, and both travel: the
                      question worth answering later is who acted AND on whose
@@ -95,19 +106,28 @@
                   <!-- The stable identifier under the name: present because it is
                        what correlates two rows, quiet because it is not what
                        anybody reads first. -->
-                  <span class="block font-mono text-3xs text-muted" [title]="entry.subject">{{ short(entry.subject) }}</span>
+                  <span class="block font-mono text-3xs text-muted" [title]="entry.subject">{{
+                    short(entry.subject)
+                  }}</span>
                 }
               </td>
               <td>
                 <!-- A denial is the shop working and a failure the shop broken:
                      two tones, never both red. -->
-                <lib-status-pill [tone]="entry.outcome === 'Failed' ? 'bad' : entry.outcome === 'Denied' ? 'warn' : 'neutral'">
+                <lib-status-pill
+                  [tone]="entry.outcome === 'Failed' ? 'bad' : entry.outcome === 'Denied' ? 'warn' : 'neutral'"
+                >
                   {{ t('audit.outcome.' + entry.outcome) }}
                 </lib-status-pill>
               </td>
               <td class="max-w-[32ch] text-xs text-muted">{{ entry.reason }}</td>
               <td class="numeric">
-                <button type="button" class="linkish" [attr.aria-expanded]="store.opened() === entry.id" (click)="store.toggle(entry.id)">
+                <button
+                  type="button"
+                  class="linkish"
+                  [attr.aria-expanded]="store.opened() === entry.id"
+                  (click)="store.toggle(entry.id)"
+                >
                   {{ store.opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
                 </button>
               </td>
@@ -126,13 +146,25 @@
                       @if (entry.traceId; as trace) {
                         <div class="grid gap-1">
                           <dt class="text-muted">{{ t('audit.trace') }}</dt>
-                          <dd><lib-copy-text [value]="trace" [copyLabel]="t('audit.copyTrace')" [copiedLabel]="t('audit.copied')" /></dd>
+                          <dd>
+                            <lib-copy-text
+                              [value]="trace"
+                              [copyLabel]="t('audit.copyTrace')"
+                              [copiedLabel]="t('audit.copied')"
+                            />
+                          </dd>
                         </div>
                       }
                       @if (entry.subject; as subject) {
                         <div class="grid gap-1">
                           <dt class="text-muted">{{ t('audit.subject') }}</dt>
-                          <dd><lib-copy-text [value]="subject" [copyLabel]="t('audit.copySubject')" [copiedLabel]="t('audit.copied')" /></dd>
+                          <dd>
+                            <lib-copy-text
+                              [value]="subject"
+                              [copyLabel]="t('audit.copySubject')"
+                              [copiedLabel]="t('audit.copied')"
+                            />
+                          </dd>
                         </div>
                       }
                     </dl>

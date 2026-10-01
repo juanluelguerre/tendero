@@ -10,7 +10,13 @@
 <section
   *transloco="let t"
   class="relative grid grid-cols-[minmax(0,1fr)] overflow-hidden rounded-lg"
-  [class]="banner ? 'gap-3 px-5 pt-5 pb-4' : aside ? 'gap-6 px-7 pt-7 pb-6 max-sm:px-5 max-sm:pt-6 max-sm:pb-5 tab:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] tab:items-center' : 'gap-6 px-7 pt-7 pb-6 max-sm:px-5 max-sm:pt-6 max-sm:pb-5'"
+  [class]="
+    banner
+      ? 'gap-3 px-5 pt-5 pb-4'
+      : aside
+        ? 'gap-6 px-7 pt-7 pb-6 max-sm:px-5 max-sm:pt-6 max-sm:pb-5 tab:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] tab:items-center'
+        : 'gap-6 px-7 pt-7 pb-6 max-sm:px-5 max-sm:pt-6 max-sm:pb-5'
+  "
   [class.border]="event"
   [class.border-(--border-inverse)]="event"
   [class.bg-(--bg-inverse)]="event"
@@ -24,8 +30,11 @@
        and three product cards side by side overflowed a tablet (the ratchet). -->
   <div class="grid justify-items-start" [class]="banner ? 'grid-cols-[1fr] gap-2' : 'gap-4'">
     <!-- The window, as an eyebrow: the one uppercase the system allows. -->
-    <p class="campaign__when text-xs font-semibold tracking-wide uppercase"
-       [class.text-(--text-inverse-muted)]="event" [class.text-(--accent-on-tint-strong)]="!event">
+    <p
+      class="campaign__when text-xs font-semibold tracking-wide uppercase"
+      [class.text-(--text-inverse-muted)]="event"
+      [class.text-(--accent-on-tint-strong)]="!event"
+    >
       @if (campaign().kind === 'Season') {
         {{ moment() === 'before' ? t('campaign.from', { date: startDay() }) : t('campaign.until', { date: endDay() }) }}
       } @else {
@@ -33,22 +42,39 @@
       }
     </p>
 
-    <h2 class="m-0 font-display leading-none" [class]="banner ? 'text-2xl' : 'text-4xl max-sm:text-3xl'"
-        [id]="'campaign-' + campaign().code">{{ campaign().name }}</h2>
-    <p class="max-w-[48ch]" [class]="banner ? 'text-md' : 'text-lg max-sm:text-md'"
-       [class.text-(--text-inverse-muted)]="event" [class.text-(--text-muted-on-tint-strong)]="!event">{{ campaign().line }}</p>
+    <h2
+      class="m-0 font-display leading-none"
+      [class]="banner ? 'text-2xl' : 'text-4xl max-sm:text-3xl'"
+      [id]="'campaign-' + campaign().code"
+    >
+      {{ campaign().name }}
+    </h2>
+    <p
+      class="max-w-[48ch]"
+      [class]="banner ? 'text-md' : 'text-lg max-sm:text-md'"
+      [class.text-(--text-inverse-muted)]="event"
+      [class.text-(--text-muted-on-tint-strong)]="!event"
+    >
+      {{ campaign().line }}
+    </p>
 
     @if (until(); as target) {
       <storefront-countdown-clock
         [until]="target"
         [label]="moment() === 'before' ? t('campaign.startsIn') : t('campaign.endsIn')"
-        (reached)="reached.emit()" />
+        (reached)="reached.emit()"
+      />
     }
 
     @if (campaign().holds.length > 0) {
       <ul class="flex flex-wrap gap-2" [attr.aria-label]="t('campaign.holds')">
         @for (hold of holds(t); track hold) {
-          <li class="campaign__hold rounded-full border border-current px-3 py-1 text-sm" [class.text-(--accent-on-tint-strong)]="!event">{{ hold }}</li>
+          <li
+            class="campaign__hold rounded-full border border-current px-3 py-1 text-sm"
+            [class.text-(--accent-on-tint-strong)]="!event"
+          >
+            {{ hold }}
+          </li>
         }
       </ul>
     }
@@ -59,11 +85,20 @@
     <p class="mt-2 flex flex-wrap items-center gap-4">
       @if (variant() === 'lead') {
         <a class="button campaign__cta max-sm:w-full" [routerLink]="links.home()" [queryParams]="listing()">
-          {{ campaign().kind === 'Season' ? t('campaign.seeSeason') : moment() === 'before' ? t('campaign.seeUpcoming') : t('campaign.seeOffers') }}
+          {{
+            campaign().kind === 'Season'
+              ? t('campaign.seeSeason')
+              : moment() === 'before'
+                ? t('campaign.seeUpcoming')
+                : t('campaign.seeOffers')
+          }}
         </a>
       } @else {
-        <a class="campaign__link inline-flex min-h-[1.5rem] items-center font-semibold text-inherit underline underline-offset-[0.2em] pointer-coarse:min-h-[2.75rem]"
-           [routerLink]="links.home()" [queryParams]="listing()">
+        <a
+          class="campaign__link inline-flex min-h-[1.5rem] items-center font-semibold text-inherit underline underline-offset-[0.2em] pointer-coarse:min-h-[2.75rem]"
+          [routerLink]="links.home()"
+          [queryParams]="listing()"
+        >
           {{ moment() === 'before' ? t('campaign.seeUpcoming') : t('campaign.seeOffers') }}
         </a>
       }
@@ -71,10 +106,19 @@
   </div>
 
   @if (image(); as source) {
-    <img class="campaign__image aspect-16/9 h-auto w-full rounded-lg object-cover" [src]="source" [alt]="campaign().imageAlt ?? ''" width="720" height="400" />
+    <img
+      class="campaign__image aspect-16/9 h-auto w-full rounded-lg object-cover"
+      [src]="source"
+      [alt]="campaign().imageAlt ?? ''"
+      width="720"
+      height="400"
+    />
   } @else if (shownProducts().length > 0) {
     <!-- On a phone the words are the card: the products are one tap away. -->
-    <ul class="campaign__products grid grid-cols-3 gap-3 text-body max-sm:hidden" [attr.aria-label]="t('campaign.products', { name: campaign().name })">
+    <ul
+      class="campaign__products grid grid-cols-3 gap-3 text-body max-sm:hidden"
+      [attr.aria-label]="t('campaign.products', { name: campaign().name })"
+    >
       @for (hit of shownProducts(); track hit.productId) {
         <li class="flex *:flex-1">
           <storefront-product-card [hit]="hit" [actions]="false" via="campaign" />

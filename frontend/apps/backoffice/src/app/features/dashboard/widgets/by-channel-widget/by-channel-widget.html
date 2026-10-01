@@ -8,7 +8,10 @@
   <ng-template>
     @if (store.mix.value()) {
       @if (store.chart(); as data) {
-        <p class="only-s text-muted"><span class="numeric text-xl font-semibold text-body">{{ share(store.agentShare()) }}</span> {{ t('byAgents') }}</p>
+        <p class="only-s text-muted">
+          <span class="numeric text-xl font-semibold text-body">{{ share(store.agentShare()) }}</span>
+          {{ t('byAgents') }}
+        </p>
         <div class="at-m">
           <backoffice-bar-chart [data]="data" layout="share" [format]="count" [caption]="t('title')" />
         </div>

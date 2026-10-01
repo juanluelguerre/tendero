@@ -29,15 +29,25 @@ describe('a status', () => {
     expect(returnStatusTone('Cancelled')).toBe('bad');
   });
 
-  @Component({ imports: [StatusPill], template: `<lib-status-pill tone="good">Entregado</lib-status-pill><lib-status-pill class="big" tone="bad" size="md">Cancelado</lib-status-pill>` })
+  @Component({
+    imports: [StatusPill],
+    template: `<lib-status-pill tone="good">Entregado</lib-status-pill
+      ><lib-status-pill class="big" tone="bad" size="md">Cancelado</lib-status-pill>`,
+  })
   class Host {}
 
   it('is the word in a pill of its tone, at the size its place wants', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();
-    const [small, big] = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('lib-status-pill > span')) as HTMLElement[];
+    const [small, big] = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('lib-status-pill > span'),
+    ) as HTMLElement[];
 
-    expect([small.textContent?.trim(), small.dataset['tone'], small.dataset['size']]).toEqual(['Entregado', 'good', 'sm']);
+    expect([small.textContent?.trim(), small.dataset['tone'], small.dataset['size']]).toEqual([
+      'Entregado',
+      'good',
+      'sm',
+    ]);
     expect([big.dataset['tone'], big.dataset['size']]).toEqual(['bad', 'md']);
   });
 });

@@ -1,4 +1,9 @@
-<section class="grid gap-4 border-t border-hairline pt-6" id="history" *transloco="let t" aria-labelledby="history-title">
+<section
+  class="grid gap-4 border-t border-hairline pt-6"
+  id="history"
+  *transloco="let t"
+  aria-labelledby="history-title"
+>
   <div class="flex flex-wrap items-start justify-between gap-4">
     <div>
       <h2 class="text-xl" id="history-title">{{ t('history.title') }}</h2>
@@ -7,7 +12,13 @@
 
     <label class="inline-flex min-h-[2.75rem] cursor-pointer items-center gap-2 text-sm font-semibold">
       <!-- 24 px, WCAG 2.2's floor for a target (the ratchet). -->
-      <input class="size-[1.5rem] accent-accent" type="checkbox" role="switch" [checked]="store.kept().enabled" (change)="toggle($event)" />
+      <input
+        class="size-[1.5rem] accent-accent"
+        type="checkbox"
+        role="switch"
+        [checked]="store.kept().enabled"
+        (change)="toggle($event)"
+      />
       <span>{{ t('history.switch') }}</span>
     </label>
   </div>
@@ -27,7 +38,10 @@
               type="button"
               class="absolute end-2 top-1/2 inline-grid size-[1.75rem] -translate-y-1/2 place-items-center rounded-full text-muted hover:bg-raised hover:text-body pointer-coarse:size-[2.75rem]"
               [attr.aria-label]="t('shelf.remove', { name: hit.name })"
-              (click)="trail.forget('View', hit.code)">×</button>
+              (click)="trail.forget('View', hit.code)"
+            >
+              ×
+            </button>
           </li>
         }
       </ul>
@@ -42,17 +56,23 @@
               class="inline-flex min-h-[1.75rem] items-center ps-3 pe-1 text-body no-underline hover:underline pointer-coarse:min-h-[2.75rem]"
               [routerLink]="links.home()"
               [queryParams]="{ q: search.key }"
-            >{{ search.key }}</a>
+              >{{ search.key }}</a
+            >
             <button
               type="button"
               class="inline-grid size-[1.75rem] place-items-center rounded-full text-muted hover:bg-raised hover:text-body pointer-coarse:size-[2.75rem]"
               [attr.aria-label]="t('home.trailSearchRemove', { text: search.key })"
-              (click)="trail.forget('Search', search.key)">×</button>
+              (click)="trail.forget('Search', search.key)"
+            >
+              ×
+            </button>
           </li>
         }
       </ul>
     }
 
-    <button type="button" class="button button--quiet justify-self-start" (click)="trail.clear()">{{ t('history.clear') }}</button>
+    <button type="button" class="button button--quiet justify-self-start" (click)="trail.clear()">
+      {{ t('history.clear') }}
+    </button>
   }
 </section>

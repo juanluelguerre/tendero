@@ -77,7 +77,13 @@ interface ListingStoreState {
  * checks.
  */
 export const ListingStore = signalStore(
-  withState<ListingStoreState>(() => ({ place: null, result: { status: 'idle' }, loadingMore: false, folded: readFolded(), pending: null })),
+  withState<ListingStoreState>(() => ({
+    place: null,
+    result: { status: 'idle' },
+    loadingMore: false,
+    folded: readFolded(),
+    pending: null,
+  })),
   withProps(({ pending }) => {
     const route = inject(ActivatedRoute);
     return {
@@ -85,7 +91,9 @@ export const ListingStore = signalStore(
       _route: route,
       _search: inject(ProductSearchService),
       _culture: inject(CultureStore),
-      _fromUrl: toSignal(route.queryParamMap.pipe(map(parseListing)), { initialValue: parseListing(route.snapshot.queryParamMap) }),
+      _fromUrl: toSignal(route.queryParamMap.pipe(map(parseListing)), {
+        initialValue: parseListing(route.snapshot.queryParamMap),
+      }),
       /** Every answer, with the question it answers: what `applyAndSettle` waits on. */
       _answers: new Subject<{ readonly key: string; readonly result: ListingResult }>(),
       /** The question being answered and the requests in flight: bookkeeping, not state anybody draws. */
@@ -123,7 +131,9 @@ export const ListingStore = signalStore(
     /** Whether the preview answers the batch as it stands now, not one from a tap ago. */
     const previewCurrent = computed(() => {
       const pending = store.pending();
-      return pending !== null && store._settled() === pending && store._preview.hasValue() && !store._preview.isLoading();
+      return (
+        pending !== null && store._settled() === pending && store._preview.hasValue() && !store._preview.isLoading()
+      );
     });
     return {
       /** *Ver N productos*: N, or null while it is not known. */
@@ -148,7 +158,11 @@ export const ListingStore = signalStore(
 
     /** A choice made: a navigation, so it is in the history and in the address. */
     const apply = (filters: ListingFilters): void => {
-      void store._router.navigate([], { relativeTo: store._route, queryParams: listingQueryParams(filters), queryParamsHandling: 'merge' });
+      void store._router.navigate([], {
+        relativeTo: store._route,
+        queryParams: listingQueryParams(filters),
+        queryParamsHandling: 'merge',
+      });
     };
 
     return {
@@ -210,7 +224,10 @@ export const ListingStore = signalStore(
           .subscribe({
             next: (page) => {
               asking.page = next;
-              patchState(store, { loadingMore: false, result: { ...current, hits: [...current.hits, ...page.hits], total: page.total } });
+              patchState(store, {
+                loadingMore: false,
+                result: { ...current, hits: [...current.hits, ...page.hits], total: page.total },
+              });
             },
             // Nothing is lost and nothing is claimed: the rows already read stay,
             // and the button comes back so it can be tried again.
@@ -235,13 +252,18 @@ export const ListingStore = signalStore(
         const afterCultureChange = previous?.key === key;
         // The same place narrowed differently keeps its rows on screen while the
         // answer comes, and its facets' shape; a new place starts from nothing.
-        const samePlace = previous !== null && previous.culture === culture
-          && previous.place.query === place.query && previous.place.category === place.category;
+        const samePlace =
+          previous !== null &&
+          previous.culture === culture &&
+          previous.place.query === place.query &&
+          previous.place.category === place.category;
         asking.asked = { place, key, culture };
         asking.page = 1;
 
         const current = store.result();
-        patchState(store, { result: current.status === 'ready' && samePlace ? { ...current, busy: true } : { status: 'loading' } });
+        patchState(store, {
+          result: current.status === 'ready' && samePlace ? { ...current, busy: true } : { status: 'loading' },
+        });
 
         const answered = () => store._answers.next({ key, result: store.result() });
         asking.inFlight?.unsubscribe();

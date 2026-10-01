@@ -53,14 +53,17 @@ describe('the components', () => {
   const hostClasses = components.flatMap(([name, ts]) =>
     [...ts.matchAll(/host:\s*\{([^}]*)\}/g)].flatMap(([, host]) =>
       [...host.matchAll(/(?:^|[\s,{])class:\s*'([^']*)'/g)].flatMap(([, value]) =>
-        value.split(/\s+/).filter(Boolean).map((utility) => [name, utility] as const),
+        value
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((utility) => [name, utility] as const),
       ),
     ),
   );
 
   const theme = readFileSync(join(repository, THEME), 'utf8');
   const safelisted = new Set(
-    [...theme.matchAll(/@source inline\('([^']*)'\)/g)].flatMap(([, list]) => list.split(/\s+/)),
+    [...theme.matchAll(/@source inline\(\s*'([^']*)'\s*\)/g)].flatMap(([, list]) => list.split(/\s+/)),
   );
 
   it('style their host only with utilities the theme generates', () => {

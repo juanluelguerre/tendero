@@ -37,14 +37,18 @@ describe('the trail', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: AuthStore, useValue: { isSignedIn: signedIn } as unknown as AuthStore },
-        { provide: Telemetry, useValue: { trackEvent: (name: string, a: unknown) => events.push([name, a]) } as unknown as Telemetry },
+        {
+          provide: Telemetry,
+          useValue: { trackEvent: (name: string, a: unknown) => events.push([name, a]) } as unknown as Telemetry,
+        },
         { provide: CustomerLink, useValue: { ensure: () => (linked++, Promise.resolve()) } as unknown as CustomerLink },
         {
           provide: BrowsingHistoryService,
           useValue: {
             get: () => (calls.push('get'), of(account(['FROMACCOUNT']))),
             merge: (trail: { views: { code: string }[] }) => (
-              calls.push(`merge:${trail.views.map((v) => v.code).join(',')}`), of(account(trail.views.map((v) => v.code)))
+              calls.push(`merge:${trail.views.map((v) => v.code).join(',')}`),
+              of(account(trail.views.map((v) => v.code)))
             ),
             recordView: (code: string) => (calls.push(`view:${code}`), of(account([code]))),
             recordSearch: (text: string) => (calls.push(`search:${text}`), of(account([], [text]))),

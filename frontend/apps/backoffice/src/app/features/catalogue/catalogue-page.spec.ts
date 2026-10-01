@@ -54,17 +54,19 @@ describe('the catalogue page', () => {
   it('offers the variants of every published product', async () => {
     const fixture = open();
 
-    http.expectOne((req) => req.url === 'http://api/api/catalog/products').flush({
-      items: [product('p-1', 'Zapatillas Pulse Runner'), product('p-2', 'Camiseta técnica')],
-      total: 2,
-      page: 1,
-      pageSize: 20,
-      counts: [
-        { status: 'Active', count: 2 },
-        { status: 'Draft', count: 0 },
-        { status: 'Archived', count: 0 },
-      ],
-    });
+    http
+      .expectOne((req) => req.url === 'http://api/api/catalog/products')
+      .flush({
+        items: [product('p-1', 'Zapatillas Pulse Runner'), product('p-2', 'Camiseta técnica')],
+        total: 2,
+        page: 1,
+        pageSize: 20,
+        counts: [
+          { status: 'Active', count: 2 },
+          { status: 'Draft', count: 0 },
+          { status: 'Archived', count: 0 },
+        ],
+      });
 
     // `*transloco` renders nothing until its language arrives, so the pending
     // translation file is answered too — empty, since what is asserted is the
@@ -74,8 +76,9 @@ describe('the catalogue page', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('a')]
-      .map((link) => link.getAttribute('href'));
+    const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('a')].map((link) =>
+      link.getAttribute('href'),
+    );
 
     expect(links).toEqual(['/products/p-1/variants', '/products/p-2/variants']);
   });

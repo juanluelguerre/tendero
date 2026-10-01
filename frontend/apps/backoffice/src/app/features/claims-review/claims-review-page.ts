@@ -35,7 +35,11 @@ export class ClaimsReviewPage {
     const step = stepOf(event, !!document.querySelector('dialog[open]'));
     if (!step) return;
     const claims = this.store.claims();
-    const index = landing(claims.findIndex((claim) => claim.claimId === this.store.selectedId()), claims.length, step);
+    const index = landing(
+      claims.findIndex((claim) => claim.claimId === this.store.selectedId()),
+      claims.length,
+      step,
+    );
     if (index === null) return;
     event.preventDefault();
     this.usage.affordance('keys', step === 1 ? 'next' : 'previous');

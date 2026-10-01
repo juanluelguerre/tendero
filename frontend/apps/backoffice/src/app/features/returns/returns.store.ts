@@ -51,12 +51,18 @@ export const ReturnsStore = signalStore(
     return {
       statusKey,
       selectedId,
-      shown: computed(() => (statusKey() === 'all' ? store.requests() : store.requests().filter((request) => request.status === statusKey()))),
+      shown: computed(() =>
+        statusKey() === 'all' ? store.requests() : store.requests().filter((request) => request.status === statusKey()),
+      ),
       filters: computed<FilterOption[]>(() => {
         const labels = store._labels() as Record<string, string>;
         const count = (status: string) => store.requests().filter((request) => request.status === status).length;
         return [
-          ...Statuses.map((status) => ({ key: status as string, label: labels[status] ?? status, count: count(status) })),
+          ...Statuses.map((status) => ({
+            key: status as string,
+            label: labels[status] ?? status,
+            count: count(status),
+          })),
           { key: 'all', label: labels['all'] ?? 'all', count: store.requests().length },
         ];
       }),
@@ -85,11 +91,16 @@ export const ReturnsStore = signalStore(
           .pipe(store._usage.reported('returns', ReturnActions[decision], via))
           .subscribe({
             next: (updated) => {
-              store.requests.update((current) => current.map((row) => (row.returnId === updated.returnId ? updated : row)));
+              store.requests.update((current) =>
+                current.map((row) => (row.returnId === updated.returnId ? updated : row)),
+              );
               patchState(store, { busy: null });
             },
             error: (error: unknown) => {
-              patchState(store, (state) => ({ busy: null, refusal: { ...state.refusal, [request.returnId]: refusalOf(error) } }));
+              patchState(store, (state) => ({
+                busy: null,
+                refusal: { ...state.refusal, [request.returnId]: refusalOf(error) },
+              }));
             },
           });
       },

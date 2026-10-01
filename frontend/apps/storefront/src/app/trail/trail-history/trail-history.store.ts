@@ -23,7 +23,8 @@ export const TrailHistoryStore = signalStore(
       kept: trail.kept,
       _cards: rxResource({
         params: () => (codes().length ? { culture: culture.active(), codes: codes() } : undefined),
-        stream: ({ params }) => search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
+        stream: ({ params }) =>
+          search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
       }),
     };
   }),

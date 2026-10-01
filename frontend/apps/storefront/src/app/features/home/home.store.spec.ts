@@ -41,12 +41,21 @@ describe('the home store', () => {
         { provide: TrailStore, useValue: { shown } },
         { provide: TaxonomyStore, useValue: { categories: () => [] } },
         { provide: ShopFrontService, useValue: { offers: () => answer('rules', { items: [] }) } },
-        { provide: WhatSellsService, useValue: { trending: () => answer('trending', ranked()), bestSellers: () => answer('bestSellers', ranked()) } },
+        {
+          provide: WhatSellsService,
+          useValue: {
+            trending: () => answer('trending', ranked()),
+            bestSellers: () => answer('bestSellers', ranked()),
+          },
+        },
         {
           provide: ProductSearchService,
           useValue: {
             browse: (options: { onOffer?: boolean; campaign?: string }) =>
-              answer(options.onOffer ? 'offers' : options.campaign ? 'campaignProducts' : 'newest', { hits: [hit('a')], total: 1 }),
+              answer(options.onOffer ? 'offers' : options.campaign ? 'campaignProducts' : 'newest', {
+                hits: [hit('a')],
+                total: 1,
+              }),
             cards: () => answer('cards', { items: [hit('a')] }),
             similar: () => answer('similar', { items: [], rankedBy: 'Rule' }),
           },
@@ -65,7 +74,11 @@ describe('the home store', () => {
     failing.add('offers');
     const store = opened();
 
-    expect([store.offerHits(), store.newestHits().map((each) => each.code), store.bestSellers().length]).toEqual([[], ['A'], 1]);
+    expect([store.offerHits(), store.newestHits().map((each) => each.code), store.bestSellers().length]).toEqual([
+      [],
+      ['A'],
+      1,
+    ]);
   });
 
   /** *Puede que te guste* is about what was viewed: a first visit asks for nothing it cannot use. */

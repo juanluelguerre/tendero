@@ -55,30 +55,53 @@ describe('Telemetry, the facade the apps inject', () => {
   });
 
   it('keeps the no-op when the adapter fails to start', () => {
-    telemetry.use(recording({ start: () => { throw new Error('no collector'); } }), context);
+    telemetry.use(
+      recording({
+        start: () => {
+          throw new Error('no collector');
+        },
+      }),
+      context,
+    );
 
     expect(telemetry.adapterName).toBe('noop');
   });
 
   it('drops an adapter that throws, and the caller never sees it', () => {
-    telemetry.use(recording({ event: () => { throw new Error('exporter exploded'); } }), context);
+    telemetry.use(
+      recording({
+        event: () => {
+          throw new Error('exporter exploded');
+        },
+      }),
+      context,
+    );
 
     expect(() => telemetry.trackEvent('webmcp_tool_invoked', { tool: 'search', outcome: 'answered' })).not.toThrow();
     expect(telemetry.adapterName).toBe('noop');
   });
 
   it('runs the work exactly once when the adapter fails before running it', () => {
-    telemetry.use(recording({ span: () => { throw new Error('tracer gone'); } }), context);
+    telemetry.use(
+      recording({
+        span: () => {
+          throw new Error('tracer gone');
+        },
+      }),
+      context,
+    );
     const work = vi.fn(() => 'paid');
 
     expect(telemetry.withSpan('checkout', work)).toBe('paid');
     expect(work).toHaveBeenCalledTimes(1);
   });
 
-  it('lets the application\'s own error through, untouched and not retried', () => {
+  it("lets the application's own error through, untouched and not retried", () => {
     telemetry.use(recording(), context);
     const failure = new Error('card declined');
-    const work = vi.fn(() => { throw failure; });
+    const work = vi.fn(() => {
+      throw failure;
+    });
 
     expect(() => telemetry.withSpan('checkout', work)).toThrow(failure);
     expect(work).toHaveBeenCalledTimes(1);

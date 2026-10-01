@@ -24,7 +24,8 @@ describe('a notice', () => {
     fixture.detectChanges();
     return fixture;
   }
-  const box = (fixture: ReturnType<typeof render>) => (fixture.nativeElement as HTMLElement).querySelector('lib-notice > div') as HTMLElement;
+  const box = (fixture: ReturnType<typeof render>) =>
+    (fixture.nativeElement as HTMLElement).querySelector('lib-notice > div') as HTMLElement;
 
   it('says what it was given, in its tone', () => {
     const fixture = render();

@@ -10,7 +10,8 @@ import { StockStore } from './stock.store';
 
 const Stock = 'http://api/api/inventory/stock';
 
-const row = (sku: string, onHand: number) => ({ sku, warehouseCode: 'MAD', onHand, available: onHand }) as unknown as StockRow;
+const row = (sku: string, onHand: number) =>
+  ({ sku, warehouseCode: 'MAD', onHand, available: onHand }) as unknown as StockRow;
 
 /** The shelves' state (ADR 0047): the filter, search and page in the URL, the rows, and the counts being typed. */
 describe('the stock store', () => {
@@ -18,7 +19,14 @@ describe('the stock store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, StockStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        StockStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -31,7 +39,15 @@ describe('the stock store', () => {
     TestBed.tick();
     http
       .match((req) => req.url === Stock && req.method === 'GET')
-      .forEach((req) => req.flush({ rows: [row('A', 3)], total: 1, counts: [{ filter: 'SoldOut', count: 2 }], reservations: [], restockAt: 5 }));
+      .forEach((req) =>
+        req.flush({
+          rows: [row('A', 3)],
+          total: 1,
+          counts: [{ filter: 'SoldOut', count: 2 }],
+          reservations: [],
+          restockAt: 5,
+        }),
+      );
     await new Promise((resolve) => setTimeout(resolve));
     return store;
   }

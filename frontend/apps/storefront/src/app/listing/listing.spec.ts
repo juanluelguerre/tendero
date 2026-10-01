@@ -62,7 +62,9 @@ describe('the listing', () => {
         { provide: CampaignsStore, useValue: { named: () => null, all: () => [], leading: () => null } },
         {
           provide: Telemetry,
-          useValue: { trackEvent: (name: string, attributes: unknown) => events.push([name, attributes]) } as unknown as Telemetry,
+          useValue: {
+            trackEvent: (name: string, attributes: unknown) => events.push([name, attributes]),
+          } as unknown as Telemetry,
         },
         { provide: TaxonomyStore, useValue: { categories: () => [], menu: () => [] } },
         {
@@ -173,7 +175,9 @@ describe('the listing', () => {
     expect(black?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Negro (1)');
     expect(black?.querySelector<HTMLElement>('.swatch__dot')?.style.backgroundColor).not.toBe('');
     // A colour nothing is left in is disabled, not hidden.
-    const red = [...column(element).querySelectorAll<HTMLButtonElement>('.swatch')].find((button) => button.textContent?.includes('Rojo'));
+    const red = [...column(element).querySelectorAll<HTMLButtonElement>('.swatch')].find((button) =>
+      button.textContent?.includes('Rojo'),
+    );
     expect(red?.disabled).toBe(true);
 
     black?.click();
@@ -194,12 +198,16 @@ describe('the listing', () => {
     expect(localStorage.getItem('tendero.listing.filtersFolded')).toBe('1');
   });
 
-  it('collects the sheet\'s choices as a batch and applies them as one navigation', async () => {
+  it("collects the sheet's choices as a batch and applies them as one navigation", async () => {
     const { harness, element } = await open();
     const dialog = element.querySelector('dialog');
     // jsdom has no modal dialogs; the platform's part is the browser's to prove.
     if (dialog) dialog.showModal = () => dialog.setAttribute('open', '');
-    if (dialog) dialog.close = () => { dialog.removeAttribute('open'); dialog.dispatchEvent(new Event('close')); };
+    if (dialog)
+      dialog.close = () => {
+        dialog.removeAttribute('open');
+        dialog.dispatchEvent(new Event('close'));
+      };
 
     element.querySelector<HTMLButtonElement>('.toolbar__filters')?.click();
     await settle(harness);
@@ -278,7 +286,12 @@ function page(params: Record<string, string | string[]>): SearchResultPage {
         ],
       },
     },
-    { code: 'offer', kind: 'Offer', label: 'En oferta', options: [{ value: 'true', label: 'En oferta', count: 1, chosen: has('onOffer', 'true') }] },
+    {
+      code: 'offer',
+      kind: 'Offer',
+      label: 'En oferta',
+      options: [{ value: 'true', label: 'En oferta', count: 1, chosen: has('onOffer', 'true') }],
+    },
     {
       code: 'COLOR',
       kind: 'Axis',

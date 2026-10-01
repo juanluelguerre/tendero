@@ -14,13 +14,18 @@ export function findingsOf(page: string, width: number, audit: PageAudit): strin
     ['lowContrast', audit.lowContrast],
   ];
   const keys = kinds.flatMap(([kind, elements]) =>
-    elements.map((element) => `${page}@${width} ${kind}: ${element.replace(/ "[^"]*"/, '').replace(/ \d+(\.\d+)?:1 < /, ' < ')}`),
+    elements.map(
+      (element) => `${page}@${width} ${kind}: ${element.replace(/ "[^"]*"/, '').replace(/ \d+(\.\d+)?:1 < /, ' < ')}`,
+    ),
   );
   return [...new Set(keys)].sort();
 }
 
 /** What a run found that the baseline does not know (regressions), and what the baseline knows that is gone (fixed). */
-export function compareToBaseline(found: readonly string[], baseline: readonly string[]): { added: string[]; fixed: string[] } {
+export function compareToBaseline(
+  found: readonly string[],
+  baseline: readonly string[],
+): { added: string[]; fixed: string[] } {
   const known = new Set(baseline);
   const now = new Set(found);
   return {

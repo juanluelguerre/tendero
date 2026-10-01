@@ -125,7 +125,10 @@ describe('the API parameters', () => {
   });
 
   it('sends only the culture and the page size for a bare listing', () => {
-    expect(searchParams({ query: '', category: null }, NoFilters, 'es', 1, 24)).toEqual({ culture: 'es', pageSize: '24' });
+    expect(searchParams({ query: '', category: null }, NoFilters, 'es', 1, 24)).toEqual({
+      culture: 'es',
+      pageSize: '24',
+    });
   });
 });
 
@@ -190,19 +193,30 @@ describe('changing the filters', () => {
 describe('which facets a change narrowed, for filter_applied', () => {
   it('names each facet a choice was added to or moved in, by its code', () => {
     const before = { ...NoFilters, brands: ['Vertex'], values: ['SIZE:42'] };
-    const after = { ...NoFilters, brands: ['Vertex', 'Caminante'], values: ['SIZE:42', 'COLOR:BLACK'], maxPrice: 60, inStock: true };
+    const after = {
+      ...NoFilters,
+      brands: ['Vertex', 'Caminante'],
+      values: ['SIZE:42', 'COLOR:BLACK'],
+      maxPrice: 60,
+      inStock: true,
+    };
 
     expect(narrowedFacets(before, after)).toEqual(['brand', 'price', 'stock', 'COLOR']);
   });
 
   it('counts a choice replaced within an attribute, and not one left as it was', () => {
-    expect(narrowedFacets({ ...NoFilters, values: ['COLOR:WHITE', 'SIZE:42'] }, { ...NoFilters, values: ['COLOR:BLACK', 'SIZE:42'] })).toEqual([
-      'COLOR',
-    ]);
+    expect(
+      narrowedFacets(
+        { ...NoFilters, values: ['COLOR:WHITE', 'SIZE:42'] },
+        { ...NoFilters, values: ['COLOR:BLACK', 'SIZE:42'] },
+      ),
+    ).toEqual(['COLOR']);
   });
 
   it('does not count a facet taken off, nor an order', () => {
-    expect(narrowedFacets({ ...NoFilters, brands: ['Vertex'], onOffer: true }, { ...NoFilters, sort: 'newest' })).toEqual([]);
+    expect(
+      narrowedFacets({ ...NoFilters, brands: ['Vertex'], onOffer: true }, { ...NoFilters, sort: 'newest' }),
+    ).toEqual([]);
   });
 });
 

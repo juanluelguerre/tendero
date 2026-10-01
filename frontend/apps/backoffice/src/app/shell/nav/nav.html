@@ -1,7 +1,9 @@
 <ng-container *transloco="let t">
   @for (group of groups; track group.label) {
     <section>
-      <h2 class="group__label mb-1 px-3 font-sans text-3xs font-semibold tracking-wide text-muted uppercase">{{ t('nav.groups.' + group.label) }}</h2>
+      <h2 class="group__label mb-1 px-3 font-sans text-3xs font-semibold tracking-wide text-muted uppercase">
+        {{ t('nav.groups.' + group.label) }}
+      </h2>
       <ul class="flex flex-col gap-[2px]" role="list">
         @for (item of group.items; track item.route) {
           <li>
@@ -22,7 +24,9 @@
               <lib-icon [name]="item.icon" />
               <span class="link__label min-w-0 flex-1">{{ t('nav.' + item.label) }}</span>
               @if (item.waiting && waiting()(item.waiting); as count) {
-                <span class="link__badge numeric text-3xs font-semibold text-warning" aria-hidden="true">{{ count }}</span>
+                <span class="link__badge numeric text-3xs font-semibold text-warning" aria-hidden="true">{{
+                  count
+                }}</span>
                 <span class="sr-only">{{ t('nav.waiting', { count }) }}</span>
               }
             </a>
