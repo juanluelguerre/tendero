@@ -145,3 +145,14 @@ it; a comment-only `totals.css` turned it red on that file.
 - **Checked against the callers**: no template puts a `display`, `position` or
   `overflow` utility on one of these hosts, so no two utilities of one property
   meet on an element, where Tailwind's order and not the author's would decide.
+
+## Amendment (2026-10-01, later the same day): the bridge is gone
+
+Point 1's `@theme inline reference` block — the bridge from
+`design/tokens.css`'s own names into Tailwind's — is replaced by ADR 0050: the
+tokens are declared in Tailwind's namespaces in `design/theme.css`, which the
+apps import, and `design/tokens.css` is generated from it for the pages with
+no Tailwind. Tailwind's default theme is no longer imported at all, so
+`--*: initial` went with the bridge. Every size the templates name is a token
+since then (`min-h-tap`), and two specs hold it: no lone length in brackets,
+and every class a template names builds.

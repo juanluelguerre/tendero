@@ -167,3 +167,50 @@ every frontend dependency updated; **all** 275 arbitrary lengths into tokens;
 `NgOptimizedImage` and Signal Forms wherever they fit; `withLinkedState`,
 `signalMethod` and `rxMethod` wherever they are the right tool. What each step
 became is recorded as it lands, in the commits and in the ADRs they name.
+
+---
+
+## As built, 2026-10-01
+
+Everything in the table landed on the branch the same day, each step with a
+spec written or changed first and a hand mutation named in its commit:
+
+| Row | Became | Where |
+|---|---|---|
+| dependencies | Angular 22.2, Nx 23.2, ESLint 10, jsdom 30…; 16 advisories → 0 (`overrides` on three Nx pins) | `build(frontend): every dependency…` |
+| A1, A3, A4, T9 | OnPush, `withFetch` and zone.js unwritten; the test setups say zoneless; the dead `dark:` variant gone | `refactor(frontend): stop saying what Angular 22 already does…` |
+| T2, T3 | the tokens became Tailwind's theme (ADR 0050); 275 lengths named; two guards — no lone length in brackets, every class builds | ADR 0050 |
+| T4, T6 | `storefront-summary`; `copy-text` in utilities | `refactor(frontend): copy-text in utilities…` |
+| N6 | NgRx resource extensions instead of `valueOf`, experimental and on record | ADR 0051 §4 |
+| N9 | the nine store specs that were missing | two `test(…)` commits |
+| N1, N2, N3, N5 | `withLinkedState`, `signalMethod`, `rxMethod`, `withWorklistUrl`; no store has an `effect` | ADR 0051 §8–9 |
+| N4 | the cart's writes serialised (`concatMap`), through `CartService` | ADR 0051 §10 |
+| A2 | `NgOptimizedImage` everywhere, `priority` on each LCP; no loader until images have sizes | ADR 0051 §12 |
+| A7 | `price`, `dateTime`, `day`, `clock` pure pipes | ADR 0051 §11 |
+| A6 | the three forms are Signal Forms | ADR 0051 §13 |
+| A5, A10 | `rxResource` over the ports, and Transloco, with their reasons | ADR 0051 §5–6 |
+
+**What it also found**: a redirect loop that froze the tab on any unknown
+address inside a language; a cart that could lose an update; a pager that
+moved from a page the list no longer had; the dashboard's refreshed reads,
+hidden from the resource migration by their generic arguments; a flaky palette
+test (250 ms of real time for a 200 ms debounce); a library tsconfig pointing
+at a file that does not exist; and, during the move to the theme, `font-bold`,
+`p-0` and `bg-transparent` gone without a sound — which is why the utilities
+guard exists.
+
+### B, what others do with a host's classes
+
+The author kept the safelist and asked what the community does. Tailwind 4's
+default, `@import "tailwindcss"` with no `source()`, scans every file in the
+project except what `.gitignore` excludes, `node_modules`, binaries, CSS and
+lockfiles (tailwindcss.com, *Detecting classes in source files*) — TypeScript
+included — and that default is what Tailwind's Angular guide installs. So the
+common practice is to scan `.ts`, and libraries that style a host in its
+metadata, as Spartan/ng's components do, rely on it. Tendero departs from it on
+purpose: `source(none)` and templates only, because the scan once generated
+utilities from TypeScript strings nobody meant as classes (ADR 0049), and the
+host's few classes are listed in `theme.css`, held by a spec. With the theme
+now only the tokens, that risk is smaller than it was; the list stays the
+author's call, and moving to a scan of `*.ts` without specs is one `@source`
+and one deleted test if it ever costs more than it saves.

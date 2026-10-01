@@ -272,23 +272,46 @@ node tools/api-map.mjs --schema CartView
   their closest common parent, which they inject (Orders' page store: the open
   order, the rows, the moves) — never two stores kept in step. A child may
   inject its parent's store, never the reverse. The component presents —
-  formatting in the reader's culture included — and the store reads and derives.
+  formatting in the reader's culture included, with the `price`, `dateTime`,
+  `day` and `clock` pipes (shared-ui), never a method a template calls — and
+  the store reads and derives.
 - **A `signalStoreFeature` for state and behaviour more than one store needs**
-  (`withDashboardPeriod` in eleven widget stores; the lists of work will share
-  their filters, search and page in the URL), or to split one store that has
+  (`withDashboardPeriod` in eleven widget stores; `withWorklistUrl` in the
+  lists of work: the query, the page, `_navigate`, `go`, one page size), or to split one store that has
   grown several responsibilities. Not to tidy a store used once. It lives
   beside the stores that share it, or in `worklist/` when they are in different
   features.
 - **What a store is not for.** A component with no state of its own gets no
   store (sign-in, the shell, the nav, a status label). Input that lives only
   while it is typed — a dialog's reason — stays a component signal. Inside a
-  store, `patchState` is for our own state, a resource for what the server is
-  read for, and `HttpClient` in a method for what it is asked to change. The
-  whole backoffice follows this; `shell/` is the frame round every screen and
+  store (ADR 0051), NgRx's tools and never an `effect`:
+  - `patchState` for its own state; `withLinkedState` for state another
+    signal resets (a list's rows a move replaces, a product's selection);
+  - a resource wrapped in `extendResource` for what the server is read for —
+    a failed one reads as no value (`provideReadableResources()`), so
+    `x.value()` never throws;
+  - `rxMethod` for a stream of requests (`switchMap`: only the latest
+    question's answer; `concatMap`: writes that must not overtake each other,
+    the cart), `signalMethod` to feed a signal into a method;
+  - a service in `data-access/` for every call, never `HttpClient` in a store.
+  A component keeps `effect` for what is outside signals — the DOM, the
+  document's head, the router, a chart library, a timer.
+  The whole backoffice follows this; `shell/` is the frame round every screen and
   `worklist/` what the lists of work share (pane, chips, pager, dialog, Undo).
   The storefront follows it too: its shop-wide state lives in theme folders
   (`cart/`, `compare/`, `taxonomy/`, `trail/`, `campaigns/`, `listing/`),
   `data-access/` holds HTTP services only, and each page provides its store.
+- **Forms are Signal Forms** (`@angular/forms/signals`, ADR 0051): a writable
+  signal as the model (in the store's props when a store owns it), `form()`
+  with a schema that says what is required and allowed, `[formField]` on each
+  input — which owns `name`, `required`, `min`/`max`, `maxlength`, so they are
+  not written by hand. A form whose names a browser test or autofill reads is
+  named (`{ name: 'address' }` → `address.line1`). Never `ngModel`.
+- **Pictures are `NgOptimizedImage`**: `ngSrc` with their size, or `fill` in a
+  box the caller sizes; lazy by default, `priority` on the picture that is the
+  page's LCP (the product's, a listing's first row, the home's lead campaign).
+- **Angular 22's defaults are not written**: no `changeDetection: OnPush` (the
+  default), no `withFetch()`, no zone.js (ADR 0051).
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
 
 ## Git Workflow
