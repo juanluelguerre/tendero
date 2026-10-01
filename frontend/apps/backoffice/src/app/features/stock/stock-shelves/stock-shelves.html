@@ -32,7 +32,7 @@
                  scans for. The SKU stays, in mono, because it is what is
                  printed on the box — the two answer different questions and
                  neither replaces the other. -->
-              <td class="min-w-[14rem]">
+              <td class="min-w-col-2xl">
                 @let described = store.describe(row);
                 @if (described) {
                   <!-- `product__name` is a hook: the end-to-end search by name reads it. -->
@@ -53,7 +53,7 @@
                 <!-- The only editable cell on the screen. A count replaces
                    the number; it does not add to it. -->
                 <input
-                  class="field w-[4.5rem] py-[2px] text-end numeric"
+                  class="field w-col-qty py-hair text-end numeric"
                   type="number"
                   min="0"
                   step="1"
@@ -79,7 +79,7 @@
               >
                 {{ row.available }}
               </td>
-              <td class="w-[5.5rem] text-end">
+              <td class="w-col-action text-end">
                 @if (store.changed(row)) {
                   <button
                     class="button button--small"

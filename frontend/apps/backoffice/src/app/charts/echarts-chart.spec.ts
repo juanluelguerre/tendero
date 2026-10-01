@@ -32,7 +32,7 @@ describe('the ECharts host', () => {
 
   it('builds its options from the colours of the tokens where it sits', () => {
     const fixture = render((colours) => ({ colour: colours.series.data }));
-    (fixture.nativeElement as HTMLElement).style.setProperty('--chart-data', 'rgb(42, 105, 176)');
+    (fixture.nativeElement as HTMLElement).style.setProperty('--color-chart-data', 'rgb(42, 105, 176)');
     fixture.detectChanges();
 
     expect(optionsOf(fixture)).toEqual({ colour: 'rgb(42, 105, 176)' });
@@ -44,11 +44,11 @@ describe('the ECharts host', () => {
     theme.choose('light');
     const fixture = render((colours) => ({ colour: colours.series.data }));
     const host = fixture.nativeElement as HTMLElement;
-    host.style.setProperty('--chart-data', 'rgb(42, 105, 176)');
+    host.style.setProperty('--color-chart-data', 'rgb(42, 105, 176)');
     fixture.detectChanges();
     expect(optionsOf(fixture)).toEqual({ colour: 'rgb(42, 105, 176)' });
 
-    host.style.setProperty('--chart-data', 'rgb(94, 151, 207)');
+    host.style.setProperty('--color-chart-data', 'rgb(94, 151, 207)');
     theme.choose('dark');
     fixture.detectChanges();
 

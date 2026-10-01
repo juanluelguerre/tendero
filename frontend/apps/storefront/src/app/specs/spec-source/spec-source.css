@@ -9,7 +9,7 @@
    centred, which is the popover's own default. */
 @supports (position-area: bottom) {
   .quote {
-    margin: var(--space-2) 0 0;
+    margin: var(--spacing-2) 0 0;
     position-area: bottom span-right;
     position-try-fallbacks: flip-block, flip-inline;
   }

@@ -30,7 +30,12 @@
        corner rather than a placeholder. A proportion scales with whatever it is
        dropped into — a result card, the gallery, a 48-pixel thumbnail — without
        any of them being told a number. -->
-  <svg class="aspect-square h-auto w-[46%] max-w-[200px]" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+  <svg
+    class="aspect-square h-auto w-placeholder max-w-placeholder-max"
+    viewBox="0 0 120 120"
+    aria-hidden="true"
+    focusable="false"
+  >
     <defs>
       <clipPath [attr.id]="clipId"><path d="M34 30 L92 30 L110 64 L16 64 Z" /></clipPath>
     </defs>
@@ -50,6 +55,6 @@
   </svg>
 
   @if (label()) {
-    <span class="max-w-[22ch] text-center text-xs text-balance">{{ label() }}</span>
+    <span class="max-w-measure-2xs text-center text-xs text-balance">{{ label() }}</span>
   }
 </div>

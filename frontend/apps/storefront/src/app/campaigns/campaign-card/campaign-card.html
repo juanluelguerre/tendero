@@ -1,4 +1,4 @@
-<!-- An event is the chalkboard — `--bg-inverse`, dark in both themes — and a
+<!-- An event is the chalkboard — `--color-inverse`, dark in both themes — and a
      season the light card on the accent's tint, stronger than the agent band's
      tint so the lead stands apart (tokens.css). Colours by purpose only
      (design-tokens.spec.ts). The clock inside reads its box's border from
@@ -18,12 +18,12 @@
         : 'gap-6 px-7 pt-7 pb-6 max-sm:px-5 max-sm:pt-6 max-sm:pb-5'
   "
   [class.border]="event"
-  [class.border-(--border-inverse)]="event"
-  [class.bg-(--bg-inverse)]="event"
-  [class.text-(--text-inverse)]="event"
-  [class.bg-(--accent-tint-strong)]="!event"
+  [class.border-hairline-inverse]="event"
+  [class.bg-inverse]="event"
+  [class.text-on-inverse]="event"
+  [class.bg-accent-tint-strong]="!event"
   [class.text-body]="!event"
-  [style.--clock-border]="event ? 'var(--border-inverse)' : 'var(--border-strong)'"
+  [style.--clock-border]="event ? 'var(--color-hairline-inverse)' : 'var(--color-hairline-strong)'"
   [attr.aria-labelledby]="'campaign-' + campaign().code"
 >
   <!-- One column that may shrink: an implicit track sizes to its widest child,
@@ -32,8 +32,8 @@
     <!-- The window, as an eyebrow: the one uppercase the system allows. -->
     <p
       class="campaign__when text-xs font-semibold tracking-wide uppercase"
-      [class.text-(--text-inverse-muted)]="event"
-      [class.text-(--accent-on-tint-strong)]="!event"
+      [class.text-on-inverse-muted]="event"
+      [class.text-accent-on-tint-strong]="!event"
     >
       @if (campaign().kind === 'Season') {
         {{ moment() === 'before' ? t('campaign.from', { date: startDay() }) : t('campaign.until', { date: endDay() }) }}
@@ -50,10 +50,10 @@
       {{ campaign().name }}
     </h2>
     <p
-      class="max-w-[48ch]"
+      class="max-w-measure-sm"
       [class]="banner ? 'text-md' : 'text-lg max-sm:text-md'"
-      [class.text-(--text-inverse-muted)]="event"
-      [class.text-(--text-muted-on-tint-strong)]="!event"
+      [class.text-on-inverse-muted]="event"
+      [class.text-muted-on-tint-strong]="!event"
     >
       {{ campaign().line }}
     </p>
@@ -71,7 +71,7 @@
         @for (hold of holds(t); track hold) {
           <li
             class="campaign__hold rounded-full border border-current px-3 py-1 text-sm"
-            [class.text-(--accent-on-tint-strong)]="!event"
+            [class.text-accent-on-tint-strong]="!event"
           >
             {{ hold }}
           </li>
@@ -95,7 +95,7 @@
         </a>
       } @else {
         <a
-          class="campaign__link inline-flex min-h-[1.5rem] items-center font-semibold text-inherit underline underline-offset-[0.2em] pointer-coarse:min-h-[2.75rem]"
+          class="campaign__link inline-flex min-h-target items-center font-semibold text-inherit underline underline-offset-(--underline-offset) pointer-coarse:min-h-tap"
           [routerLink]="links.home()"
           [queryParams]="listing()"
         >

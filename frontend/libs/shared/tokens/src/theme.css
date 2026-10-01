@@ -1,21 +1,24 @@
-/* Tendero — Tailwind 4 over the design tokens, utility-first (ADR 0049).
+/* Tendero — Tailwind 4 over the design tokens, utility-first (ADR 0049, 0050).
  *
- * The theme IS design/tokens.css and nothing else: Tailwind's own palette,
- * spacing and breakpoints are cleared, and every utility — `bg-surface`,
- * `text-muted`, `p-5`, `rounded-lg`, `md:` — names a token. The tokens stay the
- * single source (ADR 0033), dark mode stays their [data-theme='dark'] override,
- * and the no-hex test keeps its meaning: a utility can only name a token.
+ * The theme IS the design tokens: design/theme.css declares them in Tailwind's
+ * own namespaces (`--color-surface`, `--spacing-tap`, `--radius-md`), so every
+ * utility — `bg-surface`, `min-h-tap`, `rounded-md`, `md:` — names one, and
+ * nothing bridges the two. Tailwind's default theme is never imported, so its
+ * palette, spacing and breakpoints do not exist here; dark mode is the tokens'
+ * [data-theme='dark'] override, and the no-hex test keeps its meaning.
  * Never write a hex here. */
 
 /* The cascade, in order: Tailwind's reset (`base`), then what everything composes
    (`components`: the design tokens' element rules — body, headings, focus,
    eyebrow — then the shared base and each app's primitives), then the utilities,
-   which win over all of it, as utility-first needs. Tailwind is imported before
-   the tokens so its layer order is declared first; the typefaces before both,
-   because an @import of a URL only survives as the first rule. The tokens' custom
-   properties are not in a layer. */
+   which win over all of it, as utility-first needs. The layers are declared
+   first, then filled; the typefaces come before all of it, because an @import
+   of a URL only survives as the first rule. Tailwind's own `theme.css` is left
+   out on purpose: the tokens are the whole theme. */
 @import './fonts.css';
-@import 'tailwindcss' source(none);
+@layer theme, base, components, utilities;
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
 @import './tokens.css';
 @import './base.css';
 
@@ -36,122 +39,6 @@
    so `bg-surface` is already right in both themes and no template says `dark:`.
    One was declared here and never used (the review of 2026-10-01). */
 
-/* Nothing of Tailwind's own theme survives: the utilities below are all there is. */
-@theme {
-  --*: initial;
-}
-
-/* `inline`: a utility takes the token's value itself (`var(--bg-surface)`), and
-   `reference`: the theme's variables are not written out, because the tokens
-   already are them. It used to write `--font-display: var(--font-display)`,
-   which resolved only by luck of the cascade. */
-@theme inline reference {
-  /* ---------- Colour: the semantic names first; they are the ones that follow
-     the dark theme. The palette is there for the rare fixed tint. ---------- */
-  --color-page: var(--bg-page);
-  --color-surface: var(--bg-surface);
-  --color-raised: var(--bg-raised);
-  --color-hairline: var(--border);
-  --color-hairline-strong: var(--border-strong);
-  --color-body: var(--text);
-  --color-muted: var(--text-muted);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-accent-tint: var(--accent-tint);
-  --color-on-accent: var(--on-accent);
-  --color-positive: var(--positive);
-  --color-warning: var(--warning);
-  --color-danger: var(--danger);
-  --color-focus: var(--focus-ring);
-  --color-transparent: transparent;
-  --color-current: currentColor;
-
-  --color-clay-50: var(--clay-50);
-  --color-clay-100: var(--clay-100);
-  --color-clay-500: var(--clay-500);
-  --color-clay-600: var(--clay-600);
-  --color-clay-700: var(--clay-700);
-  --color-clay-800: var(--clay-800);
-  --color-olive-50: var(--olive-50);
-  --color-olive-500: var(--olive-500);
-  --color-olive-600: var(--olive-600);
-  --color-olive-700: var(--olive-700);
-  --color-stone-0: var(--stone-0);
-  --color-stone-50: var(--stone-50);
-  --color-stone-100: var(--stone-100);
-  --color-stone-200: var(--stone-200);
-  --color-stone-300: var(--stone-300);
-  --color-ink-400: var(--ink-400);
-  --color-ink-500: var(--ink-500);
-  --color-ink-700: var(--ink-700);
-  --color-ink-900: var(--ink-900);
-
-  /* ---------- Type ---------- */
-  --font-display: var(--font-display);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-mono);
-
-  --text-3xs: var(--text-3xs);
-  --text-2xs: var(--text-2xs);
-  --text-xs: var(--text-xs);
-  --text-sm: var(--text-sm);
-  --text-md: var(--text-md);
-  --text-lg: var(--text-lg);
-  --text-xl: var(--text-xl);
-  --text-2xl: var(--text-2xl);
-  --text-3xl: var(--text-3xl);
-  --text-4xl: var(--text-4xl);
-
-  --font-weight-normal: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --font-weight-extrabold: 800;
-
-  --leading-tight: var(--leading-tight);
-  --leading-snug: var(--leading-snug);
-  --leading-body: var(--leading-body);
-
-  --tracking-tight: var(--tracking-tight);
-  --tracking-wide: var(--tracking-wide);
-
-  /* ---------- Space: the tokens' own steps, named, and only those. `p-5` is
-     --space-5 (1.5rem), not Tailwind's 1.25rem; a step between two is not a
-     step the design has. ---------- */
-  --spacing-0: 0;
-  --spacing-px: 1px;
-  --spacing-1: var(--space-1);
-  --spacing-2: var(--space-2);
-  --spacing-3: var(--space-3);
-  --spacing-4: var(--space-4);
-  --spacing-5: var(--space-5);
-  --spacing-6: var(--space-6);
-  --spacing-7: var(--space-7);
-  --spacing-8: var(--space-8);
-  --spacing-9: var(--space-9);
-
-  /* ---------- Shape, depth, motion, measure ---------- */
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-full: var(--radius-full);
-  --shadow-pop: var(--shadow-pop);
-  --ease-brand: var(--ease);
-  --container-prose: var(--container-prose);
-  --container-app: var(--container-app);
-
-  /* ---------- Breakpoints: the widths the CSS already turned on (2026-09-30),
-     so a template that moves to `sm:` or `lg:` lands where its stylesheet did.
-     All in rem, as Tailwind sorts them. ---------- */
-  --breakpoint-xs: 35rem; /* 560px */
-  --breakpoint-sm: 40rem; /* 640px */
-  --breakpoint-md: 48rem; /* 768px */
-  --breakpoint-tab: 56.25rem; /* 900px, the storefront's tablet turn */
-  --breakpoint-lg: 64rem; /* 1024px */
-  --breakpoint-xl: 75rem; /* 1200px */
-  --breakpoint-2xl: 90rem; /* 1440px */
-}
-
 /* ---------- The system's only decorative element ----------
    The awning stripe, taken from the logo. It marks section breaks, the
    backoffice's active tab and the import's loading bar. It always means Tendero,
@@ -160,7 +47,7 @@
   height: 6px;
   border: 0;
   border-radius: var(--radius-full);
-  background: repeating-linear-gradient(90deg, var(--clay-500) 0 14px, var(--clay-100) 14px 28px);
+  background: repeating-linear-gradient(90deg, var(--color-clay-500) 0 14px, var(--color-clay-100) 14px 28px);
 }
 
 @utility awning-thin {

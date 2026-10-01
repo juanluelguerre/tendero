@@ -39,7 +39,7 @@ apps/
   storefront-e2e/   Playwright: the shopper and the browser agent (WebMCP)
   backoffice-e2e/   Playwright: the shopkeeper. The browser half of the pyramid, kept thin
 libs/shared/
-  tokens/           bridge to design/tokens.css plus Tailwind's @theme block
+  tokens/           Tailwind (reset and utilities, no default theme) over design/theme.css, the tokens
   ui/               primitives with NO identity: inputs, tables, focus ring
   util/             helpers: the API base URL token, price and date formatting, image URLs
   api/              the API contract's types, generated from the OpenAPI document
@@ -92,7 +92,7 @@ layouts share nothing but the word). Argued in `docs/adr/0010`.
 
 ## Rules that are not negotiable
 
-- **Not one hex outside `design/tokens.css`.** Components read tokens. This one
+- **Not one hex outside `design/theme.css`.** Components read tokens. This one
   is now a test — `libs/shared/i18n/src/lib/design-tokens.spec.ts` scans every
   `.css` in the repository — and it only became possible once the styles left
   the TypeScript files.

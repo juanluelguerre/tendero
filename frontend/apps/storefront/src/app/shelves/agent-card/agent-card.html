@@ -4,8 +4,8 @@
   *transloco="let t"
   aria-labelledby="agent-card-title"
 >
-  <span class="grid size-[3rem] place-items-center rounded-full bg-surface" aria-hidden="true">
-    <lib-icon class="size-[1.25rem] text-accent" name="bot" [stroke]="1.75" />
+  <span class="grid size-avatar place-items-center rounded-full bg-surface" aria-hidden="true">
+    <lib-icon class="size-icon-md text-accent" name="bot" [stroke]="1.75" />
   </span>
 
   <div>
@@ -20,7 +20,7 @@
 
   <!-- Aligned with the address box, not with the label above it. -->
   <a
-    class="inline-flex min-h-[2.75rem] items-center self-end rounded-md border border-hairline-strong bg-surface px-4 text-sm font-semibold text-body no-underline hover:border-muted max-tab:col-span-full max-tab:justify-self-start"
+    class="inline-flex min-h-tap items-center self-end rounded-md border border-hairline-strong bg-surface px-4 text-sm font-semibold text-body no-underline hover:border-muted max-tab:col-span-full max-tab:justify-self-start"
     [routerLink]="howTo()"
   >
     {{ t('agentCard.howTo') }}

@@ -14,7 +14,7 @@
       @if (more(); as link) {
         <!-- A way to the whole list: a link that reads as one, not a second button. -->
         <a
-          class="inline-flex min-h-[1.5rem] items-center text-sm font-semibold text-accent no-underline hover:underline pointer-coarse:min-h-[2.75rem]"
+          class="inline-flex min-h-target items-center text-sm font-semibold text-accent no-underline hover:underline pointer-coarse:min-h-tap"
           [routerLink]="link.commands"
           [queryParams]="link.queryParams"
           >{{ link.label }}</a
@@ -26,7 +26,7 @@
         <div class="flex gap-2 max-sm:hidden">
           <button
             type="button"
-            class="inline-grid size-[2.75rem] place-items-center rounded-full border border-hairline bg-surface text-lg text-body hover:enabled:border-hairline-strong disabled:cursor-default disabled:opacity-40"
+            class="inline-grid size-tap place-items-center rounded-full border border-hairline bg-surface text-lg text-body hover:enabled:border-hairline-strong disabled:cursor-default disabled:opacity-40"
             [attr.aria-controls]="id"
             [attr.aria-label]="t('shelf.previous', { heading: heading() })"
             [disabled]="atStart()"
@@ -36,7 +36,7 @@
           </button>
           <button
             type="button"
-            class="inline-grid size-[2.75rem] place-items-center rounded-full border border-hairline bg-surface text-lg text-body hover:enabled:border-hairline-strong disabled:cursor-default disabled:opacity-40"
+            class="inline-grid size-tap place-items-center rounded-full border border-hairline bg-surface text-lg text-body hover:enabled:border-hairline-strong disabled:cursor-default disabled:opacity-40"
             [attr.aria-controls]="id"
             [attr.aria-label]="t('shelf.next', { heading: heading() })"
             [disabled]="atEnd()"
@@ -56,7 +56,7 @@
          a desktop, a ranking's lines five across too; on a phone the next card
          peeks in. -->
     <ul
-      class="shelf__row mt-4 grid snap-x snap-mandatory auto-cols-[minmax(200px,1fr)] grid-flow-col gap-4 overflow-x-auto overscroll-x-contain pb-3 max-sm:auto-cols-[minmax(62%,1fr)] max-sm:data-[layout=line]:auto-cols-[minmax(80%,1fr)] lg:auto-cols-[calc((100%_-_4*var(--space-4))/5)]"
+      class="shelf__row mt-4 grid snap-x snap-mandatory auto-cols-[minmax(200px,1fr)] grid-flow-col gap-4 overflow-x-auto overscroll-x-contain pb-3 max-sm:auto-cols-[minmax(62%,1fr)] max-sm:data-[layout=line]:auto-cols-[minmax(80%,1fr)] lg:auto-cols-[calc((100%_-_4*var(--spacing-4))/5)]"
       [attr.data-layout]="layout()"
       [id]="id"
       #row
@@ -79,11 +79,11 @@
             <!-- The trail's remove: on the card's corner, over the picture, 44 px under a finger. -->
             <button
               type="button"
-              class="absolute end-2 top-2 z-1 inline-grid size-[1.75rem] place-items-center rounded-full border border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-body pointer-coarse:size-[2.75rem]"
+              class="absolute end-2 top-2 z-1 inline-grid size-control-xs place-items-center rounded-full border border-hairline bg-surface text-muted hover:border-hairline-strong hover:text-body pointer-coarse:size-tap"
               [attr.aria-label]="t('shelf.remove', { name: item.hit.name })"
               (click)="removed.emit(item.hit)"
             >
-              <lib-icon class="size-[16px]" name="remove" [stroke]="2" />
+              <lib-icon class="size-icon-sm" name="remove" [stroke]="2" />
             </button>
           }
         </li>
@@ -91,13 +91,13 @@
     </ul>
   } @placeholder {
     <div
-      class="group mt-4 grid snap-x snap-mandatory auto-cols-[minmax(200px,1fr)] grid-flow-col gap-4 overflow-x-auto overscroll-x-contain pb-3 max-sm:auto-cols-[minmax(62%,1fr)] max-sm:data-[layout=line]:auto-cols-[minmax(80%,1fr)] lg:auto-cols-[calc((100%_-_4*var(--space-4))/5)]"
+      class="group mt-4 grid snap-x snap-mandatory auto-cols-[minmax(200px,1fr)] grid-flow-col gap-4 overflow-x-auto overscroll-x-contain pb-3 max-sm:auto-cols-[minmax(62%,1fr)] max-sm:data-[layout=line]:auto-cols-[minmax(80%,1fr)] lg:auto-cols-[calc((100%_-_4*var(--spacing-4))/5)]"
       [attr.data-layout]="layout()"
       aria-hidden="true"
     >
       @for (slot of placeholders; track slot) {
         <div
-          class="skeleton aspect-3/4 rounded-lg group-data-[layout=line]:aspect-auto group-data-[layout=line]:min-h-[5.5rem]"
+          class="skeleton aspect-3/4 rounded-lg group-data-[layout=line]:aspect-auto group-data-[layout=line]:min-h-skeleton"
         ></div>
       }
     </div>

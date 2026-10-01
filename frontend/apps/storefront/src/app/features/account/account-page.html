@@ -15,7 +15,7 @@
         <h1 class="text-2xl">{{ t('account.title') }}</h1>
         <!-- The shop works without this, and it says so. Nothing here is a
              prerequisite for buying anything. -->
-        <p class="muted mt-3 max-w-[52ch]">{{ t('account.lede') }}</p>
+        <p class="muted mt-3 max-w-measure-md">{{ t('account.lede') }}</p>
 
         <!-- One button, and it leaves. Who may sign in and what they have to
              type is the issuer's business, which is what stops the shop from
@@ -78,7 +78,7 @@
                              is missing; the store hears of each failure too,
                              because a strip of nothing but tiles is not drawn. -->
                         <storefront-product-image
-                          class="size-[48px] rounded-sm border border-hairline bg-surface object-cover"
+                          class="size-thumb-sm rounded-sm border border-hairline bg-surface object-cover"
                           [src]="line.imageId ? imageUrl(line.imageId) : null"
                           alt=""
                           loading="lazy"

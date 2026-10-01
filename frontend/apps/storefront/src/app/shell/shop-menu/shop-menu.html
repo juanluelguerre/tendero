@@ -12,7 +12,7 @@
         [class.border-body]="here"
       >
         <a
-          class="inline-flex min-h-[2.75rem] items-center text-body no-underline hover:underline"
+          class="inline-flex min-h-tap items-center text-body no-underline hover:underline"
           [class.font-extrabold]="here"
           [routerLink]="links.category(department.category.code)"
           [state]="fromMenu"
@@ -34,7 +34,7 @@
                   <li>
                     <!-- 44 px on a desktop, 48 in the drawer, where a thumb aims (R-2, S-P3). -->
                     <a
-                      class="flex min-h-[2.75rem] items-center text-body no-underline hover:underline in-[.in-drawer]:min-h-[3rem] in-[.in-drawer]:ps-3"
+                      class="flex min-h-tap items-center text-body no-underline hover:underline in-[.in-drawer]:min-h-control-lg in-[.in-drawer]:ps-3"
                       [routerLink]="links.category(leaf.code)"
                       [state]="fromMenu"
                       (click)="chosen.emit()"
@@ -47,7 +47,7 @@
           } @else {
             <li>
               <a
-                class="flex min-h-[2.75rem] items-center text-body no-underline hover:underline in-[.in-drawer]:min-h-[3rem] in-[.in-drawer]:ps-3"
+                class="flex min-h-tap items-center text-body no-underline hover:underline in-[.in-drawer]:min-h-control-lg in-[.in-drawer]:ps-3"
                 [routerLink]="links.category(group.category.code)"
                 [state]="fromMenu"
                 (click)="chosen.emit()"

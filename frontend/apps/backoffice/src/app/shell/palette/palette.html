@@ -2,7 +2,7 @@
      darkest ink the tokens have. The platform centres a modal dialog with
      margin: auto, and the base reset takes it away, so it is given back. -->
 <dialog
-  class="mx-auto mt-[12vh] mb-auto max-h-[70vh] w-[min(40rem,calc(100vw-2*var(--space-4)))] flex-col overflow-hidden rounded-lg border border-hairline-strong bg-surface p-0 text-body shadow-pop backdrop:bg-ink-900/60 open:flex"
+  class="mx-auto mt-dialog-offset mb-auto max-h-dialog w-[min(40rem,calc(100vw-2*var(--spacing-4)))] flex-col overflow-hidden rounded-lg border border-hairline-strong bg-surface p-0 text-body shadow-pop backdrop:bg-ink-900/60 open:flex"
   #dialog
   [attr.aria-label]="t('palette.title')"
   (close)="store.closed()"
@@ -12,7 +12,7 @@
     <span class="text-lg text-muted" aria-hidden="true">⌕</span>
     <input
       #input
-      class="min-h-[2.5rem] flex-1 bg-transparent text-md text-body focus:outline-none"
+      class="min-h-control flex-1 bg-transparent text-md text-body focus:outline-none"
       type="text"
       role="combobox"
       aria-autocomplete="list"
@@ -33,7 +33,7 @@
   <ul class="flex-1 overflow-y-auto p-2" id="palette-options" role="listbox" [attr.aria-label]="t('palette.results')">
     @for (option of store.options(); track option.id; let index = $index) {
       <li
-        class="grid min-h-[2.75rem] cursor-pointer grid-cols-[6rem_minmax(0,auto)_minmax(0,1fr)] items-baseline gap-3 rounded-md px-3 py-2 aria-selected:bg-accent-tint max-sm:grid-cols-[minmax(0,1fr)] max-sm:gap-[2px]"
+        class="grid min-h-tap cursor-pointer grid-cols-[6rem_minmax(0,auto)_minmax(0,1fr)] items-baseline gap-3 rounded-md px-3 py-2 aria-selected:bg-accent-tint max-sm:grid-cols-[minmax(0,1fr)] max-sm:gap-hair"
         role="option"
         [id]="'palette-' + option.id"
         [attr.aria-selected]="index === store.active()"

@@ -1,8 +1,8 @@
 /* What stays here is the wordmark, which a test reads from this file (ADR 0049). */
 /*
   The wordmark is BRAND, not action: brand/BRAND.md sets it in Terracotta
-  #D85A30, so it names --brand (an alias of --clay-500) and not the --accent
-  alias, which is the interface's action colour and moved to --clay-600 in ADR
+  #D85A30, so it names --color-brand (an alias of --color-clay-500) and not the --color-accent
+  alias, which is the interface's action colour and moved to --color-clay-600 in ADR
   0034. It is also LARGE text (20px at 800), which WCAG holds to 3:1, and
   #D85A30 clears that on every light surface (3.43:1 on the page).
   design-contrast.spec.ts pins the number, the colour and the size, so changing
@@ -12,5 +12,5 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--text-lg);
-  color: var(--brand);
+  color: var(--color-brand);
 }

@@ -8,7 +8,7 @@
     @for (option of choices; track option) {
       <button
         type="button"
-        class="inline-grid min-h-[2.25rem] min-w-[2.75rem] place-items-center px-2 text-xs text-muted enabled:hover:text-body aria-pressed:bg-accent-tint aria-pressed:font-semibold aria-pressed:text-body pointer-coarse:min-h-[2.75rem]"
+        class="inline-grid min-h-control-md min-w-tap place-items-center px-2 text-xs text-muted enabled:hover:text-body aria-pressed:bg-accent-tint aria-pressed:font-semibold aria-pressed:text-body pointer-coarse:min-h-tap"
         [attr.aria-pressed]="option === choice()"
         [attr.aria-label]="names()[option]"
         [title]="names()[option]"

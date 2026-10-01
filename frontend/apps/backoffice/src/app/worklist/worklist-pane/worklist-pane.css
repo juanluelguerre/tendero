@@ -4,19 +4,19 @@
 :host {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  border: 1px solid var(--border);
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-hairline);
   border-radius: var(--radius-lg);
-  background: var(--bg-surface);
+  background: var(--color-surface);
 }
 
 /* Beside the list, keeping its place while the list scrolls. */
 @media (min-width: 64rem) {
   :host {
     position: sticky;
-    top: calc(3.5rem + var(--space-4));
-    max-height: calc(100dvh - 3.5rem - var(--space-6));
+    top: calc(3.5rem + var(--spacing-4));
+    max-height: calc(100dvh - 3.5rem - var(--spacing-6));
     overflow-y: auto;
   }
 }

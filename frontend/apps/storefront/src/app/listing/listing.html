@@ -16,7 +16,7 @@
            look like it, so the two are never mistaken (R-7.3). -->
       <button
         type="button"
-        class="button button--quiet toolbar__fold hidden min-h-[2.75rem] px-4 lg:inline-flex"
+        class="button button--quiet toolbar__fold hidden min-h-tap px-4 lg:inline-flex"
         aria-controls="listing-filters"
         [attr.aria-expanded]="!state.folded()"
         (click)="state.toggleFolded()"
@@ -35,7 +35,7 @@
       <button
         #sheetButton
         type="button"
-        class="button button--quiet toolbar__filters min-h-[2.75rem] px-4 [grid-area:filters] lg:hidden"
+        class="button button--quiet toolbar__filters min-h-tap px-4 [grid-area:filters] lg:hidden"
         aria-haspopup="dialog"
         (click)="openSheet()"
       >
@@ -54,7 +54,7 @@
 
       @if (chipList.length > 0) {
         <ul
-          class="chips flex min-w-0 list-none items-center gap-2 overflow-x-auto px-0 py-[2px] [grid-area:chips] lg:flex-wrap lg:overflow-visible"
+          class="chips flex min-w-0 list-none items-center gap-2 overflow-x-auto px-0 py-hair [grid-area:chips] lg:flex-wrap lg:overflow-visible"
           role="list"
           [attr.aria-label]="t('listing.chips.label')"
         >
@@ -62,19 +62,19 @@
             <li class="flex-none">
               <button
                 type="button"
-                class="chip inline-flex min-h-[2.25rem] cursor-pointer items-center gap-2 rounded-full border border-accent bg-accent-tint px-3 text-sm font-semibold text-body hover:border-accent-hover pointer-coarse:min-h-[2.75rem]"
+                class="chip inline-flex min-h-control-md cursor-pointer items-center gap-2 rounded-full border border-accent bg-accent-tint px-3 text-sm font-semibold text-body hover:border-accent-hover pointer-coarse:min-h-tap"
                 [attr.aria-label]="t('listing.chips.remove', { label: chip.label })"
                 (click)="state.apply(chip.without)"
               >
                 <span>{{ chip.label }}</span>
-                <lib-icon class="size-[14px]" name="remove" [stroke]="2" />
+                <lib-icon class="size-icon-xs" name="remove" [stroke]="2" />
               </button>
             </li>
           }
           <li class="flex-none">
             <button
               type="button"
-              class="min-h-[2.25rem] cursor-pointer bg-transparent px-2 text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-[2.75rem]"
+              class="min-h-control-md cursor-pointer bg-transparent px-2 text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-tap"
               (click)="clearAll('toolbar')"
             >
               {{ t('listing.clearAll') }}
@@ -93,7 +93,7 @@
         </span>
         <select
           #sortBox
-          class="select min-h-[2.75rem] w-full rounded-md border border-hairline-strong bg-surface ps-3 text-sm text-body lg:w-auto"
+          class="select min-h-tap w-full rounded-md border border-hairline-strong bg-surface ps-3 text-sm text-body lg:w-auto"
           (change)="sortBy(sortBox.value)"
         >
           <option value="" [selected]="filters.sort === null">
@@ -157,7 +157,7 @@
                  is a shop you scroll through, not one you browse. A newer answer
                  on its way dims the rows, which stay, so nothing jumps. -->
             <ul
-              class="listing__grid grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0 transition-opacity duration-(--dur-fast) ease-brand max-[30rem]:grid-cols-2 max-[30rem]:gap-3"
+              class="listing__grid grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0 transition-opacity duration-(--dur-fast) ease-brand max-2xs:grid-cols-2 max-2xs:gap-3"
               [class.opacity-60]="done.busy"
             >
               @for (hit of done.hits; track hit.productId) {
@@ -189,15 +189,15 @@
           <!-- Skeleton cards, not a spinner: the shape the answer will have, so
                the page does not jump when it arrives. -->
           <ul
-            class="grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0 max-[30rem]:grid-cols-2 max-[30rem]:gap-3"
+            class="grid list-none grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-5 p-0 max-2xs:grid-cols-2 max-2xs:gap-3"
             aria-hidden="true"
           >
             @for (placeholder of placeholders; track placeholder) {
               <li class="flex flex-col overflow-hidden rounded-lg border border-hairline bg-surface">
                 <div class="skeleton aspect-4/3 w-full"></div>
                 <div class="grid gap-2 p-4">
-                  <div class="skeleton h-[1em]"></div>
-                  <div class="skeleton h-[1em] w-[40%]"></div>
+                  <div class="skeleton h-line"></div>
+                  <div class="skeleton h-line w-2/5"></div>
                 </div>
               </li>
             }
@@ -212,21 +212,21 @@
        It rises from the bottom, the page dimmed behind it. -->
   <dialog
     #sheet
-    class="top-auto bottom-0 max-h-[92dvh] w-full max-w-full flex-col rounded-t-lg bg-surface text-body shadow-pop backdrop:bg-ink-900/40 open:flex"
+    class="top-auto bottom-0 max-h-sheet w-full max-w-full flex-col rounded-t-lg bg-surface text-body shadow-pop backdrop:bg-ink-900/40 open:flex"
     aria-labelledby="listing-sheet-title"
     (close)="sheetClosed()"
   >
-    <div class="flex min-h-[3.5rem] items-center justify-between border-b border-hairline ps-4 pe-2">
+    <div class="flex min-h-bar items-center justify-between border-b border-hairline ps-4 pe-2">
       <h2 id="listing-sheet-title" class="text-lg">
         {{ t('listing.filters') }}
       </h2>
       <button
         type="button"
-        class="inline-grid size-[2.75rem] cursor-pointer place-items-center rounded-md bg-transparent text-body"
+        class="inline-grid size-tap cursor-pointer place-items-center rounded-md bg-transparent text-body"
         [attr.aria-label]="t('listing.sheet.close')"
         (click)="sheet.close()"
       >
-        <lib-icon class="size-[22px]" name="close" />
+        <lib-icon class="size-icon-lg" name="close" />
       </button>
     </div>
 
@@ -266,7 +266,7 @@
   </dialog>
 
   <ng-template #sliders>
-    <svg class="size-[20px] flex-none" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <svg class="size-icon-md flex-none" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path
         d="M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1"
         fill="none"

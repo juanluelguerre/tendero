@@ -4,7 +4,7 @@
   @if (source() === 'description' && evidence(); as proof) {
     <!-- A button, and it looks like one on hover and focus: it opens the words. -->
     <button
-      class="inline-flex min-h-[1.5rem] cursor-pointer items-center rounded-full border border-hairline-strong bg-raised px-2 text-2xs leading-[1.6] whitespace-nowrap text-body transition-[border-color] duration-(--dur-fast) ease-brand hover:border-muted pointer-coarse:min-h-[2.75rem]"
+      class="inline-flex min-h-target cursor-pointer items-center rounded-full border border-hairline-strong bg-raised px-2 text-2xs leading-body whitespace-nowrap text-body transition-[border-color] duration-(--dur-fast) ease-brand hover:border-muted pointer-coarse:min-h-tap"
       type="button"
       [attr.popovertarget]="id"
       [style.anchor-name]="anchor"
@@ -12,7 +12,7 @@
       {{ t('specs.fromDescription') }}
     </button>
     <div
-      class="quote max-w-[min(28rem,calc(100vw-2*var(--space-4)))] rounded-lg border border-hairline bg-surface p-4 text-body shadow-pop backdrop:bg-transparent"
+      class="quote max-w-[min(28rem,calc(100vw-2*var(--spacing-4)))] rounded-lg border border-hairline bg-surface p-4 text-body shadow-pop backdrop:bg-transparent"
       popover
       [id]="id"
       [style.position-anchor]="anchor"
@@ -29,7 +29,7 @@
     </div>
   } @else if (source() === 'catalogue') {
     <span
-      class="inline-flex min-h-[1.5rem] items-center rounded-full border border-hairline bg-raised px-2 text-2xs leading-[1.6] whitespace-nowrap text-muted pointer-coarse:min-h-[2.75rem]"
+      class="inline-flex min-h-target items-center rounded-full border border-hairline bg-raised px-2 text-2xs leading-body whitespace-nowrap text-muted pointer-coarse:min-h-tap"
     >
       {{ t('specs.fromCatalogue') }}
     </span>

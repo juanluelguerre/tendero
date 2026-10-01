@@ -9,8 +9,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-height: 100dvh;
-  background: var(--bg-page);
-  color: var(--text);
+  background: var(--color-page);
+  color: var(--color-body);
 }
 
 @media (min-width: 48rem) {
@@ -19,11 +19,11 @@
   }
 }
 
-/* Brand text: --brand and never the --accent alias, and large enough to be held
+/* Brand text: --color-brand and never the --color-accent alias, and large enough to be held
    to 3:1 on every surface (design-contrast.spec.ts pins both). */
 .brand__name {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--text-lg);
-  color: var(--brand);
+  color: var(--color-brand);
 }

@@ -2,12 +2,12 @@
   @if (identity(); as who) {
     <button
       type="button"
-      class="trigger inline-flex min-h-[2.75rem] items-center gap-2 rounded-md border border-hairline px-2 text-muted hover:border-hairline-strong hover:text-body"
+      class="trigger inline-flex min-h-tap items-center gap-2 rounded-md border border-hairline px-2 text-muted hover:border-hairline-strong hover:text-body"
       popovertarget="account-menu"
       [attr.aria-label]="t('account.open', { name: who.name, role: who.role })"
     >
       <span
-        class="inline-grid size-[1.75rem] place-items-center rounded-full bg-accent-tint text-3xs font-semibold text-body"
+        class="inline-grid size-control-xs place-items-center rounded-full bg-accent-tint text-3xs font-semibold text-body"
         aria-hidden="true"
         >{{ initials() }}</span
       >
@@ -19,7 +19,7 @@
 
     <div
       id="account-menu"
-      class="menu w-[min(18rem,calc(100vw-2*var(--space-4)))] flex-col gap-4 rounded-lg border border-hairline-strong bg-surface p-4 text-body shadow-pop open:flex"
+      class="menu w-[min(18rem,calc(100vw-2*var(--spacing-4)))] flex-col gap-4 rounded-lg border border-hairline-strong bg-surface p-4 text-body shadow-pop open:flex"
       popover
     >
       <p>

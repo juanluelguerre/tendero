@@ -68,7 +68,7 @@
               <td>
                 {{ order.recipientName }}
                 <!-- `city` is a hook: the visual comparison masks it. -->
-                <span class="city block text-3xs text-muted">{{ order.city }}</span>
+                <span class="block text-3xs text-muted">{{ order.city }}</span>
               </td>
               <td><backoffice-order-status-label [order]="order" /></td>
               <td><backoffice-order-payment [order]="order" /></td>
@@ -117,7 +117,7 @@
               <backoffice-order-status-label [order]="order" />
             </span>
             <span>{{ order.recipientName }}</span>
-            <span class="city block text-3xs text-muted">{{ order.city }} · {{ placed(order.createdAt) }}</span>
+            <span class="block text-3xs text-muted">{{ order.city }} · {{ placed(order.createdAt) }}</span>
           </button>
           @if (primaryMove(order.status); as move) {
             <button

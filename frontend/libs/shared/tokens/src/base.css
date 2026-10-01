@@ -12,7 +12,7 @@
 
   /* Focus: visible, always, on everything. */
   :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-    outline: 2px solid var(--focus-ring);
+    outline: 2px solid var(--color-focus);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
@@ -24,20 +24,20 @@
     width: 100%;
     max-width: var(--container-app);
     margin-inline: auto;
-    padding-inline: var(--space-5);
+    padding-inline: var(--spacing-5);
   }
 
   @media (max-width: 640px) {
     .page-frame {
-      padding-inline: var(--space-4);
+      padding-inline: var(--spacing-4);
     }
   }
 
   .muted {
-    color: var(--text-muted);
+    color: var(--color-muted);
   }
 
   .field::placeholder {
-    color: var(--text-muted);
+    color: var(--color-muted);
   }
 }

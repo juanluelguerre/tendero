@@ -15,7 +15,7 @@
        request and reports nothing until it finishes, so it slides its own
        stripe rather than filling a portion that would invent a percentage. -->
   @if (store.importing()) {
-    <div class="mt-4 mb-5 max-w-[32rem]" role="status" aria-live="polite">
+    <div class="mt-4 mb-5 max-w-status" role="status" aria-live="polite">
       <div class="awning-rule awning-rule--thin importing__bar"></div>
       <p class="muted mt-2 text-xs">{{ t('reviewQueue.importing') }}</p>
     </div>
@@ -97,13 +97,13 @@
                 >
                   {{ item.name }}
                 </button>
-                <span class="mt-[2px] block numeric text-3xs text-muted">{{ item.code }}</span>
+                <span class="mt-hair block numeric text-3xs text-muted">{{ item.code }}</span>
               </td>
               <td>{{ item.brand ?? '—' }}</td>
               <td class="right numeric">{{ price(item) }}</td>
               <td><backoffice-product-status-tags [product]="item" /></td>
               <!-- As narrow as its link, so the column of links is one straight edge. -->
-              <td class="right w-[1%] whitespace-nowrap">
+              <td class="right w-px whitespace-nowrap">
                 <a
                   class="quiet-link"
                   [routerLink]="['/products', item.productId, 'variants']"
@@ -128,7 +128,7 @@
             </span>
             <span class="worklist-card__line">
               <backoffice-product-status-tags [product]="item" />
-              <span class="mt-[2px] block numeric text-3xs text-muted">{{ item.code }}</span>
+              <span class="mt-hair block numeric text-3xs text-muted">{{ item.code }}</span>
             </span>
           </button>
         </li>

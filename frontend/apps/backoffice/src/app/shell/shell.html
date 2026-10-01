@@ -6,13 +6,13 @@
          it scrollable too, and an icon's hidden label beside the rail gave the
          collapsed rail a sideways scrollbar. -->
     <aside
-      class="sticky top-0 hidden h-dvh w-[4.5rem] flex-col gap-5 overflow-x-hidden overflow-y-auto border-e border-hairline bg-surface px-2 py-4 md:flex xl:w-[14.5rem] xl:px-3"
+      class="sticky top-0 hidden h-dvh w-rail flex-col gap-5 overflow-x-hidden overflow-y-auto border-e border-hairline bg-surface px-2 py-4 md:flex xl:w-rail-open xl:px-3"
     >
       <a class="flex items-center justify-center gap-2 no-underline xl:justify-start xl:px-3" routerLink="/dashboard">
         <!-- See the storefront shell: the icon, not the lockup, because of the
              typeface. -->
         <img
-          class="block size-[1.75rem]"
+          class="block size-control-xs"
           src="brand/tendero-icon-backoffice.svg"
           alt=""
           aria-hidden="true"
@@ -26,13 +26,11 @@
   }
 
   <div class="flex min-w-0 flex-col">
-    <header
-      class="sticky top-0 z-3 flex min-h-[3.5rem] items-center gap-2 border-b border-hairline bg-surface ps-3 pe-5"
-    >
+    <header class="sticky top-0 z-3 flex min-h-bar items-center gap-2 border-b border-hairline bg-surface ps-3 pe-5">
       @if (canUseBackoffice()) {
         <button
           type="button"
-          class="inline-grid size-[2.75rem] flex-none place-items-center rounded-md text-body hover:bg-raised md:hidden"
+          class="inline-grid size-tap flex-none place-items-center rounded-md text-body hover:bg-raised md:hidden"
           aria-haspopup="dialog"
           [attr.aria-label]="t('nav.menu')"
           (click)="drawer.showModal()"
@@ -46,14 +44,14 @@
            is the brand, and the room goes to the menu, the palette and the account. -->
       <span class="inline-flex items-center gap-2 md:in-[.with-rail]:hidden">
         <img
-          class="block size-[1.75rem]"
+          class="block size-control-xs"
           src="brand/tendero-icon-backoffice.svg"
           alt=""
           aria-hidden="true"
           width="26"
           height="26"
         />
-        <span class="brand__name max-[26rem]:hidden">{{ t('brand.name') }}</span>
+        <span class="brand__name max-3xs:hidden">{{ t('brand.name') }}</span>
         <span class="eyebrow max-sm:hidden">{{ t('brand.area') }}</span>
       </span>
 
@@ -62,12 +60,12 @@
              key, wide enough to read as a search on a desktop, an icon on a phone. -->
         <button
           type="button"
-          class="inline-flex min-h-[2.25rem] min-w-[2.75rem] flex-none items-center gap-2 rounded-md border border-hairline bg-raised px-3 text-xs text-muted hover:border-hairline-strong hover:text-body"
+          class="inline-flex min-h-control-md min-w-tap flex-none items-center gap-2 rounded-md border border-hairline bg-raised px-3 text-xs text-muted hover:border-hairline-strong hover:text-body"
           aria-haspopup="dialog"
           (click)="openPalette()"
         >
           <span aria-hidden="true">⌕</span>
-          <span class="min-w-[16rem] text-start max-md:hidden">{{ t('palette.open') }}</span>
+          <span class="min-w-col-3xl text-start max-md:hidden">{{ t('palette.open') }}</span>
           <kbd class="rounded-sm border border-hairline px-2 py-px font-mono text-3xs max-md:hidden">Ctrl K</kbd>
         </button>
       }
@@ -109,11 +107,11 @@
       <footer class="flex flex-wrap items-baseline gap-2 p-5 text-3xs text-muted">
         <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
         @if (staffUsage.state() === 'on') {
-          <button type="button" class="min-h-[1.5rem] text-muted underline" (click)="staffUsage.switchOff()">
+          <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOff()">
             {{ t('staffUsage.switchOff') }}
           </button>
         } @else {
-          <button type="button" class="min-h-[1.5rem] text-muted underline" (click)="staffUsage.switchOn()">
+          <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOn()">
             {{ t('staffUsage.switchOn') }}
           </button>
         }
@@ -138,7 +136,7 @@
       <div class="mb-4 flex items-center justify-between ps-3">
         <span class="inline-flex items-center gap-2">
           <img
-            class="block size-[1.75rem]"
+            class="block size-control-xs"
             src="brand/tendero-icon-backoffice.svg"
             alt=""
             aria-hidden="true"
@@ -149,7 +147,7 @@
         </span>
         <button
           type="button"
-          class="inline-grid size-[2.75rem] flex-none place-items-center rounded-md text-body hover:bg-raised"
+          class="inline-grid size-tap flex-none place-items-center rounded-md text-body hover:bg-raised"
           [attr.aria-label]="t('nav.close')"
           (click)="drawer.close()"
         >

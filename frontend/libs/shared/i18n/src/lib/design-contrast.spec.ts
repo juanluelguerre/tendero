@@ -12,28 +12,28 @@ import { describe, expect, it } from 'vitest';
  * whether those colours can be read on the surfaces they sit on.
  *
  * What that cost, measured on 2026-09-20 (ADR 0034): white on the accent at
- * 3.87:1 was the one clay action of every storefront view, `--warning` was
- * 2.88:1 on `--bg-page`, and `--text-subtle` failed on every surface in BOTH
+ * 3.87:1 was the one clay action of every storefront view, `--color-warning` was
+ * 2.88:1 on `--color-page`, and `--text-subtle` failed on every surface in BOTH
  * themes across its 38 readers. The worst of them was not a weak ratio but an
- * absent token: a button wrote `color: var(--on-accent)` with nothing defining
+ * absent token: a button wrote `color: var(--color-on-accent)` with nothing defining
  * it, so the declaration was invalid and the colour fell through to the
- * inherited `--text`, giving 2.45:1 on an accent fill.
+ * inherited `--color-body`, giving 2.45:1 on an accent fill.
  *
  * The rule the pass arrived at, and what this test really guards: **a ramp's
- * middle step is a fill, and only its dark step may carry text.** `--clay-500`
+ * middle step is a fill, and only its dark step may carry text.** `--color-clay-500`
  * stays the brand primary for the logo and the awning, where nothing sits on
- * it; the interface's `--accent` is `--clay-600`, which can be read.
+ * it; the interface's `--color-accent` is `--color-clay-600`, which can be read.
  *
  * The threshold is WCAG 2.1 AA: 4.5:1 for body text, and 3:1 for a non-text
  * indicator like the focus ring (1.4.11). Large text gets a lower bar and is
  * deliberately not modelled for the semantic tokens — this system puts
  * `--text-3xs` (11px) on almost every one of them, so the body bar is the honest
  * one. The single exception is the brand: the two wordmarks are set in
- * `--brand`, and they are held to the large-text bar only because a test below
+ * `--color-brand`, and they are held to the large-text bar only because a test below
  * also holds their size.
  */
 describe('the design tokens, read on the surfaces they sit on', () => {
-  const SOURCE = 'design/tokens.css';
+  const SOURCE = 'design/theme.css';
 
   /** AA for body text, for large text (1.4.3), and for a non-text indicator (1.4.11). */
   const TEXT_BAR = 4.5;
@@ -65,14 +65,15 @@ describe('the design tokens, read on the surfaces they sit on', () => {
     return Object.fromEntries([...body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]));
   }
 
-  const root = declarations(/:root\s*\{([\s\S]*?)\n\}/);
+  // The light theme is the tokens' `@theme` block (ADR 0050); the dark block lays over it.
+  const root = declarations(/@theme static\s*\{([\s\S]*?)\n\}/);
   const dark = declarations(/\[data-theme='dark'\]\s*\{([\s\S]*?)\n\}/);
 
   /**
    * A theme is the root palette with the dark block laid over it, because that
    * is what the browser computes: `data-theme` goes on the root element, so a
    * token the dark block leaves alone keeps its `:root` value, and an alias
-   * like `--focus-ring: var(--accent)` resolves against whichever `--accent`
+   * like `--color-focus: var(--color-accent)` resolves against whichever `--color-accent`
    * won on that element.
    */
   const themes: Record<string, Record<string, string>> = {
@@ -114,23 +115,30 @@ describe('the design tokens, read on the surfaces they sit on', () => {
   }
 
   /** Every surface a component can sit on. */
-  const SURFACES = ['--bg-page', '--bg-surface', '--bg-raised'];
+  const SURFACES = ['--color-page', '--color-surface', '--color-raised'];
 
   /** Every token a component writes text in. */
-  const TEXT = ['--text', '--text-muted', '--accent', '--positive', '--warning', '--danger'];
+  const TEXT = [
+    '--color-body',
+    '--color-muted',
+    '--color-accent',
+    '--color-positive',
+    '--color-warning',
+    '--color-danger',
+  ];
 
   /** Text on a fill or a tint rather than on a surface. */
   const ON_FILL: readonly (readonly [string, string])[] = [
-    ['--on-accent', '--accent'],
-    ['--on-accent', '--accent-hover'],
-    ['--accent', '--accent-tint'],
+    ['--color-on-accent', '--color-accent'],
+    ['--color-on-accent', '--color-accent-hover'],
+    ['--color-accent', '--color-accent-tint'],
     // The season card's stronger tint (R-8): its own accent and muted steps, one darker each.
-    ['--text', '--accent-tint-strong'],
-    ['--accent-on-tint-strong', '--accent-tint-strong'],
-    ['--text-muted-on-tint-strong', '--accent-tint-strong'],
+    ['--color-body', '--color-accent-tint-strong'],
+    ['--color-accent-on-tint-strong', '--color-accent-tint-strong'],
+    ['--color-muted-on-tint-strong', '--color-accent-tint-strong'],
     // The chalkboard (R-8's event card): dark in both themes, so its text is its own.
-    ['--text-inverse', '--bg-inverse'],
-    ['--text-inverse-muted', '--bg-inverse'],
+    ['--color-on-inverse', '--color-inverse'],
+    ['--color-on-inverse-muted', '--color-inverse'],
   ];
 
   function failures(bar: number, pairs: readonly (readonly [string, string, string])[]) {
@@ -157,17 +165,20 @@ describe('the design tokens, read on the surfaces they sit on', () => {
 
   /**
    * The campaign the home leads with is set on a tint that stands apart from the
-   * page (the author, 2026-09-30): on --accent-tint it read as the same colour,
+   * page (the author, 2026-09-30): on --color-accent-tint it read as the same colour,
    * 1.01:1, and the card blended into the band after it.
    */
   it.each(themeNames)('sets the leading campaign apart from the page in the %s theme', (theme) => {
-    const ratio = contrast(resolve(themes[theme], '--accent-tint-strong'), resolve(themes[theme], '--bg-page'));
+    const ratio = contrast(
+      resolve(themes[theme], '--color-accent-tint-strong'),
+      resolve(themes[theme], '--color-page'),
+    );
 
     expect(ratio).toBeGreaterThanOrEqual(1.2);
   });
 
   it.each(themeNames)('shows a focus ring against every surface in the %s theme', (theme) => {
-    const pairs = [...SURFACES, '--bg-inverse'].map((bg) => [theme, '--focus-ring', bg] as const);
+    const pairs = [...SURFACES, '--color-inverse'].map((bg) => [theme, '--color-focus', bg] as const);
 
     expect(failures(INDICATOR_BAR, pairs)).toEqual([]);
   });
@@ -177,7 +188,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    * asks of the graphics that carry meaning. The previous period is drawn in the
    * muted text colour, so it passes on its own rather than by the table beside it.
    */
-  const MARKS = ['--chart-data', '--chart-agent', '--chart-previous'];
+  const MARKS = ['--color-chart-data', '--color-chart-agent', '--color-chart-previous'];
 
   it.each(themeNames)('draws chart marks a reader can tell from every surface in the %s theme', (theme) => {
     const pairs = MARKS.flatMap((mark) => SURFACES.map((bg) => [theme, mark, bg] as const));
@@ -188,11 +199,11 @@ describe('the design tokens, read on the surfaces they sit on', () => {
   /**
    * The brand primary is not the interface's accent, and something has to say so.
    *
-   * ADR 0034 moved `--accent` to `--clay-600` and left `--clay-500` alone, and the
+   * ADR 0034 moved `--color-accent` to `--color-clay-600` and left `--color-clay-500` alone, and the
    * first version of that claim was wrong in a way no test could see: the
-   * storefront's wordmark was set in `--accent`, so the brand's own name in the
-   * header went darker with the button. Both wordmarks are set in `--brand` (an
-   * alias of `--clay-500`) now, and they can be, because they are LARGE text
+   * storefront's wordmark was set in `--color-accent`, so the brand's own name in the
+   * header went darker with the button. Both wordmarks are set in `--color-brand` (an
+   * alias of `--color-clay-500`) now, and they can be, because they are LARGE text
    * (20px at 800), which WCAG holds to 3:1 rather than 4.5:1.
    *
    * This pins the number that makes that legitimate, in both themes: the
@@ -202,11 +213,11 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    * turns red instead of a wordmark going illegible.
    */
   it.each(themeNames)('keeps the brand primary legible as large text in the %s theme', (theme) => {
-    expect(resolve(themes[theme], '--brand')).toBe('#D85A30');
+    expect(resolve(themes[theme], '--color-brand')).toBe('#D85A30');
     expect(
       failures(
         LARGE_TEXT_BAR,
-        SURFACES.map((surface) => [theme, '--brand', surface] as const),
+        SURFACES.map((surface) => [theme, '--color-brand', surface] as const),
       ),
     ).toEqual([]);
   });
@@ -216,7 +227,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
    * lower bar legitimate. The colour alone is not enough: at the backoffice's
    * 14px body size `#D85A30` is body text, held to 4.5:1, and it misses that on
    * the dark bar (4.33:1). The way the storefront's was lost was a one-word alias
-   * (`--accent`) that looked equivalent and was not; the way the backoffice's
+   * (`--color-accent`) that looked equivalent and was not; the way the backoffice's
    * would be lost is a size nobody thought was load-bearing.
    */
   const WORDMARKS = [
@@ -231,8 +242,8 @@ describe('the design tokens, read on the surfaces they sit on', () => {
       const rule = shell.match(new RegExp(`\\.${className}\\s*\\{([^}]*)\\}`))?.[1] ?? '';
 
       expect(rule).not.toBe('');
-      expect(rule).toContain('color: var(--brand)');
-      expect(rule).not.toContain('var(--accent)');
+      expect(rule).toContain('color: var(--color-brand)');
+      expect(rule).not.toContain('var(--color-accent)');
       expect(rule).toContain('font-weight: 800');
       expect(rule).toContain('font-size: var(--text-lg)');
     },
@@ -259,7 +270,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
   it('is not passing over nothing', () => {
     expect(Object.keys(root).length).toBeGreaterThan(30);
     expect(Object.keys(dark).length).toBeGreaterThan(10);
-    expect(resolve(themes.light, '--accent')).not.toEqual(resolve(themes.dark, '--accent'));
+    expect(resolve(themes.light, '--color-accent')).not.toEqual(resolve(themes.dark, '--color-accent'));
 
     // The measurement itself has to be right, or every pair above passes for
     // the wrong reason. Black on white is the one ratio nobody has to look up.
@@ -269,7 +280,7 @@ describe('the design tokens, read on the surfaces they sit on', () => {
 
   /**
    * `--text-subtle` was deleted rather than darkened (ADR 0034): the lightest
-   * value that cleared the bar was 0.57 of ratio from `--text-muted`, which is
+   * value that cleared the bar was 0.57 of ratio from `--color-muted`, which is
    * a distinction nobody can see and which only worked while it was below the
    * minimum. A token that comes back is a decision being reversed by accident.
    */

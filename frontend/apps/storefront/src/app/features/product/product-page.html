@@ -10,9 +10,9 @@
       >
         <div class="skeleton aspect-square w-full rounded-lg border border-hairline max-md:aspect-4/3"></div>
         <div>
-          <div class="skeleton h-[1em]"></div>
-          <div class="skeleton h-[1em] w-[40%]"></div>
-          <div class="skeleton mt-4 h-[8rem]"></div>
+          <div class="skeleton h-line"></div>
+          <div class="skeleton h-line w-2/5"></div>
+          <div class="skeleton mt-4 h-skeleton-lg"></div>
         </div>
       </div>
     }
@@ -73,7 +73,7 @@
                       (click)="store.show(image.imageId)"
                     >
                       <storefront-product-image
-                        class="size-[64px] object-cover"
+                        class="size-thumb-lg object-cover"
                         [src]="imageUrl(image.imageId)"
                         [alt]="image.alt ?? item.name"
                       />
@@ -165,7 +165,7 @@
                      what enters it is announced, and it keeps its height while
                      empty, so the notice arriving does not push the page down
                      under the shopper's finger (R-5.3). -->
-                <p class="buy__notice flex min-h-[1.5rem] flex-wrap items-center gap-x-3 gap-y-2 text-sm" role="status">
+                <p class="buy__notice flex min-h-target flex-wrap items-center gap-x-3 gap-y-2 text-sm" role="status">
                   @if (store.notice(); as said) {
                     @if (said.ok) {
                       <span class="font-semibold text-positive">{{ t('product.added') }}</span>
@@ -196,7 +196,7 @@
                  the description pushed Añadir al carrito out of the first screen,
                  and price, options, buy is the order a decision is made in. -->
             @if (item.description) {
-              <p class="mt-4 max-w-[60ch] leading-body text-muted">{{ item.description }}</p>
+              <p class="mt-4 max-w-measure-lg leading-body text-muted">{{ item.description }}</p>
             }
 
             <!-- The promise, and only the part the code will honour.

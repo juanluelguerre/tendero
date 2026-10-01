@@ -25,12 +25,12 @@
             role="region"
             [attr.aria-label]="t('compare.title')"
           >
-            <table class="w-full min-w-[36rem] border-collapse text-sm">
+            <table class="w-full min-w-compare border-collapse text-sm">
               <thead>
                 <tr>
                   <th
                     scope="col"
-                    class="sticky start-0 z-1 w-[10rem] border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
+                    class="sticky start-0 z-1 w-col border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
                   >
                     {{ t('compare.attribute') }}
                   </th>
@@ -45,7 +45,7 @@
                         [attr.aria-label]="t('compare.remove', { name: product.name })"
                         (click)="store.drop(product.code)"
                       >
-                        <lib-icon class="size-[14px]" name="remove" [stroke]="2" />
+                        <lib-icon class="size-icon-xs" name="remove" [stroke]="2" />
                       </button>
                     </th>
                   }
@@ -56,7 +56,7 @@
                   <tr>
                     <th
                       scope="row"
-                      class="sticky start-0 z-1 w-[10rem] border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
+                      class="sticky start-0 z-1 w-col border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
                     >
                       {{ row.label }}
                     </th>
@@ -75,7 +75,7 @@
                 <tr>
                   <th
                     scope="row"
-                    class="sticky start-0 z-1 w-[10rem] border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
+                    class="sticky start-0 z-1 w-col border-b border-hairline bg-raised px-4 py-3 text-start align-top font-normal text-muted"
                   >
                     {{ t('specs.alsoSays') }}
                   </th>

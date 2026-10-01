@@ -29,7 +29,7 @@
                  it fails, as the product's card and page: a cart line that showed a
                  letter here, or the browser's broken-image icon, read as another shop. -->
             <storefront-product-image
-              class="size-[72px] overflow-hidden rounded-md bg-raised object-cover max-xs:size-[56px]"
+              class="size-thumb-xl overflow-hidden rounded-md bg-raised object-cover max-xs:size-thumb-md"
               [src]="imageUrl(line)"
               [alt]="line.productName"
               loading="lazy"
@@ -38,30 +38,30 @@
             <div class="min-w-0">
               <p class="font-semibold">{{ line.productName }}</p>
               @if (line.variantLabel) {
-                <p class="mt-[2px] text-sm text-muted">{{ line.variantLabel }}</p>
+                <p class="mt-hair text-sm text-muted">{{ line.variantLabel }}</p>
               }
-              <p class="mt-[2px] numeric text-xs text-muted">{{ line.sku }}</p>
+              <p class="mt-hair numeric text-xs text-muted">{{ line.sku }}</p>
             </div>
 
             <!-- The stepper: this is the control people press most on a phone. -->
             <div
-              class="flex items-center overflow-hidden rounded-md border border-hairline-strong max-xs:col-[3] max-xs:row-[2]"
+              class="flex items-center overflow-hidden rounded-md border border-hairline-strong max-xs:col-3 max-xs:row-2"
               role="group"
               [attr.aria-label]="t('cart.quantity', { name: line.productName })"
             >
               <button
                 type="button"
-                class="size-[40px] bg-surface text-lg leading-[1] text-body enabled:hover:bg-raised disabled:opacity-40"
+                class="size-control bg-surface text-lg leading-none text-body enabled:hover:bg-raised disabled:opacity-40"
                 [attr.aria-label]="t('cart.decrease')"
                 [disabled]="store.busy()"
                 (click)="change(line, -1)"
               >
                 −
               </button>
-              <span class="min-w-[2.5rem] text-center numeric font-semibold">{{ line.quantity }}</span>
+              <span class="min-w-control text-center numeric font-semibold">{{ line.quantity }}</span>
               <button
                 type="button"
-                class="size-[40px] bg-surface text-lg leading-[1] text-body enabled:hover:bg-raised disabled:opacity-40"
+                class="size-control bg-surface text-lg leading-none text-body enabled:hover:bg-raised disabled:opacity-40"
                 [attr.aria-label]="t('cart.increase')"
                 [disabled]="store.busy()"
                 (click)="change(line, 1)"
@@ -70,13 +70,13 @@
               </button>
             </div>
 
-            <p class="min-w-[5rem] text-end numeric font-semibold max-xs:col-[2] max-xs:text-start">
+            <p class="min-w-col-md text-end numeric font-semibold max-xs:col-2 max-xs:text-start">
               {{ lineTotal(line.sku) }}
             </p>
 
             <button
               type="button"
-              class="inline-grid size-[32px] place-items-center rounded-md border border-transparent text-muted enabled:hover:border-hairline enabled:hover:text-danger disabled:opacity-40 max-xs:col-[3] max-xs:row-[1]"
+              class="inline-grid size-control-sm place-items-center rounded-md border border-transparent text-muted enabled:hover:border-hairline enabled:hover:text-danger disabled:opacity-40 max-xs:col-3 max-xs:row-1"
               [attr.aria-label]="t('cart.remove', { name: line.productName })"
               [disabled]="store.busy()"
               (click)="remove(line)"
@@ -91,9 +91,7 @@
            while editing the lines, and scrolling to find it is how a basket gets
            abandoned. Unstuck on a tablet or a phone, where it sits under the
            lines and sticking it would cover them. -->
-      <aside
-        class="sticky top-[calc(var(--header-h)+var(--space-4))] grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static"
-      >
+      <aside class="sticky top-sticky grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static">
         @if (store.quote(); as quote) {
           <storefront-totals
             [currency]="quote.currency"

@@ -63,10 +63,10 @@
                  because a pill is easy to miss when you are scanning forty rows
                  for the one that matters. -->
             <tr
-              class="data-refused:shadow-[inset_2px_0_0_0_var(--warning)]"
+              class="data-refused:shadow-[inset_2px_0_0_0_var(--color-warning)]"
               [attr.data-refused]="entry.outcome !== 'Allowed' || null"
             >
-              <td class="when numeric whitespace-nowrap">{{ when(entry.at) }}</td>
+              <td class="numeric whitespace-nowrap">{{ when(entry.at) }}</td>
               <!-- In the shopkeeper's words; the type stays as its title for whoever needs it (B-F6). -->
               <td class="text-xs whitespace-nowrap" [title]="entry.commandType">
                 {{ t('audit.commands.' + entry.commandType) }}
@@ -120,7 +120,7 @@
                   {{ t('audit.outcome.' + entry.outcome) }}
                 </lib-status-pill>
               </td>
-              <td class="max-w-[32ch] text-xs text-muted">{{ entry.reason }}</td>
+              <td class="max-w-measure-xs text-xs text-muted">{{ entry.reason }}</td>
               <td class="numeric">
                 <button
                   type="button"
@@ -140,9 +140,9 @@
                        trace id and the subject are here rather than in a column
                        because they are what you copy once you have already found
                        the row. -->
-                  <pre class="max-h-[20rem] overflow-auto p-3 text-2xs leading-snug">{{ pretty(entry.payload) }}</pre>
+                  <pre class="max-h-scroll overflow-auto p-3 text-2xs leading-snug">{{ pretty(entry.payload) }}</pre>
                   @if (entry.traceId || entry.subject) {
-                    <dl class="mt-2 grid max-w-[40rem] gap-2 text-3xs">
+                    <dl class="mt-2 grid max-w-form gap-2 text-3xs">
                       @if (entry.traceId; as trace) {
                         <div class="grid gap-1">
                           <dt class="text-muted">{{ t('audit.trace') }}</dt>

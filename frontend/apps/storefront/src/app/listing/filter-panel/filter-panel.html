@@ -15,7 +15,7 @@
           @for (child of children; track child.code) {
             <li>
               <a
-                class="inline-flex min-h-[2rem] items-center gap-2 text-sm text-accent no-underline hover:underline pointer-coarse:min-h-[2.75rem]"
+                class="inline-flex min-h-control-sm items-center gap-2 text-sm text-accent no-underline hover:underline pointer-coarse:min-h-tap"
                 [routerLink]="links.category(child.code)"
               >
                 {{ child.name }}
@@ -76,7 +76,7 @@
                 <label class="sr-only" [for]="uid + '-find'">{{ t('listing.brand.find') }}</label>
                 <input
                   #find
-                  class="field mb-2 min-h-[2.5rem] text-sm"
+                  class="field mb-2 min-h-control text-sm"
                   type="text"
                   autocomplete="off"
                   [id]="uid + '-find'"
@@ -93,7 +93,7 @@
               @if (view.hidden > 0) {
                 <button
                   type="button"
-                  class="min-h-[2rem] cursor-pointer justify-self-start text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-[2.75rem]"
+                  class="min-h-control-sm cursor-pointer justify-self-start text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-tap"
                   (click)="brandsExpanded.set(true)"
                 >
                   {{ t('listing.brand.more', { count: view.hidden }) }}
@@ -101,7 +101,7 @@
               } @else if (brandsExpanded() && !brandFind()) {
                 <button
                   type="button"
-                  class="min-h-[2rem] cursor-pointer justify-self-start text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-[2.75rem]"
+                  class="min-h-control-sm cursor-pointer justify-self-start text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-tap"
                   (click)="brandsExpanded.set(false)"
                 >
                   {{ t('listing.brand.fewer') }}
@@ -129,7 +129,7 @@
                   @for (band of section.facet.price?.bands ?? []; track $index) {
                     <button
                       type="button"
-                      class="grid min-h-[3rem] cursor-pointer justify-items-center gap-[2px] rounded-md border border-hairline-strong bg-surface px-1 py-2 text-sm text-body disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 aria-pressed:border-accent aria-pressed:bg-accent-tint aria-pressed:font-semibold"
+                      class="grid min-h-control-lg cursor-pointer justify-items-center gap-hair rounded-md border border-hairline-strong bg-surface px-1 py-2 text-sm text-body disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 aria-pressed:border-accent aria-pressed:bg-accent-tint aria-pressed:font-semibold"
                       [attr.aria-pressed]="bandChosen(band)"
                       [disabled]="band.count === 0 && !bandChosen(band)"
                       (click)="chooseBand(band)"
@@ -143,13 +143,13 @@
                 @for (band of section.facet.price?.bands ?? []; track $index) {
                   @let gone = band.count === 0 && !bandChosen(band);
                   <label
-                    class="check group/check flex min-h-[2.25rem] items-center gap-2 text-sm in-[.in-sheet]:min-h-[2.75rem] in-[.in-sheet]:text-md pointer-coarse:min-h-[2.75rem]"
+                    class="check group/check flex min-h-control-md items-center gap-2 text-sm in-[.in-sheet]:min-h-tap in-[.in-sheet]:text-md pointer-coarse:min-h-tap"
                     [class.cursor-pointer]="!gone"
                     [class.cursor-not-allowed]="gone"
                     [class.text-muted]="gone"
                   >
                     <input
-                      class="m-0 size-[1.5rem] flex-none cursor-[inherit] accent-accent"
+                      class="m-0 size-target flex-none cursor-[inherit] accent-accent"
                       type="radio"
                       [name]="uid + '-band'"
                       [checked]="bandChosen(band)"
@@ -171,12 +171,12 @@
                    the right edge. The box draws the focus ring for its input. -->
               <div class="mt-2 flex gap-2">
                 <label
-                  class="flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus pointer-coarse:min-h-[2.75rem]"
+                  class="flex min-h-control min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus pointer-coarse:min-h-tap"
                 >
                   <span class="text-xs text-muted" aria-hidden="true">{{ t('listing.price.min') }}</span>
                   <input
                     #min
-                    class="range__input min-h-[2.25rem] w-full min-w-0 text-sm text-body focus-visible:outline-none"
+                    class="range__input min-h-control-md w-full min-w-0 text-sm text-body focus-visible:outline-none"
                     type="text"
                     inputmode="decimal"
                     autocomplete="off"
@@ -188,12 +188,12 @@
                   />
                 </label>
                 <label
-                  class="flex min-h-[2.5rem] min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus pointer-coarse:min-h-[2.75rem]"
+                  class="flex min-h-control min-w-0 flex-1 items-center gap-1 rounded-md border border-hairline-strong bg-surface px-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus pointer-coarse:min-h-tap"
                 >
                   <span class="text-xs text-muted" aria-hidden="true">{{ t('listing.price.max') }}</span>
                   <input
                     #max
-                    class="range__input min-h-[2.25rem] w-full min-w-0 text-sm text-body focus-visible:outline-none"
+                    class="range__input min-h-control-md w-full min-w-0 text-sm text-body focus-visible:outline-none"
                     type="text"
                     inputmode="decimal"
                     autocomplete="off"
@@ -207,7 +207,7 @@
                 @if (mode() === 'column') {
                   <button
                     type="button"
-                    class="button button--quiet min-h-[2.5rem] px-3 pointer-coarse:min-h-[2.75rem]"
+                    class="button button--quiet min-h-control px-3 pointer-coarse:min-h-tap"
                     [attr.aria-label]="t('listing.price.goLabel')"
                     (click)="applyRange()"
                   >
@@ -273,14 +273,14 @@
               @for (option of section.facet.options; track option.value) {
                 <button
                   type="button"
-                  class="swatch group/swatch inline-flex min-h-[2.25rem] cursor-pointer items-center gap-2 rounded-md border border-hairline bg-surface px-2 text-start text-sm text-body hover:enabled:border-hairline-strong disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 aria-pressed:border-accent aria-pressed:bg-accent-tint pointer-coarse:min-h-[2.75rem]"
+                  class="swatch group/swatch inline-flex min-h-control-md cursor-pointer items-center gap-2 rounded-md border border-hairline bg-surface px-2 text-start text-sm text-body hover:enabled:border-hairline-strong disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 aria-pressed:border-accent aria-pressed:bg-accent-tint pointer-coarse:min-h-tap"
                   [attr.aria-pressed]="chosen(section.facet.kind, option.value)"
                   [disabled]="dead(section.facet.kind, option)"
                   (click)="toggle(section.facet.kind, option.value)"
                 >
                   <!-- An option the definition gives no colour: an empty ring, and its name says the rest. -->
                   <span
-                    class="swatch__dot size-[1rem] flex-none rounded-full border border-hairline-strong"
+                    class="swatch__dot size-icon-sm flex-none rounded-full border border-hairline-strong"
                     [class.border-dashed]="!swatch(option)"
                     [style.background-color]="swatch(option)"
                     aria-hidden="true"
@@ -310,7 +310,7 @@
               @for (option of section.facet.options; track option.value) {
                 <button
                   type="button"
-                  class="group/size inline-flex min-h-[2.25rem] cursor-pointer flex-col items-center justify-center rounded-md border border-hairline bg-surface px-2 py-1 text-center text-sm text-body hover:enabled:border-hairline-strong disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 aria-pressed:border-accent aria-pressed:bg-accent-tint pointer-coarse:min-h-[2.75rem]"
+                  class="group/size inline-flex min-h-control-md cursor-pointer flex-col items-center justify-center rounded-md border border-hairline bg-surface px-2 py-1 text-center text-sm text-body hover:enabled:border-hairline-strong disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 aria-pressed:border-accent aria-pressed:bg-accent-tint pointer-coarse:min-h-tap"
                   [attr.aria-pressed]="chosen(section.facet.kind, option.value)"
                   [disabled]="dead(section.facet.kind, option)"
                   (click)="toggle(section.facet.kind, option.value)"
@@ -348,7 +348,7 @@
     <h3 class="m-0 font-sans text-xs font-bold tracking-wide uppercase in-[.in-sheet]:text-sm">
       <button
         type="button"
-        class="flex min-h-[2rem] w-full cursor-pointer items-center justify-between gap-2 p-0 text-body [text-transform:inherit] pointer-coarse:min-h-[2.75rem]"
+        class="flex min-h-control-sm w-full cursor-pointer items-center justify-between gap-2 p-0 text-body [text-transform:inherit] pointer-coarse:min-h-tap"
         [id]="uid + '-' + id + '-h'"
         [attr.aria-expanded]="isOpen(id)"
         [attr.aria-controls]="uid + '-' + id"
@@ -357,7 +357,7 @@
         <span>{{ label }}</span>
         <!-- Up while the section is open, down while it is folded. -->
         <lib-icon
-          class="size-[16px] text-muted transition-transform duration-(--dur-fast) ease-brand"
+          class="size-icon-sm text-muted transition-transform duration-(--dur-fast) ease-brand"
           [class.rotate-180]="isOpen(id)"
           name="chevron"
           [stroke]="1.8"
@@ -375,13 +375,13 @@
   <ng-template #check let-kind="kind" let-option="option">
     @let gone = dead(kind, option);
     <label
-      class="check group/check flex min-h-[2.25rem] items-center gap-2 text-sm in-[.in-sheet]:min-h-[2.75rem] in-[.in-sheet]:text-md pointer-coarse:min-h-[2.75rem]"
+      class="check group/check flex min-h-control-md items-center gap-2 text-sm in-[.in-sheet]:min-h-tap in-[.in-sheet]:text-md pointer-coarse:min-h-tap"
       [class.cursor-pointer]="!gone"
       [class.cursor-not-allowed]="gone"
       [class.text-muted]="gone"
     >
       <input
-        class="m-0 size-[1.5rem] flex-none cursor-[inherit] accent-accent"
+        class="m-0 size-target flex-none cursor-[inherit] accent-accent"
         type="checkbox"
         [checked]="chosen(kind, option.value)"
         [disabled]="gone"
@@ -401,7 +401,7 @@
     <button
       type="button"
       role="switch"
-      class="group/switch flex min-h-[2.25rem] w-full cursor-pointer items-center justify-between gap-3 p-0 text-start text-sm text-body disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 in-[.in-sheet]:min-h-[2.75rem] in-[.in-sheet]:text-md pointer-coarse:min-h-[2.75rem]"
+      class="group/switch flex min-h-control-md w-full cursor-pointer items-center justify-between gap-3 p-0 text-start text-sm text-body disabled:cursor-not-allowed disabled:text-muted disabled:opacity-60 in-[.in-sheet]:min-h-tap in-[.in-sheet]:text-md pointer-coarse:min-h-tap"
       [attr.aria-checked]="chosen(kind, option.value)"
       [disabled]="dead(kind, option)"
       (click)="toggle(kind, option.value)"
@@ -411,11 +411,11 @@
         <span class="text-xs font-normal text-muted"> ({{ option.count }})</span>
       </span>
       <span
-        class="relative h-[1.375rem] w-[2.5rem] flex-none rounded-full bg-hairline-strong transition-[background] duration-(--dur-fast) ease-brand group-aria-checked/switch:bg-accent"
+        class="relative h-switch-h w-switch-w flex-none rounded-full bg-hairline-strong transition-[background] duration-(--dur-fast) ease-brand group-aria-checked/switch:bg-accent"
         aria-hidden="true"
       >
         <span
-          class="absolute start-[3px] top-[3px] size-[1rem] rounded-full bg-surface transition-[translate] duration-(--dur-fast) ease-brand group-aria-checked/switch:translate-x-[1.125rem]"
+          class="absolute start-knob-inset top-knob-inset size-icon-sm rounded-full bg-surface transition-[translate] duration-(--dur-fast) ease-brand group-aria-checked/switch:translate-x-knob-travel"
         ></span>
       </span>
     </button>

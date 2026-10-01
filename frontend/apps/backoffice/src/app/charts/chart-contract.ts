@@ -22,7 +22,7 @@ export type ValueFormat = (value: number) => string;
 
 /** A series' colour is its role's token, never a hex: `tokens.css` owns them. */
 export function roleColourToken(role: SeriesRole): string {
-  return role === 'data' ? '--chart-data' : role === 'agent' ? '--chart-agent' : '--chart-previous';
+  return role === 'data' ? '--color-chart-data' : role === 'agent' ? '--color-chart-agent' : '--color-chart-previous';
 }
 
 /** How the bars stand: columns over time, rows for a ranking with long labels, one stacked bar for the parts of a whole. */

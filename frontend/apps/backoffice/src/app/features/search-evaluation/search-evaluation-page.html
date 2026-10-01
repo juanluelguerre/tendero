@@ -28,7 +28,7 @@
   } @else if (store.status() === 'running') {
     <!-- Indeterminate, like the import bar: the endpoint reports nothing until it
          has asked every query, so a percentage would be invented. -->
-    <div class="mt-4 mb-5 max-w-[32rem]" role="status" aria-live="polite">
+    <div class="mt-4 mb-5 max-w-status" role="status" aria-live="polite">
       <div class="awning-rule awning-rule--thin running__bar"></div>
       <p class="muted mt-2 text-xs">{{ t('searchEvaluation.running') }}</p>
     </div>
@@ -46,17 +46,17 @@
     </p>
 
     @if (measured.judgedProductsInCatalogue === 0) {
-      <lib-notice class="mb-4 max-w-[76ch]" tone="warn" live="assertive">{{
+      <lib-notice class="mb-4 max-w-measure-xl" tone="warn" live="assertive">{{
         t('searchEvaluation.noJudged')
       }}</lib-notice>
     }
 
     @if (!measured.vectorLayer.isConfigured) {
-      <lib-notice class="mb-4 max-w-[76ch]">{{ t('searchEvaluation.notConfigured') }}</lib-notice>
+      <lib-notice class="mb-4 max-w-measure-xl">{{ t('searchEvaluation.notConfigured') }}</lib-notice>
     } @else if (!measured.vectorLayer.isAvailable) {
       <!-- The server's own words for why, as the orders screen shows a refusal.
            `reason` is a hook: the page's spec reads the words by it. -->
-      <lib-notice class="mb-4 max-w-[76ch]" tone="warn">
+      <lib-notice class="mb-4 max-w-measure-xl" tone="warn">
         {{ t('searchEvaluation.degraded') }}
         <code class="reason mt-2 block font-mono text-3xs text-muted">{{ measured.vectorLayer.reason }}</code>
       </lib-notice>

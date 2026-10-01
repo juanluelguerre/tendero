@@ -591,7 +591,7 @@ dense.
 | Architecture | NetArchTest.Rules | Domain never references infra; slices stay independent; `Pricing` and `Inventory` see only the SharedKernel; the Elasticsearch client stays in its adapter |
 | Integration | Testcontainers | A real Postgres, Elasticsearch and Qdrant: the outbox drain, the migrations, the commerce loop end to end |
 | API in process | `WebApplicationFactory` | The OpenAPI document equals the committed one; every endpoint states who may call it; every handler resolves; the OIDC contract against both issuers |
-| Frontend | Vitest | Stores, widgets, agent tools and their degradation, and not one hex outside `design/tokens.css` across every stylesheet in the repo |
+| Frontend | Vitest | Stores, widgets, agent tools and their degradation, not one hex outside `design/theme.css` across every stylesheet in the repo, and every class a template names either builds or is ours |
 | Search quality | Golden set + NDCG@10 in CI | Relevance never regresses silently |
 | End-to-end | Playwright | The browser: sign-in, the shopper's and the shopkeeper's paths, the browser agent, accessibility |
 | Mutation | Stryker.NET, and a hand mutation per new test | Each test fails when the code it guards is broken, not only when it is absent |

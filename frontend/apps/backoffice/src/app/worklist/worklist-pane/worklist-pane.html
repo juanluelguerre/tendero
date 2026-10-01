@@ -2,7 +2,7 @@
   <!-- Back from the sheet below 1024 px; beside the list, Close says it instead. -->
   <button
     type="button"
-    class="inline-grid min-h-[2.75rem] min-w-[2.75rem] place-items-center rounded-md px-2 text-sm text-muted hover:bg-raised hover:text-body lg:hidden"
+    class="inline-grid min-h-tap min-w-tap place-items-center rounded-md px-2 text-sm text-muted hover:bg-raised hover:text-body lg:hidden"
     (click)="closed.emit()"
   >
     {{ t('pane.back') }}
@@ -17,7 +17,7 @@
   </h2>
   <button
     type="button"
-    class="inline-grid min-h-[2.75rem] min-w-[2.75rem] place-items-center rounded-md px-2 text-sm text-muted hover:bg-raised hover:text-body max-lg:hidden"
+    class="inline-grid min-h-tap min-w-tap place-items-center rounded-md px-2 text-sm text-muted hover:bg-raised hover:text-body max-lg:hidden"
     [attr.aria-label]="t('pane.close')"
     (click)="closed.emit()"
   >

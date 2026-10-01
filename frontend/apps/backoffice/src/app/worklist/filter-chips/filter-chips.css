@@ -4,7 +4,7 @@
    of its bold self. */
 :host {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--spacing-2);
   overflow-x: auto;
   padding-block: 2px;
   mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);

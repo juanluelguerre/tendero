@@ -246,6 +246,13 @@ jobs:
           node ../tools/tracking-plan.mjs
           git diff --exit-code -- libs/shared/telemetry/src/lib/generated/ ../docs/telemetry/
 
+      # The design tokens (ADR 0050) are Tailwind's theme in design/theme.css;
+      # the pages without Tailwind read design/tokens.css, written from it.
+      - name: The design tokens for pages without Tailwind are current
+        run: |
+          node ../tools/tokens.mjs
+          git diff --exit-code -- ../design/tokens.css
+
       # The C4 model (ADR 0035): LikeC4 validates it, the script holds its
       # containers to the AppHost's resources, and the diff holds the committed
       # diagrams to the model. Node is already here, and LikeC4 runs through npx

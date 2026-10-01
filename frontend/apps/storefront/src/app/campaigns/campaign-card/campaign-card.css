@@ -2,5 +2,5 @@
    clay around a clay button. Every link and button in it, the product cards'
    included, which a utility on one element cannot reach. */
 :host(.campaign--event) :is(a, button):focus-visible {
-  outline-color: var(--text-inverse);
+  outline-color: var(--color-on-inverse);
 }

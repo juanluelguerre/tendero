@@ -3,7 +3,7 @@
   <span class="sr-only">{{ label() }}</span>
   <input
     type="search"
-    class="min-h-[2.5rem] w-full rounded-md border border-hairline-strong bg-raised px-3 text-body"
+    class="min-h-control w-full rounded-md border border-hairline-strong bg-raised px-3 text-body"
     [placeholder]="placeholder()"
     [value]="value()"
     (input)="searched.emit($any($event.target).value)"

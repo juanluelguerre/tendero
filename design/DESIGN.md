@@ -1,6 +1,6 @@
 # Tendero — design system
 
-One token file (`design/tokens.css`), four surfaces. The tokens never change per
+One token file (`design/theme.css`, Tailwind's theme — ADR 0050; `design/tokens.css` is generated from it for pages without Tailwind), four surfaces. The tokens never change per
 surface; what changes is **density and voice**.
 
 ## Direction
@@ -47,13 +47,13 @@ sections. Max one page of scroll before the "run it locally" command block.
 ### Docs (`docs/`, rendered with VitePress or Astro Starlight)
 Prose measure capped at `--container-prose`; body `--text-md`, line height
 `--leading-body`. Sidebar carries a `.awning-rule--thin` on its right edge.
-Code blocks in JetBrains Mono on `--stone-50` with a hairline border, no
+Code blocks in JetBrains Mono on `--color-stone-50` with a hairline border, no
 syntax-highlight theme heavier than two accent colours. Mermaid diagrams inherit
-`--ink-900` / `--clay-500`.
+`--color-ink-900` / `--color-clay-500`.
 
 ### Storefront
-Roomy: `--text-md` body, `--space-6` between blocks, product cards on
-`--bg-surface` with `--radius-lg` and a hairline border, no shadow until hover.
+Roomy: `--text-md` body, `--spacing-6` between blocks, product cards on
+`--color-surface` with `--radius-lg` and a hairline border, no shadow until hover.
 Prices in `.price` (mono, tabular). Images do the selling, so chrome stays
 minimal — the accent is reserved for the primary action on each screen
 (add to cart, checkout) and nothing else. One clay button per view.
@@ -100,9 +100,9 @@ are shared, never copied:
   not copies: a badge on the picture (*Oferta*, *Nuevo*), a reason with its icon
   (*Porque viste…*, *Sube esta semana*), a rank drawn large and never with a
   count, a quiet card without its buttons, and a line layout for a ranking.
-- **`CampaignCard`** is a campaign: an event on the chalkboard — `--bg-inverse`,
-  `--ink-950`, a step blacker than the text's ink because at a card's size
-  `--ink-900` reads brown; dark in both themes, the one surface that is —
+- **`CampaignCard`** is a campaign: an event on the chalkboard — `--color-inverse`,
+  `--color-ink-950`, a step blacker than the text's ink because at a card's size
+  `--color-ink-900` reads brown; dark in both themes, the one surface that is —
   with its window, its clock and the view's one clay action; a season on the
   accent's tint, with no clock; the campaign's own image beside the words, or
   the products it reaches. As a category's banner it is smaller, with a link
@@ -132,10 +132,10 @@ is colour-coded and always paired with a word, never colour alone:
 
 | State | Token | Used for |
 |---|---|---|
-| Active / passing / in stock | `--positive` | Published products, green CI, NDCG above threshold |
-| Needs review / pending | `--warning` | AI-generated copy awaiting approval, draft products |
-| Failed / rejected | `--danger` | Import errors, declined payments, cancelled orders |
-| Agent activity | `--accent` | Anything a UCP agent did, so it is instantly separable from human actions |
+| Active / passing / in stock | `--color-positive` | Published products, green CI, NDCG above threshold |
+| Needs review / pending | `--color-warning` | AI-generated copy awaiting approval, draft products |
+| Failed / rejected | `--color-danger` | Import errors, declined payments, cancelled orders |
+| Agent activity | `--color-accent` | Anything a UCP agent did, so it is instantly separable from human actions |
 
 That last row is the one worth copying: **agent-driven actions are always clay.**
 Scanning the orders table, you can see at a glance what an agent bought.
@@ -145,17 +145,17 @@ Scanning the orders table, you can see at a glance what an agent bought.
 - Never write a hex outside `tokens.css`. If a component needs a colour that does
   not exist, that is a design decision, not a CSS fix.
 - **A ramp's middle step is a fill; only its dark step carries text** (ADR 0034).
-  `--clay-500` is the brand — the logo, the awning and the wordmark — and nothing
+  `--color-clay-500` is the brand — the logo, the awning and the wordmark — and nothing
   readable sits *on* it: no text colour clears AA against it, in either direction.
-  The interface's accent is `--clay-600`, and `--positive` and `--warning` take the
+  The interface's accent is `--color-clay-600`, and `--color-positive` and `--color-warning` take the
   same step down. **One exception, by name**: the two wordmarks, storefront and
-  backoffice, are set *in* `--clay-500`, because they are brand and they are
+  backoffice, are set *in* `--color-clay-500`, because they are brand and they are
   large text (20px at 800, held to 3:1; the brand clears 3.43:1 on the light page
-  and 3.88:1 on the darkest backoffice surface). Brand text names `--brand` (an
-  alias of `--clay-500`), never the `--accent` alias, which is the action colour
+  and 3.88:1 on the darkest backoffice surface). Brand text names `--color-brand` (an
+  alias of `--color-clay-500`), never the `--color-accent` alias, which is the action colour
   and moves independently — and it is large, because at body size the brand
   misses 4.5:1 on the dark surfaces.
-- **Text on an accent fill is `--on-accent`, never a hand-picked colour.** The
+- **Text on an accent fill is `--color-on-accent`, never a hand-picked colour.** The
   right answer differs per theme, which is why it is a token: white on the light
   accent, ink on the dark one. Writing either one by hand is right in one theme
   and wrong in the other.
@@ -163,9 +163,9 @@ Scanning the orders table, you can see at a glance what an agent bought.
 - Shadows only on things that genuinely float (menus, modals, toasts).
 - Colour never carries meaning alone — always pair with text or an icon.
 - Every interactive element has a visible `:focus-visible` ring. No exceptions —
-  and `outline: var(--focus-ring)` is **not** one: the shorthand resets
+  and `outline: var(--color-focus)` is **not** one: the shorthand resets
   `outline-style` to `none`, so it paints nothing and overrides the ring the
-  system already draws. Always `outline: 2px solid var(--focus-ring)`.
+  system already draws. Always `outline: 2px solid var(--color-focus)`.
 - Contrast is a gate, not an intention: `design-contrast.spec.ts` holds every text
   token against every surface at 4.5:1, and the focus ring at 3:1, in both themes.
 - Respect `prefers-reduced-motion`; the awning bar is the only thing that animates.

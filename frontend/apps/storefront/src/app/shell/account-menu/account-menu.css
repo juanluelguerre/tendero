@@ -12,12 +12,12 @@
   inset: auto;
   top: anchor(bottom);
   right: anchor(right);
-  margin: var(--space-2) 0 0;
+  margin: var(--spacing-2) 0 0;
 }
 
 @supports not (anchor-name: --a) {
   .menu {
-    top: calc(3.5rem + var(--space-1));
-    right: var(--space-4);
+    top: calc(3.5rem + var(--spacing-1));
+    right: var(--spacing-4);
   }
 }

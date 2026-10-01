@@ -24,8 +24,10 @@ import { describe, expect, it } from 'vitest';
  * would be more ceremony than test.
  */
 describe('the design tokens', () => {
-  /** The one file allowed to contain a raw colour. */
-  const SOURCE = 'design/tokens.css';
+  /** The one file allowed to contain a raw colour (ADR 0050)… */
+  const SOURCE = 'design/theme.css';
+  /** …and its copy for pages with no Tailwind, which tools/tokens.mjs writes from it. */
+  const GENERATED = 'design/tokens.css';
 
   /** `#fff`, `#ffffff`, `#ffffffff`. */
   const HEX = /#[0-9a-f]{3,8}\b/gi;
@@ -68,7 +70,7 @@ describe('the design tokens', () => {
   it('are the only place a colour is written down', () => {
     const offenders = stylesheets(repository)
       .map((path) => [relative(repository, path).replaceAll('\\', '/'), path] as const)
-      .filter(([name]) => name !== SOURCE)
+      .filter(([name]) => name !== SOURCE && name !== GENERATED)
       .flatMap(([name, path]) => {
         // Comments are prose and may name a colour; the rule is about values.
         const css = readFileSync(path, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -82,7 +84,7 @@ describe('the design tokens', () => {
   /**
    * A component names what a colour is for, never which paint it is.
    *
-   * `--red-50` is a pale pink in every theme, because no theme redefines a
+   * `--color-red-50` is a pale pink in every theme, because no theme redefines a
    * palette step — only the semantic tokens change. A failed search's box used
    * it, and under the dark theme's light text the title vanished (the author,
    * the redesign's second walkthrough); a selected variant and the skeleton's

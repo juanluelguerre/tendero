@@ -21,10 +21,10 @@ export function readChartColours(element: Element): ChartColours {
   const role = (one: SeriesRole) => token(roleColourToken(one));
   return {
     series: { data: role('data'), previous: role('previous'), agent: role('agent') },
-    text: token('--text'),
-    muted: token('--text-muted'),
-    border: token('--border'),
-    surface: token('--bg-surface'),
-    font: token('--font-body'),
+    text: token('--color-body'),
+    muted: token('--color-muted'),
+    border: token('--color-hairline'),
+    surface: token('--color-surface'),
+    font: token('--font-sans'),
   };
 }

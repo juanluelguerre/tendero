@@ -52,7 +52,7 @@
               <td>{{ agent.operator }}</td>
               <td>
                 <select
-                  class="field w-auto min-w-[8rem]"
+                  class="field w-auto min-w-col-lg"
                   [value]="agent.trust"
                   [disabled]="store.busy() === agent.agentId"
                   [attr.aria-label]="t('changeTrust', { agent: agent.displayName })"

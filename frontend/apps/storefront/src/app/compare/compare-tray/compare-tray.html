@@ -5,7 +5,7 @@
         <ul class="flex min-w-0 flex-wrap gap-2">
           @for (item of compare.items(); track item.code) {
             <li
-              class="inline-flex max-w-[16rem] items-center gap-1 rounded-full border border-hairline bg-raised px-2 py-1 text-xs"
+              class="inline-flex max-w-chip items-center gap-1 rounded-full border border-hairline bg-raised px-2 py-1 text-xs"
             >
               <span class="truncate">{{ item.name }}</span>
               <button
@@ -14,7 +14,7 @@
                 [attr.aria-label]="t('compare.remove', { name: item.name })"
                 (click)="compare.toggle(item)"
               >
-                <lib-icon class="size-[14px]" name="remove" [stroke]="2" />
+                <lib-icon class="size-icon-xs" name="remove" [stroke]="2" />
               </button>
             </li>
           }

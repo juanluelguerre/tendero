@@ -5,11 +5,11 @@
 :host {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: var(--space-6);
+  gap: var(--spacing-6);
 }
 
 /* The phone's drawer: one column, every category visible. */
 :host(.in-drawer) {
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--spacing-4);
 }

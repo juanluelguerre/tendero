@@ -52,7 +52,7 @@
       @for (tab of tabs; track tab) {
         <!-- The open tab is said by aria-current, and drawn from it. -->
         <a
-          class="inline-flex min-h-[2.75rem] flex-none items-center border-b-2 border-transparent px-3 whitespace-nowrap text-muted no-underline hover:text-body aria-[current=page]:border-body aria-[current=page]:font-semibold aria-[current=page]:text-body"
+          class="inline-flex min-h-tap flex-none items-center border-b-2 border-transparent px-3 whitespace-nowrap text-muted no-underline hover:text-body aria-[current=page]:border-body aria-[current=page]:font-semibold aria-[current=page]:text-body"
           [routerLink]="linkOf(tab)"
           [queryParams]="{ period: queryOfPeriod(period()) }"
           routerLinkActive

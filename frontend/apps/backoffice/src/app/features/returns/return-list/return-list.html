@@ -130,7 +130,7 @@
   </backoffice-list-state>
 
   <ng-template #whatOf let-request>
-    <ul class="grid gap-[2px]">
+    <ul class="grid gap-hair">
       @for (line of request.lines; track line.sku) {
         <li class="flex items-baseline gap-2 text-3xs">
           <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>

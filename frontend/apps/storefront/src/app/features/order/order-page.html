@@ -23,7 +23,7 @@
       -->
       @if (order.stopCode) {
         <p
-          class="mt-3 flex flex-wrap items-baseline gap-2 rounded-md border border-s-[3px] border-hairline border-s-warning bg-surface p-3 text-sm"
+          class="mt-3 flex flex-wrap items-baseline gap-2 rounded-md border border-s-3 border-hairline border-s-warning bg-surface p-3 text-sm"
           role="status"
         >
           <strong>{{ t('order.stop.' + order.stopCode) }}</strong>
@@ -41,7 +41,7 @@
           <ul class="grid gap-3">
             @for (line of order.lines; track line.sku) {
               <li class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4">
-                <span class="grid min-w-0 gap-[2px]">
+                <span class="grid min-w-0 gap-hair">
                   <span class="font-medium">{{ line.productName }}</span>
                   @if (line.variantLabel) {
                     <span class="text-sm text-muted">{{ line.variantLabel }}</span>
@@ -49,7 +49,7 @@
                   <span class="numeric text-xs text-muted">{{ line.sku }}</span>
                 </span>
                 <span class="numeric text-muted">×{{ line.quantity }}</span>
-                <span class="min-w-[5rem] text-end numeric font-semibold">{{
+                <span class="min-w-col-md text-end numeric font-semibold">{{
                   money(line.unitPrice * line.quantity)
                 }}</span>
               </li>
@@ -102,7 +102,7 @@
                         <label class="grid gap-2">
                           <span class="text-xs text-muted">{{ t('order.returnQuantity') }}</span>
                           <input
-                            class="field w-[5rem] numeric"
+                            class="field w-col-md numeric"
                             type="number"
                             min="1"
                             [max]="line.left"
@@ -112,7 +112,7 @@
                           />
                         </label>
 
-                        <label class="grid min-w-[12rem] flex-1 gap-2">
+                        <label class="grid min-w-col-xl flex-1 gap-2">
                           <span class="text-xs text-muted">{{ t('order.returnReason') }}</span>
                           <select
                             class="field select"
@@ -172,9 +172,7 @@
       </div>
 
       <!-- Sticks beside the panels, as the cart's does; unstuck once it sits under them. -->
-      <aside
-        class="sticky top-[calc(var(--header-h)+var(--space-4))] grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static"
-      >
+      <aside class="sticky top-sticky grid gap-4 rounded-lg border border-hairline bg-surface p-5 max-tab:static">
         <storefront-totals
           [currency]="order.currency"
           [subtotal]="order.subtotal"

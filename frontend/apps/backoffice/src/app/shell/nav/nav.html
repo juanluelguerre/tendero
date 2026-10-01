@@ -4,12 +4,12 @@
       <h2 class="group__label mb-1 px-3 font-sans text-3xs font-semibold tracking-wide text-muted uppercase">
         {{ t('nav.groups.' + group.label) }}
       </h2>
-      <ul class="flex flex-col gap-[2px]" role="list">
+      <ul class="flex flex-col gap-hair" role="list">
         @for (item of group.items; track item.route) {
           <li>
             <!-- The open screen is drawn from `aria-current`, so no two colours compete on a link. -->
             <a
-              class="link group relative flex min-h-[2.25rem] items-center gap-3 rounded-md px-3 py-1 text-sm text-muted no-underline transition-[background,color] duration-(--dur-fast) ease-brand hover:bg-raised hover:text-body aria-[current=page]:bg-accent-tint aria-[current=page]:font-semibold aria-[current=page]:text-body"
+              class="link group relative flex min-h-control-md items-center gap-3 rounded-md px-3 py-1 text-sm text-muted no-underline transition-[background,color] duration-(--dur-fast) ease-brand hover:bg-raised hover:text-body aria-[current=page]:bg-accent-tint aria-[current=page]:font-semibold aria-[current=page]:text-body"
               [routerLink]="item.route"
               routerLinkActive
               ariaCurrentWhenActive="page"
@@ -18,7 +18,7 @@
               <!-- The awning stripe marks the current screen, as it marked the
                    current tab: the same stripe, stood on its end. -->
               <span
-                class="absolute inset-y-1 start-0 w-[3px] rounded-full bg-[repeating-linear-gradient(180deg,var(--clay-500)_0_6px,var(--clay-100)_6px_12px)] opacity-0 group-aria-[current=page]:opacity-100"
+                class="absolute inset-y-1 start-0 w-rule rounded-full bg-[repeating-linear-gradient(180deg,var(--color-clay-500)_0_6px,var(--color-clay-100)_6px_12px)] opacity-0 group-aria-[current=page]:opacity-100"
                 aria-hidden="true"
               ></span>
               <lib-icon [name]="item.icon" />

@@ -47,7 +47,7 @@
                 >
                   {{ item.name }}
                 </button>
-                <span class="mt-[2px] block numeric text-3xs text-muted">{{ item.code }}</span>
+                <span class="mt-hair block numeric text-3xs text-muted">{{ item.code }}</span>
               </td>
               <td>{{ item.brand ?? '—' }}</td>
               <td class="right numeric">{{ price(item) }}</td>
@@ -56,7 +56,7 @@
               </td>
               <!-- The action column stays as narrow as its button and is pinned
                    right, so a queue of twenty rows has one straight edge to aim at. -->
-              <td class="right w-[1%] whitespace-nowrap">
+              <td class="right w-px whitespace-nowrap">
                 <!-- Quiet: one per row would be many clay buttons in one view
                      (design/DESIGN.md). The pane's is the view's clay one. -->
                 <button
@@ -84,7 +84,7 @@
             </span>
             <span class="worklist-card__line">
               <ng-container *ngTemplateOutlet="languagesOf; context: { $implicit: item }" />
-              <span class="mt-[2px] block numeric text-3xs text-muted">{{ item.brand ?? '' }}</span>
+              <span class="mt-hair block numeric text-3xs text-muted">{{ item.brand ?? '' }}</span>
             </span>
           </button>
           <button

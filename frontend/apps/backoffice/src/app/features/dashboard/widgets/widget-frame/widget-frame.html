@@ -2,7 +2,7 @@
   <header class="flex flex-wrap items-baseline justify-between gap-2">
     <h2 class="text-md">{{ heading() }}</h2>
     @if (link(); as path) {
-      <a class="inline-flex min-h-[1.5rem] items-center text-xs text-muted" [routerLink]="path">{{ linkText() }}</a>
+      <a class="inline-flex min-h-target items-center text-xs text-muted" [routerLink]="path">{{ linkText() }}</a>
     }
     <!-- What else the head says, marked `frame-aside`: the key figures' "against the period before". -->
     <ng-content select="[frame-aside]" />

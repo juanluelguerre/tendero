@@ -14,10 +14,10 @@
 
       <section class="pane-section">
         <h3 class="eyebrow">{{ t('claims.column.evidence') }}</h3>
-        <ul class="grid gap-[2px] text-xs" role="list">
+        <ul class="grid gap-hair text-xs" role="list">
           @for (quote of claim.quotes; track quote.culture + quote.start) {
             <li class="flex flex-wrap items-baseline gap-2">
-              <span class="inline-block min-w-[2ch] text-3xs text-muted uppercase">{{ quote.culture }}</span>
+              <span class="inline-block min-w-col-2xs text-3xs text-muted uppercase">{{ quote.culture }}</span>
               <q>{{ quote.text }}</q>
               <span class="muted numeric">{{ percent(quote.support) }}</span>
             </li>

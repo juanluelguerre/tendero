@@ -87,6 +87,7 @@ npm run format                                # from frontend/: Prettier, Tailwi
 UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
 node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
 node tools/tracking-plan.mjs                   # docs/telemetry/tracking-plan.json → its .md and the browser's event types
+node tools/tokens.mjs                          # design/theme.css (the tokens, Tailwind's theme) → design/tokens.css for pages without Tailwind
 node landing-page/tools/prepare.mjs           # the landing into landing-page/dist (Netlify); film: landing-page/README.md
 
 UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
@@ -212,14 +213,22 @@ node tools/api-map.mjs --schema CartView
   `HostedServiceNamingTests` holds it.
 - OpenTelemetry: every slice with I/O gets an `ActivitySource` span with tags.
   GenAI calls follow the OTel GenAI semantic conventions.
-- UI: tokens from `design/tokens.css` only — never hardcode a hex in components,
-  and a test enforces it across every `.css` in the repository.
+- UI: tokens from `design/theme.css` only (ADR 0050) — never hardcode a hex in
+  components, and a test enforces it across every `.css` in the repository.
+  `design/tokens.css` is **generated** from it (`node tools/tokens.mjs`) for the
+  pages without Tailwind; never edit it, CI diffs it.
   One clay accent action per view. Agent-driven actions are always clay.
-- **Tailwind, utility-first, over a theme that is the tokens** (ADR 0049). A
-  component's look is written in its template with utilities (`bg-surface`,
-  `text-muted`, `p-5`, `max-sm:`); the theme is `design/tokens.css` and nothing
-  else, so a utility can only name a token, and spacing is the tokens' own named
-  steps (`p-5` is `--space-5`). A token with no utility is `bg-(--danger-tint)`.
+- **Tailwind, utility-first, over a theme that is the tokens** (ADR 0049, 0050).
+  A component's look is written in its template with utilities (`bg-surface`,
+  `text-muted`, `p-5`, `max-sm:`). The tokens **are** Tailwind's theme: declared
+  in its namespaces in `design/theme.css` (`--color-surface` is `bg-surface`,
+  `--spacing-tap` is `min-h-tap`), with Tailwind's default theme never imported,
+  so a utility can only name a token. Spacing is the tokens' named steps (`p-5`
+  is `--spacing-5`, 1.5rem), and **every size is a token** — targets, controls,
+  icons, columns, measures; a lone length in brackets (`min-h-[2.75rem]`) fails
+  `design-arbitrary-values.spec.ts`, and a class that builds nothing fails
+  `design-utilities.spec.ts`. Brackets stay for a layout written as an
+  expression (`grid-cols-[minmax(0,1fr)_320px]`).
   A component's `.css` keeps only what utilities cannot say (keyframes,
   generated content, anchoring, container queries, a `:host` that depends on
   something). Classes are literal in the template — Tailwind reads `.html` only,
