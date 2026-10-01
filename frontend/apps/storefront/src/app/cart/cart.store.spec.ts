@@ -84,6 +84,37 @@ describe('the cart store', () => {
     ]);
   });
 
+  /**
+   * Two changes asked at once — a click on the product page and the browser
+   * agent's tool, or a double click — reach the server one after the other, so
+   * a late answer can never overwrite a newer basket: the second goes out once
+   * the first has answered, and been priced.
+   */
+  it('makes one change at a time, in the order they were asked', async () => {
+    const store = TestBed.inject(CartStore);
+    const first = store.add('SKU-1');
+    const second = store.add('SKU-2');
+    await new Promise((settled) => setTimeout(settled));
+    const inFlight = http.match('http://api/api/cart/lines?culture=es');
+    inFlight[0]?.flush(cart([{ sku: 'SKU-1', quantity: 1 }]), { headers: { 'X-Cart-Token': 'T-1' } });
+    await new Promise((settled) => setTimeout(settled));
+    http.expectOne('http://api/api/pricing/quote?culture=es').flush({ currency: 'EUR', lines: [] });
+    await first;
+    const next = http.match('http://api/api/cart/lines?culture=es');
+    next[0]?.flush(
+      cart([
+        { sku: 'SKU-1', quantity: 1 },
+        { sku: 'SKU-2', quantity: 1 },
+      ]),
+      { headers: { 'X-Cart-Token': 'T-1' } },
+    );
+    await new Promise((settled) => setTimeout(settled));
+    http.expectOne('http://api/api/pricing/quote?culture=es').flush({ currency: 'EUR', lines: [] });
+    await second;
+
+    expect([inFlight.length, next.length, next[0]?.request.body.sku, store.itemCount()]).toEqual([1, 1, 'SKU-2', 2]);
+  });
+
   it('starts from the token this browser kept', () => {
     localStorage.setItem('tendero.cart', 'KEPT');
 
