@@ -10,7 +10,7 @@
           routerLink="/review"
         >
           <span>{{ t('drafts') }}</span>
-          <span class="task__count numeric text-lg font-semibold">{{ valueOf(store.drafts)?.total ?? '—' }}</span>
+          <span class="task__count numeric text-lg font-semibold">{{ store.drafts.value()?.total ?? '—' }}</span>
         </a>
         @if (store.drafts.error()) {
           <p class="failed mt-1" role="alert">{{ t('failed') }}</p>
@@ -23,7 +23,7 @@
           routerLink="/claims"
         >
           <span>{{ t('claims') }}</span>
-          <span class="task__count numeric text-lg font-semibold">{{ valueOf(store.claims)?.total ?? '—' }}</span>
+          <span class="task__count numeric text-lg font-semibold">{{ store.claims.value()?.total ?? '—' }}</span>
         </a>
         @if (store.claims.error()) {
           <p class="failed mt-1" role="alert">{{ t('failed') }}</p>

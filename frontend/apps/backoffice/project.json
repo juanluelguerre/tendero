@@ -68,7 +68,8 @@
     "test": {
       "executor": "@angular/build:unit-test",
       "options": {
-        "watch": false
+        "watch": false,
+        "providersFile": "apps/backoffice/src/test-providers.ts"
       }
     },
     "serve-static": {

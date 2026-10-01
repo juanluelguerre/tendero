@@ -2,7 +2,7 @@ import { Component, inject, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { CopyText } from '@tendero/shared-ui';
-import { formatPrice, orderReference, valueOf } from '@tendero/shared-util';
+import { formatPrice, orderReference } from '@tendero/shared-util';
 import { ConfirmDialog } from '../../../worklist/confirm-dialog/confirm-dialog';
 import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
 import { cancellable, primaryMove } from '../order-moves';
@@ -26,9 +26,6 @@ import { OrderPaneStore } from './order-pane.store';
   providers: [OrderPaneStore],
 })
 export class OrderPane {
-  /** A resource read without throwing when its request failed (Angular 22). */
-  protected readonly valueOf = valueOf;
-
   protected readonly store = inject(OrdersStore);
   /** The pane's own: the open order's detail. */
   protected readonly pane = inject(OrderPaneStore);

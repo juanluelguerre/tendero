@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { translateObjectSignal } from '@jsverse/transloco';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import type { OrderStatus, OrderSummary } from '@tendero/shared-api';
-import { valueOf, without } from '@tendero/shared-util';
+import { without } from '@tendero/shared-util';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { OrderingService, type OrderMove } from '../../data-access/ordering.service';
 import { type ActionVia, BackofficeUsage } from '../../usage';
@@ -12,6 +12,7 @@ import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
 import { refusalOf } from '../../worklist/refusal';
 import { keptCounts, statusChips } from '../../worklist/filter-chips/status-chips';
 import { OrderActions } from './order-moves';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The filter's statuses in the order a working day meets them: what is to ship first. */
 const Statuses = [
@@ -77,15 +78,17 @@ export const OrdersStore = signalStore(
     page: computed(() => Math.max(1, Number(store._params().get('page') ?? 1) || 1)),
   })),
   withProps((store) => {
-    const list = rxResource({
-      params: () => ({ status: statusIn(store.statusKey()), text: store._query(), page: store.page() }),
-      stream: ({ params }) => store._ordering.orders(params.status, params.text, params.page, PageSize),
-    });
+    const list = extendResource(
+      rxResource({
+        params: () => ({ status: statusIn(store.statusKey()), text: store._query(), page: store.page() }),
+        stream: ({ params }) => store._ordering.orders(params.status, params.text, params.page, PageSize),
+      }),
+    );
     /** The rows, replaced one by one as moves come back, until the list is asked again. */
-    const orders = linkedSignal(() => valueOf(list)?.orders ?? []);
+    const orders = linkedSignal(() => list.value()?.orders ?? []);
     return {
       _list: list,
-      _counts: keptCounts(() => valueOf(list)?.counts),
+      _counts: keptCounts(() => list.value()?.counts),
       orders,
       /** The open order's row, kept while a move takes it out of the filtered list. */
       selected: linkedSignal<OrderSummary | null, OrderSummary | null>({
@@ -97,7 +100,7 @@ export const OrdersStore = signalStore(
   }),
   withComputed((store) => ({
     /** How many the filter and the search hold, not the page: the pager says it. */
-    total: computed(() => valueOf(store._list)?.total ?? 0),
+    total: computed(() => store._list.value()?.total ?? 0),
     loading: computed(() => store._list.isLoading() && !store._list.hasValue()),
     failed: computed(() => store._list.status() === 'error'),
     /** Every status, always, then *All*: a fixed row that does not move under the pointer (`statusChips`). */

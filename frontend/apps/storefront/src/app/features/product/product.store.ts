@@ -19,7 +19,7 @@ import {
   type OptionAvailability,
   type Selection,
 } from './variant-picker';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 export type ProductPageState =
   { status: 'loading' } | { status: 'done'; product: ProductDetail } | { status: 'notFound' } | { status: 'failed' };
@@ -73,14 +73,18 @@ export const ProductStore = signalStore(
        * labels. A resource CANCELS the request in flight when its inputs change,
        * so a slow answer in the old language never paints over the new one.
        */
-      _detail: rxResource({ params: asked, stream: ({ params }) => products.get(params.code, params.culture) }),
+      _detail: extendResource(
+        rxResource({ params: asked, stream: ({ params }) => products.get(params.code, params.culture) }),
+      ),
       /**
        * The same product's specs with their sources (P10-8), beside the product
        * and never in front of it: the page renders from the catalogue first, and
        * the chips arrive when Knowledge answers — or never, if it does not
        * (invariant 8).
        */
-      _sheet: rxResource({ params: asked, stream: ({ params }) => specs.get([params.code], params.culture) }),
+      _sheet: extendResource(
+        rxResource({ params: asked, stream: ({ params }) => specs.get([params.code], params.culture) }),
+      ),
     };
   }),
   withComputed(({ _code, _detail, _sheet, selection, shown }) => {
@@ -89,7 +93,7 @@ export const ProductStore = signalStore(
       switch (_detail.status()) {
         case 'resolved':
         case 'local':
-          return { status: 'done', product: valueOf(_detail) as ProductDetail };
+          return { status: 'done', product: _detail.value() as ProductDetail };
         case 'error':
           // 404: no such product; 400: no such code — a link copied short. Either
           // way the shopper is told it does not exist, never to try again.
@@ -103,7 +107,7 @@ export const ProductStore = signalStore(
       return current.status === 'done' ? current.product : null;
     });
     /** A failed sheet is no sheet: the lines fall back to the catalogue's attributes. */
-    const loadedSheet = computed(() => (_sheet.status() === 'resolved' ? valueOf(_sheet) : undefined));
+    const loadedSheet = computed(() => (_sheet.status() === 'resolved' ? _sheet.value() : undefined));
     /** The variants a shopper can choose between — discontinued ones are not on sale. */
     const variants = computed(() => {
       const current = product();

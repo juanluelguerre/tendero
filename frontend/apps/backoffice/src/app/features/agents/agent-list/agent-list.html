@@ -11,7 +11,7 @@
   <backoffice-list-state
     [loading]="store.agents.isLoading() && !store.agents.hasValue()"
     [failed]="!!store.agents.error()"
-    [empty]="valueOf(store.agents)?.length === 0"
+    [empty]="store.agents.value()?.length === 0"
     [loadingText]="t('loading')"
     [failedText]="t('loadFailed')"
     [emptyText]="t('empty')"
@@ -35,7 +35,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (agent of valueOf(store.agents); track agent.agentId) {
+          @for (agent of store.agents.value(); track agent.agentId) {
             <tr class="row" [class.row--selected]="agent.agentId === store.selectedId()" (click)="store.open(agent)">
               <td>
                 <button
@@ -93,7 +93,7 @@
     </div>
 
     <ul class="worklist-cards narrow-only" role="list">
-      @for (agent of valueOf(store.agents); track agent.agentId) {
+      @for (agent of store.agents.value(); track agent.agentId) {
         <li class="worklist-card" [class.worklist-card--selected]="agent.agentId === store.selectedId()">
           <button type="button" class="worklist-card__open" (click)="store.open(agent)">
             <span class="block font-medium">{{ agent.displayName }}</span>

@@ -8,7 +8,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { CatalogService } from '../../data-access/catalog.service';
 import { readStatus } from '../../read-status';
 import { type ActionVia, BackofficeUsage } from '../../usage';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The whole queue on one page: it is a laboratory's handful of drafts. */
 const QueueSize = 100;
@@ -28,10 +28,12 @@ export const ReviewQueueStore = signalStore(
     const route = inject(ActivatedRoute);
     const catalog = inject(CatalogService);
     const culture = inject(CultureStore);
-    const queue = rxResource({
-      params: () => ({ culture: culture.active() }),
-      stream: ({ params }) => catalog.list('Draft', params.culture, 1, QueueSize),
-    });
+    const queue = extendResource(
+      rxResource({
+        params: () => ({ culture: culture.active() }),
+        stream: ({ params }) => catalog.list('Draft', params.culture, 1, QueueSize),
+      }),
+    );
     return {
       _router: inject(Router),
       _catalog: catalog,
@@ -40,7 +42,7 @@ export const ReviewQueueStore = signalStore(
       _queue: queue,
       _queueStatus: readStatus(queue),
       /** The drafts, less those published since the queue was read. */
-      drafts: linkedSignal(() => valueOf(queue)?.items ?? []),
+      drafts: linkedSignal(() => queue.value()?.items ?? []),
     };
   }),
   withComputed((store) => {

@@ -9,7 +9,7 @@ import { CompareStore, MAX_COMPARED } from '../../compare/compare.store';
 import { SpecsService } from '../../data-access/specs.service';
 import { statusOf } from '../../failure-status';
 import { ShopLinks } from '../../shop-links';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The codes a comparison URL carries, cleaned: trimmed, upper-cased, unique, at most four. */
 export function codesFrom(query: string | null): string[] {
@@ -42,13 +42,15 @@ export const ComparisonStore = signalStore(
       _router: inject(Router),
       _links: inject(ShopLinks),
       codes,
-      _sheet: rxResource({
-        params: () => {
-          const current = codes();
-          return current.length > 1 ? { codes: current, culture: culture.active() } : undefined;
-        },
-        stream: ({ params }) => specs.get(params.codes, params.culture),
-      }),
+      _sheet: extendResource(
+        rxResource({
+          params: () => {
+            const current = codes();
+            return current.length > 1 ? { codes: current, culture: culture.active() } : undefined;
+          },
+          stream: ({ params }) => specs.get(params.codes, params.culture),
+        }),
+      ),
     };
   }),
   withComputed(({ codes, _sheet }) => ({
@@ -57,7 +59,7 @@ export const ComparisonStore = signalStore(
       switch (_sheet.status()) {
         case 'resolved':
         case 'local': {
-          const sheet = valueOf(_sheet) as SpecSheet;
+          const sheet = _sheet.value() as SpecSheet;
           // Some codes may name products a shopper cannot see: fewer than two left is not a comparison.
           return sheet.products.length < 2 ? { status: 'tooFew' } : { status: 'done', sheet };
         }

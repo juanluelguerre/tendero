@@ -17,7 +17,7 @@ import { refusalOf } from '../../worklist/refusal';
 import { UndoStore } from '../../worklist/undo/undo.store';
 import { type CampaignForm, createRequestOf, detailsOf } from './campaign-form';
 import { type CampaignBucket, bucketOf, CampaignBuckets, inCulture } from './campaign-state';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** What is being done to a campaign: its buttons wait for it. */
 export interface CampaignWork {
@@ -49,7 +49,7 @@ export const CampaignsStore = signalStore(
     const pricing = inject(PricingService);
     const catalog = inject(CatalogService);
     const culture = inject(CultureStore);
-    const campaigns = rxResource({ stream: () => pricing.campaigns() });
+    const campaigns = extendResource(rxResource({ stream: () => pricing.campaigns() }));
     return {
       _router: inject(Router),
       _pricing: pricing,
@@ -61,20 +61,22 @@ export const CampaignsStore = signalStore(
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
       _campaigns: campaigns,
       ...readStatus(campaigns),
-      promotions: rxResource({ stream: () => pricing.promotions().pipe(map((list) => list.items)) }),
-      categories: rxResource({
-        params: () => culture.active(),
-        stream: ({ params }) => catalog.categories(params).pipe(map((list) => list.items)),
-      }),
+      promotions: extendResource(rxResource({ stream: () => pricing.promotions().pipe(map((list) => list.items)) })),
+      categories: extendResource(
+        rxResource({
+          params: () => culture.active(),
+          stream: ({ params }) => catalog.categories(params).pipe(map((list) => list.items)),
+        }),
+      ),
       /** The counts per chip, from status and phase together, kept while the calendar is read again. */
       _counts: keptCounts(() => {
-        const answered = valueOf(campaigns);
+        const answered = campaigns.value();
         return answered && countBy(answered, bucketOf);
       }),
     };
   }),
   withComputed((store) => {
-    const all = computed(() => valueOf(store._campaigns) ?? []);
+    const all = computed(() => store._campaigns.value() ?? []);
     const filterKey = computed(() => store._params().get('status') ?? DefaultFilter);
     const selectedCode = computed(() => store._params().get('campaign'));
     const creating = computed(() => selectedCode() === NewCampaign);
@@ -92,7 +94,7 @@ export const CampaignsStore = signalStore(
         filterKey() === 'all' ? all() : all().filter((campaign) => bucketOf(campaign) === filterKey()),
       ),
       categoryNames: computed(
-        () => new Map((valueOf(store.categories) ?? []).map((category) => [category.code, category.name])),
+        () => new Map((store.categories.value() ?? []).map((category) => [category.code, category.name])),
       ),
     };
   }),

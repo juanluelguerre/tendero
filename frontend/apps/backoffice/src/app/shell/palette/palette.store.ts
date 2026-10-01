@@ -8,8 +8,9 @@ import { AccountsService } from '../../data-access/accounts.service';
 import { CatalogService } from '../../data-access/catalog.service';
 import { OrderingService } from '../../data-access/ordering.service';
 import { Navigation } from '../nav/navigation';
-import { orderReference, valueOf } from '@tendero/shared-util';
+import { orderReference } from '@tendero/shared-util';
 import { looksLikeId, matches, type PaletteOption, step } from './palette-search';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** Enough to choose from; the list is one Enter away for more. */
 const PerKind = 5;
@@ -41,19 +42,26 @@ export const PaletteStore = signalStore(
     return {
       _culture: culture,
       _translate: inject(TranslocoService),
-      _orders: rxResource({
-        params: search,
-        stream: ({ params }) => ordering.orders(null, params.q).pipe(map((result) => result.orders.slice(0, PerKind))),
-      }),
-      _products: rxResource({
-        params: search,
-        stream: ({ params }) => catalog.list(null, params.culture, 1, PerKind, params.q),
-      }),
+      _orders: extendResource(
+        rxResource({
+          params: search,
+          stream: ({ params }) =>
+            ordering.orders(null, params.q).pipe(map((result) => result.orders.slice(0, PerKind))),
+        }),
+      ),
+      _products: extendResource(
+        rxResource({
+          params: search,
+          stream: ({ params }) => catalog.list(null, params.culture, 1, PerKind, params.q),
+        }),
+      ),
       /** A laboratory's handful: read once when the palette first opens, and matched here. */
-      _agents: rxResource({
-        params: () => (store.isOpen() ? true : undefined),
-        stream: ({ params }) => (params ? accounts.agents() : of([])),
-      }),
+      _agents: extendResource(
+        rxResource({
+          params: () => (store.isOpen() ? true : undefined),
+          stream: ({ params }) => (params ? accounts.agents() : of([])),
+        }),
+      ),
     };
   }),
   withComputed((store) => ({
@@ -75,7 +83,7 @@ export const PaletteStore = signalStore(
 
       if (query.length < RecordsFrom) return screens;
 
-      const orders: PaletteOption[] = (valueOf(store._orders) ?? []).map((order) => ({
+      const orders: PaletteOption[] = (store._orders.value() ?? []).map((order) => ({
         id: `order-${order.orderId}`,
         kind: 'order',
         label: t('palette.order', { id: orderReference(order.orderId) }),
@@ -84,7 +92,7 @@ export const PaletteStore = signalStore(
         queryParams: { status: 'all', order: order.orderId },
       }));
 
-      const products: PaletteOption[] = (valueOf(store._products)?.items ?? []).map((product) => ({
+      const products: PaletteOption[] = (store._products.value()?.items ?? []).map((product) => ({
         id: `product-${product.productId}`,
         kind: 'product',
         label: product.name,
@@ -93,7 +101,7 @@ export const PaletteStore = signalStore(
         queryParams: { status: 'all', product: product.code },
       }));
 
-      const agents: PaletteOption[] = (valueOf(store._agents) ?? [])
+      const agents: PaletteOption[] = (store._agents.value() ?? [])
         .filter((agent) => matches(`${agent.displayName} ${agent.agentId}`, query))
         .slice(0, PerKind)
         .map((agent) => ({

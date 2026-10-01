@@ -4,6 +4,7 @@ import { signalStore, withHooks, withProps } from '@ngrx/signals';
 import { CultureStore } from '@tendero/shared-i18n';
 import { OrderingService } from '../../../data-access/ordering.service';
 import { OrdersStore } from '../orders.store';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * The pane's own state (ADR 0047): the open order's detail — its address and
@@ -18,13 +19,15 @@ export const OrderPaneStore = signalStore(
     const culture = inject(CultureStore);
     return {
       _orders: orders,
-      detail: rxResource({
-        params: () => {
-          const id = orders.selectedId();
-          return id ? { id, culture: culture.active() } : undefined;
-        },
-        stream: ({ params }) => ordering.order(params.id, params.culture),
-      }),
+      detail: extendResource(
+        rxResource({
+          params: () => {
+            const id = orders.selectedId();
+            return id ? { id, culture: culture.active() } : undefined;
+          },
+          stream: ({ params }) => ordering.order(params.id, params.culture),
+        }),
+      ),
     };
   }),
   withHooks({

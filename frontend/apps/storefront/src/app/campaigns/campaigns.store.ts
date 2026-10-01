@@ -5,6 +5,7 @@ import type { CampaignView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { CampaignService } from '../data-access/campaign.service';
 import { leadingCampaign } from './campaign-rules';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * The campaigns near now, read once per language and shared by everything that
@@ -22,10 +23,12 @@ export const CampaignsStore = signalStore(
     const service = inject(CampaignService);
     const culture = inject(CultureStore);
     return {
-      _list: rxResource({
-        params: () => ({ culture: culture.active() }),
-        stream: ({ params }) => service.list(params.culture),
-      }),
+      _list: extendResource(
+        rxResource({
+          params: () => ({ culture: culture.active() }),
+          stream: ({ params }) => service.list(params.culture),
+        }),
+      ),
     };
   }),
   withComputed(({ _list }) => {

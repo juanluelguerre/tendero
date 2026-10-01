@@ -1,12 +1,13 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import angular from '@analogjs/vite-plugin-angular';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/libs/shared/ui',
-  plugins: [angular(), tsconfigPaths({ root: '../../../' })],
+  plugins: [angular()],
+  // Vite 8 resolves the workspace's tsconfig paths itself.
+  resolve: { tsconfigPaths: true },
   test: {
     name: 'shared-ui',
     watch: false,

@@ -1,7 +1,7 @@
 import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, valueOf } from '@tendero/shared-util';
+import { formatPrice } from '@tendero/shared-util';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { BestSellersStore } from './best-sellers.store';
 import { WidgetFrame } from '../widget-frame/widget-frame';
@@ -19,7 +19,7 @@ export class BestSellersWidget {
   private readonly culture = inject(CultureStore);
 
   protected money(amount: number): string {
-    return formatPrice(amount, valueOf(this.store.sales)?.currency ?? 'EUR', this.culture.active());
+    return formatPrice(amount, this.store.sales.value()?.currency ?? 'EUR', this.culture.active());
   }
 
   readonly period = input.required<DashboardPeriod>();

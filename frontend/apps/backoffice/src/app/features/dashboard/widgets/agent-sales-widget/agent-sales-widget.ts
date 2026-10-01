@@ -1,7 +1,7 @@
 import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, valueOf } from '@tendero/shared-util';
+import { formatPrice } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import { formatShare, shareOf } from '../figures';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
@@ -22,7 +22,7 @@ export class AgentSalesWidget {
 
   /** What agents bought each day, in the reader's money. */
   protected readonly amount = (value: number): string =>
-    formatPrice(value, valueOf(this.store.sales)?.currency ?? 'EUR', this.culture.active());
+    formatPrice(value, this.store.sales.value()?.currency ?? 'EUR', this.culture.active());
 
   protected share(part: number, whole: number): string {
     return formatShare(shareOf(part, whole), this.culture.active());

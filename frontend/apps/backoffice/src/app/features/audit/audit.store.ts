@@ -6,7 +6,7 @@ import type { AuditOutcome } from '@tendero/shared-api';
 import { CatalogService } from '../../data-access/catalog.service';
 import { readStatus } from '../../read-status';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 export type AuditFilter = AuditOutcome | null;
 
@@ -30,10 +30,12 @@ export const AuditStore = signalStore(
   withState({ filter: 'Denied' as AuditFilter, page: 1, opened: null as string | null }),
   withProps((store) => {
     const catalog = inject(CatalogService);
-    const log = rxResource({
-      params: () => ({ filter: store.filter(), page: store.page() }),
-      stream: ({ params }) => catalog.audit(params.filter, params.page, PageSize),
-    });
+    const log = extendResource(
+      rxResource({
+        params: () => ({ filter: store.filter(), page: store.page() }),
+        stream: ({ params }) => catalog.audit(params.filter, params.page, PageSize),
+      }),
+    );
     return {
       _log: log,
       ...readStatus(log),
@@ -46,7 +48,7 @@ export const AuditStore = signalStore(
        */
       counts: linkedSignal<Counts | undefined, Counts | null>({
         source: () => {
-          const answered = valueOf(log)?.counts;
+          const answered = log.value()?.counts;
           if (!answered) return undefined;
           const byOutcome = new Map(answered.map((entry) => [entry.outcome as string, entry.count]));
           return { byOutcome, all: [...byOutcome.values()].reduce((sum, count) => sum + count, 0) };
@@ -56,8 +58,8 @@ export const AuditStore = signalStore(
     };
   }),
   withComputed((store) => ({
-    entries: computed(() => valueOf(store._log)?.entries ?? []),
-    total: computed(() => valueOf(store._log)?.total ?? 0),
+    entries: computed(() => store._log.value()?.entries ?? []),
+    total: computed(() => store._log.value()?.total ?? 0),
     filterOptions: computed<FilterOption[]>(() => {
       const labels = store._labels() as Record<string, string>;
       const counts = store.counts();

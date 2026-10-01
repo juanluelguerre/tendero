@@ -1,11 +1,11 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/libs/shared/a11y',
-  plugins: [tsconfigPaths({ root: '../../../' })],
+  // Vite 8 resolves the workspace's tsconfig paths itself.
+  resolve: { tsconfigPaths: true },
   test: {
     name: 'shared-a11y',
     watch: false,

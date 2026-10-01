@@ -6,7 +6,6 @@ import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
 import { toBarChart } from './sales-series';
-import { valueOf } from '@tendero/shared-util';
 
 /**
  * Sales by day's state (ADR 0047): the series on the shop's clock (ADR 0046),
@@ -29,7 +28,7 @@ export const SalesByDayStore = signalStore(
   }),
   withComputed((store) => ({
     chart: computed(() => {
-      const series = valueOf(store.series);
+      const series = store.series.value();
       if (!series) return null;
       // Until the language arrives there are no words yet; the signal fills them in when it does.
       const words = store._words() as Partial<Record<'current' | 'previous', Record<string, string>>>;

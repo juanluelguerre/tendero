@@ -10,6 +10,7 @@ import { ShopFrontService, type Category } from '../../data-access/shop-front.se
 import { ListingStore } from '../../listing/listing.store';
 import { childLinks } from '../../listing/listing-view';
 import { departmentArt, rootOf } from '../../shop-art';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The taxonomy's answer about the code in the URL; the products are the listing's. */
 export type CategoryPageState = 'loading' | 'found' | 'unknown' | 'failed';
@@ -36,10 +37,12 @@ export const CategoryStore = signalStore(
       _campaigns: inject(CampaignsStore),
       _listing: inject(ListingStore),
       _code: code,
-      _taxonomy: rxResource({
-        params: () => (code() ? { culture: culture.active() } : undefined),
-        stream: ({ params }) => shopFront.categories(params.culture).pipe(map((list) => list.items)),
-      }),
+      _taxonomy: extendResource(
+        rxResource({
+          params: () => (code() ? { culture: culture.active() } : undefined),
+          stream: ({ params }) => shopFront.categories(params.culture).pipe(map((list) => list.items)),
+        }),
+      ),
     };
   }),
   withComputed(({ _code, _taxonomy, _campaigns, _listing }) => {

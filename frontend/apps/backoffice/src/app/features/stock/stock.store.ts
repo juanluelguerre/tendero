@@ -6,13 +6,14 @@ import { patchState, signalStore, withComputed, withHooks, withMethods, withProp
 import type { SkuDescription, StockFilter, StockList, StockRow } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
-import { valueOf, without } from '@tendero/shared-util';
+import { without } from '@tendero/shared-util';
 import { catchError, debounceTime, distinctUntilChanged, map, type Observable, of, switchMap } from 'rxjs';
 import { CatalogService } from '../../data-access/catalog.service';
 import { InventoryService } from '../../data-access/inventory.service';
 import { readStatus } from '../../read-status';
 import { BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The chips, in the order the job meets them: what to restock first. */
 const Filters: readonly StockFilter[] = ['Restock', 'SoldOut', 'All'];
@@ -77,59 +78,63 @@ export const StockStore = signalStore(
      * catalogue's: it answers with the SKUs it matched, and the ledger shows those
      * and any whose SKU contains the text (R-7.1).
      */
-    const list = rxResource({
-      params: () => ({
-        culture: store._culture.active(),
-        filter: store.filter(),
-        text: store._query().trim(),
-        page: store.page(),
-      }),
-      stream: ({ params }): Observable<StockList> =>
-        params.text
-          ? store._catalog.skusMatching(params.text, params.culture).pipe(
-              map((found) => found.items.map((item) => item.sku)),
-              // A catalogue that cannot answer leaves the SKU half of the search
-              // working: the shelf does not depend on the catalogue being up.
-              catchError(() => of<string[]>([])),
-              switchMap((skus) =>
-                store._inventory.stock(
-                  params.culture,
-                  params.filter,
-                  { text: params.text, skus },
-                  params.page,
-                  PageSize,
+    const list = extendResource(
+      rxResource({
+        params: () => ({
+          culture: store._culture.active(),
+          filter: store.filter(),
+          text: store._query().trim(),
+          page: store.page(),
+        }),
+        stream: ({ params }): Observable<StockList> =>
+          params.text
+            ? store._catalog.skusMatching(params.text, params.culture).pipe(
+                map((found) => found.items.map((item) => item.sku)),
+                // A catalogue that cannot answer leaves the SKU half of the search
+                // working: the shelf does not depend on the catalogue being up.
+                catchError(() => of<string[]>([])),
+                switchMap((skus) =>
+                  store._inventory.stock(
+                    params.culture,
+                    params.filter,
+                    { text: params.text, skus },
+                    params.page,
+                    PageSize,
+                  ),
                 ),
-              ),
-            )
-          : store._inventory.stock(params.culture, params.filter, undefined, params.page, PageSize),
-    });
+              )
+            : store._inventory.stock(params.culture, params.filter, undefined, params.page, PageSize),
+      }),
+    );
 
     /**
      * What each SKU is called. Not awaited before the grid renders: the numbers
      * are what the screen is for, and a failure here leaves the SKUs unlabelled
      * and the grid working. Distinct SKUs, because two warehouses hold the same one.
      */
-    const naming = rxResource({
-      params: () => {
-        const skus = [...new Set((valueOf(list)?.rows ?? []).map((row) => row.sku))];
-        return skus.length === 0 ? undefined : { skus, culture: store._culture.active() };
-      },
-      stream: ({ params }) =>
-        store._catalog
-          .describeSkus(params.skus, params.culture)
-          .pipe(catchError(() => of({ items: [] as SkuDescription[] }))),
-    });
+    const naming = extendResource(
+      rxResource({
+        params: () => {
+          const skus = [...new Set((list.value()?.rows ?? []).map((row) => row.sku))];
+          return skus.length === 0 ? undefined : { skus, culture: store._culture.active() };
+        },
+        stream: ({ params }) =>
+          store._catalog
+            .describeSkus(params.skus, params.culture)
+            .pipe(catchError(() => of({ items: [] as SkuDescription[] }))),
+      }),
+    );
 
     return {
       _list: list,
       _naming: naming,
       ...readStatus(list),
       /** The rows, replaced one by one as counts come back, until the list is asked again. */
-      rows: linkedSignal(() => valueOf(list)?.rows ?? []),
+      rows: linkedSignal(() => list.value()?.rows ?? []),
       /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
       _counts: linkedSignal<ReadonlyMap<StockFilter, number> | undefined, ReadonlyMap<StockFilter, number> | null>({
         source: () => {
-          const answered = valueOf(list);
+          const answered = list.value();
           return answered && new Map(answered.counts.map((entry) => [entry.filter, entry.count]));
         },
         computation: (counts, previous) => counts ?? previous?.value ?? null,
@@ -137,9 +142,9 @@ export const StockStore = signalStore(
     };
   }),
   withComputed((store) => ({
-    reservations: computed(() => valueOf(store._list)?.reservations ?? []),
-    restockAt: computed(() => valueOf(store._list)?.restockAt ?? null),
-    total: computed(() => valueOf(store._list)?.total ?? 0),
+    reservations: computed(() => store._list.value()?.reservations ?? []),
+    restockAt: computed(() => store._list.value()?.restockAt ?? null),
+    total: computed(() => store._list.value()?.total ?? 0),
     filters: computed<FilterOption[]>(() => {
       const labels = store._labels() as Record<string, string>;
       const counts = store._counts();
@@ -147,7 +152,7 @@ export const StockStore = signalStore(
     }),
     soldOut: computed(() => store._counts()?.get('SoldOut') ?? 0),
     _descriptions: computed<Record<string, SkuDescription>>(() =>
-      Object.fromEntries((valueOf(store._naming)?.items ?? []).map((item) => [item.sku, item])),
+      Object.fromEntries((store._naming.value()?.items ?? []).map((item) => [item.sku, item])),
     ),
   })),
   withMethods((store) => {

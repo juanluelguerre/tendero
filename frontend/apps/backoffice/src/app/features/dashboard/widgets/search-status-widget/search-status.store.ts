@@ -2,7 +2,6 @@ import { computed, inject } from '@angular/core';
 import { signalStore, withComputed, withProps } from '@ngrx/signals';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
-import { valueOf } from '@tendero/shared-util';
 
 /**
  * Search status's state (ADR 0047): each stage of search — words, meaning,
@@ -16,7 +15,7 @@ export const SearchStatusStore = signalStore(
     return { status: refreshedResource({ params: () => ({}), stream: (_, at) => sources.searchStatus(at) }) };
   }),
   withComputed((store) => {
-    const stages = computed(() => valueOf(store.status)?.stages ?? []);
+    const stages = computed(() => store.status.value()?.stages ?? []);
     const down = computed(() => stages().filter((stage) => stage.state === 'Down'));
     return { stages, down, whole: computed(() => down().length === 0) };
   }),

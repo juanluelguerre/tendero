@@ -12,7 +12,7 @@ import { type ClaimDecision, KnowledgeService } from '../../data-access/knowledg
 import { readStatus } from '../../read-status';
 import { type ActionVia, BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** Twenty rows a page, as every worklist (R-7.2). */
 export const PageSize = 20;
@@ -52,21 +52,23 @@ export const ClaimsReviewStore = signalStore(
      * laboratory catalogue (the scale rule); a shop past that would ask the
      * catalogue for the queue's products only.
      */
-    const queue = rxResource({
-      params: () => ({ culture: store._culture.active(), support: store.filterKey(), page: store.page() }),
-      stream: ({ params }) =>
-        forkJoin({
-          claims: store._knowledge.claims(params.support, params.page, PageSize),
-          products: store._catalog.list(null, params.culture, 1, 100),
-        }),
-    });
+    const queue = extendResource(
+      rxResource({
+        params: () => ({ culture: store._culture.active(), support: store.filterKey(), page: store.page() }),
+        stream: ({ params }) =>
+          forkJoin({
+            claims: store._knowledge.claims(params.support, params.page, PageSize),
+            products: store._catalog.list(null, params.culture, 1, 100),
+          }),
+      }),
+    );
     return {
       _queue: queue,
       ...readStatus(queue),
       /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
       _counts: linkedSignal<ReadonlyMap<string, number> | undefined, ReadonlyMap<string, number> | null>({
         source: () => {
-          const page = valueOf(queue)?.claims;
+          const page = queue.value()?.claims;
           return page && new Map(page.counts.map((entry) => [entry.support, entry.count]));
         },
         computation: (counts, previous) => counts ?? previous?.value ?? null,
@@ -74,14 +76,14 @@ export const ClaimsReviewStore = signalStore(
     };
   }),
   withComputed((store) => {
-    const claims = computed(() => valueOf(store._queue)?.claims.items ?? []);
+    const claims = computed(() => store._queue.value()?.claims.items ?? []);
     const names = computed(
-      () => new Map((valueOf(store._queue)?.products.items ?? []).map((product) => [product.productId, product.name])),
+      () => new Map((store._queue.value()?.products.items ?? []).map((product) => [product.productId, product.name])),
     );
     return {
       claims,
       _names: names,
-      total: computed(() => valueOf(store._queue)?.claims.total ?? 0),
+      total: computed(() => store._queue.value()?.claims.total ?? 0),
       filters: computed<FilterOption[]>(() => {
         const labels = store._labels() as Record<string, string>;
         const counts = store._counts();

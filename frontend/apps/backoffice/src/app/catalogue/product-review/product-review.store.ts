@@ -3,6 +3,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { patchState, signalMethod, signalStore, withMethods, withProps, withState } from '@ngrx/signals';
 import { CultureStore } from '@tendero/shared-i18n';
 import { CatalogService } from '../../data-access/catalog.service';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * A product as publishing it would publish it, as state (ADR 0047): its own
@@ -15,13 +16,15 @@ export const ProductReviewStore = signalStore(
     const catalog = inject(CatalogService);
     const culture = inject(CultureStore);
     return {
-      review: rxResource({
-        params: () => {
-          const code = store.code();
-          return code ? { code, culture: culture.active() } : undefined;
-        },
-        stream: ({ params }) => catalog.review(params.code, params.culture),
-      }),
+      review: extendResource(
+        rxResource({
+          params: () => {
+            const code = store.code();
+            return code ? { code, culture: culture.active() } : undefined;
+          },
+          stream: ({ params }) => catalog.review(params.code, params.culture),
+        }),
+      ),
     };
   }),
   withMethods((store) => ({

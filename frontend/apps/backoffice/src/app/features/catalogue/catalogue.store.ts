@@ -13,7 +13,7 @@ import { BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
 import { keptCounts, statusChips } from '../../worklist/filter-chips/status-chips';
 import { UndoStore } from '../../worklist/undo/undo.store';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** Twenty rows a page, as every worklist (R-7.2). */
 export const PageSize = 20;
@@ -63,38 +63,40 @@ export const CatalogueStore = signalStore(
     page: computed(() => Math.max(1, Number(store._params().get('page') ?? 1) || 1)),
   })),
   withProps((store) => {
-    const list = rxResource({
-      params: () => ({
-        status: store.statusKey(),
-        page: store.page(),
-        culture: store._culture.active(),
-        text: store._query(),
+    const list = extendResource(
+      rxResource({
+        params: () => ({
+          status: store.statusKey(),
+          page: store.page(),
+          culture: store._culture.active(),
+          text: store._query(),
+        }),
+        stream: ({ params }) =>
+          store._catalog.list(
+            params.status === 'all' ? null : (params.status as ProductStatus),
+            params.culture,
+            params.page,
+            PageSize,
+            params.text,
+          ),
       }),
-      stream: ({ params }) =>
-        store._catalog.list(
-          params.status === 'all' ? null : (params.status as ProductStatus),
-          params.culture,
-          params.page,
-          PageSize,
-          params.text,
-        ),
-    });
+    );
     return {
       _list: list,
       ...readStatus(list),
       /** The products, their status replaced one by one as changes come back. */
-      products: linkedSignal(() => valueOf(list)?.items ?? []),
+      products: linkedSignal(() => list.value()?.items ?? []),
       /**
        * How many match the text in each status, kept while the next answer loads.
        * Every chip says its number whichever is chosen: when only the chosen one
        * did, a click moved a count from one chip to another, the row changed width
        * and the search box beside it jumped (the author, 2026-09-28).
        */
-      _counts: keptCounts(() => valueOf(list)?.counts),
+      _counts: keptCounts(() => list.value()?.counts),
     };
   }),
   withComputed((store) => {
-    const total = computed(() => valueOf(store._list)?.total ?? 0);
+    const total = computed(() => store._list.value()?.total ?? 0);
     return {
       total,
       _pages: computed(() => Math.max(1, Math.ceil(total() / PageSize))),

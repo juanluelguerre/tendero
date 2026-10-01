@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, valueOf } from '@tendero/shared-util';
+import { formatPrice } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { BarChartData } from '../../../../charts/chart-contract';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
@@ -26,7 +26,7 @@ export class ByCategoryWidget {
   readonly period = input.required<DashboardPeriod>();
 
   protected readonly money = (amount: number): string =>
-    formatPrice(amount, valueOf(this.store.mix)?.currency ?? 'EUR', this.culture.active());
+    formatPrice(amount, this.store.mix.value()?.currency ?? 'EUR', this.culture.active());
 
   protected readonly chart = computed<BarChartData | null>(() => {
     const rows = this.store.rows();

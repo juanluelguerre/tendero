@@ -2,7 +2,6 @@ import { computed, inject } from '@angular/core';
 import { signalStore, withComputed, withProps } from '@ngrx/signals';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
-import { valueOf } from '@tendero/shared-util';
 
 /**
  * The stock's state (ADR 0047): what to restock and what is sold out, and — at
@@ -22,11 +21,11 @@ export const StockStore = signalStore(
     };
   }),
   withComputed((store) => ({
-    restock: computed(() => valueOf(store.stock)?.toRestock ?? 0),
-    soldOut: computed(() => valueOf(store.stock)?.soldOut ?? 0),
-    soon: computed(() => valueOf(store.stock)?.underTwoWeeks ?? 0),
-    noSales: computed(() => valueOf(store.stock)?.noSales ?? 0),
-    closest: computed(() => valueOf(store.stock)?.closest ?? []),
-    warehouses: computed(() => valueOf(store.stock)?.warehouses ?? []),
+    restock: computed(() => store.stock.value()?.toRestock ?? 0),
+    soldOut: computed(() => store.stock.value()?.soldOut ?? 0),
+    soon: computed(() => store.stock.value()?.underTwoWeeks ?? 0),
+    noSales: computed(() => store.stock.value()?.noSales ?? 0),
+    closest: computed(() => store.stock.value()?.closest ?? []),
+    warehouses: computed(() => store.stock.value()?.warehouses ?? []),
   })),
 );

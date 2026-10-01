@@ -5,7 +5,6 @@ import type { BarChartData } from '../../../../charts/chart-contract';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
-import { valueOf } from '@tendero/shared-util';
 
 /** Orders by status' state (ADR 0047): the period's operations, and the same four counts as rows. */
 export const OrdersByStatusStore = signalStore(
@@ -23,7 +22,7 @@ export const OrdersByStatusStore = signalStore(
   }),
   withComputed((store) => ({
     chart: computed<BarChartData | null>(() => {
-      const ops = valueOf(store.operations);
+      const ops = store.operations.value();
       if (!ops) return null;
       const words = store._words() as Partial<Record<string, string>>;
       return {

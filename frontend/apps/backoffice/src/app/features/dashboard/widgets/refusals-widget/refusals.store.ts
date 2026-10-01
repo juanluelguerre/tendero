@@ -5,7 +5,6 @@ import type { BarChartData } from '../../../../charts/chart-contract';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
-import { valueOf } from '@tendero/shared-util';
 
 /** What the shop refused agents, as state (ADR 0047): Accounts' half, ranked by rule. */
 export const RefusalsStore = signalStore(
@@ -24,7 +23,7 @@ export const RefusalsStore = signalStore(
   }),
   withComputed((store) => ({
     chart: computed<BarChartData | null>(() => {
-      const denials = valueOf(store.denials);
+      const denials = store.denials.value();
       if (!denials || denials.byReason.length === 0) return null;
       const rules = store._rules() as Partial<Record<string, string>>;
       const words = store._words() as Partial<Record<string, string>>;

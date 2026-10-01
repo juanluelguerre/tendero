@@ -4,7 +4,7 @@ import { signalStore, withComputed, withProps } from '@ngrx/signals';
 import { CultureStore } from '@tendero/shared-i18n';
 import { ShopFrontService } from '../data-access/shop-front.service';
 import { menuOf } from './taxonomy-menu';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * The shop's categories, read once per language and shared by everything that
@@ -17,14 +17,16 @@ export const TaxonomyStore = signalStore(
     const shopFront = inject(ShopFrontService);
     const culture = inject(CultureStore);
     return {
-      _list: rxResource({
-        params: () => ({ culture: culture.active() }),
-        stream: ({ params }) => shopFront.categories(params.culture),
-      }),
+      _list: extendResource(
+        rxResource({
+          params: () => ({ culture: culture.active() }),
+          stream: ({ params }) => shopFront.categories(params.culture),
+        }),
+      ),
     };
   }),
   withComputed(({ _list }) => {
-    const categories = computed(() => valueOf(_list)?.items ?? []);
+    const categories = computed(() => _list.value()?.items ?? []);
     return { categories, menu: computed(() => menuOf(categories())) };
   }),
 );

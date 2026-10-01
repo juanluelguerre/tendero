@@ -4,13 +4,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { translateObjectSignal } from '@jsverse/transloco';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
 import type { ReturnView } from '@tendero/shared-api';
-import { valueOf, without } from '@tendero/shared-util';
+import { without } from '@tendero/shared-util';
 import { OrderingService, type ReturnDecision } from '../../data-access/ordering.service';
 import { readStatus } from '../../read-status';
 import { type ActionVia, BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
 import { refusalOf } from '../../worklist/refusal';
 import { ReturnActions } from './return-decisions';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The statuses a return waits in, in the order a working day meets them. */
 const Statuses = ['Requested', 'Approved', 'Received'] as const;
@@ -33,7 +34,7 @@ export const ReturnsStore = signalStore(
   withProps(() => {
     const route = inject(ActivatedRoute);
     const ordering = inject(OrderingService);
-    const queue = rxResource({ stream: () => ordering.returns() });
+    const queue = extendResource(rxResource({ stream: () => ordering.returns() }));
     return {
       _router: inject(Router),
       _ordering: ordering,
@@ -42,7 +43,7 @@ export const ReturnsStore = signalStore(
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
       ...readStatus(queue),
       /** The requests, replaced one by one as decisions come back. */
-      requests: linkedSignal(() => valueOf(queue) ?? []),
+      requests: linkedSignal(() => queue.value() ?? []),
     };
   }),
   withComputed((store) => {

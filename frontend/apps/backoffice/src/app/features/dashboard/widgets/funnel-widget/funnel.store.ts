@@ -4,7 +4,6 @@ import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
 import { shareOf } from '../figures';
-import { valueOf } from '@tendero/shared-util';
 
 /** The checkout funnel's state (ADR 0047): the period's carts, and each step as a share of those started. */
 export const FunnelStore = signalStore(
@@ -21,7 +20,7 @@ export const FunnelStore = signalStore(
   withComputed((store) => ({
     /** The steps as bars, each as wide as its share of the carts started. */
     steps: computed(() => {
-      const funnel = valueOf(store.funnel);
+      const funnel = store.funnel.value();
       if (!funnel) return [];
       return [
         { key: 'started', count: funnel.cartsStarted, share: funnel.cartsStarted === 0 ? 0 : 1 },

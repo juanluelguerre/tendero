@@ -1,5 +1,5 @@
 <ng-container *transloco="let t; prefix: 'productReview'">
-  @if (valueOf(store.review); as product) {
+  @if (store.review.value(); as product) {
     @if (product.imageIds.length > 0) {
       <ul class="grid grid-cols-4 gap-2" role="list">
         @for (id of product.imageIds; track id; let first = $first) {

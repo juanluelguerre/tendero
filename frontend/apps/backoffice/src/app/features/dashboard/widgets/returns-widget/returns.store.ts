@@ -6,7 +6,6 @@ import type { BarChartData } from '../../../../charts/chart-contract';
 import { refreshedResource } from '../../sources/dashboard-refresh';
 import { DashboardSources } from '../../sources/dashboard-sources';
 import { withDashboardPeriod } from '../../sources/with-dashboard-period';
-import { valueOf } from '@tendero/shared-util';
 
 /**
  * Returns' state (ADR 0047): the period's operations, and the open returns
@@ -29,7 +28,7 @@ export const ReturnsStore = signalStore(
   withComputed((store) => ({
     /** Null when nothing is open: no bars to rank. */
     chart: computed<BarChartData | null>(() => {
-      const ops = valueOf(store.operations);
+      const ops = store.operations.value();
       if (!ops || ops.openReturnsByReason.length === 0) return null;
       const reasons = store._reasons() as Partial<Record<ReturnReason, string>>;
       const words = store._words() as Partial<Record<string, string>>;

@@ -17,7 +17,7 @@ import {
   type ListingPlace,
 } from './listing-filters';
 import { keepShape } from './listing-view';
-import { valueOf } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** Enough to fill the grid without asking for the whole department. */
 export const ListingPageSize = 24;
@@ -117,15 +117,17 @@ export const ListingStore = signalStore(
   }),
   withProps((store) => ({
     /** What the batch would leave, asked once the taps settle: one product is enough to learn the count and the facets. */
-    _preview: rxResource({
-      params: () => {
-        const pending = store._settled();
-        const place = store.place();
-        if (!pending || !place || sameFilters(pending, store.filters())) return undefined;
-        return { place, pending, culture: store._culture.active() };
-      },
-      stream: ({ params }) => store._search.list(searchParams(params.place, params.pending, params.culture, 1, 1)),
-    }),
+    _preview: extendResource(
+      rxResource({
+        params: () => {
+          const pending = store._settled();
+          const place = store.place();
+          if (!pending || !place || sameFilters(pending, store.filters())) return undefined;
+          return { place, pending, culture: store._culture.active() };
+        },
+        stream: ({ params }) => store._search.list(searchParams(params.place, params.pending, params.culture, 1, 1)),
+      }),
+    ),
   })),
   withComputed((store) => {
     /** Whether the preview answers the batch as it stands now, not one from a tap ago. */
@@ -142,14 +144,14 @@ export const ListingStore = signalStore(
         const current = store.result();
         if (!pending) return null;
         if (sameFilters(pending, store.filters())) return current.status === 'ready' ? current.total : null;
-        return previewCurrent() ? (valueOf(store._preview)?.total ?? null) : null;
+        return previewCurrent() ? (store._preview.value()?.total ?? null) : null;
       }),
       /** The sheet's facets: the batch's own counts once known, the list's until then, the shape kept either way. */
       pendingFacets: computed<readonly SearchFacet[]>(() => {
         const current = store.result();
         const facets = current.status === 'ready' ? current.facets : [];
         if (!previewCurrent()) return facets;
-        return keepShape(facets, valueOf(store._preview)?.facets ?? []);
+        return keepShape(facets, store._preview.value()?.facets ?? []);
       }),
     };
   }),
