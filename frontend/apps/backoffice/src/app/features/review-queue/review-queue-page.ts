@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { BackofficeUsage } from '../../usage';
 import { landing, stepOf } from '../../worklist/list-keys';
 import { ReviewList } from './review-list/review-list';
@@ -24,10 +24,10 @@ import { ReviewQueueStore } from './review-queue.store';
 @Component({
   selector: 'backoffice-review-queue-page',
   imports: [ReviewList, ReviewPane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-queue-page.html',
-  styleUrl: './review-queue-page.css',
-  host: { '(document:keydown)': 'key($event)' },
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the pane have of their own is in their folders.
+  host: { class: 'block', '(document:keydown)': 'key($event)' },
   providers: [ReviewQueueStore],
 })
 export class ReviewQueuePage {
@@ -39,7 +39,11 @@ export class ReviewQueuePage {
     const step = stepOf(event, !!document.querySelector('dialog[open]'));
     if (!step) return;
     const items = this.store.drafts();
-    const index = landing(items.findIndex((item) => item.code === this.store.selectedCode()), items.length, step);
+    const index = landing(
+      items.findIndex((item) => item.code === this.store.selectedCode()),
+      items.length,
+      step,
+    );
     if (index === null) return;
     event.preventDefault();
     this.usage.affordance('keys', step === 1 ? 'next' : 'previous');

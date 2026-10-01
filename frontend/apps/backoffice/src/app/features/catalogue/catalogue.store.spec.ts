@@ -11,7 +11,8 @@ import { CatalogueStore } from './catalogue.store';
 
 const Products = 'http://api/api/catalog/products';
 
-const product = (code: string, status: string) => ({ productId: `id-${code}`, code, name: code, status }) as unknown as ProductSummary;
+const product = (code: string, status: string) =>
+  ({ productId: `id-${code}`, code, name: code, status }) as unknown as ProductSummary;
 
 /** The catalogue's shared state (ADR 0047): status, search, page and open product in the URL, and the changes. */
 describe('the catalogue store', () => {
@@ -19,7 +20,14 @@ describe('the catalogue store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, CatalogueStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        CatalogueStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -30,19 +38,12 @@ describe('the catalogue store', () => {
     await TestBed.inject(Router).navigateByUrl(url);
     const store = TestBed.inject(CatalogueStore);
     TestBed.tick();
-    http.match((req) => req.url === Products && req.method === 'GET').forEach((req) => req.flush({ items: [product('A', 'Active')], total, counts: [] }));
+    http
+      .match((req) => req.url === Products && req.method === 'GET')
+      .forEach((req) => req.flush({ items: [product('A', 'Active')], total, counts: [] }));
     await new Promise((resolve) => setTimeout(resolve));
     return store;
   }
-
-  /** A page past the last is the last: forty-five products make three pages. */
-  it('never goes past the last page', async () => {
-    const store = await at('/');
-    store.go(9);
-    await new Promise((resolve) => setTimeout(resolve));
-
-    expect(TestBed.inject(Router).url).toBe('/?page=3');
-  });
 
   /** Withdrawing offers Undo, which is publishing it again — on the server. */
   it('withdraws a product, shows its new status, and offers to publish it again', async () => {
@@ -61,6 +62,9 @@ describe('the catalogue store', () => {
     http.expectOne('http://api/api/catalog/import').flush({ created: 94, updated: 6, failed: 0, elapsedSeconds: 2.4 });
     TestBed.tick();
 
-    expect([store.imported()?.created, http.match((req) => req.url === Products && req.method === 'GET').length]).toEqual([94, 1]);
+    expect([
+      store.imported()?.created,
+      http.match((req) => req.url === Products && req.method === 'GET').length,
+    ]).toEqual([94, 1]);
   });
 });

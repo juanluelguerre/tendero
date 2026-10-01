@@ -14,7 +14,10 @@ export const StockStore = signalStore(
   withProps(() => {
     const sources = inject(DashboardSources);
     return {
-      stock: refreshedResource({ params: () => ({ period: 'Week' as const }), stream: (params, at) => sources.stockHealth(params.period, at) }),
+      stock: refreshedResource({
+        params: () => ({ period: 'Week' as const }),
+        stream: (params, at) => sources.stockHealth(params.period, at),
+      }),
     };
   }),
   withComputed((store) => ({

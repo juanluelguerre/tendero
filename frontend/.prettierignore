@@ -6,3 +6,9 @@
 .angular
 
 .nx/self-healing
+
+# Written by a generator, and CI diffs them against a fresh run: formatting them
+# here would make that diff fail.
+libs/shared/api/src/lib/generated/
+libs/shared/telemetry/src/lib/generated/
+package-lock.json

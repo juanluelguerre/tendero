@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { DefineVariantsStore } from './define-variants.store';
@@ -17,10 +17,8 @@ import { DefineVariantsStore } from './define-variants.store';
  */
 @Component({
   selector: 'backoffice-define-variants',
-  imports: [FormsModule, RouterLink, TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormField, RouterLink, TranslocoDirective],
   templateUrl: './define-variants-page.html',
-  styleUrl: './define-variants-page.css',
   providers: [DefineVariantsStore],
 })
 export class DefineVariantsPage {

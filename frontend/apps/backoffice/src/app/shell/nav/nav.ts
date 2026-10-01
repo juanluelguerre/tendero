@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Icon } from '../../icon/icon';
+import { Icon } from '@tendero/shared-ui';
 import { Navigation } from './navigation';
 import { WaitingStore } from '../waiting.store';
 
@@ -14,7 +14,6 @@ import { WaitingStore } from '../waiting.store';
 @Component({
   selector: 'backoffice-nav',
   imports: [RouterLink, RouterLinkActive, TranslocoDirective, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './nav.html',
   styleUrl: './nav.css',
   host: { '[class.in-drawer]': 'inDrawer()' },

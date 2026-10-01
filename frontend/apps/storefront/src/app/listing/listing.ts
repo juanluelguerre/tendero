@@ -1,15 +1,34 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, type ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  type ElementRef,
+  inject,
+  input,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { CultureStore, DEFAULT_CULTURE, SUPPORTED_CULTURES } from '@tendero/shared-i18n';
+import { Icon } from '@tendero/shared-ui';
 import { CampaignsStore } from '../campaigns/campaigns.store';
 import { ProductCard } from '../product-card/product-card';
 import { CanonicalLinks } from '../seo/canonical-links';
 import { RobotsMeta } from '../seo/robots-meta';
 import { ShopLinks } from '../shop-links';
 import { FilterPanel } from './filter-panel/filter-panel';
-import { clearAll, hasFilters, ListingSorts, narrowedFacets, withSort, type ListingFilters, type ListingSort } from './listing-filters';
+import {
+  clearAll,
+  hasFilters,
+  ListingSorts,
+  narrowedFacets,
+  withSort,
+  type ListingFilters,
+  type ListingSort,
+} from './listing-filters';
 import { listingIndexing } from './listing-indexing';
 import { ListingPageSize, ListingStore } from './listing.store';
 import { chipsOf, sayablePrice, type CategoryLink, type Chip } from './listing-view';
@@ -33,10 +52,10 @@ type Translate = (key: string, params?: Record<string, unknown>) => string;
  */
 @Component({
   selector: 'storefront-listing',
-  imports: [TranslocoDirective, NgTemplateOutlet, ProductCard, FilterPanel],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, NgTemplateOutlet, ProductCard, FilterPanel, Icon],
   templateUrl: './listing.html',
-  styleUrl: './listing.css',
+  // The host's own room above the listing, which its template cannot give itself.
+  host: { class: 'block mt-4' },
 })
 export class Listing {
   /** A category page's sections, drawn as links in the column; null on a search. */

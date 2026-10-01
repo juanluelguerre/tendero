@@ -15,7 +15,13 @@ describe('the audit store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, AuditStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        AuditStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -24,7 +30,12 @@ describe('the audit store', () => {
 
   const asked = () => http.match((req) => req.url === Audit).map((req) => req.request.params.toString());
 
-  async function answer(counts = [{ outcome: 'Denied', count: 3 }, { outcome: 'Allowed', count: 7 }]) {
+  async function answer(
+    counts = [
+      { outcome: 'Denied', count: 3 },
+      { outcome: 'Allowed', count: 7 },
+    ],
+  ) {
     http.match((req) => req.url === Audit).forEach((req) => req.flush({ entries: [{ id: 'e1' }], total: 3, counts }));
     await TestBed.inject(ApplicationRef).whenStable();
   }
@@ -55,7 +66,13 @@ describe('the audit store', () => {
     TestBed.tick();
     await answer();
 
-    expect(store.counts()).toEqual({ byOutcome: new Map([['Denied', 3], ['Allowed', 7]]), all: 10 });
+    expect(store.counts()).toEqual({
+      byOutcome: new Map([
+        ['Denied', 3],
+        ['Allowed', 7],
+      ]),
+      all: 10,
+    });
   });
 
   it('keeps one payload open at a time', () => {

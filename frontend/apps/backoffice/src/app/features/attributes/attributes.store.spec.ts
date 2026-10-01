@@ -10,7 +10,12 @@ import { AttributesStore } from './attributes.store';
 describe('the attributes store', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, AttributesStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        AttributesStore,
+      ],
     });
   });
 

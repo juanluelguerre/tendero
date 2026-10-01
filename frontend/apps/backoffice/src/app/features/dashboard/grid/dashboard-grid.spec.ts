@@ -2,7 +2,12 @@ import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { describe, expect, it } from 'vitest';
 import { DashboardGrid } from './dashboard-grid';
-import { DASHBOARD_WIDGETS, type WidgetDefinition, type WidgetKey, type WidgetSize } from '../widgets/dashboard-widgets';
+import {
+  DASHBOARD_WIDGETS,
+  type WidgetDefinition,
+  type WidgetKey,
+  type WidgetSize,
+} from '../widgets/dashboard-widgets';
 
 @Component({ selector: 'backoffice-stub-with-period', template: '<p>period {{ period() }}</p>' })
 class WithPeriod {
@@ -29,16 +34,27 @@ const cells = (element: HTMLElement) => [...element.querySelectorAll<HTMLElement
 
 describe('the dashboard grid', () => {
   it('lays the widgets out in their order, each at its size', () => {
-    const element = render([{ widget: 'salesByDay', size: 'M' }, { widget: 'waiting', size: 'S' }]).nativeElement as HTMLElement;
+    const element = render([
+      { widget: 'salesByDay', size: 'M' },
+      { widget: 'waiting', size: 'S' },
+    ]).nativeElement as HTMLElement;
 
-    expect(cells(element).map((cell) => [cell.dataset['widget'], [...cell.classList].find((name) => name.startsWith('cell--'))])).toEqual([
+    expect(
+      cells(element).map((cell) => [
+        cell.dataset['widget'],
+        [...cell.classList].find((name) => name.startsWith('cell--')),
+      ]),
+    ).toEqual([
       ['salesByDay', 'cell--M'],
       ['waiting', 'cell--S'],
     ]);
   });
 
   it('gives the period to the widgets that take one, and follows it when it changes', () => {
-    const fixture = render([{ widget: 'salesByDay', size: 'M' }, { widget: 'waiting', size: 'S' }]);
+    const fixture = render([
+      { widget: 'salesByDay', size: 'M' },
+      { widget: 'waiting', size: 'S' },
+    ]);
     fixture.componentRef.setInput('period', 'Month');
     fixture.detectChanges();
 

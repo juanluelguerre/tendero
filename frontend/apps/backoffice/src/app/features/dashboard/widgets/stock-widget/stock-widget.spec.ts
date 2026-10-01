@@ -34,7 +34,12 @@ describe('the stock widget', () => {
       {},
     );
 
-    expect([...element.querySelectorAll('.fact__value')].map((value) => value.textContent?.trim())).toEqual(['5', '2', '3', '7']);
+    expect([...element.querySelectorAll('.fact__value')].map((value) => value.textContent?.trim())).toEqual([
+      '5',
+      '2',
+      '3',
+      '7',
+    ]);
     expect([...element.querySelectorAll('.ranking__name')].map((name) => name.textContent?.trim())).toEqual(['A', 'B']);
     expect(element.textContent).toContain('12 days · 18 left');
     // The spec's median per warehouse (R-9, D-7), and a warehouse whose stock does not sell said so.

@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { FilterChips } from '../../worklist/filter-chips/filter-chips';
 import { Pager } from '../../worklist/pager/pager';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatDateTime } from '@tendero/shared-util';
+import { shortId } from '@tendero/shared-util';
 import { actorOf } from './audit-actor';
-import { AuditStore, PageSize } from './audit.store';
+import { WorklistPageSize } from '../../worklist/with-worklist-url';
+import { AuditStore } from './audit.store';
+import { CopyText, DateTimePipe, StatusPill } from '@tendero/shared-ui';
+import { ListState } from '../../worklist/list-state/list-state';
 
 /**
  * Who did what, and what the shop refused.
@@ -23,21 +26,20 @@ import { AuditStore, PageSize } from './audit.store';
  *
  * The payload is shown on demand rather than in the row: it is the command as
  * JSON, it is the widest column by an order of magnitude, and it is the thing
- * you want only once you have found the row.
+ * you want only once you have found the row — with the trace id and the
+ * subject beside it, to copy.
  */
 @Component({
   selector: 'backoffice-audit',
-  imports: [TranslocoDirective, FilterChips, Pager],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, FilterChips, Pager, ListState, StatusPill, CopyText, DateTimePipe],
   templateUrl: './audit-page.html',
-  styleUrl: './audit-page.css',
   providers: [AuditStore],
 })
 export class AuditPage {
   protected readonly store = inject(AuditStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
 
-  protected readonly pageSize = PageSize;
+  protected readonly pageSize = WorklistPageSize;
   protected readonly actorOf = actorOf;
 
   /**
@@ -53,18 +55,13 @@ export class AuditPage {
   }
 
   /**
-   * Order ids and trace ids are long and the column is not. The first segment is
-   * enough to match a row against something you are already looking at, and the
-   * whole value is one hover away in the title.
+   * A subject is long and the column is not. Its random end is enough to match
+   * a row against something you are already looking at (`shortId`: the first
+   * segment it used to keep is a version-7 Guid's timestamp, the same for every
+   * id minted that minute); the whole value is in the opened row, to copy.
    */
   protected short(value: string | null | undefined): string {
-    return value ? value.split('-')[0] : '';
-  }
-
-  /** 04/09/2026 and 09/04/2026 are the same instant and different days, so the
-   *  reader's culture decides. */
-  protected when(at: string): string {
-    return formatDateTime(at, this.culture.active());
+    return value ? shortId(value) : '';
   }
 
   /** The command as JSON, indented. It arrives as a string because the server

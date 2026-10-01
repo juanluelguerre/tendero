@@ -1,8 +1,16 @@
-import { computed, inject, linkedSignal } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { translateObjectSignal } from '@jsverse/transloco';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { ReturnView } from '@tendero/shared-api';
 import { without } from '@tendero/shared-util';
 import { OrderingService, type ReturnDecision } from '../../data-access/ordering.service';
@@ -11,6 +19,7 @@ import { type ActionVia, BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
 import { refusalOf } from '../../worklist/refusal';
 import { ReturnActions } from './return-decisions';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The statuses a return waits in, in the order a working day meets them. */
 const Statuses = ['Requested', 'Approved', 'Received'] as const;
@@ -33,30 +42,39 @@ export const ReturnsStore = signalStore(
   withProps(() => {
     const route = inject(ActivatedRoute);
     const ordering = inject(OrderingService);
-    const queue = rxResource({ stream: () => ordering.returns() });
+    const queue = extendResource(rxResource({ stream: () => ordering.returns() }));
     return {
       _router: inject(Router),
       _ordering: ordering,
       _usage: inject(BackofficeUsage),
       _labels: translateObjectSignal('returns.filter'),
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
+      _queue: queue,
       ...readStatus(queue),
-      /** The requests, replaced one by one as decisions come back. */
-      requests: linkedSignal(() => queue.value() ?? []),
     };
   }),
+  withLinkedState(({ _queue }) => ({
+    /** The requests, replaced one by one as decisions come back: state, changed with patchState. */
+    requests: () => _queue.value() ?? [],
+  })),
   withComputed((store) => {
     const statusKey = computed(() => store._params().get('status') ?? Waiting);
     const selectedId = computed(() => store._params().get('return'));
     return {
       statusKey,
       selectedId,
-      shown: computed(() => (statusKey() === 'all' ? store.requests() : store.requests().filter((request) => request.status === statusKey()))),
+      shown: computed(() =>
+        statusKey() === 'all' ? store.requests() : store.requests().filter((request) => request.status === statusKey()),
+      ),
       filters: computed<FilterOption[]>(() => {
         const labels = store._labels() as Record<string, string>;
         const count = (status: string) => store.requests().filter((request) => request.status === status).length;
         return [
-          ...Statuses.map((status) => ({ key: status as string, label: labels[status] ?? status, count: count(status) })),
+          ...Statuses.map((status) => ({
+            key: status as string,
+            label: labels[status] ?? status,
+            count: count(status),
+          })),
           { key: 'all', label: labels['all'] ?? 'all', count: store.requests().length },
         ];
       }),
@@ -85,11 +103,16 @@ export const ReturnsStore = signalStore(
           .pipe(store._usage.reported('returns', ReturnActions[decision], via))
           .subscribe({
             next: (updated) => {
-              store.requests.update((current) => current.map((row) => (row.returnId === updated.returnId ? updated : row)));
-              patchState(store, { busy: null });
+              patchState(store, (state) => ({
+                busy: null,
+                requests: state.requests.map((row) => (row.returnId === updated.returnId ? updated : row)),
+              }));
             },
             error: (error: unknown) => {
-              patchState(store, (state) => ({ busy: null, refusal: { ...state.refusal, [request.returnId]: refusalOf(error) } }));
+              patchState(store, (state) => ({
+                busy: null,
+                refusal: { ...state.refusal, [request.returnId]: refusalOf(error) },
+              }));
             },
           });
       },

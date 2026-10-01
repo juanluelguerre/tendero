@@ -26,7 +26,9 @@ export class InventoryService {
    * last four weeks, and the period's sell-through.
    */
   stockHealth(period: 'Day' | 'Week' | 'Month'): Observable<StockHealth> {
-    return this.http.get<StockHealth>(`${this.baseUrl}/api/dashboard/stock`, { params: new HttpParams().set('period', period) });
+    return this.http.get<StockHealth>(`${this.baseUrl}/api/dashboard/stock`, {
+      params: new HttpParams().set('period', period),
+    });
   }
 
   stock(
@@ -36,10 +38,17 @@ export class InventoryService {
     page = 1,
     pageSize = 20,
   ): Observable<StockList> {
-    let params = new HttpParams().set('culture', culture).set('filter', filter).set('page', page).set('pageSize', pageSize);
+    let params = new HttpParams()
+      .set('culture', culture)
+      .set('filter', filter)
+      .set('page', page)
+      .set('pageSize', pageSize);
     if (search) {
       params = params.set('q', search.text);
-      params = search.skus.length === 0 ? params.set('sku', '') : search.skus.reduce((query, sku) => query.append('sku', sku), params);
+      params =
+        search.skus.length === 0
+          ? params.set('sku', '')
+          : search.skus.reduce((query, sku) => query.append('sku', sku), params);
     }
 
     return this.http.get<StockList>(`${this.baseUrl}/api/inventory/stock`, { params });

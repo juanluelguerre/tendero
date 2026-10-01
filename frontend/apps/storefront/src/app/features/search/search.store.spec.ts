@@ -10,11 +10,21 @@ import type { ListingResult } from '../../listing/listing.store';
 import { ListingStore } from '../../listing/listing.store';
 import { TrailStore } from '../../trail/trail.store';
 import { SearchStore } from './search.store';
+import { signalMethod } from '@ngrx/signals';
 
 const EmptyFilters = parseListing(convertToParamMap({}));
 
 const ready = (busy = false): ListingResult =>
-  ({ status: 'ready', hits: [], total: 0, facets: [], tookMs: 1, answer: null, afterCultureChange: false, busy }) as ListingResult;
+  ({
+    status: 'ready',
+    hits: [],
+    total: 0,
+    facets: [],
+    tookMs: 1,
+    answer: null,
+    afterCultureChange: false,
+    busy,
+  }) as ListingResult;
 
 /** The home is the search (ADR 0047): what the URL asks for, what the listing lists, what the trail remembers. */
 describe('the search store', () => {
@@ -34,7 +44,16 @@ describe('the search store', () => {
       providers: [
         SearchStore,
         { provide: ActivatedRoute, useValue: { queryParamMap: query } },
-        { provide: ListingStore, useValue: { list: (place: ListingPlace | null) => listed.push(place), filters, result } },
+        {
+          provide: ListingStore,
+          // A factory, so the signalMethod is made where it can follow a signal: in an injection context.
+          useFactory: () => ({
+            // As the real one is: a signalMethod, following the signal the page hands it.
+            list: signalMethod<ListingPlace | null>((place) => listed.push(place)),
+            filters,
+            result,
+          }),
+        },
         { provide: TrailStore, useValue: { recordSearch: (text: string) => remembered.push(text) } },
         {
           provide: CampaignsStore,
@@ -70,7 +89,13 @@ describe('the search store', () => {
     filters.set({ ...EmptyFilters, onOffer: true });
     TestBed.tick();
 
-    expect([store.mode(), listed]).toEqual(['listing', [{ query: 'mochila', category: null }, { query: '', category: null }]]);
+    expect([store.mode(), listed]).toEqual([
+      'listing',
+      [
+        { query: 'mochila', category: null },
+        { query: '', category: null },
+      ],
+    ]);
   });
 
   /** *Sigue donde lo dejaste*: words that were answered, once — not every keystroke, and not while a newer answer is on its way. */
@@ -82,6 +107,20 @@ describe('the search store', () => {
     result.set(ready());
     TestBed.tick();
     result.set({ ...ready(), total: 3 } as ListingResult);
+    TestBed.tick();
+
+    expect(remembered).toEqual(['mochila']);
+  });
+
+  /** Narrowing the same words keeps the rows marked busy until the answer: the same search, not a second. */
+  it('remembers the same words once, however often their list is refreshed', () => {
+    query.next(convertToParamMap({ q: 'mochila' }));
+    opened();
+    result.set(ready());
+    TestBed.tick();
+    result.set(ready(true));
+    TestBed.tick();
+    result.set(ready());
     TestBed.tick();
 
     expect(remembered).toEqual(['mochila']);

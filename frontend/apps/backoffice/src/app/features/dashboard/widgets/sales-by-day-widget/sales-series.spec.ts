@@ -34,7 +34,13 @@ describe('a sales series as a chart', () => {
   });
 
   it('labels a day by its hours', () => {
-    const day: SalesSeries = { ...WEEK, period: 'Day', step: 'Hour', current: [point('2026-10-14T06:00:00Z', 10)], previous: [point('2026-10-13T06:00:00Z', 5)] };
+    const day: SalesSeries = {
+      ...WEEK,
+      period: 'Day',
+      step: 'Hour',
+      current: [point('2026-10-14T06:00:00Z', 10)],
+      previous: [point('2026-10-13T06:00:00Z', 5)],
+    };
 
     expect(toBarChart(day, 'es', { current: 'Hoy', previous: 'Ayer' }).categories).toEqual(['08']);
   });

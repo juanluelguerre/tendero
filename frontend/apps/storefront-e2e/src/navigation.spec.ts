@@ -15,7 +15,10 @@ test('a department is one click from the cart, on a desktop', async ({ page }) =
   await page.goto('/es/cart');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-  await page.getByRole('navigation', { name: 'Departamentos' }).getByRole('link', { name: /^\s*Bolsas y mochilas\s*$/ }).click();
+  await page
+    .getByRole('navigation', { name: 'Departamentos' })
+    .getByRole('link', { name: /^\s*Bolsas y mochilas\s*$/ })
+    .click();
 
   await expect(page).toHaveURL(/\/es\/c\/BAGS/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Bolsas y mochilas');
@@ -28,7 +31,10 @@ test('a category is two interactions from the cart, on a desktop', async ({ page
 
   // One: the department's sections. Two: the category.
   await page.getByRole('button', { name: /Bolsas y mochilas: sus secciones/ }).click();
-  await page.locator('#shop-menu').getByRole('link', { name: /^\s*Mochilas\s*$/ }).click();
+  await page
+    .locator('#shop-menu')
+    .getByRole('link', { name: /^\s*Mochilas\s*$/ })
+    .click();
 
   await expect(page).toHaveURL(/\/es\/c\/BACKPACK/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Mochilas');

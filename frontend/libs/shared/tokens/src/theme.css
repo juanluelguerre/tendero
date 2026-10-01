@@ -1,97 +1,43 @@
-/* Tendero — the bridge between the tokens and Tailwind 4.
+/* Tendero — Tailwind 4 over the design tokens, utility-first (ADR 0049, 0050).
  *
- * It replaces design/tailwind-preset.js, which was v3 format. Tailwind 4 is
- * configured from CSS with @theme, which fits much better here: the tokens ARE
- * custom properties already, so the JS preset's indirection disappears and one
- * genuine source of truth is left.
- *
- * Every entry points at its token; changing design/tokens.css moves both apps,
- * dark mode included. Never write a hex here. */
+ * The theme IS the design tokens: design/theme.css declares them in Tailwind's
+ * own namespaces (`--color-surface`, `--spacing-tap`, `--radius-md`), so every
+ * utility — `bg-surface`, `min-h-tap`, `rounded-md`, `md:` — names one, and
+ * nothing bridges the two. Tailwind's default theme is never imported, so its
+ * palette, spacing and breakpoints do not exist here; dark mode is the tokens'
+ * [data-theme='dark'] override, and the no-hex test keeps its meaning.
+ * Never write a hex here. */
 
+/* The cascade, in order: Tailwind's reset (`base`), then what everything composes
+   (`components`: the design tokens' element rules — body, headings, focus,
+   eyebrow — then the shared base and each app's primitives), then the utilities,
+   which win over all of it, as utility-first needs. The layers are declared
+   first, then filled; the typefaces come before all of it, because an @import
+   of a URL only survives as the first rule. Tailwind's own `theme.css` is left
+   out on purpose: the tokens are the whole theme. */
+@import './fonts.css';
+@layer theme, base, components, utilities;
+@import 'tailwindcss/preflight.css' layer(base);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
 @import './tokens.css';
-@import 'tailwindcss';
+@import './base.css';
 
-/* The backoffice turns dark mode on with <html data-theme="dark">. */
-@custom-variant dark ([data-theme='dark'] &);
+/* It reads the templates, and nothing else: TS, specs and markdown once gave it
+   utilities nobody wrote (`.h-84`, `.sepia`, `.ring`). Paths are from this file. */
+@source '../../../../apps/*/src/**/*.html';
+@source '../../*/src/**/*.html';
 
-@theme {
-  /* ---------- Color ---------- */
-  --color-clay-50: var(--clay-50);
-  --color-clay-100: var(--clay-100);
-  --color-clay-500: var(--clay-500);
-  --color-clay-600: var(--clay-600);
-  --color-clay-700: var(--clay-700);
-  --color-clay-800: var(--clay-800);
+/* The one place a class is written in TS: a component's own element, styled in
+   its `host: { class: '…' }` metadata, because a template cannot reach its host.
+   The scan above never reads TS, so those utilities are named here, and
+   design-host-classes.spec.ts fails when a component uses one this list lacks. */
+@source inline(
+  'block relative contents flex inline-flex grid flex-col flex-1 gap-4 min-h-0 min-h-dvh min-w-0 mt-4 overflow-hidden fixed sticky inset-x-0 bottom-0 bottom-5 z-5 z-10 justify-center pointer-events-none text-body [--chart-block-size:2.5rem]'
+);
 
-  --color-olive-50: var(--olive-50);
-  --color-olive-500: var(--olive-500);
-  --color-olive-600: var(--olive-600);
-  --color-olive-700: var(--olive-700);
-
-  --color-stone-0: var(--stone-0);
-  --color-stone-50: var(--stone-50);
-  --color-stone-100: var(--stone-100);
-  --color-stone-200: var(--stone-200);
-  --color-stone-300: var(--stone-300);
-
-  --color-ink-400: var(--ink-400);
-  --color-ink-500: var(--ink-500);
-  --color-ink-700: var(--ink-700);
-  --color-ink-900: var(--ink-900);
-
-  /* Semantic: use THESE in components, not the palette ones. They are the only
-     ones that follow the dark theme. */
-  --color-page: var(--bg-page);
-  --color-surface: var(--bg-surface);
-  --color-raised: var(--bg-raised);
-  --color-hairline: var(--border);
-  --color-hairline-strong: var(--border-strong);
-  --color-body: var(--text);
-  --color-muted: var(--text-muted);
-  --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
-  --color-accent-tint: var(--accent-tint);
-  --color-on-accent: var(--on-accent);
-  --color-positive: var(--positive);
-  --color-warning: var(--warning);
-  --color-danger: var(--danger);
-
-  /* ---------- Tipografia ---------- */
-  --font-display: var(--font-display);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-mono);
-
-  --text-3xs: var(--text-3xs);
-  --text-2xs: var(--text-2xs);
-  --text-xs: var(--text-xs);
-  --text-sm: var(--text-sm);
-  --text-base: var(--text-md);
-  --text-lg: var(--text-lg);
-  --text-xl: var(--text-xl);
-  --text-2xl: var(--text-2xl);
-  --text-3xl: var(--text-3xl);
-  --text-4xl: var(--text-4xl);
-
-  --leading-tight: var(--leading-tight);
-  --leading-snug: var(--leading-snug);
-  --leading-body: var(--leading-body);
-
-  --tracking-tight: var(--tracking-tight);
-  --tracking-wide: var(--tracking-wide);
-
-  /* ---------- Forma ---------- */
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-full: var(--radius-full);
-
-  --shadow-pop: var(--shadow-pop);
-
-  /* ---------- Movimiento y layout ---------- */
-  --ease-brand: var(--ease);
-  --container-prose: var(--container-prose);
-  --container-app: var(--container-app);
-}
+/* No `dark:` variant: dark mode is the tokens' own `[data-theme='dark']` override,
+   so `bg-surface` is already right in both themes and no template says `dark:`.
+   One was declared here and never used (the review of 2026-10-01). */
 
 /* ---------- The system's only decorative element ----------
    The awning stripe, taken from the logo. It marks section breaks, the
@@ -101,11 +47,7 @@
   height: 6px;
   border: 0;
   border-radius: var(--radius-full);
-  background: repeating-linear-gradient(
-    90deg,
-    var(--clay-500) 0 14px,
-    var(--clay-100) 14px 28px
-  );
+  background: repeating-linear-gradient(90deg, var(--color-clay-500) 0 14px, var(--color-clay-100) 14px 28px);
 }
 
 @utility awning-thin {
@@ -113,11 +55,12 @@
 }
 
 /* Commerce is read in columns: prices, SKUs, totals and metrics go in mono with
-   tabular figures so that a column of prices genuinely lines up. */
+   tabular figures so that a column of prices genuinely lines up. The utility says
+   that and no more: the tokens' `.numeric` adds its -0.01em in `components`, where
+   a table header's wide tracking still wins over it, as it always did. */
 @utility numeric {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
 }
 
 /* ---------- What the preflight takes away ----------

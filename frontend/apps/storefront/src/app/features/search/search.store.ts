@@ -1,7 +1,7 @@
-import { computed, effect, inject, untracked } from '@angular/core';
+import { computed, inject, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { signalStore, withComputed, withHooks, withProps } from '@ngrx/signals';
+import { signalMethod, signalStore, withComputed, withHooks, withProps } from '@ngrx/signals';
 import { map } from 'rxjs';
 import { CampaignsStore } from '../../campaigns/campaigns.store';
 import { hasFilters } from '../../listing/listing-filters';
@@ -45,8 +45,6 @@ export const SearchStore = signalStore(
        * it against a URL that says nothing.
        */
       queryFromUrl: toSignal(route.queryParamMap.pipe(map((params) => params.get('q') ?? '')), { initialValue: '' }),
-      /** The search already remembered, so a new answer to the same words is not a second one. */
-      _remembered: { query: null as string | null },
     };
   }),
   withComputed(({ queryFromUrl, _listing, _campaigns }) => {
@@ -79,25 +77,28 @@ export const SearchStore = signalStore(
   }),
   withHooks({
     onInit(store) {
-      // A language switch asks again as well, and the listing says when an
-      // answer came from one.
-      effect(() => {
-        const listing = store.mode() === 'listing';
-        const query = store.query();
-        untracked(() => store._listing.list(listing ? { query, category: null } : null));
-      });
+      // What the page lists follows the words; the listing asks again on a
+      // language switch itself.
+      store._listing.list(
+        computed(() => (store.mode() === 'listing' ? { query: store.query(), category: null } : null)),
+      );
 
       // *Sigue donde lo dejaste* (R-8): a search is remembered once it has been
       // listed — words that were answered, not every keystroke, and not a query
-      // too short to send. The trail decides where, and whether.
-      effect(() => {
-        const query = store.query();
-        const result = store._listing.result();
-        if (store.mode() !== 'listing' || !query || result.status !== 'ready' || result.busy) return;
-        if (store._remembered.query === query) return;
-        store._remembered.query = query;
-        untracked(() => store._trail.recordSearch(query));
+      // too short to send. The last words answered are kept while the list
+      // refreshes or another search is on its way, so the same words answered
+      // again are not a second entry. The trail decides where, and whether.
+      const answered = linkedSignal<{ query: string; ready: boolean }, string | null>({
+        source: () => {
+          const result = store._listing.result();
+          const ready = store.mode() === 'listing' && result.status === 'ready' && !result.busy;
+          return { query: store.query(), ready: ready && store.query().length > 0 };
+        },
+        computation: (now, previous) => (now.ready ? now.query : (previous?.value ?? null)),
       });
+      signalMethod<string | null>((query) => {
+        if (query) store._trail.recordSearch(query);
+      })(answered);
     },
   }),
 );

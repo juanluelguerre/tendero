@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { Icon } from '@tendero/shared-ui';
 
 /**
  * *La tienda promete* (R-8, H-4): a slim strip of what the shop commits to.
@@ -12,10 +13,9 @@ import { TranslocoDirective } from '@jsverse/transloco';
  */
 @Component({
   selector: 'storefront-promise-strip',
-  imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, Icon],
   templateUrl: './promise-strip.html',
-  styleUrl: './promise-strip.css',
+  host: { class: 'block' },
 })
 export class PromiseStrip {
   /** The free-shipping promotion's name, as the shop sells it; null when there is none. */

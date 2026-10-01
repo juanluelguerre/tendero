@@ -1,77 +1,15 @@
+/* Styled with utilities in the template (ADR 0049); what stays is the host's
+   grid, which a caller's element carries. */
+
 /* A panel on a desktop: one column per department. */
 :host {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: var(--space-6);
+  gap: var(--spacing-6);
 }
 
 /* The phone's drawer: one column, every category visible. */
 :host(.in-drawer) {
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--spacing-4);
 }
-
-.department__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-2);
-  padding-block-end: var(--space-2);
-  border-block-end: 1px solid var(--border);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-}
-
-/* Where the shopper is, in a word, a weight and a line. Not clay: the accent is
-   the page's one action (design/DESIGN.md), and a menu is not it. */
-.department--here .department__head { border-block-end: 2px solid var(--text); }
-.department--here .department__link { font-weight: 800; }
-
-.department__link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 2.75rem;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.department__link:hover { text-decoration: underline; }
-
-.department__all {
-  color: var(--text-muted);
-  font-family: var(--font-body);
-  font-size: var(--text-2xs);
-  font-weight: 400;
-}
-
-.links {
-  display: grid;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.group { margin-block-start: var(--space-2); }
-
-.group__head {
-  display: block;
-  color: var(--text-muted);
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  letter-spacing: var(--tracking-wide);
-}
-
-/* 44 px on a desktop, 48 in the drawer, where a thumb aims (R-2, S-P3). */
-.link {
-  display: flex;
-  align-items: center;
-  min-height: 2.75rem;
-  color: var(--text);
-  text-decoration: none;
-}
-
-:host(.in-drawer) .link { min-height: 3rem; padding-inline-start: var(--space-3); }
-
-.link:hover { text-decoration: underline; }

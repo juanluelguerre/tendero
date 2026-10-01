@@ -19,7 +19,14 @@ describe('the returns store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, ReturnsStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        ReturnsStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -30,7 +37,9 @@ describe('the returns store', () => {
     await TestBed.inject(Router).navigateByUrl(url);
     const store = TestBed.inject(ReturnsStore);
     TestBed.tick();
-    http.match(Returns).forEach((req) => req.flush([request('r1', 'Requested'), request('r2', 'Approved'), request('r3', 'Requested')]));
+    http
+      .match(Returns)
+      .forEach((req) => req.flush([request('r1', 'Requested'), request('r2', 'Approved'), request('r3', 'Requested')]));
     await TestBed.inject(ApplicationRef).whenStable();
     return store;
   }
@@ -39,11 +48,11 @@ describe('the returns store', () => {
   it('opens on the requests waiting for a decision, and counts every status', async () => {
     const store = await at('/');
 
-    expect([store.statusKey(), store.shown().map((row) => row.returnId), store.filters().map((chip) => `${chip.key}:${chip.count}`)]).toEqual([
-      'Requested',
-      ['r1', 'r3'],
-      ['Requested:2', 'Approved:1', 'Received:0', 'all:3'],
-    ]);
+    expect([
+      store.statusKey(),
+      store.shown().map((row) => row.returnId),
+      store.filters().map((chip) => `${chip.key}:${chip.count}`),
+    ]).toEqual(['Requested', ['r1', 'r3'], ['Requested:2', 'Approved:1', 'Received:0', 'all:3']]);
   });
 
   it('replaces the request a decision comes back with, and keeps the server sentence when it refuses', async () => {
@@ -53,6 +62,9 @@ describe('the returns store', () => {
     store.decide(request('r2', 'Approved'), 'Refund', 'pane');
     http.expectOne(`${Returns}/r2/decide`).flush('Not received yet.', { status: 409, statusText: 'Conflict' });
 
-    expect([store.shown().map((row) => row.status), store.refusal()]).toEqual([['Approved', 'Approved', 'Requested'], { r2: 'Not received yet.' }]);
+    expect([store.shown().map((row) => row.status), store.refusal()]).toEqual([
+      ['Approved', 'Approved', 'Requested'],
+      { r2: 'Not received yet.' },
+    ]);
   });
 });

@@ -1,39 +1,54 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.ordersByStatus'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-    <a class="widget__link" routerLink="/orders">{{ t('toOrders') }}</a>
-  </header>
-
-  @if (store.operations.isLoading() && !store.operations.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.operations.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else if (store.operations.value(); as ops) {
-    <dl class="facts">
-      <div class="fact">
-        <dt><a class="fact__link" routerLink="/orders">{{ t('toShip') }}</a></dt>
-        <dd class="numeric fact__value">{{ ops.toShip }}</dd>
-        @if (ops.lateToShip > 0) {
-          <dd class="tag tag--danger">{{ t('late', { count: ops.lateToShip }) }}</dd>
-        }
-      </div>
-      <div class="fact">
-        <dt><a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentAuthorized' }">{{ t('inProgress') }}</a></dt>
-        <dd class="numeric fact__value">{{ ops.inProgress }}</dd>
-      </div>
-      <div class="fact">
-        <dt><a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentFailed' }">{{ t('paymentFailed') }}</a></dt>
-        <dd class="numeric fact__value" [class.fact__value--warn]="ops.paymentFailed > 0">{{ ops.paymentFailed }}</dd>
-      </div>
-      <div class="fact">
-        <dt><a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{ t('cancelledCount') }}</a></dt>
-        <dd class="numeric fact__value">{{ ops.cancelled }}</dd>
-      </div>
-    </dl>
-    @if (store.chart(); as data) {
-      <div class="at-m">
-        <backoffice-bar-chart [data]="data" layout="rows" [format]="count" [caption]="t('title')" />
-      </div>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.ordersByStatus'"
+  [heading]="t('title')"
+  link="/orders"
+  [linkText]="t('toOrders')"
+  [resource]="store.operations"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    @if (store.operations.value(); as ops) {
+      <dl class="facts">
+        <div class="fact">
+          <dt>
+            <a class="fact__link" routerLink="/orders">{{ t('toShip') }}</a>
+          </dt>
+          <dd class="fact__value numeric">{{ ops.toShip }}</dd>
+          @if (ops.lateToShip > 0) {
+            <dd class="tag tag--danger">{{ t('late', { count: ops.lateToShip }) }}</dd>
+          }
+        </div>
+        <div class="fact">
+          <dt>
+            <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentAuthorized' }">{{
+              t('inProgress')
+            }}</a>
+          </dt>
+          <dd class="fact__value numeric">{{ ops.inProgress }}</dd>
+        </div>
+        <div class="fact">
+          <dt>
+            <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'PaymentFailed' }">{{
+              t('paymentFailed')
+            }}</a>
+          </dt>
+          <dd class="fact__value numeric" [class.fact__value--warn]="ops.paymentFailed > 0">{{ ops.paymentFailed }}</dd>
+        </div>
+        <div class="fact">
+          <dt>
+            <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{
+              t('cancelledCount')
+            }}</a>
+          </dt>
+          <dd class="fact__value numeric">{{ ops.cancelled }}</dd>
+        </div>
+      </dl>
+      @if (store.chart(); as data) {
+        <div class="at-m">
+          <backoffice-bar-chart [data]="data" layout="rows" [format]="count" [caption]="t('title')" />
+        </div>
+      }
     }
-  }
-</article>
+  </ng-template>
+</backoffice-widget-frame>

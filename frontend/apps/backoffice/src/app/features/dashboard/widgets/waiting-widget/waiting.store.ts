@@ -22,9 +22,15 @@ export const WaitingStore = signalStore(
     const sources = inject(DashboardSources);
     const culture = inject(CultureStore);
     return {
-      drafts: refreshedResource({ params: () => ({ culture: culture.active() }), stream: (params) => catalog.list('Draft', params.culture, 1, 1) }),
+      drafts: refreshedResource({
+        params: () => ({ culture: culture.active() }),
+        stream: (params) => catalog.list('Draft', params.culture, 1, 1),
+      }),
       claims: refreshedResource({ params: () => ({}), stream: () => knowledge.claims('All', 1, ClaimsShown) }),
-      stock: refreshedResource({ params: () => ({ culture: culture.active() }), stream: (params, at) => sources.stock(params.culture, at) }),
+      stock: refreshedResource({
+        params: () => ({ culture: culture.active() }),
+        stream: (params, at) => sources.stock(params.culture, at),
+      }),
     };
   }),
   withComputed((store) => ({

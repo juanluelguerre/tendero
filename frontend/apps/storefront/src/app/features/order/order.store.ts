@@ -1,4 +1,5 @@
-import { computed, inject } from '@angular/core';
+import { computed, inject, linkedSignal } from '@angular/core';
+import { applyEach, form, max, min, required } from '@angular/forms/signals';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { patchState, signalStore, withComputed, withHooks, withMethods, withProps, withState } from '@ngrx/signals';
@@ -8,8 +9,12 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { OrderService } from '../../data-access/order.service';
 import { type ReturnableLine, returnableLines } from './returnable';
 
-/** A line coming back, and on what terms. */
-export interface PickedLine {
+/** One returnable line in the return form: whether it is coming back, how many, and why. */
+export interface ReturnRow {
+  readonly sku: string;
+  /** How many may still come back: the quantity's ceiling. */
+  readonly left: number;
+  readonly picked: boolean;
   readonly quantity: number;
   readonly reason: ReturnReason;
 }
@@ -23,8 +28,6 @@ interface OrderState {
   readonly sending: boolean;
   readonly returnMessage: string | null;
   readonly returnOpened: boolean;
-  /** Which lines are coming back, and on what terms. */
-  readonly picked: ReadonlyMap<string, PickedLine>;
   /**
    * True only when this page was reached from checkout. The "thank you" belongs
    * to the moment, not to the URL: coming back to an order a week later should
@@ -52,7 +55,6 @@ export const OrderStore = signalStore(
     sending: false,
     returnMessage: null,
     returnOpened: false,
-    picked: new Map(),
     justPlaced: false,
   }),
   withProps(() => ({
@@ -70,13 +72,38 @@ export const OrderStore = signalStore(
     }),
     canReturn: computed(() => order()?.status === 'Delivered'),
   })),
-  withMethods((store) => {
-    const pick = (change: (picked: Map<string, PickedLine>) => void): void => {
-      const next = new Map(store.picked());
-      change(next);
-      patchState(store, { picked: next });
+  // The return is a Signal Form (ADR 0051): one row per line that may still come
+  // back, started again whenever the server says what is left. A quantity is at
+  // least one and at most what is left — invalid otherwise, never clamped behind
+  // the shopper's back — and a picked line needs its reason.
+  withProps(({ returnableLines }) => {
+    const rows = linkedSignal<ReturnRow[]>(() =>
+      returnableLines().map((line) => ({
+        sku: line.sku,
+        left: line.left,
+        picked: false,
+        quantity: 1,
+        reason: RETURN_REASONS[0],
+      })),
+    );
+    const returnForm = form(rows, (row) =>
+      applyEach(row, (line) => {
+        min(line.quantity, 1);
+        max(line.quantity, ({ valueOf }) => valueOf(line.left));
+        required(line.reason);
+      }),
+    );
+    return { _returnRows: rows, returnForm };
+  }),
+  withComputed(({ _returnRows, returnForm, sending }) => {
+    const pickedCount = computed(() => _returnRows().filter((row) => row.picked).length);
+    return {
+      pickedCount,
+      /** Something picked, all of it valid, nothing on its way. */
+      canSend: computed(() => pickedCount() > 0 && returnForm().valid() && !sending()),
     };
-
+  }),
+  withMethods((store) => {
     const load = async (): Promise<void> => {
       const id = store._route.snapshot.paramMap.get('id');
       if (!id) {
@@ -98,46 +125,25 @@ export const OrderStore = signalStore(
 
     return {
       _load: load,
-      quantityOf(sku: string): number {
-        return store.picked().get(sku)?.quantity ?? 1;
-      },
-      reasonOf(sku: string): string {
-        return store.picked().get(sku)?.reason ?? RETURN_REASONS[0];
-      },
-      toggle(line: ReturnableLine): void {
-        pick((picked) => {
-          if (picked.has(line.sku)) picked.delete(line.sku);
-          else picked.set(line.sku, { quantity: 1, reason: RETURN_REASONS[0] });
-        });
-      },
-      setQuantity(sku: string, quantity: number): void {
-        const left = store.returnableLines().find((line) => line.sku === sku)?.left ?? 1;
-        pick((picked) => {
-          const line = picked.get(sku);
-          if (line) picked.set(sku, { ...line, quantity: Math.min(left, Math.max(1, Number(quantity) || 1)) });
-        });
-      },
-      setReason(sku: string, reason: ReturnReason): void {
-        pick((picked) => {
-          const line = picked.get(sku);
-          if (line) picked.set(sku, { ...line, reason });
-        });
-      },
       async requestReturn(): Promise<void> {
         const order = store.order();
-        if (!order) return;
+        if (!order || !store.returnForm().valid()) return;
 
         patchState(store, { sending: true, returnMessage: null });
         try {
           const opened = await store._orders.requestReturn(
             order.orderId,
             {
-              lines: [...store.picked().entries()].map(([sku, line]) => ({ sku, quantity: line.quantity, reason: line.reason, comment: null })),
+              lines: store
+                ._returnRows()
+                .filter((row) => row.picked)
+                .map((row) => ({ sku: row.sku, quantity: row.quantity, reason: row.reason, comment: null })),
             },
             store._culture.active(),
           );
 
-          patchState(store, (state) => ({ returns: [opened, ...state.returns], picked: new Map() }));
+          patchState(store, (state) => ({ returns: [opened, ...state.returns] }));
+          store._returnRows.update((rows) => rows.map((row) => ({ ...row, picked: false })));
           // What is left to return changed, and only the server knows by how much.
           void load();
           patchState(store, { returnOpened: true, returnMessage: store._transloco.translate('order.returnOpened') });
@@ -148,7 +154,9 @@ export const OrderStore = signalStore(
             returnMessage:
               failure.status === 409
                 ? store._transloco.translate('order.returnClosed')
-                : store._transloco.translate('order.returnFailed', { reason: typeof failure.error === 'string' ? failure.error : '' }),
+                : store._transloco.translate('order.returnFailed', {
+                    reason: typeof failure.error === 'string' ? failure.error : '',
+                  }),
           });
         } finally {
           patchState(store, { sending: false });

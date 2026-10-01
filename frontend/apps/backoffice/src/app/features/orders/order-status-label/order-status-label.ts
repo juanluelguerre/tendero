@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { OrderSummary } from '@tendero/shared-api';
+import { orderStatusTone, StatusPill } from '@tendero/shared-ui';
 
 /**
  * An order's status as the list and the pane both say it: the word, whether it
@@ -9,11 +10,13 @@ import type { OrderSummary } from '@tendero/shared-api';
  */
 @Component({
   selector: 'backoffice-order-status-label',
-  imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, StatusPill],
   templateUrl: './order-status-label.html',
-  styleUrl: './order-status-label.css',
+  // Laid out by whoever places it: a table cell, a card line or the pane's head.
+  host: { class: 'contents' },
 })
 export class OrderStatusLabel {
   readonly order = input.required<OrderSummary>();
+
+  protected readonly tone = computed(() => orderStatusTone(this.order().status));
 }

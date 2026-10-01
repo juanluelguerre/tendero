@@ -33,10 +33,7 @@ describe('which campaign a page draws', () => {
   });
 
   it('gives a category the campaign of its own branch, the nearest first', () => {
-    const list = [
-      campaign({ code: 'SHOP' }),
-      campaign({ code: 'HOME_WEEK', scope: 'Category', categoryCode: 'HOME' }),
-    ];
+    const list = [campaign({ code: 'SHOP' }), campaign({ code: 'HOME_WEEK', scope: 'Category', categoryCode: 'HOME' })];
 
     expect(campaignForCategory(list, ['KITCHEN', 'HOME'])?.code).toBe('HOME_WEEK');
     expect(campaignForCategory(list, ['APPAREL'])).toBeNull();
@@ -97,7 +94,12 @@ describe('the clock', () => {
 describe('what a campaign holds', () => {
   it('names a coupon promotion with its code, and the others by name alone', () => {
     const labels = holdLabels(
-      campaign({ holds: [{ name: 'Black Friday', couponCode: 'BF2026' }, { name: 'Envío gratis desde 50 €', couponCode: null }] }),
+      campaign({
+        holds: [
+          { name: 'Black Friday', couponCode: 'BF2026' },
+          { name: 'Envío gratis desde 50 €', couponCode: null },
+        ],
+      }),
       (name, code) => `${name} con el código ${code}`,
     );
 

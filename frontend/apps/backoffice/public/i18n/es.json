@@ -35,7 +35,11 @@
     "showPayload": "Ver comando",
     "guest": "invitado",
     "title": "Auditoría",
-    "trace": "Traza {{id}}",
+    "trace": "Traza",
+    "subject": "Sujeto",
+    "copyTrace": "Copiar el id de la traza",
+    "copySubject": "Copiar el sujeto",
+    "copied": "Copiado",
     "emptyFor": "No hay nada registrado como «{{outcome}}». Que es la buena noticia.",
     "showEverything": "Ver todo",
     "commands": {
@@ -223,7 +227,10 @@
     "deliverTo": "Entregar a",
     "lines": "Líneas",
     "paneTotal": "Total, IVA y envío incluidos",
-    "paneFailed": "No se han podido cargar las líneas de este pedido."
+    "paneFailed": "No se han podido cargar las líneas de este pedido.",
+    "paneId": "Id del pedido",
+    "copyId": "Copiar el id del pedido",
+    "copied": "Id copiado"
   },
   "promotions": {
     "title": "Promociones",
@@ -855,6 +862,7 @@
     "hint": "Los agentes que la tienda conoce. Un agente que nadie registró no se rechaza: compra como no confiable, con topes más estrictos. Registrarlo es responder por él; una suspensión necesita un motivo, para poder levantarla.",
     "loading": "Cargando agentes…",
     "failed": "No se ha podido hacer el cambio.",
+    "loadFailed": "No se han podido cargar los agentes.",
     "empty": "Todavía no hay ningún agente registrado.",
     "register": {
       "title": "Registrar un agente",
@@ -887,7 +895,9 @@
     "suspendTitle": "¿Suspender a {{agent}}?",
     "suspendBody": "Deja de comprar al instante, y se le dice por qué. Puedes readmitirlo cuando quieras.",
     "suspendHint": "Deja de comprar al instante. Readmitirlo lo deshace.",
-    "suspended": "{{agent}} está suspendido."
+    "suspended": "{{agent}} está suspendido.",
+    "copyId": "Copiar el id del agente",
+    "copied": "Id copiado"
   },
   "staffUsage": {
     "title": "Cómo se usa el backoffice",

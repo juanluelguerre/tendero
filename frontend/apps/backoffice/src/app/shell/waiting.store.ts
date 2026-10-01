@@ -9,6 +9,7 @@ import { InventoryService } from '../data-access/inventory.service';
 import { KnowledgeService } from '../data-access/knowledge.service';
 import { OrderingService } from '../data-access/ordering.service';
 import type { WaitingKind } from './nav/navigation';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * How much work waits on each screen, for the rail's badges (ADR 0047: the rail
@@ -31,21 +32,23 @@ export const WaitingStore = signalStore(
     const accounts = inject(AccountsService);
     const culture = inject(CultureStore);
     return {
-      _figures: rxResource({
-        params: () => ({ culture: culture.active(), asked: store.asked() }),
-        stream: ({ params }) =>
-          forkJoin({
-            drafts: quietly(catalog.list('Draft', params.culture, 1, 1).pipe(map((page) => page.total))),
-            claims: quietly(knowledge.claims('All', 1, 1).pipe(map((queue) => queue.total))),
-            operations: quietly(ordering.operations('Day')),
-            lowStock: quietly(
-              inventory
-                .stock(params.culture, 'Restock')
-                .pipe(map((stock) => stock.counts.find((count) => count.filter === 'Restock')?.count ?? 0)),
-            ),
-            refusals: quietly(accounts.agentDenials('Day').pipe(map((denials) => denials.total))),
-          }),
-      }),
+      _figures: extendResource(
+        rxResource({
+          params: () => ({ culture: culture.active(), asked: store.asked() }),
+          stream: ({ params }) =>
+            forkJoin({
+              drafts: quietly(catalog.list('Draft', params.culture, 1, 1).pipe(map((page) => page.total))),
+              claims: quietly(knowledge.claims('All', 1, 1).pipe(map((queue) => queue.total))),
+              operations: quietly(ordering.operations('Day')),
+              lowStock: quietly(
+                inventory
+                  .stock(params.culture, 'Restock')
+                  .pipe(map((stock) => stock.counts.find((count) => count.filter === 'Restock')?.count ?? 0)),
+              ),
+              refusals: quietly(accounts.agentDenials('Day').pipe(map((denials) => denials.total))),
+            }),
+        }),
+      ),
     };
   }),
   withComputed((store) => ({

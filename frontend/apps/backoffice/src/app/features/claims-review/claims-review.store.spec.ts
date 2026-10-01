@@ -20,7 +20,14 @@ describe('the claims review store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, ClaimsReviewStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        ClaimsReviewStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -28,8 +35,14 @@ describe('the claims review store', () => {
   afterEach(() => http.match(() => true));
 
   function answer() {
-    http.match((req) => req.url === Claims).forEach((req) => req.flush({ items: [claim('c1'), claim('c2')], total: 2, counts: [{ support: 'Weak', count: 2 }] }));
-    http.match((req) => req.url === Products).forEach((req) => req.flush({ items: [{ productId: 'p1', name: 'Mochila' }], total: 1 }));
+    http
+      .match((req) => req.url === Claims)
+      .forEach((req) =>
+        req.flush({ items: [claim('c1'), claim('c2')], total: 2, counts: [{ support: 'Weak', count: 2 }] }),
+      );
+    http
+      .match((req) => req.url === Products)
+      .forEach((req) => req.flush({ items: [{ productId: 'p1', name: 'Mochila' }], total: 1 }));
   }
 
   async function at(url: string) {
@@ -49,6 +62,33 @@ describe('the claims review store', () => {
     TestBed.tick();
 
     expect([...first, weak.filterKey()]).toEqual(['Weak', 'Mochila', 'All']);
+  });
+
+  /**
+   * An empty weak queue is not an empty review: when claims wait under All, the
+   * page says so and points there. The template used to compare the list with
+   * itself, so that sentence could never be shown.
+   */
+  it('knows when the weak queue is empty but claims wait under All', async () => {
+    await TestBed.inject(Router).navigateByUrl('/');
+    const store = TestBed.inject(ClaimsReviewStore);
+    TestBed.tick();
+    http
+      .match((req) => req.url === Claims)
+      .forEach((req) =>
+        req.flush({
+          items: [],
+          total: 0,
+          counts: [
+            { support: 'Weak', count: 0 },
+            { support: 'All', count: 3 },
+          ],
+        }),
+      );
+    http.match((req) => req.url === Products).forEach((req) => req.flush({ items: [], total: 0 }));
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect([store.claims().length, store.othersWaiting()]).toEqual([0, true]);
   });
 
   /** Deciding moves on to the next claim, and the queue is read again: it is the server's. */

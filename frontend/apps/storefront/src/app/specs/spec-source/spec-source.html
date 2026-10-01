@@ -1,17 +1,37 @@
 <ng-container *transloco="let t">
+  <!-- 24 px with a mouse, 44 px under a finger (R-5.2): the pill grows on a
+       phone rather than hiding a taller hit area nobody can see. -->
   @if (source() === 'description' && evidence(); as proof) {
-    <button class="chip chip--description" type="button" [attr.popovertarget]="id" [style.anchor-name]="anchor">
+    <!-- A button, and it looks like one on hover and focus: it opens the words. -->
+    <button
+      class="inline-flex min-h-target cursor-pointer items-center rounded-full border border-hairline-strong bg-raised px-2 text-2xs leading-body whitespace-nowrap text-body transition-[border-color] duration-(--dur-fast) ease-brand hover:border-muted pointer-coarse:min-h-tap"
+      type="button"
+      [attr.popovertarget]="id"
+      [style.anchor-name]="anchor"
+    >
       {{ t('specs.fromDescription') }}
     </button>
-    <div class="quote" popover [id]="id" [style.position-anchor]="anchor" (toggle)="opened($event)">
-      <p class="quote__title">{{ t('specs.quoteTitle') }}</p>
+    <div
+      class="quote max-w-[min(28rem,calc(100vw-2*var(--spacing-4)))] rounded-lg border border-hairline bg-surface p-4 text-body shadow-pop backdrop:bg-transparent"
+      popover
+      [id]="id"
+      [style.position-anchor]="anchor"
+      (toggle)="opened($event)"
+    >
+      <p class="mb-2 text-2xs tracking-wide text-muted uppercase">{{ t('specs.quoteTitle') }}</p>
       @for (quote of proof.quotes; track $index) {
-        <blockquote class="quote__text" [attr.lang]="quote.culture || null">“{{ quote.text }}”</blockquote>
+        <blockquote class="mb-2 text-md leading-snug" [attr.lang]="quote.culture || null">
+          “{{ quote.text }}”
+        </blockquote>
       }
-      <p class="quote__support">{{ t('specs.support', { percent: percent() }) }}</p>
-      <p class="quote__note">{{ t('specs.supportNote') }}</p>
+      <p class="mt-3 text-sm">{{ t('specs.support', { percent: percent() }) }}</p>
+      <p class="mt-1 text-2xs text-muted">{{ t('specs.supportNote') }}</p>
     </div>
   } @else if (source() === 'catalogue') {
-    <span class="chip">{{ t('specs.fromCatalogue') }}</span>
+    <span
+      class="inline-flex min-h-target items-center rounded-full border border-hairline bg-raised px-2 text-2xs leading-body whitespace-nowrap text-muted pointer-coarse:min-h-tap"
+    >
+      {{ t('specs.fromCatalogue') }}
+    </span>
   }
 </ng-container>

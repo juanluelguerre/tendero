@@ -3,7 +3,13 @@
     <h1 class="page-title">{{ t('title') }}</h1>
     <div class="page-actions">
       <!-- Clay while it is the view's one action; quiet once a pane holds that. -->
-      <button type="button" class="button" [class.button--quiet]="store.paneOpen()" [attr.aria-expanded]="store.creating()" (click)="store.startNew()">
+      <button
+        type="button"
+        class="button"
+        [class.button--quiet]="store.paneOpen()"
+        [attr.aria-expanded]="store.creating()"
+        (click)="store.startNew()"
+      >
         <span aria-hidden="true">+</span> {{ t('new') }}
       </button>
     </div>
@@ -11,20 +17,29 @@
   <p class="page-hint">{{ t('hint') }}</p>
 
   <div class="worklist-tools">
-    <backoffice-filter-chips [options]="store.filters()" [selected]="store.filterKey()" [label]="t('filterLabel')" (chosen)="store.filterBy($event)" />
+    <backoffice-filter-chips
+      [options]="store.filters()"
+      [selected]="store.filterKey()"
+      [label]="t('filterLabel')"
+      (chosen)="store.filterBy($event)"
+    />
   </div>
 
-  @if (store.loading()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-    <p class="sr-only" role="status" aria-live="polite">{{ t('loading') }}</p>
-  } @else if (store.failed()) {
-    <p class="failed" role="alert">{{ t('failed') }}</p>
-  } @else if (store.campaigns().length === 0) {
-    <div class="empty"><p class="empty__text">{{ t('empty.' + store.filterKey()) }}</p></div>
-  } @else {
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.campaigns().length === 0"
+    [loadingText]="t('loading')"
+    [failedText]="t('failed')"
+    [emptyText]="t('empty.' + store.filterKey())"
+  >
     <div class="table-wrap wide-only">
       <table class="table">
-        <caption class="sr-only">{{ t('title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('column.campaign') }}</th>
@@ -36,15 +51,24 @@
         </thead>
         <tbody>
           @for (campaign of store.campaigns(); track campaign.code) {
-            <tr class="row" [class.row--selected]="campaign.code === store.selectedCode()" (click)="store.open(campaign)">
+            <tr
+              class="row"
+              [class.row--selected]="campaign.code === store.selectedCode()"
+              (click)="store.open(campaign)"
+            >
               <td>
-                <button type="button" class="row__open" [attr.aria-expanded]="campaign.code === store.selectedCode()" (click)="$event.stopPropagation(); store.open(campaign)">
+                <button
+                  type="button"
+                  class="row__open"
+                  [attr.aria-expanded]="campaign.code === store.selectedCode()"
+                  (click)="$event.stopPropagation(); store.open(campaign)"
+                >
                   {{ nameOf(campaign) }}
                 </button>
               </td>
               <td class="muted">{{ t('kind.' + campaign.kind) }}</td>
-              <td class="muted">{{ (categoryOf(campaign) ?? t('scope.shop')) }}</td>
-              <td class="numeric dates">{{ windowOf(campaign) }}</td>
+              <td class="muted">{{ categoryOf(campaign) ?? t('scope.shop') }}</td>
+              <td class="numeric whitespace-nowrap">{{ windowOf(campaign) }}</td>
               <td><ng-container *ngTemplateOutlet="stateOf; context: { $implicit: campaign }" /></td>
             </tr>
           }
@@ -57,18 +81,20 @@
         <li class="worklist-card" [class.worklist-card--selected]="campaign.code === store.selectedCode()">
           <button type="button" class="worklist-card__open" (click)="store.open(campaign)">
             <span class="worklist-card__line">
-              <span class="name">{{ nameOf(campaign) }}</span>
-              <span class="numeric worklist-card__end">{{ windowOf(campaign) }}</span>
+              <span class="font-semibold">{{ nameOf(campaign) }}</span>
+              <span class="worklist-card__end numeric">{{ windowOf(campaign) }}</span>
             </span>
             <span class="worklist-card__line">
               <ng-container *ngTemplateOutlet="stateOf; context: { $implicit: campaign }" />
-              <span class="muted">{{ t('kind.' + campaign.kind) }} · {{ (categoryOf(campaign) ?? t('scope.shop')) }}</span>
+              <span class="muted"
+                >{{ t('kind.' + campaign.kind) }} · {{ categoryOf(campaign) ?? t('scope.shop') }}</span
+              >
             </span>
           </button>
         </li>
       }
     </ul>
-  }
+  </backoffice-list-state>
 
   <ng-template #stateOf let-campaign>
     @let bucket = bucketOf(campaign);

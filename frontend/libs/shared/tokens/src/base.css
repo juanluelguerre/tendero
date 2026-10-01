@@ -1,0 +1,43 @@
+/* What both apps share, written once (ADR 0049), and in layers so that a utility
+   on an element wins over it. The primitives that differ — a button, a field, a
+   panel, the body's size — stay in each app on purpose (ADR 0010): the storefront
+   is roomy and the backoffice dense, and a shared button would grow a variant
+   matrix worse than two buttons. `numeric` and `sr-only` are utilities now, not
+   copies. */
+
+@layer base {
+  p {
+    margin: 0;
+  }
+
+  /* Focus: visible, always, on everything. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+@layer components {
+  /* Named `page-frame` and not `container`: `container` is Tailwind's. */
+  .page-frame {
+    width: 100%;
+    max-width: var(--container-app);
+    margin-inline: auto;
+    padding-inline: var(--spacing-5);
+  }
+
+  @media (max-width: 640px) {
+    .page-frame {
+      padding-inline: var(--spacing-4);
+    }
+  }
+
+  .muted {
+    color: var(--color-muted);
+  }
+
+  .field::placeholder {
+    color: var(--color-muted);
+  }
+}

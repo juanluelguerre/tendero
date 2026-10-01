@@ -36,7 +36,8 @@ async function hold(pages: readonly (readonly [string, string])[], page: Page): 
   }
 
   const { added, fixed } = compareToBaseline([...new Set(found)].sort(), JSON.parse(fs.readFileSync(file, 'utf-8')));
-  if (fixed.length) console.log(`Fixed since the baseline (remove them with UPDATE_A11Y_BASELINE=1):\n  ${fixed.join('\n  ')}`);
+  if (fixed.length)
+    console.log(`Fixed since the baseline (remove them with UPDATE_A11Y_BASELINE=1):\n  ${fixed.join('\n  ')}`);
   expect(added, 'New accessibility findings — fix them, or say why in the baseline').toEqual([]);
 }
 

@@ -10,8 +10,7 @@ import { checkoutProblem } from './checkout-problem';
  * so the shopper gets the shop's sentence and the provider's words go where the
  * shopkeeper reads them: the audit row, which records them verbatim.
  */
-const echo = (key: string, params?: Record<string, unknown>) =>
-  params ? `${key} ${JSON.stringify(params)}` : key;
+const echo = (key: string, params?: Record<string, unknown>) => (params ? `${key} ${JSON.stringify(params)}` : key);
 const money = (amount: number) => `${amount} €`;
 
 describe('what the checkout tells a shopper', () => {
@@ -27,8 +26,9 @@ describe('what the checkout tells a shopper', () => {
   });
 
   it('carries the new total when the price moved', () => {
-    expect(checkoutProblem({ status: 409, error: { total: 78.33 } }, echo, money))
-      .toBe('checkout.priceChanged {"total":"78.33 €"}');
+    expect(checkoutProblem({ status: 409, error: { total: 78.33 } }, echo, money)).toBe(
+      'checkout.priceChanged {"total":"78.33 €"}',
+    );
   });
 
   it('tells an unreachable provider apart from a decline', () => {
@@ -36,7 +36,8 @@ describe('what the checkout tells a shopper', () => {
   });
 
   it('keeps the server sentence for a request the shopper can correct', () => {
-    expect(checkoutProblem({ status: 400, error: "'express' is not offered here" }, echo, money))
-      .toBe(`checkout.failed {"reason":"'express' is not offered here"}`);
+    expect(checkoutProblem({ status: 400, error: "'express' is not offered here" }, echo, money)).toBe(
+      `checkout.failed {"reason":"'express' is not offered here"}`,
+    );
   });
 });

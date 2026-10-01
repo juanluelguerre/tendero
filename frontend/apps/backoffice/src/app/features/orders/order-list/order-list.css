@@ -1,9 +1,0 @@
-/* What the orders list has of its own. The list-and-pane pattern, the cards
-   and the pager are shared by every list of work (styles.css, work/). */
-.city { display: block; color: var(--text-muted); font-size: var(--text-3xs); }
-.code { color: var(--text); font-weight: 600; }
-.total { font-weight: 600; }
-.actions { text-align: end; white-space: nowrap; }
-
-/* The server's own sentence, under the row it belongs to. */
-.refusal td { padding-block: var(--space-2); color: var(--danger); font-size: var(--text-xs); }

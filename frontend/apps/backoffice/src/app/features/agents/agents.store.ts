@@ -10,6 +10,7 @@ import { AccountsService, type AgentTrust } from '../../data-access/accounts.ser
 import { type ActionVia, type BackofficeAction, BackofficeUsage } from '../../usage';
 import { refusalOf } from '../../worklist/refusal';
 import { UndoStore } from '../../worklist/undo/undo.store';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The trust a shopkeeper can give an agent, in the order the selects offer them. */
 export const AgentTrusts: readonly AgentTrust[] = ['Known', 'Verified'];
@@ -43,7 +44,7 @@ export const AgentsStore = signalStore(
       _undo: inject(UndoStore),
       _translate: inject(TranslocoService),
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
-      agents: rxResource({ stream: () => accounts.agents() }),
+      agents: extendResource(rxResource({ stream: () => accounts.agents() })),
     };
   }),
   withComputed((store) => {
@@ -54,10 +55,17 @@ export const AgentsStore = signalStore(
     };
   }),
   withMethods((store) => {
-    const navigate = (agent: string | null) => void store._router.navigate([], { queryParams: { agent }, queryParamsHandling: 'merge' });
+    const navigate = (agent: string | null) =>
+      void store._router.navigate([], { queryParams: { agent }, queryParamsHandling: 'merge' });
 
     /** One change: busy while it goes, the registry read again when it is done, the server's sentence when it refuses. */
-    const run = (key: string, action: BackofficeAction, via: ActionVia, change: Observable<unknown>, done?: () => void) => {
+    const run = (
+      key: string,
+      action: BackofficeAction,
+      via: ActionVia,
+      change: Observable<unknown>,
+      done?: () => void,
+    ) => {
       patchState(store, { busy: key, refusal: null });
       change.pipe(store._usage.reported('agents', action, via)).subscribe({
         next: () => {
@@ -91,8 +99,12 @@ export const AgentsStore = signalStore(
       },
       register(): void {
         const draft = store.draft();
-        run('register', 'agent_register', 'page', store._accounts.register({ ...draft, agentId: draft.agentId.trim() }), () =>
-          patchState(store, { draft: EmptyDraft }),
+        run(
+          'register',
+          'agent_register',
+          'page',
+          store._accounts.register({ ...draft, agentId: draft.agentId.trim() }),
+          () => patchState(store, { draft: EmptyDraft }),
         );
       },
       trust(agent: AgentView, trust: string): void {
@@ -107,7 +119,9 @@ export const AgentsStore = signalStore(
         if (!asked || !reason) return;
         const { agent, via } = asked;
         run(agent.agentId, 'agent_suspend', via, store._accounts.suspend(agent.agentId, reason), () =>
-          store._undo.offerTo(store._translate.translate('agents.suspended', { agent: agent.displayName }), () => reinstate(agent, via)),
+          store._undo.offerTo(store._translate.translate('agents.suspended', { agent: agent.displayName }), () =>
+            reinstate(agent, via),
+          ),
         );
       },
       reinstate,

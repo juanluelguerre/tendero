@@ -32,7 +32,11 @@ async function productsFor(page: Page, query: string, count: number): Promise<{ 
   await expect(links.first()).toBeVisible();
   const found = [];
   for (let i = 0; i < count; i++) {
-    found.push(await links.nth(i).evaluate((anchor) => ({ href: anchor.getAttribute('href') ?? '', name: (anchor.textContent ?? '').trim() })));
+    found.push(
+      await links
+        .nth(i)
+        .evaluate((anchor) => ({ href: anchor.getAttribute('href') ?? '', name: (anchor.textContent ?? '').trim() })),
+    );
   }
   return found;
 }
@@ -72,7 +76,9 @@ test.describe('the home page', () => {
     await expect(page).toHaveURL(new RegExp(`/es\\?campaign=${leading.code}$`));
     await expect(page.getByRole('heading', { level: 1 })).toContainText(leading.name);
 
-    const reached = (await (await request.get(`/api/search?campaign=${leading.code}&culture=es&pageSize=50`)).json()) as {
+    const reached = (await (
+      await request.get(`/api/search?campaign=${leading.code}&culture=es&pageSize=50`)
+    ).json()) as {
       total: number;
       hits: { code: string }[];
     };
@@ -83,9 +89,9 @@ test.describe('the home page', () => {
       return;
     }
 
-    const codes = await page.locator('.listing__grid a.card__link').evaluateAll((links) =>
-      links.map((link) => (link.getAttribute('href') ?? '').split('/').pop()),
-    );
+    const codes = await page
+      .locator('.listing__grid a.card__link')
+      .evaluateAll((links) => links.map((link) => (link.getAttribute('href') ?? '').split('/').pop()));
     expect(codes.length).toBeGreaterThan(0);
     expect(codes.every((code) => reached.hits.some((hit) => hit.code === code))).toBe(true);
     // The whole list is the campaign's, and a chip names it so it can be taken off.
@@ -125,7 +131,9 @@ test.describe('the home page', () => {
     await expect(history.getByRole('heading', { name: 'Tu historial' })).toBeVisible();
     await expect(history.locator('a.card__link', { hasText: product.name })).toBeVisible();
     // One trail, not two: the browser's copy went with the merge.
-    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('tendero.trail') ?? '{"views":[]}').views)).toEqual([]);
+    expect(
+      await page.evaluate(() => JSON.parse(localStorage.getItem('tendero.trail') ?? '{"views":[]}').views),
+    ).toEqual([]);
 
     // Leave the account as it was found.
     await history.getByRole('button', { name: 'Borrar todo' }).click();
@@ -163,7 +171,11 @@ test.describe('the home page', () => {
       },
     });
     expect(created.ok(), await created.text()).toBe(true);
-    expect((await shopkeeper.request.post(`${backofficeUrl}/api/pricing/campaign-calendar/${code}/schedule`, { headers })).ok()).toBe(true);
+    expect(
+      (
+        await shopkeeper.request.post(`${backofficeUrl}/api/pricing/campaign-calendar/${code}/schedule`, { headers })
+      ).ok(),
+    ).toBe(true);
 
     try {
       await page.goto('/es/c/KITCHEN');

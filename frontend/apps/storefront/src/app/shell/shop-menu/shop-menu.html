@@ -1,10 +1,19 @@
 <ng-container *transloco="let t">
   @for (department of menu(); track department.category.code) {
     @let here = department.category.code === current();
-    <section class="department" [class.department--here]="here">
-      <h2 class="department__head">
+    <section>
+      <!-- Where the shopper is, in a word, a weight and a line. Not clay: the
+           accent is the page's one action (design/DESIGN.md), and a menu is not it. -->
+      <h2
+        class="mb-2 flex items-baseline justify-between gap-3 pb-2 font-display text-lg"
+        [class.border-b]="!here"
+        [class.border-hairline]="!here"
+        [class.border-b-2]="here"
+        [class.border-body]="here"
+      >
         <a
-          class="department__link"
+          class="inline-flex min-h-tap items-center text-body no-underline hover:underline"
+          [class.font-extrabold]="here"
           [routerLink]="links.category(department.category.code)"
           [state]="fromMenu"
           [attr.aria-current]="here ? 'true' : null"
@@ -12,25 +21,38 @@
         >
           {{ department.category.name }}
         </a>
-        <span class="department__all">{{ here ? t('menu.here') : t('menu.all') }}</span>
+        <span class="font-sans text-2xs font-normal text-muted">{{ here ? t('menu.here') : t('menu.all') }}</span>
       </h2>
 
-      <ul class="links" role="list">
+      <ul class="grid" role="list">
         @for (group of department.groups; track group.category.code) {
           @if (group.children.length > 0) {
-            <li class="group">
-              <span class="group__head">{{ group.category.name }}</span>
-              <ul class="links" role="list">
+            <li class="mt-2">
+              <span class="block text-2xs font-semibold tracking-wide text-muted">{{ group.category.name }}</span>
+              <ul class="grid" role="list">
                 @for (leaf of group.children; track leaf.code) {
                   <li>
-                    <a class="link" [routerLink]="links.category(leaf.code)" [state]="fromMenu" (click)="chosen.emit()">{{ leaf.name }}</a>
+                    <!-- 44 px on a desktop, 48 in the drawer, where a thumb aims (R-2, S-P3). -->
+                    <a
+                      class="flex min-h-tap items-center text-body no-underline hover:underline in-[.in-drawer]:min-h-control-lg in-[.in-drawer]:ps-3"
+                      [routerLink]="links.category(leaf.code)"
+                      [state]="fromMenu"
+                      (click)="chosen.emit()"
+                      >{{ leaf.name }}</a
+                    >
                   </li>
                 }
               </ul>
             </li>
           } @else {
             <li>
-              <a class="link" [routerLink]="links.category(group.category.code)" [state]="fromMenu" (click)="chosen.emit()">{{ group.category.name }}</a>
+              <a
+                class="flex min-h-tap items-center text-body no-underline hover:underline in-[.in-drawer]:min-h-control-lg in-[.in-drawer]:ps-3"
+                [routerLink]="links.category(group.category.code)"
+                [state]="fromMenu"
+                (click)="chosen.emit()"
+                >{{ group.category.name }}</a
+              >
             </li>
           }
         }

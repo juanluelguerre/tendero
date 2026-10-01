@@ -1,46 +1,7 @@
-/* 24 px with a mouse, 44 px under a finger (R-5.2): the pill grows on a phone
-   rather than hiding a taller hit area nobody can see. */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.5rem;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: var(--bg-raised);
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-2xs);
-  line-height: 1.6;
-  white-space: nowrap;
-}
-
-/* A button, and it looks like one on hover and focus: it opens the words. */
-.chip--description {
-  cursor: pointer;
-  border-color: var(--border-strong);
-  color: var(--text);
-  transition: border-color var(--dur-fast) var(--ease);
-}
-
-.chip--description:hover {
-  border-color: var(--text-muted);
-}
-
-.chip--description:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
+/* Styled with utilities in the template (ADR 0049). What stays is the popover's
+   placement, which has no utility. */
 .quote {
-  max-inline-size: min(28rem, calc(100vw - 2 * var(--space-4)));
   margin: auto;
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--bg-surface);
-  color: var(--text);
-  box-shadow: var(--shadow-pop);
 }
 
 /* Beside its chip where the browser can anchor it, and never off-screen: the
@@ -48,41 +9,8 @@
    centred, which is the popover's own default. */
 @supports (position-area: bottom) {
   .quote {
-    margin: var(--space-2) 0 0;
+    margin: var(--spacing-2) 0 0;
     position-area: bottom span-right;
     position-try-fallbacks: flip-block, flip-inline;
   }
-}
-
-.quote::backdrop {
-  background: transparent;
-}
-
-.quote__title {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-2xs);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.quote__text {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-md);
-  line-height: var(--leading-snug);
-}
-
-.quote__support {
-  margin: var(--space-3) 0 0;
-  font-size: var(--text-sm);
-}
-
-.quote__note {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-2xs);
-  color: var(--text-muted);
-}
-
-@media (pointer: coarse) {
-  .chip { min-height: 2.75rem; }
 }

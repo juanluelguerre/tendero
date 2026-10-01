@@ -29,7 +29,9 @@ export class HomeModule {
     if (!(event.target instanceof Element) || !event.target.closest('a')) return;
 
     const element = this.host.nativeElement;
-    const drawn = element.parentElement ? [...element.parentElement.querySelectorAll(':scope > [data-home-module]')] : [element];
+    const drawn = element.parentElement
+      ? [...element.parentElement.querySelectorAll(':scope > [data-home-module]')]
+      : [element];
     this.telemetry.trackEvent('home_module_opened', {
       module: this.storefrontHomeModule(),
       position: drawn.indexOf(element) + 1,

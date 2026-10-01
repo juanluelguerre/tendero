@@ -1,58 +1,69 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.tasks'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-  </header>
+<!-- No read of its own to wait on: each task says its own failure, and one
+     failing leaves the other two standing. `task__count` is the end-to-end
+     stock spec's hook. -->
+<backoffice-widget-frame *transloco="let t; prefix: 'dashboard.tasks'" [heading]="t('title')">
+  <ng-template>
+    <ul class="grid gap-4">
+      <li class="min-w-0">
+        <a
+          class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline"
+          routerLink="/review"
+        >
+          <span>{{ t('drafts') }}</span>
+          <span class="task__count numeric text-lg font-semibold">{{ store.drafts.value()?.total ?? '—' }}</span>
+        </a>
+        @if (store.drafts.error()) {
+          <p class="failed mt-1" role="alert">{{ t('failed') }}</p>
+        }
+      </li>
 
-  <ul class="tasks">
-    <li class="task">
-      <a class="task__head" routerLink="/review">
-        <span>{{ t('drafts') }}</span>
-        <span class="numeric task__count">{{ store.drafts.value()?.total ?? '—' }}</span>
-      </a>
-      @if (store.drafts.error()) {
-        <p class="failed task__note" role="alert">{{ t('failed') }}</p>
-      }
-    </li>
+      <li class="min-w-0">
+        <a
+          class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline"
+          routerLink="/claims"
+        >
+          <span>{{ t('claims') }}</span>
+          <span class="task__count numeric text-lg font-semibold">{{ store.claims.value()?.total ?? '—' }}</span>
+        </a>
+        @if (store.claims.error()) {
+          <p class="failed mt-1" role="alert">{{ t('failed') }}</p>
+        } @else if (store.weakestClaims().length > 0) {
+          <p class="eyebrow mt-1">{{ t('weakestFirst') }}</p>
+          <ul class="mt-2 grid gap-1">
+            @for (claim of store.weakestClaims(); track claim.claimId) {
+              <li class="flex min-w-0 items-baseline gap-2 text-xs">
+                <span class="min-w-0 flex-1 truncate">{{ statement(claim) }}</span>
+                <span class="muted numeric">{{ t('support', { value: (claim.support * 100).toFixed(0) }) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </li>
 
-    <li class="task">
-      <a class="task__head" routerLink="/claims">
-        <span>{{ t('claims') }}</span>
-        <span class="numeric task__count">{{ store.claims.value()?.total ?? '—' }}</span>
-      </a>
-      @if (store.claims.error()) {
-        <p class="failed task__note" role="alert">{{ t('failed') }}</p>
-      } @else if (store.weakestClaims().length > 0) {
-        <p class="eyebrow task__note">{{ t('weakestFirst') }}</p>
-        <ul class="task__items">
-          @for (claim of store.weakestClaims(); track claim.claimId) {
-            <li class="task__item">
-              <span class="task__text">{{ statement(claim) }}</span>
-              <span class="numeric muted">{{ t('support', { value: (claim.support * 100).toFixed(0) }) }}</span>
-            </li>
-          }
-        </ul>
-      }
-    </li>
-
-    <li class="task">
-      <a class="task__head" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">
-        <span>{{ t('lowStock') }}</span>
-        <span class="numeric task__count" [class.task__count--warn]="store.restockCount() > 0">
-          {{ store.stock.hasValue() ? store.restockCount() : '—' }}
-        </span>
-      </a>
-      @if (store.stock.error()) {
-        <p class="failed task__note" role="alert">{{ t('failed') }}</p>
-      } @else if (store.lowStock().length > 0) {
-        <ul class="task__items">
-          @for (row of store.lowStock().slice(0, shown); track row.sku) {
-            <li class="task__item">
-              <span class="task__text numeric">{{ row.sku }}</span>
-              <span class="numeric">{{ t('available', { count: row.available }) }}</span>
-            </li>
-          }
-        </ul>
-      }
-    </li>
-  </ul>
-</article>
+      <li class="min-w-0">
+        <a
+          class="flex items-baseline justify-between gap-3 font-medium text-body no-underline hover:underline focus-visible:underline"
+          routerLink="/stock"
+          [queryParams]="{ filter: 'Restock' }"
+        >
+          <span>{{ t('lowStock') }}</span>
+          <span class="task__count numeric text-lg font-semibold" [class.text-warning]="store.restockCount() > 0">
+            {{ store.stock.hasValue() ? store.restockCount() : '—' }}
+          </span>
+        </a>
+        @if (store.stock.error()) {
+          <p class="failed mt-1" role="alert">{{ t('failed') }}</p>
+        } @else if (store.lowStock().length > 0) {
+          <ul class="mt-2 grid gap-1">
+            @for (row of store.lowStock().slice(0, shown); track row.sku) {
+              <li class="flex min-w-0 items-baseline gap-2 text-xs">
+                <span class="min-w-0 flex-1 truncate numeric">{{ row.sku }}</span>
+                <span class="numeric">{{ t('available', { count: row.available }) }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </li>
+    </ul>
+  </ng-template>
+</backoffice-widget-frame>

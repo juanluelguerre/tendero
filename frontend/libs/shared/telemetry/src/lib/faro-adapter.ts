@@ -60,7 +60,9 @@ export function createFaroAdapter(options: FaroAdapterOptions = {}): TelemetryAd
 
   const withRoute = (attributes: Attributes): Record<string, string> => {
     const text = Object.fromEntries(Object.entries(attributes).map(([key, value]) => [key, String(value)]));
-    return currentRoute ? { ...text, 'url.template': currentRoute, 'session.id': session } : { ...text, 'session.id': session };
+    return currentRoute
+      ? { ...text, 'url.template': currentRoute, 'session.id': session }
+      : { ...text, 'session.id': session };
   };
 
   const tracer = () => faro.api.getOTEL()?.trace.getTracer('tendero.browser');
@@ -86,7 +88,9 @@ export function createFaroAdapter(options: FaroAdapterOptions = {}): TelemetryAd
         },
         // The traffic simulator's browsers say so (ADR 0037), in the same
         // attribute the OTel adapter puts on its resource.
-        sessionTracking: isSynthetic() ? { session: { attributes: { 'user_agent.synthetic.type': 'test' } } } : undefined,
+        sessionTracking: isSynthetic()
+          ? { session: { attributes: { 'user_agent.synthetic.type': 'test' } } }
+          : undefined,
         instrumentations: [
           ...getWebInstrumentations({ captureConsole: false }),
           new TracingInstrumentation({

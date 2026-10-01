@@ -18,11 +18,7 @@ describe('the returns policy', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        { provide: API_BASE_URL, useValue: 'http://api' },
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }],
     });
 
     http = TestBed.inject(HttpTestingController);
@@ -48,8 +44,7 @@ describe('the returns policy', () => {
     const policy = TestBed.inject(ReturnsPolicyStore);
     TestBed.tick();
 
-    http.expectOne('http://api/api/returns/policy')
-      .flush('down', { status: 503, statusText: 'Service Unavailable' });
+    http.expectOne('http://api/api/returns/policy').flush('down', { status: 503, statusText: 'Service Unavailable' });
 
     expect(policy.windowDays()).toBeNull();
   });

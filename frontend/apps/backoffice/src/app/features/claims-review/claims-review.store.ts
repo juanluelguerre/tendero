@@ -1,8 +1,15 @@
 import { computed, inject, linkedSignal } from '@angular/core';
-import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { translateObjectSignal } from '@jsverse/transloco';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { ClaimForReview, ClaimSupportFilter } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -12,9 +19,8 @@ import { type ClaimDecision, KnowledgeService } from '../../data-access/knowledg
 import { readStatus } from '../../read-status';
 import { type ActionVia, BackofficeUsage } from '../../usage';
 import type { FilterOption } from '../../worklist/filter-chips/filter-chips';
-
-/** Twenty rows a page, as every worklist (R-7.2). */
-export const PageSize = 20;
+import { withWorklistUrl } from '../../worklist/with-worklist-url';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * The claims queue's shared state (ADR 0047): the filter, the page and the open
@@ -25,22 +31,19 @@ export const PageSize = 20;
  */
 export const ClaimsReviewStore = signalStore(
   withState({ busy: null as string | null }),
-  withProps(() => {
-    const route = inject(ActivatedRoute);
-    return {
-      _router: inject(Router),
-      _knowledge: inject(KnowledgeService),
-      _catalog: inject(CatalogService),
-      _culture: inject(CultureStore),
-      _usage: inject(BackofficeUsage),
-      _labels: translateObjectSignal('claims.filter'),
-      _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
-    };
-  }),
+  withWorklistUrl(),
+  withProps(() => ({
+    _knowledge: inject(KnowledgeService),
+    _catalog: inject(CatalogService),
+    _culture: inject(CultureStore),
+    _usage: inject(BackofficeUsage),
+    _labels: translateObjectSignal('claims.filter'),
+  })),
   withComputed((store) => ({
     // Read in any case: a link saved before the filter took the enum's name said `all`.
-    filterKey: computed<ClaimSupportFilter>(() => (store._params().get('support')?.toLowerCase() === 'all' ? 'All' : 'Weak')),
-    page: computed(() => Math.max(1, Number(store._params().get('page') ?? 1) || 1)),
+    filterKey: computed<ClaimSupportFilter>(() =>
+      store._params().get('support')?.toLowerCase() === 'all' ? 'All' : 'Weak',
+    ),
     selectedId: computed(() => store._params().get('claim')),
   })),
   withProps((store) => {
@@ -49,30 +52,33 @@ export const ClaimsReviewStore = signalStore(
      * laboratory catalogue (the scale rule); a shop past that would ask the
      * catalogue for the queue's products only.
      */
-    const queue = rxResource({
-      params: () => ({ culture: store._culture.active(), support: store.filterKey(), page: store.page() }),
-      stream: ({ params }) =>
-        forkJoin({
-          claims: store._knowledge.claims(params.support, params.page, PageSize),
-          products: store._catalog.list(null, params.culture, 1, 100),
-        }),
-    });
-    return {
-      _queue: queue,
-      ...readStatus(queue),
-      /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
-      _counts: linkedSignal<ReadonlyMap<string, number> | undefined, ReadonlyMap<string, number> | null>({
-        source: () => {
-          const page = queue.value()?.claims;
-          return page && new Map(page.counts.map((entry) => [entry.support, entry.count]));
-        },
-        computation: (counts, previous) => counts ?? previous?.value ?? null,
+    const queue = extendResource(
+      rxResource({
+        params: () => ({ culture: store._culture.active(), support: store.filterKey(), page: store.page() }),
+        stream: ({ params }) =>
+          forkJoin({
+            claims: store._knowledge.claims(params.support, params.page, store.pageSize),
+            products: store._catalog.list(null, params.culture, 1, 100),
+          }),
       }),
-    };
+    );
+    return { _queue: queue, ...readStatus(queue) };
   }),
+  withLinkedState(({ _queue }) => ({
+    /** The counts per filter, kept while the next page is on its way so the chips do not blink. */
+    _counts: linkedSignal<ReadonlyMap<string, number> | undefined, ReadonlyMap<string, number> | null>({
+      source: () => {
+        const page = _queue.value()?.claims;
+        return page && new Map(page.counts.map((entry) => [entry.support, entry.count]));
+      },
+      computation: (counts, previous) => counts ?? previous?.value ?? null,
+    }),
+  })),
   withComputed((store) => {
     const claims = computed(() => store._queue.value()?.claims.items ?? []);
-    const names = computed(() => new Map((store._queue.value()?.products.items ?? []).map((product) => [product.productId, product.name])));
+    const names = computed(
+      () => new Map((store._queue.value()?.products.items ?? []).map((product) => [product.productId, product.name])),
+    );
     return {
       claims,
       _names: names,
@@ -80,14 +86,19 @@ export const ClaimsReviewStore = signalStore(
       filters: computed<FilterOption[]>(() => {
         const labels = store._labels() as Record<string, string>;
         const counts = store._counts();
-        return (['Weak', 'All'] as const).map((key) => ({ key, label: labels[key] ?? key, count: counts?.get(key) ?? null }));
+        return (['Weak', 'All'] as const).map((key) => ({
+          key,
+          label: labels[key] ?? key,
+          count: counts?.get(key) ?? null,
+        }));
       }),
       selected: computed(() => claims().find((claim) => claim.claimId === store.selectedId()) ?? null),
+      /** The weak queue is empty and claims wait under All: the page points there rather than saying there is nothing. */
+      othersWaiting: computed(() => store.filterKey() === 'Weak' && (store._counts()?.get('All') ?? 0) > 0),
     };
   }),
   withMethods((store) => {
-    const navigate = (queryParams: Record<string, string | number | null>) =>
-      void store._router.navigate([], { queryParams, queryParamsHandling: 'merge' });
+    const navigate = store._navigate;
     const open = (claim: ClaimForReview) => navigate({ claim: claim.claimId });
 
     const settle = (claim: ClaimForReview) => {
@@ -108,9 +119,6 @@ export const ClaimsReviewStore = signalStore(
       },
       filterBy(key: string): void {
         navigate({ support: key === 'Weak' ? null : key, page: null });
-      },
-      go(page: number): void {
-        navigate({ page: page <= 1 ? null : page });
       },
       open,
       close(): void {

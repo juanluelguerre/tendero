@@ -7,70 +7,84 @@
   </header>
   <p class="page-hint">{{ t('promotions.hint') }}</p>
 
-  @if (store.loading()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-    <p class="sr-only" role="status" aria-live="polite">{{ t('promotions.loading') }}</p>
-  } @else if (store.failed()) {
-    <p class="failed" role="alert">{{ t('promotions.failed') }}</p>
-  } @else if (store.items().length === 0) {
-    <div class="empty"><p class="empty__text">{{ t('promotions.empty') }}</p></div>
-  } @else {
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.items().length === 0"
+    [loadingText]="t('promotions.loading')"
+    [failedText]="t('promotions.failed')"
+    [emptyText]="t('promotions.empty')"
+  >
     <div class="table-wrap">
-    <table class="table">
-      <caption class="sr-only">{{ t('promotions.title') }}</caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t('promotions.column.code') }}</th>
-          <th scope="col">{{ t('promotions.column.name') }}</th>
-          <th scope="col">{{ t('promotions.column.effect') }}</th>
-          <th scope="col">{{ t('promotions.column.combination') }}</th>
-          <th scope="col" class="numeric">{{ t('promotions.column.priority') }}</th>
-          <th scope="col">{{ t('promotions.column.state') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (promotion of store.items(); track promotion.code) {
+      <table class="table">
+        <caption class="sr-only">
+          {{
+            t('promotions.title')
+          }}
+        </caption>
+        <thead>
           <tr>
-            <td class="numeric code">{{ promotion.code }}</td>
-            <td>
-              {{ name(promotion) }}
-              @if (promotion.missingCultures.length > 0) {
-                <span class="tag tag--warn">{{ promotion.missingCultures.join(' · ') }}</span>
-              }
-            </td>
-            <td>
-              <span class="effect">{{ promotion.effect }}</span>
-              <span class="numeric effect__detail">{{ promotion.effectDetail }}</span>
-            </td>
-            <!-- The load-bearing column. A group name beside the policy is
-                 what turns "ExclusiveInGroup" into something actionable:
-                 it names who this one would suppress. -->
-            <td>
-              <span class="policy" [class]="'policy--' + promotion.combination">
-                {{ t('promotions.policy.' + promotion.combination) }}
-              </span>
-              @if (promotion.exclusivityGroup) {
-                <span class="group">{{ promotion.exclusivityGroup }}</span>
-              }
-            </td>
-            <td class="numeric">{{ promotion.priority }}</td>
-            <td>
-              @if (promotion.isActive) {
-                <span class="tag tag--ok">{{ t('promotions.state.running') }}</span>
-              } @else {
-                <span class="tag tag--warn">{{ t('promotions.state.scheduled') }}</span>
-              }
-              @if (promotion.couponCode) {
-                <span class="tag tag--code">{{ t('promotions.needsCoupon') }}</span>
-              }
-              @if (promotion.segment) {
-                <span class="tag tag--code">{{ promotion.segment }}</span>
-              }
-            </td>
+            <th scope="col">{{ t('promotions.column.code') }}</th>
+            <th scope="col">{{ t('promotions.column.name') }}</th>
+            <th scope="col">{{ t('promotions.column.effect') }}</th>
+            <th scope="col">{{ t('promotions.column.combination') }}</th>
+            <th scope="col" class="numeric">{{ t('promotions.column.priority') }}</th>
+            <th scope="col">{{ t('promotions.column.state') }}</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (promotion of store.items(); track promotion.code) {
+            <tr>
+              <td class="numeric font-medium text-body">{{ promotion.code }}</td>
+              <td>
+                {{ name(promotion) }}
+                @if (promotion.missingCultures.length > 0) {
+                  <span class="tag tag--warn">{{ promotion.missingCultures.join(' · ') }}</span>
+                }
+              </td>
+              <!-- The effect reads as one value: kind then amount, with a space
+                 that the two spans did not have — "percent-off-line30%" was the
+                 first thing the screen got wrong when it was seen running. -->
+              <td>
+                <span class="text-muted">{{ promotion.effect }}</span>
+                <span class="ms-2 numeric text-body">{{ promotion.effectDetail }}</span>
+              </td>
+              <!-- The load-bearing column. Each policy gets its own outline so the
+                 shape of the table answers "what stops applying?" before
+                 anything is read, and a group name beside the policy is what
+                 turns "ExclusiveInGroup" into something actionable: it names
+                 who this one would suppress. -->
+              <td>
+                <span
+                  class="inline-block rounded-sm border border-current px-2 py-px text-3xs whitespace-nowrap"
+                  [class.text-danger]="promotion.combination === 'ExclusiveGlobal'"
+                  [class.text-warning]="promotion.combination === 'ExclusiveInGroup'"
+                  [class.text-positive]="promotion.combination === 'Stackable'"
+                >
+                  {{ t('promotions.policy.' + promotion.combination) }}
+                </span>
+                @if (promotion.exclusivityGroup) {
+                  <span class="ms-2 inline-block font-mono text-3xs text-muted">{{ promotion.exclusivityGroup }}</span>
+                }
+              </td>
+              <td class="numeric">{{ promotion.priority }}</td>
+              <td>
+                @if (promotion.isActive) {
+                  <span class="tag tag--ok">{{ t('promotions.state.running') }}</span>
+                } @else {
+                  <span class="tag tag--warn">{{ t('promotions.state.scheduled') }}</span>
+                }
+                @if (promotion.couponCode) {
+                  <span class="tag tag--code">{{ t('promotions.needsCoupon') }}</span>
+                }
+                @if (promotion.segment) {
+                  <span class="tag tag--code">{{ promotion.segment }}</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
-  }
+  </backoffice-list-state>
 </section>

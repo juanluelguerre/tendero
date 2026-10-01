@@ -2,82 +2,118 @@
   @if (canUseBackoffice()) {
     <!-- The rail (R-3, P1): the screens grouped by job, full on a wide screen,
          icons on a tablet, and replaced by the drawer below on a phone. -->
-    <aside class="rail">
-      <a class="brand" routerLink="/dashboard">
+    <!-- Vertical overflow only: with the other axis left visible the browser makes
+         it scrollable too, and an icon's hidden label beside the rail gave the
+         collapsed rail a sideways scrollbar. -->
+    <aside
+      class="sticky top-0 hidden h-dvh w-rail flex-col gap-5 overflow-x-hidden overflow-y-auto border-e border-hairline bg-surface px-2 py-4 md:flex xl:w-rail-open xl:px-3"
+    >
+      <a class="flex items-center justify-center gap-2 no-underline xl:justify-start xl:px-3" routerLink="/dashboard">
         <!-- See the storefront shell: the icon, not the lockup, because of the
              typeface. -->
-        <img class="brand__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true" width="28" height="28" />
-        <span class="brand__name">{{ t('brand.name') }}</span>
+        <img
+          class="block size-control-xs"
+          ngSrc="brand/tendero-icon-backoffice.svg"
+          alt=""
+          aria-hidden="true"
+          width="28"
+          height="28"
+        />
+        <span class="brand__name hidden xl:inline">{{ t('brand.name') }}</span>
       </a>
       <backoffice-nav />
     </aside>
   }
 
-  <div class="column">
-    <header class="bar">
+  <div class="flex min-w-0 flex-col">
+    <header class="sticky top-0 z-3 flex min-h-bar items-center gap-2 border-b border-hairline bg-surface ps-3 pe-5">
       @if (canUseBackoffice()) {
         <button
           type="button"
-          class="bar__menu"
+          class="inline-grid size-tap flex-none place-items-center rounded-md text-body hover:bg-raised md:hidden"
           aria-haspopup="dialog"
           [attr.aria-label]="t('nav.menu')"
           (click)="drawer.showModal()"
         >
-          <backoffice-icon name="menu" />
+          <lib-icon name="menu" />
         </button>
       }
 
-      <span class="bar__brand">
-        <img class="brand__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true" width="26" height="26" />
-        <span class="brand__name">{{ t('brand.name') }}</span>
-        <span class="bar__area eyebrow">{{ t('brand.area') }}</span>
+      <!-- From a tablet up the rail carries the brand and the screens, so the bar
+           holds only what is the person's own. On the narrowest phones the mark
+           is the brand, and the room goes to the menu, the palette and the account. -->
+      <span class="inline-flex items-center gap-2 md:in-[.with-rail]:hidden">
+        <img
+          class="block size-control-xs"
+          ngSrc="brand/tendero-icon-backoffice.svg"
+          alt=""
+          aria-hidden="true"
+          width="26"
+          height="26"
+        />
+        <span class="brand__name max-3xs:hidden">{{ t('brand.name') }}</span>
+        <span class="eyebrow max-sm:hidden">{{ t('brand.area') }}</span>
       </span>
 
       @if (canUseBackoffice()) {
-        <!-- The palette's door (R-3, P2): a search-looking button that says its key. -->
-        <button type="button" class="bar__palette" aria-haspopup="dialog" (click)="openPalette()">
+        <!-- The palette's door (R-3, P2): a search-looking button that says its
+             key, wide enough to read as a search on a desktop, an icon on a phone. -->
+        <button
+          type="button"
+          class="inline-flex min-h-control-md min-w-tap flex-none items-center gap-2 rounded-md border border-hairline bg-raised px-3 text-xs text-muted hover:border-hairline-strong hover:text-body"
+          aria-haspopup="dialog"
+          (click)="openPalette()"
+        >
           <span aria-hidden="true">⌕</span>
-          <span class="bar__palette-hint">{{ t('palette.open') }}</span>
-          <kbd class="bar__palette-key">Ctrl K</kbd>
+          <span class="min-w-col-3xl text-start max-md:hidden">{{ t('palette.open') }}</span>
+          <kbd class="rounded-sm border border-hairline px-2 py-px font-mono text-3xs max-md:hidden">Ctrl K</kbd>
         </button>
       }
 
-      <span class="bar__spacer"></span>
+      <span class="flex-1"></span>
 
       @if (identity()) {
         <backoffice-account-menu (signOut)="signOut()" />
       } @else {
         <!-- Before signing in there is no account menu, and the door still has
              to be readable in both languages. -->
-        <div class="langs" role="group" [attr.aria-label]="t('nav.language')">
-          @for (option of cultures; track option) {
-            <button type="button" class="lang" [attr.aria-pressed]="option === culture()" (click)="use(option)">
-              {{ option }}
-            </button>
-          }
-        </div>
+        <lib-culture-switch
+          [label]="t('nav.language')"
+          [labelVisible]="false"
+          [cultures]="cultures"
+          [active]="culture()"
+          (chosen)="use($event)"
+        />
       }
     </header>
 
     @if (canUseBackoffice() && !staffUsage.noticeSeen()) {
       <!-- ADR 0041's notice stays at the top, where it cannot be missed, but in
            the content's column and width (R-3). -->
-      <backoffice-staff-notice class="notice-slot" />
+      <backoffice-staff-notice class="mx-5 mt-4 max-sm:mx-4" />
     }
 
-    <main class="main"><router-outlet /></main>
+    <main class="flex-1 px-5 pt-6 pb-8 max-sm:px-4 max-sm:pt-5 max-sm:pb-5"><router-outlet /></main>
 
     @if (canUseBackoffice()) {
       <backoffice-undo-toast />
     }
 
     @if (canUseBackoffice()) {
-      <footer class="usage">
+      <!-- The notice's standing switch (ADR 0041): quiet, at the foot of every
+           screen, so switching it off never means finding a settings page. On the
+           text's line, not the box's top: the button is 24 px tall to be a
+           target, and stretched beside it the sentence sat above its own link. -->
+      <footer class="flex flex-wrap items-baseline gap-2 p-5 text-3xs text-muted">
         <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
         @if (staffUsage.state() === 'on') {
-          <button type="button" class="linkish" (click)="staffUsage.switchOff()">{{ t('staffUsage.switchOff') }}</button>
+          <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOff()">
+            {{ t('staffUsage.switchOff') }}
+          </button>
         } @else {
-          <button type="button" class="linkish" (click)="staffUsage.switchOn()">{{ t('staffUsage.switchOn') }}</button>
+          <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOn()">
+            {{ t('staffUsage.switchOn') }}
+          </button>
         }
       </footer>
     }
@@ -88,16 +124,34 @@
   }
 
   <!-- The phone's navigation: a modal dialog, so the platform traps focus,
-       closes on Esc and makes the page behind it inert. -->
-  <dialog #drawer class="drawer" [attr.aria-label]="t('nav.menu')">
+       closes on Esc and makes the page behind it inert. It floats, so it is
+       allowed a shadow; the page behind is dimmed with the darkest ink the
+       tokens have, never a new colour. -->
+  <dialog
+    #drawer
+    class="inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-[min(20rem,88vw)] max-w-none overflow-y-auto border-0 border-e border-hairline-strong bg-surface px-3 pt-3 pb-6 text-body shadow-pop backdrop:bg-ink-900/60"
+    [attr.aria-label]="t('nav.menu')"
+  >
     @if (canUseBackoffice()) {
-      <div class="drawer__head">
-        <span class="bar__brand">
-          <img class="brand__mark" src="brand/tendero-icon-backoffice.svg" alt="" aria-hidden="true" width="26" height="26" />
+      <div class="mb-4 flex items-center justify-between ps-3">
+        <span class="inline-flex items-center gap-2">
+          <img
+            class="block size-control-xs"
+            ngSrc="brand/tendero-icon-backoffice.svg"
+            alt=""
+            aria-hidden="true"
+            width="26"
+            height="26"
+          />
           <span class="brand__name">{{ t('brand.name') }}</span>
         </span>
-        <button type="button" class="bar__menu" [attr.aria-label]="t('nav.close')" (click)="drawer.close()">
-          <backoffice-icon name="close" />
+        <button
+          type="button"
+          class="inline-grid size-tap flex-none place-items-center rounded-md text-body hover:bg-raised"
+          [attr.aria-label]="t('nav.close')"
+          (click)="drawer.close()"
+        >
+          <lib-icon name="close" />
         </button>
       </div>
       <backoffice-nav [inDrawer]="true" (chosen)="drawer.close()" />

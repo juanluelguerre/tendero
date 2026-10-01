@@ -59,5 +59,7 @@ export function arrivedVia(navigation: Navigation | null | undefined): ArrivedFr
 export function cameFiltered(previous: UrlTree | null | undefined): boolean {
   if (!previous) return false;
   const kind = arrivedFrom(previous);
-  return (kind === 'search' || kind === 'category' || kind === 'listing') && hasFilters(parseListing(previous.queryParamMap));
+  return (
+    (kind === 'search' || kind === 'category' || kind === 'listing') && hasFilters(parseListing(previous.queryParamMap))
+  );
 }

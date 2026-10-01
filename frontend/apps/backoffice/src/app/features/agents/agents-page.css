@@ -1,4 +1,0 @@
-/* The page is a frame: the list-and-pane layout is shared by every worklist
-   (styles.css), and what the list, the form and the pane have of their own is
-   in their folders. */
-:host { display: block; }

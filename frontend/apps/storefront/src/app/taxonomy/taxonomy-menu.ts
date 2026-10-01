@@ -34,6 +34,7 @@ export function departmentOf(code: string, categories: readonly CategoryView[]):
   const byCode = new Map(categories.map((category) => [category.code, category]));
   let category = byCode.get(code);
   // Up by parent: `path` carries the ancestors' NAMES, for a breadcrumb, not their codes.
-  for (let steps = 0; category && category.parent && steps < categories.length; steps++) category = byCode.get(category.parent);
+  for (let steps = 0; category && category.parent && steps < categories.length; steps++)
+    category = byCode.get(category.parent);
   return category?.depth === 0 ? category.code : null;
 }

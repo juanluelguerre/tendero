@@ -1,10 +1,11 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import type { HttpResponse } from '@angular/common/http';
 import { computed, inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import type { CartView, PriceQuote, ShippingOptionsResponse } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { API_BASE_URL } from '@tendero/shared-util';
-import { firstValueFrom } from 'rxjs';
+import { catchError, concatMap, defer, finalize, firstValueFrom, type Observable, of, pipe, tap } from 'rxjs';
+import { CartService, CartTokenHeader } from '../data-access/cart.service';
 
 /**
  * Where the cart token lives.
@@ -16,8 +17,11 @@ import { firstValueFrom } from 'rxjs';
  */
 const TOKEN_KEY = 'tendero.cart';
 
-/** The header the API reads it from and echoes it back in. */
-const TOKEN_HEADER = 'X-Cart-Token';
+/** A change in the cart's queue, and how to say its turn is over. */
+interface CartJob {
+  readonly work: () => Observable<unknown>;
+  readonly done: () => void;
+}
 
 interface CartState {
   readonly cart: CartView | null;
@@ -49,10 +53,16 @@ interface CartState {
  */
 export const CartStore = signalStore(
   { providedIn: 'root' },
-  withState<CartState>(() => ({ cart: null, quote: null, busy: false, failed: null, token: readToken(), _shipping: 0 })),
+  withState<CartState>(() => ({
+    cart: null,
+    quote: null,
+    busy: false,
+    failed: null,
+    token: readToken(),
+    _shipping: 0,
+  })),
   withProps(() => ({
-    _http: inject(HttpClient),
-    _baseUrl: inject(API_BASE_URL),
+    _cart: inject(CartService),
     _culture: inject(CultureStore),
   })),
   withComputed(({ cart }) => ({
@@ -61,14 +71,6 @@ export const CartStore = signalStore(
     isEmpty: computed(() => (cart()?.lines.length ?? 0) === 0),
   })),
   withMethods((store) => {
-    const headers = (): HttpHeaders => {
-      const token = store.token();
-      return token ? new HttpHeaders({ [TOKEN_HEADER]: token }) : new HttpHeaders();
-    };
-
-    /** The explicit parameter wins over the header (ADR 0013). */
-    const params = (): HttpParams => new HttpParams().set('culture', store._culture.active());
-
     const keep = (token: string): void => {
       patchState(store, { token });
       try {
@@ -84,69 +86,68 @@ export const CartStore = signalStore(
      * quote with no lines, and asking anyway would paint an error over a basket
      * somebody just finished emptying.
      */
-    const refreshQuote = async (): Promise<void> => {
+    const quoted = (): Observable<unknown> => {
       const cart = store.cart();
       if (!cart || cart.lines.length === 0) {
         patchState(store, { quote: null });
-        return;
+        return of(null);
       }
 
-      try {
-        const quote = await firstValueFrom(
-          store._http.post<PriceQuote>(
-            `${store._baseUrl}/api/pricing/quote`,
-            { lines: cart.lines.map((line) => ({ sku: line.sku, quantity: line.quantity })), shipping: store._shipping() },
-            { params: params() },
-          ),
-        );
-        patchState(store, { quote });
-      } catch {
+      const lines = cart.lines.map((line) => ({ sku: line.sku, quantity: line.quantity }));
+      return store._cart.quote(lines, store._shipping(), store._culture.active()).pipe(
+        tap((quote) => patchState(store, { quote })),
         // A basket the shop cannot price is still a basket. The screen says the
         // total is unavailable and keeps the lines, which is more useful than an
         // empty page.
-        patchState(store, { quote: null });
-      }
+        catchError(() => {
+          patchState(store, { quote: null });
+          return of(null);
+        }),
+      );
     };
 
-    const run = async (call: () => Promise<{ body: CartView | null; headers: HttpHeaders }>): Promise<void> => {
+    /** One change and the quote that follows it, start to finish. */
+    const change = (call: () => Observable<HttpResponse<CartView>>): Observable<unknown> => {
       patchState(store, { busy: true, failed: null });
-      try {
-        const response = await call();
-
-        // The token comes back on EVERY answer and not only on the first, so the
-        // client stores what the last response said rather than having to know
-        // when a cart was created.
-        const token = response.headers.get(TOKEN_HEADER);
-        if (token) keep(token);
-
-        patchState(store, { cart: response.body });
-        await refreshQuote();
-      } catch (error) {
-        patchState(store, { failed: describe(error) });
-      } finally {
-        patchState(store, { busy: false });
-      }
+      return defer(call).pipe(
+        tap((response) => {
+          // The token comes back on EVERY answer and not only on the first, so the
+          // client stores what the last response said rather than having to know
+          // when a cart was created.
+          const token = response.headers.get(CartTokenHeader);
+          if (token) keep(token);
+          patchState(store, { cart: response.body });
+        }),
+        concatMap(() => quoted()),
+        catchError((error: unknown) => {
+          patchState(store, { failed: describe(error) });
+          return of(null);
+        }),
+        finalize(() => patchState(store, { busy: false })),
+      );
     };
+
+    /**
+     * Every change waits for the one before it, answer and quote included:
+     * `concatMap`. A click on the product page and the browser agent's tool, or
+     * a double click, could otherwise cross on the wire, and a late answer would
+     * overwrite a newer basket.
+     */
+    const queue = rxMethod<CartJob>(pipe(concatMap((job) => job.work().pipe(finalize(() => job.done())))));
+
+    /** Puts a piece of work in the queue; the promise settles when its turn is over. */
+    const enqueue = (work: () => Observable<unknown>): Promise<void> =>
+      new Promise((done) => queue({ work, done: () => done() }));
+
+    const token = () => store.token();
+    const culture = () => store._culture.active();
 
     /** Reads whatever is stored. Safe to call on every page. */
-    const load = async (): Promise<void> => {
-      if (!store.token()) return;
-      await run(() =>
-        firstValueFrom(store._http.get<CartView>(`${store._baseUrl}/api/cart`, { headers: headers(), params: params(), observe: 'response' })),
-      );
-    };
+    const load = (): Promise<void> =>
+      store.token() ? enqueue(() => change(() => store._cart.read(token(), culture()))) : Promise.resolve();
 
-    /** Zero removes the line — the same call, because that is what "−" at one unit means. */
     const setQuantity = (sku: string, quantity: number): Promise<void> =>
-      run(() =>
-        firstValueFrom(
-          store._http.put<CartView>(
-            `${store._baseUrl}/api/cart/lines/${encodeURIComponent(sku)}`,
-            { quantity },
-            { headers: headers(), params: params(), observe: 'response' },
-          ),
-        ),
-      );
+      enqueue(() => change(() => store._cart.setQuantity(sku, quantity, token(), culture())));
 
     return {
       load,
@@ -156,40 +157,30 @@ export const CartStore = signalStore(
        * person finishes here (P11-1). The token replaces whatever basket was
        * stored: the link is for this purchase.
        */
-      async adopt(token: string): Promise<void> {
-        keep(token);
+      async adopt(handedOver: string): Promise<void> {
+        keep(handedOver);
         await load();
       },
       add(sku: string, quantity = 1): Promise<void> {
-        return run(() =>
-          firstValueFrom(
-            store._http.post<CartView>(
-              `${store._baseUrl}/api/cart/lines`,
-              { sku, quantity },
-              { headers: headers(), params: params(), observe: 'response' },
-            ),
-          ),
-        );
+        return enqueue(() => change(() => store._cart.add(sku, quantity, token(), culture())));
       },
       remove(sku: string): Promise<void> {
         return setQuantity(sku, 0);
       },
       /** The delivery options for an address, priced by the same call checkout uses. */
       shippingOptions(address: unknown): Promise<ShippingOptionsResponse> {
-        return firstValueFrom(
-          store._http.post<ShippingOptionsResponse>(`${store._baseUrl}/api/checkout/shipping-options`, address, {
-            headers: headers(),
-            params: params(),
-          }),
-        );
+        return firstValueFrom(store._cart.shippingOptions(address, token(), culture()));
       },
       /**
        * Re-quotes with a shipping amount. Checkout calls it when the option
-       * changes, because the total the shopper agrees to includes delivery.
+       * changes, because the total the shopper agrees to includes delivery. In the
+       * queue too: a quote must not overtake the change it prices.
        */
       async quoteWithShipping(amount: number): Promise<PriceQuote | null> {
-        patchState(store, { _shipping: amount });
-        await refreshQuote();
+        await enqueue(() => {
+          patchState(store, { _shipping: amount });
+          return quoted();
+        });
         return store.quote();
       },
       /**

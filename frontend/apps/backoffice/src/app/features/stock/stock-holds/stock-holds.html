@@ -1,34 +1,41 @@
 <ng-container *transloco="let t">
-<aside class="holds">
-  <h2 class="holds__title">{{ t('stock.reservations') }}</h2>
+  <aside class="rounded-lg border border-hairline bg-surface p-4">
+    <h2 class="mb-3 text-xs font-semibold tracking-wide text-muted uppercase">{{ t('stock.reservations') }}</h2>
 
-  @if (store.reservations().length === 0) {
-    <p class="muted">{{ t('stock.noReservations') }}</p>
-  } @else {
-    <ul class="holds__list">
-      @for (hold of store.reservations(); track hold.reservationId) {
-        <li class="hold">
-          <div class="hold__head">
-            <span class="hold__status" [class]="'hold__status--' + hold.status">
-              {{ t('stock.status.' + hold.status) }}
-            </span>
-            <span class="hold__order">{{ shortId(hold) }}</span>
-          </div>
+    @if (store.reservations().length === 0) {
+      <p class="muted">{{ t('stock.noReservations') }}</p>
+    } @else {
+      <ul class="grid gap-3">
+        @for (hold of store.reservations(); track hold.reservationId) {
+          <li class="border-b border-hairline pb-3 text-xs last:border-b-0 last:pb-0">
+            <div class="flex items-center justify-between gap-2">
+              <span
+                class="rounded-sm border border-current px-2 py-px text-3xs"
+                [class.text-warning]="hold.status === 'Held'"
+                [class.text-positive]="hold.status === 'Committed'"
+                [class.text-danger]="hold.status === 'Released'"
+                [class.text-muted]="hold.status === 'Expired'"
+              >
+                {{ t('stock.status.' + hold.status) }}
+              </span>
+              <span class="font-mono text-3xs text-muted" [title]="hold.orderId">{{ shortId(hold) }}</span>
+            </div>
 
-          @if (hold.lines.length > 0) {
-            <ul class="hold__lines">
-              @for (line of hold.lines; track line) {
-                <li class="hold__line">{{ line }}</li>
-              }
-            </ul>
-          }
+            @if (hold.lines.length > 0) {
+              <ul class="mt-2">
+                @for (line of hold.lines; track line) {
+                  <li class="font-mono text-3xs text-muted">{{ line }}</li>
+                }
+              </ul>
+            }
 
-          @if (hold.reason) {
-            <p class="hold__reason">{{ hold.reason }}</p>
-          }
-        </li>
-      }
-    </ul>
-  }
-</aside>
+            @if (hold.reason) {
+              <!-- The sentence that makes a cancelled order explicable. -->
+              <p class="mt-2 text-muted">{{ hold.reason }}</p>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </aside>
 </ng-container>

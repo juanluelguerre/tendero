@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AgentView } from '@tendero/shared-api';
 
@@ -6,9 +6,9 @@ import type { AgentView } from '@tendero/shared-api';
 @Component({
   selector: 'backoffice-agent-status',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './agent-status.html',
-  styleUrl: './agent-status.css',
+  // Laid out by whoever places it; the tags are the shared ones (styles.css).
+  host: { class: 'contents' },
 })
 export class AgentStatus {
   readonly agent = input.required<AgentView>();

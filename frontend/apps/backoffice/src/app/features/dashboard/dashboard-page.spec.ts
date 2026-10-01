@@ -21,11 +21,28 @@ class StubWidget {
 }
 
 const Keys: WidgetKey[] = [
-  'keyFigures', 'salesByDay', 'bestSellers', 'byChannel', 'waiting', 'health', 'ordersByStatus',
-  'funnel', 'returns', 'stock', 'customers', 'agentSales', 'refusals',
-  'byCategory', 'sellThrough', 'campaigns', 'searchStatus',
+  'keyFigures',
+  'salesByDay',
+  'bestSellers',
+  'byChannel',
+  'waiting',
+  'health',
+  'ordersByStatus',
+  'funnel',
+  'returns',
+  'stock',
+  'customers',
+  'agentSales',
+  'refusals',
+  'byCategory',
+  'sellThrough',
+  'campaigns',
+  'searchStatus',
 ];
-const Stubs = Object.fromEntries(Keys.map((key) => [key, { component: StubWidget, takesPeriod: true }])) as Record<WidgetKey, WidgetDefinition>;
+const Stubs = Object.fromEntries(Keys.map((key) => [key, { component: StubWidget, takesPeriod: true }])) as Record<
+  WidgetKey,
+  WidgetDefinition
+>;
 
 describe('the dashboard page', () => {
   const active = signal(false);
@@ -61,7 +78,8 @@ describe('the dashboard page', () => {
 
   async function open(url: string) {
     const harness = await RouterTestingHarness.create(url);
-    for (const request of TestBed.inject(HttpTestingController).match((req) => req.url.includes('/i18n/'))) request.flush(English);
+    for (const request of TestBed.inject(HttpTestingController).match((req) => req.url.includes('/i18n/')))
+      request.flush(English);
     await harness.fixture.whenStable();
     harness.detectChanges();
     return harness;
@@ -72,10 +90,17 @@ describe('the dashboard page', () => {
   it('opens the tab its URL names, on the period its URL names', async () => {
     const element = shell(await open('/dashboard/sales?period=month'));
 
-    expect(element.querySelector('nav.tabs a[aria-current="page"]')?.getAttribute('href')).toBe('/dashboard/sales?period=month');
+    expect(element.querySelector('nav.tabs a[aria-current="page"]')?.getAttribute('href')).toBe(
+      '/dashboard/sales?period=month',
+    );
     expect(element.querySelector('.period[aria-pressed="true"]')?.getAttribute('data-period')).toBe('Month');
     expect([...element.querySelectorAll<HTMLElement>('.cell')].map((cell) => cell.dataset['widget'])).toEqual([
-      'keyFigures', 'salesByDay', 'byChannel', 'bestSellers', 'byCategory', 'sellThrough',
+      'keyFigures',
+      'salesByDay',
+      'byChannel',
+      'bestSellers',
+      'byCategory',
+      'sellThrough',
     ]);
     expect(element.querySelector('.cell')?.textContent?.trim()).toBe('Month');
   });
@@ -83,7 +108,9 @@ describe('the dashboard page', () => {
   it('opens the Overview at /dashboard, on the week', async () => {
     const element = shell(await open('/dashboard'));
 
-    expect(element.querySelector('nav.tabs a[aria-current="page"]')?.getAttribute('href')).toBe('/dashboard?period=week');
+    expect(element.querySelector('nav.tabs a[aria-current="page"]')?.getAttribute('href')).toBe(
+      '/dashboard?period=week',
+    );
     expect(element.querySelector('.period[aria-pressed="true"]')?.getAttribute('data-period')).toBe('Week');
   });
 
@@ -130,7 +157,9 @@ describe('the dashboard page', () => {
   it('refreshes every minute on the wall, and only there', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
     const harness = await open('/dashboard');
-    const refresh = harness.fixture.debugElement.query((node) => node.componentInstance instanceof DashboardPage).injector.get(DashboardRefresh);
+    const refresh = harness.fixture.debugElement
+      .query((node) => node.componentInstance instanceof DashboardPage)
+      .injector.get(DashboardRefresh);
     const before = refresh.at();
     vi.advanceTimersByTime(120_000);
     expect(refresh.at()).toBe(before);

@@ -1,64 +1,100 @@
 <ng-container *transloco="let t">
   @let item = hit();
-  @let source = imageUrl();
+  @let line = layout() === 'line';
 
   <!-- The picture goes to the product too — and so does the placeholder,
        which used to sit outside the link: on 82 of 100 cards the biggest thing
        on them went nowhere (UI review, 2026-09-11). Hidden from the keyboard
        and from screen readers, because the name below is the one link they
        need. -->
-  <a class="card__media" [routerLink]="links.product(item.slug, item.code)" [state]="linkState()" tabindex="-1" aria-hidden="true">
+  <a
+    class="relative block"
+    [class.flex-none]="line"
+    [class.w-8]="line"
+    [routerLink]="links.product(item.slug, item.code)"
+    [state]="linkState()"
+    tabindex="-1"
+    aria-hidden="true"
+  >
     @if (badge(); as label) {
       <!-- Decoration of the picture, so hidden with it; a screen reader gets the
-           same word after the name. -->
-      <span class="card__badge">{{ label }}</span>
+           same word after the name. A label on the picture — *Oferta*, *Nuevo* —
+           in the accent, as a figure on a tag is: a word, not an action. -->
+      <span
+        class="absolute start-2 top-2 z-1 rounded-sm bg-accent px-2 py-hair text-2xs font-semibold text-on-accent"
+        >{{ label }}</span
+      >
     }
-    @if (source) {
-      <img
-        class="card__image"
-        [src]="source"
-        [alt]="item.name"
-        loading="lazy"
-        (error)="broken.set(true)"
-      />
-    } @else {
-      <!-- A default state, not a gap: a card with no picture has to look
-           deliberate. -->
-      <storefront-product-image-placeholder
-        class="card__image card__image--fallback"
-        [alt]="t('product.noImage')"
-        [label]="layout() === 'tile' ? t('product.noImage') : ''" />
-    }
+    <!-- What cannot be bought is drawn faded, so a shelf reads at a glance. -->
+    <storefront-product-image
+      class="w-full border-hairline bg-raised object-cover"
+      [class.aspect-4/3]="!line"
+      [class.border-b]="!line"
+      [class.aspect-square]="line"
+      [class.rounded-sm]="line"
+      [class.opacity-45]="!item.inStock"
+      [class.saturate-40]="!item.inStock"
+      [src]="imageUrl()"
+      [alt]="item.name"
+      [labelled]="!line"
+      [priority]="priority()"
+    />
   </a>
 
   @if (rank(); as place) {
-    <span class="card__rank numeric" aria-hidden="true">{{ place }}</span>
+    <!-- A ranking: the place large, in the mono face the shop uses for figures. -->
+    <span class="numeric text-2xl leading-none font-semibold text-accent" [class.-order-1]="line" aria-hidden="true">{{
+      place
+    }}</span>
   }
 
-  <div class="card__body">
-    @if (item.brand && layout() === 'tile') {
-      <p class="card__brand eyebrow">{{ item.brand }}</p>
+  <div class="flex flex-col gap-1" [class.p-4]="!line" [class.min-w-0]="line" [class.py-3]="line" [class.pe-3]="line">
+    @if (item.brand && !line) {
+      <p class="eyebrow">{{ item.brand }}</p>
     }
 
     <!-- The whole card is not the link; the NAME is. A card whose every pixel
          navigates cannot also hold an add button, and the heading is what a
          screen reader reads out as the destination. -->
-    <h3 class="card__name">
-      <a class="card__link" [routerLink]="links.product(item.slug, item.code)" [state]="linkState()">
+    <h3 class="font-sans leading-snug font-semibold tracking-[normal]" [class.text-md]="!line" [class.text-sm]="line">
+      <!-- `card__link` is the end-to-end tests' hook. A finger's 44 px without
+           moving the card: the name keeps its line, and the padding it gains is
+           taken back by the margin (R-5.2). What the padding overlaps is the
+           image above, which leads to the same product. Its blocks stay inline: the
+           formatter's line breaks would be spaces around the name. -->
+      <!-- prettier-ignore -->
+      <a class="card__link text-inherit no-underline hover:underline pointer-coarse:-my-3 pointer-coarse:inline-block pointer-coarse:py-3"
+         [routerLink]="links.product(item.slug, item.code)" [state]="linkState()">
         @if (rank(); as place) {<span class="sr-only">{{ t('shelf.rank', { rank: place }) }} </span>}{{ item.name }}
         @if (badge(); as label) {<span class="sr-only"> · {{ label }}</span>}
       </a>
     </h3>
 
-    <p class="card__price numeric">{{ price() }}</p>
+    <p
+      class="numeric font-medium"
+      [class.mt-2]="!line"
+      [class.text-lg]="!line"
+      [class.mt-1]="line"
+      [class.text-md]="line"
+      [class.text-muted]="!item.inStock"
+    >
+      {{ hit().priceAmount | price: hit().priceCurrency : culture.active() }}
+    </p>
 
     @if (reason(); as why) {
-      <p class="card__reason">
-        <svg class="card__reasonIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <p class="mt-1 flex items-start gap-1 text-2xs leading-snug text-muted">
+        <svg
+          class="mt-nudge-sm size-icon-xs flex-none fill-none stroke-current stroke-2 [stroke-linecap:round] [stroke-linejoin:round]"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
           @if (why.icon === 'viewed') {
-            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+            <circle cx="12" cy="12" r="3" />
           } @else {
-            <path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" />
+            <path d="M3 17l6-6 4 4 8-8" />
+            <path d="M15 7h6v6" />
           }
         </svg>
         <span>{{ why.text }}</span>
@@ -68,26 +104,33 @@
     <!-- Only when it cannot be bought. "In stock" on every card is a label, not
          information; the absence is the default and the presence is the news. -->
     @if (!item.inStock) {
-      <p class="card__soldOut">{{ t('product.soldOut') }}</p>
+      <p class="mt-1 text-xs font-semibold text-danger">{{ t('product.soldOut') }}</p>
     } @else if (actions()) {
-      <button class="card__add" type="button" [disabled]="adding()" (click)="addToCart()">
+      <button
+        class="mt-3 min-h-control w-full rounded-md border border-hairline-strong bg-surface text-sm font-semibold text-body transition-[background,border-color,color] duration-(--dur-fast) ease-brand hover:enabled:border-accent hover:enabled:bg-accent hover:enabled:text-on-accent disabled:cursor-default disabled:opacity-60"
+        type="button"
+        [disabled]="adding()"
+        (click)="addToCart()"
+      >
         {{ adding() ? '…' : t('product.addToCart') }}
       </button>
     }
 
     <!-- A toggle, not a link: the tray at the foot of the page collects the
          picks, and the comparison is its own URL. Quiet, because adding to the
-         cart is this card's one accent action. -->
+         cart is this card's one accent action. 24 px, WCAG 2.2's floor; 44
+         where a finger aims (R-1, S-F4). -->
     @if (actions()) {
-    @let picked = compare.has(item.code);
-    <button
-      class="card__compare"
-      type="button"
-      [attr.aria-pressed]="picked"
-      [disabled]="!picked && compare.full()"
-      (click)="toggleCompare()">
-      {{ picked ? t('compare.picked') : t('compare.pick') }}
-    </button>
+      @let picked = compare.has(item.code);
+      <button
+        class="inline-flex min-h-target items-center self-start text-xs text-muted underline underline-offset-(--underline-offset) disabled:cursor-not-allowed disabled:no-underline aria-pressed:text-body pointer-coarse:min-h-tap"
+        type="button"
+        [attr.aria-pressed]="picked"
+        [disabled]="!picked && compare.full()"
+        (click)="toggleCompare()"
+      >
+        {{ picked ? t('compare.picked') : t('compare.pick') }}
+      </button>
     }
   </div>
 </ng-container>

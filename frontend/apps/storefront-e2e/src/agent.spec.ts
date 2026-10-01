@@ -42,8 +42,15 @@ async function withAgent(page: Page, path = '/es'): Promise<void> {
 function call(page: Page, name: string, input: Record<string, unknown>): Promise<ToolResult> {
   return page.evaluate(
     async ([toolName, toolInput]) => {
-      const tools = (window as unknown as { __tools: { name: string; execute: (i: unknown) => Promise<{ content: { text: string }[]; isError?: boolean }> }[] }).__tools;
-      const tool = tools.find((candidate) => candidate.name === toolName as string);
+      const tools = (
+        window as unknown as {
+          __tools: {
+            name: string;
+            execute: (i: unknown) => Promise<{ content: { text: string }[]; isError?: boolean }>;
+          }[];
+        }
+      ).__tools;
+      const tool = tools.find((candidate) => candidate.name === (toolName as string));
       if (!tool) throw new Error(`No tool named ${toolName as string}`);
 
       const result = await tool.execute(toolInput);
@@ -85,7 +92,9 @@ test.describe('the agent surface', () => {
     await withAgent(page);
 
     const result = await call(page, 'list_campaigns', {});
-    const campaigns = ((await (await request.get('/api/pricing/campaigns?culture=es')).json()) as { items: { code: string }[] }).items;
+    const campaigns = (
+      (await (await request.get('/api/pricing/campaigns?culture=es')).json()) as { items: { code: string }[] }
+    ).items;
 
     expect(result.isError).toBe(false);
     if (campaigns.length === 0) {

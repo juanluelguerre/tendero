@@ -1,5 +1,14 @@
 import { computed, inject } from '@angular/core';
-import { patchState, signalMethod, signalStore, withComputed, withLinkedState, withMethods, withProps, withState } from '@ngrx/signals';
+import {
+  patchState,
+  signalMethod,
+  signalStore,
+  withComputed,
+  withLinkedState,
+  withMethods,
+  withProps,
+  withState,
+} from '@ngrx/signals';
 import type { ManagedCampaignView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { blankForm, type CampaignForm, codeFrom, differs, formOf, toggled } from '../campaign-form';
@@ -71,14 +80,18 @@ export const CampaignEditorStore = signalStore(
       /** The categories a campaign can be scoped to, each with its trail. */
       scopes: computed(() =>
         (store._calendar.categories.value() ?? []).map((category) => {
-          const trail = category.path[category.path.length - 1] === category.name ? category.path : [...category.path, category.name];
+          const trail =
+            category.path[category.path.length - 1] === category.name
+              ? category.path
+              : [...category.path, category.name];
           return { code: category.code, label: trail.join(' › ') };
         }),
       ),
     };
   }),
   withMethods((store) => {
-    const edit = (change: Partial<CampaignForm>) => patchState(store, (state) => ({ form: { ...state.form, ...change } }));
+    const edit = (change: Partial<CampaignForm>) =>
+      patchState(store, (state) => ({ form: { ...state.form, ...change } }));
 
     return {
       /** Pass the component's input signal: null is a new campaign. */
@@ -87,7 +100,9 @@ export const CampaignEditorStore = signalStore(
       editName(culture: Culture, value: string): void {
         patchState(store, (state) => {
           const name = { ...state.form.name, [culture]: value };
-          return { form: { ...state.form, name, code: state.codeFollowsName ? codeFrom(name.en || name.es) : state.form.code } };
+          return {
+            form: { ...state.form, name, code: state.codeFollowsName ? codeFrom(name.en || name.es) : state.form.code },
+          };
         });
       },
       editLine(culture: Culture, value: string): void {
@@ -104,11 +119,20 @@ export const CampaignEditorStore = signalStore(
         edit({ categoryCode: value || null });
       },
       choose(code: string, on: boolean): void {
-        patchState(store, (state) => ({ form: { ...state.form, promotionCodes: toggled(state.form.promotionCodes, code, on) } }));
+        patchState(store, (state) => ({
+          form: { ...state.form, promotionCodes: toggled(state.form.promotionCodes, code, on) },
+        }));
       },
       editAlt(culture: Culture, value: string): void {
         patchState(store, (state) =>
-          state.form.image ? { form: { ...state.form, image: { ...state.form.image, alt: { ...state.form.image.alt, [culture]: value } } } } : {},
+          state.form.image
+            ? {
+                form: {
+                  ...state.form,
+                  image: { ...state.form.image, alt: { ...state.form.image.alt, [culture]: value } },
+                },
+              }
+            : {},
         );
       },
       removeImage(): void {
@@ -117,7 +141,10 @@ export const CampaignEditorStore = signalStore(
       },
       upload(file: File): void {
         store._calendar.upload(store._key(), file, (imageId) =>
-          patchState(store, (state) => ({ fileName: file.name, form: { ...state.form, image: { imageId, alt: state.form.image?.alt ?? { es: '', en: '' } } } })),
+          patchState(store, (state) => ({
+            fileName: file.name,
+            form: { ...state.form, image: { imageId, alt: state.form.image?.alt ?? { es: '', en: '' } } },
+          })),
         );
       },
       save(): void {

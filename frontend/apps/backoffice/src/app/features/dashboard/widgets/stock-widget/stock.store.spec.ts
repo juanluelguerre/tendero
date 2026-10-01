@@ -27,7 +27,14 @@ describe('the stock store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, StockStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        StockStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });
@@ -38,6 +45,12 @@ describe('the stock store', () => {
     http.expectOne('http://api/api/dashboard/stock?period=Week').flush(HEALTH);
     await TestBed.inject(ApplicationRef).whenStable();
 
-    expect([store.restock(), store.soldOut(), store.soon(), store.noSales(), store.closest().map((sku) => sku.sku)]).toEqual([4, 1, 2, 7, ['BACKPACK']]);
+    expect([
+      store.restock(),
+      store.soldOut(),
+      store.soon(),
+      store.noSales(),
+      store.closest().map((sku) => sku.sku),
+    ]).toEqual([4, 1, 2, 7, ['BACKPACK']]);
   });
 });

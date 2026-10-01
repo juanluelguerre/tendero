@@ -12,7 +12,15 @@ import { OrdersStore } from './orders.store';
 const Orders = 'http://api/api/orders';
 
 const order = (orderId: string, status: string): OrderSummary =>
-  ({ orderId, status, recipientName: 'Ana', city: 'Madrid', total: 50, currency: 'EUR', createdAt: '2026-09-29T10:00:00Z' }) as unknown as OrderSummary;
+  ({
+    orderId,
+    status,
+    recipientName: 'Ana',
+    city: 'Madrid',
+    total: 50,
+    currency: 'EUR',
+    createdAt: '2026-09-29T10:00:00Z',
+  }) as unknown as OrderSummary;
 
 /** The orders page's state without its screen (ADR 0047): the URL in, the list and the moves out. */
 describe('the orders store', () => {
@@ -52,6 +60,54 @@ describe('the orders store', () => {
     expect([request.request.params.get('status'), request.request.params.get('page')]).toEqual(['Confirmed', '1']);
   });
 
+  /**
+   * A list the server could not answer says so. In Angular 22 reading a failed
+   * resource's value throws, and every figure derived from it threw with it: the
+   * screen stayed on "Loading" for good (found on 2026-10-01 by answering 500).
+   */
+  it('says the list failed, and its figures read empty rather than throw', async () => {
+    const store = await at('/');
+    listed()[0].flush('boom', { status: 500, statusText: 'Server Error' });
+    await new Promise((settled) => setTimeout(settled));
+    TestBed.tick();
+
+    expect([store.failed(), store.loading(), store.orders(), store.total()]).toEqual([true, false, [], 0]);
+  });
+
+  /**
+   * An expired session is not the list's failure: the interceptor sends the
+   * person to the door, which says why. Orders said "failed" here while every
+   * other list said nothing (the review of 2026-10-01).
+   */
+  it('says nothing failed when the session expired', async () => {
+    const store = await at('/');
+    listed()[0].flush('', { status: 401, statusText: 'Unauthorized' });
+    await new Promise((settled) => setTimeout(settled));
+    TestBed.tick();
+
+    expect(store.failed()).toBe(false);
+  });
+
+  /**
+   * The rows and the open order are state (`withLinkedState`): a move changes
+   * them through the store, with patchState, and nothing outside can set them.
+   * They were public writable signals until the review of 2026-10-01. NgRx
+   * protects state by its type, not at runtime, so this is a type test: if the
+   * store let a component write them, the directives below would be unused and
+   * the file would not compile.
+   */
+  it('lets only the store change its rows and its open order', async () => {
+    const store = await at('/');
+    const fromOutside = () => {
+      // @ts-expect-error -- state: only the store changes the rows
+      store.orders.set([]);
+      // @ts-expect-error -- state: only the store changes the open order
+      store.selected.set(null);
+    };
+
+    expect(fromOutside).toBeTypeOf('function');
+  });
+
   /** A status typed by hand that the shop does not have lists everything, rather than asking for a 400. */
   it('lists every order for a status the shop does not have', async () => {
     await at('/?status=Nope');
@@ -67,7 +123,9 @@ describe('the orders store', () => {
     store.apply(order('a', 'Confirmed'), 'Ship', 'row');
     http.expectOne(`${Orders}/a/move`).flush(order('a', 'Shipped'));
     store.apply(order('b', 'Confirmed'), 'Ship', 'row');
-    http.expectOne(`${Orders}/b/move`).flush('Cannot ship an order that is not paid.', { status: 409, statusText: 'Conflict' });
+    http
+      .expectOne(`${Orders}/b/move`)
+      .flush('Cannot ship an order that is not paid.', { status: 409, statusText: 'Conflict' });
 
     expect(store.orders().map((row) => row.status)).toEqual(['Shipped', 'Confirmed']);
     expect(store.refusal()).toEqual({ b: 'Cannot ship an order that is not paid.' });

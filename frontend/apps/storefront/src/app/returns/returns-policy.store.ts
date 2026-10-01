@@ -4,6 +4,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { signalStore, withComputed, withProps } from '@ngrx/signals';
 import type { ReturnPolicy } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * How long the shop gives you to send something back.
@@ -23,7 +24,9 @@ export const ReturnsPolicyStore = signalStore(
   withProps(() => {
     const http = inject(HttpClient);
     const baseUrl = inject(API_BASE_URL);
-    return { _policy: rxResource({ stream: () => http.get<ReturnPolicy>(`${baseUrl}/api/returns/policy`) }) };
+    return {
+      _policy: extendResource(rxResource({ stream: () => http.get<ReturnPolicy>(`${baseUrl}/api/returns/policy`) })),
+    };
   }),
   withComputed(({ _policy }) => ({
     /**

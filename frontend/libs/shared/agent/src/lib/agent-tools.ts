@@ -1,11 +1,6 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { Telemetry } from '@tendero/shared-telemetry';
-import {
-  supportsModelContext,
-  type ModelContext,
-  type ToolDescriptor,
-  type ToolResponse,
-} from './model-context';
+import { supportsModelContext, type ModelContext, type ToolDescriptor, type ToolResponse } from './model-context';
 
 /**
  * Registers this page's tools with the browser's agent, when there is one.

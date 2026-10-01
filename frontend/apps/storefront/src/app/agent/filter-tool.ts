@@ -1,9 +1,5 @@
 import type { SearchFacet } from '@tendero/shared-api';
-import {
-  withPrice,
-  type ListingFilters,
-  type ListingPlace,
-} from '../listing/listing-filters';
+import { withPrice, type ListingFilters, type ListingPlace } from '../listing/listing-filters';
 
 /**
  * The browser agent's filters (R-7.3, F-5): what `list_filters` says and what
@@ -26,8 +22,7 @@ export interface FilterChoice {
 }
 
 export type FilterOutcome =
-  | { readonly ok: true; readonly filters: ListingFilters }
-  | { readonly ok: false; readonly reason: string };
+  { readonly ok: true; readonly filters: ListingFilters } | { readonly ok: false; readonly reason: string };
 
 /** Every facet the list offers, one per line, with the value to send for each option and how many it would leave. */
 export function describeFacets(facets: readonly SearchFacet[], total: number): string {
@@ -41,7 +36,10 @@ export function describeFacets(facets: readonly SearchFacet[], total: number): s
     }
 
     const options = facet.options
-      .map((option) => `${option.value}${option.value === option.label ? '' : ` "${option.label}"`} [${option.count}]${option.chosen ? ' (chosen)' : ''}`)
+      .map(
+        (option) =>
+          `${option.value}${option.value === option.label ? '' : ` "${option.label}"`} [${option.count}]${option.chosen ? ' (chosen)' : ''}`,
+      )
       .join(', ');
     return `- ${facet.code} (${facet.label}): ${options}`;
   });
@@ -62,13 +60,16 @@ export function chooseFilter(
 ): FilterOutcome {
   const facet = facets.find((candidate) => candidate.code === choice.facet);
   if (!facet) {
-    return refused(`No facet "${choice.facet}" here. The list offers: ${facets.map((f) => f.code).join(', ') || 'none'}.`);
+    return refused(
+      `No facet "${choice.facet}" here. The list offers: ${facets.map((f) => f.code).join(', ') || 'none'}.`,
+    );
   }
 
   if (facet.kind === 'Price') {
     const min = choice.minPrice ?? null;
     const max = choice.maxPrice ?? null;
-    if ((min !== null && !(min >= 0)) || (max !== null && !(max >= 0))) return refused('A price is a number of at least 0.');
+    if ((min !== null && !(min >= 0)) || (max !== null && !(max >= 0)))
+      return refused('A price is a number of at least 0.');
     return { ok: true, filters: withPrice(filters, min, max) };
   }
 

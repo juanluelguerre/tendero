@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ReturnList } from './return-list/return-list';
 import { ReturnPane } from './return-pane/return-pane';
 import { ReturnsStore } from './returns.store';
@@ -20,9 +20,10 @@ import { ReturnsStore } from './returns.store';
 @Component({
   selector: 'backoffice-returns',
   imports: [ReturnList, ReturnPane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './returns-page.html',
-  styleUrl: './returns-page.css',
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the pane have of their own is in their folders.
+  host: { class: 'block' },
   providers: [ReturnsStore],
 })
 export class ReturnsPage {

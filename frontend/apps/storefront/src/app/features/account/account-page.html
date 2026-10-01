@@ -5,18 +5,17 @@
     }
 
     @case ('failed') {
-      <div class="notice">
-        <h1 class="notice__title">{{ t('account.failedTitle') }}</h1>
+      <storefront-page-state class="mb-4" [level]="1" [heading]="t('account.failedTitle')">
         <p class="muted">{{ t('account.failed') }}</p>
-      </div>
+      </storefront-page-state>
     }
 
     @case ('signedOut') {
-      <section class="signIn">
-        <h1 class="signIn__title">{{ t('account.title') }}</h1>
+      <section class="pt-6 pb-4">
+        <h1 class="text-2xl">{{ t('account.title') }}</h1>
         <!-- The shop works without this, and it says so. Nothing here is a
              prerequisite for buying anything. -->
-        <p class="signIn__lede muted">{{ t('account.lede') }}</p>
+        <p class="muted mt-3 max-w-measure-md">{{ t('account.lede') }}</p>
 
         <!-- One button, and it leaves. Who may sign in and what they have to
              type is the issuer's business, which is what stops the shop from
@@ -27,18 +26,18 @@
       </section>
 
       <!-- A guest's trail is this browser's, and so are the controls over it (R-8). -->
-      <storefront-trail-history class="account__history" />
+      <storefront-trail-history class="mt-7" />
     }
 
     @case ('signedIn') {
       @let session = store.state();
       @if (session.status === 'signedIn') {
-        <header class="head">
-          <h1 class="head__title">{{ identity()?.name }}</h1>
+        <header class="flex items-baseline justify-between gap-4 pt-6 pb-4">
+          <h1 class="text-2xl">{{ identity()?.name }}</h1>
           <button type="button" class="quiet" (click)="store.signOut()">{{ t('account.signOut') }}</button>
         </header>
 
-        <h2 class="orders__title">{{ t('account.orders') }}</h2>
+        <h2 class="mb-3 text-lg">{{ t('account.orders') }}</h2>
 
         @if (session.orders.length === 0) {
           <!-- Truthful rather than helpful-sounding: somebody who has never
@@ -47,17 +46,25 @@
           <p class="muted">{{ t('account.noOrders') }}</p>
           <a class="button" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
         } @else {
-          <ul class="orders">
+          <ul class="grid gap-2">
             @for (order of session.orders; track order.orderId) {
-              <li class="order">
+              <li class="rounded-md border border-hairline bg-surface px-4 py-3">
                 <!--
                   **What is in it, before what it cost.** The row used to say
                   "9 lines, 624.48 EUR", which describes an order nobody
                   remembers placing. A person recognises an order by the things
                   in it, so the pictures and the first names come first and the
                   arithmetic sits underneath.
+
+                  So the row is a grid rather than a stack: thumbnails, then what
+                  it was, then what it cost — left to right, in the order
+                  somebody reads them. On a phone the figures go under the names
+                  instead of beside them.
                 -->
-                <a class="order__link" [routerLink]="links.order(order.orderId)">
+                <a
+                  class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center justify-between gap-3 max-sm:grid-cols-[auto_minmax(0,1fr)]"
+                  [routerLink]="links.order(order.orderId)"
+                >
                   <!--
                     Only when at least one line HAS a picture. Six of the hundred
                     seed products carry one, so an unconditional strip drew three
@@ -65,42 +72,44 @@
                     which reads worse than the names alone.
                   -->
                   @if (hasImages(order)) {
-                    <span class="order__thumbs">
+                    <span class="flex gap-1">
                       @for (line of order.preview; track line.sku) {
-                        @if (line.imageId && !store.broken().has(line.sku)) {
-                          <img class="order__thumb" [src]="imageUrl(line.imageId)" alt=""
-                               loading="lazy" (error)="store.imageFailed(line.sku)" />
-                        } @else {
-                          <!-- The same labelled tile the rest of the shop uses:
-                               the seed points at images that may not exist, so
-                               this is the DEFAULT path on a fresh clone rather
-                               than an error state. -->
-                          <storefront-product-image-placeholder
-                            class="order__thumb order__thumb--fallback"
-                            [alt]="t('product.noImage')" />
-                        }
+                        <!-- The same tile the rest of the shop uses when a picture
+                             is missing; the store hears of each failure too,
+                             because a strip of nothing but tiles is not drawn. -->
+                        <storefront-product-image
+                          class="size-thumb-sm rounded-sm border border-hairline bg-surface object-cover"
+                          [src]="line.imageId ? imageUrl(line.imageId) : null"
+                          alt=""
+                          (failed)="store.imageFailed(line.sku)"
+                        />
                       }
                     </span>
                   }
 
-                  <span class="order__body">
-                    <span class="order__names">{{ names(order) }}</span>
-                    <span class="order__meta muted">
-                      {{ when(order) }} · {{ t('account.lineCount', { count: order.lineCount }) }}
+                  <span class="grid min-w-0 gap-1">
+                    <span class="truncate font-semibold">{{ names(order) }}</span>
+                    <span class="muted text-sm">
+                      {{ order.createdAt | dateTime: culture.active() }} ·
+                      {{ t('account.lineCount', { count: order.lineCount }) }}
                     </span>
                   </span>
 
-                  <span class="order__figures">
-                    <span class="order__status">{{ t('order.status.' + order.status) }}</span>
-                    <span class="order__total numeric">{{ price(order) }}</span>
+                  <span
+                    class="grid justify-items-end gap-1 text-end max-sm:col-span-full max-sm:justify-items-start max-sm:text-start"
+                  >
+                    <span class="text-sm text-muted">{{ t('order.status.' + order.status) }}</span>
+                    <span class="numeric font-semibold">{{
+                      order.total | price: order.currency : culture.active()
+                    }}</span>
                   </span>
                 </a>
 
                 <!-- The history is where somebody goes looking for the order
                      that vanished, so the reason belongs here as much as on the
-                     order itself. -->
+                     order itself. Same weight as the line count above it. -->
                 @if (order.stopCode) {
-                  <span class="order__stop muted">{{ t('order.stop.' + order.stopCode) }}</span>
+                  <span class="muted block text-xs">{{ t('order.stop.' + order.stopCode) }}</span>
                 }
 
                 <!--
@@ -109,10 +118,17 @@
                   window opens on Delivered, and the screen derives that from the
                   status the SERVER sent rather than keeping its own copy of the
                   rule — `Order.AllowedTransitions` stays the only source.
+
+                  Not the clay action: the view already has one, and a link per
+                  row would make four of them (design/DESIGN.md).
                 -->
                 @if (order.status === 'Delivered') {
-                  <a class="order__return" [routerLink]="links.order(order.orderId)"
-                     [fragment]="'return'">{{ t('account.requestReturn') }}</a>
+                  <a
+                    class="mt-2 inline-block text-sm text-body underline underline-offset-2 hover:text-accent"
+                    [routerLink]="links.order(order.orderId)"
+                    [fragment]="'return'"
+                    >{{ t('account.requestReturn') }}</a
+                  >
                 }
               </li>
             }
@@ -120,7 +136,7 @@
         }
 
         <!-- *Tu historial* (R-8, H-3b): see it, delete it, switch it off. -->
-        <storefront-trail-history class="account__history" />
+        <storefront-trail-history class="mt-7" />
       }
     }
   }

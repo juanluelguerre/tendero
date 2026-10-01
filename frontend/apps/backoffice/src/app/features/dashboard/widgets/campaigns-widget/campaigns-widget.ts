@@ -1,12 +1,13 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { formatPrice } from '@tendero/shared-util';
+import { PricePipe } from '@tendero/shared-ui';
+import { Component, computed, inject } from '@angular/core';
 import { TranslocoDirective, translateObjectSignal } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice } from '@tendero/shared-util';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { BarChartData } from '../../../../charts/chart-contract';
 import { changeOf, formatChange } from '../figures';
 import { CampaignsStore } from './campaigns.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /**
  * A campaign against its baseline (spec, Overview and Growth; R-9, D-7): what it
@@ -16,18 +17,19 @@ import { CampaignsStore } from './campaigns.store';
  */
 @Component({
   selector: 'backoffice-campaigns-widget',
-  imports: [TranslocoDirective, RouterLink, BarChart],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, BarChart, WidgetFrame, PricePipe],
   templateUrl: './campaigns-widget.html',
-  styleUrl: './campaigns-widget.css',
+  host: { class: 'block' },
   providers: [CampaignsStore],
 })
 export class CampaignsWidget {
   protected readonly store = inject(CampaignsStore);
-  private readonly culture = inject(CultureStore);
-  private readonly words = translateObjectSignal('dashboard.campaigns');
+  protected readonly culture = inject(CultureStore);
 
-  protected readonly money = (amount: number): string => formatPrice(amount, this.store.uplift.value()?.currency ?? 'EUR', this.culture.active());
+  /** The chart's axis and figures: a function the chart calls, where a template would use the price pipe. */
+  protected readonly money = (amount: number): string =>
+    formatPrice(amount, this.store.uplift.value()?.currency ?? 'EUR', this.culture.active());
+  private readonly words = translateObjectSignal('dashboard.campaigns');
 
   protected readonly name = computed(() => {
     const campaign = this.store.campaign();
@@ -39,7 +41,9 @@ export class CampaignsWidget {
   /** The uplift as a change against the baseline: +27 %, in the reader's culture. */
   protected readonly uplift = computed(() => {
     const figures = this.store.uplift.value();
-    return figures?.baseline != null ? formatChange(changeOf(figures.sold, figures.baseline), this.culture.active()) : null;
+    return figures?.baseline != null
+      ? formatChange(changeOf(figures.sold, figures.baseline), this.culture.active())
+      : null;
   });
 
   /** The days that have ended, sold against their baseline: today, under way, would read as a fall. */
@@ -48,13 +52,22 @@ export class CampaignsWidget {
     const days = figures?.days.filter((day) => !day.future && !day.partial) ?? [];
     if (!figures?.hasBaseline || days.length === 0) return null;
     // In the zone the server counted the days in (ADR 0046): never one assumed here.
-    const format = new Intl.DateTimeFormat(this.culture.active(), { day: 'numeric', month: 'short', timeZone: figures.timeZone });
+    const format = new Intl.DateTimeFormat(this.culture.active(), {
+      day: 'numeric',
+      month: 'short',
+      timeZone: figures.timeZone,
+    });
     const words = this.words() as Partial<Record<'sold' | 'baseline', string>>;
     return {
       categories: days.map((day) => format.format(new Date(day.start)).replace('.', '')),
       series: [
         { key: 'sold', label: words.sold ?? '', role: 'data', values: days.map((day) => day.sold) },
-        { key: 'baseline', label: words.baseline ?? '', role: 'previous', values: days.map((day) => day.baseline ?? 0) },
+        {
+          key: 'baseline',
+          label: words.baseline ?? '',
+          role: 'previous',
+          values: days.map((day) => day.baseline ?? 0),
+        },
       ],
     };
   });

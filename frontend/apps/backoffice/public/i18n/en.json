@@ -35,7 +35,11 @@
     "showPayload": "Show command",
     "guest": "guest",
     "title": "Audit",
-    "trace": "Trace {{id}}",
+    "trace": "Trace",
+    "subject": "Subject",
+    "copyTrace": "Copy the trace id",
+    "copySubject": "Copy the subject",
+    "copied": "Copied",
     "emptyFor": "Nothing {{outcome}} has been recorded. That is the good outcome.",
     "showEverything": "Show everything",
     "commands": {
@@ -223,7 +227,10 @@
     "deliverTo": "Deliver to",
     "lines": "Lines",
     "paneTotal": "Total, VAT and shipping included",
-    "paneFailed": "Could not load this order's lines."
+    "paneFailed": "Could not load this order's lines.",
+    "paneId": "Order id",
+    "copyId": "Copy the order id",
+    "copied": "Id copied"
   },
   "promotions": {
     "title": "Promotions",
@@ -855,6 +862,7 @@
     "hint": "The agents the shop knows. An agent nobody registered is not refused: it shops as untrusted, under tighter caps. Registering one is vouching for it; a suspension needs a reason, so it can be lifted.",
     "loading": "Loading agents…",
     "failed": "The change could not be made.",
+    "loadFailed": "Could not load the agents.",
     "empty": "No agent is registered yet.",
     "register": {
       "title": "Register an agent",
@@ -887,7 +895,9 @@
     "suspendTitle": "Suspend {{agent}}?",
     "suspendBody": "It stops buying at once, and is told why. You can reinstate it at any time.",
     "suspendHint": "It stops buying at once. Reinstating undoes it.",
-    "suspended": "{{agent}} is suspended."
+    "suspended": "{{agent}} is suspended.",
+    "copyId": "Copy the agent id",
+    "copied": "Id copied"
   },
   "staffUsage": {
     "title": "How the backoffice is used",

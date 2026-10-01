@@ -1,10 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type {
-  BrowsingHistoryView,
-  BrowsingKind,
-  MergeHistoryRequest,
-} from '@tendero/shared-api';
+import type { BrowsingHistoryView, BrowsingKind, MergeHistoryRequest } from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 

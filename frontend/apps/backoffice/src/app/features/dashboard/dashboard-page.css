@@ -1,71 +1,12 @@
-.periods { display: inline-flex; gap: var(--space-1); }
-
-.period--active {
-  color: var(--text);
-  border-color: var(--text-muted);
-  font-weight: 600;
-}
-
-.tabs {
-  display: flex;
-  gap: var(--space-1);
-  margin-block-end: var(--space-4);
-  border-block-end: 1px solid var(--border);
-  /* On a phone the tabs scroll sideways rather than wrap (spec, the phone). */
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.tab {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  min-block-size: 2.75rem;
-  padding-inline: var(--space-3);
-  color: var(--text-muted);
-  text-decoration: none;
-  border-block-end: 2px solid transparent;
-  white-space: nowrap;
-}
-
-.tab:hover { color: var(--text); }
-
-.tab--active {
-  color: var(--text);
-  border-block-end-color: var(--text);
-  font-weight: 600;
-}
-
-/* The button is for a monitor: from 1440 up, never on a phone (spec, full screen). */
-.full-screen-enter { display: none; }
-
-@media (min-width: 90rem) {
-  .full-screen-enter { display: inline-flex; }
-}
-
-/* On the wall the section is the whole screen: its own background, its rows
-   sharing the height, the head reduced to what a glance from across a room needs. */
+/* Styled with utilities in the template (ADR 0049), but for the wall.
+   On the wall the section is the whole screen: its own background, its rows
+   sharing the height, the head reduced to what a glance from across a room needs.
+   A pseudo-class of six properties reads better here than as six variants. */
 .dashboard:fullscreen {
   display: flex;
   flex-direction: column;
   block-size: 100dvh;
-  padding: var(--space-5);
+  padding: var(--spacing-5);
   overflow: auto;
-  background: var(--bg-page);
+  background: var(--color-page);
 }
-
-
-.wall-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-2) var(--space-5);
-  margin-block-end: var(--space-4);
-}
-
-.wall-head__title {
-  margin: 0;
-  font-size: var(--text-xl);
-}
-
-.full-screen-leave { margin-inline-start: auto; }

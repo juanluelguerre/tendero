@@ -17,7 +17,9 @@ const DATA: BarChartData = {
 const WORDS = { charts: { figures: { show: 'Show the figures', hide: 'Hide the figures' } } };
 
 beforeEach(() => {
-  TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n()] });
+  TestBed.configureTestingModule({
+    providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n()],
+  });
   TestBed.inject(CultureStore).use('en');
 });
 
@@ -27,7 +29,8 @@ async function render() {
   fixture.componentRef.setInput('format', (value: number) => `€${value}`);
   fixture.componentRef.setInput('caption', 'Sales by day');
   fixture.detectChanges();
-  for (const request of TestBed.inject(HttpTestingController).match((req) => req.url.includes('/i18n/'))) request.flush(WORDS);
+  for (const request of TestBed.inject(HttpTestingController).match((req) => req.url.includes('/i18n/')))
+    request.flush(WORDS);
   await fixture.whenStable();
   fixture.detectChanges();
   return fixture;
@@ -45,7 +48,10 @@ describe('the chart contract', () => {
     const element = (await render()).nativeElement as HTMLElement;
 
     expect(element.querySelector('figure figcaption')?.textContent).toContain('Sales by day');
-    expect([...element.querySelectorAll('.legend li')].map((item) => item.textContent?.trim())).toEqual(['This week', 'Week before']);
+    expect([...element.querySelectorAll('.legend li')].map((item) => item.textContent?.trim())).toEqual([
+      'This week',
+      'Week before',
+    ]);
   });
 
   /** The spec's accessibility section: the figures are there for anyone who asks, not only for a screen reader. */
@@ -71,7 +77,9 @@ describe('the chart contract', () => {
     fixture.componentRef.setInput('layout', 'rows');
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).style.getPropertyValue('--chart-block-size')).toBe('calc(2 * 2rem + 1rem)');
+    expect((fixture.nativeElement as HTMLElement).style.getPropertyValue('--chart-block-size')).toBe(
+      'calc(2 * 2rem + 1rem)',
+    );
   });
 
   it('draws with ECharts, deferred until the chart is on screen (ADR 0045)', async () => {

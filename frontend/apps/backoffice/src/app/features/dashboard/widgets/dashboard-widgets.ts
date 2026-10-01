@@ -4,10 +4,23 @@ import { InjectionToken, type Type } from '@angular/core';
 export type WidgetSize = 'S' | 'M' | 'L';
 
 export type WidgetKey =
-  | 'keyFigures' | 'salesByDay' | 'bestSellers' | 'byChannel'
-  | 'waiting' | 'health' | 'ordersByStatus' | 'funnel' | 'returns' | 'stock'
-  | 'customers' | 'agentSales' | 'refusals'
-  | 'byCategory' | 'sellThrough' | 'campaigns' | 'searchStatus';
+  | 'keyFigures'
+  | 'salesByDay'
+  | 'bestSellers'
+  | 'byChannel'
+  | 'waiting'
+  | 'health'
+  | 'ordersByStatus'
+  | 'funnel'
+  | 'returns'
+  | 'stock'
+  | 'customers'
+  | 'agentSales'
+  | 'refusals'
+  | 'byCategory'
+  | 'sellThrough'
+  | 'campaigns'
+  | 'searchStatus';
 
 /** One widget on one dashboard, at one size: a dashboard is a list of these, which is what v2 will let a person edit. */
 export interface WidgetPlacement {

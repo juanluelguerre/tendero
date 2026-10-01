@@ -7,10 +7,7 @@ import { SearchService } from '../../data-access/search.service';
 import { toView } from './evaluation-view';
 
 type EvaluationState =
-  | { status: 'idle' }
-  | { status: 'running' }
-  | { status: 'ready'; result: SearchEvaluation }
-  | { status: 'failed' };
+  { status: 'idle' } | { status: 'running' } | { status: 'ready'; result: SearchEvaluation } | { status: 'failed' };
 
 /**
  * The search evaluation's state (ADR 0047). It runs the whole golden set, so it

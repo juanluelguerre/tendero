@@ -1,18 +1,37 @@
-<form class="register panel" (submit)="$event.preventDefault(); store.register()" *transloco="let t; prefix: 'agents'">
-  <h2 class="register__title">{{ t('register.title') }}</h2>
-  <label class="register__field">
+<form
+  class="panel mb-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,12rem),1fr))] items-end gap-3 overflow-visible p-4"
+  (submit)="$event.preventDefault(); store.register()"
+  *transloco="let t; prefix: 'agents'"
+>
+  <h2 class="col-span-full m-0 text-md">{{ t('register.title') }}</h2>
+  <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('register.agentId') }}</span>
-    <input class="field" required [value]="store.draft().agentId" (input)="store.edit('agentId', $any($event.target).value)" />
+    <input
+      class="field"
+      required
+      [value]="store.draft().agentId"
+      (input)="store.edit('agentId', $any($event.target).value)"
+    />
   </label>
-  <label class="register__field">
+  <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('register.displayName') }}</span>
-    <input class="field" required [value]="store.draft().displayName" (input)="store.edit('displayName', $any($event.target).value)" />
+    <input
+      class="field"
+      required
+      [value]="store.draft().displayName"
+      (input)="store.edit('displayName', $any($event.target).value)"
+    />
   </label>
-  <label class="register__field">
+  <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('register.operator') }}</span>
-    <input class="field" required [value]="store.draft().operator" (input)="store.edit('operator', $any($event.target).value)" />
+    <input
+      class="field"
+      required
+      [value]="store.draft().operator"
+      (input)="store.edit('operator', $any($event.target).value)"
+    />
   </label>
-  <label class="register__field">
+  <label class="grid gap-1 text-xs text-muted">
     <span>{{ t('column.trust') }}</span>
     <select class="field" [value]="store.draft().trust" (change)="store.editTrust($any($event.target).value)">
       @for (trust of trusts; track trust) {
@@ -20,5 +39,7 @@
       }
     </select>
   </label>
-  <button class="button register__submit" type="submit" [disabled]="store.busy() === 'register'">{{ t('register.submit') }}</button>
+  <button class="button justify-self-start" type="submit" [disabled]="store.busy() === 'register'">
+    {{ t('register.submit') }}
+  </button>
 </form>

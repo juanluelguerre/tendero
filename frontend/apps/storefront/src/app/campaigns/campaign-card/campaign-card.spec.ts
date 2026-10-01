@@ -27,7 +27,10 @@ describe('the campaign card', () => {
         provideTenderoI18n(),
         provideRouter([]),
         { provide: API_BASE_URL, useValue: 'http://api' },
-        { provide: Telemetry, useValue: { trackEvent: (n: string, a: unknown) => events.push([n, a]) } as unknown as Telemetry },
+        {
+          provide: Telemetry,
+          useValue: { trackEvent: (n: string, a: unknown) => events.push([n, a]) } as unknown as Telemetry,
+        },
       ],
     });
   });
@@ -37,7 +40,8 @@ describe('the campaign card', () => {
     fixture.componentRef.setInput('campaign', campaign);
     fixture.componentRef.setInput('variant', variant);
     fixture.detectChanges();
-    for (const request of TestBed.inject(HttpTestingController).match((req) => req.url.includes('/i18n/'))) request.flush(TRANSLATIONS);
+    for (const request of TestBed.inject(HttpTestingController).match((req) => req.url.includes('/i18n/')))
+      request.flush(TRANSLATIONS);
     await fixture.whenStable();
     fixture.detectChanges();
     return { fixture, element: fixture.nativeElement as HTMLElement };
@@ -71,7 +75,12 @@ describe('the campaign card', () => {
 
   it('names a coupon promotion with its code', async () => {
     const { element } = await render(
-      event({ holds: [{ name: 'Black Friday', couponCode: 'BF2026' }, { name: '3x2 en camisetas', couponCode: null }] }),
+      event({
+        holds: [
+          { name: 'Black Friday', couponCode: 'BF2026' },
+          { name: '3x2 en camisetas', couponCode: null },
+        ],
+      }),
     );
 
     expect([...element.querySelectorAll('.campaign__hold')].map((li) => li.textContent?.trim())).toEqual([
@@ -81,7 +90,9 @@ describe('the campaign card', () => {
   });
 
   it('shows its own image with its alt text, and no products beside it', async () => {
-    const { element } = await render(event({ imageId: 'campaigns/tendero-days.webp', imageAlt: 'Una tienda con toldo' }));
+    const { element } = await render(
+      event({ imageId: 'campaigns/tendero-days.webp', imageAlt: 'Una tienda con toldo' }),
+    );
 
     const image = element.querySelector('.campaign__image') as HTMLImageElement;
     expect(image.getAttribute('src')).toBe('http://api/api/images/campaigns%2Ftendero-days.webp');
@@ -103,7 +114,9 @@ describe('the campaign card', () => {
     // With Ctrl held the router leaves the page alone (a new tab's gesture), and the
     // browser's own default is cancelled at the document: the click still counts.
     element.ownerDocument.addEventListener('click', (click) => click.preventDefault(), { once: true });
-    element.querySelector('.campaign__cta')?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+    element
+      .querySelector('.campaign__cta')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
 
     expect(events).toEqual([['campaign_card_opened', { campaign: 'TENDERO_DAYS', phase: 'before' }]]);
   });

@@ -1,27 +1,39 @@
 <ng-container *transloco="let t">
   @if (compare.items().length > 0) {
-    <aside class="tray" [attr.aria-label]="t('compare.tray')">
-      <div class="page-frame tray__inner">
-        <ul class="tray__items">
+    <aside class="border-t border-hairline bg-surface shadow-pop" [attr.aria-label]="t('compare.tray')">
+      <div class="page-frame flex flex-wrap items-center justify-between gap-3 py-3">
+        <ul class="flex min-w-0 flex-wrap gap-2">
           @for (item of compare.items(); track item.code) {
-            <li class="tray__item">
-              <span class="tray__name">{{ item.name }}</span>
+            <li
+              class="inline-flex max-w-chip items-center gap-1 rounded-full border border-hairline bg-raised px-2 py-1 text-xs"
+            >
+              <span class="truncate">{{ item.name }}</span>
               <button
-                class="tray__remove"
+                class="inline-flex px-1 text-muted"
                 type="button"
                 [attr.aria-label]="t('compare.remove', { name: item.name })"
-                (click)="compare.toggle(item)">×</button>
+                (click)="compare.toggle(item)"
+              >
+                <lib-icon class="size-icon-xs" name="remove" [stroke]="2" />
+              </button>
             </li>
           }
         </ul>
-        <div class="tray__actions">
-          <button class="tray__clear" type="button" (click)="compare.clear()">{{ t('compare.clear') }}</button>
+        <div class="flex items-center gap-4">
+          <button class="px-1 text-xs text-muted underline" type="button" (click)="compare.clear()">
+            {{ t('compare.clear') }}
+          </button>
           @if (compare.items().length > 1) {
-            <a class="tray__go" [routerLink]="links.compare()" [queryParams]="query()">
+            <!-- A secondary action: the page's clay stays with adding to the cart. -->
+            <a
+              class="rounded-md border border-body px-4 py-2 text-sm text-body no-underline hover:bg-raised"
+              [routerLink]="links.compare()"
+              [queryParams]="query()"
+            >
               {{ t('compare.go', { count: compare.items().length }) }}
             </a>
           } @else {
-            <span class="tray__hint">{{ t('compare.pickAnother') }}</span>
+            <span class="text-xs text-muted">{{ t('compare.pickAnother') }}</span>
           }
         </div>
       </div>

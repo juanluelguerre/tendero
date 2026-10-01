@@ -2,9 +2,23 @@
 <!-- Read once, as a sentence; not a live region. -->
 <span class="sr-only">{{ spoken() }}</span>
 
-<span class="clock" aria-hidden="true">
-  <span class="clock__label">{{ label() }}</span>
-  <span class="clock__box numeric">{{ time.days }}<small class="clock__unit">d</small></span>
-  <span class="clock__box numeric">{{ pad(time.hours) }}<small class="clock__unit">h</small></span>
-  <span class="clock__box numeric">{{ pad(time.minutes) }}<small class="clock__unit">min</small></span>
+<!-- The clock takes its colours from where it sits: `currentColor` for the
+     figures, and the box's border from `--clock-border` when its card sets one,
+     so the same clock reads on the chalkboard of an event and on a season's
+     light card without a variant of its own. -->
+<span class="flex flex-wrap items-center gap-2" aria-hidden="true">
+  <span class="me-1 text-sm opacity-85">{{ label() }}</span>
+  @for (
+    part of [
+      { value: time.days, unit: 'd' },
+      { value: pad(time.hours), unit: 'h' },
+      { value: pad(time.minutes), unit: 'min' },
+    ];
+    track part.unit
+  ) {
+    <span
+      class="inline-flex min-w-clock items-baseline gap-nudge-lg rounded-md border border-[color:var(--clock-border,var(--color-hairline-strong))] px-3 py-2 numeric text-xl leading-none font-medium max-sm:min-w-clock-sm max-sm:text-lg"
+      >{{ part.value }}<small class="text-2xs opacity-80">{{ part.unit }}</small></span
+    >
+  }
 </span>

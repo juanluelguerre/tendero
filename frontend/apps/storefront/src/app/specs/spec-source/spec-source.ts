@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SpecEvidence, SpecSource as Source } from '@tendero/shared-api';
 import { Telemetry } from '@tendero/shared-telemetry';
@@ -17,7 +17,6 @@ let next = 0;
 @Component({
   selector: 'storefront-spec-source',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './spec-source.html',
   styleUrl: './spec-source.css',
 })
@@ -28,7 +27,6 @@ export class SpecSource {
   private readonly telemetry = inject(Telemetry);
 
   protected readonly id = `spec-source-${next++}`;
-
 
   /**
    * Support as a whole percentage — the NLI model's measure, not the extractor's

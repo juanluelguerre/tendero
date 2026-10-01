@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { type ChartBuild, EchartsChart } from './echarts-chart';
 import { sparklineOptions } from './echarts-sparkline-options';
 
@@ -10,10 +10,9 @@ import { sparklineOptions } from './echarts-sparkline-options';
 @Component({
   selector: 'backoffice-sparkline',
   imports: [EchartsChart],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sparkline.html',
-  styleUrl: './sparkline.css',
-  host: { 'aria-hidden': 'true' },
+  // A sparkline's height, which its plot reads; the placeholder is in the template.
+  host: { class: 'block [--chart-block-size:2.5rem]', 'aria-hidden': 'true' },
 })
 export class Sparkline {
   readonly values = input.required<readonly number[]>();

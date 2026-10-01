@@ -70,7 +70,11 @@ describe('the trail, as a guest keeps it', () => {
   });
 
   it('removes one entry', () => {
-    const trail: TrailSnapshot = { enabled: true, views: [entry('AAA', daysAgo(1))], searches: [entry('Cafetera', daysAgo(1))] };
+    const trail: TrailSnapshot = {
+      enabled: true,
+      views: [entry('AAA', daysAgo(1))],
+      searches: [entry('Cafetera', daysAgo(1))],
+    };
 
     expect(withoutEntry(trail, 'Search', 'cafetera').searches).toEqual([]);
     expect(withoutEntry(trail, 'View', 'aaa').views).toEqual([]);
@@ -106,7 +110,12 @@ describe('the trail, read back from storage', () => {
   it('drops what is not an entry, and applies the rules again', () => {
     const stored = JSON.stringify({
       enabled: true,
-      views: [{ key: 'aaa', at: daysAgo(1) }, { key: 7 }, { key: 'OLD', at: daysAgo(120) }, { key: 'AAA', at: daysAgo(3) }],
+      views: [
+        { key: 'aaa', at: daysAgo(1) },
+        { key: 7 },
+        { key: 'OLD', at: daysAgo(120) },
+        { key: 'AAA', at: daysAgo(3) },
+      ],
       searches: 'nope',
     });
 

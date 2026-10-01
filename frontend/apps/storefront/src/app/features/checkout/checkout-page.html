@@ -1,5 +1,7 @@
-<section *transloco="let t" class="checkout">
-  <h1 class="checkout__title">{{ t('checkout.title') }}</h1>
+<!-- Steps on the left, the total on the right — the same shape as the cart, so
+     moving between the two does not move the thing a shopper is watching. -->
+<section *transloco="let t" class="pt-6 pb-8">
+  <h1 class="mb-5 text-2xl">{{ t('checkout.title') }}</h1>
 
   @if (cart.isEmpty()) {
     <div class="blank">
@@ -8,56 +10,92 @@
     </div>
   } @else {
     @if (store.problem(); as message) {
-      <p #notice class="notice notice--bad" role="alert" tabindex="-1">{{ message }}</p>
+      <lib-notice #notice class="mb-4" tone="bad" live="assertive" tabindex="-1">{{ message }}</lib-notice>
     }
 
-    <div class="layout">
-      <div class="steps">
+    <div class="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6 max-tab:grid-cols-[minmax(0,1fr)]">
+      <div class="grid gap-5">
+        <!-- Fieldsets, because these ARE groups of controls and a screen reader
+             should be told so; the semantics stay and the look is the panel's.
+             A legend is drawn ON its fieldset's border, so the heading sat across
+             the panel's top edge (R-6's second walkthrough). Floated at full
+             width it becomes the panel's first line, inside it, and is still the
+             group's accessible name; what follows it clears it. -->
         <!-- 1 · Where -->
-        <fieldset class="step">
-          <legend class="step__title">{{ t('checkout.address') }}</legend>
+        <fieldset class="step rounded-lg border border-hairline bg-surface p-5">
+          <legend class="float-start mb-4 w-full font-display text-md font-extrabold">
+            {{ t('checkout.address') }}
+          </legend>
 
-          <div class="grid">
-            <label class="row row--wide">
-              <span class="row__label">{{ t('checkout.recipientName') }}</span>
-              <input class="field" name="recipientName" [ngModel]="store.address().recipientName" (ngModelChange)="store.edit({ recipientName: $event })" (change)="store.addressChanged()" autocomplete="name" required />
+          <div class="clear-both mb-4 grid grid-cols-2 gap-4 max-xs:grid-cols-1">
+            <label class="col-span-full grid gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.recipientName') }}</span>
+              <input
+                class="field"
+                [formField]="store.addressForm.recipientName"
+                (change)="store.addressChanged()"
+                autocomplete="name"
+              />
             </label>
 
-            <label class="row row--wide">
-              <span class="row__label">{{ t('checkout.line1') }}</span>
-              <input class="field" name="line1" [ngModel]="store.address().line1" (ngModelChange)="store.edit({ line1: $event })" (change)="store.addressChanged()" autocomplete="address-line1" />
+            <label class="col-span-full grid gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.line1') }}</span>
+              <input
+                class="field"
+                [formField]="store.addressForm.line1"
+                (change)="store.addressChanged()"
+                autocomplete="address-line1"
+              />
             </label>
 
-            <label class="row row--wide">
-              <span class="row__label">{{ t('checkout.line2') }}</span>
-              <input class="field" name="line2" [ngModel]="store.address().line2" (ngModelChange)="store.edit({ line2: $event })" (change)="store.addressChanged()" autocomplete="address-line2" />
+            <label class="col-span-full grid gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.line2') }}</span>
+              <input
+                class="field"
+                [formField]="store.addressForm.line2"
+                (change)="store.addressChanged()"
+                autocomplete="address-line2"
+              />
             </label>
 
-            <label class="row">
-              <span class="row__label">{{ t('checkout.postalCode') }}</span>
-              <input class="field" name="postalCode" [ngModel]="store.address().postalCode" (ngModelChange)="store.edit({ postalCode: $event })" (change)="store.addressChanged()" autocomplete="postal-code" />
+            <label class="grid gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.postalCode') }}</span>
+              <input
+                class="field"
+                [formField]="store.addressForm.postalCode"
+                (change)="store.addressChanged()"
+                autocomplete="postal-code"
+              />
             </label>
 
-            <label class="row">
-              <span class="row__label">{{ t('checkout.city') }}</span>
-              <input class="field" name="city" [ngModel]="store.address().city" (ngModelChange)="store.edit({ city: $event })" (change)="store.addressChanged()" autocomplete="address-level2" />
+            <label class="grid gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.city') }}</span>
+              <input
+                class="field"
+                [formField]="store.addressForm.city"
+                (change)="store.addressChanged()"
+                autocomplete="address-level2"
+              />
             </label>
 
-            <label class="row">
-              <span class="row__label">{{ t('checkout.region') }}</span>
-              <input class="field" name="region" [ngModel]="store.address().region" (ngModelChange)="store.edit({ region: $event })" (change)="store.addressChanged()" autocomplete="address-level1" />
+            <label class="grid gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.region') }}</span>
+              <input
+                class="field"
+                [formField]="store.addressForm.region"
+                (change)="store.addressChanged()"
+                autocomplete="address-level1"
+              />
             </label>
 
-            <label class="row">
-              <span class="row__label">{{ t('checkout.country') }}</span>
+            <label class="grid gap-2">
+              <span class="text-sm font-medium text-muted">{{ t('checkout.country') }}</span>
               <!-- Two letters, uppercase: the value three different things
                    look up (a rate, a tax rule, a market). -->
               <input
                 class="field numeric"
-                name="countryCode"
-                maxlength="2"
                 autocomplete="country"
-                [ngModel]="store.address().countryCode" (ngModelChange)="store.edit({ countryCode: $event })"
+                [formField]="store.addressForm.countryCode"
                 (change)="store.addressChanged()"
               />
             </label>
@@ -66,17 +104,28 @@
           <!-- No button to press to learn the shipping (R-1, S-F3): the options and
                the total follow the address as it is written, and this says so
                while they are on their way. -->
-          <p class="rating muted" role="status" aria-live="polite">{{ store.rating() ? t('checkout.loadingOptions') : '' }}</p>
+          <!-- It keeps its line while the options are on their way, so the form does
+               not jump when they arrive. -->
+          <p class="muted mt-2 min-h-target text-xs" role="status" aria-live="polite">
+            {{ store.rating() ? t('checkout.loadingOptions') : '' }}
+          </p>
         </fieldset>
 
-        <!-- 2 · How -->
+        <!-- 2 · How. In a radio row the whole row is the target, not the 16px
+             circle: delivery and payment are the two choices a checkout is made
+             of, and both are made on a phone. The row a shopper picked is the one
+             whose radio is checked. -->
         @if (store.options().length > 0) {
-          <fieldset class="step">
-            <legend class="step__title">{{ t('checkout.delivery') }}</legend>
+          <fieldset class="step rounded-lg border border-hairline bg-surface p-5">
+            <legend class="float-start mb-4 w-full font-display text-md font-extrabold">
+              {{ t('checkout.delivery') }}
+            </legend>
 
-            <div class="options">
+            <div class="clear-both grid gap-2">
               @for (option of store.options(); track option.code) {
-                <label class="option" [class.option--picked]="option.code === store.chosen()?.code">
+                <label
+                  class="grid min-h-control-xl cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-hairline px-4 py-3 transition-[border-color,background] duration-(--dur-fast) ease-brand hover:border-hairline-strong has-checked:border-accent has-checked:bg-raised"
+                >
                   <input
                     type="radio"
                     name="shipping"
@@ -84,17 +133,21 @@
                     [checked]="option.code === store.chosen()?.code"
                     (change)="store.choose(option)"
                   />
-                  <span class="option__body">
-                    <span class="option__label">{{ option.label }}</span>
+                  <span class="grid min-w-0 gap-hair">
+                    <span class="font-medium">{{ option.label }}</span>
                     @if (option.estimatedDays) {
-                      <span class="option__days">
-                        {{ option.estimatedDays === 1
+                      <span class="text-xs text-muted">
+                        {{
+                          option.estimatedDays === 1
                             ? t('checkout.deliveryOneDay')
-                            : t('checkout.deliveryDays', { days: option.estimatedDays }) }}
+                            : t('checkout.deliveryDays', { days: option.estimatedDays })
+                        }}
                       </span>
                     }
                   </span>
-                  <span class="option__price numeric">{{ store.money(option.amount) }}</span>
+                  <span class="numeric font-semibold">{{
+                    option.amount | price: store.currency() : culture.active()
+                  }}</span>
                 </label>
               }
             </div>
@@ -102,13 +155,17 @@
         }
 
         <!-- 3 · Pay -->
-        <fieldset class="step">
-          <legend class="step__title">{{ t('checkout.payment') }}</legend>
-          <p class="step__hint">{{ t('checkout.paymentHint') }}</p>
+        <fieldset class="step rounded-lg border border-hairline bg-surface p-5">
+          <legend class="float-start mb-4 w-full font-display text-md font-extrabold">
+            {{ t('checkout.payment') }}
+          </legend>
+          <p class="clear-both mb-4 text-sm text-muted">{{ t('checkout.paymentHint') }}</p>
 
-          <div class="options">
+          <div class="clear-both grid gap-2">
             @for (card of cards; track card) {
-              <label class="option" [class.option--picked]="card === store.instrument()">
+              <label
+                class="grid min-h-control-xl cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-hairline px-4 py-3 transition-[border-color,background] duration-(--dur-fast) ease-brand hover:border-hairline-strong has-checked:border-accent has-checked:bg-raised"
+              >
                 <input
                   type="radio"
                   name="instrument"
@@ -116,9 +173,9 @@
                   [checked]="card === store.instrument()"
                   (change)="store.chooseInstrument(card)"
                 />
-                <span class="option__body">
-                  <span class="option__label">{{ t(cardKey(card)) }}</span>
-                  <span class="option__days numeric">{{ card }}</span>
+                <span class="grid min-w-0 gap-hair">
+                  <span class="font-medium">{{ t(cardKey(card)) }}</span>
+                  <span class="numeric text-xs text-muted">{{ card }}</span>
                 </span>
               </label>
             }
@@ -126,52 +183,36 @@
         </fieldset>
       </div>
 
-      <aside class="summary">
+      <storefront-summary>
         @if (cart.quote(); as quote) {
-          <dl class="totals">
-            <div class="totals__row">
-              <dt>{{ t('cart.subtotal') }}</dt>
-              <dd class="numeric">{{ store.money(quote.subtotal) }}</dd>
-            </div>
-
-            @if (quote.discountTotal > 0) {
-              <div class="totals__row totals__row--off">
-                <dt>{{ t('cart.discounts') }}</dt>
-                <dd class="numeric">−{{ store.money(quote.discountTotal) }}</dd>
-              </div>
-            }
-
-            <div class="totals__row">
-              <dt>{{ t('cart.shipping') }}</dt>
-              <dd class="numeric">
-                {{ store.chosen() ? store.money(quote.shipping) : t('cart.shippingAtCheckout') }}
-              </dd>
-            </div>
-
-            <div class="totals__row totals__row--total">
-              <dt>{{ t('cart.total') }}</dt>
-              <dd class="numeric">{{ store.money(quote.total) }}</dd>
-            </div>
-
-            @if (quote.taxTotal > 0) {
-              <p class="totals__tax">{{ t('cart.tax') }} · {{ store.money(quote.taxTotal) }}</p>
-            }
-          </dl>
+          <storefront-totals
+            [currency]="quote.currency"
+            [subtotal]="quote.subtotal"
+            [discountTotal]="quote.discountTotal"
+            [shipping]="quote.shipping"
+            [shippingState]="store.chosen() ? 'charged' : 'to-choose'"
+            [total]="quote.total"
+            [taxTotal]="quote.taxTotal"
+          />
 
           <button
-            class="button button--block"
+            class="button flex w-full"
             type="button"
             [disabled]="store.paying() || !store.chosen() || !store.address().recipientName.trim()"
             (click)="store.pay()"
           >
-            {{ store.paying() ? t('checkout.paying') : t('checkout.pay', { total: store.money(quote.total) }) }}
+            {{
+              store.paying()
+                ? t('checkout.paying')
+                : t('checkout.pay', { total: (quote.total | price: store.currency() : culture.active()) })
+            }}
           </button>
         } @else {
           <p class="muted">{{ t('cart.noQuote') }}</p>
         }
 
         <a class="quiet" [routerLink]="links.cart()">{{ t('cart.title') }}</a>
-      </aside>
+      </storefront-summary>
     </div>
   }
 </section>

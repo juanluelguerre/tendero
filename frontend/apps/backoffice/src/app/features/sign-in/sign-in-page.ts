@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
+import { Notice } from '@tendero/shared-ui';
 
 /**
  * The door, and it no longer decides who may come through it.
@@ -24,10 +26,8 @@ import { AuthStore } from '@tendero/shared-auth';
  */
 @Component({
   selector: 'backoffice-sign-in',
-  imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, Notice, NgOptimizedImage],
   templateUrl: './sign-in-page.html',
-  styleUrl: './sign-in-page.css',
 })
 export class SignInPage {
   private readonly auth = inject(AuthStore);
@@ -44,8 +44,7 @@ export class SignInPage {
    * signing key per process, so every restart of the API ends every session in
    * every browser).
    */
-  protected readonly expired =
-    this.route.snapshot.queryParamMap.get('reason') === 'expired';
+  protected readonly expired = this.route.snapshot.queryParamMap.get('reason') === 'expired';
 
   /**
    * Somebody who IS signed in, as somebody the backoffice is not for — a
@@ -56,7 +55,8 @@ export class SignInPage {
    * ordinary door.
    */
   protected readonly wrongRole = computed(() =>
-    this.route.snapshot.queryParamMap.get('reason') === 'role' ? this.auth.identity() : null);
+    this.route.snapshot.queryParamMap.get('reason') === 'role' ? this.auth.identity() : null,
+  );
 
   /** Named so the screen can say who is about to ask for your password. */
   protected readonly issuer = this.auth.issuer();

@@ -1,49 +1,26 @@
+/* Styled with utilities in the template (ADR 0049). What stays: the host's row,
+   which scrolls inside itself on a phone with a fade at its edge to say so (a
+   gradient mask) and wraps from 1024 px, and the label that reserves the width
+   of its bold self. */
 :host {
   display: flex;
-  gap: var(--space-2);
+  gap: var(--spacing-2);
   overflow-x: auto;
   padding-block: 2px;
   mask-image: linear-gradient(to right, black calc(100% - 2rem), transparent);
 }
 
 @media (min-width: 64rem) {
-  :host { flex-wrap: wrap; overflow: visible; mask-image: none; }
+  :host {
+    flex-wrap: wrap;
+    overflow: visible;
+    mask-image: none;
+  }
 }
 
-.chip {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 2.25rem;
-  padding-inline: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-xs);
-  cursor: pointer;
-}
-
-.chip:hover { color: var(--text); border-color: var(--border-strong); }
-
-.chip[aria-pressed='true'] {
-  border-color: var(--accent);
-  background: var(--accent-tint);
-  color: var(--text);
-  font-weight: 600;
-}
-
-.chip__count { color: var(--text-muted); font-size: var(--text-3xs); }
-
-/* The label reserves the width of its bold self, so choosing a chip does not
-   widen it by the pixel or two the weight adds, and nothing beside it moves. */
-.chip__label {
-  display: inline-flex;
-  flex-direction: column;
-}
-
+/* An invisible copy of the words in the weight a choice gives them, so choosing
+   a chip does not widen it by the pixel or two the weight adds, and nothing
+   beside it moves. */
 .chip__label::after {
   content: attr(data-label);
   height: 0;

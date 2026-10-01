@@ -12,7 +12,15 @@ import { OrderPaneStore } from './order-pane.store';
 const Orders = 'http://api/api/orders';
 
 const order = (orderId: string, status: string): OrderSummary =>
-  ({ orderId, status, recipientName: 'Ana', city: 'Madrid', total: 50, currency: 'EUR', createdAt: '2026-09-29T10:00:00Z' }) as unknown as OrderSummary;
+  ({
+    orderId,
+    status,
+    recipientName: 'Ana',
+    city: 'Madrid',
+    total: 50,
+    currency: 'EUR',
+    createdAt: '2026-09-29T10:00:00Z',
+  }) as unknown as OrderSummary;
 
 /** The pane's own state (ADR 0047): the open order's detail, which only the pane reads. */
 describe('the order pane store', () => {
@@ -41,7 +49,9 @@ describe('the order pane store', () => {
     await TestBed.inject(Router).navigateByUrl(url);
     const pane = TestBed.inject(OrderPaneStore);
     TestBed.tick();
-    http.match((req) => req.url === Orders).forEach((req) => req.flush({ orders: [order('a', 'Confirmed')], total: 1, counts: [] }));
+    http
+      .match((req) => req.url === Orders)
+      .forEach((req) => req.flush({ orders: [order('a', 'Confirmed')], total: 1, counts: [] }));
     // One turn for the list's answer to land; the detail is still being asked, so the app is not stable yet.
     await new Promise((resolve) => setTimeout(resolve));
     TestBed.tick();

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { ProductReview } from '../../../catalogue/product-review/product-review';
@@ -13,9 +13,9 @@ import { ReviewQueueStore } from '../review-queue.store';
 @Component({
   selector: 'backoffice-review-pane',
   imports: [RouterLink, TranslocoDirective, WorklistPane, ProductReview],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './review-pane.html',
-  styleUrl: './review-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child.
+  host: { class: 'contents' },
 })
 export class ReviewPane {
   protected readonly store = inject(ReviewQueueStore);

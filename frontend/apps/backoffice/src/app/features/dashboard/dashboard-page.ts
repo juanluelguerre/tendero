@@ -1,4 +1,14 @@
-import { afterNextRender, ChangeDetectionStrategy, Component, computed, effect, type ElementRef, inject, Injector, untracked, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  effect,
+  type ElementRef,
+  inject,
+  Injector,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -13,6 +23,7 @@ import { type DashboardTab, DashboardTabs } from './tabs/dashboard-tabs';
 import { provideDashboardWidgets } from './widgets/dashboard-widget-registry';
 import { BackofficeUsage } from '../../usage';
 import { FullScreen } from './full-screen';
+import { signalMethod } from '@ngrx/signals';
 
 /** A minute, until R-10's live source replaces the clock. */
 const WallRefresh = 60_000;
@@ -36,7 +47,6 @@ const WallRefresh = 60_000;
 @Component({
   selector: 'backoffice-dashboard',
   imports: [TranslocoDirective, RouterLink, RouterLinkActive, RouterOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
   providers: [DashboardSources, DashboardRefresh, provideDashboardWidgets()],
@@ -70,7 +80,9 @@ export class DashboardPage {
 
   constructor() {
     // On the wall the figures are asked for again every minute; off it, never on a clock.
-    effect(() => (this.fullScreen.active() ? this.refresh.every(WallRefresh) : this.refresh.stop()));
+    signalMethod<boolean>((onTheWall) => (onTheWall ? this.refresh.every(WallRefresh) : this.refresh.stop()))(
+      this.fullScreen.active,
+    );
 
     // The button pressed goes away with the head it sits in (WCAG 2.4.3): the
     // keyboard lands on the way back — in or out, by the button or by Esc.
@@ -80,7 +92,10 @@ export class DashboardPage {
       if (onTheWall === wasOnTheWall) return;
       wasOnTheWall = onTheWall;
       afterNextRender(
-        () => this.wall().nativeElement.querySelector<HTMLElement>(onTheWall ? '.full-screen-leave' : '.full-screen-enter')?.focus(),
+        () =>
+          this.wall()
+            .nativeElement.querySelector<HTMLElement>(onTheWall ? '.full-screen-leave' : '.full-screen-enter')
+            ?.focus(),
         { injector: this.injector },
       );
     });
@@ -91,7 +106,11 @@ export class DashboardPage {
   }
 
   protected choose(period: DashboardPeriod): void {
-    void this.router.navigate([], { relativeTo: this.route.firstChild ?? this.route, queryParams: { period: queryOfPeriod(period) }, queryParamsHandling: 'merge' });
+    void this.router.navigate([], {
+      relativeTo: this.route.firstChild ?? this.route,
+      queryParams: { period: queryOfPeriod(period) },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected enterWall(): void {

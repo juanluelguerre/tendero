@@ -4,3 +4,5 @@ export * from './lib/format-price';
 export * from './lib/product-image-url';
 export * from './lib/without';
 export * from './lib/order-reference';
+export * from './lib/short-id';
+export * from './lib/readable-resources';

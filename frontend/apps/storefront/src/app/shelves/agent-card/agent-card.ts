@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { CopyText } from '@tendero/shared-ui';
+import { CopyText, Icon } from '@tendero/shared-ui';
 import { ShopLinks } from '../../shop-links';
 import { AgentAddresses } from '../agent-addresses';
 
@@ -16,10 +16,9 @@ import { AgentAddresses } from '../agent-addresses';
  */
 @Component({
   selector: 'storefront-agent-card',
-  imports: [TranslocoDirective, RouterLink, CopyText],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, CopyText, Icon],
   templateUrl: './agent-card.html',
-  styleUrl: './agent-card.css',
+  host: { class: 'block' },
 })
 export class AgentCard {
   protected readonly links = inject(ShopLinks);

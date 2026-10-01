@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CatalogueList } from './catalogue-list/catalogue-list';
 import { CataloguePane } from './catalogue-pane/catalogue-pane';
 import { CatalogueStore } from './catalogue.store';
@@ -17,9 +17,10 @@ import { CatalogueStore } from './catalogue.store';
 @Component({
   selector: 'backoffice-catalogue-page',
   imports: [CatalogueList, CataloguePane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './catalogue-page.html',
-  styleUrl: './catalogue-page.css',
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the pane have of their own is in their folders.
+  host: { class: 'block' },
   providers: [CatalogueStore],
 })
 export class CataloguePage {

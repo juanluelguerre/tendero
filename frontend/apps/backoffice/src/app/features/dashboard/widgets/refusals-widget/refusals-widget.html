@@ -1,35 +1,37 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.refusals'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-  </header>
-
-  @if (store.denials.isLoading() && !store.denials.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.denials.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else if (store.denials.value(); as refused) {
-    @if (refused.total === 0) {
-      <p class="muted widget__state">{{ t('noDenials') }}</p>
-    } @else {
-      <p class="denials__total"><span class="numeric">{{ refused.total }}</span> {{ t('denied') }}</p>
-      @if (store.chart(); as data) {
-        <div class="at-m">
-          <backoffice-bar-chart [data]="data" layout="rows" [format]="count" [caption]="t('byRule')" />
-        </div>
-      }
-      <h3 class="eyebrow widget__sub">{{ t('latest') }}</h3>
-      <ul class="latest">
-        @for (denial of refused.recent; track denial.at + denial.agentId) {
-          <li class="latest__row">
-            <span class="numeric">{{ denial.agentId }}</span>
-            <span class="tag tag--warn">{{ t('rule.' + denial.reason) }}</span>
-            <span class="muted latest__when">{{ when(denial.at) }}</span>
-            @if (denial.detail) {
-              <span class="muted latest__detail">{{ denial.detail }}</span>
-            }
-          </li>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.refusals'"
+  [heading]="t('title')"
+  [resource]="store.denials"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    @if (store.denials.value(); as refused) {
+      @if (refused.total === 0) {
+        <p class="muted">{{ t('noDenials') }}</p>
+      } @else {
+        <p class="mb-2">
+          <span class="numeric text-lg font-semibold">{{ refused.total }}</span> {{ t('denied') }}
+        </p>
+        @if (store.chart(); as data) {
+          <div class="at-m">
+            <backoffice-bar-chart [data]="data" layout="rows" [format]="count" [caption]="t('byRule')" />
+          </div>
         }
-      </ul>
+        <h3 class="eyebrow mt-2 mb-0">{{ t('latest') }}</h3>
+        <ul class="grid gap-2">
+          @for (denial of refused.recent; track denial.at + denial.agentId) {
+            <li class="latest__row flex flex-wrap items-baseline gap-2 text-xs">
+              <span class="numeric">{{ denial.agentId }}</span>
+              <span class="tag tag--warn">{{ t('rule.' + denial.reason) }}</span>
+              <span class="muted ms-auto text-3xs">{{ denial.at | dateTime: culture.active() }}</span>
+              @if (denial.detail) {
+                <span class="muted basis-full text-3xs">{{ denial.detail }}</span>
+              }
+            </li>
+          }
+        </ul>
+      }
     }
-  }
-</article>
+  </ng-template>
+</backoffice-widget-frame>

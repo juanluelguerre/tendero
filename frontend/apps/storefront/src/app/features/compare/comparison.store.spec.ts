@@ -20,7 +20,8 @@ describe('codesFrom', () => {
   });
 });
 
-const sheet = (...codes: string[]): SpecSheet => ({ products: codes.map((code) => ({ code })), statements: [] }) as unknown as SpecSheet;
+const sheet = (...codes: string[]): SpecSheet =>
+  ({ products: codes.map((code) => ({ code })), statements: [] }) as unknown as SpecSheet;
 
 /** The comparison page's own state (P10-7; ADR 0047): the URL is the comparison, and the sheet is Knowledge's answer about it. */
 describe('the comparison store', () => {
@@ -48,7 +49,10 @@ describe('the comparison store', () => {
         { provide: Router, useValue: { navigate: async (_: unknown, extras: unknown) => void went.push(extras) } },
         {
           provide: CompareStore,
-          useValue: { items: () => [{ code: 'CAF-001', name: 'Moka' }], toggle: (item: { code: string }) => void toggled.push(item.code) },
+          useValue: {
+            items: () => [{ code: 'CAF-001', name: 'Moka' }],
+            toggle: (item: { code: string }) => void toggled.push(item.code),
+          },
         },
       ],
     });

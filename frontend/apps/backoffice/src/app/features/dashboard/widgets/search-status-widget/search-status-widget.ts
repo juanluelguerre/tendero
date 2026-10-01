@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { SearchStatusStore } from './search-status.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /**
  * Search's status (spec, Operations; R-9, D-7): each stage said as what the
@@ -10,10 +11,9 @@ import { SearchStatusStore } from './search-status.store';
  */
 @Component({
   selector: 'backoffice-search-status-widget',
-  imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, WidgetFrame],
   templateUrl: './search-status-widget.html',
-  styleUrl: './search-status-widget.css',
+  host: { class: 'block' },
   providers: [SearchStatusStore],
 })
 export class SearchStatusWidget {
@@ -24,6 +24,9 @@ export class SearchStatusWidget {
   protected since(at: string): string {
     const when = new Date(at);
     const today = when.toDateString() === new Date().toDateString();
-    return new Intl.DateTimeFormat(this.culture.active(), today ? { timeStyle: 'short' } : { dateStyle: 'short', timeStyle: 'short' }).format(when);
+    return new Intl.DateTimeFormat(
+      this.culture.active(),
+      today ? { timeStyle: 'short' } : { dateStyle: 'short', timeStyle: 'short' },
+    ).format(when);
   }
 }

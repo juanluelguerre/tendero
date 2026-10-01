@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AnalyticsConsent } from '@tendero/shared-telemetry';
 
@@ -14,9 +14,7 @@ import { AnalyticsConsent } from '@tendero/shared-telemetry';
 @Component({
   selector: 'storefront-consent-banner',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './consent-banner.html',
-  styleUrl: './consent-banner.css',
 })
 export class ConsentBanner {
   protected readonly consent = inject(AnalyticsConsent);

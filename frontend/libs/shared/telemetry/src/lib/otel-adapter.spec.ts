@@ -8,7 +8,12 @@ import { SYNTHETIC_USER_AGENT } from './synthetic';
 describeTelemetryAdapterContract('The OpenTelemetry adapter', () => {
   const spans = new InMemorySpanExporter();
   const logs = new InMemoryLogRecordExporter();
-  const adapter = createOtelAdapter({ spanExporter: spans, logExporter: logs, webVitals: false, instrumentFetch: false });
+  const adapter = createOtelAdapter({
+    spanExporter: spans,
+    logExporter: logs,
+    webVitals: false,
+    instrumentFetch: false,
+  });
 
   return {
     adapter,
@@ -49,7 +54,9 @@ describe('The OpenTelemetry adapter and simulated traffic', () => {
   }
 
   it('labels everything a simulated browser sends as synthetic (ADR 0037)', async () => {
-    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(`Mozilla/5.0 HeadlessChrome ${SYNTHETIC_USER_AGENT}1.0 (synthetic)`);
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(
+      `Mozilla/5.0 HeadlessChrome ${SYNTHETIC_USER_AGENT}1.0 (synthetic)`,
+    );
 
     expect((await resourceOfASpan())['user_agent.synthetic.type']).toBe('test');
   });

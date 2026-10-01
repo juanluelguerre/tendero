@@ -10,6 +10,7 @@ import { OrderingService } from '../../data-access/ordering.service';
 import { Navigation } from '../nav/navigation';
 import { orderReference } from '@tendero/shared-util';
 import { looksLikeId, matches, type PaletteOption, step } from './palette-search';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** Enough to choose from; the list is one Enter away for more. */
 const PerKind = 5;
@@ -30,25 +31,37 @@ export const PaletteStore = signalStore(
     const ordering = inject(OrderingService);
     const catalog = inject(CatalogService);
     const accounts = inject(AccountsService);
-    const asked = toSignal(toObservable(store.query).pipe(debounceTime(200), distinctUntilChanged()), { initialValue: '' });
-    const search = () => (store.isOpen() && asked().trim().length >= RecordsFrom ? { q: asked().trim(), culture: culture.active() } : undefined);
+    const asked = toSignal(toObservable(store.query).pipe(debounceTime(200), distinctUntilChanged()), {
+      initialValue: '',
+    });
+    const search = () =>
+      store.isOpen() && asked().trim().length >= RecordsFrom
+        ? { q: asked().trim(), culture: culture.active() }
+        : undefined;
 
     return {
       _culture: culture,
       _translate: inject(TranslocoService),
-      _orders: rxResource({
-        params: search,
-        stream: ({ params }) => ordering.orders(null, params.q).pipe(map((result) => result.orders.slice(0, PerKind))),
-      }),
-      _products: rxResource({
-        params: search,
-        stream: ({ params }) => catalog.list(null, params.culture, 1, PerKind, params.q),
-      }),
+      _orders: extendResource(
+        rxResource({
+          params: search,
+          stream: ({ params }) =>
+            ordering.orders(null, params.q).pipe(map((result) => result.orders.slice(0, PerKind))),
+        }),
+      ),
+      _products: extendResource(
+        rxResource({
+          params: search,
+          stream: ({ params }) => catalog.list(null, params.culture, 1, PerKind, params.q),
+        }),
+      ),
       /** A laboratory's handful: read once when the palette first opens, and matched here. */
-      _agents: rxResource({
-        params: () => (store.isOpen() ? true : undefined),
-        stream: ({ params }) => (params ? accounts.agents() : of([])),
-      }),
+      _agents: extendResource(
+        rxResource({
+          params: () => (store.isOpen() ? true : undefined),
+          stream: ({ params }) => (params ? accounts.agents() : of([])),
+        }),
+      ),
     };
   }),
   withComputed((store) => ({
@@ -101,7 +114,9 @@ export const PaletteStore = signalStore(
         }));
 
       // An id is what nobody types by accident: then orders lead.
-      return looksLikeId(query) ? [...orders, ...products, ...agents, ...screens] : [...screens, ...orders, ...products, ...agents];
+      return looksLikeId(query)
+        ? [...orders, ...products, ...agents, ...screens]
+        : [...screens, ...orders, ...products, ...agents];
     }),
     loading: computed(() => store._orders.isLoading() || store._products.isLoading()),
   })),

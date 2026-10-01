@@ -1,5 +1,7 @@
-import { DestroyRef, effect, inject, Injectable, type ResourceRef, signal, untracked } from '@angular/core';
+import { DestroyRef, inject, Injectable, type ResourceRef, signal, untracked } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { signalMethod } from '@ngrx/signals';
+import { extendResource } from '@ngrx/signals/resource';
 import type { Observable } from 'rxjs';
 
 /**
@@ -48,19 +50,22 @@ export function refreshedResource<P extends object, T>(options: {
   stream: (params: P, at: number) => Observable<T>;
 }): ResourceRef<T | undefined> {
   const refresh = inject(DashboardRefresh);
-  const resource = rxResource<T, P>({
-    // Undefined params keep a resource idle; Angular's type does not say so.
-    params: options.params as () => P,
-    stream: ({ params }) => options.stream(params, untracked(refresh.at)),
-  });
+  // A failed read is no value, not a throw, like every other resource (ADR 0051).
+  const resource = extendResource(
+    rxResource<T, P>({
+      // Undefined params keep a resource idle; Angular's type does not say so.
+      params: options.params as () => P,
+      stream: ({ params }) => options.stream(params, untracked(refresh.at)),
+    }),
+  );
 
+  // Each new instant on the clock reloads; the one it was created at does not.
   let asked = untracked(refresh.at);
-  effect(() => {
-    const at = refresh.at();
+  signalMethod<number>((at) => {
     if (at === asked) return;
     asked = at;
-    untracked(() => resource.reload());
-  });
+    resource.reload();
+  })(refresh.at);
 
   return resource;
 }

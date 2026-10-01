@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, output } from '@angular/core';
+import { Component, computed, inject, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
 import { type Culture, CultureStore } from '@tendero/shared-i18n';
-import { type ThemeChoice, ThemeChoices, ThemeStore } from '@tendero/shared-ui';
+import { CultureSwitch, Icon, type ThemeChoice, ThemeStore, ThemeSwitch } from '@tendero/shared-ui';
 import { BackofficeUsage } from '../../usage';
-import { Icon } from '../../icon/icon';
 
 /**
  * Who is signed in and what they can set for themselves: the language, the
@@ -17,10 +16,10 @@ import { Icon } from '../../icon/icon';
  */
 @Component({
   selector: 'backoffice-account-menu',
-  imports: [TranslocoDirective, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, Icon, CultureSwitch, ThemeSwitch],
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
+  host: { class: 'inline-flex' },
 })
 export class AccountMenu {
   private readonly auth = inject(AuthStore);
@@ -42,7 +41,6 @@ export class AccountMenu {
 
   protected readonly cultures = this.cultureStore.available;
   protected readonly culture = this.cultureStore.active;
-  protected readonly themes = ThemeChoices;
   protected readonly themeChoice = this.theme.choice;
 
   protected use(culture: Culture): void {

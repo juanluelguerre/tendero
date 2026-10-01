@@ -14,8 +14,24 @@ export type Affordance = TrackedEvents['backoffice_affordance_used']['affordance
 export type AffordanceTarget = TrackedEvents['backoffice_affordance_used']['target'];
 
 const Views: readonly BackofficeView[] = [
-  'dashboard', 'dashboard.sales', 'dashboard.operations', 'dashboard.growth', 'dashboard.agents', 'review', 'catalogue', 'claims', 'attributes', 'search', 'promotions',
-  'campaigns', 'stock', 'orders', 'returns', 'agents', 'audit', 'variants',
+  'dashboard',
+  'dashboard.sales',
+  'dashboard.operations',
+  'dashboard.growth',
+  'dashboard.agents',
+  'review',
+  'catalogue',
+  'claims',
+  'attributes',
+  'search',
+  'promotions',
+  'campaigns',
+  'stock',
+  'orders',
+  'returns',
+  'agents',
+  'audit',
+  'variants',
 ];
 
 /**
@@ -28,7 +44,9 @@ const Views: readonly BackofficeView[] = [
 export function viewOf(url: string): BackofficeView | null {
   const segments = url.split(/[?#]/)[0].split('/').filter(Boolean);
   if (segments[0] === 'products' && segments[2] === 'variants') return 'variants';
-  const view = (segments[0] === 'dashboard' && segments[1] ? `dashboard.${segments[1]}` : (segments[0] ?? 'dashboard')) as BackofficeView;
+  const view = (
+    segments[0] === 'dashboard' && segments[1] ? `dashboard.${segments[1]}` : (segments[0] ?? 'dashboard')
+  ) as BackofficeView;
   return Views.includes(view) ? view : null;
 }
 
@@ -73,7 +91,8 @@ export class BackofficeUsage {
   reported<T>(view: ActionView, action: BackofficeAction, via: ActionVia): MonoTypeOperatorFunction<T> {
     return tap<T>({
       next: () => this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: 'done' }),
-      error: (failure: unknown) => this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: outcomeOf(failure) }),
+      error: (failure: unknown) =>
+        this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: outcomeOf(failure) }),
     });
   }
 

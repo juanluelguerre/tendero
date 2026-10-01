@@ -34,7 +34,14 @@ describe('the health store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, HealthStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        HealthStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });

@@ -1,14 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject } from '@angular/core';
+import { FormField } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ReturnView } from '@tendero/shared-api';
 import { RETURN_REASONS } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, orderReference } from '@tendero/shared-util';
+import { orderReference } from '@tendero/shared-util';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
 import { OrderStore } from './order.store';
+import { Notice, PricePipe, StatusPill, orderStatusTone, returnStatusTone } from '@tendero/shared-ui';
+import { Totals } from '../../totals/totals';
+import { Summary } from '../../summary/summary';
 
 /**
  * The order, and the way back.
@@ -26,11 +29,9 @@ import { OrderStore } from './order.store';
  */
 @Component({
   selector: 'storefront-order',
-  imports: [TranslocoDirective, FormsModule, RouterLink],
+  imports: [TranslocoDirective, RouterLink, Notice, StatusPill, Totals, Summary, PricePipe, FormField],
   providers: [OrderStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './order-page.html',
-  styleUrl: './order-page.css',
 })
 export class OrderPage {
   protected readonly store = inject(OrderStore);
@@ -38,7 +39,7 @@ export class OrderPage {
   /** Every link carries the language segment (P5-13). */
   protected readonly links = inject(ShopLinks);
 
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
 
   protected readonly reasons = RETURN_REASONS;
 
@@ -46,12 +47,10 @@ export class OrderPage {
       with the rule that refuses a late return. */
   protected readonly returnWindowDays = inject(ReturnsPolicyStore).windowDays;
 
-  protected money(amount: number): string {
-    return formatPrice(amount, this.store.order()?.currency ?? 'EUR', this.culture.active());
-  }
-
   /** A full Guid is unreadable; its random end is what a person reads, and what finds it. */
   protected readonly shortId = orderReference;
+  protected readonly orderTone = orderStatusTone;
+  protected readonly returnTone = returnStatusTone;
 
   protected describe(request: ReturnView): string {
     return request.lines.map((line) => `${line.sku} ×${line.quantity}`).join(' · ');

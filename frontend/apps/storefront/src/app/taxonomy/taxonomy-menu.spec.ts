@@ -1,7 +1,13 @@
 import type { CategoryView } from '@tendero/shared-api';
 import { departmentOf, menuOf } from './taxonomy-menu';
 
-const category = (code: string, parent: string | null, depth: number): CategoryView => ({ code, parent, name: code, path: [], depth });
+const category = (code: string, parent: string | null, depth: number): CategoryView => ({
+  code,
+  parent,
+  name: code,
+  path: [],
+  depth,
+});
 
 const shop = [
   category('HOME', null, 0),
@@ -13,7 +19,7 @@ const shop = [
 ];
 
 describe('the taxonomy as a menu', () => {
-  it('draws departments, their sections, and a section\'s leaves', () => {
+  it("draws departments, their sections, and a section's leaves", () => {
     const menu = menuOf(shop);
 
     expect(menu.map((department) => department.category.code)).toEqual(['HOME', 'BAGS']);

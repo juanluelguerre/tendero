@@ -1,7 +1,40 @@
-<section class="campaign" *transloco="let t" [attr.aria-labelledby]="'campaign-' + campaign().code"
-         [class.campaign--withAside]="image() || shownProducts().length > 0">
-  <div class="campaign__words">
-    <p class="campaign__when">
+<!-- An event is the chalkboard — `--color-inverse`, dark in both themes — and a
+     season the light card on the accent's tint, stronger than the agent band's
+     tint so the lead stands apart (tokens.css). Colours by purpose only
+     (design-tokens.spec.ts). The clock inside reads its box's border from
+     `--clock-border`. The banner is the same card, one line of it, at the head
+     of a category's pages. -->
+@let event = campaign().kind !== 'Season';
+@let banner = variant() === 'banner';
+@let aside = !!image() || shownProducts().length > 0;
+<section
+  *transloco="let t"
+  class="relative grid grid-cols-[minmax(0,1fr)] overflow-hidden rounded-lg"
+  [class]="
+    banner
+      ? 'gap-3 px-5 pt-5 pb-4'
+      : aside
+        ? 'gap-6 px-7 pt-7 pb-6 max-sm:px-5 max-sm:pt-6 max-sm:pb-5 tab:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] tab:items-center'
+        : 'gap-6 px-7 pt-7 pb-6 max-sm:px-5 max-sm:pt-6 max-sm:pb-5'
+  "
+  [class.border]="event"
+  [class.border-hairline-inverse]="event"
+  [class.bg-inverse]="event"
+  [class.text-on-inverse]="event"
+  [class.bg-accent-tint-strong]="!event"
+  [class.text-body]="!event"
+  [style.--clock-border]="event ? 'var(--color-hairline-inverse)' : 'var(--color-hairline-strong)'"
+  [attr.aria-labelledby]="'campaign-' + campaign().code"
+>
+  <!-- One column that may shrink: an implicit track sizes to its widest child,
+       and three product cards side by side overflowed a tablet (the ratchet). -->
+  <div class="grid justify-items-start" [class]="banner ? 'grid-cols-[1fr] gap-2' : 'gap-4'">
+    <!-- The window, as an eyebrow: the one uppercase the system allows. -->
+    <p
+      class="campaign__when text-xs font-semibold tracking-wide uppercase"
+      [class.text-on-inverse-muted]="event"
+      [class.text-accent-on-tint-strong]="!event"
+    >
       @if (campaign().kind === 'Season') {
         {{ moment() === 'before' ? t('campaign.from', { date: startDay() }) : t('campaign.until', { date: endDay() }) }}
       } @else {
@@ -9,32 +42,63 @@
       }
     </p>
 
-    <h2 class="campaign__name" [id]="'campaign-' + campaign().code">{{ campaign().name }}</h2>
-    <p class="campaign__line">{{ campaign().line }}</p>
+    <h2
+      class="m-0 font-display leading-none"
+      [class]="banner ? 'text-2xl' : 'text-4xl max-sm:text-3xl'"
+      [id]="'campaign-' + campaign().code"
+    >
+      {{ campaign().name }}
+    </h2>
+    <p
+      class="max-w-measure-sm"
+      [class]="banner ? 'text-md' : 'text-lg max-sm:text-md'"
+      [class.text-on-inverse-muted]="event"
+      [class.text-muted-on-tint-strong]="!event"
+    >
+      {{ campaign().line }}
+    </p>
 
     @if (until(); as target) {
       <storefront-countdown-clock
-        class="campaign__clock"
         [until]="target"
         [label]="moment() === 'before' ? t('campaign.startsIn') : t('campaign.endsIn')"
-        (reached)="reached.emit()" />
+        (reached)="reached.emit()"
+      />
     }
 
     @if (campaign().holds.length > 0) {
-      <ul class="campaign__holds" [attr.aria-label]="t('campaign.holds')">
+      <ul class="flex flex-wrap gap-2" [attr.aria-label]="t('campaign.holds')">
         @for (hold of holds(t); track hold) {
-          <li class="campaign__hold">{{ hold }}</li>
+          <li
+            class="campaign__hold rounded-full border border-current px-3 py-1 text-sm"
+            [class.text-accent-on-tint-strong]="!event"
+          >
+            {{ hold }}
+          </li>
         }
       </ul>
     }
 
-    <p class="campaign__actions">
+    <!-- `campaign__cta` and `campaign__link` are the tests' hooks, as are
+         `campaign__when`, `campaign__hold`, `campaign__image` and
+         `campaign__products`. -->
+    <p class="mt-2 flex flex-wrap items-center gap-4">
       @if (variant() === 'lead') {
-        <a class="button campaign__cta" [routerLink]="links.home()" [queryParams]="listing()">
-          {{ campaign().kind === 'Season' ? t('campaign.seeSeason') : moment() === 'before' ? t('campaign.seeUpcoming') : t('campaign.seeOffers') }}
+        <a class="button campaign__cta max-sm:w-full" [routerLink]="links.home()" [queryParams]="listing()">
+          {{
+            campaign().kind === 'Season'
+              ? t('campaign.seeSeason')
+              : moment() === 'before'
+                ? t('campaign.seeUpcoming')
+                : t('campaign.seeOffers')
+          }}
         </a>
       } @else {
-        <a class="campaign__link" [routerLink]="links.home()" [queryParams]="listing()">
+        <a
+          class="campaign__link inline-flex min-h-target items-center font-semibold text-inherit underline underline-offset-(--underline-offset) pointer-coarse:min-h-tap"
+          [routerLink]="links.home()"
+          [queryParams]="listing()"
+        >
           {{ moment() === 'before' ? t('campaign.seeUpcoming') : t('campaign.seeOffers') }}
         </a>
       }
@@ -42,11 +106,22 @@
   </div>
 
   @if (image(); as source) {
-    <img class="campaign__image" [src]="source" [alt]="campaign().imageAlt ?? ''" width="720" height="400" />
+    <img
+      class="campaign__image aspect-16/9 h-auto w-full rounded-lg object-cover"
+      [ngSrc]="source"
+      [priority]="priority()"
+      [alt]="campaign().imageAlt ?? ''"
+      width="720"
+      height="400"
+    />
   } @else if (shownProducts().length > 0) {
-    <ul class="campaign__products" [attr.aria-label]="t('campaign.products', { name: campaign().name })">
+    <!-- On a phone the words are the card: the products are one tap away. -->
+    <ul
+      class="campaign__products grid grid-cols-3 gap-3 text-body max-sm:hidden"
+      [attr.aria-label]="t('campaign.products', { name: campaign().name })"
+    >
       @for (hit of shownProducts(); track hit.productId) {
-        <li class="campaign__product">
+        <li class="flex *:flex-1">
           <storefront-product-card [hit]="hit" [actions]="false" via="campaign" />
         </li>
       }

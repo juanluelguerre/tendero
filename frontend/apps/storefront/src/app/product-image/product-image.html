@@ -1,0 +1,14 @@
+<ng-container *transloco="let t">
+  @let source = src();
+  @if (source && !broken()) {
+    <!-- `fill`: the image is the caller's box, whatever size the caller gave it (NgOptimizedImage). -->
+    <img class="[object-fit:inherit]" [ngSrc]="source" fill [priority]="priority()" [alt]="alt()" (error)="fail()" />
+  } @else {
+    <!-- A default state, not a gap: a product with no picture has to look deliberate. -->
+    <storefront-product-image-placeholder
+      class="size-full"
+      [alt]="t('product.noImage')"
+      [label]="labelled() ? t('product.noImage') : ''"
+    />
+  }
+</ng-container>

@@ -32,15 +32,22 @@ export class AccountsService {
   }
 
   trust(agentId: string, trust: AgentTrust): Observable<AgentChangeResponse> {
-    return this.http.post<AgentChangeResponse>(`${this.baseUrl}/api/agents/${encodeURIComponent(agentId)}/trust`, { trust });
+    return this.http.post<AgentChangeResponse>(`${this.baseUrl}/api/agents/${encodeURIComponent(agentId)}/trust`, {
+      trust,
+    });
   }
 
   suspend(agentId: string, reason: string): Observable<AgentChangeResponse> {
-    return this.http.post<AgentChangeResponse>(`${this.baseUrl}/api/agents/${encodeURIComponent(agentId)}/suspend`, { reason });
+    return this.http.post<AgentChangeResponse>(`${this.baseUrl}/api/agents/${encodeURIComponent(agentId)}/suspend`, {
+      reason,
+    });
   }
 
   reinstate(agentId: string): Observable<AgentChangeResponse> {
-    return this.http.post<AgentChangeResponse>(`${this.baseUrl}/api/agents/${encodeURIComponent(agentId)}/reinstate`, {});
+    return this.http.post<AgentChangeResponse>(
+      `${this.baseUrl}/api/agents/${encodeURIComponent(agentId)}/reinstate`,
+      {},
+    );
   }
 
   agentDenials(period: DashboardPeriod): Observable<AgentDenialsSummary> {

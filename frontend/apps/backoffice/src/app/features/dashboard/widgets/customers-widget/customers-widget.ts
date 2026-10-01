@@ -1,16 +1,16 @@
-import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { BarChart } from '../../../../charts/bar-chart';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { CustomersStore } from './customers.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** Who bought (spec, Growth's Customers): new against returning, as figures and as one share. */
 @Component({
   selector: 'backoffice-customers-widget',
-  imports: [TranslocoDirective, BarChart],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, BarChart, WidgetFrame],
   templateUrl: './customers-widget.html',
-  styleUrl: './customers-widget.css',
+  host: { class: 'block' },
   providers: [CustomersStore],
 })
 export class CustomersWidget {

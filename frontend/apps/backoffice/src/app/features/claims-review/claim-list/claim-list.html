@@ -5,47 +5,75 @@
   <p class="page-hint">{{ t('claims.hint') }}</p>
 
   <div class="worklist-tools">
-    <backoffice-filter-chips [options]="store.filters()" [selected]="store.filterKey()" [label]="t('claims.filterLabel')" (chosen)="store.filterBy($event)" />
+    <backoffice-filter-chips
+      [options]="store.filters()"
+      [selected]="store.filterKey()"
+      [label]="t('claims.filterLabel')"
+      (chosen)="store.filterBy($event)"
+    />
   </div>
 
-  @if (store.loading()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-  <p class="sr-only" role="status" aria-live="polite">{{ t('claims.loading') }}</p>
-  } @else if (store.failed()) {
-    <p class="failed" role="alert">{{ t('claims.failed') }}</p>
-  } @else if (store.claims().length === 0) {
-    <div class="empty"><p class="empty__text">{{ store.claims().length === 0 ? t('claims.empty') : t('claims.none') }}</p></div>
-  } @else {
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.claims().length === 0"
+    [loadingText]="t('claims.loading')"
+    [failedText]="t('claims.failed')"
+    [emptyText]="store.othersWaiting() ? t('claims.none') : t('claims.empty')"
+  >
     <div class="table-wrap wide-only">
       <table class="table">
-        <caption class="sr-only">{{ t('claims.title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('claims.title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('claims.column.claim') }}</th>
             <th scope="col">{{ t('claims.column.product') }}</th>
             <th scope="col" class="numeric">{{ t('claims.column.support') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('claims.column.action') }}</span></th>
+            <th scope="col">
+              <span class="sr-only">{{ t('claims.column.action') }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           @for (claim of store.claims(); track claim.claimId) {
             <tr class="row" [class.row--selected]="claim.claimId === store.selectedId()" (click)="store.open(claim)">
               <td>
-                <button type="button" class="row__open statement" [attr.aria-expanded]="claim.claimId === store.selectedId()" (click)="$event.stopPropagation(); store.open(claim)">
+                <button
+                  type="button"
+                  class="row__open m-0 font-medium"
+                  [attr.aria-expanded]="claim.claimId === store.selectedId()"
+                  (click)="$event.stopPropagation(); store.open(claim)"
+                >
                   {{ statement(claim) }}
                 </button>
                 @if (claim.attributeCode) {
-                  <span class="attribute code">{{ claim.attributeCode }} = {{ claim.value }}</span>
+                  <span class="mt-1 inline-block rounded-sm border border-hairline px-2 py-px text-3xs"
+                    >{{ claim.attributeCode }} = {{ claim.value }}</span
+                  >
                 }
               </td>
-              <td class="product">{{ store.productName(claim) }}</td>
+              <td class="font-medium whitespace-nowrap">{{ store.productName(claim) }}</td>
               <td class="numeric"><backoffice-claim-support [claim]="claim" /></td>
-              <td class="actions">
+              <td class="text-end whitespace-nowrap">
                 <!-- Quiet, both: one clay action per view, and a queue of rows has many. -->
-                <button type="button" class="button button--small button--quiet" [disabled]="store.busy() === claim.claimId" (click)="$event.stopPropagation(); store.decide(claim, 'approve', 'row')">
+                <button
+                  type="button"
+                  class="button button--small button--quiet"
+                  [disabled]="store.busy() === claim.claimId"
+                  (click)="$event.stopPropagation(); store.decide(claim, 'approve', 'row')"
+                >
                   {{ t('claims.approve') }}
                 </button>
-                <button type="button" class="button button--small button--quiet" [disabled]="store.busy() === claim.claimId" (click)="$event.stopPropagation(); store.decide(claim, 'reject', 'row')">
+                <button
+                  type="button"
+                  class="button button--small button--quiet ms-2"
+                  [disabled]="store.busy() === claim.claimId"
+                  (click)="$event.stopPropagation(); store.decide(claim, 'reject', 'row')"
+                >
                   {{ t('claims.reject') }}
                 </button>
               </td>
@@ -59,9 +87,9 @@
       @for (claim of store.claims(); track claim.claimId) {
         <li class="worklist-card" [class.worklist-card--selected]="claim.claimId === store.selectedId()">
           <button type="button" class="worklist-card__open" (click)="store.open(claim)">
-            <span class="statement">{{ statement(claim) }}</span>
+            <span class="m-0 font-medium">{{ statement(claim) }}</span>
             <span class="worklist-card__line">
-              <span class="product muted">{{ store.productName(claim) }}</span>
+              <span class="muted font-medium whitespace-nowrap">{{ store.productName(claim) }}</span>
               <span class="worklist-card__end"><backoffice-claim-support [claim]="claim" /></span>
             </span>
           </button>
@@ -69,5 +97,5 @@
       }
     </ul>
     <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
-  }
+  </backoffice-list-state>
 </ng-container>

@@ -34,7 +34,10 @@ describe('the returns widget', () => {
   it('ranks the open returns by reason in the returns screen words', async () => {
     const element = await open(OPS);
 
-    expect([...element.querySelectorAll('table tbody th')].map((cell) => cell.textContent?.trim())).toEqual(['Damaged', 'Wrong size']);
+    expect([...element.querySelectorAll('table tbody th')].map((cell) => cell.textContent?.trim())).toEqual([
+      'Damaged',
+      'Wrong size',
+    ]);
     expect([...element.querySelectorAll('table td')].map((cell) => cell.textContent?.trim())).toEqual(['3', '1']);
   });
 

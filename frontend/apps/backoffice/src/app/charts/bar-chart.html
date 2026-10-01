@@ -1,30 +1,50 @@
-<figure class="chart" *transloco="let t; prefix: 'charts.figures'">
+<figure class="grid gap-3" *transloco="let t; prefix: 'charts.figures'">
   <figcaption class="sr-only">{{ caption() }}</figcaption>
-  <div class="head">
-    <ul class="legend">
+  <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+    <ul class="legend flex gap-4 text-2xs text-muted">
       @for (series of data().series; track series.key) {
-        <li><span class="swatch" [style.background]="colour(series.role)"></span>{{ series.label }}</li>
+        <li class="inline-flex items-center gap-2">
+          <span class="size-icon-2xs rounded-xs" [style.background]="colour(series.role)"></span>{{ series.label }}
+        </li>
       }
     </ul>
-    <button type="button" class="figures-toggle" [attr.aria-expanded]="figuresShown()" [attr.aria-controls]="tableId"
-      (click)="figuresShown.set(!figuresShown())">{{ figuresShown() ? t('hide') : t('show') }}</button>
+    <!-- 24px at least, WCAG 2.2's target size: the accessibility ratchet found it at 18. -->
+    <button
+      type="button"
+      class="figures-toggle inline-flex min-h-target items-center text-2xs text-muted underline hover:text-body"
+      [attr.aria-expanded]="figuresShown()"
+      [attr.aria-controls]="tableId"
+      (click)="figuresShown.set(!figuresShown())"
+    >
+      {{ figuresShown() ? t('hide') : t('show') }}
+    </button>
   </div>
   @defer (on viewport) {
     <backoffice-echarts-chart [build]="build()" />
   } @placeholder {
-    <div class="placeholder"></div>
+    <div class="h-[var(--chart-block-size,12.5rem)]"></div>
   }
-  <table [id]="tableId" class="figures" [class.sr-only]="!figuresShown()">
-    <caption>{{ caption() }}</caption>
+  <table [id]="tableId" class="figures border-collapse text-2xs tabular-nums" [class.sr-only]="!figuresShown()">
+    <caption class="text-start text-muted">
+      {{
+        caption()
+      }}
+    </caption>
     <thead>
-      <tr><th scope="col"></th>
-        @for (series of data().series; track series.key) { <th scope="col">{{ series.label }}</th> }
+      <tr>
+        <th scope="col" class="border-b border-hairline px-2 py-1 text-end"></th>
+        @for (series of data().series; track series.key) {
+          <th scope="col" class="border-b border-hairline px-2 py-1 text-end">{{ series.label }}</th>
+        }
       </tr>
     </thead>
     <tbody>
       @for (category of data().categories; track $index; let row = $index) {
-        <tr><th scope="row">{{ category }}</th>
-          @for (series of data().series; track series.key) { <td>{{ format()(series.values[row]) }}</td> }
+        <tr>
+          <th scope="row" class="border-b border-hairline px-2 py-1 text-start">{{ category }}</th>
+          @for (series of data().series; track series.key) {
+            <td class="border-b border-hairline px-2 py-1 text-end">{{ format()(series.values[row]) }}</td>
+          }
         </tr>
       }
     </tbody>

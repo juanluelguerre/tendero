@@ -120,9 +120,7 @@ export class AuthStore {
    */
   async bootstrap(): Promise<void> {
     try {
-      this.configuration = await firstValueFrom(
-        this.http.get<AuthConfiguration>(`${this.baseUrl}/api/auth/config`),
-      );
+      this.configuration = await firstValueFrom(this.http.get<AuthConfiguration>(`${this.baseUrl}/api/auth/config`));
     } catch {
       return;
     }
@@ -291,10 +289,7 @@ export const tenderoAuthInterceptor: HttpInterceptorFn = (request, next) => {
   // to one.
   const isOurs = request.url.startsWith('/api');
 
-  const outbound =
-    token && isOurs
-      ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-      : request;
+  const outbound = token && isOurs ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : request;
 
   return next(outbound).pipe(
     catchError((error: unknown) => {

@@ -100,9 +100,7 @@ export class TelemetryStartup {
     const report = () => this.telemetry.route(routeTemplate(router.routerState.snapshot.root));
     report();
 
-    const subscription = router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(report);
+    const subscription = router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(report);
     this.destroyRef.onDestroy(() => subscription.unsubscribe());
   }
 }

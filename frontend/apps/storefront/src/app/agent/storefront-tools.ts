@@ -142,7 +142,11 @@ export class StorefrontTools {
         type: 'object',
         properties: {
           facet: { type: 'string', description: 'A facet code from list_filters, e.g. brand, price, COLOR.' },
-          values: { type: 'array', items: { type: 'string' }, description: 'Option values from list_filters, e.g. ["COLOR:BLACK"].' },
+          values: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Option values from list_filters, e.g. ["COLOR:BLACK"].',
+          },
           minPrice: { type: 'number', description: 'For the price facet: the lowest price, inclusive.' },
           maxPrice: { type: 'number', description: 'For the price facet: the highest price, inclusive.' },
         },
@@ -168,7 +172,9 @@ export class StorefrontTools {
           const after = await listing.applyAndSettle(outcome.filters);
           if (after.status !== 'ready') return refuse('The shop could not list the products just now.');
 
-          const lines = after.hits.slice(0, StorefrontTools.MaximumResults).map((hit) => `${hit.name} · code ${hit.code}`);
+          const lines = after.hits
+            .slice(0, StorefrontTools.MaximumResults)
+            .map((hit) => `${hit.name} · code ${hit.code}`);
           return say(`${after.total} product(s) now on screen:\n${lines.join('\n')}`);
         } catch {
           return refuse('The list did not answer in time.');
@@ -199,9 +205,7 @@ export class StorefrontTools {
         if (!code) return refuse('A product code is required.');
 
         try {
-          const product = await firstValueFrom(
-            this.products.get(code, this.culture.active()),
-          );
+          const product = await firstValueFrom(this.products.get(code, this.culture.active()));
 
           const variants = product.variants
             .filter((variant) => !variant.discontinued)
@@ -212,8 +216,10 @@ export class StorefrontTools {
                   : 'in stock'
                 : 'sold out';
 
-              return `  ${variant.sku} — ${variant.label || product.name} — ` +
-                `${this.money(variant.priceAmount, variant.priceCurrency)} — ${stock}`;
+              return (
+                `  ${variant.sku} — ${variant.label || product.name} — ` +
+                `${this.money(variant.priceAmount, variant.priceCurrency)} — ${stock}`
+              );
             });
 
           const specs = product.attributes.map(

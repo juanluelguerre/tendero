@@ -1,9 +1,11 @@
-import { effect, inject, untracked } from '@angular/core';
+import { inject, untracked } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { signalStore, withHooks, withProps } from '@ngrx/signals';
+import { signalMethod, signalStore, withHooks, withProps } from '@ngrx/signals';
+import type { OrderSummary } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { OrderingService } from '../../../data-access/ordering.service';
 import { OrdersStore } from '../orders.store';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * The pane's own state (ADR 0047): the open order's detail — its address and
@@ -18,13 +20,15 @@ export const OrderPaneStore = signalStore(
     const culture = inject(CultureStore);
     return {
       _orders: orders,
-      detail: rxResource({
-        params: () => {
-          const id = orders.selectedId();
-          return id ? { id, culture: culture.active() } : undefined;
-        },
-        stream: ({ params }) => ordering.order(params.id, params.culture),
-      }),
+      detail: extendResource(
+        rxResource({
+          params: () => {
+            const id = orders.selectedId();
+            return id ? { id, culture: culture.active() } : undefined;
+          },
+          stream: ({ params }) => ordering.order(params.id, params.culture),
+        }),
+      ),
     };
   }),
   withHooks({
@@ -32,12 +36,11 @@ export const OrderPaneStore = signalStore(
       // A move changes the open order's status: its detail is asked again,
       // keeping what it shows until the answer arrives.
       let seen = untracked(() => store._orders.selected());
-      effect(() => {
-        const row = store._orders.selected();
+      signalMethod<OrderSummary | null>((row) => {
         const moved = row !== null && seen !== null && row.orderId === seen.orderId && row.status !== seen.status;
         seen = row;
-        if (moved) untracked(() => store.detail.reload());
-      });
+        if (moved) store.detail.reload();
+      })(store._orders.selected);
     },
   }),
 );

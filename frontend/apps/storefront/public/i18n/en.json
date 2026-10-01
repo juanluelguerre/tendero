@@ -417,5 +417,9 @@
     "copyCommand": "Copy the command",
     "copyUcp": "Copy the UCP profile’s address",
     "copied": "Copied"
+  },
+  "notFound": {
+    "title": "That page does not exist",
+    "text": "The link may be wrong, or the page may be gone."
   }
 }

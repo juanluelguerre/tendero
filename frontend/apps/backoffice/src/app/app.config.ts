@@ -1,16 +1,12 @@
-import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
-import {
-  ApplicationConfig,
-  provideAppInitializer,
-  provideBrowserGlobalErrorListeners,
-  inject,
-} from '@angular/core';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { ApplicationConfig, provideAppInitializer, provideBrowserGlobalErrorListeners, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { AuthStore, tenderoAuthInterceptor } from '@tendero/shared-auth';
 import { provideTenderoI18n, provideTranslatedTitles } from '@tendero/shared-i18n';
 import { provideTelemetry } from '@tendero/shared-telemetry';
 import { appRoutes } from './app.routes';
+import { provideReadableResources } from '@tendero/shared-util';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,7 +22,9 @@ export const appConfig: ApplicationConfig = {
     provideOAuthClient(),
     provideAppInitializer(() => inject(AuthStore).bootstrap()),
 
-    provideHttpClient(withFetch(), withInterceptors([tenderoAuthInterceptor])),
+    provideHttpClient(withInterceptors([tenderoAuthInterceptor])),
+    // A failed resource reads as no value, not as a throw (ADR 0051).
+    provideReadableResources(),
     provideTenderoI18n(),
     provideTranslatedTitles(),
 

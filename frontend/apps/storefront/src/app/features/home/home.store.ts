@@ -12,6 +12,7 @@ import type { ShelfItem } from '../../shelves/product-row/product-row';
 import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
 import { TrailStore } from '../../trail/trail.store';
 import { departmentsOf, freeShippingOf, offerRulesOf, rankedIds, rankedItems } from './home-bands';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** How many cards a row asks for: two screens of a desktop row, one of them whole. */
 const RowSize = 10;
@@ -42,45 +43,63 @@ export const HomeStore = signalStore(
     const byCulture = () => ({ culture: culture.active() });
     const withViews = () => (viewedCodes().length ? { culture: culture.active(), codes: viewedCodes() } : undefined);
     const rankedCards = (ranking: typeof sales.trending, size: number) =>
-      rxResource({
-        params: byCulture,
-        stream: ({ params }) =>
-          ranking(size).pipe(
-            switchMap((ranked) =>
-              ranked.items.length
-                ? search.cards(params.culture, { ids: rankedIds(ranked) }).pipe(map((cards) => rankedItems(ranked, cards.items)))
-                : of([] as ShelfItem[]),
+      extendResource(
+        rxResource({
+          params: byCulture,
+          stream: ({ params }) =>
+            ranking(size).pipe(
+              switchMap((ranked) =>
+                ranked.items.length
+                  ? search
+                      .cards(params.culture, { ids: rankedIds(ranked) })
+                      .pipe(map((cards) => rankedItems(ranked, cards.items)))
+                  : of([] as ShelfItem[]),
+              ),
             ),
-          ),
-      });
+        }),
+      );
 
     return {
       _taxonomy: inject(TaxonomyStore),
       /** The campaign the home leads with, or null. */
       campaign: campaigns.leading,
       /** What the leading campaign reaches, for its card when it has no picture of its own. */
-      _campaignProducts: rxResource({
-        params: () => {
-          const campaign = campaigns.leading();
-          return campaign && !campaign.imageId && campaign.phase === 'Running'
-            ? { culture: culture.active(), campaign: campaign.code }
-            : undefined;
-        },
-        stream: ({ params }) => search.browse({ ...params, pageSize: 3 }).pipe(map((page) => page.hits)),
-      }),
-      _viewedCards: rxResource({
-        params: withViews,
-        stream: ({ params }) => search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
-      }),
-      _similar: rxResource({ params: withViews, stream: ({ params }) => search.similar(params.culture, params.codes, RowSize) }),
-      _offerHits: rxResource({
-        params: byCulture,
-        stream: ({ params }) => search.browse({ culture: params.culture, onOffer: true, pageSize: RowSize }),
-      }),
-      _offerRules: rxResource({
-        params: byCulture,
-        stream: ({ params }) => shopFront.offers(params.culture).pipe(map((result) => result.items)),
-      }),
+      _campaignProducts: extendResource(
+        rxResource({
+          params: () => {
+            const campaign = campaigns.leading();
+            return campaign && !campaign.imageId && campaign.phase === 'Running'
+              ? { culture: culture.active(), campaign: campaign.code }
+              : undefined;
+          },
+          stream: ({ params }) => search.browse({ ...params, pageSize: 3 }).pipe(map((page) => page.hits)),
+        }),
+      ),
+      _viewedCards: extendResource(
+        rxResource({
+          params: withViews,
+          stream: ({ params }) =>
+            search.cards(params.culture, { codes: params.codes }).pipe(map((result) => result.items)),
+        }),
+      ),
+      _similar: extendResource(
+        rxResource({
+          params: withViews,
+          stream: ({ params }) => search.similar(params.culture, params.codes, RowSize),
+        }),
+      ),
+      _offerHits: extendResource(
+        rxResource({
+          params: byCulture,
+          stream: ({ params }) => search.browse({ culture: params.culture, onOffer: true, pageSize: RowSize }),
+        }),
+      ),
+      _offerRules: extendResource(
+        rxResource({
+          params: byCulture,
+          stream: ({ params }) => shopFront.offers(params.culture).pipe(map((result) => result.items)),
+        }),
+      ),
       _trending: rankedCards((size) => sales.trending(size), RowSize),
       _bestSellers: rankedCards((size) => sales.bestSellers(size), TopSize),
       /**
@@ -89,14 +108,18 @@ export const HomeStore = signalStore(
        * whole catalogue and would be sorting by import order while calling it
        * news.
        */
-      _newest: rxResource({
-        params: byCulture,
-        stream: ({ params }) => search.browse({ culture: params.culture, sort: 'Newest', pageSize: RowSize }),
-      }),
+      _newest: extendResource(
+        rxResource({
+          params: byCulture,
+          stream: ({ params }) => search.browse({ culture: params.culture, sort: 'Newest', pageSize: RowSize }),
+        }),
+      ),
     };
   }),
   withComputed((store) => ({
-    campaignHits: computed<readonly SearchHit[]>(() => (store._campaignProducts.hasValue() ? store._campaignProducts.value() : [])),
+    campaignHits: computed<readonly SearchHit[]>(() =>
+      store._campaignProducts.hasValue() ? store._campaignProducts.value() : [],
+    ),
     /** *Sigue donde lo dejaste*: the trail's products, as cards. */
     viewed: computed<readonly SearchHit[]>(() => (store._viewedCards.hasValue() ? store._viewedCards.value() : [])),
     /** What the trail suggests, before the page words it; null when it is not known. */

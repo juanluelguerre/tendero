@@ -83,9 +83,11 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 dotnet run --project tools/SearchEval         # golden set NDCG report
 dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42  # simulated shoppers and agents (ADR 0037); also a resource in Aspire
 npx nx serve storefront|backoffice            # from frontend/
+npm run format                                # from frontend/: Prettier, Tailwind classes sorted; CI runs format:check
 UPDATE_DOMAIN_MODEL=1 dotnet test --project tests/Architecture.Tests  # regenerate docs/domain-model.md
 node tools/c4.mjs                             # validate docs/c4/tendero.c4 against the AppHost, redraw its diagrams
 node tools/tracking-plan.mjs                   # docs/telemetry/tracking-plan.json → its .md and the browser's event types
+node tools/tokens.mjs                          # design/theme.css (the tokens, Tailwind's theme) → design/tokens.css for pages without Tailwind
 node landing-page/tools/prepare.mjs           # the landing into landing-page/dist (Netlify); film: landing-page/README.md
 
 UPDATE_OPENAPI=1 dotnet test tests/Api.Tests  # regenerate docs/openapi/tendero.json
@@ -211,14 +213,50 @@ node tools/api-map.mjs --schema CartView
   `HostedServiceNamingTests` holds it.
 - OpenTelemetry: every slice with I/O gets an `ActivitySource` span with tags.
   GenAI calls follow the OTel GenAI semantic conventions.
-- UI: tokens from `design/tokens.css` only — never hardcode a hex in components,
-  and a test enforces it across every `.css` in the repository.
+- UI: tokens from `design/theme.css` only (ADR 0050) — never hardcode a hex in
+  components, and a test enforces it across every `.css` in the repository.
+  `design/tokens.css` is **generated** from it (`node tools/tokens.mjs`) for the
+  pages without Tailwind; never edit it, CI diffs it.
   One clay accent action per view. Agent-driven actions are always clay.
-- **An Angular component is three files** — `name.ts`, `name.html`, `name.css` —
-  which is what the current Angular style guide describes. Not a style
-  preference: a template inside a `.ts` literal is invisible to every HTML tool
-  and a stylesheet inside one is invisible to every CSS tool, including the token
-  test.
+- **Tailwind, utility-first, over a theme that is the tokens** (ADR 0049, 0050).
+  A component's look is written in its template with utilities (`bg-surface`,
+  `text-muted`, `p-5`, `max-sm:`). The tokens **are** Tailwind's theme: declared
+  in its namespaces in `design/theme.css` (`--color-surface` is `bg-surface`,
+  `--spacing-tap` is `min-h-tap`), with Tailwind's default theme never imported,
+  so a utility can only name a token. Spacing is the tokens' named steps (`p-5`
+  is `--spacing-5`, 1.5rem), and **every size is a token** — targets, controls,
+  icons, columns, measures; a lone length in brackets (`min-h-[2.75rem]`) fails
+  `design-arbitrary-values.spec.ts`, and a class that builds nothing fails
+  `design-utilities.spec.ts`. Brackets stay for a layout written as an
+  expression (`grid-cols-[minmax(0,1fr)_320px]`).
+  A component's `.css` keeps only what utilities cannot say (keyframes,
+  generated content, anchoring, container queries, a `:host` that depends on
+  something). Classes are literal in the template — Tailwind reads `.html` only,
+  never a class name built in TS; the one exception is the host's, below. Each
+  app's tiny, much-repeated primitives (`.button`, `.field`, `.table`, `.tag`…)
+  stay as component classes in its `styles.css`; anything longer that repeats
+  becomes a component (`libs/shared/ui` across apps), never `@apply`.
+- **⚠ The host's own look.** A template cannot reach its component's element, and
+  a custom element is `inline` until told otherwise. Where it goes:
+  - **Fixed look → `host: { class: 'block' }`** in the decorator (Angular's style
+    guide prefers the `host` property). Tailwind does not read TS, so each such
+    utility is listed in `theme.css`'s `@source inline(…)`, and
+    `design-host-classes.spec.ts` fails when one is missing.
+  - **`:host` in the `.css` only when it depends on something**: a state
+    (`:host(.in-drawer)`, `:host(:hover)`), a media or container query, the
+    context (`:host-context(…)`), or a layered default the caller must be able to
+    override (`lib-icon`).
+  - **Never a `style` in the host metadata**: it beats every class, so whoever
+    places the component can no longer adjust it, and it has no states.
+  - Never style a child component's element from the parent's stylesheet:
+    encapsulation makes that rule match nothing when the element is created
+    from code (the dashboard's tab did exactly that).
+- **An Angular component is `name.ts` + `name.html`, and `name.css` only when it
+  has something to say** — the current Angular style guide's layout. A template
+  inside a `.ts` literal is invisible to every HTML tool and a stylesheet inside
+  one to every CSS tool, including the token test, so neither is ever inline. A
+  `.css` emptied by utilities is deleted with its `styleUrl` (the same spec
+  fails on one that holds only comments).
 - **Folders by feature and theme, never by type of code** (Angular's style
   guide; ADR 0047). A feature keeps its page(s), routes and page store at its
   root; a component that is a concept of its own lives in a folder named for it
@@ -234,23 +272,49 @@ node tools/api-map.mjs --schema CartView
   their closest common parent, which they inject (Orders' page store: the open
   order, the rows, the moves) — never two stores kept in step. A child may
   inject its parent's store, never the reverse. The component presents —
-  formatting in the reader's culture included — and the store reads and derives.
+  formatting in the reader's culture included, with the `price`, `dateTime`,
+  `day` and `clock` pipes (shared-ui), never a method a template calls — and
+  the store reads and derives.
 - **A `signalStoreFeature` for state and behaviour more than one store needs**
-  (`withDashboardPeriod` in eleven widget stores; the lists of work will share
-  their filters, search and page in the URL), or to split one store that has
+  (`withDashboardPeriod` in eleven widget stores; `withWorklistUrl` in the
+  lists of work: the query, the page, `_navigate`, `go`, one page size), or to split one store that has
   grown several responsibilities. Not to tidy a store used once. It lives
   beside the stores that share it, or in `worklist/` when they are in different
   features.
 - **What a store is not for.** A component with no state of its own gets no
   store (sign-in, the shell, the nav, a status label). Input that lives only
   while it is typed — a dialog's reason — stays a component signal. Inside a
-  store, `patchState` is for our own state, a resource for what the server is
-  read for, and `HttpClient` in a method for what it is asked to change. The
-  whole backoffice follows this; `shell/` is the frame round every screen and
+  store (ADR 0051), NgRx's tools and never an `effect`:
+  - `patchState` for its own state; `withLinkedState` for state another
+    signal resets (a list's rows a move replaces, a product's selection);
+  - a resource wrapped in `extendResource` for what the server is read for —
+    a failed one reads as no value (`provideReadableResources()`), so
+    `x.value()` never throws;
+  - `rxMethod` for a stream of requests (`switchMap`: only the latest
+    question's answer; `concatMap`: writes that must not overtake each other,
+    the cart), `signalMethod` to feed a signal into a method;
+  - a service in `data-access/` for every call, never `HttpClient` in a store.
+  A component keeps `effect` for what is outside signals — the DOM, the
+  document's head, the router, a chart library, a timer. `effect` is not
+  deprecated: Angular's guide keeps it for exactly that and advises against
+  propagating state with it; the store rule is deliberately stricter, and
+  `frontend/README.md` ("Where an `effect` belongs") says why, tool by tool.
+  The whole backoffice follows this; `shell/` is the frame round every screen and
   `worklist/` what the lists of work share (pane, chips, pager, dialog, Undo).
   The storefront follows it too: its shop-wide state lives in theme folders
   (`cart/`, `compare/`, `taxonomy/`, `trail/`, `campaigns/`, `listing/`),
   `data-access/` holds HTTP services only, and each page provides its store.
+- **Forms are Signal Forms** (`@angular/forms/signals`, ADR 0051): a writable
+  signal as the model (in the store's props when a store owns it), `form()`
+  with a schema that says what is required and allowed, `[formField]` on each
+  input — which owns `name`, `required`, `min`/`max`, `maxlength`, so they are
+  not written by hand. A form whose names a browser test or autofill reads is
+  named (`{ name: 'address' }` → `address.line1`). Never `ngModel`.
+- **Pictures are `NgOptimizedImage`**: `ngSrc` with their size, or `fill` in a
+  box the caller sizes; lazy by default, `priority` on the picture that is the
+  page's LCP (the product's, a listing's first row, the home's lead campaign).
+- **Angular 22's defaults are not written**: no `changeDetection: OnPush` (the
+  default), no `withFetch()`, no zone.js (ADR 0051).
 - Solution format: Tendero.slnx (XML). Never create or commit a legacy .sln.
 
 ## Git Workflow

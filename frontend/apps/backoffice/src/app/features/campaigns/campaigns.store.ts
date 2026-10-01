@@ -17,6 +17,7 @@ import { refusalOf } from '../../worklist/refusal';
 import { UndoStore } from '../../worklist/undo/undo.store';
 import { type CampaignForm, createRequestOf, detailsOf } from './campaign-form';
 import { type CampaignBucket, bucketOf, CampaignBuckets, inCulture } from './campaign-state';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** What is being done to a campaign: its buttons wait for it. */
 export interface CampaignWork {
@@ -48,7 +49,7 @@ export const CampaignsStore = signalStore(
     const pricing = inject(PricingService);
     const catalog = inject(CatalogService);
     const culture = inject(CultureStore);
-    const campaigns = rxResource({ stream: () => pricing.campaigns() });
+    const campaigns = extendResource(rxResource({ stream: () => pricing.campaigns() }));
     return {
       _router: inject(Router),
       _pricing: pricing,
@@ -60,11 +61,13 @@ export const CampaignsStore = signalStore(
       _params: toSignal(route.queryParamMap, { initialValue: route.snapshot.queryParamMap }),
       _campaigns: campaigns,
       ...readStatus(campaigns),
-      promotions: rxResource({ stream: () => pricing.promotions().pipe(map((list) => list.items)) }),
-      categories: rxResource({
-        params: () => culture.active(),
-        stream: ({ params }) => catalog.categories(params).pipe(map((list) => list.items)),
-      }),
+      promotions: extendResource(rxResource({ stream: () => pricing.promotions().pipe(map((list) => list.items)) })),
+      categories: extendResource(
+        rxResource({
+          params: () => culture.active(),
+          stream: ({ params }) => catalog.categories(params).pipe(map((list) => list.items)),
+        }),
+      ),
       /** The counts per chip, from status and phase together, kept while the calendar is read again. */
       _counts: keptCounts(() => {
         const answered = campaigns.value();
@@ -84,9 +87,15 @@ export const CampaignsStore = signalStore(
       creating,
       selected,
       paneOpen: computed(() => creating() || selected() !== null),
-      filters: computed<FilterOption[]>(() => statusChips(CampaignBuckets, store._labels() as Record<string, string>, store._counts())),
-      campaigns: computed(() => (filterKey() === 'all' ? all() : all().filter((campaign) => bucketOf(campaign) === filterKey()))),
-      categoryNames: computed(() => new Map((store.categories.value() ?? []).map((category) => [category.code, category.name]))),
+      filters: computed<FilterOption[]>(() =>
+        statusChips(CampaignBuckets, store._labels() as Record<string, string>, store._counts()),
+      ),
+      campaigns: computed(() =>
+        filterKey() === 'all' ? all() : all().filter((campaign) => bucketOf(campaign) === filterKey()),
+      ),
+      categoryNames: computed(
+        () => new Map((store.categories.value() ?? []).map((category) => [category.code, category.name])),
+      ),
     };
   }),
   withMethods((store) => {
@@ -101,7 +110,12 @@ export const CampaignsStore = signalStore(
     };
 
     /** One change: its campaign's buttons wait, the calendar is read again, the server's sentence when it refuses. */
-    const run = (work: CampaignWork, action: BackofficeAction, change: Observable<CampaignChangeResponse>, done?: (answer: CampaignChangeResponse) => void) => {
+    const run = (
+      work: CampaignWork,
+      action: BackofficeAction,
+      change: Observable<CampaignChangeResponse>,
+      done?: (answer: CampaignChangeResponse) => void,
+    ) => {
       start(work);
       change.pipe(store._usage.reported('campaigns', action, 'pane')).subscribe({
         next: (answer) => {
@@ -118,7 +132,9 @@ export const CampaignsStore = signalStore(
       const action: BackofficeAction = to === 'schedule' ? 'campaign_schedule' : 'campaign_unschedule';
       const name = inCulture(campaign.name, store._culture.active());
       run({ code: campaign.code, what: to }, action, store._pricing.moveCampaign(campaign.code, to), (answer) =>
-        store._undo.offerTo(store._translate.translate(`campaigns.moved.${to}`, { name }), () => move(answer.campaign, reverse)),
+        store._undo.offerTo(store._translate.translate(`campaigns.moved.${to}`, { name }), () =>
+          move(answer.campaign, reverse),
+        ),
       );
     };
 
@@ -136,9 +152,13 @@ export const CampaignsStore = signalStore(
         navigate({ campaign: null });
       },
       create(form: CampaignForm): void {
-        run({ code: NewCampaign, what: 'save' }, 'campaign_create', store._pricing.createCampaign(createRequestOf(form)), (answer) =>
-          // The new campaign opens where it now lives: among the drafts.
-          navigate({ status: bucketOf(answer.campaign), campaign: answer.campaign.code }),
+        run(
+          { code: NewCampaign, what: 'save' },
+          'campaign_create',
+          store._pricing.createCampaign(createRequestOf(form)),
+          (answer) =>
+            // The new campaign opens where it now lives: among the drafts.
+            navigate({ status: bucketOf(answer.campaign), campaign: answer.campaign.code }),
         );
       },
       update(code: string, form: CampaignForm): void {

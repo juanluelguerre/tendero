@@ -15,8 +15,7 @@ function anOrder(...lines: Array<[sku: string, quantity: number]>): OrderView {
   return {
     orderId: 'o1',
     lines: lines.map(
-      ([sku, quantity]) =>
-        ({ sku, productName: sku, variantLabel: null, unitPrice: 20, quantity }) as OrderLineView,
+      ([sku, quantity]) => ({ sku, productName: sku, variantLabel: null, unitPrice: 20, quantity }) as OrderLineView,
     ),
   } as unknown as OrderView;
 }

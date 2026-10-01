@@ -1,7 +1,24 @@
 @if (undo.offer(); as offer) {
-  <div class="toast" *transloco="let t">
-    <span class="toast__message">{{ offer.message }}</span>
-    <button type="button" class="toast__undo" (click)="undo.take()">{{ t('undo.take') }}</button>
-    <button type="button" class="toast__dismiss" [attr.aria-label]="t('undo.dismiss')" (click)="undo.dismiss()">×</button>
+  <!-- It floats over the page, so it is one of the few things allowed a shadow. -->
+  <div
+    class="pointer-events-auto flex max-w-[calc(100vw-2*var(--spacing-4))] items-center gap-3 rounded-lg border border-hairline-strong bg-raised py-2 ps-4 pe-2 text-body shadow-pop"
+    *transloco="let t"
+  >
+    <span class="text-sm">{{ offer.message }}</span>
+    <button
+      type="button"
+      class="inline-grid min-h-tap min-w-tap place-items-center rounded-md font-semibold text-body underline hover:bg-surface"
+      (click)="undo.take()"
+    >
+      {{ t('undo.take') }}
+    </button>
+    <button
+      type="button"
+      class="inline-grid min-h-tap min-w-tap place-items-center rounded-md text-muted hover:bg-surface"
+      [attr.aria-label]="t('undo.dismiss')"
+      (click)="undo.dismiss()"
+    >
+      <lib-icon name="close" />
+    </button>
   </div>
 }

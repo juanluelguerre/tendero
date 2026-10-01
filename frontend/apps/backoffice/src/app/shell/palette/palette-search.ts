@@ -10,7 +10,11 @@ export interface PaletteOption {
 
 /** Folded for comparison: no case, no accents — "cafe" finds "Cafeteras" and "Café". */
 export function fold(text: string): string {
-  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .trim();
 }
 
 /** Whether a label answers what was typed: every word typed appears in it, in any order. */

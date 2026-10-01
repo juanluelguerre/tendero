@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { StockStore } from './stock.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /**
  * The stock (spec, Operations): what to restock and what is sold out, and from M
@@ -12,10 +13,9 @@ import { StockStore } from './stock.store';
  */
 @Component({
   selector: 'backoffice-stock-widget',
-  imports: [TranslocoDirective, RouterLink],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, WidgetFrame],
   templateUrl: './stock-widget.html',
-  styleUrl: './stock-widget.css',
+  host: { class: 'block' },
   providers: [StockStore],
 })
 export class StockWidget {

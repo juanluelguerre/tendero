@@ -5,22 +5,45 @@
   [items]="items()"
   [removable]="true"
   via="trail"
-  (removed)="trail.forget('View', $event.code)">
-  <span shelfActions class="trail__actions">
-    <a class="trail__manage" [routerLink]="links.account()" fragment="history">{{ t('home.trailManage') }}</a>
-    <button type="button" class="trail__clear" (click)="trail.clear()">{{ t('home.trailClear') }}</button>
+  (removed)="trail.forget('View', $event.code)"
+>
+  <span shelfActions class="inline-flex items-center gap-4">
+    <a
+      class="inline-flex min-h-target items-center text-sm text-muted underline underline-offset-(--underline-offset) max-sm:hidden pointer-coarse:min-h-tap"
+      [routerLink]="links.account()"
+      fragment="history"
+      >{{ t('home.trailManage') }}</a
+    >
+    <button
+      type="button"
+      class="inline-flex min-h-target items-center text-sm font-semibold text-accent hover:underline pointer-coarse:min-h-tap"
+      (click)="trail.clear()"
+    >
+      {{ t('home.trailClear') }}
+    </button>
   </span>
 
   @if (searches().length > 0) {
-    <ul shelfExtras class="trail__searches" [attr.aria-label]="t('home.trailSearches')">
-      <li class="trail__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" focusable="false"><path d="M4 12a8 8 0 1 0 2.3-5.7" /><path d="M4 4v4h4M12 8v4l3 2" /></svg>
+    <ul shelfExtras class="mt-3 flex flex-wrap items-center gap-2" [attr.aria-label]="t('home.trailSearches')">
+      <li aria-hidden="true">
+        <lib-icon class="block size-icon-sm text-muted" name="history" [stroke]="2" />
       </li>
       @for (search of searches(); track search.key) {
-        <li class="trail__search">
-          <a class="trail__query" [routerLink]="links.home()" [queryParams]="{ q: search.key }">{{ search.key }}</a>
-          <button type="button" class="trail__forget" [attr.aria-label]="t('home.trailSearchRemove', { text: search.key })"
-                  (click)="trail.forget('Search', search.key)">×</button>
+        <li class="inline-flex items-center rounded-full border border-hairline bg-surface text-xs">
+          <a
+            class="inline-flex min-h-control-xs items-center ps-3 pe-1 text-body no-underline hover:underline pointer-coarse:min-h-tap"
+            [routerLink]="links.home()"
+            [queryParams]="{ q: search.key }"
+            >{{ search.key }}</a
+          >
+          <button
+            type="button"
+            class="inline-grid size-control-xs place-items-center rounded-full text-muted hover:text-body pointer-coarse:size-tap"
+            [attr.aria-label]="t('home.trailSearchRemove', { text: search.key })"
+            (click)="trail.forget('Search', search.key)"
+          >
+            <lib-icon class="size-icon-sm" name="remove" [stroke]="2" />
+          </button>
         </li>
       }
     </ul>

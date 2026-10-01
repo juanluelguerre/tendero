@@ -5,7 +5,12 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import { BatchLogRecordProcessor, LoggerProvider, type LogRecordExporter } from '@opentelemetry/sdk-logs';
-import { BatchSpanProcessor, WebTracerProvider, type ReadableSpan, type SpanExporter } from '@opentelemetry/sdk-trace-web';
+import {
+  BatchSpanProcessor,
+  WebTracerProvider,
+  type ReadableSpan,
+  type SpanExporter,
+} from '@opentelemetry/sdk-trace-web';
 import { scrubUrl } from './scrub-url';
 import { isSynthetic } from './synthetic';
 import type { ActorKind, TelemetryAdapter, TelemetryContext } from './telemetry';
@@ -54,7 +59,9 @@ export function createOtelAdapter(options: OtelAdapterOptions = {}): TelemetryAd
   let session = '';
 
   const withRoute = (attributes: Attributes): Attributes =>
-    currentRoute ? { ...attributes, 'url.template': currentRoute, 'session.id': session } : { ...attributes, 'session.id': session };
+    currentRoute
+      ? { ...attributes, 'url.template': currentRoute, 'session.id': session }
+      : { ...attributes, 'session.id': session };
 
   return {
     name: 'otel',
@@ -73,7 +80,9 @@ export function createOtelAdapter(options: OtelAdapterOptions = {}): TelemetryAd
       const tracerProvider = new WebTracerProvider({
         resource,
         spanProcessors: [
-          new BatchSpanProcessor(options.spanExporter ?? new OTLPTraceExporter({ url: `${context.endpoint}/v1/traces` })),
+          new BatchSpanProcessor(
+            options.spanExporter ?? new OTLPTraceExporter({ url: `${context.endpoint}/v1/traces` }),
+          ),
         ],
       });
 
@@ -108,13 +117,14 @@ export function createOtelAdapter(options: OtelAdapterOptions = {}): TelemetryAd
         if (document.visibilityState === 'hidden') void flushAll();
       });
 
-      if (options.webVitals !== false) void observeWebVitals((name, value, rating) =>
-        logger.emit({
-          eventName: 'browser.web_vital',
-          severityNumber: SeverityNumber.INFO,
-          attributes: withRoute({ 'web_vital.name': name, 'web_vital.value': value, 'web_vital.rating': rating }),
-        }),
-      );
+      if (options.webVitals !== false)
+        void observeWebVitals((name, value, rating) =>
+          logger.emit({
+            eventName: 'browser.web_vital',
+            severityNumber: SeverityNumber.INFO,
+            attributes: withRoute({ 'web_vital.name': name, 'web_vital.value': value, 'web_vital.rating': rating }),
+          }),
+        );
     },
 
     event(name: string, attributes: Attributes, actor: ActorKind): void {
@@ -184,7 +194,6 @@ async function observeWebVitals(report: (name: string, value: number, rating: st
   const { onCLS, onINP, onLCP } = await import('web-vitals');
   for (const observe of [onCLS, onINP, onLCP]) observe((metric) => report(metric.name, metric.value, metric.rating));
 }
-
 
 /**
  * Every `fetch` as a client span — which is every API call, because both apps use

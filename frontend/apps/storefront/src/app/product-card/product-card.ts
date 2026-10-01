@@ -1,13 +1,14 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import { PricePipe } from '@tendero/shared-ui';
+import { Component, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
+import { ProductImageUrls } from '@tendero/shared-util';
 import { CartStore } from '../cart/cart.store';
 import { CompareStore } from '../compare/compare.store';
 import type { ProductVia } from '../features/product/arrived-from';
-import { ProductImagePlaceholder } from '../product-image-placeholder/product-image-placeholder';
+import { ProductImage } from '../product-image/product-image';
 import { ShopLinks } from '../shop-links';
 
 /** Why a card is in its row, in one line under the price: *Porque viste…*, *Sube esta semana* (R-8). */
@@ -33,12 +34,10 @@ export interface CardReason {
  */
 @Component({
   selector: 'storefront-product-card',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, ProductImage, PricePipe],
   templateUrl: './product-card.html',
   styleUrl: './product-card.css',
   host: {
-    '[class.card--soldOut]': '!hit().inStock',
     '[class.card--line]': "layout() === 'line'",
   },
 })
@@ -63,18 +62,16 @@ export class ProductCard {
   readonly layout = input<'tile' | 'line'>('tile');
   /** The row that led here, carried in the navigation's state (`arrivedVia`). */
   readonly via = input<ProductVia | null>(null);
+  /** The first row of a listing: its pictures are what the page is judged loaded by (LCP), fetched first. */
+  readonly priority = input(false);
 
   private readonly cart = inject(CartStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
   private readonly images = inject(ProductImageUrls);
 
   protected readonly links = inject(ShopLinks);
   protected readonly compare = inject(CompareStore);
   protected readonly adding = signal(false);
-
-  /** The seed points at images that may not be there, so a broken one is the
-   *  default path on a fresh clone rather than an error. */
-  protected readonly broken = signal(false);
 
   protected linkState(): { via: ProductVia } | undefined {
     const via = this.via();
@@ -83,16 +80,12 @@ export class ProductCard {
 
   protected imageUrl(): string | null {
     const id = this.hit().imageId;
-    return id && !this.broken() ? this.images.of(id) : null;
+    return id ? this.images.of(id) : null;
   }
 
   /** Picks the product for the comparison tray, or takes it out (P10-7). */
   protected toggleCompare(): void {
     this.compare.toggle({ code: this.hit().code, name: this.hit().name });
-  }
-
-  protected price(): string {
-    return formatPrice(this.hit().priceAmount, this.hit().priceCurrency, this.culture.active());
   }
 
   protected async addToCart(): Promise<void> {

@@ -1,60 +1,91 @@
 <ng-container *transloco="let t">
-  <a class="skip" href="#main">{{ t('nav.skipToContent') }}</a>
+  <!-- Hidden until focused: the first thing a keyboard user meets should be a
+       way past the chrome, and the first thing everyone else meets should not
+       be a stray link. -->
+  <a
+    class="absolute start-4 top-[calc(var(--spacing-4)*-4)] z-20 rounded-md bg-accent px-4 py-2 text-on-accent no-underline transition-[top] duration-(--dur-fast) ease-brand focus-visible:top-4"
+    href="#main"
+    >{{ t('nav.skipToContent') }}</a
+  >
 
   <!-- The row that sticks (R-3, S-P4): the way into the shop, the brand and the
        basket. Only this row: on a phone its 56 px is all the product page
-       spends, and the Add to cart button stays inside the first screen. -->
-  <header class="header">
-    <div class="page-frame header__row">
+       spends, and the Add to cart button stays inside the first screen. The
+       panel hangs from it, over the page. -->
+  <header class="sticky top-0 z-10 bg-page">
+    <div class="page-frame flex min-h-header items-center gap-4 max-md:min-h-bar max-md:gap-2">
       <!-- TIENDA opens the drawer on a phone and a tablet. On a desktop the
            departments have a row of their own below (R-7.3, F-0): a hamburger
            left of the logo was the phone's convention carried over, and beside
-           the listing's filter toggle it read as the same kind of control. -->
+           the listing's filter toggle it read as the same kind of control.
+           Quiet, and never clay: the accent is the page's one action, and on a
+           shop page that is add-to-cart. -->
       <button
         #menuButton
         type="button"
-        class="menu-button"
+        class="inline-flex min-h-tap flex-none items-center gap-2 rounded-md border border-hairline bg-surface px-3 font-semibold text-body hover:border-hairline-strong aria-expanded:border-body lg:hidden"
         aria-controls="shop-menu"
         [attr.aria-expanded]="expanded()"
         (click)="toggleMenu()"
       >
-        <svg class="menu-button__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-        </svg>
+        <lib-icon class="size-icon-md" name="menu" />
         <span>{{ t('nav.shop') }}</span>
       </button>
 
-      <a class="brand" [routerLink]="home()">
+      <a class="flex items-center gap-3 text-inherit no-underline max-md:mx-auto" [routerLink]="home()">
         <!-- The icon, not the full lockup: the wordmark beside it already uses
              real Bricolage, and the text embedded in the SVG only has Inter to
              fall back on. Empty alt because the name is right next to it. -->
-        <img class="brand__mark" src="brand/tendero-icon-shop.svg" alt="" aria-hidden="true" width="40" height="40" />
-        <span class="brand__text">
+        <img
+          class="size-mark max-md:size-mark-sm"
+          ngSrc="brand/tendero-icon-shop.svg"
+          alt=""
+          aria-hidden="true"
+          width="40"
+          height="40"
+        />
+        <span class="flex flex-col leading-tight">
           <span class="brand__wordmark">{{ t('brand.name') }}</span>
-          <span class="brand__tagline">{{ t('brand.tagline') }}</span>
+          <span class="text-2xs text-muted max-md:hidden">{{ t('brand.tagline') }}</span>
         </span>
       </a>
 
       <!-- The shop's one search, in the same place on every page, as the large
            shops have it: the search page no longer carries a second box
            (the author, the redesign's second walkthrough). -->
-      <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--row' }" />
+      <ng-container *ngTemplateOutlet="search; context: { $implicit: 'row' }" />
 
-      <div class="header__end">
+      <div class="ms-auto flex items-center gap-3 max-md:ms-0">
         <!-- Who is shopping, the language and the theme: one menu at every
              width, as in the backoffice (the author, 2026-09-28). -->
         <storefront-account-menu />
 
         <!-- The basket. The count is on the badge and also in the label,
-             because a number in a circle means nothing to a screen reader. -->
-        <a class="cart" [routerLink]="cartLink()" [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'">
-          <svg class="cart__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+             because a number in a circle means nothing to a screen reader.
+             It is NOT clay: one accent action per view. The badge is, because
+             it is the one thing here that changes and wants to be noticed. -->
+        <a
+          class="relative grid size-tap flex-none place-items-center rounded-md text-body no-underline transition-[background] duration-(--dur-fast) ease-brand hover:bg-raised"
+          [routerLink]="cartLink()"
+          [attr.aria-label]="t('nav.cart') + ' (' + cart.itemCount() + ')'"
+        >
+          <svg class="size-icon-lg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path
+              d="M3 4h2.2l2.3 10.5a2 2 0 0 0 2 1.5h7.6a2 2 0 0 0 2-1.6L20.5 7H6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
             <circle cx="10" cy="19.5" r="1.4" fill="currentColor" />
             <circle cx="17" cy="19.5" r="1.4" fill="currentColor" />
           </svg>
           @if (cart.itemCount() > 0) {
-            <span class="cart__badge numeric">{{ cart.itemCount() }}</span>
+            <span
+              class="cart__badge absolute end-0 top-hair grid h-badge min-w-badge place-items-center rounded-full bg-accent px-1 numeric text-3xs leading-none font-bold text-on-accent"
+              >{{ cart.itemCount() }}</span
+            >
           }
         </a>
       </div>
@@ -63,13 +94,15 @@
     <!-- The departments, visible on a desktop as Amazon, Zalando and El Corte
          Inglés show theirs: each a link, one click from any page, and a toggle
          beside it for its sections. No hover: the same for a pointer, a finger
-         and a keyboard (the WAI disclosure navigation pattern). -->
-    <nav class="departments" [attr.aria-label]="t('nav.departments')">
-      <ul class="page-frame departments__list" role="list">
+         and a keyboard (the WAI disclosure navigation pattern). The phone and
+         the tablet keep TIENDA and its drawer, which is the convention there,
+         so the row and the button never show together. -->
+    <nav class="hidden border-t border-hairline lg:block" [attr.aria-label]="t('nav.departments')">
+      <ul class="page-frame flex gap-5" role="list">
         @for (item of departments(); track item.code) {
-          <li class="departments__item">
+          <li class="flex items-center gap-1">
             <a
-              class="departments__link"
+              class="inline-flex min-h-tap items-center border-b-2 border-transparent font-semibold text-body no-underline hover:text-accent aria-[current=true]:border-accent"
               [routerLink]="links.category(item.code)"
               [state]="fromMenu"
               [attr.aria-current]="department() === item.code ? 'true' : null"
@@ -78,28 +111,40 @@
             </a>
             <button
               type="button"
-              class="departments__toggle"
+              class="group inline-grid size-control-sm place-items-center rounded-sm bg-transparent text-muted hover:bg-raised hover:text-body"
               aria-controls="shop-menu"
               [attr.data-department-toggle]="item.code"
               [attr.aria-expanded]="openDepartment() === item.code"
               [attr.aria-label]="t('nav.sectionsOf', { name: item.name })"
               (click)="toggleDepartment(item.code)"
             >
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
+              <lib-icon
+                class="size-icon-sm transition-transform duration-(--dur-fast) ease-brand group-aria-expanded:rotate-180"
+                name="chevron"
+                [stroke]="1.8"
+              />
             </button>
           </li>
         }
         <!-- Two shelves the filters make, at the row's end: the listing with
-             *En oferta* or *Novedades* on, and nothing else (R-7.3, F-3). -->
-        <li class="departments__item departments__item--shelf">
-          <a class="departments__link departments__link--shelf" [routerLink]="links.home()" [queryParams]="onOffer">
+             *En oferta* or *Novedades* on, and nothing else (R-7.3, F-3). They
+             read as links in the accent, as the mock-ups draw them: places to
+             look, not departments. -->
+        <li class="ms-auto flex items-center gap-1">
+          <a
+            class="inline-flex min-h-tap items-center border-b-2 border-transparent font-semibold text-accent no-underline hover:underline"
+            [routerLink]="links.home()"
+            [queryParams]="onOffer"
+          >
             {{ t('nav.offers') }}
           </a>
         </li>
-        <li class="departments__item">
-          <a class="departments__link departments__link--shelf" [routerLink]="links.home()" [queryParams]="newArrivals">
+        <li class="flex items-center gap-1">
+          <a
+            class="inline-flex min-h-tap items-center border-b-2 border-transparent font-semibold text-accent no-underline hover:underline"
+            [routerLink]="links.home()"
+            [queryParams]="newArrivals"
+          >
             {{ t('nav.newArrivals') }}
           </a>
         </li>
@@ -108,7 +153,10 @@
 
     <!-- A department's sections, under the row and over the page. -->
     @if (menuOpen()) {
-      <div class="menu-panel" id="shop-menu">
+      <div
+        class="absolute inset-x-0 top-full max-h-[calc(100dvh-var(--spacing-header))] overflow-y-auto border-y border-hairline bg-surface py-6 shadow-pop"
+        id="shop-menu"
+      >
         <div class="page-frame">
           <storefront-shop-menu [only]="openDepartment()" [current]="department()" (chosen)="closeMenu(false)" />
         </div>
@@ -118,48 +166,84 @@
 
   <!-- On a phone, search has a row of its own that scrolls away with the page,
        on every page, as the header's box does on a wider screen. -->
-  <div class="page-frame search-row narrow-only">
-    <ng-container *ngTemplateOutlet="search; context: { $implicit: 'search--full' }" />
+  <div class="page-frame hidden pt-1 pb-2 max-md:block">
+    <ng-container *ngTemplateOutlet="search; context: { $implicit: 'full' }" />
   </div>
 
   <!-- The signature, and the only decoration in the system. It marks where the
        chrome ends and the shop begins. -->
   <hr class="awning" />
 
-  <main id="main" class="page-frame main"><router-outlet /></main>
+  <main id="main" class="page-frame flex-1 pt-6 pb-8 max-md:pt-5 max-md:pb-6"><router-outlet /></main>
 
   <storefront-compare-tray />
 
-  <footer class="footer">
-    <div class="page-frame footer__inner">
+  <footer class="border-t border-hairline">
+    <div class="page-frame flex flex-wrap items-center justify-between gap-3 py-5 text-2xs">
       <span class="muted">{{ t('brand.name') }} · {{ t('brand.tagline') }}</span>
     </div>
   </footer>
 
   <!-- The phone's menu: a modal dialog, so the platform traps the focus, closes
-       on Esc and makes the page behind it inert. -->
-  <dialog #drawer class="drawer" [attr.aria-label]="t('nav.shop')" (close)="drawerOpen.set(false)">
-    <div class="drawer__head">
-      <span class="drawer__title">{{ t('nav.shop') }}</span>
-      <button type="button" class="drawer__close" [attr.aria-label]="t('nav.close')" (click)="drawer.close()">
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-        </svg>
+       on Esc and makes the page behind it inert. It floats, so it is allowed a
+       shadow; the page behind is dimmed with the darkest ink the tokens have,
+       never a new colour. -->
+  <dialog
+    #drawer
+    class="inset-y-0 start-0 end-auto m-0 h-dvh max-h-none w-[min(22rem,88vw)] max-w-none flex-col border-e border-hairline-strong bg-surface p-0 text-body shadow-pop backdrop:bg-ink-900/40 open:flex"
+    [attr.aria-label]="t('nav.shop')"
+    (close)="drawerOpen.set(false)"
+  >
+    <div class="flex min-h-bar items-center justify-between border-b border-hairline ps-4 pe-2">
+      <span class="font-display text-lg font-extrabold">{{ t('nav.shop') }}</span>
+      <button
+        type="button"
+        class="inline-grid size-tap place-items-center rounded-md bg-transparent text-body"
+        [attr.aria-label]="t('nav.close')"
+        (click)="drawer.close()"
+      >
+        <lib-icon class="size-icon-lg" name="close" />
       </button>
     </div>
     @if (drawerOpened()) {
-      <storefront-shop-menu class="drawer__menu" mode="drawer" [current]="department()" (chosen)="drawer.close()" />
+      <storefront-shop-menu
+        class="flex-1 overflow-y-auto px-4 py-3"
+        mode="drawer"
+        [current]="department()"
+        (chosen)="drawer.close()"
+      />
     }
   </dialog>
 
+  <!-- `row` is the header's box, which gives way to the phone's own row; `full` is that row's. -->
   <ng-template #search let-variant>
-    <form class="search" [class]="variant" role="search" (submit)="$event.preventDefault(); find(box.value)">
+    <form
+      class="relative flex"
+      [class]="variant === 'row' ? 'max-w-search flex-1 max-md:hidden' : 'w-full'"
+      role="search"
+      (submit)="$event.preventDefault(); find(box.value)"
+    >
       <label class="sr-only" [for]="'find-' + variant">{{ t('nav.searchLabel') }}</label>
       <!-- The box shows what the page is listing, so a results page says what
            it answered and the words can be refined where they were typed. -->
-      <input #box class="search__input" type="search" [id]="'find-' + variant" [placeholder]="t('nav.search')" [value]="query()" />
-      <button type="submit" class="search__go" [attr.aria-label]="t('nav.searchGo')">
-        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <input
+        #box
+        class="min-h-tap w-full rounded-md border border-hairline-strong bg-surface ps-3 pe-tap text-body"
+        type="search"
+        [id]="'find-' + variant"
+        [placeholder]="t('nav.search')"
+        [value]="query()"
+      />
+      <!-- The magnifier sends it, inside the box's right end, as the large shops
+           draw it: Enter is not the only way, and on a phone there may be no
+           Enter key in sight. Quiet, not clay: the page's one accent action is
+           the page's. -->
+      <button
+        type="submit"
+        class="absolute inset-y-0 end-0 grid w-tap place-items-center rounded-r-md bg-transparent text-muted hover:text-body"
+        [attr.aria-label]="t('nav.searchGo')"
+      >
+        <svg class="size-icon" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
           <circle cx="9" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2" />
           <line x1="13.5" y1="13.5" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         </svg>

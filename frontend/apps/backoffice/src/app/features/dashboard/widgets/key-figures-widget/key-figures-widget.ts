@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { formatPrice } from '@tendero/shared-util';
@@ -7,14 +7,14 @@ import { type Change, formatChange, formatShare } from '../figures';
 import { keyFigures } from './key-figures';
 import type { DashboardPeriod } from '../../../../data-access/ordering.service';
 import { KeyFiguresStore } from './key-figures.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** The figures a shopkeeper asks first (spec, the Overview): each with how it moved against the period before and its trend where the server has a series. */
 @Component({
   selector: 'backoffice-key-figures-widget',
-  imports: [TranslocoDirective, Sparkline],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, Sparkline, WidgetFrame],
   templateUrl: './key-figures-widget.html',
-  styleUrl: './key-figures-widget.css',
+  host: { class: 'block' },
   providers: [KeyFiguresStore],
 })
 export class KeyFiguresWidget {

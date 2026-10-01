@@ -32,9 +32,7 @@ export function checkoutProblem(
   // with a generic message would throw away the useful half.
   const problem = failure.error as { detail?: string } | null;
   const detail =
-    typeof failure.error === 'string' && failure.error.length > 0
-      ? failure.error
-      : (problem?.detail ?? '');
+    typeof failure.error === 'string' && failure.error.length > 0 ? failure.error : (problem?.detail ?? '');
 
   return translate('checkout.failed', { reason: detail });
 }

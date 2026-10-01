@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -7,7 +7,8 @@ import type { ProductDetail } from '@tendero/shared-api';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { formatPrice, ProductImageUrls } from '@tendero/shared-util';
 import { filter } from 'rxjs';
-import { ProductImagePlaceholder } from '../../product-image-placeholder/product-image-placeholder';
+import { Crumbs } from '../../crumbs/crumbs';
+import { ProductImage } from '../../product-image/product-image';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { CanonicalLinks } from '../../seo/canonical-links';
 import { ShopLinks } from '../../shop-links';
@@ -16,6 +17,7 @@ import { SpecValue } from '../../specs/spec-value/spec-value';
 import { TrailStore } from '../../trail/trail.store';
 import { arrivedVia, cameFiltered } from './arrived-from';
 import { ProductStore } from './product.store';
+import { PageState } from '../../page-state/page-state';
 
 /**
  * The product detail page.
@@ -36,11 +38,9 @@ import { ProductStore } from './product.store';
  */
 @Component({
   selector: 'storefront-product-page',
-  imports: [TranslocoDirective, RouterLink, ProductImagePlaceholder, SpecValue, SpecSource],
+  imports: [TranslocoDirective, RouterLink, Crumbs, ProductImage, SpecValue, SpecSource, PageState],
   providers: [ProductStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-page.html',
-  styleUrl: './product-page.css',
 })
 export class ProductPage {
   protected readonly store = inject(ProductStore);
@@ -71,6 +71,9 @@ export class ProductPage {
    * the copy the policy's store exists to remove.
    */
   protected readonly returnWindowDays = inject(ReturnsPolicyStore).windowDays;
+
+  /** The branch's names, root first, for the crumbs. */
+  protected readonly crumbs = computed(() => this.store.product()?.category.map((step) => step.name) ?? []);
 
   /** Every finished navigation, so the tab can be renamed after the router
       names it — see the first effect in the constructor. */
@@ -122,7 +125,10 @@ export class ProductPage {
 
     const navigation = this.router.lastSuccessfulNavigation();
     const previous = navigation?.previousNavigation?.finalUrl;
-    this.telemetry.trackEvent('product_viewed', { arrived_from: arrivedVia(navigation), filtered: cameFiltered(previous) });
+    this.telemetry.trackEvent('product_viewed', {
+      arrived_from: arrivedVia(navigation),
+      filtered: cameFiltered(previous),
+    });
 
     // *Sigue donde lo dejaste* (R-8): once per product, as the event is. The
     // trail decides where it is kept, and whether it is kept at all.
@@ -163,9 +169,14 @@ export class ProductPage {
       culture: alternate.culture,
       path: this.links.productIn(alternate.culture, alternate.slug, product.code),
     }));
-    const fallback = product.alternates.find((alternate) => alternate.culture === DEFAULT_CULTURE) ?? product.alternates[0];
+    const fallback =
+      product.alternates.find((alternate) => alternate.culture === DEFAULT_CULTURE) ?? product.alternates[0];
 
-    this.seo.set(canonical, alternates, fallback ? this.links.productIn(DEFAULT_CULTURE, fallback.slug, product.code) : canonical);
+    this.seo.set(
+      canonical,
+      alternates,
+      fallback ? this.links.productIn(DEFAULT_CULTURE, fallback.slug, product.code) : canonical,
+    );
   }
 
   /**
@@ -173,7 +184,7 @@ export class ProductPage {
    * variant, and the product's range before it has — which is the same thing the
    * search card shows, so moving from one to the other never contradicts itself.
    */
-  protected price(): string {
+  protected readonly price = computed(() => {
     const product = this.store.product();
     if (!product) return '';
 
@@ -185,7 +196,7 @@ export class ProductPage {
       return `${formatPrice(product.priceFrom, product.priceCurrency, culture)} – ${formatPrice(product.priceTo, product.priceCurrency, culture)}`;
     }
     return formatPrice(product.priceFrom, product.priceCurrency, culture);
-  }
+  });
 
   protected imageUrl(imageId: string): string {
     return this.images.of(imageId);

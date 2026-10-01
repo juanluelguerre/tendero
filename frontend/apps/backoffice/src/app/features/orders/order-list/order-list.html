@@ -11,32 +11,31 @@
       [label]="t('orders.filterLabel')"
       (chosen)="store.filterBy($event)"
     />
-
-    <label class="find">
-      <span class="sr-only">{{ t('orders.findLabel') }}</span>
-      <input
-        type="search"
-        class="find__input"
-        [placeholder]="t('orders.find')"
-        [value]="store.text()"
-        (input)="store.search($any($event.target).value)"
-      />
-    </label>
+    <backoffice-find
+      [label]="t('orders.findLabel')"
+      [placeholder]="t('orders.find')"
+      [value]="store.text()"
+      (searched)="store.search($event)"
+    />
   </div>
 
-  @if (store.loading()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-    <p class="sr-only" role="status" aria-live="polite">{{ t('orders.loading') }}</p>
-  } @else if (store.failed()) {
-    <p class="failed" role="alert">{{ t('orders.failed') }}</p>
-  } @else if (store.orders().length === 0) {
-    <div class="empty"><p class="empty__text">{{ store.text().trim() || store.statusKey() !== 'all' ? t('orders.none') : t('orders.empty') }}</p></div>
-  } @else {
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.orders().length === 0"
+    [loadingText]="t('orders.loading')"
+    [failedText]="t('orders.failed')"
+    [emptyText]="store.text().trim() || store.statusKey() !== 'all' ? t('orders.none') : t('orders.empty')"
+  >
     <!-- A table from a tablet up; cards on a phone, where a row's move was
          past a sideways scroll (R-1, B-F4). -->
     <div class="table-wrap wide-only">
       <table class="table">
-        <caption class="sr-only">{{ t('orders.title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('orders.title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('orders.column.order') }}</th>
@@ -45,7 +44,9 @@
             <th scope="col">{{ t('orders.column.payment') }}</th>
             <th scope="col">{{ t('orders.column.placed') }}</th>
             <th scope="col" class="numeric">{{ t('orders.column.total') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('orders.column.action') }}</span></th>
+            <th scope="col">
+              <span class="sr-only">{{ t('orders.column.action') }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -66,13 +67,14 @@
               </td>
               <td>
                 {{ order.recipientName }}
-                <span class="city">{{ order.city }}</span>
+                <!-- `city` is a hook: the visual comparison masks it. -->
+                <span class="block text-3xs text-muted">{{ order.city }}</span>
               </td>
               <td><backoffice-order-status-label [order]="order" /></td>
               <td><backoffice-order-payment [order]="order" /></td>
               <td class="muted">{{ placed(order.createdAt) }}</td>
-              <td class="numeric total">{{ money(order.total, order.currency) }}</td>
-              <td class="actions">
+              <td class="numeric font-semibold">{{ order.total | price: order.currency : culture.active() }}</td>
+              <td class="text-end whitespace-nowrap">
                 @if (primaryMove(order.status); as move) {
                   <button
                     class="button button--small button--quiet"
@@ -86,8 +88,11 @@
               </td>
             </tr>
             @if (store.refusal()[order.orderId] !== undefined) {
-              <tr class="refusal">
-                <td colspan="7" role="alert">{{ store.refusal()[order.orderId] || t('orders.refused') }}</td>
+              <!-- The server's own sentence, under the row it belongs to. -->
+              <tr>
+                <td class="py-2 text-xs text-danger" colspan="7" role="alert">
+                  {{ store.refusal()[order.orderId] || t('orders.refused') }}
+                </td>
               </tr>
             }
           }
@@ -98,16 +103,23 @@
     <ul class="worklist-cards narrow-only" role="list">
       @for (order of store.orders(); track order.orderId) {
         <li class="worklist-card" [class.worklist-card--selected]="order.orderId === store.selectedId()">
-          <button type="button" class="worklist-card__open" [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })" (click)="store.open(order)">
+          <button
+            type="button"
+            class="worklist-card__open"
+            [attr.aria-label]="t('orders.openOrder', { id: shortId(order.orderId) })"
+            (click)="store.open(order)"
+          >
             <span class="worklist-card__line">
-              <span class="numeric code">{{ shortId(order.orderId) }}</span>
-              <span class="numeric total worklist-card__end">{{ money(order.total, order.currency) }}</span>
+              <span class="numeric font-semibold text-body">{{ shortId(order.orderId) }}</span>
+              <span class="worklist-card__end numeric font-semibold">{{
+                order.total | price: order.currency : culture.active()
+              }}</span>
             </span>
             <span class="worklist-card__line">
               <backoffice-order-status-label [order]="order" />
             </span>
-            <span class="card__who">{{ order.recipientName }}</span>
-            <span class="city">{{ order.city }} · {{ placed(order.createdAt) }}</span>
+            <span>{{ order.recipientName }}</span>
+            <span class="block text-3xs text-muted">{{ order.city }} · {{ placed(order.createdAt) }}</span>
           </button>
           @if (primaryMove(order.status); as move) {
             <button
@@ -120,11 +132,13 @@
             </button>
           }
           @if (store.refusal()[order.orderId] !== undefined) {
-            <p class="worklist-card__refusal" role="alert">{{ store.refusal()[order.orderId] || t('orders.refused') }}</p>
+            <p class="col-span-full text-xs text-danger" role="alert">
+              {{ store.refusal()[order.orderId] || t('orders.refused') }}
+            </p>
           }
         </li>
       }
     </ul>
     <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
-  }
+  </backoffice-list-state>
 </ng-container>

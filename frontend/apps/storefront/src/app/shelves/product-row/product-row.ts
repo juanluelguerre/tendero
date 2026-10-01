@@ -1,6 +1,5 @@
 import {
   afterNextRender,
-  ChangeDetectionStrategy,
   Component,
   effect,
   type ElementRef,
@@ -16,6 +15,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
 import type { ProductVia } from '../../features/product/arrived-from';
 import { ProductCard, type CardReason } from '../../product-card/product-card';
+import { Icon } from '@tendero/shared-ui';
 
 /** One product in a row, with what the row says about it. */
 export interface ShelfItem {
@@ -52,10 +52,9 @@ let rows = 0;
  */
 @Component({
   selector: 'storefront-product-row',
-  imports: [TranslocoDirective, RouterLink, ProductCard],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, ProductCard, Icon],
   templateUrl: './product-row.html',
-  styleUrl: './product-row.css',
+  host: { class: 'block' },
 })
 export class ProductRow {
   readonly heading = input.required<string>();

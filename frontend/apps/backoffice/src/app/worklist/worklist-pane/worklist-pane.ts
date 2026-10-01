@@ -1,6 +1,6 @@
-import { afterRenderEffect, ChangeDetectionStrategy, Component, type ElementRef, input, output, viewChild } from '@angular/core';
+import { afterRenderEffect, Component, type ElementRef, input, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Icon } from '../../icon/icon';
+import { Icon } from '@tendero/shared-ui';
 
 let panes = 0;
 
@@ -17,7 +17,6 @@ let panes = 0;
 @Component({
   selector: 'backoffice-worklist-pane',
   imports: [TranslocoDirective, Icon],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './worklist-pane.html',
   styleUrl: './worklist-pane.css',
   host: {

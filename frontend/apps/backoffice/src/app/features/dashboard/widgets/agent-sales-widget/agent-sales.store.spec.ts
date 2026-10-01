@@ -27,7 +27,15 @@ describe('the agent sales store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, AgentSalesStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        AgentSalesStore,
+      ],
     });
     TestBed.inject(CultureStore).use('en');
     http = TestBed.inject(HttpTestingController);
@@ -38,9 +46,14 @@ describe('the agent sales store', () => {
     TestBed.runInInjectionContext(() => store.followPeriod(signal<DashboardPeriod>('Week')));
     TestBed.tick();
     for (const request of http.match((req) => req.url.includes('/i18n/'))) request.flush({});
-    http.expectOne('http://api/api/dashboard/agent-sales?period=Week').flush({ orders: 4, agentOrders: 1, byAgent: [] });
+    http
+      .expectOne('http://api/api/dashboard/agent-sales?period=Week')
+      .flush({ orders: 4, agentOrders: 1, byAgent: [] });
     http.expectOne('http://api/api/dashboard/sales/series?period=Week').flush({
-      period: 'Week', currency: 'EUR', timeZone: 'Europe/Madrid', step: 'Day',
+      period: 'Week',
+      currency: 'EUR',
+      timeZone: 'Europe/Madrid',
+      step: 'Day',
       current: [point('2026-10-12T00:00:00+02:00', 40), point('2026-10-13T00:00:00+02:00', 0)],
       previous: [point('2026-10-05T00:00:00+02:00', 0), point('2026-10-06T00:00:00+02:00', 0)],
     });

@@ -7,11 +7,20 @@
     The modules, in the spec's order. Each is marked with `storefrontHomeModule`
     (home_module_opened), and each is drawn only when it has something to show:
     no empty stage, no empty box, no row a failed request left blank.
+
+    The home (R-8): a column of modules with room between them. The campaign is
+    the one loud thing; every row after it is the same quiet `ProductRow`. The
+    track may shrink: an implicit one sizes to its widest module.
   -->
-  <div class="home">
+  <div class="mt-5 mb-7 grid grid-cols-[minmax(0,1fr)] gap-7 max-sm:gap-6">
     @if (store.campaign(); as leading) {
-      <storefront-campaign-card storefrontHomeModule="campaign" [campaign]="leading" [products]="store.campaignHits()"
-                                (reached)="campaigns.refresh()" />
+      <storefront-campaign-card
+        storefrontHomeModule="campaign"
+        [campaign]="leading"
+        [priority]="true"
+        [products]="store.campaignHits()"
+        (reached)="campaigns.refresh()"
+      />
     }
 
     @if (trail.any()) {
@@ -25,9 +34,14 @@
       <storefront-product-row
         storefrontHomeModule="offers"
         [heading]="t('home.offers')"
-        [lede]="store.offerRules() ? t('home.offersLede') + ' ' + t('home.offersRules', { names: store.offerRules() }) : t('home.offersLede')"
+        [lede]="
+          store.offerRules()
+            ? t('home.offersLede') + ' ' + t('home.offersRules', { names: store.offerRules() })
+            : t('home.offersLede')
+        "
         [more]="{ label: t('home.offersAll'), commands: links.home(), queryParams: { offer: 1 } }"
-        [items]="offerItems" />
+        [items]="offerItems"
+      />
     }
 
     @let suggestions = suggested(because(t));
@@ -37,7 +51,8 @@
         [heading]="t('home.suggested')"
         [lede]="t('home.suggestedLede')"
         [items]="suggestions"
-        via="suggested" />
+        via="suggested"
+      />
     }
 
     @let rising = trending(t('home.rising'));
@@ -47,7 +62,8 @@
         [heading]="t('home.trending')"
         [lede]="t('home.trendingLede')"
         [items]="rising"
-        via="trending" />
+        via="trending"
+      />
     }
 
     @if (store.bestSellers().length > 0) {
@@ -56,7 +72,8 @@
         [heading]="t('home.bestSellers')"
         [lede]="t('home.bestSellersLede')"
         [items]="store.bestSellers()"
-        layout="line" />
+        layout="line"
+      />
     }
 
     @let arrivals = newest(t('home.newBadge'));
@@ -66,21 +83,28 @@
         [heading]="t('home.newest')"
         [lede]="t('home.newestLede')"
         [more]="{ label: t('home.newestAll'), commands: links.home(), queryParams: { new: 1 } }"
-        [items]="arrivals" />
+        [items]="arrivals"
+      />
     }
 
     @if (store.departments().length > 0) {
-      <section class="departments" storefrontHomeModule="departments" aria-labelledby="home-departments">
-        <h2 class="departments__title" id="home-departments">{{ t('home.departments') }}</h2>
-        <ul class="departments__list">
+      <section storefrontHomeModule="departments" aria-labelledby="home-departments">
+        <h2 class="font-display text-xl" id="home-departments">{{ t('home.departments') }}</h2>
+        <ul class="mt-4 grid list-none grid-cols-[repeat(auto-fit,minmax(16rem,1fr))] gap-4 p-0">
           @for (department of store.departments(); track department.code) {
             <li>
-              <a class="department" [routerLink]="links.category(department.code)">
-                <!-- Decorative: the name beside it is the link's label. -->
-                <img class="department__art" [src]="art(department.code)" alt="" loading="lazy" width="400" height="300" />
-                <span class="department__words">
-                  <span class="department__name">{{ department.name }}</span>
-                  <span class="department__sections">{{ department.sections }}</span>
+              <a
+                class="flex h-full items-center gap-4 rounded-lg border border-hairline bg-surface p-3 text-inherit no-underline transition-[border-color] duration-(--dur-fast) ease-brand hover:border-hairline-strong"
+                [routerLink]="links.category(department.code)"
+              >
+                <!-- Decorative: the name beside it is the link's label. A 4:3 drawing
+                     cropped to a square tile: the tile is its box, and it fills it. -->
+                <span class="relative size-thumb-xl flex-none overflow-hidden rounded-md bg-accent-tint">
+                  <img class="object-cover" [ngSrc]="art(department.code)" fill alt="" />
+                </span>
+                <span class="grid min-w-0 gap-1">
+                  <span class="font-display text-md font-extrabold">{{ department.name }}</span>
+                  <span class="text-xs text-muted">{{ department.sections }}</span>
                 </span>
               </a>
             </li>

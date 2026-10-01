@@ -5,10 +5,7 @@
  * up on its own. It is the ONLY place in the repo where a backend localhost
  * appears.
  */
-const api =
-  process.env['services__api__http__0'] ??
-  process.env['services__api__https__0'] ??
-  'http://localhost:5130';
+const api = process.env['services__api__http__0'] ?? process.env['services__api__https__0'] ?? 'http://localhost:5130';
 
 /**
  * /otlp: the browser's telemetry (ADR 0036), posted to the page's own origin and

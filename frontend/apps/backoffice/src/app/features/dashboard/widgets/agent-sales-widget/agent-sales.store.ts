@@ -17,8 +17,14 @@ export const AgentSalesStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      sales: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.agentSales(params.period, at) }),
-      _series: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.series(params.period, at) }),
+      sales: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.agentSales(params.period, at),
+      }),
+      _series: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.series(params.period, at),
+      }),
       _culture: inject(CultureStore),
       _words: translateObjectSignal('dashboard.agentSales'),
     };
@@ -31,7 +37,14 @@ export const AgentSalesStore = signalStore(
       const words = store._words() as Partial<Record<string, string>>;
       return {
         categories: bucketLabels(series, store._culture.active()),
-        series: [{ key: 'agents', label: words['byDay'] ?? '', role: 'agent', values: series.current.map((point) => point.agentRevenue) }],
+        series: [
+          {
+            key: 'agents',
+            label: words['byDay'] ?? '',
+            role: 'agent',
+            values: series.current.map((point) => point.agentRevenue),
+          },
+        ],
       };
     }),
   })),

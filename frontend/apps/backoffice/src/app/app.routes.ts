@@ -50,8 +50,7 @@ export const appRoutes: Route[] = [
         // name only the tabs, so no widget enters the first bundle.
         path: 'dashboard',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
+        loadComponent: () => import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
         children: dashboardChildren,
       },
       {
@@ -63,15 +62,13 @@ export const appRoutes: Route[] = [
       {
         path: 'sign-in',
         title: 'signIn.title',
-        loadComponent: () =>
-          import('./features/sign-in/sign-in-page').then((m) => m.SignInPage),
+        loadComponent: () => import('./features/sign-in/sign-in-page').then((m) => m.SignInPage),
       },
       {
         path: 'products/:id/variants',
         title: 'variants.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/variants/define-variants-page').then((m) => m.DefineVariantsPage),
+        loadComponent: () => import('./features/variants/define-variants-page').then((m) => m.DefineVariantsPage),
       },
       {
         path: 'audit',
@@ -83,38 +80,32 @@ export const appRoutes: Route[] = [
         path: 'attributes',
         title: 'attributes.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/attributes/attributes-page').then((m) => m.AttributesPage),
+        loadComponent: () => import('./features/attributes/attributes-page').then((m) => m.AttributesPage),
       },
       {
         path: 'search',
         title: 'searchEvaluation.title',
         canActivate: [shopkeeper],
         loadComponent: () =>
-          import('./features/search-evaluation/search-evaluation-page').then(
-            (m) => m.SearchEvaluationPage,
-          ),
+          import('./features/search-evaluation/search-evaluation-page').then((m) => m.SearchEvaluationPage),
       },
       {
         path: 'promotions',
         title: 'promotions.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/promotions/promotions-page').then((m) => m.PromotionsPage),
+        loadComponent: () => import('./features/promotions/promotions-page').then((m) => m.PromotionsPage),
       },
       {
         path: 'campaigns',
         title: 'campaigns.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/campaigns/campaigns-page').then((m) => m.CampaignsPage),
+        loadComponent: () => import('./features/campaigns/campaigns-page').then((m) => m.CampaignsPage),
       },
       {
         path: 'stock',
         title: 'stock.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/stock/stock-page').then((m) => m.StockPage),
+        loadComponent: () => import('./features/stock/stock-page').then((m) => m.StockPage),
       },
       {
         path: 'orders',
@@ -132,22 +123,19 @@ export const appRoutes: Route[] = [
         path: 'catalogue',
         title: 'catalogue.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/catalogue/catalogue-page').then((m) => m.CataloguePage),
+        loadComponent: () => import('./features/catalogue/catalogue-page').then((m) => m.CataloguePage),
       },
       {
         path: 'claims',
         title: 'claims.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/claims-review/claims-review-page').then((m) => m.ClaimsReviewPage),
+        loadComponent: () => import('./features/claims-review/claims-review-page').then((m) => m.ClaimsReviewPage),
       },
       {
         path: 'review',
         title: 'reviewQueue.title',
         canActivate: [shopkeeper],
-        loadComponent: () =>
-          import('./features/review-queue/review-queue-page').then((m) => m.ReviewQueuePage),
+        loadComponent: () => import('./features/review-queue/review-queue-page').then((m) => m.ReviewQueuePage),
       },
     ],
   },

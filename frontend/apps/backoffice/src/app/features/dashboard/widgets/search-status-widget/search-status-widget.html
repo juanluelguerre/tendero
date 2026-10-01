@@ -1,27 +1,29 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.searchStatus'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-  </header>
-
-  @if (store.status.isLoading() && !store.status.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.status.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else if (store.stages().length === 0) {
-    <p class="muted widget__state">{{ t('checking') }}</p>
-  } @else {
-    <p class="widget__sub">{{ store.whole() ? t('whole') : t('degraded') }}</p>
-    <ul class="ranking">
-      @for (stage of store.stages(); track stage.stage) {
-        <li class="ranking__row">
-          <span class="ranking__name">{{ t('stage.' + stage.stage) }}</span>
-          <span class="tag" [class.tag--ok]="stage.state === 'Up'" [class.tag--danger]="stage.state === 'Down'">{{ t('state.' + stage.state) }}</span>
-          <span class="muted numeric">{{ t('since', { at: since(stage.since) }) }}</span>
-        </li>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.searchStatus'"
+  [heading]="t('title')"
+  [resource]="store.status"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    @if (store.stages().length === 0) {
+      <p class="muted">{{ t('checking') }}</p>
+    } @else {
+      <p class="mt-2">{{ store.whole() ? t('whole') : t('degraded') }}</p>
+      <ul class="ranking">
+        @for (stage of store.stages(); track stage.stage) {
+          <li class="ranking__row">
+            <span class="ranking__name">{{ t('stage.' + stage.stage) }}</span>
+            <span class="tag" [class.tag--ok]="stage.state === 'Up'" [class.tag--danger]="stage.state === 'Down'">{{
+              t('state.' + stage.state)
+            }}</span>
+            <span class="muted numeric">{{ t('since', { at: since(stage.since) }) }}</span>
+          </li>
+        }
+      </ul>
+      @for (stage of store.down(); track stage.stage) {
+        <p class="muted text-3xs">{{ t('means.' + stage.stage) }}</p>
       }
-    </ul>
-    @for (stage of store.down(); track stage.stage) {
-      <p class="muted widget__note">{{ t('means.' + stage.stage) }}</p>
     }
-  }
-</article>
+  </ng-template>
+</backoffice-widget-frame>

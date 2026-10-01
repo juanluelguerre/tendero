@@ -10,11 +10,17 @@ import { ShopFrontService, type Category } from '../../data-access/shop-front.se
 import type { ListingPlace } from '../../listing/listing-filters';
 import { ListingStore } from '../../listing/listing.store';
 import { CategoryStore } from './category.store';
+import { signalMethod } from '@ngrx/signals';
 
 const category = (code: string, parent: string | null, depth: number): Category =>
   ({ code, parent, name: code, path: [], depth }) as unknown as Category;
 
-const taxonomy = [category('HOME', null, 0), category('KITCHEN', 'HOME', 1), category('TEXTILES', 'HOME', 1), category('BAGS', null, 0)];
+const taxonomy = [
+  category('HOME', null, 0),
+  category('KITCHEN', 'HOME', 1),
+  category('TEXTILES', 'HOME', 1),
+  category('BAGS', null, 0),
+];
 
 /** A category page's own state (ADR 0047): the branch the URL names, and what it tells the listing to list. */
 describe('the category store', () => {
@@ -38,7 +44,15 @@ describe('the category store', () => {
         { provide: CultureStore, useValue: { active: signal('es') } },
         { provide: ShopFrontService, useValue: { categories: () => answer() } },
         { provide: CampaignsStore, useValue: { all: campaigns } },
-        { provide: ListingStore, useValue: { list: (place: ListingPlace | null) => listed.push(place), result: signal({ status: 'idle' }) } },
+        {
+          provide: ListingStore,
+          // A factory, so the signalMethod is made where it can follow a signal: in an injection context.
+          useFactory: () => ({
+            // As the real one is: a signalMethod, following the signal the page hands it.
+            list: signalMethod<ListingPlace | null>((place) => listed.push(place)),
+            result: signal({ status: 'idle' }),
+          }),
+        },
       ],
     });
     const store = TestBed.inject(CategoryStore);

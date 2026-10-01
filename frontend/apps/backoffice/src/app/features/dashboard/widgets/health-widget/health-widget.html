@@ -1,45 +1,47 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.health'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-  </header>
-
-  @if (store.operations.isLoading() && !store.operations.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.operations.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else if (store.operations.value()) {
-    <dl class="facts">
-      @for (rate of store.rates(); track rate.key) {
-        <!-- From M the three rates; at S the cancellation rate, the one the shopkeeper acts on first. -->
-        <div class="fact" [class.at-m]="rate.key !== 'cancellation'">
-          <dt>
-            @if (rate.key === 'cancellation') {
-              <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{ t('rate.' + rate.key) }}</a>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.health'"
+  [heading]="t('title')"
+  [resource]="store.operations"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    @if (store.operations.value()) {
+      <dl class="facts">
+        @for (rate of store.rates(); track rate.key) {
+          <!-- From M the three rates; at S the cancellation rate, the one the shopkeeper acts on first. -->
+          <div class="fact" [class.at-m]="rate.key !== 'cancellation'">
+            <dt>
+              @if (rate.key === 'cancellation') {
+                <a class="fact__link" routerLink="/orders" [queryParams]="{ status: 'Cancelled' }">{{
+                  t('rate.' + rate.key)
+                }}</a>
+              } @else {
+                {{ t('rate.' + rate.key) }}
+              }
+            </dt>
+            @if (rate.rate !== null && rate.standing) {
+              <dd class="fact__value numeric">{{ share(rate.rate) }}</dd>
+              <!-- Against the target the server holds: the standing is decided
+                   there, and said here in a word as well as a colour. -->
+              <dd
+                class="tag"
+                [class.tag--ok]="rate.standing === 'within'"
+                [class.tag--warn]="rate.standing === 'near'"
+                [class.tag--danger]="rate.standing === 'outside'"
+              >
+                {{ t('standing.' + rate.standing, { target: share(rate.target) }) }}
+              </dd>
             } @else {
-              {{ t('rate.' + rate.key) }}
+              <dd class="muted fact__value">{{ t('noData') }}</dd>
             }
-          </dt>
-          @if (rate.rate !== null && rate.standing) {
-            <dd class="numeric fact__value">{{ share(rate.rate) }}</dd>
-            <!-- Against the target the server holds: the standing is decided
-                 there, and said here in a word as well as a colour. -->
-            <dd
-              class="tag"
-              [class.tag--ok]="rate.standing === 'within'"
-              [class.tag--warn]="rate.standing === 'near'"
-              [class.tag--danger]="rate.standing === 'outside'"
-            >
-              {{ t('standing.' + rate.standing, { target: share(rate.target) }) }}
-            </dd>
-          } @else {
-            <dd class="muted fact__value">{{ t('noData') }}</dd>
-          }
-          <dd class="muted fact__note">{{ t('count.' + rate.key, { count: rate.count }) }}</dd>
-          @if (rate.apart > 0) {
-            <dd class="muted fact__note">{{ t('apart', { count: rate.apart }) }}</dd>
-          }
-        </div>
-      }
-    </dl>
-  }
-</article>
+            <dd class="muted fact__note">{{ t('count.' + rate.key, { count: rate.count }) }}</dd>
+            @if (rate.apart > 0) {
+              <dd class="muted fact__note">{{ t('apart', { count: rate.apart }) }}</dd>
+            }
+          </div>
+        }
+      </dl>
+    }
+  </ng-template>
+</backoffice-widget-frame>

@@ -7,7 +7,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { ShopFrontService } from '../data-access/shop-front.service';
 import { TaxonomyStore } from './taxonomy.store';
 
-const category = (code: string, parent: string | null, depth: number): CategoryView => ({ code, parent, name: code, path: [], depth });
+const category = (code: string, parent: string | null, depth: number): CategoryView => ({
+  code,
+  parent,
+  name: code,
+  path: [],
+  depth,
+});
 
 /** The shop's categories, read once per language and shared by the menu, the drawer and the filters (ADR 0047). */
 describe('the taxonomy store', () => {
@@ -37,9 +43,11 @@ describe('the taxonomy store', () => {
     const store = TestBed.inject(TaxonomyStore);
     TestBed.tick();
 
-    expect(store.menu().map((department) => [department.category.code, department.groups.map((group) => group.category.code)])).toEqual([
-      ['HOME', ['KITCHEN-es']],
-    ]);
+    expect(
+      store
+        .menu()
+        .map((department) => [department.category.code, department.groups.map((group) => group.category.code)]),
+    ).toEqual([['HOME', ['KITCHEN-es']]]);
   });
 
   it('reads them again when the language changes, and only then', () => {
@@ -49,6 +57,9 @@ describe('the taxonomy store', () => {
     culture.set('en');
     TestBed.tick();
 
-    expect([asked, store.categories().map((category) => category.code)]).toEqual([['es', 'en'], ['HOME', 'KITCHEN-en']]);
+    expect([asked, store.categories().map((category) => category.code)]).toEqual([
+      ['es', 'en'],
+      ['HOME', 'KITCHEN-en'],
+    ]);
   });
 });

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, untracked } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { PageTitles } from '@tendero/shared-i18n';
@@ -9,8 +10,13 @@ import { Listing } from '../../listing/listing';
 import { hasFilters } from '../../listing/listing-filters';
 import { ListingStore } from '../../listing/listing.store';
 import { ShopLinks } from '../../shop-links';
+import type { Category } from '../../data-access/shop-front.service';
 import { CategoryStore } from './category.store';
 import { openedVia } from './opened-via';
+import { Notice } from '@tendero/shared-ui';
+import { PageState } from '../../page-state/page-state';
+import { Crumbs } from '../../crumbs/crumbs';
+import { signalMethod } from '@ngrx/signals';
 
 /**
  * Everything in one branch of the taxonomy.
@@ -34,13 +40,11 @@ import { openedVia } from './opened-via';
  */
 @Component({
   selector: 'storefront-category-page',
-  imports: [TranslocoDirective, RouterLink, Listing, CampaignCard],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, Listing, CampaignCard, Notice, PageState, Crumbs, NgOptimizedImage],
   // Its own listing — the filters in the URL, the request, the phone's batch —
   // and its own branch, which tells the listing what to list.
   providers: [ListingStore, CategoryStore],
   templateUrl: './category-page.html',
-  styleUrl: './category-page.css',
 })
 export class CategoryPage {
   protected readonly store = inject(CategoryStore);
@@ -58,15 +62,12 @@ export class CategoryPage {
   protected readonly filtered = computed(() => hasFilters(this.listing.filters()));
 
   constructor() {
-    effect(() => {
-      const found = this.store.category();
-      if (this.store.state() !== 'found' || !found) return;
-      untracked(() => {
-        // The tab names the section, not "Section".
-        this.titles.name(found.name);
-        this.reportOpened(found.code);
-      });
-    });
+    // Once per category found: the tab names the section, not "Section", and the visit is reported.
+    signalMethod<Category | null>((found) => {
+      if (!found) return;
+      this.titles.name(found.name);
+      this.reportOpened(found.code);
+    })(computed(() => (this.store.state() === 'found' ? this.store.category() : null)));
   }
 
   /**

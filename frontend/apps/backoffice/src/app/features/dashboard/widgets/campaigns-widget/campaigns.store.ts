@@ -12,10 +12,14 @@ import { DashboardSources } from '../../sources/dashboard-sources';
  */
 export function leadingCampaign(campaigns: readonly ManagedCampaignView[]): ManagedCampaignView | null {
   // Ended before it opened, a campaign never ran: there is nothing to measure.
-  const live = campaigns.filter((campaign) => campaign.status !== 'Draft' && instant(closesAt(campaign)) > instant(campaign.startsAt));
+  const live = campaigns.filter(
+    (campaign) => campaign.status !== 'Draft' && instant(closesAt(campaign)) > instant(campaign.startsAt),
+  );
   const running = live.filter((campaign) => campaign.phase === 'Running').sort((a, b) => b.priority - a.priority);
   if (running.length > 0) return running[0];
-  const over = live.filter((campaign) => campaign.phase === 'Over').sort((a, b) => instant(closesAt(b)) - instant(closesAt(a)));
+  const over = live
+    .filter((campaign) => campaign.phase === 'Over')
+    .sort((a, b) => instant(closesAt(b)) - instant(closesAt(a)));
   return over[0] ?? null;
 }
 
@@ -38,7 +42,10 @@ function instant(at: string): number {
 export const CampaignsStore = signalStore(
   withProps(() => {
     const sources = inject(DashboardSources);
-    return { _sources: sources, _calendar: refreshedResource({ params: () => ({}), stream: (_, at) => sources.campaigns(at) }) };
+    return {
+      _sources: sources,
+      _calendar: refreshedResource({ params: () => ({}), stream: (_, at) => sources.campaigns(at) }),
+    };
   }),
   withComputed((store) => ({
     campaign: computed(() => (store._calendar.hasValue() ? leadingCampaign(store._calendar.value()) : null)),
@@ -47,14 +54,24 @@ export const CampaignsStore = signalStore(
     uplift: refreshedResource({
       params: () => {
         const campaign = store.campaign();
-        return campaign ? { from: campaign.startsAt, to: closesAt(campaign), category: campaign.scope === 'Category' ? campaign.categoryCode : null } : undefined;
+        return campaign
+          ? {
+              from: campaign.startsAt,
+              to: closesAt(campaign),
+              category: campaign.scope === 'Category' ? campaign.categoryCode : null,
+            }
+          : undefined;
       },
       stream: (params, at) => store._sources.uplift(params.from, params.to, params.category, at),
     }),
   })),
   withComputed((store) => ({
     /** Waiting for the calendar or the figures, and nothing drawn yet. */
-    loading: computed(() => (store._calendar.isLoading() && !store._calendar.hasValue()) || (store.uplift.isLoading() && !store.uplift.hasValue())),
+    loading: computed(
+      () =>
+        (store._calendar.isLoading() && !store._calendar.hasValue()) ||
+        (store.uplift.isLoading() && !store.uplift.hasValue()),
+    ),
     failed: computed(() => !!store._calendar.error() || !!store.uplift.error()),
   })),
 );

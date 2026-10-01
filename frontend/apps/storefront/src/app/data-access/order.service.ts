@@ -66,11 +66,9 @@ export class OrderService {
 
   requestReturn(orderId: string, request: RequestReturnRequest, culture: string): Promise<ReturnView> {
     return firstValueFrom(
-      this.http.post<ReturnView>(
-        `${this.baseUrl}/api/orders/${encodeURIComponent(orderId)}/returns`,
-        request,
-        { params: this.params(culture) },
-      ),
+      this.http.post<ReturnView>(`${this.baseUrl}/api/orders/${encodeURIComponent(orderId)}/returns`, request, {
+        params: this.params(culture),
+      }),
     );
   }
 

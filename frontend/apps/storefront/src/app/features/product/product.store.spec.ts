@@ -10,8 +10,24 @@ import { ProductService } from '../../data-access/product.service';
 import { SpecsService } from '../../data-access/specs.service';
 import { ProductStore } from './product.store';
 
-const variant = (sku: string, axisValues: Record<string, string>, inStock: boolean, imageId: string | null = null): VariantView =>
-  ({ variantId: sku, sku, priceAmount: 29.9, priceCurrency: 'EUR', axisValues, label: sku, imageId, discontinued: false, inStock, remaining: null }) as unknown as VariantView;
+const variant = (
+  sku: string,
+  axisValues: Record<string, string>,
+  inStock: boolean,
+  imageId: string | null = null,
+): VariantView =>
+  ({
+    variantId: sku,
+    sku,
+    priceAmount: 29.9,
+    priceCurrency: 'EUR',
+    axisValues,
+    label: sku,
+    imageId,
+    discontinued: false,
+    inStock,
+    remaining: null,
+  }) as unknown as VariantView;
 
 /** Navy in 40 (sold out, and listed first) and 38, black only in 38 and with its own photo. */
 const aShirt = (): ProductDetail =>
@@ -46,7 +62,10 @@ describe('the product store', () => {
     TestBed.configureTestingModule({
       providers: [
         ProductStore,
-        { provide: ActivatedRoute, useValue: { paramMap: of(convertToParamMap({ slug: 'camisa-de-lino', code: 'K7M2QX9P4T' })) } },
+        {
+          provide: ActivatedRoute,
+          useValue: { paramMap: of(convertToParamMap({ slug: 'camisa-de-lino', code: 'K7M2QX9P4T' })) },
+        },
         { provide: CultureStore, useValue: { active: signal('es') } },
         { provide: ProductService, useValue: { get: () => answer() } },
         { provide: SpecsService, useValue: { get: () => throwError(() => new Error('Knowledge is down')) } },
@@ -73,6 +92,19 @@ describe('the product store', () => {
 
     TestBed.resetTestingModule();
     expect(missing).toBe('notFound');
+  });
+
+  /**
+   * A code that is not a code — a link copied short, an address typed by hand —
+   * is refused by the API as malformed (400). For the shopper it is a product
+   * that does not exist; "try again in a moment" would never come true.
+   */
+  it('says a malformed code is not found, not a failure', () => {
+    answer = () => throwError(() => ({ status: 400 }));
+    const malformed = opened().state().status;
+
+    TestBed.resetTestingModule();
+    expect(malformed).toBe('notFound');
   });
 
   /** The specs are Knowledge's, beside the product: without them the lines fall back to the catalogue's (invariant 8). */
@@ -104,6 +136,9 @@ describe('the product store', () => {
     const store = opened();
     store.choose('COLOR', 'BLACK');
 
-    expect([store.chosen()?.sku, store.gallery().map((image) => image.imageId)]).toEqual(['BLACK-38', ['black', 'cover']]);
+    expect([store.chosen()?.sku, store.gallery().map((image) => image.imageId)]).toEqual([
+      'BLACK-38',
+      ['black', 'cover'],
+    ]);
   });
 });

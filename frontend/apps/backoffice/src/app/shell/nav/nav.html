@@ -1,22 +1,32 @@
 <ng-container *transloco="let t">
   @for (group of groups; track group.label) {
-    <section class="group">
-      <h2 class="group__label">{{ t('nav.groups.' + group.label) }}</h2>
-      <ul class="group__items" role="list">
+    <section>
+      <h2 class="group__label mb-1 px-3 font-sans text-3xs font-semibold tracking-wide text-muted uppercase">
+        {{ t('nav.groups.' + group.label) }}
+      </h2>
+      <ul class="flex flex-col gap-hair" role="list">
         @for (item of group.items; track item.route) {
           <li>
+            <!-- The open screen is drawn from `aria-current`, so no two colours compete on a link. -->
             <a
-              class="link"
+              class="link group relative flex min-h-control-md items-center gap-3 rounded-md px-3 py-1 text-sm text-muted no-underline transition-[background,color] duration-(--dur-fast) ease-brand hover:bg-raised hover:text-body aria-[current=page]:bg-accent-tint aria-[current=page]:font-semibold aria-[current=page]:text-body"
               [routerLink]="item.route"
-              routerLinkActive="link--active"
+              routerLinkActive
               ariaCurrentWhenActive="page"
               (click)="chosen.emit()"
             >
-              <span class="link__mark" aria-hidden="true"></span>
-              <backoffice-icon [name]="item.icon" />
-              <span class="link__label">{{ t('nav.' + item.label) }}</span>
+              <!-- The awning stripe marks the current screen, as it marked the
+                   current tab: the same stripe, stood on its end. -->
+              <span
+                class="absolute inset-y-1 start-0 w-rule rounded-full bg-[repeating-linear-gradient(180deg,var(--color-clay-500)_0_6px,var(--color-clay-100)_6px_12px)] opacity-0 group-aria-[current=page]:opacity-100"
+                aria-hidden="true"
+              ></span>
+              <lib-icon [name]="item.icon" />
+              <span class="link__label min-w-0 flex-1">{{ t('nav.' + item.label) }}</span>
               @if (item.waiting && waiting()(item.waiting); as count) {
-                <span class="link__badge numeric" aria-hidden="true">{{ count }}</span>
+                <span class="link__badge numeric text-3xs font-semibold text-warning" aria-hidden="true">{{
+                  count
+                }}</span>
                 <span class="sr-only">{{ t('nav.waiting', { count }) }}</span>
               }
             </a>

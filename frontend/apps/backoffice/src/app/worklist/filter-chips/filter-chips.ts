@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 
 /** One filter: its key, its words and, when known, how many it would show. */
 export interface FilterOption {
@@ -14,7 +14,6 @@ export interface FilterOption {
  */
 @Component({
   selector: 'backoffice-filter-chips',
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './filter-chips.html',
   styleUrl: './filter-chips.css',
   host: { role: 'group', '[attr.aria-label]': 'label()' },

@@ -1,59 +1,72 @@
 @if (store.selected(); as request) {
   <ng-container *transloco="let t">
-  <backoffice-worklist-pane [heading]="t('returns.paneTitle', { number: request.number, id: shortId(request.orderId) })" (closed)="closed.emit()">
-    <div class="pane-status">
-      <backoffice-return-status-label [request]="request" />
-      <a class="quiet-link" routerLink="/orders" [queryParams]="{ status: 'all', order: request.orderId }">
-        {{ t('returns.openOrder') }}
-      </a>
-    </div>
-
-    <section class="pane-section">
-      <h3 class="eyebrow">{{ t('returns.column.what') }}</h3>
-      <ul class="lines" role="list">
-        @for (line of request.lines; track line.sku) {
-          <li class="line">
-            <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
-            <span class="reason" [class.reason--damaged]="line.reason === 'Damaged'">{{ t('returns.reason.' + line.reason) }}</span>
-            @if (line.comment) {
-              <q class="line__comment">{{ line.comment }}</q>
-            }
-          </li>
-        }
-      </ul>
-    </section>
-
-    @if (request.refundAmount) {
-      <p class="pane-total">
-        <span class="muted">{{ t('returns.column.refund') }}</span>
-        <span class="numeric strong">{{ money(request.refundAmount) }}</span>
-      </p>
-    }
-
-    @if (store.refusal()[request.returnId] !== undefined) {
-      <p class="failed" role="alert">{{ store.refusal()[request.returnId] || t('returns.refused') }}</p>
-    }
-
-    @if (nextDecision(request); as decision) {
-      <button type="button" class="button pane-primary" [disabled]="store.busy() === request.returnId" (click)="store.decide(request, decision, 'pane')">
-        {{ store.busy() === request.returnId ? t('returns.deciding') : t('returns.decideLong.' + decision) }}
-      </button>
-    }
-
-    @if (rejectable(request)) {
-      <div class="danger-zone">
-        <button type="button" class="linkish linkish--danger" (click)="askToReject()">{{ t('returns.reject.open') }}</button>
-        <p class="muted">{{ t('returns.reject.consequence') }}</p>
+    <backoffice-worklist-pane
+      [heading]="t('returns.paneTitle', { number: request.number, id: shortId(request.orderId) })"
+      (closed)="closed.emit()"
+    >
+      <div class="flex flex-wrap items-center gap-3">
+        <backoffice-return-status-label [request]="request" />
+        <a class="quiet-link" routerLink="/orders" [queryParams]="{ status: 'all', order: request.orderId }">
+          {{ t('returns.openOrder') }}
+        </a>
       </div>
-      <backoffice-confirm-dialog
-        [heading]="t('returns.reject.title', { number: request.number })"
-        [body]="t('returns.reject.body')"
-        [reasonLabel]="t('returns.reject.reason')"
-        [keepLabel]="t('returns.reject.keep')"
-        [confirmLabel]="t('returns.reject.confirm')"
-        (confirmed)="store.decide(request, 'Reject', 'pane', $event)"
-      />
-    }
-  </backoffice-worklist-pane>
+
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('returns.column.what') }}</h3>
+        <ul class="grid gap-2 text-xs" role="list">
+          @for (line of request.lines; track line.sku) {
+            <li class="flex flex-wrap items-baseline gap-2">
+              <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
+              <span [class.text-muted]="line.reason !== 'Damaged'" [class.text-danger]="line.reason === 'Damaged'">{{
+                t('returns.reason.' + line.reason)
+              }}</span>
+              @if (line.comment) {
+                <!-- The customer's own words, when they gave any: quoted, and read second. -->
+                <q class="basis-full text-muted italic">{{ line.comment }}</q>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+
+      @if (request.refundAmount) {
+        <p class="flex justify-between border-t border-hairline pt-2">
+          <span class="muted">{{ t('returns.column.refund') }}</span>
+          <span class="numeric font-semibold">{{ request.refundAmount | price: 'EUR' : culture.active() }}</span>
+        </p>
+      }
+
+      @if (store.refusal()[request.returnId] !== undefined) {
+        <p class="failed" role="alert">{{ store.refusal()[request.returnId] || t('returns.refused') }}</p>
+      }
+
+      @if (nextDecision(request); as decision) {
+        <button
+          type="button"
+          class="button pane-primary"
+          [disabled]="store.busy() === request.returnId"
+          (click)="store.decide(request, decision, 'pane')"
+        >
+          {{ store.busy() === request.returnId ? t('returns.deciding') : t('returns.decideLong.' + decision) }}
+        </button>
+      }
+
+      @if (rejectable(request)) {
+        <div class="danger-zone">
+          <button type="button" class="linkish linkish--danger" (click)="askToReject()">
+            {{ t('returns.reject.open') }}
+          </button>
+          <p class="muted">{{ t('returns.reject.consequence') }}</p>
+        </div>
+        <backoffice-confirm-dialog
+          [heading]="t('returns.reject.title', { number: request.number })"
+          [body]="t('returns.reject.body')"
+          [reasonLabel]="t('returns.reject.reason')"
+          [keepLabel]="t('returns.reject.keep')"
+          [confirmLabel]="t('returns.reject.confirm')"
+          (confirmed)="store.decide(request, 'Reject', 'pane', $event)"
+        />
+      }
+    </backoffice-worklist-pane>
   </ng-container>
 }

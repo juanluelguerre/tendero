@@ -1,16 +1,16 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { ClaimsShown, WaitingStore } from './waiting.store';
+import { WidgetFrame } from '../widget-frame/widget-frame';
 
 /** What is waiting for the shopkeeper (P11-7): drafts to publish, claims to review, stock to restock — each leading to the screen that acts on it. */
 @Component({
   selector: 'backoffice-waiting-widget',
-  imports: [TranslocoDirective, RouterLink],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, WidgetFrame],
   templateUrl: './waiting-widget.html',
-  styleUrl: './waiting-widget.css',
+  host: { class: 'block' },
   providers: [WaitingStore],
 })
 export class WaitingWidget {

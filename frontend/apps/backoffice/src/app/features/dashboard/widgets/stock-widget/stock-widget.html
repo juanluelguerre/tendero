@@ -1,35 +1,38 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.stock'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-    <a class="widget__link" routerLink="/stock">{{ t('toStock') }}</a>
-  </header>
-
-  @if (store.stock.isLoading() && !store.stock.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.stock.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else {
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.stock'"
+  [heading]="t('title')"
+  link="/stock"
+  [linkText]="t('toStock')"
+  [resource]="store.stock"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
     <dl class="facts">
       <div class="fact">
-        <dt><a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">{{ t('restock') }}</a></dt>
-        <dd class="numeric fact__value" [class.fact__value--warn]="store.restock() > 0">{{ store.restock() }}</dd>
+        <dt>
+          <a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'Restock' }">{{ t('restock') }}</a>
+        </dt>
+        <dd class="fact__value numeric" [class.fact__value--warn]="store.restock() > 0">{{ store.restock() }}</dd>
       </div>
       <div class="fact">
-        <dt><a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'SoldOut' }">{{ t('soldOut') }}</a></dt>
-        <dd class="numeric fact__value" [class.fact__value--warn]="store.soldOut() > 0">{{ store.soldOut() }}</dd>
+        <dt>
+          <a class="fact__link" routerLink="/stock" [queryParams]="{ filter: 'SoldOut' }">{{ t('soldOut') }}</a>
+        </dt>
+        <dd class="fact__value numeric" [class.fact__value--warn]="store.soldOut() > 0">{{ store.soldOut() }}</dd>
       </div>
       <div class="fact at-m">
         <dt>{{ t('soon') }}</dt>
-        <dd class="numeric fact__value" [class.fact__value--warn]="store.soon() > 0">{{ store.soon() }}</dd>
+        <dd class="fact__value numeric" [class.fact__value--warn]="store.soon() > 0">{{ store.soon() }}</dd>
       </div>
       <div class="fact at-m">
         <dt>{{ t('noSales') }}</dt>
-        <dd class="numeric fact__value">{{ store.noSales() }}</dd>
+        <dd class="fact__value numeric">{{ store.noSales() }}</dd>
       </div>
     </dl>
     @if (store.closest().length > 0) {
       <div class="at-m">
-        <h3 class="eyebrow widget__sub">{{ t('closest') }}</h3>
+        <h3 class="eyebrow mt-2 mb-0">{{ t('closest') }}</h3>
         <ol class="ranking">
           @for (row of store.closest(); track row.sku) {
             <li class="ranking__row">
@@ -44,7 +47,7 @@
       <div class="at-m">
         <!-- Each warehouse's median cover as if it sold alone at the shop's pace:
              orders record no warehouse, so its share of the pace is not known. -->
-        <h3 class="eyebrow widget__sub">{{ t('byWarehouse') }}</h3>
+        <h3 class="eyebrow mt-2 mb-0">{{ t('byWarehouse') }}</h3>
         <ul class="ranking">
           @for (warehouse of store.warehouses(); track warehouse.warehouseCode) {
             <li class="ranking__row numeric">
@@ -58,6 +61,6 @@
         </ul>
       </div>
     }
-    <p class="muted widget__note">{{ t('pace') }}</p>
-  }
-</article>
+    <p class="muted text-3xs">{{ t('pace') }}</p>
+  </ng-template>
+</backoffice-widget-frame>

@@ -1,4 +1,0 @@
-/* The pane is laid out by the page's list-and-pane grid, as if it were its child. */
-:host { display: contents; }
-
-.agent__reason { display: block; font-size: var(--text-3xs); }

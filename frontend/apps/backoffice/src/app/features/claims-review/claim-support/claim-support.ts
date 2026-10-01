@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ClaimForReview } from '@tendero/shared-api';
 import { percent } from '../claim-statement';
@@ -11,9 +11,8 @@ import { percent } from '../claim-statement';
 @Component({
   selector: 'backoffice-claim-support',
   imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claim-support.html',
-  styleUrl: './claim-support.css',
+  host: { class: 'contents' },
 })
 export class ClaimSupport {
   readonly claim = input.required<ClaimForReview>();

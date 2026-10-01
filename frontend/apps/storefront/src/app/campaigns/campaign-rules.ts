@@ -36,7 +36,8 @@ export function campaignForCategory(campaigns: readonly CampaignView[], codes: r
   const wanted = new Set(codes.map((code) => code.toUpperCase()));
   return (
     campaigns.find(
-      (campaign) => campaign.scope === 'Category' && live(campaign) && wanted.has((campaign.categoryCode ?? '').toUpperCase()),
+      (campaign) =>
+        campaign.scope === 'Category' && live(campaign) && wanted.has((campaign.categoryCode ?? '').toUpperCase()),
     ) ?? null
   );
 }
@@ -128,10 +129,7 @@ export function spokenTimeLeft(left: TimeLeft, culture: string): string {
  * that needs a code is shown, never counted (ADR 0044). The sentence around the
  * code is the caller's, in the reader's language.
  */
-export function holdLabels(
-  campaign: CampaignView,
-  withCode: (name: string, code: string) => string,
-): string[] {
+export function holdLabels(campaign: CampaignView, withCode: (name: string, code: string) => string): string[] {
   return campaign.holds.map((hold) => (hold.couponCode ? withCode(hold.name, hold.couponCode) : hold.name));
 }
 

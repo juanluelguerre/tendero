@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs';
@@ -12,12 +12,17 @@ import { FullScreen } from '../full-screen';
 @Component({
   selector: 'backoffice-dashboard-tab',
   imports: [DashboardGrid],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard-tab-page.html',
-  styleUrl: './dashboard-tab-page.css',
+  // On the wall the page's section is a column and this tab takes what the head leaves
+  // (spec: the tab fills the monitor). Here, on the tab's own host: the router creates
+  // this element from code, so the page's stylesheet cannot reach it — its rule for it
+  // never matched (the whole-branch review).
+  host: { class: 'block flex-1 min-h-0' },
 })
 export class DashboardTabPage {
-  private readonly tab = toSignal(inject(ActivatedRoute).data.pipe(map((data) => data['tab'] as DashboardTab)), { requireSync: true });
+  private readonly tab = toSignal(inject(ActivatedRoute).data.pipe(map((data) => data['tab'] as DashboardTab)), {
+    requireSync: true,
+  });
 
   protected readonly period = injectDashboardPeriod();
   protected readonly layout = computed(() => DashboardLayouts[this.tab()]);

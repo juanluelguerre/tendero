@@ -21,7 +21,9 @@ export function describeCampaigns(campaigns: readonly CampaignView[], culture: s
         ? `running until ${campaign.endsAt} (${left(campaign.endsAt, now)} left)`
         : `starts ${campaign.startsAt} (in ${left(campaign.startsAt, now)}), ends ${campaign.endsAt}`;
     const holds = campaign.holds.length
-      ? campaign.holds.map((hold) => (hold.couponCode ? `${hold.name} (coupon ${hold.couponCode})` : hold.name)).join('; ')
+      ? campaign.holds
+          .map((hold) => (hold.couponCode ? `${hold.name} (coupon ${hold.couponCode})` : hold.name))
+          .join('; ')
       : 'nothing yet';
 
     return (

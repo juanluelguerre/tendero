@@ -1,39 +1,40 @@
-<article class="agents" *transloco="let t">
-  <header class="agents__head">
-    <h1 class="agents__title">{{ t('agents.title') }}</h1>
-    <p class="agents__lede">{{ t('agents.lede') }}</p>
+<!-- A page to read: the prose measure, blocks with room between them. -->
+<article class="grid max-w-prose gap-6 py-7" *transloco="let t">
+  <header>
+    <h1 class="text-3xl">{{ t('agents.title') }}</h1>
+    <p class="mt-3 text-lg text-muted">{{ t('agents.lede') }}</p>
   </header>
 
-  <section class="agents__block" aria-labelledby="agents-can">
-    <h2 id="agents-can">{{ t('agents.canTitle') }}</h2>
-    <ul class="agents__list">
+  <section class="grid gap-3" aria-labelledby="agents-can">
+    <h2 id="agents-can" class="text-xl">{{ t('agents.canTitle') }}</h2>
+    <ul class="grid gap-2 ps-5">
       <li>{{ t('agents.canSearch') }}</li>
       <li>{{ t('agents.canCompare') }}</li>
       <li>{{ t('agents.canCart') }}</li>
     </ul>
   </section>
 
-  <section class="agents__block" aria-labelledby="agents-mcp">
-    <h2 id="agents-mcp">{{ t('agents.mcpTitle') }}</h2>
+  <section class="grid gap-3" aria-labelledby="agents-mcp">
+    <h2 id="agents-mcp" class="text-xl">{{ t('agents.mcpTitle') }}</h2>
     <p>{{ t('agents.mcpBody') }}</p>
     <lib-copy-text [value]="addresses.mcp" [copyLabel]="t('agents.copyMcp')" [copiedLabel]="t('agents.copied')" />
     <p class="muted">{{ t('agents.mcpCommand') }}</p>
     <lib-copy-text [value]="command" [copyLabel]="t('agents.copyCommand')" [copiedLabel]="t('agents.copied')" block />
   </section>
 
-  <section class="agents__block" aria-labelledby="agents-browser">
-    <h2 id="agents-browser">{{ t('agents.browserTitle') }}</h2>
+  <section class="grid gap-3" aria-labelledby="agents-browser">
+    <h2 id="agents-browser" class="text-xl">{{ t('agents.browserTitle') }}</h2>
     <p>{{ t('agents.browserBody') }}</p>
   </section>
 
-  <section class="agents__block" aria-labelledby="agents-ucp">
-    <h2 id="agents-ucp">{{ t('agents.ucpTitle') }}</h2>
+  <section class="grid gap-3" aria-labelledby="agents-ucp">
+    <h2 id="agents-ucp" class="text-xl">{{ t('agents.ucpTitle') }}</h2>
     <p>{{ t('agents.ucpBody') }}</p>
     <lib-copy-text [value]="addresses.ucp" [copyLabel]="t('agents.copyUcp')" [copiedLabel]="t('agents.copied')" />
   </section>
 
-  <section class="agents__block agents__block--pay" aria-labelledby="agents-pay">
-    <h2 id="agents-pay">{{ t('agents.youPay') }}</h2>
+  <section class="grid gap-3 rounded-lg bg-accent-tint p-5" aria-labelledby="agents-pay">
+    <h2 id="agents-pay" class="text-xl">{{ t('agents.youPay') }}</h2>
     <p>{{ t('agents.youPayBody') }}</p>
   </section>
 </article>

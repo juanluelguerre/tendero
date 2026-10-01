@@ -2,26 +2,55 @@
   <ng-container *transloco="let t; prefix: 'agents'">
     <backoffice-worklist-pane [heading]="agent.displayName" (closed)="closed.emit()">
       <dl class="facts">
-        <div><dt>{{ t('column.agent') }}</dt><dd class="numeric">{{ agent.agentId }}</dd></div>
-        <div><dt>{{ t('column.operator') }}</dt><dd>{{ agent.operator }}</dd></div>
-        <div><dt>{{ t('column.trust') }}</dt><dd>{{ t('trust.' + agent.trust) }}</dd></div>
-        <div><dt>{{ t('column.registered') }}</dt><dd class="numeric">{{ when(agent.registeredAt) }}</dd></div>
+        <!-- The id its token carries, whole and on a row of its own: what an
+             operator is asked for and what the logs are searched by, so it is
+             copied, not typed. -->
+        <div class="col-span-full">
+          <dt>{{ t('column.agent') }}</dt>
+          <dd><lib-copy-text [value]="agent.agentId" [copyLabel]="t('copyId')" [copiedLabel]="t('copied')" /></dd>
+        </div>
+        <div>
+          <dt>{{ t('column.operator') }}</dt>
+          <dd>{{ agent.operator }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('column.trust') }}</dt>
+          <dd>{{ t('trust.' + agent.trust) }}</dd>
+        </div>
+        <div>
+          <dt>{{ t('column.registered') }}</dt>
+          <dd class="numeric">{{ agent.registeredAt | day: culture.active() }}</dd>
+        </div>
         <div>
           <dt>{{ t('column.status') }}</dt>
           <dd>
             <backoffice-agent-status [agent]="agent" />
             @if (agent.status === 'Suspended') {
-              <span class="muted agent__reason">{{ agent.suspensionReason }}</span>
+              <span class="muted block text-3xs">{{ agent.suspensionReason }}</span>
             }
           </dd>
         </div>
       </dl>
 
       @if (agent.status === 'Suspended') {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="store.busy() === agent.agentId" (click)="store.reinstate(agent, 'pane')">{{ t('reinstate') }}</button>
+        <button
+          type="button"
+          class="button button--quiet pane-primary"
+          [disabled]="store.busy() === agent.agentId"
+          (click)="store.reinstate(agent, 'pane')"
+        >
+          {{ t('reinstate') }}
+        </button>
       } @else {
-        <button type="button" class="button button--quiet pane-primary" [disabled]="store.busy() === agent.agentId" (click)="store.askToSuspend(agent, 'pane')">{{ t('suspend') }}</button>
-        <p class="muted hint">{{ t('suspendHint') }}</p>
+        <button
+          type="button"
+          class="button button--quiet pane-primary"
+          [disabled]="store.busy() === agent.agentId"
+          (click)="store.askToSuspend(agent, 'pane')"
+        >
+          {{ t('suspend') }}
+        </button>
+        <p class="muted">{{ t('suspendHint') }}</p>
       }
     </backoffice-worklist-pane>
   </ng-container>

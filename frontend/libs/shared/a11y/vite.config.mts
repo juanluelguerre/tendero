@@ -1,11 +1,11 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig(() => ({
-  root: __dirname,
+  root: import.meta.dirname,
   cacheDir: '../../../node_modules/.vite/libs/shared/a11y',
-  plugins: [nxViteTsPaths()],
+  // Vite 8 resolves the workspace's tsconfig paths itself.
+  resolve: { tsconfigPaths: true },
   test: {
     name: 'shared-a11y',
     watch: false,

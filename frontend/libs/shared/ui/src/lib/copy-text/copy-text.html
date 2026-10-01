@@ -1,14 +1,43 @@
-<span class="copy" [class.copy--block]="block()">
+<!-- A line by default; a command keeps its lines and scrolls sideways rather than
+     wrapping, with the button at its top. -->
+<span
+  class="box-border flex gap-2 rounded-md border border-hairline bg-surface pe-1"
+  [class.items-center]="!block()"
+  [class.min-h-tap]="!block()"
+  [class.py-1]="!block()"
+  [class.ps-3]="!block()"
+  [class.items-start]="block()"
+  [class.py-3]="block()"
+  [class.ps-4]="block()"
+>
   @if (block()) {
-    <pre class="copy__text numeric"><code>{{ value() }}</code></pre>
+    <pre
+      class="m-0 min-w-0 flex-1 overflow-x-auto numeric text-xs whitespace-pre select-all"
+    ><code>{{ value() }}</code></pre>
   } @else {
-    <code class="copy__text numeric">{{ value() }}</code>
+    <code class="m-0 min-w-0 flex-1 numeric text-xs wrap-anywhere select-all">{{ value() }}</code>
   }
-  <button type="button" class="copy__button" [attr.aria-label]="copyLabel()" [attr.title]="copyLabel()" (click)="copy()">
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a1 1 0 0 1 1-1h9" />
+  <!-- 32px, and 44 where a finger aims. -->
+  <button
+    type="button"
+    class="inline-grid size-control-sm flex-none place-items-center rounded-sm border-0 bg-transparent hover:bg-raised pointer-coarse:size-tap"
+    [attr.aria-label]="copyLabel()"
+    [attr.title]="copyLabel()"
+    (click)="copy()"
+  >
+    <svg
+      class="size-icon-md fill-none stroke-accent"
+      viewBox="0 0 24 24"
+      stroke-width="1.75"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M5 15V5a1 1 0 0 1 1-1h9" />
     </svg>
   </button>
-  <!-- Said once when it happens; empty otherwise. -->
-  <span class="copy__status" role="status">{{ copied() ? copiedLabel() : '' }}</span>
+  <!-- Said once when it happens; empty otherwise. Out of sight, not out of the accessibility tree. -->
+  <span class="sr-only" role="status">{{ copied() ? copiedLabel() : '' }}</span>
 </span>

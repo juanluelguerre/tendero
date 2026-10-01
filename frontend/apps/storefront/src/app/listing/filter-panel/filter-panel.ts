@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
+import { Component, computed, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import type { FacetKind, FacetOption, PriceBand, SearchFacet } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
+import { Icon } from '@tendero/shared-ui';
 import { TaxonomyStore } from '../../taxonomy/taxonomy.store';
 import { ShopLinks } from '../../shop-links';
 import { isChosen, parseAmount, toggleOption, withPrice, type ListingFilters } from '../listing-filters';
@@ -33,11 +34,10 @@ let panels = 0;
  */
 @Component({
   selector: 'storefront-filter-panel',
-  imports: [TranslocoDirective, RouterLink, NgTemplateOutlet],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, NgTemplateOutlet, Icon],
   templateUrl: './filter-panel.html',
   styleUrl: './filter-panel.css',
-  host: { '[class.in-sheet]': "mode() === 'sheet'" },
+  host: { class: 'block', '[class.in-sheet]': "mode() === 'sheet'" },
 })
 export class FilterPanel {
   readonly facets = input.required<readonly SearchFacet[]>();
@@ -110,7 +110,12 @@ export class FilterPanel {
       from: (min: string) => this.transloco.translate('listing.price.from', { price: min }),
       between: (min: string, max: string) => this.transloco.translate('listing.price.between', { min, max }),
     };
-    return priceLabel(band.from, band.to, (amount) => sayablePrice(amount, this.currency(), this.culture.active()), words);
+    return priceLabel(
+      band.from,
+      band.to,
+      (amount) => sayablePrice(amount, this.currency(), this.culture.active()),
+      words,
+    );
   }
 
   // ---------- Choosing ----------

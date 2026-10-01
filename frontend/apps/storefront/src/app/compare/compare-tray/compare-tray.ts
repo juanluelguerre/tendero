@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CompareStore } from '../compare.store';
 import { ShopLinks } from '../../shop-links';
+import { Icon } from '@tendero/shared-ui';
 
 /**
  * The products picked for comparison, at the foot of every page until they are
@@ -12,10 +13,12 @@ import { ShopLinks } from '../../shop-links';
  */
 @Component({
   selector: 'storefront-compare-tray',
-  imports: [TranslocoDirective, RouterLink],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, Icon],
   templateUrl: './compare-tray.html',
-  styleUrl: './compare-tray.css',
+  // The host is what sticks: a sticky element cannot leave its
+  // parent, and the component's own element is that parent — inline by default, so the
+  // tray stuck to nothing until the host became the sticky box.
+  host: { class: 'block sticky bottom-0 z-10' },
 })
 export class CompareTray {
   protected readonly compare = inject(CompareStore);

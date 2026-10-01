@@ -1,16 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, Injector, untracked, viewChild } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { Component, computed, effect, inject, Injector, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthStore } from '@tendero/shared-auth';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { StaffUsage } from '@tendero/shared-telemetry';
-import { ThemeStore } from '@tendero/shared-ui';
+import { CultureSwitch, Icon, ThemeStore } from '@tendero/shared-ui';
 import { filter } from 'rxjs';
 import { backofficeAccess } from '../access';
 import { BackofficeUsage } from '../usage';
 import { AccountMenu } from './account-menu/account-menu';
-import { Icon } from '../icon/icon';
 import { Nav } from './nav/nav';
 import { Palette } from './palette/palette';
 import { StaffNotice } from './staff-notice/staff-notice';
@@ -30,8 +30,19 @@ import { WaitingStore } from './waiting.store';
  */
 @Component({
   selector: 'backoffice-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon, UndoToast, Palette],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    TranslocoDirective,
+    StaffNotice,
+    Nav,
+    AccountMenu,
+    Icon,
+    CultureSwitch,
+    UndoToast,
+    Palette,
+    NgOptimizedImage,
+  ],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
   host: { '[class.with-rail]': 'canUseBackoffice()', '(document:keydown)': 'shortcut($event)' },
@@ -68,7 +79,10 @@ export class Shell {
 
     // R-0's measurement: every screen the shopkeeper opens, by its route (ADR 0041).
     this.router.events
-      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed())
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
       .subscribe((event) => {
         if (!this.canUseBackoffice()) return;
         this.usage.opened(event.urlAfterRedirects);
@@ -137,5 +151,8 @@ export class Shell {
 
 /** Whether a key press is somebody writing: then a / is a character, not a command. */
 function isTyping(target: EventTarget | null): boolean {
-  return target instanceof HTMLElement && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+  );
 }

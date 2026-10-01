@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, computed, inject, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import type { CultureView } from '../evaluation-view';
@@ -10,21 +11,29 @@ import type { CultureView } from '../evaluation-view';
  */
 @Component({
   selector: 'backoffice-culture-evaluation',
-  imports: [TranslocoDirective],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, NgTemplateOutlet],
   templateUrl: './culture-evaluation.html',
-  styleUrl: './culture-evaluation.css',
+  host: { class: 'block' },
 })
 export class CultureEvaluation {
   private readonly culture = inject(CultureStore);
 
   readonly view = input.required<CultureView>();
 
-  private readonly decimals = computed(() => new Intl.NumberFormat(this.culture.active(), { minimumFractionDigits: 3, maximumFractionDigits: 3 }));
-  private readonly signedDecimals = computed(
-    () => new Intl.NumberFormat(this.culture.active(), { minimumFractionDigits: 3, maximumFractionDigits: 3, signDisplay: 'exceptZero' }),
+  private readonly decimals = computed(
+    () => new Intl.NumberFormat(this.culture.active(), { minimumFractionDigits: 3, maximumFractionDigits: 3 }),
   );
-  private readonly wholeNumbers = computed(() => new Intl.NumberFormat(this.culture.active(), { maximumFractionDigits: 0 }));
+  private readonly signedDecimals = computed(
+    () =>
+      new Intl.NumberFormat(this.culture.active(), {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+        signDisplay: 'exceptZero',
+      }),
+  );
+  private readonly wholeNumbers = computed(
+    () => new Intl.NumberFormat(this.culture.active(), { maximumFractionDigits: 0 }),
+  );
 
   protected score(value: number | null): string {
     return value === null ? '—' : this.decimals().format(value);

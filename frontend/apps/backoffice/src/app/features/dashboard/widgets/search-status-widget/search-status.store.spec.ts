@@ -14,7 +14,14 @@ describe('the search status store', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), { provide: API_BASE_URL, useValue: 'http://api' }, DashboardSources, DashboardRefresh, SearchStatusStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        DashboardSources,
+        DashboardRefresh,
+        SearchStatusStore,
+      ],
     });
     http = TestBed.inject(HttpTestingController);
   });

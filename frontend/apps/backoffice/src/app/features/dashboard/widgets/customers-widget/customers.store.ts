@@ -18,8 +18,14 @@ export const CustomersStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      funnel: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.funnel(params.period, at) }),
-      _series: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.series(params.period, at) }),
+      funnel: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.funnel(params.period, at),
+      }),
+      _series: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.series(params.period, at),
+      }),
       _culture: inject(CultureStore),
       _words: translateObjectSignal('dashboard.customers'),
     };
@@ -33,8 +39,18 @@ export const CustomersStore = signalStore(
       return {
         categories: bucketLabels(series, store._culture.active()),
         series: [
-          { key: 'new', label: words['newCustomers'] ?? '', role: 'data', values: series.current.map((point) => point.newCustomers) },
-          { key: 'returning', label: words['returningCustomers'] ?? '', role: 'previous', values: series.current.map((point) => point.returningCustomers) },
+          {
+            key: 'new',
+            label: words['newCustomers'] ?? '',
+            role: 'data',
+            values: series.current.map((point) => point.newCustomers),
+          },
+          {
+            key: 'returning',
+            label: words['returningCustomers'] ?? '',
+            role: 'previous',
+            values: series.current.map((point) => point.returningCustomers),
+          },
         ],
       };
     }),

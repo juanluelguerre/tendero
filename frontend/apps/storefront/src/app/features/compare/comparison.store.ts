@@ -9,6 +9,7 @@ import { CompareStore, MAX_COMPARED } from '../../compare/compare.store';
 import { SpecsService } from '../../data-access/specs.service';
 import { statusOf } from '../../failure-status';
 import { ShopLinks } from '../../shop-links';
+import { extendResource } from '@ngrx/signals/resource';
 
 /** The codes a comparison URL carries, cleaned: trimmed, upper-cased, unique, at most four. */
 export function codesFrom(query: string | null): string[] {
@@ -20,10 +21,7 @@ export function codesFrom(query: string | null): string[] {
 }
 
 export type ComparisonState =
-  | { status: 'tooFew' }
-  | { status: 'loading' }
-  | { status: 'failed' }
-  | { status: 'done'; sheet: SpecSheet };
+  { status: 'tooFew' } | { status: 'loading' } | { status: 'failed' } | { status: 'done'; sheet: SpecSheet };
 
 /**
  * The comparison page's own state (P10-7; ADR 0047): the products the URL
@@ -36,19 +34,23 @@ export const ComparisonStore = signalStore(
     const route = inject(ActivatedRoute);
     const specs = inject(SpecsService);
     const culture = inject(CultureStore);
-    const codes = toSignal(route.queryParamMap.pipe(map((params) => codesFrom(params.get('codes')))), { initialValue: [] as string[] });
+    const codes = toSignal(route.queryParamMap.pipe(map((params) => codesFrom(params.get('codes')))), {
+      initialValue: [] as string[],
+    });
     return {
       _compare: inject(CompareStore),
       _router: inject(Router),
       _links: inject(ShopLinks),
       codes,
-      _sheet: rxResource({
-        params: () => {
-          const current = codes();
-          return current.length > 1 ? { codes: current, culture: culture.active() } : undefined;
-        },
-        stream: ({ params }) => specs.get(params.codes, params.culture),
-      }),
+      _sheet: extendResource(
+        rxResource({
+          params: () => {
+            const current = codes();
+            return current.length > 1 ? { codes: current, culture: culture.active() } : undefined;
+          },
+          stream: ({ params }) => specs.get(params.codes, params.culture),
+        }),
+      ),
     };
   }),
   withComputed(({ codes, _sheet }) => ({

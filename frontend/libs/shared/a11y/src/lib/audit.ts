@@ -37,10 +37,16 @@ function inBrowser(contrastSource: string): PageAudit {
     (el.getAttribute('aria-labelledby') ? 'labelledby' : '') ||
     // An image names the link it is in, whether an <img>, an <svg> or an element
     // that says it is one (`role="img"`, as the storefront's placeholder does).
-    [...el.querySelectorAll('img[alt], svg[aria-label], [role=img][aria-label]')].map((i) => i.getAttribute('alt') || i.getAttribute('aria-label')).join('').trim();
+    [...el.querySelectorAll('img[alt], svg[aria-label], [role=img][aria-label]')]
+      .map((i) => i.getAttribute('alt') || i.getAttribute('aria-label'))
+      .join('')
+      .trim();
   const describe = (el: Element): string => {
     const text = (el.textContent || '').trim().slice(0, 24);
-    const classes = typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
+    const classes =
+      typeof el.className === 'string' && el.className.trim()
+        ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.')
+        : '';
     return `${el.tagName.toLowerCase()}${classes}${text ? ` "${text}"` : ''}`;
   };
   const backgroundOf = (el: Element | null): string => {
@@ -94,7 +100,13 @@ function inBrowser(contrastSource: string): PageAudit {
     unnamedControls: controls.filter((el) => ['A', 'BUTTON'].includes(el.tagName) && !name(el)).map(describe),
     unlabelledFields: [...document.querySelectorAll('input:not([type=hidden]), select, textarea')]
       .filter(visible)
-      .filter((el) => !(el as HTMLInputElement).labels?.length && !el.getAttribute('aria-label') && !el.getAttribute('aria-labelledby') && !el.getAttribute('title'))
+      .filter(
+        (el) =>
+          !(el as HTMLInputElement).labels?.length &&
+          !el.getAttribute('aria-label') &&
+          !el.getAttribute('aria-labelledby') &&
+          !el.getAttribute('title'),
+      )
       .map(describe),
     smallTargets: [...new Set(smallTargets)],
     lowContrast: [...new Set(lowContrast)],

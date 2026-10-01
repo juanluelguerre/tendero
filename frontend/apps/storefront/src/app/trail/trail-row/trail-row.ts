@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { SearchHit } from '@tendero/shared-api';
 import { AuthStore } from '@tendero/shared-auth';
+import { Icon } from '@tendero/shared-ui';
 import { ProductRow, type ShelfItem } from '../../shelves/product-row/product-row';
 import { ShopLinks } from '../../shop-links';
 import { TrailStore } from '../trail.store';
@@ -18,10 +19,9 @@ import { TrailStore } from '../trail.store';
  */
 @Component({
   selector: 'storefront-trail-row',
-  imports: [TranslocoDirective, RouterLink, ProductRow],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, ProductRow, Icon],
   templateUrl: './trail-row.html',
-  styleUrl: './trail-row.css',
+  host: { class: 'block' },
 })
 export class TrailRow {
   /** The viewed products' cards, in the trail's order. */

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { BackofficeUsage } from '../../usage';
 import { landing, stepOf } from '../../worklist/list-keys';
 import { ClaimList } from './claim-list/claim-list';
@@ -19,10 +19,10 @@ import { ClaimsReviewStore } from './claims-review.store';
 @Component({
   selector: 'backoffice-claims-review-page',
   imports: [ClaimList, ClaimPane],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './claims-review-page.html',
-  styleUrl: './claims-review-page.css',
-  host: { '(document:keydown)': 'key($event)' },
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the pane have of their own is in their folders.
+  host: { class: 'block', '(document:keydown)': 'key($event)' },
   providers: [ClaimsReviewStore],
 })
 export class ClaimsReviewPage {
@@ -34,7 +34,11 @@ export class ClaimsReviewPage {
     const step = stepOf(event, !!document.querySelector('dialog[open]'));
     if (!step) return;
     const claims = this.store.claims();
-    const index = landing(claims.findIndex((claim) => claim.claimId === this.store.selectedId()), claims.length, step);
+    const index = landing(
+      claims.findIndex((claim) => claim.claimId === this.store.selectedId()),
+      claims.length,
+      step,
+    );
     if (index === null) return;
     event.preventDefault();
     this.usage.affordance('keys', step === 1 ? 'next' : 'previous');

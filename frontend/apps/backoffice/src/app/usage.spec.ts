@@ -41,7 +41,10 @@ describe('a screen opened', () => {
     usage.opened('/dashboard/sales');
 
     expect(telemetry.trackEvent.mock.calls.map(([, attributes]) => attributes.view)).toEqual([
-      'dashboard.sales', 'dashboard.operations', 'orders', 'dashboard.sales',
+      'dashboard.sales',
+      'dashboard.operations',
+      'orders',
+      'dashboard.sales',
     ]);
   });
 });

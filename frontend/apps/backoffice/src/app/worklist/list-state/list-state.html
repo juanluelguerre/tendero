@@ -1,0 +1,14 @@
+<p class="sr-only" role="status">{{ loading() ? loadingText() : '' }}</p>
+@if (loading()) {
+  <div class="skeleton-list" aria-hidden="true"></div>
+} @else if (failed()) {
+  <p class="failed" role="alert">{{ failedText() }}</p>
+} @else if (empty()) {
+  <div class="empty">
+    <p class="empty__text">{{ emptyText() }}</p>
+    <!-- Where to go instead, when the screen has somewhere: marked `empty-action`. -->
+    <ng-content select="[empty-action]" />
+  </div>
+} @else {
+  <ng-content />
+}

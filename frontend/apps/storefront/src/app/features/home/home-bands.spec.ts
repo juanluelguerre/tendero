@@ -1,10 +1,26 @@
 import type { CategoryView, OfferView, SearchHit } from '@tendero/shared-api';
 import { describe, expect, it } from 'vitest';
-import { departmentsOf, freeShippingOf, labelled, offerRulesOf, rankedIds, rankedItems, risingItems, suggestionItems } from './home-bands';
+import {
+  departmentsOf,
+  freeShippingOf,
+  labelled,
+  offerRulesOf,
+  rankedIds,
+  rankedItems,
+  risingItems,
+  suggestionItems,
+} from './home-bands';
 
 describe('what the home bands make of their answers', () => {
   it('keeps a ranking in its order, with its places, and skips a product no longer shown', () => {
-    const ranked = { days: 7, items: [{ rank: 2, productId: 'b' }, { rank: 1, productId: 'a' }, { rank: 3, productId: 'gone' }] };
+    const ranked = {
+      days: 7,
+      items: [
+        { rank: 2, productId: 'b' },
+        { rank: 1, productId: 'a' },
+        { rank: 3, productId: 'gone' },
+      ],
+    };
 
     expect(rankedIds(ranked)).toEqual(['a', 'b', 'gone']);
     expect(rankedItems(ranked, [hit('b'), hit('a')]).map((item) => [item.hit.productId, item.rank])).toEqual([
@@ -15,7 +31,13 @@ describe('what the home bands make of their answers', () => {
 
   it('says why a suggestion is there by the viewed product name, and never makes one up', () => {
     const items = suggestionItems(
-      { items: [{ product: hit('x'), becauseOf: 'a' }, { product: hit('y'), becauseOf: 'UNKNOWN' }], rankedBy: 'Rule' },
+      {
+        items: [
+          { product: hit('x'), becauseOf: 'a' },
+          { product: hit('y'), becauseOf: 'UNKNOWN' },
+        ],
+        rankedBy: 'Rule',
+      },
       [hit('a')],
       (name) => `Porque viste ${name}`,
     );
@@ -34,7 +56,11 @@ describe('what the home bands make of their answers', () => {
   });
 
   it('takes the free-shipping promise from the promotion own name, and the rest as small print', () => {
-    const offers = [offer('SHIP0', 'Envío gratis desde 50 €', 'free-shipping'), offer('A', '10% en ropa'), offer('B', '3x2 en camisetas')];
+    const offers = [
+      offer('SHIP0', 'Envío gratis desde 50 €', 'free-shipping'),
+      offer('A', '10% en ropa'),
+      offer('B', '3x2 en camisetas'),
+    ];
 
     expect(freeShippingOf(offers)).toBe('Envío gratis desde 50 €');
     expect(freeShippingOf([offer('A', '10% en ropa')])).toBeNull();

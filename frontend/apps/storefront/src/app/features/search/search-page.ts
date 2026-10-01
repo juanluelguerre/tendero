@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -9,6 +9,8 @@ import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
 import { HomeSections } from '../home/home-sections';
 import { SearchStore } from './search.store';
+import { Notice } from '@tendero/shared-ui';
+import { PageState } from '../../page-state/page-state';
 
 /**
  * The storefront's home is the search: the first thing a shopkeeper does is
@@ -20,13 +22,11 @@ import { SearchStore } from './search.store';
  */
 @Component({
   selector: 'storefront-search-page',
-  imports: [TranslocoDirective, RouterLink, HomeSections, Listing],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, HomeSections, Listing, Notice, PageState],
   // Its own listing — the filters in the URL, the request, the phone's batch —
   // and its own words, which tell the listing what to list.
   providers: [ListingStore, SearchStore],
   templateUrl: './search-page.html',
-  styleUrl: './search-page.css',
 })
 export class SearchPage {
   protected readonly store = inject(SearchStore);

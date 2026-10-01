@@ -1,3 +1,5 @@
+import { shortId } from './short-id';
+
 /**
  * An order as a person reads and types it: the last eight characters of its id.
  *
@@ -8,5 +10,5 @@
  * finds it.
  */
 export function orderReference(id: string): string {
-  return id.replace(/-/g, '').slice(-8);
+  return shortId(id);
 }

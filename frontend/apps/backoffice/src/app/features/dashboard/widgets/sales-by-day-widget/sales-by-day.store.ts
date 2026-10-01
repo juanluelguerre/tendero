@@ -17,7 +17,10 @@ export const SalesByDayStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      series: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.series(params.period, at) }),
+      series: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.series(params.period, at),
+      }),
       _culture: inject(CultureStore),
       /** A signal of the words, so the legend follows a change of language rather than keeping the first. */
       _words: translateObjectSignal('dashboard.salesByDay'),

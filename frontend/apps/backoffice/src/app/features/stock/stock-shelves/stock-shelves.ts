@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Pager } from '../../../worklist/pager/pager';
-import { PageSize, shelfOf, StockStore } from '../stock.store';
+import { shelfOf, StockStore } from '../stock.store';
 
 /**
  * The shelves: each SKU in each warehouse, what it holds, what is spoken for and
@@ -11,12 +11,11 @@ import { PageSize, shelfOf, StockStore } from '../stock.store';
 @Component({
   selector: 'backoffice-stock-shelves',
   imports: [TranslocoDirective, Pager],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './stock-shelves.html',
-  styleUrl: './stock-shelves.css',
+  host: { class: 'block min-w-0' },
 })
 export class StockShelves {
   protected readonly store = inject(StockStore);
-  protected readonly pageSize = PageSize;
+  protected readonly pageSize = this.store.pageSize;
   protected readonly shelfOf = shelfOf;
 }

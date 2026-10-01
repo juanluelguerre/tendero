@@ -34,7 +34,15 @@ const saved = (code: string) =>
 describe('the campaign editor store', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([]), provideTenderoI18n(), { provide: API_BASE_URL, useValue: 'http://api' }, CampaignsStore, CampaignEditorStore],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTenderoI18n(),
+        { provide: API_BASE_URL, useValue: 'http://api' },
+        CampaignsStore,
+        CampaignEditorStore,
+      ],
     });
   });
 

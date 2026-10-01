@@ -5,20 +5,29 @@
   <p class="page-hint">{{ t('returns.hint') }}</p>
 
   <div class="worklist-tools">
-    <backoffice-filter-chips [options]="store.filters()" [selected]="store.statusKey()" [label]="t('returns.filterLabel')" (chosen)="store.filterBy($event)" />
+    <backoffice-filter-chips
+      [options]="store.filters()"
+      [selected]="store.statusKey()"
+      [label]="t('returns.filterLabel')"
+      (chosen)="store.filterBy($event)"
+    />
   </div>
 
-  @if (store.loading()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-  <p class="sr-only" role="status" aria-live="polite">{{ t('returns.loading') }}</p>
-  } @else if (store.failed()) {
-    <p class="failed" role="alert">{{ t('returns.failed') }}</p>
-  } @else if (store.shown().length === 0) {
-    <div class="empty"><p class="empty__text">{{ store.requests().length === 0 ? t('returns.empty') : t('returns.none') }}</p></div>
-  } @else {
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.shown().length === 0"
+    [loadingText]="t('returns.loading')"
+    [failedText]="t('returns.failed')"
+    [emptyText]="store.requests().length === 0 ? t('returns.empty') : t('returns.none')"
+  >
     <div class="table-wrap wide-only">
       <table class="table">
-        <caption class="sr-only">{{ t('returns.title') }}</caption>
+        <caption class="sr-only">
+          {{
+            t('returns.title')
+          }}
+        </caption>
         <thead>
           <tr>
             <th scope="col">{{ t('returns.column.return') }}</th>
@@ -26,12 +35,18 @@
             <th scope="col">{{ t('returns.column.what') }}</th>
             <th scope="col">{{ t('returns.column.status') }}</th>
             <th scope="col" class="numeric">{{ t('returns.column.refund') }}</th>
-            <th scope="col"><span class="sr-only">{{ t('returns.column.action') }}</span></th>
+            <th scope="col">
+              <span class="sr-only">{{ t('returns.column.action') }}</span>
+            </th>
           </tr>
         </thead>
         <tbody>
           @for (request of store.shown(); track request.returnId) {
-            <tr class="row" [class.row--selected]="request.returnId === store.selectedId()" (click)="store.open(request)">
+            <tr
+              class="row"
+              [class.row--selected]="request.returnId === store.selectedId()"
+              (click)="store.open(request)"
+            >
               <!-- Which return of the order, not the first segment of its GUID:
                    two returns opened in the same second read the same there. -->
               <td>
@@ -49,8 +64,10 @@
               <td class="numeric" [title]="request.orderId">{{ shortId(request.orderId) }}</td>
               <td><ng-container *ngTemplateOutlet="whatOf; context: { $implicit: request }" /></td>
               <td><backoffice-return-status-label [request]="request" /></td>
-              <td class="numeric refund">{{ request.refundAmount ? money(request.refundAmount) : '—' }}</td>
-              <td class="actions">
+              <td class="numeric font-semibold">
+                {{ request.refundAmount ? (request.refundAmount | price: 'EUR' : culture.active()) : '—' }}
+              </td>
+              <td class="text-end whitespace-nowrap">
                 @if (nextDecision(request); as decision) {
                   <button
                     class="button button--small button--quiet"
@@ -64,8 +81,11 @@
               </td>
             </tr>
             @if (store.refusal()[request.returnId] !== undefined) {
-              <tr class="refusal">
-                <td colspan="6" role="alert">{{ store.refusal()[request.returnId] || t('returns.refused') }}</td>
+              <!-- The server's own sentence, under the row it belongs to. -->
+              <tr>
+                <td class="py-2 text-xs text-danger" colspan="6" role="alert">
+                  {{ store.refusal()[request.returnId] || t('returns.refused') }}
+                </td>
               </tr>
             }
           }
@@ -76,35 +96,53 @@
     <ul class="worklist-cards narrow-only" role="list">
       @for (request of store.shown(); track request.returnId) {
         <li class="worklist-card" [class.worklist-card--selected]="request.returnId === store.selectedId()">
-          <button type="button" class="worklist-card__open" [attr.aria-label]="t('returns.openReturn', { number: request.number })" (click)="store.open(request)">
+          <button
+            type="button"
+            class="worklist-card__open"
+            [attr.aria-label]="t('returns.openReturn', { number: request.number })"
+            (click)="store.open(request)"
+          >
             <span class="worklist-card__line">
-              <span class="numeric strong">#{{ request.number }}</span>
+              <span class="numeric font-semibold">#{{ request.number }}</span>
               <backoffice-return-status-label [request]="request" />
-              <span class="numeric worklist-card__end">{{ request.refundAmount ? money(request.refundAmount) : '' }}</span>
+              <span class="worklist-card__end numeric">{{
+                request.refundAmount ? (request.refundAmount | price: 'EUR' : culture.active()) : ''
+              }}</span>
             </span>
             <ng-container *ngTemplateOutlet="whatOf; context: { $implicit: request }" />
           </button>
           @if (nextDecision(request); as decision) {
-            <button class="button button--quiet worklist-card__action" type="button" [disabled]="store.busy() === request.returnId" (click)="store.decide(request, decision, 'row')">
+            <button
+              class="button button--quiet worklist-card__action"
+              type="button"
+              [disabled]="store.busy() === request.returnId"
+              (click)="store.decide(request, decision, 'row')"
+            >
               {{ store.busy() === request.returnId ? t('returns.deciding') : t('returns.decide.' + decision) }}
             </button>
           }
           @if (store.refusal()[request.returnId] !== undefined) {
-            <p class="worklist-card__refusal" role="alert">{{ store.refusal()[request.returnId] || t('returns.refused') }}</p>
+            <p class="col-span-full text-xs text-danger" role="alert">
+              {{ store.refusal()[request.returnId] || t('returns.refused') }}
+            </p>
           }
         </li>
       }
     </ul>
-  }
+  </backoffice-list-state>
 
-<ng-template #whatOf let-request>
-  <ul class="what">
-    @for (line of request.lines; track line.sku) {
-      <li class="what__line">
-        <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
-        <span class="reason" [class.reason--damaged]="line.reason === 'Damaged'">{{ t('returns.reason.' + line.reason) }}</span>
-      </li>
-    }
-  </ul>
-</ng-template>
+  <ng-template #whatOf let-request>
+    <ul class="grid gap-hair">
+      @for (line of request.lines; track line.sku) {
+        <li class="flex items-baseline gap-2 text-3xs">
+          <span class="numeric">{{ line.sku }} ×{{ line.quantity }}</span>
+          <!-- The one reason that changes what happens: damaged goods do not go
+             back on sale, so the row that will not restock is the row to notice. -->
+          <span [class.text-muted]="line.reason !== 'Damaged'" [class.text-danger]="line.reason === 'Damaged'">{{
+            t('returns.reason.' + line.reason)
+          }}</span>
+        </li>
+      }
+    </ul>
+  </ng-template>
 </ng-container>

@@ -1,5 +1,0 @@
-/* What the agents list has of its own; the table, cards and tags are shared (styles.css). */
-.agent__name { display: block; font-weight: 500; }
-.agent__id { font-size: var(--text-3xs); }
-
-.field--inline { inline-size: auto; min-inline-size: 8rem; }

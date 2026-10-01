@@ -68,7 +68,10 @@ test.describe('the storefront', () => {
 
     // The language lives in the account menu, with the theme, since the author
     // asked for the backoffice's arrangement (2026-09-28). A guest is told so.
-    await page.getByRole('banner').getByRole('button', { name: /tu cuenta y tus preferencias \(invitado\)/i }).click();
+    await page
+      .getByRole('banner')
+      .getByRole('button', { name: /tu cuenta y tus preferencias \(invitado\)/i })
+      .click();
     await expect(page.locator('#account-menu')).toContainText('Invitado');
     await page.locator('#account-menu').getByRole('button', { name: 'en', exact: true }).click();
 
@@ -145,16 +148,10 @@ test.describe('the storefront', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(product.name);
 
     const options = page.locator('.option');
-    test.skip(
-      (await options.count()) === 0,
-      'The first product in the catalogue has no variant axes declared.',
-    );
+    test.skip((await options.count()) === 0, 'The first product in the catalogue has no variant axes declared.');
 
     const disabled = page.locator('.option:disabled');
-    test.skip(
-      (await disabled.count()) === 0,
-      'No product in the seeded catalogue has a hole in its variant matrix.',
-    );
+    test.skip((await disabled.count()) === 0, 'No product in the seeded catalogue has a hole in its variant matrix.');
 
     // Still rendered, and still readable. An option that disappears makes the
     // picker jump and makes the shopper think the shop lost something.
@@ -177,9 +174,7 @@ test.describe('the storefront', () => {
     await expect(alternates).toHaveCount(3); // es, en, x-default
 
     for (const culture of ['es', 'en', 'x-default']) {
-      await expect(
-        page.locator(`link[rel="alternate"][hreflang="${culture}"]`),
-      ).toHaveCount(1);
+      await expect(page.locator(`link[rel="alternate"][hreflang="${culture}"]`)).toHaveCount(1);
     }
   });
 

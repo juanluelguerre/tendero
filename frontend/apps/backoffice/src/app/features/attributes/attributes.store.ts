@@ -3,6 +3,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { signalStore, withComputed, withProps } from '@ngrx/signals';
 import { CatalogService } from '../../data-access/catalog.service';
 import { readStatus } from '../../read-status';
+import { extendResource } from '@ngrx/signals/resource';
 
 /**
  * The attribute definitions' state (ADR 0047): the list, read once, and how
@@ -11,7 +12,7 @@ import { readStatus } from '../../read-status';
 export const AttributesStore = signalStore(
   withProps(() => {
     const catalog = inject(CatalogService);
-    const definitions = rxResource({ stream: () => catalog.attributeDefinitions() });
+    const definitions = extendResource(rxResource({ stream: () => catalog.attributeDefinitions() }));
     return { _definitions: definitions, ...readStatus(definitions) };
   }),
   withComputed((store) => {

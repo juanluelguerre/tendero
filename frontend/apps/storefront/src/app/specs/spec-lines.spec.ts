@@ -13,7 +13,12 @@ const sheet: SpecSheet = {
       label: 'Material',
       cells: [
         {
-          source: 'description', kind: 'Option', value: 'aluminio', number: null, unit: null, flag: null,
+          source: 'description',
+          kind: 'Option',
+          value: 'aluminio',
+          number: null,
+          unit: null,
+          flag: null,
           evidence: { support: 0.93, quotes: [{ culture: 'es', text: 'de aluminio' }] },
         },
       ],

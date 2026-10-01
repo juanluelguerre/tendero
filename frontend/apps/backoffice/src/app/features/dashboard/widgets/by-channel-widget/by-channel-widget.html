@@ -1,30 +1,33 @@
-<article class="widget panel" *transloco="let t; prefix: 'dashboard.byChannel'">
-  <header class="widget__head">
-    <h2 class="widget__title">{{ t('title') }}</h2>
-  </header>
-
-  @if (store.mix.isLoading() && !store.mix.hasValue()) {
-    <p class="muted widget__state" role="status">{{ t('loading') }}</p>
-  } @else if (store.mix.error()) {
-    <p class="failed widget__state" role="alert">{{ t('failed') }}</p>
-  } @else if (store.mix.value()) {
-    @if (store.chart(); as data) {
-      <p class="only-s share-figure"><span class="numeric share-figure__value">{{ share(store.agentShare()) }}</span> {{ t('byAgents') }}</p>
-      <div class="at-m">
-        <backoffice-bar-chart [data]="data" layout="share" [format]="count" [caption]="t('title')" />
-      </div>
-      <!-- MCP and UCP are both agents, so both clay: told apart in words, not in a third colour. -->
-      <p class="muted widget__note">{{ t('agentsBy', { mcp: store.agentsBy().mcp, ucp: store.agentsBy().ucp }) }}</p>
-      <p class="muted widget__note">{{ t('revenueShare', { share: share(store.revenueShare()) }) }}</p>
-    } @else {
-      <!-- The size contract holds when empty too: the S figure's place says so, as the M chart's does. -->
-      <!-- Orders before channels are sales: then nothing sold through a channel the shop recorded. -->
-      @let nothing = store.unrecorded() > 0 ? t('nothingRecorded') : t('nothingSold');
-      <p class="muted widget__state only-s">{{ nothing }}</p>
-      <p class="muted widget__state at-m">{{ nothing }}</p>
+<backoffice-widget-frame
+  *transloco="let t; prefix: 'dashboard.byChannel'"
+  [heading]="t('title')"
+  [resource]="store.mix"
+  [loadingText]="t('loading')"
+  [failedText]="t('failed')"
+>
+  <ng-template>
+    @if (store.mix.value()) {
+      @if (store.chart(); as data) {
+        <p class="only-s text-muted">
+          <span class="numeric text-xl font-semibold text-body">{{ share(store.agentShare()) }}</span>
+          {{ t('byAgents') }}
+        </p>
+        <div class="at-m">
+          <backoffice-bar-chart [data]="data" layout="share" [format]="count" [caption]="t('title')" />
+        </div>
+        <!-- MCP and UCP are both agents, so both clay: told apart in words, not in a third colour. -->
+        <p class="muted text-3xs">{{ t('agentsBy', { mcp: store.agentsBy().mcp, ucp: store.agentsBy().ucp }) }}</p>
+        <p class="muted text-3xs">{{ t('revenueShare', { share: share(store.revenueShare()) }) }}</p>
+      } @else {
+        <!-- The size contract holds when empty too: the S figure's place says so, as the M chart's does. -->
+        <!-- Orders before channels are sales: then nothing sold through a channel the shop recorded. -->
+        @let nothing = store.unrecorded() > 0 ? t('nothingRecorded') : t('nothingSold');
+        <p class="muted only-s">{{ nothing }}</p>
+        <p class="muted at-m">{{ nothing }}</p>
+      }
+      @if (store.unrecorded() > 0) {
+        <p class="muted text-3xs">{{ t('unrecorded', { count: store.unrecorded() }) }}</p>
+      }
     }
-    @if (store.unrecorded() > 0) {
-      <p class="muted widget__note">{{ t('unrecorded', { count: store.unrecorded() }) }}</p>
-    }
-  }
-</article>
+  </ng-template>
+</backoffice-widget-frame>

@@ -1,0 +1,10 @@
+/* In `components`, so a size or a colour the caller puts on <lib-icon> as a
+   utility wins over this default, as it would over any primitive (ADR 0049). */
+@layer components {
+  :host {
+    display: inline-flex;
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}

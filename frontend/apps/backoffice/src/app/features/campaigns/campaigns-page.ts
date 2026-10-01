@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
 import { WorklistPane } from '../../worklist/worklist-pane/worklist-pane';
@@ -21,9 +21,10 @@ import { CampaignsStore } from './campaigns.store';
   selector: 'backoffice-campaigns-page',
   imports: [TranslocoDirective, WorklistPane, CampaignList, CampaignEditor],
   providers: [CampaignsStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaigns-page.html',
-  styleUrl: './campaigns-page.css',
+  // The page is a frame: the list-and-pane layout is shared by every worklist
+  // (styles.css), and what the list and the editor have of their own is in their folders.
+  host: { class: 'block' },
 })
 export class CampaignsPage {
   protected readonly store = inject(CampaignsStore);

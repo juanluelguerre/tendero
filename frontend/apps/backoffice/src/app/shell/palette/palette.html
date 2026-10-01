@@ -1,27 +1,39 @@
-<dialog class="palette" #dialog [attr.aria-label]="t('palette.title')" (close)="store.closed()" *transloco="let t">
-  <div class="palette__input">
-    <span class="palette__icon" aria-hidden="true">⌕</span>
+<!-- It floats, so it is allowed a shadow; the page behind is dimmed with the
+     darkest ink the tokens have. The platform centres a modal dialog with
+     margin: auto, and the base reset takes it away, so it is given back. -->
+<dialog
+  class="mx-auto mt-dialog-offset mb-auto max-h-dialog w-[min(40rem,calc(100vw-2*var(--spacing-4)))] flex-col overflow-hidden rounded-lg border border-hairline-strong bg-surface p-0 text-body shadow-pop backdrop:bg-ink-900/60 open:flex"
+  #dialog
+  [attr.aria-label]="t('palette.title')"
+  (close)="store.closed()"
+  *transloco="let t"
+>
+  <div class="flex items-center gap-3 border-b border-hairline px-4 py-3">
+    <span class="text-lg text-muted" aria-hidden="true">⌕</span>
     <input
       #input
+      class="min-h-control flex-1 bg-transparent text-md text-body focus:outline-none"
       type="text"
       role="combobox"
       aria-autocomplete="list"
       aria-controls="palette-options"
       [attr.aria-expanded]="store.options().length > 0"
-      [attr.aria-activedescendant]="store.options()[store.active()] ? 'palette-' + store.options()[store.active()].id : null"
+      [attr.aria-activedescendant]="
+        store.options()[store.active()] ? 'palette-' + store.options()[store.active()].id : null
+      "
       [attr.aria-label]="t('palette.title')"
       [placeholder]="t('palette.placeholder')"
       [value]="store.query()"
       (input)="store.typed($any($event.target).value)"
       (keydown)="key($event)"
     />
-    <kbd class="palette__esc">Esc</kbd>
+    <kbd class="rounded-sm border border-hairline px-2 py-px font-mono text-3xs text-muted">Esc</kbd>
   </div>
 
-  <ul class="palette__options" id="palette-options" role="listbox" [attr.aria-label]="t('palette.results')">
+  <ul class="flex-1 overflow-y-auto p-2" id="palette-options" role="listbox" [attr.aria-label]="t('palette.results')">
     @for (option of store.options(); track option.id; let index = $index) {
       <li
-        class="option"
+        class="grid min-h-tap cursor-pointer grid-cols-[6rem_minmax(0,auto)_minmax(0,1fr)] items-baseline gap-3 rounded-md px-3 py-2 aria-selected:bg-accent-tint max-sm:grid-cols-[minmax(0,1fr)] max-sm:gap-hair"
         role="option"
         [id]="'palette-' + option.id"
         [attr.aria-selected]="index === store.active()"
@@ -30,17 +42,19 @@
         (keydown.enter)="go(option)"
         (mousemove)="store.activate(index)"
       >
-        <span class="option__kind">{{ t('palette.kind.' + option.kind) }}</span>
-        <span class="option__label">{{ option.label }}</span>
-        <span class="option__detail">{{ option.detail }}</span>
+        <span class="text-3xs font-semibold tracking-wide text-muted uppercase">{{
+          t('palette.kind.' + option.kind)
+        }}</span>
+        <span class="truncate font-semibold">{{ option.label }}</span>
+        <span class="truncate text-xs text-muted">{{ option.detail }}</span>
       </li>
     }
   </ul>
   @if (store.options().length === 0) {
-    <p class="palette__none" role="status">{{ store.loading() ? t('palette.searching') : t('palette.none') }}</p>
+    <p class="p-4 text-muted" role="status">{{ store.loading() ? t('palette.searching') : t('palette.none') }}</p>
   }
 
-  <p class="palette__keys">
+  <p class="flex flex-wrap gap-4 border-t border-hairline bg-raised px-4 py-2 text-3xs text-muted">
     <span>{{ t('palette.keys.move') }}</span>
     <span>{{ t('palette.keys.go') }}</span>
     <span>{{ t('palette.keys.close') }}</span>

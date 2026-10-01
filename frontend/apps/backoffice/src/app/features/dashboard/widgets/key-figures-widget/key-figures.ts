@@ -1,7 +1,8 @@
 import type { CheckoutFunnel, OperationsSummary, SalesSeries, SalesSummary } from '@tendero/shared-api';
 import { type Change, changeOf } from '../figures';
 
-export type KeyFigureKey = 'revenue' | 'orders' | 'units' | 'averageOrder' | 'unitsPerOrder' | 'conversion' | 'returnRate';
+export type KeyFigureKey =
+  'revenue' | 'orders' | 'units' | 'averageOrder' | 'unitsPerOrder' | 'conversion' | 'returnRate';
 
 export interface KeyFigure {
   readonly key: KeyFigureKey;
@@ -40,9 +41,24 @@ export function keyFigures(sources: KeyFigureSources, say: KeyFigureFormats): Ke
   if (sales) {
     const { current, previous } = sales;
     figures.push(
-      { key: 'revenue', value: say.money(current.revenue), change: changeOf(current.revenue, previous.revenue), trend: trend((point) => point.revenue) },
-      { key: 'orders', value: String(current.orders), change: changeOf(current.orders, previous.orders), trend: trend((point) => point.orders) },
-      { key: 'units', value: String(current.units), change: changeOf(current.units, previous.units), trend: trend((point) => point.units) },
+      {
+        key: 'revenue',
+        value: say.money(current.revenue),
+        change: changeOf(current.revenue, previous.revenue),
+        trend: trend((point) => point.revenue),
+      },
+      {
+        key: 'orders',
+        value: String(current.orders),
+        change: changeOf(current.orders, previous.orders),
+        trend: trend((point) => point.orders),
+      },
+      {
+        key: 'units',
+        value: String(current.units),
+        change: changeOf(current.units, previous.units),
+        trend: trend((point) => point.units),
+      },
       {
         key: 'averageOrder',
         value: say.money(current.averageOrderValue),
@@ -61,6 +77,7 @@ export function keyFigures(sources: KeyFigureSources, say: KeyFigureFormats): Ke
 
   // No previous period and no series for these two yet (Plan 3, D-7): said bare, never with an invented change.
   if (funnel) figures.push({ key: 'conversion', value: say.share(funnel.conversion), change: null, trend: null });
-  if (operations) figures.push({ key: 'returnRate', value: say.share(operations.returnRate), change: null, trend: null });
+  if (operations)
+    figures.push({ key: 'returnRate', value: say.share(operations.returnRate), change: null, trend: null });
   return figures;
 }

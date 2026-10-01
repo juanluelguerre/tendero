@@ -57,6 +57,8 @@ test.describe('a return', () => {
     await page.locator('.returnable__detail select').first().selectOption('WrongSize');
     await page.getByRole('button', { name: 'Request the return' }).click();
 
-    await expect(page.getByRole('status').filter({ hasText: 'Return opened. This page shows where it is.' })).toBeVisible();
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Return opened. This page shows where it is.' }),
+    ).toBeVisible();
   });
 });

@@ -14,7 +14,10 @@ export const SellThroughStore = signalStore(
   withProps((store) => {
     const sources = inject(DashboardSources);
     return {
-      stock: refreshedResource({ params: store.periodParams, stream: (params, at) => sources.stockHealth(params.period, at) }),
+      stock: refreshedResource({
+        params: store.periodParams,
+        stream: (params, at) => sources.stockHealth(params.period, at),
+      }),
     };
   }),
   withComputed((store) => ({

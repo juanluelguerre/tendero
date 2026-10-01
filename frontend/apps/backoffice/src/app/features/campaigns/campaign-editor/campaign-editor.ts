@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, viewChild } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { Component, computed, inject, input, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { ManagedCampaignView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -27,10 +28,9 @@ let editors = 0;
  */
 @Component({
   selector: 'backoffice-campaign-editor',
-  imports: [TranslocoDirective, ConfirmDialog],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, ConfirmDialog, NgOptimizedImage],
   templateUrl: './campaign-editor.html',
-  styleUrl: './campaign-editor.css',
+  host: { class: 'block' },
   providers: [CampaignEditorStore],
 })
 export class CampaignEditor {

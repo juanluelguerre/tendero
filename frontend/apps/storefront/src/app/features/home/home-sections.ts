@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CampaignCard } from '../../campaigns/campaign-card/campaign-card';
@@ -38,11 +39,20 @@ import { HomeStore } from './home.store';
  */
 @Component({
   selector: 'storefront-home-sections',
-  imports: [TranslocoDirective, RouterLink, CampaignCard, TrailRow, AgentCard, ProductRow, PromiseStrip, HomeModule],
+  imports: [
+    TranslocoDirective,
+    RouterLink,
+    CampaignCard,
+    TrailRow,
+    AgentCard,
+    ProductRow,
+    PromiseStrip,
+    HomeModule,
+    NgOptimizedImage,
+  ],
   providers: [HomeStore],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-sections.html',
-  styleUrl: './home-sections.css',
+  host: { class: 'block' },
 })
 export class HomeSections {
   protected readonly store = inject(HomeStore);

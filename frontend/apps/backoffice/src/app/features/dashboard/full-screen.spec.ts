@@ -4,7 +4,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { FullScreen } from './full-screen';
 
 describe('full screen', () => {
-  afterEach(() => Object.defineProperty(TestBed.inject(DOCUMENT), 'fullscreenElement', { configurable: true, value: null }));
+  afterEach(() =>
+    Object.defineProperty(TestBed.inject(DOCUMENT), 'fullscreenElement', { configurable: true, value: null }),
+  );
 
   /** Review focus 3: Esc is the browser's, not ours — the state follows its event, whoever left. */
   it('follows the browser in and out, Esc included', () => {

@@ -1,16 +1,35 @@
-<dialog class="confirm" #dialog [attr.aria-labelledby]="headingId">
+<!-- It floats, so it is allowed a shadow; the page behind is dimmed with the
+     darkest ink the tokens have, never a new colour. The platform centres a
+     modal dialog with margin: auto, and the reset takes every margin away, so
+     `m-auto` gives it back. -->
+<dialog
+  class="m-auto w-[min(28rem,calc(100vw-2*var(--spacing-4)))] rounded-lg border border-hairline-strong bg-surface p-5 text-body shadow-pop backdrop:bg-[color-mix(in_srgb,var(--color-ink-900)_60%,transparent)]"
+  #dialog
+  [attr.aria-labelledby]="headingId"
+>
   <form method="dialog" (submit)="$event.preventDefault(); confirm()">
-    <h2 class="confirm__heading" [id]="headingId">{{ heading() }}</h2>
+    <h2 class="mb-3 text-lg" [id]="headingId">{{ heading() }}</h2>
     <p>{{ body() }}</p>
     @if (reasonLabel(); as label) {
-      <label class="confirm__reason">
+      <label class="my-4 grid gap-1 text-xs text-muted">
         <span>{{ label }}</span>
-        <textarea rows="2" [required]="reasonRequired()" [value]="reason()" (input)="reason.set($any($event.target).value)"></textarea>
+        <textarea
+          class="rounded-md border border-hairline-strong bg-raised p-2 text-body"
+          rows="2"
+          [required]="reasonRequired()"
+          [value]="reason()"
+          (input)="reason.set($any($event.target).value)"
+        ></textarea>
       </label>
     }
-    <div class="confirm__actions">
+    <div class="mt-4 flex flex-wrap justify-end gap-2">
       <button type="button" class="button button--quiet" (click)="keep()">{{ keepLabel() }}</button>
-      <button type="submit" class="button" [class.button--danger]="tone() === 'danger'" [disabled]="blocked()">
+      <button
+        type="submit"
+        class="button data-[tone=danger]:bg-danger data-[tone=danger]:enabled:hover:bg-danger data-[tone=danger]:enabled:hover:brightness-110"
+        [attr.data-tone]="tone()"
+        [disabled]="blocked()"
+      >
         {{ confirmLabel() }}
       </button>
     </div>

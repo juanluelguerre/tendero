@@ -1,53 +1,17 @@
-/* Only what this page adds; the header, tables, tags and empty state are
-   primitives in styles.css. */
-
-/* The running bar is the review queue's import bar: the awning stripe sliding
-   its own gradient, because the endpoint reports nothing until it finishes.
-   Two copies, not three, so it stays here (styles.css says why three). */
-.running {
-  margin-block: var(--space-4) var(--space-5);
-  max-width: 32rem;
-}
-
+/* Styled with utilities in the template (ADR 0049). What stays is the running
+   bar's slide — the catalogue's import bar, the awning stripe sliding its own
+   gradient — because a keyframe says it and a utility does not. Two copies, not
+   three, so it stays here (styles.css says why three). */
 .running__bar {
   background-size: 28px 100%;
   animation: awning-slide 900ms linear infinite;
 }
 
-.running__label {
-  margin-block-start: var(--space-2);
-  font-size: var(--text-xs);
-}
-
 @keyframes awning-slide {
-  from { background-position: 0 0; }
-  to   { background-position: 28px 0; }
-}
-
-.took {
-  margin-block-end: var(--space-4);
-  font-size: var(--text-xs);
-}
-
-.notice {
-  max-width: 76ch;
-  margin-block-end: var(--space-4);
-  padding: var(--space-3);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.notice--warn {
-  border-color: var(--warning);
-  color: var(--text);
-}
-
-.reason {
-  display: block;
-  margin-block-start: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-3xs);
-  color: var(--text-muted);
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 28px 0;
+  }
 }

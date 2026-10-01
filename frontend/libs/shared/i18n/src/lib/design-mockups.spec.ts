@@ -22,7 +22,7 @@ import { describe, expect, it } from 'vitest';
  * **A new colour is allowed; a new colour smuggled in is not.** A mockup is
  * where the design system gets improved, which already happened once: the blind
  * design pass of 2026-09-18 found that `[data-theme='dark']` redefines
- * `--positive` and neither `--danger` nor `--warning`, and refused to invent a
+ * `--color-positive` and neither `--color-danger` nor `--color-warning`, and refused to invent a
  * hex rather than break the rule. That is the flow this test protects —
  * `.pen` proposes, a person approves, `tokens.css` changes — which is invariant
  * 12 applied to design instead of to the catalogue. A value that is not in
@@ -30,7 +30,7 @@ import { describe, expect, it } from 'vitest';
  * with a reason, exactly as a `ProductClaim` carries its provenance.
  */
 describe('the mockups', () => {
-  const TOKENS = 'design/tokens.css';
+  const TOKENS = 'design/theme.css';
   /**
    * Both halves of the ladder's second rung. `design/mockups/` is what has been
    * published; `design/unpublished/mockups/` is what waits for the article that
@@ -59,9 +59,7 @@ describe('the mockups', () => {
   })();
 
   const palette = new Set(
-    [...(readFileSync(join(repository, TOKENS), 'utf8').match(HEX) ?? [])].map((hex) =>
-      hex.toLowerCase(),
-    ),
+    [...(readFileSync(join(repository, TOKENS), 'utf8').match(HEX) ?? [])].map((hex) => hex.toLowerCase()),
   );
 
   /** Values a person has looked at and allowed, each with the reason it exists. */
@@ -84,11 +82,7 @@ describe('the mockups', () => {
         ? readdirSync(directory).flatMap((entry) => {
             const path = join(directory, entry);
 
-            return statSync(path).isDirectory()
-              ? walk(path)
-              : path.endsWith(extension)
-                ? [path]
-                : [];
+            return statSync(path).isDirectory() ? walk(path) : path.endsWith(extension) ? [path] : [];
           })
         : [];
 
@@ -109,8 +103,7 @@ describe('the mockups', () => {
         typeof variable.value === 'string'
           ? [variable.value]
           : // A themed value is an array of {value, theme} entries.
-            (variable.value as { value?: string }[] | undefined)?.map((entry) => entry.value ?? '') ??
-            [],
+            ((variable.value as { value?: string }[] | undefined)?.map((entry) => entry.value ?? '') ?? []),
       )
       .filter(Boolean)
       .map((value) => value.toLowerCase());
@@ -134,7 +127,7 @@ describe('the mockups', () => {
     // 21 times - every one of them a swatch printing the value it documents,
     // beside a fill that was a proper `$variable`:
     //
-    //   {"ZFb9X": {"fill": "$clay-500"}, "qlchJ": {"content": "--clay-500"},
+    //   {"ZFb9X": {"fill": "$clay-500"}, "qlchJ": {"content": "--color-clay-500"},
     //    "K3sL3V": {"content": "#D85A30"}}
     //
     // A sheet whose job is to document colours cannot be forbidden the `#`

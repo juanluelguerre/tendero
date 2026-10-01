@@ -265,7 +265,10 @@ export function narrowedFacets(before: ListingFilters, after: ListingFilters): s
 
   if (changed(before.within, after.within)) facets.push('category');
   if (changed(before.brands, after.brands)) facets.push('brand');
-  if ((after.minPrice !== null || after.maxPrice !== null) && (after.minPrice !== before.minPrice || after.maxPrice !== before.maxPrice)) {
+  if (
+    (after.minPrice !== null || after.maxPrice !== null) &&
+    (after.minPrice !== before.minPrice || after.maxPrice !== before.maxPrice)
+  ) {
     facets.push('price');
   }
   if (after.onOffer && !before.onOffer) facets.push('offer');

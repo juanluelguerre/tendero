@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, output, viewChild } from '@angular/core';
+import { PricePipe } from '@tendero/shared-ui';
+import { Component, inject, output, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatPrice, orderReference } from '@tendero/shared-util';
+import { orderReference } from '@tendero/shared-util';
 import { ConfirmDialog } from '../../../worklist/confirm-dialog/confirm-dialog';
 import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
 import { nextDecision, rejectable } from '../return-decisions';
@@ -16,14 +17,14 @@ import { ReturnsStore } from '../returns.store';
  */
 @Component({
   selector: 'backoffice-return-pane',
-  imports: [TranslocoDirective, RouterLink, WorklistPane, ConfirmDialog, ReturnStatusLabel],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TranslocoDirective, RouterLink, WorklistPane, ConfirmDialog, ReturnStatusLabel, PricePipe],
   templateUrl: './return-pane.html',
-  styleUrl: './return-pane.css',
+  // The pane is laid out by the page's list-and-pane grid, as if it were its child.
+  host: { class: 'contents' },
 })
 export class ReturnPane {
   protected readonly store = inject(ReturnsStore);
-  private readonly culture = inject(CultureStore);
+  protected readonly culture = inject(CultureStore);
   private readonly rejectDialog = viewChild(ConfirmDialog);
 
   /** The person closed the pane. */
@@ -34,10 +35,6 @@ export class ReturnPane {
 
   /** A full Guid is unreadable; its random end is what a person reads, and what finds it. */
   protected readonly shortId = orderReference;
-
-  protected money(amount: number): string {
-    return formatPrice(amount, 'EUR', this.culture.active());
-  }
 
   protected askToReject(): void {
     this.rejectDialog()?.open();

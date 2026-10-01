@@ -1,13 +1,13 @@
-<section *transloco="let t" class="order">
+<section *transloco="let t" class="pt-6 pb-8">
   @if (store.order(); as order) {
-    <header class="order__head">
+    <header class="mb-5 flex flex-wrap items-center gap-3">
       @if (store.justPlaced()) {
-        <p class="order__thanks">{{ t('order.placed') }}</p>
+        <p class="basis-full font-semibold text-positive">{{ t('order.placed') }}</p>
       }
-      <h1 class="order__title">{{ t('order.reference', { id: shortId(order.orderId) }) }}</h1>
-      <span class="chip" [class]="'chip--' + order.status">
+      <h1 class="text-2xl">{{ t('order.reference', { id: shortId(order.orderId) }) }}</h1>
+      <lib-status-pill [tone]="orderTone(order.status)" size="md">
         {{ t('order.status.' + order.status) }}
-      </span>
+      </lib-status-pill>
 
       <!--
         A shop that says no has to say why where the no is read. Before this,
@@ -15,42 +15,51 @@
         and the reason existed only inside a processed outbox message.
 
         The code is translated and the detail is not: it is a SKU and two
-        numbers, which read the same in both languages.
+        numbers, which read the same in both languages — in the monospace face,
+        doing its usual job.
+
+        And it is deliberately not an error banner: the order did not break,
+        the shop declined it.
       -->
       @if (order.stopCode) {
-        <p class="order__stop" role="status">
+        <p
+          class="mt-3 flex flex-wrap items-baseline gap-2 rounded-md border border-s-3 border-hairline border-s-warning bg-surface p-3 text-sm"
+          role="status"
+        >
           <strong>{{ t('order.stop.' + order.stopCode) }}</strong>
           @if (order.stopDetail) {
-            <span class="order__stop-detail">{{ order.stopDetail }}</span>
+            <span class="numeric text-muted">{{ order.stopDetail }}</span>
           }
         </p>
       }
     </header>
 
-    <div class="layout">
-      <div class="panels">
-        <section class="panel">
-          <h2 class="panel__title">{{ t('order.lines') }}</h2>
-          <ul class="lines">
+    <div class="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6 max-tab:grid-cols-[minmax(0,1fr)]">
+      <div class="grid gap-5">
+        <section class="rounded-lg border border-hairline bg-surface p-5">
+          <h2 class="mb-4 text-md">{{ t('order.lines') }}</h2>
+          <ul class="grid gap-3">
             @for (line of order.lines; track line.sku) {
-              <li class="line">
-                <span class="line__body">
-                  <span class="line__name">{{ line.productName }}</span>
+              <li class="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4">
+                <span class="grid min-w-0 gap-hair">
+                  <span class="font-medium">{{ line.productName }}</span>
                   @if (line.variantLabel) {
-                    <span class="line__variant">{{ line.variantLabel }}</span>
+                    <span class="text-sm text-muted">{{ line.variantLabel }}</span>
                   }
-                  <span class="line__sku numeric">{{ line.sku }}</span>
+                  <span class="numeric text-xs text-muted">{{ line.sku }}</span>
                 </span>
-                <span class="line__quantity numeric">×{{ line.quantity }}</span>
-                <span class="line__price numeric">{{ money(line.unitPrice * line.quantity) }}</span>
+                <span class="numeric text-muted">×{{ line.quantity }}</span>
+                <span class="min-w-col-md text-end numeric font-semibold">{{
+                  line.unitPrice * line.quantity | price: store.order()?.currency ?? 'EUR' : culture.active()
+                }}</span>
               </li>
             }
           </ul>
         </section>
 
         @if (store.canReturn()) {
-          <section class="panel">
-            <h2 class="panel__title">{{ t('order.returnTitle') }}</h2>
+          <section class="rounded-lg border border-hairline bg-surface p-5">
+            <h2 class="mb-4 text-md">{{ t('order.returnTitle') }}</h2>
             <!-- The window is the SERVER's number (`ReturnRequest.Window`),
                  not a literal typed here. It used to be one, and shortening the
                  window would have left this line promising the old one. When it
@@ -58,74 +67,66 @@
                  stays, because the server is what enforces the window anyway. -->
             @let returnDays = returnWindowDays();
             @if (returnDays !== null) {
-              <p class="panel__hint">{{ t('order.returnHint', { days: returnDays }) }}</p>
+              <p class="-mt-2 mb-4 text-sm text-muted">{{ t('order.returnHint', { days: returnDays }) }}</p>
             }
 
             @if (store.returnMessage(); as message) {
-              <p class="notice" [class.notice--bad]="!store.returnOpened()"
-                 [class.notice--good]="store.returnOpened()" role="status">{{ message }}</p>
+              <lib-notice class="mb-4" [tone]="store.returnOpened() ? 'good' : 'bad'" live="polite">{{
+                message
+              }}</lib-notice>
             }
 
+            <!-- Each line unfolds its own quantity and reason when it is picked.
+                 Showing all of them at once would be a form nobody reads; showing
+                 none of them would hide that the reason is per line, which is
+                 the whole model. `returnable__pick` and `returnable__detail` are
+                 the end-to-end test's hooks. -->
             <!-- Only what is left to return, as the server counts it
                  (`ReturnRequest.Returnable`). Listing every line of the order
                  is how one shirt was returned twice through this page. -->
             @if (store.returnableLines().length === 0) {
-              <p class="panel__hint">{{ t('order.nothingLeftToReturn') }}</p>
+              <p class="-mt-2 mb-4 text-sm text-muted">{{ t('order.nothingLeftToReturn') }}</p>
             } @else {
-            <ul class="returnables">
-              @for (line of store.returnableLines(); track line.sku) {
-                <li class="returnable">
-                  <label class="returnable__pick">
-                    <input
-                      type="checkbox"
-                      [checked]="store.picked().has(line.sku)"
-                      (change)="store.toggle(line)"
-                    />
-                    <span>{{ line.productName }}</span>
-                  </label>
+              <ul class="grid gap-3">
+                @for (line of store.returnableLines(); track line.sku; let index = $index) {
+                  @let row = store.returnForm[index];
+                  <li class="rounded-md border border-hairline p-3">
+                    <label class="returnable__pick flex cursor-pointer items-center gap-3 font-medium">
+                      <input type="checkbox" [formField]="row.picked" />
+                      <span>{{ line.productName }}</span>
+                    </label>
 
-                  @if (store.picked().has(line.sku)) {
-                    <div class="returnable__detail">
-                      <label class="row">
-                        <span class="row__label">{{ t('order.returnQuantity') }}</span>
-                        <input
-                          class="field field--tiny numeric"
-                          type="number"
-                          min="1"
-                          [max]="line.left"
-                          [ngModel]="store.quantityOf(line.sku)"
-                          (ngModelChange)="store.setQuantity(line.sku, $event)"
-                          [name]="'quantity-' + line.sku"
-                        />
-                      </label>
+                    @if (row.picked().value()) {
+                      <div
+                        class="returnable__detail mt-3 flex flex-wrap gap-3 border-t border-dashed border-hairline pt-3"
+                      >
+                        <label class="grid gap-2">
+                          <span class="text-xs text-muted">{{ t('order.returnQuantity') }}</span>
+                          <input
+                            class="field w-col-md numeric"
+                            type="number"
+                            [formField]="row.quantity"
+                            [attr.aria-invalid]="row.quantity().invalid()"
+                          />
+                        </label>
 
-                      <label class="row row--grow">
-                        <span class="row__label">{{ t('order.returnReason') }}</span>
-                        <select
-                          class="field select"
-                          [ngModel]="store.reasonOf(line.sku)"
-                          (ngModelChange)="store.setReason(line.sku, $event)"
-                          [name]="'reason-' + line.sku"
-                        >
-                          @for (reason of reasons; track reason) {
-                            <option [value]="reason">{{ t('order.reason.' + reason) }}</option>
-                          }
-                        </select>
-                      </label>
-                    </div>
-                  }
-                </li>
-              }
-            </ul>
+                        <label class="grid min-w-col-xl flex-1 gap-2">
+                          <span class="text-xs text-muted">{{ t('order.returnReason') }}</span>
+                          <select class="field select" [formField]="row.reason">
+                            @for (reason of reasons; track reason) {
+                              <option [value]="reason">{{ t('order.reason.' + reason) }}</option>
+                            }
+                          </select>
+                        </label>
+                      </div>
+                    }
+                  </li>
+                }
+              </ul>
 
-            <button
-              class="button"
-              type="button"
-              [disabled]="store.picked().size === 0 || store.sending()"
-              (click)="store.requestReturn()"
-            >
-              {{ t('order.returnSubmit') }}
-            </button>
+              <button class="button" type="button" [disabled]="!store.canSend()" (click)="store.requestReturn()">
+                {{ t('order.returnSubmit') }}
+              </button>
             }
           </section>
         } @else if (order.status !== 'Cancelled') {
@@ -133,23 +134,25 @@
         }
 
         @if (store.returns().length > 0) {
-          <section class="panel">
-            <h2 class="panel__title">{{ t('order.returns') }}</h2>
-            <ul class="returns">
+          <section class="rounded-lg border border-hairline bg-surface p-5">
+            <h2 class="mb-4 text-md">{{ t('order.returns') }}</h2>
+            <ul class="grid gap-3">
               @for (request of store.returns(); track request.returnId) {
-                <li class="return">
-                  <span class="return__number numeric">#{{ request.number }}</span>
-                  <span class="chip chip--{{ request.status }}">
+                <li class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 text-sm">
+                  <span class="numeric text-xs text-muted">#{{ request.number }}</span>
+                  <lib-status-pill [tone]="returnTone(request.status)" size="md">
                     {{ t('order.returnStatus.' + request.status) }}
-                  </span>
-                  <span class="return__lines numeric">
+                  </lib-status-pill>
+                  <span class="numeric text-xs text-muted">
                     {{ describe(request) }}
                   </span>
                   @if (request.refundAmount) {
-                    <span class="return__refund numeric">{{ money(request.refundAmount) }}</span>
+                    <span class="numeric font-semibold text-positive">{{
+                      request.refundAmount | price: store.order()?.currency ?? 'EUR' : culture.active()
+                    }}</span>
                   }
                   @if (request.resolution) {
-                    <p class="return__resolution">{{ request.resolution }}</p>
+                    <p class="col-span-full text-xs text-muted">{{ request.resolution }}</p>
                   }
                 </li>
               }
@@ -158,42 +161,24 @@
         }
       </div>
 
-      <aside class="summary">
-        <dl class="totals">
-          <div class="totals__row">
-            <dt>{{ t('cart.subtotal') }}</dt>
-            <dd class="numeric">{{ money(order.subtotal) }}</dd>
-          </div>
+      <storefront-summary>
+        <storefront-totals
+          [currency]="order.currency"
+          [subtotal]="order.subtotal"
+          [discountTotal]="order.discountTotal"
+          [shipping]="order.shipping"
+          [shippingLabel]="order.shippingLabel"
+          [total]="order.total"
+          [taxTotal]="order.taxTotal"
+        />
 
-          @if (order.discountTotal > 0) {
-            <div class="totals__row totals__row--off">
-              <dt>{{ t('cart.discounts') }}</dt>
-              <dd class="numeric">−{{ money(order.discountTotal) }}</dd>
-            </div>
-          }
-
-          <div class="totals__row">
-            <dt>{{ order.shippingLabel }}</dt>
-            <dd class="numeric">{{ money(order.shipping) }}</dd>
-          </div>
-
-          <div class="totals__row totals__row--total">
-            <dt>{{ t('cart.total') }}</dt>
-            <dd class="numeric">{{ money(order.total) }}</dd>
-          </div>
-
-          @if (order.taxTotal > 0) {
-            <p class="totals__tax">{{ t('cart.tax') }} · {{ money(order.taxTotal) }}</p>
-          }
-        </dl>
-
-        <div class="ship">
-          <p class="ship__label eyebrow">{{ t('order.shippingTo') }}</p>
-          <p class="ship__value">{{ order.shippingAddress }}</p>
+        <div class="border-t border-hairline pt-3">
+          <p class="eyebrow mb-1">{{ t('order.shippingTo') }}</p>
+          <p class="text-sm">{{ order.shippingAddress }}</p>
         </div>
 
         <a class="quiet" [routerLink]="links.home()">{{ t('nav.continueShopping') }}</a>
-      </aside>
+      </storefront-summary>
     </div>
   } @else if (store.loading()) {
     <p class="muted" role="status" aria-live="polite">{{ t('order.loading') }}</p>
