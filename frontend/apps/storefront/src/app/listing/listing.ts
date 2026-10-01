@@ -3,6 +3,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Telemetry } from '@tendero/shared-telemetry';
 import { CultureStore, DEFAULT_CULTURE, SUPPORTED_CULTURES } from '@tendero/shared-i18n';
+import { Icon } from '@tendero/shared-ui';
 import { CampaignsStore } from '../campaigns/campaigns.store';
 import { ProductCard } from '../product-card/product-card';
 import { CanonicalLinks } from '../seo/canonical-links';
@@ -33,7 +34,7 @@ type Translate = (key: string, params?: Record<string, unknown>) => string;
  */
 @Component({
   selector: 'storefront-listing',
-  imports: [TranslocoDirective, NgTemplateOutlet, ProductCard, FilterPanel],
+  imports: [TranslocoDirective, NgTemplateOutlet, ProductCard, FilterPanel, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './listing.html',
   styleUrl: './listing.css',

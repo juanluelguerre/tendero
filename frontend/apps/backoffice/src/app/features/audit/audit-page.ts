@@ -3,10 +3,11 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { FilterChips } from '../../worklist/filter-chips/filter-chips';
 import { Pager } from '../../worklist/pager/pager';
 import { CultureStore } from '@tendero/shared-i18n';
-import { formatDateTime } from '@tendero/shared-util';
+import { formatDateTime, shortId } from '@tendero/shared-util';
 import { actorOf } from './audit-actor';
 import { AuditStore, PageSize } from './audit.store';
-import { Notice } from '@tendero/shared-ui';
+import { CopyText, StatusPill } from '@tendero/shared-ui';
+import { ListState } from '../../worklist/list-state/list-state';
 
 /**
  * Who did what, and what the shop refused.
@@ -24,11 +25,12 @@ import { Notice } from '@tendero/shared-ui';
  *
  * The payload is shown on demand rather than in the row: it is the command as
  * JSON, it is the widest column by an order of magnitude, and it is the thing
- * you want only once you have found the row.
+ * you want only once you have found the row — with the trace id and the
+ * subject beside it, to copy.
  */
 @Component({
   selector: 'backoffice-audit',
-  imports: [TranslocoDirective, FilterChips, Pager, Notice],
+  imports: [TranslocoDirective, FilterChips, Pager, ListState, StatusPill, CopyText],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './audit-page.html',
   styleUrl: './audit-page.css',
@@ -54,12 +56,13 @@ export class AuditPage {
   }
 
   /**
-   * Order ids and trace ids are long and the column is not. The first segment is
-   * enough to match a row against something you are already looking at, and the
-   * whole value is one hover away in the title.
+   * A subject is long and the column is not. Its random end is enough to match
+   * a row against something you are already looking at (`shortId`: the first
+   * segment it used to keep is a version-7 Guid's timestamp, the same for every
+   * id minted that minute); the whole value is in the opened row, to copy.
    */
   protected short(value: string | null | undefined): string {
-    return value ? value.split('-')[0] : '';
+    return value ? shortId(value) : '';
   }
 
   /** 04/09/2026 and 09/04/2026 are the same instant and different days, so the

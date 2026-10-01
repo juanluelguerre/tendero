@@ -259,12 +259,13 @@
         (click)="toggleSection(id)"
       >
         <span>{{ label }}</span>
-        <svg
-          class="size-[16px] flex-none text-muted transition-transform duration-(--dur-fast) ease-brand"
-          [class.rotate-180]="!isOpen(id)"
-          viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <!-- Up while the section is open, down while it is folded. -->
+        <lib-icon
+          class="size-[16px] text-muted transition-transform duration-(--dur-fast) ease-brand"
+          [class.rotate-180]="isOpen(id)"
+          name="chevron"
+          [stroke]="1.8"
+        />
       </button>
     </h3>
   </ng-template>

@@ -91,7 +91,7 @@
             </button>
           }
           @if (store.refusal()[request.returnId] !== undefined) {
-            <p class="worklist-card__refusal" role="alert">{{ store.refusal()[request.returnId] || t('returns.refused') }}</p>
+            <p class="col-span-full text-xs text-danger" role="alert">{{ store.refusal()[request.returnId] || t('returns.refused') }}</p>
           }
         </li>
       }

@@ -39,7 +39,7 @@
             <span class="numeric font-semibold">{{ money(found.order.total, found.order.currency) }}</span>
           </p>
         } @else if (pane.detail.isLoading()) {
-          <div class="skeleton" aria-hidden="true"></div>
+          <div class="skeleton min-h-[4.5rem] rounded-md bg-raised" aria-hidden="true"></div>
           <p class="sr-only" role="status">{{ t('orders.loading') }}</p>
         } @else if (pane.detail.status() === 'error') {
           <p class="failed" role="alert">{{ t('orders.paneFailed') }}</p>

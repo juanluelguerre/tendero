@@ -4,6 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { ManagedCampaignView } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { FilterChips } from '../../../worklist/filter-chips/filter-chips';
+import { ListState } from '../../../worklist/list-state/list-state';
 import { bucketOf, type CampaignBucket, inCulture, windowOf } from '../campaign-state';
 import { CampaignsStore } from '../campaigns.store';
 
@@ -15,7 +16,7 @@ import { CampaignsStore } from '../campaigns.store';
  */
 @Component({
   selector: 'backoffice-campaign-list',
-  imports: [TranslocoDirective, NgTemplateOutlet, FilterChips],
+  imports: [TranslocoDirective, NgTemplateOutlet, FilterChips, ListState],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campaign-list.html',
   styleUrl: './campaign-list.css',

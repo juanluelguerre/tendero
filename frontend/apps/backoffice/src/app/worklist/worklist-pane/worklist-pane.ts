@@ -1,6 +1,6 @@
 import { afterRenderEffect, ChangeDetectionStrategy, Component, type ElementRef, input, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Icon } from '../../icon/icon';
+import { Icon } from '@tendero/shared-ui';
 
 let panes = 0;
 

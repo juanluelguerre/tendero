@@ -1,0 +1,25 @@
+<!-- The label beside the choices, or only their group's name when the place
+     around it already says what it is (the backoffice's door, before signing in). -->
+<div class="flex items-center justify-between gap-3">
+  @if (labelVisible()) {
+    <span class="text-xs text-muted" [id]="id">{{ label() }}</span>
+  }
+  <div
+    class="inline-flex overflow-hidden rounded-md border border-hairline-strong"
+    role="group"
+    [attr.aria-labelledby]="labelVisible() ? id : null"
+    [attr.aria-label]="labelVisible() ? null : label()"
+  >
+    @for (option of cultures(); track option) {
+      <!-- The code is written as it is said, lower case; it is shown in capitals. -->
+      <button
+        type="button"
+        class="inline-grid min-h-[2.25rem] min-w-[2.75rem] place-items-center px-2 text-xs text-muted uppercase enabled:hover:text-body aria-pressed:bg-accent-tint aria-pressed:font-semibold aria-pressed:text-body pointer-coarse:min-h-[2.75rem]"
+        [attr.aria-pressed]="option === active()"
+        (click)="chosen.emit(option)"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+</div>

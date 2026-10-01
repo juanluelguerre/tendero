@@ -69,9 +69,7 @@
                 (click)="state.apply(chip.without)"
               >
                 <span>{{ chip.label }}</span>
-                <svg class="size-[14px]" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <path d="M7 7l10 10M17 7L7 17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
+                <lib-icon class="size-[14px]" name="remove" [stroke]="2" />
               </button>
             </li>
           }
@@ -207,9 +205,7 @@
         [attr.aria-label]="t('listing.sheet.close')"
         (click)="sheet.close()"
       >
-        <svg class="size-[22px]" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-        </svg>
+        <lib-icon class="size-[22px]" name="close" />
       </button>
     </div>
 

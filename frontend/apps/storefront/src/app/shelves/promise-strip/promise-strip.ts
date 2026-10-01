@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { Icon } from '@tendero/shared-ui';
 
 /**
  * *La tienda promete* (R-8, H-4): a slim strip of what the shop commits to.
@@ -12,7 +13,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
  */
 @Component({
   selector: 'storefront-promise-strip',
-  imports: [TranslocoDirective],
+  imports: [TranslocoDirective, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './promise-strip.html',
   styleUrl: './promise-strip.css',

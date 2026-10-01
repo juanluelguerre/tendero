@@ -5,12 +5,11 @@ import { AuthStore } from '@tendero/shared-auth';
 import { Culture, CultureStore } from '@tendero/shared-i18n';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { StaffUsage } from '@tendero/shared-telemetry';
-import { ThemeStore } from '@tendero/shared-ui';
+import { CultureSwitch, Icon, ThemeStore } from '@tendero/shared-ui';
 import { filter } from 'rxjs';
 import { backofficeAccess } from '../access';
 import { BackofficeUsage } from '../usage';
 import { AccountMenu } from './account-menu/account-menu';
-import { Icon } from '../icon/icon';
 import { Nav } from './nav/nav';
 import { Palette } from './palette/palette';
 import { StaffNotice } from './staff-notice/staff-notice';
@@ -30,7 +29,7 @@ import { WaitingStore } from './waiting.store';
  */
 @Component({
   selector: 'backoffice-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon, UndoToast, Palette],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective, StaffNotice, Nav, AccountMenu, Icon, CultureSwitch, UndoToast, Palette],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',

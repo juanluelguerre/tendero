@@ -35,7 +35,11 @@
     "showPayload": "Show command",
     "guest": "guest",
     "title": "Audit",
-    "trace": "Trace {{id}}",
+    "trace": "Trace",
+    "subject": "Subject",
+    "copyTrace": "Copy the trace id",
+    "copySubject": "Copy the subject",
+    "copied": "Copied",
     "emptyFor": "Nothing {{outcome}} has been recorded. That is the good outcome.",
     "showEverything": "Show everything",
     "commands": {

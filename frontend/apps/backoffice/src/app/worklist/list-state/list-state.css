@@ -1,2 +1,16 @@
 /* Laid out by the list that places it, as if its states were the list's own children. */
 :host { display: contents; }
+
+/* A list that is loading keeps the shape of what is coming — rows, drawn by
+   the background alone — so nothing jumps when it arrives (R-3, P8; R-1,
+   B-F10). The words stay, for a screen reader. A layered gradient, which a
+   utility would only spell worse; `skeleton-list` is also the spec's hook. */
+.skeleton-list {
+  min-height: 15rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 0.75rem, var(--bg-raised) 0.75rem 2.25rem, transparent 2.25rem 3rem)
+    var(--space-4) 0 / calc(100% - 2 * var(--space-4)) 100% no-repeat,
+    var(--bg-surface);
+}

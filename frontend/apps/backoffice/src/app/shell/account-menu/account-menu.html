@@ -1,46 +1,37 @@
 <ng-container *transloco="let t">
   @if (identity(); as who) {
-    <button type="button" class="trigger" popovertarget="account-menu" [attr.aria-label]="t('account.open', { name: who.name, role: who.role })">
-      <span class="avatar" aria-hidden="true">{{ initials() }}</span>
-      <span class="trigger__role">{{ who.role }}</span>
-      <backoffice-icon name="chevron" />
+    <button
+      type="button"
+      class="trigger inline-flex min-h-[2.75rem] items-center gap-2 rounded-md border border-hairline px-2 text-muted hover:border-hairline-strong hover:text-body"
+      popovertarget="account-menu"
+      [attr.aria-label]="t('account.open', { name: who.name, role: who.role })"
+    >
+      <span class="inline-grid size-[1.75rem] place-items-center rounded-full bg-accent-tint text-3xs font-semibold text-body" aria-hidden="true">{{ initials() }}</span>
+      <!-- The role as words, not a tag: the button is already the box, and a box
+           inside it read as a second control (the author, the second walkthrough). -->
+      <span class="font-mono text-2xs text-muted">{{ who.role }}</span>
+      <lib-icon name="chevron" />
     </button>
 
-    <div id="account-menu" class="menu" popover>
-      <p class="menu__who">
+    <div
+      id="account-menu"
+      class="menu w-[min(18rem,calc(100vw-2*var(--space-4)))] flex-col gap-4 rounded-lg border border-hairline-strong bg-surface p-4 text-body shadow-pop open:flex"
+      popover
+    >
+      <p>
         <strong>{{ who.name }}</strong>
       </p>
 
-      <div class="menu__row">
-        <span class="menu__label" id="account-language">{{ t('nav.language') }}</span>
-        <div class="segmented" role="group" aria-labelledby="account-language">
-          @for (option of cultures; track option) {
-            <button type="button" class="segmented__option" [attr.aria-pressed]="option === culture()" (click)="use(option)">
-              {{ option }}
-            </button>
-          }
-        </div>
-      </div>
+      <lib-culture-switch [label]="t('nav.language')" [cultures]="cultures" [active]="culture()" (chosen)="use($event)" />
 
-      <div class="menu__row">
-        <span class="menu__label" id="account-theme">{{ t('account.theme') }}</span>
-        <div class="segmented" role="group" aria-labelledby="account-theme">
-          @for (choice of themes; track choice) {
-            <button
-              type="button"
-              class="segmented__option"
-              [attr.aria-pressed]="choice === themeChoice()"
-              [attr.aria-label]="t('account.themes.' + choice)"
-              [attr.title]="t('account.themes.' + choice)"
-              (click)="choose(choice)"
-            >
-              <backoffice-icon [name]="choice" />
-            </button>
-          }
-        </div>
-      </div>
+      <lib-theme-switch
+        [label]="t('account.theme')"
+        [names]="{ system: t('account.themes.system'), light: t('account.themes.light'), dark: t('account.themes.dark') }"
+        [choice]="themeChoice()"
+        (chosen)="choose($event)"
+      />
 
-      <button type="button" class="button button--quiet menu__signout" (click)="signOut.emit()">
+      <button type="button" class="button button--quiet self-start" (click)="signOut.emit()">
         {{ t('signIn.signOut') }}
       </button>
     </div>

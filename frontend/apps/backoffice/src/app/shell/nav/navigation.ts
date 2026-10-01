@@ -1,4 +1,4 @@
-import type { IconName } from '../../icon/icon';
+import type { IconName } from '@tendero/shared-ui';
 
 /** A figure that says how much work waits on a screen, shown as its badge. */
 export type WaitingKind = 'drafts' | 'claims' | 'toShip' | 'openReturns' | 'lowStock' | 'refusals';

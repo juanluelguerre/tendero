@@ -5,7 +5,7 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { TranslocoDirective } from '@jsverse/transloco';
 import { AgentTools } from '@tendero/shared-agent';
 import { CultureStore } from '@tendero/shared-i18n';
-import { ThemeStore } from '@tendero/shared-ui';
+import { Icon, ThemeStore } from '@tendero/shared-ui';
 import { filter, map } from 'rxjs';
 import { StorefrontTools } from '../agent/storefront-tools';
 import { CartStore } from '../cart/cart.store';
@@ -32,7 +32,7 @@ import { AccountMenu } from './account-menu/account-menu';
  */
 @Component({
   selector: 'storefront-shell',
-  imports: [RouterOutlet, RouterLink, TranslocoDirective, NgTemplateOutlet, ConsentBanner, CompareTray, ShopMenu, AccountMenu],
+  imports: [RouterOutlet, RouterLink, TranslocoDirective, NgTemplateOutlet, ConsentBanner, CompareTray, ShopMenu, AccountMenu, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './shell.html',
   styleUrl: './shell.css',

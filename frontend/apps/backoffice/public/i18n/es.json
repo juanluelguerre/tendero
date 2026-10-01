@@ -35,7 +35,11 @@
     "showPayload": "Ver comando",
     "guest": "invitado",
     "title": "Auditoría",
-    "trace": "Traza {{id}}",
+    "trace": "Traza",
+    "subject": "Sujeto",
+    "copyTrace": "Copiar el id de la traza",
+    "copySubject": "Copiar el sujeto",
+    "copied": "Copiado",
     "emptyFor": "No hay nada registrado como «{{outcome}}». Que es la buena noticia.",
     "showEverything": "Ver todo",
     "commands": {

@@ -24,7 +24,12 @@
     }
     <div class="mt-4 flex flex-wrap justify-end gap-2">
       <button type="button" class="button button--quiet" (click)="keep()">{{ keepLabel() }}</button>
-      <button type="submit" class="button" [class.button--danger]="tone() === 'danger'" [disabled]="blocked()">
+      <button
+        type="submit"
+        class="button data-[tone=danger]:bg-danger data-[tone=danger]:enabled:hover:bg-danger data-[tone=danger]:enabled:hover:brightness-110"
+        [attr.data-tone]="tone()"
+        [disabled]="blocked()"
+      >
         {{ confirmLabel() }}
       </button>
     </div>

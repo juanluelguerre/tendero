@@ -1,8 +1,13 @@
-<aside class="notice" role="region" *transloco="let t; prefix: 'staffUsage'" [attr.aria-label]="t('title')">
-  <p class="notice__text">
-    <strong>{{ t('title') }}.</strong> {{ t('notice') }}
+<aside
+  class="flex flex-wrap items-center gap-3 rounded-lg border border-hairline bg-raised px-4 py-3 text-xs"
+  role="region"
+  *transloco="let t; prefix: 'staffUsage'"
+  [attr.aria-label]="t('title')"
+>
+  <p class="flex-[1_1_28rem] text-muted">
+    <strong class="text-body">{{ t('title') }}.</strong> {{ t('notice') }}
   </p>
-  <div class="notice__actions">
+  <div class="flex gap-2">
     <button type="button" class="button button--small button--quiet" (click)="usage.switchOff()">{{ t('switchOff') }}</button>
     <button type="button" class="button button--small" (click)="usage.acknowledge()">{{ t('understood') }}</button>
   </div>

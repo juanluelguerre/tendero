@@ -1,7 +1,10 @@
 /* The frame of every screen (the redesign's R-3). One column on a phone, and a
    rail beside the content from a tablet up: icons from 768 px, labels from
    1200 px. The content takes all the width that is left (R-1, B-F11); only
-   running text keeps a measure, and the pages set that themselves. */
+   running text keeps a measure, and the pages set that themselves. Styled with
+   utilities in the template (ADR 0049); what stays is the host's grid, which a
+   template cannot give itself, and the wordmark, which a test reads from this
+   file. */
 :host {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -10,14 +13,9 @@
   color: var(--text);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  text-decoration: none;
+@media (min-width: 48rem) {
+  :host(.with-rail) { grid-template-columns: auto minmax(0, 1fr); }
 }
-
-.brand__mark { display: block; width: 1.75rem; height: 1.75rem; }
 
 /* Brand text: --brand and never the --accent alias, and large enough to be held
    to 3:1 on every surface (design-contrast.spec.ts pins both). */
@@ -26,217 +24,4 @@
   font-weight: 800;
   font-size: var(--text-lg);
   color: var(--brand);
-}
-
-.rail { display: none; }
-
-@media (min-width: 48rem) {
-  :host(.with-rail) { grid-template-columns: auto minmax(0, 1fr); }
-
-  .rail {
-    position: sticky;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-    width: 4.5rem;
-    height: 100dvh;
-    padding: var(--space-4) var(--space-2);
-    /* Vertical only. With the other axis left visible the browser makes it
-       scrollable too, and an icon's hidden label beside the rail gave the
-       collapsed rail a sideways scrollbar. */
-    overflow-x: hidden;
-    overflow-y: auto;
-    border-inline-end: 1px solid var(--border);
-    background: var(--bg-surface);
-  }
-
-  .rail .brand__name { display: none; }
-  .rail .brand { justify-content: center; }
-}
-
-@media (min-width: 75rem) {
-  .rail { width: 14.5rem; padding-inline: var(--space-3); }
-  .rail .brand__name { display: inline; }
-  .rail .brand { justify-content: flex-start; padding-inline: var(--space-3); }
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.bar {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 3.5rem;
-  padding-inline: var(--space-3) var(--space-5);
-  border-block-end: 1px solid var(--border);
-  background: var(--bg-surface);
-}
-
-.bar__menu {
-  flex: none;
-  display: inline-grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: none;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.bar__menu:hover { background: var(--bg-raised); }
-
-.bar__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.bar__spacer { flex: 1; }
-
-/* The palette's door: wide enough to read as a search on a desktop, an icon on a phone. */
-.bar__palette {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 2.25rem;
-  min-width: 2.75rem;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--bg-raised);
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-xs);
-  cursor: pointer;
-}
-
-.bar__palette:hover { color: var(--text); border-color: var(--border-strong); }
-.bar__palette-hint { min-width: 16rem; text-align: start; }
-
-.bar__palette-key {
-  padding: 1px var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: var(--text-3xs);
-}
-
-@media (max-width: 47.99rem) {
-  .bar__palette-hint,
-  .bar__palette-key { display: none; }
-}
-
-/* From a tablet up the rail carries the brand and the screens, so the bar
-   holds only what is the person's own. */
-@media (min-width: 48rem) {
-  :host(.with-rail) .bar__menu,
-  :host(.with-rail) .bar .bar__brand { display: none; }
-}
-
-@media (max-width: 40rem) {
-  .bar__area { display: none; }
-}
-
-/* On the narrowest phones the mark is the brand, and the room goes to the
-   menu, the palette and the account. */
-@media (max-width: 26rem) {
-  .bar .bar__brand .brand__name { display: none; }
-}
-
-.langs {
-  display: flex;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.lang {
-  min-width: 2.75rem;
-  min-height: 2.25rem;
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.lang[aria-pressed='true'] { background: var(--accent-tint); color: var(--text); font-weight: 600; }
-
-.notice-slot { margin: var(--space-4) var(--space-5) 0; }
-
-.main {
-  flex: 1;
-  padding: var(--space-6) var(--space-5) var(--space-8);
-}
-
-@media (max-width: 40rem) {
-  .notice-slot { margin-inline: var(--space-4); }
-  .main { padding: var(--space-5) var(--space-4); }
-}
-
-/* The notice's standing switch (ADR 0041): quiet, at the foot of every screen,
-   so switching it off never means finding a settings page. */
-.usage {
-  display: flex;
-  flex-wrap: wrap;
-  /* On the text's line, not the box's top: the button is 24 px tall to be a
-     target, and stretched beside it the sentence sat above its own link. */
-  align-items: baseline;
-  gap: var(--space-2);
-  padding: var(--space-5);
-  color: var(--text-muted);
-  font-size: var(--text-3xs);
-}
-
-.linkish {
-  min-height: 1.5rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-/* The phone's drawer. It floats, so it is allowed a shadow; the page behind is
-   dimmed with the darkest ink the tokens have, never a new colour. */
-.drawer {
-  inset-block: 0;
-  inset-inline: 0 auto;
-  width: min(20rem, 88vw);
-  max-width: none;
-  height: 100dvh;
-  max-height: none;
-  margin: 0;
-  padding: var(--space-3) var(--space-3) var(--space-6);
-  overflow-y: auto;
-  border: 0;
-  border-inline-end: 1px solid var(--border-strong);
-  background: var(--bg-surface);
-  color: var(--text);
-  box-shadow: var(--shadow-pop);
-}
-
-.drawer::backdrop { background: color-mix(in srgb, var(--ink-900) 60%, transparent); }
-
-.drawer__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-block-end: var(--space-4);
-  padding-inline-start: var(--space-3);
 }

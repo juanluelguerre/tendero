@@ -1,0 +1,17 @@
+<div class="flex items-center justify-between gap-3">
+  <span class="text-xs text-muted" [id]="id">{{ label() }}</span>
+  <div class="inline-flex overflow-hidden rounded-md border border-hairline-strong" role="group" [attr.aria-labelledby]="id">
+    @for (option of choices; track option) {
+      <button
+        type="button"
+        class="inline-grid min-h-[2.25rem] min-w-[2.75rem] place-items-center px-2 text-xs text-muted enabled:hover:text-body aria-pressed:bg-accent-tint aria-pressed:font-semibold aria-pressed:text-body pointer-coarse:min-h-[2.75rem]"
+        [attr.aria-pressed]="option === choice()"
+        [attr.aria-label]="names()[option]"
+        [title]="names()[option]"
+        (click)="chosen.emit(option)"
+      >
+        <lib-icon [name]="option" />
+      </button>
+    }
+  </div>
+</div>

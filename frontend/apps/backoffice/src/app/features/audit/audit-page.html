@@ -9,33 +9,33 @@
   <!-- It opens on the refusals. An audit log whose default view is a thousand
        successful publishes is a changelog. -->
   <backoffice-filter-chips
-    class="filters"
+    class="mt-5 mb-4"
     [options]="store.filterOptions()"
     [selected]="store.filter() ?? 'all'"
     [label]="t('audit.filterLabel')"
     (chosen)="store.use($event === 'all' ? null : $any($event))"
   />
 
-  @if (store.loading()) {
-    <div class="skeleton-list" aria-hidden="true"></div>
-    <p class="sr-only" role="status" aria-live="polite">{{ t('audit.loading') }}</p>
-  } @else if (store.failed()) {
-    <lib-notice class="mb-4" tone="bad" live="assertive">{{ t('audit.failed') }}</lib-notice>
-  } @else if (store.entries().length === 0) {
-    <!--
-      The empty message names the FILTER, because the screen opens on `denied`
-      and a shop that has refused nothing is the normal case. "Nothing recorded
-      yet" over a log with two hundred allowed rows in it is a screen lying about
-      its own data, and it reads as a feature that does not work.
-    -->
-    <p class="muted">{{ t(store.filter() ? 'audit.emptyFor' : 'audit.empty', { outcome: outcomeLabel(t) }) }}</p>
-
+  <!--
+    The empty message names the FILTER, because the screen opens on `denied`
+    and a shop that has refused nothing is the normal case. "Nothing recorded
+    yet" over a log with two hundred allowed rows in it is a screen lying about
+    its own data, and it reads as a feature that does not work.
+  -->
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.entries().length === 0"
+    [loadingText]="t('audit.loading')"
+    [failedText]="t('audit.failed')"
+    [emptyText]="t(store.filter() ? 'audit.emptyFor' : 'audit.empty', { outcome: outcomeLabel(t) })"
+  >
     @if (store.filter()) {
-      <button type="button" class="button button--quiet" (click)="store.use(null)">
+      <button empty-action type="button" class="button button--quiet" (click)="store.use(null)">
         {{ t('audit.showEverything') }}
       </button>
     }
-  } @else {
+
     <!-- In the frame every other table scrolls inside, with its cue: on a phone
          it scrolled the whole page sideways by 520 px (R-1, B-F2). -->
     <div class="table-wrap">
@@ -53,16 +53,19 @@
         </thead>
         <tbody>
           @for (entry of store.entries(); track entry.id) {
-            <tr [class.row--refused]="entry.outcome !== 'Allowed'">
-              <td class="numeric when">{{ when(entry.at) }}</td>
+            <!-- A refused row is marked on the LEFT EDGE as well as by its pill,
+                 because a pill is easy to miss when you are scanning forty rows
+                 for the one that matters. -->
+            <tr class="data-refused:shadow-[inset_2px_0_0_0_var(--warning)]" [attr.data-refused]="entry.outcome !== 'Allowed' || null">
+              <td class="when numeric whitespace-nowrap">{{ when(entry.at) }}</td>
               <!-- In the shopkeeper's words; the type stays as its title for whoever needs it (B-F6). -->
-              <td class="command" [title]="entry.commandType">{{ t('audit.commands.' + entry.commandType) }}</td>
-              <td class="who">
+              <td class="text-xs whitespace-nowrap" [title]="entry.commandType">{{ t('audit.commands.' + entry.commandType) }}</td>
+              <td class="flex flex-col gap-1">
                 <!-- An agent is a principal, not a customer, and both travel: the
                      question worth answering later is who acted AND on whose
                      behalf. Agent-driven rows render in clay (design/DESIGN.md). -->
                 @if (entry.agentId) {
-                  <span class="agent">{{ entry.agentId }}</span>
+                  <span class="font-mono text-2xs text-accent">{{ entry.agentId }}</span>
                 }
 
                 <!--
@@ -73,34 +76,36 @@
                   `681c3d75-9cc6-437d-a9c2-98d1d41ecf36` and name nobody.
 
                   The subject stays visible because it is what correlates two rows,
-                  and it is shortened for the same reason order ids are: the first
-                  segment is enough to match against something you are already
-                  looking at, and the whole value is one hover away.
+                  and it is shortened for the same reason order ids are: the
+                  random end is enough to match against something you are
+                  already looking at, and the whole value is in the opened row,
+                  to copy.
                 -->
                 @let actor = actorOf(entry);
-                <span class="subject">{{ 'guest' in actor ? t('audit.guest') : actor.label }}</span>
+                <span class="text-muted">{{ 'guest' in actor ? t('audit.guest') : actor.label }}</span>
 
                 <!--
                   Only when there IS a name and it differs. Rows written before
                   this column existed carry none, so they fall back to printing the
-                  subject above — and repeating its first segment underneath was
+                  subject above — and repeating it shortened underneath was
                   the same value twice, which is exactly the noise this was meant
                   to remove.
                 -->
                 @if (entry.actorName && entry.subject && entry.subject !== entry.actorName) {
-                  <span class="who__id" [title]="entry.subject">{{ short(entry.subject) }}</span>
+                  <!-- The stable identifier under the name: present because it is
+                       what correlates two rows, quiet because it is not what
+                       anybody reads first. -->
+                  <span class="block font-mono text-3xs text-muted" [title]="entry.subject">{{ short(entry.subject) }}</span>
                 }
               </td>
               <td>
-                <span
-                  class="pill"
-                  [class.pill--warning]="entry.outcome === 'Denied'"
-                  [class.pill--danger]="entry.outcome === 'Failed'"
-                >
+                <!-- A denial is the shop working and a failure the shop broken:
+                     two tones, never both red. -->
+                <lib-status-pill [tone]="entry.outcome === 'Failed' ? 'bad' : entry.outcome === 'Denied' ? 'warn' : 'neutral'">
                   {{ t('audit.outcome.' + entry.outcome) }}
-                </span>
+                </lib-status-pill>
               </td>
-              <td class="reason">{{ entry.reason }}</td>
+              <td class="max-w-[32ch] text-xs text-muted">{{ entry.reason }}</td>
               <td class="numeric">
                 <button type="button" class="linkish" [attr.aria-expanded]="store.opened() === entry.id" (click)="store.toggle(entry.id)">
                   {{ store.opened() === entry.id ? t('audit.hidePayload') : t('audit.showPayload') }}
@@ -109,16 +114,28 @@
             </tr>
 
             @if (store.opened() === entry.id) {
-              <tr class="payload-row">
-                <td colspan="6">
+              <tr>
+                <td class="bg-raised" colspan="6">
                   <!-- The command as it was sent, with credentials replaced. The
-                       trace id is here rather than in a column because it is what
-                       you copy once you have already found the row. -->
-                  <pre class="payload code">{{ pretty(entry.payload) }}</pre>
-                  @if (entry.traceId) {
-                    <p class="trace muted code" [title]="entry.traceId">
-                      {{ t('audit.trace', { id: short(entry.traceId) }) }}
-                    </p>
+                       trace id and the subject are here rather than in a column
+                       because they are what you copy once you have already found
+                       the row. -->
+                  <pre class="max-h-[20rem] overflow-auto p-3 text-2xs leading-snug">{{ pretty(entry.payload) }}</pre>
+                  @if (entry.traceId || entry.subject) {
+                    <dl class="mt-2 grid max-w-[40rem] gap-2 text-3xs">
+                      @if (entry.traceId; as trace) {
+                        <div class="grid gap-1">
+                          <dt class="text-muted">{{ t('audit.trace') }}</dt>
+                          <dd><lib-copy-text [value]="trace" [copyLabel]="t('audit.copyTrace')" [copiedLabel]="t('audit.copied')" /></dd>
+                        </div>
+                      }
+                      @if (entry.subject; as subject) {
+                        <div class="grid gap-1">
+                          <dt class="text-muted">{{ t('audit.subject') }}</dt>
+                          <dd><lib-copy-text [value]="subject" [copyLabel]="t('audit.copySubject')" [copiedLabel]="t('audit.copied')" /></dd>
+                        </div>
+                      }
+                    </dl>
                   }
                 </td>
               </tr>
@@ -127,6 +144,6 @@
         </tbody>
       </table>
     </div>
-      <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
-  }
+    <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
+  </backoffice-list-state>
 </ng-container>

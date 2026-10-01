@@ -29,11 +29,11 @@
     </p>
     <p class="mt-1 text-3xs text-muted">{{ t('claims.proposedBy', { extractor: claim.model ?? claim.extractor }) }}</p>
 
-    <div class="pane-actions">
-      <button type="button" class="button pane-primary" [disabled]="store.busy() === claim.claimId" (click)="store.decide(claim, 'approve', 'pane')">
+    <div class="flex flex-wrap gap-2">
+      <button type="button" class="button pane-primary flex-1" [disabled]="store.busy() === claim.claimId" (click)="store.decide(claim, 'approve', 'pane')">
         {{ t('claims.approve') }}
       </button>
-      <button type="button" class="button button--quiet pane-primary" [disabled]="store.busy() === claim.claimId" (click)="store.decide(claim, 'reject', 'pane')">
+      <button type="button" class="button button--quiet pane-primary flex-1" [disabled]="store.busy() === claim.claimId" (click)="store.decide(claim, 'reject', 'pane')">
         {{ t('claims.reject') }}
       </button>
     </div>

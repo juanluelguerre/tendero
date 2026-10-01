@@ -4,7 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthStore } from '@tendero/shared-auth';
 import { type Culture, CultureStore } from '@tendero/shared-i18n';
 import { Telemetry } from '@tendero/shared-telemetry';
-import { type ThemeChoice, ThemeChoices, ThemeStore } from '@tendero/shared-ui';
+import { CultureSwitch, type ThemeChoice, ThemeStore, ThemeSwitch } from '@tendero/shared-ui';
 
 /**
  * Who is shopping and how the shop is shown to them: the language, the theme,
@@ -21,7 +21,7 @@ import { type ThemeChoice, ThemeChoices, ThemeStore } from '@tendero/shared-ui';
  */
 @Component({
   selector: 'storefront-account-menu',
-  imports: [TranslocoDirective, RouterLink],
+  imports: [TranslocoDirective, RouterLink, CultureSwitch, ThemeSwitch],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './account-menu.html',
   styleUrl: './account-menu.css',
@@ -47,7 +47,6 @@ export class AccountMenu {
 
   protected readonly cultures = this.cultureStore.available;
   protected readonly culture = this.cultureStore.active;
-  protected readonly themes = ThemeChoices;
   protected readonly themeChoice = this.theme.choice;
   protected readonly accountLink = computed(() => ['/', this.culture(), 'account']);
 

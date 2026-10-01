@@ -22,13 +22,7 @@
   @if (searches().length > 0) {
     <ul shelfExtras class="mt-3 flex flex-wrap items-center gap-2" [attr.aria-label]="t('home.trailSearches')">
       <li aria-hidden="true">
-        <svg
-          class="block size-[1rem] fill-none stroke-muted stroke-2"
-          viewBox="0 0 24 24"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          focusable="false"
-        ><path d="M4 12a8 8 0 1 0 2.3-5.7" /><path d="M4 4v4h4M12 8v4l3 2" /></svg>
+<lib-icon class="block size-[1rem] text-muted" name="history" [stroke]="2" />
       </li>
       @for (search of searches(); track search.key) {
         <li class="inline-flex items-center rounded-full border border-hairline bg-surface text-xs">
