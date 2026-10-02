@@ -1,6 +1,8 @@
 using ElGuerre.Tendero.Inventory.Adapters;
+using ElGuerre.Tendero.Inventory.Features.StockHealth;
 using ElGuerre.Tendero.Inventory.Ledger;
 using ElGuerre.Tendero.Inventory.Ports;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -36,6 +38,9 @@ public static class InventoryServiceCollectionExtensions
 
         // Scoped: it writes through the unit of work, which is the DbContext.
         services.AddScoped<IStockLedger, StockLedger>();
+
+        // What Steward may read of the stock (phase 12, ADR 0054).
+        services.AddScoped<IReadTool, StockToRestockTool>();
 
         return services;
     }
