@@ -44,6 +44,16 @@ the rule every container here follows.
   will be somewhat higher. The window stays an estimate until S-6 records the
   largest real conversation.
 
-## The contract run
+## The contract run (2026-10-02)
 
-Recorded below after Task 7.
+`tests/Ai.Tests`, `Category=Model`, against `steward-model` with the 5.5 GB
+limit: **three of three pass** — the 4B calls a tool through the default chat
+template and answers with its result, reports input and output tokens, and a
+timeout surfaces as one.
+
+The first run failed the third, and that was the finding: the OpenAI SDK
+retries a failed call three times by default and then throws an
+`AggregateException`. With the local profile's 300 s timeout, a stuck turn would
+have taken twenty minutes to fail and been metered as one call. The client now
+makes exactly one request per call (`ClientRetryPolicy(maxRetries: 0)`, a unit
+test holds it); trying again, or the fallback, is the caller's decision — S-3's.

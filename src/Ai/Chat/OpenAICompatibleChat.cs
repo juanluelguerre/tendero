@@ -33,7 +33,15 @@ public static class OpenAICompatibleChat
     {
         ArgumentNullException.ThrowIfNull(baseUrl);
 
-        var options = new OpenAIClientOptions { Endpoint = baseUrl, NetworkTimeout = timeout ?? TimeSpan.FromMinutes(10) };
+        var options = new OpenAIClientOptions
+        {
+            Endpoint = baseUrl,
+            NetworkTimeout = timeout ?? TimeSpan.FromMinutes(10),
+            // One request per call. The SDK's default three retries would make a
+            // 300 s timeout fail after twenty minutes, metered as one call; trying
+            // again, or the fallback, is the caller's decision.
+            RetryPolicy = new ClientRetryPolicy(maxRetries: 0),
+        };
         if (transport is not null)
             options.Transport = transport;
 
