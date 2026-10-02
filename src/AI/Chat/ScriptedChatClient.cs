@@ -1,4 +1,7 @@
+using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 
 namespace ElGuerre.Tendero.AI.Chat;
@@ -12,9 +15,14 @@ namespace ElGuerre.Tendero.AI.Chat;
 /// that loops, so a turn's cap can be shown.</param>
 /// <param name="ThenFail">Fails once its tools answered — a provider dropping a turn
 /// half way.</param>
+/// <param name="Then">A second round, called once the first round answered (S-6):
+/// an argument written <c>{from:tool:path}</c> takes that tool's latest result at
+/// that path — <c>data.products.0.productId</c> — so a script can find a product
+/// and then propose for it, though its id is minted at import.</param>
 public sealed record ScriptedTurn(
     string When, IReadOnlyList<ScriptedCall>? Calls = null, string? Say = null,
-    int InputTokens = 100, int OutputTokens = 20, int DelayMs = 0, bool Always = false, bool ThenFail = false);
+    int InputTokens = 100, int OutputTokens = 20, int DelayMs = 0, bool Always = false, bool ThenFail = false,
+    IReadOnlyList<ScriptedCall>? Then = null);
 
 public sealed record ScriptedCall(string Tool, JsonElement Arguments);
 
@@ -54,14 +62,26 @@ public sealed class ScriptedChatClient(IReadOnlyList<ScriptedTurn> script, TimeS
             await Task.Delay(step.DelayMs, deadline.Token);
         }
 
-        var answered = conversation.LastOrDefault()?.Role == ChatRole.Tool;
-        if (answered && step.ThenFail)
+        // How many rounds of calls this turn has made since the person spoke.
+        var rounds = conversation
+            .Skip(conversation.FindLastIndex(message => message.Role == ChatRole.User) + 1)
+            .Count(message => message.Role == ChatRole.Assistant && message.Contents.OfType<FunctionCallContent>().Any());
+
+        var next = rounds switch
+        {
+            0 => step.Calls,
+            1 when step.Then is { Count: > 0 } then => then,
+            _ when step.Always => step.Calls,
+            _ => null,
+        };
+        if (rounds > 0 && step.ThenFail && (step.Then is null || rounds > 1))
             throw new HttpRequestException("The scripted provider dropped the turn.");
-        if (step.Calls is { Count: > 0 } calls && (!answered || step.Always))
+        if (next is { Count: > 0 } calls)
         {
             return Answer(new ChatMessage(ChatRole.Assistant,
             [
-                .. calls.Select((call, index) => new FunctionCallContent($"call-{index}", call.Tool, Arguments(call.Arguments))),
+                .. calls.Select((call, index) =>
+                    new FunctionCallContent($"call-{rounds}-{index}", call.Tool, Arguments(call.Arguments, conversation))),
             ]), step.InputTokens, step.OutputTokens, ChatFinishReason.ToolCalls);
         }
 
@@ -85,10 +105,77 @@ public sealed class ScriptedChatClient(IReadOnlyList<ScriptedTurn> script, TimeS
             ModelId = "scripted",
         };
 
-    private static Dictionary<string, object?> Arguments(JsonElement arguments) =>
-        arguments.ValueKind == JsonValueKind.Object
-            ? arguments.EnumerateObject().ToDictionary(property => property.Name, property => (object?)property.Value.Clone())
-            : [];
+    private static Dictionary<string, object?> Arguments(JsonElement arguments, IReadOnlyList<ChatMessage> conversation)
+    {
+        if (arguments.ValueKind != JsonValueKind.Object)
+            return [];
+
+        var resolved = Resolve(JsonNode.Parse(arguments.GetRawText()), conversation);
+        return JsonSerializer.SerializeToElement(resolved).EnumerateObject()
+            .ToDictionary(property => property.Name, property => (object?)property.Value.Clone());
+    }
+
+    /// <summary>A reference to an earlier result: <c>{from:find_products:data.products.0.productId}</c>.</summary>
+    private static readonly Regex Reference = new(@"^\{from:(?<tool>[a-z_]+):(?<path>[^}]+)\}$", RegexOptions.CultureInvariant);
+
+    private static JsonNode? Resolve(JsonNode? node, IReadOnlyList<ChatMessage> conversation)
+    {
+        switch (node)
+        {
+            // Only a reference is replaced: a node kept is not set again, because a
+            // node cannot be given to the parent it already has.
+            case JsonObject properties:
+                foreach (var name in properties.Select(property => property.Key).ToList())
+                {
+                    var child = properties[name];
+                    if (Resolve(child, conversation) is var resolved && !ReferenceEquals(child, resolved))
+                        properties[name] = resolved;
+                }
+
+                return properties;
+            case JsonArray items:
+                for (var index = 0; index < items.Count; index++)
+                {
+                    var child = items[index];
+                    if (Resolve(child, conversation) is var resolved && !ReferenceEquals(child, resolved))
+                        items[index] = resolved;
+                }
+
+                return items;
+            case JsonValue value when value.TryGetValue<string>(out var text) && Reference.Match(text) is { Success: true } reference:
+                return Lookup(reference.Groups["tool"].Value, reference.Groups["path"].Value, conversation)
+                    ?? throw new InvalidOperationException($"The script refers to {text}, which no earlier result holds.");
+            default:
+                return node;
+        }
+    }
+
+    /// <summary>The value at a dotted path of a tool's latest result; numbers index arrays.</summary>
+    private static JsonNode? Lookup(string tool, string path, IReadOnlyList<ChatMessage> conversation)
+    {
+        var names = conversation.SelectMany(message => message.Contents).OfType<FunctionCallContent>()
+            .ToDictionary(call => call.CallId, call => call.Name);
+        var result = conversation.SelectMany(message => message.Contents).OfType<FunctionResultContent>()
+            .LastOrDefault(found => names.GetValueOrDefault(found.CallId) == tool);
+        if (result is null)
+            return null;
+
+        var node = JsonNode.Parse(Text(result.Result));
+        foreach (var segment in path.Split('.'))
+        {
+            node = node switch
+            {
+                JsonArray items when int.TryParse(segment, NumberStyles.None, CultureInfo.InvariantCulture, out var index) && index < items.Count
+                    => items[index],
+                JsonObject properties => properties[segment],
+                _ => null,
+            };
+            if (node is null)
+                return null;
+        }
+
+        return node?.DeepClone();
+    }
 
     /// <summary>Each <c>{tool:name}</c> becomes that tool's latest result, as text.</summary>
     private static string Fill(string say, IReadOnlyList<ChatMessage> conversation)

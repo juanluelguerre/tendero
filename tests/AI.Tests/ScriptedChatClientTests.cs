@@ -72,6 +72,42 @@ public sealed class ScriptedChatClientTests
         await Assert.ThrowsAsync<HttpRequestException>(() => failing.GetResponseAsync(conversation, cancellationToken: TestContext.Current.CancellationToken));
     }
 
+    /// <summary>
+    /// A second round of calls after the first round answered, and an argument
+    /// taken from what a tool returned (S-6): a script can find a product and then
+    /// propose for it, though its id is minted at import and no script can know it.
+    /// </summary>
+    [Fact]
+    public async Task A_second_round_takes_an_argument_from_what_the_first_round_read()
+    {
+        var script = new ScriptedChatClient(
+        [
+            new ScriptedTurn("rename", [new ScriptedCall("find_products", Json("""{"text":"Pulse"}"""))],
+                Then: [new ScriptedCall("propose", Json("""{"items":[{"productId":"{from:find_products:data.products.0.productId}","name":"Pulse"}]}"""))],
+                Say: "Proposed."),
+        ], TimeSpan.FromSeconds(5));
+        var found = Json("""{"data":{"products":[{"productId":"0199-pulse","name":"Pulse Runner"}]},"rows":1}""");
+        List<ChatMessage> conversation =
+        [
+            new(ChatRole.User, "rename the Pulse Runner"),
+            new(ChatRole.Assistant, [new FunctionCallContent("call-0", "find_products")]),
+            new(ChatRole.Tool, [new FunctionResultContent("call-0", found)]),
+        ];
+
+        var second = await script.GetResponseAsync(conversation, cancellationToken: TestContext.Current.CancellationToken);
+        var call = Assert.Single(second.Messages.SelectMany(message => message.Contents).OfType<FunctionCallContent>());
+        conversation.Add(new(ChatRole.Assistant, [call]));
+        conversation.Add(new(ChatRole.Tool, [new FunctionResultContent(call.CallId, "ok")]));
+        var third = await script.GetResponseAsync(conversation, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("propose", call.Name);
+        var item = ((JsonElement)call.Arguments!["items"]!)[0];
+        Assert.Equal(("0199-pulse", "Pulse"), (item.GetProperty("productId").GetString(), item.GetProperty("name").GetString()));
+        Assert.Equal("Proposed.", third.Text);
+    }
+
+    private static JsonElement Json(string json) => JsonDocument.Parse(json).RootElement.Clone();
+
     [Fact]
     public async Task A_question_it_was_not_scripted_for_says_so()
     {
