@@ -81,6 +81,11 @@ public sealed class EndpointAuthorizationTests
     /// through the test above.
     /// </summary>
     [Theory]
+    [InlineData("/api/steward/proposals/approve")]
+    [InlineData("/api/steward/proposals/reject")]
+    public void Stewards_proposals_are_decided_by_the_shopkeeper(string route) => Writes_to_the_catalogue_require_the_shopkeeper(route);
+
+    [Theory]
     [InlineData("/api/catalog/import")]
     [InlineData("/api/catalog/products/{id:guid}/publish")]
     [InlineData("/api/catalog/products/{id:guid}/withdraw")]

@@ -30,6 +30,7 @@ internal static class DomainModelDocument
         ("Ordering", Solution.Ordering),
         ("Accounts", Solution.Accounts),
         ("Knowledge", Solution.Knowledge),
+        ("Assist", Solution.Assist),
     ];
 
     private static readonly NullabilityInfoContext Nullability = new();

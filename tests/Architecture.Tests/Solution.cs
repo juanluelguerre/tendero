@@ -1,6 +1,7 @@
 extern alias TenderoApi;
 using System.Reflection;
 using ElGuerre.Tendero.Accounts.Domain;
+using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
@@ -24,6 +25,7 @@ internal static class Solution
 {
     public static readonly Assembly SharedKernel = typeof(LocalizedText).Assembly;
     public static readonly Assembly Accounts = typeof(Customer).Assembly;
+    public static readonly Assembly Assist = typeof(ActionProposal).Assembly;
     public static readonly Assembly Catalog = typeof(Product).Assembly;
     public static readonly Assembly Ordering = typeof(Order).Assembly;
     public static readonly Assembly Search = typeof(IProductIndexer).Assembly;
@@ -40,7 +42,7 @@ internal static class Solution
     public static readonly Assembly Ucp = typeof(UcpProfile).Assembly;
 
     /// <summary>Contexts and capabilities: where the domain and the slices live.</summary>
-    public static readonly Assembly[] Contexts = [Accounts, Catalog, Inventory, Knowledge, Ordering, Pricing, Search];
+    public static readonly Assembly[] Contexts = [Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search];
 
     /// <summary>
     /// Transports, which are deliberately NOT in <see cref="Contexts"/>: they own
@@ -52,7 +54,7 @@ internal static class Solution
 
     public static readonly Assembly[] All =
     [
-        SharedKernel, Accounts, Catalog, Inventory, Knowledge, Ordering, Pricing, Search,
+        SharedKernel, Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search,
         Mcp, Ucp, Persistence, ServiceDefaults, Api, Workers, SearchEval
     ];
 }

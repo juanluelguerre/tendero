@@ -977,3 +977,54 @@ stateDiagram-v2
     Proposed --> Superseded
     Approved --> Superseded
 ```
+
+## Assist
+
+```mermaid
+classDiagram
+    class ActionProposal {
+        <<aggregate>>
+        +ProposalId Id
+        +string Command
+        +string Payload
+        +string Subject
+        +string? Before
+        +string Reason
+        +ProposalProvenance Provenance
+        +DateTimeOffset ProposedAt
+        +ProposalStatus Status
+        +string? DecidedBy
+        +DateTimeOffset? DecidedAt
+        +string? Result
+    }
+    class ProposalProvenance {
+        <<record>>
+        +string? Profile
+        +string? Model
+        +string? PromptVersion
+        +string? ConversationId
+        +string? TraceId
+        +string AskedBy
+    }
+    class ProposalStatus {
+        <<enumeration>>
+        Proposed
+        Approved
+        Applied
+        Failed
+        Rejected
+        Stale
+    }
+    ActionProposal --> ProposalProvenance : Provenance
+```
+
+### ActionProposal states
+
+```mermaid
+stateDiagram-v2
+    Proposed --> Approved
+    Proposed --> Rejected
+    Proposed --> Stale
+    Approved --> Applied
+    Approved --> Failed
+```

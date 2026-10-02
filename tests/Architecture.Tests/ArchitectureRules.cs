@@ -382,6 +382,63 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// Assist runs other contexts' commands and references none of them: it reaches
+    /// them only through <see cref="IProposableCommand"/>, which each context
+    /// implements for its own commands (ADR 0052). A reference to Catalog here
+    /// would be Assist learning what a product is.
+    /// </summary>
+    [Fact]
+    public void Assist_knows_only_the_shared_kernel()
+    {
+        var sharedKernel = Solution.SharedKernel.GetName().Name;
+
+        var contexts = Solution.Assist.GetReferencedAssemblies()
+            .Select(reference => reference.Name)
+            .OfType<string>()
+            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal) && name != sharedKernel)
+            .ToArray();
+
+        Assert.True(contexts.Length == 0,
+            $"Assist references {string.Join(", ", contexts)}. It may reference only {sharedKernel}: "
+            + "it runs commands through IProposableCommand, never through another context's types.");
+    }
+
+    /// <summary>
+    /// "Approving or rejecting — a proposal or a claim — is never proposable" (the
+    /// Steward spec): no AI approves what an AI proposed. Every entry derives the
+    /// typed base, so the command it runs can be read, and none runs a decision.
+    /// </summary>
+    [Fact]
+    public void No_proposable_command_approves_rejects_or_reviews()
+    {
+        var entries = Solution.All
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => !type.IsAbstract && typeof(IProposableCommand).IsAssignableFrom(type))
+            .ToList();
+
+        Assert.True(entries.Count >= 2, $"Only {entries.Count} proposable commands were found; the scan is not seeing Catalog's.");
+
+        var offending = entries
+            .Select(type => (Type: type, Command: CommandOf(type)))
+            .Where(entry => entry.Command is null
+                            || entry.Command.Name.StartsWith("Approve", StringComparison.Ordinal)
+                            || entry.Command.Name.StartsWith("Reject", StringComparison.Ordinal)
+                            || entry.Command.Name.StartsWith("Review", StringComparison.Ordinal))
+            .Select(entry => $"{entry.Type.FullName} runs {entry.Command?.Name ?? "a command it does not declare"}")
+            .ToList();
+
+        Assert.True(offending.Count == 0, "Proposable commands that decide, or that hide their command:\n" + string.Join('\n', offending));
+
+        static Type? CommandOf(Type type)
+        {
+            for (var current = type.BaseType; current is not null; current = current.BaseType)
+                if (current.IsGenericType && current.GetGenericTypeDefinition() == typeof(ProposableCommand<,,>))
+                    return current.GetGenericArguments()[1];
+            return null;
+        }
+    }
+
+    /// <summary>
     /// And so does Catalog, for the same reason and under the same limit.
     ///
     /// The product page renders a variant picker where a sold-out size is
