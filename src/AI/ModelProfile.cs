@@ -42,7 +42,8 @@ public sealed class ModelProfile
     public int ContextTokens { get; init; } = 8192;
 
     /// <summary>A local model on the CPU and a hosted one answer at very different
-    /// speeds, so each profile says how long is too long.</summary>
+    /// speeds, so each profile says how long is too long. An in-process ONNX profile
+    /// has no network to time out and ignores it.</summary>
     public int TimeoutSeconds { get; init; } = 120;
 
     /// <summary>
@@ -60,8 +61,13 @@ public sealed class ModelProfile
     public IReadOnlyList<string> Problems(string name)
     {
         List<string> problems = [];
+        if (TimeoutSeconds <= 0)
+            problems.Add($"Model profile '{name}' has a TimeoutSeconds of {TimeoutSeconds}; it must be positive.");
+
         if (Kind == ModelKind.OpenAICompatible)
         {
+            if (Endpoint is not null && !(Endpoint.IsAbsoluteUri && Endpoint.Scheme is "http" or "https"))
+                problems.Add($"Model profile '{name}' has an Endpoint that is not an http(s) URL: {Endpoint}.");
             if (string.IsNullOrWhiteSpace(Model))
                 problems.Add($"Model profile '{name}' has no Model.");
             if (Auth == ModelAuth.Bearer && string.IsNullOrWhiteSpace(ApiKey))

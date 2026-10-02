@@ -48,6 +48,17 @@ public sealed class ModelProfileTests
         Assert.Contains(profile.Problems("gemini"), problem => problem.Contains(lacking) && problem.Contains("gemini"));
     }
 
+    /// <summary>Said at start, not at the first call (M-7).</summary>
+    [Theory]
+    [InlineData("http://x/v1/", 0, "TimeoutSeconds")]
+    [InlineData("ftp://x/v1/", 120, "Endpoint")]
+    public void A_profile_with_an_impossible_timeout_or_endpoint_names_it(string endpoint, int timeout, string lacking)
+    {
+        var profile = new ModelProfile { Endpoint = new Uri(endpoint), Model = "m", TimeoutSeconds = timeout };
+
+        Assert.Contains(profile.Problems("local"), problem => problem.Contains(lacking));
+    }
+
     [Fact]
     public void A_profile_with_everything_has_no_problems() =>
         Assert.Empty(new ModelProfile { Endpoint = new Uri("http://x/v1/"), Model = "m" }.Problems("local"));

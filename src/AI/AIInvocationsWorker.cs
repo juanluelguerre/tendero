@@ -14,6 +14,8 @@ public sealed partial class AIInvocationsWorker(AIInvocationLog log, IServiceSco
 {
     private const int BatchSize = 100;
 
+    private static readonly TimeSpan DrainGrace = TimeSpan.FromSeconds(5);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var batch = new List<AIInvocation>(BatchSize);
@@ -41,6 +43,25 @@ public sealed partial class AIInvocationsWorker(AIInvocationLog log, IServiceSco
         }
         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
         {
+        }
+
+        // The host is stopping: what is still in the log is written rather than
+        // lost — the cost line is the sum of the rows — within a short grace.
+        batch.Clear();
+        while (log.Reader.TryRead(out var row))
+            batch.Add(row);
+        if (batch.Count == 0)
+            return;
+
+        try
+        {
+            using var grace = new CancellationTokenSource(DrainGrace);
+            await using var scope = scopes.CreateAsyncScope();
+            await scope.ServiceProvider.GetRequiredService<IAIInvocationWriter>().WriteAsync(batch, grace.Token);
+        }
+        catch (Exception failure)
+        {
+            LogLost(logger, failure, batch.Count);
         }
     }
 

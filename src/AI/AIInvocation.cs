@@ -5,6 +5,10 @@ public enum AIOutcome
     Ok,
     Error,
     Timeout,
+
+    /// <summary>The caller stopped waiting — a panel closed, a stream left half
+    /// read. Not the model failing, so not counted as an error.</summary>
+    Cancelled,
 }
 
 /// <summary>

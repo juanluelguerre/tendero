@@ -60,6 +60,64 @@ public sealed class MeteringChatClientTests
         Assert.Equal(AIOutcome.Timeout, row.Outcome);
     }
 
+    /// <summary>A shopkeeper closing the panel is not a model failing: the call is
+    /// recorded as Cancelled, so the error rate stays the model's (M-1).</summary>
+    [Fact]
+    public async Task A_call_the_caller_cancelled_is_recorded_as_cancelled()
+    {
+        var log = new AIInvocationLog();
+        using var closed = new CancellationTokenSource();
+        await closed.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Metered(new Failing(new TaskCanceledException()), log, new ModelProfile { Model = "m" })
+            .GetResponseAsync("hola", cancellationToken: closed.Token));
+
+        Assert.True(log.Reader.TryRead(out var row));
+        Assert.Equal(AIOutcome.Cancelled, row.Outcome);
+    }
+
+    /// <summary>A stream that breaks still leaves its row (M-2).</summary>
+    [Fact]
+    public async Task A_stream_that_fails_is_recorded()
+    {
+        var log = new AIInvocationLog();
+        var chat = Metered(new Streaming(fail: true), log, new ModelProfile { Model = "m" });
+
+        await Assert.ThrowsAsync<HttpRequestException>(async () =>
+        {
+            await foreach (var _ in chat.GetStreamingResponseAsync("hola", cancellationToken: TestContext.Current.CancellationToken)) { }
+        });
+
+        Assert.True(log.Reader.TryRead(out var row));
+        Assert.Equal(AIOutcome.Error, row.Outcome);
+    }
+
+    /// <summary>And so does a stream the caller stopped reading (M-2).</summary>
+    [Fact]
+    public async Task A_stream_left_half_read_is_recorded()
+    {
+        var log = new AIInvocationLog();
+        var chat = Metered(new Streaming(fail: false), log, new ModelProfile { Model = "m" });
+
+        await foreach (var _ in chat.GetStreamingResponseAsync("hola", cancellationToken: TestContext.Current.CancellationToken))
+            break;
+
+        Assert.True(log.Reader.TryRead(out var row));
+        Assert.Equal(AIOutcome.Cancelled, row.Outcome);
+    }
+
+    [Fact]
+    public async Task A_stream_read_to_the_end_is_recorded_with_its_usage()
+    {
+        var log = new AIInvocationLog();
+        var chat = Metered(new Streaming(fail: false), log, new ModelProfile { Model = "m" });
+
+        await foreach (var _ in chat.GetStreamingResponseAsync("hola", cancellationToken: TestContext.Current.CancellationToken)) { }
+
+        Assert.True(log.Reader.TryRead(out var row));
+        Assert.Equal((AIOutcome.Ok, 7L, 2L), (row.Outcome, row.InputTokens, row.OutputTokens));
+    }
+
     private static IChatClient Metered(IChatClient inner, AIInvocationLog log, ModelProfile profile) =>
         new MeteringChatClient(inner, "gemini", profile, log, Clock);
 
@@ -70,6 +128,27 @@ public sealed class MeteringChatClientTests
 
         public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default) =>
             throw new NotSupportedException();
+
+        public object? GetService(Type serviceType, object? serviceKey = null) => null;
+
+        public void Dispose() { }
+    }
+
+    private sealed class Streaming(bool fail) : IChatClient
+    {
+        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null,
+            [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "ho");
+            await Task.Yield();
+            if (fail)
+                throw new HttpRequestException("503");
+            yield return new ChatResponseUpdate(ChatRole.Assistant, "la");
+            yield return new ChatResponseUpdate { Contents = [new UsageContent(new UsageDetails { InputTokenCount = 7, OutputTokenCount = 2 })] };
+        }
 
         public object? GetService(Type serviceType, object? serviceKey = null) => null;
 

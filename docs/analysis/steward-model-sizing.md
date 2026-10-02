@@ -47,7 +47,10 @@ the rule every container here follows.
   hosted profiles start from, and the reason the panel shows progress rather
   than streaming (a spec non-goal revisited after S-7).
 - The development stack was running beside it; on an idle machine the rates
-  will be somewhat higher. The window stays an estimate until S-6 records the
+  will be somewhat higher. With `Tendero__Knowledge` on as well, the extractor
+  and `steward-model` each take 12 threads of the machine's 16: when both are
+  busy they share the CPU, and these figures — measured with `steward-model`
+  alone — are the best case. The window stays an estimate until S-6 records the
   largest real conversation.
 
 ## The contract run (2026-10-02)

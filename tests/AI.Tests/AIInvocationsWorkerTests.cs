@@ -57,6 +57,27 @@ public sealed class AIInvocationsWorkerTests
         Assert.Single(writer.Rows);
     }
 
+    /// <summary>The rows still in the log when the host stops are written, not
+    /// lost: the cost line is the sum of the rows (M-4).</summary>
+    [Fact]
+    public async Task The_rows_left_when_the_host_stops_are_still_written()
+    {
+        var (log, writer, worker) = Compose();
+        var release = new TaskCompletionSource();
+        writer.Block = release;
+
+        await worker.StartAsync(TestContext.Current.CancellationToken);
+        log.Record(AIInvocationLogTests.Row());
+        await writer.Attempted(1);
+        log.Record(AIInvocationLogTests.Row());
+        log.Record(AIInvocationLogTests.Row());
+        var stopping = worker.StopAsync(TestContext.Current.CancellationToken);
+        release.SetResult();
+        await stopping;
+
+        Assert.Equal(3, writer.Rows.Count);
+    }
+
     private static (AIInvocationLog, RecordingWriter, AIInvocationsWorker) Compose()
     {
         var log = new AIInvocationLog();
@@ -76,9 +97,18 @@ public sealed class AIInvocationsWorkerTests
 
         public Exception? FailNextWith { get; set; }
 
-        public Task WriteAsync(IReadOnlyList<AIInvocation> rows, CancellationToken cancellationToken = default)
+        /// <summary>Holds the first write until released, so rows queue behind it.</summary>
+        public TaskCompletionSource? Block { get; set; }
+
+        public async Task WriteAsync(IReadOnlyList<AIInvocation> rows, CancellationToken cancellationToken = default)
         {
             Interlocked.Increment(ref this.attempts);
+            if (Block is { } block)
+            {
+                Block = null;
+                await block.Task;
+            }
+
             if (FailNextWith is { } failure)
             {
                 FailNextWith = null;
@@ -92,7 +122,6 @@ public sealed class AIInvocationsWorkerTests
 
             lock (Rows)
                 Rows.AddRange(rows);
-            return Task.CompletedTask;
         }
 
         public Task Seen(int count) => Until(() => { lock (Rows) return Rows.Count >= count; });

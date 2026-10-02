@@ -25,11 +25,7 @@ public sealed class MeteringChatClient(
         }
         catch (Exception failure)
         {
-            // A timeout is the HTTP client giving up, not the caller cancelling.
-            Record(options, started, null,
-                failure is TaskCanceledException or TimeoutException && !cancellationToken.IsCancellationRequested
-                    ? AIOutcome.Timeout
-                    : AIOutcome.Error);
+            Record(options, started, null, OutcomeOf(failure, cancellationToken));
             throw;
         }
     }
@@ -38,19 +34,51 @@ public sealed class MeteringChatClient(
         IEnumerable<ChatMessage> messages, ChatOptions? options = null,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // Streaming is a non-goal (the spec); metered all the same, from the usage
-        // the updates carry.
+        // Streaming is a non-goal (the spec), metered all the same. By hand, so a
+        // stream that breaks, or one the caller stops reading, still leaves its row.
         var started = clock.GetTimestamp();
         UsageDetails? usage = null;
-        await foreach (var update in base.GetStreamingResponseAsync(messages, options, cancellationToken))
+        var outcome = AIOutcome.Cancelled;   // left half read, unless it ends or fails
+        await using var updates = base.GetStreamingResponseAsync(messages, options, cancellationToken)
+            .GetAsyncEnumerator(cancellationToken);
+        try
         {
-            foreach (var content in update.Contents.OfType<UsageContent>())
-                usage = content.Details;
-            yield return update;
-        }
+            while (true)
+            {
+                ChatResponseUpdate update;
+                try
+                {
+                    if (!await updates.MoveNextAsync())
+                        break;
+                    update = updates.Current;
+                }
+                catch (Exception failure)
+                {
+                    outcome = OutcomeOf(failure, cancellationToken);
+                    throw;
+                }
 
-        Record(options, started, usage, AIOutcome.Ok);
+                foreach (var content in update.Contents.OfType<UsageContent>())
+                    usage = content.Details;
+                yield return update;
+            }
+
+            outcome = AIOutcome.Ok;
+        }
+        finally
+        {
+            Record(options, started, usage, outcome);
+        }
     }
+
+    /// <summary>The caller giving up is Cancelled; the HTTP client giving up is a
+    /// Timeout; anything else is the model or the network failing.</summary>
+    private static AIOutcome OutcomeOf(Exception failure, CancellationToken cancellationToken) => failure switch
+    {
+        OperationCanceledException when cancellationToken.IsCancellationRequested => AIOutcome.Cancelled,
+        TaskCanceledException or TimeoutException => AIOutcome.Timeout,
+        _ => AIOutcome.Error,
+    };
 
     private void Record(ChatOptions? options, long started, UsageDetails? usage, AIOutcome outcome)
     {

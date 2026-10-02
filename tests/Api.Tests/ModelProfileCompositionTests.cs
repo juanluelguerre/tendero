@@ -38,6 +38,19 @@ public sealed class ModelProfileCompositionTests
         Assert.NotNull(factory.Services.GetKeyedService<IChatClient>("gemini"));
     }
 
+    /// <summary>Steward's local model is the extractor's GGUF: its rows carry the
+    /// same model id, or "tokens per model" would split one model in two (M-5).</summary>
+    [Fact]
+    public void The_local_profile_names_its_model_as_the_extractor_does()
+    {
+        using var factory = new TenderoApiFactory();
+        _ = factory.CreateClient();
+
+        Assert.Equal(
+            ElGuerre.Tendero.Knowledge.KnowledgeServiceCollectionExtensions.Extractor.ModelId,
+            factory.Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()["Steward:Models:local:Model"]);
+    }
+
     [Fact]
     public void With_its_address_the_local_profile_is_a_client()
     {

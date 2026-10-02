@@ -25,6 +25,23 @@ public sealed class ModelProfileRegistrationTests
         Assert.Null(provider.GetKeyedService<IChatClient>("deepseek"));
     }
 
+    /// <summary>The order the spec gives: tracing outside metering, so the metered
+    /// row's trace is the GenAI span's (M-9).</summary>
+    [Fact]
+    public void Tracing_is_outside_metering()
+    {
+        using var provider = Compose(new()
+        {
+            ["Steward:Models:local:Endpoint"] = "http://localhost:38085/v1/",
+            ["Steward:Models:local:Model"] = "Qwen/Qwen3.5-4B",
+        });
+
+        var client = provider.GetRequiredKeyedService<IChatClient>("local");
+
+        Assert.IsType<OpenTelemetryChatClient>(client);
+        Assert.IsType<MeteringChatClient>(((DelegatingChatClient)client).GetService<MeteringChatClient>());
+    }
+
     [Fact]
     public void A_profile_that_cannot_be_called_stops_the_host_naming_it()
     {

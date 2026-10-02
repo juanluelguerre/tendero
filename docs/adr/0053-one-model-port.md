@@ -44,6 +44,9 @@ cannot be the shared place.
 7. **One request per call.** The OpenAI SDK's three default retries are off:
    with a 300 s local timeout they turned a stuck call into twenty minutes,
    metered as one. Trying again, or the fallback, is the caller's decision.
+   That holds for the claim extractor too: a transient 5xx or 429 now costs one
+   of a product's attempts and its one-minute pause, where the SDK used to retry
+   inside the attempt — and a stuck call no longer takes forty minutes.
 8. **A profile is registered where it can be reached.** One with no endpoint is
    left out without complaint — the local profile until the AppHost hands it an
    address — and every other profile is a client regardless; one that is half
