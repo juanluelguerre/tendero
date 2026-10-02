@@ -29,12 +29,14 @@ public static class SalesRanking
     /// What sold in <paramref name="orders"/>, grouped by <paramref name="key"/>,
     /// most units first; a tie goes to the one that brought more money, and then
     /// to the key, so the same orders always rank the same way. Orders that are
-    /// not sales are left out here, whoever passed them.
+    /// not sales are left out here, whoever passed them; <paramref name="lines"/>
+    /// narrows the lines that count (a category, for Steward's ranking).
     /// </summary>
-    public static IReadOnlyList<Sold> Rank(IEnumerable<Order> orders, Func<OrderLine, string> key) =>
+    public static IReadOnlyList<Sold> Rank(IEnumerable<Order> orders, Func<OrderLine, string> key, Func<OrderLine, bool>? lines = null) =>
     [
         .. orders.Where(IsSale)
             .SelectMany(order => order.Lines)
+            .Where(lines ?? (_ => true))
             .GroupBy(key, StringComparer.OrdinalIgnoreCase)
             .Select(group => new Sold(group.Key, group.First().ProductName, group.Sum(line => line.Quantity), group.Sum(line => line.Total.Amount)))
             .OrderByDescending(sold => sold.Units)

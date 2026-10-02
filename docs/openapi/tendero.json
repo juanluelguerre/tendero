@@ -3079,6 +3079,66 @@
         }
       }
     },
+    "/api/dashboard/products": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetProductPerformance",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "ranking",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "Best",
+                "Worst"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductPerformance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/checkout/shipping-options": {
       "post": {
         "tags": [
@@ -6211,6 +6271,12 @@
           }
         }
       },
+      "PerformanceRanking": {
+        "enum": [
+          "Best",
+          "Worst"
+        ]
+      },
       "PlaceOrderRequest": {
         "required": [
           "shippingAddress",
@@ -6633,6 +6699,69 @@
           "sortOrder": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ProductPerformance": {
+        "required": [
+          "period",
+          "ranking",
+          "category",
+          "currency",
+          "total",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/DashboardPeriod"
+          },
+          "ranking": {
+            "$ref": "#/components/schemas/PerformanceRanking"
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductSales"
+            }
+          }
+        }
+      },
+      "ProductSales": {
+        "required": [
+          "productId",
+          "name",
+          "units",
+          "revenue"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "revenue": {
+            "type": "number",
+            "format": "double"
           }
         }
       },

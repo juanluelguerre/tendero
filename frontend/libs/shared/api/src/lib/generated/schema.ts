@@ -1140,6 +1140,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetProductPerformance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/checkout/shipping-options": {
         parameters: {
             query?: never;
@@ -1961,6 +1977,8 @@ export interface components {
             /** Format: date-time */
             at: string;
         };
+        /** @enum {unknown} */
+        PerformanceRanking: "Best" | "Worst";
         PlaceOrderRequest: {
             shippingAddress: components["schemas"]["AddressRequest"];
             shippingOptionCode: string;
@@ -2063,6 +2081,23 @@ export interface components {
             alt: null | string;
             /** Format: int32 */
             sortOrder: number;
+        };
+        ProductPerformance: {
+            period: components["schemas"]["DashboardPeriod"];
+            ranking: components["schemas"]["PerformanceRanking"];
+            category: null | string;
+            currency: string;
+            /** Format: int32 */
+            total: number;
+            rows: components["schemas"]["ProductSales"][];
+        };
+        ProductSales: {
+            productId: string;
+            name: string;
+            /** Format: int32 */
+            units: number;
+            /** Format: double */
+            revenue: number;
         };
         /** @enum {unknown} */
         ProductStatus: "Draft" | "Active" | "Archived";
@@ -4796,6 +4831,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalesMix"];
+                };
+            };
+        };
+    };
+    GetProductPerformance: {
+        parameters: {
+            query?: {
+                period?: "Day" | "Week" | "Month";
+                ranking?: "Best" | "Worst";
+                category?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductPerformance"];
                 };
             };
         };

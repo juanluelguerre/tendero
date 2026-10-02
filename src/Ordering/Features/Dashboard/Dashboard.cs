@@ -420,6 +420,15 @@ public sealed class DashboardEndpoints : ICarterModule
             async Task<Ok<SalesMix>> (WireEnum<DashboardPeriod>? period, IQueryDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(new GetSalesMixQuery(period?.Value ?? DashboardPeriods.Default), ct)))
             .WithName("GetSalesMix");
+
+        // The products that sell most or least (phase 12, S-3a), under a category
+        // and everything below it when one is given.
+        dashboard.MapGet("/products",
+            async Task<Ok<ProductPerformance>> (WireEnum<DashboardPeriod>? period, WireEnum<PerformanceRanking>? ranking,
+                string? category, int? limit, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetProductPerformanceQuery(
+                    period?.Value ?? DashboardPeriods.Default, ranking?.Value ?? PerformanceRanking.Best, category, limit ?? 10), ct)))
+            .WithName("GetProductPerformance");
     }
 
 }
