@@ -365,6 +365,20 @@ public sealed class StewardTurnTests
         Assert.Empty(FakeEntry.Applied);
     }
 
+    /// <summary>Each turn counted by how it ended, for the dashboard's fallbacks and
+    /// unavailability (S-6).</summary>
+    [Fact]
+    public async Task Every_turn_is_counted_by_its_status_and_whether_it_fell_back()
+    {
+        using var heard = new InstrumentRecorder("tendero.steward.turns");
+        await using var shop = Compose("broken", fallback: "scripted");
+
+        await shop.Ask("hello");
+
+        var turn = Assert.Single(heard.Of("tendero.steward.turns"));
+        Assert.Equal(("answered", true), ((string)turn["status"]!, (bool)turn["fell_back"]!));
+    }
+
     [Fact]
     public async Task A_turn_that_outlives_its_deadline_is_unavailable_and_does_not_fall_back()
     {

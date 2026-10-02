@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-39 features: **34** answered by a signal emitted today,
+40 features: **35** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -72,6 +72,7 @@ everything here that is not *planned* is emitted.
 | AI search layer | How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss? | Whether the AI stages can be on by default, which service to fix first, and when a reindex is due. | `tendero.search.degraded`, `tendero.search.vector_projection.failed` | emitted |
 | Outbox | Is eventual consistency still eventual? | When a second worker replica, and the row locking it needs, is worth building. | `tendero.outbox.lag` | emitted |
 | Model-call metering | Are model-call rows being lost before they reach telemetry.ai_invocations? | Whether the in-process log needs a larger bound, or a durable queue, before the cost line and the AI usage dashboard can be trusted. | `tendero.ai.invocations.dropped` | emitted |
+| AI usage and cost | What do the models cost per day and per model, how fast do they answer, and how often does no model answer Steward? | Which profile is Steward's default and which its fallback, and whether a hosted model is worth its price over the local one (S-7). | `tendero.ai.calls`, `tendero.ai.cost`, `tendero.steward.turns` | emitted |
 
 ## Events
 
@@ -539,3 +540,46 @@ Answers:
 - **Model-call metering** — Are model-call rows being lost before they reach telemetry.ai_invocations?
 
 No attributes.
+
+### `tendero.ai.calls`
+
+counter, unit `{call}`. Model calls, by operation, profile, model and outcome. Never by conversation: the rows carry that.
+
+Answers:
+
+- **AI usage and cost** — What do the models cost per day and per model, how fast do they answer, and how often does no model answer Steward?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `operation` | string | — | What the call was for: steward.turn, knowledge.extract. |
+| `profile` | string | — | The profile that was called, by its configuration name. |
+| `model` | string | — | The model the profile serves. |
+| `outcome` | string | `ok`, `error`, `timeout`, `cancelled` | AIOutcome, labelled by MetricLabels. |
+
+### `tendero.ai.cost`
+
+counter, unit `{micro_euro}`. What model calls cost at their profile's price at that moment, in micro-euros.
+
+Answers:
+
+- **AI usage and cost** — What do the models cost per day and per model, how fast do they answer, and how often does no model answer Steward?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `operation` | string | — | What the call was for: steward.turn, knowledge.extract. |
+| `profile` | string | — | The profile that was called, by its configuration name. |
+| `model` | string | — | The model the profile serves. |
+| `outcome` | string | `ok`, `error`, `timeout`, `cancelled` | AIOutcome, labelled by MetricLabels. |
+
+### `tendero.steward.turns`
+
+counter, unit `{turn}`. Steward's turns, by how they ended and whether a fallback profile was reached.
+
+Answers:
+
+- **AI usage and cost** — What do the models cost per day and per model, how fast do they answer, and how often does no model answer Steward?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `status` | string | `answered`, `unavailable`, `budget_exceeded`, `conversation_too_long` | StewardStatus, labelled by MetricLabels. |
+| `fell_back` | boolean | — | Whether a profile after the first was reached. |

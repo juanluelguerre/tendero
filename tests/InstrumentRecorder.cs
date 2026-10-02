@@ -16,7 +16,7 @@ namespace ElGuerre.Tendero.Tests;
 public sealed class InstrumentRecorder : IDisposable
 {
     private readonly MeterListener listener = new();
-    private readonly ConcurrentQueue<(string Name, IReadOnlyDictionary<string, object?> Tags)> heard = new();
+    private readonly ConcurrentQueue<(string Name, long Value, IReadOnlyDictionary<string, object?> Tags)> heard = new();
 
     public InstrumentRecorder(params string[] instruments)
     {
@@ -25,12 +25,12 @@ public sealed class InstrumentRecorder : IDisposable
             if (instruments.Contains(instrument.Name))
                 l.EnableMeasurementEvents(instrument);
         };
-        this.listener.SetMeasurementEventCallback<long>((instrument, _, tags, _) =>
+        this.listener.SetMeasurementEventCallback<long>((instrument, value, tags, _) =>
         {
             var copy = new Dictionary<string, object?>();
             foreach (var tag in tags)
                 copy[tag.Key] = tag.Value;
-            this.heard.Enqueue((instrument.Name, copy));
+            this.heard.Enqueue((instrument.Name, value, copy));
         });
         this.listener.Start();
     }
@@ -38,6 +38,9 @@ public sealed class InstrumentRecorder : IDisposable
     /// <summary>The labels of every measurement of one instrument, in the order they came.</summary>
     public IReadOnlyList<IReadOnlyDictionary<string, object?>> Of(string instrument) =>
         [.. this.heard.Where(entry => entry.Name == instrument).Select(entry => entry.Tags)];
+
+    /// <summary>What one instrument added up to, every measurement's value summed.</summary>
+    public long Sum(string instrument) => this.heard.Where(entry => entry.Name == instrument).Sum(entry => entry.Value);
 
     public void Dispose() => this.listener.Dispose();
 }

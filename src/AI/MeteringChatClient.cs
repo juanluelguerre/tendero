@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Runtime.CompilerServices;
+using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.AI;
 
 namespace ElGuerre.Tendero.AI;
@@ -13,6 +15,18 @@ public sealed class MeteringChatClient(
     IChatClient inner, string profileName, ModelProfile profile, AIInvocationLog log, TimeProvider clock)
     : DelegatingChatClient(inner)
 {
+    private static readonly Meter Meter = new(TelemetrySources.AI);
+
+    /// <summary>`tendero.ai.calls` (the tracking plan): model calls by what they were
+    /// for, who answered and how it ended — `ai-usage.json`'s errors and its mix.</summary>
+    private static readonly Counter<long> Calls = Meter.CreateCounter<long>(
+        "tendero.ai.calls", unit: "{call}", description: "Model calls, by operation, profile, model and outcome.");
+
+    /// <summary>`tendero.ai.cost`: what they cost at the profile's price of that
+    /// moment, in micro-euros — the dashboard's cost per day and per model.</summary>
+    private static readonly Counter<long> Cost = Meter.CreateCounter<long>(
+        "tendero.ai.cost", unit: "{micro_euro}", description: "What model calls cost at their profile's price, in micro-euros.");
+
     public override async Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
@@ -84,17 +98,34 @@ public sealed class MeteringChatClient(
     {
         var input = usage?.InputTokenCount ?? 0;
         var output = usage?.OutputTokenCount ?? 0;
+        var operation = ModelCall.Read(options, ModelCall.Operation) ?? "unknown";
+        var model = options?.ModelId ?? profile.Model ?? profileName;
+        var cost = profile.CostMicroEuros(input, output);
+
+        // Never the conversation as a label: a series per conversation is a
+        // cardinality explosion, and the rows already carry it.
+        TagList labels = new()
+        {
+            { "operation", operation },
+            { "profile", profileName },
+            { "model", model },
+            { "outcome", MetricLabels.Of(outcome) },
+        };
+        Calls.Add(1, labels);
+        if (cost > 0)
+            Cost.Add(cost, labels);
+
         log.Record(new AIInvocation(
             Guid.CreateVersion7(clock.GetUtcNow()),
-            ModelCall.Read(options, ModelCall.Operation) ?? "unknown",
+            operation,
             profileName,
-            options?.ModelId ?? profile.Model ?? profileName,
+            model,
             ModelCall.Read(options, ModelCall.PromptVersion),
             ModelCall.Read(options, ModelCall.Conversation),
             Activity.Current?.TraceId.ToString(),
             input,
             output,
-            profile.CostMicroEuros(input, output),
+            cost,
             (int)clock.GetElapsedTime(started).TotalMilliseconds,
             outcome,
             clock.GetUtcNow()));

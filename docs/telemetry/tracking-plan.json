@@ -361,6 +361,17 @@
       "signals": [
         "tendero.ai.invocations.dropped"
       ]
+    },
+    {
+      "name": "AI usage and cost",
+      "area": "platform",
+      "question": "What do the models cost per day and per model, how fast do they answer, and how often does no model answer Steward?",
+      "decision": "Which profile is Steward's default and which its fallback, and whether a hosted model is worth its price over the local one (S-7).",
+      "signals": [
+        "tendero.ai.calls",
+        "tendero.ai.cost",
+        "tendero.steward.turns"
+      ]
     }
   ],
   "events": [
@@ -1124,6 +1135,91 @@
       "unit": "{row}",
       "description": "Model-call rows dropped because the log was full.",
       "attributes": {}
+    },
+    {
+      "name": "tendero.ai.calls",
+      "instrument": "counter",
+      "unit": "{call}",
+      "description": "Model calls, by operation, profile, model and outcome. Never by conversation: the rows carry that.",
+      "attributes": {
+        "operation": {
+          "type": "string",
+          "description": "What the call was for: steward.turn, knowledge.extract."
+        },
+        "profile": {
+          "type": "string",
+          "description": "The profile that was called, by its configuration name."
+        },
+        "model": {
+          "type": "string",
+          "description": "The model the profile serves."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "ok",
+            "error",
+            "timeout",
+            "cancelled"
+          ],
+          "description": "AIOutcome, labelled by MetricLabels.",
+          "from": "AIOutcome"
+        }
+      }
+    },
+    {
+      "name": "tendero.ai.cost",
+      "instrument": "counter",
+      "unit": "{micro_euro}",
+      "description": "What model calls cost at their profile's price at that moment, in micro-euros.",
+      "attributes": {
+        "operation": {
+          "type": "string",
+          "description": "What the call was for: steward.turn, knowledge.extract."
+        },
+        "profile": {
+          "type": "string",
+          "description": "The profile that was called, by its configuration name."
+        },
+        "model": {
+          "type": "string",
+          "description": "The model the profile serves."
+        },
+        "outcome": {
+          "type": "string",
+          "values": [
+            "ok",
+            "error",
+            "timeout",
+            "cancelled"
+          ],
+          "description": "AIOutcome, labelled by MetricLabels.",
+          "from": "AIOutcome"
+        }
+      }
+    },
+    {
+      "name": "tendero.steward.turns",
+      "instrument": "counter",
+      "unit": "{turn}",
+      "description": "Steward's turns, by how they ended and whether a fallback profile was reached.",
+      "attributes": {
+        "status": {
+          "type": "string",
+          "values": [
+            "answered",
+            "unavailable",
+            "budget_exceeded",
+            "conversation_too_long"
+          ],
+          "description": "StewardStatus, labelled by MetricLabels.",
+          "from": "StewardStatus"
+        },
+        "fell_back": {
+          "type": "boolean",
+          "description": "Whether a profile after the first was reached."
+        }
+      }
     }
   ]
 }

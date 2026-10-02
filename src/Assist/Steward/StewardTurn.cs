@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.AI.Chat;
@@ -118,6 +119,13 @@ public sealed partial class StewardTurnHandler(
     ILogger<StewardTurnHandler> logger) : ICommandHandler<StewardTurnCommand, StewardAnswer>
 {
     private static readonly ActivitySource Telemetry = new(TelemetrySources.Assist);
+
+    private static readonly Meter Meter = new(TelemetrySources.Assist);
+
+    /// <summary>`tendero.steward.turns` (the tracking plan): turns by how they ended
+    /// and whether a fallback answered — `ai-usage.json`'s unavailability and fallbacks.</summary>
+    private static readonly Counter<long> Turns = Meter.CreateCounter<long>(
+        "tendero.steward.turns", unit: "{turn}", description: "Steward's turns, by status and whether a fallback profile was reached.");
 
     public async Task<StewardAnswer> HandleAsync(StewardTurnCommand command, CancellationToken cancellationToken)
     {
@@ -263,10 +271,16 @@ public sealed partial class StewardTurnHandler(
             cancellationToken: cancellationToken);
     }
 
+    /// <summary>Every turn ends here, so every turn is counted here, once.</summary>
     private static StewardAnswer Answer(
         StewardTurnCommand command, StewardStatus status, string? text, StewardTrace trace, TurnCost? cost, string? profile,
-        bool fellBack, bool nearLimit) =>
-        new(status, text, trace.Reads, trace.Proposed, cost, profile, fellBack, nearLimit, command.ConversationId);
+        bool fellBack, bool nearLimit)
+    {
+        Turns.Add(1,
+            new KeyValuePair<string, object?>("status", MetricLabels.Of(status)),
+            new KeyValuePair<string, object?>("fell_back", fellBack));
+        return new(status, text, trace.Reads, trace.Proposed, cost, profile, fellBack, nearLimit, command.ConversationId);
+    }
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Steward's profile {Profile} failed a turn")]
     private static partial void LogFailed(ILogger logger, Exception failure, string profile);
