@@ -33,7 +33,11 @@ public sealed record EvaluationOptions(
     string? Tei = null,
     string? AttributesPath = null,
     string? Onnx = null,
-    string? ClaimsDirectory = null)
+    string? ClaimsDirectory = null,
+    string? Database = null,
+    string? Script = null,
+    int ContextTokens = 8192,
+    string? CopilotDirectory = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -57,6 +61,10 @@ public sealed record EvaluationOptions(
           --pool <file>           Write every strategy's unjudged first-ten results as JSON, to be judged
           --split <name>          tune or holdout: score only that half of the golden set (not with --ci)
           --ci                    Exit non-zero when a strategy falls under its thresholds in any culture
+          --database <conn>       copilot: a disposable Postgres; migrated, and seeded when empty
+          --chat <url> --model <id>  copilot: an OpenAI-compatible endpoint and the model it serves
+          --script <file>         copilot: a Scripted model instead, for a dry run of the suite itself
+          --context <tokens>      copilot: the profile's window (default 8192)
 
         The scope suite (--suite scope) needs only --embeddings, and reads:
           --scope <dir>           Scope query directory (default tools/SearchEval/scope)
@@ -158,6 +166,10 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("tei", "http://localhost:38091"),
             values.GetValueOrDefault("attributes", Path.Combine("seed", "attributes.sample.json")),
             values.GetValueOrDefault("onnx"),
-            values.GetValueOrDefault("knowledge", Path.Combine("tools", "SearchEval", "knowledge")));
+            values.GetValueOrDefault("knowledge", Path.Combine("tools", "SearchEval", "knowledge")),
+            values.GetValueOrDefault("database"),
+            values.GetValueOrDefault("script"),
+            int.TryParse(values.GetValueOrDefault("context"), out var context) ? context : 8192,
+            values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "copilot")));
     }
 }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- A tool, not a layer: it leans on Search's ports and on the catalogue
-       connector, and knows neither Elasticsearch nor EF Core. Architecture rule
+       connector, and writes neither Elasticsearch nor EF Core. Architecture rule
        4 watches it like the rest of the solution. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -24,9 +24,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../src/AI/ElGuerre.Tendero.AI.csproj" />
+    <ProjectReference Include="../../src/Assist/ElGuerre.Tendero.Assist.csproj" />
     <ProjectReference Include="../../src/Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../../src/Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../../src/Knowledge/ElGuerre.Tendero.Knowledge.csproj" />
+    <ProjectReference Include="../../src/Ordering/ElGuerre.Tendero.Ordering.csproj" />
+    <!-- The copilot suite's laboratory composes the shop in this process, as the
+         API does, over a disposable database: through Persistence's own methods,
+         so this tool still writes no EF Core. -->
+    <ProjectReference Include="../../src/Persistence/ElGuerre.Tendero.Persistence.csproj" />
     <ProjectReference Include="../../src/Search/ElGuerre.Tendero.Search.csproj" />
     <ProjectReference Include="../../src/SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>

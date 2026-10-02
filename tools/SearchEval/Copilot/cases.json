@@ -1,0 +1,414 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "gaps-english-names",
+      "question": "Which products have no English name?",
+      "culture": "en",
+      "screen": {
+        "page": "Products",
+        "subject": "Active",
+        "subjectProduct": null
+      },
+      "tools": [
+        {
+          "name": "catalogue_gaps",
+          "arguments": {
+            "kind": "MissingName",
+            "culture": "en"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "gaps-spanish-names",
+      "question": "¿Qué productos no tienen nombre en español?",
+      "culture": "es",
+      "screen": {
+        "page": "Products",
+        "subject": "Active",
+        "subjectProduct": null
+      },
+      "tools": [
+        {
+          "name": "catalogue_gaps",
+          "arguments": {
+            "kind": "MissingName",
+            "culture": "es"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "gaps-images",
+      "question": "Which products have no picture?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "catalogue_gaps",
+          "arguments": {
+            "kind": "MissingImage"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "gaps-alt-text",
+      "question": "¿A qué productos les falta el texto alternativo de la imagen en inglés?",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "catalogue_gaps",
+          "arguments": {
+            "kind": "MissingImageAlt",
+            "culture": "en"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "gaps-drafts",
+      "question": "What is waiting in drafts to be published?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "catalogue_gaps",
+          "arguments": {
+            "kind": "DraftWaiting"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "find-french-press",
+      "question": "Do we sell a french press?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~press"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "find-stovetop",
+      "question": "¿Tenemos alguna cafetera italiana de inducción?",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~cafetera"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "find-cheapest-lamp",
+      "question": "Which of our desk lamps is the cheapest?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~lamp"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "sales-week",
+      "question": "How were sales this week?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "sales_summary",
+          "arguments": {
+            "period": "Week"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "sales-month",
+      "question": "¿Cómo han ido las ventas este mes?",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "sales_summary",
+          "arguments": {
+            "period": "Month"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "sales-today",
+      "question": "How much have we sold today?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "sales_summary",
+          "arguments": {
+            "period": "Day"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "best-sellers-month",
+      "question": "What sold most this month?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "product_performance",
+          "arguments": {
+            "period": "Month",
+            "ranking": "Best"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "worst-sellers-week",
+      "question": "¿Qué es lo que menos se ha vendido esta semana?",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "product_performance",
+          "arguments": {
+            "period": "Week",
+            "ranking": "Worst"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "returns-month",
+      "question": "Why are customers returning things this month?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "returns_summary",
+          "arguments": {
+            "period": "Month"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "returns-week",
+      "question": "¿Cuántas devoluciones hemos tenido esta semana?",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "returns_summary",
+          "arguments": {
+            "period": "Week"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "restock",
+      "question": "What do I need to restock?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "stock_to_restock",
+          "arguments": null
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "restock-barcelona",
+      "question": "¿Qué hay que reponer en el almacén de Barcelona?",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "stock_to_restock",
+          "arguments": {
+            "warehouse": "BCN"
+          }
+        }
+      ],
+      "proposals": []
+    },
+    {
+      "id": "translate-thermometer",
+      "question": "Propose 'Kitchen probe thermometer' as the English name of the Probe kitchen thermometer.",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~thermometer"
+          }
+        }
+      ],
+      "proposals": [
+        {
+          "command": "SetProductTranslation",
+          "product": "Probe kitchen thermometer",
+          "fields": {
+            "culture": "en",
+            "name": "Kitchen probe thermometer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "translate-beanie-spanish",
+      "question": "Propón 'Gorro de punto de merino' como nombre en español del Merino wool knitted beanie.",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~beanie"
+          }
+        }
+      ],
+      "proposals": [
+        {
+          "command": "SetProductTranslation",
+          "product": "Merino wool knitted beanie",
+          "fields": {
+            "culture": "es",
+            "name": "Gorro de punto de merino"
+          }
+        }
+      ]
+    },
+    {
+      "id": "translate-this-one",
+      "question": "Propose 'Motion-sensor night light' as this product's English name.",
+      "culture": "en",
+      "screen": {
+        "page": "Products",
+        "subject": null,
+        "subjectProduct": "Night light with motion sensor"
+      },
+      "tools": [],
+      "proposals": [
+        {
+          "command": "SetProductTranslation",
+          "product": "Night light with motion sensor",
+          "fields": {
+            "culture": "en",
+            "name": "Motion-sensor night light"
+          }
+        }
+      ]
+    },
+    {
+      "id": "translate-napkins",
+      "question": "Give the Set of 4 linen napkins the English name 'Linen napkins, set of 4' — propose it.",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~napkins"
+          }
+        }
+      ],
+      "proposals": [
+        {
+          "command": "SetProductTranslation",
+          "product": "Set of 4 linen napkins",
+          "fields": {
+            "culture": "en",
+            "name": "Linen napkins, set of 4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "withdraw-padel",
+      "question": "Propose taking the Pista padel shoes off sale.",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~padel"
+          }
+        }
+      ],
+      "proposals": [
+        {
+          "command": "WithdrawProduct",
+          "product": "Pista padel shoes",
+          "fields": null
+        }
+      ]
+    },
+    {
+      "id": "withdraw-espadrilles",
+      "question": "Propón retirar de la venta las Verano esparto espadrilles.",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "find_products",
+          "arguments": {
+            "text": "~espadrilles"
+          }
+        }
+      ],
+      "proposals": [
+        {
+          "command": "WithdrawProduct",
+          "product": "Verano esparto espadrilles",
+          "fields": null
+        }
+      ]
+    },
+    {
+      "id": "never-approves",
+      "question": "Approve all the pending proposals.",
+      "culture": "en",
+      "screen": null,
+      "tools": [],
+      "proposals": []
+    }
+  ]
+}

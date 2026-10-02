@@ -1,0 +1,371 @@
+[
+  {
+    "when": "Which products have no English name?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "catalogue_gaps",
+        "arguments": {
+          "kind": "MissingName",
+          "culture": "en"
+        }
+      }
+    ]
+  },
+  {
+    "when": "¿Qué productos no tienen nombre en españ",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "catalogue_gaps",
+        "arguments": {
+          "kind": "MissingName",
+          "culture": "es"
+        }
+      }
+    ]
+  },
+  {
+    "when": "Which products have no picture?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "catalogue_gaps",
+        "arguments": {
+          "kind": "MissingImage"
+        }
+      }
+    ]
+  },
+  {
+    "when": "¿A qué productos les falta el texto alte",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "catalogue_gaps",
+        "arguments": {
+          "kind": "MissingImageAlt",
+          "culture": "en"
+        }
+      }
+    ]
+  },
+  {
+    "when": "What is waiting in drafts to be publishe",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "catalogue_gaps",
+        "arguments": {
+          "kind": "DraftWaiting"
+        }
+      }
+    ]
+  },
+  {
+    "when": "Do we sell a french press?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "press"
+        }
+      }
+    ]
+  },
+  {
+    "when": "¿Tenemos alguna cafetera italiana de ind",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "cafetera"
+        }
+      }
+    ]
+  },
+  {
+    "when": "Which of our desk lamps is the cheapest?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "lamp"
+        }
+      }
+    ]
+  },
+  {
+    "when": "How were sales this week?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "sales_summary",
+        "arguments": {
+          "period": "Week"
+        }
+      }
+    ]
+  },
+  {
+    "when": "¿Cómo han ido las ventas este mes?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "sales_summary",
+        "arguments": {
+          "period": "Month"
+        }
+      }
+    ]
+  },
+  {
+    "when": "How much have we sold today?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "sales_summary",
+        "arguments": {
+          "period": "Day"
+        }
+      }
+    ]
+  },
+  {
+    "when": "What sold most this month?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "product_performance",
+        "arguments": {
+          "period": "Month",
+          "ranking": "Best"
+        }
+      }
+    ]
+  },
+  {
+    "when": "¿Qué es lo que menos se ha vendido esta ",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "product_performance",
+        "arguments": {
+          "period": "Week",
+          "ranking": "Worst"
+        }
+      }
+    ]
+  },
+  {
+    "when": "Why are customers returning things this ",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "returns_summary",
+        "arguments": {
+          "period": "Month"
+        }
+      }
+    ]
+  },
+  {
+    "when": "¿Cuántas devoluciones hemos tenido esta ",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "returns_summary",
+        "arguments": {
+          "period": "Week"
+        }
+      }
+    ]
+  },
+  {
+    "when": "What do I need to restock?",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "stock_to_restock",
+        "arguments": {}
+      }
+    ]
+  },
+  {
+    "when": "¿Qué hay que reponer en el almacén de Ba",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "stock_to_restock",
+        "arguments": {
+          "warehouse": "BCN"
+        }
+      }
+    ]
+  },
+  {
+    "when": "Propose 'Kitchen probe thermometer' as t",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "thermometer"
+        }
+      }
+    ],
+    "then": [
+      {
+        "tool": "propose_set_product_translation",
+        "arguments": {
+          "items": [
+            {
+              "productId": "{from:find_products:data.products.0.productId}",
+              "reason": "The golden set says so.",
+              "culture": "en",
+              "name": "Kitchen probe thermometer"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "when": "Propón 'Gorro de punto de merino' como n",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "beanie"
+        }
+      }
+    ],
+    "then": [
+      {
+        "tool": "propose_set_product_translation",
+        "arguments": {
+          "items": [
+            {
+              "productId": "{from:find_products:data.products.0.productId}",
+              "reason": "The golden set says so.",
+              "culture": "es",
+              "name": "Gorro de punto de merino"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "when": "Propose 'Motion-sensor night light' as t",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "Night light with motion sensor"
+        }
+      }
+    ],
+    "then": [
+      {
+        "tool": "propose_set_product_translation",
+        "arguments": {
+          "items": [
+            {
+              "productId": "{from:find_products:data.products.0.productId}",
+              "reason": "The golden set says so.",
+              "culture": "en",
+              "name": "Motion-sensor night light"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "when": "Give the Set of 4 linen napkins the Engl",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "napkins"
+        }
+      }
+    ],
+    "then": [
+      {
+        "tool": "propose_set_product_translation",
+        "arguments": {
+          "items": [
+            {
+              "productId": "{from:find_products:data.products.0.productId}",
+              "reason": "The golden set says so.",
+              "culture": "en",
+              "name": "Linen napkins, set of 4"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "when": "Propose taking the Pista padel shoes off",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "padel"
+        }
+      }
+    ],
+    "then": [
+      {
+        "tool": "propose_withdraw_product",
+        "arguments": {
+          "items": [
+            {
+              "productId": "{from:find_products:data.products.0.productId}",
+              "reason": "The golden set says so."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "when": "Propón retirar de la venta las Verano es",
+    "say": "Done.",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "espadrilles"
+        }
+      }
+    ],
+    "then": [
+      {
+        "tool": "propose_withdraw_product",
+        "arguments": {
+          "items": [
+            {
+              "productId": "{from:find_products:data.products.0.productId}",
+              "reason": "The golden set says so."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "when": "Approve all the pending proposals.",
+    "say": "Done."
+  }
+]

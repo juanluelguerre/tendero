@@ -1,0 +1,119 @@
+using System.Text.Json;
+using ElGuerre.Tendero.SearchEval.Copilot;
+using Xunit;
+
+namespace ElGuerre.Tendero.SearchEval.Tests;
+
+/// <summary>
+/// The copilot suite's verdicts (S-6): the right reads, with the arguments that
+/// matter, and exactly the proposals expected — compared, never judged by a model.
+/// </summary>
+public sealed class CopilotScoringTests
+{
+    private static readonly TurnMeasure Measure = new("Answered", 2, 1800, 200, 0, 12.5, 1900, null);
+
+    private static readonly IReadOnlyDictionary<string, string> Codes = new Dictionary<string, string>
+    {
+        ["Probe kitchen thermometer"] = "0B6K18J7PB",
+        ["Pista padel shoes"] = "CJ0BBKTB5A",
+    };
+
+    private static JsonElement Json(string json) => JsonDocument.Parse(json).RootElement.Clone();
+
+    private static CopilotCase Case(IReadOnlyList<ExpectedTool> tools, IReadOnlyList<ExpectedProposal>? proposals = null) =>
+        new("case", "question", "en", null, tools, proposals ?? []);
+
+    [Fact]
+    public void A_read_with_the_arguments_that_matter_passes_whatever_else_it_carries()
+    {
+        var verdict = CopilotScoring.Judge(
+            Case([new ExpectedTool("catalogue_gaps", new Dictionary<string, string> { ["kind"] = "MissingName", ["culture"] = "en" })]),
+            [new ToolCall("catalogue_gaps", Json("""{"kind":"missingname","culture":"EN","namesIn":"es"}"""))], [], Codes, Measure);
+
+        Assert.True(verdict.Passed);
+    }
+
+    [Fact]
+    public void The_right_tool_with_the_wrong_arguments_is_not_valid()
+    {
+        var verdict = CopilotScoring.Judge(
+            Case([new ExpectedTool("sales_summary", new Dictionary<string, string> { ["period"] = "Month" })]),
+            [new ToolCall("sales_summary", Json("""{"period":"Week"}"""))], [], Codes, Measure);
+
+        Assert.Equal((true, false, true, false), (verdict.RightTools, verdict.ValidArguments, verdict.ExactProposals, verdict.Passed));
+    }
+
+    /// <summary>A model's words are matched by what they must contain: "~press" holds for "French press".</summary>
+    [Fact]
+    public void Free_text_is_matched_by_what_it_contains()
+    {
+        var verdict = CopilotScoring.Judge(
+            Case([new ExpectedTool("find_products", new Dictionary<string, string> { ["text"] = "~press" })]),
+            [new ToolCall("find_products", Json("""{"text":"French Press"}"""))], [], Codes, Measure);
+
+        Assert.True(verdict.ValidArguments);
+    }
+
+    [Fact]
+    public void A_proposal_is_matched_by_its_command_its_product_and_the_fields_that_matter()
+    {
+        var verdict = CopilotScoring.Judge(
+            Case([], [new ExpectedProposal("SetProductTranslation", "Probe kitchen thermometer",
+                new Dictionary<string, string> { ["culture"] = "en", ["name"] = "Kitchen probe thermometer" })]),
+            [], [new StoredProposal("SetProductTranslation", "0B6K18J7PB", Json("""{"productId":"x","culture":"en","name":"kitchen probe thermometer "}"""))],
+            Codes, Measure);
+
+        Assert.True(verdict.ExactProposals);
+    }
+
+    /// <summary>A question that only asks must not propose: a proposal nobody asked for fails the case.</summary>
+    [Fact]
+    public void A_proposal_nobody_expected_fails_the_case()
+    {
+        var verdict = CopilotScoring.Judge(
+            Case([]), [], [new StoredProposal("WithdrawProduct", "CJ0BBKTB5A", Json("{}"))], Codes, Measure);
+
+        Assert.False(verdict.ExactProposals);
+        Assert.Contains("proposed besides: WithdrawProduct CJ0BBKTB5A", verdict.Problems);
+    }
+
+    [Fact]
+    public void A_proposal_for_another_product_is_not_the_one_expected()
+    {
+        var verdict = CopilotScoring.Judge(
+            Case([], [new ExpectedProposal("WithdrawProduct", "Pista padel shoes", null)]),
+            [], [new StoredProposal("WithdrawProduct", "0B6K18J7PB", Json("{}"))], Codes, Measure);
+
+        Assert.False(verdict.ExactProposals);
+    }
+
+    [Fact]
+    public void A_turn_that_failed_does_not_pass_even_when_nothing_was_expected()
+    {
+        var verdict = CopilotScoring.Judge(Case([]), [], [], Codes, Measure with { Error = "503" });
+
+        Assert.False(verdict.Passed);
+    }
+
+    /// <summary>A case naming a product the laboratory does not have is the suite's mistake, said before a model is blamed.</summary>
+    [Fact]
+    public void A_case_naming_a_product_the_laboratory_lacks_is_refused()
+    {
+        var failure = Assert.Throws<InvalidOperationException>(() => CopilotScoring.Judge(
+            Case([], [new ExpectedProposal("WithdrawProduct", "Moka pot", null)]), [], [], Codes, Measure));
+
+        Assert.Contains("Moka pot", failure.Message);
+    }
+
+    [Fact]
+    public void The_score_is_each_shares_the_latencies_by_nearest_rank_and_the_largest_call()
+    {
+        var pass = new CaseVerdict("a", true, true, true, [], [], Measure with { Seconds = 10, LargestCall = 3000, MicroEuros = 2000 });
+        var fail = new CaseVerdict("b", true, false, true, [], [], Measure with { Seconds = 30, LargestCall = 5200, MicroEuros = 0 });
+
+        var score = CopilotScoring.Summarise([pass, fail]);
+
+        Assert.Equal((2, 1.0, 0.5, 1.0, 0.5), (score.Cases, score.RightTools, score.ValidArguments, score.ExactProposals, score.Passed));
+        Assert.Equal((10.0, 30.0, 5200L, 0.001), (score.LatencyP50Seconds, score.LatencyP95Seconds, score.LargestCall, score.EurosPerTurn));
+    }
+}

@@ -115,4 +115,15 @@ public static class PersistenceServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Applies the pending migrations: for a tool that composes the shop in its own
+    /// process — the copilot suite's laboratory — and must not know EF Core is there.
+    /// The hosts do it through <c>MigrateSchemaAtStartupWorker</c>.
+    /// </summary>
+    public static async Task MigrateTenderoSchemaAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
+    {
+        await using var scope = services.CreateAsyncScope();
+        await scope.ServiceProvider.GetRequiredService<TenderoDbContext>().Database.MigrateAsync(cancellationToken);
+    }
 }

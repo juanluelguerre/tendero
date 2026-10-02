@@ -40,3 +40,38 @@ está bien puesta, y la puerta acaba midiendo los prejuicios de quien anotó.
 
 `eval.thresholds.json` — **medidos, no inventados**, con ~1% de margen sobre la
 línea base real. Bajarlos exige justificarlo en el cuerpo del PR.
+
+## La suite `copilot` (Steward, fase 12)
+
+Steward contra `copilot/cases.json`: cada caso es una pregunta, la pantalla en
+que se hace, las lecturas que debería hacer —con los argumentos que importan— y
+las propuestas que debería guardar. **Sin modelo juez**: una propuesta es un
+comando y se compara exacta. Mide herramienta correcta, argumentos válidos,
+propuestas exactas, latencia p50/p95, tokens y € por vuelta, y **la llamada más
+grande** (entrada y salida), que es lo que la ventana de contexto debe caber.
+
+La vuelta es la misma que corre la API —el agente, las lecturas de cada
+contexto, las propuestas en Assist— compuesta en este proceso sobre un
+**Postgres desechable** que la suite migra y, si está vacío, llena con el
+catálogo semilla y su stock:
+
+```bash
+docker run -d --name copilot-eval-pg --memory 768m --cpus 2 \
+  -e POSTGRES_PASSWORD=eval -e POSTGRES_DB=copilot -p 39432:5432 postgres:17
+
+# Contra el modelo local de Steward (Tendero__Steward=true lo levanta en :38085)
+dotnet run --project tools/SearchEval -- --suite copilot \
+  --database "Host=localhost;Port=39432;Database=copilot;Username=postgres;Password=eval" \
+  --chat http://localhost:38085 --model Qwen/Qwen3.5-4B --report artifacts/copilot.json
+
+# Ensayo de la propia suite, sin modelo: un guion que responde lo esperado
+dotnet run --project tools/SearchEval -- --suite copilot --database "…" \
+  --script tools/SearchEval/copilot/dry-run.json
+
+docker rm -f copilot-eval-pg
+```
+
+Se **mide, no se compara con un umbral**: S-7 la pasa por cada perfil y el
+autor elige el de por defecto con los números (`docs/analysis/steward-models.md`).
+Un caso que nombra un producto que el laboratorio no tiene detiene la suite
+antes de preguntar a ningún modelo: ese error sería de la suite, no del modelo.
