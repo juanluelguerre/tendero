@@ -25,6 +25,13 @@ nothing else. Article 01 (*Design before code*) is about them.
 Every colour in them is a design token variable, and `design-mockups.spec.ts`
 holds them to that.
 
+**The same three, in Excalidraw** (`*.excalidraw`, 2026-10-02). Redrawn through
+Excalidraw's official MCP server, to compare it with pen.dev on the same screens:
+open-source (MIT), free, hand-drawn without any trick, and JSON like a `.pen`.
+Excalidraw has no colour variables, so every stroke is a literal hex, and
+`design-mockups.spec.ts` reads these files too: a hex the palette does not own
+fails it. Article 01 tells how the two compared.
+
 ## Until 2026-09-21 this folder was empty, and that was the finding
 
 Tendero never drew one. The sketch's job here was done by **prose** — `P8-11` in
