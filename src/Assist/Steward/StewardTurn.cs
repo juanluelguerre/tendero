@@ -156,15 +156,21 @@ public sealed partial class StewardTurnHandler(
         using var turn = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
         var fellBack = false;
         var tooLong = false;
+        var passedOne = false;
         foreach (var candidate in candidates)
         {
             var (name, profile, trace) = (candidate.Name, candidate.Profile, candidate.Trace);
+
+            // Falling back is reaching a profile after another: one that failed alone
+            // was not a fallback failing too, and the panel must not say it was.
+            fellBack |= passedOne;
+            passedOne = true;
 
             // A window that cannot hold the question and an answer is not asked: the
             // model would cut the history and answer something else.
             if (candidate.Needs > profile.ContextTokens)
             {
-                (tooLong, fellBack) = (true, true);
+                tooLong = true;
                 continue;
             }
 
@@ -205,8 +211,6 @@ public sealed partial class StewardTurnHandler(
                     activity?.SetTag("assist.unavailable", true);
                     return Answer(command, StewardStatus.Unavailable, null, trace, null, name, fellBack, false);
                 }
-
-                fellBack = true;
             }
         }
 

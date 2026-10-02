@@ -125,6 +125,9 @@ public sealed class StewardTurnTests
             ["Steward:Models:broken:Endpoint"] = "http://127.0.0.1:9/v1/",
             ["Steward:Models:broken:Model"] = "broken",
             ["Steward:Models:broken:TimeoutSeconds"] = "2",
+            ["Steward:Models:broken-too:Endpoint"] = "http://127.0.0.1:9/v1/",
+            ["Steward:Models:broken-too:Model"] = "broken-too",
+            ["Steward:Models:broken-too:TimeoutSeconds"] = "2",
         };
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
 
@@ -185,6 +188,18 @@ public sealed class StewardTurnTests
         Assert.Equal(StewardStatus.Unavailable, answer.Status);
         Assert.Empty(shop.Proposals.All);
         Assert.Empty(answer.ProposalIds);
+        // No other profile was tried: the panel must not say a fallback failed too.
+        Assert.False(answer.FellBack);
+    }
+
+    [Fact]
+    public async Task A_model_and_its_fallback_both_failing_say_both_were_tried()
+    {
+        await using var shop = Compose("broken", fallback: "broken-too");
+
+        var answer = await shop.Ask("hello");
+
+        Assert.Equal((StewardStatus.Unavailable, true), (answer.Status, answer.FellBack));
     }
 
     [Fact]
