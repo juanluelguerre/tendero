@@ -1,0 +1,8 @@
+/* The same frame as the cart's empty state: a heading, then the shared blank. */
+.not-found {
+  padding-block: var(--space-6) var(--space-8);
+}
+
+.not-found__title {
+  margin: 0 0 var(--space-5);
+}
