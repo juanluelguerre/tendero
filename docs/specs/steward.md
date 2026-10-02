@@ -485,9 +485,21 @@ notifications and alerts.
    `worklist/review-dialog`, which Steward's proposals review and the claims review
    both project into; the claims review opens from the claim pane, quietly.
    Rulings the spec left open: there is no "reject the unticked" for claims (the
-   mock-up has none, and a claim is rejected on its own, from the queue); *Open the
-   weak one* opens it in the weak queue's first page, where the weakest claim is
-   first; the attribute is shown by its code, as the queue's row does.
+   mock-up has none, and a claim is rejected on its own, from the queue); the
+   attribute is shown by its code, as the queue's row does.
+   *Corrected after the final review (2026-10-02)*: every row of a bulk approval
+   goes through the one-claim command, refusals included, so a weak claim pushed
+   in bulk is a **denial on the audit log** (WeakSupport), not a silence; *Open the
+   weak one* opens the queue narrowed to that product (`?product=`), where the claim
+   is on the first page — in the whole shop's weak queue it was only if it was
+   among the shop's twenty weakest; the weak rows come last, as the mock-up draws
+   them; a product past a hundred claims says how many the review shows; a failed
+   approval says so. **The event that proves it is used** is
+   `proposals_reviewed` with a `kind` of `claims` beside `proposals` (proposed,
+   approved, unticked) — it answers whether a batch is reviewed or rubber-stamped,
+   R-2's fear, and S-6 adds it to the tracking plan with the other three. Ruling:
+   the pane offers the bulk review even when the product has one claim; knowing
+   that would cost a read per opened claim, and the review of one is harmless.
 6. **S-6 · Measured and evaluated.** The `copilot` suite on the local model,
    `ai-usage.json`, the four events in the tracking plan, the window fixed from
    the largest conversation.

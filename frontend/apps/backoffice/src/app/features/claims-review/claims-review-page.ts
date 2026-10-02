@@ -34,6 +34,12 @@ export class ClaimsReviewPage {
   private readonly usage = inject(BackofficeUsage);
   private readonly bulk = viewChild.required(ClaimsBulkReview);
 
+  /** Approved together: the queue is read again, and the claim that was open may be decided now. */
+  protected approved(): void {
+    this.store.reload();
+    this.store.close();
+  }
+
   /** A product's claims together, the open claim's product (S-5). */
   protected reviewAll(claim: ClaimForReview): void {
     this.bulk().open(claim.productId, this.store.productName(claim));

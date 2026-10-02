@@ -590,7 +590,9 @@
       "All": "Todas"
     },
     "none": "No hay afirmaciones con respaldo débil pendientes. El resto está en Todas.",
-    "nextHint": "Al decidir se abre la siguiente de la lista."
+    "nextHint": "Al decidir se abre la siguiente de la lista.",
+    "oneProduct": "Afirmaciones de un producto",
+    "everyProduct": "Ver todos los productos"
   },
   "dashboard": {
     "title": "Panel",
@@ -1168,6 +1170,13 @@
       "WeakSupport": "Apoyo débil — no aprobada",
       "NotWaiting": "Ya decidida",
       "NotFound": "No encontrada"
-    }
+    },
+    "headingOne": "Revisar 1 afirmación · {{product}}",
+    "loading": "Cargando las afirmaciones de {{product}}…",
+    "capped": "Se muestran las {{shown}} primeras de {{total}}; el resto espera en la cola.",
+    "tallyOne": "{{together}} de {{count}} pueden ir juntas · 1 débil",
+    "weakFor": "{{attribute}}: apoyo débil — ábrela para decidir",
+    "approveFailed": "La aprobación no se completó. Lo decidido aparece en su fila; vuelve a intentar el resto.",
+    "done": "{{approved}} aprobadas."
   }
 }

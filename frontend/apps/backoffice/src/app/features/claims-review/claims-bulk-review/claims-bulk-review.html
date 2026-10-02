@@ -1,10 +1,19 @@
 <backoffice-review-dialog [labelledBy]="headingId">
   <ng-container *transloco="let t" ngProjectAs="[reviewHead]">
     <h2 class="m-0 text-lg" [id]="headingId">
-      {{ t('claimsBulk.heading', { count: store.count(), product: product() }) }}
+      {{
+        store.loading()
+          ? t('claimsBulk.loading', { product: product() })
+          : store.count() === 1
+            ? t('claimsBulk.headingOne', { product: product() })
+            : t('claimsBulk.heading', { count: store.count(), product: product() })
+      }}
     </h2>
     <p class="m-0 text-xs text-muted">
       {{ store.failed() ? t('claimsBulk.failed') : t('claimsBulk.lede') }}
+      @if (store.total() > store.count()) {
+        {{ t('claimsBulk.capped', { shown: store.count(), total: store.total() }) }}
+      }
     </p>
   </ng-container>
 
@@ -30,6 +39,7 @@
               [checked]="row.ticked"
               [disabled]="!row.tickable || store.busy()"
               [attr.aria-label]="row.claim.attributeCode ?? statementIn(row.claim, culture.active())"
+              [attr.aria-describedby]="row.claim.isWeak ? headingId + '-weak-' + row.claim.claimId : null"
               (change)="store.toggle(row.claim.claimId)"
             />
           </td>
@@ -43,6 +53,12 @@
               <button
                 type="button"
                 class="mt-1 min-h-target text-xs text-warning underline"
+                [id]="headingId + '-weak-' + row.claim.claimId"
+                [attr.aria-label]="
+                  t('claimsBulk.weakFor', {
+                    attribute: row.claim.attributeCode ?? statementIn(row.claim, culture.active()),
+                  })
+                "
                 (click)="openOne(row.claim.claimId)"
               >
                 {{ t('claimsBulk.weak') }}
@@ -59,12 +75,26 @@
     </tbody>
   </table>
 
+  <ng-container *transloco="let t" ngProjectAs="[reviewNote]">
+    @if (store.approveFailed()) {
+      <p class="m-0 text-xs text-danger" role="alert">{{ t('claimsBulk.approveFailed') }}</p>
+    }
+    <!-- The rows' outcomes, said once for a screen reader: they appear in place, silently. -->
+    <p class="sr-only" aria-live="polite">
+      @if (store.approved() > 0) {
+        {{ t('claimsBulk.done', { approved: store.approved() }) }}
+      }
+    </p>
+  </ng-container>
+
   <ng-container *transloco="let t" ngProjectAs="[reviewFoot]">
     <span class="me-auto text-xs text-muted">
       {{
-        store.weak() > 0
-          ? t('claimsBulk.tally', { together: store.together(), count: store.count(), weak: store.weak() })
-          : t('claimsBulk.selected', { selected: store.selected(), count: store.together() })
+        store.weak() === 1
+          ? t('claimsBulk.tallyOne', { together: store.together(), count: store.count() })
+          : store.weak() > 1
+            ? t('claimsBulk.tally', { together: store.together(), count: store.count(), weak: store.weak() })
+            : t('claimsBulk.selected', { selected: store.selected(), count: store.together() })
       }}
     </span>
     <button type="button" class="button button--quiet" (click)="close()">

@@ -110,7 +110,9 @@ public enum ReviewDecision
 }
 
 /// <summary>A person's decision on a claim — never a model's, never a chat message (invariant 12).</summary>
-public sealed record ReviewClaimCommand(ClaimId ClaimId, ReviewDecision Decision) : ICommand<ReviewClaimResult>;
+/// <param name="InBulk">Approved with others, through the bulk review (S-5): then a
+/// weakly supported claim is refused — on its own audit row, as a denial.</param>
+public sealed record ReviewClaimCommand(ClaimId ClaimId, ReviewDecision Decision, bool InBulk = false) : ICommand<ReviewClaimResult>;
 
 public enum ReviewOutcome
 {
@@ -120,6 +122,9 @@ public enum ReviewOutcome
     /// <summary>Already decided, or superseded by a newer text: there is nothing left to review.</summary>
     NotWaiting,
 
+    /// <summary>Weakly supported and approved in bulk: never — it is decided on its own (S-5).</summary>
+    WeakSupport,
+
     NotFound,
 }
 
@@ -128,7 +133,7 @@ public sealed record ReviewClaimResult(ReviewOutcome Outcome, ClaimId ClaimId) :
     AuditOutcome IAuditedResult.AuditOutcome => Outcome switch
     {
         ReviewOutcome.Approved or ReviewOutcome.Rejected => AuditOutcome.Allowed,
-        ReviewOutcome.NotWaiting or ReviewOutcome.NotFound => AuditOutcome.Denied,
+        ReviewOutcome.NotWaiting or ReviewOutcome.NotFound or ReviewOutcome.WeakSupport => AuditOutcome.Denied,
     };
 
     string? IAuditedResult.AuditReason =>
@@ -153,6 +158,11 @@ public sealed class ReviewClaimHandler(
             return new ReviewClaimResult(ReviewOutcome.NotFound, command.ClaimId);
         if (claim.Status != ClaimStatus.Proposed)
             return new ReviewClaimResult(ReviewOutcome.NotWaiting, command.ClaimId);
+
+        // The server's rule, whatever a screen sent: a weak claim is opened and
+        // decided on its own, never approved together with others.
+        if (command.InBulk && command.Decision == ReviewDecision.Approve && claim.IsWeaklySupported)
+            return new ReviewClaimResult(ReviewOutcome.WeakSupport, command.ClaimId);
 
         var principal = principals.Current;
         var reviewer = principal.DisplayName ?? principal.Subject ?? "unknown";
@@ -231,7 +241,7 @@ public sealed class ReviewClaimsEndpoints : ICarterModule
         return result.Outcome switch
         {
             ReviewOutcome.NotFound => TypedResults.NotFound(),
-            ReviewOutcome.NotWaiting => TypedResults.Conflict(new ReviewClaimConflict(
+            ReviewOutcome.NotWaiting or ReviewOutcome.WeakSupport => TypedResults.Conflict(new ReviewClaimConflict(
                 "The claim is not waiting for review.",
                 "It was already decided, or its description changed and a newer claim replaced it.")),
             _ => TypedResults.Ok(new ReviewClaimResponse(

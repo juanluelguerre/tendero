@@ -19,6 +19,7 @@ public sealed class ApproveClaimsTests
     private readonly TestClock clock = new();
     private readonly InMemoryKnowledge knowledge = new();
     private readonly ProductId mug = ProductId.New();
+    private readonly RecordingAudit audit = new();
 
     private ProductClaim Propose(string quote, double support)
     {
@@ -46,6 +47,7 @@ public sealed class ApproveClaimsTests
         services.AddSingleton<IUnitOfWork>(this.knowledge);
         services.AddSingleton<TimeProvider>(this.clock);
         services.AddSingleton<IPrincipalAccessor>(new Reviewer("Ana Tendera"));
+        services.AddSingleton<IAuditWriter>(this.audit);
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
@@ -84,6 +86,25 @@ public sealed class ApproveClaimsTests
             approvals.Rows.Select(row => row.Outcome));
     }
 
+    /// <summary>
+    /// Every row leaves its audit row, the refusals too: a weak claim pushed through
+    /// a bulk approval is a denial on record, as it is through the one-claim path
+    /// (review of S-5, I-2).
+    /// </summary>
+    [Fact]
+    public async Task Every_row_is_audited_and_a_weak_claim_as_a_denial()
+    {
+        var glaze = Propose("gres esmaltado", 0.96);
+        var origin = Propose("diseñada en Lisboa", 0.41);
+
+        await Approve(glaze.Id, origin.Id, ClaimId.New());
+
+        Assert.Equal(
+            [("ReviewClaimCommand", AuditOutcome.Allowed, null), ("ReviewClaimCommand", AuditOutcome.Denied, "WeakSupport"),
+             ("ReviewClaimCommand", AuditOutcome.Denied, "NotFound")],
+            this.audit.Rows.Select(row => (row.CommandType, row.Outcome, row.Reason)));
+    }
+
     [Theory]
     [InlineData(0, false)]
     [InlineData(1, true)]
@@ -92,6 +113,18 @@ public sealed class ApproveClaimsTests
     public void A_batch_holds_one_to_a_hundred_claims(int count, bool valid) =>
         Assert.Equal(valid, new ApproveClaimsValidator().Validate(
             new ApproveClaimsCommand([.. Enumerable.Range(0, count).Select(_ => ClaimId.New())])).IsValid);
+
+    private sealed class RecordingAudit : IAuditWriter
+    {
+        public List<AuditEntry> Rows { get; } = [];
+
+        public Task WriteAsync(AuditEntry entry, CancellationToken cancellationToken = default)
+        {
+            lock (this.Rows)
+                this.Rows.Add(entry);
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class Reviewer(string name) : IPrincipalAccessor
     {

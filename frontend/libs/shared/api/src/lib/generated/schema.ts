@@ -420,6 +420,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/knowledge/claims/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApproveClaims"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/knowledge/claims": {
         parameters: {
             query?: never;
@@ -478,22 +494,6 @@ export interface paths {
         get: operations["GetProductSpecs"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/knowledge/claims/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["ApproveClaims"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2532,7 +2532,7 @@ export interface components {
             outcome: components["schemas"]["ReviewOutcome"];
         };
         /** @enum {unknown} */
-        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "NotFound";
+        ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "NotFound";
         SalesFigures: {
             /** Format: double */
             revenue: number;
@@ -3661,6 +3661,30 @@ export interface operations {
             };
         };
     };
+    ApproveClaims: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveClaimsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimApprovalsResponse"];
+                };
+            };
+        };
+    };
     ListClaimsForReview: {
         parameters: {
             query?: {
@@ -3789,30 +3813,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    ApproveClaims: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ApproveClaimsRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClaimApprovalsResponse"];
-                };
             };
         };
     };

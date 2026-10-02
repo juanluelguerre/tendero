@@ -28,6 +28,8 @@ export const ClaimsBulkReviewStore = signalStore(
     untickedIds: [] as readonly string[],
     outcomes: {} as Readonly<Record<string, BulkApprovalOutcome>>,
     busy: false,
+    /** The last approval did not reach the server, or it failed there. */
+    approveFailed: false,
   }),
   withProps((store) => {
     const knowledge = inject(KnowledgeService);
@@ -40,8 +42,12 @@ export const ClaimsBulkReviewStore = signalStore(
     return { _knowledge: knowledge, _claims: claims, ...readStatus(claims) };
   }),
   withComputed((store) => {
+    // The rows that can go together first, the weak after them, as the mock-up draws it.
+    const claims = computed(() =>
+      [...(store._claims.value()?.items ?? [])].sort((a, b) => Number(a.isWeak) - Number(b.isWeak)),
+    );
     const rows = computed<ClaimRow[]>(() =>
-      (store._claims.value()?.items ?? []).map((claim) => {
+      claims().map((claim) => {
         const outcome = store.outcomes()[claim.claimId] ?? null;
         const tickable = !outcome && !claim.isWeak;
         return { claim, tickable, ticked: tickable && !store.untickedIds().includes(claim.claimId), outcome };
@@ -52,6 +58,9 @@ export const ClaimsBulkReviewStore = signalStore(
       rows,
       /** Every claim the review shows. */
       count: computed(() => rows().length),
+      /** Every claim the product has waiting: more than the review shows past its hundred. */
+      total: computed(() => store._claims.value()?.total ?? 0),
+      approved: computed(() => rows().filter((row) => row.outcome === 'Approved').length),
       /** How many may go together: well supported and still waiting. */
       together: computed(() => rows().filter((row) => row.tickable).length),
       weak: computed(() => rows().filter((row) => !row.outcome && row.claim.isWeak).length),
@@ -63,7 +72,7 @@ export const ClaimsBulkReviewStore = signalStore(
   withMethods((store) => ({
     /** A product's claims, every row ticked again. */
     load(productId: string): void {
-      patchState(store, { productId, untickedIds: [], outcomes: {}, busy: false });
+      patchState(store, { productId, untickedIds: [], outcomes: {}, busy: false, approveFailed: false });
       store._claims.reload();
     },
     toggle(claimId: string): void {
@@ -76,7 +85,7 @@ export const ClaimsBulkReviewStore = signalStore(
     /** Approves the ticked; `answered` runs once the server said what became of each. */
     approve(answered?: () => void): void {
       if (!store.canApprove()) return;
-      patchState(store, { busy: true });
+      patchState(store, { busy: true, approveFailed: false });
       store._knowledge
         .approveMany(
           store
@@ -96,8 +105,9 @@ export const ClaimsBulkReviewStore = signalStore(
             answered?.();
           },
           error: (failure: unknown) => {
-            patchState(store, { busy: false });
-            if (isSessionExpired(failure)) return;
+            if (isSessionExpired(failure)) return patchState(store, { busy: false });
+            // Said, then read again: what the server did decide shows on its row.
+            patchState(store, { busy: false, approveFailed: true });
             store._claims.reload();
           },
         });

@@ -1101,6 +1101,36 @@
         }
       }
     },
+    "/api/knowledge/claims/approve": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ApproveClaims",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveClaimsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimApprovalsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/knowledge/claims": {
       "get": {
         "tags": [
@@ -1278,36 +1308,6 @@
           },
           "404": {
             "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/api/knowledge/claims/approve": {
-      "post": {
-        "tags": [
-          "Knowledge"
-        ],
-        "operationId": "ApproveClaims",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApproveClaimsRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ClaimApprovalsResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -8370,6 +8370,7 @@
           "Approved",
           "Rejected",
           "NotWaiting",
+          "WeakSupport",
           "NotFound"
         ]
       },

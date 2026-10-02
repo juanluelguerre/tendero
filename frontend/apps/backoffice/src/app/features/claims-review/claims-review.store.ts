@@ -45,6 +45,8 @@ export const ClaimsReviewStore = signalStore(
       store._params().get('support')?.toLowerCase() === 'all' ? 'All' : 'Weak',
     ),
     selectedId: computed(() => store._params().get('claim')),
+    /** One product's claims, when the queue was narrowed to it (from a bulk review). */
+    productKey: computed(() => store._params().get('product')),
   })),
   withProps((store) => {
     /**
@@ -54,10 +56,15 @@ export const ClaimsReviewStore = signalStore(
      */
     const queue = extendResource(
       rxResource({
-        params: () => ({ culture: store._culture.active(), support: store.filterKey(), page: store.page() }),
+        params: () => ({
+          culture: store._culture.active(),
+          support: store.filterKey(),
+          page: store.page(),
+          product: store.productKey(),
+        }),
         stream: ({ params }) =>
           forkJoin({
-            claims: store._knowledge.claims(params.support, params.page, store.pageSize),
+            claims: store._knowledge.claims(params.support, params.page, store.pageSize, params.product),
             products: store._catalog.list(null, params.culture, 1, 100),
           }),
       }),
@@ -124,9 +131,17 @@ export const ClaimsReviewStore = signalStore(
       close(): void {
         navigate({ claim: null });
       },
-      /** A claim by its id: the weak queue's first page, where a weak claim is first. */
-      openById(claimId: string): void {
-        navigate({ claim: claimId, support: null, page: null });
+      /**
+       * A claim by its id, among its product's claims: there it is on the first
+       * page, where in the whole shop's weak queue it would be only if it were
+       * among the shop's weakest (review of S-5).
+       */
+      openById(claimId: string, productId: string): void {
+        navigate({ claim: claimId, product: productId, support: null, page: null });
+      },
+      /** Back to every product's claims. */
+      everyProduct(): void {
+        navigate({ product: null, page: null });
       },
       /** The queue is the server's: read it again after a bulk approval. */
       reload(): void {

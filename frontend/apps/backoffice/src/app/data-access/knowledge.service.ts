@@ -25,10 +25,16 @@ export class KnowledgeService {
    * A page of the review queue, ordered by the server — the weakest support
    * first — narrowed to the weak ones or not, with every filter's count (R-7.2).
    */
-  claims(support: ClaimSupportFilter = 'All', page = 1, pageSize = 20): Observable<ClaimsForReviewPage> {
-    return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, {
-      params: new HttpParams().set('support', support).set('page', page).set('pageSize', pageSize),
-    });
+  claims(
+    support: ClaimSupportFilter = 'All',
+    page = 1,
+    pageSize = 20,
+    product: string | null = null,
+  ): Observable<ClaimsForReviewPage> {
+    let params = new HttpParams().set('support', support).set('page', page).set('pageSize', pageSize);
+    // One product's: where a claim opened from its bulk review is on the first page.
+    if (product) params = params.set('product', product);
+    return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, { params });
   }
 
   /** One product's claims waiting for review, every one: its bulk review reads them all. */

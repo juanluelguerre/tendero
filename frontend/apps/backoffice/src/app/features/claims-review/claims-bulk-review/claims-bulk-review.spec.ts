@@ -48,8 +48,8 @@ describe('the claims bulk review', () => {
 
   it('leaves the weak claim unticked and offers to open it on its own', async () => {
     const fixture = TestBed.createComponent(ClaimsBulkReview);
-    const opened: string[] = [];
-    fixture.componentInstance.openClaim.subscribe((id) => opened.push(id));
+    const opened: { claimId: string; productId: string }[] = [];
+    fixture.componentInstance.openClaim.subscribe((claim) => opened.push(claim));
     fixture.componentInstance.open('p1', 'Taza');
     fixture.detectChanges();
     http.expectOne((req) => req.url === Claims).flush({ items: [claim('a'), claim('b', true)], counts: [] });
@@ -64,6 +64,6 @@ describe('the claims bulk review', () => {
       [false, true],
     ]);
     (element.querySelector('tbody button') as HTMLButtonElement).click();
-    expect(opened).toEqual(['b']);
+    expect(opened).toEqual([{ claimId: 'b', productId: 'p1' }]);
   });
 });

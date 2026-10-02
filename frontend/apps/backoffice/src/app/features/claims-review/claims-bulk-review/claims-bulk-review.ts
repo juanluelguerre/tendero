@@ -26,8 +26,8 @@ export class ClaimsBulkReview {
 
   /** Something was approved: the queue reads itself again. */
   readonly decided = output<void>();
-  /** The person chose to decide a weak claim on its own. */
-  readonly openClaim = output<string>();
+  /** The person chose to decide a weak claim on its own, among its product's claims. */
+  readonly openClaim = output<{ claimId: string; productId: string }>();
 
   protected readonly headingId = `claims-review-${++reviews}`;
   protected readonly statementIn = statementIn;
@@ -50,6 +50,6 @@ export class ClaimsBulkReview {
 
   protected openOne(claimId: string): void {
     this.frame().close();
-    this.openClaim.emit(claimId);
+    this.openClaim.emit({ claimId, productId: this.store.productId() ?? '' });
   }
 }

@@ -50,10 +50,10 @@ describe('the claims bulk review store', () => {
     const { store, asked } = await reviewing([claim('a'), claim('b', true), claim('c')]);
 
     expect([asked.request.params.get('product'), asked.request.params.get('support')]).toEqual(['p1', 'All']);
-    expect(store.rows().map((row) => [row.ticked, row.tickable])).toEqual([
-      [true, true],
-      [false, false],
-      [true, true],
+    expect(store.rows().map((row) => [row.claim.claimId, row.ticked, row.tickable])).toEqual([
+      ['a', true, true],
+      ['c', true, true],
+      ['b', false, false],
     ]);
     expect([store.together(), store.weak(), store.selected(), store.firstWeak()?.claimId]).toEqual([2, 1, 2, 'b']);
   });
@@ -67,6 +67,28 @@ describe('the claims bulk review store', () => {
     approval.flush({ rows: [{ claimId: 'a', outcome: 'Approved' }] });
 
     expect(store.rows().map((row) => row.outcome)).toEqual(['Approved', null, null]);
+  });
+
+  /** The rows that can go together first, the weak ones after them, as the mock-up draws it. */
+  it('lists the weak claims last, and says when the product has more than it shows', async () => {
+    const store = TestBed.inject(ClaimsBulkReviewStore);
+    store.load('p1');
+    TestBed.tick();
+    http
+      .expectOne((req) => req.url === Claims)
+      .flush({ items: [claim('w', true), claim('a')], total: 120, page: 1, pageSize: 100, counts: [] });
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect([store.rows().map((row) => row.claim.claimId), store.total()]).toEqual([['a', 'w'], 120]);
+  });
+
+  /** An approval the server did not answer is said, not swallowed. */
+  it('says when the approval did not go through', async () => {
+    const { store } = await reviewing([claim('a')]);
+    store.approve();
+    http.expectOne(`${Claims}/approve`).flush('down', { status: 503, statusText: 'Unavailable' });
+
+    expect(store.approveFailed()).toBe(true);
   });
 
   /** A product with weak claims only: nothing goes together, the weak one is the way on. */

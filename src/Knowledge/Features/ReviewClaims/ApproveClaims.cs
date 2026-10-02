@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Knowledge.Domain;
-using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -53,9 +52,9 @@ public sealed class ApproveClaimsValidator : AbstractValidator<ApproveClaimsComm
 }
 
 /// <summary>
-/// Checks each claim's support on the server and approves the others through the
-/// one-claim command, each in a DI scope of its own: one claim's failure leaves
-/// nothing modified for the next one's save, and each audit row names its claim.
+/// Sends each claim through the one-claim command, in bulk, each in a DI scope of
+/// its own: one claim's failure leaves nothing modified for the next one's save,
+/// and each audit row names its claim.
 /// </summary>
 public sealed class ApproveClaimsHandler(IServiceScopeFactory scopes) : ICommandHandler<ApproveClaimsCommand, ClaimApprovals>
 {
@@ -74,33 +73,25 @@ public sealed class ApproveClaimsHandler(IServiceScopeFactory scopes) : ICommand
         return new ClaimApprovals(rows);
     }
 
+    /// <summary>
+    /// The one-claim command decides every row, refusals included, so each is its
+    /// own audit row — a weak claim pushed through a bulk approval is a denial on
+    /// record (review of S-5, I-2). Two people deciding one claim at once is the
+    /// one-claim path's case too: the last write wins, as it does there.
+    /// </summary>
     private async Task<BulkApprovalOutcome> ApproveAsync(ClaimId id, CancellationToken cancellationToken)
     {
         await using var scope = scopes.CreateAsyncScope();
-        var claim = await scope.ServiceProvider.GetRequiredService<IKnowledgeRepository>().FindClaimAsync(id, cancellationToken);
-        if (claim is null)
-            return BulkApprovalOutcome.NotFound;
-        if (claim.Status != ClaimStatus.Proposed)
-            return BulkApprovalOutcome.NotWaiting;
-        if (claim.IsWeaklySupported)
-            return BulkApprovalOutcome.WeakSupport;
+        var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+            .SendAsync(new ReviewClaimCommand(id, ReviewDecision.Approve, InBulk: true), cancellationToken);
 
-        try
+        return result.Outcome switch
         {
-            var result = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
-                .SendAsync(new ReviewClaimCommand(id, ReviewDecision.Approve), cancellationToken);
-            return result.Outcome switch
-            {
-                ReviewOutcome.Approved => BulkApprovalOutcome.Approved,
-                ReviewOutcome.NotFound => BulkApprovalOutcome.NotFound,
-                _ => BulkApprovalOutcome.NotWaiting,
-            };
-        }
-        catch (ConcurrentWriteException)
-        {
-            // Another reviewer decided it between the read and the save.
-            return BulkApprovalOutcome.NotWaiting;
-        }
+            ReviewOutcome.Approved => BulkApprovalOutcome.Approved,
+            ReviewOutcome.WeakSupport => BulkApprovalOutcome.WeakSupport,
+            ReviewOutcome.NotFound => BulkApprovalOutcome.NotFound,
+            _ => BulkApprovalOutcome.NotWaiting,
+        };
     }
 }
 

@@ -91,6 +91,23 @@ describe('the claims review store', () => {
     expect([store.claims().length, store.othersWaiting()]).toEqual([0, true]);
   });
 
+  /**
+   * A weak claim opened from a product's bulk review lands on that product's weak
+   * claims, where it is on the first page — the whole shop's weak queue would
+   * put it on page 1 only if it were among the shop's twenty weakest (review of
+   * S-5, I-1).
+   */
+  it("opens a claim from the bulk review among its product's claims", async () => {
+    const store = await at('/');
+    store.openById('c9', 'p7');
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+
+    expect(TestBed.inject(Router).url).toBe('/?claim=c9&product=p7');
+    expect(http.expectOne((req) => req.url === Claims).request.params.get('product')).toBe('p7');
+    expect(store.productKey()).toBe('p7');
+  });
+
   /** Deciding moves on to the next claim, and the queue is read again: it is the server's. */
   it('opens the next claim after a decision, and asks for the queue again', async () => {
     const store = await at('/?claim=c1');

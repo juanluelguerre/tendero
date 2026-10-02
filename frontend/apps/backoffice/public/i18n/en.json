@@ -590,7 +590,9 @@
       "All": "All"
     },
     "none": "No weakly supported claim is waiting. The rest are under All.",
-    "nextHint": "Deciding opens the next claim down the list."
+    "nextHint": "Deciding opens the next claim down the list.",
+    "oneProduct": "One product's claims",
+    "everyProduct": "Show every product"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -1168,6 +1170,13 @@
       "WeakSupport": "Weak support — not approved",
       "NotWaiting": "Already decided",
       "NotFound": "Not found"
-    }
+    },
+    "headingOne": "Review 1 claim · {{product}}",
+    "loading": "Loading the claims of {{product}}…",
+    "capped": "Showing the first {{shown}} of {{total}}; the rest wait in the queue.",
+    "tallyOne": "{{together}} of {{count}} can go together · 1 weak",
+    "weakFor": "{{attribute}}: weak support — open it to decide",
+    "approveFailed": "The approval did not go through. What was decided shows on its row; try the rest again.",
+    "done": "{{approved}} approved."
   }
 }

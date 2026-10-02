@@ -3,4 +3,4 @@
   <backoffice-claim-pane (closed)="store.close()" (reviewAll)="reviewAll($event)" />
 </section>
 
-<backoffice-claims-bulk-review (decided)="store.reload()" (openClaim)="store.openById($event)" />
+<backoffice-claims-bulk-review (decided)="approved()" (openClaim)="store.openById($event.claimId, $event.productId)" />
