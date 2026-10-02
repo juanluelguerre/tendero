@@ -405,6 +405,18 @@ notifications and alerts.
 3. **S-3 · Steward reads and proposes.** `catalogue_gaps`, the six tools, the two
    proposal tools, the agent, `POST /api/steward/turns`, the caps, the fallback,
    the `Scripted` kind.
+   *As built (2026-10-02, split into S-3a and S-3b)*: the reads are tools their
+   contexts own (`IReadTool`, ADR 0054) — `find_products`, `catalogue_gaps`,
+   `sales_summary`, `product_performance`, `stock_to_restock`, `returns_summary` —
+   answered in a `{ data, rows, total }` envelope; the proposal tools are generated,
+   one per proposable command: `propose_set_product_translation` and
+   `propose_withdraw_product`. A turn is a `ChatClientAgent` (Microsoft Agent
+   Framework 1.23.0) with five tool rounds at most (six model calls), 600 output
+   tokens per call, a conversation budget of 60,000 tokens read from
+   `telemetry.ai_invocations`, and twenty turns a minute per person. The fallback
+   answers when the model fails, except after a proposal was stored (a second
+   model would propose it again). The `Scripted` kind can loop and can fail after
+   its tools, so both are tested.
 4. **S-4 · The backoffice.** The panel and its sheet, the screen context, the
    card, the review, the Proposals list and its rail entry, the unavailable
    state, es and en.

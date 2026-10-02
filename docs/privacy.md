@@ -74,3 +74,9 @@ what is sent to the provider, along with catalogue text: product names and
 descriptions. Conversations are not kept; each model call leaves one row in
 `telemetry.ai_invocations` with its tokens, cost and latency, never the prompt or
 the answer (ADR 0053).
+
+A turn (S-3b) sends the model the conversation the shopkeeper's browser posts,
+the screen it was asked on, and the tools' answers — each inside a `{ data, rows,
+total }` envelope that marks catalogue text as data — and nothing else. Every
+tool's answer type is checked by an architecture rule for any field that names a
+customer, an order, an address, a phone or a comment (ADR 0054).

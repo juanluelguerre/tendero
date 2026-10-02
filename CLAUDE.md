@@ -133,7 +133,9 @@ node tools/api-map.mjs --schema CartView
    `Inventory`, `Ordering`, `Accounts`, `Knowledge` (phase 10: claims a model
    proposes and a person approves, never written into `Catalog` — ADR 0018),
    `Assist` (phase 12: proposals a model makes and a person decides; it runs
-   other contexts' commands only through `IProposableCommand` — ADR 0052).
+   other contexts' commands only through `IProposableCommand` and reads them only
+   through `IReadTool` — ADR 0052, ADR 0054 — and besides the kernel references
+   only the model port, `AI`).
    `Pricing` and `Inventory` reference
    SharedKernel and nothing else, and an architecture rule computes that by
    reflection — that purity is what makes the promotion engine verifiable with
