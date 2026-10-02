@@ -477,6 +477,17 @@ notifications and alerts.
    asked, a rare case and a wording one.
 5. **S-5 · Claims in bulk.** The review component on claims, the server's refusal
    of weak claims in bulk, R-2's amendment in `docs/specs/redesign.md`.
+   *As built (2026-10-02)*: `POST /api/knowledge/claims/approve` approves a
+   product's claims, each through the one-claim command in a DI scope of its own
+   (its own audit row), and answers WeakSupport on the row of a weak one — the
+   server's `IsWeaklySupported`, never the screen's. `GET /api/knowledge/claims`
+   takes `?product=`. In the backoffice the review's frame is one component,
+   `worklist/review-dialog`, which Steward's proposals review and the claims review
+   both project into; the claims review opens from the claim pane, quietly.
+   Rulings the spec left open: there is no "reject the unticked" for claims (the
+   mock-up has none, and a claim is rejected on its own, from the queue); *Open the
+   weak one* opens it in the weak queue's first page, where the weakest claim is
+   first; the attribute is shown by its code, as the queue's row does.
 6. **S-6 · Measured and evaluated.** The `copilot` suite on the local model,
    `ai-usage.json`, the four events in the tracking plan, the window fixed from
    the largest conversation.

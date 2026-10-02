@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.Knowledge.Domain;
-using ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -11,13 +10,14 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ElGuerre.Tendero.Knowledge.Features.ApproveClaims;
+namespace ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
 
 /// <summary>
 /// A product's claims approved together, after the review that shows every one of
 /// them (phase 12, S-5; Steward spec, decision 5 — which amends R-2's refusal of
-/// bulk approval for claims). Not audited itself: each claim it approves is a
-/// <see cref="ReviewClaimCommand"/>, audited one by one.
+/// bulk approval for claims). Still reviewing claims, so in this slice: it
+/// dispatches the one-claim command beside it. Not audited itself: each claim it
+/// approves is a <see cref="ReviewClaimCommand"/>, audited one by one.
 /// </summary>
 public sealed record ApproveClaimsCommand(IReadOnlyList<ClaimId> Ids) : ICommand<ClaimApprovals>, IUnauditedCommand;
 

@@ -1,5 +1,4 @@
 using ElGuerre.Tendero.Knowledge.Domain;
-using ElGuerre.Tendero.Knowledge.Features.ApproveClaims;
 using ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
 using ElGuerre.Tendero.Knowledge.Ports;
 using ElGuerre.Tendero.SharedKernel;

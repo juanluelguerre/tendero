@@ -85,7 +85,8 @@
       "UnscheduleCampaignCommand": "Desprogramar una campaña",
       "UpdateCampaignCommand": "Editar una campaña",
       "UpdateCheckoutSessionCommand": "Actualizar un pago",
-      "WithdrawProductCommand": "Retirar un producto de la venta"
+      "WithdrawProductCommand": "Retirar un producto de la venta",
+      "ApproveClaimsCommand": "Aprobar afirmaciones juntas"
     }
   },
   "brand": {

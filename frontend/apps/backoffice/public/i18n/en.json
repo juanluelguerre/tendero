@@ -85,7 +85,8 @@
       "UnscheduleCampaignCommand": "Unschedule a campaign",
       "UpdateCampaignCommand": "Edit a campaign",
       "UpdateCheckoutSessionCommand": "Update a checkout",
-      "WithdrawProductCommand": "Take a product off sale"
+      "WithdrawProductCommand": "Take a product off sale",
+      "ApproveClaimsCommand": "Approve claims together"
     }
   },
   "brand": {
