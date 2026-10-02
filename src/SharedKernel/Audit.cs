@@ -52,7 +52,11 @@ public sealed record AuditEntry(
     AuditOutcome Outcome,
     string? Reason,
     string? TraceId,
-    DateTimeOffset At)
+    DateTimeOffset At,
+
+    /// <summary>The approved proposal this command ran for, or null when a person
+    /// or an agent sent it directly (phase 12, ADR 0052).</summary>
+    ProposalId? Proposal = null)
 {
     public static AuditEntry For(
         string commandType,
@@ -61,7 +65,8 @@ public sealed record AuditEntry(
         AuditOutcome outcome,
         string? reason,
         string? traceId,
-        DateTimeOffset at) =>
+        DateTimeOffset at,
+        ProposalId? proposal = null) =>
         new(Guid.CreateVersion7(at),
             commandType,
             payload,
@@ -72,7 +77,8 @@ public sealed record AuditEntry(
             outcome,
             reason,
             traceId,
-            at);
+            at,
+            proposal);
 }
 
 /// <summary>

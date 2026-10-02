@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20260930064255_OrderChannelMomentsAndCategory";
+    public override string LastMigrationId => "20261002160125_AuditProposal";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -675,6 +675,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                         b1.Property<string>("CategoryCode")
                             .HasJsonPropertyName("categoryCode");
 
+                        b1.Property<string>("CategoryPath")
+                            .HasJsonPropertyName("categoryPath");
+
                         b1.Property<string>("ImageId")
                             .HasJsonPropertyName("imageId");
 
@@ -1162,6 +1165,9 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                         b1.Property<string>("CategoryCode")
                             .HasJsonPropertyName("categoryCode");
 
+                        b1.Property<string>("CategoryPath")
+                            .HasJsonPropertyName("categoryPath");
+
                         b1.Property<string>("ImageId")
                             .HasJsonPropertyName("imageId");
 
@@ -1487,6 +1493,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasColumnType("jsonb")
                     .HasColumnName("payload");
 
+                b.Property<Guid?>("Proposal")
+                    .HasColumnType("uuid")
+                    .HasColumnName("proposal");
+
                 b.Property<string>("Reason")
                     .HasMaxLength(1000)
                     .HasColumnType("character varying(1000)")
@@ -1508,6 +1518,10 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                 b.HasIndex("At")
                     .IsDescending()
                     .HasDatabaseName("ix_audit_entries_at");
+
+                b.HasIndex("Proposal")
+                    .HasDatabaseName("ix_audit_entries_proposal")
+                    .HasFilter("proposal IS NOT NULL");
 
                 b.HasIndex("Agent", "At")
                     .IsDescending(false, true)

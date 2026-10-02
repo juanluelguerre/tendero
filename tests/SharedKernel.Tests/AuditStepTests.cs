@@ -233,6 +233,46 @@ public sealed class AuditStepTests
         Assert.Empty(audit.Entries);
     }
 
+    /// <summary>
+    /// A command run for an approved proposal says so in its row: that column is
+    /// what lets the audit read "proposed by Steward, approved by Lucía".
+    /// </summary>
+    [Fact]
+    public async Task A_command_dispatched_for_a_proposal_names_it_in_its_row()
+    {
+        var audit = new RecordingAuditWriter();
+        await using var root = Compose(CommercePrincipal.Anonymous, audit);
+        await using var scope = root.CreateAsyncScope();
+        var proposal = ProposalId.New(Clock.GetUtcNow());
+
+        scope.ServiceProvider.GetRequiredService<ProposalScope>().Enter(proposal);
+        await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>()
+            .SendAsync(new Publish("a-product"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(proposal, Assert.Single(audit.Entries).Proposal);
+    }
+
+    [Fact]
+    public async Task A_command_nobody_proposed_has_no_proposal_in_its_row()
+    {
+        var (dispatcher, audit) = Pipeline();
+
+        await dispatcher.SendAsync(new Publish("a-product"), TestContext.Current.CancellationToken);
+
+        Assert.Null(Assert.Single(audit.Entries).Proposal);
+    }
+
+    /// <summary>One scope is one proposal: entering a second would file one
+    /// command's row under somebody else's proposal.</summary>
+    [Fact]
+    public void A_scope_carries_one_proposal()
+    {
+        var scope = new ProposalScope();
+        scope.Enter(ProposalId.New(Clock.GetUtcNow()));
+
+        Assert.Throws<InvalidOperationException>(() => scope.Enter(ProposalId.New(Clock.GetUtcNow())));
+    }
+
     // ---------- fixtures ----------
 
     private static (ICommandDispatcher, RecordingAuditWriter) Pipeline(

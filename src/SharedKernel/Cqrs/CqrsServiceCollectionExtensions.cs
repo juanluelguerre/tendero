@@ -40,6 +40,9 @@ public static class CqrsServiceCollectionExtensions
         services.TryAddScoped<IQueryDispatcher, QueryDispatcher>();
         services.TryAddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
 
+        // Which approved proposal this scope's commands run for, if any (ADR 0052).
+        services.TryAddScoped<ProposalScope>();
+
         foreach (var assembly in assemblies.Distinct())
             RegisterHandlers(services, assembly.GetTypes());
 

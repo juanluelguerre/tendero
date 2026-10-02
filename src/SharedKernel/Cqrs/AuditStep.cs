@@ -73,6 +73,9 @@ internal static class AuditStep
         var clock = services.GetService<TimeProvider>() ?? TimeProvider.System;
         var traceId = Activity.Current?.TraceId.ToString();
 
+        // Set only when Assist runs an approved proposal (ADR 0052).
+        var proposal = services.GetService<ProposalScope>()?.Current;
+
         try
         {
             var result = await handle();
@@ -92,7 +95,8 @@ internal static class AuditStep
                 outcome,
                 reason,
                 traceId,
-                clock.GetUtcNow()), ct);
+                clock.GetUtcNow(),
+                proposal), ct);
 
             return result;
         }
@@ -111,7 +115,8 @@ internal static class AuditStep
                     : AuditOutcome.Failed,
                 failure.Message,
                 traceId,
-                clock.GetUtcNow()), ct);
+                clock.GetUtcNow(),
+                proposal), ct);
 
             throw;
         }

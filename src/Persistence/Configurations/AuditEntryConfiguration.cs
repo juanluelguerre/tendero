@@ -44,6 +44,10 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
 
         builder.Property(entry => entry.Reason).HasMaxLength(1000);
         builder.Property(entry => entry.TraceId).HasMaxLength(64);
+
+        // The proposal a command ran for (phase 12): what lets a row say "proposed
+        // by Steward, approved by Lucía". Filtered, as the agent's: most rows have none.
+        builder.HasIndex(entry => entry.Proposal).HasFilter("proposal IS NOT NULL");
         builder.Property(entry => entry.At).IsRequired();
 
         // What the audit screen actually asks: the most recent first.

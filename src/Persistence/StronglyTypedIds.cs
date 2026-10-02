@@ -34,6 +34,7 @@ internal static class StronglyTypedIds
         conventions.Properties<ClaimId>().HaveConversion<ClaimIdConverter>();
         conventions.Properties<SourceDocumentId>().HaveConversion<SourceDocumentIdConverter>();
         conventions.Properties<CampaignCode>().HaveConversion<CampaignCodeConverter>();
+        conventions.Properties<ProposalId>().HaveConversion<ProposalIdConverter>();
     }
 
     private sealed class ProductIdConverter() : ValueConverter<ProductId, Guid>(id => id.Value, value => new ProductId(value));
@@ -48,4 +49,5 @@ internal static class StronglyTypedIds
     private sealed class ClaimIdConverter() : ValueConverter<ClaimId, Guid>(id => id.Value, value => new ClaimId(value));
     private sealed class SourceDocumentIdConverter() : ValueConverter<SourceDocumentId, string>(id => id.Value, value => new SourceDocumentId(value));
     private sealed class CampaignCodeConverter() : ValueConverter<CampaignCode, string>(code => code.Value, value => new CampaignCode(value));
+    private sealed class ProposalIdConverter() : ValueConverter<ProposalId, Guid>(id => id.Value, value => new ProposalId(value));
 }
