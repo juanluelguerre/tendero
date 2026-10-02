@@ -13,6 +13,22 @@ internal sealed class InMemoryProposals : IProposalRepository
         Task.FromResult(All.SingleOrDefault(proposal => proposal.Id == id));
 
     public void Add(ActionProposal proposal) => All.Add(proposal);
+
+    public Task<(IReadOnlyList<ActionProposal> Items, int Total)> PageAsync(
+        IReadOnlyCollection<ProposalStatus>? statuses, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var matching = All.Where(proposal => statuses is null || statuses.Contains(proposal.Status))
+            .OrderByDescending(proposal => proposal.ProposedAt).ThenByDescending(proposal => proposal.Id.Value).ToList();
+        return Task.FromResult<(IReadOnlyList<ActionProposal>, int)>(
+            ([.. matching.Skip((page - 1) * pageSize).Take(pageSize)], matching.Count));
+    }
+
+    public Task<IReadOnlyList<ActionProposal>> FindManyAsync(IReadOnlyCollection<ProposalId> ids, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<ActionProposal>>([.. All.Where(proposal => ids.Contains(proposal.Id))]);
+
+    public Task<IReadOnlyDictionary<ProposalStatus, int>> CountByStatusAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyDictionary<ProposalStatus, int>>(
+            All.GroupBy(proposal => proposal.Status).ToDictionary(group => group.Key, group => group.Count()));
 }
 
 internal sealed class CountingUnitOfWork : IUnitOfWork

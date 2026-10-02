@@ -2,6 +2,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.Assist;
 using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Assist.Features.DecideProposals;
+using ElGuerre.Tendero.Assist.Features.ListProposals;
 using ElGuerre.Tendero.Assist.Features.ProposeActions;
 using ElGuerre.Tendero.Assist.Ports;
 using ElGuerre.Tendero.Catalog;
@@ -67,6 +68,36 @@ public sealed class ProposalApprovalTests(PostgresFixture postgres)
     }
 
     /// <summary>
+    /// The Proposals list on Postgres (S-4): counted per filter by status in SQL,
+    /// paged, and a turn's ids read back with the product's name its display stored.
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task The_list_counts_pages_and_reads_back_a_turns_proposals_with_their_display()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var (provider, factory) = await ShopAsync("proposal_list", ct);
+        await using var _ = provider;
+        var product = await FirstProductAsync(factory, ct);
+
+        var applied = await ProposeAsync(provider, product, "Applied name", ct);
+        await SendAsync(provider, new ApproveProposalsCommand([applied]), ct);
+        var waiting = await ProposeAsync(provider, product, "Waiting name", ct);
+
+        var toReview = await AskAsync(provider, new ListProposalsQuery(ProposalFilter.ToReview, null, 1, 20, "en"), ct);
+        Assert.Equal(waiting.ToString(), Assert.Single(toReview.Items).Id);
+        Assert.Equal([1, 1, 0, 0, 2], toReview.Counts.Select(count => count.Count));
+
+        var turn = await AskAsync(provider, new ListProposalsQuery(ProposalFilter.ToReview, [waiting, applied], 1, 20, "en"), ct);
+        Assert.Equal([waiting.ToString(), applied.ToString()], turn.Items.Select(item => item.Id));
+        await using var context = factory.Create();
+        var name = (await context.Products.SingleAsync(p => p.Id == product, ct)).Name.In("en");
+        Assert.All(turn.Items, item => Assert.Equal(("English name", "Name · EN"), (item.Topic, item.Changes[0].Field)));
+        Assert.Equal(("Waiting name", name), (turn.Items[0].Changes[0].Proposed, turn.Items[0].Title));
+    }
+
+    /// <summary>
     /// Two approvals of one proposal at once: each reads it Proposed, and only the
     /// first save may stand. The proposal's version (Postgres's xmin) refuses the
     /// second, and the unit of work says so as a ConcurrentWriteException — what
@@ -116,6 +147,12 @@ public sealed class ProposalApprovalTests(PostgresFixture postgres)
             [new ProposedAction(SetProductTranslationProposal.CommandName, payload, "It has no English name.")],
             new ProposalSource("scripted", null, "steward-v1", "conv-1")), ct);
         return Assert.Single(result.Rows).Id!.Value;
+    }
+
+    private static async Task<T> AskAsync<T>(ServiceProvider provider, IQuery<T> query, CancellationToken ct)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>().SendAsync(query, ct);
     }
 
     private static async Task<T> SendAsync<T>(ServiceProvider provider, ICommand<T> command, CancellationToken ct)

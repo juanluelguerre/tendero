@@ -100,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/steward/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListProposals"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/steward/proposals/approve": {
         parameters: {
             query?: never;
@@ -2190,6 +2206,11 @@ export interface components {
             isActive: boolean;
             missingCultures: string[];
         };
+        ProposalChangeView: {
+            field: string;
+            now: null | string;
+            proposed: null | string;
+        };
         ProposalDecisionView: {
             id: string;
             outcome: components["schemas"]["DecisionOutcome"];
@@ -2197,6 +2218,51 @@ export interface components {
         };
         ProposalDecisionsResponse: {
             rows: components["schemas"]["ProposalDecisionView"][];
+        };
+        /** @enum {unknown} */
+        ProposalFilter: "ToReview" | "Applied" | "Rejected" | "Failed" | "All";
+        ProposalFilterCount: {
+            filter: components["schemas"]["ProposalFilter"];
+            /** Format: int32 */
+            count: number;
+        };
+        ProposalProvenanceView: {
+            profile: null | string;
+            model: null | string;
+            promptVersion: null | string;
+            conversationId: null | string;
+            traceId: null | string;
+            askedBy: string;
+        };
+        /** @enum {unknown} */
+        ProposalStatus: "Proposed" | "Approved" | "Applied" | "Failed" | "Rejected" | "Stale";
+        ProposalView: {
+            id: string;
+            command: string;
+            action: string;
+            subject: string;
+            title: string;
+            topic: string;
+            changes: components["schemas"]["ProposalChangeView"][];
+            reason: string;
+            status: components["schemas"]["ProposalStatus"];
+            /** Format: date-time */
+            proposedAt: string;
+            decidedBy: null | string;
+            /** Format: date-time */
+            decidedAt: null | string;
+            result: null | string;
+            provenance: components["schemas"]["ProposalProvenanceView"];
+        };
+        ProposalsPage: {
+            items: components["schemas"]["ProposalView"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            counts: components["schemas"]["ProposalFilterCount"][];
         };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
@@ -2988,6 +3054,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StewardAnswer"];
+                };
+            };
+        };
+    };
+    ListProposals: {
+        parameters: {
+            query?: {
+                filter?: "ToReview" | "Applied" | "Rejected" | "Failed" | "All";
+                ids?: string[];
+                page?: number;
+                pageSize?: number;
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalsPage"];
                 };
             };
         };

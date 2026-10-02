@@ -209,6 +209,76 @@
         }
       }
     },
+    "/api/steward/proposals": {
+      "get": {
+        "tags": [
+          "Steward"
+        ],
+        "operationId": "ListProposals",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "ToReview",
+                "Applied",
+                "Rejected",
+                "Failed",
+                "All"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalsPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/steward/proposals/approve": {
       "post": {
         "tags": [
@@ -7068,6 +7138,31 @@
           }
         }
       },
+      "ProposalChangeView": {
+        "required": [
+          "field",
+          "now",
+          "proposed"
+        ],
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "now": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "proposed": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ProposalDecisionView": {
         "required": [
           "id",
@@ -7100,6 +7195,200 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProposalDecisionView"
+            }
+          }
+        }
+      },
+      "ProposalFilter": {
+        "enum": [
+          "ToReview",
+          "Applied",
+          "Rejected",
+          "Failed",
+          "All"
+        ]
+      },
+      "ProposalFilterCount": {
+        "required": [
+          "filter",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/ProposalFilter"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ProposalProvenanceView": {
+        "required": [
+          "profile",
+          "model",
+          "promptVersion",
+          "conversationId",
+          "traceId",
+          "askedBy"
+        ],
+        "type": "object",
+        "properties": {
+          "profile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "model": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "promptVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "conversationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "traceId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "askedBy": {
+            "type": "string"
+          }
+        }
+      },
+      "ProposalStatus": {
+        "enum": [
+          "Proposed",
+          "Approved",
+          "Applied",
+          "Failed",
+          "Rejected",
+          "Stale"
+        ]
+      },
+      "ProposalView": {
+        "required": [
+          "id",
+          "command",
+          "action",
+          "subject",
+          "title",
+          "topic",
+          "changes",
+          "reason",
+          "status",
+          "proposedAt",
+          "decidedBy",
+          "decidedAt",
+          "result",
+          "provenance"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "topic": {
+            "type": "string"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposalChangeView"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProposalStatus"
+          },
+          "proposedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decidedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/ProposalProvenanceView"
+          }
+        }
+      },
+      "ProposalsPage": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "counts"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposalView"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "counts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposalFilterCount"
             }
           }
         }
