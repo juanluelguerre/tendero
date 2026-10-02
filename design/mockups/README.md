@@ -16,6 +16,15 @@ because the two that exist belong to article 22 and are waiting in
 removes. They are promoted with one `git mv` on the day the article goes live — the
 rule the project already applies to the articles themselves.
 
+The first one here is `storefront-home.excalidraw`, with `storefront-home-excalidraw.png`
+beside it (2026-10-02, article 01): the storefront home drawn in Excalidraw by
+Claude Code through Excalidraw's MCP server, in the tokens' colours and with the
+catalogue's own pictures. Excalidraw has no colour variables, so every colour is a
+literal hex, and the same spec reads `.excalidraw` files and holds them to the
+palette. Excalidraw cannot load the brand's fonts and has no font weights, so
+the type is Nunito and Cascadia at one weight: the mockup shows the structure and
+the colours, not the type.
+
 Each mockup is committed in two formats, on purpose (ADR 0033): the `.pen` is
 documented JSON, so a reader opens it in any text editor and sees what a mockup is
 made of, and the `.html` export is for a reader who just wants to look at the
