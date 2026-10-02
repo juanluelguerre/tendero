@@ -87,7 +87,8 @@
       "UpdateCheckoutSessionCommand": "Update a checkout",
       "WithdrawProductCommand": "Take a product off sale",
       "ApproveClaimsCommand": "Approve claims together"
-    }
+    },
+    "fromProposal": "Proposed by Steward"
   },
   "brand": {
     "area": "Backoffice",

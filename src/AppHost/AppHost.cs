@@ -627,6 +627,17 @@ if (steward)
     api.WithEnvironment("Steward__Models__local__Endpoint",
         ReferenceExpression.Create($"{stewardModel.GetEndpoint("http")}/v1/"));
 
+// A Scripted Steward (phase 12, S-6): CI's browser spec drives the panel, the card,
+// the review and the audit row with a script, because no model fits a runner —
+// `Tendero__StewardScript=<file>`, and the scripted profile answers instead.
+if (builder.Configuration["Tendero:StewardScript"] is { Length: > 0 } stewardScript)
+{
+    api.WithEnvironment("Steward__Model", "scripted")
+        .WithEnvironment("Steward__Models__scripted__Kind", "Scripted")
+        .WithEnvironment("Steward__Models__scripted__Model", "scripted")
+        .WithEnvironment("Steward__Models__scripted__Script", Path.GetFullPath(stewardScript, repositoryRoot));
+}
+
 if (useKeycloak)
 {
     api.WithReference(keycloak).WaitFor(keycloak)

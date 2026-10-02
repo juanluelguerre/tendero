@@ -1,0 +1,29 @@
+[
+  {
+    "when": "Pulse Runner",
+    "calls": [
+      {
+        "tool": "find_products",
+        "arguments": {
+          "text": "Pulse Runner cushioned"
+        }
+      }
+    ],
+    "then": [
+      {
+        "tool": "propose_set_product_translation",
+        "arguments": {
+          "items": [
+            {
+              "productId": "{from:find_products:data.products.0.productId}",
+              "culture": "en",
+              "name": "Pulse Runner cushioned running shoes",
+              "reason": "The English name, as the supplier writes it."
+            }
+          ]
+        }
+      }
+    ],
+    "say": "I found the Pulse Runner and proposed its English name: nothing changes until you approve it."
+  }
+]

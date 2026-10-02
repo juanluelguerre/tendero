@@ -318,6 +318,8 @@ jobs:
       # nobody exercises is composition that is broken.
       - name: Bring up the stack
         run: |
+          # Steward answers from a script (S-6): no model fits a runner.
+          export Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json
           dotnet run --project src/AppHost > "$RUNNER_TEMP/aspire.log" 2>&1 &
 
           # **Not port 4201.** The dev server answers within seconds of starting

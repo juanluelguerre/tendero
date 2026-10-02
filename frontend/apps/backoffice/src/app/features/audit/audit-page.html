@@ -95,6 +95,17 @@
                 @let actor = actorOf(entry);
                 <span class="text-muted">{{ 'guest' in actor ? t('audit.guest') : actor.label }}</span>
 
+                <!-- Proposed by Steward, approved by this person (phase 12): the
+                     approver acted, the proposal is linked. Agent-driven, so clay. -->
+                @if (entry.proposalId; as proposal) {
+                  <a
+                    class="text-2xs text-accent underline"
+                    routerLink="/steward/proposals"
+                    [queryParams]="{ filter: 'All', proposal: proposal }"
+                    >{{ t('audit.fromProposal') }}</a
+                  >
+                }
+
                 <!--
                   Only when there IS a name and it differs. Rows written before
                   this column existed carry none, so they fall back to printing the

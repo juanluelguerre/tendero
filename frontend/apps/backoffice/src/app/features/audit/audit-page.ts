@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { FilterChips } from '../../worklist/filter-chips/filter-chips';
 import { Pager } from '../../worklist/pager/pager';
@@ -31,7 +32,7 @@ import { ListState } from '../../worklist/list-state/list-state';
  */
 @Component({
   selector: 'backoffice-audit',
-  imports: [TranslocoDirective, FilterChips, Pager, ListState, StatusPill, CopyText, DateTimePipe],
+  imports: [TranslocoDirective, RouterLink, FilterChips, Pager, ListState, StatusPill, CopyText, DateTimePipe],
   templateUrl: './audit-page.html',
   providers: [AuditStore],
 })
