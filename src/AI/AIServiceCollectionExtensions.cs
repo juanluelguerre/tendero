@@ -23,8 +23,12 @@ public static class AIServiceCollectionExtensions
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton<AIInvocationLog>();
 
+        // Each profile on its own: one this host cannot reach is left out, and the
+        // others are clients whether or not it is (a hosted profile does not wait
+        // for the local container).
         var profiles = configuration.GetSection(section).GetChildren()
             .Select(child => (Name: child.Key, Profile: child.Get<ModelProfile>() ?? new ModelProfile()))
+            .Where(entry => entry.Profile.IsAvailable)
             .ToList();
 
         var problems = profiles.SelectMany(entry => entry.Profile.Problems(entry.Name)).ToList();

@@ -38,6 +38,25 @@ public sealed class AIInvocationsWorkerTests
         Assert.Single(writer.Rows);
     }
 
+    /// <summary>A driver timeout can surface as an OperationCanceledException with
+    /// nobody stopping the host: it is one lost batch like any other, never a worker
+    /// that faults and takes the API down with it (final review).</summary>
+    [Fact]
+    public async Task A_cancellation_nobody_asked_for_is_a_lost_batch_not_a_stopped_worker()
+    {
+        var (log, writer, worker) = Compose();
+        writer.FailNextWith = new OperationCanceledException("the command timed out");
+        log.Record(AIInvocationLogTests.Row());
+
+        await worker.StartAsync(TestContext.Current.CancellationToken);
+        await writer.Attempted(1);
+        log.Record(AIInvocationLogTests.Row());
+        await writer.Seen(1);
+        await worker.StopAsync(TestContext.Current.CancellationToken);
+
+        Assert.Single(writer.Rows);
+    }
+
     private static (AIInvocationLog, RecordingWriter, AIInvocationsWorker) Compose()
     {
         var log = new AIInvocationLog();
@@ -55,9 +74,16 @@ public sealed class AIInvocationsWorkerTests
 
         public bool FailNext { get; set; }
 
+        public Exception? FailNextWith { get; set; }
+
         public Task WriteAsync(IReadOnlyList<AIInvocation> rows, CancellationToken cancellationToken = default)
         {
             Interlocked.Increment(ref this.attempts);
+            if (FailNextWith is { } failure)
+            {
+                FailNextWith = null;
+                throw failure;
+            }
             if (FailNext)
             {
                 FailNext = false;

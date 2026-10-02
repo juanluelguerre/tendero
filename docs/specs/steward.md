@@ -373,7 +373,8 @@ notifications and alerts.
    container behind `Tendero__Steward`.
    *As built (2026-10-02)*: the shared place is `ElGuerre.Tendero.AI` (ADR 0053),
    not a context. Rulings the spec left open: a profile has a `TimeoutSeconds`
-   (300 for the local one — a full window took 263 s on the CPU); its endpoint is
+   (480 for the local one: the typical turn is up to ~458 s on the CPU, most of
+   it writing the answer — **S-3 caps Steward's output tokens**); its endpoint is
    the provider's base URL with `/v1`; the client makes one request per call (the
    SDK's three retries are off); a full metering log drops the newest row and
    counts it; the table is `telemetry.ai_invocations`. `steward-model` peaked at

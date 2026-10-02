@@ -45,6 +45,13 @@ public sealed class ModelProfile
     /// speeds, so each profile says how long is too long.</summary>
     public int TimeoutSeconds { get; init; } = 120;
 
+    /// <summary>
+    /// Whether this host can reach it. An OpenAI-compatible profile with no endpoint
+    /// is not here — the local one until the AppHost hands it an address — and is
+    /// left out without complaint; one that is half configured is a mistake.
+    /// </summary>
+    public bool IsAvailable => Kind != ModelKind.OpenAICompatible || Endpoint is not null;
+
     public long CostMicroEuros(long inputTokens, long outputTokens) =>
         (long)Math.Round(inputTokens * InputPrice + outputTokens * OutputPrice, MidpointRounding.AwayFromZero);
 
@@ -55,8 +62,6 @@ public sealed class ModelProfile
         List<string> problems = [];
         if (Kind == ModelKind.OpenAICompatible)
         {
-            if (Endpoint is null)
-                problems.Add($"Model profile '{name}' has no Endpoint.");
             if (string.IsNullOrWhiteSpace(Model))
                 problems.Add($"Model profile '{name}' has no Model.");
             if (Auth == ModelAuth.Bearer && string.IsNullOrWhiteSpace(ApiKey))

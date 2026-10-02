@@ -44,11 +44,16 @@ cannot be the shared place.
 7. **One request per call.** The OpenAI SDK's three default retries are off:
    with a 300 s local timeout they turned a stuck call into twenty minutes,
    metered as one. Trying again, or the fallback, is the caller's decision.
-8. **Steward's local model is a container of its own** (`steward-model`) serving
+8. **A profile is registered where it can be reached.** One with no endpoint is
+   left out without complaint — the local profile until the AppHost hands it an
+   address — and every other profile is a client regardless; one that is half
+   configured stops the host.
+9. **Steward's local model is a container of its own** (`steward-model`) serving
    the extractor's GGUF from the extractor's volume with an 8,192-token slot,
    limited to 5.5 GB from a measurement (`docs/analysis/steward-model-sizing.md`).
-   The API is handed its address only with `Tendero__Steward=true`, and registers
-   no profile without it.
+   The API is handed its address only with `Tendero__Steward=true`. Its timeout
+   is 480 s: the typical turn takes up to ~458 s on the CPU, most of it writing
+   the answer.
 
 ## Consequences
 

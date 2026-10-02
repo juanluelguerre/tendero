@@ -21,6 +21,23 @@ public sealed class ModelProfileCompositionTests
         Assert.Null(factory.Services.GetKeyedService<IChatClient>("local"));
     }
 
+    /// <summary>A hosted profile does not wait for the local container (final
+    /// review, I-1): with a key and no Tendero__Steward, it is still a client.</summary>
+    [Fact]
+    public void A_hosted_profile_is_a_client_without_the_stewards_container()
+    {
+        using var root = new TenderoApiFactory();
+        using var factory = root.WithWebHostBuilder(builder => builder
+            .UseSetting("Steward:Models:gemini:Endpoint", "https://generativelanguage.googleapis.com/v1beta/openai/")
+            .UseSetting("Steward:Models:gemini:Model", "gemini-2.5-flash")
+            .UseSetting("Steward:Models:gemini:Auth", "Bearer")
+            .UseSetting("Steward:Models:gemini:ApiKey", "secret"));
+        _ = factory.CreateClient();
+
+        Assert.Null(factory.Services.GetKeyedService<IChatClient>("local"));
+        Assert.NotNull(factory.Services.GetKeyedService<IChatClient>("gemini"));
+    }
+
     [Fact]
     public void With_its_address_the_local_profile_is_a_client()
     {

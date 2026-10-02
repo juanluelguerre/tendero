@@ -22,8 +22,19 @@ public sealed class ModelProfileTests
     public void A_cost_rounds_half_away_from_zero() =>
         Assert.Equal(1, new ModelProfile { InputPrice = 0.5m }.CostMicroEuros(1, 0));
 
+    /// <summary>A profile with no endpoint is not available in this host — the local
+    /// one until the AppHost hands it an address — and that is not a mistake
+    /// (final review, I-1). One that is half configured is.</summary>
+    [Fact]
+    public void A_profile_with_no_endpoint_is_not_here_and_is_no_problem()
+    {
+        var profile = new ModelProfile { Model = "qwen3.5-4b-q8_0" };
+
+        Assert.False(profile.IsAvailable);
+        Assert.Empty(profile.Problems("local"));
+    }
+
     [Theory]
-    [InlineData(ModelKind.OpenAICompatible, null, "m", ModelAuth.None, null, "Endpoint")]
     [InlineData(ModelKind.OpenAICompatible, "http://x/v1/", null, ModelAuth.None, null, "Model")]
     [InlineData(ModelKind.OpenAICompatible, "http://x/v1/", "m", ModelAuth.Bearer, null, "ApiKey")]
     public void A_profile_that_cannot_be_called_names_what_it_lacks(

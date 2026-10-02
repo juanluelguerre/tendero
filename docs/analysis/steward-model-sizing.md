@@ -32,9 +32,15 @@ the rule every container here follows.
 
 ## What it means for Steward
 
-- **A turn with a full window takes about four minutes on this CPU**, and
-  prompt processing is most of it (~185 s for 8k tokens). The local profile's
-  timeout is set to 300 s, not the 180 s first written in the plan.
+- **A turn with a full window takes about four minutes on this CPU**, and with
+  this request's short answer (181 tokens) prompt processing was most of it
+  (~185 s for 8k tokens). But generation is the slow half for an ordinary
+  answer: the spec's typical turn — a prompt of up to 4,700 tokens and an answer
+  of 400–800 — is ~110 s of reading plus 174–348 s of writing, **up to ~458 s**.
+  The local profile's timeout is therefore **480 s** (first written as 180, then
+  300 from this request alone; the final review did the arithmetic). The lever
+  that matters is the answer's length: S-3 caps Steward's output tokens, and S-6
+  re-derives the timeout from the largest real turn.
 - Typical turns are smaller (the spec's estimate is 2,700–4,700 tokens), which
   this rate puts at roughly 60–110 s of prompt processing before the first
   generated token. That is the number S-6's evaluation and S-7's comparison with

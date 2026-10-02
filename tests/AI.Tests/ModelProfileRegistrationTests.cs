@@ -39,6 +39,24 @@ public sealed class ModelProfileRegistrationTests
         Assert.Contains("ApiKey", failure.Message);
     }
 
+    /// <summary>Each profile is registered on its own: a hosted one is a client
+    /// whether or not the local one has an address (final review, I-1).</summary>
+    [Fact]
+    public void A_hosted_profile_is_a_client_while_the_local_one_has_no_address()
+    {
+        using var provider = Compose(new()
+        {
+            ["Steward:Models:local:Model"] = "qwen3.5-4b-q8_0",
+            ["Steward:Models:gemini:Endpoint"] = "https://generativelanguage.googleapis.com/v1beta/openai/",
+            ["Steward:Models:gemini:Model"] = "gemini-2.5-flash",
+            ["Steward:Models:gemini:Auth"] = "Bearer",
+            ["Steward:Models:gemini:ApiKey"] = "secret",
+        });
+
+        Assert.Null(provider.GetKeyedService<IChatClient>("local"));
+        Assert.NotNull(provider.GetKeyedService<IChatClient>("gemini"));
+    }
+
     [Fact]
     public void No_profiles_is_no_clients_and_no_failure()
     {

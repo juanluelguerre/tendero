@@ -29,7 +29,9 @@ public sealed partial class AIInvocationsWorker(AIInvocationLog log, IServiceSco
                     await using var scope = scopes.CreateAsyncScope();
                     await scope.ServiceProvider.GetRequiredService<IAIInvocationWriter>().WriteAsync(batch, stoppingToken);
                 }
-                catch (Exception failure) when (failure is not OperationCanceledException)
+                // Anything but the host stopping is one lost batch — a driver's
+                // timeout can surface as an OperationCanceledException too.
+                catch (Exception failure) when (!stoppingToken.IsCancellationRequested)
                 {
                     LogLost(logger, failure, batch.Count);
                 }
