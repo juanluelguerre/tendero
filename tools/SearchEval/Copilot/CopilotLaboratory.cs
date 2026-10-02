@@ -14,6 +14,7 @@ using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace ElGuerre.Tendero.SearchEval.Copilot;
 
@@ -41,6 +42,49 @@ public sealed class ToolCallLog
     {
         lock (this.calls)
             this.calls.Clear();
+    }
+}
+
+/// <summary>
+/// What the shop logged as a warning or worse while a case ran: why a turn was
+/// unavailable — the turn answers so, and logs the reason, which the report shows.
+/// </summary>
+public sealed class CapturedLogs : ILoggerProvider
+{
+    private readonly List<string> lines = [];
+
+    public IReadOnlyList<string> Lines
+    {
+        get
+        {
+            lock (this.lines)
+                return [.. this.lines];
+        }
+    }
+
+    public void Clear()
+    {
+        lock (this.lines)
+            this.lines.Clear();
+    }
+
+    public ILogger CreateLogger(string categoryName) => new Capture(this);
+
+    public void Dispose() { }
+
+    private sealed class Capture(CapturedLogs owner) : ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Warning;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (!IsEnabled(logLevel))
+                return;
+            lock (owner.lines)
+                owner.lines.Add($"{formatter(state, exception)}{(exception is null ? "" : $": {exception.GetType().Name}: {exception.Message}")}");
+        }
     }
 }
 
@@ -88,7 +132,9 @@ public static class CopilotLaboratory
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
 
         var services = new ServiceCollection();
-        services.AddLogging();
+        var logs = new CapturedLogs();
+        services.AddSingleton(logs);
+        services.AddLogging(logging => logging.AddProvider(logs));
         services.AddTenderoCqrs(
             typeof(ImportProductsCommand).Assembly,
             typeof(GetSalesSummaryQuery).Assembly,

@@ -97,7 +97,31 @@ public static class ArgumentSchemas
     };
 
     public static JsonElement Of(Type arguments) =>
-        JsonSerializer.SerializeToElement(NamingClosedSets(arguments, JsonSchemaExporter.GetJsonSchemaAsNode(Json, arguments)));
+        JsonSerializer.SerializeToElement(
+            OneTypeEach(NamingClosedSets(arguments, JsonSchemaExporter.GetJsonSchemaAsNode(Json, arguments))));
+
+    /// <summary>
+    /// An object at the root and one type per property, as an OpenAI-compatible
+    /// client takes them. The exporter writes a record and an optional argument as
+    /// nullable — <c>["object","null"]</c> — and the OpenAI client refuses a type
+    /// that is not a string: every turn against a real model failed on it (S-6).
+    /// Optional is what <c>required</c> already says; null adds nothing a model needs.
+    /// </summary>
+    private static JsonNode OneTypeEach(JsonNode schema)
+    {
+        schema["type"] = "object";
+        if (schema["properties"] is JsonObject properties)
+        {
+            foreach (var (_, property) in properties)
+            {
+                if (property is JsonObject node && node["type"] is JsonArray types &&
+                    types.Select(type => type?.GetValue<string>()).FirstOrDefault(type => type is not "null") is { } single)
+                    node["type"] = single;
+            }
+        }
+
+        return schema;
+    }
 
     /// <summary>
     /// The exporter cannot see through the names-only converter and describes a
@@ -113,9 +137,14 @@ public static class ArgumentSchemas
         {
             var type = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
             var name = JsonNamingPolicy.CamelCase.ConvertName(property.Name);
-            if (!type.IsEnum || properties[name] is not JsonObject node)
+            if (!type.IsEnum || !properties.ContainsKey(name))
                 continue;
 
+            // A required one comes out as `true` — any value — and an optional one as
+            // an object with its default: both become an object naming the values,
+            // which is what a model is shown and what llama.cpp's grammar takes.
+            if (properties[name] is not JsonObject node)
+                properties[name] = node = new JsonObject();
             node["type"] = "string";
             node["enum"] = new JsonArray([.. Enum.GetNames(type).Select(value => (JsonNode)JsonValue.Create(value))]);
         }

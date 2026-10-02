@@ -73,6 +73,8 @@ internal sealed class CopilotSuite : IEvaluationSuite
         ServiceProvider provider, CopilotCase item, IReadOnlyDictionary<string, string> codes, CancellationToken cancellationToken)
     {
         var calls = provider.GetRequiredService<ToolCallLog>();
+        var logs = provider.GetRequiredService<CapturedLogs>();
+        logs.Clear();
         var log = provider.GetRequiredService<AIInvocationLog>();
         calls.Clear();
         while (log.Reader.TryRead(out _)) { }
@@ -89,8 +91,9 @@ internal sealed class CopilotSuite : IEvaluationSuite
             answer = await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(
                 new StewardTurnCommand([new TurnMessage("user", item.Question)], screen, $"copilot-{item.Id}-{Guid.CreateVersion7()}", item.Culture),
                 cancellationToken);
+            // An unavailable turn logged why; that is the case's error, not just its status.
             if (answer.Status != StewardStatus.Answered)
-                error = answer.Status.ToString();
+                error = string.Join(" | ", logs.Lines.Prepend(answer.Status.ToString()));
         }
         catch (Exception failure) when (!cancellationToken.IsCancellationRequested)
         {

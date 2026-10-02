@@ -23,6 +23,42 @@ public sealed class ReadToolTests
         Assert.True(properties.TryGetProperty("limit", out _));
     }
 
+    /// <summary>
+    /// What an OpenAI-compatible client is handed: an object at the root and one type
+    /// per property. The exporter writes a record and an optional string as nullable,
+    /// <c>["object","null"]</c>, and the OpenAI client refuses a type that is not a
+    /// string — every turn against the local model failed on it, and the scripted
+    /// model, which never serializes a schema, could not see it (S-6).
+    /// </summary>
+    [Fact]
+    public void The_schema_is_an_object_with_one_type_for_each_argument()
+    {
+        var schema = ArgumentSchemas.Of(typeof(OptionalArguments));
+
+        Assert.Equal("object", schema.GetProperty("type").GetString());
+        foreach (var property in schema.GetProperty("properties").EnumerateObject())
+            Assert.Equal(JsonValueKind.String, property.Value.GetProperty("type").ValueKind);
+        Assert.Equal("string", schema.GetProperty("properties").GetProperty("note").GetProperty("type").GetString());
+    }
+
+    /// <summary>
+    /// A closed set the model must give is an object naming its values, never
+    /// <c>true</c> — what the exporter writes when it cannot see the converter, and
+    /// what llama.cpp's grammar refuses: "schema must be an object" (S-6).
+    /// </summary>
+    [Fact]
+    public void A_required_closed_set_is_an_object_naming_its_values()
+    {
+        var side = ArgumentSchemas.Of(typeof(RequiredArguments)).GetProperty("properties").GetProperty("side");
+
+        Assert.Equal(JsonValueKind.Object, side.ValueKind);
+        Assert.Equal(["Front", "Back"], side.GetProperty("enum").EnumerateArray().Select(value => value.GetString()));
+    }
+
+    private sealed record OptionalArguments(string? Note, Side? Side = null, int? Limit = null);
+
+    private sealed record RequiredArguments(Side Side);
+
     /// <summary>A closed set is read by its name and shown by its names (ADR 0043):
     /// the catalogue's gap kinds were refused until this (S-3b).</summary>
     [Fact]
