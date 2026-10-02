@@ -417,6 +417,28 @@ notifications and alerts.
    answers when the model fails, except after a proposal was stored (a second
    model would propose it again). The `Scripted` kind can loop and can fail after
    its tools, so both are tested.
+   *Corrected after the final review (2026-10-02)*: what a call takes is counted
+   with the instructions and the tools' schemas in it, plus the answer's 600
+   tokens; a profile whose window cannot hold that is not asked, and when none can,
+   the turn answers `ConversationTooLong` so the panel offers a new conversation.
+   A model's wrong arguments are the tool's answer, with the reason, never a fault
+   — so a model that keeps getting them wrong answers at the cap rather than
+   falling back. Any other tool failure reaches the model as a bare error (no
+   exception text leaves the shop), and only a *model's* failure — the network, a
+   timeout, a provider's status, the runtime — is worth the fallback; a failure of
+   the shop's own is `Unavailable` at once and logged as an error. A whole turn has
+   ten minutes (`Steward:TurnSeconds`), with no fallback after it. The screen is
+   one line of at most 100 characters, quoted and marked as data in the
+   instructions.
+   **The budget bounds a conversation, not a person.** It is checked with the
+   turn's own first call in it, but the conversation id is the client's to send,
+   so a person who starts new conversations starts new budgets; what bounds a
+   person is the rate limit, twenty turns a minute. While every profile is local
+   that costs electricity, not money. **Before a paid profile is configured (S-7),
+   a budget per person per day is required**: the metering rows carry no person
+   today, and adding one is a migration S-7 owns. The turn's cost line counts the
+   answering profile only — a failed attempt before a fallback is in the rows,
+   and S-6's cost per conversation reads the rows, not the line.
 4. **S-4 · The backoffice.** The panel and its sheet, the screen context, the
    card, the review, the Proposals list and its rail entry, the unavailable
    state, es and en.
@@ -427,7 +449,8 @@ notifications and alerts.
    the largest conversation.
 7. **S-7 · The measurement.** The hosted profiles with the author's keys, the
    small model; `docs/analysis/steward-models.md`; the author chooses the
-   default.
+   default. **First, before any paid profile exists**: a token budget per person
+   per day, with the person on the metering row (S-3b's correction above).
 8. **S-8 · Close.** ADR 0019 (*the copilot proposes commands, never prose*),
    Stryker, the before and after captures, the notebook and the material map.
 

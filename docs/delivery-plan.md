@@ -836,6 +836,7 @@ API (`design/DESIGN.md` gains a changelog).
 - [ ] `P12-6` `copilot` eval suite: assert the proposed command, no judge — **M**
 - [ ] `P12-7` AI observability panel: cost per conversation, p50/p95, tokens per model, degradation counter — **M**
 - [ ] `P12-8` ADR 0019 — **S**
+- [ ] `P12-9` A token budget per person per day, the person on each metering row — **S** (S-3b's final review: the conversation budget is the client's to restart; required before S-7 configures a paid profile)
 
 **Risks.** Prompt injection through catalogue and claim text — the copilot reads
 data written by importers and models. Constrain it to typed read tools over
