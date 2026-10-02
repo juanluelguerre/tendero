@@ -27,6 +27,12 @@ public sealed class FindProductsTool(IQueryDispatcher queries) : ReadTool<FindPr
     protected override async Task<(FoundProducts Data, int Rows, int? Total)> ReadAsync(
         FindProductsArguments arguments, IQueryDispatcher queries, CancellationToken cancellationToken)
     {
+        // Nothing in particular is the whole catalogue fifty at a time: what is
+        // missing everywhere is catalogue_gaps' question, answered in one read.
+        if (string.IsNullOrWhiteSpace(arguments.Text))
+            throw new ArgumentException(
+                "find_products needs words of a name or a code. To list what the catalogue lacks, use catalogue_gaps.");
+
         var page = await queries.SendAsync(
             new ListProductsQuery(null, arguments.Culture ?? CultureNegotiation.Default, 1, ReadLimits.MaxRows, arguments.Text), cancellationToken);
 

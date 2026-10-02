@@ -68,4 +68,17 @@ public sealed class CatalogReadToolsTests
 
         Assert.Contains("catalogue_gaps", failure.Message);
     }
+
+    /// <summary>Finding nothing in particular is the whole catalogue a page at a time,
+    /// which is a gap list's job: the model is told to say what it looks for.</summary>
+    [Theory]
+    [InlineData("""{"text":""}""")]
+    [InlineData("""{"text":"   "}""")]
+    public async Task Find_products_without_words_is_an_error_the_model_can_read(string arguments)
+    {
+        var failure = await Assert.ThrowsAsync<ArgumentException>(() => Tools().Single(tool => tool.Name == "find_products")
+            .ReadAsync(Arguments(arguments), TestContext.Current.CancellationToken));
+
+        Assert.Contains("catalogue_gaps", failure.Message);
+    }
 }

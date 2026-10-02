@@ -8973,7 +8973,8 @@
         "enum": [
           "Answered",
           "Unavailable",
-          "BudgetExceeded"
+          "BudgetExceeded",
+          "ConversationTooLong"
         ]
       },
       "StewardTurnRequest": {

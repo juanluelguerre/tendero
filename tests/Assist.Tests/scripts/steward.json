@@ -2,19 +2,122 @@
   {
     "when": "English",
     "calls": [
-      { "tool": "look_at_gaps", "arguments": {} },
-      { "tool": "propose_set_value", "arguments": { "items": [ { "subject": "MUG-1", "value": "Mug", "reason": "It has no English name." } ] } }
+      {
+        "tool": "look_at_gaps",
+        "arguments": {}
+      },
+      {
+        "tool": "propose_set_value",
+        "arguments": {
+          "items": [
+            {
+              "subject": "MUG-1",
+              "value": "Mug",
+              "reason": "It has no English name."
+            }
+          ]
+        }
+      }
     ],
     "say": "I read the gaps and proposed: {tool:propose_set_value}",
     "inputTokens": 1500,
     "outputTokens": 120
   },
-  { "when": "loop", "calls": [ { "tool": "look_at_gaps", "arguments": {} } ], "always": true },
-  { "when": "invent", "calls": [ { "tool": "no_such_tool", "arguments": {} } ], "say": "That tool does not exist." },
+  {
+    "when": "loop",
+    "calls": [
+      {
+        "tool": "look_at_gaps",
+        "arguments": {}
+      }
+    ],
+    "always": true
+  },
+  {
+    "when": "invent",
+    "calls": [
+      {
+        "tool": "no_such_tool",
+        "arguments": {}
+      }
+    ],
+    "say": "That tool does not exist."
+  },
   {
     "when": "drop",
-    "calls": [ { "tool": "propose_set_value", "arguments": { "items": [ { "subject": "MUG-1", "value": "Mug", "reason": "Because." } ] } } ],
+    "calls": [
+      {
+        "tool": "propose_set_value",
+        "arguments": {
+          "items": [
+            {
+              "subject": "MUG-1",
+              "value": "Mug",
+              "reason": "Because."
+            }
+          ]
+        }
+      }
+    ],
     "thenFail": true
   },
-  { "when": "hello", "say": "Hello." }
+  {
+    "when": "picky",
+    "calls": [
+      {
+        "tool": "picky",
+        "arguments": {}
+      }
+    ],
+    "always": true
+  },
+  {
+    "when": "slow",
+    "say": "Late.",
+    "delayMs": 3000
+  },
+  {
+    "when": "wrong arguments",
+    "calls": [
+      {
+        "tool": "picky",
+        "arguments": {
+          "kind": "Everything"
+        }
+      }
+    ],
+    "say": "I asked again: {tool:picky}"
+  },
+  {
+    "when": "leak",
+    "calls": [
+      {
+        "tool": "leaky",
+        "arguments": {}
+      }
+    ],
+    "say": "The tool said: {tool:leaky}"
+  },
+  {
+    "when": "numeric reason",
+    "calls": [
+      {
+        "tool": "propose_set_value",
+        "arguments": {
+          "items": [
+            {
+              "subject": "MUG-1",
+              "value": "Mug",
+              "reason": 5
+            }
+          ]
+        }
+      }
+    ],
+    "say": "The tool said: {tool:propose_set_value}"
+  },
+  {
+    "when": "hello",
+    "say": "Hello."
+  }
 ]

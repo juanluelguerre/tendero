@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Carter;
 using ElGuerre.Tendero.AI;
+using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.Assist.Features.ProposeActions;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -35,6 +36,9 @@ public sealed class StewardOptions
 
     /// <summary>Tokens a conversation may spend, input and output, before it must start again.</summary>
     public long ConversationTokenBudget { get; init; } = 60_000;
+
+    /// <summary>How long a whole turn may take, every call and tool included.</summary>
+    public int TurnSeconds { get; init; } = 600;
 }
 
 /// <param name="Role">"user" or "assistant".</param>
@@ -58,6 +62,9 @@ public enum StewardStatus
 
     /// <summary>The conversation spent its tokens; a new one starts again.</summary>
     BudgetExceeded,
+
+    /// <summary>No profile's window holds the conversation; a new one starts again.</summary>
+    ConversationTooLong,
 }
 
 /// <param name="Reads">Every read the turn made, by name, with its rows.</param>
@@ -87,8 +94,16 @@ public sealed class StewardTurnValidator : AbstractValidator<StewardTurnCommand>
             message.RuleFor(m => m.Text).NotEmpty().MaximumLength(20_000);
         });
         RuleFor(x => x.ConversationId).NotEmpty().MaximumLength(100);
+
+        // The screen is written into the instructions: each part one short line.
+        RuleFor(x => x.Screen!.Page).NotEmpty().MaximumLength(ScreenContext.MaxLength).Must(OneLine)
+            .When(x => x.Screen is not null);
+        RuleFor(x => x.Screen!.Subject).MaximumLength(ScreenContext.MaxLength).Must(OneLine)
+            .When(x => x.Screen?.Subject is not null);
         RuleFor(x => x.Culture).Must(CultureNegotiation.Supports).WithMessage("Supported cultures: es, en.");
     }
+
+    private static bool OneLine(string? text) => text is null || !text.Any(char.IsControl);
 }
 
 public sealed partial class StewardTurnHandler(
@@ -110,28 +125,53 @@ public sealed partial class StewardTurnHandler(
         activity?.SetTag("assist.conversation", command.ConversationId);
         var settings = options.Value;
 
-        if (await usage.ConversationTokensAsync(command.ConversationId, cancellationToken) >= settings.ConversationTokenBudget)
-            return Answer(command, StewardStatus.BudgetExceeded, null, new StewardTrace(), null, null, false, false);
-
+        var instructions = StewardPrompt.For(command.Culture, command.Screen);
         var history = command.Messages
             .Select(message => new ChatMessage(message.Role == "assistant" ? ChatRole.Assistant : ChatRole.User, message.Text))
             .ToList();
-        var reading = command.Messages.Sum(message => message.Text.Length) / 4;   // four characters a token
+        var said = command.Messages.Sum(message => message.Text.Length);
 
-        string?[] candidates = [settings.Model, settings.Fallback];
-        var fellBack = false;
-        foreach (var name in candidates.OfType<string>().Where(name => name.Length > 0).Distinct())
+        string?[] names = [settings.Model, settings.Fallback];
+        var candidates = names.OfType<string>().Where(name => name.Length > 0).Distinct()
+            .Select(name => (Name: name, Client: services.GetKeyedService<IChatClient>(name), Profile: profiles.Find(name)))
+            .Where(candidate => candidate.Client is not null && candidate.Profile is not null)
+            .Select(candidate => new Candidate(candidate.Name, candidate.Client!, candidate.Profile!, new StewardTrace()))
+            .ToList();
+        foreach (var candidate in candidates)
         {
-            var client = services.GetKeyedService<IChatClient>(name);
-            var profile = profiles.Find(name);
-            if (client is null || profile is null)
-                continue;
+            candidate.Tools = StewardTools.For(reads, proposals, commands,
+                new ProposalSource(candidate.Name, candidate.Profile.Model, StewardPrompt.Version, command.ConversationId),
+                candidate.Trace);
+            // The instructions and the tools' schemas travel with every call, and an
+            // answer needs its room: all of it is what the window must hold.
+            candidate.Needs = Tokens(instructions.Length + StewardTools.Size(candidate.Tools) + said) + settings.MaxOutputTokens;
+        }
 
-            var trace = new StewardTrace();
+        // Checked with this turn in it, before anything is spent.
+        var asking = candidates.Count > 0 ? candidates.Min(candidate => candidate.Needs) : 0;
+        if (await usage.ConversationTokensAsync(command.ConversationId, cancellationToken) + asking > settings.ConversationTokenBudget)
+            return Answer(command, StewardStatus.BudgetExceeded, null, new StewardTrace(), null, null, false, false);
+
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(settings.TurnSeconds), clock);
+        using var turn = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
+        var fellBack = false;
+        var tooLong = false;
+        foreach (var candidate in candidates)
+        {
+            var (name, profile, trace) = (candidate.Name, candidate.Profile, candidate.Trace);
+
+            // A window that cannot hold the question and an answer is not asked: the
+            // model would cut the history and answer something else.
+            if (candidate.Needs > profile.ContextTokens)
+            {
+                (tooLong, fellBack) = (true, true);
+                continue;
+            }
+
             var started = clock.GetTimestamp();
             try
             {
-                var response = await RunAsync(client, name, profile, trace, command, history, settings, cancellationToken);
+                var response = await RunAsync(candidate, instructions, command, history, settings, turn.Token);
                 var calls = response.Messages.Count(message => message.Role == ChatRole.Assistant);
                 var input = response.Usage?.InputTokenCount ?? 0;
                 var output = response.Usage?.OutputTokenCount ?? 0;
@@ -142,41 +182,64 @@ public sealed partial class StewardTurnHandler(
                     trace,
                     new TurnCost(calls, input, output, profile.CostMicroEuros(input, output),
                         (int)clock.GetElapsedTime(started).TotalMilliseconds, profile.Model ?? name),
-                    name, fellBack, reading > profile.ContextTokens * 0.8);
+                    name, fellBack, candidate.Needs > profile.ContextTokens * 0.8);
             }
             catch (Exception failure) when (!cancellationToken.IsCancellationRequested)
             {
-                LogFailed(logger, failure, name);
+                // Only the model failing is worth another profile. The turn outliving
+                // its deadline, or a failure of the shop's own, would spend the same
+                // on the fallback and end the same.
+                var modelFailed = !deadline.IsCancellationRequested && ModelFailures.IsModelFailure(failure);
+                if (modelFailed)
+                    LogFailed(logger, failure, name);
+                else if (deadline.IsCancellationRequested)
+                    LogOutlived(logger, failure, name, settings.TurnSeconds);
+                else
+                    LogBroken(logger, failure, name);
 
                 // A turn that stored proposals before failing keeps them — they wait
                 // for a person — and does not fall back: a second model would propose
                 // them again.
-                if (trace.Proposed.Count > 0)
+                if (!modelFailed || trace.Proposed.Count > 0)
+                {
+                    activity?.SetTag("assist.unavailable", true);
                     return Answer(command, StewardStatus.Unavailable, null, trace, null, name, fellBack, false);
+                }
 
                 fellBack = true;
             }
         }
 
+        if (tooLong)
+            return Answer(command, StewardStatus.ConversationTooLong, null, new StewardTrace(), null, null, fellBack, true);
+
         activity?.SetTag("assist.unavailable", true);
         return Answer(command, StewardStatus.Unavailable, null, new StewardTrace(), null, null, fellBack, false);
     }
 
-    private async Task<AgentResponse> RunAsync(
-        IChatClient client, string profileName, ModelProfile profile, StewardTrace trace,
-        StewardTurnCommand command, List<ChatMessage> history, StewardOptions settings, CancellationToken cancellationToken)
+    /// <summary>A profile the turn may ask, with its tools and what asking it takes.</summary>
+    private sealed record Candidate(string Name, IChatClient Client, ModelProfile Profile, StewardTrace Trace)
     {
-        var tools = StewardTools.For(reads, proposals, commands,
-            new ProposalSource(profileName, profile.Model, StewardPrompt.Version, command.ConversationId), trace);
+        public IReadOnlyList<AIFunction> Tools { get; set; } = [];
 
+        /// <summary>Tokens the first call takes, the answer's room included.</summary>
+        public int Needs { get; set; }
+    }
+
+    /// <summary>Four characters a token, rounded up: an estimate, which the window's
+    /// margin and the near-limit flag absorb.</summary>
+    private static int Tokens(int characters) => (characters + 3) / 4;
+
+    private async Task<AgentResponse> RunAsync(
+        Candidate candidate, string instructions, StewardTurnCommand command, List<ChatMessage> history,
+        StewardOptions settings, CancellationToken cancellationToken)
+    {
         // Short-lived, one per turn (invariant 9): the caps are the function loop's,
         // and the model's client is the profile's, metered and traced call by call.
-        var pipeline = client.AsBuilder()
-            .UseFunctionInvocation(configure: invocation =>
-            {
-                invocation.MaximumIterationsPerRequest = settings.MaxIterations;
-                invocation.IncludeDetailedErrors = true;
-            })
+        // No detailed errors: what a failure of the shop's says is not the model's to
+        // read — a model's own mistake reaches it as the tool's answer instead.
+        var pipeline = candidate.Client.AsBuilder()
+            .UseFunctionInvocation(configure: invocation => invocation.MaximumIterationsPerRequest = settings.MaxIterations)
             .Build(services);
 
         var agent = new ChatClientAgent(pipeline, new ChatClientAgentOptions
@@ -184,8 +247,8 @@ public sealed partial class StewardTurnHandler(
             Name = "steward",
             ChatOptions = new ChatOptions
             {
-                Instructions = StewardPrompt.For(command.Culture, command.Screen),
-                Tools = [.. tools],
+                Instructions = instructions,
+                Tools = [.. candidate.Tools],
                 MaxOutputTokens = settings.MaxOutputTokens,
             },
             UseProvidedChatClientAsIs = true,
@@ -203,6 +266,12 @@ public sealed partial class StewardTurnHandler(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Steward's profile {Profile} failed a turn")]
     private static partial void LogFailed(ILogger logger, Exception failure, string profile);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Steward's turn on {Profile} outlived its {Seconds} seconds")]
+    private static partial void LogOutlived(ILogger logger, Exception failure, string profile, int seconds);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Steward's turn on {Profile} broke on the shop's side, not the model's")]
+    private static partial void LogBroken(ILogger logger, Exception failure, string profile);
 }
 
 // ---------- The wire ----------
