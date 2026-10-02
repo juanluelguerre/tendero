@@ -442,6 +442,26 @@ notifications and alerts.
 4. **S-4 · The backoffice.** The panel and its sheet, the screen context, the
    card, the review, the Proposals list and its rail entry, the unavailable
    state, es and en.
+   *As built (2026-10-02)*: a proposal stores, when it is made, a **display**
+   its owning context writes (`ProposalDisplay`: the subject's title, the kind of
+   change in words, each field now and proposed), so the card, the review and the
+   list show a product's name without Assist reading Catalog; a proposal made
+   before has none and reads by its code. `GET /api/steward/proposals` serves the
+   list (five filters counted on the server — To review holds an approval whose
+   result was never recorded, Failed holds the stale) and a turn's ids, in order.
+   The conversation is a root store that survives the panel closing; whether the
+   panel is open is a store of its own, so the panel's code is a deferred chunk.
+   The screen context is the route's title and the open row, or else the filter.
+   The way on without AI is a new filter on Products, `?missing=en`. Rulings the
+   spec left open: no "Reading the catalogue…" per tool (turns do not stream — a
+   non-goal), one working line with Stop instead; the unavailable panel offers
+   the missing-English filter whatever was asked, since a question cannot be
+   mapped to a filter deterministically; the review asks for a reason before
+   rejecting the unticked; the Proposals screen joins `backoffice_view_opened`
+   with S-6's events. Seen in the browser against a Scripted profile: four
+   names proposed, three approved and one rejected with its reason, each row's
+   result in place, the unavailable state — which found that a lone profile's
+   failure was reported as a fallback's too, fixed.
 5. **S-5 · Claims in bulk.** The review component on claims, the server's refusal
    of weak claims in bulk, R-2's amendment in `docs/specs/redesign.md`.
 6. **S-6 · Measured and evaluated.** The `copilot` suite on the local model,
