@@ -231,6 +231,10 @@ free SQL, no traces, no business logic in `Assist`.
 | `returns_summary` | Ordering `GetReturnsSummaryQuery` — **new** | returns opened in the period; no order, customer or comment |
 
 The non-AI answer the unavailable state offers is `GET /api/catalog/products?missing=en`.
+It counts archived products too, which `catalogue_gaps` leaves out; the list's
+status chips show the difference. `stock_to_restock`'s warehouse narrows the
+shop's list to what that warehouse stocks — the need and the pace stay the
+shop's — and a warehouse the shop does not have is a 400 naming the ones it has.
 
 **Correction (S-3a):** the dispatcher checks no policy — it validates and runs the
 handler. "As the person asking" holds because the principal is the person's, and

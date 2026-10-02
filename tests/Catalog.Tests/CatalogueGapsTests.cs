@@ -82,6 +82,24 @@ public sealed class CatalogueGapsTests
         Assert.StartsWith("Producto", gaps.Rows[0].Name);
     }
 
+    /// <summary>The gap's culture and the reader's are two things: a product with no
+    /// picture is named in the language the shopkeeper reads (final review, S-3a).</summary>
+    [Fact]
+    public async Task Names_are_in_the_readers_culture_and_the_gaps_culture_is_normalised()
+    {
+        var bilingual = Product.Create(Clock,
+            new LocalizedText(new Dictionary<string, string> { ["es"] = "Mochila", ["en"] = "Backpack" }), new Money(10m, "EUR"));
+        var handler = new CatalogueGapsHandler(new InMemoryProductCatalogReader(bilingual, Spanish("Flexo")));
+
+        var pictures = await handler.HandleAsync(
+            new CatalogueGapsQuery(CatalogueGap.MissingImage, null, DisplayCulture: "en"), TestContext.Current.CancellationToken);
+        var english = await handler.HandleAsync(
+            new CatalogueGapsQuery(CatalogueGap.MissingName, "EN"), TestContext.Current.CancellationToken);
+
+        Assert.Contains("Backpack", pictures.Rows.Select(row => row.Name));
+        Assert.Equal("en", english.Culture);
+    }
+
     [Fact]
     public async Task An_archived_product_is_no_gap()
     {

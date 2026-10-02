@@ -10,7 +10,7 @@ namespace ElGuerre.Tendero.Ordering.Features.Dashboard;
 /// Returns opened in a period, whatever became of them since: units by reason and
 /// by SKU. Steward's <c>returns_summary</c> (phase 12, S-3a). Aggregates and
 /// products only — no order, no customer and no comment, which is the shopper's
-/// own words: a hosted model may read this.
+/// own words: a hosted model may read this. Ten SKUs by default, fifty at most.
 /// </summary>
 public sealed record GetReturnsSummaryQuery(DashboardPeriod Period, int Limit = 10) : IQuery<ReturnsSummary>;
 

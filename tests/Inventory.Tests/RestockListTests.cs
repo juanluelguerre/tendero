@@ -42,15 +42,41 @@ public sealed class RestockListTests
         Assert.Equal(Restocking.At, list.RestockAt);
     }
 
+    /// <summary>The need is the shop's (R-7.1's point is summed over the warehouses),
+    /// and a warehouse asked for narrows the shop's list to what it stocks — never a
+    /// warehouse's units against the shop's pace (final review, S-3a).</summary>
     [Fact]
-    public async Task Two_warehouses_are_summed_unless_one_is_asked_for()
+    public async Task Two_warehouses_are_summed_and_a_warehouse_narrows_the_shops_list()
     {
         var stock = new FakeStock();
         stock.Put("MUG", "MAD", 3);
-        stock.Put("MUG", "BCN", 4);   // 7 in all: above the point
+        stock.Put("MUG", "BCN", 4);   // 7 in all: above the point, whatever MAD holds
+        stock.Put("CUP", "MAD", 1);
+        stock.Put("CUP", "BCN", 2);   // 3 in all: to restock
+        stock.Put("PAN", "BCN", 1);   // to restock, but not stocked in MAD
 
-        Assert.Empty((await List(stock, [])).Rows);
-        Assert.Equal(3, Assert.Single((await List(stock, [], warehouse: "MAD")).Rows).Available);
+        Assert.Equal(["CUP", "PAN"], (await List(stock, [])).Rows.Select(row => row.Sku).Order());
+
+        var mad = await List(stock, [], warehouse: "mad");
+        var cup = Assert.Single(mad.Rows);
+        Assert.Equal(("CUP", 3, (int?)1), (cup.Sku, cup.Available, cup.InWarehouse));
+        Assert.Null((await List(stock, [])).Rows.First().InWarehouse);
+    }
+
+    /// <summary>A warehouse the shop does not have is said to be unknown, with the
+    /// ones it has — never an empty list that reads as "nothing to restock".</summary>
+    [Fact]
+    public async Task A_warehouse_the_shop_does_not_have_is_unknown_and_the_known_ones_are_named()
+    {
+        var stock = new FakeStock();
+        stock.Put("CUP", "MAD", 1);
+        stock.Put("CUP", "BCN", 1);
+
+        var list = await List(stock, [], warehouse: "Madrid");
+
+        Assert.True(list.UnknownWarehouse);
+        Assert.Equal(["BCN", "MAD"], list.Warehouses);
+        Assert.Empty(list.Rows);
     }
 
     [Fact]

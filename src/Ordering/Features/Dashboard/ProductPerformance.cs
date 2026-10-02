@@ -19,6 +19,9 @@ public enum PerformanceRanking
 /// The products that sell most or least in a period, by units and then revenue —
 /// the ranking the home uses (<see cref="SalesRanking"/>), narrowed to a category
 /// and everything under it. Steward's <c>product_performance</c> (phase 12).
+/// Ten rows by default, a ranking's natural length; fifty at most. A category the
+/// shop never sold in reads as an empty ranking: checking that it exists would be
+/// Ordering reading the catalogue.
 /// </summary>
 public sealed record GetProductPerformanceQuery(
     DashboardPeriod Period, PerformanceRanking Ranking, string? Category = null, int Limit = 10)

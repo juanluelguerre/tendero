@@ -140,6 +140,7 @@ public sealed class ListProductsHandler(IProductCatalogReader products)
     {
         using var activity = Telemetry.StartActivity("catalog.list");
         activity?.SetTag("catalog.status", query.Status?.ToString());
+        activity?.SetTag("catalog.missing_culture", query.MissingCulture);
 
         var page = await products.ListAsync(
             query.Status, query.Text, query.MissingCulture, query.Page, query.PageSize, cancellationToken);

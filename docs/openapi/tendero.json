@@ -817,6 +817,16 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestockProblem"
+                }
+              }
+            }
           }
         }
       }
@@ -7603,6 +7613,8 @@
       "RestockList": {
         "required": [
           "warehouse",
+          "unknownWarehouse",
+          "warehouses",
           "restockAt",
           "total",
           "rows"
@@ -7614,6 +7626,15 @@
               "null",
               "string"
             ]
+          },
+          "unknownWarehouse": {
+            "type": "boolean"
+          },
+          "warehouses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "restockAt": {
             "type": "integer",
@@ -7631,10 +7652,33 @@
           }
         }
       },
+      "RestockProblem": {
+        "required": [
+          "title",
+          "detail",
+          "warehouses"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "warehouses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "RestockRow": {
         "required": [
           "sku",
           "available",
+          "inWarehouse",
           "perDay",
           "coverageDays"
         ],
@@ -7645,6 +7689,13 @@
           },
           "available": {
             "type": "integer",
+            "format": "int32"
+          },
+          "inWarehouse": {
+            "type": [
+              "null",
+              "integer"
+            ],
             "format": "int32"
           },
           "perDay": {

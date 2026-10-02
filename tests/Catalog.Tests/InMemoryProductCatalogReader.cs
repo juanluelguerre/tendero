@@ -19,7 +19,7 @@ internal sealed class InMemoryProductCatalogReader(params Product[] products) : 
             .Where(p => typed.Length == 0
                 || p.Code.Contains(typed, StringComparison.OrdinalIgnoreCase)
                 || p.Name.Cultures.Any(culture => p.Name.In(culture).Contains(typed, StringComparison.OrdinalIgnoreCase)))
-            .Where(p => missingCulture is null || !p.Name.Cultures.Contains(Culture.Normalize(missingCulture)))
+            .Where(p => missingCulture is not { Length: > 0 } culture || !p.Name.Cultures.Contains(Culture.Normalize(culture)))
             .ToList();
         var matching = typedMatches.Where(p => status is null || p.Status == status).ToList();
 

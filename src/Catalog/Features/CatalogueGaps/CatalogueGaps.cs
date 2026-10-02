@@ -34,7 +34,10 @@ public enum CatalogueGap
 /// <c>catalogue_gaps</c>, and a screen's question alike. Draft and Active only:
 /// an archived product is out of the catalogue.
 /// </summary>
-public sealed record CatalogueGapsQuery(CatalogueGap Kind, string? Culture, int Limit = ReadLimits.MaxRows)
+/// <param name="Culture">The gap's language, for the kinds that are in one.</param>
+/// <param name="DisplayCulture">The reader's: what the names come back in.</param>
+public sealed record CatalogueGapsQuery(
+    CatalogueGap Kind, string? Culture, int Limit = ReadLimits.MaxRows, string DisplayCulture = CultureNegotiation.Default)
     : IQuery<CatalogueGaps>;
 
 /// <param name="Total">All the products with the gap, not only the rows shown.</param>
@@ -77,6 +80,8 @@ public sealed class CatalogueGapsValidator : AbstractValidator<CatalogueGapsQuer
             .WithMessage("This gap is not in a language.");
 
         RuleFor(x => x.Limit).InclusiveBetween(1, ReadLimits.MaxRows);
+
+        RuleFor(x => x.DisplayCulture).Must(CultureNegotiation.Supports);
     }
 }
 
@@ -88,6 +93,7 @@ public sealed class CatalogueGapsHandler(IProductCatalogReader products) : IQuer
     {
         using var activity = Telemetry.StartActivity("catalog.gaps");
         activity?.SetTag("catalog.gap", query.Kind.ToString());
+        activity?.SetTag("catalog.culture", query.Culture);
 
         // In memory over the live catalogue: a hundred products (the scale rule's
         // "deferred with its number"); the full catalogue makes it SQL.
@@ -97,12 +103,11 @@ public sealed class CatalogueGapsHandler(IProductCatalogReader products) : IQuer
             .ToList();
 
         activity?.SetTag("catalog.total", gaps.Count);
-        var culture = query.Culture ?? CultureNegotiation.Default;
 
-        return new CatalogueGaps(query.Kind, query.Culture, gaps.Count,
+        return new CatalogueGaps(query.Kind, query.Culture is { } asked ? Culture.Normalize(asked) : null, gaps.Count,
         [
             .. gaps.Take(query.Limit).Select(product =>
-                new GapRow(product.Id.Value.ToString(), product.Code, product.Name.In(culture), product.Status)),
+                new GapRow(product.Id.Value.ToString(), product.Code, product.Name.In(query.DisplayCulture), product.Status)),
         ]);
     }
 }
@@ -111,12 +116,20 @@ public sealed class CatalogueGapsEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        // GET /api/catalog/gaps?kind=MissingName&culture=en&limit=50
+        // GET /api/catalog/gaps?kind=MissingName&culture=en&limit=50 — `culture` is the
+        // gap's language; the names come back in the reader's, from Accept-Language
+        // (invariant 6), declared as Content-Language.
         app.MapGet("/api/catalog/gaps",
                 async Task<Ok<CatalogueGaps>> (WireEnum<CatalogueGap> kind, string? culture, int? limit,
-                    IQueryDispatcher dispatcher, CancellationToken ct) =>
-                    TypedResults.Ok(await dispatcher.SendAsync(
-                        new CatalogueGapsQuery(kind.Value, culture, limit ?? ReadLimits.MaxRows), ct)))
+                    HttpContext http, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                {
+                    var reader = CultureNegotiation.Resolve(null, http.Request.Headers.AcceptLanguage);
+                    var gaps = await dispatcher.SendAsync(
+                        new CatalogueGapsQuery(kind.Value, culture, limit ?? ReadLimits.MaxRows, reader), ct);
+                    http.Response.Headers.ContentLanguage = reader;
+                    http.Response.Headers.Vary = "Accept-Language";
+                    return TypedResults.Ok(gaps);
+                })
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Catalog")
             .WithName("ListCatalogueGaps");
