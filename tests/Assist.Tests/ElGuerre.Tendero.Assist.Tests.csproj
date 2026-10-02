@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Assist.Tests</RootNamespace>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Assist/ElGuerre.Tendero.Assist.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../TestClock.cs" Link="TestClock.cs" />
+    <Compile Include="../InstrumentRecorder.cs" Link="InstrumentRecorder.cs" />
+  </ItemGroup>
+
+</Project>

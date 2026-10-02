@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Bounded context Assist (phase 12, ADR 0052): what a model proposes and a
+       person decides. It owns ActionProposal, which has a lifecycle, a writer and
+       actors of its own — how a context earns its boundary (ADR 0014). It runs
+       other contexts' commands only through IProposableCommand, so it references
+       SharedKernel and nothing else; an architecture rule holds that. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Assist</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Carter" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Assist.Tests" />
+  </ItemGroup>
+
+</Project>
