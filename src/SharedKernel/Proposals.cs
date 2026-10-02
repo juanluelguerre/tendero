@@ -55,6 +55,9 @@ public interface IProposableCommand
     /// <summary>What a person reads: "Translate a product".</summary>
     LocalizedText Label { get; }
 
+    /// <summary>The payload's JSON schema: what a model is shown it must write.</summary>
+    JsonElement PayloadSchema { get; }
+
     Task<ProposalCheck> CheckAsync(JsonElement payload, CancellationToken cancellationToken = default);
 
     /// <summary>A snapshot of what the command would change, as it is now, in JSON
@@ -106,6 +109,8 @@ public abstract class ProposableCommand<TPayload, TCommand, TResult>(IServicePro
     public abstract string Name { get; }
 
     public abstract LocalizedText Label { get; }
+
+    public JsonElement PayloadSchema { get; } = ArgumentSchemas.Of(typeof(TPayload));
 
     protected abstract TCommand ToCommand(TPayload payload);
 

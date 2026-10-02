@@ -21,6 +21,8 @@ public sealed class ProposableCommands
     }
 
     public IProposableCommand? Find(string name) => this.entries.GetValueOrDefault(name);
+
+    public IEnumerable<IProposableCommand> All => this.entries.Values;
 }
 
 public static class ProposalLimits

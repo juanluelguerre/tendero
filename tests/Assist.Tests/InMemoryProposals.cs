@@ -76,6 +76,10 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
 
     public LocalizedText Label { get; } = new(new Dictionary<string, string> { ["en"] = "Set a value", ["es"] = "Poner un valor" });
 
+    public JsonElement PayloadSchema { get; } = JsonDocument.Parse("""
+        {"type":"object","properties":{"subject":{"type":"string"},"value":{"type":"string"}},"required":["subject","value"]}
+        """).RootElement.Clone();
+
     public Task<ProposalCheck> CheckAsync(JsonElement payload, CancellationToken cancellationToken = default)
     {
         var (subject, value) = Read(payload);
