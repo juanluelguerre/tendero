@@ -1,0 +1,4 @@
+<section class="worklist-layout" [class.worklist-layout--with-pane]="store.selected()">
+  <backoffice-proposal-list class="worklist-list" />
+  <backoffice-proposal-pane (closed)="store.close()" />
+</section>

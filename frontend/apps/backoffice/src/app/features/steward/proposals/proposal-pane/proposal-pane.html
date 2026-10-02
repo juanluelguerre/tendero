@@ -1,0 +1,98 @@
+@if (store.selected(); as proposal) {
+  <ng-container *transloco="let t">
+    <backoffice-worklist-pane [heading]="proposal.title" (closed)="closed.emit()">
+      <p class="eyebrow m-0 text-accent">{{ proposal.topic }} · {{ t('proposals.status.' + proposal.status) }}</p>
+      <p class="m-0 font-mono text-xs text-muted">{{ proposal.subject }}</p>
+
+      @if (proposal.changes.length > 0) {
+        <dl class="m-0 grid gap-2 rounded-lg border border-hairline bg-raised p-4">
+          @for (change of proposal.changes; track change.field) {
+            <div class="grid gap-hair">
+              <dt class="text-xs text-muted">{{ change.field }}</dt>
+              <dd class="m-0 text-xs text-muted">{{ change.now ?? t('proposals.blank') }}</dd>
+              <dd class="m-0 font-medium">→ {{ change.proposed ?? t('proposals.blank') }}</dd>
+            </div>
+          }
+        </dl>
+      }
+
+      <section class="pane-section">
+        <h3 class="eyebrow">{{ t('proposals.why') }}</h3>
+        <p class="m-0 text-muted">{{ proposal.reason }}</p>
+      </section>
+
+      <dl class="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 border-t border-hairline pt-3 text-xs">
+        <dt class="text-muted">{{ t('proposals.provenance.proposedBy') }}</dt>
+        <dd class="m-0 text-end">Steward · {{ proposal.provenance.model ?? proposal.provenance.profile ?? '—' }}</dd>
+        <dt class="text-muted">{{ t('proposals.provenance.prompt') }}</dt>
+        <dd class="m-0 text-end font-mono">{{ proposal.provenance.promptVersion ?? '—' }}</dd>
+        <dt class="text-muted">{{ t('proposals.provenance.askedBy') }}</dt>
+        <dd class="m-0 text-end">
+          {{ proposal.provenance.askedBy }} · {{ proposal.proposedAt | dateTime: culture.active() }}
+        </dd>
+        <dt class="text-muted">{{ t('proposals.provenance.command') }}</dt>
+        <dd class="m-0 text-end font-mono">{{ proposal.command }}</dd>
+        @if (proposal.provenance.traceId; as trace) {
+          <dt class="text-muted">{{ t('proposals.provenance.trace') }}</dt>
+          <dd class="m-0 truncate text-end font-mono" [attr.title]="trace">{{ trace }}</dd>
+        }
+      </dl>
+
+      @switch (proposal.status) {
+        @case ('Proposed') {
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="button pane-primary flex-1"
+              [disabled]="store.busy() === proposal.id"
+              (click)="store.approve(proposal)"
+            >
+              {{ t('proposals.approve') }}
+            </button>
+            <button
+              type="button"
+              class="button button--quiet pane-primary flex-1"
+              [disabled]="store.busy() === proposal.id"
+              (click)="askToReject(proposal)"
+            >
+              {{ t('proposals.reject') }}
+            </button>
+          </div>
+          <p class="mt-1 text-3xs text-muted">{{ t('proposals.approveHint') }}</p>
+        }
+        @case ('Approved') {
+          <!-- The process died while it ran: approving again finishes it, safely
+               (the command is idempotent and staleness is checked again). -->
+          <p class="m-0 text-xs">{{ t('proposals.unknownResult') }}</p>
+          <button
+            type="button"
+            class="button pane-primary"
+            [disabled]="store.busy() === proposal.id"
+            (click)="store.approve(proposal)"
+          >
+            {{ t('proposals.finish') }}
+          </button>
+        }
+        @default {
+          <p class="m-0 text-xs">
+            {{ t('proposals.decided.' + proposal.status, { by: proposal.decidedBy ?? '—' }) }}
+            @if (proposal.result; as result) {
+              <span class="text-muted"> — {{ result }}</span>
+            }
+          </p>
+        }
+      }
+    </backoffice-worklist-pane>
+
+    <backoffice-confirm-dialog
+      [heading]="t('proposals.rejectDialog.heading')"
+      [body]="t('proposals.rejectDialog.body')"
+      [confirmLabel]="t('proposals.rejectDialog.confirm')"
+      [keepLabel]="t('proposals.rejectDialog.keep')"
+      [reasonLabel]="t('proposals.rejectDialog.reason')"
+      [reasonRequired]="true"
+      tone="normal"
+      (confirmed)="rejected($event)"
+    />
+  </ng-container>
+}

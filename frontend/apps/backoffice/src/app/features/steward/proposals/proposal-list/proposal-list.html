@@ -1,0 +1,78 @@
+<ng-container *transloco="let t">
+  <header class="page-head">
+    <h1 class="page-title">{{ t('proposals.title') }}</h1>
+  </header>
+  <p class="page-hint">{{ t('proposals.hint') }}</p>
+
+  <div class="worklist-tools">
+    <backoffice-filter-chips
+      [options]="store.filters()"
+      [selected]="store.filterKey()"
+      [label]="t('proposals.filterLabel')"
+      (chosen)="store.filterBy($event)"
+    />
+  </div>
+
+  <backoffice-list-state
+    [loading]="store.loading()"
+    [failed]="store.failed()"
+    [empty]="store.proposals().length === 0"
+    [loadingText]="t('proposals.loading')"
+    [failedText]="t('proposals.failed')"
+    [emptyText]="t('proposals.empty.' + store.filterKey())"
+  >
+    <div class="table-wrap wide-only">
+      <table class="table">
+        <caption class="sr-only">
+          {{
+            t('proposals.title')
+          }}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('proposals.column.product') }}</th>
+            <th scope="col">{{ t('proposals.column.change') }}</th>
+            <th scope="col">{{ t('proposals.column.proposed') }}</th>
+            <th scope="col">{{ t('proposals.column.when') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (proposal of store.proposals(); track proposal.id) {
+            <tr class="row" [class.row--selected]="proposal.id === store.selectedId()" (click)="store.open(proposal)">
+              <td>
+                <button
+                  type="button"
+                  class="row__open m-0 font-medium"
+                  [attr.aria-expanded]="proposal.id === store.selectedId()"
+                  (click)="$event.stopPropagation(); store.open(proposal)"
+                >
+                  {{ proposal.title }}
+                </button>
+              </td>
+              <td class="text-muted">{{ proposal.topic }}</td>
+              <td>{{ proposal.changes[0]?.proposed ?? '—' }}</td>
+              <td class="whitespace-nowrap text-muted">{{ proposal.proposedAt | dateTime: culture.active() }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="worklist-cards narrow-only" role="list">
+      @for (proposal of store.proposals(); track proposal.id) {
+        <li class="worklist-card" [class.worklist-card--selected]="proposal.id === store.selectedId()">
+          <button type="button" class="worklist-card__open" (click)="store.open(proposal)">
+            <span class="m-0 font-medium">{{ proposal.title }}</span>
+            <span class="worklist-card__line">
+              <span class="muted">{{ proposal.topic }} → {{ proposal.changes[0]?.proposed ?? '—' }}</span>
+              <span class="worklist-card__end muted whitespace-nowrap">{{
+                proposal.proposedAt | dateTime: culture.active()
+              }}</span>
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+    <backoffice-pager [page]="store.page()" [pageSize]="pageSize" [total]="store.total()" (go)="store.go($event)" />
+  </backoffice-list-state>
+</ng-container>

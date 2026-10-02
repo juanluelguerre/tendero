@@ -150,11 +150,13 @@
       "sales": "Ventas",
       "stock": "Stock",
       "agents": "Agentes",
-      "insight": "Análisis"
+      "insight": "Análisis",
+      "steward": "Steward"
     },
     "menu": "Menú",
     "close": "Cerrar menú",
-    "waiting": "{{count}} pendientes"
+    "waiting": "{{count}} pendientes",
+    "proposals": "Propuestas"
   },
   "orders": {
     "captured": "Cobrado",
@@ -970,12 +972,164 @@
       "go": "Intro ir",
       "close": "Esc cerrar",
       "lists": "En la cola de revisión y en afirmaciones: j y k"
-    }
+    },
+    "ask": "Preguntar a Steward",
+    "askDetail": "Steward"
   },
   "pager": {
     "label": "Páginas",
     "range": "{{from}}–{{to}} de {{total}}",
     "previous": "Anterior",
     "next": "Siguiente"
+  },
+  "proposals": {
+    "title": "Propuestas",
+    "hint": "Lo que Steward propuso. Nada de aquí ha cambiado la tienda hasta que alguien lo apruebe.",
+    "filterLabel": "Mostrar propuestas",
+    "filter": {
+      "ToReview": "Por revisar",
+      "Applied": "Aplicadas",
+      "Rejected": "Rechazadas",
+      "Failed": "Fallidas",
+      "All": "Todas"
+    },
+    "loading": "Cargando las propuestas…",
+    "failed": "No se pudieron cargar las propuestas. Inténtalo de nuevo.",
+    "empty": {
+      "ToReview": "No hay nada esperando revisión.",
+      "Applied": "Todavía no se ha aplicado ninguna propuesta.",
+      "Rejected": "No se ha rechazado ninguna propuesta.",
+      "Failed": "Ninguna propuesta ha fallado.",
+      "All": "Steward todavía no ha propuesto nada."
+    },
+    "blank": "(vacío)",
+    "column": {
+      "product": "Producto",
+      "change": "Cambio",
+      "proposed": "Propuesto",
+      "when": "Cuándo"
+    },
+    "status": {
+      "Proposed": "Por revisar",
+      "Approved": "Aprobada, resultado desconocido",
+      "Applied": "Aplicada",
+      "Failed": "Fallida",
+      "Rejected": "Rechazada",
+      "Stale": "Cambió entretanto"
+    },
+    "why": "Por qué",
+    "provenance": {
+      "proposedBy": "Propuesta por",
+      "prompt": "Prompt",
+      "askedBy": "Preguntó",
+      "command": "Comando",
+      "trace": "Traza"
+    },
+    "approve": "Aprobar",
+    "reject": "Rechazar…",
+    "approveHint": "Aprobar ejecuta el comando como tú, con su propia fila de auditoría que nombra la propuesta.",
+    "unknownResult": "Aprobada, pero su resultado no quedó registrado. Terminarla es seguro: antes se vuelve a comprobar lo que cambia.",
+    "finish": "Terminar la aprobación",
+    "decided": {
+      "Applied": "Aplicada, aprobada por {{by}}.",
+      "Failed": "Falló cuando {{by}} la aprobó",
+      "Rejected": "Rechazada por {{by}}",
+      "Stale": "No se aplicó: lo que cambia cambió después de proponerse."
+    },
+    "rejectDialog": {
+      "heading": "¿Rechazar esta propuesta?",
+      "body": "No cambia nada en la tienda. El motivo se queda con la propuesta.",
+      "confirm": "Rechazar",
+      "keep": "Conservarla",
+      "reason": "¿Por qué no? Es con lo que se juzgará el próximo prompt."
+    }
+  },
+  "proposalReview": {
+    "heading": "Revisar {{count}} propuestas · {{topic}}",
+    "headingOne": "Revisar la propuesta · {{topic}}",
+    "provenance": "Propuestas por Steward · {{model}} · prompt {{prompt}} · {{when}}. Desmarca las que no quieras; cada una que apruebes es su propio cambio en la auditoría.",
+    "column": {
+      "pick": "Aprobar",
+      "code": "Código",
+      "now": "Ahora",
+      "proposed": "Propuesto",
+      "result": "Resultado"
+    },
+    "selected": "{{selected}} de {{count}} seleccionadas",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "rejectUnticked": "Rechazar la desmarcada",
+    "rejectUntickedMany": "Rechazar las {{count}} desmarcadas",
+    "approve": "Aprobar {{count}}",
+    "reason": "¿Por qué no las desmarcadas? Es con lo que se juzgará el próximo prompt.",
+    "reasonConfirm": "Rechazarlas",
+    "loading": "Cargando las propuestas…",
+    "failed": "No se pudieron cargar las propuestas. Inténtalo de nuevo.",
+    "outcome": {
+      "Applied": "Aplicada",
+      "Failed": "Falló",
+      "Stale": "Cambió entretanto — no se aplicó",
+      "Rejected": "Rechazada",
+      "NotFound": "No encontrada",
+      "NotWaiting": "Ya decidida"
+    }
+  },
+  "steward": {
+    "name": "Steward",
+    "open": "Steward",
+    "close": "Cerrar Steward",
+    "on": "En: {{screen}}",
+    "intro": "Pregunta por ventas, stock, devoluciones o el catálogo. Steward lee la tienda y propone cambios para que tú los apruebes.",
+    "you": "Tú",
+    "read": "Leído: {{tool}} · {{rows}} filas",
+    "readOf": "Leído: {{tool}} · {{rows}} de {{total}} filas",
+    "tools": {
+      "find_products": "productos",
+      "catalogue_gaps": "huecos del catálogo",
+      "sales_summary": "ventas",
+      "product_performance": "rendimiento por producto",
+      "stock_to_restock": "stock por reponer",
+      "returns_summary": "devoluciones"
+    },
+    "card": {
+      "heading": "{{count}} propuestas · {{topic}}",
+      "headingOne": "1 propuesta · {{topic}}",
+      "more": "y {{count}} más",
+      "review": "Revisar {{count}} propuestas",
+      "reviewOne": "Revisar la propuesta",
+      "kept": "Guardadas en Propuestas",
+      "decided": "{{count}} ya decididas"
+    },
+    "cost": "Esta conversación: {{calls}} llamadas · {{tokens}} tokens · {{euros}} · {{seconds}} s · {{model}}",
+    "working": "Steward está leyendo la tienda…",
+    "stop": "Parar",
+    "stopped": "Parado. Lo que ya propuso espera en Propuestas.",
+    "placeholder": "Pregunta por la tienda…",
+    "send": "Enviar",
+    "promise": "Steward lee y propone. Nada cambia hasta que tú lo apruebes.",
+    "failed": "La pregunta no llegó a Steward. Inténtalo de nuevo.",
+    "tooMany": "Demasiadas preguntas en un minuto. Espera un momento y vuelve a intentarlo.",
+    "unavailable": {
+      "title": "Steward no puede contestar ahora",
+      "bodyBoth": "No contestó ningún modelo (lo intentaron el modelo y su respaldo). No se propuso nada y nada cambió. El resto del backoffice funciona como siempre.",
+      "bodyOne": "No contestó ningún modelo. No se propuso nada y nada cambió. El resto del backoffice funciona como siempre.",
+      "kept": "Lo que propuso antes de fallar espera en Propuestas.",
+      "without": "Sin Steward",
+      "missingName": "Productos sin nombre en inglés",
+      "missingNameDetail": "La misma lista, como filtro en Productos",
+      "proposals": "Propuestas",
+      "proposalsDetail": "Lo ya propuesto sigue ahí para revisarlo",
+      "tryAgain": "Reintentar"
+    },
+    "tooLong": {
+      "title": "Esta conversación es demasiado larga para el modelo",
+      "body": "Empieza una nueva. No se pierde nada de lo propuesto: espera en Propuestas."
+    },
+    "budget": {
+      "title": "Esta conversación ha gastado su presupuesto",
+      "body": "Empieza una nueva. No se pierde nada de lo propuesto: espera en Propuestas."
+    },
+    "near": "Esta conversación está cerca del límite del modelo. Empieza una nueva para tu próxima pregunta.",
+    "newConversation": "Nueva conversación"
   }
 }

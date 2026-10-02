@@ -26,6 +26,21 @@ const Paths = {
   agents: 'M5 9h14v10H5z M12 5v4 M9 14h.01 M15 14h.01 M12 3a1 1 0 1 0 0 2a1 1 0 1 0 0-2',
   audit: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z M9 12l2 2 4-4',
   search: 'M4 16a8 8 0 1 1 16 0 M12 16l4-5',
+  /** What Steward proposed: a list with its ticks. */
+  proposals: 'M4 7l1.5 1.5L8 6 M4 13l1.5 1.5L8 12 M11 7h9 M11 13h9 M11 19h9 M4 19h4',
+
+  // ---------- Steward (phase 12)
+  /** Steward itself: a spark and its small one, the mark agent-driven things wear. */
+  steward: 'M10 4l1.6 4.4L16 10l-4.4 1.6L10 16l-1.6-4.4L4 10l4.4-1.6z M18 3v4 M16 5h4',
+  /** What a turn read: the shop's records. */
+  records:
+    'M5 6c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3z M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6 M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3',
+  /** The same answer, as a filter on a list. */
+  filter: 'M4 5h16l-6 7.5V19l-4-2v-4.5z',
+  /** Send the question. */
+  send: 'M12 19V5 M6 11l6-6 6 6',
+  /** No model answered. */
+  unavailable: 'M4 4l16 16 M9.5 5.5A6 6 0 0 1 18 11a4 4 0 0 1 1.5 7.6 M16 19H7a4 4 0 0 1-1.3-7.8',
 
   // ---------- Both apps' controls
   menu: 'M4 6h16 M4 12h16 M4 18h16',

@@ -132,6 +132,14 @@ export const appRoutes: Route[] = [
         loadComponent: () => import('./features/claims-review/claims-review-page').then((m) => m.ClaimsReviewPage),
       },
       {
+        // What Steward proposed (phase 12): the list of work behind the panel's
+        // "Kept in Proposals", so nothing proposed is lost when the panel closes.
+        path: 'steward/proposals',
+        title: 'proposals.title',
+        canActivate: [shopkeeper],
+        loadComponent: () => import('./features/steward/proposals/proposals-page').then((m) => m.ProposalsPage),
+      },
+      {
         path: 'review',
         title: 'reviewQueue.title',
         canActivate: [shopkeeper],

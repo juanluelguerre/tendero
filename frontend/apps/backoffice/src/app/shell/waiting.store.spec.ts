@@ -33,6 +33,7 @@ describe('the waiting store', () => {
       '/dashboard/operations': { toShip: 3, openReturns: 2 },
       '/inventory/stock': { counts: [{ filter: 'Restock', count: 5 }] },
       '/dashboard/agent-denials': { total: 1 },
+      '/steward/proposals': { counts: [{ filter: 'ToReview', count: 12 }] },
     };
     for (const request of http.match((req) => req.url.startsWith(Api) && !req.url.includes('/i18n/'))) {
       const path = Object.keys(bodies).find((key) => request.request.url.startsWith(Api + key));
@@ -56,8 +57,10 @@ describe('the waiting store', () => {
     await settle();
 
     expect(
-      (['drafts', 'claims', 'toShip', 'openReturns', 'lowStock', 'refusals'] as const).map((kind) => store.of()(kind)),
-    ).toEqual([4, 7, 3, 2, 5, 1]);
+      (['drafts', 'claims', 'toShip', 'openReturns', 'lowStock', 'refusals', 'proposals'] as const).map((kind) =>
+        store.of()(kind),
+      ),
+    ).toEqual([4, 7, 3, 2, 5, 1, 12]);
   });
 
   /** A badge that cannot load is no badge, never an error in the navigation. */

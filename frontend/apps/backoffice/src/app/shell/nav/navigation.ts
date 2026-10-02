@@ -1,7 +1,7 @@
 import type { IconName } from '@tendero/shared-ui';
 
 /** A figure that says how much work waits on a screen, shown as its badge. */
-export type WaitingKind = 'drafts' | 'claims' | 'toShip' | 'openReturns' | 'lowStock' | 'refusals';
+export type WaitingKind = 'drafts' | 'claims' | 'toShip' | 'openReturns' | 'lowStock' | 'refusals' | 'proposals';
 
 export interface NavItem {
   readonly route: string;
@@ -18,7 +18,7 @@ export interface NavGroup {
 }
 
 /**
- * The backoffice's thirteen screens as six groups, in the order a working day
+ * The backoffice's fourteen screens as seven groups, in the order a working day
  * meets them (the redesign's R-3, P1). It replaced a row of twelve tabs that
  * pushed every page sideways on a tablet (R-1, B-F1). The rail and the phone's
  * drawer both draw from this list, so the two can never disagree.
@@ -52,4 +52,8 @@ export const Navigation: readonly NavGroup[] = [
     ],
   },
   { label: 'insight', items: [{ route: '/search', label: 'search', icon: 'search' }] },
+  {
+    label: 'steward',
+    items: [{ route: '/steward/proposals', label: 'proposals', icon: 'proposals', waiting: 'proposals' }],
+  },
 ];

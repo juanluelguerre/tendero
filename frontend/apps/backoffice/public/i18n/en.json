@@ -150,11 +150,13 @@
       "sales": "Sales",
       "stock": "Stock",
       "agents": "Agents",
-      "insight": "Insight"
+      "insight": "Insight",
+      "steward": "Steward"
     },
     "menu": "Menu",
     "close": "Close menu",
-    "waiting": "{{count}} waiting"
+    "waiting": "{{count}} waiting",
+    "proposals": "Proposals"
   },
   "orders": {
     "captured": "Captured",
@@ -970,12 +972,164 @@
       "go": "Enter go",
       "close": "Esc close",
       "lists": "In the review queue and claims: j and k"
-    }
+    },
+    "ask": "Ask Steward",
+    "askDetail": "Steward"
   },
   "pager": {
     "label": "Pages",
     "range": "{{from}}–{{to}} of {{total}}",
     "previous": "Previous",
     "next": "Next"
+  },
+  "proposals": {
+    "title": "Proposals",
+    "hint": "What Steward proposed. Nothing here has changed the shop until someone approves it.",
+    "filterLabel": "Show proposals",
+    "filter": {
+      "ToReview": "To review",
+      "Applied": "Applied",
+      "Rejected": "Rejected",
+      "Failed": "Failed",
+      "All": "All"
+    },
+    "loading": "Loading the proposals…",
+    "failed": "The proposals could not be loaded. Try again.",
+    "empty": {
+      "ToReview": "Nothing is waiting for review.",
+      "Applied": "No proposal has been applied yet.",
+      "Rejected": "No proposal has been rejected.",
+      "Failed": "No proposal failed.",
+      "All": "Steward has proposed nothing yet."
+    },
+    "blank": "(empty)",
+    "column": {
+      "product": "Product",
+      "change": "Change",
+      "proposed": "Proposed",
+      "when": "When"
+    },
+    "status": {
+      "Proposed": "To review",
+      "Approved": "Approved, result unknown",
+      "Applied": "Applied",
+      "Failed": "Failed",
+      "Rejected": "Rejected",
+      "Stale": "Changed meanwhile"
+    },
+    "why": "Why",
+    "provenance": {
+      "proposedBy": "Proposed by",
+      "prompt": "Prompt",
+      "askedBy": "Asked by",
+      "command": "Command",
+      "trace": "Trace"
+    },
+    "approve": "Approve",
+    "reject": "Reject…",
+    "approveHint": "Approving runs the command as you, with its own audit row that names the proposal.",
+    "unknownResult": "Approved, but its result was not recorded. Finishing it is safe: what it changes is checked again first.",
+    "finish": "Finish the approval",
+    "decided": {
+      "Applied": "Applied, approved by {{by}}.",
+      "Failed": "Failed when {{by}} approved it",
+      "Rejected": "Rejected by {{by}}",
+      "Stale": "Not applied: what it changes changed after it was proposed."
+    },
+    "rejectDialog": {
+      "heading": "Reject this proposal?",
+      "body": "Nothing changes in the shop. The reason stays with the proposal.",
+      "confirm": "Reject",
+      "keep": "Keep it",
+      "reason": "Why not? It is what the next prompt is judged against."
+    }
+  },
+  "proposalReview": {
+    "heading": "Review {{count}} proposals · {{topic}}",
+    "headingOne": "Review the proposal · {{topic}}",
+    "provenance": "Proposed by Steward · {{model}} · prompt {{prompt}} · {{when}}. Untick any you do not want; each one you approve is its own change in the audit.",
+    "column": {
+      "pick": "Approve",
+      "code": "Code",
+      "now": "Now",
+      "proposed": "Proposed",
+      "result": "Result"
+    },
+    "selected": "{{selected}} of {{count}} selected",
+    "cancel": "Cancel",
+    "close": "Close",
+    "rejectUnticked": "Reject the unticked one",
+    "rejectUntickedMany": "Reject the {{count}} unticked",
+    "approve": "Approve {{count}}",
+    "reason": "Why not the unticked? It is what the next prompt is judged against.",
+    "reasonConfirm": "Reject them",
+    "loading": "Loading the proposals…",
+    "failed": "The proposals could not be loaded. Try again.",
+    "outcome": {
+      "Applied": "Applied",
+      "Failed": "Failed",
+      "Stale": "Changed meanwhile — not applied",
+      "Rejected": "Rejected",
+      "NotFound": "Not found",
+      "NotWaiting": "Already decided"
+    }
+  },
+  "steward": {
+    "name": "Steward",
+    "open": "Steward",
+    "close": "Close Steward",
+    "on": "On: {{screen}}",
+    "intro": "Ask about sales, stock, returns or the catalogue. Steward reads the shop and proposes changes for you to approve.",
+    "you": "You",
+    "read": "Read {{tool}} · {{rows}} rows",
+    "readOf": "Read {{tool}} · {{rows}} of {{total}} rows",
+    "tools": {
+      "find_products": "products",
+      "catalogue_gaps": "catalogue gaps",
+      "sales_summary": "sales",
+      "product_performance": "product performance",
+      "stock_to_restock": "stock to restock",
+      "returns_summary": "returns"
+    },
+    "card": {
+      "heading": "{{count}} proposals · {{topic}}",
+      "headingOne": "1 proposal · {{topic}}",
+      "more": "and {{count}} more",
+      "review": "Review {{count}} proposals",
+      "reviewOne": "Review the proposal",
+      "kept": "Kept in Proposals",
+      "decided": "{{count}} already decided"
+    },
+    "cost": "This conversation: {{calls}} calls · {{tokens}} tokens · {{euros}} · {{seconds}} s · {{model}}",
+    "working": "Steward is reading the shop…",
+    "stop": "Stop",
+    "stopped": "Stopped. Anything already proposed waits in Proposals.",
+    "placeholder": "Ask about the shop…",
+    "send": "Send",
+    "promise": "Steward reads and proposes. Nothing changes until you approve.",
+    "failed": "The question did not reach Steward. Try again.",
+    "tooMany": "Too many questions in a minute. Wait a moment and try again.",
+    "unavailable": {
+      "title": "Steward cannot answer right now",
+      "bodyBoth": "No model answered (the model and its fallback both tried). Nothing was proposed and nothing changed. The rest of the backoffice works as usual.",
+      "bodyOne": "No model answered. Nothing was proposed and nothing changed. The rest of the backoffice works as usual.",
+      "kept": "What it proposed before failing waits in Proposals.",
+      "without": "Without Steward",
+      "missingName": "Products missing an English name",
+      "missingNameDetail": "The same list, as a filter on Products",
+      "proposals": "Proposals",
+      "proposalsDetail": "What was already proposed stays there to review",
+      "tryAgain": "Try again"
+    },
+    "tooLong": {
+      "title": "This conversation is too long for the model",
+      "body": "Start a new one. Nothing already proposed is lost: it waits in Proposals."
+    },
+    "budget": {
+      "title": "This conversation has spent its budget",
+      "body": "Start a new one. Nothing already proposed is lost: it waits in Proposals."
+    },
+    "near": "This conversation is near the model's limit. Start a new one for your next question.",
+    "newConversation": "New conversation"
   }
 }

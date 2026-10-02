@@ -8,6 +8,7 @@ import { CatalogService } from '../data-access/catalog.service';
 import { InventoryService } from '../data-access/inventory.service';
 import { KnowledgeService } from '../data-access/knowledge.service';
 import { OrderingService } from '../data-access/ordering.service';
+import { StewardService } from '../data-access/steward.service';
 import type { WaitingKind } from './nav/navigation';
 import { extendResource } from '@ngrx/signals/resource';
 
@@ -30,6 +31,7 @@ export const WaitingStore = signalStore(
     const ordering = inject(OrderingService);
     const inventory = inject(InventoryService);
     const accounts = inject(AccountsService);
+    const steward = inject(StewardService);
     const culture = inject(CultureStore);
     return {
       _figures: extendResource(
@@ -46,6 +48,11 @@ export const WaitingStore = signalStore(
                   .pipe(map((stock) => stock.counts.find((count) => count.filter === 'Restock')?.count ?? 0)),
               ),
               refusals: quietly(accounts.agentDenials('Day').pipe(map((denials) => denials.total))),
+              proposals: quietly(
+                steward
+                  .proposals('ToReview', params.culture, 1, 1)
+                  .pipe(map((page) => page.counts.find((count) => count.filter === 'ToReview')?.count ?? 0)),
+              ),
             }),
         }),
       ),
