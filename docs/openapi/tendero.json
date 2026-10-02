@@ -784,6 +784,43 @@
         }
       }
     },
+    "/api/dashboard/restock": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetRestockList",
+        "parameters": [
+          {
+            "name": "warehouse",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestockList"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dashboard/stock": {
       "get": {
         "tags": [
@@ -7560,6 +7597,69 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "RestockList": {
+        "required": [
+          "warehouse",
+          "restockAt",
+          "total",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "warehouse": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "restockAt": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RestockRow"
+            }
+          }
+        }
+      },
+      "RestockRow": {
+        "required": [
+          "sku",
+          "available",
+          "perDay",
+          "coverageDays"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "available": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "perDay": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "coverageDays": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },

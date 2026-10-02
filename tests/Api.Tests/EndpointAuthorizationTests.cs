@@ -74,6 +74,7 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/dashboard/uplift")]
     [InlineData("/api/dashboard/products")]
     [InlineData("/api/dashboard/returns")]
+    [InlineData("/api/dashboard/restock")]
     [InlineData("/api/dashboard/search-status")]
     public void The_dashboards_new_reads_are_the_shopkeepers(string route) => Writes_to_the_catalogue_require_the_shopkeeper(route);
 

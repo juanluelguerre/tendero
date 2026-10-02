@@ -324,6 +324,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/restock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetRestockList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/stock": {
         parameters: {
             query?: never;
@@ -2318,6 +2334,23 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        RestockList: {
+            warehouse: null | string;
+            /** Format: int32 */
+            restockAt: number;
+            /** Format: int32 */
+            total: number;
+            rows: components["schemas"]["RestockRow"][];
+        };
+        RestockRow: {
+            sku: string;
+            /** Format: int32 */
+            available: number;
+            /** Format: double */
+            perDay: null | number;
+            /** Format: double */
+            coverageDays: null | number;
+        };
         /** @enum {unknown} */
         ReturnDecision: "Approve" | "Reject" | "Receive" | "Refund";
         ReturnLineRequest: {
@@ -3290,6 +3323,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogueGaps"];
+                };
+            };
+        };
+    };
+    GetRestockList: {
+        parameters: {
+            query?: {
+                warehouse?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestockList"];
                 };
             };
         };
