@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261002160125_AuditProposal";
+    public override string LastMigrationId => "20261002161135_AddAssistProposals";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -165,6 +165,101 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
                     .HasFilter("subject IS NOT NULL");
 
                 b.ToTable("customers", "accounts");
+            });
+
+        modelBuilder.Entity("ElGuerre.Tendero.Assist.Domain.ActionProposal", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<string>("Before")
+                    .HasColumnType("jsonb")
+                    .HasColumnName("before");
+
+                b.Property<string>("Command")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("command");
+
+                b.Property<DateTimeOffset?>("DecidedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("decided_at");
+
+                b.Property<string>("DecidedBy")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("decided_by");
+
+                b.Property<string>("Payload")
+                    .IsRequired()
+                    .HasColumnType("jsonb")
+                    .HasColumnName("payload");
+
+                b.Property<DateTimeOffset>("ProposedAt")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("proposed_at");
+
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)")
+                    .HasColumnName("reason");
+
+                b.Property<string>("Result")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)")
+                    .HasColumnName("result");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("status");
+
+                b.Property<string>("Subject")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("subject");
+
+                b.ComplexProperty(typeof(Dictionary<string, object>), "Provenance", "ElGuerre.Tendero.Assist.Domain.ActionProposal.Provenance#ProposalProvenance", b1 =>
+                    {
+                        b1.IsRequired();
+
+                        b1.Property<string>("AskedBy")
+                            .IsRequired()
+                            .HasJsonPropertyName("askedBy");
+
+                        b1.Property<string>("ConversationId")
+                            .HasJsonPropertyName("conversationId");
+
+                        b1.Property<string>("Model")
+                            .HasJsonPropertyName("model");
+
+                        b1.Property<string>("Profile")
+                            .HasJsonPropertyName("profile");
+
+                        b1.Property<string>("PromptVersion")
+                            .HasJsonPropertyName("promptVersion");
+
+                        b1.Property<string>("TraceId")
+                            .HasJsonPropertyName("traceId");
+
+                        b1
+                            .ToJson("provenance")
+                            .HasColumnType("jsonb");
+                    });
+
+                b.HasKey("Id")
+                    .HasName("pk_action_proposals");
+
+                b.HasIndex("Status", "ProposedAt")
+                    .IsDescending(false, true)
+                    .HasDatabaseName("ix_action_proposals_status_proposed_at");
+
+                b.ToTable("action_proposals", "assist");
             });
 
         modelBuilder.Entity("ElGuerre.Tendero.Catalog.Domain.Product", b =>

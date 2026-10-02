@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Accounts.Ports;
+using ElGuerre.Tendero.Assist.Ports;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
 using ElGuerre.Tendero.Knowledge.Ports;
@@ -68,6 +69,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<ICheckoutSessionRepository, EfCheckoutSessionRepository>();
         services.AddScoped<IReturnRequestRepository, EfReturnRequestRepository>();
         services.AddScoped<IKnowledgeRepository, EfKnowledgeRepository>();
+        services.AddScoped<IProposalRepository, EfProposalRepository>();
         services.AddScoped<IAttributeVocabulary, CatalogAttributeVocabulary>();
         services.AddScoped<IProductFacts, CatalogProductFacts>();
 

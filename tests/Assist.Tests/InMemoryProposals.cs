@@ -54,13 +54,13 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
         var (subject, value) = Read(payload);
         if (string.IsNullOrWhiteSpace(value))
             return Task.FromResult(ProposalCheck.Invalid("Value must not be blank."));
-        return Task.FromResult(world.TryGetValue(subject, out var now)
+        return Task.FromResult(Snapshot(world, subject) is { } now
             ? ProposalCheck.Valid(subject, now)
             : ProposalCheck.Invalid($"No {subject}."));
     }
 
     public Task<string?> NowAsync(JsonElement payload, CancellationToken cancellationToken = default) =>
-        Task.FromResult(world.GetValueOrDefault(Read(payload).Subject));
+        Task.FromResult(Snapshot(world, Read(payload).Subject));
 
     public Task<ProposalApplication> ApplyAsync(JsonElement payload, CancellationToken cancellationToken = default)
     {
@@ -74,6 +74,10 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
         Applied.Add((subject, scope.Current));
         return Task.FromResult(ProposalApplication.Done);
     }
+
+    /// <summary>JSON, as every entry's snapshot is: the base class serialises one.</summary>
+    public static string? Snapshot(Dictionary<string, string> world, string subject) =>
+        world.TryGetValue(subject, out var value) ? JsonSerializer.Serialize(new { value, subject }) : null;
 
     public static JsonElement Payload(string subject, string value) =>
         JsonDocument.Parse(JsonSerializer.Serialize(new { subject, value })).RootElement.Clone();

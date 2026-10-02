@@ -53,6 +53,22 @@ public sealed class DecideProposalsTests
         Assert.Equal(ProposalStatus.Stale, proposal.Status);
     }
 
+    /// <summary>
+    /// The snapshot comes back from a jsonb column, and jsonb keeps the value, not
+    /// the text: its own spacing and its own key order. Compared as text, every
+    /// proposal read back from Postgres was stale — the integration test found it.
+    /// </summary>
+    [Fact]
+    public async Task A_snapshot_written_differently_but_meaning_the_same_is_not_stale()
+    {
+        var shop = Shop(("MUG-1", "Mug"));
+        var proposal = ActionProposal.Propose(FakeEntry.CommandName, FakeEntry.Payload("MUG-1", "new").GetRawText(), "MUG-1",
+            """{"subject": "MUG-1", "value": "Mug"}""", "because", new ProposalProvenance(null, null, null, null, null, "lucia"), Clock);
+        shop.Proposals.Add(proposal);
+
+        Assert.Equal(DecisionOutcome.Applied, Assert.Single((await shop.Approve(proposal.Id)).Rows).Outcome);
+    }
+
     [Fact]
     public async Task A_row_whose_subject_has_gone_is_stale()
     {
@@ -187,7 +203,7 @@ public sealed class DecideProposalsTests
         public ActionProposal Propose(string subject, string value)
         {
             var proposal = ActionProposal.Propose(FakeEntry.CommandName, FakeEntry.Payload(subject, value).GetRawText(),
-                subject, World[subject], "because", new ProposalProvenance(null, null, null, null, null, "lucia"), Clock);
+                subject, FakeEntry.Snapshot(World, subject), "because", new ProposalProvenance(null, null, null, null, null, "lucia"), Clock);
             Proposals.Add(proposal);
             return proposal;
         }

@@ -42,7 +42,9 @@ public sealed record AuditEntryView(
     AuditOutcome Outcome,
     string? Reason,
     string? TraceId,
-    DateTimeOffset At);
+    DateTimeOffset At,
+    /// <summary>The approved proposal the command ran for (phase 12), or null.</summary>
+    string? ProposalId);
 
 /// <summary>How many entries of the log have one outcome.</summary>
 public sealed record AuditOutcomeCount(AuditOutcome Outcome, int Count);
@@ -137,5 +139,6 @@ public sealed class ListAuditEntriesHandler(IAuditReader audit)
             entry.Outcome,
             entry.Reason,
             entry.TraceId,
-            entry.At);
+            entry.At,
+            entry.Proposal?.ToString());
 }

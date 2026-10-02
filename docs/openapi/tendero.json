@@ -170,6 +170,66 @@
         }
       }
     },
+    "/api/steward/proposals/approve": {
+      "post": {
+        "tags": [
+          "Steward"
+        ],
+        "operationId": "ApproveProposals",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveProposalsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalDecisionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/steward/proposals/reject": {
+      "post": {
+        "tags": [
+          "Steward"
+        ],
+        "operationId": "RejectProposals",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectProposalsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalDecisionsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/withdraw": {
       "post": {
         "tags": [
@@ -3746,6 +3806,21 @@
           }
         }
       },
+      "ApproveProposalsRequest": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "AttributeDefinitionView": {
         "required": [
           "code",
@@ -3847,7 +3922,8 @@
           "outcome",
           "reason",
           "traceId",
-          "at"
+          "at",
+          "proposalId"
         ],
         "type": "object",
         "properties": {
@@ -3902,6 +3978,12 @@
           "at": {
             "type": "string",
             "format": "date-time"
+          },
+          "proposalId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -4799,6 +4881,16 @@
             ]
           }
         }
+      },
+      "DecisionOutcome": {
+        "enum": [
+          "Applied",
+          "Failed",
+          "Stale",
+          "Rejected",
+          "NotFound",
+          "NotWaiting"
+        ]
       },
       "DefineVariantsRequest": {
         "required": [
@@ -6600,6 +6692,42 @@
           }
         }
       },
+      "ProposalDecisionView": {
+        "required": [
+          "id",
+          "outcome",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/DecisionOutcome"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ProposalDecisionsResponse": {
+        "required": [
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProposalDecisionView"
+            }
+          }
+        }
+      },
       "PublishOutcome": {
         "enum": [
           "Published",
@@ -7042,6 +7170,25 @@
           "elapsedSeconds": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "RejectProposalsRequest": {
+        "required": [
+          "ids",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -8682,6 +8829,9 @@
     },
     {
       "name": "Search"
+    },
+    {
+      "name": "Steward"
     },
     {
       "name": "Telemetry"

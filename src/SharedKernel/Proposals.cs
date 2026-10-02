@@ -57,8 +57,9 @@ public interface IProposableCommand
 
     Task<ProposalCheck> CheckAsync(JsonElement payload, CancellationToken cancellationToken = default);
 
-    /// <summary>A snapshot of what the command would change, as it is now; null
-    /// when the subject no longer exists or the payload cannot be read.</summary>
+    /// <summary>A snapshot of what the command would change, as it is now, in JSON
+    /// (compared by value, never as text); null when the subject no longer exists
+    /// or the payload cannot be read.</summary>
     Task<string?> NowAsync(JsonElement payload, CancellationToken cancellationToken = default);
 
     Task<ProposalApplication> ApplyAsync(JsonElement payload, CancellationToken cancellationToken = default);

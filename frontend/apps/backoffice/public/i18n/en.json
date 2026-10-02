@@ -44,6 +44,7 @@
     "showEverything": "Show everything",
     "commands": {
       "AddToCartCommand": "Add to cart",
+      "ApproveProposalsCommand": "Approve proposals",
       "CancelCheckoutSessionCommand": "Cancel a checkout",
       "ChangeAgentTrustCommand": "Change an agent's trust",
       "ClaimCartCommand": "Keep a guest's cart on signing in",
@@ -62,6 +63,7 @@
       "OpenCheckoutSessionCommand": "Open a checkout",
       "PaymentWebhookCommand": "Payment provider's notice",
       "PlaceOrderCommand": "Place an order",
+      "ProposeActionsCommand": "Propose changes",
       "ProposeClaimsCommand": "Propose claims from a description",
       "PublishProductCommand": "Publish a product",
       "RecordBrowsingCommand": "Record a product viewed or a search",
@@ -70,6 +72,7 @@
       "RegisterAgentCommand": "Register an agent",
       "ReindexProductsCommand": "Rebuild the search index",
       "ReinstateAgentCommand": "Reinstate an agent",
+      "RejectProposalsCommand": "Reject proposals",
       "RequestReturnCommand": "Ask for a return",
       "ReviewClaimCommand": "Decide a claim",
       "ScheduleCampaignCommand": "Schedule a campaign",

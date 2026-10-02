@@ -2,6 +2,8 @@ using Carter;
 using ElGuerre.Tendero.Accounts;
 using ElGuerre.Tendero.Accounts.Features.LinkIdentity;
 using ElGuerre.Tendero.Api;
+using ElGuerre.Tendero.Assist;
+using ElGuerre.Tendero.Assist.Features.DecideProposals;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.DevIssuer;
@@ -38,7 +40,8 @@ builder.Services.AddTenderoCqrs(
     typeof(ListStockQuery).Assembly,
     typeof(PlaceOrderCommand).Assembly,
     typeof(LinkIdentityCommand).Assembly,
-    typeof(ReviewClaimsEndpoints).Assembly);
+    typeof(ReviewClaimsEndpoints).Assembly,
+    typeof(ApproveProposalsCommand).Assembly);
 
 builder.Services.AddTenderoPersistence(
     builder.Configuration.GetRequiredConnectionString("tendero-db"));
@@ -105,6 +108,9 @@ builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
 // The claims layer's review side (P10-5). Its models are handed only to the
 // worker; here, with no address for them, Knowledge registers the rules alone.
 builder.Services.AddKnowledge(builder.Configuration);
+
+// Steward's proposals and their decisions (phase 12, ADR 0052).
+builder.Services.AddAssist();
 
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 

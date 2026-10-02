@@ -103,7 +103,7 @@ public sealed class ApproveProposalsHandler(
         {
             // Stale when what the command would change is not what was proposed
             // against. An entry that no longer exists cannot say, and fails below.
-            if (entry is not null && await entry.NowAsync(payload, cancellationToken) != proposal.Before)
+            if (entry is not null && !Snapshots.Same(await entry.NowAsync(payload, cancellationToken), proposal.Before))
             {
                 proposal.MarkStale(approver, clock);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
@@ -178,6 +178,24 @@ public sealed class RejectProposalsHandler(
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new ProposalDecisions(rows);
+    }
+}
+
+/// <summary>
+/// Two snapshots of "now" are the same when they say the same thing. Compared by
+/// value, never as text: the stored one comes back from a jsonb column, which
+/// keeps neither the spacing nor the key order it was written with.
+/// </summary>
+internal static class Snapshots
+{
+    public static bool Same(string? now, string? before)
+    {
+        if (now is null || before is null)
+            return now is null && before is null;
+
+        using var a = JsonDocument.Parse(now);
+        using var b = JsonDocument.Parse(before);
+        return JsonElement.DeepEquals(a.RootElement, b.RootElement);
     }
 }
 

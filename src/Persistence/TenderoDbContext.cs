@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Accounts.Domain;
+using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
 using ElGuerre.Tendero.Knowledge.Domain;
@@ -30,6 +31,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<SourceDocument> SourceDocuments => Set<SourceDocument>();
     public DbSet<ProductClaim> Claims => Set<ProductClaim>();
+    public DbSet<ActionProposal> Proposals => Set<ActionProposal>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
@@ -62,6 +64,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ReservationConfiguration());
         modelBuilder.ApplyConfiguration(new SourceDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new ProductClaimConfiguration());
+        modelBuilder.ApplyConfiguration(new ActionProposalConfiguration());
         modelBuilder.ApplyConfiguration(new CampaignConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());

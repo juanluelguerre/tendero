@@ -20,6 +20,7 @@
     <!-- Implements the ports the slices declare: IProductRepository and
          IUnitOfWork (Catalog/ImportProducts) and IProductReader (Search). -->
     <ProjectReference Include="../Accounts/ElGuerre.Tendero.Accounts.csproj" />
+    <ProjectReference Include="../Assist/ElGuerre.Tendero.Assist.csproj" />
     <ProjectReference Include="../Catalog/ElGuerre.Tendero.Catalog.csproj" />
     <ProjectReference Include="../Inventory/ElGuerre.Tendero.Inventory.csproj" />
     <ProjectReference Include="../Knowledge/ElGuerre.Tendero.Knowledge.csproj" />

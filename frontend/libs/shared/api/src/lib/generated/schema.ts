@@ -84,6 +84,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/steward/proposals/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApproveProposals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/steward/proposals/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RejectProposals"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/withdraw": {
         parameters: {
             query?: never;
@@ -1302,6 +1334,9 @@ export interface components {
             reasonCode: null | string;
             reason: null | string;
         };
+        ApproveProposalsRequest: {
+            ids: string[];
+        };
         AttributeDefinitionView: {
             code: string;
             label: {
@@ -1337,6 +1372,7 @@ export interface components {
             traceId: null | string;
             /** Format: date-time */
             at: string;
+            proposalId: null | string;
         };
         /** @enum {unknown} */
         AuditOutcome: "Allowed" | "Denied" | "Failed";
@@ -1574,6 +1610,8 @@ export interface components {
             decision: components["schemas"]["ReturnDecision"];
             reason: null | string;
         };
+        /** @enum {unknown} */
+        DecisionOutcome: "Applied" | "Failed" | "Stale" | "Rejected" | "NotFound" | "NotWaiting";
         DefineVariantsRequest: {
             axes: components["schemas"]["VariantAxisRequest"][];
             skuPrefix: null | string;
@@ -2038,6 +2076,14 @@ export interface components {
             isActive: boolean;
             missingCultures: string[];
         };
+        ProposalDecisionView: {
+            id: string;
+            outcome: components["schemas"]["DecisionOutcome"];
+            reason: null | string;
+        };
+        ProposalDecisionsResponse: {
+            rows: components["schemas"]["ProposalDecisionView"][];
+        };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
         PublishProductConflict: {
@@ -2164,6 +2210,10 @@ export interface components {
             removed: number;
             /** Format: double */
             elapsedSeconds: number;
+        };
+        RejectProposalsRequest: {
+            ids: string[];
+            reason: string;
         };
         RequestReturnRequest: {
             lines: components["schemas"]["ReturnLineRequest"][];
@@ -2704,6 +2754,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TelemetryConfiguration"];
+                };
+            };
+        };
+    };
+    ApproveProposals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveProposalsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalDecisionsResponse"];
+                };
+            };
+        };
+    };
+    RejectProposals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectProposalsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalDecisionsResponse"];
                 };
             };
         };

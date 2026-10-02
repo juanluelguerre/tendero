@@ -21,7 +21,7 @@ public sealed class ProposeActionsTests
 
         var stored = Assert.Single(proposals.All);
         Assert.Equal(stored.Id, Assert.Single(result.Rows).Id);
-        Assert.Equal(("MUG-1", "old", "Lucía"), (stored.Subject, stored.Before, stored.Provenance.AskedBy));
+        Assert.Equal(("MUG-1", """{"value":"old","subject":"MUG-1"}""", "Lucía"), (stored.Subject, stored.Before, stored.Provenance.AskedBy));
         Assert.Equal("qwen3.5-4b", stored.Provenance.Model);
         Assert.Equal(1, unitOfWork.SaveCount);
     }

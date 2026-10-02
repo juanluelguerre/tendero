@@ -44,6 +44,7 @@
     "showEverything": "Ver todo",
     "commands": {
       "AddToCartCommand": "Añadir al carrito",
+      "ApproveProposalsCommand": "Aprobar propuestas",
       "CancelCheckoutSessionCommand": "Cancelar un pago",
       "ChangeAgentTrustCommand": "Cambiar la confianza de un agente",
       "ClaimCartCommand": "Conservar el carrito al iniciar sesión",
@@ -62,6 +63,7 @@
       "OpenCheckoutSessionCommand": "Abrir un pago",
       "PaymentWebhookCommand": "Aviso del proveedor de pago",
       "PlaceOrderCommand": "Hacer un pedido",
+      "ProposeActionsCommand": "Proponer cambios",
       "ProposeClaimsCommand": "Proponer afirmaciones de una descripción",
       "PublishProductCommand": "Publicar un producto",
       "RecordBrowsingCommand": "Registrar un producto visto o una búsqueda",
@@ -70,6 +72,7 @@
       "RegisterAgentCommand": "Registrar un agente",
       "ReindexProductsCommand": "Reconstruir el índice de búsqueda",
       "ReinstateAgentCommand": "Readmitir un agente",
+      "RejectProposalsCommand": "Rechazar propuestas",
       "RequestReturnCommand": "Pedir una devolución",
       "ReviewClaimCommand": "Decidir una afirmación",
       "ScheduleCampaignCommand": "Programar una campaña",
