@@ -86,7 +86,7 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
         if (string.IsNullOrWhiteSpace(value))
             return Task.FromResult(ProposalCheck.Invalid("Value must not be blank."));
         return Task.FromResult(Snapshot(world, subject) is { } now
-            ? ProposalCheck.Valid(subject, now)
+            ? ProposalCheck.Valid(subject, now, Display(subject, world[subject], value))
             : ProposalCheck.Invalid($"No {subject}."));
     }
 
@@ -113,6 +113,11 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
     /// <summary>JSON, as every entry's snapshot is: the base class serialises one.</summary>
     public static string? Snapshot(Dictionary<string, string> world, string subject) =>
         world.TryGetValue(subject, out var value) ? JsonSerializer.Serialize(new { value, subject }) : null;
+
+    /// <summary>What a person reads: the subject, the change, the value now and proposed.</summary>
+    public static ProposalDisplay Display(string subject, string now, string proposed) =>
+        new(LocalizedText.From("en", subject), LocalizedText.From("en", "Value"),
+            [new ProposalChange(LocalizedText.From("en", "Value"), now, proposed)]);
 
     public static JsonElement Payload(string subject, string value) =>
         JsonDocument.Parse(JsonSerializer.Serialize(new { subject, value })).RootElement.Clone();

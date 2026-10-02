@@ -67,6 +67,10 @@ public sealed class ActionProposal : AggregateRoot
     public string Payload { get; private set; } = null!;
     public string Subject { get; private set; } = null!;
     public string? Before { get; private set; }
+
+    /// <summary>What a person reads of it, as its owning context wrote it when it was
+    /// proposed (<see cref="ProposalDisplay"/>, JSON); null on proposals made before S-4.</summary>
+    public string? Display { get; private set; }
     public string Reason { get; private set; } = null!;
     public ProposalProvenance Provenance { get; private set; } = null!;
     public DateTimeOffset ProposedAt { get; private set; }
@@ -83,7 +87,7 @@ public sealed class ActionProposal : AggregateRoot
 
     public static ActionProposal Propose(
         string command, string payload, string subject, string? before, string reason,
-        ProposalProvenance provenance, TimeProvider clock)
+        ProposalProvenance provenance, TimeProvider clock, string? display = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(command);
         ArgumentException.ThrowIfNullOrWhiteSpace(payload);
@@ -99,6 +103,7 @@ public sealed class ActionProposal : AggregateRoot
             Payload = payload,
             Subject = subject,
             Before = before,
+            Display = display,
             Reason = reason,
             Provenance = provenance,
             ProposedAt = at,

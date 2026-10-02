@@ -20,6 +20,7 @@ internal sealed class ActionProposalConfiguration : IEntityTypeConfiguration<Act
         // back field by field by the review.
         builder.Property(proposal => proposal.Payload).HasColumnType("jsonb").IsRequired();
         builder.Property(proposal => proposal.Before).HasColumnType("jsonb");
+        builder.Property(proposal => proposal.Display).HasColumnType("jsonb");
 
         builder.Property(proposal => proposal.Subject).HasMaxLength(200).IsRequired();
         builder.Property(proposal => proposal.Reason).HasMaxLength(2000).IsRequired();

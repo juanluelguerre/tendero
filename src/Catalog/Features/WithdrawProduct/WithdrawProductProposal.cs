@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 
@@ -23,8 +24,13 @@ public sealed class WithdrawProductProposal(IServiceProvider services, IProductR
 
     protected override async Task<ProposalSubject?> ReadAsync(WithdrawProductCommand command, CancellationToken cancellationToken) =>
         await products.FindByIdAsync(command.ProductId, cancellationToken) is { } product
-            ? new ProposalSubject(product.Code, new WithdrawalNow(product.Status.ToString()))
+            ? new ProposalSubject(product.Code, new WithdrawalNow(product.Status.ToString()), new ProposalDisplay(
+                product.Name,
+                Both("Withdrawal", "Retirada"),
+                [new ProposalChange(Both("Status", "Estado"), product.Status.ToString(), nameof(ProductStatus.Draft))]))
             : null;
+
+    private static LocalizedText Both(string en, string es) => new(new Dictionary<string, string> { ["en"] = en, ["es"] = es });
 
     private sealed record WithdrawalNow(string Status);
 }

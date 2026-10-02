@@ -26,6 +26,19 @@ public sealed class ProposeActionsTests
         Assert.Equal(1, unitOfWork.SaveCount);
     }
 
+    /// <summary>What the card, the review and the list show is written when it is
+    /// proposed, by the context that owns the command: Assist reads no other context.</summary>
+    [Fact]
+    public async Task A_stored_proposal_keeps_what_a_person_reads_of_it()
+    {
+        var (handler, proposals, _) = Handler(new() { ["MUG-1"] = "old" });
+
+        await handler.HandleAsync(Command(("MUG-1", "new")), TestContext.Current.CancellationToken);
+
+        var display = ProposalDisplay.FromJson(Assert.Single(proposals.All).Display)!;
+        Assert.Equal(("MUG-1", "old", "new"), (display.Title.In("en"), display.Changes[0].Now, display.Changes[0].Proposed));
+    }
+
     [Fact]
     public async Task An_invalid_action_comes_back_as_an_error_and_is_not_stored()
     {

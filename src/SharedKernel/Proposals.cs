@@ -70,11 +70,12 @@ public interface IProposableCommand
 
 /// <param name="Subject">What the proposal is about, as a value (a product's code).</param>
 /// <param name="Now">The snapshot <see cref="IProposableCommand.NowAsync"/> returns, taken when proposed.</param>
-public sealed record ProposalCheck(string? Subject, string? Now, IReadOnlyList<string> Errors)
+/// <param name="Display">What a person reads of it, when the entry writes one.</param>
+public sealed record ProposalCheck(string? Subject, string? Now, IReadOnlyList<string> Errors, ProposalDisplay? Display = null)
 {
     public bool IsValid => Errors.Count == 0;
 
-    public static ProposalCheck Valid(string subject, string now) => new(subject, now, []);
+    public static ProposalCheck Valid(string subject, string now, ProposalDisplay? display = null) => new(subject, now, [], display);
 
     public static ProposalCheck Invalid(params string[] errors) => new(null, null, errors);
 }
@@ -88,7 +89,56 @@ public sealed record ProposalApplication(bool Applied, string? Reason)
 
 /// <param name="Now">The fields the command would change, as they are: serialised
 /// into the snapshot staleness compares.</param>
-public sealed record ProposalSubject(string Subject, object Now);
+/// <param name="Display">What a person reads of the proposal: written here, by the
+/// context that knows its subject, and stored with it.</param>
+public sealed record ProposalSubject(string Subject, object Now, ProposalDisplay? Display = null);
+
+/// <summary>One field a proposal changes, as a person reads it: "Name · EN", now, proposed.</summary>
+public sealed record ProposalChange(LocalizedText Field, string? Now, string? Proposed);
+
+/// <summary>
+/// What a person reads of a proposal (S-4): its subject's title, the kind of
+/// change ("English name"), and each field now and proposed. The owning context
+/// writes it when the proposal is made and Assist stores it as it came, so the
+/// card, the review and the list show a product's name without Assist reading
+/// Catalog (invariant 1) — and show what was proposed, as it was proposed.
+/// </summary>
+public sealed record ProposalDisplay(LocalizedText Title, LocalizedText Kind, IReadOnlyList<ProposalChange> Changes)
+{
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    public string ToJson() => JsonSerializer.Serialize(
+        new Stored(Title.Values, Kind.Values, [.. Changes.Select(change => new StoredChange(change.Field.Values, change.Now, change.Proposed))]),
+        Json);
+
+    /// <summary>The display a proposal stored, or null when it has none or it
+    /// cannot be read: a list shows the proposal without it, never fails on it.</summary>
+    public static ProposalDisplay? FromJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<Stored>(json, Json) is { Title.Count: > 0, Kind.Count: > 0 } stored
+                ? new ProposalDisplay(new LocalizedText(stored.Title), new LocalizedText(stored.Kind),
+                [
+                    .. (stored.Changes ?? []).Where(change => change.Field is { Count: > 0 })
+                        .Select(change => new ProposalChange(new LocalizedText(change.Field), change.Now, change.Proposed)),
+                ])
+                : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private sealed record Stored(
+        IReadOnlyDictionary<string, string> Title, IReadOnlyDictionary<string, string> Kind, IReadOnlyList<StoredChange>? Changes);
+
+    private sealed record StoredChange(IReadOnlyDictionary<string, string> Field, string? Now, string? Proposed);
+}
 
 /// <summary>
 /// What every proposable command does the same way: read the payload into the
@@ -131,7 +181,7 @@ public abstract class ProposableCommand<TPayload, TCommand, TResult>(IServicePro
             return ProposalCheck.Invalid([.. errors]);
 
         return await ReadAsync(command, cancellationToken) is { } subject
-            ? ProposalCheck.Valid(subject.Subject, Snapshot(subject.Now))
+            ? ProposalCheck.Valid(subject.Subject, Snapshot(subject.Now), subject.Display)
             : ProposalCheck.Invalid($"The subject of this {Name} does not exist.");
     }
 

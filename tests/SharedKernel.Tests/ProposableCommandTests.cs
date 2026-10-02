@@ -150,3 +150,29 @@ public sealed class ProposableCommandTests
                 : null);
     }
 }
+
+/// <summary>The display a proposal stores is JSON the kernel reads back; an
+/// unreadable one is no display, never a failure of the list that shows it.</summary>
+public sealed class ProposalDisplayTests
+{
+    [Fact]
+    public void A_display_reads_back_what_was_written_in_both_languages()
+    {
+        var display = new ProposalDisplay(
+            new LocalizedText(new Dictionary<string, string> { ["es"] = "Taza", ["en"] = "Mug" }),
+            LocalizedText.From("en", "English name"),
+            [new ProposalChange(LocalizedText.From("en", "Name · EN"), null, "Mug")]);
+
+        var read = ProposalDisplay.FromJson(display.ToJson())!;
+
+        Assert.Equal(("Taza", "Mug", "English name"), (read.Title.In("es"), read.Title.In("en"), read.Kind.In("en")));
+        Assert.Equal(("Name · EN", null, "Mug"), (read.Changes[0].Field.In("en"), read.Changes[0].Now, read.Changes[0].Proposed));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("not json")]
+    [InlineData("""{"title":{}}""")]
+    public void An_unreadable_display_is_none(string? json) => Assert.Null(ProposalDisplay.FromJson(json));
+}

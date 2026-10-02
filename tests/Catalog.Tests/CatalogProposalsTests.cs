@@ -87,6 +87,41 @@ public sealed class CatalogProposalsTests
         Assert.Equal("""{"status":"Active"}""", check.Now);
     }
 
+    /// <summary>What a person reads in the card, the review and the list, written
+    /// by the context that knows the product: its name, the change in words, and
+    /// each field now and proposed (S-4).</summary>
+    [Fact]
+    public async Task A_translation_shows_the_products_name_and_the_field_it_fills()
+    {
+        var product = AProduct();
+        var entry = Entries(product).Single(e => e.Name == "SetProductTranslation");
+
+        var display = (await entry.CheckAsync(
+            Payload($$"""{"productId":"{{product.Id.Value}}","culture":"en","name":"Moka pot","description":"For the stove."}"""),
+            TestContext.Current.CancellationToken)).Display!;
+
+        Assert.Equal("Cafetera", display.Title.In("es"));
+        Assert.Equal(("English name", "Nombre en inglés"), (display.Kind.In("en"), display.Kind.In("es")));
+        Assert.Equal(2, display.Changes.Count);
+        Assert.Equal(("Name · EN", null, "Moka pot"), (display.Changes[0].Field.In("en"), display.Changes[0].Now, display.Changes[0].Proposed));
+        Assert.Equal(("Descripción · EN", "For the stove."), (display.Changes[1].Field.In("es"), display.Changes[1].Proposed));
+    }
+
+    [Fact]
+    public async Task A_withdrawal_shows_the_product_going_back_to_draft()
+    {
+        var product = AProduct();
+        product.Publish(Clock);
+        var entry = Entries(product).Single(e => e.Name == "WithdrawProduct");
+
+        var display = (await entry.CheckAsync(
+            Payload($$"""{"productId":"{{product.Id.Value}}"}"""), TestContext.Current.CancellationToken)).Display!;
+
+        Assert.Equal(("Withdrawal", "Retirada"), (display.Kind.In("en"), display.Kind.In("es")));
+        var change = Assert.Single(display.Changes);
+        Assert.Equal(("Status", "Active", "Draft"), (change.Field.In("en"), change.Now, change.Proposed));
+    }
+
     [Fact]
     public void Every_entry_has_a_label_in_both_languages()
     {

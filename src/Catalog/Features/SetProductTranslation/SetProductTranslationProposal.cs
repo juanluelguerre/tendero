@@ -37,10 +37,22 @@ public sealed class SetProductTranslationProposal(IServiceProvider services, IPr
             return null;
 
         var culture = Culture.Normalize(command.Culture);
-        return new ProposalSubject(product.Code, new TranslationNow(
-            product.Name.Values.GetValueOrDefault(culture),
-            product.Description?.Values.GetValueOrDefault(culture)));
+        var now = new TranslationNow(product.Name.Values.GetValueOrDefault(culture), product.Description?.Values.GetValueOrDefault(culture));
+
+        // The shopkeeper reads "English name", never the command's name (spec, decision 7).
+        var code = culture.ToUpperInvariant();
+        List<ProposalChange> changes = [new(Both($"Name · {code}", $"Nombre · {code}"), now.Name, command.Name)];
+        if (command.Description is not null)
+            changes.Add(new(Both($"Description · {code}", $"Descripción · {code}"), now.Description, command.Description));
+
+        return new ProposalSubject(product.Code, now, new ProposalDisplay(product.Name, KindIn(culture), changes));
     }
+
+    private static LocalizedText KindIn(string culture) => culture == "en"
+        ? Both("English name", "Nombre en inglés")
+        : Both("Spanish name", "Nombre en español");
+
+    private static LocalizedText Both(string en, string es) => new(new Dictionary<string, string> { ["en"] = en, ["es"] = es });
 
     private sealed record TranslationNow(string? Name, string? Description);
 }

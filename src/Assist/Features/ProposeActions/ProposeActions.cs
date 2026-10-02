@@ -95,7 +95,8 @@ public sealed class ProposeActionsHandler(
             }
 
             var proposal = ActionProposal.Propose(
-                entry.Name, action.Payload.GetRawText(), check.Subject!, check.Now, action.Reason, provenance, clock);
+                entry.Name, action.Payload.GetRawText(), check.Subject!, check.Now, action.Reason, provenance, clock,
+                check.Display?.ToJson());
             proposals.Add(proposal);
             rows.Add(new ProposedRow(index, proposal.Id, []));
         }

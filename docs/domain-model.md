@@ -989,6 +989,7 @@ classDiagram
         +string Payload
         +string Subject
         +string? Before
+        +string? Display
         +string Reason
         +ProposalProvenance Provenance
         +DateTimeOffset ProposedAt
