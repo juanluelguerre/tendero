@@ -230,6 +230,16 @@ glossary explains them. The TL;DR has **at most three bullets, one short sentenc
 each**; if it needs more, the article is not clear yet. Tendero's pre-flight
 refuses a TL;DR with more than three.
 
+**11 · The hero has a one-line caption** (decided 2026-10-02). The picture at the
+top of a post is an illustration, and a reader should not have to guess what it has
+to do with the article. One line under it, at most twenty words and in B2 English,
+says what it means for the article — *an empty tray looks like a customer who was
+not interested* — not what it shows, which is the alt text's job. Only the hero:
+the images inside an article sit next to the text that explains them. It is written
+as **Hero caption** in the article's notes in `docs/blog/index.md`; Tendero's
+pre-flight refuses a hero without one, and the publishing script writes it under
+the hero in the body and on the image's media item.
+
 ---
 
 ## Phase 0 · Make the gates real
@@ -975,7 +985,7 @@ oversight, and each is a paragraph in some future article.
 | Cart lines as a table | jsonb, read only with the cart that owns them | Something queries a line on its own. UCP mutating one goes through the aggregate, so it is not that |
 | Locale in the URL (`/es/…`) | one route serves two languages; the query is in the URL now, the language is still in a signal and in `localStorage` | The PDP route, which is where the per-culture slugs and `hreflang` both land (`P5-13`). The query already answers with every culture's slug |
 | A slug table with uniqueness and redirects | **settled, not deferred** — ADR 0026 makes the slug decorative and the URL carries a code, so there is nothing to make unique and no history to keep | Never, unless the code leaves the URL |
-| Spec Kit experiment | ADR 0009 reserves it for the UCP work | Phase 11 |
+| Spec Kit experiment — and the tools beside it: OpenSpec (MIT), Kiro (AWS), and the superpowers skills the repository already uses for larger work | ADR 0009 reserved it for the UCP work, and phase 11 closed without it: two new methods in one phase would have made neither result attributable (notebook, 2026-09-18). Article 01 now tells readers the test has not happened and will have its own article (2026-10-02) | The next feature that starts from nothing but a sentence — one branch, one feature, ADR 0009's six rules |
 | `.claude/` skills and plugin | none exist; *From four repo skills to an installable plugin* is blocked on it | After enough repetition to have opinions |
 | **A storefront that looks like a shop** | the home page and the taxonomy landed 2026-09-04 and the returns promise 2026-09-07; what is left is the editorial imagery, and a delivery promise the code cannot make yet — a rate needs an address | Deliberately after the floor. See below — it is the largest single item here and the only one that is not deferred for scale |
 

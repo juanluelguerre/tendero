@@ -496,6 +496,22 @@ deterministically, is: the model parses and phrases, code chooses.
 The interface for it already ships as the backoffice review queue, which is why
 phase 10 inherits a proven screen instead of inventing one.
 
+### ADR — Architecture Decision Record
+
+**A short document about one decision: the problem, what was decided, and what it
+costs.** The form is Michael Nygard's, from
+[*Documenting Architecture Decisions*](https://www.cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
+(2011). Code shows what the project does; an ADR keeps why, for the person who
+reads the code later and would otherwise undo a decision without knowing its
+reason.
+
+In Tendero they are numbered in [`adr/`](adr/README.md), one file each, and
+CLAUDE.md's definition of done asks for one whenever a decision constrains the
+future. A decision is never deleted: a later ADR that replaces or amends it says
+so in its status line (ADR 0014 *supersedes the title of ADR 0002*), and the old
+one stays, so the history of a decision is in the repository. Articles cite them
+by number; article 01 is where the series first explains them.
+
 ---
 
 ## Seeing it run (phase 9b)
