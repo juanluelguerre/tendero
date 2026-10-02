@@ -52,6 +52,12 @@
         </button>
       </div>
       <p class="mt-1 text-3xs text-muted">{{ t('claims.nextHint') }}</p>
+
+      <!-- The product's other claims, together (S-5): quiet, the pane's clay
+           action is Approve. -->
+      <button type="button" class="button button--quiet button--small self-start" (click)="reviewAll.emit(claim)">
+        {{ t('claimsBulk.door') }}
+      </button>
     </backoffice-worklist-pane>
   </ng-container>
 }

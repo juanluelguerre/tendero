@@ -124,6 +124,14 @@ export const ClaimsReviewStore = signalStore(
       close(): void {
         navigate({ claim: null });
       },
+      /** A claim by its id: the weak queue's first page, where a weak claim is first. */
+      openById(claimId: string): void {
+        navigate({ claim: claimId, support: null, page: null });
+      },
+      /** The queue is the server's: read it again after a bulk approval. */
+      reload(): void {
+        store._queue.reload();
+      },
       decide(claim: ClaimForReview, decision: ClaimDecision, via: ActionVia): void {
         patchState(store, { busy: claim.claimId });
 

@@ -22,6 +22,14 @@ export type QuoteForReview = Schemas['QuoteForReview'];
 export type ReviewClaimResponse = Schemas['ReviewClaimResponse'];
 
 /**
+ * A product's claims approved together (Steward, S-5): one row per claim, and a
+ * weakly supported one refused on its row by the server, whatever was sent.
+ */
+export type ClaimApprovalsResponse = Schemas['ClaimApprovalsResponse'];
+export type ClaimApprovalView = Schemas['ClaimApprovalView'];
+export type BulkApprovalOutcome = Schemas['BulkApprovalOutcome'];
+
+/**
  * The specs of one to four products, aligned row by row (P10-7, P10-8). One
  * product is the product page's table, several a comparison: the same rows, so
  * the two never disagree. A cell's `source` is `catalogue`, `description` (an

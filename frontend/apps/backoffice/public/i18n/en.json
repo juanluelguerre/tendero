@@ -1141,5 +1141,32 @@
     },
     "near": "This conversation is near the model's limit. Start a new one for your next question.",
     "newConversation": "New conversation"
+  },
+  "claimsBulk": {
+    "door": "Review this product's claims together",
+    "heading": "Review {{count}} claims · {{product}}",
+    "lede": "The same review as Steward's proposals: what changes, and the evidence for it. Weakly supported claims cannot be approved together — open them one by one.",
+    "failed": "The claims could not be loaded. Try again.",
+    "column": {
+      "pick": "Approve",
+      "attribute": "Attribute",
+      "value": "Proposed value",
+      "evidence": "Evidence",
+      "result": "Result"
+    },
+    "weak": "Weak support — open it to decide",
+    "tally": "{{together}} of {{count}} can go together · {{weak}} weak",
+    "selected": "{{selected}} of {{count}} selected",
+    "cancel": "Cancel",
+    "close": "Close",
+    "openWeak": "Open the weak one",
+    "openFirstWeak": "Open the first weak one",
+    "approve": "Approve {{count}}",
+    "outcome": {
+      "Approved": "Approved",
+      "WeakSupport": "Weak support — not approved",
+      "NotWaiting": "Already decided",
+      "NotFound": "Not found"
+    }
   }
 }

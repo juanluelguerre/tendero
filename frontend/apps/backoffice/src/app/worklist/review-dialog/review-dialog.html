@@ -1,0 +1,16 @@
+<!-- It floats, so it is allowed a shadow; the page behind is dimmed with the
+     darkest ink the tokens have. Wide, because a review is a table. -->
+<dialog
+  class="m-auto max-h-dialog w-[min(56rem,calc(100vw-2*var(--spacing-4)))] overflow-hidden rounded-lg border border-hairline-strong bg-surface p-0 text-body shadow-pop backdrop:bg-[color-mix(in_srgb,var(--color-ink-900)_60%,transparent)]"
+  #dialog
+  [attr.aria-labelledby]="labelledBy()"
+>
+  <div class="flex max-h-dialog flex-col">
+    <header class="grid gap-1 border-b border-hairline p-5"><ng-content select="[reviewHead]" /></header>
+    <div class="min-h-0 flex-1 overflow-y-auto"><ng-content /></div>
+    <footer class="grid gap-3 border-t border-hairline bg-raised p-5">
+      <ng-content select="[reviewNote]" />
+      <div class="flex flex-wrap items-center gap-2"><ng-content select="[reviewFoot]" /></div>
+    </footer>
+  </div>
+</dialog>

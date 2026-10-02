@@ -1,8 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
+import type { ClaimForReview } from '@tendero/shared-api';
 import { BackofficeUsage } from '../../usage';
 import { landing, stepOf } from '../../worklist/list-keys';
 import { ClaimList } from './claim-list/claim-list';
 import { ClaimPane } from './claim-pane/claim-pane';
+import { ClaimsBulkReview } from './claims-bulk-review/claims-bulk-review';
 import { ClaimsReviewStore } from './claims-review.store';
 
 /**
@@ -12,13 +14,15 @@ import { ClaimsReviewStore } from './claims-review.store';
  * claim beside the list with the statement in both languages, every quote that
  * backs it and how well, and who proposed it.
  *
- * **No bulk approve, on purpose** (R-2, P4): each claim is a judgement about one
- * product, and a bulk approve is how a review queue becomes a rubber stamp.
+ * **A product's claims together, through the review** (Steward's decision 5,
+ * which amends R-2's P4): R-2 refused a bulk approve because it is how a review
+ * queue becomes a rubber stamp; the review that shows every row, any row
+ * unticked, and the server refusing a weak claim in bulk, is what answers that.
  * Nothing reaches the catalogue until a person approves it (invariant 12).
  */
 @Component({
   selector: 'backoffice-claims-review-page',
-  imports: [ClaimList, ClaimPane],
+  imports: [ClaimList, ClaimPane, ClaimsBulkReview],
   templateUrl: './claims-review-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list and the pane have of their own is in their folders.
@@ -28,6 +32,12 @@ import { ClaimsReviewStore } from './claims-review.store';
 export class ClaimsReviewPage {
   protected readonly store = inject(ClaimsReviewStore);
   private readonly usage = inject(BackofficeUsage);
+  private readonly bulk = viewChild.required(ClaimsBulkReview);
+
+  /** A product's claims together, the open claim's product (S-5). */
+  protected reviewAll(claim: ClaimForReview): void {
+    this.bulk().open(claim.productId, this.store.productName(claim));
+  }
 
   /** j and k move down and up the claims, the pane following (the redesign's R-3, P5). */
   protected key(event: KeyboardEvent): void {

@@ -1,140 +1,127 @@
-<!-- It floats, so it is allowed a shadow; the page behind is dimmed with the
-     darkest ink the tokens have. Wide, because the review is a table: code, now
-     and proposed side by side. The dialog stands outside the translations, so it
-     is there to open whether or not they have loaded. -->
-<dialog
-  class="m-auto max-h-dialog w-[min(56rem,calc(100vw-2*var(--spacing-4)))] overflow-hidden rounded-lg border border-hairline-strong bg-surface p-0 text-body shadow-pop backdrop:bg-[color-mix(in_srgb,var(--color-ink-900)_60%,transparent)]"
-  #dialog
-  [attr.aria-labelledby]="headingId"
->
-  <ng-container *transloco="let t">
-    <div class="flex max-h-dialog flex-col">
-      <header class="grid gap-1 border-b border-hairline p-5">
-        @if (store.first(); as first) {
-          <h2 class="m-0 text-lg" [id]="headingId">
-            {{
-              store.rows().length === 1
-                ? t('proposalReview.headingOne', { topic: first.topic })
-                : t('proposalReview.heading', { count: store.rows().length, topic: first.topic })
-            }}
-          </h2>
-          <p class="m-0 text-xs text-muted">
-            {{
-              t('proposalReview.provenance', {
-                model: first.provenance.model ?? first.provenance.profile ?? '—',
-                prompt: first.provenance.promptVersion ?? '—',
-                when: first.proposedAt | dateTime: culture.active(),
-              })
-            }}
-          </p>
-        } @else {
-          <h2 class="m-0 text-lg" [id]="headingId">
-            {{ store.failed() ? t('proposalReview.failed') : t('proposalReview.loading') }}
-          </h2>
-        }
-      </header>
-
-      <div class="min-h-0 flex-1 overflow-y-auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">
-                <span class="sr-only">{{ t('proposalReview.column.pick') }}</span>
-              </th>
-              <th scope="col">{{ t('proposalReview.column.code') }}</th>
-              <th scope="col">{{ t('proposalReview.column.now') }}</th>
-              <th scope="col">{{ t('proposalReview.column.proposed') }}</th>
-              <th scope="col">{{ t('proposalReview.column.result') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of store.rows(); track row.proposal.id) {
-              <tr [class.text-muted]="!row.ticked">
-                <td>
-                  <input
-                    type="checkbox"
-                    class="size-icon-md accent-accent"
-                    [checked]="row.ticked"
-                    [disabled]="!row.open || store.busy()"
-                    [attr.aria-label]="row.proposal.title"
-                    (change)="store.toggle(row.proposal.id)"
-                  />
-                </td>
-                <td class="font-mono text-xs whitespace-nowrap">{{ row.proposal.subject }}</td>
-                <td>
-                  <span class="block">{{ row.proposal.title }}</span>
-                  @for (change of row.proposal.changes; track change.field) {
-                    <span class="block text-3xs text-muted"
-                      >{{ change.field }}: {{ change.now ?? t('proposals.blank') }}</span
-                    >
-                  }
-                </td>
-                <td class="font-medium">
-                  @for (change of row.proposal.changes; track change.field) {
-                    <span class="block">{{ change.proposed ?? t('proposals.blank') }}</span>
-                  }
-                </td>
-                <td class="text-xs">
-                  @if (row.outcome; as outcome) {
-                    <span
-                      [class.text-positive]="outcome.outcome === 'Applied'"
-                      [class.text-danger]="outcome.outcome === 'Failed'"
-                      >{{ t('proposalReview.outcome.' + outcome.outcome) }}</span
-                    >
-                    @if (outcome.reason) {
-                      <span class="block text-3xs text-muted">{{ outcome.reason }}</span>
-                    }
-                  } @else if (!row.open) {
-                    <span class="text-muted">{{ t('proposals.status.' + row.proposal.status) }}</span>
-                  }
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <footer class="grid gap-3 border-t border-hairline bg-raised p-5">
-        @if (asking()) {
-          <label class="grid gap-1 text-xs text-muted">
-            <span>{{ t('proposalReview.reason') }}</span>
-            <textarea
-              class="rounded-md border border-hairline-strong bg-surface p-2 text-body"
-              rows="2"
-              required
-              [value]="reason()"
-              (input)="reason.set($any($event.target).value)"
-            ></textarea>
-          </label>
-        }
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="me-auto text-xs text-muted">
-            {{ t('proposalReview.selected', { selected: store.selected(), count: store.waiting() }) }}
-          </span>
-          <button type="button" class="button button--quiet" (click)="close()">
-            {{ store.waiting() === 0 ? t('proposalReview.close') : t('proposalReview.cancel') }}
-          </button>
-          @if (store.unticked() > 0) {
-            <button
-              type="button"
-              class="button button--quiet"
-              [disabled]="store.busy() || (asking() && !reason().trim())"
-              (click)="reject()"
-            >
-              {{
-                asking()
-                  ? t('proposalReview.reasonConfirm')
-                  : store.unticked() === 1
-                    ? t('proposalReview.rejectUnticked')
-                    : t('proposalReview.rejectUntickedMany', { count: store.unticked() })
-              }}
-            </button>
-          }
-          <button type="button" class="button" [disabled]="!store.canApprove()" (click)="approve()">
-            {{ t('proposalReview.approve', { count: store.selected() }) }}
-          </button>
-        </div>
-      </footer>
-    </div>
+<backoffice-review-dialog [labelledBy]="headingId">
+  <ng-container *transloco="let t" ngProjectAs="[reviewHead]">
+    @if (store.first(); as first) {
+      <h2 class="m-0 text-lg" [id]="headingId">
+        {{
+          store.rows().length === 1
+            ? t('proposalReview.headingOne', { topic: first.topic })
+            : t('proposalReview.heading', { count: store.rows().length, topic: first.topic })
+        }}
+      </h2>
+      <p class="m-0 text-xs text-muted">
+        {{
+          t('proposalReview.provenance', {
+            model: first.provenance.model ?? first.provenance.profile ?? '—',
+            prompt: first.provenance.promptVersion ?? '—',
+            when: first.proposedAt | dateTime: culture.active(),
+          })
+        }}
+      </p>
+    } @else {
+      <h2 class="m-0 text-lg" [id]="headingId">
+        {{ store.failed() ? t('proposalReview.failed') : t('proposalReview.loading') }}
+      </h2>
+    }
   </ng-container>
-</dialog>
+
+  <table class="table" *transloco="let t">
+    <thead>
+      <tr>
+        <th scope="col">
+          <span class="sr-only">{{ t('proposalReview.column.pick') }}</span>
+        </th>
+        <th scope="col">{{ t('proposalReview.column.code') }}</th>
+        <th scope="col">{{ t('proposalReview.column.now') }}</th>
+        <th scope="col">{{ t('proposalReview.column.proposed') }}</th>
+        <th scope="col">{{ t('proposalReview.column.result') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of store.rows(); track row.proposal.id) {
+        <tr [class.text-muted]="!row.ticked">
+          <td>
+            <input
+              type="checkbox"
+              class="size-icon-md accent-accent"
+              [checked]="row.ticked"
+              [disabled]="!row.open || store.busy()"
+              [attr.aria-label]="row.proposal.title"
+              (change)="store.toggle(row.proposal.id)"
+            />
+          </td>
+          <td class="font-mono text-xs whitespace-nowrap">{{ row.proposal.subject }}</td>
+          <td>
+            <span class="block">{{ row.proposal.title }}</span>
+            @for (change of row.proposal.changes; track change.field) {
+              <span class="block text-3xs text-muted"
+                >{{ change.field }}: {{ change.now ?? t('proposals.blank') }}</span
+              >
+            }
+          </td>
+          <td class="font-medium">
+            @for (change of row.proposal.changes; track change.field) {
+              <span class="block">{{ change.proposed ?? t('proposals.blank') }}</span>
+            }
+          </td>
+          <td class="text-xs">
+            @if (row.outcome; as outcome) {
+              <span
+                [class.text-positive]="outcome.outcome === 'Applied'"
+                [class.text-danger]="outcome.outcome === 'Failed'"
+                >{{ t('proposalReview.outcome.' + outcome.outcome) }}</span
+              >
+              @if (outcome.reason) {
+                <span class="block text-3xs text-muted">{{ outcome.reason }}</span>
+              }
+            } @else if (!row.open) {
+              <span class="text-muted">{{ t('proposals.status.' + row.proposal.status) }}</span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <ng-container *transloco="let t" ngProjectAs="[reviewNote]">
+    @if (asking()) {
+      <label class="grid gap-1 text-xs text-muted">
+        <span>{{ t('proposalReview.reason') }}</span>
+        <textarea
+          class="rounded-md border border-hairline-strong bg-surface p-2 text-body"
+          rows="2"
+          required
+          [value]="reason()"
+          (input)="reason.set($any($event.target).value)"
+        ></textarea>
+      </label>
+    }
+  </ng-container>
+
+  <ng-container *transloco="let t" ngProjectAs="[reviewFoot]">
+    <span class="me-auto text-xs text-muted">
+      {{ t('proposalReview.selected', { selected: store.selected(), count: store.waiting() }) }}
+    </span>
+    <button type="button" class="button button--quiet" (click)="close()">
+      {{ store.waiting() === 0 ? t('proposalReview.close') : t('proposalReview.cancel') }}
+    </button>
+    @if (store.unticked() > 0) {
+      <button
+        type="button"
+        class="button button--quiet"
+        [disabled]="store.busy() || (asking() && !reason().trim())"
+        (click)="reject()"
+      >
+        {{
+          asking()
+            ? t('proposalReview.reasonConfirm')
+            : store.unticked() === 1
+              ? t('proposalReview.rejectUnticked')
+              : t('proposalReview.rejectUntickedMany', { count: store.unticked() })
+        }}
+      </button>
+    }
+    <button type="button" class="button" [disabled]="!store.canApprove()" (click)="approve()">
+      {{ t('proposalReview.approve', { count: store.selected() }) }}
+    </button>
+  </ng-container>
+</backoffice-review-dialog>

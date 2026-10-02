@@ -1141,5 +1141,32 @@
     },
     "near": "Esta conversación está cerca del límite del modelo. Empieza una nueva para tu próxima pregunta.",
     "newConversation": "Nueva conversación"
+  },
+  "claimsBulk": {
+    "door": "Revisar juntas las afirmaciones de este producto",
+    "heading": "Revisar {{count}} afirmaciones · {{product}}",
+    "lede": "La misma revisión que las propuestas de Steward: qué cambia y en qué se apoya. Las afirmaciones con apoyo débil no se aprueban juntas: ábrelas una a una.",
+    "failed": "No se pudieron cargar las afirmaciones. Inténtalo de nuevo.",
+    "column": {
+      "pick": "Aprobar",
+      "attribute": "Atributo",
+      "value": "Valor propuesto",
+      "evidence": "Evidencia",
+      "result": "Resultado"
+    },
+    "weak": "Apoyo débil — ábrela para decidir",
+    "tally": "{{together}} de {{count}} pueden ir juntas · {{weak}} débiles",
+    "selected": "{{selected}} de {{count}} seleccionadas",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "openWeak": "Abrir la débil",
+    "openFirstWeak": "Abrir la primera débil",
+    "approve": "Aprobar {{count}}",
+    "outcome": {
+      "Approved": "Aprobada",
+      "WeakSupport": "Apoyo débil — no aprobada",
+      "NotWaiting": "Ya decidida",
+      "NotFound": "No encontrada"
+    }
   }
 }

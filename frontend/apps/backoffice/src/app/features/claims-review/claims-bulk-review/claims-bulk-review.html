@@ -1,0 +1,82 @@
+<backoffice-review-dialog [labelledBy]="headingId">
+  <ng-container *transloco="let t" ngProjectAs="[reviewHead]">
+    <h2 class="m-0 text-lg" [id]="headingId">
+      {{ t('claimsBulk.heading', { count: store.count(), product: product() }) }}
+    </h2>
+    <p class="m-0 text-xs text-muted">
+      {{ store.failed() ? t('claimsBulk.failed') : t('claimsBulk.lede') }}
+    </p>
+  </ng-container>
+
+  <table class="table" *transloco="let t">
+    <thead>
+      <tr>
+        <th scope="col">
+          <span class="sr-only">{{ t('claimsBulk.column.pick') }}</span>
+        </th>
+        <th scope="col">{{ t('claimsBulk.column.attribute') }}</th>
+        <th scope="col">{{ t('claimsBulk.column.value') }}</th>
+        <th scope="col">{{ t('claimsBulk.column.evidence') }}</th>
+        <th scope="col">{{ t('claimsBulk.column.result') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of store.rows(); track row.claim.claimId) {
+        <tr [class.text-muted]="!row.ticked">
+          <td>
+            <input
+              type="checkbox"
+              class="size-icon-md accent-accent"
+              [checked]="row.ticked"
+              [disabled]="!row.tickable || store.busy()"
+              [attr.aria-label]="row.claim.attributeCode ?? statementIn(row.claim, culture.active())"
+              (change)="store.toggle(row.claim.claimId)"
+            />
+          </td>
+          <td>{{ row.claim.attributeCode ?? statementIn(row.claim, culture.active()) }}</td>
+          <td class="font-medium">{{ row.claim.value ?? '—' }}</td>
+          <td>
+            @for (quote of row.claim.quotes; track quote.culture + quote.start) {
+              <q class="block italic">{{ quote.text }}</q>
+            }
+            @if (row.claim.isWeak && !row.outcome) {
+              <button
+                type="button"
+                class="mt-1 min-h-target text-xs text-warning underline"
+                (click)="openOne(row.claim.claimId)"
+              >
+                {{ t('claimsBulk.weak') }}
+              </button>
+            }
+          </td>
+          <td class="text-xs">
+            @if (row.outcome; as outcome) {
+              <span [class.text-positive]="outcome === 'Approved'">{{ t('claimsBulk.outcome.' + outcome) }}</span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <ng-container *transloco="let t" ngProjectAs="[reviewFoot]">
+    <span class="me-auto text-xs text-muted">
+      {{
+        store.weak() > 0
+          ? t('claimsBulk.tally', { together: store.together(), count: store.count(), weak: store.weak() })
+          : t('claimsBulk.selected', { selected: store.selected(), count: store.together() })
+      }}
+    </span>
+    <button type="button" class="button button--quiet" (click)="close()">
+      {{ store.together() === 0 && store.weak() === 0 ? t('claimsBulk.close') : t('claimsBulk.cancel') }}
+    </button>
+    @if (store.firstWeak(); as weak) {
+      <button type="button" class="button button--quiet" (click)="openOne(weak.claimId)">
+        {{ store.weak() === 1 ? t('claimsBulk.openWeak') : t('claimsBulk.openFirstWeak') }}
+      </button>
+    }
+    <button type="button" class="button" [disabled]="!store.canApprove()" (click)="approve()">
+      {{ t('claimsBulk.approve', { count: store.selected() }) }}
+    </button>
+  </ng-container>
+</backoffice-review-dialog>

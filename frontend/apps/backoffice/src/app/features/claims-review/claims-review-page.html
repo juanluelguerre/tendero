@@ -1,4 +1,6 @@
 <section class="worklist-layout" [class.worklist-layout--with-pane]="store.selected()">
   <backoffice-claim-list class="worklist-list" />
-  <backoffice-claim-pane (closed)="store.close()" />
+  <backoffice-claim-pane (closed)="store.close()" (reviewAll)="reviewAll($event)" />
 </section>
+
+<backoffice-claims-bulk-review (decided)="store.reload()" (openClaim)="store.openById($event)" />

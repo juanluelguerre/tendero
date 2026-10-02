@@ -1,5 +1,6 @@
 import { Component, inject, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
+import type { ClaimForReview } from '@tendero/shared-api';
 import { WorklistPane } from '../../../worklist/worklist-pane/worklist-pane';
 import { percent, statementIn } from '../claim-statement';
 import { ClaimSupport } from '../claim-support/claim-support';
@@ -22,6 +23,9 @@ export class ClaimPane {
 
   /** The person closed the pane. */
   readonly closed = output<void>();
+
+  /** The person wants to review this product's claims together (S-5). */
+  readonly reviewAll = output<ClaimForReview>();
 
   protected readonly statementIn = statementIn;
   protected readonly percent = percent;

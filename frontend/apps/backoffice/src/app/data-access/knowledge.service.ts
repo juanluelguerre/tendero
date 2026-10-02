@@ -1,6 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { ClaimsForReviewPage, ClaimSupportFilter, ReviewClaimResponse } from '@tendero/shared-api';
+import type {
+  ClaimApprovalsResponse,
+  ClaimsForReviewPage,
+  ClaimSupportFilter,
+  ReviewClaimResponse,
+} from '@tendero/shared-api';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { Observable } from 'rxjs';
 
@@ -24,6 +29,18 @@ export class KnowledgeService {
     return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, {
       params: new HttpParams().set('support', support).set('page', page).set('pageSize', pageSize),
     });
+  }
+
+  /** One product's claims waiting for review, every one: its bulk review reads them all. */
+  claimsOf(productId: string): Observable<ClaimsForReviewPage> {
+    return this.http.get<ClaimsForReviewPage>(`${this.baseUrl}/api/knowledge/claims`, {
+      params: new HttpParams().set('support', 'All').set('product', productId).set('page', 1).set('pageSize', 100),
+    });
+  }
+
+  /** Approves a product's claims together; the server refuses each weak one on its row. */
+  approveMany(claimIds: readonly string[]): Observable<ClaimApprovalsResponse> {
+    return this.http.post<ClaimApprovalsResponse>(`${this.baseUrl}/api/knowledge/claims/approve`, { ids: claimIds });
   }
 
   /**
