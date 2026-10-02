@@ -8,9 +8,13 @@ namespace ElGuerre.Tendero.AI.Chat;
 /// <param name="Say">What it answers once the tools have answered, with
 /// <c>{tool:name}</c> replaced by that tool's result.</param>
 /// <param name="DelayMs">How long it takes, so a timeout can be shown.</param>
+/// <param name="Always">Calls its tools again even after they answered — a model
+/// that loops, so a turn's cap can be shown.</param>
+/// <param name="ThenFail">Fails once its tools answered — a provider dropping a turn
+/// half way.</param>
 public sealed record ScriptedTurn(
     string When, IReadOnlyList<ScriptedCall>? Calls = null, string? Say = null,
-    int InputTokens = 100, int OutputTokens = 20, int DelayMs = 0);
+    int InputTokens = 100, int OutputTokens = 20, int DelayMs = 0, bool Always = false, bool ThenFail = false);
 
 public sealed record ScriptedCall(string Tool, JsonElement Arguments);
 
@@ -51,7 +55,9 @@ public sealed class ScriptedChatClient(IReadOnlyList<ScriptedTurn> script, TimeS
         }
 
         var answered = conversation.LastOrDefault()?.Role == ChatRole.Tool;
-        if (step.Calls is { Count: > 0 } calls && !answered)
+        if (answered && step.ThenFail)
+            throw new HttpRequestException("The scripted provider dropped the turn.");
+        if (step.Calls is { Count: > 0 } calls && (!answered || step.Always))
         {
             return Answer(new ChatMessage(ChatRole.Assistant,
             [

@@ -80,6 +80,7 @@
       "SetCartLineCommand": "Cambiar una línea del carrito",
       "SetProductAttributeCommand": "Fijar un atributo de producto",
       "SetProductTranslationCommand": "Traducir un producto",
+      "StewardTurnCommand": "Preguntar a Steward",
       "SuspendAgentCommand": "Suspender un agente",
       "UnscheduleCampaignCommand": "Desprogramar una campaña",
       "UpdateCampaignCommand": "Editar una campaña",

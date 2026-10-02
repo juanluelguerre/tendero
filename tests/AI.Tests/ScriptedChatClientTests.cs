@@ -39,6 +39,39 @@ public sealed class ScriptedChatClientTests
         Assert.Equal("There are 12 products with no English name.", answer.Text);
     }
 
+    /// <summary>A model that never stops calling tools, so a turn's cap can be shown.</summary>
+    [Fact]
+    public async Task An_always_step_calls_again_after_its_tools_answered()
+    {
+        var looping = new ScriptedChatClient([new ScriptedTurn("loop", [new ScriptedCall("t", default)], Always: true)], TimeSpan.FromSeconds(5));
+        List<ChatMessage> conversation =
+        [
+            new(ChatRole.User, "loop"),
+            new(ChatRole.Assistant, [new FunctionCallContent("call-0", "t")]),
+            new(ChatRole.Tool, [new FunctionResultContent("call-0", 1)]),
+        ];
+
+        var answer = await looping.GetResponseAsync(conversation, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Single(answer.Messages.SelectMany(message => message.Contents).OfType<FunctionCallContent>());
+    }
+
+    /// <summary>A model that fails after its tools answered: a provider dropping a
+    /// turn half way, after a proposal was stored.</summary>
+    [Fact]
+    public async Task A_then_fail_step_fails_once_its_tools_answered()
+    {
+        var failing = new ScriptedChatClient([new ScriptedTurn("propose", [new ScriptedCall("t", default)], ThenFail: true)], TimeSpan.FromSeconds(5));
+        List<ChatMessage> conversation =
+        [
+            new(ChatRole.User, "propose"),
+            new(ChatRole.Assistant, [new FunctionCallContent("call-0", "t")]),
+            new(ChatRole.Tool, [new FunctionResultContent("call-0", 1)]),
+        ];
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => failing.GetResponseAsync(conversation, cancellationToken: TestContext.Current.CancellationToken));
+    }
+
     [Fact]
     public async Task A_question_it_was_not_scripted_for_says_so()
     {

@@ -38,6 +38,8 @@ public static class AIServiceCollectionExtensions
         foreach (var (name, profile) in profiles)
             services.AddKeyedSingleton<IChatClient>(name, (provider, _) => Model(profile).Meter(name, profile, provider));
 
+        services.AddSingleton(new ModelProfiles(profiles.ToDictionary(entry => entry.Name, entry => entry.Profile)));
+
         return services;
     }
 

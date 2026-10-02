@@ -39,5 +39,12 @@ public sealed class AIInvocationRowsTests(PostgresFixture postgres)
         Assert.Equal(rows, await reread.AIInvocations.OrderBy(row => row.At).ToListAsync(ct));
         var outcome = await reread.Database.SqlQueryRaw<string>("SELECT outcome AS \"Value\" FROM telemetry.ai_invocations ORDER BY at").ToListAsync(ct);
         Assert.Equal(["Ok", "Timeout"], outcome);
+
+        // A conversation's tokens so far: what a turn's budget is checked against (S-3b).
+        await using var reading = new ServiceCollection().AddLogging().AddTenderoPersistence(factory.ConnectionString)
+            .BuildServiceProvider().CreateAsyncScope();
+        var reader = reading.ServiceProvider.GetRequiredService<IAIInvocationReader>();
+        Assert.Equal(1842, await reader.ConversationTokensAsync("conv-1", ct));
+        Assert.Equal(0, await reader.ConversationTokensAsync("nobody", ct));
     }
 }

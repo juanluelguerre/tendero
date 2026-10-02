@@ -89,7 +89,9 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAuditWriter>(services => services.GetRequiredService<EfAuditWriter>());
         services.AddScoped<IAuditReader>(services => services.GetRequiredService<EfAuditWriter>());
         services.AddScoped<IAgentDenialHistory>(services => services.GetRequiredService<EfAuditWriter>());
-        services.AddScoped<IAIInvocationWriter, EfAIInvocationWriter>();
+        services.AddScoped<EfAIInvocationWriter>();
+        services.AddScoped<IAIInvocationWriter>(services => services.GetRequiredService<EfAIInvocationWriter>());
+        services.AddScoped<IAIInvocationReader>(services => services.GetRequiredService<EfAIInvocationWriter>());
 
         // One adapter, two Accounts ports, one instance per scope.
         services.AddScoped<EfCustomerRepository>();

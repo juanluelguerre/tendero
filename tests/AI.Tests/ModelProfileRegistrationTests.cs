@@ -74,6 +74,27 @@ public sealed class ModelProfileRegistrationTests
         Assert.NotNull(provider.GetKeyedService<IChatClient>("gemini"));
     }
 
+    /// <summary>A profile's price and window, by its name: what a turn's cost and its
+    /// context limit are read from (S-3b).</summary>
+    [Fact]
+    public void Each_available_profile_is_found_by_its_name()
+    {
+        using var provider = Compose(new()
+        {
+            ["Steward:Models:local:Model"] = "Qwen/Qwen3.5-4B",
+            ["Steward:Models:gemini:Endpoint"] = "https://generativelanguage.googleapis.com/v1beta/openai/",
+            ["Steward:Models:gemini:Model"] = "gemini-2.5-flash",
+            ["Steward:Models:gemini:Auth"] = "Bearer",
+            ["Steward:Models:gemini:ApiKey"] = "secret",
+            ["Steward:Models:gemini:InputPrice"] = "0.30",
+        });
+
+        var profiles = provider.GetRequiredService<ModelProfiles>();
+
+        Assert.Equal(0.30m, profiles.Find("gemini")!.InputPrice);
+        Assert.Null(profiles.Find("local"));
+    }
+
     [Fact]
     public void No_profiles_is_no_clients_and_no_failure()
     {

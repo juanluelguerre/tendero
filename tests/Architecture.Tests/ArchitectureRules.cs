@@ -422,25 +422,26 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
-    /// Assist runs other contexts' commands and references none of them: it reaches
-    /// them only through <see cref="IProposableCommand"/>, which each context
-    /// implements for its own commands (ADR 0052). A reference to Catalog here
-    /// would be Assist learning what a product is.
+    /// Assist runs other contexts' commands and reads and references none of them: it
+    /// reaches them only through <see cref="IProposableCommand"/> and
+    /// <see cref="IReadTool"/>, which each context implements for its own (ADR 0052,
+    /// ADR 0054). Besides the kernel it may use the model port, AI, which is not a
+    /// context. A reference to Catalog here would be Assist learning what a product is.
     /// </summary>
     [Fact]
-    public void Assist_knows_only_the_shared_kernel()
+    public void Assist_knows_no_other_context()
     {
-        var sharedKernel = Solution.SharedKernel.GetName().Name;
+        string?[] allowed = [Solution.SharedKernel.GetName().Name, Solution.AI.GetName().Name];
 
         var contexts = Solution.Assist.GetReferencedAssemblies()
             .Select(reference => reference.Name)
             .OfType<string>()
-            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal) && name != sharedKernel)
+            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal) && !allowed.Contains(name))
             .ToArray();
 
         Assert.True(contexts.Length == 0,
-            $"Assist references {string.Join(", ", contexts)}. It may reference only {sharedKernel}: "
-            + "it runs commands through IProposableCommand, never through another context's types.");
+            $"Assist references {string.Join(", ", contexts)}. It may reference only the SharedKernel and AI: "
+            + "it runs commands through IProposableCommand and reads through IReadTool, never through another context's types.");
     }
 
     /// <summary>
