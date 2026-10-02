@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Ai.Chat;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Features.ProposeClaims;

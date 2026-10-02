@@ -1,0 +1,26 @@
+{
+  "stryker-config": {
+    "project": "ElGuerre.Tendero.Ai.csproj",
+    "test-projects": [
+      "../../tests/Ai.Tests/ElGuerre.Tendero.Ai.Tests.csproj"
+    ],
+    "test-runner": "mtp",
+    "concurrency": 1,
+    "reporters": [
+      "html",
+      "json",
+      "cleartext"
+    ],
+    "ignore-methods": [
+      "*Log",
+      "Log*",
+      "*.LogInformation",
+      "*.LogWarning",
+      "*.LogError",
+      "*.LogDebug",
+      "*.SetTag",
+      "*.StartActivity",
+      "*.AddTag"
+    ]
+  }
+}

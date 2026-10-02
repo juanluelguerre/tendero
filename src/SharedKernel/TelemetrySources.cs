@@ -24,6 +24,9 @@ public static class TelemetrySources
 
     /// <summary>Steward's proposals and their decisions (phase 12).</summary>
     public const string Assist = "ElGuerre.Tendero.Assist";
+
+    /// <summary>Every model call, whoever makes it (phase 12, ADR 0053).</summary>
+    public const string Ai = "ElGuerre.Tendero.Ai";
     public const string Outbox = "ElGuerre.Tendero.Outbox";
 
     /// <summary>The agent transports, MCP and UCP: what external agents call.</summary>
@@ -38,5 +41,5 @@ public static class TelemetrySources
     public const string SharedKernel = "ElGuerre.Tendero.SharedKernel";
 
     public static readonly string[] All =
-        [Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search, Outbox, Agents, SharedKernel];
+        [Accounts, Ai, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search, Outbox, Agents, SharedKernel];
 }

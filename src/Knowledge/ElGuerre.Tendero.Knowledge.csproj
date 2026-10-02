@@ -26,10 +26,10 @@
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../Ai/ElGuerre.Tendero.Ai.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 

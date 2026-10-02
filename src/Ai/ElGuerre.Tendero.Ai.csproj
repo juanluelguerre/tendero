@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- How Tendero reaches a model (phase 12, ADR 0053). Not a context: it owns no
+       aggregate. The chat factory every model user shares, profiles from
+       configuration as keyed IChatClients, and the metering that writes one
+       telemetry row per call. The OpenAI SDK and ONNX Runtime stay inside
+       ElGuerre.Tendero.Ai.Chat; everything else sees IChatClient. -->
+  <PropertyGroup>
+    <RootNamespace>ElGuerre.Tendero.Ai</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.AI" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ElGuerre.Tendero.Ai.Tests" />
+  </ItemGroup>
+
+</Project>

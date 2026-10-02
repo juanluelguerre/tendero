@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
+using ElGuerre.Tendero.Ai.Chat;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.SearchEval.Claims;

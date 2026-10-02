@@ -1,35 +1,11 @@
-using System.ClientModel;
-using System.ClientModel.Primitives;
 using ElGuerre.Tendero.Knowledge.Support;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
 
-// The namespace is the fence, as in Search.Embeddings: the OpenAI SDK stays inside
-// Knowledge.Chat, and everything else sees IChatClient and the Knowledge ports.
+// The namespace is the fence, as in Search.Embeddings and Ai.Chat: the scorer reads
+// OpenAI's raw log-probabilities, so it alone stays here (ADR 0053).
 namespace ElGuerre.Tendero.Knowledge.Chat;
-
-/// <summary>
-/// The one place that knows the generative model is reached over OpenAI's chat
-/// API — llama.cpp's server today; vLLM or a hosted model would be a new endpoint,
-/// not new code (ADR 0005: the MEAI abstraction is the port).
-/// </summary>
-public static class OpenAICompatibleChat
-{
-    // llama.cpp checks no key, and the SDK refuses to build a client without one.
-    private const string UnusedApiKey = "llama-cpp-checks-no-key";
-
-    public static IChatClient Create(Uri endpoint, string model, PipelineTransport? transport = null)
-    {
-        ArgumentNullException.ThrowIfNull(endpoint);
-
-        var options = new OpenAIClientOptions { Endpoint = new Uri(endpoint, "v1"), NetworkTimeout = TimeSpan.FromMinutes(10) };
-        if (transport is not null)
-            options.Transport = transport;
-
-        return new ChatClient(model, new ApiKeyCredential(UnusedApiKey), options).AsIChatClient();
-    }
-}
 
 /// <summary>
 /// The generative model asked whether the text says the claim, answering one

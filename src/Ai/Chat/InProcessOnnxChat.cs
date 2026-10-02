@@ -4,7 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Microsoft.ML.OnnxRuntimeGenAI;
 
-namespace ElGuerre.Tendero.Knowledge.Chat;
+namespace ElGuerre.Tendero.Ai.Chat;
 
 /// <summary>
 /// A generative model run inside the process by ONNX Runtime GenAI, from a
