@@ -48,6 +48,16 @@ public sealed class CatalogueGapsTests
         Assert.False(CatalogueGapRules.Has(described, CatalogueGap.MissingImageAlt, "es"));
     }
 
+    /// <summary>A picture with no alternative text at all lacks it in every language.</summary>
+    [Fact]
+    public void A_picture_with_no_alt_at_all_is_missing_it()
+    {
+        var product = Spanish("Flexo");
+        product.AddImage(Clock, new ImageId("flexo-1"));
+
+        Assert.True(CatalogueGapRules.Has(product, CatalogueGap.MissingImageAlt, "es"));
+    }
+
     [Fact]
     public void A_draft_is_waiting_and_an_active_product_is_not()
     {
