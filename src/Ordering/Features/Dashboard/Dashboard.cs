@@ -429,6 +429,12 @@ public sealed class DashboardEndpoints : ICarterModule
                 TypedResults.Ok(await dispatcher.SendAsync(new GetProductPerformanceQuery(
                     period?.Value ?? DashboardPeriods.Default, ranking?.Value ?? PerformanceRanking.Best, category, limit ?? 10), ct)))
             .WithName("GetProductPerformance");
+
+        // Returns opened in a period, by reason and by SKU — nobody's words in it (S-3a).
+        dashboard.MapGet("/returns",
+            async Task<Ok<ReturnsSummary>> (WireEnum<DashboardPeriod>? period, int? limit, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                TypedResults.Ok(await dispatcher.SendAsync(new GetReturnsSummaryQuery(period?.Value ?? DashboardPeriods.Default, limit ?? 10), ct)))
+            .WithName("GetReturnsSummary");
     }
 
 }

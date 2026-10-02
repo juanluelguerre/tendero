@@ -1156,6 +1156,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetReturnsSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/checkout/shipping-options": {
         parameters: {
             query?: never;
@@ -2244,6 +2260,11 @@ export interface components {
             /** Format: int32 */
             count: number;
         };
+        ReasonUnits: {
+            reason: components["schemas"]["ReturnReason"];
+            /** Format: int32 */
+            units: number;
+        };
         RecentDenial: {
             agentId: string;
             actorName: null | string;
@@ -2338,6 +2359,17 @@ export interface components {
             sku: string;
             /** Format: int32 */
             quantity: number;
+        };
+        ReturnsSummary: {
+            period: components["schemas"]["DashboardPeriod"];
+            /** Format: int32 */
+            returns: number;
+            /** Format: int32 */
+            units: number;
+            byReason: components["schemas"]["ReasonUnits"][];
+            /** Format: int32 */
+            skuTotal: number;
+            bySku: components["schemas"]["SkuReturns"][];
         };
         ReviewClaimConflict: {
             title: string;
@@ -2516,6 +2548,12 @@ export interface components {
             productName: string;
             variantLabel: null | string;
             slug: string;
+        };
+        SkuReturns: {
+            sku: string;
+            /** Format: int32 */
+            units: number;
+            byReason: components["schemas"]["ReasonUnits"][];
         };
         SkuSellThrough: {
             sku: string;
@@ -4856,6 +4894,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductPerformance"];
+                };
+            };
+        };
+    };
+    GetReturnsSummary: {
+        parameters: {
+            query?: {
+                period?: "Day" | "Week" | "Month";
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnsSummary"];
                 };
             };
         };

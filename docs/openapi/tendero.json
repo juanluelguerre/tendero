@@ -3139,6 +3139,48 @@
         }
       }
     },
+    "/api/dashboard/returns": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "operationId": "GetReturnsSummary",
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "enum": [
+                "Day",
+                "Week",
+                "Month"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnsSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/checkout/shipping-options": {
       "post": {
         "tags": [
@@ -7306,6 +7348,22 @@
           }
         }
       },
+      "ReasonUnits": {
+        "required": [
+          "reason",
+          "units"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/ReturnReason"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "RecentDenial": {
         "required": [
           "agentId",
@@ -7662,6 +7720,46 @@
           "quantity": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "ReturnsSummary": {
+        "required": [
+          "period",
+          "returns",
+          "units",
+          "byReason",
+          "skuTotal",
+          "bySku"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/DashboardPeriod"
+          },
+          "returns": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byReason": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReasonUnits"
+            }
+          },
+          "skuTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bySku": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkuReturns"
+            }
           }
         }
       },
@@ -8327,6 +8425,29 @@
           },
           "slug": {
             "type": "string"
+          }
+        }
+      },
+      "SkuReturns": {
+        "required": [
+          "sku",
+          "units",
+          "byReason"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "units": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byReason": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReasonUnits"
+            }
           }
         }
       },
