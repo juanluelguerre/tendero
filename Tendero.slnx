@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Ai/ElGuerre.Tendero.Ai.csproj" />
+    <Project Path="src/AI/ElGuerre.Tendero.AI.csproj" />
     <Project Path="src/AppHost/ElGuerre.Tendero.AppHost.csproj" />
     <Project Path="src/Api/ElGuerre.Tendero.Api.csproj" />
     <Project Path="src/Assist/ElGuerre.Tendero.Assist.csproj" />
@@ -20,7 +20,7 @@
     <Project Path="src/Workers/ElGuerre.Tendero.Workers.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Ai.Tests/ElGuerre.Tendero.Ai.Tests.csproj" />
+    <Project Path="tests/AI.Tests/ElGuerre.Tendero.AI.Tests.csproj" />
     <Project Path="tests/Api.Tests/ElGuerre.Tendero.Api.Tests.csproj" />
     <Project Path="tests/Architecture.Tests/ElGuerre.Tendero.Architecture.Tests.csproj" />
     <Project Path="tests/Assist.Tests/ElGuerre.Tendero.Assist.Tests.csproj" />

@@ -1,8 +1,8 @@
 {
   "stryker-config": {
-    "project": "ElGuerre.Tendero.Ai.csproj",
+    "project": "ElGuerre.Tendero.AI.csproj",
     "test-projects": [
-      "../../tests/Ai.Tests/ElGuerre.Tendero.Ai.Tests.csproj"
+      "../../tests/AI.Tests/ElGuerre.Tendero.AI.Tests.csproj"
     ],
     "test-runner": "mtp",
     "concurrency": 1,

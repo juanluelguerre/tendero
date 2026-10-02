@@ -3,7 +3,7 @@ using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
 
-// The namespace is the fence, as in Search.Embeddings and Ai.Chat: the scorer reads
+// The namespace is the fence, as in Search.Embeddings and AI.Chat: the scorer reads
 // OpenAI's raw log-probabilities, so it alone stays here (ADR 0053).
 namespace ElGuerre.Tendero.Knowledge.Chat;
 

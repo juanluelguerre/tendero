@@ -4,9 +4,9 @@
        aggregate. The chat factory every model user shares, profiles from
        configuration as keyed IChatClients, and the metering that writes one
        telemetry row per call. The OpenAI SDK and ONNX Runtime stay inside
-       ElGuerre.Tendero.Ai.Chat; everything else sees IChatClient. -->
+       ElGuerre.Tendero.AI.Chat; everything else sees IChatClient. -->
   <PropertyGroup>
-    <RootNamespace>ElGuerre.Tendero.Ai</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.AI</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="ElGuerre.Tendero.Ai.Tests" />
+    <InternalsVisibleTo Include="ElGuerre.Tendero.AI.Tests" />
   </ItemGroup>
 
 </Project>

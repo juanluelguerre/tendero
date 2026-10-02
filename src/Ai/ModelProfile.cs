@@ -1,4 +1,4 @@
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 public enum ModelKind
 {

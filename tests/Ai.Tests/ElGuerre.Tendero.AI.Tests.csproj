@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <RootNamespace>ElGuerre.Tendero.Ai.Tests</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.AI.Tests</RootNamespace>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Ai/ElGuerre.Tendero.Ai.csproj" />
+    <ProjectReference Include="../../src/AI/ElGuerre.Tendero.AI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

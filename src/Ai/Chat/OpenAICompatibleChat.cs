@@ -5,8 +5,8 @@ using OpenAI;
 using OpenAI.Chat;
 
 // The namespace is the fence, as in Search.Embeddings: the OpenAI SDK stays inside
-// Ai.Chat, and everything else sees IChatClient (ADR 0053).
-namespace ElGuerre.Tendero.Ai.Chat;
+// AI.Chat, and everything else sees IChatClient (ADR 0053).
+namespace ElGuerre.Tendero.AI.Chat;
 
 /// <summary>
 /// The one place that knows the generative model is reached over OpenAI's chat

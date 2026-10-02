@@ -4,7 +4,7 @@
 
 **Goal:** One way to reach a model — profiles in configuration, registered as keyed `IChatClient`s, every call metered into `telemetry.AiInvocations` without holding the request — used today by the claim extractor, and by Steward from S-3; plus the `steward-model` container behind `Tendero__Steward`, sized from a measurement.
 
-**Architecture:** A new project, `ElGuerre.Tendero.Ai`, is not a context (it owns no aggregate, like `Mcp` and `Ucp`): it holds the shared chat factory moved out of Knowledge (`Ai.Chat`, the only place besides Search's embeddings and Knowledge's scorer that may touch the OpenAI SDK), the profile options and their keyed registration, a metering `DelegatingChatClient`, the `AiInvocation` record with its writer port, an in-process channel and the worker that drains it. Persistence writes the rows on its own context, as it writes the audit. The pipeline per profile is OpenTelemetry (GenAI conventions) → metering → the model; S-3 adds function invocation outside it. The local profile points at a new llama.cpp container that serves the extractor's GGUF from the same volume with a slot of its own.
+**Architecture:** A new project, `ElGuerre.Tendero.AI`, is not a context (it owns no aggregate, like `Mcp` and `Ucp`): it holds the shared chat factory moved out of Knowledge (`AI.Chat`, the only place besides Search's embeddings and Knowledge's scorer that may touch the OpenAI SDK), the profile options and their keyed registration, a metering `DelegatingChatClient`, the `AiInvocation` record with its writer port, an in-process channel and the worker that drains it. Persistence writes the rows on its own context, as it writes the audit. The pipeline per profile is OpenTelemetry (GenAI conventions) → metering → the model; S-3 adds function invocation outside it. The local profile points at a new llama.cpp container that serves the extractor's GGUF from the same volume with a slot of its own.
 
 **Tech Stack:** .NET 11 preview, Microsoft.Extensions.AI (+ .OpenAI) and ONNX Runtime GenAI (already in the solution), System.Threading.Channels, EF Core + Npgsql, Aspire AppHost, llama.cpp server `v0.5.0`.
 
@@ -22,8 +22,8 @@
 
 ## Rulings already taken
 
-1. **`ElGuerre.Tendero.Ai` is a new project, not a context and not the kernel.** The kernel must not carry the OpenAI SDK or ONNX; Knowledge cannot be the shared place, because Steward (Assist) must not depend on another context. It references SharedKernel only, an architecture rule says so, and an ADR (0053) records it. Cost if wrong: one more project to move from.
-2. **`ChatYesNoSupportScorer` stays in `Knowledge.Chat`** — it reads OpenAI's raw log-probabilities and serves only Knowledge. The OpenAI fence becomes `Search.Embeddings`, `Knowledge.Chat` and `Ai.Chat`.
+1. **`ElGuerre.Tendero.AI` is a new project, not a context and not the kernel.** The kernel must not carry the OpenAI SDK or ONNX; Knowledge cannot be the shared place, because Steward (Assist) must not depend on another context. It references SharedKernel only, an architecture rule says so, and an ADR (0053) records it. Cost if wrong: one more project to move from.
+2. **`ChatYesNoSupportScorer` stays in `Knowledge.Chat`** — it reads OpenAI's raw log-probabilities and serves only Knowledge. The OpenAI fence becomes `Search.Embeddings`, `Knowledge.Chat` and `AI.Chat`.
 3. **A profile's `Endpoint` is the full OpenAI base URL, `/v1` included** (Gemini's is `…/v1beta/openai/`). The old `Create(endpoint, model)` keeps appending `v1` for the extractor and SearchEval; profiles use `CreateAt(baseUrl, model, apiKey, timeout)`.
 4. **A profile has a `TimeoutSeconds` (default 120)** the spec does not list: the contract suite's "a timeout surfaced as such" needs one per profile, and a hosted profile and the local CPU one need different ones.
 5. **The call's operation, conversation and prompt version travel in `ChatOptions.AdditionalProperties`** (`tendero.operation`, `tendero.conversation`, `tendero.prompt_version`), set by `ModelCall.Options(...)`. Explicit at the call site, no ambient state. A call with no operation is metered as `unknown`.
@@ -41,19 +41,19 @@
 
 ---
 
-### Task 1: The `Ai` project, and the chat factory moved into it
+### Task 1: The `AI` project, and the chat factory moved into it
 
 **Files:**
-- Create: `src/Ai/ElGuerre.Tendero.Ai.csproj`, `src/Ai/stryker-config.json`
-- Move: `src/Knowledge/Chat/InProcessOnnxChat.cs` → `src/Ai/Chat/InProcessOnnxChat.cs` (namespace `ElGuerre.Tendero.Ai.Chat`)
-- Move: the `OpenAICompatibleChat` class out of `src/Knowledge/Chat/OpenAICompatibleChat.cs` → `src/Ai/Chat/OpenAICompatibleChat.cs` (the file in Knowledge keeps `ChatYesNoSupportScorer` and is renamed `ChatYesNoSupportScorer.cs`)
-- Modify: `src/Knowledge/ElGuerre.Tendero.Knowledge.csproj` (reference Ai; drop `Microsoft.ML.OnnxRuntimeGenAI`), `src/Knowledge/KnowledgeServiceCollectionExtensions.cs`, `tools/SearchEval/Suites/ClaimsSuite.cs`, `tools/SearchEval/Suites/SupportSuite.cs` (usings), `Tendero.slnx`, `src/SharedKernel/TelemetrySources.cs` (`Ai`)
-- Create: `tests/Ai.Tests/ElGuerre.Tendero.Ai.Tests.csproj`, `tests/Ai.Tests/OpenAICompatibleChatTests.cs`
+- Create: `src/AI/ElGuerre.Tendero.AI.csproj`, `src/AI/stryker-config.json`
+- Move: `src/Knowledge/Chat/InProcessOnnxChat.cs` → `src/AI/Chat/InProcessOnnxChat.cs` (namespace `ElGuerre.Tendero.AI.Chat`)
+- Move: the `OpenAICompatibleChat` class out of `src/Knowledge/Chat/OpenAICompatibleChat.cs` → `src/AI/Chat/OpenAICompatibleChat.cs` (the file in Knowledge keeps `ChatYesNoSupportScorer` and is renamed `ChatYesNoSupportScorer.cs`)
+- Modify: `src/Knowledge/ElGuerre.Tendero.Knowledge.csproj` (reference Ai; drop `Microsoft.ML.OnnxRuntimeGenAI`), `src/Knowledge/KnowledgeServiceCollectionExtensions.cs`, `tools/SearchEval/Suites/ClaimsSuite.cs`, `tools/SearchEval/Suites/SupportSuite.cs` (usings), `Tendero.slnx`, `src/SharedKernel/TelemetrySources.cs` (`AI`)
+- Create: `tests/AI.Tests/ElGuerre.Tendero.AI.Tests.csproj`, `tests/AI.Tests/OpenAICompatibleChatTests.cs`
 
 **Interfaces:**
-- Produces: `ElGuerre.Tendero.Ai.Chat.OpenAICompatibleChat.Create(Uri endpoint, string model, PipelineTransport? transport = null)` (unchanged behaviour: appends `v1`) and `CreateAt(Uri baseUrl, string model, string? apiKey = null, TimeSpan? timeout = null, PipelineTransport? transport = null)`; `ElGuerre.Tendero.Ai.Chat.InProcessOnnxChat.Create(string modelDirectory)`; `TelemetrySources.Ai = "ElGuerre.Tendero.Ai"`.
+- Produces: `ElGuerre.Tendero.AI.Chat.OpenAICompatibleChat.Create(Uri endpoint, string model, PipelineTransport? transport = null)` (unchanged behaviour: appends `v1`) and `CreateAt(Uri baseUrl, string model, string? apiKey = null, TimeSpan? timeout = null, PipelineTransport? transport = null)`; `ElGuerre.Tendero.AI.Chat.InProcessOnnxChat.Create(string modelDirectory)`; `TelemetrySources.AI = "ElGuerre.Tendero.AI"`.
 
-- [ ] **Step 1: Create the projects.** `src/Ai/ElGuerre.Tendero.Ai.csproj`:
+- [ ] **Step 1: Create the projects.** `src/AI/ElGuerre.Tendero.AI.csproj`:
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -62,9 +62,9 @@
        aggregate. The chat factory every model user shares, profiles from
        configuration as keyed IChatClients, and the metering that writes one
        telemetry row per call. The OpenAI SDK and ONNX Runtime stay inside
-       ElGuerre.Tendero.Ai.Chat; everything else sees IChatClient. -->
+       ElGuerre.Tendero.AI.Chat; everything else sees IChatClient. -->
   <PropertyGroup>
-    <RootNamespace>ElGuerre.Tendero.Ai</RootNamespace>
+    <RootNamespace>ElGuerre.Tendero.AI</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -79,24 +79,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="ElGuerre.Tendero.Ai.Tests" />
+    <InternalsVisibleTo Include="ElGuerre.Tendero.AI.Tests" />
   </ItemGroup>
 
 </Project>
 ```
 
-Check `Directory.Packages.props` for `Microsoft.Extensions.Hosting.Abstractions`; if it is not centrally versioned, use `<FrameworkReference Include="Microsoft.AspNetCore.App" />` instead (as Knowledge does) — no new package either way. `tests/Ai.Tests/ElGuerre.Tendero.Ai.Tests.csproj` and `src/Ai/stryker-config.json`: copies of Assist's with `Assist` → `Ai`. Add both projects to `Tendero.slnx` by hand, in their folders (`dotnet sln add` did not write the file on 2026-10-02). `TelemetrySources`: `public const string Ai = "ElGuerre.Tendero.Ai";`, added to `All`.
+Check `Directory.Packages.props` for `Microsoft.Extensions.Hosting.Abstractions`; if it is not centrally versioned, use `<FrameworkReference Include="Microsoft.AspNetCore.App" />` instead (as Knowledge does) — no new package either way. `tests/AI.Tests/ElGuerre.Tendero.AI.Tests.csproj` and `src/AI/stryker-config.json`: copies of Assist's with `Assist` → `AI`. Add both projects to `Tendero.slnx` by hand, in their folders (`dotnet sln add` did not write the file on 2026-10-02). `TelemetrySources`: `public const string AI = "ElGuerre.Tendero.AI";`, added to `All`.
 
-- [ ] **Step 2: Write the failing test** — `tests/Ai.Tests/OpenAICompatibleChatTests.cs`:
+- [ ] **Step 2: Write the failing test** — `tests/AI.Tests/OpenAICompatibleChatTests.cs`:
 
 ```csharp
 using System.ClientModel.Primitives;
 using System.Net;
-using ElGuerre.Tendero.Ai.Chat;
+using ElGuerre.Tendero.AI.Chat;
 using Microsoft.Extensions.AI;
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 /// <summary>Where a request goes and what it carries, read off the wire: a profile's
 /// base URL is used as given, and a key travels as a bearer token.</summary>
@@ -147,9 +147,9 @@ public sealed class OpenAICompatibleChatTests
 }
 ```
 
-- [ ] **Step 3: Run it** — `dotnet test tests/Ai.Tests`. Expected: build FAILS (`ElGuerre.Tendero.Ai.Chat` does not exist).
+- [ ] **Step 3: Run it** — `dotnet test tests/AI.Tests`. Expected: build FAILS (`ElGuerre.Tendero.AI.Chat` does not exist).
 
-- [ ] **Step 4: Move and extend.** `git mv src/Knowledge/Chat/InProcessOnnxChat.cs src/Ai/Chat/InProcessOnnxChat.cs` and change its namespace to `ElGuerre.Tendero.Ai.Chat`. Create `src/Ai/Chat/OpenAICompatibleChat.cs` with the class moved from Knowledge (namespace `ElGuerre.Tendero.Ai.Chat`, keep the fence comment) and the new method:
+- [ ] **Step 4: Move and extend.** `git mv src/Knowledge/Chat/InProcessOnnxChat.cs src/AI/Chat/InProcessOnnxChat.cs` and change its namespace to `ElGuerre.Tendero.AI.Chat`. Create `src/AI/Chat/OpenAICompatibleChat.cs` with the class moved from Knowledge (namespace `ElGuerre.Tendero.AI.Chat`, keep the fence comment) and the new method:
 
 ```csharp
     /// <summary>A profile's endpoint is the provider's OpenAI base URL, /v1 included,
@@ -167,9 +167,9 @@ public sealed class OpenAICompatibleChatTests
     }
 ```
 
-and make `Create(endpoint, model, transport)` call `CreateAt(new Uri(endpoint, "v1"), model, transport: transport)`. Rename the Knowledge file to `ChatYesNoSupportScorer.cs` (`git mv`), leaving only that class. Knowledge's csproj references `../Ai/ElGuerre.Tendero.Ai.csproj` and drops the ONNX package line; fix the `using`s in `KnowledgeServiceCollectionExtensions.cs` and both SearchEval suites (`using ElGuerre.Tendero.Ai.Chat;`; SearchEval's csproj references Ai if Knowledge's reference does not flow).
+and make `Create(endpoint, model, transport)` call `CreateAt(new Uri(endpoint, "v1"), model, transport: transport)`. Rename the Knowledge file to `ChatYesNoSupportScorer.cs` (`git mv`), leaving only that class. Knowledge's csproj references `../AI/ElGuerre.Tendero.AI.csproj` and drops the ONNX package line; fix the `using`s in `KnowledgeServiceCollectionExtensions.cs` and both SearchEval suites (`using ElGuerre.Tendero.AI.Chat;`; SearchEval's csproj references Ai if Knowledge's reference does not flow).
 
-- [ ] **Step 5: Run** — `dotnet build -warnaserror` then `dotnet test tests/Ai.Tests tests/Knowledge.Tests tests/SearchEval.Tests`. Expected: clean; PASS.
+- [ ] **Step 5: Run** — `dotnet build -warnaserror` then `dotnet test tests/AI.Tests tests/Knowledge.Tests tests/SearchEval.Tests`. Expected: clean; PASS.
 
 - [ ] **Step 6: Commit** — `git commit -m "refactor(ai): one chat factory every model user shares, out of Knowledge (S-2)"`.
 
@@ -178,18 +178,18 @@ and make `Create(endpoint, model, transport)` call `CreateAt(new Uri(endpoint, "
 ### Task 2: Profiles, as options
 
 **Files:**
-- Create: `src/Ai/ModelProfile.cs`
-- Test: `tests/Ai.Tests/ModelProfileTests.cs`
+- Create: `src/AI/ModelProfile.cs`
+- Test: `tests/AI.Tests/ModelProfileTests.cs`
 
 **Interfaces:**
 - Produces: `enum ModelKind { OpenAICompatible, OnnxInProcess }`; `enum ModelAuth { None, Bearer }`; `sealed class ModelProfile { ModelKind Kind; Uri? Endpoint; string? Model; ModelAuth Auth; string? ApiKey; string? Directory; decimal InputPrice; decimal OutputPrice; int ContextTokens = 8192; int TimeoutSeconds = 120; IReadOnlyList<string> Problems(string name); long CostMicroEuros(long inputTokens, long outputTokens); }`.
 
-- [ ] **Step 1: Write the failing tests** — `tests/Ai.Tests/ModelProfileTests.cs`:
+- [ ] **Step 1: Write the failing tests** — `tests/AI.Tests/ModelProfileTests.cs`:
 
 ```csharp
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 public sealed class ModelProfileTests
 {
@@ -235,12 +235,12 @@ public sealed class ModelProfileTests
 }
 ```
 
-- [ ] **Step 2: Run** — `dotnet test tests/Ai.Tests`. Expected: build FAILS (`ModelProfile` missing).
+- [ ] **Step 2: Run** — `dotnet test tests/AI.Tests`. Expected: build FAILS (`ModelProfile` missing).
 
-- [ ] **Step 3: Implement** — `src/Ai/ModelProfile.cs`:
+- [ ] **Step 3: Implement** — `src/AI/ModelProfile.cs`:
 
 ```csharp
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 public enum ModelKind
 {
@@ -312,7 +312,7 @@ public sealed class ModelProfile
 }
 ```
 
-- [ ] **Step 4: Run** — `dotnet test tests/Ai.Tests`. Expected: PASS.
+- [ ] **Step 4: Run** — `dotnet test tests/AI.Tests`. Expected: PASS.
 
 - [ ] **Step 5: Commit** — `git commit -m "feat(ai): a model profile is an entry in configuration, with its price (S-2)"`.
 
@@ -321,8 +321,8 @@ public sealed class ModelProfile
 ### Task 3: The metering client and the channel
 
 **Files:**
-- Create: `src/Ai/AiInvocation.cs`, `src/Ai/ModelCall.cs`, `src/Ai/AiInvocationLog.cs`, `src/Ai/MeteringChatClient.cs`
-- Test: `tests/Ai.Tests/MeteringChatClientTests.cs`, `tests/Ai.Tests/AiInvocationLogTests.cs`
+- Create: `src/AI/AiInvocation.cs`, `src/AI/ModelCall.cs`, `src/AI/AiInvocationLog.cs`, `src/AI/MeteringChatClient.cs`
+- Test: `tests/AI.Tests/MeteringChatClientTests.cs`, `tests/AI.Tests/AiInvocationLogTests.cs`
 
 **Interfaces:**
 - Produces:
@@ -333,14 +333,14 @@ public sealed class ModelProfile
   - `sealed class AiInvocationLog(int capacity = 10_000) { bool Record(AiInvocation row); ChannelReader<AiInvocation> Reader { get; } }`
   - `sealed class MeteringChatClient(IChatClient inner, string profileName, ModelProfile profile, AiInvocationLog log, TimeProvider clock) : DelegatingChatClient`
 
-- [ ] **Step 1: Write the failing tests** — `tests/Ai.Tests/MeteringChatClientTests.cs`:
+- [ ] **Step 1: Write the failing tests** — `tests/AI.Tests/MeteringChatClientTests.cs`:
 
 ```csharp
 using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.AI;
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 /// <summary>One row per model call, whatever the call did — the cost line of a
 /// conversation and the Grafana panel are both sums of these rows.</summary>
@@ -429,12 +429,12 @@ public sealed class MeteringChatClientTests
 }
 ```
 
-`tests/Ai.Tests/AiInvocationLogTests.cs`:
+`tests/AI.Tests/AiInvocationLogTests.cs`:
 
 ```csharp
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 public sealed class AiInvocationLogTests
 {
@@ -456,12 +456,12 @@ public sealed class AiInvocationLogTests
 
 Add `<Compile Include="../TestClock.cs" Link="TestClock.cs" />` to the Ai test project if the copy from Assist does not carry it.
 
-- [ ] **Step 2: Run** — `dotnet test tests/Ai.Tests`. Expected: build FAILS.
+- [ ] **Step 2: Run** — `dotnet test tests/AI.Tests`. Expected: build FAILS.
 
-- [ ] **Step 3: Implement.** `src/Ai/AiInvocation.cs`:
+- [ ] **Step 3: Implement.** `src/AI/AiInvocation.cs`:
 
 ```csharp
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 public enum AiOutcome
 {
@@ -497,12 +497,12 @@ public interface IAiInvocationWriter
 }
 ```
 
-`src/Ai/ModelCall.cs`:
+`src/AI/ModelCall.cs`:
 
 ```csharp
 using Microsoft.Extensions.AI;
 
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 /// <summary>
 /// What a call is for, said where it is made: the metering reads it from the
@@ -532,14 +532,14 @@ public static class ModelCall
 }
 ```
 
-`src/Ai/AiInvocationLog.cs`:
+`src/AI/AiInvocationLog.cs`:
 
 ```csharp
 using System.Diagnostics.Metrics;
 using System.Threading.Channels;
 using ElGuerre.Tendero.SharedKernel;
 
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 /// <summary>
 /// The rows on their way to the database, in process. Bounded, and full means the
@@ -548,7 +548,7 @@ namespace ElGuerre.Tendero.Ai;
 /// </summary>
 public sealed class AiInvocationLog(int capacity = 10_000)
 {
-    private static readonly Meter Meter = new(TelemetrySources.Ai);
+    private static readonly Meter Meter = new(TelemetrySources.AI);
 
     private static readonly Counter<long> Dropped = Meter.CreateCounter<long>(
         "tendero.ai.invocations.dropped", unit: "{row}", description: "Model-call rows dropped because the log was full.");
@@ -571,13 +571,13 @@ public sealed class AiInvocationLog(int capacity = 10_000)
 
 (`FullMode = Wait` with `TryWrite` is what makes a full channel refuse immediately; the other modes make `TryWrite` succeed by dropping some other row silently.)
 
-`src/Ai/MeteringChatClient.cs`:
+`src/AI/MeteringChatClient.cs`:
 
 ```csharp
 using System.Diagnostics;
 using Microsoft.Extensions.AI;
 
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 /// <summary>
 /// Records one row per call — tokens, cost at the profile's price, latency, outcome
@@ -647,7 +647,7 @@ public sealed class MeteringChatClient(
 }
 ```
 
-- [ ] **Step 4: Run** — `dotnet test tests/Ai.Tests`. Expected: PASS. Hand mutation for the full-log test: change `FullMode = BoundedChannelFullMode.Wait` to `DropOldest` → `A_full_log_refuses_without_waiting` red; restore.
+- [ ] **Step 4: Run** — `dotnet test tests/AI.Tests`. Expected: PASS. Hand mutation for the full-log test: change `FullMode = BoundedChannelFullMode.Wait` to `DropOldest` → `A_full_log_refuses_without_waiting` red; restore.
 
 - [ ] **Step 5: Commit** — `git commit -m "feat(ai): every model call leaves one row, and metering never holds the request (S-2)"` with the hand mutation named in the body.
 
@@ -656,14 +656,14 @@ public sealed class MeteringChatClient(
 ### Task 4: Profiles registered as keyed clients, and the extractor metered
 
 **Files:**
-- Create: `src/Ai/AiServiceCollectionExtensions.cs`
+- Create: `src/AI/AiServiceCollectionExtensions.cs`
 - Modify: `src/Knowledge/KnowledgeServiceCollectionExtensions.cs`, `src/Knowledge/Extraction/ChatClaimExtractor.cs` (the call's options), `tests/Knowledge.Tests/KnowledgeRegistrationTests.cs` (if it resolves the unkeyed `IChatClient`)
-- Test: `tests/Ai.Tests/ModelProfileRegistrationTests.cs`
+- Test: `tests/AI.Tests/ModelProfileRegistrationTests.cs`
 
 **Interfaces:**
-- Produces: `IServiceCollection AddModelProfiles(this IServiceCollection services, IConfiguration configuration, string section = "Steward:Models")` — one keyed singleton `IChatClient` per profile (key = profile name), OpenTelemetry (`TelemetrySources.Ai`) → metering → model; throws `InvalidOperationException` listing every problem; registers `AiInvocationLog` (singleton) and `TimeProvider` if absent. `IChatClient Meter(this IChatClient inner, string profileName, ModelProfile profile, IServiceProvider services)` for a client built in code (the extractor). `ChatClaimExtractor` calls with `ModelCall.Options("knowledge.extract", promptVersion: PromptVersion, options)`.
+- Produces: `IServiceCollection AddModelProfiles(this IServiceCollection services, IConfiguration configuration, string section = "Steward:Models")` — one keyed singleton `IChatClient` per profile (key = profile name), OpenTelemetry (`TelemetrySources.AI`) → metering → model; throws `InvalidOperationException` listing every problem; registers `AiInvocationLog` (singleton) and `TimeProvider` if absent. `IChatClient Meter(this IChatClient inner, string profileName, ModelProfile profile, IServiceProvider services)` for a client built in code (the extractor). `ChatClaimExtractor` calls with `ModelCall.Options("knowledge.extract", promptVersion: PromptVersion, options)`.
 
-- [ ] **Step 1: Write the failing tests** — `tests/Ai.Tests/ModelProfileRegistrationTests.cs`:
+- [ ] **Step 1: Write the failing tests** — `tests/AI.Tests/ModelProfileRegistrationTests.cs`:
 
 ```csharp
 using Microsoft.Extensions.AI;
@@ -671,7 +671,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 public sealed class ModelProfileRegistrationTests
 {
@@ -724,17 +724,17 @@ public sealed class ModelProfileRegistrationTests
 
 - [ ] **Step 2: Run** — Expected: build FAILS (`AddModelProfiles` missing).
 
-- [ ] **Step 3: Implement** — `src/Ai/AiServiceCollectionExtensions.cs`:
+- [ ] **Step 3: Implement** — `src/AI/AiServiceCollectionExtensions.cs`:
 
 ```csharp
-using ElGuerre.Tendero.Ai.Chat;
+using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 public static class AiServiceCollectionExtensions
 {
@@ -768,7 +768,7 @@ public static class AiServiceCollectionExtensions
     /// extractor's, whose model the AppHost hands it directly.</summary>
     public static IChatClient Meter(this IChatClient inner, string profileName, ModelProfile profile, IServiceProvider services) =>
         inner.AsBuilder()
-            .UseOpenTelemetry(sourceName: TelemetrySources.Ai)
+            .UseOpenTelemetry(sourceName: TelemetrySources.AI)
             .Use(model => new MeteringChatClient(
                 model, profileName, profile,
                 services.GetRequiredService<AiInvocationLog>(),
@@ -794,9 +794,9 @@ In `AddKnowledge`, replace the extractor's registration:
                 .Meter("extractor", new ModelProfile { Model = Extractor.ModelId, ContextTokens = 4096 }, provider));
 ```
 
-(the old `.UseOpenTelemetry(sourceName: TelemetrySources.Knowledge)` goes: `Meter` traces it under `TelemetrySources.Ai`). In `ChatClaimExtractor`, wrap the options it builds: `var options = ModelCall.Options("knowledge.extract", promptVersion: PromptVersion, options: new ChatOptions { … });` — read the file first; keep every option it sets.
+(the old `.UseOpenTelemetry(sourceName: TelemetrySources.Knowledge)` goes: `Meter` traces it under `TelemetrySources.AI`). In `ChatClaimExtractor`, wrap the options it builds: `var options = ModelCall.Options("knowledge.extract", promptVersion: PromptVersion, options: new ChatOptions { … });` — read the file first; keep every option it sets.
 
-- [ ] **Step 4: Run** — `dotnet test tests/Ai.Tests tests/Knowledge.Tests`. Expected: PASS.
+- [ ] **Step 4: Run** — `dotnet test tests/AI.Tests tests/Knowledge.Tests`. Expected: PASS.
 
 - [ ] **Step 5: Commit** — `git commit -m "feat(ai): profiles are keyed clients behind one pipeline, and the extractor is metered (S-2)"`.
 
@@ -805,21 +805,21 @@ In `AddKnowledge`, replace the extractor's registration:
 ### Task 5: The worker, the table, and the rows written
 
 **Files:**
-- Create: `src/Ai/AiInvocationsWorker.cs`; `src/Persistence/Configurations/AiInvocationConfiguration.cs`; `src/Persistence/EfAiInvocationWriter.cs`; the migration `AddAiInvocations`
-- Modify: `src/Ai/AiServiceCollectionExtensions.cs` (`AddAiInvocationLog`), `src/Persistence/ElGuerre.Tendero.Persistence.csproj` (reference Ai), `src/Persistence/TenderoDbContext.cs` (`DbSet<AiInvocation> AiInvocations` **and** `ApplyConfiguration(new AiInvocationConfiguration())` in its explicit list), `src/Persistence/PersistenceServiceCollectionExtensions.cs`, `src/Api/Program.cs` and `src/Workers/WorkerServices.cs` (`AddAiInvocationLog()`), `src/Api/ElGuerre.Tendero.Api.csproj`, `src/Workers/ElGuerre.Tendero.Workers.csproj` (reference Ai if not transitive)
-- Test: `tests/Ai.Tests/AiInvocationsWorkerTests.cs`, `tests/Integration.Tests/AiInvocationRowsTests.cs`
+- Create: `src/AI/AiInvocationsWorker.cs`; `src/Persistence/Configurations/AiInvocationConfiguration.cs`; `src/Persistence/EfAiInvocationWriter.cs`; the migration `AddAiInvocations`
+- Modify: `src/AI/AiServiceCollectionExtensions.cs` (`AddAiInvocationLog`), `src/Persistence/ElGuerre.Tendero.Persistence.csproj` (reference Ai), `src/Persistence/TenderoDbContext.cs` (`DbSet<AiInvocation> AiInvocations` **and** `ApplyConfiguration(new AiInvocationConfiguration())` in its explicit list), `src/Persistence/PersistenceServiceCollectionExtensions.cs`, `src/Api/Program.cs` and `src/Workers/WorkerServices.cs` (`AddAiInvocationLog()`), `src/Api/ElGuerre.Tendero.Api.csproj`, `src/Workers/ElGuerre.Tendero.Workers.csproj` (reference Ai if not transitive)
+- Test: `tests/AI.Tests/AiInvocationsWorkerTests.cs`, `tests/Integration.Tests/AiInvocationRowsTests.cs`
 
 **Interfaces:**
 - Produces: `sealed class AiInvocationsWorker(AiInvocationLog log, IServiceScopeFactory scopes, ILogger<AiInvocationsWorker> logger) : BackgroundService` — reads up to 100 rows at a time, writes them through a scoped `IAiInvocationWriter`, logs and continues on failure; `IServiceCollection AddAiInvocationLog(this IServiceCollection services)` (log + worker); table `telemetry.ai_invocations`.
 
-- [ ] **Step 1: Write the failing tests.** `tests/Ai.Tests/AiInvocationsWorkerTests.cs`:
+- [ ] **Step 1: Write the failing tests.** `tests/AI.Tests/AiInvocationsWorkerTests.cs`:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 public sealed class AiInvocationsWorkerTests
 {
@@ -904,14 +904,14 @@ public sealed class AiInvocationsWorkerTests
 
 - [ ] **Step 2: Run** — Expected: build FAILS (`AiInvocationsWorker`, `AiInvocations` missing).
 
-- [ ] **Step 3: Implement.** `src/Ai/AiInvocationsWorker.cs`:
+- [ ] **Step 3: Implement.** `src/AI/AiInvocationsWorker.cs`:
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace ElGuerre.Tendero.Ai;
+namespace ElGuerre.Tendero.AI;
 
 /// <summary>
 /// Drains the log into the table, a batch at a time, off the request. A batch that
@@ -971,7 +971,7 @@ In `AiServiceCollectionExtensions`:
 `src/Persistence/Configurations/AiInvocationConfiguration.cs`:
 
 ```csharp
-using ElGuerre.Tendero.Ai;
+using ElGuerre.Tendero.AI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -1006,7 +1006,7 @@ internal sealed class AiInvocationConfiguration : IEntityTypeConfiguration<AiInv
 `src/Persistence/EfAiInvocationWriter.cs`:
 
 ```csharp
-using ElGuerre.Tendero.Ai;
+using ElGuerre.Tendero.AI;
 using Microsoft.EntityFrameworkCore;
 
 namespace ElGuerre.Tendero.Persistence;
@@ -1028,7 +1028,7 @@ Register `services.AddScoped<IAiInvocationWriter, EfAiInvocationWriter>();` besi
 
 Run: `dotnet tool run dotnet-ef migrations add AddAiInvocations --project src/Persistence`. Expected: creates `telemetry.ai_invocations` with its two indexes, and nothing else.
 
-- [ ] **Step 4: Run** — `dotnet test tests/Ai.Tests`, `dotnet test tests/Persistence.Tests`, `dotnet test tests/Integration.Tests --filter "FullyQualifiedName~AiInvocationRowsTests|FullyQualifiedName~MigrationBaselineTests"` (Docker up), `dotnet test tests/Architecture.Tests --filter "FullyQualifiedName~HostedServiceNaming"`. Expected: PASS.
+- [ ] **Step 4: Run** — `dotnet test tests/AI.Tests`, `dotnet test tests/Persistence.Tests`, `dotnet test tests/Integration.Tests --filter "FullyQualifiedName~AiInvocationRowsTests|FullyQualifiedName~MigrationBaselineTests"` (Docker up), `dotnet test tests/Architecture.Tests --filter "FullyQualifiedName~HostedServiceNaming"`. Expected: PASS.
 
 - [ ] **Step 5: Commit** — `git commit -m "feat(ai): the model-call rows reach telemetry.ai_invocations off the request (S-2)"`.
 
@@ -1117,7 +1117,7 @@ The `local` profile has no `Endpoint` in `appsettings.json` — the AppHost give
 ### Task 7: The contract suite against the real container
 
 **Files:**
-- Create: `tests/Ai.Tests/ChatProfileContractTests.cs`, `tests/Ai.Tests/LlamaCppProfileContractTests.cs`
+- Create: `tests/AI.Tests/ChatProfileContractTests.cs`, `tests/AI.Tests/LlamaCppProfileContractTests.cs`
 
 - [ ] **Step 1: Write the suite.**
 
@@ -1125,7 +1125,7 @@ The `local` profile has no `Endpoint` in `appsettings.json` — the AppHost give
 using Microsoft.Extensions.AI;
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 /// <summary>
 /// What every profile kind must do for Steward (the spec, *Evaluation and tests*):
@@ -1185,9 +1185,9 @@ public abstract class ChatProfileContractTests
 
 `LlamaCppProfileContractTests.cs`: derives it; `Client(timeout)` returns `null` unless `GET http://localhost:38085/health` answers 200 within two seconds, and otherwise `OpenAICompatibleChat.CreateAt(new Uri("http://localhost:38085/v1/"), "qwen3.5-4b-q8_0", timeout: timeout)`.
 
-- [ ] **Step 2: Run it against the container** — start `steward-model` as Task 6 declared (`docker run` with the measured limit on port 38085, or the AppHost with `Tendero__Steward=true`), run `dotnet test tests/Ai.Tests --filter "Category=Model"`, record pass/fail and the tool-call answer in `docs/analysis/steward-model-sizing.md`, then stop and remove the container. Expected: 3 PASS. If the 4B does not call the tool with the default chat template, that is a finding for S-3's prompt, recorded — not a reason to weaken the test.
+- [ ] **Step 2: Run it against the container** — start `steward-model` as Task 6 declared (`docker run` with the measured limit on port 38085, or the AppHost with `Tendero__Steward=true`), run `dotnet test tests/AI.Tests --filter "Category=Model"`, record pass/fail and the tool-call answer in `docs/analysis/steward-model-sizing.md`, then stop and remove the container. Expected: 3 PASS. If the 4B does not call the tool with the default chat template, that is a finding for S-3's prompt, recorded — not a reason to weaken the test.
 
-- [ ] **Step 3: Without the container** — `dotnet test tests/Ai.Tests`. Expected: the three skip, the rest pass.
+- [ ] **Step 3: Without the container** — `dotnet test tests/AI.Tests`. Expected: the three skip, the rest pass.
 
 - [ ] **Step 4: Commit** — `git commit -m "test(ai): the contract every chat profile meets, run against Steward's local model (S-2)"`.
 
@@ -1196,11 +1196,11 @@ public abstract class ChatProfileContractTests
 ### Task 8: The rules, the ADR, the board
 
 **Files:**
-- Modify: `tests/Architecture.Tests/Solution.cs` (`Ai` in `All`, not in `Contexts`), `tests/Architecture.Tests/ArchitectureRules.cs` (the OpenAI fence gains `ElGuerre.Tendero.Ai.Chat`; a new rule `Ai_knows_only_the_shared_kernel`; ONNX Runtime fenced to `Ai.Chat`), the Architecture test project's references
-- Create: `docs/adr/0053-one-model-port.md`; modify `docs/adr/README.md`, `CLAUDE.md` (the namespace list; `Ai` beside `Mcp` and `Ucp` as not a context), `docs/delivery-plan.md` (`P12-2` done), `docs/specs/steward.md` (*S-2 as built*), `docs/blog/notebook.md`
+- Modify: `tests/Architecture.Tests/Solution.cs` (`AI` in `All`, not in `Contexts`), `tests/Architecture.Tests/ArchitectureRules.cs` (the OpenAI fence gains `ElGuerre.Tendero.AI.Chat`; a new rule `AI_knows_only_the_shared_kernel`; ONNX Runtime fenced to `AI.Chat`), the Architecture test project's references
+- Create: `docs/adr/0053-one-model-port.md`; modify `docs/adr/README.md`, `CLAUDE.md` (the namespace list; `AI` beside `Mcp` and `Ucp` as not a context), `docs/delivery-plan.md` (`P12-2` done), `docs/specs/steward.md` (*S-2 as built*), `docs/blog/notebook.md`
 
-- [ ] **Step 1:** Write `Ai_knows_only_the_shared_kernel` as `Assist_knows_only_the_shared_kernel` is written; add `ElGuerre.Tendero.Ai.Chat` to the OpenAI fence's allowed namespaces and a twin rule for `Microsoft.ML.OnnxRuntimeGenAI` allowed only there. Hand mutation each: an `OpenAI` type used in `src/Ai/ModelProfile.cs` → the fence red; a Knowledge reference from Ai → the new rule red; restore both.
-- [ ] **Step 2:** ADR 0053 — *One model port: profiles in configuration, one pipeline, one row per call* — context (Knowledge owned the only factory; Steward and Tino need the same; hosted profiles cost money), decision (the `Ai` project and its fence; profiles as keyed clients; OTel → metering → model; the channel and its trade; `telemetry.ai_invocations`), consequences (a provider is an entry; the extractor is metered too; a full log drops rows, counted).
+- [ ] **Step 1:** Write `AI_knows_only_the_shared_kernel` as `Assist_knows_only_the_shared_kernel` is written; add `ElGuerre.Tendero.AI.Chat` to the OpenAI fence's allowed namespaces and a twin rule for `Microsoft.ML.OnnxRuntimeGenAI` allowed only there. Hand mutation each: an `OpenAI` type used in `src/AI/ModelProfile.cs` → the fence red; a Knowledge reference from Ai → the new rule red; restore both.
+- [ ] **Step 2:** ADR 0053 — *One model port: profiles in configuration, one pipeline, one row per call* — context (Knowledge owned the only factory; Steward and Tino need the same; hosted profiles cost money), decision (the `AI` project and its fence; profiles as keyed clients; OTel → metering → model; the channel and its trade; `telemetry.ai_invocations`), consequences (a provider is an entry; the extractor is metered too; a full log drops rows, counted).
 - [ ] **Step 3:** The docs above, and a notebook entry with the sizing numbers and the contract run's result.
 - [ ] **Step 4:** `dotnet build -warnaserror`; `dotnet test` (Docker up); `npx nx run-many -t lint test` from `frontend/` only if a response changed (it should not). Expected: clean and green.
 - [ ] **Step 5: Commit** — `git commit -m "docs(ai): ADR 0053, one model port, and S-2 on the board (S-2)"`.

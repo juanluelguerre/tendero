@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 public sealed class ModelProfileTests
 {

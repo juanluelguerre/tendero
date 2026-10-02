@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using ElGuerre.Tendero.Ai.Chat;
+using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Support;
 using ElGuerre.Tendero.SearchEval.Claims;

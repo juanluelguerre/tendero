@@ -1,10 +1,10 @@
 using System.ClientModel.Primitives;
 using System.Net;
-using ElGuerre.Tendero.Ai.Chat;
+using ElGuerre.Tendero.AI.Chat;
 using Microsoft.Extensions.AI;
 using Xunit;
 
-namespace ElGuerre.Tendero.Ai.Tests;
+namespace ElGuerre.Tendero.AI.Tests;
 
 /// <summary>Where a request goes and what it carries, read off the wire: a profile's
 /// base URL is used as given, and a key travels as a bearer token.</summary>

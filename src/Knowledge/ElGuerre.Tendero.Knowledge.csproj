@@ -29,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Ai/ElGuerre.Tendero.Ai.csproj" />
+    <ProjectReference Include="../AI/ElGuerre.Tendero.AI.csproj" />
     <ProjectReference Include="../SharedKernel/ElGuerre.Tendero.SharedKernel.csproj" />
   </ItemGroup>
 
