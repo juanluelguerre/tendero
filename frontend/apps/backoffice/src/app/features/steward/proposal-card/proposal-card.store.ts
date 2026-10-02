@@ -9,6 +9,9 @@ import { readStatus } from '../../../read-status';
 /** How many proposals the card shows before "and N more" (the mock-up). */
 const Shown = 3;
 
+/** What still waits for a person: the list's To review chip, an approval whose result was never recorded included. */
+const Waiting: readonly string[] = ['Proposed', 'Approved'];
+
 /** A turn's proposals, and how many times the panel has said something was decided. */
 export interface CardBatch {
   readonly ids: readonly string[];
@@ -46,7 +49,8 @@ export const ProposalCardStore = signalStore(
       reason: computed(() => items()[0]?.reason ?? ''),
       shown: computed(() => items().slice(0, Shown)),
       more: computed(() => Math.max(0, items().length - Shown)),
-      decided: computed(() => items().filter((item) => item.status !== 'Proposed').length),
+      waiting: computed(() => items().filter((item) => Waiting.includes(item.status)).length),
+      decided: computed(() => items().filter((item) => !Waiting.includes(item.status)).length),
     };
   }),
   withMethods((store) => ({

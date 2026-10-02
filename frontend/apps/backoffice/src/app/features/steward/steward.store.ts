@@ -6,6 +6,7 @@ import type { ScreenContext, StewardAnswer, StewardTurnRequest, TurnMessage } fr
 import { CultureStore } from '@tendero/shared-i18n';
 import { catchError, EMPTY, pipe, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { StewardService } from '../../data-access/steward.service';
+import { WaitingStore } from '../../shell/waiting.store';
 
 /** Where a question stands: on its way, answered, stopped by the person, or lost on the way. */
 export type ExchangeState = 'asking' | 'answered' | 'stopped' | 'failed' | 'tooMany';
@@ -49,6 +50,7 @@ export const StewardStore = signalStore(
   withProps(() => ({
     _steward: inject(StewardService),
     _culture: inject(CultureStore),
+    _waiting: inject(WaitingStore),
     _stop: new Subject<void>(),
   })),
   withComputed((store) => {
@@ -81,6 +83,8 @@ export const StewardStore = signalStore(
         return !!status && Ending.includes(status);
       }),
       nearLimit: computed(() => !!last()?.answer?.nearContextLimit),
+      /** The newest answer's words, for the panel's one live region; empty while none. */
+      latestAnswer: computed(() => (last()?.state === 'answered' ? (last()?.answer?.text ?? '') : '')),
     };
   }),
   withMethods((store) => {
@@ -98,6 +102,8 @@ export const StewardStore = signalStore(
             tap((answer) => {
               settle(id, { state: 'answered', answer });
               patchState(store, { conversationId: answer.conversationId });
+              // The rail's badge counts what waits: these just started waiting.
+              if (answer.proposalIds.length > 0) store._waiting.refresh();
             }),
             catchError((failure: unknown) => {
               const tooMany = failure instanceof HttpErrorResponse && failure.status === 429;

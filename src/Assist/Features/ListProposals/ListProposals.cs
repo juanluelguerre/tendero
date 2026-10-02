@@ -135,7 +135,7 @@ public sealed class ListProposalsHandler(IProposalRepository proposals, Proposab
             proposal.Subject,
             display?.Title.In(culture) ?? proposal.Subject,
             display?.Kind.In(culture) ?? action,
-            [.. (display?.Changes ?? []).Select(change => new ProposalChangeView(change.Field.In(culture), change.Now, change.Proposed))],
+            [.. (display?.Changes ?? []).Select(change => new ProposalChangeView(change.Field.In(culture), change.Now?.In(culture), change.Proposed?.In(culture)))],
             proposal.Reason,
             proposal.Status,
             proposal.ProposedAt,

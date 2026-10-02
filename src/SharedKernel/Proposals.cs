@@ -93,8 +93,17 @@ public sealed record ProposalApplication(bool Applied, string? Reason)
 /// context that knows its subject, and stored with it.</param>
 public sealed record ProposalSubject(string Subject, object Now, ProposalDisplay? Display = null);
 
-/// <summary>One field a proposal changes, as a person reads it: "Name · EN", now, proposed.</summary>
-public sealed record ProposalChange(LocalizedText Field, string? Now, string? Proposed);
+/// <summary>
+/// One field a proposal changes, as a person reads it: "Name · EN", now, proposed.
+/// Each side is text in languages too: a proposed name is the words written, in
+/// the language they were written in, and a status is words in each language the
+/// shop speaks — never an enum's name (the review of S-4).
+/// </summary>
+public sealed record ProposalChange(LocalizedText Field, LocalizedText? Now, LocalizedText? Proposed)
+{
+    /// <summary>Text as written, in the language it was written in; null stays null.</summary>
+    public static LocalizedText? Written(string culture, string? text) => text is null ? null : LocalizedText.From(culture, text);
+}
 
 /// <summary>
 /// What a person reads of a proposal (S-4): its subject's title, the kind of
@@ -108,7 +117,8 @@ public sealed record ProposalDisplay(LocalizedText Title, LocalizedText Kind, IR
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public string ToJson() => JsonSerializer.Serialize(
-        new Stored(Title.Values, Kind.Values, [.. Changes.Select(change => new StoredChange(change.Field.Values, change.Now, change.Proposed))]),
+        new Stored(Title.Values, Kind.Values,
+            [.. Changes.Select(change => new StoredChange(change.Field.Values, Words(change.Now), Words(change.Proposed)))]),
         Json);
 
     /// <summary>The display a proposal stored, or null when it has none or it
@@ -124,7 +134,7 @@ public sealed record ProposalDisplay(LocalizedText Title, LocalizedText Kind, IR
                 ? new ProposalDisplay(new LocalizedText(stored.Title), new LocalizedText(stored.Kind),
                 [
                     .. (stored.Changes ?? []).Where(change => change.Field is { Count: > 0 })
-                        .Select(change => new ProposalChange(new LocalizedText(change.Field), change.Now, change.Proposed)),
+                        .Select(change => new ProposalChange(new LocalizedText(change.Field), Read(change.Now), Read(change.Proposed))),
                 ])
                 : null;
         }
@@ -137,7 +147,21 @@ public sealed record ProposalDisplay(LocalizedText Title, LocalizedText Kind, IR
     private sealed record Stored(
         IReadOnlyDictionary<string, string> Title, IReadOnlyDictionary<string, string> Kind, IReadOnlyList<StoredChange>? Changes);
 
-    private sealed record StoredChange(IReadOnlyDictionary<string, string> Field, string? Now, string? Proposed);
+    /// <param name="Now">Words per language — or, in the first displays, plain text.</param>
+    private sealed record StoredChange(IReadOnlyDictionary<string, string> Field, JsonElement? Now, JsonElement? Proposed);
+
+    private static JsonElement? Words(LocalizedText? text) =>
+        text is null ? null : JsonSerializer.SerializeToElement(text.Values, Json);
+
+    /// <summary>Plain text, as the first displays stored it, is read as written in a
+    /// language nobody named ("und", ISO 639's undetermined): every culture falls back to it.</summary>
+    private static LocalizedText? Read(JsonElement? value) => value switch
+    {
+        { ValueKind: JsonValueKind.String } text => LocalizedText.From("und", text.GetString()!),
+        { ValueKind: JsonValueKind.Object } words when words.Deserialize<Dictionary<string, string>>(Json) is { Count: > 0 } read
+            => new LocalizedText(read),
+        _ => null,
+    };
 }
 
 /// <summary>

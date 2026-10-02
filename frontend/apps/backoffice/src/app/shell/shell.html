@@ -133,16 +133,10 @@
     }
   </div>
 
-  @if (canUseBackoffice() && steward.isOpen()) {
+  @if (canUseBackoffice()) {
     <!-- Steward's panel (phase 12): a column beside the content from 1024 px, a
-         full-screen sheet below. Deferred, so nobody who never opens it loads it. -->
-    <div
-      class="fixed inset-0 z-5 bg-surface lg:sticky lg:top-0 lg:z-auto lg:h-dvh lg:w-panel lg:border-s lg:border-hairline"
-    >
-      @defer {
-        <backoffice-steward-panel class="h-full" />
-      }
-    </div>
+         modal sheet below; the dock decides which. -->
+    <backoffice-steward-dock />
   }
 
   @if (canUseBackoffice()) {

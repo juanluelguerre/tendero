@@ -33,6 +33,8 @@ describe('the steward panel', () => {
     HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
       this.open = true;
     };
+    // jsdom lays nothing out, so it has nothing to scroll into view.
+    Element.prototype.scrollIntoView ??= () => undefined;
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),

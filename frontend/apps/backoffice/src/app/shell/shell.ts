@@ -16,7 +16,7 @@ import { Palette } from './palette/palette';
 import { StaffNotice } from './staff-notice/staff-notice';
 import { UndoToast } from '../worklist/undo/undo-toast';
 import { WaitingStore } from './waiting.store';
-import { StewardPanel } from '../features/steward/panel/steward-panel';
+import { StewardDock } from '../features/steward/dock/steward-dock';
 import { StewardDoorStore } from '../features/steward/steward-door.store';
 
 /**
@@ -44,7 +44,7 @@ import { StewardDoorStore } from '../features/steward/steward-door.store';
     UndoToast,
     Palette,
     NgOptimizedImage,
-    StewardPanel,
+    StewardDock,
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.css',

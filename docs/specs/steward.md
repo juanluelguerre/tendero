@@ -462,6 +462,19 @@ notifications and alerts.
    names proposed, three approved and one rejected with its reason, each row's
    result in place, the unavailable state — which found that a lone profile's
    failure was reported as a fallback's too, fixed.
+   *Corrected after the final review (2026-10-02)*: below 1024 px the sheet is a
+   modal `<dialog>` (the page under it inert, Esc closes it, the focus returns);
+   the card offers Review only for what still waits — after its own review it
+   offers to see the batch, quietly; a change's values are words in both
+   languages (a withdrawal reads "A la venta → Borrador", never the enum's
+   name), and a display stored with plain text still reads; the rail's badge is
+   read again when an answer brings proposals; one live region, the newest
+   answer's. Rulings: **closing the panel does not stop a turn** — the
+   conversation is a root store, the turn runs on and its answer is there when
+   the panel opens again (Stop is the way to stop one, and what a turn proposed
+   is kept either way); the unavailable notice says "the model and its fallback
+   both tried" also when the first was skipped for its window rather than
+   asked, a rare case and a wording one.
 5. **S-5 · Claims in bulk.** The review component on claims, the server's refusal
    of weak claims in bulk, R-2's amendment in `docs/specs/redesign.md`.
 6. **S-6 · Measured and evaluated.** The `copilot` suite on the local model,

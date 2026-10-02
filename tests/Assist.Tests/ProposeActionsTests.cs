@@ -36,7 +36,7 @@ public sealed class ProposeActionsTests
         await handler.HandleAsync(Command(("MUG-1", "new")), TestContext.Current.CancellationToken);
 
         var display = ProposalDisplay.FromJson(Assert.Single(proposals.All).Display)!;
-        Assert.Equal(("MUG-1", "old", "new"), (display.Title.In("en"), display.Changes[0].Now, display.Changes[0].Proposed));
+        Assert.Equal(("MUG-1", "old", "new"), (display.Title.In("en"), display.Changes[0].Now?.In("en"), display.Changes[0].Proposed?.In("en")));
     }
 
     [Fact]

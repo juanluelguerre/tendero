@@ -74,11 +74,17 @@ export class StewardPanel {
     // The panel opens to be asked: the composer has the focus.
     afterNextRender(() => this.composer()?.nativeElement.focus());
 
-    // The newest exchange in view, as it arrives (the DOM's, so an effect).
+    // The newest question at the top of the view as it is asked (the DOM's, so an
+    // effect): its answer, and a card that loads after it, grow below it in sight.
+    // Scrolling to the bottom instead left a card that arrived later under the fold.
     effect(() => {
-      this.store.exchanges();
+      const asked = this.store.exchanges().length;
       const element = this.conversation()?.nativeElement;
-      if (element) queueMicrotask(() => (element.scrollTop = element.scrollHeight));
+      if (!element || asked === 0) return;
+      queueMicrotask(() => {
+        const questions = element.querySelectorAll('[data-question]');
+        questions[questions.length - 1]?.scrollIntoView({ block: 'start' });
+      });
     });
   }
 

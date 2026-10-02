@@ -1,4 +1,9 @@
-@if (store.count() > 0) {
+@if (store.failed()) {
+  <p class="m-0 text-xs text-muted" *transloco="let t">
+    {{ t('steward.card.failed') }}
+    <a class="quiet-link" routerLink="/steward/proposals">{{ t('steward.card.kept') }}</a>
+  </p>
+} @else if (store.count() > 0) {
   <section class="overflow-hidden rounded-lg border border-hairline-strong" *transloco="let t">
     <header class="grid gap-1 bg-accent-tint px-4 py-3">
       <h3 class="eyebrow m-0 text-accent">
@@ -28,12 +33,25 @@
     </ul>
 
     <footer class="flex flex-wrap items-center gap-3 border-t border-hairline px-4 py-3">
-      <button type="button" class="button" (click)="review.emit(ids())">
-        {{ store.count() === 1 ? t('steward.card.reviewOne') : t('steward.card.review', { count: store.count() }) }}
-      </button>
+      @if (store.waiting() > 0) {
+        <button type="button" class="button" (click)="review.emit(ids())">
+          {{
+            store.waiting() === 1 ? t('steward.card.reviewOne') : t('steward.card.review', { count: store.waiting() })
+          }}
+        </button>
+      } @else {
+        <!-- Nothing waits: the batch can still be seen, quietly — no clay for work that is done. -->
+        <button type="button" class="button button--quiet" (click)="review.emit(ids())">
+          {{ t('steward.card.see') }}
+        </button>
+      }
       <a class="quiet-link text-xs" routerLink="/steward/proposals">{{ t('steward.card.kept') }}</a>
       @if (store.decided() > 0) {
-        <span class="text-xs text-muted">{{ t('steward.card.decided', { count: store.decided() }) }}</span>
+        <span class="text-xs text-muted">
+          {{
+            store.decided() === 1 ? t('steward.card.decidedOne') : t('steward.card.decided', { count: store.decided() })
+          }}
+        </span>
       }
     </footer>
   </section>

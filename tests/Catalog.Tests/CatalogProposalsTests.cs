@@ -103,8 +103,8 @@ public sealed class CatalogProposalsTests
         Assert.Equal("Cafetera", display.Title.In("es"));
         Assert.Equal(("English name", "Nombre en inglés"), (display.Kind.In("en"), display.Kind.In("es")));
         Assert.Equal(2, display.Changes.Count);
-        Assert.Equal(("Name · EN", null, "Moka pot"), (display.Changes[0].Field.In("en"), display.Changes[0].Now, display.Changes[0].Proposed));
-        Assert.Equal(("Descripción · EN", "For the stove."), (display.Changes[1].Field.In("es"), display.Changes[1].Proposed));
+        Assert.Equal(("Name · EN", null, "Moka pot"), (display.Changes[0].Field.In("en"), display.Changes[0].Now, display.Changes[0].Proposed?.In("es")));
+        Assert.Equal(("Descripción · EN", "For the stove."), (display.Changes[1].Field.In("es"), display.Changes[1].Proposed?.In("es")));
     }
 
     [Fact]
@@ -119,7 +119,9 @@ public sealed class CatalogProposalsTests
 
         Assert.Equal(("Withdrawal", "Retirada"), (display.Kind.In("en"), display.Kind.In("es")));
         var change = Assert.Single(display.Changes);
-        Assert.Equal(("Status", "Active", "Draft"), (change.Field.In("en"), change.Now, change.Proposed));
+        // In the shopkeeper's words, both languages: never the enum's name (review of S-4, I-2).
+        Assert.Equal(("Status", "On sale", "Draft"), (change.Field.In("en"), change.Now?.In("en"), change.Proposed?.In("en")));
+        Assert.Equal(("Estado", "A la venta", "Borrador"), (change.Field.In("es"), change.Now?.In("es"), change.Proposed?.In("es")));
     }
 
     [Fact]

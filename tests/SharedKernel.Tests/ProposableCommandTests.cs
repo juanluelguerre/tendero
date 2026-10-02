@@ -161,12 +161,22 @@ public sealed class ProposalDisplayTests
         var display = new ProposalDisplay(
             new LocalizedText(new Dictionary<string, string> { ["es"] = "Taza", ["en"] = "Mug" }),
             LocalizedText.From("en", "English name"),
-            [new ProposalChange(LocalizedText.From("en", "Name · EN"), null, "Mug")]);
+            [new ProposalChange(LocalizedText.From("en", "Name · EN"), null, LocalizedText.From("en", "Mug"))]);
 
         var read = ProposalDisplay.FromJson(display.ToJson())!;
 
         Assert.Equal(("Taza", "Mug", "English name"), (read.Title.In("es"), read.Title.In("en"), read.Kind.In("en")));
-        Assert.Equal(("Name · EN", null, "Mug"), (read.Changes[0].Field.In("en"), read.Changes[0].Now, read.Changes[0].Proposed));
+        Assert.Equal(("Name · EN", null, "Mug"), (read.Changes[0].Field.In("en"), read.Changes[0].Now, read.Changes[0].Proposed?.In("es")));
+    }
+
+    /// <summary>The first displays stored their values as plain text: still read, as written.</summary>
+    [Fact]
+    public void A_display_whose_values_are_plain_text_still_reads()
+    {
+        var read = ProposalDisplay.FromJson(
+            """{"title":{"en":"Mug"},"kind":{"en":"English name"},"changes":[{"field":{"en":"Name"},"now":null,"proposed":"Mug"}]}""")!;
+
+        Assert.Equal("Mug", read.Changes[0].Proposed?.In("es"));
     }
 
     [Theory]

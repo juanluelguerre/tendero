@@ -1,0 +1,22 @@
+@if (door.isOpen()) {
+  @if (wide()) {
+    <aside class="sticky top-0 h-dvh w-panel border-s border-hairline bg-surface" [attr.aria-label]="name()">
+      @defer {
+        <backoffice-steward-panel class="h-full" />
+      }
+    </aside>
+  } @else {
+    <!-- The sheet: a modal dialog, full screen. Esc closes it through its own
+         close event, which closes the door too. -->
+    <dialog
+      class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-surface p-0 text-body"
+      #sheet
+      (close)="door.close()"
+      [attr.aria-label]="name()"
+    >
+      @defer {
+        <backoffice-steward-panel class="h-full" />
+      }
+    </dialog>
+  }
+}

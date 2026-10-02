@@ -272,6 +272,10 @@ public sealed class LocalizedText
     public static LocalizedText From(string culture, string value) =>
         new(new Dictionary<string, string> { [culture] = value });
 
+    /// <summary>Words the shop writes itself, in both its languages: a label, a status.</summary>
+    public static LocalizedText Both(string en, string es) =>
+        new(new Dictionary<string, string> { ["en"] = en, ["es"] = es });
+
     public IReadOnlyDictionary<string, string> Values => this.values;
     public IReadOnlyCollection<string> Cultures => this.values.Keys;
 

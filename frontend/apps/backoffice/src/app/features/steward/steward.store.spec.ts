@@ -108,6 +108,20 @@ describe('the steward store', () => {
     expect(store.cost()).toEqual({ calls: 4, tokens: 2200, microEuros: 4200, milliseconds: 8200, model: 'qwen' });
   });
 
+  /** Proposals arrived: the rail's badge reads its count again, not only after the next navigation. */
+  it('asks the badges again when an answer brings proposals', () => {
+    const badge = (req: { url: string; params: { get(name: string): string | null } }) =>
+      req.url === 'http://api/api/steward/proposals' && req.params.get('filter') === 'ToReview';
+    // The badges' first reading, answered: what follows is what this answer asks for.
+    TestBed.tick();
+    http.match(badge).forEach((req) => req.flush({ counts: [] }));
+    store.ask('One', screen);
+    http.expectOne((req) => req.url === Turns).flush(answer('A', { proposalIds: ['p1'] }));
+    TestBed.tick();
+
+    expect(http.match(badge)).toHaveLength(1);
+  });
+
   /** Over the budget or past every window, the conversation is over: only a new one goes on. */
   it('ends a conversation that is too long, and starts a new one from nothing', () => {
     store.ask('One', screen);

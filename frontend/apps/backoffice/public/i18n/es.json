@@ -1105,7 +1105,10 @@
       "review": "Revisar {{count}} propuestas",
       "reviewOne": "Revisar la propuesta",
       "kept": "Guardadas en Propuestas",
-      "decided": "{{count}} ya decididas"
+      "decided": "{{count}} ya decididas",
+      "see": "Ver las propuestas",
+      "decidedOne": "1 ya decidida",
+      "failed": "No se pudieron cargar aquí las propuestas."
     },
     "cost": "Esta conversación: {{calls}} llamadas · {{tokens}} tokens · {{euros}} · {{seconds}} s · {{model}}",
     "working": "Steward está leyendo la tienda…",
@@ -1120,13 +1123,13 @@
       "title": "Steward no puede contestar ahora",
       "bodyBoth": "No contestó ningún modelo (lo intentaron el modelo y su respaldo). No se propuso nada y nada cambió. El resto del backoffice funciona como siempre.",
       "bodyOne": "No contestó ningún modelo. No se propuso nada y nada cambió. El resto del backoffice funciona como siempre.",
-      "kept": "Lo que propuso antes de fallar espera en Propuestas.",
       "without": "Sin Steward",
       "missingName": "Productos sin nombre en inglés",
       "missingNameDetail": "La misma lista, como filtro en Productos",
       "proposals": "Propuestas",
       "proposalsDetail": "Lo ya propuesto sigue ahí para revisarlo",
-      "tryAgain": "Reintentar"
+      "tryAgain": "Reintentar",
+      "bodyKept": "Ningún modelo terminó de contestar. Lo que propuso antes de fallar espera en Propuestas; nada cambió en la tienda. El resto del backoffice funciona como siempre."
     },
     "tooLong": {
       "title": "Esta conversación es demasiado larga para el modelo",

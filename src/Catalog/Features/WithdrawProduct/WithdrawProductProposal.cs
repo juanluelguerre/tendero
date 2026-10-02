@@ -26,11 +26,17 @@ public sealed class WithdrawProductProposal(IServiceProvider services, IProductR
         await products.FindByIdAsync(command.ProductId, cancellationToken) is { } product
             ? new ProposalSubject(product.Code, new WithdrawalNow(product.Status.ToString()), new ProposalDisplay(
                 product.Name,
-                Both("Withdrawal", "Retirada"),
-                [new ProposalChange(Both("Status", "Estado"), product.Status.ToString(), nameof(ProductStatus.Draft))]))
+                LocalizedText.Both("Withdrawal", "Retirada"),
+                [new ProposalChange(LocalizedText.Both("Status", "Estado"), StatusWords(product.Status), StatusWords(ProductStatus.Draft))]))
             : null;
 
-    private static LocalizedText Both(string en, string es) => new(new Dictionary<string, string> { ["en"] = en, ["es"] = es });
+    /// <summary>A status as the backoffice's chips say it: "On sale", never "Active".</summary>
+    private static LocalizedText StatusWords(ProductStatus status) => status switch
+    {
+        ProductStatus.Active => LocalizedText.Both("On sale", "A la venta"),
+        ProductStatus.Draft => LocalizedText.Both("Draft", "Borrador"),
+        _ => LocalizedText.Both("Archived", "Archivado"),
+    };
 
     private sealed record WithdrawalNow(string Status);
 }

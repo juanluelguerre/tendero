@@ -1105,7 +1105,10 @@
       "review": "Review {{count}} proposals",
       "reviewOne": "Review the proposal",
       "kept": "Kept in Proposals",
-      "decided": "{{count}} already decided"
+      "decided": "{{count}} already decided",
+      "see": "See the proposals",
+      "decidedOne": "1 already decided",
+      "failed": "The proposals could not be loaded here."
     },
     "cost": "This conversation: {{calls}} calls · {{tokens}} tokens · {{euros}} · {{seconds}} s · {{model}}",
     "working": "Steward is reading the shop…",
@@ -1120,13 +1123,13 @@
       "title": "Steward cannot answer right now",
       "bodyBoth": "No model answered (the model and its fallback both tried). Nothing was proposed and nothing changed. The rest of the backoffice works as usual.",
       "bodyOne": "No model answered. Nothing was proposed and nothing changed. The rest of the backoffice works as usual.",
-      "kept": "What it proposed before failing waits in Proposals.",
       "without": "Without Steward",
       "missingName": "Products missing an English name",
       "missingNameDetail": "The same list, as a filter on Products",
       "proposals": "Proposals",
       "proposalsDetail": "What was already proposed stays there to review",
-      "tryAgain": "Try again"
+      "tryAgain": "Try again",
+      "bodyKept": "No model finished answering. What it proposed before failing waits in Proposals; nothing changed in the shop. The rest of the backoffice works as usual."
     },
     "tooLong": {
       "title": "This conversation is too long for the model",

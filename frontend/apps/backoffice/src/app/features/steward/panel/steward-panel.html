@@ -20,13 +20,20 @@
       </button>
     </header>
 
-    <div class="grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation aria-live="polite">
+    <!-- One live region, the newest answer's: announcing the whole conversation
+         repeated every question and cost line to a screen reader. -->
+    <p class="sr-only" aria-live="polite">{{ store.latestAnswer() }}</p>
+
+    <div class="grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation>
       @if (store.exchanges().length === 0) {
         <p class="m-0 text-sm text-muted">{{ t('steward.intro') }}</p>
       }
 
       @for (exchange of store.exchanges(); track exchange.id) {
-        <p class="m-0 ms-auto max-w-measure-sm rounded-lg border border-hairline bg-raised px-4 py-2">
+        <p
+          class="m-0 ms-auto max-w-measure-sm scroll-mt-4 rounded-lg border border-hairline bg-raised px-4 py-2"
+          data-question
+        >
           <span class="sr-only">{{ t('steward.you') }}: </span>{{ exchange.question }}
         </p>
 
@@ -76,16 +83,19 @@
                     <p class="m-0 whitespace-pre-line">{{ answer.text }}</p>
                   }
                   @case ('Unavailable') {
-                    <lib-notice tone="warn" live="polite">
+                    <lib-notice tone="warn">
                       <p class="m-0 flex items-center gap-2 font-medium">
                         <lib-icon class="size-icon-md" name="unavailable" />{{ t('steward.unavailable.title') }}
                       </p>
                       <p class="m-0 mt-1 text-sm">
-                        {{ answer.fellBack ? t('steward.unavailable.bodyBoth') : t('steward.unavailable.bodyOne') }}
+                        {{
+                          answer.proposalIds.length > 0
+                            ? t('steward.unavailable.bodyKept')
+                            : answer.fellBack
+                              ? t('steward.unavailable.bodyBoth')
+                              : t('steward.unavailable.bodyOne')
+                        }}
                       </p>
-                      @if (answer.proposalIds.length > 0) {
-                        <p class="m-0 mt-1 text-sm">{{ t('steward.unavailable.kept') }}</p>
-                      }
                     </lib-notice>
                     <h3 class="eyebrow m-0">{{ t('steward.unavailable.without') }}</h3>
                     <a
@@ -119,13 +129,13 @@
                     </button>
                   }
                   @case ('ConversationTooLong') {
-                    <lib-notice tone="warn" live="polite">
+                    <lib-notice tone="warn">
                       <p class="m-0 font-medium">{{ t('steward.tooLong.title') }}</p>
                       <p class="m-0 mt-1 text-sm">{{ t('steward.tooLong.body') }}</p>
                     </lib-notice>
                   }
                   @case ('BudgetExceeded') {
-                    <lib-notice tone="warn" live="polite">
+                    <lib-notice tone="warn">
                       <p class="m-0 font-medium">{{ t('steward.budget.title') }}</p>
                       <p class="m-0 mt-1 text-sm">{{ t('steward.budget.body') }}</p>
                     </lib-notice>
@@ -152,7 +162,7 @@
       }
 
       @if (store.nearLimit() && !store.ended()) {
-        <lib-notice tone="info" live="polite">
+        <lib-notice tone="info">
           <p class="m-0 text-sm">{{ t('steward.near') }}</p>
           <button type="button" class="button button--small button--quiet mt-2" (click)="store.newConversation()">
             {{ t('steward.newConversation') }}

@@ -61,6 +61,28 @@ describe('the proposal card store', () => {
     );
   });
 
+  /**
+   * After its own review a batch has nothing to review: the card must not offer
+   * "Review 4 proposals" beside "4 already decided" (review of S-4, I-1). An
+   * approval whose result was never recorded still waits, as the list's To review
+   * chip says.
+   */
+  it('counts as waiting only what still waits for a person', async () => {
+    const store = TestBed.inject(ProposalCardStore);
+    const batch = signal({ ids: ['a', 'b', 'c', 'd'], revision: 0 });
+    TestBed.runInInjectionContext(() => store.follow(batch));
+    TestBed.tick();
+    http
+      .expectOne((req) => req.url === Proposals)
+      .flush({
+        items: [proposal('a', 'Applied'), proposal('b', 'Approved'), proposal('c', 'Stale'), proposal('d')],
+        counts: [],
+      });
+    await TestBed.inject(ApplicationRef).whenStable();
+
+    expect([store.waiting(), store.decided(), store.failed()]).toEqual([2, 2, false]);
+  });
+
   it('reads the batch again when the panel says something was decided', async () => {
     const store = TestBed.inject(ProposalCardStore);
     const batch = signal({ ids: ['a'], revision: 0 });
