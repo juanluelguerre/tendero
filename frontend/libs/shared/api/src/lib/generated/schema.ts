@@ -2336,16 +2336,25 @@ export interface components {
         };
         RestockList: {
             warehouse: null | string;
+            unknownWarehouse: boolean;
+            warehouses: string[];
             /** Format: int32 */
             restockAt: number;
             /** Format: int32 */
             total: number;
             rows: components["schemas"]["RestockRow"][];
         };
+        RestockProblem: {
+            title: string;
+            detail: string;
+            warehouses: string[];
+        };
         RestockRow: {
             sku: string;
             /** Format: int32 */
             available: number;
+            /** Format: int32 */
+            inWarehouse: null | number;
             /** Format: double */
             perDay: null | number;
             /** Format: double */
@@ -3346,6 +3355,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RestockList"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestockProblem"];
                 };
             };
         };
