@@ -214,6 +214,68 @@
         }
       }
     },
+    "/api/catalog/products/{id}/translations/{culture}": {
+      "put": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "SetProductTranslation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetProductTranslationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetProductTranslationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetProductTranslationConflict"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{code}/review": {
       "get": {
         "tags": [
@@ -7684,6 +7746,54 @@
           }
         }
       },
+      "SetProductTranslationConflict": {
+        "required": [
+          "title",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "SetProductTranslationRequest": {
+        "required": [
+          "name",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SetProductTranslationResponse": {
+        "required": [
+          "productId",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/TranslationOutcome"
+          }
+        }
+      },
       "ShippingOptionView": {
         "required": [
           "code",
@@ -8277,6 +8387,14 @@
             "type": "string"
           }
         }
+      },
+      "TranslationOutcome": {
+        "enum": [
+          "Translated",
+          "Unchanged",
+          "Archived",
+          "NotFound"
+        ]
       },
       "UpliftDay": {
         "required": [

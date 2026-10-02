@@ -76,6 +76,7 @@
       "SetBrowsingCommand": "Switch a browsing history on or off",
       "SetCartLineCommand": "Change a cart line",
       "SetProductAttributeCommand": "Set a product attribute",
+      "SetProductTranslationCommand": "Translate a product",
       "SuspendAgentCommand": "Suspend an agent",
       "UnscheduleCampaignCommand": "Unschedule a campaign",
       "UpdateCampaignCommand": "Edit a campaign",

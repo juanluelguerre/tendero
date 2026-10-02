@@ -27,6 +27,13 @@ public sealed record ProductArchived(ProductId ProductId, DateTimeOffset Occurre
 
 public sealed class Product : AggregateRoot
 {
+    /// <summary>The longest name a translation may write. The seed's longest is 56
+    /// characters; the column is jsonb, so this is the catalogue's rule, not the
+    /// database's.</summary>
+    public const int NameMaxLength = 200;
+
+    public const int DescriptionMaxLength = 4000;
+
     private readonly List<ProductImage> images = [];
     private readonly List<AttributeValue> attributes = [];
     private readonly List<ExternalReference> externalReferences = [];

@@ -100,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/products/{id}/translations/{culture}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SetProductTranslation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{code}/review": {
         parameters: {
             query?: never;
@@ -2335,6 +2351,18 @@ export interface components {
             /** Format: int32 */
             quantity: number;
         };
+        SetProductTranslationConflict: {
+            title: string;
+            detail: string;
+        };
+        SetProductTranslationRequest: {
+            name: string;
+            description: null | string;
+        };
+        SetProductTranslationResponse: {
+            productId: string;
+            outcome: components["schemas"]["TranslationOutcome"];
+        };
         ShippingOptionView: {
             code: string;
             label: string;
@@ -2494,6 +2522,8 @@ export interface components {
         TelemetryConfiguration: {
             adapter: string;
         };
+        /** @enum {unknown} */
+        TranslationOutcome: "Translated" | "Unchanged" | "Archived" | "NotFound";
         UpliftDay: {
             /** Format: date-time */
             start: string;
@@ -2712,6 +2742,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WithdrawProductConflict"];
+                };
+            };
+        };
+    };
+    SetProductTranslation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                culture: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetProductTranslationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetProductTranslationResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetProductTranslationConflict"];
                 };
             };
         };

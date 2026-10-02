@@ -76,6 +76,7 @@
       "SetBrowsingCommand": "Activar o desactivar un historial de navegación",
       "SetCartLineCommand": "Cambiar una línea del carrito",
       "SetProductAttributeCommand": "Fijar un atributo de producto",
+      "SetProductTranslationCommand": "Traducir un producto",
       "SuspendAgentCommand": "Suspender un agente",
       "UnscheduleCampaignCommand": "Desprogramar una campaña",
       "UpdateCampaignCommand": "Editar una campaña",
