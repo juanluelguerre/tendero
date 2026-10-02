@@ -1,6 +1,8 @@
 using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Connectors.Seed;
+using ElGuerre.Tendero.Catalog.Features.SetProductTranslation;
+using ElGuerre.Tendero.Catalog.Features.WithdrawProduct;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
@@ -37,6 +39,10 @@ public static class CatalogServiceCollectionExtensions
             configuration.GetSection(FileSystemImageStoreOptions.SectionName));
         services.AddSingleton<IImageStore, FileSystemImageStore>();
         services.AddHttpClient<IExternalImageReader, ExternalImageReader>();
+
+        // What Steward may propose (phase 12): a class here and a line there.
+        services.AddScoped<IProposableCommand, SetProductTranslationProposal>();
+        services.AddScoped<IProposableCommand, WithdrawProductProposal>();
 
         return services;
     }
