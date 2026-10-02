@@ -31,5 +31,10 @@ internal sealed class EfUnitOfWork(TenderoDbContext context) : IUnitOfWork
         {
             throw new ConcurrentWriteException(postgres.ConstraintName ?? "a unique index", exception);
         }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            // A row with a version — a proposal — changed since it was read.
+            throw new ConcurrentWriteException("the row's version", exception);
+        }
     }
 }

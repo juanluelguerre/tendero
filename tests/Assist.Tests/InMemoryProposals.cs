@@ -26,6 +26,17 @@ internal sealed class CountingUnitOfWork : IUnitOfWork
     }
 }
 
+/// <summary>A unit of work that fails on the saves a test names, counting from one.</summary>
+internal sealed class ScriptedUnitOfWork : IUnitOfWork
+{
+    private int saves;
+
+    public Func<int, Exception?> FailOn { get; set; } = _ => null;
+
+    public Task SaveChangesAsync(CancellationToken ct) =>
+        FailOn(++saves) is { } failure ? Task.FromException(failure) : Task.CompletedTask;
+}
+
 internal sealed class FixedPrincipal(string name) : IPrincipalAccessor
 {
     public CommercePrincipal Current { get; } = new(null, null, name.ToLowerInvariant(), name, ["shopkeeper"]);

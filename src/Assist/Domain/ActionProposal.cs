@@ -47,6 +47,19 @@ public sealed class ActionProposal : AggregateRoot
         [ProposalStatus.Stale] = [],
     };
 
+    /// <summary>What the result column holds. A reason longer than this is cut, so
+    /// recording a failure can never fail itself.</summary>
+    public const int ResultMaxLength = 1000;
+
+    /// <summary>
+    /// How long an approval may take before it is presumed dead. An approved row
+    /// runs one command in the same request; one approved longer ago than this
+    /// left no result because its process died, and may be finished again. One
+    /// approved more recently may still be running in another request — a double
+    /// click, a second tab — and running it again would run its command twice.
+    /// </summary>
+    public static readonly TimeSpan StillRunning = TimeSpan.FromMinutes(5);
+
     private ActionProposal() { }
 
     public ProposalId Id { get; private set; }
@@ -63,6 +76,10 @@ public sealed class ActionProposal : AggregateRoot
 
     /// <summary>Why it failed, or why it was rejected; null otherwise.</summary>
     public string? Result { get; private set; }
+
+    /// <summary>The stored row's version, set by the store on every write: two
+    /// decisions taken on one version cannot both be saved.</summary>
+    public uint Version { get; private set; }
 
     public static ActionProposal Propose(
         string command, string payload, string subject, string? before, string reason,
@@ -100,13 +117,30 @@ public sealed class ActionProposal : AggregateRoot
 
     public void MarkStale(string by, TimeProvider clock) => Decide(ProposalStatus.Stale, by, clock);
 
+    /// <summary>Approved, with no result, for longer than an approval can take.</summary>
+    public bool MayRetry(TimeProvider clock) =>
+        Status == ProposalStatus.Approved && DecidedAt <= clock.GetUtcNow() - StillRunning;
+
+    /// <summary>Takes over an approval that died: whoever finishes it is its
+    /// approver now, and the new moment keeps a second retry from running at once.</summary>
+    public void Retry(string by, TimeProvider clock)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(by);
+        if (!MayRetry(clock))
+            throw new InvalidOperationException($"Proposal {Id} is {Status}, approved at {DecidedAt}; it cannot be retried yet.");
+
+        DecidedBy = by;
+        DecidedAt = clock.GetUtcNow();
+    }
+
     public void RecordApplied() => Move(ProposalStatus.Applied);
 
     public void RecordFailed(string reason)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
         Move(ProposalStatus.Failed);
-        Result = reason;
+        Result = string.IsNullOrWhiteSpace(reason) ? "The command failed without saying why."
+            : reason.Length > ResultMaxLength ? reason[..ResultMaxLength]
+            : reason;
     }
 
     private void Decide(ProposalStatus to, string by, TimeProvider clock)

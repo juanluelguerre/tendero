@@ -38,6 +38,10 @@ what a product is.
 - The audit can say who proposed a change and who approved it, without joining.
 - A proposal stores values (the command's name, its payload, the subject's
   code), never a reference into another context (invariant 1).
-- Retrying an approval whose result is unknown skips the staleness check, which
-  relies on the commands being idempotent; a proposable command that is not
-  idempotent would need this decision reopened.
+- A proposal carries a version (Postgres's xmin): of two approvals of one
+  proposal, only the first save stands, and the other is told it is no longer
+  waiting, so a double click runs a command once.
+- Retrying an approval whose result is unknown is allowed only once it is older
+  than an approval can take (five minutes), and it skips the staleness check,
+  which relies on the commands being idempotent; a proposable command that is
+  not idempotent would need this decision reopened.

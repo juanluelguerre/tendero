@@ -3,6 +3,7 @@ using ElGuerre.Tendero.Assist;
 using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Assist.Features.DecideProposals;
 using ElGuerre.Tendero.Assist.Features.ProposeActions;
+using ElGuerre.Tendero.Assist.Ports;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.Catalog.Features.SetProductTranslation;
@@ -63,6 +64,30 @@ public sealed class ProposalApprovalTests(PostgresFixture postgres)
         Assert.Equal(DecisionOutcome.Stale, Assert.Single(decisions.Rows).Outcome);
         await using var reread = factory.Create();
         Assert.Equal("From a person", (await reread.Products.SingleAsync(p => p.Id == product, ct)).Name.Values["en"]);
+    }
+
+    /// <summary>
+    /// Two approvals of one proposal at once: each reads it Proposed, and only the
+    /// first save may stand. The proposal's version (Postgres's xmin) refuses the
+    /// second, and the unit of work says so as a ConcurrentWriteException — what
+    /// the approval turns into NotWaiting (final review, I-2).
+    /// </summary>
+    [Fact]
+    [Trait("Category", "Integration")]
+    public async Task A_decision_made_on_an_old_copy_of_a_proposal_is_refused()
+    {
+        postgres.SkipIfUnavailable();
+        var ct = TestContext.Current.CancellationToken;
+        var (provider, factory) = await ShopAsync("proposal_version", ct);
+        await using var _ = provider;
+        var proposal = await ProposeAsync(provider, await FirstProductAsync(factory, ct), "From the model", ct);
+
+        await using var late = provider.CreateAsyncScope();
+        var copy = (await late.ServiceProvider.GetRequiredService<IProposalRepository>().FindAsync(proposal, ct))!;
+        await SendAsync(provider, new ApproveProposalsCommand([proposal]), ct);
+
+        copy.Reject("Marta", "Too late", TimeProvider.System);
+        await Assert.ThrowsAsync<ConcurrentWriteException>(() => late.ServiceProvider.GetRequiredService<IUnitOfWork>().SaveChangesAsync(ct));
     }
 
     // ---------- fixtures ----------

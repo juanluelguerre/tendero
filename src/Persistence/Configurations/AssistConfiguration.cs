@@ -30,6 +30,12 @@ internal sealed class ActionProposalConfiguration : IEntityTypeConfiguration<Act
 
         builder.ComplexProperty(proposal => proposal.Provenance, provenance => provenance.ToJson("provenance"));
 
+        // The row's version, Postgres's own xmin: two approvals of one proposal
+        // both read it Proposed, and only the first save stands. The second is a
+        // concurrency failure the unit of work reports, and the approval that made
+        // it is told the proposal is no longer waiting (final review, I-2).
+        builder.Property(proposal => proposal.Version).HasColumnName("xmin").IsRowVersion();
+
         // What the Proposals list asks (S-4): one status, the newest first.
         builder.HasIndex(proposal => new { proposal.Status, proposal.ProposedAt }).IsDescending(false, true);
 

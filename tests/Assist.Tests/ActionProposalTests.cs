@@ -66,6 +66,50 @@ public sealed class ActionProposalTests
         Assert.Equal((ProposalStatus.Stale, "Lucía"), (proposal.Status, proposal.DecidedBy));
     }
 
+    /// <summary>A reason comes from whatever the command threw or returned; the
+    /// column holds a thousand characters, and a longer one must not take the row's
+    /// result down with it (final review, I-1).</summary>
+    [Fact]
+    public void A_failure_reason_longer_than_its_column_is_cut_to_it()
+    {
+        var proposal = AProposal();
+        proposal.Approve("Lucía", Clock);
+
+        proposal.RecordFailed(new string('x', 5000));
+
+        Assert.Equal(ActionProposal.ResultMaxLength, proposal.Result!.Length);
+    }
+
+    [Fact]
+    public void A_failure_without_a_reason_still_says_it_failed()
+    {
+        var proposal = AProposal();
+        proposal.Approve("Lucía", Clock);
+
+        proposal.RecordFailed("  ");
+
+        Assert.Equal(ProposalStatus.Failed, proposal.Status);
+        Assert.False(string.IsNullOrWhiteSpace(proposal.Result));
+    }
+
+    /// <summary>An approval moments old may still be running in another request:
+    /// only one old enough to have died can be finished again (final review, I-2).</summary>
+    [Fact]
+    public void A_just_approved_proposal_is_not_retried_until_it_could_have_died()
+    {
+        var clock = new TestClock();
+        var proposal = ActionProposal.Propose("SetProductTranslation", "{}", "MOKA-1", null, "because", Provenance(), clock);
+        proposal.Approve("Lucía", clock);
+
+        Assert.False(proposal.MayRetry(clock));
+        clock.Advance(ActionProposal.StillRunning + TimeSpan.FromSeconds(1));
+        Assert.True(proposal.MayRetry(clock));
+
+        proposal.Retry("Marta", clock);
+        Assert.Equal(("Marta", clock.GetUtcNow()), (proposal.DecidedBy, proposal.DecidedAt));
+        Assert.False(proposal.MayRetry(clock));
+    }
+
     [Fact]
     public void Nothing_is_applied_without_an_approval()
     {

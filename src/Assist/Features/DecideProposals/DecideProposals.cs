@@ -59,13 +59,16 @@ public sealed class RejectProposalsValidator : AbstractValidator<RejectProposals
 
 /// <summary>
 /// Approves proposals and runs their commands in the same request, as the person
-/// approving (spec decision 9). Each row has its own DI scope: its command's
-/// unit of work is its own, so a row that throws leaves nothing half-written for
-/// the next one to save, and its scope names the proposal for the audit row.
+/// approving (spec decision 9).
+///
+/// Each row has two DI scopes of its own. The proposal is read and saved in one,
+/// so a row whose result cannot be saved leaves nothing modified for the next
+/// row's save to retry; its command runs in the other, so a command that throws
+/// leaves nothing half-written either, and that scope names the proposal for the
+/// command's audit row. Whatever goes wrong in a row is that row's answer, never
+/// the batch's.
 /// </summary>
 public sealed class ApproveProposalsHandler(
-    IProposalRepository proposals,
-    IUnitOfWork unitOfWork,
     IServiceScopeFactory scopes,
     IPrincipalAccessor principals,
     TimeProvider clock) : ICommandHandler<ApproveProposalsCommand, ProposalDecisions>
@@ -79,19 +82,41 @@ public sealed class ApproveProposalsHandler(
         var rows = new List<ProposalDecision>();
 
         foreach (var id in command.Ids.Distinct())
-            rows.Add(await ApproveAsync(id, approver, cancellationToken));
+            rows.Add(await DecideAsync(id, approver, cancellationToken));
 
         activity?.SetTag("assist.rows", rows.Count);
         activity?.SetTag("assist.applied", rows.Count(row => row.Outcome == DecisionOutcome.Applied));
         return new ProposalDecisions(rows);
     }
 
+    private async Task<ProposalDecision> DecideAsync(ProposalId id, string approver, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ApproveAsync(id, approver, cancellationToken);
+        }
+        catch (Exception failure) when (failure is not OperationCanceledException)
+        {
+            // The rows before this one stay reported and the rows after it still
+            // run; this one is Failed, or left Approved for a retry to finish.
+            return new ProposalDecision(id, DecisionOutcome.Failed, $"This row could not be completed: {failure.Message}");
+        }
+    }
+
     private async Task<ProposalDecision> ApproveAsync(ProposalId id, string approver, CancellationToken cancellationToken)
     {
+        await using var books = scopes.CreateAsyncScope();
+        var proposals = books.ServiceProvider.GetRequiredService<IProposalRepository>();
+        var unitOfWork = books.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
         var proposal = await proposals.FindAsync(id, cancellationToken);
         if (proposal is null)
             return new ProposalDecision(id, DecisionOutcome.NotFound, null);
-        if (proposal.Status is not (ProposalStatus.Proposed or ProposalStatus.Approved))
+
+        // Approved moments ago may still be running in another request; only an
+        // approval old enough to have died is finished again.
+        var retrying = proposal.MayRetry(clock);
+        if (proposal.Status != ProposalStatus.Proposed && !retrying)
             return new ProposalDecision(id, DecisionOutcome.NotWaiting, null);
 
         await using var scope = scopes.CreateAsyncScope();
@@ -99,22 +124,33 @@ public sealed class ApproveProposalsHandler(
         using var document = JsonDocument.Parse(proposal.Payload);
         var payload = document.RootElement;
 
-        if (proposal.Status == ProposalStatus.Proposed)
-        {
-            // Stale when what the command would change is not what was proposed
-            // against. An entry that no longer exists cannot say, and fails below.
-            if (entry is not null && !Snapshots.Same(await entry.NowAsync(payload, cancellationToken), proposal.Before))
-            {
-                proposal.MarkStale(approver, clock);
-                await unitOfWork.SaveChangesAsync(cancellationToken);
-                return new ProposalDecision(id, DecisionOutcome.Stale, null);
-            }
+        // Stale when what the command would change is not what was proposed
+        // against. An entry that no longer exists cannot say, and fails below.
+        // A retry skips it: its command may already have run.
+        var stale = !retrying && entry is not null
+            && !Snapshots.Same(await entry.NowAsync(payload, cancellationToken), proposal.Before);
 
-            // Saved before running: if the process dies now, the list shows
-            // "approved, result unknown" and approving again finishes it.
+        if (stale)
+            proposal.MarkStale(approver, clock);
+        else if (retrying)
+            proposal.Retry(approver, clock);
+        else
             proposal.Approve(approver, clock);
+
+        // The claim, saved before anything runs: the proposal's version makes it
+        // one request's alone, and the one that saved second is told so. If the
+        // process dies after it, the list shows "approved, result unknown".
+        try
+        {
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
+        catch (ConcurrentWriteException)
+        {
+            return new ProposalDecision(id, DecisionOutcome.NotWaiting, null);
+        }
+
+        if (stale)
+            return new ProposalDecision(id, DecisionOutcome.Stale, null);
 
         var application = await ApplyAsync(entry, proposal, payload, scope.ServiceProvider, cancellationToken);
         if (application.Applied)

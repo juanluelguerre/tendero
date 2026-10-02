@@ -132,10 +132,60 @@ public sealed class DecideProposalsTests
         var proposal = shop.Propose("MUG-1", "new");
         proposal.Approve("Lucía", Clock);
         shop.World["MUG-1"] = "new";   // it had run before the process died
+        Clock.Advance(ActionProposal.StillRunning + TimeSpan.FromSeconds(1));
 
         var result = await shop.Approve(proposal.Id);
 
         Assert.Equal(DecisionOutcome.Applied, Assert.Single(result.Rows).Outcome);
+    }
+
+    /// <summary>A row whose result cannot be saved — a database blip, a reason too
+    /// long for its column — fails alone: the batch answers, and the rows after it
+    /// still run (final review, I-1).</summary>
+    [Fact]
+    public async Task A_row_whose_result_cannot_be_saved_fails_alone()
+    {
+        var shop = Shop(("A", "1"), ("B", "1"));
+        var a = shop.Propose("A", "2");
+        var b = shop.Propose("B", "2");
+        shop.UnitOfWork.FailOn = save => save == 2 ? new TimeoutException("the database went away") : null;   // A's result
+
+        var result = await shop.Approve(a.Id, b.Id);
+
+        var first = result.Rows[0];
+        Assert.Equal(DecisionOutcome.Failed, first.Outcome);
+        Assert.Contains("the database went away", first.Reason);
+        Assert.Equal(DecisionOutcome.Applied, result.Rows[1].Outcome);
+        Assert.Equal("2", shop.World["B"]);
+    }
+
+    /// <summary>Two approvals of one proposal at once — a double click, two tabs:
+    /// the one whose approval was saved second is told it is not waiting, and its
+    /// command does not run (final review, I-2).</summary>
+    [Fact]
+    public async Task A_proposal_another_approval_reached_first_is_not_waiting_and_runs_nothing()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new");
+        shop.UnitOfWork.FailOn = save => save == 1 ? new ConcurrentWriteException("the proposal's version", new Exception()) : null;
+
+        var row = Assert.Single((await shop.Approve(proposal.Id)).Rows);
+
+        Assert.Equal(DecisionOutcome.NotWaiting, row.Outcome);
+        Assert.Empty(FakeEntry.Applied);
+    }
+
+    [Fact]
+    public async Task A_proposal_approved_moments_ago_is_still_running_and_is_not_run_again()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new");
+        proposal.Approve("Lucía", Clock);
+
+        var row = Assert.Single((await shop.Approve(proposal.Id)).Rows);
+
+        Assert.Equal(DecisionOutcome.NotWaiting, row.Outcome);
+        Assert.Empty(FakeEntry.Applied);
     }
 
     [Fact]
@@ -188,7 +238,7 @@ public sealed class DecideProposalsTests
             var services = new ServiceCollection();
             services.AddSingleton<TimeProvider>(Clock);
             services.AddSingleton<IProposalRepository>(Proposals);
-            services.AddSingleton<IUnitOfWork>(new CountingUnitOfWork());
+            services.AddSingleton<IUnitOfWork>(UnitOfWork);
             services.AddSingleton<IPrincipalAccessor>(new FixedPrincipal("Lucía"));
             services.AddScoped<ProposalScope>();
             services.AddScoped<IProposableCommand>(scope => new FakeEntry(World, scope.GetRequiredService<ProposalScope>()));
@@ -200,6 +250,8 @@ public sealed class DecideProposalsTests
 
         public InMemoryProposals Proposals { get; } = new();
 
+        public ScriptedUnitOfWork UnitOfWork { get; } = new();
+
         public ActionProposal Propose(string subject, string value)
         {
             var proposal = ActionProposal.Propose(FakeEntry.CommandName, FakeEntry.Payload(subject, value).GetRawText(),
@@ -209,8 +261,7 @@ public sealed class DecideProposalsTests
         }
 
         public Task<ProposalDecisions> Approve(params ProposalId[] ids) =>
-            new ApproveProposalsHandler(Proposals, new CountingUnitOfWork(), provider.GetRequiredService<IServiceScopeFactory>(),
-                    new FixedPrincipal("Lucía"), Clock)
+            new ApproveProposalsHandler(provider.GetRequiredService<IServiceScopeFactory>(), new FixedPrincipal("Lucía"), Clock)
                 .HandleAsync(new ApproveProposalsCommand(ids), TestContext.Current.CancellationToken);
 
         public Task<ProposalDecisions> Reject(string reason, params ProposalId[] ids) =>

@@ -996,6 +996,7 @@ classDiagram
         +string? DecidedBy
         +DateTimeOffset? DecidedAt
         +string? Result
+        +UInt32 Version
     }
     class ProposalProvenance {
         <<record>>
