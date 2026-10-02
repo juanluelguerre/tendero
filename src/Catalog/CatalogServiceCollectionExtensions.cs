@@ -1,6 +1,8 @@
 using ElGuerre.Tendero.Catalog.Adapters;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog.Connectors.Seed;
+using ElGuerre.Tendero.Catalog.Features.CatalogueGaps;
+using ElGuerre.Tendero.Catalog.Features.ListProducts;
 using ElGuerre.Tendero.Catalog.Features.SetProductTranslation;
 using ElGuerre.Tendero.Catalog.Features.WithdrawProduct;
 using ElGuerre.Tendero.Catalog.Ports;
@@ -43,6 +45,10 @@ public static class CatalogServiceCollectionExtensions
         // What Steward may propose (phase 12): a class here and a line there.
         services.AddScoped<IProposableCommand, SetProductTranslationProposal>();
         services.AddScoped<IProposableCommand, WithdrawProductProposal>();
+
+        // What Steward may read of the catalogue (phase 12, ADR 0054).
+        services.AddScoped<IReadTool, FindProductsTool>();
+        services.AddScoped<IReadTool, CatalogueGapsTool>();
 
         return services;
     }

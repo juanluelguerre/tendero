@@ -23,6 +23,17 @@ public sealed class ReadToolTests
         Assert.True(properties.TryGetProperty("limit", out _));
     }
 
+    /// <summary>A closed set is read by its name and shown by its names (ADR 0043):
+    /// the catalogue's gap kinds were refused until this (S-3b).</summary>
+    [Fact]
+    public async Task A_closed_set_is_read_by_its_name_and_its_names_are_in_the_schema()
+    {
+        var answer = await Tool().ReadAsync(Arguments("""{"shelf":"A","limit":1,"side":"Back"}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["A-1"], ((ShelfView)answer.Data).Items);
+        Assert.Contains("Back", Tool().ArgumentsSchema.GetRawText());
+    }
+
     [Fact]
     public async Task Arguments_that_read_dispatch_the_query_and_answer_its_data_rows_and_total()
     {
@@ -63,7 +74,9 @@ public sealed class ReadToolTests
         return services.BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<ShelfTool>();
     }
 
-    private sealed record ShelfArguments(string Shelf, int Limit = 10);
+    private enum Side { Front, Back }
+
+    private sealed record ShelfArguments(string Shelf, int Limit = 10, Side Side = Side.Front);
 
     private sealed record ShelfQuery(string Shelf, int Limit) : IQuery<ShelfPage>;
 

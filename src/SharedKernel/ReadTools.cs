@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using System.Text.Json.Serialization.Metadata;
 using FluentValidation;
@@ -43,13 +44,40 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
     where TArgs : class
     where TData : class
 {
+    // A closed set by its name, as on the wire (ADR 0043): a model writes
+    // "MissingName", and the schema it is shown lists the names.
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+        Converters = { WireJson.Enums() },
     };
 
-    private static readonly JsonElement Schema =
-        JsonSerializer.SerializeToElement(JsonSchemaExporter.GetJsonSchemaAsNode(Json, typeof(TArgs)));
+    private static readonly JsonElement Schema = JsonSerializer.SerializeToElement(NamingClosedSets(
+        JsonSchemaExporter.GetJsonSchemaAsNode(Json, typeof(TArgs))));
+
+    /// <summary>
+    /// The exporter cannot see through the names-only converter and describes a
+    /// closed set as nothing at all; the model must see the names it may write.
+    /// Arguments are flat records, so their own properties are all there is to name.
+    /// </summary>
+    private static JsonNode NamingClosedSets(JsonNode schema)
+    {
+        if (schema["properties"] is not JsonObject properties)
+            return schema;
+
+        foreach (var property in typeof(TArgs).GetProperties())
+        {
+            var type = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+            var name = JsonNamingPolicy.CamelCase.ConvertName(property.Name);
+            if (!type.IsEnum || properties[name] is not JsonObject node)
+                continue;
+
+            node["type"] = "string";
+            node["enum"] = new JsonArray([.. Enum.GetNames(type).Select(value => (JsonNode)JsonValue.Create(value))]);
+        }
+
+        return schema;
+    }
 
     public abstract string Name { get; }
 
