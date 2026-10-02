@@ -57,9 +57,12 @@ internal sealed class EfKnowledgeRepository(TenderoDbContext context) : IKnowled
     /// said the way SQL can, and held to it by the integration test.
     /// </summary>
     public async Task<ClaimPage> ClaimsAsync(
-        ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, CancellationToken cancellationToken = default)
+        ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, ProductId? product = null,
+        CancellationToken cancellationToken = default)
     {
         var claims = context.Claims.AsNoTracking().Where(claim => claim.Status == status);
+        if (product is { } one)
+            claims = claims.Where(claim => claim.ProductId == one);
         var weak = claims.Where(claim => EF.Property<List<Evidence>>(claim, EvidenceColumn)
             .Any(item => item.Support < ProductClaim.WeakSupport));
 

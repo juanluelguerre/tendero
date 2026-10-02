@@ -152,7 +152,7 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
 
         var pages = new List<ClaimPage>();
         for (var page = 1; page <= 4; page++)
-            pages.Add(await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, page, 2, ct));
+            pages.Add(await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, page, 2, cancellationToken: ct));
 
         // Postgres orders a uuid by its bytes, which is the order of its lower-case text.
         Assert.Equal(
@@ -161,10 +161,15 @@ public sealed class KnowledgePersistenceTests(PostgresFixture postgres)
             pages.SelectMany(page => page.Claims).Select(claim => claim.Id));
         Assert.All(pages, page => Assert.Equal(8, page.Total));
 
-        var weak = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.Weak, 2, 4, ct);
+        var weak = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.Weak, 2, 4, cancellationToken: ct);
         Assert.Equal([thinQuote.Id, underTheLine.Id], weak.Claims.Select(claim => claim.Id));
         Assert.Equal(6, weak.Total);
         Assert.Equal((6, 8), (weak.CountBySupport[ClaimSupportFilter.Weak], weak.CountBySupport[ClaimSupportFilter.All]));
         Assert.Equal(weak.CountBySupport, pages[0].CountBySupport);
+
+        // One product's claims, for its bulk review (S-5): the filter and the counts in SQL.
+        var lamps = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, 1, 20, lamp, ct);
+        var none = await repository.ClaimsAsync(ClaimStatus.Proposed, ClaimSupportFilter.All, 1, 20, ProductId.New(), ct);
+        Assert.Equal((8, 0, 0), (lamps.Total, none.Total, none.CountBySupport[ClaimSupportFilter.Weak]));
     }
 }

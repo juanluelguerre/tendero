@@ -42,9 +42,10 @@ public sealed class InMemoryKnowledge : IKnowledgeRepository, IUnitOfWork
         Task.FromResult(Claims.FirstOrDefault(claim => claim.Id == id));
 
     public Task<ClaimPage> ClaimsAsync(
-        ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, CancellationToken cancellationToken = default)
+        ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, ProductId? product = null,
+        CancellationToken cancellationToken = default)
     {
-        var inStatus = Claims.Where(claim => claim.Status == status).ToList();
+        var inStatus = Claims.Where(claim => claim.Status == status && (product is null || claim.ProductId == product)).ToList();
         var counts = new Dictionary<ClaimSupportFilter, int>
         {
             [ClaimSupportFilter.Weak] = inStatus.Count(claim => claim.IsWeaklySupported),

@@ -484,6 +484,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/knowledge/claims/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApproveClaims"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{orderId}/returns": {
         parameters: {
             query?: never;
@@ -1430,6 +1446,9 @@ export interface components {
             reasonCode: null | string;
             reason: null | string;
         };
+        ApproveClaimsRequest: {
+            ids: null | string[];
+        };
         ApproveProposalsRequest: {
             ids: string[];
         };
@@ -1499,6 +1518,8 @@ export interface components {
             views: components["schemas"]["ViewedProduct"][];
             searches: components["schemas"]["PastSearch"][];
         };
+        /** @enum {unknown} */
+        BulkApprovalOutcome: "Approved" | "WeakSupport" | "NotWaiting" | "NotFound";
         /** @enum {unknown} */
         CampaignChange: "Created" | "Updated" | "Scheduled" | "Unscheduled" | "Ended" | "Unchanged" | "NotFound" | "AlreadyExists" | "UnknownPromotion" | "UnknownImage" | "WindowClosed" | "NotEditable" | "NotAllowed";
         CampaignChangeResponse: {
@@ -1651,6 +1672,13 @@ export interface components {
         CheckoutHandOff: {
             cartToken: string;
             culture: string;
+        };
+        ClaimApprovalView: {
+            claimId: string;
+            outcome: components["schemas"]["BulkApprovalOutcome"];
+        };
+        ClaimApprovalsResponse: {
+            rows: components["schemas"]["ClaimApprovalView"][];
         };
         ClaimForReview: {
             claimId: string;
@@ -3639,6 +3667,7 @@ export interface operations {
                 support?: components["schemas"]["ClaimSupportFilter"];
                 page?: number;
                 pageSize?: number;
+                product?: string;
             };
             header?: never;
             path?: never;
@@ -3760,6 +3789,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    ApproveClaims: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApproveClaimsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClaimApprovalsResponse"];
+                };
             };
         };
     };

@@ -1130,6 +1130,14 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "product",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
@@ -1270,6 +1278,36 @@
           },
           "404": {
             "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/knowledge/claims/approve": {
+      "post": {
+        "tags": [
+          "Knowledge"
+        ],
+        "operationId": "ApproveClaims",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveClaimsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimApprovalsResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4122,6 +4160,24 @@
           }
         }
       },
+      "ApproveClaimsRequest": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "ApproveProposalsRequest": {
         "required": [
           "ids"
@@ -4409,6 +4465,14 @@
             }
           }
         }
+      },
+      "BulkApprovalOutcome": {
+        "enum": [
+          "Approved",
+          "WeakSupport",
+          "NotWaiting",
+          "NotFound"
+        ]
       },
       "CampaignChange": {
         "enum": [
@@ -4996,6 +5060,35 @@
           },
           "culture": {
             "type": "string"
+          }
+        }
+      },
+      "ClaimApprovalView": {
+        "required": [
+          "claimId",
+          "outcome"
+        ],
+        "type": "object",
+        "properties": {
+          "claimId": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/BulkApprovalOutcome"
+          }
+        }
+      },
+      "ClaimApprovalsResponse": {
+        "required": [
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClaimApprovalView"
+            }
           }
         }
       },

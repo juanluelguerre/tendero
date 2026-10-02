@@ -49,6 +49,25 @@ public sealed class ReviewClaimsTests
         Assert.Equal("Flexo LED con tres temperaturas de color y brazo articulado."[quote.Start..quote.End], quote.Text);
     }
 
+    /// <summary>One product's claims, for its bulk review (S-5): the queue narrowed, the counts with it.</summary>
+    [Fact]
+    public async Task The_queue_can_be_narrowed_to_one_product()
+    {
+        Propose("brazo articulado", 0.97);
+        var other = ProductId.New();
+        var document = SourceDocument.Describe(other, "es", "Taza de gres.", this.clock);
+        this.knowledge.Add(document);
+        this.knowledge.Add(ProductClaim.Propose(
+            other, LocalizedText.From("es", "Es de gres.").With("en", "It is stoneware."), null, null,
+            [new Evidence(document.Id, document.Locate("gres")!, 0.9)],
+            new Provenance("chat", "m", "r", "p", "run", this.clock.GetUtcNow()), this.clock));
+
+        var queue = await new ListClaimsForReviewHandler(this.knowledge).HandleAsync(
+            new ListClaimsForReviewQuery(Product: this.lamp), TestContext.Current.CancellationToken);
+
+        Assert.Equal((1, this.lamp.ToString()), (queue.Total, Assert.Single(queue.Items).ProductId));
+    }
+
     [Fact]
     public async Task Approving_names_the_person_the_request_authenticated_as()
     {

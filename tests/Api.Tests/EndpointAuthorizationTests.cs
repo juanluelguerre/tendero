@@ -90,6 +90,11 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/steward/proposals")]
     public void Stewards_proposals_are_decided_by_the_shopkeeper(string route) => Writes_to_the_catalogue_require_the_shopkeeper(route);
 
+    /// <summary>A product's claims approved together (S-5): the shopkeeper's, as one claim's approval is.</summary>
+    [Theory]
+    [InlineData("/api/knowledge/claims/approve")]
+    public void Claims_in_bulk_are_approved_by_the_shopkeeper(string route) => Writes_to_the_catalogue_require_the_shopkeeper(route);
+
     [Theory]
     [InlineData("/api/catalog/import")]
     [InlineData("/api/catalog/products/{id:guid}/publish")]

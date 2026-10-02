@@ -26,7 +26,10 @@ public interface IKnowledgeRepository
     /// tie-break, so two pages never repeat or skip one. Narrowed by support, and
     /// counted by support before it narrows (R-7.2).
     /// </summary>
-    Task<ClaimPage> ClaimsAsync(ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, CancellationToken cancellationToken = default);
+    /// <param name="product">One product's claims; every product's when null.</param>
+    Task<ClaimPage> ClaimsAsync(
+        ClaimStatus status, ClaimSupportFilter support, int page, int pageSize, ProductId? product = null,
+        CancellationToken cancellationToken = default);
 
     void Add(SourceDocument document);
 

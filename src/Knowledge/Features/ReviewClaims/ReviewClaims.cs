@@ -18,8 +18,10 @@ namespace ElGuerre.Tendero.Knowledge.Features.ReviewClaims;
 /// page at a time (R-7.2). It stopped at a hundred without saying so, and a queue
 /// that hides its hundred-and-first claim is a queue that looks finished.
 /// </summary>
+/// <param name="Product">One product's claims, for its bulk review (S-5); every product's when null.</param>
 public sealed record ListClaimsForReviewQuery(
-    ClaimSupportFilter Support = ClaimSupportFilter.All, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize)
+    ClaimSupportFilter Support = ClaimSupportFilter.All, int Page = Paging.FirstPage, int PageSize = Paging.DefaultPageSize,
+    ProductId? Product = null)
     : IQuery<ClaimsForReviewPage>;
 
 /// <summary>How many waiting claims one support filter shows.</summary>
@@ -71,7 +73,7 @@ public sealed class ListClaimsForReviewHandler(IKnowledgeRepository knowledge)
 {
     public async Task<ClaimsForReviewPage> HandleAsync(ListClaimsForReviewQuery query, CancellationToken cancellationToken)
     {
-        var page = await knowledge.ClaimsAsync(ClaimStatus.Proposed, query.Support, query.Page, query.PageSize, cancellationToken);
+        var page = await knowledge.ClaimsAsync(ClaimStatus.Proposed, query.Support, query.Page, query.PageSize, query.Product, cancellationToken);
         var result = new List<ClaimForReview>(page.Claims.Count);
 
         foreach (var claim in page.Claims)
@@ -196,12 +198,14 @@ public sealed class ReviewClaimsEndpoints : ICarterModule
     {
         // GET /api/knowledge/claims?support=Weak&page=1&pageSize=20 — the review
         // queue, weakest support first. Every claim unless `support` says Weak:
-        // which one a screen opens on is the screen's choice.
+        // which one a screen opens on is the screen's choice. `product` narrows it
+        // to one product's, for its bulk review.
         app.MapGet("/api/knowledge/claims",
             async Task<Ok<ClaimsForReviewPage>> (
-                   ClaimSupportFilter? support, int? page, int? pageSize, IQueryDispatcher dispatcher, CancellationToken ct) =>
+                   ClaimSupportFilter? support, int? page, int? pageSize, Guid? product, IQueryDispatcher dispatcher, CancellationToken ct) =>
                 TypedResults.Ok(await dispatcher.SendAsync(new ListClaimsForReviewQuery(
-                    support ?? ClaimSupportFilter.All, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize), ct)))
+                    support ?? ClaimSupportFilter.All, page ?? Paging.FirstPage, pageSize ?? Paging.DefaultPageSize,
+                    product is { } id ? new ProductId(id) : null), ct)))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Knowledge")
             .WithName("ListClaimsForReview");
