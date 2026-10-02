@@ -360,6 +360,14 @@ notifications and alerts.
 1. **S-1 · Proposals without a model.** `SetProductTranslation` in Catalog; the
    `Assist` context with `ActionProposal`, the registry, approve and reject; the
    audit's `ProposalId`; the ADR that makes `Assist` a context, and CLAUDE.md.
+   *As built (2026-10-02)*: each proposable command is an `IProposableCommand`
+   its own context registers (`ProposableCommand<TPayload, TCommand, TResult>`),
+   so `Assist` references the kernel alone (ADR 0052). Rulings the spec left
+   open: an `Approved` proposal retried after a crash skips the staleness check;
+   "now" is a JSON snapshot of the fields the command would change, compared by
+   value because jsonb keeps neither spacing nor key order; the Proposals list's
+   query moves to S-4; names up to 200 characters and descriptions up to 4,000;
+   batches of at most 100; each approved row runs in a DI scope of its own.
 2. **S-2 · The model port.** The shared factory, profiles and keyed registration,
    the metering client, `AiInvocations` and its worker; the `steward-model`
    container behind `Tendero__Steward`.

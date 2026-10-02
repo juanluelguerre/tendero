@@ -9,7 +9,7 @@ code quality and architectural clarity matter more than shipping fast.
 Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
 `ElGuerre.Tendero.Pricing`, `ElGuerre.Tendero.Inventory`,
 `ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Accounts`,
-`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`,
+`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.Assist`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`,
 `ElGuerre.Tendero.Ucp`). Project file name,
 assembly name and root namespace are the same string; the folders under `src/`
 drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope in
@@ -130,7 +130,9 @@ node tools/api-map.mjs --schema CartView
    orders snapshot product name/price into `OrderLine`, an applied discount
    snapshots the promotion's code and label. Today: `Catalog`, `Pricing`,
    `Inventory`, `Ordering`, `Accounts`, `Knowledge` (phase 10: claims a model
-   proposes and a person approves, never written into `Catalog` — ADR 0018).
+   proposes and a person approves, never written into `Catalog` — ADR 0018),
+   `Assist` (phase 12: proposals a model makes and a person decides; it runs
+   other contexts' commands only through `IProposableCommand` — ADR 0052).
    `Pricing` and `Inventory` reference
    SharedKernel and nothing else, and an architecture rule computes that by
    reflection — that purity is what makes the promotion engine verifiable with
@@ -189,7 +191,8 @@ node tools/api-map.mjs --schema CartView
 > context still has to earn its boundary — its own lifecycle, its own actor, or
 > a consistency boundary genuinely its own — and **a context with no writer is
 > not a context yet**: `Pricing` reads committed files and owns no table.
-> `Mcp`, `Ucp` and `Assist` are not contexts; they own no state.
+> `Mcp` and `Ucp` are not contexts; they own no state. `Assist` became one in
+> phase 12 (ADR 0052): a proposal has a lifecycle, a writer and actors of its own.
 
 ## Conventions
 
