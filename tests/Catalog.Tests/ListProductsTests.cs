@@ -127,6 +127,31 @@ public sealed class ListProductsTests
     public void A_page_is_asked_for_within_the_paging_contract(int page, int pageSize, bool valid) =>
         Assert.Equal(valid, new ListProductsValidator().Validate(new ListProductsQuery(null, "es", page, pageSize)).IsValid);
 
+    /// <summary>"Products missing an English name": the filter Steward's unavailable
+    /// state points at, and the queue's own question (S-3a). The chips count only
+    /// what the filter shows.</summary>
+    [Fact]
+    public async Task Products_missing_a_culture_are_the_ones_listed_and_counted()
+    {
+        var spanishOnly = ADraftProduct("Flexo articulado");
+        var both = Product.Create(Clock,
+            new LocalizedText(new Dictionary<string, string> { ["es"] = "Mochila", ["en"] = "Backpack" }), new Money(49m, "EUR"));
+
+        var result = await HandlerOver(spanishOnly, both).HandleAsync(
+            new ListProductsQuery(null, "es", 1, 20, MissingCulture: "en"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(spanishOnly.Code, Assert.Single(result.Items).Code);
+        Assert.Equal(1, result.Total);
+        Assert.Equal(1, result.Counts.Sum(count => count.Count));
+    }
+
+    [Theory]
+    [InlineData("fr", false)]
+    [InlineData("EN", true)]
+    [InlineData(null, true)]
+    public void A_missing_culture_is_one_the_shop_speaks(string? culture, bool valid) =>
+        Assert.Equal(valid, new ListProductsValidator().Validate(new ListProductsQuery(null, "es", 1, 20, MissingCulture: culture)).IsValid);
+
     private static ListProductsHandler HandlerOver(params Product[] products) =>
         new(new InMemoryProductCatalogReader(products));
 

@@ -32,9 +32,12 @@ public interface IProductCatalogReader
 {
     /// <summary>
     /// A page of products, narrowed by status and by text (the redesign's R-4.6):
-    /// the text matches any part of the name in any culture, or the code.
+    /// the text matches any part of the name in any culture, or the code; and by a
+    /// culture the name has nothing in (S-3a). The counts follow the text and the
+    /// culture, never the status.
     /// </summary>
-    Task<ProductPage> ListAsync(ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct);
+    Task<ProductPage> ListAsync(
+        ProductStatus? status, string? text, string? missingCulture, int page, int pageSize, CancellationToken ct);
 
     /// <summary>
     /// The SKUs of every product whose name, in any culture, or code contains the

@@ -19,7 +19,7 @@ internal sealed class EfProductRepository(TenderoDbContext context)
     // whole filter and not to the page, because a review queue needs to say how
     // many are left. Counting in SQL avoids pulling the catalogue in to discard it.
     public async Task<ProductPage> ListAsync(
-        ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct)
+        ProductStatus? status, string? text, string? missingCulture, int page, int pageSize, CancellationToken ct)
     {
         var query = context.Products.AsNoTracking();
 
@@ -27,6 +27,12 @@ internal sealed class EfProductRepository(TenderoDbContext context)
         {
             var matching = Matching(typed);
             query = query.Where(product => matching.Contains((Guid)(object)product.Id));
+        }
+
+        if (missingCulture is { Length: > 0 } culture)
+        {
+            var missing = Missing(Culture.Normalize(culture));
+            query = query.Where(product => missing.Contains((Guid)(object)product.Id));
         }
 
         // Per status before narrowing to one, as the orders list does: the
@@ -89,6 +95,19 @@ internal sealed class EfProductRepository(TenderoDbContext context)
                OR EXISTS (SELECT 1 FROM jsonb_each_text(p.name) AS n WHERE n.value ILIKE {pattern} ESCAPE '\')
             """);
     }
+
+    /// <summary>
+    /// The ids of the products whose name has no value in <paramref name="culture"/> —
+    /// the queue's "missing English" and Steward's gap (S-3a). A key test on the
+    /// jsonb, the culture a parameter and not text; the same id subquery the text
+    /// filter composes.
+    /// </summary>
+    private IQueryable<Guid> Missing(string culture) =>
+        context.Database.SqlQuery<Guid>(
+            $"""
+            SELECT p.id AS "Value" FROM catalog.products AS p
+            WHERE NOT (p.name ? {culture})
+            """);
 
     /// <summary>What was typed, matched as typed: a % or _ in it is a character, not a wildcard.</summary>
     private static string Escaped(string text) =>

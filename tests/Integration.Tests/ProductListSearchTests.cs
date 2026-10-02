@@ -49,7 +49,7 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
         var reader = scope.ServiceProvider.GetRequiredService<IProductCatalogReader>();
 
         async Task<string[]> Found(string text) =>
-            [.. (await reader.ListAsync(null, text, 1, 20, ct)).Items.Select(product => product.Code).Order()];
+            [.. (await reader.ListAsync(null, text, null, 1, 20, ct)).Items.Select(product => product.Code).Order()];
 
         // The keys of {"es": …, "en": …}: a match on them would be every product.
         Assert.Empty(await Found("es"));
@@ -63,7 +63,16 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
         Assert.Equal([kettle.Code], await Found("100%"));
         Assert.Empty(await Found("0%urban"));
 
-        Assert.Equal(3, (await reader.ListAsync(null, "  ", 1, 20, ct)).Total);
+        Assert.Equal(3, (await reader.ListAsync(null, "  ", null, 1, 20, ct)).Total);
+
+        // A culture missing from the jsonb's keys (S-3a): the lamp has no English
+        // name; every product has a Spanish one; and the two filters compose.
+        async Task<string[]> Missing(string culture, string? text = null) =>
+            [.. (await reader.ListAsync(null, text, culture, 1, 20, ct)).Items.Select(product => product.Code).Order()];
+
+        Assert.Equal([lamp.Code], await Missing("en"));
+        Assert.Empty(await Missing("es"));
+        Assert.Empty(await Missing("en", "mochila"));
     }
 
     /// <summary>
@@ -134,7 +143,7 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
         await using var scope = services.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<IProductCatalogReader>();
 
-        var page = await reader.ListAsync(ProductStatus.Active, "mochila", 1, 20, ct);
+        var page = await reader.ListAsync(ProductStatus.Active, "mochila", null, 1, 20, ct);
 
         Assert.Equal(onSale.Code, Assert.Single(page.Items).Code);
         Assert.Equal(1, page.CountByStatus[ProductStatus.Active]);

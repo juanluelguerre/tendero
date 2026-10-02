@@ -468,6 +468,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "missing",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

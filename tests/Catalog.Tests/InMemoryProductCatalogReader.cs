@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
+using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Catalog.Tests;
 
@@ -11,13 +12,14 @@ namespace ElGuerre.Tendero.Catalog.Tests;
 internal sealed class InMemoryProductCatalogReader(params Product[] products) : IProductCatalogReader
 {
     public Task<ProductPage> ListAsync(
-        ProductStatus? status, string? text, int page, int pageSize, CancellationToken ct)
+        ProductStatus? status, string? text, string? missingCulture, int page, int pageSize, CancellationToken ct)
     {
         var typed = text?.Trim() ?? "";
         var typedMatches = products
             .Where(p => typed.Length == 0
                 || p.Code.Contains(typed, StringComparison.OrdinalIgnoreCase)
                 || p.Name.Cultures.Any(culture => p.Name.In(culture).Contains(typed, StringComparison.OrdinalIgnoreCase)))
+            .Where(p => missingCulture is null || !p.Name.Cultures.Contains(Culture.Normalize(missingCulture)))
             .ToList();
         var matching = typedMatches.Where(p => status is null || p.Status == status).ToList();
 
