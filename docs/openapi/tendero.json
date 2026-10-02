@@ -170,6 +170,45 @@
         }
       }
     },
+    "/api/steward/turns": {
+      "post": {
+        "tags": [
+          "Steward"
+        ],
+        "operationId": "TakeStewardTurn",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StewardTurnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StewardAnswer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/steward/proposals/approve": {
       "post": {
         "tags": [
@@ -8131,6 +8170,24 @@
           }
         }
       },
+      "ScreenContext": {
+        "required": [
+          "page",
+          "subject"
+        ],
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "string"
+          },
+          "subject": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SearchAnswer": {
         "required": [
           "match"
@@ -8850,6 +8907,107 @@
           }
         }
       },
+      "StewardAnswer": {
+        "required": [
+          "status",
+          "text",
+          "reads",
+          "proposalIds",
+          "cost",
+          "profile",
+          "fellBack",
+          "nearContextLimit",
+          "conversationId"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/StewardStatus"
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolUse"
+            }
+          },
+          "proposalIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cost": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TurnCost"
+              }
+            ]
+          },
+          "profile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fellBack": {
+            "type": "boolean"
+          },
+          "nearContextLimit": {
+            "type": "boolean"
+          },
+          "conversationId": {
+            "type": "string"
+          }
+        }
+      },
+      "StewardStatus": {
+        "enum": [
+          "Answered",
+          "Unavailable",
+          "BudgetExceeded"
+        ]
+      },
+      "StewardTurnRequest": {
+        "required": [
+          "messages",
+          "screen",
+          "conversationId"
+        ],
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TurnMessage"
+            }
+          },
+          "screen": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScreenContext"
+              }
+            ]
+          },
+          "conversationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "StockFilter": {
         "enum": [
           "Restock",
@@ -9055,6 +9213,30 @@
           }
         }
       },
+      "ToolUse": {
+        "required": [
+          "tool",
+          "rows",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "tool": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "TranslationOutcome": {
         "enum": [
           "Translated",
@@ -9062,6 +9244,57 @@
           "Archived",
           "NotFound"
         ]
+      },
+      "TurnCost": {
+        "required": [
+          "calls",
+          "inputTokens",
+          "outputTokens",
+          "microEuros",
+          "milliseconds",
+          "model"
+        ],
+        "type": "object",
+        "properties": {
+          "calls": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "inputTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "outputTokens": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "microEuros": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "milliseconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "model": {
+            "type": "string"
+          }
+        }
+      },
+      "TurnMessage": {
+        "required": [
+          "role",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
       },
       "UpliftDay": {
         "required": [

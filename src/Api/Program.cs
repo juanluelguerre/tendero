@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Carter;
 using ElGuerre.Tendero.Accounts;
 using ElGuerre.Tendero.Accounts.Features.LinkIdentity;
@@ -5,6 +6,7 @@ using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Assist;
 using ElGuerre.Tendero.Assist.Features.DecideProposals;
+using ElGuerre.Tendero.Assist.Steward;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.DevIssuer;
@@ -111,10 +113,20 @@ builder.Services.AddCors(cors => cors.AddDefaultPolicy(policy => policy
 builder.Services.AddKnowledge(builder.Configuration);
 
 // Steward's proposals and their decisions (phase 12, ADR 0052).
-builder.Services.AddAssist();
+builder.Services.AddAssist(builder.Configuration);
 
 // One row per model call, written off the request (ADR 0053).
 builder.Services.AddAIInvocationLog();
+
+// Twenty Steward turns a minute per person (the spec, *Security*): a loop or an
+// abuse costs a bounded amount. Partitioned by the principal, never by address.
+builder.Services.AddRateLimiter(limiter =>
+{
+    limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    limiter.AddPolicy(StewardTurnEndpoints.TurnsPerPerson, http => RateLimitPartition.GetFixedWindowLimiter(
+        http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject ?? "anonymous",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
 
 // Steward's model profiles (ADR 0053), each on its own. The local one has no
 // address of its own: the AppHost hands it one only when its container runs
@@ -164,6 +176,7 @@ app.UseSyntheticTrafficLabels();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapDefaultEndpoints();
 
 // Always served, not only in Development: the contract test reads it from here,

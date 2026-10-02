@@ -1,9 +1,14 @@
 using System.Diagnostics;
+using Carter;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Features.ProposeActions;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.Agents.AI;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -60,9 +65,10 @@ public enum StewardStatus
 /// <param name="Profile">The profile that answered.</param>
 /// <param name="FellBack">Whether the first profile failed and the fallback answered.</param>
 /// <param name="NearContextLimit">The history is near the answering profile's window: start a new conversation.</param>
+/// <param name="ConversationId">The conversation this turn belongs to — minted on the first turn.</param>
 public sealed record StewardAnswer(
     StewardStatus Status, string? Text, IReadOnlyList<ToolUse> Reads, IReadOnlyList<string> ProposalIds,
-    TurnCost? Cost, string? Profile, bool FellBack, bool NearContextLimit);
+    TurnCost? Cost, string? Profile, bool FellBack, bool NearContextLimit, string ConversationId);
 
 /// <summary>What the turn cost, at the answering profile's price: the panel's cost line adds these up.</summary>
 public sealed record TurnCost(int Calls, long InputTokens, long OutputTokens, long MicroEuros, int Milliseconds, string Model);
@@ -105,7 +111,7 @@ public sealed partial class StewardTurnHandler(
         var settings = options.Value;
 
         if (await usage.ConversationTokensAsync(command.ConversationId, cancellationToken) >= settings.ConversationTokenBudget)
-            return Answer(StewardStatus.BudgetExceeded, null, new StewardTrace(), null, null, false, false);
+            return Answer(command, StewardStatus.BudgetExceeded, null, new StewardTrace(), null, null, false, false);
 
         var history = command.Messages
             .Select(message => new ChatMessage(message.Role == "assistant" ? ChatRole.Assistant : ChatRole.User, message.Text))
@@ -131,7 +137,7 @@ public sealed partial class StewardTurnHandler(
                 var output = response.Usage?.OutputTokenCount ?? 0;
                 activity?.SetTag("assist.profile", name);
 
-                return Answer(StewardStatus.Answered,
+                return Answer(command, StewardStatus.Answered,
                     string.IsNullOrWhiteSpace(response.Text) ? StewardPrompt.StoppedAtTheCap(command.Culture) : response.Text,
                     trace,
                     new TurnCost(calls, input, output, profile.CostMicroEuros(input, output),
@@ -146,14 +152,14 @@ public sealed partial class StewardTurnHandler(
                 // for a person — and does not fall back: a second model would propose
                 // them again.
                 if (trace.Proposed.Count > 0)
-                    return Answer(StewardStatus.Unavailable, null, trace, null, name, fellBack, false);
+                    return Answer(command, StewardStatus.Unavailable, null, trace, null, name, fellBack, false);
 
                 fellBack = true;
             }
         }
 
         activity?.SetTag("assist.unavailable", true);
-        return Answer(StewardStatus.Unavailable, null, new StewardTrace(), null, null, fellBack, false);
+        return Answer(command, StewardStatus.Unavailable, null, new StewardTrace(), null, null, fellBack, false);
     }
 
     private async Task<AgentResponse> RunAsync(
@@ -191,9 +197,43 @@ public sealed partial class StewardTurnHandler(
     }
 
     private static StewardAnswer Answer(
-        StewardStatus status, string? text, StewardTrace trace, TurnCost? cost, string? profile, bool fellBack, bool nearLimit) =>
-        new(status, text, trace.Reads, trace.Proposed, cost, profile, fellBack, nearLimit);
+        StewardTurnCommand command, StewardStatus status, string? text, StewardTrace trace, TurnCost? cost, string? profile,
+        bool fellBack, bool nearLimit) =>
+        new(status, text, trace.Reads, trace.Proposed, cost, profile, fellBack, nearLimit, command.ConversationId);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Steward's profile {Profile} failed a turn")]
     private static partial void LogFailed(ILogger logger, Exception failure, string profile);
+}
+
+// ---------- The wire ----------
+
+/// <param name="ConversationId">The conversation to continue; omitted on its first turn.</param>
+public sealed record StewardTurnRequest(IReadOnlyList<TurnMessage> Messages, ScreenContext? Screen, string? ConversationId);
+
+public sealed class StewardTurnEndpoints : ICarterModule
+{
+    /// <summary>The rate limiter's policy: twenty turns a minute per person (the spec, *Security*).</summary>
+    public const string TurnsPerPerson = "steward-turns";
+
+    public void AddRoutes(IEndpointRouteBuilder app)
+    {
+        // POST /api/steward/turns?culture=en — the conversation so far, the screen it
+        // was asked on; the server keeps nothing between turns.
+        app.MapPost("/api/steward/turns",
+                async Task<Ok<StewardAnswer>> (StewardTurnRequest body, string? culture, HttpContext http,
+                    ICommandDispatcher dispatcher, CancellationToken ct) =>
+                {
+                    var language = CultureNegotiation.Resolve(culture, http.Request.Headers.AcceptLanguage);
+                    var conversation = body.ConversationId is { Length: > 0 } id ? id : Guid.CreateVersion7().ToString();
+                    var answer = await dispatcher.SendAsync(
+                        new StewardTurnCommand(body.Messages ?? [], body.Screen, conversation, language), ct);
+                    http.Response.Headers.ContentLanguage = language;
+                    http.Response.Headers.Vary = "Accept-Language";
+                    return TypedResults.Ok(answer);
+                })
+            .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
+            .RequireRateLimiting(TurnsPerPerson)
+            .WithTags("Steward")
+            .WithName("TakeStewardTurn");
+    }
 }

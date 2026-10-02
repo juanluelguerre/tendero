@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/steward/turns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TakeStewardTurn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/steward/proposals/approve": {
         parameters: {
             query?: never;
@@ -2475,6 +2491,10 @@ export interface components {
             previous: components["schemas"]["SalesFigures"];
             bestSellers: components["schemas"]["BestSeller"][];
         };
+        ScreenContext: {
+            page: string;
+            subject: null | string;
+        };
         SearchAnswer: {
             match: components["schemas"]["SearchMatch"];
             helpTopic?: null | string;
@@ -2655,6 +2675,24 @@ export interface components {
             since: string;
             reason: null | string;
         };
+        StewardAnswer: {
+            status: components["schemas"]["StewardStatus"];
+            text: null | string;
+            reads: components["schemas"]["ToolUse"][];
+            proposalIds: string[];
+            cost: null | components["schemas"]["TurnCost"];
+            profile: null | string;
+            fellBack: boolean;
+            nearContextLimit: boolean;
+            conversationId: string;
+        };
+        /** @enum {unknown} */
+        StewardStatus: "Answered" | "Unavailable" | "BudgetExceeded";
+        StewardTurnRequest: {
+            messages: components["schemas"]["TurnMessage"][];
+            screen: null | components["schemas"]["ScreenContext"];
+            conversationId: null | string;
+        };
         /** @enum {unknown} */
         StockFilter: "Restock" | "SoldOut" | "All";
         StockFilterCount: {
@@ -2718,8 +2756,32 @@ export interface components {
         TelemetryConfiguration: {
             adapter: string;
         };
+        ToolUse: {
+            tool: string;
+            /** Format: int32 */
+            rows: number;
+            /** Format: int32 */
+            total: null | number;
+        };
         /** @enum {unknown} */
         TranslationOutcome: "Translated" | "Unchanged" | "Archived" | "NotFound";
+        TurnCost: {
+            /** Format: int32 */
+            calls: number;
+            /** Format: int64 */
+            inputTokens: number;
+            /** Format: int64 */
+            outputTokens: number;
+            /** Format: int64 */
+            microEuros: number;
+            /** Format: int32 */
+            milliseconds: number;
+            model: string;
+        };
+        TurnMessage: {
+            role: string;
+            text: string;
+        };
         UpliftDay: {
             /** Format: date-time */
             start: string;
@@ -2900,6 +2962,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TelemetryConfiguration"];
+                };
+            };
+        };
+    };
+    TakeStewardTurn: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StewardTurnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StewardAnswer"];
                 };
             };
         };
