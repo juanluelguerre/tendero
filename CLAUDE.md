@@ -9,7 +9,7 @@ code quality and architectural clarity matter more than shipping fast.
 Root namespace: `ElGuerre.Tendero.*` (`ElGuerre.Tendero.Catalog`,
 `ElGuerre.Tendero.Pricing`, `ElGuerre.Tendero.Inventory`,
 `ElGuerre.Tendero.Ordering`, `ElGuerre.Tendero.Accounts`,
-`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.Assist`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`,
+`ElGuerre.Tendero.Search`, `ElGuerre.Tendero.Assist`, `ElGuerre.Tendero.AI`, `ElGuerre.Tendero.SharedKernel`, `ElGuerre.Tendero.Mcp`,
 `ElGuerre.Tendero.Ucp`). Project file name,
 assembly name and root namespace are the same string; the folders under `src/`
 drop the prefix (`src/Catalog/ElGuerre.Tendero.Catalog.csproj`). The npm scope in
@@ -74,6 +74,7 @@ laborious.
 ```bash
 dotnet run --project src/AppHost              # full stack via Aspire
 Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana stack (or profile https-observability)
+Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (5.5 GB; ADR 0053)
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
 dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
@@ -191,7 +192,8 @@ node tools/api-map.mjs --schema CartView
 > context still has to earn its boundary — its own lifecycle, its own actor, or
 > a consistency boundary genuinely its own — and **a context with no writer is
 > not a context yet**: `Pricing` reads committed files and owns no table.
-> `Mcp` and `Ucp` are not contexts; they own no state. `Assist` became one in
+> `Mcp`, `Ucp` and `AI` are not contexts; they own no state (`AI` is the model
+> port every context reaches a model through — ADR 0053). `Assist` became one in
 > phase 12 (ADR 0052): a proposal has a lifecycle, a writer and actors of its own.
 
 ## Conventions

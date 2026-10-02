@@ -1,6 +1,7 @@
 extern alias TenderoApi;
 using System.Reflection;
 using ElGuerre.Tendero.Accounts.Domain;
+using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
@@ -26,6 +27,7 @@ internal static class Solution
     public static readonly Assembly SharedKernel = typeof(LocalizedText).Assembly;
     public static readonly Assembly Accounts = typeof(Customer).Assembly;
     public static readonly Assembly Assist = typeof(ActionProposal).Assembly;
+    public static readonly Assembly AI = typeof(ModelProfile).Assembly;
     public static readonly Assembly Catalog = typeof(Product).Assembly;
     public static readonly Assembly Ordering = typeof(Order).Assembly;
     public static readonly Assembly Search = typeof(IProductIndexer).Assembly;
@@ -54,7 +56,7 @@ internal static class Solution
 
     public static readonly Assembly[] All =
     [
-        SharedKernel, Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search,
+        SharedKernel, AI, Accounts, Assist, Catalog, Inventory, Knowledge, Ordering, Pricing, Search,
         Mcp, Ucp, Persistence, ServiceDefaults, Api, Workers, SearchEval
     ];
 }

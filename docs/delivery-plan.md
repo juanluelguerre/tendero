@@ -829,7 +829,7 @@ API (`design/DESIGN.md` gains a changelog).
 `no empezada` · priority **medium** · size **L** · **spec written 2026-10-01: [`docs/specs/steward.md`](specs/steward.md)**, mock-ups in `design/unpublished/mockups/backoffice-steward.pen`; approved 2026-10-02 and built in the order S-1 to S-8 it lists — **S-1 built 2026-10-02** (proposals without a model: `SetProductTranslation`, the `Assist` context, approve and reject, the audit's `ProposalId`, ADR 0052)
 
 - [ ] ~~`P12-1` Grafana + Tempo + Prometheus in the AppHost~~ — **moved to `P9b-3`** on 2026-09-24: the stack is the substrate of differentiators 4 and 6, not an appendix of the copilot
-- [ ] `P12-2` MEAI delegating client: OTel GenAI span + `telemetry.AiInvocations` row — **M**
+- [x] `P12-2` MEAI delegating client: OTel GenAI span + `telemetry.AiInvocations` row — **M** (S-2, 2026-10-02: `ElGuerre.Tendero.AI`, ADR 0053)
 - [ ] `P12-3` `src/Assist`; Microsoft Agent Framework, five read-only tools — **L**
 - [x] `P12-4` `ActionProposal` with a registered command type and payload — **M** (S-1, 2026-10-02)
 - [x] `P12-5` Approval deserializes and dispatches through `ICommandDispatcher` — **M** (S-1, 2026-10-02)

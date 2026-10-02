@@ -352,6 +352,15 @@
       "signals": [
         "backoffice_affordance_used"
       ]
+    },
+    {
+      "name": "Model-call metering",
+      "area": "platform",
+      "question": "Are model-call rows being lost before they reach telemetry.ai_invocations?",
+      "decision": "Whether the in-process log needs a larger bound, or a durable queue, before the cost line and the AI usage dashboard can be trusted.",
+      "signals": [
+        "tendero.ai.invocations.dropped"
+      ]
     }
   ],
   "events": [
@@ -1108,6 +1117,13 @@
           "from": "SetAttributeOutcome"
         }
       }
+    },
+    {
+      "name": "tendero.ai.invocations.dropped",
+      "instrument": "counter",
+      "unit": "{row}",
+      "description": "Model-call rows dropped because the log was full.",
+      "attributes": {}
     }
   ]
 }

@@ -53,6 +53,7 @@
 | [0050](0050-the-tokens-are-tailwinds-theme.md) | The design tokens are Tailwind's theme; the plain file is generated | accepted |
 | [0051](0051-angular-22-and-ngrx-22-as-their-guides-say.md) | Angular 22 and NgRx 22 as their guides say: defaults unwritten, resource extensions, rxResource over ports | accepted |
 | [0052](0052-assist-is-a-context.md) | Assist is a context: a proposal has a life of its own, and runs other contexts' commands only through `IProposableCommand` | accepted |
+| [0053](0053-one-model-port.md) | One model port: profiles in configuration, one pipeline, one row per call in `telemetry.ai_invocations` | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 

@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-38 features: **33** answered by a signal emitted today,
+39 features: **34** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -71,6 +71,7 @@ everything here that is not *planned* is emitted.
 |---|---|---|---|---|
 | AI search layer | How often is a search answered without one of its AI stages, and how many product changes did the vector layer miss? | Whether the AI stages can be on by default, which service to fix first, and when a reindex is due. | `tendero.search.degraded`, `tendero.search.vector_projection.failed` | emitted |
 | Outbox | Is eventual consistency still eventual? | When a second worker replica, and the row locking it needs, is worth building. | `tendero.outbox.lag` | emitted |
+| Model-call metering | Are model-call rows being lost before they reach telemetry.ai_invocations? | Whether the in-process log needs a larger bound, or a durable queue, before the cost line and the AI usage dashboard can be trusted. | `tendero.ai.invocations.dropped` | emitted |
 
 ## Events
 
@@ -528,3 +529,13 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `outcome` | string | `set`, `unchanged`, `product_not_found`, `unknown_attribute`, `value_rejected` | SetAttributeOutcome, labelled by MetricLabels. |
+
+### `tendero.ai.invocations.dropped`
+
+counter, unit `{row}`. Model-call rows dropped because the log was full.
+
+Answers:
+
+- **Model-call metering** — Are model-call rows being lost before they reach telemetry.ai_invocations?
+
+No attributes.

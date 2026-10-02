@@ -142,6 +142,45 @@ public sealed class ArchitectureRules
     }
 
     /// <summary>
+    /// ONNX Runtime runs a model in process, and only the shared chat factory does
+    /// that (ADR 0053): anywhere else it would be a second way to reach a model,
+    /// with no metering and no profile.
+    /// </summary>
+    [Fact]
+    public void Onnx_runtime_stays_inside_the_chat_factory()
+    {
+        foreach (var assembly in Solution.All)
+        {
+            var result = Types.InAssembly(assembly)
+                .That().DoNotResideInNamespace("ElGuerre.Tendero.AI.Chat")
+                .ShouldNot().HaveDependencyOn("Microsoft.ML.OnnxRuntimeGenAI")
+                .GetResult();
+
+            Assert.True(result.IsSuccessful, Describe(assembly, result));
+        }
+    }
+
+    /// <summary>
+    /// The model port serves every context and belongs to none (ADR 0053): a
+    /// reference from AI to a context would make the port learn that context, and
+    /// the contexts that use AI would close a cycle through it.
+    /// </summary>
+    [Fact]
+    public void AI_knows_only_the_shared_kernel()
+    {
+        var sharedKernel = Solution.SharedKernel.GetName().Name;
+
+        var references = Solution.AI.GetReferencedAssemblies()
+            .Select(reference => reference.Name)
+            .OfType<string>()
+            .Where(name => name.StartsWith("ElGuerre.Tendero.", StringComparison.Ordinal) && name != sharedKernel)
+            .ToArray();
+
+        Assert.True(references.Length == 0,
+            $"AI references {string.Join(", ", references)}. It may reference only {sharedKernel}: it is the port every context reaches a model through.");
+    }
+
+    /// <summary>
     /// The model server is a detail behind <c>IEmbeddingGenerator</c>, exactly
     /// as Elasticsearch is behind the search ports. The OpenAI SDK is how TEI
     /// happens to be reached today (P8-2), and the day it is reached some other
@@ -159,6 +198,7 @@ public sealed class ArchitectureRules
             var result = Types.InAssembly(assembly)
                 .That().DoNotResideInNamespace("ElGuerre.Tendero.Search.Embeddings")
                 .And().DoNotResideInNamespace("ElGuerre.Tendero.Knowledge.Chat")
+                .And().DoNotResideInNamespace("ElGuerre.Tendero.AI.Chat")
                 .ShouldNot().HaveDependencyOn("OpenAI")
                 .GetResult();
 

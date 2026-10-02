@@ -371,6 +371,14 @@ notifications and alerts.
 2. **S-2 · The model port.** The shared factory, profiles and keyed registration,
    the metering client, `AiInvocations` and its worker; the `steward-model`
    container behind `Tendero__Steward`.
+   *As built (2026-10-02)*: the shared place is `ElGuerre.Tendero.AI` (ADR 0053),
+   not a context. Rulings the spec left open: a profile has a `TimeoutSeconds`
+   (300 for the local one — a full window took 263 s on the CPU); its endpoint is
+   the provider's base URL with `/v1`; the client makes one request per call (the
+   SDK's three retries are off); a full metering log drops the newest row and
+   counts it; the table is `telemetry.ai_invocations`. `steward-model` peaked at
+   4.81 GiB with a full window and is limited to 5.5 GB
+   (`docs/analysis/steward-model-sizing.md`).
 3. **S-3 · Steward reads and proposes.** `catalogue_gaps`, the six tools, the two
    proposal tools, the agent, `POST /api/steward/turns`, the caps, the fallback,
    the `Scripted` kind.
