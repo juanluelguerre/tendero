@@ -58,3 +58,19 @@ log that exists for something else. **The codes and the words are redacted**
 (`[AuditRedacted]`) — an audit log that kept what the customer deleted would make
 "delete" a lie. The OpenTelemetry spans carry counts and the kind, never a code or
 a search.
+
+## What Steward reads, and what may leave the machine
+
+Steward, the backoffice copilot (phase 12), answers from six reads the contexts
+own (`docs/specs/steward.md`, *What Steward reads*). They carry **aggregates and
+products only**: product codes and names, SKUs, units, revenue, days of cover,
+return reasons. They never carry a customer's name, email, address or id, an
+order id, or a return's comment — the shopper's own words — and a test holds the
+returns summary's types to it.
+
+With the local model (`steward-model`) nothing leaves the machine. **With a hosted
+profile** (Gemini, DeepSeek — S-7), those figures and the shopkeeper's question are
+what is sent to the provider, along with catalogue text: product names and
+descriptions. Conversations are not kept; each model call leaves one row in
+`telemetry.ai_invocations` with its tokens, cost and latency, never the prompt or
+the answer (ADR 0053).

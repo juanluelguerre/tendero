@@ -218,6 +218,24 @@ free SQL, no traces, no business logic in `Assist`.
 | `stock_to_restock(warehouse?)` | what needs restocking, with its coverage in days | Inventory, R-7.1's restocking rule |
 | `returns_summary(period)` | returns by reason and by product | Ordering |
 
+*As built in S-3a (2026-10-02)* — the query behind each tool, every one capped at
+50 rows with its total and shopkeeper-only over HTTP:
+
+| Tool | Query | Notes |
+|---|---|---|
+| `find_products` | Catalog `ListProductsQuery` (`Text`) | the catalogue, every status; not Search, which is the shopper's (anonymous, hybrid, Active only) |
+| `catalogue_gaps` | Catalog `CatalogueGapsQuery` — **new** | kinds `MissingName`, `MissingImage`, `MissingImageAlt` (per culture), `DraftWaiting`; *required attribute* is backlog, the domain has no such concept |
+| `sales_summary` | Ordering `GetSalesSummaryQuery` + `GetSalesMixQuery` | the mix has no previous period |
+| `product_performance` | Ordering `GetProductPerformanceQuery` — **new** | the home's ranking; *worst* is among what sold — what sold nothing is in no order |
+| `stock_to_restock` | Inventory `GetRestockListQuery` — **new** | every SKU at or below R-7.1's point, with its days of cover |
+| `returns_summary` | Ordering `GetReturnsSummaryQuery` — **new** | returns opened in the period; no order, customer or comment |
+
+The non-AI answer the unavailable state offers is `GET /api/catalog/products?missing=en`.
+
+**Correction (S-3a):** the dispatcher checks no policy — it validates and runs the
+handler. "As the person asking" holds because the principal is the person's, and
+the policy is the Steward endpoint's own: S-3b's turn endpoint is shopkeeper-only.
+
 Common rules:
 
 - **At most 50 rows per call, always with the total** (*50 of 312*).

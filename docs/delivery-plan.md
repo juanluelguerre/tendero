@@ -826,7 +826,7 @@ API (`design/DESIGN.md` gains a changelog).
 
 ## Phase 12 · Steward, the backoffice copilot, and AI observability
 
-`no empezada` · priority **medium** · size **L** · **spec written 2026-10-01: [`docs/specs/steward.md`](specs/steward.md)**, mock-ups in `design/unpublished/mockups/backoffice-steward.pen`; approved 2026-10-02 and built in the order S-1 to S-8 it lists — **S-1 built 2026-10-02** (proposals without a model: `SetProductTranslation`, the `Assist` context, approve and reject, the audit's `ProposalId`, ADR 0052)
+`no empezada` · priority **medium** · size **L** · **spec written 2026-10-01: [`docs/specs/steward.md`](specs/steward.md)**, mock-ups in `design/unpublished/mockups/backoffice-steward.pen`; approved 2026-10-02 and built in the order S-1 to S-8 it lists (S-3 split into S-3a, the reads, and S-3b, the agent) — **S-1, S-2 and S-3a built 2026-10-02** (proposals without a model: `SetProductTranslation`, the `Assist` context, approve and reject, the audit's `ProposalId`, ADR 0052)
 
 - [ ] ~~`P12-1` Grafana + Tempo + Prometheus in the AppHost~~ — **moved to `P9b-3`** on 2026-09-24: the stack is the substrate of differentiators 4 and 6, not an appendix of the copilot
 - [x] `P12-2` MEAI delegating client: OTel GenAI span + `telemetry.AiInvocations` row — **M** (S-2, 2026-10-02: `ElGuerre.Tendero.AI`, ADR 0053)
