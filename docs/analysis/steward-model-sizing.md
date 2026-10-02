@@ -46,7 +46,7 @@ the rule every container here follows.
 
 ## The contract run (2026-10-02)
 
-`tests/Ai.Tests`, `Category=Model`, against `steward-model` with the 5.5 GB
+`tests/AI.Tests`, `Category=Model`, against `steward-model` with the 5.5 GB
 limit: **three of three pass** — the 4B calls a tool through the default chat
 template and answers with its result, reports input and output tokens, and a
 timeout surfaces as one.
