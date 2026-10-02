@@ -39,6 +39,10 @@ public interface IProductCatalogReader
     Task<ProductPage> ListAsync(
         ProductStatus? status, string? text, string? missingCulture, int page, int pageSize, CancellationToken ct);
 
+    /// <summary>Every product still in the catalogue, Draft and Active: what a gap
+    /// can be found in (S-3a). The whole of it — a hundred products today.</summary>
+    Task<IReadOnlyList<Product>> LiveAsync(CancellationToken ct);
+
     /// <summary>
     /// The SKUs of every product whose name, in any culture, or code contains the
     /// text: the catalogue's half of a stock search (R-7.1). The ledger matches

@@ -29,6 +29,9 @@ internal sealed class InMemoryProductCatalogReader(params Product[] products) : 
             typedMatches.GroupBy(p => p.Status).ToDictionary(group => group.Key, group => group.Count())));
     }
 
+    public Task<IReadOnlyList<Product>> LiveAsync(CancellationToken ct) =>
+        Task.FromResult<IReadOnlyList<Product>>([.. products.Where(p => p.Status != ProductStatus.Archived)]);
+
     public Task<IReadOnlyList<string>> SkusOfProductsMatchingAsync(string text, CancellationToken ct)
     {
         var typed = text.Trim();

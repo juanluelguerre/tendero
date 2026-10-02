@@ -90,6 +90,8 @@ public sealed class EndpointAuthorizationTests
     [InlineData("/api/catalog/products/{id:guid}/publish")]
     [InlineData("/api/catalog/products/{id:guid}/withdraw")]
     [InlineData("/api/catalog/products/{id:guid}/translations/{culture}")]
+    // Not a write, and here because it reads drafts too (S-3a).
+    [InlineData("/api/catalog/gaps")]
     // Not a write, and here because it shows drafts, as the list does.
     [InlineData("/api/catalog/products/{code}/review")]
     [InlineData("/api/search/reindex")]

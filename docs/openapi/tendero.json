@@ -733,6 +733,57 @@
         }
       }
     },
+    "/api/catalog/gaps": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "operationId": "ListCatalogueGaps",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "MissingName",
+                "MissingImage",
+                "MissingImageAlt",
+                "DraftWaiting"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogueGaps"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/dashboard/stock": {
       "get": {
         "tags": [
@@ -4479,6 +4530,44 @@
           }
         }
       },
+      "CatalogueGap": {
+        "enum": [
+          "MissingName",
+          "MissingImage",
+          "MissingImageAlt",
+          "DraftWaiting"
+        ]
+      },
+      "CatalogueGaps": {
+        "required": [
+          "kind",
+          "culture",
+          "total",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/CatalogueGap"
+          },
+          "culture": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GapRow"
+            }
+          }
+        }
+      },
       "CategorySales": {
         "required": [
           "categoryCode",
@@ -5025,6 +5114,29 @@
           "Option",
           null
         ]
+      },
+      "GapRow": {
+        "required": [
+          "productId",
+          "code",
+          "name",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus"
+          }
+        }
       },
       "HistorySettingsRequest": {
         "required": [

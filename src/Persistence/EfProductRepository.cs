@@ -96,6 +96,11 @@ internal sealed class EfProductRepository(TenderoDbContext context)
             """);
     }
 
+    public async Task<IReadOnlyList<Product>> LiveAsync(CancellationToken ct) =>
+        await context.Products.AsNoTracking()
+            .Where(product => product.Status != ProductStatus.Archived)
+            .ToListAsync(ct);
+
     /// <summary>
     /// The ids of the products whose name has no value in <paramref name="culture"/> —
     /// the queue's "missing English" and Steward's gap (S-3a). A key test on the

@@ -308,6 +308,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalog/gaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ListCatalogueGaps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/stock": {
         parameters: {
             query?: never;
@@ -1497,6 +1513,15 @@ export interface components {
             expiresAt: string;
             lines: components["schemas"]["CartLineView"][];
         };
+        /** @enum {unknown} */
+        CatalogueGap: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting";
+        CatalogueGaps: {
+            kind: components["schemas"]["CatalogueGap"];
+            culture: null | string;
+            /** Format: int32 */
+            total: number;
+            rows: components["schemas"]["GapRow"][];
+        };
         CategorySales: {
             categoryCode: null | string;
             /** Format: int32 */
@@ -1644,6 +1669,12 @@ export interface components {
         };
         /** @enum {unknown} */
         FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
+        GapRow: {
+            productId: string;
+            code: string;
+            name: string;
+            status: components["schemas"]["ProductStatus"];
+        };
         HistorySettingsRequest: {
             enabled: boolean;
         };
@@ -3162,6 +3193,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": string;
+                };
+            };
+        };
+    };
+    ListCatalogueGaps: {
+        parameters: {
+            query: {
+                kind: "MissingName" | "MissingImage" | "MissingImageAlt" | "DraftWaiting";
+                culture?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogueGaps"];
                 };
             };
         };
