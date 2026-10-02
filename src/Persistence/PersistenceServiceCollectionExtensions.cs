@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Accounts.Ports;
+using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Ports;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.Inventory.Ports;
@@ -88,6 +89,7 @@ public static class PersistenceServiceCollectionExtensions
         services.AddScoped<IAuditWriter>(services => services.GetRequiredService<EfAuditWriter>());
         services.AddScoped<IAuditReader>(services => services.GetRequiredService<EfAuditWriter>());
         services.AddScoped<IAgentDenialHistory>(services => services.GetRequiredService<EfAuditWriter>());
+        services.AddScoped<IAIInvocationWriter, EfAIInvocationWriter>();
 
         // One adapter, two Accounts ports, one instance per scope.
         services.AddScoped<EfCustomerRepository>();

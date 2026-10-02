@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Accounts.Features.ManageTrail;
+using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.SetProductAttribute;
 using ElGuerre.Tendero.Inventory;
@@ -83,6 +84,8 @@ public static class WorkerServices
 
         // The claims layer (ADR 0018): the rules always, the models when the AppHost started them.
         builder.Services.AddKnowledge(builder.Configuration);
+        // The extractor's calls, one row each, written off the worker's loop (ADR 0053).
+        builder.Services.AddAIInvocationLog();
 
         // Inside the worker the actor is the system, and this is the
         // implementation `IPrincipalAccessor` documented and nobody had

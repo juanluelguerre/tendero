@@ -17,7 +17,7 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261002162756_ProposalVersion";
+    public override string LastMigrationId => "20261002171549_AddAIInvocations";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -27,6 +27,85 @@ partial class TenderoDbContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
         NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+        modelBuilder.Entity("ElGuerre.Tendero.AI.AIInvocation", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uuid")
+                    .HasColumnName("id");
+
+                b.Property<DateTimeOffset>("At")
+                    .HasColumnType("timestamp with time zone")
+                    .HasColumnName("at");
+
+                b.Property<string>("ConversationId")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("conversation_id");
+
+                b.Property<long>("CostMicroEuros")
+                    .HasColumnType("bigint")
+                    .HasColumnName("cost_micro_euros");
+
+                b.Property<long>("InputTokens")
+                    .HasColumnType("bigint")
+                    .HasColumnName("input_tokens");
+
+                b.Property<int>("LatencyMs")
+                    .HasColumnType("integer")
+                    .HasColumnName("latency_ms");
+
+                b.Property<string>("Model")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)")
+                    .HasColumnName("model");
+
+                b.Property<string>("Operation")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("operation");
+
+                b.Property<string>("Outcome")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)")
+                    .HasColumnName("outcome");
+
+                b.Property<long>("OutputTokens")
+                    .HasColumnType("bigint")
+                    .HasColumnName("output_tokens");
+
+                b.Property<string>("Profile")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("profile");
+
+                b.Property<string>("PromptVersion")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)")
+                    .HasColumnName("prompt_version");
+
+                b.Property<string>("TraceId")
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)")
+                    .HasColumnName("trace_id");
+
+                b.HasKey("Id")
+                    .HasName("pk_ai_invocations");
+
+                b.HasIndex("At")
+                    .IsDescending()
+                    .HasDatabaseName("ix_ai_invocations_at");
+
+                b.HasIndex("ConversationId")
+                    .HasDatabaseName("ix_ai_invocations_conversation_id")
+                    .HasFilter("conversation_id IS NOT NULL");
+
+                b.ToTable("ai_invocations", "telemetry");
+            });
 
         modelBuilder.Entity("ElGuerre.Tendero.Accounts.Domain.Agent", b =>
             {

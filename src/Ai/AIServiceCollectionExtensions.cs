@@ -37,6 +37,14 @@ public static class AIServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>The log and the worker that drains it — in every host that calls a model.</summary>
+    public static IServiceCollection AddAIInvocationLog(this IServiceCollection services)
+    {
+        services.TryAddSingleton<AIInvocationLog>();
+        services.AddHostedService<AIInvocationsWorker>();
+        return services;
+    }
+
     /// <summary>The same tracing and metering for a client built in code — the claim
     /// extractor's, whose model the AppHost hands it directly.</summary>
     public static IChatClient Meter(this IChatClient inner, string profileName, ModelProfile profile, IServiceProvider services) =>

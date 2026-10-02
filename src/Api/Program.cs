@@ -1,6 +1,7 @@
 using Carter;
 using ElGuerre.Tendero.Accounts;
 using ElGuerre.Tendero.Accounts.Features.LinkIdentity;
+using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Assist;
 using ElGuerre.Tendero.Assist.Features.DecideProposals;
@@ -111,6 +112,9 @@ builder.Services.AddKnowledge(builder.Configuration);
 
 // Steward's proposals and their decisions (phase 12, ADR 0052).
 builder.Services.AddAssist();
+
+// One row per model call, written off the request (ADR 0053).
+builder.Services.AddAIInvocationLog();
 
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 

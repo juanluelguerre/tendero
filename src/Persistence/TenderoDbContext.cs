@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Accounts.Domain;
+using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Domain;
 using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Inventory.Domain;
@@ -41,6 +42,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
     /// no context — every context writes to it and none owns it.
     /// </summary>
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+    public DbSet<AIInvocation> AIInvocations => Set<AIInvocation>();
 
     /// <summary>
     /// Pre-convention configuration: what is true of a TYPE wherever it appears.
@@ -67,6 +69,7 @@ public sealed class TenderoDbContext(DbContextOptions<TenderoDbContext> options)
         modelBuilder.ApplyConfiguration(new ActionProposalConfiguration());
         modelBuilder.ApplyConfiguration(new CampaignConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new AIInvocationConfiguration());
         modelBuilder.ApplyConfiguration(new OutboxMessageConfiguration());
 
         SnakeCaseNames.Apply(modelBuilder);
