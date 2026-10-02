@@ -64,6 +64,13 @@ public sealed class ModelProfileTests
         Assert.Empty(new ModelProfile { Endpoint = new Uri("http://x/v1/"), Model = "m" }.Problems("local"));
 
     [Fact]
+    public void A_scripted_profile_needs_a_script_that_exists()
+    {
+        Assert.NotEmpty(new ModelProfile { Kind = ModelKind.Scripted, Script = "no/such/script.json" }.Problems("scripted"));
+        Assert.Empty(new ModelProfile { Kind = ModelKind.Scripted, Script = Path.Combine(AppContext.BaseDirectory, "scripts", "contract.json") }.Problems("scripted"));
+    }
+
+    [Fact]
     public void An_onnx_profile_needs_a_directory_and_no_endpoint()
     {
         Assert.NotEmpty(new ModelProfile { Kind = ModelKind.OnnxInProcess }.Problems("phi"));

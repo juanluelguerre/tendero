@@ -67,6 +67,7 @@ public static class AIServiceCollectionExtensions
             profile.Auth == ModelAuth.Bearer ? profile.ApiKey : null,
             TimeSpan.FromSeconds(profile.TimeoutSeconds)),
         ModelKind.OnnxInProcess => InProcessOnnxChat.Create(profile.Directory!),
+        ModelKind.Scripted => ScriptedChatClient.FromFile(profile.Script!, TimeSpan.FromSeconds(profile.TimeoutSeconds)),
         _ => throw new InvalidOperationException($"No model kind {profile.Kind}."),
     };
 }

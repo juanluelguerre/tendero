@@ -1,0 +1,20 @@
+[
+  {
+    "when": "English name",
+    "calls": [ { "tool": "count_products_missing_english", "arguments": {} } ],
+    "say": "There are {tool:count_products_missing_english} products with no English name.",
+    "inputTokens": 120,
+    "outputTokens": 15
+  },
+  {
+    "when": "hello",
+    "say": "Hello.",
+    "inputTokens": 12,
+    "outputTokens": 2
+  },
+  {
+    "when": "long story",
+    "say": "Once upon a time.",
+    "delayMs": 200
+  }
+]

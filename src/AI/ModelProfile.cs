@@ -4,6 +4,9 @@ public enum ModelKind
 {
     OpenAICompatible,
     OnnxInProcess,
+
+    /// <summary>Tests only: a deterministic model answering from a script.</summary>
+    Scripted,
 }
 
 public enum ModelAuth
@@ -33,6 +36,9 @@ public sealed class ModelProfile
 
     /// <summary>The model's folder, for an in-process ONNX profile.</summary>
     public string? Directory { get; init; }
+
+    /// <summary>The script's file, for a Scripted profile.</summary>
+    public string? Script { get; init; }
 
     public decimal InputPrice { get; init; }
 
@@ -72,6 +78,11 @@ public sealed class ModelProfile
                 problems.Add($"Model profile '{name}' has no Model.");
             if (Auth == ModelAuth.Bearer && string.IsNullOrWhiteSpace(ApiKey))
                 problems.Add($"Model profile '{name}' uses Bearer and has no ApiKey.");
+        }
+        else if (Kind == ModelKind.Scripted)
+        {
+            if (string.IsNullOrWhiteSpace(Script) || !File.Exists(Script))
+                problems.Add($"Model profile '{name}' is scripted and has no Script file: {Script}.");
         }
         else if (string.IsNullOrWhiteSpace(Directory))
         {
