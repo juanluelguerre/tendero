@@ -1,7 +1,12 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using ElGuerre.Tendero.Catalog.Connectors;
+using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Inventory;
+using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.SharedKernel;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using NetArchTest.Rules;
 using Xunit;
 using TestResult = NetArchTest.Rules.TestResult;
@@ -419,6 +424,96 @@ public sealed class ArchitectureRules
         Assert.True(contexts.Length == 0,
             $"Accounts references {string.Join(", ", contexts)}. It may reference only {sharedKernel} — "
             + "Ordering will need Accounts for order history, so a dependency this way closes a cycle.");
+    }
+
+    /// <summary>
+    /// What a model may read never carries a customer (the Steward spec, *What
+    /// Steward reads*): with a hosted profile, a tool's answer is what leaves the
+    /// machine. Every read tool derives <see cref="ReadTool{TArgs, TData}"/>, so its
+    /// answer's type can be read, and nothing reachable from it names a customer,
+    /// an order, an address or a shopper's words.
+    /// </summary>
+    [Fact]
+    public void A_read_tool_carries_no_customer_field()
+    {
+        string[] forbidden = ["CustomerId", "Customer", "Email", "Address", "OrderId", "Comment", "Phone", "FirstName", "LastName", "DisplayName"];
+
+        var tools = Solution.All
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => !type.IsAbstract && typeof(IReadTool).IsAssignableFrom(type))
+            .ToList();
+        Assert.True(tools.Count >= 6, $"Only {tools.Count} read tools were found; the scan is not seeing the contexts'.");
+
+        var offending = new List<string>();
+        foreach (var tool in tools)
+        {
+            var data = DataOf(tool);
+            if (data is null)
+            {
+                offending.Add($"{tool.FullName} does not derive ReadTool<,>, so its answer cannot be read");
+                continue;
+            }
+
+            foreach (var (type, property) in Reachable(data))
+                if (forbidden.Contains(property, StringComparer.OrdinalIgnoreCase))
+                    offending.Add($"{tool.Name}: {type.Name}.{property}");
+        }
+
+        Assert.True(offending.Count == 0, "Read tools that carry a customer:\n" + string.Join('\n', offending));
+
+        static Type? DataOf(Type type)
+        {
+            for (var current = type.BaseType; current is not null; current = current.BaseType)
+                if (current.IsGenericType && current.GetGenericTypeDefinition() == typeof(ReadTool<,>))
+                    return current.GetGenericArguments()[1];
+            return null;
+        }
+
+        static IEnumerable<(Type Type, string Property)> Reachable(Type root)
+        {
+            var seen = new HashSet<Type>();
+            var pending = new Stack<Type>([root]);
+            while (pending.Count > 0)
+            {
+                var type = pending.Pop();
+                if (!seen.Add(type) || type.Namespace?.StartsWith("ElGuerre.Tendero", StringComparison.Ordinal) != true)
+                    continue;
+
+                foreach (var property in type.GetProperties())
+                {
+                    yield return (type, property.Name);
+                    var inner = property.PropertyType.IsGenericType ? property.PropertyType.GetGenericArguments() : [property.PropertyType];
+                    foreach (var next in inner)
+                        pending.Push(Nullable.GetUnderlyingType(next) ?? next);
+                }
+            }
+        }
+    }
+
+    /// <summary>A tool's name is how the model calls it: one per tool, and none that a
+    /// proposal tool or a decision would be called.</summary>
+    [Fact]
+    public async Task Every_read_tool_has_its_own_name_and_none_decides()
+    {
+        var services = new ServiceCollection();
+        services.AddCatalog(new ConfigurationBuilder().Build());
+        services.AddOrdering(new ConfigurationBuilder().Build());
+        services.AddInventory(new ConfigurationBuilder().Build());
+        services.AddSingleton<IQueryDispatcher>(new NoQueries());
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+
+        var names = scope.ServiceProvider.GetServices<IReadTool>().Select(tool => tool.Name).ToList();
+
+        Assert.Equal(names.Count, names.Distinct(StringComparer.Ordinal).Count());
+        Assert.DoesNotContain(names, name => name.StartsWith("propose_", StringComparison.Ordinal)
+            || name.Contains("approve", StringComparison.OrdinalIgnoreCase) || name.Contains("reject", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private sealed class NoQueries : IQueryDispatcher
+    {
+        public Task<TResult> SendAsync<TResult>(IQuery<TResult> query, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 
     /// <summary>
