@@ -54,6 +54,7 @@ graph TB
     Tendero.Qdrant@{ shape: disk, label: "qdrant" }
     Tendero.Embeddings@{ shape: rectangle, label: "embeddings" }
     Tendero.Reranker@{ shape: rectangle, label: "reranker" }
+    Tendero.Steward_model@{ shape: rectangle, label: "steward-model" }
     Tendero.Observability@{ shape: rectangle, label: "observability" }
   end
   Identity@{ shape: rectangle, label: "Identity provider" }
@@ -70,6 +71,7 @@ graph TB
   Tendero.Api -. "`nearest neighbours`" .-> Tendero.Qdrant
   Tendero.Api -. "`embeds the query`" .-> Tendero.Embeddings
   Tendero.Api -. "`reranks the head`" .-> Tendero.Reranker
+  Tendero.Api -. "`asks the questions Steward is given`" .-> Tendero.Steward_model
   Tendero.Api -. "`traces, metrics, logs (OTLP)`" .-> Tendero.Observability
   Tendero.Workers -. "`drains the outbox`" .-> Tendero.Postgres
   Tendero.Workers -. "`projects products`" .-> Tendero.Elasticsearch

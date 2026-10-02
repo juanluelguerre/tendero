@@ -58,6 +58,7 @@ const int embeddingsPort = 38081;
 const int rerankerPort = 38082;
 const int extractorPort = 38083;
 const int supportPort = 38084;
+const int stewardModelPort = 38085;
 const int grafanaPort = 33000;
 const int collectorGrpcPort = 34317;
 const int collectorHttpPort = 34318;
@@ -372,12 +373,41 @@ var support = builder.AddContainer("support", "ghcr.io/huggingface/text-embeddin
     .WithVolume("tendero-tei-models", "/data")
     .WithContainerRuntimeArgs("--memory=3g", "--memory-swap=3g", Cpus(8));
 
+// STEWARD'S LOCAL MODEL, declared always and started on demand (phase 12).
+//
+//   Tendero__Steward=true dotnet run --project src/AppHost
+//
+// The extractor's GGUF from the extractor's volume — the same file, so nothing is
+// downloaded twice — served by a container of its own: the extractor's one slot of
+// 4,096 tokens is taken, and Steward's tool definitions alone are 1,000–1,500. Its
+// window is 8,192, an estimate S-6 replaces with a measurement. A prompt that
+// fills it peaked at 4.81 GiB; the limit is 5.5 (docs/analysis/steward-model-sizing.md).
+var steward = string.Equals(builder.Configuration["Tendero:Steward"], "true",
+    StringComparison.OrdinalIgnoreCase);
+
+var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama.cpp", "server-" + llamaCppRelease)
+    .WithArgs("-m", "/models/qwen3.5-4b-q8_0.gguf", "--host", "0.0.0.0", "--port", "8080",
+        "-c", "8192", "-np", "1", "-t", "12", "--jinja", "--load-mode", "none",
+        "--chat-template-kwargs", "{\"enable_thinking\":false}")
+    .WithHttpEndpoint(targetPort: 8080, port: stewardModelPort, name: "http")
+    .WithHttpHealthCheck("/health", endpointName: "http")
+    .WithVolume("tendero-extractor-models", "/models", isReadOnly: true)
+    .WithContainerRuntimeArgs("--memory=5632m", "--memory-swap=5632m", Cpus(12))
+    .WaitForCompletion(extractorModel);
+
+if (!steward)
+    stewardModel.WithExplicitStart();
+
 if (!knowledge)
 {
-    extractorModel.WithExplicitStart();
     extractor.WithExplicitStart();
     support.WithExplicitStart();
 }
+
+// The model is prepared for whichever of the two needs it: Steward's container
+// waits for the same preparation, which is idempotent (it checks the SHA-256).
+if (!knowledge && !steward)
+    extractorModel.WithExplicitStart();
 
 // THE GRAFANA STACK, declared always and started on demand (phase 9b, ADR 0036).
 //
@@ -589,6 +619,13 @@ if (vectors)
 // answers.
 if (rerank)
     api.WithReference(rerankerEndpoint);
+
+// Steward's local profile by the same rule: its address only where its container
+// runs. Without it the API registers no model profile, and Steward has no model —
+// S-3's "unavailable" path, never a call to a container nobody started.
+if (steward)
+    api.WithEnvironment("Steward__Models__local__Endpoint",
+        ReferenceExpression.Create($"{stewardModel.GetEndpoint("http")}/v1/"));
 
 if (useKeycloak)
 {

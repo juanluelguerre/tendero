@@ -116,6 +116,13 @@ builder.Services.AddAssist();
 // One row per model call, written off the request (ADR 0053).
 builder.Services.AddAIInvocationLog();
 
+// Steward's model profiles (ADR 0053). The local one has no address of its own:
+// the AppHost hands it one only when its container runs (Tendero__Steward=true),
+// so without it no profile is registered and Steward has no model — never a
+// call to a container nobody started.
+if (builder.Configuration["Steward:Models:local:Endpoint"] is { Length: > 0 })
+    builder.Services.AddModelProfiles(builder.Configuration);
+
 builder.Services.AddCarter(configurator: carter => carter.WithEmptyValidators());
 
 // The document is the API's shape, and from it come the frontend's types

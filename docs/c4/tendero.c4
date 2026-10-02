@@ -80,6 +80,11 @@ model {
       technology 'llama.cpp'
       description 'Qwen3.5-4B, 8 bits, converted from its revision; proposes claims; only with Tendero__Knowledge'
     }
+    steward-model = service 'steward-model' {
+      #optional
+      technology 'llama.cpp'
+      description 'The same Qwen3.5-4B as the extractor, in a slot of its own of 8,192 tokens; answers Steward; only with Tendero__Steward'
+    }
     support = service 'support' {
       #optional
       technology 'Text Embeddings Inference'
@@ -119,6 +124,7 @@ model {
   tendero.workers -> tendero.qdrant 'projects vectors'
   tendero.workers -> tendero.embeddings 'embeds products'
   tendero.workers -> tendero.extractor 'proposes claims'
+  tendero.api -> tendero.steward-model 'asks the questions Steward is given'
   tendero.workers -> tendero.support 'scores their support'
   tendero.api -> identity 'validates tokens (JWKS)'
   tendero.api -> payments 'authorises, captures, refunds'
