@@ -170,6 +170,6 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("database"),
             values.GetValueOrDefault("script"),
             int.TryParse(values.GetValueOrDefault("context"), out var context) ? context : 8192,
-            values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "copilot")));
+            values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "Copilot")));
     }
 }

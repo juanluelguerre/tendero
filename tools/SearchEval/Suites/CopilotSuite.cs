@@ -25,7 +25,7 @@ internal sealed class CopilotSuite : IEvaluationSuite
     /// <summary>Two dozen turns at up to six model calls each, minutes apiece on a CPU (S-2 measured up to ~458 s for one).</summary>
     public TimeSpan Budget => TimeSpan.FromHours(4);
 
-    public string Description => "Steward against copilot/cases.json: right tools, valid arguments, exact proposals, latency, tokens, cost";
+    public string Description => "Steward against Copilot/cases.json: right tools, valid arguments, exact proposals, latency, tokens, cost";
 
     public async Task<int> RunAsync(EvaluationOptions options, CancellationToken cancellationToken)
     {

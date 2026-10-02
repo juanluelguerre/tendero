@@ -43,7 +43,7 @@ línea base real. Bajarlos exige justificarlo en el cuerpo del PR.
 
 ## La suite `copilot` (Steward, fase 12)
 
-Steward contra `copilot/cases.json`: cada caso es una pregunta, la pantalla en
+Steward contra `Copilot/cases.json`: cada caso es una pregunta, la pantalla en
 que se hace, las lecturas que debería hacer —con los argumentos que importan— y
 las propuestas que debería guardar. **Sin modelo juez**: una propuesta es un
 comando y se compara exacta. Mide herramienta correcta, argumentos válidos,
@@ -66,7 +66,7 @@ dotnet run --project tools/SearchEval -- --suite copilot \
 
 # Ensayo de la propia suite, sin modelo: un guion que responde lo esperado
 dotnet run --project tools/SearchEval -- --suite copilot --database "…" \
-  --script tools/SearchEval/copilot/dry-run.json
+  --script tools/SearchEval/Copilot/dry-run.json
 
 docker rm -f copilot-eval-pg
 ```
