@@ -1,0 +1,40 @@
+@if (store.count() > 0) {
+  <section class="overflow-hidden rounded-lg border border-hairline-strong" *transloco="let t">
+    <header class="grid gap-1 bg-accent-tint px-4 py-3">
+      <h3 class="eyebrow m-0 text-accent">
+        {{
+          store.count() === 1
+            ? t('steward.card.headingOne', { topic: store.topic() })
+            : t('steward.card.heading', { count: store.count(), topic: store.topic() })
+        }}
+      </h3>
+      <p class="m-0 text-xs text-muted">{{ store.reason() }}</p>
+    </header>
+
+    <ul class="m-0 p-0" role="list">
+      @for (proposal of store.shown(); track proposal.id) {
+        <li class="grid gap-hair border-t border-hairline px-4 py-2">
+          <span class="text-xs text-muted">{{ proposal.title }}</span>
+          @for (change of proposal.changes; track change.field) {
+            <span class="font-medium">→ {{ change.proposed ?? t('proposals.blank') }}</span>
+          }
+        </li>
+      }
+      @if (store.more() > 0) {
+        <li class="border-t border-hairline px-4 py-2 text-xs text-muted">
+          {{ t('steward.card.more', { count: store.more() }) }}
+        </li>
+      }
+    </ul>
+
+    <footer class="flex flex-wrap items-center gap-3 border-t border-hairline px-4 py-3">
+      <button type="button" class="button" (click)="review.emit(ids())">
+        {{ store.count() === 1 ? t('steward.card.reviewOne') : t('steward.card.review', { count: store.count() }) }}
+      </button>
+      <a class="quiet-link text-xs" routerLink="/steward/proposals">{{ t('steward.card.kept') }}</a>
+      @if (store.decided() > 0) {
+        <span class="text-xs text-muted">{{ t('steward.card.decided', { count: store.decided() }) }}</span>
+      }
+    </footer>
+  </section>
+}

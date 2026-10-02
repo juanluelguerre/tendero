@@ -51,6 +51,14 @@
       [label]="t('catalogue.filterLabel')"
       (chosen)="store.filterBy($event)"
     />
+    @if (store.missing(); as missing) {
+      <span class="inline-flex items-center gap-2 rounded-full border border-hairline-strong px-3 text-xs">
+        {{ t('catalogue.missing', { language: t('catalogue.language.' + missing) }) }}
+        <button type="button" class="min-h-target text-muted underline" (click)="store.showAll()">
+          {{ t('catalogue.showAll') }}
+        </button>
+      </span>
+    }
     <backoffice-find
       [label]="t('catalogue.findLabel')"
       [placeholder]="t('catalogue.find')"

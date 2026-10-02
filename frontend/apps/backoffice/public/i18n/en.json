@@ -121,7 +121,13 @@
     "refused": "The catalogue refused that change.",
     "toReview": "Review the new drafts",
     "findLabel": "Find a product",
-    "find": "Name in any language, or code"
+    "find": "Name in any language, or code",
+    "missing": "Missing a name in {{language}}",
+    "showAll": "Show all",
+    "language": {
+      "en": "English",
+      "es": "Spanish"
+    }
   },
   "charts": {
     "figures": {
@@ -965,7 +971,8 @@
       "screen": "Screen",
       "order": "Order",
       "product": "Product",
-      "agent": "Agent"
+      "agent": "Agent",
+      "steward": "Steward"
     },
     "keys": {
       "move": "↑ ↓ move",
@@ -974,7 +981,7 @@
       "lists": "In the review queue and claims: j and k"
     },
     "ask": "Ask Steward",
-    "askDetail": "Steward"
+    "askDetail": "Steward · ask about the shop"
   },
   "pager": {
     "label": "Pages",

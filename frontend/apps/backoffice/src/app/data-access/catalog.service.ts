@@ -72,7 +72,14 @@ export class CatalogService {
     return this.http.get<AuditLog>(`${this.baseUrl}/api/audit`, { params });
   }
 
-  list(status: ProductStatus | null, culture: string, page = 1, pageSize = 20, text = ''): Observable<ProductListPage> {
+  list(
+    status: ProductStatus | null,
+    culture: string,
+    page = 1,
+    pageSize = 20,
+    text = '',
+    missing: string | null = null,
+  ): Observable<ProductListPage> {
     let params = new HttpParams().set('culture', culture).set('page', page).set('pageSize', pageSize);
 
     // No parameter at all rather than an empty one: the API rejects an unknown
@@ -80,6 +87,8 @@ export class CatalogService {
     if (status) params = params.set('status', status);
     // A name in any culture, or a code (R-4.6).
     if (text.trim()) params = params.set('q', text.trim());
+    // The products whose name lacks this language: Steward's question, without Steward.
+    if (missing) params = params.set('missing', missing);
 
     return this.http.get<ProductListPage>(`${this.baseUrl}/api/catalog/products`, { params });
   }

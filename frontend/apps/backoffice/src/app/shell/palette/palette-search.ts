@@ -1,7 +1,8 @@
 /** What the palette offers: where it goes, and what kind of thing it is. */
 export interface PaletteOption {
   readonly id: string;
-  readonly kind: 'order' | 'product' | 'agent' | 'screen';
+  /** `steward` opens Steward's panel rather than going anywhere. */
+  readonly kind: 'order' | 'product' | 'agent' | 'screen' | 'steward';
   readonly label: string;
   readonly detail: string;
   readonly route: string;

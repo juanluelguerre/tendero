@@ -64,6 +64,8 @@ export const CatalogueStore = signalStore(
   withComputed((store) => ({
     statusKey: computed(() => store._params().get('status') ?? 'Active'),
     selectedCode: computed(() => store._params().get('product')),
+    /** A language the products' names lack: the list without AI that Steward's unavailable panel points to. */
+    missing: computed(() => store._params().get('missing')),
   })),
   withProps((store) => {
     const list = extendResource(
@@ -73,6 +75,7 @@ export const CatalogueStore = signalStore(
           page: store.page(),
           culture: store._culture.active(),
           text: store._query(),
+          missing: store.missing(),
         }),
         stream: ({ params }) =>
           store._catalog.list(
@@ -81,6 +84,7 @@ export const CatalogueStore = signalStore(
             params.page,
             store.pageSize,
             params.text,
+            params.missing,
           ),
       }),
     );
@@ -158,6 +162,10 @@ export const CatalogueStore = signalStore(
       },
       close(): void {
         navigate({ product: null });
+      },
+      /** Drops the missing-language filter. */
+      showAll(): void {
+        navigate({ missing: null, page: null });
       },
       publish,
       /** Withdrawing offers Undo, which is publishing it again — on the server, audited like any other. */

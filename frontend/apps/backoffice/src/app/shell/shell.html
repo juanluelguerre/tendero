@@ -70,6 +70,20 @@
         </button>
       }
 
+      @if (canUseBackoffice()) {
+        <!-- Steward's door (phase 12): an agent's, so clay; pressed while its panel is open. -->
+        <button
+          type="button"
+          class="inline-flex min-h-control-md min-w-tap flex-none items-center justify-center gap-2 rounded-md border border-accent px-3 text-xs font-medium text-accent hover:bg-accent-tint aria-pressed:bg-accent-tint"
+          [attr.aria-pressed]="steward.isOpen()"
+          (click)="steward.toggle()"
+        >
+          <lib-icon class="size-icon-sm" name="steward" />
+          <span class="max-md:hidden">{{ t('steward.open') }}</span>
+          <span class="sr-only md:hidden">{{ t('steward.name') }}</span>
+        </button>
+      }
+
       <span class="flex-1"></span>
 
       @if (identity()) {
@@ -118,6 +132,18 @@
       </footer>
     }
   </div>
+
+  @if (canUseBackoffice() && steward.isOpen()) {
+    <!-- Steward's panel (phase 12): a column beside the content from 1024 px, a
+         full-screen sheet below. Deferred, so nobody who never opens it loads it. -->
+    <div
+      class="fixed inset-0 z-5 bg-surface lg:sticky lg:top-0 lg:z-auto lg:h-dvh lg:w-panel lg:border-s lg:border-hairline"
+    >
+      @defer {
+        <backoffice-steward-panel class="h-full" />
+      }
+    </div>
+  }
 
   @if (canUseBackoffice()) {
     <backoffice-palette />

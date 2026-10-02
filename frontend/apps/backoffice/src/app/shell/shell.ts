@@ -16,6 +16,8 @@ import { Palette } from './palette/palette';
 import { StaffNotice } from './staff-notice/staff-notice';
 import { UndoToast } from '../worklist/undo/undo-toast';
 import { WaitingStore } from './waiting.store';
+import { StewardPanel } from '../features/steward/panel/steward-panel';
+import { StewardDoorStore } from '../features/steward/steward-door.store';
 
 /**
  * The backoffice shell, as the redesign's R-3 drew it: the screens grouped by
@@ -42,10 +44,15 @@ import { WaitingStore } from './waiting.store';
     UndoToast,
     Palette,
     NgOptimizedImage,
+    StewardPanel,
   ],
   templateUrl: './shell.html',
   styleUrl: './shell.css',
-  host: { '[class.with-rail]': 'canUseBackoffice()', '(document:keydown)': 'shortcut($event)' },
+  host: {
+    '[class.with-rail]': 'canUseBackoffice()',
+    '[class.with-steward]': 'canUseBackoffice() && steward.isOpen()',
+    '(document:keydown)': 'shortcut($event)',
+  },
 })
 export class Shell {
   private readonly auth = inject(AuthStore);
@@ -53,6 +60,9 @@ export class Shell {
   private readonly cultureStore = inject(CultureStore);
   private readonly usage = inject(BackofficeUsage);
   private readonly injector = inject(Injector);
+
+  /** Steward's door, in the bar; its panel beside the content. */
+  protected readonly steward = inject(StewardDoorStore);
 
   /** The notice to staff and its switch (ADR 0041). */
   protected readonly staffUsage = inject(StaffUsage);

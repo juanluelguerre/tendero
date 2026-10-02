@@ -19,6 +19,14 @@
   }
 }
 
+/* Steward's panel takes a third column from 1024 px; below, it is a sheet over
+   the screen and the grid does not change. */
+@media (min-width: 64rem) {
+  :host(.with-rail.with-steward) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
 /* Brand text: --color-brand and never the --color-accent alias, and large enough to be held
    to 3:1 on every surface (design-contrast.spec.ts pins both). */
 .brand__name {

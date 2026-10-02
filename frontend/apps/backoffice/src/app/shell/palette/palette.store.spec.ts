@@ -52,6 +52,14 @@ describe('the palette store', () => {
     await vi.advanceTimersByTimeAsync(200);
   };
 
+  /** Steward is reached from the palette too (spec, *The panel*): its option opens the panel, not a screen. */
+  it('offers to ask Steward, first, when nothing is typed', () => {
+    const store = TestBed.inject(PaletteStore);
+    store.opened();
+
+    expect(store.options()[0].kind).toBe('steward');
+  });
+
   it('asks nothing while it is closed, whatever is typed', async () => {
     const store = TestBed.inject(PaletteStore);
     store.typed('ana');

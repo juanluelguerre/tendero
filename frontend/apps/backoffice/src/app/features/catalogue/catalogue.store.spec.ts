@@ -45,6 +45,24 @@ describe('the catalogue store', () => {
     return store;
   }
 
+  /**
+   * The same answer without AI (Steward's spec, *When no model answers*): the
+   * products missing a language's name, as a filter in the URL, which the
+   * unavailable panel links to and the person can drop.
+   */
+  it('narrows to the products missing a language, and drops the filter on request', async () => {
+    await TestBed.inject(Router).navigateByUrl('/?status=all&missing=en');
+    const store = TestBed.inject(CatalogueStore);
+    TestBed.tick();
+    const asked = http.expectOne((req) => req.url === Products && req.method === 'GET');
+    const missing = [store.missing(), asked.request.params.get('missing')];
+    asked.flush({ items: [], total: 0, counts: [] });
+    store.showAll();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect([...missing, TestBed.inject(Router).url]).toEqual(['en', 'en', '/?status=all']);
+  });
+
   /** Withdrawing offers Undo, which is publishing it again — on the server. */
   it('withdraws a product, shows its new status, and offers to publish it again', async () => {
     const store = await at('/?product=A');

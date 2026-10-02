@@ -1,0 +1,199 @@
+<ng-container *transloco="let t">
+  <section class="flex h-full flex-col bg-surface" [attr.aria-label]="t('steward.name')">
+    <header class="flex min-h-bar items-center gap-2 border-b border-hairline ps-4 pe-2">
+      <lib-icon class="size-icon-md text-accent" name="steward" />
+      <h2 class="m-0 text-lg">{{ t('steward.name') }}</h2>
+      @if (screenLabel(); as label) {
+        <span class="truncate rounded-full border border-hairline px-2 py-px text-3xs text-muted">
+          {{ t('steward.on', { screen: label }) }}
+        </span>
+      }
+      <span class="flex-1"></span>
+      <button
+        type="button"
+        class="inline-grid size-tap flex-none place-items-center rounded-md text-body hover:bg-raised"
+        [attr.aria-label]="t('steward.close')"
+        (click)="door.close()"
+      >
+        <lib-icon class="max-lg:hidden" name="close" />
+        <lib-icon class="lg:hidden" name="chevron" />
+      </button>
+    </header>
+
+    <div class="grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation aria-live="polite">
+      @if (store.exchanges().length === 0) {
+        <p class="m-0 text-sm text-muted">{{ t('steward.intro') }}</p>
+      }
+
+      @for (exchange of store.exchanges(); track exchange.id) {
+        <p class="m-0 ms-auto max-w-measure-sm rounded-lg border border-hairline bg-raised px-4 py-2">
+          <span class="sr-only">{{ t('steward.you') }}: </span>{{ exchange.question }}
+        </p>
+
+        @switch (exchange.state) {
+          @case ('asking') {
+            <div class="flex items-center gap-3 text-xs text-muted" role="status">
+              <span class="awning-rule awning-rule--thin w-col-lg"></span>
+              <span>{{ t('steward.working') }}</span>
+              <button type="button" class="button button--small button--quiet" (click)="store.stop()">
+                {{ t('steward.stop') }}
+              </button>
+            </div>
+          }
+          @case ('stopped') {
+            <p class="m-0 text-xs text-muted">{{ t('steward.stopped') }}</p>
+          }
+          @case ('failed') {
+            <p class="m-0 text-xs text-danger" role="alert">{{ t('steward.failed') }}</p>
+          }
+          @case ('tooMany') {
+            <p class="m-0 text-xs text-danger" role="alert">{{ t('steward.tooMany') }}</p>
+          }
+          @case ('answered') {
+            @if (exchange.answer; as answer) {
+              <div class="grid gap-3">
+                @if (answer.reads.length > 0) {
+                  <ul class="m-0 grid gap-hair p-0 text-xs text-muted" role="list">
+                    @for (read of answer.reads; track $index) {
+                      <li class="flex items-center gap-2">
+                        <lib-icon class="size-icon-xs" name="records" />
+                        {{
+                          read.total !== null && read.total > read.rows
+                            ? t('steward.readOf', {
+                                tool: t('steward.tools.' + read.tool),
+                                rows: read.rows,
+                                total: read.total,
+                              })
+                            : t('steward.read', { tool: t('steward.tools.' + read.tool), rows: read.rows })
+                        }}
+                      </li>
+                    }
+                  </ul>
+                }
+
+                @switch (answer.status) {
+                  @case ('Answered') {
+                    <p class="m-0 whitespace-pre-line">{{ answer.text }}</p>
+                  }
+                  @case ('Unavailable') {
+                    <lib-notice tone="warn" live="polite">
+                      <p class="m-0 flex items-center gap-2 font-medium">
+                        <lib-icon class="size-icon-md" name="unavailable" />{{ t('steward.unavailable.title') }}
+                      </p>
+                      <p class="m-0 mt-1 text-sm">
+                        {{ answer.fellBack ? t('steward.unavailable.bodyBoth') : t('steward.unavailable.bodyOne') }}
+                      </p>
+                      @if (answer.proposalIds.length > 0) {
+                        <p class="m-0 mt-1 text-sm">{{ t('steward.unavailable.kept') }}</p>
+                      }
+                    </lib-notice>
+                    <h3 class="eyebrow m-0">{{ t('steward.unavailable.without') }}</h3>
+                    <a
+                      class="flex items-start gap-3 rounded-lg border border-hairline p-4 no-underline hover:border-hairline-strong"
+                      routerLink="/catalogue"
+                      [queryParams]="{ status: 'all', missing: 'en' }"
+                    >
+                      <lib-icon class="size-icon-md text-accent" name="filter" />
+                      <span class="grid gap-hair">
+                        <span class="font-medium text-accent">{{ t('steward.unavailable.missingName') }}</span>
+                        <span class="text-xs text-muted">{{ t('steward.unavailable.missingNameDetail') }}</span>
+                      </span>
+                    </a>
+                    <a
+                      class="flex items-start gap-3 rounded-lg border border-hairline p-4 no-underline hover:border-hairline-strong"
+                      routerLink="/steward/proposals"
+                    >
+                      <lib-icon class="size-icon-md text-accent" name="proposals" />
+                      <span class="grid gap-hair">
+                        <span class="font-medium text-accent">{{ t('steward.unavailable.proposals') }}</span>
+                        <span class="text-xs text-muted">{{ t('steward.unavailable.proposalsDetail') }}</span>
+                      </span>
+                    </a>
+                    <button
+                      type="button"
+                      class="button button--quiet justify-self-start"
+                      [disabled]="store.busy()"
+                      (click)="again(exchange.question)"
+                    >
+                      {{ t('steward.unavailable.tryAgain') }}
+                    </button>
+                  }
+                  @case ('ConversationTooLong') {
+                    <lib-notice tone="warn" live="polite">
+                      <p class="m-0 font-medium">{{ t('steward.tooLong.title') }}</p>
+                      <p class="m-0 mt-1 text-sm">{{ t('steward.tooLong.body') }}</p>
+                    </lib-notice>
+                  }
+                  @case ('BudgetExceeded') {
+                    <lib-notice tone="warn" live="polite">
+                      <p class="m-0 font-medium">{{ t('steward.budget.title') }}</p>
+                      <p class="m-0 mt-1 text-sm">{{ t('steward.budget.body') }}</p>
+                    </lib-notice>
+                  }
+                }
+
+                @if (answer.proposalIds.length > 0 && answer.status === 'Answered') {
+                  <backoffice-proposal-card
+                    [ids]="answer.proposalIds"
+                    [revision]="revision()"
+                    (review)="openReview($event)"
+                  />
+                }
+              </div>
+            }
+          }
+        }
+      }
+
+      @if (store.cost().calls > 0) {
+        <p class="m-0 font-mono text-3xs text-muted">
+          {{ t('steward.cost', store.cost() | costLine: culture.active()) }}
+        </p>
+      }
+
+      @if (store.nearLimit() && !store.ended()) {
+        <lib-notice tone="info" live="polite">
+          <p class="m-0 text-sm">{{ t('steward.near') }}</p>
+          <button type="button" class="button button--small button--quiet mt-2" (click)="store.newConversation()">
+            {{ t('steward.newConversation') }}
+          </button>
+        </lib-notice>
+      }
+    </div>
+
+    <footer class="grid gap-2 border-t border-hairline p-4">
+      @if (store.ended()) {
+        <button type="button" class="button" (click)="store.newConversation()">
+          {{ t('steward.newConversation') }}
+        </button>
+      } @else {
+        <form class="flex items-end gap-2" (submit)="$event.preventDefault(); send()">
+          <label class="sr-only" for="steward-question">{{ t('steward.placeholder') }}</label>
+          <textarea
+            id="steward-question"
+            class="min-h-control flex-1 resize-none rounded-md border border-hairline-strong bg-raised p-2 text-body"
+            rows="1"
+            #composer
+            [placeholder]="t('steward.placeholder')"
+            [value]="draft()"
+            [disabled]="store.busy()"
+            (input)="draft.set($any($event.target).value)"
+            (keydown)="keyed($event)"
+          ></textarea>
+          <button
+            type="submit"
+            class="inline-grid size-control flex-none place-items-center rounded-md border border-hairline-strong text-body hover:bg-raised"
+            [attr.aria-label]="t('steward.send')"
+            [disabled]="store.busy() || !draft().trim()"
+          >
+            <lib-icon name="send" />
+          </button>
+        </form>
+      }
+      <p class="m-0 text-3xs text-muted">{{ t('steward.promise') }}</p>
+    </footer>
+  </section>
+</ng-container>
+
+<!-- Outside the translations, so it is there to open whether or not they have loaded. -->
+<backoffice-proposal-review (decided)="decided()" />

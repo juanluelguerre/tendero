@@ -4,6 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { BackofficeUsage } from '../../usage';
 import type { PaletteOption } from './palette-search';
 import { PaletteStore } from './palette.store';
+import { StewardDoorStore } from '../../features/steward/steward-door.store';
 
 /**
  * The command palette (the redesign's R-3, P2): Ctrl K, ⌘K or /, then a screen
@@ -26,6 +27,7 @@ export class Palette {
   protected readonly store = inject(PaletteStore);
   private readonly router = inject(Router);
   private readonly usage = inject(BackofficeUsage);
+  private readonly steward = inject(StewardDoorStore);
 
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   private readonly input = viewChild.required<ElementRef<HTMLInputElement>>('input');
@@ -49,6 +51,13 @@ export class Palette {
   }
 
   protected go(option: PaletteOption): void {
+    if (option.kind === 'steward') {
+      // Not a place: the panel opens over whatever screen this is, which is the
+      // screen its questions are about.
+      this.dialog().nativeElement.close();
+      this.steward.open();
+      return;
+    }
     this.usage.affordance('palette', option.kind);
     this.dialog().nativeElement.close();
     void this.router.navigate([option.route], { queryParams: option.queryParams });

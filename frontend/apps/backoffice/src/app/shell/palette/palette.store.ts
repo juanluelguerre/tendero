@@ -70,16 +70,27 @@ export const PaletteStore = signalStore(
       const t = (key: string, params?: Record<string, unknown>) => store._translate.translate(key, params);
       store._culture.active();
 
-      const screens: PaletteOption[] = Navigation.flatMap((group) =>
-        group.items.map((item) => ({
-          id: `screen-${item.label}`,
-          kind: 'screen' as const,
-          label: t(`nav.${item.label}`),
-          detail: t(`nav.groups.${group.label}`),
-          route: item.route,
-          queryParams: {},
-        })),
-      ).filter((option) => matches(`${option.label} ${option.detail}`, query));
+      const ask: PaletteOption = {
+        id: 'ask-steward',
+        kind: 'steward',
+        label: t('palette.ask'),
+        detail: t('palette.askDetail'),
+        route: '',
+        queryParams: {},
+      };
+      const screens: PaletteOption[] = [
+        ask,
+        ...Navigation.flatMap((group) =>
+          group.items.map((item) => ({
+            id: `screen-${item.label}`,
+            kind: 'screen' as const,
+            label: t(`nav.${item.label}`),
+            detail: t(`nav.groups.${group.label}`),
+            route: item.route,
+            queryParams: {},
+          })),
+        ),
+      ].filter((option) => matches(`${option.label} ${option.detail}`, query));
 
       if (query.length < RecordsFrom) return screens;
 

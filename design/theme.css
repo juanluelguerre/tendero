@@ -276,6 +276,7 @@
   --container-placeholder-max: 12.5rem; /* …and its largest */
   --container-rail: 4.5rem;       /* the backoffice's nav, folded */
   --container-rail-open: 14.5rem; /* …and open (xl) */
+  --container-panel: 26.25rem;    /* 420px — a panel beside the content: Steward's (from lg) */
 
   /* Heights tied to the viewport. */
   --spacing-centred: 60dvh;   /* a page whose one card sits in the middle */

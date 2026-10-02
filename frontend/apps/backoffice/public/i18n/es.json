@@ -121,7 +121,13 @@
     "refused": "El catálogo ha rechazado ese cambio.",
     "toReview": "Revisar los borradores nuevos",
     "findLabel": "Buscar un producto",
-    "find": "Nombre en cualquier idioma, o código"
+    "find": "Nombre en cualquier idioma, o código",
+    "missing": "Sin nombre en {{language}}",
+    "showAll": "Mostrar todos",
+    "language": {
+      "en": "inglés",
+      "es": "español"
+    }
   },
   "charts": {
     "figures": {
@@ -965,7 +971,8 @@
       "screen": "Pantalla",
       "order": "Pedido",
       "product": "Producto",
-      "agent": "Agente"
+      "agent": "Agente",
+      "steward": "Steward"
     },
     "keys": {
       "move": "↑ ↓ moverse",
@@ -974,7 +981,7 @@
       "lists": "En la cola de revisión y en afirmaciones: j y k"
     },
     "ask": "Preguntar a Steward",
-    "askDetail": "Steward"
+    "askDetail": "Steward · pregunta por la tienda"
   },
   "pager": {
     "label": "Páginas",
