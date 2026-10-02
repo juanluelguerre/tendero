@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.Ordering.Adapters;
+using ElGuerre.Tendero.Ordering.Features.Dashboard;
 using ElGuerre.Tendero.Ordering.Ports;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
@@ -104,6 +105,11 @@ public static class OrderingServiceCollectionExtensions
         // adapter would not need it.
         services.TryAddSingleton(provider =>
             (FakePaymentProvider)provider.GetRequiredKeyedService<IPaymentProvider>(FakePaymentProvider.Key));
+
+        // What Steward may read of the shop's sales and returns (phase 12, ADR 0054).
+        services.AddScoped<IReadTool, SalesSummaryTool>();
+        services.AddScoped<IReadTool, ProductPerformanceTool>();
+        services.AddScoped<IReadTool, ReturnsSummaryTool>();
 
         return services;
     }
