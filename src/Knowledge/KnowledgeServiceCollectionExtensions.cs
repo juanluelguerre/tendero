@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Extraction;
@@ -7,6 +8,7 @@ using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ElGuerre.Tendero.Knowledge;
 
@@ -38,8 +40,11 @@ public static class KnowledgeServiceCollectionExtensions
 
         if (configuration[ExtractorEndpointKey] is { Length: > 0 } extractor)
         {
-            services.AddChatClient(_ => OpenAICompatibleChat.Create(new Uri(extractor), Extractor.ModelId))
-                .UseOpenTelemetry(sourceName: TelemetrySources.Knowledge);
+            // Traced and metered like every model call (ADR 0053): one row per
+            // product it reads, under knowledge.extract.
+            services.TryAddSingleton<AIInvocationLog>();
+            services.AddChatClient(provider => OpenAICompatibleChat.Create(new Uri(extractor), Extractor.ModelId)
+                .Meter("extractor", new ModelProfile { Model = Extractor.ModelId, ContextTokens = 4096 }, provider));
             services.AddKeyedSingleton<IClaimExtractor>(ClaimExtractors.Chat,
                 (provider, _) => new ChatClaimExtractor(provider.GetRequiredService<IChatClient>()));
         }

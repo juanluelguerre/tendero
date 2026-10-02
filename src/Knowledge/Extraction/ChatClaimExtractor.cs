@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using ElGuerre.Tendero.AI;
 using Microsoft.Extensions.AI;
 
 namespace ElGuerre.Tendero.Knowledge.Extraction;
@@ -51,7 +52,7 @@ public sealed class ChatClaimExtractor(IChatClient chat) : IClaimExtractor
                 ? $"options [{string.Join(", ", attribute.Options)}]"
                 : attribute.Kind + (attribute.Unit is { Length: > 0 } unit ? $" in {unit}" : ""))));
 
-        var options = new ChatOptions
+        var options = ModelCall.Options("knowledge.extract", promptVersion: PromptVersion, options: new ChatOptions
         {
             Temperature = 0,
             Seed = 42,
@@ -61,7 +62,7 @@ public sealed class ChatClaimExtractor(IChatClient chat) : IClaimExtractor
             // the first run of P10-0 took the machine down with it.
             MaxOutputTokens = MaxTokens,
             ResponseFormat = ChatResponseFormat.ForJsonSchema(Schema(attributes), "claims"),
-        };
+        });
 
         var response = await chat.GetResponseAsync(
             [

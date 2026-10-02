@@ -1,5 +1,7 @@
+using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Support;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -39,5 +41,15 @@ public sealed class KnowledgeRegistrationTests
         Assert.IsType<ChatClaimExtractor>(provider.GetRequiredKeyedService<IClaimExtractor>(ClaimExtractors.Chat));
         Assert.IsType<TeiNliSupportScorer>(provider.GetRequiredService<ISupportScorer>());
         Assert.IsType<RulesClaimExtractor>(provider.GetRequiredKeyedService<IClaimExtractor>(ClaimExtractors.Rules));
+    }
+
+    /// <summary>The extractor's calls are model calls like Steward's: each leaves a
+    /// row in telemetry.ai_invocations (ADR 0053).</summary>
+    [Fact]
+    public void The_extractors_model_is_metered()
+    {
+        using var provider = Compose((KnowledgeServiceCollectionExtensions.ExtractorEndpointKey, "http://localhost:38083"));
+
+        Assert.NotNull(provider.GetRequiredService<IChatClient>().GetService<MeteringChatClient>());
     }
 }
