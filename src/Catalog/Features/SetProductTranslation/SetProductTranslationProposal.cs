@@ -1,3 +1,4 @@
+using ElGuerre.Tendero.Catalog.Domain;
 using ElGuerre.Tendero.Catalog.Ports;
 using ElGuerre.Tendero.SharedKernel;
 
@@ -29,8 +30,10 @@ public sealed class SetProductTranslationProposal(IServiceProvider services, IPr
 
     protected override async Task<ProposalSubject?> ReadAsync(SetProductTranslationCommand command, CancellationToken cancellationToken)
     {
+        // An archived product is out of the catalogue: no subject to translate, so
+        // nothing is proposed for it, and archiving one makes its proposal stale.
         var product = await products.FindByIdAsync(command.ProductId, cancellationToken);
-        if (product is null)
+        if (product is null || product.Status == ProductStatus.Archived)
             return null;
 
         var culture = Culture.Normalize(command.Culture);

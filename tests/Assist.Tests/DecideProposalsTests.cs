@@ -23,6 +23,8 @@ public sealed class DecideProposalsTests
         FakeEntry.Refusing.Clear();
         FakeEntry.Throwing.Clear();
         FakeEntry.Applied.Clear();
+        FakeEntry.NotJson.Clear();
+        FakeEntry.OnApply = null;
     }
 
     [Fact]
@@ -131,12 +133,76 @@ public sealed class DecideProposalsTests
         var shop = Shop(("MUG-1", "old"));
         var proposal = shop.Propose("MUG-1", "new");
         proposal.Approve("Lucía", Clock);
-        shop.World["MUG-1"] = "new";   // it had run before the process died
         Clock.Advance(ActionProposal.StillRunning + TimeSpan.FromSeconds(1));
 
         var result = await shop.Approve(proposal.Id);
 
         Assert.Equal(DecisionOutcome.Applied, Assert.Single(result.Rows).Outcome);
+        Assert.Equal("new", shop.World["MUG-1"]);
+    }
+
+    /// <summary>
+    /// A retry whose "now" moved cannot tell whether its own command ran before the
+    /// process died or a person changed it since: either way, running it again
+    /// could overwrite a person's edit, so it runs nothing and says why (M-2).
+    /// </summary>
+    [Fact]
+    public async Task A_retry_whose_subject_changed_since_the_approval_runs_nothing()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new");
+        proposal.Approve("Lucía", Clock);
+        shop.World["MUG-1"] = "written by hand the next morning";
+        Clock.Advance(ActionProposal.StillRunning + TimeSpan.FromSeconds(1));
+
+        var row = Assert.Single((await shop.Approve(proposal.Id)).Rows);
+
+        Assert.Equal(DecisionOutcome.Failed, row.Outcome);
+        Assert.Contains("changed", row.Reason);
+        Assert.Equal("written by hand the next morning", shop.World["MUG-1"]);
+        Assert.Empty(FakeEntry.Applied);
+    }
+
+    /// <summary>A client that disconnects mid-batch: the row whose command ran is
+    /// still recorded, and no row after it starts (M-1).</summary>
+    [Fact]
+    public async Task A_cancelled_batch_records_the_row_that_ran_and_starts_no_other()
+    {
+        var shop = Shop(("A", "1"), ("B", "1"));
+        var a = shop.Propose("A", "2");
+        var b = shop.Propose("B", "2");
+        using var disconnect = new CancellationTokenSource();
+        FakeEntry.OnApply = _ => disconnect.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => shop.Approve(disconnect.Token, a.Id, b.Id));
+
+        Assert.Equal(2, shop.UnitOfWork.Saved);   // A's claim and A's result
+        Assert.Equal(ProposalStatus.Applied, a.Status);
+        Assert.Equal(["A"], FakeEntry.Applied.Select(applied => applied.Subject));
+    }
+
+    /// <summary>An entry whose "now" is not JSON is stale, not a broken row (M-4).</summary>
+    [Fact]
+    public async Task A_now_that_is_not_json_makes_the_row_stale()
+    {
+        var shop = Shop(("MUG-1", "old"));
+        var proposal = shop.Propose("MUG-1", "new");
+        FakeEntry.NotJson.Add("MUG-1");
+
+        Assert.Equal(DecisionOutcome.Stale, Assert.Single((await shop.Approve(proposal.Id)).Rows).Outcome);
+    }
+
+    /// <summary>A body with no ids reaches the validator as an empty list — a 400,
+    /// not a NullReferenceException and a 500 (M-5).</summary>
+    [Fact]
+    public void A_body_without_ids_becomes_an_empty_decision_the_validator_refuses()
+    {
+        var approval = DecideProposalsEndpoints.Approval(new ApproveProposalsRequest(null!));
+        var rejection = DecideProposalsEndpoints.Rejection(new RejectProposalsRequest(null!, "because"));
+
+        Assert.Empty(approval.Ids);
+        Assert.Empty(rejection.Ids);
+        Assert.False(new ApproveProposalsValidator().Validate(approval).IsValid);
     }
 
     /// <summary>A row whose result cannot be saved — a database blip, a reason too
@@ -260,9 +326,11 @@ public sealed class DecideProposalsTests
             return proposal;
         }
 
-        public Task<ProposalDecisions> Approve(params ProposalId[] ids) =>
+        public Task<ProposalDecisions> Approve(params ProposalId[] ids) => Approve(TestContext.Current.CancellationToken, ids);
+
+        public Task<ProposalDecisions> Approve(CancellationToken cancellationToken, params ProposalId[] ids) =>
             new ApproveProposalsHandler(provider.GetRequiredService<IServiceScopeFactory>(), new FixedPrincipal("Lucía"), Clock)
-                .HandleAsync(new ApproveProposalsCommand(ids), TestContext.Current.CancellationToken);
+                .HandleAsync(new ApproveProposalsCommand(ids), cancellationToken);
 
         public Task<ProposalDecisions> Reject(string reason, params ProposalId[] ids) =>
             new RejectProposalsHandler(Proposals, new CountingUnitOfWork(), new FixedPrincipal("Lucía"), Clock)

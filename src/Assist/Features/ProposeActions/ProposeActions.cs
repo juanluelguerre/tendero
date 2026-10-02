@@ -30,13 +30,23 @@ public sealed record ProposeActionsResult(IReadOnlyList<ProposedRow> Rows);
 
 public sealed class ProposeActionsValidator : AbstractValidator<ProposeActionsCommand>
 {
+    /// <summary>The longest payload a proposal stores, as JSON text.</summary>
+    public const int PayloadMaxLength = 16 * 1024;
+
     public ProposeActionsValidator()
     {
         RuleFor(x => x.Actions).NotEmpty();
         RuleFor(x => x.Actions.Count).LessThanOrEqualTo(ProposalLimits.MaxBatch);
+        RuleFor(x => x.Source.Profile).MaximumLength(200);
+        RuleFor(x => x.Source.Model).MaximumLength(200);
+        RuleFor(x => x.Source.PromptVersion).MaximumLength(200);
+        RuleFor(x => x.Source.ConversationId).MaximumLength(200);
         RuleForEach(x => x.Actions).ChildRules(action =>
         {
             action.RuleFor(a => a.Command).NotEmpty().MaximumLength(100);
+            action.RuleFor(a => a.Payload.GetRawText().Length)
+                .LessThanOrEqualTo(PayloadMaxLength)
+                .WithMessage($"A payload holds at most {PayloadMaxLength} characters.");
             action.RuleFor(a => a.Reason)
                 .Must(reason => !string.IsNullOrWhiteSpace(reason))
                 .WithMessage("Every proposal says why.")

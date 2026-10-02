@@ -33,8 +33,18 @@ internal sealed class ScriptedUnitOfWork : IUnitOfWork
 
     public Func<int, Exception?> FailOn { get; set; } = _ => null;
 
-    public Task SaveChangesAsync(CancellationToken ct) =>
-        FailOn(++saves) is { } failure ? Task.FromException(failure) : Task.CompletedTask;
+    /// <summary>The saves that reached the store, as EF's would: a cancelled token is refused.</summary>
+    public int Saved { get; private set; }
+
+    public Task SaveChangesAsync(CancellationToken ct)
+    {
+        if (ct.IsCancellationRequested)
+            return Task.FromCanceled(ct);
+        if (FailOn(++saves) is { } failure)
+            return Task.FromException(failure);
+        Saved++;
+        return Task.CompletedTask;
+    }
 }
 
 internal sealed class FixedPrincipal(string name) : IPrincipalAccessor
@@ -56,6 +66,12 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
     public static HashSet<string> Throwing { get; } = [];
     public static List<(string Subject, ProposalId? Proposal)> Applied { get; } = [];
 
+    /// <summary>Runs as a subject is applied: the moment a client disconnects.</summary>
+    public static Action<string>? OnApply { get; set; }
+
+    /// <summary>Subjects whose "now" is not JSON — an entry that skipped the typed base.</summary>
+    public static HashSet<string> NotJson { get; } = [];
+
     public string Name => CommandName;
 
     public LocalizedText Label { get; } = new(new Dictionary<string, string> { ["en"] = "Set a value", ["es"] = "Poner un valor" });
@@ -70,8 +86,11 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
             : ProposalCheck.Invalid($"No {subject}."));
     }
 
-    public Task<string?> NowAsync(JsonElement payload, CancellationToken cancellationToken = default) =>
-        Task.FromResult(Snapshot(world, Read(payload).Subject));
+    public Task<string?> NowAsync(JsonElement payload, CancellationToken cancellationToken = default)
+    {
+        var subject = Read(payload).Subject;
+        return Task.FromResult(NotJson.Contains(subject) ? "not json" : Snapshot(world, subject));
+    }
 
     public Task<ProposalApplication> ApplyAsync(JsonElement payload, CancellationToken cancellationToken = default)
     {
@@ -83,6 +102,7 @@ internal sealed class FakeEntry(Dictionary<string, string> world, ProposalScope 
 
         world[subject] = value;
         Applied.Add((subject, scope.Current));
+        OnApply?.Invoke(subject);
         return Task.FromResult(ProposalApplication.Done);
     }
 

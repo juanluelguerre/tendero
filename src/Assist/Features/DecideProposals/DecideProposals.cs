@@ -82,7 +82,11 @@ public sealed class ApproveProposalsHandler(
         var rows = new List<ProposalDecision>();
 
         foreach (var id in command.Ids.Distinct())
+        {
+            // A client that left stops the batch between rows, never inside one.
+            cancellationToken.ThrowIfCancellationRequested();
             rows.Add(await DecideAsync(id, approver, cancellationToken));
+        }
 
         activity?.SetTag("assist.rows", rows.Count);
         activity?.SetTag("assist.applied", rows.Count(row => row.Outcome == DecisionOutcome.Applied));
@@ -124,11 +128,11 @@ public sealed class ApproveProposalsHandler(
         using var document = JsonDocument.Parse(proposal.Payload);
         var payload = document.RootElement;
 
-        // Stale when what the command would change is not what was proposed
+        // Changed when what the command would change is not what was proposed
         // against. An entry that no longer exists cannot say, and fails below.
-        // A retry skips it: its command may already have run.
-        var stale = !retrying && entry is not null
+        var changed = entry is not null
             && !Snapshots.Same(await entry.NowAsync(payload, cancellationToken), proposal.Before);
+        var stale = changed && !retrying;
 
         if (stale)
             proposal.MarkStale(approver, clock);
@@ -152,12 +156,19 @@ public sealed class ApproveProposalsHandler(
         if (stale)
             return new ProposalDecision(id, DecisionOutcome.Stale, null);
 
-        var application = await ApplyAsync(entry, proposal, payload, scope.ServiceProvider, cancellationToken);
+        // From the claim on, the row finishes even if the client has left: a
+        // command that ran and a result never recorded is the one state a person
+        // could not read back.
+        var application = retrying && changed
+            // A retry cannot tell its own command having run before the process
+            // died from a person's edit since: running again could overwrite one.
+            ? ProposalApplication.Failed("It changed after it was approved — it may have been applied before the approval stopped. Nothing was run; check it before proposing it again.")
+            : await ApplyAsync(entry, proposal, payload, scope.ServiceProvider, CancellationToken.None);
         if (application.Applied)
             proposal.RecordApplied();
         else
             proposal.RecordFailed(application.Reason!);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(CancellationToken.None);
 
         return new ProposalDecision(id, application.Applied ? DecisionOutcome.Applied : DecisionOutcome.Failed, application.Reason);
     }
@@ -229,9 +240,17 @@ internal static class Snapshots
         if (now is null || before is null)
             return now is null && before is null;
 
-        using var a = JsonDocument.Parse(now);
-        using var b = JsonDocument.Parse(before);
-        return JsonElement.DeepEquals(a.RootElement, b.RootElement);
+        try
+        {
+            using var a = JsonDocument.Parse(now);
+            using var b = JsonDocument.Parse(before);
+            return JsonElement.DeepEquals(a.RootElement, b.RootElement);
+        }
+        catch (JsonException)
+        {
+            // A snapshot that cannot be read cannot be shown to be the same.
+            return false;
+        }
     }
 }
 
@@ -259,18 +278,24 @@ public sealed class DecideProposalsEndpoints : ICarterModule
     {
         app.MapPost("/api/steward/proposals/approve",
                 async Task<Ok<ProposalDecisionsResponse>> (ApproveProposalsRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>
-                    View(await dispatcher.SendAsync(new ApproveProposalsCommand([.. body.Ids.Select(id => new ProposalId(id))]), ct)))
+                    View(await dispatcher.SendAsync(Approval(body), ct)))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Steward")
             .WithName("ApproveProposals");
 
         app.MapPost("/api/steward/proposals/reject",
                 async Task<Ok<ProposalDecisionsResponse>> (RejectProposalsRequest body, ICommandDispatcher dispatcher, CancellationToken ct) =>
-                    View(await dispatcher.SendAsync(new RejectProposalsCommand([.. body.Ids.Select(id => new ProposalId(id))], body.Reason), ct)))
+                    View(await dispatcher.SendAsync(Rejection(body), ct)))
             .RequireAuthorization(TenderoPolicyNames.Shopkeeper)
             .WithTags("Steward")
             .WithName("RejectProposals");
     }
+
+    internal static ApproveProposalsCommand Approval(ApproveProposalsRequest body) =>
+        new([.. (body.Ids ?? []).Select(id => new ProposalId(id))]);
+
+    internal static RejectProposalsCommand Rejection(RejectProposalsRequest body) =>
+        new([.. (body.Ids ?? []).Select(id => new ProposalId(id))], body.Reason);
 
     private static Ok<ProposalDecisionsResponse> View(ProposalDecisions decisions) =>
         TypedResults.Ok(new ProposalDecisionsResponse(

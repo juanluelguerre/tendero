@@ -63,6 +63,19 @@ public sealed class ProposeActionsTests
             [new ProposedAction("SetValue", FakeEntry.Payload("a", "b"), " ")], Source())).IsValid);
     }
 
+    /// <summary>A runaway model could fill a jsonb row: a payload and its source
+    /// strings are bounded like everything else a proposal stores (M-8).</summary>
+    [Fact]
+    public void The_validator_bounds_a_payload_and_where_it_came_from()
+    {
+        var validator = new ProposeActionsValidator();
+        var huge = FakeEntry.Payload("a", new string('x', ProposeActionsValidator.PayloadMaxLength));
+
+        Assert.False(validator.Validate(new ProposeActionsCommand([new ProposedAction("SetValue", huge, "r")], Source())).IsValid);
+        Assert.False(validator.Validate(new ProposeActionsCommand(
+            [new ProposedAction("SetValue", FakeEntry.Payload("a", "b"), "r")], Source() with { Model = new string('m', 201) })).IsValid);
+    }
+
     private static ProposeActionsCommand Command(params (string Subject, string Value)[] actions) => new(
         [.. actions.Select(action => new ProposedAction(FakeEntry.CommandName, FakeEntry.Payload(action.Subject, action.Value), "It has no English name."))],
         Source());

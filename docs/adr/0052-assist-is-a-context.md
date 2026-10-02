@@ -41,7 +41,12 @@ what a product is.
 - A proposal carries a version (Postgres's xmin): of two approvals of one
   proposal, only the first save stands, and the other is told it is no longer
   waiting, so a double click runs a command once.
+- A command whose own validator refuses it at approval leaves the proposal
+  Failed and no audit row of its own: the dispatcher validates before the audit
+  step, as it does for every command — an invalid request is not an attempt.
+  The proposal's result says why.
 - Retrying an approval whose result is unknown is allowed only once it is older
-  than an approval can take (five minutes), and it skips the staleness check,
-  which relies on the commands being idempotent; a proposable command that is
-  not idempotent would need this decision reopened.
+  than an approval can take (five minutes). If what the command would change is
+  still what was proposed against, it runs; if not, nothing runs and the row
+  fails saying so, because the retry cannot tell its own command having run
+  from a person's edit since.

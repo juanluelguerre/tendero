@@ -46,6 +46,21 @@ public sealed class CatalogProposalsTests
         Assert.False(check.IsValid);
     }
 
+    /// <summary>An archived product is out of the catalogue: nothing is proposed
+    /// for it, and one archived after the proposal makes it stale rather than a
+    /// failure the shopkeeper did not cause (final review, M-3).</summary>
+    [Fact]
+    public async Task An_archived_product_is_no_subject_for_a_translation()
+    {
+        var product = AProduct();
+        product.Archive(Clock);
+        var entry = Entries(product).Single(e => e.Name == "SetProductTranslation");
+        var payload = Payload($$"""{"productId":"{{product.Id.Value}}","culture":"en","name":"Moka pot"}""");
+
+        Assert.False((await entry.CheckAsync(payload, TestContext.Current.CancellationToken)).IsValid);
+        Assert.Null(await entry.NowAsync(payload, TestContext.Current.CancellationToken));
+    }
+
     [Fact]
     public async Task Applying_a_translation_writes_it()
     {

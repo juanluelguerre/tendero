@@ -99,7 +99,8 @@ public abstract class ProposableCommand<TPayload, TCommand, TResult>(IServicePro
     where TCommand : ICommand<TResult>
     where TResult : IAuditedResult
 {
-    /// <summary>Fixed, because a snapshot is compared as text.</summary>
+    /// <summary>Fixed, so the same state always writes the same snapshot; Assist
+    /// still compares two of them by value, since jsonb keeps neither spacing nor order.</summary>
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public abstract string Name { get; }
