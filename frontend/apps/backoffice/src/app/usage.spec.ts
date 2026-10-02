@@ -24,6 +24,8 @@ describe('which screen a URL is', () => {
     expect(viewOf('/sign-in?returnTo=/dashboard')).toBeNull();
     expect(viewOf('/products/0199a1f0-0000')).toBeNull();
     expect(viewOf('/dashboard/somewhere')).toBeNull();
+    // Steward's list of work (phase 12) is a screen like the others.
+    expect(viewOf('/steward/proposals?filter=All')).toBe('proposals');
   });
 });
 

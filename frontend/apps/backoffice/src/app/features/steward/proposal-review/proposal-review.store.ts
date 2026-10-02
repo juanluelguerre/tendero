@@ -8,6 +8,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import type { Observable } from 'rxjs';
 import { StewardService } from '../../../data-access/steward.service';
 import { readStatus } from '../../../read-status';
+import { BackofficeUsage } from '../../../usage';
 
 /** A row of the review: the proposal, whether it is ticked, and what its decision did. */
 export interface ReviewRow {
@@ -41,7 +42,7 @@ export const ProposalReviewStore = signalStore(
         stream: ({ params }) => steward.proposalsById(params.ids, params.culture),
       }),
     );
-    return { _steward: steward, _batch: batch, ...readStatus(batch) };
+    return { _steward: steward, _usage: inject(BackofficeUsage), _batch: batch, ...readStatus(batch) };
   }),
   withComputed((store) => {
     const rows = computed<ReviewRow[]>(() =>
@@ -98,6 +99,12 @@ export const ProposalReviewStore = signalStore(
       },
       approve(answered?: () => void): void {
         if (!store.canApprove()) return;
+        store._usage.proposalsReviewed('proposals', {
+          proposed: store.waiting(),
+          approved: store.selected(),
+          rejected: 0,
+          unticked: store.unticked(),
+        });
         decide(
           store._steward.approve(
             store
@@ -114,6 +121,12 @@ export const ProposalReviewStore = signalStore(
           .filter((row) => row.open && !row.ticked)
           .map((row) => row.proposal.id);
         if (ids.length === 0 || !reason.trim() || store.busy()) return;
+        store._usage.proposalsReviewed('proposals', {
+          proposed: store.waiting(),
+          approved: 0,
+          rejected: ids.length,
+          unticked: store.unticked(),
+        });
         decide(store._steward.reject(ids, reason.trim()), answered);
       },
     };

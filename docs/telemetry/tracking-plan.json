@@ -372,6 +372,18 @@
         "tendero.ai.cost",
         "tendero.steward.turns"
       ]
+    },
+    {
+      "name": "Steward",
+      "area": "backoffice",
+      "question": "Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?",
+      "decision": "Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.",
+      "signals": [
+        "steward_opened",
+        "steward_answered",
+        "proposals_reviewed",
+        "steward_unavailable"
+      ]
     }
   ],
   "events": [
@@ -536,7 +548,8 @@
             "returns",
             "agents",
             "audit",
-            "variants"
+            "variants",
+            "proposals"
           ],
           "description": "The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9)."
         }
@@ -563,7 +576,8 @@
             "returns",
             "agents",
             "audit",
-            "variants"
+            "variants",
+            "proposals"
           ],
           "description": "The screen it was done on."
         },
@@ -741,6 +755,117 @@
             "all"
           ],
           "description": "One product or one search removed, or the whole trail."
+        }
+      }
+    },
+    {
+      "name": "steward_opened",
+      "description": "The shopkeeper opened Steward's panel, from the bar or the palette (phase 12). A staff event: never who, never what they ask.",
+      "consent": "staff",
+      "attributes": {
+        "view": {
+          "type": "string",
+          "values": [
+            "dashboard",
+            "dashboard.sales",
+            "dashboard.operations",
+            "dashboard.growth",
+            "dashboard.agents",
+            "review",
+            "catalogue",
+            "claims",
+            "attributes",
+            "search",
+            "promotions",
+            "campaigns",
+            "stock",
+            "orders",
+            "returns",
+            "agents",
+            "audit",
+            "variants",
+            "proposals"
+          ],
+          "description": "The screen it was opened on."
+        }
+      }
+    },
+    {
+      "name": "steward_answered",
+      "description": "A Steward turn came back. Never the question's text nor the answer's: what it read, what it cost, which profile answered.",
+      "consent": "staff",
+      "attributes": {
+        "status": {
+          "type": "string",
+          "values": [
+            "answered",
+            "unavailable",
+            "budget_exceeded",
+            "conversation_too_long"
+          ],
+          "description": "StewardStatus, as the turn answered it."
+        },
+        "tools": {
+          "type": "number",
+          "description": "How many reads the turn made."
+        },
+        "proposals": {
+          "type": "number",
+          "description": "How many proposals it stored."
+        },
+        "calls": {
+          "type": "number",
+          "description": "Model calls the turn took, six at most."
+        },
+        "cost": {
+          "type": "number",
+          "description": "What the turn cost, in micro-euros; 0 on a local profile."
+        },
+        "fell_back": {
+          "type": "boolean",
+          "description": "Whether a profile after the first answered."
+        }
+      }
+    },
+    {
+      "name": "proposals_reviewed",
+      "description": "A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. The counts, never what they said.",
+      "consent": "staff",
+      "attributes": {
+        "kind": {
+          "type": "string",
+          "values": [
+            "proposals",
+            "claims"
+          ],
+          "description": "Steward's proposals, or a product's claims (S-5)."
+        },
+        "proposed": {
+          "type": "number",
+          "description": "How many the review showed waiting."
+        },
+        "approved": {
+          "type": "number",
+          "description": "How many this decision approved."
+        },
+        "rejected": {
+          "type": "number",
+          "description": "How many it rejected."
+        },
+        "unticked": {
+          "type": "number",
+          "description": "How many the person unticked: a rubber stamp leaves this at zero, batch after batch."
+        }
+      }
+    },
+    {
+      "name": "steward_unavailable",
+      "description": "A Steward turn found no model to answer it: the default failed, and the fallback too when there is one.",
+      "consent": "staff",
+      "attributes": {
+        "fell_back": {
+          "type": "boolean",
+          "description": "Whether a fallback profile was tried as well."
         }
       }
     }

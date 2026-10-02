@@ -6,6 +6,7 @@ import type { BulkApprovalOutcome, ClaimForReview } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { KnowledgeService } from '../../../data-access/knowledge.service';
 import { readStatus } from '../../../read-status';
+import { BackofficeUsage } from '../../../usage';
 
 /** A row of the review: the claim, whether it may go together with others, and what became of it. */
 export interface ClaimRow {
@@ -39,7 +40,7 @@ export const ClaimsBulkReviewStore = signalStore(
         stream: ({ params }) => knowledge.claimsOf(params),
       }),
     );
-    return { _knowledge: knowledge, _claims: claims, ...readStatus(claims) };
+    return { _knowledge: knowledge, _usage: inject(BackofficeUsage), _claims: claims, ...readStatus(claims) };
   }),
   withComputed((store) => {
     // The rows that can go together first, the weak after them, as the mock-up draws it.
@@ -85,6 +86,13 @@ export const ClaimsBulkReviewStore = signalStore(
     /** Approves the ticked; `answered` runs once the server said what became of each. */
     approve(answered?: () => void): void {
       if (!store.canApprove()) return;
+      // The weak ones were proposed too, and could not go together: they count as shown, not as unticked.
+      store._usage.proposalsReviewed('claims', {
+        proposed: store.together() + store.weak(),
+        approved: store.selected(),
+        rejected: 0,
+        unticked: store.together() - store.selected(),
+      });
       patchState(store, { busy: true, approveFailed: false });
       store._knowledge
         .approveMany(

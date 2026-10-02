@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+import type { StewardAnswer } from '@tendero/shared-api';
 import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
 import { type MonoTypeOperatorFunction, tap } from 'rxjs';
 
@@ -12,6 +13,17 @@ export type ActionOutcome = TrackedEvents['backoffice_action_taken']['outcome'];
 export type ActionVia = TrackedEvents['backoffice_action_taken']['via'];
 export type Affordance = TrackedEvents['backoffice_affordance_used']['affordance'];
 export type AffordanceTarget = TrackedEvents['backoffice_affordance_used']['target'];
+/** A batch a model proposed: Steward's proposals, or a product's claims together. */
+export type ReviewedKind = TrackedEvents['proposals_reviewed']['kind'];
+type Reviewed = Omit<TrackedEvents['proposals_reviewed'], 'kind'>;
+
+/** A turn's status as the tracking plan spells it. */
+const Statuses: Record<StewardAnswer['status'], TrackedEvents['steward_answered']['status']> = {
+  Answered: 'answered',
+  Unavailable: 'unavailable',
+  BudgetExceeded: 'budget_exceeded',
+  ConversationTooLong: 'conversation_too_long',
+};
 
 const Views: readonly BackofficeView[] = [
   'dashboard',
@@ -32,6 +44,7 @@ const Views: readonly BackofficeView[] = [
   'agents',
   'audit',
   'variants',
+  'proposals',
 ];
 
 /**
@@ -44,6 +57,7 @@ const Views: readonly BackofficeView[] = [
 export function viewOf(url: string): BackofficeView | null {
   const segments = url.split(/[?#]/)[0].split('/').filter(Boolean);
   if (segments[0] === 'products' && segments[2] === 'variants') return 'variants';
+  if (segments[0] === 'steward' && segments[1] === 'proposals') return 'proposals';
   const view = (
     segments[0] === 'dashboard' && segments[1] ? `dashboard.${segments[1]}` : (segments[0] ?? 'dashboard')
   ) as BackofficeView;
@@ -94,6 +108,35 @@ export class BackofficeUsage {
       error: (failure: unknown) =>
         this.telemetry.trackEvent('backoffice_action_taken', { view, action, via, outcome: outcomeOf(failure) }),
     });
+  }
+
+  /** Steward's panel opened, and on which screen (phase 12): is it used, and from where? */
+  stewardOpened(url: string): void {
+    const view = viewOf(url);
+    if (view) this.telemetry.trackEvent('steward_opened', { view });
+  }
+
+  /**
+   * A turn came back: what it read, stored and cost, which is what decides the
+   * tools and the default profile — never the question's words or the answer's.
+   * An unavailable turn is reported once more on its own, for the profile choice.
+   */
+  stewardAnswered(answer: StewardAnswer): void {
+    this.telemetry.trackEvent('steward_answered', {
+      status: Statuses[answer.status],
+      tools: answer.reads.length,
+      proposals: answer.proposalIds.length,
+      calls: answer.cost?.calls ?? 0,
+      cost: answer.cost?.microEuros ?? 0,
+      fell_back: answer.fellBack,
+    });
+    if (answer.status === 'Unavailable')
+      this.telemetry.trackEvent('steward_unavailable', { fell_back: answer.fellBack });
+  }
+
+  /** A batch a model proposed, decided through the review: reviewed, or stamped? */
+  proposalsReviewed(kind: ReviewedKind, counts: Reviewed): void {
+    this.telemetry.trackEvent('proposals_reviewed', { kind, ...counts });
   }
 
   /** Something reached through the palette or a list shortcut (R-4.6): are they used? */

@@ -3,8 +3,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import type { StewardAnswer } from '@tendero/shared-api';
 import { provideTenderoI18n } from '@tendero/shared-i18n';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StewardStore } from './steward.store';
 
 const Turns = 'http://api/api/steward/turns';
@@ -29,16 +30,19 @@ const answer = (text: string | null, extra: Partial<StewardAnswer> = {}): Stewar
  */
 describe('the steward store', () => {
   let http: HttpTestingController;
+  const telemetry = { trackEvent: vi.fn() };
   let store: InstanceType<typeof StewardStore>;
   const screen = { page: 'Products', subject: 'Active' };
 
   beforeEach(() => {
+    telemetry.trackEvent.mockClear();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         provideTenderoI18n(),
         { provide: API_BASE_URL, useValue: 'http://api' },
+        { provide: Telemetry, useValue: telemetry },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -120,6 +124,24 @@ describe('the steward store', () => {
     TestBed.tick();
 
     expect(http.match(badge)).toHaveLength(1);
+  });
+
+  /** What a turn read, cost and stored — never what was asked (the tracking plan, steward_answered). */
+  it('reports each answer, and an unavailable one twice over', () => {
+    store.ask('One', screen);
+    http
+      .expectOne((req) => req.url === Turns)
+      .flush(answer('A', { proposalIds: ['p1'], reads: [{ tool: 'catalogue_gaps', rows: 3, total: 3 }] }));
+    store.ask('Two', screen);
+    http
+      .expectOne((req) => req.url === Turns)
+      .flush(answer(null, { status: 'Unavailable', cost: null, fellBack: true }));
+
+    expect(telemetry.trackEvent.mock.calls).toEqual([
+      ['steward_answered', { status: 'answered', tools: 1, proposals: 1, calls: 2, cost: 2100, fell_back: false }],
+      ['steward_answered', { status: 'unavailable', tools: 0, proposals: 0, calls: 0, cost: 0, fell_back: true }],
+      ['steward_unavailable', { fell_back: true }],
+    ]);
   });
 
   /** Over the budget or past every window, the conversation is over: only a new one goes on. */

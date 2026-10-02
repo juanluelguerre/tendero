@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-40 features: **35** answered by a signal emitted today,
+41 features: **36** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -55,6 +55,7 @@ everything here that is not *planned* is emitted.
 | Theme choice | Does anybody change the theme from the system's, and to which? | If nobody changes it within a month of the laboratory's use, the switch goes and the system's preference stays (the redesign's R-3). The storefront's half arrives with R-5.1 as a behavioural event. | `backoffice_theme_chosen` | emitted |
 | Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
 | Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
+| Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable` | emitted |
 
 ### Agents
 
@@ -183,7 +184,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). |
+| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). |
 
 ### `backoffice_action_taken`
 
@@ -196,7 +197,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants` | The screen it was done on. |
+| `view` | string | `dashboard`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen it was done on. |
 | `action` | string | `publish`, `withdraw`, `import`, `claim_approve`, `claim_reject`, `order_ship`, `order_deliver`, `order_cancel`, `return_approve`, `return_reject`, `return_receive`, `return_refund`, `agent_register`, `agent_trust`, `agent_suspend`, `agent_reinstate`, `campaign_create`, `campaign_update`, `campaign_schedule`, `campaign_unschedule`, `campaign_end` | What was done, from a closed list. |
 | `outcome` | string | `done`, `refused`, `failed` | done; refused when the server said no (a 4xx, a rule); failed when it could not answer. |
 | `via` | string | `row`, `pane`, `page` | Where it was pressed: on the list's row, in the pane beside it, or as the page's own action (R-3's adoption signal for the pane). |
@@ -287,6 +288,63 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `scope` | string | `one`, `all` | One product or one search removed, or the whole trail. |
+
+### `steward_opened`
+
+browser event, staff. The shopkeeper opened Steward's panel, from the bar or the palette (phase 12). A staff event: never who, never what they ask.
+
+Answers:
+
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `view` | string | `dashboard`, `dashboard.sales`, `dashboard.operations`, `dashboard.growth`, `dashboard.agents`, `review`, `catalogue`, `claims`, `attributes`, `search`, `promotions`, `campaigns`, `stock`, `orders`, `returns`, `agents`, `audit`, `variants`, `proposals` | The screen it was opened on. |
+
+### `steward_answered`
+
+browser event, staff. A Steward turn came back. Never the question's text nor the answer's: what it read, what it cost, which profile answered.
+
+Answers:
+
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `status` | string | `answered`, `unavailable`, `budget_exceeded`, `conversation_too_long` | StewardStatus, as the turn answered it. |
+| `tools` | number | — | How many reads the turn made. |
+| `proposals` | number | — | How many proposals it stored. |
+| `calls` | number | — | Model calls the turn took, six at most. |
+| `cost` | number | — | What the turn cost, in micro-euros; 0 on a local profile. |
+| `fell_back` | boolean | — | Whether a profile after the first answered. |
+
+### `proposals_reviewed`
+
+browser event, staff. A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. The counts, never what they said.
+
+Answers:
+
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `kind` | string | `proposals`, `claims` | Steward's proposals, or a product's claims (S-5). |
+| `proposed` | number | — | How many the review showed waiting. |
+| `approved` | number | — | How many this decision approved. |
+| `rejected` | number | — | How many it rejected. |
+| `unticked` | number | — | How many the person unticked: a rubber stamp leaves this at zero, batch after batch. |
+
+### `steward_unavailable`
+
+browser event, staff. A Steward turn found no model to answer it: the default failed, and the fallback too when there is one.
+
+Answers:
+
+- **Steward** — Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `fell_back` | boolean | — | Whether a fallback profile was tried as well. |
 
 ## Metrics
 

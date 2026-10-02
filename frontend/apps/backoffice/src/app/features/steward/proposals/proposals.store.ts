@@ -16,6 +16,7 @@ import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { StewardService } from '../../../data-access/steward.service';
 import { readStatus } from '../../../read-status';
+import { BackofficeUsage } from '../../../usage';
 import type { FilterOption } from '../../../worklist/filter-chips/filter-chips';
 import { withWorklistUrl } from '../../../worklist/with-worklist-url';
 
@@ -35,6 +36,7 @@ export const ProposalsStore = signalStore(
   withProps(() => ({
     _steward: inject(StewardService),
     _culture: inject(CultureStore),
+    _usage: inject(BackofficeUsage),
     _labels: translateObjectSignal('proposals.filter'),
   })),
   withComputed((store) => ({
@@ -110,10 +112,12 @@ export const ProposalsStore = signalStore(
       },
       approve(proposal: ProposalView): void {
         patchState(store, { busy: proposal.id });
+        store._usage.proposalsReviewed('proposals', { proposed: 1, approved: 1, rejected: 0, unticked: 0 });
         store._steward.approve([proposal.id]).subscribe({ next: () => settle(proposal), error: failed(proposal) });
       },
       reject(proposal: ProposalView, reason: string): void {
         patchState(store, { busy: proposal.id });
+        store._usage.proposalsReviewed('proposals', { proposed: 1, approved: 0, rejected: 1, unticked: 0 });
         store._steward
           .reject([proposal.id], reason)
           .subscribe({ next: () => settle(proposal), error: failed(proposal) });

@@ -7,6 +7,7 @@ import { CultureStore } from '@tendero/shared-i18n';
 import { catchError, EMPTY, pipe, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { StewardService } from '../../data-access/steward.service';
 import { WaitingStore } from '../../shell/waiting.store';
+import { BackofficeUsage } from '../../usage';
 
 /** Where a question stands: on its way, answered, stopped by the person, or lost on the way. */
 export type ExchangeState = 'asking' | 'answered' | 'stopped' | 'failed' | 'tooMany';
@@ -51,6 +52,7 @@ export const StewardStore = signalStore(
     _steward: inject(StewardService),
     _culture: inject(CultureStore),
     _waiting: inject(WaitingStore),
+    _usage: inject(BackofficeUsage),
     _stop: new Subject<void>(),
   })),
   withComputed((store) => {
@@ -101,6 +103,7 @@ export const StewardStore = signalStore(
             takeUntil(store._stop),
             tap((answer) => {
               settle(id, { state: 'answered', answer });
+              store._usage.stewardAnswered(answer);
               patchState(store, { conversationId: answer.conversationId });
               // The rail's badge counts what waits: these just started waiting.
               if (answer.proposalIds.length > 0) store._waiting.refresh();

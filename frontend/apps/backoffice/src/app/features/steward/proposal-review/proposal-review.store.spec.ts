@@ -4,8 +4,9 @@ import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import type { ProposalView } from '@tendero/shared-api';
 import { provideTenderoI18n } from '@tendero/shared-i18n';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProposalReviewStore } from './proposal-review.store';
 
 const Proposals = 'http://api/api/steward/proposals';
@@ -20,14 +21,17 @@ const proposal = (id: string, status = 'Proposed') =>
  */
 describe('the proposal review store', () => {
   let http: HttpTestingController;
+  const telemetry = { trackEvent: vi.fn() };
 
   beforeEach(() => {
+    telemetry.trackEvent.mockClear();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         provideTenderoI18n(),
         { provide: API_BASE_URL, useValue: 'http://api' },
+        { provide: Telemetry, useValue: telemetry },
         ProposalReviewStore,
       ],
     });
@@ -73,6 +77,21 @@ describe('the proposal review store', () => {
 
     expect(store.rows().map((row) => row.outcome?.outcome ?? null)).toEqual(['Applied', null, 'Stale']);
     expect([store.selected(), store.unticked()]).toEqual([0, 1]);
+  });
+
+  /** The counts that say whether a batch was reviewed or stamped (the tracking plan, proposals_reviewed). */
+  it('reports what each decision did to the batch', async () => {
+    const { store } = await reviewing([proposal('a'), proposal('b'), proposal('c')]);
+    store.toggle('b');
+    store.approve();
+    http.expectOne(`${Proposals}/approve`).flush({ rows: [] });
+    store.rejectUnticked('Too literal.');
+    http.expectOne(`${Proposals}/reject`).flush({ rows: [] });
+
+    expect(telemetry.trackEvent.mock.calls).toEqual([
+      ['proposals_reviewed', { kind: 'proposals', proposed: 3, approved: 2, rejected: 0, unticked: 1 }],
+      ['proposals_reviewed', { kind: 'proposals', proposed: 3, approved: 0, rejected: 1, unticked: 1 }],
+    ]);
   });
 
   it('rejects the unticked ones with the reason given', async () => {

@@ -1,4 +1,7 @@
-import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { patchState, signalStore, withMethods, withProps, withState } from '@ngrx/signals';
+import { BackofficeUsage } from '../../usage';
 
 /**
  * Whether Steward's panel is open (ADR 0047: the bar's button, the palette and
@@ -10,15 +13,22 @@ import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
 export const StewardDoorStore = signalStore(
   { providedIn: 'root' },
   withState({ isOpen: false }),
-  withMethods((store) => ({
-    open(): void {
+  withProps(() => ({ _usage: inject(BackofficeUsage), _router: inject(Router) })),
+  withMethods((store) => {
+    /** Every opening is counted with the screen it happened on; a closing is not one. */
+    const open = () => {
+      if (store.isOpen()) return;
       patchState(store, { isOpen: true });
-    },
-    close(): void {
-      patchState(store, { isOpen: false });
-    },
-    toggle(): void {
-      patchState(store, (state) => ({ isOpen: !state.isOpen }));
-    },
-  })),
+      store._usage.stewardOpened(store._router.url);
+    };
+    const close = () => patchState(store, { isOpen: false });
+    return {
+      open,
+      close,
+      toggle(): void {
+        if (store.isOpen()) close();
+        else open();
+      },
+    };
+  }),
 );

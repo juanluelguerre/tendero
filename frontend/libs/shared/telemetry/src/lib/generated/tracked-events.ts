@@ -110,7 +110,7 @@ export interface TrackedEvents {
    */
   readonly backoffice_view_opened: {
     /** The screen, by its route; never an id in it. The dashboard's Overview is dashboard, each of its tabs dashboard.<tab> (R-9). */
-    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
+    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
   };
 
   /**
@@ -124,7 +124,7 @@ export interface TrackedEvents {
    */
   readonly backoffice_action_taken: {
     /** The screen it was done on. */
-    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants';
+    readonly view: 'dashboard' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
     /** What was done, from a closed list. */
     readonly action: 'publish' | 'withdraw' | 'import' | 'claim_approve' | 'claim_reject' | 'order_ship' | 'order_deliver' | 'order_cancel' | 'return_approve' | 'return_reject' | 'return_receive' | 'return_refund' | 'agent_register' | 'agent_trust' | 'agent_suspend' | 'agent_reinstate' | 'campaign_create' | 'campaign_update' | 'campaign_schedule' | 'campaign_unschedule' | 'campaign_end';
     /** done; refused when the server said no (a 4xx, a rule); failed when it could not answer. */
@@ -218,6 +218,68 @@ export interface TrackedEvents {
     /** One product or one search removed, or the whole trail. */
     readonly scope: 'one' | 'all';
   };
+
+  /**
+   * The shopkeeper opened Steward's panel, from the bar or the palette (phase 12). A staff event: never who, never what they ask.
+   *
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   */
+  readonly steward_opened: {
+    /** The screen it was opened on. */
+    readonly view: 'dashboard' | 'dashboard.sales' | 'dashboard.operations' | 'dashboard.growth' | 'dashboard.agents' | 'review' | 'catalogue' | 'claims' | 'attributes' | 'search' | 'promotions' | 'campaigns' | 'stock' | 'orders' | 'returns' | 'agents' | 'audit' | 'variants' | 'proposals';
+  };
+
+  /**
+   * A Steward turn came back. Never the question's text nor the answer's: what it read, what it cost, which profile answered.
+   *
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   */
+  readonly steward_answered: {
+    /** StewardStatus, as the turn answered it. */
+    readonly status: 'answered' | 'unavailable' | 'budget_exceeded' | 'conversation_too_long';
+    /** How many reads the turn made. */
+    readonly tools: number;
+    /** How many proposals it stored. */
+    readonly proposals: number;
+    /** Model calls the turn took, six at most. */
+    readonly calls: number;
+    /** What the turn cost, in micro-euros; 0 on a local profile. */
+    readonly cost: number;
+    /** Whether a profile after the first answered. */
+    readonly fell_back: boolean;
+  };
+
+  /**
+   * A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. The counts, never what they said.
+   *
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   */
+  readonly proposals_reviewed: {
+    /** Steward's proposals, or a product's claims (S-5). */
+    readonly kind: 'proposals' | 'claims';
+    /** How many the review showed waiting. */
+    readonly proposed: number;
+    /** How many this decision approved. */
+    readonly approved: number;
+    /** How many it rejected. */
+    readonly rejected: number;
+    /** How many the person unticked: a rubber stamp leaves this at zero, batch after batch. */
+    readonly unticked: number;
+  };
+
+  /**
+   * A Steward turn found no model to answer it: the default failed, and the fallback too when there is one.
+   *
+   * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
+   * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
+   */
+  readonly steward_unavailable: {
+    /** Whether a fallback profile was tried as well. */
+    readonly fell_back: boolean;
+  };
 }
 
 /**
@@ -243,4 +305,8 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   home_module_opened: 'behavioural',
   campaign_card_opened: 'behavioural',
   trail_cleared: 'behavioural',
+  steward_opened: 'staff',
+  steward_answered: 'staff',
+  proposals_reviewed: 'staff',
+  steward_unavailable: 'staff',
 };

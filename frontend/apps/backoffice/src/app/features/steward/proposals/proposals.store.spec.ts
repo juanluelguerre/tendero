@@ -5,8 +5,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import type { ProposalView } from '@tendero/shared-api';
 import { provideTenderoI18n } from '@tendero/shared-i18n';
+import { Telemetry } from '@tendero/shared-telemetry';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProposalsStore } from './proposals.store';
 
 const Proposals = 'http://api/api/steward/proposals';
@@ -17,8 +18,10 @@ const proposal = (id: string) =>
 /** The Proposals list's shared state (ADR 0047): the filter, the page and the open proposal in the URL, the rows, the decisions. */
 describe('the proposals store', () => {
   let http: HttpTestingController;
+  const telemetry = { trackEvent: vi.fn() };
 
   beforeEach(() => {
+    telemetry.trackEvent.mockClear();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -26,6 +29,7 @@ describe('the proposals store', () => {
         provideRouter([]),
         provideTenderoI18n(),
         { provide: API_BASE_URL, useValue: 'http://api' },
+        { provide: Telemetry, useValue: telemetry },
         ProposalsStore,
       ],
     });
@@ -104,6 +108,16 @@ describe('the proposals store', () => {
     expect([TestBed.inject(Router).url, http.match((req) => req.url === Proposals).length]).toEqual([
       '/?proposal=p2',
       1,
+    ]);
+  });
+
+  it('reports a decision taken in the pane as a batch of one', async () => {
+    const store = await at('/?proposal=p1');
+    store.approve(proposal('p1'));
+    http.expectOne(`${Proposals}/approve`).flush({ rows: [] });
+
+    expect(telemetry.trackEvent.mock.calls).toEqual([
+      ['proposals_reviewed', { kind: 'proposals', proposed: 1, approved: 1, rejected: 0, unticked: 0 }],
     ]);
   });
 
