@@ -425,6 +425,7 @@ database a new password its volume does not know.
 | `https-vectors` | plus the vector layer: search by meaning, similar products, the reranker on a GPU |
 | `https-knowledge` | plus the claims models: the extractor and the support scorer |
 | `https-advanced` | plus both: every AI stage on — their containers' memory limits add up to about 14 GB on a CPU |
+| `https-steward` | plus Steward's local model (6 GB): without it the panel opens and answers that no model is available |
 | `https-observability` | plus the Grafana stack |
 | `http` | the default stack, with the dashboard over plain HTTP |
 
