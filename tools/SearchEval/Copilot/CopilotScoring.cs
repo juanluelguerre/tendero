@@ -45,8 +45,11 @@ public sealed record StoredProposal(string Command, string Subject, JsonElement 
 /// <summary>What one turn did and cost, as the suite measured it.</summary>
 /// <param name="LargestCall">The most tokens one model call took, input and output:
 /// what the context window must hold.</param>
+/// <param name="Answer">What the turn said: laboratory data, kept to read why a case
+/// failed — a model that asks for confirmation instead of proposing reads so here.</param>
 public sealed record TurnMeasure(
-    string Status, int Calls, long InputTokens, long OutputTokens, long MicroEuros, double Seconds, long LargestCall, string? Error);
+    string Status, int Calls, long InputTokens, long OutputTokens, long MicroEuros, double Seconds, long LargestCall, string? Error,
+    string? Answer = null);
 
 /// <param name="RightTools">Every expected read was made.</param>
 /// <param name="ValidArguments">Every expected read was made with the arguments that matter.</param>

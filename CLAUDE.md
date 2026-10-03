@@ -74,7 +74,8 @@ laborious.
 ```bash
 dotnet run --project src/AppHost              # full stack via Aspire
 Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana stack (or profile https-observability)
-Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (5.5 GB; ADR 0053)
+Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB; ADR 0053)
+Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec)
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
 dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
@@ -82,6 +83,7 @@ dotnet tool restore                           # EF tools and Stryker, pinned
 dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
 dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-check  # from src/<Project>, at phase close
 dotnet run --project tools/SearchEval         # golden set NDCG report
+dotnet run --project tools/SearchEval -- --suite copilot --database <disposable pg> --chat <url> --model <id>  # Steward's golden set (README)
 dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42  # simulated shoppers and agents (ADR 0037); also a resource in Aspire
 npx nx serve storefront|backoffice            # from frontend/
 npm run format                                # from frontend/: Prettier, Tailwind classes sorted; CI runs format:check

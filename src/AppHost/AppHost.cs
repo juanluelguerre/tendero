@@ -380,19 +380,25 @@ var support = builder.AddContainer("support", "ghcr.io/huggingface/text-embeddin
 // The extractor's GGUF from the extractor's volume — the same file, so nothing is
 // downloaded twice — served by a container of its own: the extractor's one slot of
 // 4,096 tokens is taken, and Steward's tool definitions alone are 1,000–1,500. Its
-// window is 8,192, an estimate S-6 replaces with a measurement. A prompt that
-// fills it peaked at 4.81 GiB; the limit is 5.5 (docs/analysis/steward-model-sizing.md).
+// window is 8,192 — measured in S-6: the copilot suite's largest call was 5,996
+// tokens, 27 % under it. Over the suite's 24 turns the container peaked at 5.32 GiB;
+// the limit is 6 GB (docs/analysis/steward-model-sizing.md).
 var steward = string.Equals(builder.Configuration["Tendero:Steward"], "true",
     StringComparison.OrdinalIgnoreCase);
 
 var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama.cpp", "server-" + llamaCppRelease)
     .WithArgs("-m", "/models/qwen3.5-4b-q8_0.gguf", "--host", "0.0.0.0", "--port", "8080",
         "-c", "8192", "-np", "1", "-t", "12", "--jinja", "--load-mode", "none",
+        // No prompt cache in RAM (S-6): llama.cpp keeps up to 8 GiB of past prompts by
+        // default, and under this container's limit it grew turn after turn until the
+        // kernel killed it — four of the copilot suite's cases in. One slot already
+        // reuses the prefix every turn shares (the instructions and the tools).
+        "--cache-ram", "0",
         "--chat-template-kwargs", "{\"enable_thinking\":false}")
     .WithHttpEndpoint(targetPort: 8080, port: stewardModelPort, name: "http")
     .WithHttpHealthCheck("/health", endpointName: "http")
     .WithVolume("tendero-extractor-models", "/models", isReadOnly: true)
-    .WithContainerRuntimeArgs("--memory=5632m", "--memory-swap=5632m", Cpus(12))
+    .WithContainerRuntimeArgs("--memory=6g", "--memory-swap=6g", Cpus(12))
     .WaitForCompletion(extractorModel);
 
 if (!steward)

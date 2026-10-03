@@ -503,6 +503,17 @@ notifications and alerts.
 6. **S-6 · Measured and evaluated.** The `copilot` suite on the local model,
    `ai-usage.json`, the four events in the tracking plan, the window fixed from
    the largest conversation.
+   *As built (2026-10-03)*: metrics `tendero.ai.calls`, `tendero.ai.cost` and
+   `tendero.steward.turns` and the `ai-usage.json` dashboard beside `shop-pulse`;
+   the four events, `proposals_reviewed` with a `kind` of proposals or claims; the
+   `copilot` suite in `tools/SearchEval`, composed in-process over a disposable
+   Postgres, 24 cases; the Scripted model in rounds with `{from:tool:path}`; the
+   browser spec, in CI, over `Tendero__StewardScript`; the audit links a row to its
+   proposal. **Measured** (`docs/analysis/steward-models.md`): the local 4B passes
+   22 of 24, p50 22.5 s, the largest call 5,996 tokens — the window stays 8,192,
+   now measured; the container's limit rises to 6 GB (peak 5.315 GiB) and its
+   prompt cache is off (`--cache-ram 0`; it had the container killed). The suite's
+   first real turns found two schema bugs every real model would have hit.
 7. **S-7 · The measurement.** The hosted profiles with the author's keys, the
    small model; `docs/analysis/steward-models.md`; the author chooses the
    default. **First, before any paid profile exists**: a token budget per person

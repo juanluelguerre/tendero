@@ -833,8 +833,8 @@ API (`design/DESIGN.md` gains a changelog).
 - [x] `P12-3` `src/Assist`; Microsoft Agent Framework, five read-only tools — **L** (S-3b, 2026-10-02: six read tools in their contexts, `POST /api/steward/turns`, ADR 0054)
 - [x] `P12-4` `ActionProposal` with a registered command type and payload — **M** (S-1, 2026-10-02)
 - [x] `P12-5` Approval deserializes and dispatches through `ICommandDispatcher` — **M** (S-1, 2026-10-02)
-- [ ] `P12-6` `copilot` eval suite: assert the proposed command, no judge — **M**
-- [ ] `P12-7` AI observability panel: cost per conversation, p50/p95, tokens per model, degradation counter — **M**
+- [x] `P12-6` `copilot` eval suite: assert the proposed command, no judge — **M** (S-6, 2026-10-03: `tools/SearchEval --suite copilot`, 24 cases, in-process over a disposable Postgres; its first real run found two schema bugs no scripted test could)
+- [ ] ~~`P12-7` AI observability panel~~ — **moved to feature B** by the spec (decision 2); its figures are Grafana's `ai-usage.json` (S-6, 2026-10-03): cost per day and model, p50/p95, tokens per model, unavailability and fallbacks
 - [ ] `P12-8` ADR 0019 — **S**
 - [ ] `P12-9` A token budget per person per day, the person on each metering row — **S** (S-3b's final review: the conversation budget is the client's to restart; required before S-7 configures a paid profile)
 

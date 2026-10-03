@@ -66,3 +66,43 @@ retries a failed call three times by default and then throws an
 have taken twenty minutes to fail and been metered as one call. The client now
 makes exactly one request per call (`ClientRetryPolicy(maxRetries: 0)`, a unit
 test holds it); trying again, or the fallback, is the caller's decision — S-3's.
+
+## Measured over the copilot suite (S-6, 2026-10-03)
+
+The 24 cases of `tools/SearchEval --suite copilot`, each a real Steward turn —
+the agent, the contexts' reads, proposals stored — against this container run
+exactly as the AppHost runs it. Results by case are in `steward-models.md`.
+
+| | |
+|---|---|
+| **Largest single call** (input + output) | **5,996 tokens** — 27 % under the 8,192 window |
+| Tokens per turn (all its calls) | 4,195 on average |
+| Turn latency | p50 22.5 s · p95 132 s · slowest 186 s |
+| **Memory peak over the 24 turns** | **5.315 GiB** |
+
+**The window stays 8,192 — now a measurement, not an estimate.** The heaviest
+calls were the catalogue gaps' reads (images, drafts): fifty rows with names
+handed back to the model as input. The read's size, not the answer's, is what
+fills the window and what the local CPU spends its time on.
+
+**The limit rises to 6 GB.** The single full-window request of S-2 peaked at
+4.81 GiB; twenty-four turns in a row peaked at 5.315, and 5.5 GB left 0.19 GiB —
+3 %. The peak plus 0.5 GB, rounded up to the next 0.5, is 6 GB.
+
+**Two things the AppHost's arguments did not say, found by measuring:**
+
+- **llama.cpp keeps a prompt cache in RAM, up to 8 GiB by default**
+  (`--cache-ram 8192`). Under a 5.5 GB limit it grew turn after turn, and the
+  kernel killed the container four cases in (`OOMKilled`, exit 137). S-2 measured
+  one request, which never sees a cache grow. The AppHost now passes
+  `--cache-ram 0`: with one slot, the slot itself already reuses the prefix every
+  turn shares (the instructions and the tools — llama.cpp's log reports the
+  reuse).
+- **A window measured larger than it ships is not the same container.** A first
+  attempt ran with a 12,288 window "so as not to cut anything short", under the
+  same limit and without `--load-mode none`: the weights were mapped, not loaded,
+  were evicted under the limit, and generation fell to **0.39 tokens/s**. Run
+  exactly as shipped, it is **2.2 tokens/s**. That run's numbers were discarded.
+
+The profile's timeout (480 s) and the turn's deadline (600 s) stand: the slowest
+turn took 186 s.

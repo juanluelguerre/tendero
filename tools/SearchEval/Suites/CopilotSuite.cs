@@ -122,7 +122,8 @@ internal sealed class CopilotSuite : IEvaluationSuite
             rows.Sum(row => row.CostMicroEuros),
             clock.Elapsed.TotalSeconds,
             rows.Count == 0 ? 0 : rows.Max(row => row.InputTokens + row.OutputTokens),
-            error);
+            error,
+            answer?.Text);
         return CopilotScoring.Judge(item, calls.Calls, stored, codes, measure);
     }
 
