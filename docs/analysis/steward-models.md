@@ -23,7 +23,7 @@ measured with it.
 | **local** — Qwen3.5-4B Q8, llama.cpp `server-v0.5.0`, 12 CPUs, 6 GB, 8,192 window | **22/24 (92 %)** | 100 % | 96 % | 96 % | 22.5 s | 132 s | 4,195 | 5,996 | 0 |
 | hosted (S-7) | | | | | | | | | |
 | small — Phi-4-mini Q8 (MIT), same llama.cpp and settings | **1/24 (4 %)**, not a verdict on the model: **its tools never reached it** | 8 % | 8 % | 75 % (only "never approves" passes) | 4.0 s | 8.7 s | 311 | 375 | 0 |
-| small model (S-7) | | | | | | | | | |
+| small — Qwen3-1.7B Q8 (Apache-2.0), same llama.cpp and settings | **9/24 (38 %)** | 46 % | 42 % | 75 % | 8.9 s | 15.9 s | 2,633 | 3,444 | 0 |
 
 Measured on 2026-10-03, on the author's machine (16 CPUs), the development
 containers idle beside it.
@@ -70,3 +70,25 @@ Using it would mean our own chat template, and a parser for its `<|tool_call|>`
 output, which llama.cpp does not know for this template: work on the serving,
 not a measurement. Not done. The next small model to try is one whose template
 llama.cpp already speaks, such as Qwen3-1.7B.
+
+## Qwen3-1.7B: fast, and not enough (2026-10-03)
+
+`Qwen/Qwen3-1.7B-GGUF` Q8_0 (1.83 GB, Apache-2.0), same image and flags as the
+local profile. Its template speaks llama.cpp's tool format, so the tools reach it
+(a direct request: 155 prompt tokens and a valid `sales_summary` call), unlike
+Phi-4-mini. Nine cases pass, **two and a half times faster** than the 4B (p50
+8.9 s against 22.5 s, the slowest turn 49 s):
+
+- **Passes**: the five catalogue-gap reads, `sales-week`, `best-sellers-month`,
+  `returns-week` and `never-approves`.
+- **Fails by not calling the tool**: 13 of 15 failures end *"never called X"* —
+  it answers from nothing instead of reading, on the same questions the 4B reads
+  for (`sales-month` fails where `sales-week` passes). It never finds a product
+  before proposing, so none of the translate and withdraw cases stores anything.
+- **Fails by a wrong argument**: `restock-barcelona` passes `Barcelona`, as the 4B
+  did, and the read's refusal naming `BCN` was not enough.
+
+A model that proposes changes to the catalogue on 38 % of its questions is not a
+fallback worth having; below the 4B, the speed is bought with the thing Steward is
+for. The suite's three rows now say where the line is: **4B local 92 %, 1.7B 38 %,
+Phi-4-mini not servable**. The hosted profiles are still to measure.
