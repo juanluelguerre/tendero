@@ -22,8 +22,44 @@
 /* Steward's panel takes a third column from 1024 px; below, it is a sheet over
    the screen and the grid does not change. */
 @media (min-width: 64rem) {
+  /* The layout of the prototype: the header spans the whole width, and under it the
+     screen and the panel sit side by side, each scrolling on its own — the page itself
+     does not, which left two scrollbars at the window's edge. The content's wrapper
+     steps aside (display: contents) so the header, the page and the panel are all
+     items of this grid. */
   :host(.with-rail.with-steward) {
     grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  :host(.with-rail.with-steward) > aside {
+    grid-row: 1 / span 2;
+  }
+
+  :host(.with-rail.with-steward) > div {
+    display: contents;
+  }
+
+  :host(.with-rail.with-steward) > div > header {
+    grid-column: 2 / 4;
+    grid-row: 1;
+  }
+
+  :host(.with-rail.with-steward) .page {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  :host(.with-rail.with-steward) > backoffice-steward-dock {
+    display: block;
+    grid-column: 3;
+    grid-row: 2;
+    min-height: 0;
   }
 }
 

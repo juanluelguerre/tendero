@@ -101,36 +101,40 @@
       }
     </header>
 
-    @if (canUseBackoffice() && !staffUsage.noticeSeen()) {
-      <!-- ADR 0041's notice stays at the top, where it cannot be missed, but in
+    <!-- The page: the notice, the screen and the footer. With Steward's panel open it is
+         what scrolls beside the panel, under a header that spans both (shell.css). -->
+    <div class="page flex flex-1 flex-col">
+      @if (canUseBackoffice() && !staffUsage.noticeSeen()) {
+        <!-- ADR 0041's notice stays at the top, where it cannot be missed, but in
            the content's column and width (R-3). -->
-      <backoffice-staff-notice class="mx-5 mt-4 max-sm:mx-4" />
-    }
+        <backoffice-staff-notice class="mx-5 mt-4 max-sm:mx-4" />
+      }
 
-    <main class="flex-1 px-5 pt-6 pb-8 max-sm:px-4 max-sm:pt-5 max-sm:pb-5"><router-outlet /></main>
+      <main class="flex-1 px-5 pt-6 pb-8 max-sm:px-4 max-sm:pt-5 max-sm:pb-5"><router-outlet /></main>
 
-    @if (canUseBackoffice()) {
-      <backoffice-undo-toast />
-    }
+      @if (canUseBackoffice()) {
+        <backoffice-undo-toast />
+      }
 
-    @if (canUseBackoffice()) {
-      <!-- The notice's standing switch (ADR 0041): quiet, at the foot of every
+      @if (canUseBackoffice()) {
+        <!-- The notice's standing switch (ADR 0041): quiet, at the foot of every
            screen, so switching it off never means finding a settings page. On the
            text's line, not the box's top: the button is 24 px tall to be a
            target, and stretched beside it the sentence sat above its own link. -->
-      <footer class="flex flex-wrap items-baseline gap-2 p-5 text-3xs text-muted">
-        <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
-        @if (staffUsage.state() === 'on') {
-          <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOff()">
-            {{ t('staffUsage.switchOff') }}
-          </button>
-        } @else {
-          <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOn()">
-            {{ t('staffUsage.switchOn') }}
-          </button>
-        }
-      </footer>
-    }
+        <footer class="flex flex-wrap items-baseline gap-2 p-5 text-3xs text-muted">
+          <span>{{ t('staffUsage.footer.' + staffUsage.state()) }}</span>
+          @if (staffUsage.state() === 'on') {
+            <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOff()">
+              {{ t('staffUsage.switchOff') }}
+            </button>
+          } @else {
+            <button type="button" class="min-h-target text-muted underline" (click)="staffUsage.switchOn()">
+              {{ t('staffUsage.switchOn') }}
+            </button>
+          }
+        </footer>
+      }
+    </div>
   </div>
 
   @if (canUseBackoffice()) {

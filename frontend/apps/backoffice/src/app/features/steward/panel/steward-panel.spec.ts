@@ -120,6 +120,19 @@ describe('the steward panel', () => {
     expect(document.activeElement).toBe(composer);
   });
 
+  /**
+   * Every question carries a screen-reader-only span, which is `position: absolute`: in a
+   * scroller that is not positioned it is neither contained nor clipped, and it lands far
+   * down the page, which grows with the conversation (found in the author's browser, 2026-10-03).
+   */
+  it('positions its scroller, so what is only for a screen reader cannot stretch the page', async () => {
+    const element = await asked(answer({}));
+
+    const scroller = element.querySelector('.overflow-y-auto');
+    expect(scroller?.classList.contains('relative')).toBe(true);
+    expect(scroller?.querySelector('.sr-only')).not.toBeNull();
+  });
+
   it('brings the proposals as a card, read by their ids', async () => {
     await asked(answer({ proposalIds: ['p1', 'p2'] }));
 

@@ -46,6 +46,16 @@
     scrollbar-gutter: stable;
   }
 
+  /* With Steward's panel open from 1024 px the page does not scroll — the content and
+     the panel each do, see the shell — so there is no scrollbar to keep room for: the
+     reserved gutter showed as a dark strip beside the panel. */
+  @media (min-width: 64rem) {
+    html:has(backoffice-shell.with-steward) {
+      overflow: hidden;
+      scrollbar-gutter: auto;
+    }
+  }
+
   body {
     margin: 0;
     background: var(--color-page);

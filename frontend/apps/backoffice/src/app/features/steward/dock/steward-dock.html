@@ -1,6 +1,6 @@
 @if (door.isOpen()) {
   @if (wide()) {
-    <aside class="sticky top-0 h-dvh w-panel border-s border-hairline bg-surface" [attr.aria-label]="name()">
+    <aside class="h-full w-panel border-s border-hairline bg-surface" [attr.aria-label]="name()">
       @defer {
         <backoffice-steward-panel class="h-full" />
       }
