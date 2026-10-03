@@ -425,6 +425,7 @@ database a new password its volume does not know.
 | `https-vectors` | plus the vector layer: search by meaning, similar products, the reranker on a GPU |
 | `https-knowledge` | plus the claims models: the extractor and the support scorer |
 | `https-advanced` | plus both: every AI stage on — their containers' memory limits add up to about 14 GB on a CPU |
+| `https-all` | every AI piece at once: the vector layer, the claims models and Steward's model — not the Grafana stack. Memory and VRAM added up have not been measured on one machine; on a GPU it is the embeddings, the reranker and Steward's model (about 4.8 GB) sharing the card |
 | `https-steward` | plus Steward's local model (6 GB): without it the panel opens and answers that no model is available |
 | `https-observability` | plus the Grafana stack |
 | `http` | the default stack, with the dashboard over plain HTTP |
