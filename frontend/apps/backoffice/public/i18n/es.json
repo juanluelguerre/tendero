@@ -1116,6 +1116,8 @@
     },
     "cost": "Esta conversación: {{calls}} llamadas · {{tokens}} tokens · {{euros}} · {{seconds}} s · {{model}}",
     "working": "Steward está leyendo la tienda…",
+    "elapsed": "{{seconds}} s",
+    "slow": "Un modelo local puede tardar un minuto o más.",
     "stop": "Parar",
     "stopped": "Parado. Lo que ya propuso espera en Propuestas.",
     "placeholder": "Pregunta por la tienda…",

@@ -21,6 +21,7 @@ import { screenOf } from '../screen-context';
 import { StewardDoorStore } from '../steward-door.store';
 import { StewardStore } from '../steward.store';
 import { CostLinePipe } from './cost-line.pipe';
+import { StewardWait } from './steward-wait/steward-wait';
 
 /**
  * Steward's panel (phase 12; spec, *The panel*): beside the content from 1024 px,
@@ -34,7 +35,7 @@ import { CostLinePipe } from './cost-line.pipe';
  */
 @Component({
   selector: 'backoffice-steward-panel',
-  imports: [TranslocoDirective, RouterLink, Icon, Notice, ProposalCard, ProposalReview, CostLinePipe],
+  imports: [TranslocoDirective, RouterLink, Icon, Notice, ProposalCard, ProposalReview, CostLinePipe, StewardWait],
   templateUrl: './steward-panel.html',
   host: { class: 'block' },
 })

@@ -39,9 +39,9 @@
 
         @switch (exchange.state) {
           @case ('asking') {
-            <div class="flex items-center gap-3 text-xs text-muted" role="status">
+            <div class="flex flex-wrap items-center gap-3 text-xs text-muted" role="status">
               <span class="awning-rule awning-rule--thin w-col-lg"></span>
-              <span>{{ t('steward.working') }}</span>
+              <backoffice-steward-wait />
               <button type="button" class="button button--small button--quiet" (click)="store.stop()">
                 {{ t('steward.stop') }}
               </button>
