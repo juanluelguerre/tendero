@@ -21,6 +21,7 @@ measured with it.
 | Profile | Passed | Right tools | Valid arguments | Exact proposals | p50 | p95 | Tokens/turn | Largest call | €/turn |
 |---|---|---|---|---|---|---|---|---|---|
 | **local** — Qwen3.5-4B Q8, llama.cpp `server-v0.5.0`, 12 CPUs, 6 GB, 8,192 window | **22/24 (92 %)** | 100 % | 96 % | 96 % | 22.5 s | 132 s | 4,195 | 5,996 | 0 |
+| **local on the GPU** — the same Qwen3.5-4B Q8, llama.cpp CUDA 12 image, every layer offloaded, RTX 5070 Laptop (8 GB) | **22/24 (92 %)** | 96 % | 92 % | 100 % | **1.9 s** | 8.9 s | 4,268 | 6,117 | 0 |
 | hosted (S-7) | | | | | | | | | |
 | small — Phi-4-mini Q8 (MIT), same llama.cpp and settings | **1/24 (4 %)**, not a verdict on the model: **its tools never reached it** | 8 % | 8 % | 75 % (only "never approves" passes) | 4.0 s | 8.7 s | 311 | 375 | 0 |
 | small — Qwen3-1.7B Q8 (Apache-2.0), same llama.cpp and settings | **9/24 (38 %)** | 46 % | 42 % | 75 % | 8.9 s | 15.9 s | 2,633 | 3,444 | 0 |
@@ -92,3 +93,17 @@ A model that proposes changes to the catalogue on 38 % of its questions is not a
 fallback worth having; below the 4B, the speed is bought with the thing Steward is
 for. The suite's three rows now say where the line is: **4B local 92 %, 1.7B 38 %,
 Phi-4-mini not servable**. The hosted profiles are still to measure.
+
+## The same model on the GPU (2026-10-03)
+
+The 4B is the only local model that does the job (92 %; the 1.7B 38 %, Phi-4-mini
+cannot be served), and what was wrong with it was time. On the author's RTX 5070
+Laptop it passes the same 22 of 24 — a different two (`find-cheapest-lamp` and
+`restock-barcelona`: the model varies a little between runs) — with a **median
+turn of 1.9 s against 22.5 s, the slowest 12 s against 186**: twelve times
+faster at the median and fifteen at the worst. It holds 4.8 GB of the card's 8 GB
+(the embeddings take 1.3 GB beside it) and 1.1 GiB of RAM instead of 5.3.
+
+`server-cuda-v0.5.0` works with the machine's driver (610.88); `server-cuda13-v0.5.0`
+refuses to start: *requirement error: unsatisfied condition: cuda>=13.4*. The
+AppHost uses the GPU when the embeddings do (`Tendero__Inference__Device`).

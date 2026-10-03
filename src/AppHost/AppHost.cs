@@ -383,10 +383,19 @@ var support = builder.AddContainer("support", "ghcr.io/huggingface/text-embeddin
 // window is 8,192 — measured in S-6: the copilot suite's largest call was 5,996
 // tokens, 27 % under it. Over the suite's 24 turns the container peaked at 5.32 GiB;
 // the limit is 6 GB (docs/analysis/steward-model-sizing.md).
+//
+// ON THE GPU WHEN THERE IS ONE, by the same switch as the embeddings
+// (Tendero__Inference__Device): llama.cpp's CUDA 12 image and every layer offloaded.
+// Measured on 2026-10-03 on the RTX 5070 Laptop, the same model, the same 24 cases:
+// 22 of 24 on both, and a median turn of 1.9 s against 22.5 s on the CPU, the
+// slowest 12 s against 186. It holds 4.8 GB of the card's 8 and 1.1 GiB of RAM. The
+// `cuda13` image is not used: it asks for a driver reporting CUDA 13.4, and this
+// machine's 610.88 does not.
 var steward = string.Equals(builder.Configuration["Tendero:Steward"], "true",
     StringComparison.OrdinalIgnoreCase);
 
-var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama.cpp", "server-" + llamaCppRelease)
+var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama.cpp",
+        (inference.UsesGpu ? "server-cuda-" : "server-") + llamaCppRelease)
     .WithArgs("-m", "/models/qwen3.5-4b-q8_0.gguf", "--host", "0.0.0.0", "--port", "8080",
         "-c", "8192", "-np", "1", "-t", "12", "--jinja", "--load-mode", "none",
         // No prompt cache in RAM (S-6): llama.cpp keeps up to 8 GiB of past prompts by
@@ -400,6 +409,9 @@ var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama
     .WithVolume("tendero-extractor-models", "/models", isReadOnly: true)
     .WithContainerRuntimeArgs("--memory=6g", "--memory-swap=6g", Cpus(12))
     .WaitForCompletion(extractorModel);
+
+if (inference.UsesGpu)
+    stewardModel.WithArgs("-ngl", "99").WithContainerRuntimeArgs("--gpus", "all");
 
 if (!steward)
     stewardModel.WithExplicitStart();
