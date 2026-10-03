@@ -311,7 +311,7 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `status` | string | `answered`, `unavailable`, `budget_exceeded`, `conversation_too_long` | StewardStatus, as the turn answered it. |
+| `status` | string | `answered`, `unavailable`, `budget_exceeded`, `conversation_too_long`, `daily_budget_exceeded` | StewardStatus, as the turn answered it. |
 | `tools` | number | — | How many reads the turn made. |
 | `proposals` | number | — | How many proposals it stored. |
 | `calls` | number | — | Model calls the turn took, six at most. |
@@ -640,5 +640,5 @@ Answers:
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
-| `status` | string | `answered`, `unavailable`, `budget_exceeded`, `conversation_too_long` | StewardStatus, labelled by MetricLabels. |
+| `status` | string | `answered`, `unavailable`, `budget_exceeded`, `conversation_too_long`, `daily_budget_exceeded` | StewardStatus, labelled by MetricLabels. |
 | `fell_back` | boolean | — | Whether a profile after the first was reached. |

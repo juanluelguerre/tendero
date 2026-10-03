@@ -26,7 +26,7 @@ public sealed class AIInvocationRowsTests(PostgresFixture postgres)
         AIInvocation[] rows =
         [
             new(Guid.CreateVersion7(Instant), "steward.turn", "gemini", "gemini-2.5-flash", "steward-v1", "conv-1",
-                "4bf92f3577b34da6a3ce929d0e0e4736", 1500, 342, 1305, 4100, AIOutcome.Ok, Instant),
+                "4bf92f3577b34da6a3ce929d0e0e4736", 1500, 342, 1305, 4100, AIOutcome.Ok, Instant, "lucia"),
             new(Guid.CreateVersion7(Instant.AddSeconds(1)), "knowledge.extract", "extractor", "Qwen/Qwen3.5-4B", "claims-2026-09-26", null,
                 null, 0, 0, 0, 180000, AIOutcome.Timeout, Instant.AddSeconds(1)),
         ];
@@ -46,5 +46,10 @@ public sealed class AIInvocationRowsTests(PostgresFixture postgres)
         var reader = reading.ServiceProvider.GetRequiredService<IAIInvocationReader>();
         Assert.Equal(1842, await reader.ConversationTokensAsync("conv-1", ct));
         Assert.Equal(0, await reader.ConversationTokensAsync("nobody", ct));
+
+        // A person's tokens since a moment: what the day's budget is checked against (P12-9).
+        Assert.Equal(1842, await reader.PersonTokensSinceAsync("lucia", Instant.AddHours(-1), ct));
+        Assert.Equal(0, await reader.PersonTokensSinceAsync("lucia", Instant.AddSeconds(1), ct));
+        Assert.Equal(0, await reader.PersonTokensSinceAsync("nobody", Instant.AddHours(-1), ct));
     }
 }

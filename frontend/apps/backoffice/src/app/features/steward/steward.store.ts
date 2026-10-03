@@ -30,8 +30,8 @@ export interface ConversationCost {
   readonly model: string | null;
 }
 
-/** Statuses after which this conversation cannot go on: only a new one does. */
-const Ending: readonly StewardAnswer['status'][] = ['BudgetExceeded', 'ConversationTooLong'];
+/** Statuses after which this conversation cannot go on: only a new one does — or tomorrow, for the day's budget. */
+const Ending: readonly StewardAnswer['status'][] = ['BudgetExceeded', 'ConversationTooLong', 'DailyBudgetExceeded'];
 
 let exchanges = 0;
 

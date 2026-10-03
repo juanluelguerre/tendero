@@ -238,7 +238,7 @@ export interface TrackedEvents {
    */
   readonly steward_answered: {
     /** StewardStatus, as the turn answered it. */
-    readonly status: 'answered' | 'unavailable' | 'budget_exceeded' | 'conversation_too_long';
+    readonly status: 'answered' | 'unavailable' | 'budget_exceeded' | 'conversation_too_long' | 'daily_budget_exceeded';
     /** How many reads the turn made. */
     readonly tools: number;
     /** How many proposals it stored. */

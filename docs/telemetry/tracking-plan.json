@@ -801,7 +801,8 @@
             "answered",
             "unavailable",
             "budget_exceeded",
-            "conversation_too_long"
+            "conversation_too_long",
+            "daily_budget_exceeded"
           ],
           "description": "StewardStatus, as the turn answered it."
         },
@@ -1339,7 +1340,8 @@
             "answered",
             "unavailable",
             "budget_exceeded",
-            "conversation_too_long"
+            "conversation_too_long",
+            "daily_budget_exceeded"
           ],
           "description": "StewardStatus, labelled by MetricLabels.",
           "from": "StewardStatus"

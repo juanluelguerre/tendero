@@ -74,14 +74,25 @@ public sealed class StewardTurnTests
             throw new InvalidOperationException(Secret);
     }
 
-    private sealed class SpentTokens(long spent) : IAIInvocationReader
+    private sealed class SpentTokens(long spent, long today) : IAIInvocationReader
     {
+        /// <summary>Who the day's tokens were asked for, and since when.</summary>
+        public (string Subject, DateTimeOffset Since)? Asked { get; private set; }
+
         public Task<long> ConversationTokensAsync(string conversationId, CancellationToken cancellationToken = default) => Task.FromResult(spent);
+
+        public Task<long> PersonTokensSinceAsync(string subject, DateTimeOffset since, CancellationToken cancellationToken = default)
+        {
+            Asked = (subject, since);
+            return Task.FromResult(today);
+        }
     }
 
-    private sealed class Shop(ServiceProvider provider, InMemoryProposals proposals) : IAsyncDisposable
+    private sealed class Shop(ServiceProvider provider, InMemoryProposals proposals, SpentTokens tokens) : IAsyncDisposable
     {
         public InMemoryProposals Proposals { get; } = proposals;
+
+        public SpentTokens Tokens { get; } = tokens;
 
         /// <summary>The rows metering wrote, one per model call.</summary>
         public IReadOnlyList<AIInvocation> Metered()
@@ -105,7 +116,7 @@ public sealed class StewardTurnTests
     }
 
     private static Shop Compose(
-        string model, string? fallback = null, long spent = 0, int contextTokens = 8192, int turnSeconds = 600)
+        string model, string? fallback = null, long spent = 0, int contextTokens = 8192, int turnSeconds = 600, long spentToday = 0)
     {
         var settings = new Dictionary<string, string?>
         {
@@ -143,10 +154,11 @@ public sealed class StewardTurnTests
         services.AddScoped<IReadTool, GapsTool>();
         services.AddScoped<IReadTool, PickyTool>();
         services.AddScoped<IReadTool, LeakyTool>();
-        services.AddSingleton<IAIInvocationReader>(new SpentTokens(spent));
+        var tokens = new SpentTokens(spent, spentToday);
+        services.AddSingleton<IAIInvocationReader>(tokens);
         services.AddAssist(configuration);
         services.AddModelProfiles(configuration);
-        return new Shop(services.BuildServiceProvider(), proposals);
+        return new Shop(services.BuildServiceProvider(), proposals, tokens);
     }
 
     [Fact]
@@ -233,6 +245,35 @@ public sealed class StewardTurnTests
 
         Assert.Equal(StewardStatus.BudgetExceeded, answer.Status);
         Assert.Null(answer.Cost);
+    }
+
+    /// <summary>
+    /// What bounds a person is their day, not their conversation: the conversation
+    /// id is the client's to send, so starting a new one starts a new budget (P12-9).
+    /// Required before a paid profile exists.
+    /// </summary>
+    [Fact]
+    public async Task A_person_over_their_days_budget_asks_no_model_whatever_the_conversation()
+    {
+        await using var shop = Compose("scripted", spentToday: 300_000);
+
+        var answer = await shop.Ask("hello");
+
+        Assert.Equal(StewardStatus.DailyBudgetExceeded, answer.Status);
+        Assert.Null(answer.Cost);
+        Assert.Empty(shop.Metered());
+    }
+
+    /// <summary>The day is the shop's (ADR 0046): 10:30 in Madrid in January, so it began at 23:00 UTC the day before.</summary>
+    [Fact]
+    public async Task The_days_tokens_are_counted_for_the_person_since_the_shops_midnight()
+    {
+        await using var shop = Compose("scripted", spentToday: 1_000);
+
+        var answer = await shop.Ask("hello");
+
+        Assert.Equal(StewardStatus.Answered, answer.Status);
+        Assert.Equal(("lucía", new DateTimeOffset(2026, 1, 14, 23, 0, 0, TimeSpan.Zero)), shop.Tokens.Asked);
     }
 
     [Fact]

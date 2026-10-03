@@ -128,6 +128,7 @@ public sealed class MeteringChatClient(
             cost,
             (int)clock.GetElapsedTime(started).TotalMilliseconds,
             outcome,
-            clock.GetUtcNow()));
+            clock.GetUtcNow(),
+            ModelCall.Read(options, ModelCall.Person)));
     }
 }

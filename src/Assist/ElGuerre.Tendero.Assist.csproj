@@ -19,6 +19,7 @@
     <PackageReference Include="Carter" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="NodaTime" />
   </ItemGroup>
 
   <ItemGroup>

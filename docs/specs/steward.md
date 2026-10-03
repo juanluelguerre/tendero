@@ -518,6 +518,12 @@ notifications and alerts.
    small model; `docs/analysis/steward-models.md`; the author chooses the
    default. **First, before any paid profile exists**: a token budget per person
    per day, with the person on the metering row (S-3b's correction above).
+   *Budget as built (2026-10-03)*: the row carries the person's subject; a turn
+   is refused with `DailyBudgetExceeded` when the person's tokens since the shop's
+   midnight (ADR 0046) plus this turn's first call pass
+   `Steward:PersonDailyTokenBudget` (300,000 — about seventy local turns), in any
+   conversation they started. A turn is checked before it is asked, so the last
+   turn of the day may overshoot by its own calls, never by a second turn.
 8. **S-8 · Close.** ADR 0019 (*the copilot proposes commands, never prose*),
    Stryker, the before and after captures, the notebook and the material map.
 

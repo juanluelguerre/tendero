@@ -21,6 +21,7 @@ internal sealed class AIInvocationConfiguration : IEntityTypeConfiguration<AIInv
         builder.Property(row => row.PromptVersion).HasMaxLength(100);
         builder.Property(row => row.ConversationId).HasMaxLength(100);
         builder.Property(row => row.TraceId).HasMaxLength(64);
+        builder.Property(row => row.Subject).HasMaxLength(200);
 
         // As text, as every enum here: a SELECT has to be readable.
         builder.Property(row => row.Outcome).HasConversion<string>().HasMaxLength(20).IsRequired();
@@ -28,5 +29,8 @@ internal sealed class AIInvocationConfiguration : IEntityTypeConfiguration<AIInv
         // What the cost line and the panel ask: a conversation's rows, and a day's.
         builder.HasIndex(row => row.ConversationId).HasFilter("conversation_id IS NOT NULL");
         builder.HasIndex(row => row.At).IsDescending();
+
+        // A person's day: what Steward's budget per person is checked against (P12-9).
+        builder.HasIndex(row => new { row.Subject, row.At }).HasFilter("subject IS NOT NULL");
     }
 }

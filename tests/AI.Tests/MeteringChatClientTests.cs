@@ -11,6 +11,21 @@ public sealed class MeteringChatClientTests
 {
     private static readonly TestClock Clock = new();
 
+    /// <summary>The row names who asked, so a day's tokens can be counted for a person (P12-9).</summary>
+    [Fact]
+    public async Task A_call_made_for_a_person_leaves_their_subject_on_the_row()
+    {
+        var log = new AIInvocationLog();
+        var chat = Metered(new Answering(new UsageDetails { InputTokenCount = 10, OutputTokenCount = 5 }), log, new ModelProfile());
+
+        await chat.GetResponseAsync("hola", ModelCall.Options("steward.turn", "conv-1", "steward-v1", person: "lucia"), TestContext.Current.CancellationToken);
+        await chat.GetResponseAsync("hola", ModelCall.Options("knowledge.extract"), TestContext.Current.CancellationToken);
+
+        Assert.True(log.Reader.TryRead(out var asked));
+        Assert.True(log.Reader.TryRead(out var background));
+        Assert.Equal(("lucia", (string?)null), (asked.Subject, background.Subject));
+    }
+
     [Fact]
     public async Task A_call_leaves_a_row_with_its_tokens_cost_operation_and_model()
     {

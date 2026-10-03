@@ -15,6 +15,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace ElGuerre.Tendero.Assist.Steward;
 
@@ -37,6 +38,13 @@ public sealed class StewardOptions
 
     /// <summary>Tokens a conversation may spend, input and output, before it must start again.</summary>
     public long ConversationTokenBudget { get; init; } = 60_000;
+
+    /// <summary>
+    /// Tokens a person may spend in the shop's day, whatever the conversations they
+    /// start: the conversation id is the client's to send, so only this bounds them.
+    /// Required before a paid profile exists (P12-9).
+    /// </summary>
+    public long PersonDailyTokenBudget { get; init; } = 300_000;
 
     /// <summary>How long a whole turn may take, every call and tool included.</summary>
     public int TurnSeconds { get; init; } = 600;
@@ -66,6 +74,9 @@ public enum StewardStatus
 
     /// <summary>No profile's window holds the conversation; a new one starts again.</summary>
     ConversationTooLong,
+
+    /// <summary>The person spent their day's tokens, in this conversation and the others: a new conversation does not help, tomorrow does.</summary>
+    DailyBudgetExceeded,
 }
 
 /// <param name="Reads">Every read the turn made, by name, with its rows.</param>
@@ -114,6 +125,8 @@ public sealed partial class StewardTurnHandler(
     IServiceProvider services,
     ModelProfiles profiles,
     IAIInvocationReader usage,
+    IPrincipalAccessor principal,
+    IOptions<ShopOptions> shop,
     IOptions<StewardOptions> options,
     TimeProvider clock,
     ILogger<StewardTurnHandler> logger) : ICommandHandler<StewardTurnCommand, StewardAnswer>
@@ -159,6 +172,13 @@ public sealed partial class StewardTurnHandler(
         var asking = candidates.Count > 0 ? candidates.Min(candidate => candidate.Needs) : 0;
         if (await usage.ConversationTokensAsync(command.ConversationId, cancellationToken) + asking > settings.ConversationTokenBudget)
             return Answer(command, StewardStatus.BudgetExceeded, null, new StewardTrace(), null, null, false, false);
+
+        // A person's day, in the shop's time zone (ADR 0046). A turn always has a
+        // person, because its endpoint needs a login.
+        var person = principal.Current.Subject;
+        if (person is not null && await usage.PersonTokensSinceAsync(person, StartOfShopDay(), cancellationToken) + asking
+            > settings.PersonDailyTokenBudget)
+            return Answer(command, StewardStatus.DailyBudgetExceeded, null, new StewardTrace(), null, null, false, false);
 
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(settings.TurnSeconds), clock);
         using var turn = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
@@ -229,6 +249,13 @@ public sealed partial class StewardTurnHandler(
         return Answer(command, StewardStatus.Unavailable, null, new StewardTrace(), null, null, fellBack, false);
     }
 
+    private DateTimeOffset StartOfShopDay()
+    {
+        var zone = DateTimeZoneProviders.Tzdb[shop.Value.TimeZone];
+        var today = Instant.FromDateTimeOffset(clock.GetUtcNow()).InZone(zone).Date;
+        return today.AtStartOfDayInZone(zone).ToInstant().ToDateTimeOffset();
+    }
+
     /// <summary>A profile the turn may ask, with its tools and what asking it takes.</summary>
     private sealed record Candidate(string Name, IChatClient Client, ModelProfile Profile, StewardTrace Trace)
     {
@@ -267,7 +294,8 @@ public sealed partial class StewardTurnHandler(
         }).AsBuilder().UseOpenTelemetry(sourceName: TelemetrySources.AI).Build(services);
 
         return await agent.RunAsync(history,
-            options: new ChatClientAgentRunOptions(ModelCall.Options("steward.turn", command.ConversationId, StewardPrompt.Version)),
+            options: new ChatClientAgentRunOptions(ModelCall.Options(
+                "steward.turn", command.ConversationId, StewardPrompt.Version, person: principal.Current.Subject)),
             cancellationToken: cancellationToken);
     }
 

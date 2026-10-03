@@ -2781,7 +2781,7 @@ export interface components {
             conversationId: string;
         };
         /** @enum {unknown} */
-        StewardStatus: "Answered" | "Unavailable" | "BudgetExceeded" | "ConversationTooLong";
+        StewardStatus: "Answered" | "Unavailable" | "BudgetExceeded" | "ConversationTooLong" | "DailyBudgetExceeded";
         StewardTurnRequest: {
             messages: components["schemas"]["TurnMessage"][];
             screen: null | components["schemas"]["ScreenContext"];

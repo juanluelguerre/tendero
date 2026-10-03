@@ -836,7 +836,7 @@ API (`design/DESIGN.md` gains a changelog).
 - [x] `P12-6` `copilot` eval suite: assert the proposed command, no judge — **M** (S-6, 2026-10-03: `tools/SearchEval --suite copilot`, 24 cases, in-process over a disposable Postgres; its first real run found two schema bugs no scripted test could)
 - [ ] ~~`P12-7` AI observability panel~~ — **moved to feature B** by the spec (decision 2); its figures are Grafana's `ai-usage.json` (S-6, 2026-10-03): cost per day and model, p50/p95, tokens per model, unavailability and fallbacks
 - [ ] `P12-8` ADR 0019 — **S**
-- [ ] `P12-9` A token budget per person per day, the person on each metering row — **S** (S-3b's final review: the conversation budget is the client's to restart; required before S-7 configures a paid profile)
+- [x] `P12-9` A token budget per person per day, the person on each metering row — **S** · **done 2026-10-03**: `AIInvocation.Subject` (migration `AIInvocationSubject`), `Steward:PersonDailyTokenBudget` (300,000) counted from the shop's midnight, status `DailyBudgetExceeded`, es and en — (S-3b's final review: the conversation budget is the client's to restart; required before S-7 configures a paid profile)
 
 **Risks.** Prompt injection through catalogue and claim text — the copilot reads
 data written by importers and models. Constrain it to typed read tools over

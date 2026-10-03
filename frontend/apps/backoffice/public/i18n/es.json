@@ -1145,6 +1145,10 @@
       "title": "Esta conversación ha gastado su presupuesto",
       "body": "Empieza una nueva. No se pierde nada de lo propuesto: espera en Propuestas."
     },
+    "dailyBudget": {
+      "title": "Has gastado el presupuesto de hoy de Steward",
+      "body": "Vuelve a empezar mañana. No se pierde nada de lo propuesto: espera en Propuestas, y el resto del backoffice funciona como siempre."
+    },
     "near": "Esta conversación está cerca del límite del modelo. Empieza una nueva para tu próxima pregunta.",
     "newConversation": "Nueva conversación"
   },

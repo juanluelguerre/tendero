@@ -23,6 +23,7 @@ const Statuses: Record<StewardAnswer['status'], TrackedEvents['steward_answered'
   Unavailable: 'unavailable',
   BudgetExceeded: 'budget_exceeded',
   ConversationTooLong: 'conversation_too_long',
+  DailyBudgetExceeded: 'daily_budget_exceeded',
 };
 
 const Views: readonly BackofficeView[] = [

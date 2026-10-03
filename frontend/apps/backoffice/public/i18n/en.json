@@ -1145,6 +1145,10 @@
       "title": "This conversation has spent its budget",
       "body": "Start a new one. Nothing already proposed is lost: it waits in Proposals."
     },
+    "dailyBudget": {
+      "title": "You have used today's Steward budget",
+      "body": "It starts again tomorrow. Nothing already proposed is lost: it waits in Proposals, and the rest of the backoffice works as usual."
+    },
     "near": "This conversation is near the model's limit. Start a new one for your next question.",
     "newConversation": "New conversation"
   },

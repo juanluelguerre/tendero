@@ -162,6 +162,26 @@ describe('the steward store', () => {
     expect(http.expectOne((req) => req.url === Turns).request.body.conversationId).toBeNull();
   });
 
+  /** The person's day is spent: this conversation is over, and the tracking plan names why (P12-9). */
+  it('ends the conversation when the person has spent their day, and reports it as such', () => {
+    store.ask('One', screen);
+    http.expectOne((req) => req.url === Turns).flush(answer(null, { status: 'DailyBudgetExceeded', cost: null }));
+
+    expect(store.ended()).toBe(true);
+    expect(telemetry.trackEvent.mock.calls[0]).toEqual([
+      'steward_answered',
+      {
+        status: 'daily_budget_exceeded',
+        tools: 0,
+        proposals: 0,
+        calls: 0,
+        cost: 0,
+        profile: 'local',
+        fell_back: false,
+      },
+    ]);
+  });
+
   it('says when the conversation nears the model’s window', () => {
     store.ask('One', screen);
     http.expectOne((req) => req.url === Turns).flush(answer('A', { nearContextLimit: true }));

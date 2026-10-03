@@ -140,6 +140,12 @@
                       <p class="m-0 mt-1 text-sm">{{ t('steward.budget.body') }}</p>
                     </lib-notice>
                   }
+                  @case ('DailyBudgetExceeded') {
+                    <lib-notice tone="warn">
+                      <p class="m-0 font-medium">{{ t('steward.dailyBudget.title') }}</p>
+                      <p class="m-0 mt-1 text-sm">{{ t('steward.dailyBudget.body') }}</p>
+                    </lib-notice>
+                  }
                 }
 
                 @if (answer.proposalIds.length > 0 && answer.status === 'Answered') {

@@ -15,6 +15,14 @@ internal sealed class EfAIInvocationWriter(IDbContextFactory<TenderoDbContext> c
             .SumAsync(row => row.InputTokens + row.OutputTokens, cancellationToken);
     }
 
+    public async Task<long> PersonTokensSinceAsync(string subject, DateTimeOffset since, CancellationToken cancellationToken = default)
+    {
+        await using var context = await contexts.CreateDbContextAsync(cancellationToken);
+        return await context.AIInvocations.AsNoTracking()
+            .Where(row => row.Subject == subject && row.At >= since)
+            .SumAsync(row => row.InputTokens + row.OutputTokens, cancellationToken);
+    }
+
     public async Task WriteAsync(IReadOnlyList<AIInvocation> rows, CancellationToken cancellationToken = default)
     {
         await using var context = await contexts.CreateDbContextAsync(cancellationToken);

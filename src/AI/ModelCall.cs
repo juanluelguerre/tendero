@@ -12,8 +12,9 @@ public static class ModelCall
     public const string Operation = "tendero.operation";
     public const string Conversation = "tendero.conversation";
     public const string PromptVersion = "tendero.prompt_version";
+    public const string Person = "tendero.person";
 
-    public static ChatOptions Options(string operation, string? conversation = null, string? promptVersion = null, ChatOptions? options = null)
+    public static ChatOptions Options(string operation, string? conversation = null, string? promptVersion = null, ChatOptions? options = null, string? person = null)
     {
         options ??= new ChatOptions();
         options.AdditionalProperties ??= [];
@@ -22,6 +23,8 @@ public static class ModelCall
             options.AdditionalProperties[Conversation] = conversation;
         if (promptVersion is not null)
             options.AdditionalProperties[PromptVersion] = promptVersion;
+        if (person is not null)
+            options.AdditionalProperties[Person] = person;
         return options;
     }
 
