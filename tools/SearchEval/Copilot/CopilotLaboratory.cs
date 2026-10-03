@@ -177,20 +177,38 @@ public static class CopilotLaboratory
         }
     }
 
-    /// <summary>Each product's English name and the code the import gave it.</summary>
+    /// <summary>Each product's English name and the code the import gave it, every page of them.</summary>
     public static async Task<IReadOnlyDictionary<string, string>> ProductsAsync(ServiceProvider provider, CancellationToken cancellationToken)
     {
         await using var scope = provider.CreateAsyncScope();
-        var page = await scope.ServiceProvider.GetRequiredService<IQueryDispatcher>()
-            .SendAsync(new ListProductsQuery(null, "en", 1, Paging.MaxPageSize), cancellationToken);
-        return page.Items.ToDictionary(item => item.Name, item => item.Code, StringComparer.Ordinal);
+        var queries = scope.ServiceProvider.GetRequiredService<IQueryDispatcher>();
+        var products = new Dictionary<string, string>(StringComparer.Ordinal);
+        for (var number = 1; ; number++)
+        {
+            var page = await queries.SendAsync(new ListProductsQuery(null, "en", number, Paging.MaxPageSize), cancellationToken);
+            foreach (var item in page.Items)
+                products[item.Name] = item.Code;
+            if (page.Items.Count == 0 || number * Paging.MaxPageSize >= page.Total)
+                return products;
+        }
+    }
+
+    /// <summary>The reads every turn may make and the commands it may propose: what the cases may name.</summary>
+    public static (IReadOnlyList<string> Tools, IReadOnlyList<string> Commands) Registered(ServiceProvider provider)
+    {
+        using var scope = provider.CreateScope();
+        return ([.. scope.ServiceProvider.GetServices<IReadTool>().Select(tool => tool.Name)],
+            [.. scope.ServiceProvider.GetRequiredService<ProposableCommands>().All.Select(command => command.Name)]);
     }
 
     /// <summary>The evaluated profile's client, wrapped so every tool call it makes is recorded.</summary>
     private static void RecordCalls(IServiceCollection services)
     {
-        var descriptor = services.Single(candidate =>
-            candidate.ServiceType == typeof(IChatClient) && Equals(candidate.ServiceKey, Profile));
+        var descriptor = services.SingleOrDefault(candidate =>
+                             candidate.ServiceType == typeof(IChatClient) && Equals(candidate.ServiceKey, Profile))
+                         ?? throw new InvalidOperationException(
+                             $"The profile '{Profile}' was not registered: its settings (--chat with --model, or --script) " +
+                             "are missing or name a provider the model port does not know, and AddModelProfiles skipped it.");
         services.Remove(descriptor);
         services.AddKeyedSingleton<IChatClient>(Profile, (provider, key) => new RecordingChatClient(
             (IChatClient)descriptor.KeyedImplementationFactory!(provider, key), provider.GetRequiredService<ToolCallLog>()));

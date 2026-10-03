@@ -40,14 +40,22 @@ internal sealed class CopilotSuite : IEvaluationSuite
         await CopilotLaboratory.PrepareAsync(provider, Directory.GetCurrentDirectory(), cancellationToken);
         var codes = await CopilotLaboratory.ProductsAsync(provider, cancellationToken);
 
-        // Before any model is asked: a case that names a product the shop does not
-        // have is the suite's mistake, and blaming a model for it would be a lie.
+        // Before any model is asked: a case that names a product, a read or a command
+        // the shop does not have is the suite's mistake, and blaming a model for it
+        // would be a lie.
         var missing = golden.Cases
             .SelectMany(item => item.Proposals.Select(proposal => proposal.Product).Append(item.Screen?.SubjectProduct))
             .OfType<string>().Where(name => !codes.ContainsKey(name)).Distinct().ToList();
         if (missing.Count > 0)
         {
             Console.Error.WriteLine($"The laboratory has no product named: {string.Join(", ", missing)}");
+            return 2;
+        }
+
+        var (tools, commands) = CopilotLaboratory.Registered(provider);
+        if (CopilotScoring.Unregistered(golden, tools, commands) is { Count: > 0 } unknown)
+        {
+            Console.Error.WriteLine($"The cases name what the shop does not register: {string.Join(", ", unknown)}");
             return 2;
         }
 

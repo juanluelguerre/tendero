@@ -74,6 +74,19 @@ public static class CopilotScoring
         Converters = { new JsonStringEnumConverter() },
     };
 
+    /// <summary>The cases' tools and commands the shop does not register: a typo of the suite's, never a model's failure.</summary>
+    public static IReadOnlyList<string> Unregistered(CopilotCases cases, IEnumerable<string> tools, IEnumerable<string> commands)
+    {
+        var (knownTools, knownCommands) = (tools.ToHashSet(StringComparer.Ordinal), commands.ToHashSet(StringComparer.Ordinal));
+        return
+        [
+            .. cases.Cases.SelectMany(item => item.Tools).Select(tool => tool.Name).Where(name => !knownTools.Contains(name))
+                .Distinct().Select(name => $"tool {name}"),
+            .. cases.Cases.SelectMany(item => item.Proposals).Select(proposal => proposal.Command).Where(name => !knownCommands.Contains(name))
+                .Distinct().Select(name => $"command {name}"),
+        ];
+    }
+
     /// <summary>
     /// One case's verdict. <paramref name="codes"/> maps a seed product's English name
     /// to the code the laboratory gave it at import.

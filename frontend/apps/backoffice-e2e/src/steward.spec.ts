@@ -35,7 +35,7 @@ test.describe('Steward', () => {
     await expect(review).toBeVisible({ timeout: 30_000 });
     await review.click();
     const dialog = page.getByRole('dialog');
-    await expect(dialog.getByText('Pulse Runner cushioned running shoes').first()).toBeVisible();
+    await expect(dialog.getByText('Pulse Runner cushioned road running shoes').first()).toBeVisible();
     await dialog.getByRole('button', { name: /^approve 1$/i }).click();
     await expect(dialog.getByText(/^applied$/i)).toBeVisible();
     await dialog.getByRole('button', { name: /^close$/i }).click();

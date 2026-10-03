@@ -17,7 +17,7 @@
             {
               "productId": "{from:find_products:data.products.0.productId}",
               "culture": "en",
-              "name": "Pulse Runner cushioned running shoes",
+              "name": "Pulse Runner cushioned road running shoes",
               "reason": "The English name, as the supplier writes it."
             }
           ]

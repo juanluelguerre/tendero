@@ -105,6 +105,24 @@ public sealed class CopilotScoringTests
         Assert.Contains("Moka pot", failure.Message);
     }
 
+    /// <summary>
+    /// A misspelt tool or command in the cases is the suite's mistake: named before
+    /// any model is asked, or it reads as the model never calling it (review of S-6).
+    /// </summary>
+    [Fact]
+    public void A_tool_or_command_the_shop_does_not_register_is_named_before_any_model_is_asked()
+    {
+        var cases = new CopilotCases(1,
+        [
+            Case([new ExpectedTool("find_products", null), new ExpectedTool("find_prodcts", null)],
+                [new ExpectedProposal("SetProductTranslation", "Moka pot", null), new ExpectedProposal("SetProductTranslaton", "Moka pot", null)]),
+        ]);
+
+        var unknown = CopilotScoring.Unregistered(cases, ["find_products"], ["SetProductTranslation"]);
+
+        Assert.Equal(["tool find_prodcts", "command SetProductTranslaton"], unknown);
+    }
+
     [Fact]
     public void The_score_is_each_shares_the_latencies_by_nearest_rank_and_the_largest_call()
     {
