@@ -105,19 +105,47 @@ public static class ArgumentSchemas
     /// client takes them. The exporter writes a record and an optional argument as
     /// nullable — <c>["object","null"]</c> — and the OpenAI client refuses a type
     /// that is not a string: every turn against a real model failed on it (S-6).
-    /// Optional is what <c>required</c> already says; null adds nothing a model needs.
+    /// A nullable argument is one the model may leave out, so dropping its null
+    /// takes it out of <c>required</c> too — the exporter lists a positional record's
+    /// every parameter there, and a grammar that keeps it would make the model write
+    /// one (a translation's description it invents, over the product's). A number
+    /// the web's options also read from a string stays a number, and a null default
+    /// says nothing.
     /// </summary>
     private static JsonNode OneTypeEach(JsonNode schema)
     {
         schema["type"] = "object";
-        if (schema["properties"] is JsonObject properties)
+        if (schema["properties"] is not JsonObject properties)
+            return schema;
+
+        var omittable = new List<string>();
+        foreach (var (name, property) in properties)
         {
-            foreach (var (_, property) in properties)
+            if (property is not JsonObject node || node["type"] is not JsonArray types)
+                continue;
+
+            var named = types.Select(type => type?.GetValue<string>()).OfType<string>().ToList();
+            if (named.Contains("null"))
+                omittable.Add(name);
+            var others = named.Where(type => type is not "null").ToList();
+            if (others.FirstOrDefault(type => type is not "string") is { } number)
             {
-                if (property is JsonObject node && node["type"] is JsonArray types &&
-                    types.Select(type => type?.GetValue<string>()).FirstOrDefault(type => type is not "null") is { } single)
-                    node["type"] = single;
+                node["type"] = number;
+                node.Remove("pattern");
             }
+            else if (others.FirstOrDefault() is { } single)
+                node["type"] = single;
+
+            if (node.TryGetPropertyValue("default", out var value) && value is null)
+                node.Remove("default");
+        }
+
+        if (schema["required"] is JsonArray required)
+        {
+            foreach (var name in omittable)
+                required.Remove(required.FirstOrDefault(item => item?.GetValue<string>() == name));
+            if (required.Count == 0)
+                schema.AsObject().Remove("required");
         }
 
         return schema;

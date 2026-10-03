@@ -55,6 +55,28 @@ public sealed class ReadToolTests
         Assert.Equal(["Front", "Back"], side.GetProperty("enum").EnumerateArray().Select(value => value.GetString()));
     }
 
+    /// <summary>
+    /// What may be left out stays omittable when its null type is dropped: a
+    /// translation's description is optional, and a grammar that made it required
+    /// would have the model invent one that overwrites the product's (review of S-6).
+    /// A count stays a number, and a nullable default says nothing.
+    /// </summary>
+    [Fact]
+    public void An_optional_argument_is_not_required_a_count_is_a_number_and_no_default_is_null()
+    {
+        var schema = ArgumentSchemas.Of(typeof(PayloadLike));
+        var required = schema.TryGetProperty("required", out var names)
+            ? names.EnumerateArray().Select(name => name.GetString()).ToList()
+            : [];
+        var properties = schema.GetProperty("properties");
+
+        Assert.Equal(["name"], required);
+        Assert.Equal("integer", properties.GetProperty("limit").GetProperty("type").GetString());
+        Assert.False(properties.GetProperty("description").TryGetProperty("default", out _));
+    }
+
+    private sealed record PayloadLike(string Name, string? Description, int Limit = 10);
+
     private sealed record OptionalArguments(string? Note, Side? Side = null, int? Limit = null);
 
     private sealed record RequiredArguments(Side Side);
