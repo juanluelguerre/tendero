@@ -55,16 +55,13 @@
     overflow-y: auto;
   }
 
-  :host(.with-rail) > .side-slot {
-    display: grid;
-    grid-column: 3;
-    grid-row: 2;
-    min-height: 0;
+  /* A drawer over the page sits under the header, and left of Steward when it is docked. */
+  :host(.with-rail) {
+    --pane-top: var(--spacing-bar);
   }
 
-  /* Where Steward has the room, the item's pane waits out of the way. */
-  :host(.with-rail) > .side-slot--yields {
-    display: none;
+  :host(.with-rail.with-steward) {
+    --pane-offset: var(--container-panel);
   }
 
   :host(.with-rail) > backoffice-steward-dock {
@@ -75,9 +72,19 @@
   }
 }
 
-/* Below 85 rem the slot holds a drawer (position: fixed) and takes no room. */
+/* The pane of an item is docked in the slot only from 112 rem; below, the slot holds a
+   drawer (position: fixed) and takes no room. */
 .side-slot {
   display: contents;
+}
+
+@media (min-width: 112rem) {
+  :host(.with-rail) > .side-slot {
+    display: grid;
+    grid-column: 3;
+    grid-row: 2;
+    min-height: 0;
+  }
 }
 
 /* Brand text: --color-brand and never the --color-accent alias, and large enough to be held

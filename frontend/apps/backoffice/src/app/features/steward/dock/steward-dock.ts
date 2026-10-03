@@ -27,7 +27,7 @@ export class StewardDock {
   protected readonly name = translateSignal('steward.name');
 
   /** Whether the panes sit beside the page (from 85 rem) or are drawers over it. */
-  protected readonly wide = inject(SidePane).docked;
+  protected readonly wide = inject(SidePane).stewardDocked;
 
   private readonly sheet = viewChild<ElementRef<HTMLDialogElement>>('sheet');
 

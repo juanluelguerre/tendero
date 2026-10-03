@@ -11,9 +11,9 @@
   background: var(--color-surface);
 }
 
-/* Docked in the shell's slot from 85 rem: a column of the window's height under the
+/* Docked in the shell's slot from 112 rem: a column of the window's height under the
    header, like Steward's, scrolling on its own. */
-@media (min-width: 85rem) {
+@media (min-width: 112rem) {
   :host {
     box-sizing: border-box;
     width: var(--container-panel);
@@ -25,13 +25,14 @@
   }
 }
 
-/* From 48 rem to 85: a drawer over the page, from the right. */
-@media (min-width: 48rem) and (max-width: 84.99rem) {
+/* From 48 rem to 112: a drawer over the page, from the right — under the header and
+   left of Steward where the shell has set them (85 rem up), the whole height otherwise. */
+@media (min-width: 48rem) and (max-width: 111.99rem) {
   :host {
     box-sizing: border-box;
     position: fixed;
-    inset-block: 0;
-    inset-inline-end: 0;
+    inset-block: var(--pane-top, 0) 0;
+    inset-inline-end: var(--pane-offset, 0);
     z-index: 4;
     width: min(var(--container-panel), 100vw);
     overflow-y: auto;

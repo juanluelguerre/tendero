@@ -54,6 +54,7 @@ import { StewardDoorStore } from '../features/steward/steward-door.store';
   styleUrl: './shell.css',
   host: {
     '[class.with-rail]': 'canUseBackoffice()',
+    '[class.with-steward]': 'canUseBackoffice() && steward.isOpen()',
     '(document:keydown)': 'shortcut($event)',
   },
 })

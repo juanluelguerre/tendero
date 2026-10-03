@@ -1,11 +1,10 @@
 import { computed, DestroyRef, Directive, inject, Injectable, signal, type Signal, TemplateRef } from '@angular/core';
-import { StewardDoorStore } from '../../features/steward/steward-door.store';
 
-/** Where a pane is docked beside the page: the page keeps a narrow table's 44 rem beside a 26 rem pane and the open rail. */
-const DockedFrom = '(min-width: 85rem)';
+/** Where Steward is docked beside the page: it keeps a narrow table's 44 rem beside a 26 rem panel and the open rail. */
+const StewardDockedFrom = '(min-width: 85rem)';
 
-/** Where Steward and the pane of an item are both docked, and so need not take turns. */
-const BothDockedFrom = '(min-width: 112rem)';
+/** Where the pane of an item is docked too: there is room to spare for both. Below, it is a drawer over the page. */
+const PaneDockedFrom = '(min-width: 112rem)';
 
 /** Whether a media query matches, followed as the window changes. */
 function follows(query: string): Signal<boolean> {
@@ -16,26 +15,22 @@ function follows(query: string): Signal<boolean> {
 }
 
 /**
- * The shell's one slot for the pane of a list's open item, beside the screen and
- * under the header, at Steward's left (the prototype's layout). A screen does not
- * place its pane: it declares it with `*backofficeSidePane` where it lives, and the
- * shell draws it in the slot — so every pane has the same frame, the same place and
- * its own scroll, and opening one never moves the list.
+ * The shell's one slot for the pane of a list's open item. A screen does not place
+ * its pane: it declares it with `*backofficeSidePane` where it lives, and the shell
+ * draws it in the slot — so every pane has the same frame and its own scroll, and
+ * opening one never moves the list. Docked beside the screen from 112 rem (under the
+ * header, at Steward's left); below, a drawer over the screen, left of Steward when
+ * Steward is docked: the two never share the page's width, so the list is never narrow.
  */
 @Injectable({ providedIn: 'root' })
 export class SidePane {
-  private readonly door = inject(StewardDoorStore);
   private readonly shown = signal<TemplateRef<unknown> | null>(null);
-  private readonly room = follows(BothDockedFrom);
 
-  /** Panes sit beside the page; below, they are drawers over it (and sheets on a phone). */
-  readonly docked = follows(DockedFrom);
+  /** Steward sits beside the page; below, it is a drawer over it, and a sheet on a phone. */
+  readonly stewardDocked = follows(StewardDockedFrom);
 
-  /** Docked, but with room for one only: Steward and an item's pane take turns. */
-  readonly takesTurns = computed(() => this.docked() && !this.room());
-
-  /** The item's pane is out of the way, not closed, while Steward has the room. */
-  readonly yields = computed(() => this.takesTurns() && this.door.isOpen());
+  /** The item's pane sits beside the page only where there is room to spare; below, it is a drawer over it. */
+  readonly docked = follows(PaneDockedFrom);
 
   /** What the slot draws, if anything. */
   readonly template = this.shown.asReadonly();
@@ -44,12 +39,6 @@ export class SidePane {
 
   show(template: TemplateRef<unknown>): void {
     this.shown.set(template);
-    this.reveal();
-  }
-
-  /** A pane was opened or a new item picked in it: where the panes take turns, it has the room. */
-  reveal(): void {
-    if (this.takesTurns()) this.door.close();
   }
 
   /** Only the pane that is shown can take itself away: a later one is not closed by an earlier one's end. */
