@@ -14,6 +14,7 @@ using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 namespace ElGuerre.Tendero.SearchEval.Copilot;
@@ -88,19 +89,21 @@ public sealed class CapturedLogs : ILoggerProvider
     }
 }
 
-/// <summary>A context's read, recorded on its way in: the arguments are what the suite judges.</summary>
-public sealed class RecordingReadTool(IReadTool inner, ToolCallLog log) : IReadTool
+/// <summary>
+/// The model's tool calls, recorded where they are born — in its answers — on the
+/// evaluated profile's client: the arguments are what the suite judges. Not a
+/// decorator on the reads: a read is a context's, derives <c>ReadTool</c>, and an
+/// architecture rule holds that (its answer is what leaves the shop).
+/// </summary>
+public sealed class RecordingChatClient(IChatClient inner, ToolCallLog log) : DelegatingChatClient(inner)
 {
-    public string Name => inner.Name;
-
-    public string Description => inner.Description;
-
-    public JsonElement ArgumentsSchema => inner.ArgumentsSchema;
-
-    public Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default)
+    public override async Task<ChatResponse> GetResponseAsync(
+        IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
-        log.Add(new ToolCall(inner.Name, arguments.Clone()));
-        return inner.ReadAsync(arguments, cancellationToken);
+        var response = await base.GetResponseAsync(messages, options, cancellationToken);
+        foreach (var call in response.Messages.SelectMany(message => message.Contents).OfType<FunctionCallContent>())
+            log.Add(new ToolCall(call.Name, JsonSerializer.SerializeToElement(call.Arguments ?? new Dictionary<string, object?>())));
+        return response;
     }
 }
 
@@ -148,7 +151,7 @@ public static class CopilotLaboratory
         services.AddModelProfiles(configuration);
         services.AddSingleton<IPrincipalAccessor>(new Examiner());
         services.AddSingleton<ToolCallLog>();
-        RecordReads(services);
+        RecordCalls(services);
         return services.BuildServiceProvider();
     }
 
@@ -183,19 +186,14 @@ public static class CopilotLaboratory
         return page.Items.ToDictionary(item => item.Name, item => item.Code, StringComparer.Ordinal);
     }
 
-    /// <summary>Every context's read, wrapped so its calls are recorded.</summary>
-    private static void RecordReads(IServiceCollection services)
+    /// <summary>The evaluated profile's client, wrapped so every tool call it makes is recorded.</summary>
+    private static void RecordCalls(IServiceCollection services)
     {
-        foreach (var descriptor in services.Where(descriptor => descriptor.ServiceType == typeof(IReadTool)).ToList())
-        {
-            services.Remove(descriptor);
-            services.Add(new ServiceDescriptor(typeof(IReadTool), provider =>
-            {
-                var inner = descriptor.ImplementationFactory?.Invoke(provider)
-                            ?? ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!);
-                return new RecordingReadTool((IReadTool)inner, provider.GetRequiredService<ToolCallLog>());
-            }, descriptor.Lifetime));
-        }
+        var descriptor = services.Single(candidate =>
+            candidate.ServiceType == typeof(IChatClient) && Equals(candidate.ServiceKey, Profile));
+        services.Remove(descriptor);
+        services.AddKeyedSingleton<IChatClient>(Profile, (provider, key) => new RecordingChatClient(
+            (IChatClient)descriptor.KeyedImplementationFactory!(provider, key), provider.GetRequiredService<ToolCallLog>()));
     }
 
     private sealed record SeedStock(string Sku, string Warehouse, int OnHand);
