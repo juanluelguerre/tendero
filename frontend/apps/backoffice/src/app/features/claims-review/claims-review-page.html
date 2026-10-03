@@ -1,6 +1,9 @@
-<section class="worklist-layout" [class.worklist-layout--with-pane]="store.selected()">
+<section class="worklist-layout">
   <backoffice-claim-list class="worklist-list" />
-  <backoffice-claim-pane (closed)="store.close()" (reviewAll)="reviewAll($event)" />
 </section>
+
+@if (store.selected()) {
+  <backoffice-claim-pane *backofficeSidePane (closed)="store.close()" (reviewAll)="reviewAll($event)" />
+}
 
 <backoffice-claims-bulk-review (decided)="approved()" (openClaim)="store.openById($event.claimId, $event.productId)" />

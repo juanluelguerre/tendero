@@ -2,6 +2,7 @@ import { afterNextRender, Component, inject, Injector } from '@angular/core';
 import { OrderList } from './order-list/order-list';
 import { OrderPane } from './order-pane/order-pane';
 import { OrdersStore } from './orders.store';
+import { SidePaneContent } from '../../shell/side-pane/side-pane';
 
 /**
  * The orders, as R-3 drew them (R-4.2): the list and, beside it, the open
@@ -15,7 +16,7 @@ import { OrdersStore } from './orders.store';
  */
 @Component({
   selector: 'backoffice-orders',
-  imports: [OrderList, OrderPane],
+  imports: [SidePaneContent, OrderList, OrderPane],
   templateUrl: './orders-page.html',
   // The page is a frame: the list-and-pane layout is shared by every list of work
   // (styles.css), and what the list and the pane have of their own is in their folders.

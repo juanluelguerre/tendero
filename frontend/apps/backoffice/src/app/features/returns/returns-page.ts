@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ReturnList } from './return-list/return-list';
 import { ReturnPane } from './return-pane/return-pane';
 import { ReturnsStore } from './returns.store';
+import { SidePaneContent } from '../../shell/side-pane/side-pane';
 
 /**
  * The returns queue, as R-3 drew the lists of work (R-4.3): it opens on what
@@ -19,7 +20,7 @@ import { ReturnsStore } from './returns.store';
  */
 @Component({
   selector: 'backoffice-returns',
-  imports: [ReturnList, ReturnPane],
+  imports: [SidePaneContent, ReturnList, ReturnPane],
   templateUrl: './returns-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list and the pane have of their own is in their folders.

@@ -56,6 +56,12 @@
       </span>
 
       @if (canUseBackoffice()) {
+        <backoffice-breadcrumbs class="max-md:hidden" />
+      }
+
+      <span class="flex-1"></span>
+
+      @if (canUseBackoffice()) {
         <!-- The palette's door (R-3, P2): a search-looking button that says its
              key, wide enough to read as a search on a desktop, an icon on a phone. -->
         <button
@@ -83,8 +89,6 @@
           <span class="sr-only md:hidden">{{ t('steward.name') }}</span>
         </button>
       }
-
-      <span class="flex-1"></span>
 
       @if (identity()) {
         <backoffice-account-menu (signOut)="signOut()" />
@@ -141,6 +145,10 @@
     <!-- Steward's panel (phase 12): a column beside the content from 1024 px, a
          modal sheet below; the dock decides which. -->
     <backoffice-steward-dock />
+
+    <!-- The pane of the open item of a list (*backofficeSidePane), beside the screen
+         and at Steward's left; empty, it takes no room. -->
+    <div class="side-slot"><ng-container *ngTemplateOutlet="sidePane.template()" /></div>
   }
 
   @if (canUseBackoffice()) {

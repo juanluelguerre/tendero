@@ -7,6 +7,7 @@ import type { ManagedCampaignView } from '@tendero/shared-api';
 import { provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { SidePaneSlotForSpecs } from '../../shell/side-pane/side-pane-slot.testing';
 import { CampaignsPage } from './campaigns-page';
 
 const Calendar = 'http://api/api/pricing/campaign-calendar';
@@ -42,10 +43,16 @@ describe('the campaigns page', () => {
     http.expectOne((req) => req.url === 'http://api/api/catalog/categories').flush({ items: [] });
     // `*transloco` renders nothing until its language arrives; the words are not what is asserted.
     for (const translations of http.match((req) => req.url.includes('/i18n/'))) translations.flush({});
+    const slot = TestBed.createComponent(SidePaneSlotForSpecs);
+    slot.autoDetectChanges();
     harness.detectChanges();
     await harness.fixture.whenStable();
     harness.detectChanges();
-    return harness.routeNativeElement as HTMLElement;
+    slot.detectChanges();
+    // The page and the shell's slot, as a person sees them together.
+    const together = document.body.appendChild(document.createElement('div'));
+    together.append(harness.routeNativeElement as HTMLElement, slot.nativeElement as HTMLElement);
+    return together;
   }
 
   const counts = (page: HTMLElement) =>

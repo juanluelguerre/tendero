@@ -1,12 +1,8 @@
-<section
-  class="worklist-layout"
-  [class.worklist-layout--with-pane]="store.paneOpen()"
-  *transloco="let t; prefix: 'campaigns'"
->
+<section class="worklist-layout" *transloco="let t; prefix: 'campaigns'">
   <backoffice-campaign-list class="worklist-list" />
 
   @if (store.paneOpen()) {
-    <backoffice-worklist-pane [heading]="selectedName() ?? t('new')" (closed)="store.close()">
+    <backoffice-worklist-pane *backofficeSidePane [heading]="selectedName() ?? t('new')" (closed)="store.close()">
       <backoffice-campaign-editor [campaign]="store.selected()" />
     </backoffice-worklist-pane>
   }

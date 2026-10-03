@@ -1,0 +1,6 @@
+/* Utilities say the rest (ADR 0049). What stays is what they cannot: the conversation
+   scrolls with the wheel, the trackpad and the keyboard, and draws no scrollbar — a
+   chat reads as a page, not as a window with a bar beside it. */
+.conversation {
+  scrollbar-width: none;
+}

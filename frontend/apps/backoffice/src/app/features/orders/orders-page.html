@@ -1,4 +1,7 @@
-<section class="worklist-layout" [class.worklist-layout--with-pane]="store.selectedId()">
+<section class="worklist-layout">
   <backoffice-order-list class="worklist-list" />
-  <backoffice-order-pane (closed)="close()" />
 </section>
+
+@if (store.selectedId()) {
+  <backoffice-order-pane *backofficeSidePane (closed)="close()" />
+}

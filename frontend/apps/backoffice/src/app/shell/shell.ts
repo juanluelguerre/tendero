@@ -1,4 +1,4 @@
-import { NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, Injector, untracked, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
@@ -11,7 +11,9 @@ import { filter } from 'rxjs';
 import { backofficeAccess } from '../access';
 import { BackofficeUsage } from '../usage';
 import { AccountMenu } from './account-menu/account-menu';
+import { Breadcrumbs } from './breadcrumbs/breadcrumbs';
 import { Nav } from './nav/nav';
+import { SidePane } from './side-pane/side-pane';
 import { Palette } from './palette/palette';
 import { StaffNotice } from './staff-notice/staff-notice';
 import { UndoToast } from '../worklist/undo/undo-toast';
@@ -33,6 +35,8 @@ import { StewardDoorStore } from '../features/steward/steward-door.store';
 @Component({
   selector: 'backoffice-shell',
   imports: [
+    Breadcrumbs,
+    NgTemplateOutlet,
     RouterOutlet,
     RouterLink,
     TranslocoDirective,
@@ -50,7 +54,6 @@ import { StewardDoorStore } from '../features/steward/steward-door.store';
   styleUrl: './shell.css',
   host: {
     '[class.with-rail]': 'canUseBackoffice()',
-    '[class.with-steward]': 'canUseBackoffice() && steward.isOpen()',
     '(document:keydown)': 'shortcut($event)',
   },
 })
@@ -63,6 +66,7 @@ export class Shell {
 
   /** Steward's door, in the bar; its panel beside the content. */
   protected readonly steward = inject(StewardDoorStore);
+  protected readonly sidePane = inject(SidePane);
 
   /** The notice to staff and its switch (ADR 0041). */
   protected readonly staffUsage = inject(StaffUsage);

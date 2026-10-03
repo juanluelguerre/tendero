@@ -24,7 +24,7 @@
          repeated every question and cost line to a screen reader. -->
     <p class="sr-only" aria-live="polite">{{ store.latestAnswer() }}</p>
 
-    <div class="relative grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation>
+    <div class="conversation relative grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation>
       @if (store.exchanges().length === 0) {
         <p class="m-0 text-sm text-muted">{{ t('steward.intro') }}</p>
       }

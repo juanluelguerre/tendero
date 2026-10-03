@@ -1,4 +1,7 @@
-<section class="worklist-layout" [class.worklist-layout--with-pane]="store.selected()">
+<section class="worklist-layout">
   <backoffice-proposal-list class="worklist-list" />
-  <backoffice-proposal-pane (closed)="store.close()" />
 </section>
+
+@if (store.selected()) {
+  <backoffice-proposal-pane *backofficeSidePane (closed)="store.close()" />
+}

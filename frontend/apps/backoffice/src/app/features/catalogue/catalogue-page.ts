@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CatalogueList } from './catalogue-list/catalogue-list';
 import { CataloguePane } from './catalogue-pane/catalogue-pane';
 import { CatalogueStore } from './catalogue.store';
+import { SidePaneContent } from '../../shell/side-pane/side-pane';
 
 /**
  * Every product, by status, and what can be done with one (the redesign's
@@ -16,7 +17,7 @@ import { CatalogueStore } from './catalogue.store';
  */
 @Component({
   selector: 'backoffice-catalogue-page',
-  imports: [CatalogueList, CataloguePane],
+  imports: [SidePaneContent, CatalogueList, CataloguePane],
   templateUrl: './catalogue-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list and the pane have of their own is in their folders.

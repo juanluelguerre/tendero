@@ -19,48 +19,59 @@
   }
 }
 
-/* Steward's panel takes a third column from 1024 px; below, it is a sheet over
-   the screen and the grid does not change. */
+/* From 1024 px the shell is the frame of the window and does not scroll itself
+   (the prototype's layout): the header spans the whole width; under it the screen and
+   the panes sit side by side — the screen, the pane of its open item, Steward — each
+   scrolling on its own, so opening one never moves another. The content's wrapper
+   steps aside (display: contents) so the header, the page and the panes are all items
+   of this grid. Below 1024 px the page scrolls and a pane is a sheet over it. */
 @media (min-width: 64rem) {
-  /* The layout of the prototype: the header spans the whole width, and under it the
-     screen and the panel sit side by side, each scrolling on its own — the page itself
-     does not, which left two scrollbars at the window's edge. The content's wrapper
-     steps aside (display: contents) so the header, the page and the panel are all
-     items of this grid. */
-  :host(.with-rail.with-steward) {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+  :host(.with-rail) {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
     grid-template-rows: auto minmax(0, 1fr);
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
   }
 
-  :host(.with-rail.with-steward) > aside {
+  :host(.with-rail) > aside {
     grid-row: 1 / span 2;
   }
 
-  :host(.with-rail.with-steward) > div {
+  :host(.with-rail) > div {
     display: contents;
   }
 
-  :host(.with-rail.with-steward) > div > header {
-    grid-column: 2 / 4;
+  :host(.with-rail) > div > header {
+    grid-column: 2 / 5;
     grid-row: 1;
   }
 
-  :host(.with-rail.with-steward) .page {
+  :host(.with-rail) .page {
     grid-column: 2;
     grid-row: 2;
     min-height: 0;
     overflow-y: auto;
   }
 
-  :host(.with-rail.with-steward) > backoffice-steward-dock {
-    display: block;
+  :host(.with-rail) > .side-slot {
+    display: grid;
     grid-column: 3;
     grid-row: 2;
     min-height: 0;
   }
+
+  :host(.with-rail) > backoffice-steward-dock {
+    display: block;
+    grid-column: 4;
+    grid-row: 2;
+    min-height: 0;
+  }
+}
+
+/* Below 1024 px the slot holds a sheet (position: fixed) and takes no room. */
+.side-slot {
+  display: contents;
 }
 
 /* Brand text: --color-brand and never the --color-accent alias, and large enough to be held

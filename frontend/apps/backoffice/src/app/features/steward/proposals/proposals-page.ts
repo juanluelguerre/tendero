@@ -4,6 +4,7 @@ import { landing, stepOf } from '../../../worklist/list-keys';
 import { ProposalList } from './proposal-list/proposal-list';
 import { ProposalPane } from './proposal-pane/proposal-pane';
 import { ProposalsStore } from './proposals.store';
+import { SidePaneContent } from '../../../shell/side-pane/side-pane';
 
 /**
  * What Steward proposed (phase 12), as the lists of work are drawn: a filter by
@@ -14,7 +15,7 @@ import { ProposalsStore } from './proposals.store';
  */
 @Component({
   selector: 'backoffice-proposals-page',
-  imports: [ProposalList, ProposalPane],
+  imports: [SidePaneContent, ProposalList, ProposalPane],
   templateUrl: './proposals-page.html',
   host: { class: 'block', '(document:keydown)': 'key($event)' },
   providers: [ProposalsStore],

@@ -1,0 +1,13 @@
+<ng-container *transloco="let t">
+  @if (crumbs(); as place) {
+    <nav [attr.aria-label]="t('nav.breadcrumbs')" class="text-sm">
+      <ol class="m-0 flex list-none items-center gap-2 p-0 text-muted">
+        @if (t('nav.groups.' + place.group) !== t('nav.' + place.item)) {
+          <li class="truncate">{{ t('nav.groups.' + place.group) }}</li>
+          <li aria-hidden="true">/</li>
+        }
+        <li class="truncate text-body" aria-current="page">{{ t('nav.' + place.item) }}</li>
+      </ol>
+    </nav>
+  }
+</ng-container>

@@ -57,3 +57,27 @@ export const Navigation: readonly NavGroup[] = [
     items: [{ route: '/steward/proposals', label: 'proposals', icon: 'proposals', waiting: 'proposals' }],
   },
 ];
+
+/** Where a url is, by the model's own labels: the group and the screen. */
+export interface Crumbs {
+  readonly group: string;
+  readonly item: string;
+  readonly route: string;
+}
+
+/**
+ * The group and the screen a url belongs to — the longest route that is the url or
+ * its parent — or null where there is no screen: the sign-in, an unknown address.
+ * The header's breadcrumbs read it, so they come from the same list as the rail.
+ */
+export function crumbsOf(url: string): Crumbs | null {
+  const path = url.split(/[?#]/)[0];
+  let found: Crumbs | null = null;
+  for (const group of Navigation)
+    for (const item of group.items) {
+      const here = path === item.route || path.startsWith(item.route + '/');
+      if (here && (!found || item.route.length > found.route.length))
+        found = { group: group.label, item: item.label, route: item.route };
+    }
+  return found;
+}

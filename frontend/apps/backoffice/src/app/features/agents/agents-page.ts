@@ -5,6 +5,7 @@ import { AgentList } from './agent-list/agent-list';
 import { AgentPane } from './agent-pane/agent-pane';
 import { AgentRegister } from './agent-register/agent-register';
 import { AgentsStore } from './agents.store';
+import { SidePaneContent } from '../../shell/side-pane/side-pane';
 
 /**
  * The agents a shop vouches for (P11-6), as R-3 drew the lists of work (R-4.3).
@@ -17,7 +18,7 @@ import { AgentsStore } from './agents.store';
  */
 @Component({
   selector: 'backoffice-agents',
-  imports: [TranslocoDirective, ConfirmDialog, AgentList, AgentRegister, AgentPane],
+  imports: [SidePaneContent, TranslocoDirective, ConfirmDialog, AgentList, AgentRegister, AgentPane],
   templateUrl: './agents-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list, the form and the pane have of their own is in their

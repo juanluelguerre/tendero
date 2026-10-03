@@ -139,6 +139,7 @@
   },
   "nav": {
     "agents": "Registry",
+    "breadcrumbs": "Breadcrumb",
     "attributes": "Attributes",
     "audit": "Audit",
     "catalogue": "Products",

@@ -6,6 +6,7 @@ import { ClaimList } from './claim-list/claim-list';
 import { ClaimPane } from './claim-pane/claim-pane';
 import { ClaimsBulkReview } from './claims-bulk-review/claims-bulk-review';
 import { ClaimsReviewStore } from './claims-review.store';
+import { SidePaneContent } from '../../shell/side-pane/side-pane';
 
 /**
  * Claims a model proposed and a person decides (phase 10, ADR 0018), as R-3
@@ -22,7 +23,7 @@ import { ClaimsReviewStore } from './claims-review.store';
  */
 @Component({
   selector: 'backoffice-claims-review-page',
-  imports: [ClaimList, ClaimPane, ClaimsBulkReview],
+  imports: [SidePaneContent, ClaimList, ClaimPane, ClaimsBulkReview],
   templateUrl: './claims-review-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list and the pane have of their own is in their folders.

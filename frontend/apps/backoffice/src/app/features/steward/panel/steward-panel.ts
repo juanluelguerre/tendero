@@ -49,6 +49,7 @@ import { StewardWait } from './steward-wait/steward-wait';
     StewardMarkdown,
   ],
   templateUrl: './steward-panel.html',
+  styleUrl: './steward-panel.css',
   host: { class: 'block' },
 })
 export class StewardPanel {

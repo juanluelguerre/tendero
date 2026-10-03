@@ -1,6 +1,6 @@
 /* Styled with utilities in the template (ADR 0049). What stays is the host's
-   frame, because the pane itself is the landmark: beside the list from 1024 px,
-   a sheet over it below. */
+   frame, because the pane itself is the landmark: a column in the shell's slot from
+   1024 px, a sheet over the list below. */
 :host {
   display: flex;
   flex-direction: column;
@@ -11,13 +11,17 @@
   background: var(--color-surface);
 }
 
-/* Beside the list, keeping its place while the list scrolls. */
+/* In the shell's slot from 1024 px: a column of the window's height under the header,
+   like Steward's, scrolling on its own. */
 @media (min-width: 64rem) {
   :host {
-    position: sticky;
-    top: calc(3.5rem + var(--spacing-4));
-    max-height: calc(100dvh - 3.5rem - var(--spacing-6));
+    box-sizing: border-box;
+    width: var(--container-panel);
+    height: 100%;
     overflow-y: auto;
+    border: 0;
+    border-inline-start: 1px solid var(--color-hairline);
+    border-radius: 0;
   }
 }
 

@@ -6,6 +6,7 @@ import { CampaignEditor } from './campaign-editor/campaign-editor';
 import { CampaignList } from './campaign-list/campaign-list';
 import { inCulture } from './campaign-state';
 import { CampaignsStore } from './campaigns.store';
+import { SidePaneContent } from '../../shell/side-pane/side-pane';
 
 /**
  * The shop's campaigns (R-8, H-1b) — named windows over promotions, set here
@@ -19,7 +20,7 @@ import { CampaignsStore } from './campaigns.store';
  */
 @Component({
   selector: 'backoffice-campaigns-page',
-  imports: [TranslocoDirective, WorklistPane, CampaignList, CampaignEditor],
+  imports: [SidePaneContent, TranslocoDirective, WorklistPane, CampaignList, CampaignEditor],
   providers: [CampaignsStore],
   templateUrl: './campaigns-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist

@@ -4,6 +4,7 @@ import { landing, stepOf } from '../../worklist/list-keys';
 import { ReviewList } from './review-list/review-list';
 import { ReviewPane } from './review-pane/review-pane';
 import { ReviewQueueStore } from './review-queue.store';
+import { SidePaneContent } from '../../shell/side-pane/side-pane';
 
 /**
  * The review queue: what is imported, or withdrawn, waits here in Draft, and
@@ -23,7 +24,7 @@ import { ReviewQueueStore } from './review-queue.store';
  */
 @Component({
   selector: 'backoffice-review-queue-page',
-  imports: [ReviewList, ReviewPane],
+  imports: [SidePaneContent, ReviewList, ReviewPane],
   templateUrl: './review-queue-page.html',
   // The page is a frame: the list-and-pane layout is shared by every worklist
   // (styles.css), and what the list and the pane have of their own is in their folders.
