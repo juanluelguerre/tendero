@@ -22,6 +22,7 @@ measured with it.
 |---|---|---|---|---|---|---|---|---|---|
 | **local** — Qwen3.5-4B Q8, llama.cpp `server-v0.5.0`, 12 CPUs, 6 GB, 8,192 window | **22/24 (92 %)** | 100 % | 96 % | 96 % | 22.5 s | 132 s | 4,195 | 5,996 | 0 |
 | hosted (S-7) | | | | | | | | | |
+| small — Phi-4-mini Q8 (MIT), same llama.cpp and settings | **1/24 (4 %)**, not a verdict on the model: **its tools never reached it** | 8 % | 8 % | 75 % (only "never approves" passes) | 4.0 s | 8.7 s | 311 | 375 | 0 |
 | small model (S-7) | | | | | | | | | |
 
 Measured on 2026-10-03, on the author's machine (16 CPUs), the development
@@ -51,3 +52,21 @@ Three bugs, all in the shipped Steward, none visible to a test before: the tool
 schemas the OpenAI client and llama.cpp refused (every turn against a real model
 failed), and the container's prompt cache that would have had the kernel kill it
 a few turns in. `steward-model-sizing.md` and the notebook tell both.
+
+## Phi-4-mini: not measurable as served (2026-10-03)
+
+`bartowski/microsoft_Phi-4-mini-instruct-GGUF` Q8_0 (4.08 GB; base model MIT),
+under the same llama.cpp image and flags as the local profile. One case of 24
+passes, and the reason is not the model: a direct request with one tool had a
+prompt of **9 tokens** — the tool never reached the model, which answered that it
+had no access to sales data. The template embedded in the GGUF renders tools only
+from a `tools` key *inside the system message* (`'<|tool|>' + message['tools']`);
+llama.cpp, given the OpenAI-style `tools` list, hands them to the template as a
+variable the template never reads. Every turn is therefore ~300 tokens, against
+the 1,700 of the Qwen run, and the 4 s median is the speed of a model that was
+asked nothing.
+
+Using it would mean our own chat template, and a parser for its `<|tool_call|>`
+output, which llama.cpp does not know for this template: work on the serving,
+not a measurement. Not done. The next small model to try is one whose template
+llama.cpp already speaks, such as Qwen3-1.7B.
