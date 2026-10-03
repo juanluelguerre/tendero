@@ -249,6 +249,24 @@ public sealed class TrackingPlanTests
             $"Dashboards read series no live metric produces: {string.Join(", ", read.Except(served).Order())}.");
     }
 
+    /// <summary>
+    /// The GenAI conventions' series carry every operation the port makes — chats and
+    /// embeddings alike — so a panel that reads one without naming the operation
+    /// mixes a millisecond embedding into a turn's latency (review of S-6).
+    /// </summary>
+    [Fact]
+    public void Every_gen_ai_series_a_dashboard_reads_names_its_operation()
+    {
+        var unnamed = Directory.GetFiles(
+                Path.Combine(RepositoryRoot(), "src", "AppHost", "observability", "dashboards"), "*.json")
+            .SelectMany(file => Regex.Matches(File.ReadAllText(file), @"\bgen_ai_client_[a-z_]+(\{[^}]*\})?")
+                .Select(match => $"{Path.GetFileName(file)}: {match.Value}"))
+            .Where(read => !read.Contains("gen_ai_operation_name", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.True(unnamed.Count == 0, $"Read without an operation: {string.Join("; ", unnamed)}.");
+    }
+
     private static IEnumerable<string> PrometheusNames(Signal metric)
     {
         var name = metric.Name.Replace('.', '_');
