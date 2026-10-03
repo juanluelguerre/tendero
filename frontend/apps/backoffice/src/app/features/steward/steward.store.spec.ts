@@ -135,11 +135,17 @@ describe('the steward store', () => {
     store.ask('Two', screen);
     http
       .expectOne((req) => req.url === Turns)
-      .flush(answer(null, { status: 'Unavailable', cost: null, fellBack: true }));
+      .flush(answer(null, { status: 'Unavailable', cost: null, profile: null, fellBack: true }));
 
     expect(telemetry.trackEvent.mock.calls).toEqual([
-      ['steward_answered', { status: 'answered', tools: 1, proposals: 1, calls: 2, cost: 2100, fell_back: false }],
-      ['steward_answered', { status: 'unavailable', tools: 0, proposals: 0, calls: 0, cost: 0, fell_back: true }],
+      [
+        'steward_answered',
+        { status: 'answered', tools: 1, proposals: 1, calls: 2, cost: 2100, profile: 'local', fell_back: false },
+      ],
+      [
+        'steward_answered',
+        { status: 'unavailable', tools: 0, proposals: 0, calls: 0, cost: 0, profile: 'none', fell_back: true },
+      ],
       ['steward_unavailable', { fell_back: true }],
     ]);
   });

@@ -114,11 +114,19 @@ describe('the proposals store', () => {
   it('reports a decision taken in the pane as a batch of one', async () => {
     const store = await at('/?proposal=p1');
     store.approve(proposal('p1'));
-    http.expectOne(`${Proposals}/approve`).flush({ rows: [] });
+    http.expectOne(`${Proposals}/approve`).flush({ rows: [{ id: 'p1', outcome: 'Applied', reason: null }] });
 
     expect(telemetry.trackEvent.mock.calls).toEqual([
       ['proposals_reviewed', { kind: 'proposals', proposed: 1, approved: 1, rejected: 0, unticked: 0 }],
     ]);
+  });
+
+  it('reports nothing when the decision in the pane did not go through', async () => {
+    const store = await at('/?proposal=p1');
+    store.approve(proposal('p1'));
+    http.expectOne(`${Proposals}/approve`).flush('taken', { status: 409, statusText: 'Conflict' });
+
+    expect(telemetry.trackEvent).not.toHaveBeenCalled();
   });
 
   it('rejects with the reason the person gave', async () => {

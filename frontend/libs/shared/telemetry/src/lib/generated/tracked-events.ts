@@ -247,12 +247,14 @@ export interface TrackedEvents {
     readonly calls: number;
     /** What the turn cost, in micro-euros; 0 on a local profile. */
     readonly cost: number;
+    /** The profile that answered, as configured (local, a hosted one's name): a handful, set by the shop. none when no profile answered; which one failed is the metric tendero.ai.calls, by profile and outcome. */
+    readonly profile: string;
     /** Whether a profile after the first answered. */
     readonly fell_back: boolean;
   };
 
   /**
-   * A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. The counts, never what they said.
+   * A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. Sent once the server answered, counting what it did to each row; the counts, never what they said.
    *
    * Steward: Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all?
    * Decides: Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared.
@@ -260,13 +262,13 @@ export interface TrackedEvents {
   readonly proposals_reviewed: {
     /** Steward's proposals, or a product's claims (S-5). */
     readonly kind: 'proposals' | 'claims';
-    /** How many the review showed waiting. */
+    /** How many the review showed waiting, counted by the batch's first decision: a reject after an approve of the same batch sends 0. */
     readonly proposed: number;
-    /** How many this decision approved. */
+    /** How many this decision approved, as the server answered: a stale or failed row is not one. */
     readonly approved: number;
     /** How many it rejected. */
     readonly rejected: number;
-    /** How many the person unticked: a rubber stamp leaves this at zero, batch after batch. */
+    /** How many the person unticked, counted by the batch's first decision like proposed: a rubber stamp leaves this at zero, batch after batch. */
     readonly unticked: number;
   };
 

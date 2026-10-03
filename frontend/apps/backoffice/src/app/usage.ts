@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import type { StewardAnswer } from '@tendero/shared-api';
+import type { ProposalDecisionsResponse, StewardAnswer } from '@tendero/shared-api';
 import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
 import { type MonoTypeOperatorFunction, tap } from 'rxjs';
 
@@ -128,6 +128,7 @@ export class BackofficeUsage {
       proposals: answer.proposalIds.length,
       calls: answer.cost?.calls ?? 0,
       cost: answer.cost?.microEuros ?? 0,
+      profile: answer.profile ?? 'none',
       fell_back: answer.fellBack,
     });
     if (answer.status === 'Unavailable')
@@ -137,6 +138,15 @@ export class BackofficeUsage {
   /** A batch a model proposed, decided through the review: reviewed, or stamped? */
   proposalsReviewed(kind: ReviewedKind, counts: Reviewed): void {
     this.telemetry.trackEvent('proposals_reviewed', { kind, ...counts });
+  }
+
+  /** Steward's proposals decided, counted from what the server did to each row. */
+  proposalsDecided(answer: ProposalDecisionsResponse, shown: Pick<Reviewed, 'proposed' | 'unticked'>): void {
+    this.proposalsReviewed('proposals', {
+      ...shown,
+      approved: answer.rows.filter((row) => row.outcome === 'Applied').length,
+      rejected: answer.rows.filter((row) => row.outcome === 'Rejected').length,
+    });
   }
 
   /** Something reached through the palette or a list shortcut (R-4.6): are they used? */

@@ -32,6 +32,8 @@ export const ProposalReviewStore = signalStore(
     untickedIds: [] as readonly string[],
     outcomes: {} as Readonly<Record<string, ProposalDecisionView>>,
     busy: false,
+    /** The batch's shown and unticked are counted by its first decision only. */
+    reported: false,
   }),
   withProps((store) => {
     const steward = inject(StewardService);
@@ -64,11 +66,24 @@ export const ProposalReviewStore = signalStore(
     };
   }),
   withMethods((store) => {
+    /**
+     * What a decision did, once the server answered it: the rows it applied or
+     * rejected, and — the first time only — how many the batch showed and how many
+     * the person unticked, so an approve and a reject of one batch count it once.
+     */
+    const report = (answer: ProposalDecisionsResponse, proposed: number, unticked: number) => {
+      const first = !store.reported();
+      store._usage.proposalsDecided(answer, { proposed: first ? proposed : 0, unticked: first ? unticked : 0 });
+      patchState(store, { reported: true });
+    };
+
     /** Sends a decision; `answered` runs once the server said what became of each row. */
     const decide = (decision: Observable<ProposalDecisionsResponse>, answered?: () => void) => {
+      const [proposed, unticked] = [store.waiting(), store.unticked()];
       patchState(store, { busy: true });
       decision.subscribe({
         next: (answer) => {
+          report(answer, proposed, unticked);
           patchState(store, (state) => ({
             busy: false,
             outcomes: { ...state.outcomes, ...Object.fromEntries(answer.rows.map((row) => [row.id, row])) },
@@ -87,7 +102,7 @@ export const ProposalReviewStore = signalStore(
     return {
       /** A new batch: every row ticked again, no result yet. */
       load(ids: readonly string[]): void {
-        patchState(store, { ids: [...ids], untickedIds: [], outcomes: {}, busy: false });
+        patchState(store, { ids: [...ids], untickedIds: [], outcomes: {}, busy: false, reported: false });
         store._batch.reload();
       },
       toggle(id: string): void {
@@ -99,12 +114,6 @@ export const ProposalReviewStore = signalStore(
       },
       approve(answered?: () => void): void {
         if (!store.canApprove()) return;
-        store._usage.proposalsReviewed('proposals', {
-          proposed: store.waiting(),
-          approved: store.selected(),
-          rejected: 0,
-          unticked: store.unticked(),
-        });
         decide(
           store._steward.approve(
             store
@@ -121,12 +130,6 @@ export const ProposalReviewStore = signalStore(
           .filter((row) => row.open && !row.ticked)
           .map((row) => row.proposal.id);
         if (ids.length === 0 || !reason.trim() || store.busy()) return;
-        store._usage.proposalsReviewed('proposals', {
-          proposed: store.waiting(),
-          approved: 0,
-          rejected: ids.length,
-          unticked: store.unticked(),
-        });
         decide(store._steward.reject(ids, reason.trim()), answered);
       },
     };

@@ -316,11 +316,12 @@ Answers:
 | `proposals` | number | — | How many proposals it stored. |
 | `calls` | number | — | Model calls the turn took, six at most. |
 | `cost` | number | — | What the turn cost, in micro-euros; 0 on a local profile. |
+| `profile` | string | — | The profile that answered, as configured (local, a hosted one's name): a handful, set by the shop. none when no profile answered; which one failed is the metric tendero.ai.calls, by profile and outcome. |
 | `fell_back` | boolean | — | Whether a profile after the first answered. |
 
 ### `proposals_reviewed`
 
-browser event, staff. A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. The counts, never what they said.
+browser event, staff. A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. Sent once the server answered, counting what it did to each row; the counts, never what they said.
 
 Answers:
 
@@ -329,10 +330,10 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `kind` | string | `proposals`, `claims` | Steward's proposals, or a product's claims (S-5). |
-| `proposed` | number | — | How many the review showed waiting. |
-| `approved` | number | — | How many this decision approved. |
+| `proposed` | number | — | How many the review showed waiting, counted by the batch's first decision: a reject after an approve of the same batch sends 0. |
+| `approved` | number | — | How many this decision approved, as the server answered: a stale or failed row is not one. |
 | `rejected` | number | — | How many it rejected. |
-| `unticked` | number | — | How many the person unticked: a rubber stamp leaves this at zero, batch after batch. |
+| `unticked` | number | — | How many the person unticked, counted by the batch's first decision like proposed: a rubber stamp leaves this at zero, batch after batch. |
 
 ### `steward_unavailable`
 

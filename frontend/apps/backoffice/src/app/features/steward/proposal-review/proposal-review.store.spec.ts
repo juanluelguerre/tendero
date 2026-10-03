@@ -79,19 +79,37 @@ describe('the proposal review store', () => {
     expect([store.selected(), store.unticked()]).toEqual([0, 1]);
   });
 
-  /** The counts that say whether a batch was reviewed or stamped (the tracking plan, proposals_reviewed). */
-  it('reports what each decision did to the batch', async () => {
+  /**
+   * The counts that say whether a batch was reviewed or stamped (the tracking plan,
+   * proposals_reviewed): what the server did, once it answered, and the batch's
+   * shown and unticked counted once — a reject after an approve adds only its own.
+   */
+  it('reports what each decision did to the batch, counting the batch once', async () => {
     const { store } = await reviewing([proposal('a'), proposal('b'), proposal('c')]);
     store.toggle('b');
     store.approve();
-    http.expectOne(`${Proposals}/approve`).flush({ rows: [] });
+    http.expectOne(`${Proposals}/approve`).flush({
+      rows: [
+        { id: 'a', outcome: 'Applied', reason: null },
+        { id: 'c', outcome: 'Stale', reason: null },
+      ],
+    });
     store.rejectUnticked('Too literal.');
-    http.expectOne(`${Proposals}/reject`).flush({ rows: [] });
+    http.expectOne(`${Proposals}/reject`).flush({ rows: [{ id: 'b', outcome: 'Rejected', reason: null }] });
 
     expect(telemetry.trackEvent.mock.calls).toEqual([
-      ['proposals_reviewed', { kind: 'proposals', proposed: 3, approved: 2, rejected: 0, unticked: 1 }],
-      ['proposals_reviewed', { kind: 'proposals', proposed: 3, approved: 0, rejected: 1, unticked: 1 }],
+      ['proposals_reviewed', { kind: 'proposals', proposed: 3, approved: 1, rejected: 0, unticked: 1 }],
+      ['proposals_reviewed', { kind: 'proposals', proposed: 0, approved: 0, rejected: 1, unticked: 0 }],
     ]);
+  });
+
+  /** A decision the server did not take was not a review. */
+  it('reports nothing when the decision did not go through', async () => {
+    const { store } = await reviewing([proposal('a')]);
+    store.approve();
+    http.expectOne(`${Proposals}/approve`).flush('down', { status: 503, statusText: 'Unavailable' });
+
+    expect(telemetry.trackEvent).not.toHaveBeenCalled();
   });
 
   it('rejects the unticked ones with the reason given', async () => {

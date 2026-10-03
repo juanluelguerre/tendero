@@ -87,12 +87,7 @@ export const ClaimsBulkReviewStore = signalStore(
     approve(answered?: () => void): void {
       if (!store.canApprove()) return;
       // The weak ones were proposed too, and could not go together: they count as shown, not as unticked.
-      store._usage.proposalsReviewed('claims', {
-        proposed: store.together() + store.weak(),
-        approved: store.selected(),
-        rejected: 0,
-        unticked: store.together() - store.selected(),
-      });
+      const [proposed, unticked] = [store.together() + store.weak(), store.together() - store.selected()];
       patchState(store, { busy: true, approveFailed: false });
       store._knowledge
         .approveMany(
@@ -103,6 +98,12 @@ export const ClaimsBulkReviewStore = signalStore(
         )
         .subscribe({
           next: (answer) => {
+            store._usage.proposalsReviewed('claims', {
+              proposed,
+              approved: answer.rows.filter((row) => row.outcome === 'Approved').length,
+              rejected: 0,
+              unticked,
+            });
             patchState(store, (state) => ({
               busy: false,
               outcomes: {

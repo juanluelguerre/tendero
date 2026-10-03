@@ -821,6 +821,10 @@
           "type": "number",
           "description": "What the turn cost, in micro-euros; 0 on a local profile."
         },
+        "profile": {
+          "type": "string",
+          "description": "The profile that answered, as configured (local, a hosted one's name): a handful, set by the shop. none when no profile answered; which one failed is the metric tendero.ai.calls, by profile and outcome."
+        },
         "fell_back": {
           "type": "boolean",
           "description": "Whether a profile after the first answered."
@@ -829,7 +833,7 @@
     },
     {
       "name": "proposals_reviewed",
-      "description": "A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. The counts, never what they said.",
+      "description": "A batch a model proposed was decided through the review: Steward's proposals, or a product's claims together. Sent once the server answered, counting what it did to each row; the counts, never what they said.",
       "consent": "staff",
       "attributes": {
         "kind": {
@@ -842,11 +846,11 @@
         },
         "proposed": {
           "type": "number",
-          "description": "How many the review showed waiting."
+          "description": "How many the review showed waiting, counted by the batch's first decision: a reject after an approve of the same batch sends 0."
         },
         "approved": {
           "type": "number",
-          "description": "How many this decision approved."
+          "description": "How many this decision approved, as the server answered: a stale or failed row is not one."
         },
         "rejected": {
           "type": "number",
@@ -854,7 +858,7 @@
         },
         "unticked": {
           "type": "number",
-          "description": "How many the person unticked: a rubber stamp leaves this at zero, batch after batch."
+          "description": "How many the person unticked, counted by the batch's first decision like proposed: a rubber stamp leaves this at zero, batch after batch."
         }
       }
     },

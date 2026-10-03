@@ -11,7 +11,7 @@ import {
   withState,
 } from '@ngrx/signals';
 import { extendResource } from '@ngrx/signals/resource';
-import type { ProposalFilter, ProposalView } from '@tendero/shared-api';
+import type { ProposalDecisionsResponse, ProposalFilter, ProposalView } from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { StewardService } from '../../../data-access/steward.service';
@@ -95,6 +95,12 @@ export const ProposalsStore = signalStore(
       store._list.reload();
     };
 
+    /** The pane decides a batch of one: reported once the server said what became of it. */
+    const decided = (proposal: ProposalView) => (answer: ProposalDecisionsResponse) => {
+      store._usage.proposalsDecided(answer, { proposed: 1, unticked: 0 });
+      settle(proposal);
+    };
+
     const failed = (proposal: ProposalView) => (failure: unknown) => {
       if (isSessionExpired(failure)) return;
       // A 409 or a refusal: somebody else decided it, or it changed. The list is
@@ -112,15 +118,11 @@ export const ProposalsStore = signalStore(
       },
       approve(proposal: ProposalView): void {
         patchState(store, { busy: proposal.id });
-        store._usage.proposalsReviewed('proposals', { proposed: 1, approved: 1, rejected: 0, unticked: 0 });
-        store._steward.approve([proposal.id]).subscribe({ next: () => settle(proposal), error: failed(proposal) });
+        store._steward.approve([proposal.id]).subscribe({ next: decided(proposal), error: failed(proposal) });
       },
       reject(proposal: ProposalView, reason: string): void {
         patchState(store, { busy: proposal.id });
-        store._usage.proposalsReviewed('proposals', { proposed: 1, approved: 0, rejected: 1, unticked: 0 });
-        store._steward
-          .reject([proposal.id], reason)
-          .subscribe({ next: () => settle(proposal), error: failed(proposal) });
+        store._steward.reject([proposal.id], reason).subscribe({ next: decided(proposal), error: failed(proposal) });
       },
     };
   }),

@@ -90,7 +90,7 @@ describe('the claims bulk review store', () => {
     const { store } = await reviewing([claim('a'), claim('b', true), claim('c')]);
     store.toggle('c');
     store.approve();
-    http.expectOne(`${Claims}/approve`).flush({ rows: [] });
+    http.expectOne(`${Claims}/approve`).flush({ rows: [{ claimId: 'a', outcome: 'Approved' }] });
 
     expect(telemetry.trackEvent.mock.calls).toEqual([
       ['proposals_reviewed', { kind: 'claims', proposed: 3, approved: 1, rejected: 0, unticked: 1 }],
@@ -104,6 +104,7 @@ describe('the claims bulk review store', () => {
     http.expectOne(`${Claims}/approve`).flush('down', { status: 503, statusText: 'Unavailable' });
 
     expect(store.approveFailed()).toBe(true);
+    expect(telemetry.trackEvent).not.toHaveBeenCalled();
   });
 
   /** A product with weak claims only: nothing goes together, the weak one is the way on. */
