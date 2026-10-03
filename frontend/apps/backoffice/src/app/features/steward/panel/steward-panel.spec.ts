@@ -5,11 +5,12 @@ import { provideRouter } from '@angular/router';
 import type { StewardAnswer } from '@tendero/shared-api';
 import { provideTenderoI18n } from '@tendero/shared-i18n';
 import { API_BASE_URL } from '@tendero/shared-util';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StewardStore } from '../steward.store';
 import { StewardPanel } from './steward-panel';
 
 const Turns = 'http://api/api/steward/turns';
+const scrolledIntoView = vi.fn();
 const Proposals = 'http://api/api/steward/proposals';
 
 const answer = (extra: Partial<StewardAnswer>): StewardAnswer => ({
@@ -34,7 +35,7 @@ describe('the steward panel', () => {
       this.open = true;
     };
     // jsdom lays nothing out, so it has nothing to scroll into view.
-    Element.prototype.scrollIntoView ??= () => undefined;
+    Element.prototype.scrollIntoView = scrolledIntoView;
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
@@ -71,6 +72,52 @@ describe('the steward panel', () => {
     expect(element.textContent).toContain('steward.read');
     expect(element.textContent).toContain('Twelve have no English name.');
     expect(element.textContent).toContain('steward.cost');
+  });
+
+  /** What the model writes with Markdown is drawn as such, and markup it writes stays text. */
+  it("draws the answer's Markdown: bold, a list and a table, and never its HTML", async () => {
+    const element = await asked(
+      answer({
+        text: 'Hay **22 productos**.\n\n1. Uno\n2. Dos\n\n| Producto | Ventas |\n|---|---|\n| Bolsa | 10 € |\n\n<img src=x onerror=alert(1)>',
+      }),
+    );
+
+    expect(element.querySelector('strong')?.textContent).toBe('22 productos');
+    expect([...element.querySelectorAll('ol li')].map((item) => item.textContent?.trim())).toEqual(['Uno', 'Dos']);
+    expect(element.querySelector('table td')?.textContent?.trim()).toBe('Bolsa');
+    expect(element.querySelector('img')).toBeNull();
+    expect(element.textContent).toContain('<img src=x onerror=alert(1)>');
+  });
+
+  /** scrollIntoView scrolls the page too, and left the backoffice scrolled to its end with a blank below (author's run, 2026-10-03). */
+  it('scrolls its own conversation to the new question and never the page', async () => {
+    scrolledIntoView.mockClear();
+
+    await asked(answer({}));
+
+    expect(scrolledIntoView).not.toHaveBeenCalled();
+  });
+
+  /** A disabled field loses the focus, and nobody gave it back: the next question needed a click. */
+  it('keeps the composer for the next question while an answer is on its way, and gets the focus back after it', async () => {
+    const fixture = TestBed.createComponent(StewardPanel);
+    fixture.detectChanges();
+    for (const translations of http.match((req) => req.url.includes('/i18n/'))) translations.flush({});
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    const composer = (fixture.nativeElement as HTMLElement).querySelector('textarea') as HTMLTextAreaElement;
+    composer.focus();
+
+    TestBed.inject(StewardStore).ask('One', null);
+    fixture.detectChanges();
+    expect(composer.disabled).toBe(false);
+
+    composer.blur();
+    http.expectOne((req) => req.url === Turns).flush(answer({}));
+    fixture.detectChanges();
+    TestBed.tick();
+
+    expect(document.activeElement).toBe(composer);
   });
 
   it('brings the proposals as a card, read by their ids', async () => {

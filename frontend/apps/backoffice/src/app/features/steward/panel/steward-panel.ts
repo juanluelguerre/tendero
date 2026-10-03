@@ -6,6 +6,7 @@ import {
   type ElementRef,
   inject,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -21,6 +22,7 @@ import { screenOf } from '../screen-context';
 import { StewardDoorStore } from '../steward-door.store';
 import { StewardStore } from '../steward.store';
 import { CostLinePipe } from './cost-line.pipe';
+import { StewardMarkdown } from './steward-markdown/steward-markdown';
 import { StewardWait } from './steward-wait/steward-wait';
 
 /**
@@ -35,7 +37,17 @@ import { StewardWait } from './steward-wait/steward-wait';
  */
 @Component({
   selector: 'backoffice-steward-panel',
-  imports: [TranslocoDirective, RouterLink, Icon, Notice, ProposalCard, ProposalReview, CostLinePipe, StewardWait],
+  imports: [
+    TranslocoDirective,
+    RouterLink,
+    Icon,
+    Notice,
+    ProposalCard,
+    ProposalReview,
+    CostLinePipe,
+    StewardWait,
+    StewardMarkdown,
+  ],
   templateUrl: './steward-panel.html',
   host: { class: 'block' },
 })
@@ -78,19 +90,35 @@ export class StewardPanel {
     // The newest question at the top of the view as it is asked (the DOM's, so an
     // effect): its answer, and a card that loads after it, grow below it in sight.
     // Scrolling to the bottom instead left a card that arrived later under the fold.
+    // The conversation's own scroll, never scrollIntoView: that scrolls every
+    // ancestor, the page included, and left the backoffice scrolled to its end.
     effect(() => {
       const asked = this.store.exchanges().length;
       const element = this.conversation()?.nativeElement;
       if (!element || asked === 0) return;
       queueMicrotask(() => {
         const questions = element.querySelectorAll('[data-question]');
-        questions[questions.length - 1]?.scrollIntoView({ block: 'start' });
+        const last = questions[questions.length - 1];
+        if (!last) return;
+        const padding = Number.parseFloat(getComputedStyle(element).paddingTop) || 0;
+        element.scrollTop += last.getBoundingClientRect().top - element.getBoundingClientRect().top - padding;
+      });
+    });
+
+    // The composer is for the next question: once an answer is in, it has the focus
+    // again unless the person went somewhere else (the review's dialog has its own).
+    effect(() => {
+      if (this.store.busy()) return;
+      const composer = this.composer()?.nativeElement;
+      untracked(() => {
+        const active = document.activeElement;
+        if (composer && (!active || active === document.body)) composer.focus();
       });
     });
   }
 
   protected send(): void {
-    if (!this.draft().trim()) return;
+    if (!this.draft().trim() || this.store.busy()) return;
     this.store.ask(this.draft(), this.screen());
     this.draft.set('');
   }

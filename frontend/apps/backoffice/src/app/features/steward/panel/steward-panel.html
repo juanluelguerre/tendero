@@ -80,7 +80,7 @@
 
                 @switch (answer.status) {
                   @case ('Answered') {
-                    <p class="m-0 whitespace-pre-line">{{ answer.text }}</p>
+                    <backoffice-steward-markdown [text]="answer.text ?? ''" />
                   }
                   @case ('Unavailable') {
                     <lib-notice tone="warn">
@@ -192,7 +192,6 @@
             #composer
             [placeholder]="t('steward.placeholder')"
             [value]="draft()"
-            [disabled]="store.busy()"
             (input)="draft.set($any($event.target).value)"
             (keydown)="keyed($event)"
           ></textarea>
