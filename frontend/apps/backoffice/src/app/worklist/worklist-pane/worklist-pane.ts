@@ -1,6 +1,7 @@
-import { afterRenderEffect, Component, type ElementRef, input, output, viewChild } from '@angular/core';
+import { afterRenderEffect, Component, type ElementRef, inject, input, output, viewChild } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Icon } from '@tendero/shared-ui';
+import { SidePane } from '../../shell/side-pane/side-pane';
 
 let panes = 0;
 
@@ -33,8 +34,11 @@ export class WorklistPane {
   private readonly title = viewChild.required<ElementRef<HTMLElement>>('title');
 
   constructor() {
+    const slot = inject(SidePane);
     afterRenderEffect(() => {
       this.heading();
+      // A new item picked while Steward holds the room brings its pane back.
+      slot.reveal();
       this.title().nativeElement.focus();
     });
   }

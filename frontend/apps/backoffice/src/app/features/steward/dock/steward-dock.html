@@ -9,7 +9,7 @@
     <!-- The sheet: a modal dialog, full screen. Esc closes it through its own
          close event, which closes the door too. -->
     <dialog
-      class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-surface p-0 text-body"
+      class="m-0 ms-auto h-dvh max-h-none w-full max-w-none border-0 bg-surface p-0 text-body md:w-panel md:border-s md:border-hairline"
       #sheet
       (close)="door.close()"
       [attr.aria-label]="name()"

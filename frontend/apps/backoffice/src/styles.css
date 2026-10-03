@@ -54,10 +54,10 @@
     scrollbar-gutter: stable;
   }
 
-  /* From 1024 px the shell is the frame of the window and the page does not scroll —
+  /* From 85 rem the shell is the frame of the window and the page does not scroll —
      the screen and the panes each do, see the shell — so there is no scrollbar to keep
      room for: the reserved gutter showed as a dark strip beside the panel. */
-  @media (min-width: 64rem) {
+  @media (min-width: 85rem) {
     html:has(backoffice-shell.with-rail) {
       overflow: hidden;
       scrollbar-gutter: auto;

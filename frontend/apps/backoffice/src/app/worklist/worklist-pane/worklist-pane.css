@@ -11,9 +11,9 @@
   background: var(--color-surface);
 }
 
-/* In the shell's slot from 1024 px: a column of the window's height under the header,
-   like Steward's, scrolling on its own. */
-@media (min-width: 64rem) {
+/* Docked in the shell's slot from 85 rem: a column of the window's height under the
+   header, like Steward's, scrolling on its own. */
+@media (min-width: 85rem) {
   :host {
     box-sizing: border-box;
     width: var(--container-panel);
@@ -25,8 +25,25 @@
   }
 }
 
-/* Below 1024 px a sheet over the list, and Back returns to it. */
-@media (max-width: 63.99rem) {
+/* From 48 rem to 85: a drawer over the page, from the right. */
+@media (min-width: 48rem) and (max-width: 84.99rem) {
+  :host {
+    box-sizing: border-box;
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 4;
+    width: min(var(--container-panel), 100vw);
+    overflow-y: auto;
+    border: 0;
+    border-inline-start: 1px solid var(--color-hairline-strong);
+    border-radius: 0;
+    box-shadow: var(--shadow-pop);
+  }
+}
+
+/* A phone: a sheet over the list, and Back returns to it. */
+@media (max-width: 47.99rem) {
   :host {
     position: fixed;
     inset: 0;
@@ -34,5 +51,18 @@
     overflow-y: auto;
     border: 0;
     border-radius: 0;
+  }
+}
+
+/* Back is for the sheet; beside or over the page, Close says it. */
+@media (min-width: 48rem) {
+  .pane__back {
+    display: none;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  .pane__close {
+    display: none;
   }
 }

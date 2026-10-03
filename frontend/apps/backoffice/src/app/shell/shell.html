@@ -148,7 +148,9 @@
 
     <!-- The pane of the open item of a list (*backofficeSidePane), beside the screen
          and at Steward's left; empty, it takes no room. -->
-    <div class="side-slot"><ng-container *ngTemplateOutlet="sidePane.template()" /></div>
+    <div class="side-slot" [class.side-slot--yields]="sidePane.yields()">
+      <ng-container *ngTemplateOutlet="sidePane.template()" />
+    </div>
   }
 
   @if (canUseBackoffice()) {
