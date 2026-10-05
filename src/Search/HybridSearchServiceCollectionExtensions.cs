@@ -41,6 +41,9 @@ public static class HybridSearchServiceCollectionExtensions
         services.TryAddKeyedScoped<ISearchStrategy, LexicalSearchStrategy>(SearchStrategies.Lexical);
         services.TryAddKeyedScoped<ISearchStrategy, HybridSearchStrategy>(SearchStrategies.Hybrid);
 
+        // The shop's search as the storefront's assistant reads it (phase 12b, ADR 0054).
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<SharedKernel.IReadTool, Features.SearchProducts.SearchProductsTool>());
+
         return services;
     }
 }
