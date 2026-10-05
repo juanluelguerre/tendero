@@ -120,16 +120,49 @@ public sealed class ReadToolTests
         Assert.Contains("Limit is at most 50.", failure.Message);
     }
 
+    /// <summary>A read whose answer is figures hands an answer nothing to cite: Steward's six.</summary>
+    [Fact]
+    public async Task A_read_has_no_facts_unless_its_tool_says_them()
+    {
+        var answer = await Tool().ReadAsync(Arguments("""{"shelf":"A","limit":2}"""), TestContext.Current.CancellationToken);
+
+        Assert.Empty(answer.Facts!);
+    }
+
+    [Fact]
+    public async Task A_tool_that_says_facts_hands_them_over_with_their_subject_and_source()
+    {
+        var answer = await Tool<LabelledShelfTool>().ReadAsync(Arguments("""{"shelf":"A","limit":1}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            [new Fact("A-1", FactSource.DataSheet, "Shelf: A"), new Fact(Fact.TheShop, FactSource.Policy, "A-1 goes back within 30 days.")],
+            answer.Facts);
+    }
+
+    /// <summary>An answer's citations are an enum of the facts read: a read cannot hand over a thousand.</summary>
+    [Fact]
+    public async Task No_more_facts_than_the_limit_and_the_first_ones()
+    {
+        var answer = await Tool<LabelledShelfTool>().ReadAsync(Arguments("""{"shelf":"A","limit":50}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal(ReadLimits.MaxFacts, answer.Facts!.Count);
+        Assert.Equal("Shelf: A", answer.Facts[0].Text);
+        Assert.Equal("A-30 goes back within 30 days.", answer.Facts[^1].Text);
+    }
+
     // ---------- fixtures ----------
 
     private static JsonElement Arguments(string json) => JsonDocument.Parse(json).RootElement.Clone();
 
-    private static IReadTool Tool()
+    private static IReadTool Tool() => Tool<ShelfTool>();
+
+    private static IReadTool Tool<TTool>()
+        where TTool : class, IReadTool
     {
         var services = new ServiceCollection();
         services.AddTenderoCqrs(typeof(ReadToolTests).Assembly);
-        services.AddScoped<ShelfTool>();
-        return services.BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<ShelfTool>();
+        services.AddScoped<TTool>();
+        return services.BuildServiceProvider().CreateScope().ServiceProvider.GetRequiredService<TTool>();
     }
 
     private enum Side { Front, Back }
@@ -153,7 +186,7 @@ public sealed class ReadToolTests
             Task.FromResult(new ShelfPage([.. Enumerable.Range(1, query.Limit).Select(index => $"{query.Shelf}-{index}")], 5));
     }
 
-    private sealed class ShelfTool(IQueryDispatcher queries) : ReadTool<ShelfArguments, ShelfView>(queries)
+    private class ShelfTool(IQueryDispatcher queries) : ReadTool<ShelfArguments, ShelfView>(queries)
     {
         public override ToolAudience Audience => ToolAudience.Shopkeeper;
 
@@ -167,5 +200,18 @@ public sealed class ReadToolTests
             var page = await queries.SendAsync(new ShelfQuery(arguments.Shelf, arguments.Limit), cancellationToken);
             return (new ShelfView(page.Items), page.Items.Count, page.Total);
         }
+    }
+
+    /// <summary>The same read, saying two facts of each item: one about the item, one about the shop.</summary>
+    private sealed class LabelledShelfTool(IQueryDispatcher queries) : ShelfTool(queries)
+    {
+        protected override IReadOnlyList<Fact> Facts(ShelfView data) =>
+        [
+            .. data.Items.SelectMany(item => new[]
+            {
+                new Fact(item, FactSource.DataSheet, $"Shelf: {item[..1]}"),
+                new Fact(Fact.TheShop, FactSource.Policy, $"{item} goes back within 30 days."),
+            }),
+        ];
     }
 }

@@ -50,7 +50,46 @@ public enum ToolAudience
 /// <param name="Total">How many there were in all, when the read is capped.</param>
 /// <param name="Tables">What the panel draws from the same rows: built by code from the read, so
 /// what is shown is what was read and not the model's retelling of it.</param>
-public sealed record ReadAnswer(object Data, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null);
+/// <param name="Facts">What the read says that an answer may cite (phase 12b): each a
+/// sentence with what it is about and where it comes from.</param>
+public sealed record ReadAnswer(
+    object Data, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null, IReadOnlyList<Fact>? Facts = null);
+
+/// <summary>Where a fact comes from: what the shopper is shown beside a sentence that cites it.</summary>
+public enum FactSource
+{
+    /// <summary>A claim a person approved (Knowledge), with the quotes it rests on.</summary>
+    Claim,
+
+    /// <summary>A structured attribute of the product.</summary>
+    DataSheet,
+
+    /// <summary>A sentence of the product's description: published with the product, approved by nobody line by line.</summary>
+    Description,
+
+    /// <summary>A rule of the shop's own — its return policy.</summary>
+    Policy,
+
+    /// <summary>The asking shopper's own order.</summary>
+    Order,
+}
+
+/// <summary>
+/// One thing a read says, as a sentence an answer may cite (the Tino spec, *An
+/// answer*). The shopper's assistant says nothing that is not one of these: the
+/// model picks facts and phrases them, and code holds each sentence to the fact it
+/// names.
+/// </summary>
+/// <param name="Subject">What it is about: a product's code, or <see cref="TheShop"/>.</param>
+/// <param name="Text">The fact, in the read's culture: "Material: cast aluminium".</param>
+/// <param name="Quotes">For a claim, the evidence a person approved it on.</param>
+/// <param name="Support">For a claim, how well that evidence supports it, 0 to 1.</param>
+public sealed record Fact(
+    string Subject, FactSource Source, string Text, IReadOnlyList<string>? Quotes = null, double? Support = null)
+{
+    /// <summary>The subject of a fact that is about no product: a policy.</summary>
+    public const string TheShop = "SHOP";
+}
 
 /// <summary>How the panel formats a cell: a number in the reader's culture, money in the table's currency.</summary>
 public enum CellKind
@@ -128,6 +167,9 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
     /// <summary>What the panel draws of what was read; none when a read has no rows worth a table.</summary>
     protected virtual IReadOnlyList<ResultTable> Tables(TData data) => [];
 
+    /// <summary>What an answer may cite of what was read; none for a read whose answer is figures.</summary>
+    protected virtual IReadOnlyList<Fact> Facts(TData data) => [];
+
     public async Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default)
     {
         TArgs read;
@@ -144,7 +186,7 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
         try
         {
             var (data, rows, total) = await ReadAsync(read, queries, cancellationToken);
-            return new ReadAnswer(data, rows, total, Tables(data));
+            return new ReadAnswer(data, rows, total, Tables(data), [.. Facts(data).Take(ReadLimits.MaxFacts)]);
         }
         catch (ValidationException refused)
         {
