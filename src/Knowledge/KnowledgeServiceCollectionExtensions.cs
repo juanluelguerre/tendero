@@ -38,6 +38,10 @@ public static class KnowledgeServiceCollectionExtensions
 
         services.AddKeyedSingleton<IClaimExtractor, RulesClaimExtractor>(ClaimExtractors.Rules);
 
+        // What the storefront's assistant may read of the shop's knowledge (phase 12b,
+        // ADR 0054): the sheet the product page reads, a shopper's.
+        services.AddScoped<IReadTool, Features.ProductSpecs.ProductSpecsTool>();
+
         if (configuration[ExtractorEndpointKey] is { Length: > 0 } extractor)
         {
             // Traced and metered like every model call (ADR 0053): one row per
