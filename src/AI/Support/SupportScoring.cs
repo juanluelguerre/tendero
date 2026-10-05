@@ -70,6 +70,17 @@ public sealed class TeiRerankerSupportScorer(HttpClient http) : ISupportScorer
     private sealed record Rank([property: JsonPropertyName("index")] int Index, [property: JsonPropertyName("score")] double Score);
 }
 
+/// <summary>
+/// A scorer that answers the same for every pair — for tests only, as the Scripted
+/// model is (phase 12b): the browser spec runs Tino in CI, where no model fits, and
+/// what it proves is the wiring. What a real score does to an answer is measured
+/// (<c>docs/analysis/tino-models.md</c>) and unit-tested with scores of its own.
+/// </summary>
+public sealed class FixedSupportScorer(double support) : ISupportScorer
+{
+    public Task<double> ScoreAsync(string text, string claim, CancellationToken cancellationToken) => Task.FromResult(support);
+}
+
 public static class SupportServiceCollectionExtensions
 {
     /// <summary>Where the AppHost says the scorer's container answers, when it started it.</summary>
@@ -82,8 +93,16 @@ public static class SupportServiceCollectionExtensions
     /// fail every call, no address at all is no scorer, which each caller has an
     /// answer for.
     /// </summary>
+    /// <summary>A fixed score instead of a scorer: set only by a host that runs a scripted model.</summary>
+    public const string ScriptedKey = "Support:Scripted";
+
     public static IServiceCollection AddSupportScorer(this IServiceCollection services, IConfiguration configuration)
     {
+        // Only where there is no scorer to ask: an address always wins.
+        if (configuration[EndpointKey] is not { Length: > 0 }
+            && double.TryParse(configuration[ScriptedKey], System.Globalization.CultureInfo.InvariantCulture, out var scripted))
+            services.TryAddSingleton<ISupportScorer>(new FixedSupportScorer(scripted));
+
         if (configuration[EndpointKey] is { Length: > 0 } support)
         {
             // Its own HttpClient, not the factory's: the default resilience handler

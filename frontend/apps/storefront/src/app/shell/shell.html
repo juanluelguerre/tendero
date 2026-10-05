@@ -56,6 +56,34 @@
       <ng-container *ngTemplateOutlet="search; context: { $implicit: 'row' }" />
 
       <div class="ms-auto flex items-center gap-3 max-md:ms-0">
+        <!-- Tino's door (phase 12b), where Steward's is in the backoffice: before the
+             account, outlined in clay because it is an agent's, pressed while its
+             panel is open, its icon alone on a phone. Where Tino cannot be asked the
+             door stays, quiet, and says so: nobody is left wondering where it went. -->
+        @if (tino.unavailable()) {
+          <button
+            type="button"
+            class="inline-flex min-h-tap min-w-tap flex-none items-center justify-center gap-2 rounded-md border border-hairline bg-transparent px-3 text-sm text-muted hover:border-hairline-strong"
+            data-tino-door
+            [attr.aria-pressed]="tino.isOpen()"
+            (click)="tino.toggle()"
+          >
+            <lib-icon class="size-icon-sm" name="steward" />
+            <span class="max-md:sr-only">{{ t('tino.doorUnavailable') }}</span>
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="inline-flex min-h-tap min-w-tap flex-none items-center justify-center gap-2 rounded-md border border-accent bg-transparent px-3 text-sm font-medium text-accent hover:bg-accent-tint aria-pressed:bg-accent-tint"
+            data-tino-door
+            [attr.aria-pressed]="tino.isOpen()"
+            (click)="tino.toggle()"
+          >
+            <lib-icon class="size-icon-sm" name="steward" />
+            <span class="max-md:sr-only">{{ t('tino.door') }}</span>
+          </button>
+        }
+
         <!-- Who is shopping, the language and the theme: one menu at every
              width, as in the backoffice (the author, 2026-09-28). -->
         <storefront-account-menu />
@@ -250,6 +278,9 @@
       </button>
     </form>
   </ng-template>
+
+  <!-- Tino's panel: beside the page from 64 rem, a sheet below; the dock decides. -->
+  <storefront-tino-dock />
 
   <storefront-consent-banner />
 </ng-container>

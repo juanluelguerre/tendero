@@ -1,0 +1,30 @@
+<ng-container *transloco="let t">
+  <!-- The platform's own disclosure: a keyboard, a finger and a screen reader open it
+       the same way, and there is nothing to position. -->
+  <details class="text-2xs">
+    <summary
+      class="inline-flex min-h-target cursor-pointer list-none items-center gap-1 rounded-full border px-2 leading-body"
+      [class.border-hairline]="!approved()"
+      [class.bg-raised]="!approved()"
+      [class.text-muted]="!approved()"
+      [class.border-positive]="approved()"
+      [class.text-positive]="approved()"
+    >
+      {{ t('tino.source.' + reason().source) }}
+    </summary>
+    <div class="mt-1 grid gap-1 rounded-md border border-hairline bg-raised p-2 text-muted">
+      @if (approved() && reason().quotes.length > 0) {
+        <p class="m-0">{{ t('tino.source.quoteTitle') }}</p>
+        @for (quote of reason().quotes; track $index) {
+          <blockquote class="m-0 text-body">“{{ quote }}”</blockquote>
+        }
+        @if (percent(); as support) {
+          <p class="m-0">{{ t('tino.source.support', { percent: support }) }}</p>
+        }
+      } @else {
+        <p class="m-0">{{ t('tino.source.factTitle') }}</p>
+        <p class="m-0 text-body">{{ reason().fact }}</p>
+      }
+    </div>
+  </details>
+</ng-container>

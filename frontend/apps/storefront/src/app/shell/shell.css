@@ -14,3 +14,10 @@
   font-size: var(--text-lg);
   color: var(--color-brand);
 }
+
+/* Tino's panel sits beside the page, fixed, while it is open on a wide screen; the
+   page keeps its own width beside it instead of running under it. The host's look
+   that depends on a state, so it lives here (CLAUDE.md, *The host's own look*). */
+:host(.tino-docked) {
+  padding-inline-end: var(--container-panel);
+}

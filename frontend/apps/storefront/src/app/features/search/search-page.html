@@ -31,6 +31,16 @@
 
     @case ('listing') {
       @let result = listing.result();
+      @if (askTino()) {
+        <!-- Where search is weakest — nothing found, only what is near, or a question
+             rather than a product's name — the same words can be asked of Tino. -->
+        <p class="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted" data-ask-tino>
+          {{ t('tino.offer.lede') }}
+          <button type="button" class="button button--quiet" (click)="tino.ask(store.queryFromUrl().trim())">
+            {{ t('tino.offer.action') }}
+          </button>
+        </p>
+      }
       @if (result.status === 'failed') {
         <storefront-page-state class="mt-5" tone="bad" role="alert" [heading]="t('search.failedTitle')">
           <p class="muted">{{ t('search.failed') }}</p>

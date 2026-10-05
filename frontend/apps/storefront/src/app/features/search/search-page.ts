@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
@@ -7,6 +7,7 @@ import { Listing } from '../../listing/listing';
 import { ListingStore } from '../../listing/listing.store';
 import { ReturnsPolicyStore } from '../../returns/returns-policy.store';
 import { ShopLinks } from '../../shop-links';
+import { TinoDoorStore } from '../../tino/tino-door.store';
 import { HomeSections } from '../home/home-sections';
 import { SearchStore } from './search.store';
 import { Notice } from '@tendero/shared-ui';
@@ -20,6 +21,9 @@ import { PageState } from '../../page-state/page-state';
  * What the page shows is its store's and its listing's (ADR 0047); the page
  * words it: the heading, the day a campaign starts.
  */
+/** From this many words a query reads as a question, not a product's name. */
+const SentenceFrom = 4;
+
 @Component({
   selector: 'storefront-search-page',
   imports: [TranslocoDirective, RouterLink, HomeSections, Listing, Notice, PageState],
@@ -42,6 +46,21 @@ export class SearchPage {
   protected readonly links = inject(ShopLinks);
 
   private readonly culture = inject(CultureStore);
+
+  /** Tino's door, for the offer below the heading. */
+  protected readonly tino = inject(TinoDoorStore);
+
+  /**
+   * Whether to offer the same words to Tino (the Tino spec, *The conversation*):
+   * only where it can be asked, and where search is weakest — it found nothing, it
+   * found only what is near, or the words are a question more than a name.
+   */
+  protected readonly askTino = computed(() => {
+    const result = this.listing.result();
+    const words = this.store.queryFromUrl().trim();
+    if (this.tino.available() !== true || !words || result.status !== 'ready') return false;
+    return result.total === 0 || result.answer?.match === 'Related' || words.split(/\s+/).length >= SentenceFrom;
+  });
 
   /** The window the shop actually honours, read once and shared with the order
    *  page's own copy of this number (`ReturnsPolicyStore`). */

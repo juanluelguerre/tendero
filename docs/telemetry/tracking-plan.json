@@ -388,9 +388,13 @@
     {
       "name": "Tino",
       "area": "storefront",
-      "question": "Does Tino answer, with which kind of answer — and when it does not, why: no model, the model's failure, time, or the day's budget?",
-      "decision": "The turn's seconds and the shop's daily budget; the default profile and its fallback. A model failing often means the prompt or the model, not the shop; its events — whether an answer leads to a product — arrive with the storefront (T-6).",
+      "question": "Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?",
+      "decision": "Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.",
       "signals": [
+        "tino_opened",
+        "tino_answered",
+        "tino_result_followed",
+        "tino_unavailable",
         "tendero.tino.turns"
       ]
     }
@@ -880,6 +884,111 @@
         "fell_back": {
           "type": "boolean",
           "description": "Whether a fallback profile was tried as well."
+        }
+      }
+    },
+    {
+      "name": "tino_opened",
+      "description": "A shopper opened Tino's panel, from the header or from the search page's offer (phase 12b). Only with analytics consent; never what they ask.",
+      "consent": "behavioural",
+      "attributes": {
+        "from": {
+          "type": "string",
+          "values": [
+            "header",
+            "search"
+          ],
+          "description": "The header's door, or the search page's *Ask Tino this*."
+        },
+        "page": {
+          "type": "string",
+          "values": [
+            "home",
+            "search",
+            "category",
+            "product",
+            "order",
+            "cart",
+            "other"
+          ],
+          "description": "The kind of page it was opened on."
+        }
+      }
+    },
+    {
+      "name": "tino_answered",
+      "description": "Tino answered a turn (phase 12b). The kind of answer and its counts, never the question nor a sentence of the answer. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "kind": {
+          "type": "string",
+          "values": [
+            "products",
+            "shop",
+            "ask",
+            "no_data",
+            "order"
+          ],
+          "description": "The shape of the answer."
+        },
+        "products": {
+          "type": "number",
+          "description": "Products the answer names."
+        },
+        "reasons": {
+          "type": "number",
+          "description": "Sentences the shopper is shown, each with the fact it cites."
+        },
+        "reasons_dropped": {
+          "type": "number",
+          "description": "Sentences the model wrote that did not hold and were not shown."
+        },
+        "model_calls": {
+          "type": "number",
+          "description": "Model calls the turn took."
+        }
+      }
+    },
+    {
+      "name": "tino_result_followed",
+      "description": "A shopper followed something an answer of Tino's offered (phase 12b): a product, the order's page, or all the search's results. Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "action": {
+          "type": "string",
+          "values": [
+            "product_opened",
+            "order_opened",
+            "search_opened"
+          ],
+          "description": "What was followed."
+        },
+        "position": {
+          "type": "number",
+          "description": "For a product, its place in the answer, from 1; 0 otherwise."
+        }
+      }
+    },
+    {
+      "name": "tino_unavailable",
+      "description": "Tino did not answer and the panel showed the search results instead, or said it is not available (phase 12b). Only with analytics consent.",
+      "consent": "behavioural",
+      "attributes": {
+        "cause": {
+          "type": "string",
+          "values": [
+            "no_profile",
+            "model",
+            "time",
+            "budget",
+            "shop",
+            "too_long",
+            "scorer",
+            "too_many",
+            "network",
+            "not_available"
+          ],
+          "description": "The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off."
         }
       }
     }

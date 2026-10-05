@@ -13,6 +13,8 @@ import { departmentOf } from '../taxonomy/taxonomy-menu';
 import { TaxonomyStore } from '../taxonomy/taxonomy.store';
 import { ListingParam } from '../listing/listing-filters';
 import { ShopLinks } from '../shop-links';
+import { TinoDock } from '../tino/tino-dock/tino-dock';
+import { TinoDoorStore } from '../tino/tino-door.store';
 import { CompareTray } from '../compare/compare-tray/compare-tray';
 import { ConsentBanner } from './consent-banner/consent-banner';
 import { ShopMenu } from './shop-menu/shop-menu';
@@ -41,6 +43,7 @@ import { AccountMenu } from './account-menu/account-menu';
     CompareTray,
     ShopMenu,
     AccountMenu,
+    TinoDock,
     Icon,
     NgOptimizedImage,
   ],
@@ -49,6 +52,8 @@ import { AccountMenu } from './account-menu/account-menu';
   // The host is the page's column, which its template cannot give itself.
   host: {
     class: 'flex flex-col min-h-dvh',
+    // The room Tino's panel takes beside the page, while it is open there (shell.css).
+    '[class.tino-docked]': 'tino.docked()',
     '(document:click)': 'clickedAt($event)',
     '(document:keydown.escape)': 'closeMenu(true)',
   },
@@ -70,6 +75,9 @@ export class Shell {
    * refresh it.
    */
   protected readonly cart = inject(CartStore);
+
+  /** Tino's door: whether its panel is open, and whether Tino can be asked at all. */
+  protected readonly tino = inject(TinoDoorStore);
 
   private readonly agent = inject(AgentTools);
   private readonly tools = inject(StorefrontTools);
@@ -113,6 +121,7 @@ export class Shell {
 
   constructor() {
     void this.cart.load();
+    this.tino.check();
     this.agent.register(this.tools.all());
 
     // Created with the shell, so the page wears the chosen theme from the start.

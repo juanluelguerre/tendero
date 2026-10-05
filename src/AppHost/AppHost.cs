@@ -679,6 +679,20 @@ if (builder.Configuration["Tendero:StewardScript"] is { Length: > 0 } stewardScr
         .WithEnvironment("Steward__Models__scripted__Script", Path.GetFullPath(stewardScript, repositoryRoot));
 }
 
+// A Scripted Tino (phase 12b, T-6), for the storefront's browser spec in CI as
+// Steward's is for the backoffice's: `Tendero__TinoScript=<file>`. No model and no
+// scorer fit a runner, so the profile answers from the script and every sentence it
+// writes is scored the same — what the spec proves is the wiring, on any machine.
+if (builder.Configuration["Tendero:TinoScript"] is { Length: > 0 } tinoScript)
+{
+    api.WithEnvironment("Tino__Enabled", "true")
+        .WithEnvironment("Tino__Model", "tino")
+        .WithEnvironment("Steward__Models__tino__Kind", "Scripted")
+        .WithEnvironment("Steward__Models__tino__Model", "scripted")
+        .WithEnvironment("Steward__Models__tino__Script", Path.GetFullPath(tinoScript, repositoryRoot))
+        .WithEnvironment("Support__Scripted", "0.95");
+}
+
 if (useKeycloak)
 {
     api.WithReference(keycloak).WaitFor(keycloak)

@@ -35,7 +35,7 @@ everything here that is not *planned* is emitted.
 | Campaign card | Do shoppers open the campaign card, before a campaign starts as well as while it runs? | If the before card is not opened, the teaser is not worth its place. | `campaign_card_opened` | emitted |
 | Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
-| Tino | Does Tino answer, with which kind of answer — and when it does not, why: no model, the model's failure, time, or the day's budget? | The turn's seconds and the shop's daily budget; the default profile and its fallback. A model failing often means the prompt or the model, not the shop; its events — whether an answer leads to a product — arrive with the storefront (T-6). | `tendero.tino.turns` | emitted |
+| Tino | Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why? | Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile. | `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`, `tendero.tino.turns` | emitted |
 
 ### Backoffice
 
@@ -348,6 +348,60 @@ Answers:
 |---|---|---|---|
 | `fell_back` | boolean | — | Whether a fallback profile was tried as well. |
 
+### `tino_opened`
+
+browser event, behavioural. A shopper opened Tino's panel, from the header or from the search page's offer (phase 12b). Only with analytics consent; never what they ask.
+
+Answers:
+
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `from` | string | `header`, `search` | The header's door, or the search page's *Ask Tino this*. |
+| `page` | string | `home`, `search`, `category`, `product`, `order`, `cart`, `other` | The kind of page it was opened on. |
+
+### `tino_answered`
+
+browser event, behavioural. Tino answered a turn (phase 12b). The kind of answer and its counts, never the question nor a sentence of the answer. Only with analytics consent.
+
+Answers:
+
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `kind` | string | `products`, `shop`, `ask`, `no_data`, `order` | The shape of the answer. |
+| `products` | number | — | Products the answer names. |
+| `reasons` | number | — | Sentences the shopper is shown, each with the fact it cites. |
+| `reasons_dropped` | number | — | Sentences the model wrote that did not hold and were not shown. |
+| `model_calls` | number | — | Model calls the turn took. |
+
+### `tino_result_followed`
+
+browser event, behavioural. A shopper followed something an answer of Tino's offered (phase 12b): a product, the order's page, or all the search's results. Only with analytics consent.
+
+Answers:
+
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `action` | string | `product_opened`, `order_opened`, `search_opened` | What was followed. |
+| `position` | number | — | For a product, its place in the answer, from 1; 0 otherwise. |
+
+### `tino_unavailable`
+
+browser event, behavioural. Tino did not answer and the panel showed the search results instead, or said it is not available (phase 12b). Only with analytics consent.
+
+Answers:
+
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `cause` | string | `no_profile`, `model`, `time`, `budget`, `shop`, `too_long`, `scorer`, `too_many`, `network`, `not_available` | The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. |
+
 ## Metrics
 
 Created by a Tendero `Meter` (`TelemetrySources`), as a static field. No
@@ -650,7 +704,7 @@ counter, unit `{turn}`. Tino's turns, by status, by cause when it did not answer
 
 Answers:
 
-- **Tino** — Does Tino answer, with which kind of answer — and when it does not, why: no model, the model's failure, time, or the day's budget?
+- **Tino** — Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
 
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|

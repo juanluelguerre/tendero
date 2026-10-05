@@ -282,6 +282,62 @@ export interface TrackedEvents {
     /** Whether a fallback profile was tried as well. */
     readonly fell_back: boolean;
   };
+
+  /**
+   * A shopper opened Tino's panel, from the header or from the search page's offer (phase 12b). Only with analytics consent; never what they ask.
+   *
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   */
+  readonly tino_opened: {
+    /** The header's door, or the search page's *Ask Tino this*. */
+    readonly from: 'header' | 'search';
+    /** The kind of page it was opened on. */
+    readonly page: 'home' | 'search' | 'category' | 'product' | 'order' | 'cart' | 'other';
+  };
+
+  /**
+   * Tino answered a turn (phase 12b). The kind of answer and its counts, never the question nor a sentence of the answer. Only with analytics consent.
+   *
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   */
+  readonly tino_answered: {
+    /** The shape of the answer. */
+    readonly kind: 'products' | 'shop' | 'ask' | 'no_data' | 'order';
+    /** Products the answer names. */
+    readonly products: number;
+    /** Sentences the shopper is shown, each with the fact it cites. */
+    readonly reasons: number;
+    /** Sentences the model wrote that did not hold and were not shown. */
+    readonly reasons_dropped: number;
+    /** Model calls the turn took. */
+    readonly model_calls: number;
+  };
+
+  /**
+   * A shopper followed something an answer of Tino's offered (phase 12b): a product, the order's page, or all the search's results. Only with analytics consent.
+   *
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   */
+  readonly tino_result_followed: {
+    /** What was followed. */
+    readonly action: 'product_opened' | 'order_opened' | 'search_opened';
+    /** For a product, its place in the answer, from 1; 0 otherwise. */
+    readonly position: number;
+  };
+
+  /**
+   * Tino did not answer and the panel showed the search results instead, or said it is not available (phase 12b). Only with analytics consent.
+   *
+   * Tino: Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?
+   * Decides: Where its door lives and whether the search page's offer earns its place; above 20 % of sentences dropped, the prompt or the model is the problem; if answers lead to products no more than search results do, the conversation is not worth its cost; the turn's seconds, the shop's daily budget and the default profile.
+   */
+  readonly tino_unavailable: {
+    /** The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. */
+    readonly cause: 'no_profile' | 'model' | 'time' | 'budget' | 'shop' | 'too_long' | 'scorer' | 'too_many' | 'network' | 'not_available';
+  };
 }
 
 /**
@@ -311,4 +367,8 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   steward_answered: 'staff',
   proposals_reviewed: 'staff',
   steward_unavailable: 'staff',
+  tino_opened: 'behavioural',
+  tino_answered: 'behavioural',
+  tino_result_followed: 'behavioural',
+  tino_unavailable: 'behavioural',
 };

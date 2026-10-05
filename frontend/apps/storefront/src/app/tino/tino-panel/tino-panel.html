@@ -1,0 +1,201 @@
+<ng-container *transloco="let t">
+  <section class="flex h-full flex-col bg-surface" [attr.aria-label]="t('tino.name')">
+    <header class="flex min-h-bar items-center gap-2 border-b border-hairline ps-4 pe-2">
+      <lib-icon class="size-icon-md text-accent" name="steward" />
+      <h2 class="m-0 text-lg">{{ t('tino.name') }}</h2>
+      @if (context(); as looking) {
+        <!-- What "it" means in the next question: sent beside it, never typed. -->
+        <span class="truncate rounded-full border border-hairline px-2 py-px text-3xs text-muted">
+          {{ t('tino.on.' + looking.kind) }}
+        </span>
+      }
+      <span class="flex-1"></span>
+      <button
+        type="button"
+        class="inline-grid size-tap flex-none place-items-center rounded-md bg-transparent text-body hover:bg-raised"
+        [attr.aria-label]="t('tino.close')"
+        (click)="door.close()"
+      >
+        <lib-icon name="close" />
+      </button>
+    </header>
+
+    @if (door.unavailable()) {
+      <!-- Not available: said, and the shop's search is what there is (invariant 8). -->
+      <div class="grid content-start gap-3 p-4">
+        <p class="m-0 text-md font-medium">{{ t('tino.notAvailable.title') }}</p>
+        <p class="m-0 text-sm text-muted">{{ t('tino.notAvailable.body') }}</p>
+        <form class="flex items-end gap-2" role="search" (submit)="$event.preventDefault(); find(words.value)">
+          <label class="sr-only" for="tino-search">{{ t('nav.searchLabel') }}</label>
+          <input
+            #words
+            id="tino-search"
+            class="min-h-tap w-full flex-1 rounded-md border border-hairline-strong bg-surface px-3 text-body"
+            type="search"
+            [placeholder]="t('nav.search')"
+          />
+          <button type="submit" class="button">{{ t('tino.notAvailable.search') }}</button>
+        </form>
+      </div>
+    } @else {
+      <!-- One live region, and what it says is that an answer is there: reading the
+           whole of it again would repeat every card. -->
+      <p class="sr-only" aria-live="polite">
+        @if (store.latest(); as latest) {
+          {{ latest.state === 'fallback' ? t('tino.fallback.title') : t('tino.answered') }}
+        }
+      </p>
+
+      <div class="relative grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation>
+        @if (store.exchanges().length === 0) {
+          <p class="m-0 text-sm text-muted">{{ t('tino.intro') }}</p>
+        }
+
+        @for (item of drawn(); track item.exchange.id) {
+          @let exchange = item.exchange;
+          <p
+            class="m-0 ms-auto max-w-measure-sm scroll-mt-4 rounded-lg border border-hairline bg-raised px-4 py-2"
+            data-question
+          >
+            <span class="sr-only">{{ t('tino.you') }}: </span>{{ exchange.question }}
+          </p>
+
+          @switch (exchange.state) {
+            @case ('asking') {
+              <div class="flex flex-wrap items-center gap-3 text-xs text-muted" role="status">
+                <span>{{ t('tino.working') }}</span>
+                <button type="button" class="button button--quiet" (click)="store.stop()">
+                  {{ t('tino.stop') }}
+                </button>
+              </div>
+            }
+            @case ('stopped') {
+              <p class="m-0 text-xs text-muted">{{ t('tino.stopped') }}</p>
+            }
+            @case ('fallback') {
+              <!-- Tino did not answer: the search did, for the same words, and it says so. -->
+              <lib-notice tone="warn">
+                <p class="m-0 font-medium">{{ t('tino.fallback.title') }}</p>
+                <p class="m-0 mt-1 text-sm">
+                  {{
+                    exchange.cards.length > 0
+                      ? t('tino.fallback.results')
+                      : t('tino.fallback.' + (exchange.cause === 'too_many' ? 'tooMany' : 'nothing'))
+                  }}
+                </p>
+              </lib-notice>
+              <ul class="m-0 grid list-none gap-3 p-0" role="list" data-fallback>
+                @for (card of exchange.cards; track card.code) {
+                  <li [attr.data-position]="$index + 1">
+                    <storefront-product-card [hit]="card" layout="line" [actions]="false" />
+                  </li>
+                }
+              </ul>
+            }
+            @case ('answered') {
+              @if (exchange.answer; as answer) {
+                <div class="grid gap-3" data-answer [attr.data-kind]="answer.kind">
+                  @switch (answer.kind) {
+                    @case ('Products') {
+                      <ul class="m-0 grid list-none gap-3 p-0" role="list">
+                        @for (named of item.named; track named.product.code) {
+                          <li class="grid gap-2" [attr.data-position]="$index + 1">
+                            @if (named.card; as card) {
+                              <storefront-product-card [hit]="card" layout="line" [actions]="false" />
+                            } @else {
+                              <!-- The shop could not read a card for it: its name, as the read gave it. -->
+                              <p class="m-0 font-semibold">{{ named.product.name }}</p>
+                            }
+                            @for (reason of named.product.reasons; track $index) {
+                              <div class="grid gap-1 ps-3">
+                                <p class="m-0 text-sm">{{ reason.text }}</p>
+                                <storefront-tino-source [reason]="reason" />
+                              </div>
+                            }
+                          </li>
+                        }
+                      </ul>
+                    }
+                    @case ('NoData') {
+                      @if (answer.noData; as missing) {
+                        <lib-notice tone="warn">
+                          <p class="m-0">{{ missing.sentence }}</p>
+                        </lib-notice>
+                        @if (missing.nearest.length > 0) {
+                          <h3 class="eyebrow m-0">{{ t('tino.nearest') }}</h3>
+                          @for (reason of missing.nearest; track $index) {
+                            <div class="grid gap-1">
+                              <p class="m-0 text-sm">{{ reason.text }}</p>
+                              <storefront-tino-source [reason]="reason" />
+                            </div>
+                          }
+                        }
+                      }
+                    }
+                    @case ('Ask') {
+                      <p class="m-0">{{ answer.ask }}</p>
+                    }
+                    @default {
+                      <!-- About the shop, or about an order of the shopper's: sentences, each with its chip. -->
+                      @if (answer.order; as order) {
+                        <p class="m-0 font-semibold">{{ order.title }}</p>
+                      }
+                      @for (reason of answer.says; track $index) {
+                        <div class="grid gap-1">
+                          <p class="m-0 text-sm">{{ reason.text }}</p>
+                          @if (reason.source !== 'Notice') {
+                            <storefront-tino-source [reason]="reason" />
+                          }
+                        </div>
+                      }
+                      @if (answer.order; as order) {
+                        <!-- Tino explains and links; a return is opened on the order's own page. -->
+                        <a
+                          class="text-sm text-accent"
+                          [routerLink]="['/', culture(), 'orders', order.id]"
+                          (click)="followed('order_opened')"
+                          >{{ t('tino.openOrder') }}</a
+                        >
+                      }
+                    }
+                  }
+                </div>
+              }
+            }
+          }
+
+          @if (item.more; as more) {
+            <a
+              class="justify-self-start text-sm text-accent"
+              [routerLink]="links.home()"
+              [queryParams]="{ q: more.text }"
+              (click)="followed('search_opened')"
+              >{{ t('tino.seeAll', { count: more.total }) }}</a
+            >
+          }
+        }
+      </div>
+
+      <footer class="grid gap-2 border-t border-hairline p-4">
+        <form class="flex items-end gap-2" (submit)="$event.preventDefault(); send()">
+          <label class="sr-only" for="tino-question">{{ t('tino.composerLabel') }}</label>
+          <textarea
+            id="tino-question"
+            class="min-h-tap flex-1 resize-none rounded-md border border-hairline-strong bg-surface p-2 text-body"
+            rows="1"
+            #composer
+            [placeholder]="t('tino.placeholder')"
+            [value]="draft()"
+            (input)="draft.set($any($event.target).value)"
+            (keydown)="keyed($event)"
+          ></textarea>
+          <!-- The panel's one clay action. -->
+          <button type="submit" class="button" [disabled]="store.busy() || !draft().trim()">
+            {{ t('tino.send') }}
+          </button>
+        </form>
+        <p class="m-0 text-3xs text-muted">{{ t('tino.promise') }}</p>
+      </footer>
+    }
+  </section>
+</ng-container>

@@ -146,6 +146,32 @@ public sealed class ScriptedChatClientTests
         Assert.Equal("The pan is great.", answer.Text);
     }
 
+    /// <summary>A product's code is minted at import: a script finds it by the name beside it in what it was asked.</summary>
+    [Fact]
+    public async Task A_reply_takes_a_word_from_what_was_asked_wherever_the_reply_names_one()
+    {
+        var asked = "PRODUCTS (code = name):\n4YGH = Sartén de hierro\nB4V9 = Set de sartenes\n\nSHOPPER: a pan";
+        var reply = """{"kind":"products","products":[{"code":"{asked:(\\S+) = Set}","reasons":[{"says":"Vale.","cites":"f1"}]}],"first":"{asked:name\\):\\r?\\n(\\S+) = }"}""";
+
+        var answer = await Replying(reply).GetResponseAsync(asked, HeldToASchema, TestContext.Current.CancellationToken);
+
+        using var written = JsonDocument.Parse(answer.Text);
+        Assert.Equal("B4V9", written.RootElement.GetProperty("products")[0].GetProperty("code").GetString());
+        Assert.Equal("4YGH", written.RootElement.GetProperty("first").GetString());
+        // What is not a reference is left as written.
+        Assert.Equal("Vale.", written.RootElement.GetProperty("products")[0].GetProperty("reasons")[0].GetProperty("says").GetString());
+    }
+
+    /// <summary>A pattern that finds nothing stays as written — which no answer accepts as a code, so the script's mistake shows.</summary>
+    [Fact]
+    public async Task A_reference_that_finds_nothing_in_what_was_asked_is_left_as_it_was_written()
+    {
+        var answer = await Replying("""{"code":"{asked:(\\S+) = Olla}"}""").GetResponseAsync("PAN-1 = Sartén. a pan", HeldToASchema, TestContext.Current.CancellationToken);
+
+        using var written = JsonDocument.Parse(answer.Text);
+        Assert.Equal("{asked:(\\S+) = Olla}", written.RootElement.GetProperty("code").GetString());
+    }
+
     [Fact]
     public async Task A_step_with_no_reply_was_not_scripted_for_a_schema()
     {

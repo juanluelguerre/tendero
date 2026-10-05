@@ -421,5 +421,54 @@
   "notFound": {
     "title": "Esa página no existe",
     "text": "Puede que el enlace esté mal o que la página ya no esté."
+  },
+  "tino": {
+    "name": "Tino",
+    "door": "Pregunta a Tino",
+    "doorUnavailable": "Tino · no disponible",
+    "close": "Cerrar Tino",
+    "intro": "Pregunta qué buscas, por un producto o por un pedido tuyo. Respondo con lo que esta tienda ha comprobado, y enseño de dónde sale cada cosa.",
+    "you": "Tú",
+    "placeholder": "Pregunta a Tino",
+    "send": "Enviar",
+    "promise": "Tino puede equivocarse en lo que querías decir, nunca en lo que cita.",
+    "working": "Leyendo lo que la tienda sabe…",
+    "stop": "Parar",
+    "stopped": "Parado. Pregunta otra vez cuando quieras.",
+    "answered": "Tino ha respondido.",
+    "nearest": "Lo que sí dice",
+    "openOrder": "Abrir este pedido →",
+    "seeAll": "Ver los {{count}} resultados →",
+    "on": {
+      "Product": "En: este producto",
+      "Order": "En: este pedido"
+    },
+    "source": {
+      "Claim": "Aprobado por el tendero",
+      "DataSheet": "De la ficha del producto",
+      "Description": "De la descripción del producto",
+      "Policy": "Política de devoluciones",
+      "Order": "Tu pedido",
+      "Notice": "La tienda",
+      "quoteTitle": "Aprobado a partir de estas palabras",
+      "support": "Cuánto lo respaldan: {{percent}} %",
+      "factTitle": "Lo que la tienda tiene"
+    },
+    "fallback": {
+      "title": "Tino no está respondiendo ahora.",
+      "results": "Estos son los resultados de búsqueda para tus palabras.",
+      "nothing": "Y la búsqueda no ha encontrado nada para tus palabras. Prueba con menos en el buscador.",
+      "tooMany": "Demasiadas preguntas en un minuto. La búsqueda no ha encontrado nada para tus palabras; prueba en un momento."
+    },
+    "notAvailable": {
+      "title": "Tino no está disponible ahora.",
+      "body": "El buscador de la tienda funciona como siempre.",
+      "search": "Buscar"
+    },
+    "offer": {
+      "lede": "¿Prefieres preguntarlo?",
+      "action": "Pregúntaselo a Tino"
+    },
+    "composerLabel": "Pregunta por un producto o por un pedido tuyo"
   }
 }

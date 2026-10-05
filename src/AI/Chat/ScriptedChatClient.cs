@@ -21,7 +21,10 @@ namespace ElGuerre.Tendero.AI.Chat;
 /// and then propose for it, though its id is minted at import.</param>
 /// <param name="Reply">What it answers a call that asks for JSON of a schema
 /// (phase 12b): the object itself, or a string to answer something that is not JSON.
-/// Such a call has no tools, so the step's calls are not made again.</param>
+/// Such a call has no tools, so the step's calls are not made again. A value written
+/// <c>{asked:pattern}</c> takes the first group the pattern captures in what was
+/// asked — a product's code is minted at import, so a script finds it by the name
+/// beside it: <c>{asked:(\S+) = Sartén}</c>.</param>
 public sealed record ScriptedTurn(
     string When, IReadOnlyList<ScriptedCall>? Calls = null, string? Say = null,
     int InputTokens = 100, int OutputTokens = 20, int DelayMs = 0, bool Always = false, bool ThenFail = false,
@@ -71,7 +74,7 @@ public sealed class ScriptedChatClient(IReadOnlyList<ScriptedTurn> script, TimeS
             var reply = step.Reply switch
             {
                 { ValueKind: JsonValueKind.String } text => text.GetString() ?? "",
-                { } json => json.GetRawText(),
+                { } json => FromAsked(JsonNode.Parse(json.GetRawText()), asked)?.ToJsonString() ?? "null",
                 null => NotScripted,
             };
             return Answer(new ChatMessage(ChatRole.Assistant, reply), step.InputTokens, step.OutputTokens);
@@ -128,6 +131,40 @@ public sealed class ScriptedChatClient(IReadOnlyList<ScriptedTurn> script, TimeS
         var resolved = Resolve(JsonNode.Parse(arguments.GetRawText()), conversation);
         return JsonSerializer.SerializeToElement(resolved).EnumerateObject()
             .ToDictionary(property => property.Name, property => (object?)property.Value.Clone());
+    }
+
+    /// <summary>A word of what was asked: <c>{asked:(\S+) = Sartén}</c> is the code beside that name.</summary>
+    private static readonly Regex Asked = new(@"^\{asked:(?<pattern>.+)\}$", RegexOptions.CultureInvariant | RegexOptions.Singleline);
+
+    /// <summary>The reply with every <c>{asked:pattern}</c> replaced by what the pattern captures in what was asked; a pattern that finds nothing stays as written, which no answer accepts.</summary>
+    private static JsonNode? FromAsked(JsonNode? node, string asked)
+    {
+        switch (node)
+        {
+            case JsonObject properties:
+                foreach (var name in properties.Select(property => property.Key).ToList())
+                {
+                    var child = properties[name];
+                    if (FromAsked(child, asked) is var resolved && !ReferenceEquals(child, resolved))
+                        properties[name] = resolved;
+                }
+
+                return properties;
+            case JsonArray items:
+                for (var index = 0; index < items.Count; index++)
+                {
+                    var child = items[index];
+                    if (FromAsked(child, asked) is var resolved && !ReferenceEquals(child, resolved))
+                        items[index] = resolved;
+                }
+
+                return items;
+            case JsonValue value when value.TryGetValue<string>(out var text) && Asked.Match(text) is { Success: true } reference:
+                var found = Regex.Match(asked, reference.Groups["pattern"].Value, RegexOptions.CultureInvariant | RegexOptions.Multiline, TimeSpan.FromSeconds(1));
+                return found is { Success: true, Groups.Count: > 1 } ? JsonValue.Create(found.Groups[1].Value) : node;
+            default:
+                return node;
+        }
     }
 
     /// <summary>A reference to an earlier result: <c>{from:find_products:data.products.0.productId}</c>.</summary>

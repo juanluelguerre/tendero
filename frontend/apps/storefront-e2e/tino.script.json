@@ -1,0 +1,33 @@
+[
+  {
+    "when": "inducción",
+    "calls": [{ "tool": "search_products", "arguments": { "text": "sartén", "culture": "es" } }],
+    "then": [
+      {
+        "tool": "get_product_specs",
+        "arguments": { "codes": ["{from:search_products:data.products.0.code}"], "culture": "es" }
+      }
+    ],
+    "say": "DONE",
+    "reply": {
+      "kind": "products",
+      "products": [
+        {
+          "code": "{asked:PRODUCTS \\(code = name\\):\\r?\\n(\\S+) = }",
+          "reasons": [{ "says": "Es lo que la tienda tiene anotado de ella.", "cites": "f1" }]
+        }
+      ]
+    }
+  },
+  {
+    "when": "devolver",
+    "calls": [{ "tool": "get_return_policy", "arguments": { "culture": "es" } }],
+    "say": "DONE",
+    "reply": { "kind": "shop", "says": [{ "says": "Tienes 14 días desde la entrega.", "cites": "f1" }] }
+  },
+  {
+    "when": "mi pedido",
+    "calls": [{ "tool": "my_orders", "arguments": { "culture": "es" } }],
+    "say": "DONE"
+  }
+]

@@ -421,5 +421,54 @@
   "notFound": {
     "title": "That page does not exist",
     "text": "The link may be wrong, or the page may be gone."
+  },
+  "tino": {
+    "name": "Tino",
+    "door": "Ask Tino",
+    "doorUnavailable": "Tino · not available",
+    "close": "Close Tino",
+    "intro": "Ask what you are looking for, about a product, or about an order of yours. I answer from what this shop has verified, and I show where each thing comes from.",
+    "you": "You",
+    "placeholder": "Ask Tino",
+    "send": "Send",
+    "promise": "Tino can be wrong about what you meant, never about what it cites.",
+    "working": "Reading what the shop knows…",
+    "stop": "Stop",
+    "stopped": "Stopped. Ask again when you like.",
+    "answered": "Tino has answered.",
+    "nearest": "What they do say",
+    "openOrder": "Open this order →",
+    "seeAll": "See all {{count}} results →",
+    "on": {
+      "Product": "On: this product",
+      "Order": "On: this order"
+    },
+    "source": {
+      "Claim": "Approved by the shopkeeper",
+      "DataSheet": "From the product's data sheet",
+      "Description": "From the product's description",
+      "Policy": "Return policy",
+      "Order": "Your order",
+      "Notice": "The shop",
+      "quoteTitle": "Approved from these words",
+      "support": "How well they support it: {{percent}} %",
+      "factTitle": "What the shop holds"
+    },
+    "fallback": {
+      "title": "Tino is not answering right now.",
+      "results": "These are the search results for your words.",
+      "nothing": "And the search found nothing for your words. Try fewer of them in the search box.",
+      "tooMany": "Too many questions in a minute. The search found nothing for your words; try again shortly."
+    },
+    "notAvailable": {
+      "title": "Tino is not available right now.",
+      "body": "The shop's search works as always.",
+      "search": "Search"
+    },
+    "offer": {
+      "lede": "Rather ask it as a question?",
+      "action": "Ask Tino this"
+    },
+    "composerLabel": "Ask about a product or an order of yours"
   }
 }

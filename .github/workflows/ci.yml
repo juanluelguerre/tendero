@@ -320,6 +320,8 @@ jobs:
         run: |
           # Steward answers from a script (S-6): no model fits a runner.
           export Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json
+          # And Tino from its own (phase 12b): no model and no scorer fit a runner either.
+          export Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json
           dotnet run --project src/AppHost > "$RUNNER_TEMP/aspire.log" 2>&1 &
 
           # **Not port 4201.** The dev server answers within seconds of starting

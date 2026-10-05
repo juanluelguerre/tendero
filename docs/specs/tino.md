@@ -458,6 +458,31 @@ ways for Tino:
    threshold stays 0.5: the suite has no labels to move it by.
 6. **T-6 · The storefront** (`P12b-4`). The mock-ups first; the panel and sheet,
    the cards and chips, the fallback, the events, es and en.
+   *As built (2026-10-05)*: `apps/storefront/src/app/tino/`. **The door** is in the
+   header before the account, outlined in clay, pressed while the panel is open, its
+   icon alone on a phone; where the server says Tino cannot be asked it stays, quiet,
+   and reads *not available*. **The panel** is beside the page from 64 rem — fixed,
+   and the shell gives it the room, so the shop is still there to browse — and a
+   modal sheet below; deferred, so nobody who never opens it downloads it. An
+   answer's **product is the shop's card**, read by its code from
+   `GET /api/search/cards`; under it each sentence with **the chip of its source**,
+   which opens the words a claim was approved on or the fact as the shop holds it.
+   An order answer links to the order's page; a notice of the shop's has no chip.
+   **When Tino does not answer — whatever the cause, the request failing included —
+   the panel shows the search's results for the same words and says so.** What the
+   shopper is looking at is read from the address: a product's page or an order's.
+   The search page offers *Ask Tino this* where it found nothing, only what is
+   near, or the query is four words or more. Four events in the tracking plan:
+   `tino_opened`, `tino_answered`, `tino_result_followed`, `tino_unavailable`.
+   The browser spec runs over a scripted Tino (`Tendero__TinoScript`, in CI), with
+   a fixed score in place of the scorer: the card and its chip, the shop's answer
+   and the guest's notice, the fallback, the sheet closed with Esc. Rulings the spec
+   left open: the product card carries no *add to cart* in the panel (the answer
+   leads to the page); a phone's sheet closes when a link of an answer is followed;
+   the head says *On: this product* — the address has the code, not the name; turns
+   do not show what was read (the mock-up's *Read: …* line), which a shopper has no
+   use for. **Not captured**: the not-available state, which needs a stack with no
+   Tino — at the close.
 7. **T-7 · Close** (`P12b-8`). The ADR (*an answer is a list of cited facts*),
    Stryker, the captures, the notebook and the material map.
 

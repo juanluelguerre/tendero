@@ -77,6 +77,7 @@ Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana st
 Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB, on the GPU when there is one; ADR 0053; or profile https-steward; profile https-all turns on vectors, knowledge and Steward)
 Tendero__Tino=true dotnet run --project src/AppHost           # + Tino, the storefront's assistant, on the same local model and the support scorer — only on a GPU; without one it stays off and says so
 Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec)
+Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json dotnet run --project src/AppHost      # Tino from a script, on any machine (CI's browser spec; TINO_SCRIPTED=1 to run it locally)
 dotnet build -warnaserror                     # warnings are errors, always
 dotnet test                                   # unit + contract + architecture
 dotnet test --filter Category=Integration     # Testcontainers (skips without Docker)
