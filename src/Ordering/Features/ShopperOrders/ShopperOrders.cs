@@ -145,13 +145,21 @@ public sealed class MyOrdersTool(IQueryDispatcher queries, ShopperScreen screen,
 
         var words = new OrderWords(culture, DateTimeZoneProviders.Tzdb[shop.Value.TimeZone]);
         this.ids.Clear();
+
+        // "My last order" is a question about one of several: which is the latest is
+        // said, not left for a model to work out from two dates (T-5 measured it wrong).
+        var latest = result.Orders.Count > 1 ? result.Orders.MaxBy(order => order.PlacedAt) : null;
         var said = result.Orders.Select((order, index) =>
         {
             var reference = $"order{index + 1}";
             this.ids[reference] = order.OrderId;
             // The composing call reads the sentences and nothing else, so which order
             // the shopper is looking at is one of them.
-            IReadOnlyList<string> says = order.OnScreen ? [words.OnTheScreen, .. words.Of(order)] : words.Of(order);
+            List<string> says = [.. words.Of(order)];
+            if (ReferenceEquals(order, latest))
+                says.Insert(0, words.TheLatest);
+            if (order.OnScreen)
+                says.Insert(0, words.OnTheScreen);
             return new OrderForShopper(reference, order.OnScreen, words.Title(order), says);
         }).ToList();
 
@@ -193,6 +201,10 @@ internal sealed class OrderWords(string culture, DateTimeZone zone)
     public string OnTheScreen => English
         ? "This is the order the shopper is looking at."
         : "Este es el pedido que el comprador está viendo.";
+
+    public string TheLatest => English
+        ? "This is the shopper's most recent order."
+        : "Este es el pedido más reciente del comprador.";
 
     public string Title(ShopperOrder order) => English ? $"Order of {Day(order.PlacedAt)}" : $"Pedido del {Day(order.PlacedAt)}";
 

@@ -85,6 +85,7 @@ dotnet tool run dotnet-ef migrations add <Name> --project src/Persistence
 dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-check  # from src/<Project>, at phase close
 dotnet run --project tools/SearchEval         # golden set NDCG report
 dotnet run --project tools/SearchEval -- --suite copilot --database <disposable pg> --chat <url> --model <id>  # Steward's golden set (README)
+dotnet run --project tools/SearchEval -- --suite assistant --database <disposable pg> --elasticsearch <throwaway es> --tei <scorer> --chat <url> --model <id>  # Tino's golden set (README)
 dotnet run --project tools/TrafficSim -- --TrafficSim:Seed=42  # simulated shoppers and agents (ADR 0037); also a resource in Aspire
 npx nx serve storefront|backoffice            # from frontend/
 npm run format                                # from frontend/: Prettier, Tailwind classes sorted; CI runs format:check

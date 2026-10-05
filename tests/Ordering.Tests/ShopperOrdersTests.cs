@@ -331,8 +331,11 @@ public sealed class ShopperOrdersTests
 
         var orders = ((OrdersForShopper)(await tool.ReadAsync(Arguments("""{"culture":"es"}"""), Ct)).Data).Orders;
 
-        // Newest first: the cancelled one is order1.
-        Assert.Equal("Su estado es: cancelado.", orders[0].Says[1]);
+        // Newest first: the cancelled one is order1 — and with more than one order,
+        // which is the latest is said, not left to be worked out from two dates.
+        Assert.Equal("Este es el pedido más reciente del comprador.", orders[0].Says[0]);
+        Assert.DoesNotContain("Este es el pedido más reciente del comprador.", orders[1].Says);
+        Assert.Contains("Su estado es: cancelado.", orders[0].Says);
         Assert.DoesNotContain(orders[0].Says, sentence => sentence.Contains("devolver", StringComparison.Ordinal));
         Assert.Equal("El plazo para devolverlo terminó el 15 de enero de 2026.", orders[1].Says[^1]);
     }

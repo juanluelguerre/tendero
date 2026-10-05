@@ -373,11 +373,21 @@ public sealed class TinoTurnTests
         Assert.Null(MyOrders.Handed);
         Assert.Null(answer.Order);
         Assert.Equal(TinoKind.Shop, answer.Kind);
-        Assert.Equal(("Para preguntar por un pedido, inicia sesión o ábrelo desde su correo.", FactSource.Notice),
-            (answer.Says.Single().Text, answer.Says.Single().Source));
+
+        // The shop's notice word for word, not the model's retelling of it: with
+        // nobody to answer about and nothing else read, code answers and no model
+        // composes — the three calls are the gathering's.
+        var notice = "Para preguntar por un pedido, inicia sesión o abre el pedido desde su correo de confirmación.";
+        Assert.Equal((notice, notice, FactSource.Notice), (answer.Says.Single().Text, answer.Says.Single().Fact, answer.Says.Single().Source));
+        Assert.Equal((2, 0), (answer.Cost!.Calls, answer.ReasonsDropped));
+        Assert.Empty(shop.Scored);
     }
 
-    /// <summary>A number in the question is words: nothing reads it, and the model's own guess at an order is no order.</summary>
+    /// <summary>
+    /// A number in the question is words: nothing reads it. The read is handed no
+    /// order, says there is nobody to answer about, and that is the answer — whatever
+    /// the model would have written where an order goes.
+    /// </summary>
     [Fact]
     public async Task An_order_number_typed_into_the_question_reads_nothing()
     {
@@ -387,7 +397,9 @@ public sealed class TinoTurnTests
         var answer = await shop.Ask($"where is order number {OrderId}? typed");
 
         Assert.Null(MyOrders.Handed);
-        AssertUnavailable(answer, TinoCause.Model, $"where is order number {OrderId}? typed");
+        Assert.DoesNotContain(OrderId, MyOrders.Asked!.Value.GetRawText());
+        Assert.Equal((TinoStatus.Answered, TinoKind.Shop, (AnsweredOrder?)null), (answer.Status, answer.Kind, answer.Order));
+        Assert.Equal(FactSource.Notice, answer.Says.Single().Source);
     }
 
     /// <summary>An answer that is only sentences, with none of them left, says nothing: it is not shown as an empty answer.</summary>
@@ -581,7 +593,7 @@ public sealed class TinoTurnTests
     [Fact]
     public async Task The_conversations_tokens_spent_no_model_is_asked()
     {
-        await using var shop = Compose(spentInConversation: 30_000);
+        await using var shop = Compose(spentInConversation: 100_000);
 
         AssertUnavailable(await shop.Ask("una sartén para induction"), TinoCause.Budget, "una sartén para induction");
         Assert.Empty(shop.Metered());

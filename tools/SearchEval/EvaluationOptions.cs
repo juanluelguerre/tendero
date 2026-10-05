@@ -37,7 +37,9 @@ public sealed record EvaluationOptions(
     string? Database = null,
     string? Script = null,
     int ContextTokens = 8192,
-    string? CopilotDirectory = null)
+    string? CopilotDirectory = null,
+    string? AssistantDirectory = null,
+    string? Only = null)
 {
     public bool IsHybrid => Strategy == SearchStrategies.Hybrid;
 
@@ -65,6 +67,7 @@ public sealed record EvaluationOptions(
           --chat <url> --model <id>  copilot: an OpenAI-compatible endpoint and the model it serves
           --script <file>         copilot: a Scripted model instead, for a dry run of the suite itself
           --context <tokens>      copilot: the profile's window (default 8192)
+          --only <ids>            assistant: only the cases whose id contains one of these, comma separated
 
         The scope suite (--suite scope) needs only --embeddings, and reads:
           --scope <dir>           Scope query directory (default tools/SearchEval/scope)
@@ -170,6 +173,8 @@ public sealed record EvaluationOptions(
             values.GetValueOrDefault("database"),
             values.GetValueOrDefault("script"),
             int.TryParse(values.GetValueOrDefault("context"), out var context) ? context : 8192,
-            values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "Copilot")));
+            values.GetValueOrDefault("copilot", Path.Combine("tools", "SearchEval", "Copilot")),
+            values.GetValueOrDefault("assistant", Path.Combine("tools", "SearchEval", "Assistant")),
+            values.GetValueOrDefault("only"));
     }
 }

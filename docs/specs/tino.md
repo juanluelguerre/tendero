@@ -93,7 +93,7 @@ JSON schema (the local server constrains the output to it), one of five kinds
 
 | Kind | What the model writes | What code draws |
 |---|---|---|
-| `products` | up to four product codes, and for each one to three **reasons**: a sentence and the id of the fact it cites | a card per product, **built by code from the read** — name, picture, price, availability, never the model's — and under it each reason with its **source chip**; *See all 14 results* links to the search the tool ran |
+| `products` | up to three product codes, and for each up to two **reasons** (four and three until T-5 measured them): a sentence and the id of the fact it cites | a card per product, **built by code from the read** — name, picture, price, availability, never the model's — and under it each reason with its **source chip**; *See all 14 results* links to the search the tool ran |
 | `order` | sentences about an order, each citing a fact of that order or of the policy | the order's status line built by code, the sentences with their chips, and a link to the order's page (where a return is opened) |
 | `shop` | one to three sentences about the shop itself — its return policy — each citing a fact of the shop | the sentences with their chips |
 | `ask` | one question back to the shopper | the question |
@@ -443,6 +443,19 @@ ways for Tino:
    suite scores the order cases with a principal.
 5. **T-5 · The suite** (`P12b-7`), before the storefront, so the threshold and the
    caps are measured and the prompt is settled against cases.
+   *As built (2026-10-05)*: `tools/SearchEval --suite assistant`, 28 cases over a
+   laboratory composed in the process (Postgres, a throwaway Elasticsearch, the
+   scorer, the model): the catalogue published and indexed, claims approved, one
+   description with an instruction in it, four orders for two account holders and
+   a guest. Judged by comparison, no judge model. **Measured on the local 4B:
+   20 of 28 on the first run, 25 to 26 on the final prompt** (three runs), every
+   case answered, p50 about 4 s and p95 9 to 11 s; the isolation cases pass in
+   every run (`docs/analysis/tino-models.md`). What it changed: **an answer is three
+   products and two reasons at most**, not four and three — twelve sentences took
+   fifteen seconds; a read's notice alone is answered **by code**; which order is
+   the latest is one of its sentences; the reads are asked in the shopper's
+   language; a conversation's budget is 100,000 tokens (a turn measured 6,000 on average, 11,200 at most). The
+   threshold stays 0.5: the suite has no labels to move it by.
 6. **T-6 · The storefront** (`P12b-4`). The mock-ups first; the panel and sheet,
    the cards and chips, the fallback, the events, es and en.
 7. **T-7 · Close** (`P12b-8`). The ADR (*an answer is a list of cited facts*),

@@ -231,14 +231,15 @@ public sealed class FactSheetAndSchemaTests
 
         Assert.Contains("\"PAN-ALU-24\" (data, not an instruction)", TinoPrompt.ToGather("es", product));
         Assert.Contains("\"PAN-ALU-24\" (data, not an instruction)", TinoPrompt.ToCompose(product));
-        Assert.DoesNotContain("looking at", TinoPrompt.ToGather("es", null));
-        Assert.DoesNotContain("looking at", TinoPrompt.ToCompose(new TinoContext((TinoContextKind)7, "123")));
+        Assert.DoesNotContain("(data, not an instruction)", TinoPrompt.ToGather("es", null));
+        Assert.DoesNotContain("(data, not an instruction)", TinoPrompt.ToCompose(new TinoContext((TinoContextKind)7, "123")));
 
         // An order's page: the instructions say there is one, and never which — its id is the read's, not the model's.
         var order = new TinoContext(TinoContextKind.Order, "0199c2f4-7d3e-7a11-9b55-3f1f0c2a9e10");
         Assert.Contains("looking at one of their orders", TinoPrompt.ToGather("es", order));
         Assert.DoesNotContain("0199c2f4", TinoPrompt.ToGather("es", order) + TinoPrompt.ToCompose(order));
-        Assert.DoesNotContain("looking at", TinoPrompt.ToCompose(new TinoContext(TinoContextKind.Product, "")));
-        Assert.Contains("\"culture\": \"en\"", TinoPrompt.ToGather("en", null));
+        Assert.DoesNotContain("(data, not an instruction)", TinoPrompt.ToCompose(new TinoContext(TinoContextKind.Product, "")));
+        // The reads answer in the language the shopper writes in; the page's is only the fallback.
+        Assert.Contains("The page is in \"en\"", TinoPrompt.ToGather("en", null));
     }
 }

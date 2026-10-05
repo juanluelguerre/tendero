@@ -20,9 +20,15 @@ public static class AnswerSchema
 {
     public const string Name = "tino_answer";
 
-    public const int MaxProducts = 4;
+    /// <summary>
+    /// Three products and two reasons each, not the four and three the spec first
+    /// wrote: the suite's first run (T-5) spent 15 to 17 seconds of a turn's twenty on
+    /// answers of twelve sentences, most of them a fact restated. Six sentences is
+    /// what answers the question.
+    /// </summary>
+    public const int MaxProducts = 3;
 
-    public const int MaxReasons = 3;
+    public const int MaxReasons = 2;
 
     public static JsonElement For(FactSheet sheet)
     {

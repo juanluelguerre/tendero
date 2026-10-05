@@ -50,7 +50,12 @@ public sealed class TinoOptions
     /// <summary>How long a whole turn may take: both phases, every call and tool.</summary>
     public int TurnSeconds { get; init; } = 20;
 
-    public long ConversationTokenBudget { get; init; } = 30_000;
+    /// <summary>
+    /// Tokens a conversation may spend. The suite measured a turn at 6,000 on average
+    /// and 11,200 at most (T-5), the tools' schemas and the sheet in every call: the
+    /// first estimate, 30,000, was five turns. This is about sixteen.
+    /// </summary>
+    public long ConversationTokenBudget { get; init; } = 100_000;
 
     /// <summary>
     /// Tokens every shopper together may spend in the shop's day. An anonymous
@@ -253,9 +258,20 @@ public sealed class TinoTurnHandler(
             options: new ChatClientAgentRunOptions(ModelCall.Options(Operation, command.ConversationId, TinoPrompt.Version, person: person)),
             cancellationToken: cancellationToken);
 
+        var sheet = candidate.Sheet;
+
+        // Nobody to answer about, and nothing else read: the shop's notice IS the
+        // answer, word for word. Nothing is left for a model to phrase or to get
+        // wrong — the suite saw it ask the shopper a question back instead (T-5).
+        if (sheet.Products.Count == 0 && sheet.Orders.Count == 0
+            && sheet.Facts.Count > 0 && sheet.Facts.All(fact => fact.Fact.Source == FactSource.Notice))
+        {
+            var notices = sheet.Facts.Select(fact => new Reason(fact.Fact.Text, FactSource.Notice, fact.Fact.Text, [], null)).ToList();
+            return (new TinoBody(TinoKind.Shop, [], notices, null, null, 0), Cost(candidate, started, gathered, null));
+        }
+
         // The sheet goes where the shopper's last words were, in front of them: what
         // the model answers from, and the question it answers.
-        var sheet = candidate.Sheet;
         List<ChatMessage> asked =
         [
             new(ChatRole.System, composing),
@@ -295,11 +311,17 @@ public sealed class TinoTurnHandler(
         if (body is { Kind: TinoKind.Shop or TinoKind.Order, Says.Count: 0 })
             throw new UnusableAnswerException("Nothing Tino's model wrote was said by the fact it cited.");
 
-        var calls = gathered.Messages.Count(message => message.Role == ChatRole.Assistant) + 1;
-        var input = (gathered.Usage?.InputTokenCount ?? 0) + (composed.Usage?.InputTokenCount ?? 0);
-        var output = (gathered.Usage?.OutputTokenCount ?? 0) + (composed.Usage?.OutputTokenCount ?? 0);
-        return (body, new TurnCost(calls, input, output, candidate.Profile.CostMicroEuros(input, output),
-            (int)clock.GetElapsedTime(started).TotalMilliseconds, candidate.Profile.Model ?? candidate.Name));
+        return (body, Cost(candidate, started, gathered, composed));
+    }
+
+    /// <summary>What both phases cost; a turn code answered has no composing call.</summary>
+    private TurnCost Cost(Candidate candidate, long started, AgentResponse gathered, ChatResponse? composed)
+    {
+        var calls = gathered.Messages.Count(message => message.Role == ChatRole.Assistant) + (composed is null ? 0 : 1);
+        var input = (gathered.Usage?.InputTokenCount ?? 0) + (composed?.Usage?.InputTokenCount ?? 0);
+        var output = (gathered.Usage?.OutputTokenCount ?? 0) + (composed?.Usage?.OutputTokenCount ?? 0);
+        return new TurnCost(calls, input, output, candidate.Profile.CostMicroEuros(input, output),
+            (int)clock.GetElapsedTime(started).TotalMilliseconds, candidate.Profile.Model ?? candidate.Name);
     }
 
     /// <summary>What the storefront searches for when Tino did not answer: the shopper's last words.</summary>

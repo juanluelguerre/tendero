@@ -137,7 +137,7 @@ internal sealed class CopilotSuite : IEvaluationSuite
     }
 
     /// <summary>The profile the turn asks, in configuration's words: a script, or an endpoint and its model.</summary>
-    private static (IReadOnlyDictionary<string, string?> Settings, string Label) Profile(EvaluationOptions options)
+    internal static (IReadOnlyDictionary<string, string?> Settings, string Label) Profile(EvaluationOptions options)
     {
         const string prefix = "Steward:Models:" + CopilotLaboratory.Profile + ":";
         if (options.Script is { Length: > 0 } script)

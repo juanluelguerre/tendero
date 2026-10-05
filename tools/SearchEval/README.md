@@ -75,3 +75,54 @@ Se **mide, no se compara con un umbral**: S-7 la pasa por cada perfil y el
 autor elige el de por defecto con los números (`docs/analysis/steward-models.md`).
 Un caso que nombra un producto que el laboratorio no tiene detiene la suite
 antes de preguntar a ningún modelo: ese error sería de la suite, no del modelo.
+
+## La suite `assistant` (Tino, fase 12b)
+
+Tino contra `Assistant/cases.json`: cada caso es una pregunta, quién la hace
+(nadie, o uno de los compradores del laboratorio), la página desde la que se hace
+(un producto, un pedido) y lo que una respuesta correcta tiene. **Sin modelo
+juez**: se compara el tipo de respuesta, las lecturas hechas, los productos por su
+código, **los datos citados** —el texto de la tienda, no las palabras del modelo—,
+el pedido por su id y las palabras que ninguna frase puede llevar.
+
+El turno es el que corre la API, compuesto en este proceso sobre un laboratorio
+que la suite prepara: importa el catálogo semilla y lo **publica**, lo indexa en
+un Elasticsearch para la búsqueda de la tienda, graba las descripciones y aprueba
+los claims que las reglas proponen con soporte suficiente, le pone una instrucción
+a la descripción de un producto y coloca cuatro pedidos de tres personas. Necesita
+cuatro contenedores, todos desechables:
+
+```bash
+L="--label com.docker.compose.project=tendero"
+docker run -d --name tino-eval-pg $L --memory 768m --cpus 2 \
+  -e POSTGRES_PASSWORD=eval -e POSTGRES_DB=tino -p 39433:5432 postgres:17
+docker run -d --name tino-eval-es $L --memory 2g --cpus 2 -p 39211:9200 \
+  -e discovery.type=single-node -e xpack.security.enabled=false -e "ES_JAVA_OPTS=-Xms1g -Xmx1g" \
+  docker.elastic.co/elasticsearch/elasticsearch:9.5.0
+docker run -d --name tino-eval-nli $L --memory 3g --memory-swap 3g --cpus 8 -p 39484:80 \
+  -v tendero-tei-models:/data ghcr.io/huggingface/text-embeddings-inference:cpu-1.9.3 \
+  --model-id MoritzLaurer/bge-m3-zeroshot-v2.0 --revision 9abf1c8aaeb82a2447809c20753ed0b106b76652 \
+  --max-batch-tokens 1024 --max-batch-requests 1 --auto-truncate --tokenization-workers 2
+docker run -d --name tino-eval-model $L --gpus all --memory 6g --memory-swap 6g --cpus 12 -p 39480:8080 \
+  -v tendero-extractor-models:/models:ro ghcr.io/ggml-org/llama.cpp:server-cuda-v0.5.0 \
+  -m /models/qwen3.5-4b-q8_0.gguf --host 0.0.0.0 --port 8080 -c 8192 -np 1 -t 12 --jinja \
+  --load-mode none --cache-ram 0 --chat-template-kwargs '{"enable_thinking":false}' -ngl 99
+
+dotnet run --project tools/SearchEval -- --suite assistant \
+  --database "Host=localhost;Port=39433;Database=tino;Username=postgres;Password=eval" \
+  --elasticsearch http://localhost:39211 --tei http://localhost:39484 \
+  --chat http://localhost:39480 --model Qwen/Qwen3.5-4B --report artifacts/assistant.json
+# --only pan,order   solo los casos cuyo id contiene alguna de esas palabras
+
+docker rm -f tino-eval-pg tino-eval-es tino-eval-nli tino-eval-model
+```
+
+En Git Bash, `MSYS_NO_PATHCONV=1` delante de los `docker run` que montan
+`/models` o `/data`: sin él la ruta se reescribe y el modelo no se encuentra.
+
+**El Elasticsearch es solo el suyo**: la suite recrea los índices al empezar.
+Nunca el del stack ni otro con datos. Se **mide, no se compara con un umbral**:
+los números están en `docs/analysis/tino-models.md`, y lo que varía de una pasada
+a otra con el mismo modelo, también. Un caso que nombra un producto, un pedido,
+una lectura o un comprador que el laboratorio no tiene detiene la suite antes de
+preguntar a ningún modelo.

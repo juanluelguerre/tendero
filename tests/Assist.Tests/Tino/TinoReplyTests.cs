@@ -118,7 +118,7 @@ public sealed class TinoReplyTests
     }
 
     [Fact]
-    public void No_more_than_four_products_three_reasons_each_and_a_product_once()
+    public void No_more_products_and_reasons_than_an_answer_has_room_for_and_a_product_once()
     {
         var sheet = new FactSheet();
         sheet.Add(new ReadAnswer(new { }, 6, 6,
@@ -130,8 +130,9 @@ public sealed class TinoReplyTests
 
         var body = TinoReply.Read($$"""{"kind":"products","products":[{{products}}]}""", sheet)!;
 
-        Assert.Equal(["P-1", "P-2", "P-3", "P-4"], body.Products.Select(product => product.Code));
-        Assert.Equal(["Dice 1.", "Dice 2.", "Dice 3."], body.Products[0].Reasons.Select(reason => reason.Text));
+        Assert.Equal((3, 2), (AnswerSchema.MaxProducts, AnswerSchema.MaxReasons));
+        Assert.Equal(["P-1", "P-2", "P-3"], body.Products.Select(product => product.Code));
+        Assert.Equal(["Dice 1.", "Dice 2."], body.Products[0].Reasons.Select(reason => reason.Text));
         // Past the limit is cut, not counted: it held, there was no room for it.
         Assert.Equal(0, body.Dropped);
     }
@@ -232,7 +233,6 @@ public sealed class TinoReplyTests
     {
         var body = TinoReply.Read("""
             {"kind":"order","order":"order1","says":[
-              {"says":"Ya está entregado.","cites":"f2"},
               {"says":"Puedes devolver los botines hasta el 15 de enero.","cites":"f3"},
               {"says":"Hay 14 días desde la entrega.","cites":"f4"}]}
             """, FactSheetAndSchemaTests.WithAnOrder())!;
@@ -240,7 +240,7 @@ public sealed class TinoReplyTests
         Assert.Equal((TinoKind.Order, 0), (body.Kind, body.Dropped));
         // The reference the model used is this turn's; what the storefront links to is the order's id.
         Assert.Equal(new AnsweredOrder("0199-real-id", "Pedido del 1 de enero de 2026"), body.Order);
-        Assert.Equal([FactSource.Order, FactSource.Order, FactSource.Policy], body.Says.Select(reason => reason.Source));
+        Assert.Equal([FactSource.Order, FactSource.Policy], body.Says.Select(reason => reason.Source));
         Assert.Empty(body.Products);
     }
 

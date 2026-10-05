@@ -15,7 +15,7 @@ The board. Open this to know what to do next; everything else is reference.
 > Update these three lines at the end of every session. They are the point of the file.
 
 - **Current phase:** **phase 12, Steward, closed on 2026-10-05** on `feature/phase-12-steward` (not merged: the branch waits for the author) — S-1 to S-6 and S-8 done, `P12-9` and `P12-10` with them; ADR 0019 written last; Stryker over the seven projects it touched, `Assist` at 84.76 % and `AI` at 72.02 % of covered as first baselines (`docs/testing.md`); the after captures in `docs/blog/reports/2026-10-05-phase-12-steward/`. **Left open on purpose by the author**: S-7's hosted profiles (Steward runs on the local Qwen3.5-4B on the GPU, about two seconds a turn) and everything about pictures, which waits for phase 13 (`docs/analysis/image-models.md`). Before it: the redesign (R-0 to R-9) and the frontend against its own guides, merged into `develop`.
-- **Next task:** **phase 12b, Tino — T-5, the `assistant` suite** (`P12b-7`), on `feature/phase-12b-tino`: cases with the tools, the products and the citations each answer must have and the facts it must not state, order cases with a principal, injection and language cases — no judge — and from it the support threshold, the caps and the prompt. What it has to settle is written in `docs/analysis/tino-models.md`: the name's reach, a fact that denies a *sin dato*, a question answered in part, fifteen seconds of a turn's twenty. Done so far: the spec and its mock-ups, **T-2** (the reads, the typed answer, the turn), **T-3** (grounding) and **T-4** (after-sale: `my_orders`, with no order number anywhere a model or a shopper can reach). Then T-6 (the storefront). Phase 12's branch still waits for the author to merge it.
+- **Next task:** **phase 12b, Tino — T-6, the storefront** (`P12b-4`), on `feature/phase-12b-tino`: the panel and the sheet from the mock-ups (`design/unpublished/mockups/storefront-tino.pen`), the door in the header where Steward's is, the cards from `GET /api/search/cards` and the chips from each reason's source, the fallback to the search results, the not-available state, the events in the tracking plan, es and en; a browser spec over a scripted Tino. The backend is done: **T-2** (the reads, the typed answer, the turn), **T-3** (grounding), **T-4** (after-sale) and **T-5** (the `assistant` suite: 25 to 26 of 28 on the local 4B, p95 9 to 11 s — `docs/analysis/tino-models.md`). Then the close (`P12b-8`). Phase 12's branch still waits for the author to merge it.
 - **Next publication:** article **01 · Design before code** on **2026-09-29** — the design system, one deliberately ugly sketch per app of screens already in the tag of 00, the running screen as the prototype, and its own tag cut from `develop`. Then **02 · One port, N catalogs** on 2026-10-13, reviewed and re-checked against `blog/02-one-port-n-catalogs` on 2026-09-21. The articles were renumbered that day to their publication order, which follows the book (`blog/index.md`, *Why this order*). Article 00's published post still names the old next article and needs a one-line edit in WordPress.
 
 **Decisions taken 2026-09-18** — 1 · **the project gains an optional second
@@ -862,7 +862,7 @@ answer ends in a button. `#AIEngineering #agents #dotnet #ecommerce`
 
 ## Phase 12b · Tino, the shopping assistant, with a voice
 
-`en curso` (T-2, T-3 y T-4 hechos 2026-10-05; voz aplazada a la fase 13) · priority **medium** · size **L** — added 2026-09-26 at the author's
+`en curso` (T-2 a T-5 hechos 2026-10-05; voz aplazada a la fase 13) · priority **medium** · size **L** — added 2026-09-26 at the author's
 request, with speech recognition inside it rather than in phase 13. The vision
 lists *a conversational assistant* among the standard 2026 capabilities and no
 phase had it; the gap analysis marked it missing. It comes **after phase 10**
@@ -877,7 +877,7 @@ call are built there.
 - [ ] `P12b-4` The storefront conversation: es and en, one clay action, agent-driven actions in clay; **degrades to the search results** when no model answers (invariant 8), and the test proves it — **M**
 - [ ] `P12b-5` *(postponed 2026-10-05 by the author to phase 13 and after, with the image work — not part of 12b's close)* `ISpeechToText` with two adapters compared under one protocol: the browser's Web Speech API (no server, but Chrome sends the audio to Google) and **whisper.cpp** in a container, weights pinned by revision (ADR 0031), limits sized from a measurement; the text box is the non-AI path — **M**
 - [ ] `P12b-6` *(postponed with `P12b-5`)* Voice in the assistant and in the search box on mobile; accessibility checked with the tokens and the keyboard, not assumed — **M**
-- [ ] `P12b-7` `assistant` eval suite in `SearchEval`: questions with the claims each answer must cite; a fact with no citation fails, no judge — **M**
+- [x] `P12b-7` `assistant` eval suite in `SearchEval`: questions with the claims each answer must cite; a fact with no citation fails, no judge — **M** · **done 2026-10-05** (T-5): 28 cases, 25 to 26 passed on the final prompt over three runs, every case answered, the isolation cases in every run; it cut an answer to three products and two reasons
 - [ ] `P12b-8` ADR — **S**
 
 **Risks.** Prompt injection through descriptions and claims, which the assistant
