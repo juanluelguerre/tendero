@@ -1,5 +1,6 @@
-import { Component, type ElementRef, effect, inject, viewChild } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { translateSignal } from '@jsverse/transloco';
+import { ModalSheet } from '@tendero/shared-ui';
 import { SidePane } from '../../../shell/side-pane/side-pane';
 import { StewardPanel } from '../panel/steward-panel';
 import { StewardDoorStore } from '../steward-door.store';
@@ -14,7 +15,7 @@ import { StewardDoorStore } from '../steward-door.store';
  */
 @Component({
   selector: 'backoffice-steward-dock',
-  imports: [StewardPanel],
+  imports: [StewardPanel, ModalSheet],
   templateUrl: './steward-dock.html',
   // The column is the shell grid's third, as if it were the shell's own child.
   host: { class: 'contents' },
@@ -28,16 +29,4 @@ export class StewardDock {
 
   /** Whether the panes sit beside the page (from 85 rem) or are drawers over it. */
   protected readonly wide = inject(SidePane).stewardDocked;
-
-  private readonly sheet = viewChild<ElementRef<HTMLDialogElement>>('sheet');
-
-  constructor() {
-    // The dialog is the DOM's: opened when the sheet is asked for, closed with the door.
-    effect(() => {
-      const dialog = this.sheet()?.nativeElement;
-      if (!dialog) return;
-      if (this.door.isOpen() && !dialog.open) dialog.showModal();
-      else if (!this.door.isOpen() && dialog.open) dialog.close();
-    });
-  }
 }

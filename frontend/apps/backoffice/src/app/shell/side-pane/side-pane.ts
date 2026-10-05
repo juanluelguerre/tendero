@@ -1,18 +1,11 @@
-import { computed, DestroyRef, Directive, inject, Injectable, signal, type Signal, TemplateRef } from '@angular/core';
+import { computed, DestroyRef, Directive, inject, Injectable, signal, TemplateRef } from '@angular/core';
+import { followsMedia } from '@tendero/shared-ui';
 
 /** Where Steward is docked beside the page: it keeps a narrow table's 44 rem beside a 26 rem panel and the open rail. */
 const StewardDockedFrom = '(min-width: 85rem)';
 
 /** Where the pane of an item is docked too: there is room to spare for both. Below, it is a drawer over the page. */
 const PaneDockedFrom = '(min-width: 112rem)';
-
-/** Whether a media query matches, followed as the window changes. */
-function follows(query: string): Signal<boolean> {
-  const list = window.matchMedia(query);
-  const matches = signal(list.matches);
-  list.addEventListener('change', (event) => matches.set(event.matches));
-  return matches.asReadonly();
-}
 
 /**
  * The shell's one slot for the pane of a list's open item. A screen does not place
@@ -27,10 +20,10 @@ export class SidePane {
   private readonly shown = signal<TemplateRef<unknown> | null>(null);
 
   /** Steward sits beside the page; below, it is a drawer over it, and a sheet on a phone. */
-  readonly stewardDocked = follows(StewardDockedFrom);
+  readonly stewardDocked = followsMedia(StewardDockedFrom);
 
   /** The item's pane sits beside the page only where there is room to spare; below, it is a drawer over it. */
-  readonly docked = follows(PaneDockedFrom);
+  readonly docked = followsMedia(PaneDockedFrom);
 
   /** What the slot draws, if anything. */
   readonly template = this.shown.asReadonly();

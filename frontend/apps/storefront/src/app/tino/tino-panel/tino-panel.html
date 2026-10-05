@@ -46,7 +46,11 @@
         }
       </p>
 
-      <div class="relative grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation>
+      <!-- It scrolls and draws no scrollbar, as Steward's does: a chat reads as a page. -->
+      <div
+        class="relative grid min-h-0 flex-1 [scrollbar-width:none] content-start gap-4 overflow-y-auto p-4"
+        [libConversationScroll]="store.exchanges().length"
+      >
         @if (store.exchanges().length === 0) {
           <p class="m-0 text-sm text-muted">{{ t('tino.intro') }}</p>
         }
@@ -177,20 +181,20 @@
       </div>
 
       <footer class="grid gap-2 border-t border-hairline p-4">
-        <form class="flex items-end gap-2" (submit)="$event.preventDefault(); send()">
+        <form class="flex items-end gap-2" (submit)="$event.preventDefault(); box.send()">
           <label class="sr-only" for="tino-question">{{ t('tino.composerLabel') }}</label>
           <textarea
             id="tino-question"
             class="min-h-tap flex-1 resize-none rounded-md border border-hairline-strong bg-surface p-2 text-body"
             rows="1"
-            #composer
+            libComposer
+            #box="libComposer"
             [placeholder]="t('tino.placeholder')"
-            [value]="draft()"
-            (input)="draft.set($any($event.target).value)"
-            (keydown)="keyed($event)"
+            [busy]="store.busy()"
+            (asked)="ask($event)"
           ></textarea>
           <!-- The panel's one clay action. -->
-          <button type="submit" class="button" [disabled]="store.busy() || !draft().trim()">
+          <button type="submit" class="button" [disabled]="!box.ready()">
             {{ t('tino.send') }}
           </button>
         </form>

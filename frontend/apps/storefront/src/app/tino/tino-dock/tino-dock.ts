@@ -1,5 +1,6 @@
-import { Component, type ElementRef, effect, inject, viewChild } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { translateSignal } from '@jsverse/transloco';
+import { ModalSheet } from '@tendero/shared-ui';
 import { TinoDoorStore } from '../tino-door.store';
 import { TinoPanel } from '../tino-panel/tino-panel';
 
@@ -13,7 +14,7 @@ import { TinoPanel } from '../tino-panel/tino-panel';
  */
 @Component({
   selector: 'storefront-tino-dock',
-  imports: [TinoPanel],
+  imports: [TinoPanel, ModalSheet],
   templateUrl: './tino-dock.html',
   host: { class: 'contents' },
 })
@@ -23,16 +24,4 @@ export class TinoDock {
   /** The landmark's and the dialog's name. Not through the template's directive:
       the dialog must exist to be opened whether or not the words have loaded. */
   protected readonly name = translateSignal('tino.name');
-
-  private readonly sheet = viewChild<ElementRef<HTMLDialogElement>>('sheet');
-
-  constructor() {
-    // The dialog is the DOM's: opened when the sheet is asked for, closed with the door.
-    effect(() => {
-      const dialog = this.sheet()?.nativeElement;
-      if (!dialog) return;
-      if (this.door.isOpen() && !dialog.open) dialog.showModal();
-      else if (!this.door.isOpen() && dialog.open) dialog.close();
-    });
-  }
 }

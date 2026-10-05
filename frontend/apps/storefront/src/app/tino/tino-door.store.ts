@@ -1,22 +1,15 @@
-import { computed, inject, signal, type Signal } from '@angular/core';
+import { computed, inject } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
-import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { extendResource } from '@ngrx/signals/resource';
 import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
-import { catchError, of, pipe, switchMap, tap } from 'rxjs';
+import { followsMedia } from '@tendero/shared-ui';
 import { TinoService } from '../data-access/tino.service';
 import { pageOf } from './tino-context';
 
 /** From here the panel sits beside the page; below, it is a sheet over it. */
 const DockedFrom = '(min-width: 64rem)';
-
-/** Whether a media query matches, followed as the window changes; where there is no such thing to ask, it does not. */
-function follows(query: string): Signal<boolean> {
-  const list = typeof window.matchMedia === 'function' ? window.matchMedia(query) : null;
-  const matches = signal(list?.matches ?? false);
-  list?.addEventListener('change', (event) => matches.set(event.matches));
-  return matches.asReadonly();
-}
 
 /**
  * Tino's door (phase 12b; ADR 0047: the header's button, the search page's offer
@@ -32,24 +25,33 @@ export const TinoDoorStore = signalStore(
   { providedIn: 'root' },
   withState({
     isOpen: false,
-    /** Null until the server has said; a shop that does not answer says no. */
-    available: null as boolean | null,
     /** A question the search page handed over, for the panel to ask as it opens. */
     handed: null as string | null,
   }),
-  withProps(() => ({
-    _tino: inject(TinoService),
-    _telemetry: inject(Telemetry),
-    _router: inject(Router),
-    /** Whether there is room for the panel beside the page. */
-    wide: follows(DockedFrom),
-  })),
-  withComputed((store) => ({
-    /** The panel is open beside the page: the shell gives it the room. */
-    docked: computed(() => store.isOpen() && store.wide()),
-    /** The door is quiet and says so only once the server has said no: not while it has not answered yet. */
-    unavailable: computed(() => store.available() === false),
-  })),
+  withProps(() => {
+    const tino = inject(TinoService);
+    return {
+      _telemetry: inject(Telemetry),
+      _router: inject(Router),
+      /** Read once, when the shell first draws the door: what the server is read for is a resource (ADR 0051). */
+      _status: extendResource(rxResource({ stream: () => tino.status() })),
+      /** Whether there is room for the panel beside the page. */
+      wide: followsMedia(DockedFrom),
+    };
+  }),
+  withComputed((store) => {
+    /** Null until the server has said; a shop that does not answer says no. */
+    const available = computed<boolean | null>(() =>
+      store._status.status() === 'error' ? false : (store._status.value()?.available ?? null),
+    );
+    return {
+      available,
+      /** The door is quiet and says so only once the server has said no: not while it has not answered yet. */
+      unavailable: computed(() => available() === false),
+      /** The panel is open beside the page: the shell gives it the room. */
+      docked: computed(() => store.isOpen() && store.wide()),
+    };
+  }),
   withMethods((store) => {
     const open = (from: TrackedEvents['tino_opened']['from']) => {
       if (store.isOpen()) return;
@@ -58,13 +60,6 @@ export const TinoDoorStore = signalStore(
       if (store.unavailable()) store._telemetry.trackEvent('tino_unavailable', { cause: 'not_available' });
     };
     return {
-      /** Asked once, when the shell is drawn. */
-      check: rxMethod<void>(
-        pipe(
-          switchMap(() => store._tino.status().pipe(catchError(() => of({ available: false })))),
-          tap((status) => patchState(store, { available: status.available })),
-        ),
-      ),
       open,
       close(): void {
         patchState(store, { isOpen: false });

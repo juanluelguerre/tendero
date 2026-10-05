@@ -1,21 +1,11 @@
-import {
-  afterNextRender,
-  Component,
-  computed,
-  effect,
-  type ElementRef,
-  inject,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, effect, inject, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import type { AnsweredProduct, SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
-import { Icon, Notice } from '@tendero/shared-ui';
+import { Composer, ConversationScroll, Icon, Notice } from '@tendero/shared-ui';
 import { filter, map } from 'rxjs';
 import { ProductCard } from '../../product-card/product-card';
 import { ShopLinks } from '../../shop-links';
@@ -49,7 +39,7 @@ interface Drawn {
  */
 @Component({
   selector: 'storefront-tino-panel',
-  imports: [TranslocoDirective, RouterLink, Icon, Notice, ProductCard, TinoSource],
+  imports: [TranslocoDirective, RouterLink, Icon, Notice, Composer, ConversationScroll, ProductCard, TinoSource],
   templateUrl: './tino-panel.html',
   // A product followed is a click on a link inside one of an answer's products: heard
   // here, on the host, as the home's modules hear theirs — the list items are not controls.
@@ -62,9 +52,6 @@ export class TinoPanel {
   protected readonly culture = inject(CultureStore).active;
   private readonly router = inject(Router);
   private readonly telemetry = inject(Telemetry);
-
-  /** The question while it is typed. */
-  protected readonly draft = signal('');
 
   private readonly url = toSignal(
     this.router.events.pipe(
@@ -88,13 +75,7 @@ export class TinoPanel {
     }),
   );
 
-  private readonly composer = viewChild<ElementRef<HTMLTextAreaElement>>('composer');
-  private readonly conversation = viewChild<ElementRef<HTMLElement>>('conversation');
-
   constructor() {
-    // The panel opens to be asked: the composer has the focus.
-    afterNextRender(() => this.composer()?.nativeElement.focus());
-
     // What the search page handed over is asked as the panel opens.
     effect(() => {
       const handed = this.door.handed();
@@ -104,35 +85,10 @@ export class TinoPanel {
         this.store.ask(handed, this.context());
       });
     });
-
-    // The newest question at the top of the view as it is asked (the DOM's, so an
-    // effect): its answer grows below it in sight. The conversation's own scroll,
-    // never scrollIntoView, which would scroll the page under the panel too.
-    effect(() => {
-      const asked = this.store.exchanges().length;
-      const element = this.conversation()?.nativeElement;
-      if (!element || asked === 0) return;
-      queueMicrotask(() => {
-        const questions = element.querySelectorAll('[data-question]');
-        const last = questions[questions.length - 1];
-        if (!last) return;
-        const padding = Number.parseFloat(getComputedStyle(element).paddingTop) || 0;
-        element.scrollTop += last.getBoundingClientRect().top - element.getBoundingClientRect().top - padding;
-      });
-    });
   }
 
-  protected send(): void {
-    if (!this.draft().trim() || this.store.busy()) return;
-    this.store.ask(this.draft(), this.context());
-    this.draft.set('');
-  }
-
-  /** Enter sends; Shift+Enter is a new line. */
-  protected keyed(event: KeyboardEvent): void {
-    if (event.key !== 'Enter' || event.shiftKey) return;
-    event.preventDefault();
-    this.send();
+  protected ask(question: string): void {
+    this.store.ask(question, this.context());
   }
 
   /** The search, from the panel that could not answer: the shop's own box, where the words go as they always did. */

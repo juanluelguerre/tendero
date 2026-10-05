@@ -24,7 +24,12 @@
          repeated every question and cost line to a screen reader. -->
     <p class="sr-only" aria-live="polite">{{ store.latestAnswer() }}</p>
 
-    <div class="conversation relative grid min-h-0 flex-1 content-start gap-4 overflow-y-auto p-4" #conversation>
+    <!-- It scrolls with the wheel, the trackpad and the keyboard, and draws no scrollbar:
+         a chat reads as a page, not as a window with a bar beside it. -->
+    <div
+      class="relative grid min-h-0 flex-1 [scrollbar-width:none] content-start gap-4 overflow-y-auto p-4"
+      [libConversationScroll]="store.exchanges().length"
+    >
       @if (store.exchanges().length === 0) {
         <p class="m-0 text-sm text-muted">{{ t('steward.intro') }}</p>
       }
@@ -195,23 +200,23 @@
           {{ t('steward.newConversation') }}
         </button>
       } @else {
-        <form class="flex items-end gap-2" (submit)="$event.preventDefault(); send()">
+        <form class="flex items-end gap-2" (submit)="$event.preventDefault(); box.send()">
           <label class="sr-only" for="steward-question">{{ t('steward.placeholder') }}</label>
           <textarea
             id="steward-question"
             class="min-h-control flex-1 resize-none rounded-md border border-hairline-strong bg-raised p-2 text-body"
             rows="1"
-            #composer
+            libComposer
+            #box="libComposer"
             [placeholder]="t('steward.placeholder')"
-            [value]="draft()"
-            (input)="draft.set($any($event.target).value)"
-            (keydown)="keyed($event)"
+            [busy]="store.busy()"
+            (asked)="ask($event)"
           ></textarea>
           <button
             type="submit"
             class="inline-grid size-control flex-none place-items-center rounded-md border border-hairline-strong text-body hover:bg-raised"
             [attr.aria-label]="t('steward.send')"
-            [disabled]="store.busy() || !draft().trim()"
+            [disabled]="!box.ready()"
           >
             <lib-icon name="send" />
           </button>

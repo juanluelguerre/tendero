@@ -121,7 +121,6 @@ export class Shell {
 
   constructor() {
     void this.cart.load();
-    this.tino.check();
     this.agent.register(this.tools.all());
 
     // Created with the shell, so the page wears the chosen theme from the start.

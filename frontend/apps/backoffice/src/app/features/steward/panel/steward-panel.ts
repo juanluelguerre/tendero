@@ -1,19 +1,9 @@
-import {
-  afterNextRender,
-  Component,
-  computed,
-  effect,
-  type ElementRef,
-  inject,
-  signal,
-  untracked,
-  viewChild,
-} from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { Icon, Notice } from '@tendero/shared-ui';
+import { Composer, ConversationScroll, Icon, Notice } from '@tendero/shared-ui';
 import { filter } from 'rxjs';
 import { WaitingStore } from '../../../shell/waiting.store';
 import { ProposalCard } from '../proposal-card/proposal-card';
@@ -43,6 +33,8 @@ import { StewardWait } from './steward-wait/steward-wait';
     RouterLink,
     Icon,
     Notice,
+    Composer,
+    ConversationScroll,
     ProposalCard,
     ProposalReview,
     CostLinePipe,
@@ -51,7 +43,6 @@ import { StewardWait } from './steward-wait/steward-wait';
     StewardTable,
   ],
   templateUrl: './steward-panel.html',
-  styleUrl: './steward-panel.css',
   host: { class: 'block' },
 })
 export class StewardPanel {
@@ -61,9 +52,6 @@ export class StewardPanel {
   private readonly router = inject(Router);
   private readonly translate = inject(TranslocoService);
   private readonly waiting = inject(WaitingStore);
-
-  /** The question while it is typed. */
-  protected readonly draft = signal('');
 
   /** How many times the review decided something: every card reads its batch again. */
   protected readonly revision = signal(0);
@@ -83,54 +71,9 @@ export class StewardPanel {
   });
 
   private readonly review = viewChild.required(ProposalReview);
-  private readonly composer = viewChild<ElementRef<HTMLTextAreaElement>>('composer');
-  private readonly conversation = viewChild<ElementRef<HTMLElement>>('conversation');
 
-  constructor() {
-    // The panel opens to be asked: the composer has the focus.
-    afterNextRender(() => this.composer()?.nativeElement.focus());
-
-    // The newest question at the top of the view as it is asked (the DOM's, so an
-    // effect): its answer, and a card that loads after it, grow below it in sight.
-    // Scrolling to the bottom instead left a card that arrived later under the fold.
-    // The conversation's own scroll, never scrollIntoView: that scrolls every
-    // ancestor, the page included, and left the backoffice scrolled to its end.
-    effect(() => {
-      const asked = this.store.exchanges().length;
-      const element = this.conversation()?.nativeElement;
-      if (!element || asked === 0) return;
-      queueMicrotask(() => {
-        const questions = element.querySelectorAll('[data-question]');
-        const last = questions[questions.length - 1];
-        if (!last) return;
-        const padding = Number.parseFloat(getComputedStyle(element).paddingTop) || 0;
-        element.scrollTop += last.getBoundingClientRect().top - element.getBoundingClientRect().top - padding;
-      });
-    });
-
-    // The composer is for the next question: once an answer is in, it has the focus
-    // again unless the person went somewhere else (the review's dialog has its own).
-    effect(() => {
-      if (this.store.busy()) return;
-      const composer = this.composer()?.nativeElement;
-      untracked(() => {
-        const active = document.activeElement;
-        if (composer && (!active || active === document.body)) composer.focus();
-      });
-    });
-  }
-
-  protected send(): void {
-    if (!this.draft().trim() || this.store.busy()) return;
-    this.store.ask(this.draft(), this.screen());
-    this.draft.set('');
-  }
-
-  /** Enter sends; Shift+Enter is a new line. */
-  protected keyed(event: KeyboardEvent): void {
-    if (event.key !== 'Enter' || event.shiftKey) return;
-    event.preventDefault();
-    this.send();
+  protected ask(question: string): void {
+    this.store.ask(question, this.screen());
   }
 
   protected again(question: string): void {

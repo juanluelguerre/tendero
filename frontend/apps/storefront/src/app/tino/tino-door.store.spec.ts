@@ -1,3 +1,4 @@
+import { ApplicationRef } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -30,26 +31,38 @@ describe("tino's door", () => {
     door = TestBed.inject(TinoDoorStore);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // The status is read when the door is first drawn; a test that says nothing of it leaves it unanswered.
+    http.match(Status);
+    http.verify();
+  });
+
+  /** The server answers the one read the door makes, once the store's resource has asked. */
+  async function says(...answer: Parameters<ReturnType<HttpTestingController['expectOne']>['flush']>) {
+    TestBed.tick();
+    http.expectOne(Status).flush(...answer);
+    await TestBed.inject(ApplicationRef).whenStable();
+  }
 
   /** The door is not drawn as "not available" while the shop has not answered: it would flicker on every visit. */
-  it('says nothing about availability until the server has, and then what the server said', () => {
+  it('says nothing about availability until the server has, and then what the server said', async () => {
     expect([door.available(), door.unavailable()]).toEqual([null, false]);
 
-    door.check();
-    http.expectOne(Status).flush({ available: true });
+    await says({ available: true });
 
     expect([door.available(), door.unavailable()]).toEqual([true, false]);
   });
 
-  it('is not available when the server says so, and when the server does not answer', () => {
-    door.check();
-    http.expectOne(Status).flush({ available: false });
-    expect(door.unavailable()).toBe(true);
+  it('is not available when the server says so', async () => {
+    await says({ available: false });
 
-    door.check();
-    http.expectOne(Status).flush('down', { status: 503, statusText: 'Service Unavailable' });
     expect(door.unavailable()).toBe(true);
+  });
+
+  it('is not available when the server does not answer', async () => {
+    await says('down', { status: 503, statusText: 'Service Unavailable' });
+
+    expect([door.available(), door.unavailable()]).toEqual([false, true]);
   });
 
   it('opens and closes, and every opening is counted with where it came from and the page it was on', async () => {
@@ -70,9 +83,8 @@ describe("tino's door", () => {
   });
 
   /** Opening a door that leads nowhere is what the fallback's event is for too. */
-  it('counts an opening while Tino is not available as one', () => {
-    door.check();
-    http.expectOne(Status).flush({ available: false });
+  it('counts an opening while Tino is not available as one', async () => {
+    await says({ available: false });
 
     door.toggle();
 

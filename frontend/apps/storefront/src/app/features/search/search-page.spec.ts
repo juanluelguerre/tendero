@@ -82,6 +82,9 @@ describe('the search page, when the answer is not an exact match', () => {
     for (const translations of http.match((req) => req.url.includes('/i18n/'))) translations.flush(TRANSLATIONS);
 
     harness.detectChanges();
+    // Tino's door reads its availability once; unanswered, it would hold `whenStable` open too.
+    for (const status of http.match((req) => req.url.endsWith('/api/assistant/status')))
+      status.flush({ available: true });
     await harness.fixture.whenStable();
     harness.detectChanges();
 

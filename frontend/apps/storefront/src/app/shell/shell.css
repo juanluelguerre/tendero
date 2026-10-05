@@ -15,9 +15,13 @@
   color: var(--color-brand);
 }
 
-/* Tino's panel sits beside the page, fixed, while it is open on a wide screen; the
-   page keeps its own width beside it instead of running under it. The host's look
-   that depends on a state, so it lives here (CLAUDE.md, *The host's own look*). */
+/* Tino's panel sits beside the page, fixed and the window's whole height, while it
+   is open on a wide screen; the page — its header with it — keeps its own width
+   beside it instead of running under it. Tried under a header that spanned the
+   window, as Steward's is (2026-10-05): this shop's header is a centred frame, and
+   it either left a gap above the panel or stopped lining up with the page. The
+   host's look that depends on a state, so it lives here (CLAUDE.md, *The host's
+   own look*). */
 :host(.tino-docked) {
   padding-inline-end: var(--container-panel);
 }

@@ -481,8 +481,20 @@ ways for Tino:
    leads to the page); a phone's sheet closes when a link of an answer is followed;
    the head says *On: this product* — the address has the code, not the name; turns
    do not show what was read (the mock-up's *Read: …* line), which a shopper has no
-   use for. **Not captured**: the not-available state, which needs a stack with no
-   Tino — at the close.
+   use for.
+   *After the author's walkthrough in a browser, on the real model (2026-10-05)*:
+   **the conversation draws no scrollbar**, as Steward's; the docked panel **stays
+   the window's whole height, beside the header** — it was tried under a header
+   spanning the window, as Steward's, and the author preferred it as it was: this
+   shop's header is a centred frame, not the backoffice's bar. What the two panels
+   did the same way is one thing
+   in `libs/shared/ui/src/lib/conversation/`: `Composer` (the box a question is
+   typed in), `ConversationScroll` (the newest question to the top), `ModalSheet`
+   (a dialog that is modal while its condition holds) and `followsMedia`. The
+   composer fixed a fault both panels had: typed and sent inside one render, the box
+   kept the words. The door's availability became a resource, the stores' rule for
+   what the server is read for (ADR 0051), instead of a method the shell called.
+   **Not captured**: the not-available state — at the close.
 7. **T-7 · Close** (`P12b-8`). The ADR (*an answer is a list of cited facts*),
    Stryker, the captures, the notebook and the material map.
 

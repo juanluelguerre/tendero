@@ -9,3 +9,8 @@ export * from './lib/icon/icon';
 export * from './lib/switches/culture-switch';
 export * from './lib/switches/theme-switch';
 export * from './lib/formatting/formatting.pipes';
+// A conversation with an agent, in either app: Steward's panel and Tino's.
+export * from './lib/conversation/follows-media';
+export * from './lib/conversation/modal-sheet';
+export * from './lib/conversation/conversation-scroll';
+export * from './lib/conversation/composer';

@@ -227,6 +227,20 @@ describe('the tino panel', () => {
     expect(element.querySelector<HTMLButtonElement>('footer button[type="submit"]')!.disabled).toBe(true);
   });
 
+  it('empties the box when Enter comes before the page has drawn what was typed', async () => {
+    const fixture = await drawn();
+    const composer = (fixture.nativeElement as HTMLElement).querySelector('textarea')!;
+
+    // No render between the two: a slow frame, or a tab in the background.
+    composer.value = 'una sartén';
+    composer.dispatchEvent(new Event('input'));
+    composer.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    fixture.detectChanges();
+
+    http.expectOne((req) => req.url === Turns);
+    expect(composer.value).toBe('');
+  });
+
   it('adds a line with Shift+Enter instead of sending', async () => {
     const fixture = await drawn();
     const composer = (fixture.nativeElement as HTMLElement).querySelector('textarea')!;
@@ -284,7 +298,7 @@ describe('the tino panel', () => {
   /** The door stayed; what is behind it says so, and offers the shop's search. */
   it('says it is not available and offers the search, with no box to ask in', async () => {
     const door = TestBed.inject(TinoDoorStore);
-    door.check();
+    TestBed.tick();
     http.expectOne(Status).flush({ available: false });
     const fixture = await drawn();
     const element = fixture.nativeElement as HTMLElement;

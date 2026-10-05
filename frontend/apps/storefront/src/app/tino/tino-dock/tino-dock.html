@@ -15,7 +15,7 @@
          event, which closes the door too. -->
     <dialog
       class="m-0 h-dvh max-h-none w-full max-w-none border-0 bg-surface p-0 text-body"
-      #sheet
+      [libModalSheet]="door.isOpen()"
       (close)="door.close()"
       [attr.aria-label]="name()"
     >
