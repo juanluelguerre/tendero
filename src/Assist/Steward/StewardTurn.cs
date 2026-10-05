@@ -2,8 +2,8 @@ using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Carter;
 using ElGuerre.Tendero.AI;
-using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.Assist.Features.ProposeActions;
+using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
 using Microsoft.Agents.AI;
@@ -152,11 +152,8 @@ public sealed partial class StewardTurnHandler(
             .ToList();
         var said = command.Messages.Sum(message => message.Text.Length);
 
-        string?[] names = [settings.Model, settings.Fallback];
-        var candidates = names.OfType<string>().Where(name => name.Length > 0).Distinct()
-            .Select(name => (Name: name, Client: services.GetKeyedService<IChatClient>(name), Profile: profiles.Find(name)))
-            .Where(candidate => candidate.Client is not null && candidate.Profile is not null)
-            .Select(candidate => new Candidate(candidate.Name, candidate.Client!, candidate.Profile!, new StewardTrace()))
+        var candidates = ProfileWalk.Find(services, profiles, settings.Model, settings.Fallback)
+            .Select(found => new Candidate(found.Name, found.Client, found.Profile, new StewardTrace()))
             .ToList();
         foreach (var candidate in candidates)
         {
@@ -165,7 +162,7 @@ public sealed partial class StewardTurnHandler(
                 candidate.Trace);
             // The instructions and the tools' schemas travel with every call, and an
             // answer needs its room: all of it is what the window must hold.
-            candidate.Needs = Tokens(instructions.Length + StewardTools.Size(candidate.Tools) + said) + settings.MaxOutputTokens;
+            candidate.Needs = ProfileWalk.Tokens(instructions.Length + StewardTools.Size(candidate.Tools) + said) + settings.MaxOutputTokens;
         }
 
         // Checked with this turn in it, before anything is spent.
@@ -180,32 +177,23 @@ public sealed partial class StewardTurnHandler(
             > settings.PersonDailyTokenBudget)
             return Answer(command, StewardStatus.DailyBudgetExceeded, null, new StewardTrace(), null, null, false, false);
 
-        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(settings.TurnSeconds), clock);
-        using var turn = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deadline.Token);
-        var fellBack = false;
-        var tooLong = false;
-        var passedOne = false;
-        foreach (var candidate in candidates)
+        // A turn that stored proposals before failing keeps them — they wait for a
+        // person — and does not fall back: a second model would propose them again.
+        var walk = await ProfileWalk.RunAsync("Steward", candidates, settings.TurnSeconds, clock, logger,
+            async (candidate, turn) =>
+            {
+                var started = clock.GetTimestamp();
+                var response = await RunAsync(candidate, instructions, command, history, settings, turn);
+                return (Response: response, Milliseconds: (int)clock.GetElapsedTime(started).TotalMilliseconds);
+            },
+            candidate => candidate.Trace.Proposed.Count > 0,
+            cancellationToken);
+
+        switch (walk.End)
         {
-            var (name, profile, trace) = (candidate.Name, candidate.Profile, candidate.Trace);
-
-            // Falling back is reaching a profile after another: one that failed alone
-            // was not a fallback failing too, and the panel must not say it was.
-            fellBack |= passedOne;
-            passedOne = true;
-
-            // A window that cannot hold the question and an answer is not asked: the
-            // model would cut the history and answer something else.
-            if (candidate.Needs > profile.ContextTokens)
-            {
-                tooLong = true;
-                continue;
-            }
-
-            var started = clock.GetTimestamp();
-            try
-            {
-                var response = await RunAsync(candidate, instructions, command, history, settings, turn.Token);
+            case WalkEnd.Answered:
+                var (response, milliseconds) = walk.Answer;
+                var (name, profile, trace) = (walk.Candidate!.Name, walk.Candidate.Profile, walk.Candidate.Trace);
                 var calls = response.Messages.Count(message => message.Role == ChatRole.Assistant);
                 var input = response.Usage?.InputTokenCount ?? 0;
                 var output = response.Usage?.OutputTokenCount ?? 0;
@@ -214,39 +202,19 @@ public sealed partial class StewardTurnHandler(
                 return Answer(command, StewardStatus.Answered,
                     Said(response.Text, command.Culture, trace),
                     trace,
-                    new TurnCost(calls, input, output, profile.CostMicroEuros(input, output),
-                        (int)clock.GetElapsedTime(started).TotalMilliseconds, profile.Model ?? name),
-                    name, fellBack, candidate.Needs > profile.ContextTokens * 0.8);
-            }
-            catch (Exception failure) when (!cancellationToken.IsCancellationRequested)
-            {
-                // Only the model failing is worth another profile. The turn outliving
-                // its deadline, or a failure of the shop's own, would spend the same
-                // on the fallback and end the same.
-                var modelFailed = !deadline.IsCancellationRequested && ModelFailures.IsModelFailure(failure);
-                if (modelFailed)
-                    LogFailed(logger, failure, name);
-                else if (deadline.IsCancellationRequested)
-                    LogOutlived(logger, failure, name, settings.TurnSeconds);
-                else
-                    LogBroken(logger, failure, name);
+                    new TurnCost(calls, input, output, profile.CostMicroEuros(input, output), milliseconds, profile.Model ?? name),
+                    name, walk.FellBack, walk.Candidate.Needs > profile.ContextTokens * 0.8);
 
-                // A turn that stored proposals before failing keeps them — they wait
-                // for a person — and does not fall back: a second model would propose
-                // them again.
-                if (!modelFailed || trace.Proposed.Count > 0)
-                {
-                    activity?.SetTag("assist.unavailable", true);
-                    return Answer(command, StewardStatus.Unavailable, null, trace, null, name, fellBack, false);
-                }
-            }
+            case WalkEnd.TooLong:
+                return Answer(command, StewardStatus.ConversationTooLong, null, new StewardTrace(), null, null, walk.FellBack, true);
+
+            default:
+                // Stopped at a profile — out of time, the shop's own failure, or
+                // proposals already stored — or ran out of them.
+                activity?.SetTag("assist.unavailable", true);
+                return Answer(command, StewardStatus.Unavailable, null,
+                    walk.Candidate?.Trace ?? new StewardTrace(), null, walk.Candidate?.Name, walk.FellBack, false);
         }
-
-        if (tooLong)
-            return Answer(command, StewardStatus.ConversationTooLong, null, new StewardTrace(), null, null, fellBack, true);
-
-        activity?.SetTag("assist.unavailable", true);
-        return Answer(command, StewardStatus.Unavailable, null, new StewardTrace(), null, null, fellBack, false);
     }
 
     /// <summary>
@@ -273,17 +241,13 @@ public sealed partial class StewardTurnHandler(
     }
 
     /// <summary>A profile the turn may ask, with its tools and what asking it takes.</summary>
-    private sealed record Candidate(string Name, IChatClient Client, ModelProfile Profile, StewardTrace Trace)
+    private sealed record Candidate(string Name, IChatClient Client, ModelProfile Profile, StewardTrace Trace) : IWalkCandidate
     {
         public IReadOnlyList<AIFunction> Tools { get; set; } = [];
 
         /// <summary>Tokens the first call takes, the answer's room included.</summary>
         public int Needs { get; set; }
     }
-
-    /// <summary>Four characters a token, rounded up: an estimate, which the window's
-    /// margin and the near-limit flag absorb.</summary>
-    private static int Tokens(int characters) => (characters + 3) / 4;
 
     private async Task<AgentResponse> RunAsync(
         Candidate candidate, string instructions, StewardTurnCommand command, List<ChatMessage> history,
@@ -325,15 +289,6 @@ public sealed partial class StewardTurnHandler(
             new KeyValuePair<string, object?>("fell_back", fellBack));
         return new(status, text, trace.Reads, trace.Proposed, cost, profile, fellBack, nearLimit, command.ConversationId);
     }
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Steward's profile {Profile} failed a turn")]
-    private static partial void LogFailed(ILogger logger, Exception failure, string profile);
-
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Steward's turn on {Profile} outlived its {Seconds} seconds")]
-    private static partial void LogOutlived(ILogger logger, Exception failure, string profile, int seconds);
-
-    [LoggerMessage(Level = LogLevel.Error, Message = "Steward's turn on {Profile} broke on the shop's side, not the model's")]
-    private static partial void LogBroken(ILogger logger, Exception failure, string profile);
 }
 
 // ---------- The wire ----------
