@@ -3,7 +3,9 @@ using System.Text.RegularExpressions;
 using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Inventory;
+using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Ordering;
+using ElGuerre.Tendero.Search;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -457,7 +459,8 @@ public sealed class ArchitectureRules
             .SelectMany(assembly => assembly.GetTypes())
             .Where(type => !type.IsAbstract && typeof(IReadTool).IsAssignableFrom(type))
             .ToList();
-        Assert.True(tools.Count >= 6, $"Only {tools.Count} read tools were found; the scan is not seeing the contexts'.");
+        Assert.True(tools.Count >= 10, $"Only {tools.Count} read tools were found; the scan is not seeing the contexts'.");
+        Assert.Contains(tools, tool => AudienceOf(tool) == ToolAudience.Shopper);
 
         var offending = new List<string>();
         foreach (var tool in tools)
@@ -520,12 +523,17 @@ public sealed class ArchitectureRules
         services.AddCatalog(new ConfigurationBuilder().Build());
         services.AddOrdering(new ConfigurationBuilder().Build());
         services.AddInventory(new ConfigurationBuilder().Build());
+        services.AddKnowledge(new ConfigurationBuilder().Build());
+        services.AddSearchStrategies();
         services.AddSingleton<IQueryDispatcher>(new NoQueries());
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
 
         var names = scope.ServiceProvider.GetServices<IReadTool>().Select(tool => tool.Name).ToList();
 
+        // Both audiences in one list: a name is the model's handle, and one tool's
+        // must never be another's, whoever it is for.
+        Assert.Equal(10, names.Count);
         Assert.Equal(names.Count, names.Distinct(StringComparer.Ordinal).Count());
         Assert.DoesNotContain(names, name => name.StartsWith("propose_", StringComparison.Ordinal)
             || name.Contains("approve", StringComparison.OrdinalIgnoreCase) || name.Contains("reject", StringComparison.OrdinalIgnoreCase));
