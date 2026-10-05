@@ -494,6 +494,27 @@ ways for Tino:
    composer fixed a fault both panels had: typed and sent inside one render, the box
    kept the words. The door's availability became a resource, the stores' rule for
    what the server is read for (ADR 0051), instead of a method the shell called.
+   Later the same day, from the author at the screen: with the panel docked **the
+   shell scrolls, not the window**, so the page's scrollbar is at the page's edge,
+   left of the panel, and thin everywhere as in the backoffice (the position is
+   carried across); **the header's search sits beside Tino's door**, as the
+   backoffice's beside Steward's. And two more things the agents share:
+   `withConversation` (shared-util), the store feature both conversations are built
+   on — the exchanges, one turn at a time, stop, a new conversation — and
+   `lib-turn-wait`, the seconds a turn has been out.
+   **"This product's details do not say…" is only about the product on the screen**
+   (the author's walk, the same day): asked from a search page whether the shop had a
+   red T-shirt, Tino answered that *this product's* details did not say it was red —
+   about a product nobody had shown. The kind is now offered in the schema, and
+   accepted when read, only for the product the shopper is looking at and only when
+   the turn read it; anywhere else the model has *products* or *the shop has no such
+   information*. The panel shows that product's card above the sentence, since the
+   conversation outlives the page. Prompt `tino-2026-10-05g`. **Not re-measured**:
+   the `assistant` suite has not run since; its three *sin dato* cases are all on a
+   product's page.
+   The docked page scrolls under the header (its bar starts below the awning); the
+   header's rows run to the panel's edge; sending is an arrow and, while a turn is
+   out, a square in its place — in both panels.
    **Not captured**: the not-available state — at the close.
 7. **T-7 · Close** (`P12b-8`). The ADR (*an answer is a list of cited facts*),
    Stryker, the captures, the notebook and the material map.

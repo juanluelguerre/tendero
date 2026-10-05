@@ -56,6 +56,7 @@
 | [0052](0052-assist-is-a-context.md) | Assist is a context: a proposal has a life of its own, and runs other contexts' commands only through `IProposableCommand` | accepted |
 | [0053](0053-one-model-port.md) | One model port: profiles in configuration, one pipeline, one row per call in `telemetry.ai_invocations` | accepted |
 | [0054](0054-read-tools-belong-to-their-contexts.md) | Read tools belong to their contexts: a context decides what a model may read of it, through `IReadTool` and a DTO with no customer in it — amended in phase 12b: a read has an audience | accepted |
+| [0055](0055-an-answer-is-a-list-of-cited-facts.md) | An answer to a shopper is a list of cited facts, never prose of a model's own: a schema built from the turn's reads, grounding in code before anything is shown, the shop's card and not the model's | accepted |
 
 Format: context → decision → consequences. Keep each under a page.
 
