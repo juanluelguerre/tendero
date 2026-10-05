@@ -25,11 +25,22 @@ public sealed class FactSheet
     private readonly Lock gate = new();
     private readonly List<NumberedFact> facts = [];
     private readonly List<Subject> products = [];
+    private readonly List<Subject> orders = [];
 
     public IReadOnlyList<NumberedFact> Facts => this.facts;
 
     /// <summary>The products the turn's reads returned, in the order first seen.</summary>
     public IReadOnlyList<Subject> Products => this.products;
+
+    /// <summary>The asking shopper's orders the turn read, under their references of this turn.</summary>
+    public IReadOnlyList<Subject> Orders => this.orders;
+
+    /// <summary>The facts about one product, or one order.</summary>
+    public IEnumerable<NumberedFact> Of(string subject) =>
+        this.facts.Where(fact => string.Equals(fact.Fact.Subject, subject, StringComparison.OrdinalIgnoreCase));
+
+    public Subject? Order(string? reference) =>
+        this.orders.FirstOrDefault(order => string.Equals(order.Key, reference, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>The facts that are about the shop and no product.</summary>
     public IEnumerable<NumberedFact> OfTheShop => this.facts.Where(fact => fact.Fact.Subject == Fact.TheShop);
@@ -57,7 +68,7 @@ public sealed class FactSheet
                 // A fact about a product the read did not name still makes it one the
                 // answer may name: by its code, which is all that is known of it.
                 if (fact.Subject != Fact.TheShop)
-                    Know(new Subject(fact.Subject, fact.Subject));
+                    Know(new Subject(fact.Subject, fact.Subject, fact.Source == FactSource.Order ? SubjectKind.Order : SubjectKind.Product));
                 this.facts.Add(new NumberedFact($"f{this.facts.Count + 1}", fact));
             }
         }
@@ -65,8 +76,15 @@ public sealed class FactSheet
 
     private void Know(Subject subject)
     {
-        if (Product(subject.Key) is null)
+        if (subject.Kind == SubjectKind.Order)
+        {
+            if (Order(subject.Key) is null)
+                this.orders.Add(subject);
+        }
+        else if (Product(subject.Key) is null)
+        {
             this.products.Add(subject);
+        }
     }
 
     /// <summary>
@@ -82,6 +100,14 @@ public sealed class FactSheet
             text.Append(product.Key).Append(" = ").AppendLine(OneLine(product.Name));
         if (this.products.Count == 0)
             text.AppendLine("(none)");
+
+        // An order is named by its reference of this turn; its id is not here to be read.
+        if (this.orders.Count > 0)
+        {
+            text.AppendLine().AppendLine("THE SHOPPER'S ORDERS (reference = title):");
+            foreach (var order in this.orders)
+                text.Append(order.Key).Append(" = ").AppendLine(OneLine(order.Name));
+        }
 
         text.AppendLine().AppendLine("FACTS (id | about | source | fact):");
         foreach (var fact in this.facts)

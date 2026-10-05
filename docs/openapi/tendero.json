@@ -4173,6 +4173,21 @@
           }
         }
       },
+      "AnsweredOrder": {
+        "required": [
+          "id",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
       "AnsweredProduct": {
         "required": [
           "code",
@@ -5562,7 +5577,8 @@
           "DataSheet",
           "Description",
           "Policy",
-          "Order"
+          "Order",
+          "Notice"
         ]
       },
       "GapRow": {
@@ -9940,6 +9956,16 @@
           },
           "conversationId": {
             "type": "string"
+          },
+          "order": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AnsweredOrder"
+              }
+            ]
           }
         }
       },
@@ -9983,7 +10009,8 @@
       },
       "TinoContextKind": {
         "enum": [
-          "Product"
+          "Product",
+          "Order"
         ]
       },
       "TinoKind": {
@@ -9992,6 +10019,7 @@
           "Shop",
           "Ask",
           "NoData",
+          "Order",
           null
         ]
       },

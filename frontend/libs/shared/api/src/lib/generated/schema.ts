@@ -1467,6 +1467,10 @@ export interface components {
             culture: string;
             slug: string;
         };
+        AnsweredOrder: {
+            id: string;
+            title: string;
+        };
         AnsweredProduct: {
             code: string;
             name: string;
@@ -1817,7 +1821,7 @@ export interface components {
         /** @enum {unknown} */
         FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
         /** @enum {unknown} */
-        FactSource: "Claim" | "DataSheet" | "Description" | "Policy" | "Order";
+        FactSource: "Claim" | "DataSheet" | "Description" | "Policy" | "Order" | "Notice";
         GapRow: {
             productId: string;
             code: string;
@@ -2937,6 +2941,7 @@ export interface components {
             profile: null | string;
             fellBack: boolean;
             conversationId: string;
+            order?: null | components["schemas"]["AnsweredOrder"];
         };
         TinoAvailability: {
             available: boolean;
@@ -2948,9 +2953,9 @@ export interface components {
             key: string;
         };
         /** @enum {unknown} */
-        TinoContextKind: "Product";
+        TinoContextKind: "Product" | "Order";
         /** @enum {unknown} */
-        TinoKind: "Products" | "Shop" | "Ask" | "NoData" | null;
+        TinoKind: "Products" | "Shop" | "Ask" | "NoData" | "Order" | null;
         TinoRead: {
             tool: string;
             arguments: components["schemas"]["JsonElement"];

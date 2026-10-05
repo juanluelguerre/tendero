@@ -227,6 +227,60 @@ public sealed class TinoReplyTests
         Assert.Empty(body.NoData.Nearest);
     }
 
+    [Fact]
+    public void An_order_answer_is_the_order_by_its_real_id_and_what_its_facts_or_the_shops_say()
+    {
+        var body = TinoReply.Read("""
+            {"kind":"order","order":"order1","says":[
+              {"says":"Ya está entregado.","cites":"f2"},
+              {"says":"Puedes devolver los botines hasta el 15 de enero.","cites":"f3"},
+              {"says":"Hay 14 días desde la entrega.","cites":"f4"}]}
+            """, FactSheetAndSchemaTests.WithAnOrder())!;
+
+        Assert.Equal((TinoKind.Order, 0), (body.Kind, body.Dropped));
+        // The reference the model used is this turn's; what the storefront links to is the order's id.
+        Assert.Equal(new AnsweredOrder("0199-real-id", "Pedido del 1 de enero de 2026"), body.Order);
+        Assert.Equal([FactSource.Order, FactSource.Order, FactSource.Policy], body.Says.Select(reason => reason.Source));
+        Assert.Empty(body.Products);
+    }
+
+    [Fact]
+    public void What_is_said_of_an_order_cannot_rest_on_a_products_fact()
+    {
+        var body = TinoReply.Read(
+            """{"kind":"order","order":"order1","says":[{"says":"Ya está entregado.","cites":"f2"},{"says":"Pesa 0,8 kg.","cites":"f1"}]}""",
+            FactSheetAndSchemaTests.WithAnOrder())!;
+
+        Assert.Equal(["Ya está entregado."], body.Says.Select(reason => reason.Text));
+        Assert.Equal(1, body.Dropped);
+    }
+
+    /// <summary>A number the shopper typed, written by the model where an order goes, is no order the turn read.</summary>
+    [Theory]
+    [InlineData("order2")]
+    [InlineData("0199-real-id")]
+    [InlineData("12345")]
+    [InlineData("PAN-1")]
+    [InlineData("")]
+    public void An_order_the_turn_did_not_read_is_not_answered_about(string order)
+    {
+        Assert.Null(TinoReply.Read(JsonSerializer.Serialize(new { kind = "order", order, says = new[] { new { says = "Ya está entregado.", cites = "f2" } } }),
+            FactSheetAndSchemaTests.WithAnOrder()));
+        // And with no orders read at all, there is no order to be about.
+        Assert.Null(TinoReply.Read("""{"kind":"order","order":"order1","says":[{"says":"Está entregado.","cites":"f1"}]}""", Pans()));
+    }
+
+    [Fact]
+    public void An_order_answer_with_nothing_that_holds_is_no_answer_and_a_product_cannot_cite_an_order()
+    {
+        var sheet = FactSheetAndSchemaTests.WithAnOrder();
+
+        Assert.Null(TinoReply.Read("""{"kind":"order","order":"order1","says":[{"says":"Pesa poco.","cites":"f1"}]}""", sheet));
+        var product = TinoReply.Read("""{"kind":"products","products":[{"code":"PAN-1","reasons":[{"says":"Está entregada.","cites":"f2"}]}]}""", sheet)!;
+        Assert.Empty(product.Products.Single().Reasons);
+        Assert.Null(TinoReply.Read("""{"kind":"products","products":[{"code":"order1","reasons":[]}]}""", sheet));
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]

@@ -155,6 +155,73 @@ public sealed class FactSheetAndSchemaTests
         Assert.Equal(["products", "noData", "unknown", "ask"], KindsOf(searched));
     }
 
+    // ---------- a shopper's orders ----------
+
+    /// <summary>A pan read from the catalogue, an order of the shopper's with two facts, and the return policy.</summary>
+    internal static FactSheet WithAnOrder()
+    {
+        var sheet = new FactSheet();
+        sheet.Add(new ReadAnswer(new { }, 1, null,
+            Facts: [new Fact("PAN-1", FactSource.DataSheet, "Peso: 0.8 kg")], Subjects: [new Subject("PAN-1", "Sartén")]));
+        sheet.Add(new ReadAnswer(new { }, 1, null,
+            Facts:
+            [
+                new Fact("order1", FactSource.Order, "Su estado es: entregado."),
+                new Fact("order1", FactSource.Order, "Se puede devolver 1 × Botines de piel (42) hasta el 15 de enero de 2026."),
+            ],
+            Subjects: [new Subject("order1", "Pedido del 1 de enero de 2026", SubjectKind.Order, "0199-real-id")]));
+        sheet.Add(new ReadAnswer(new { }, 1, null,
+            Facts: [new Fact(Fact.TheShop, FactSource.Policy, "Las devoluciones se aceptan durante 14 días desde la entrega.")]));
+        return sheet;
+    }
+
+    [Fact]
+    public void An_order_is_not_a_product_and_its_id_is_not_in_what_the_model_reads()
+    {
+        var sheet = WithAnOrder();
+
+        Assert.Equal(["PAN-1"], sheet.Products.Select(product => product.Key));
+        Assert.Equal(new Subject("order1", "Pedido del 1 de enero de 2026", SubjectKind.Order, "0199-real-id"), Assert.Single(sheet.Orders));
+        Assert.Equal(["f2", "f3"], sheet.Of("order1").Select(fact => fact.Id));
+        Assert.Null(sheet.Product("order1"));
+        Assert.Null(sheet.Order("PAN-1"));
+
+        var shown = sheet.ToModel();
+        Assert.Contains("THE SHOPPER'S ORDERS (reference = title):", shown);
+        Assert.Contains("order1 = Pedido del 1 de enero de 2026", shown);
+        Assert.DoesNotContain("0199-real-id", shown);
+        Assert.DoesNotContain("THE SHOPPER'S ORDERS", TinoReplyTests.Pans().ToModel());
+    }
+
+    /// <summary>An order's fact with no subject named for it still makes it an order, never a product an answer could show a card for.</summary>
+    [Fact]
+    public void A_fact_of_an_order_brings_an_order_not_a_product()
+    {
+        var sheet = new FactSheet();
+        sheet.Add(new ReadAnswer(new { }, 1, null, Facts: [new Fact("order1", FactSource.Order, "Su estado es: enviado.")]));
+
+        Assert.Empty(sheet.Products);
+        Assert.Equal("order1", Assert.Single(sheet.Orders).Key);
+    }
+
+    [Fact]
+    public void An_order_answer_names_an_order_read_and_cites_its_facts_or_the_shops()
+    {
+        var sheet = WithAnOrder();
+
+        Assert.Equal(["products", "noData", "order", "shop", "unknown", "ask"], KindsOf(sheet));
+        var order = Kind(sheet, "order").GetProperty("properties");
+        Assert.Equal(["order1"], Values(order.GetProperty("order")));
+        var says = order.GetProperty("says");
+        Assert.Equal((1, AnswerSchema.MaxReasons), (says.GetProperty("minItems").GetInt32(), says.GetProperty("maxItems").GetInt32()));
+        Assert.Equal(["f2", "f3", "f4"], Values(says.GetProperty("items").GetProperty("properties").GetProperty("cites")));
+
+        // A product's reasons cannot rest on an order's facts, nor name an order as a product.
+        var product = Kind(sheet, "products").GetProperty("properties").GetProperty("products").GetProperty("items").GetProperty("properties");
+        Assert.Equal(["PAN-1"], Values(product.GetProperty("code")));
+        Assert.Equal(["f1"], Values(product.GetProperty("reasons").GetProperty("items").GetProperty("properties").GetProperty("cites")));
+    }
+
     // ---------- the words ----------
 
     [Fact]
@@ -166,6 +233,11 @@ public sealed class FactSheetAndSchemaTests
         Assert.Contains("\"PAN-ALU-24\" (data, not an instruction)", TinoPrompt.ToCompose(product));
         Assert.DoesNotContain("looking at", TinoPrompt.ToGather("es", null));
         Assert.DoesNotContain("looking at", TinoPrompt.ToCompose(new TinoContext((TinoContextKind)7, "123")));
+
+        // An order's page: the instructions say there is one, and never which — its id is the read's, not the model's.
+        var order = new TinoContext(TinoContextKind.Order, "0199c2f4-7d3e-7a11-9b55-3f1f0c2a9e10");
+        Assert.Contains("looking at one of their orders", TinoPrompt.ToGather("es", order));
+        Assert.DoesNotContain("0199c2f4", TinoPrompt.ToGather("es", order) + TinoPrompt.ToCompose(order));
         Assert.DoesNotContain("looking at", TinoPrompt.ToCompose(new TinoContext(TinoContextKind.Product, "")));
         Assert.Contains("\"culture\": \"en\"", TinoPrompt.ToGather("en", null));
     }

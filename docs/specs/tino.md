@@ -424,6 +424,23 @@ ways for Tino:
 4. **T-4 · After-sale** (`P12b-2b`). `my_orders`, `my_order`, the returnable
    answer from Ordering, a guest's order from the screen's context, the isolation
    tests — one customer's order asked for by another, a guest's by a wrong id.
+   *As built (2026-10-05)* — `docs/superpowers/plans/2026-10-05-tino-t4-after-sale.md`.
+   **One read, not two**: `my_orders` takes the language and nothing that names an
+   order, so there is no id for a model to pass or a shopper to type. It answers
+   with the order on the screen — read by the rule its own page reads it by
+   (`OrderAccess`) — and a signed-in shopper's three most recent, each as sentences
+   in es and en with the shop's days: placed, status, delivered, what it holds, the
+   total, and what can be returned line by line and until which day, from
+   `ReturnRequest.Returnable` and `WindowIsOpen`. The order on the screen reaches
+   the read through a scoped `ShopperScreen` the turn fills from the context
+   (`{ kind: Order, key: <id> }`); the model sees `order1`, and the real id comes
+   back in the answer (`order.id`) for the storefront's link. A sixth kind of
+   answer, `order`: which order, and one to three sentences each citing a fact of
+   it or of the shop. With nobody to answer about — not signed in, no order on the
+   screen — the read hands over a notice of the shop's and the answer cites it.
+   An answer whose every sentence fell in grounding is the model's failure, not an
+   empty answer. **Not seen against the model**: the seed has no orders; T-5's
+   suite scores the order cases with a principal.
 5. **T-5 · The suite** (`P12b-7`), before the storefront, so the threshold and the
    caps are measured and the prompt is settled against cases.
 6. **T-6 · The storefront** (`P12b-4`). The mock-ups first; the panel and sheet,

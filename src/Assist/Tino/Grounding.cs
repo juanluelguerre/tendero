@@ -64,7 +64,9 @@ public sealed class Grounding(ISupportScorer scorer, double threshold)
                 // A product whose reasons all fell is still one a read returned: a plain card.
                 return body with { Products = products, Dropped = dropped };
 
-            case TinoKind.Shop:
+            // An order's facts are whole sentences and so is the policy: each is held to
+            // the fact alone.
+            case TinoKind.Shop or TinoKind.Order:
                 var says = await HeldAsync(body.Says, null, cancellationToken);
                 dropped += body.Says.Count - says.Count;
                 return body with { Says = says, Dropped = dropped };

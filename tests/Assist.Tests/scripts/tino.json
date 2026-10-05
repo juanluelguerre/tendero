@@ -51,6 +51,31 @@
     "reply": { "kind": "noData", "code": "PAN-1", "about": "cuánto pesa", "claim": "Pesa 0,8 kg.", "language": "es", "nearest": [] }
   },
   {
+    "when": "where is it",
+    "calls": [{ "tool": "my_orders", "arguments": { "culture": "es" } }],
+    "say": "DONE",
+    "reply": {
+      "kind": "order",
+      "order": "order1",
+      "says": [
+        { "says": "Está enviado y en camino.", "cites": "f1" },
+        { "says": "Aún no se puede devolver: el plazo empieza con la entrega.", "cites": "f2" }
+      ]
+    }
+  },
+  {
+    "when": "sin sesión",
+    "calls": [{ "tool": "my_orders", "arguments": { "culture": "es" } }],
+    "say": "DONE",
+    "reply": { "kind": "shop", "says": [{ "says": "Para preguntar por un pedido, inicia sesión o ábrelo desde su correo.", "cites": "f1" }] }
+  },
+  {
+    "when": "typed",
+    "calls": [{ "tool": "my_orders", "arguments": { "culture": "en" } }],
+    "say": "DONE",
+    "reply": { "kind": "order", "order": "0199c2f4-7d3e-7a11-9b55-3f1f0c2a9e10", "says": [{ "says": "It is on its way.", "cites": "f1" }] }
+  },
+  {
     "when": "devolver",
     "calls": [{ "tool": "get_return_policy", "arguments": { "culture": "es" } }],
     "say": "DONE",

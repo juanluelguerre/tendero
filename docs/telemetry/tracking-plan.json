@@ -1397,7 +1397,8 @@
             "products",
             "shop",
             "ask",
-            "no_data"
+            "no_data",
+            "order"
           ],
           "description": "TinoKind, labelled by MetricLabels; none when Tino did not answer."
         }

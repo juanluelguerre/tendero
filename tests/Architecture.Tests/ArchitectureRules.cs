@@ -459,7 +459,7 @@ public sealed class ArchitectureRules
             .SelectMany(assembly => assembly.GetTypes())
             .Where(type => !type.IsAbstract && typeof(IReadTool).IsAssignableFrom(type))
             .ToList();
-        Assert.True(tools.Count >= 10, $"Only {tools.Count} read tools were found; the scan is not seeing the contexts'.");
+        Assert.True(tools.Count >= 11, $"Only {tools.Count} read tools were found; the scan is not seeing the contexts'.");
         Assert.Contains(tools, tool => AudienceOf(tool) == ToolAudience.Shopper);
 
         var offending = new List<string>();
@@ -560,7 +560,7 @@ public sealed class ArchitectureRules
 
         // Both audiences in one list: a name is the model's handle, and one tool's
         // must never be another's, whoever it is for.
-        Assert.Equal(10, names.Count);
+        Assert.Equal(11, names.Count);
         Assert.Equal(names.Count, names.Distinct(StringComparer.Ordinal).Count());
         Assert.DoesNotContain(names, name => name.StartsWith("propose_", StringComparison.Ordinal)
             || name.Contains("approve", StringComparison.OrdinalIgnoreCase) || name.Contains("reject", StringComparison.OrdinalIgnoreCase));

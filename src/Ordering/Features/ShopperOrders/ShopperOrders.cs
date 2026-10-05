@@ -149,7 +149,10 @@ public sealed class MyOrdersTool(IQueryDispatcher queries, ShopperScreen screen,
         {
             var reference = $"order{index + 1}";
             this.ids[reference] = order.OrderId;
-            return new OrderForShopper(reference, order.OnScreen, words.Title(order), words.Of(order));
+            // The composing call reads the sentences and nothing else, so which order
+            // the shopper is looking at is one of them.
+            IReadOnlyList<string> says = order.OnScreen ? [words.OnTheScreen, .. words.Of(order)] : words.Of(order);
+            return new OrderForShopper(reference, order.OnScreen, words.Title(order), says);
         }).ToList();
 
         // Nobody to answer about is said, not left as an empty list: a guest who is
@@ -186,6 +189,10 @@ internal sealed class OrderWords(string culture, DateTimeZone zone)
     public string SignInOrOpenTheOrder => English
         ? "To ask about an order, sign in, or open the order from its confirmation email."
         : "Para preguntar por un pedido, inicia sesión o abre el pedido desde su correo de confirmación.";
+
+    public string OnTheScreen => English
+        ? "This is the order the shopper is looking at."
+        : "Este es el pedido que el comprador está viendo.";
 
     public string Title(ShopperOrder order) => English ? $"Order of {Day(order.PlacedAt)}" : $"Pedido del {Day(order.PlacedAt)}";
 

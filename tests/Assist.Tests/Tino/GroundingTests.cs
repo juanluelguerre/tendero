@@ -137,6 +137,27 @@ public sealed class GroundingTests
         Assert.Equal(policy, Assert.Single(scorer.Asked).Premise);
     }
 
+    /// <summary>A date the model worked out for itself is a figure its fact does not state.</summary>
+    [Fact]
+    public async Task What_is_said_of_an_order_is_held_to_the_orders_fact_alone_and_to_its_figures()
+    {
+        var scorer = new Scorer((_, _) => 0.95);
+        var fact = "Se puede devolver 1 × Botines de piel (42) hasta el 15 de enero de 2026.";
+        var body = new TinoBody(TinoKind.Order, [],
+            [
+                About("Puedes devolver los botines hasta el 15 de enero de 2026.", fact, FactSource.Order),
+                About("Te quedan 12 días para devolverlos.", fact, FactSource.Order),
+            ],
+            null, null, 0, Order: new AnsweredOrder("id", "Pedido del 1 de enero de 2026"));
+
+        var held = await Hold(body, scorer);
+
+        Assert.Equal(["Puedes devolver los botines hasta el 15 de enero de 2026."], held.Says.Select(reason => reason.Text));
+        Assert.Equal((1, new AnsweredOrder("id", "Pedido del 1 de enero de 2026")), (held.Dropped, held.Order));
+        // The order's title is not put before the fact: the fact is a whole sentence.
+        Assert.Equal(fact, Assert.Single(scorer.Asked).Premise);
+    }
+
     [Fact]
     public async Task A_question_back_is_not_a_statement_and_nothing_is_asked_of_the_scorer()
     {

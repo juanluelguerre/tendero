@@ -87,9 +87,16 @@ Tino, the storefront's assistant (phase 12b, `docs/specs/tino.md`), answers from
 four reads of the shop: its search, a product's page, a product's specifications
 with the claims a person approved, and the return policy. **Everything they carry
 is what the storefront already shows to anyone**: products on sale, their text,
-their prices. They carry nothing of the person asking. Orders arrive in a later
-step (T-4), and then only the asking shopper's own, without a name, an email, a
-phone or an address — the same rule, with its list for a shopper's reads.
+their prices. They carry nothing of the person asking.
+
+A fifth read, `my_orders`, is about the person asking and nobody else: **their
+own orders**, found by who is signed in, or — for a guest — the one order on the
+screen they asked from, whose id their browser sent beside the question. What it
+hands the model is sentences: when the order was placed and delivered, its
+status, what it holds, its total, and what can still be returned and until which
+day. **Not the order's id** — the model sees `order1` — and no name, email, phone
+or address: an architecture rule holds a shopper's reads to that list (ADR 0054,
+amended). It takes no order number, so one typed into the chat reads nothing.
 
 Anyone may ask, signed in or not. **The conversation is not kept**: it travels
 with the browser, turn by turn. What stays is one row per model call in

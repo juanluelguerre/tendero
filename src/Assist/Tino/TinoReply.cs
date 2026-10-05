@@ -23,7 +23,7 @@ public static class TinoReply
 
     private sealed record Written(
         string? Kind, IReadOnlyList<WrittenProduct>? Products, IReadOnlyList<Cited>? Says, string? Ask,
-        string? Code, string? About, string? Claim, string? Language, IReadOnlyList<Cited>? Nearest);
+        string? Code, string? About, string? Claim, string? Language, IReadOnlyList<Cited>? Nearest, string? Order);
 
     private sealed record WrittenProduct(string? Code, IReadOnlyList<Cited>? Reasons);
 
@@ -68,6 +68,14 @@ public static class TinoReply
                 var says = Reasons(written.Says, Fact.TheShop, sheet, ref dropped);
                 return says.Count > 0 ? new(TinoKind.Shop, [], says, null, null, dropped) : null;
 
+            // An order the turn read, and what is said of it: each sentence a fact of
+            // that order or of the shop. An order it did not read is not answered about.
+            case "order" when sheet.Order(written.Order) is { } order:
+                var ofTheOrder = Reasons(written.Says, order.Key, sheet, ref dropped, orTheShops: true);
+                return ofTheOrder.Count > 0
+                    ? new(TinoKind.Order, [], ofTheOrder, null, null, dropped, Order: new AnsweredOrder(order.Reference ?? "", order.Name))
+                    : null;
+
             case "ask":
                 return IsAQuestion(written.Ask) ? new(TinoKind.Ask, [], [], written.Ask!.Trim(), null, 0) : null;
 
@@ -91,14 +99,15 @@ public static class TinoReply
     }
 
     /// <summary>The reasons that hold: each cites a fact this turn issued, about this subject.</summary>
-    private static List<Reason> Reasons(IReadOnlyList<Cited>? written, string subject, FactSheet sheet, ref int dropped)
+    private static List<Reason> Reasons(
+        IReadOnlyList<Cited>? written, string subject, FactSheet sheet, ref int dropped, bool orTheShops = false)
     {
         var reasons = new List<Reason>();
         foreach (var reason in written ?? [])
         {
             var fact = sheet.Find(reason.Cites)?.Fact;
             var holds = fact is not null
-                && string.Equals(fact.Subject, subject, StringComparison.OrdinalIgnoreCase)
+                && (string.Equals(fact.Subject, subject, StringComparison.OrdinalIgnoreCase) || (orTheShops && fact.Subject == Fact.TheShop))
                 && reason.Says is { Length: > 0 and <= MaxSentence } says && !string.IsNullOrWhiteSpace(says);
             if (!holds)
             {

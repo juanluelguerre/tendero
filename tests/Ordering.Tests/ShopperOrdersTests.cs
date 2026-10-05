@@ -362,7 +362,11 @@ public sealed class ShopperOrdersTests
         var answer = await tool.ReadAsync(Arguments("""{"culture":"es"}"""), Ct);
 
         Assert.Equal(order.Id, dispatcher.Asked!.OnScreen);
-        Assert.True(Assert.Single(((OrdersForShopper)answer.Data).Orders).OnScreen);
+        var said = Assert.Single(((OrdersForShopper)answer.Data).Orders);
+        Assert.True(said.OnScreen);
+        // Which order "this order" means is one of its sentences: the call that
+        // writes the answer reads the sentences and nothing else.
+        Assert.Equal("Este es el pedido que el comprador está viendo.", said.Says[0]);
         Assert.Null(((OrdersForShopper)answer.Data).Notice);
     }
 

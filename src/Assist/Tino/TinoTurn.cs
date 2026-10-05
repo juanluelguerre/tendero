@@ -100,6 +100,10 @@ public sealed class TinoTurnValidator : AbstractValidator<TinoTurnCommand>
         RuleFor(x => x.Context!.Key).NotEmpty().MaximumLength(TinoContext.MaxLength)
             .Must(key => key is null || !key.Any(character => char.IsControl(character) || character == '"'))
             .When(x => x.Context is not null);
+
+        // An order's key is an order's id and nothing else: it is not a place to write.
+        RuleFor(x => x.Context!.Key).Must(key => Guid.TryParse(key, out _)).WithMessage("An order is named by its id.")
+            .When(x => x.Context is { Kind: TinoContextKind.Order });
     }
 }
 
@@ -136,6 +140,7 @@ public sealed class TinoTurnHandler(
     IAIInvocationReader usage,
     IPrincipalAccessor principal,
     IEnumerable<ISupportScorer> scorers,
+    ShopperScreen screen,
     IOptions<ShopOptions> shop,
     IOptions<TinoOptions> options,
     TimeProvider clock,
@@ -164,6 +169,10 @@ public sealed class TinoTurnHandler(
         if (scorers.FirstOrDefault() is not { } scorer)
             return Unavailable(command, TinoCause.Scorer, [], null, false);
         var grounding = new Grounding(scorer, settings.SupportThreshold);
+
+        // The order on the shopper's screen goes to the read that needs it, beside the
+        // model and not through it: no tool takes an order's id as an argument.
+        screen.OrderId = command.Context is { Kind: TinoContextKind.Order } looking ? looking.Key : null;
 
         var gathering = TinoPrompt.ToGather(command.Culture, command.Context);
         var composing = TinoPrompt.ToCompose(command.Context);
@@ -197,7 +206,7 @@ public sealed class TinoTurnHandler(
             var (body, cost, answered) = (walk.Answer.Body!, walk.Answer.Cost, walk.Candidate!);
             activity?.SetTag("assist.profile", answered.Name);
             return Count(new TinoAnswer(TinoStatus.Answered, null, body.Kind, body.Products, body.Says, body.Ask, body.NoData,
-                answered.Reads, SearchText(command), body.Dropped, cost, answered.Name, walk.FellBack, command.ConversationId));
+                answered.Reads, SearchText(command), body.Dropped, cost, answered.Name, walk.FellBack, command.ConversationId, body.Order));
         }
 
         activity?.SetTag("assist.unavailable", true);
@@ -279,6 +288,12 @@ public sealed class TinoTurnHandler(
             candidate.ScorerFailed = true;
             throw;
         }
+
+        // An answer that is only sentences, with none of them left, says nothing: the
+        // model's failure, like one that was never an answer. (A product with no
+        // reason left is still a product a read returned.)
+        if (body is { Kind: TinoKind.Shop or TinoKind.Order, Says.Count: 0 })
+            throw new UnusableAnswerException("Nothing Tino's model wrote was said by the fact it cited.");
 
         var calls = gathered.Messages.Count(message => message.Role == ChatRole.Assistant) + 1;
         var input = (gathered.Usage?.InputTokenCount ?? 0) + (composed.Usage?.InputTokenCount ?? 0);

@@ -27,7 +27,9 @@ public static class AnswerSchema
     public static JsonElement For(FactSheet sheet)
     {
         var codes = sheet.Products.Select(product => product.Key).ToArray();
-        var productFacts = sheet.Facts.Where(fact => fact.Fact.Subject != Fact.TheShop).Select(fact => fact.Id).ToArray();
+        var productFacts = sheet.Facts.Where(fact => sheet.Product(fact.Fact.Subject) is not null).Select(fact => fact.Id).ToArray();
+        var orders = sheet.Orders.Select(order => order.Key).ToArray();
+        var orderFacts = sheet.Facts.Where(fact => sheet.Order(fact.Fact.Subject) is not null).Select(fact => fact.Id).ToArray();
         var shopFacts = sheet.OfTheShop.Select(fact => fact.Id).ToArray();
 
         var kinds = new JsonArray();
@@ -48,6 +50,17 @@ public static class AnswerSchema
                 ["claim"] = Text(),
                 ["language"] = Enum(CultureNegotiation.Supported),
                 ["nearest"] = productFacts.Length > 0 ? Array(Cited(productFacts), 0, MaxReasons) : Array(Cited(["none"]), 0, 0),
+            }));
+        }
+
+        // An order of the shopper's: which one, and sentences that each cite a fact of
+        // it or of the shop — the return policy is what "can I return it" rests on too.
+        if (orders.Length > 0 && orderFacts.Length > 0)
+        {
+            kinds.Add(Kind("order", new JsonObject
+            {
+                ["order"] = Enum(orders),
+                ["says"] = Array(Cited([.. orderFacts, .. shopFacts]), 1, MaxReasons),
             }));
         }
 

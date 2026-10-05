@@ -24,10 +24,18 @@
 
 ## Tasks
 
-- [ ] **1 · The port.** `Subject` gains its kind and a reference the model never sees; `FactSource.Notice`; `ShopperScreen`.
-- [ ] **2 · Ordering.** `ShopperOrdersQuery` and its handler over the repositories and `OrderAccess`; `my_orders` with its facts in es and en. Isolation tests: another shopper's order, a guest's by a wrong id, an account holder's order asked for by nobody.
-- [ ] **3 · Tino.** The sheet's orders, the `order` kind in the schema, the reply's reader and grounding; the context's `Order`; the instructions.
-- [ ] **4 · The turn and the wire.** `ShopperScreen` set from the context; the answer's order; OpenAPI and types; architecture rules.
-- [ ] **5 · Docs**: privacy, the spec, the board, the notebook.
+- [x] **1 · The port.** `Subject` gains its kind and a reference the model never sees; `FactSource.Notice`; `ShopperScreen`.
+- [x] **2 · Ordering.** `ShopperOrdersQuery` and its handler over the repositories and `OrderAccess`; `my_orders` with its facts in es and en. Isolation tests: another shopper's order, a guest's by a wrong id, an account holder's order asked for by nobody.
+- [x] **3 · Tino.** The sheet's orders, the `order` kind in the schema, the reply's reader and grounding; the context's `Order`; the instructions.
+- [x] **4 · The turn and the wire.** `ShopperScreen` set from the context; the answer's order; OpenAPI and types; architecture rules.
+- [x] **5 · Docs**: privacy, the spec, the board, the notebook.
 
 Not in this plan: a run on the stack against the model — the seed has no orders, and placing them is the storefront's flow (T-6's browser spec covers the answer end to end; T-5's suite scores the order cases with a principal).
+
+## As built (2026-10-05)
+
+All five. One thing the plan did not have: the composing call reads the sheet and
+not the read's data, so *which order is on the screen* had to become one of the
+order's sentences. And one found by a test written for something else — a `shop`
+or `order` answer whose every sentence fell in grounding was returned as an answer
+with nothing in it; it is now the model's failure.

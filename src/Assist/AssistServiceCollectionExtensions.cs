@@ -18,6 +18,10 @@ public static class AssistServiceCollectionExtensions
         services.AddScoped<ProposableCommands>();
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton(ModelProfiles.None);
+
+        // What the shopper is looking at, for a read that needs it (phase 12b): filled
+        // by Tino's turn, never by a model.
+        services.TryAddScoped<SharedKernel.ShopperScreen>();
         if (configuration is not null)
         {
             services.Configure<StewardOptions>(configuration.GetSection(StewardOptions.SectionName));

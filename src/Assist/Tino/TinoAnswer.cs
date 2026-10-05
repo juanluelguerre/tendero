@@ -44,6 +44,9 @@ public enum TinoKind
     Shop,
     Ask,
     NoData,
+
+    /// <summary>About an order of the asking shopper's.</summary>
+    Order,
 }
 
 /// <summary>
@@ -66,6 +69,10 @@ public sealed record AnsweredProduct(string Code, string Name, IReadOnlyList<Rea
 /// <param name="Nearest">What the product's details do say that is nearest, cited.</param>
 public sealed record NoData(string? Code, string? Name, string Sentence, IReadOnlyList<Reason> Nearest);
 
+/// <summary>The order an answer is about. Its id is for the storefront's link to the
+/// order's page — where a return is opened — and went nowhere near a model.</summary>
+public sealed record AnsweredOrder(string Id, string Title);
+
 /// <summary>A read the turn made, with what it was asked — a search's is where "see all" leads.</summary>
 public sealed record TinoRead(string Tool, JsonElement Arguments, int Rows, int? Total);
 
@@ -80,11 +87,11 @@ public sealed record TinoAnswer(
     TinoStatus Status, TinoCause? Cause, TinoKind? Kind,
     IReadOnlyList<AnsweredProduct> Products, IReadOnlyList<Reason> Says, string? Ask, NoData? NoData,
     IReadOnlyList<TinoRead> Reads, string SearchText, int ReasonsDropped,
-    TurnCost? Cost, string? Profile, bool FellBack, string ConversationId);
+    TurnCost? Cost, string? Profile, bool FellBack, string ConversationId, AnsweredOrder? Order = null);
 
 /// <summary>What the model's reply holds once code has read it: one of the kinds, and how much of it was dropped.</summary>
 /// <param name="Claim">For a <see cref="TinoKind.NoData"/> about a product, the statement
 /// the model says its details do not make — what grounding checks that none of them does.</param>
 public sealed record TinoBody(
     TinoKind Kind, IReadOnlyList<AnsweredProduct> Products, IReadOnlyList<Reason> Says, string? Ask, NoData? NoData, int Dropped,
-    string? Claim = null);
+    string? Claim = null, AnsweredOrder? Order = null);
