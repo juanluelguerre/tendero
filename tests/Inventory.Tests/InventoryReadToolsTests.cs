@@ -48,6 +48,8 @@ public sealed class InventoryReadToolsTests
 
         // A warehouse asked for adds what it holds; the shop's list does not carry the column.
         var table = Assert.Single(answer.Tables!);
+        Assert.Equal("stockToRestock", table.Key);
+        Assert.Equal([CellKind.Text, CellKind.Number, CellKind.Number, CellKind.Number, CellKind.Days], table.Columns.Select(column => column.Kind));
         Assert.Equal(["sku", "available", "inWarehouse", "perDay", "coverageDays"], table.Columns.Select(column => column.Key));
         Assert.Equal(table.Columns.Count, Assert.Single(table.Rows).Count);
     }

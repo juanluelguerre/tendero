@@ -42,11 +42,14 @@ public sealed class ProposeActionsTests
     [Fact]
     public async Task An_invalid_action_comes_back_as_an_error_and_is_not_stored()
     {
-        var (handler, proposals, _) = Handler(new() { ["MUG-1"] = "old" });
+        var (handler, proposals, unitOfWork) = Handler(new() { ["MUG-1"] = "old" });
 
         var result = await handler.HandleAsync(Command(("MUG-1", "new"), ("GONE", "x"), ("MUG-1", " ")), TestContext.Current.CancellationToken);
 
         Assert.Single(proposals.All);
+        // The row that was accepted is saved although its neighbours were refused: a
+        // batch is not all or nothing, and what the model was told is stored is stored.
+        Assert.Equal(1, unitOfWork.SaveCount);
         Assert.Equal([0], result.Rows.Where(row => row.Id is not null).Select(row => row.Index));
         Assert.Equal("No GONE.", Assert.Single(result.Rows[1].Errors));
         Assert.Equal("Value must not be blank.", Assert.Single(result.Rows[2].Errors));
@@ -55,13 +58,15 @@ public sealed class ProposeActionsTests
     [Fact]
     public async Task An_action_no_entry_is_named_for_is_refused()
     {
-        var (handler, proposals, _) = Handler(new() { ["MUG-1"] = "old" });
+        var (handler, proposals, unitOfWork) = Handler(new() { ["MUG-1"] = "old" });
 
         var result = await handler.HandleAsync(new ProposeActionsCommand(
             [new ProposedAction("ApproveProposals", FakeEntry.Payload("MUG-1", "x"), "because")], Source()), TestContext.Current.CancellationToken);
 
         Assert.Empty(proposals.All);
         Assert.Equal("No proposable command is named ApproveProposals.", Assert.Single(Assert.Single(result.Rows).Errors));
+        // Nothing was stored, so nothing is written.
+        Assert.Equal(0, unitOfWork.SaveCount);
     }
 
     [Fact]

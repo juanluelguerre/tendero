@@ -121,6 +121,26 @@
     "say": "The tool said: {tool:propose_set_value}"
   },
   {
+    "when": "copy the shelf",
+    "calls": [
+      {
+        "tool": "look_at_shelf",
+        "arguments": {}
+      }
+    ],
+    "say": "Five things are on the shelf.\n\n- MUG-1\n- CUP-2\n- PAN-3\n- BAG-4\n- LAMP-5"
+  },
+  {
+    "when": "only the shelf",
+    "calls": [
+      {
+        "tool": "look_at_shelf",
+        "arguments": {}
+      }
+    ],
+    "say": "- MUG-1\n- CUP-2\n- PAN-3\n- BAG-4\n- LAMP-5"
+  },
+  {
     "when": "hello",
     "say": "Hello."
   }

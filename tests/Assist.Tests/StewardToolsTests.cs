@@ -71,6 +71,46 @@ public sealed class StewardToolsTests
         Assert.DoesNotContain(names, name => name.Contains("approve") || name.Contains("reject"));
     }
 
+    /// <summary>
+    /// What the model is shown of a proposal tool: { items: [ the command's payload +
+    /// a reason ] }, the reason required beside what the payload already requires. A
+    /// grammar is built from this, so a missing type is a tool no model can call.
+    /// </summary>
+    [Fact]
+    public void A_proposal_tools_schema_is_items_of_the_payload_plus_a_required_reason()
+    {
+        var tool = Compose().Tools.Single(tool => tool.Name == "propose_set_value");
+        var schema = tool.JsonSchema;
+
+        Assert.Equal("object", schema.GetProperty("type").GetString());
+        Assert.Equal(["items"], schema.GetProperty("required").EnumerateArray().Select(name => name.GetString()));
+        var items = schema.GetProperty("properties").GetProperty("items");
+        Assert.Equal("array", items.GetProperty("type").GetString());
+        var item = items.GetProperty("items");
+        Assert.Equal("object", item.GetProperty("type").GetString());
+        Assert.Equal(["subject", "value", "reason"], item.GetProperty("required").EnumerateArray().Select(name => name.GetString()));
+        Assert.Equal(["subject", "value", "reason"], item.GetProperty("properties").EnumerateObject().Select(property => property.Name));
+        var reason = item.GetProperty("properties").GetProperty("reason");
+        Assert.Equal("string", reason.GetProperty("type").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(reason.GetProperty("description").GetString()));
+
+        Assert.StartsWith("Propose to set a value:", tool.Description);
+        Assert.Contains("Nothing changes until a person approves.", tool.Description);
+    }
+
+    /// <summary>Every tool's name, description and schema travel with every call: the window is counted with all of them.</summary>
+    [Fact]
+    public void What_the_tools_cost_the_window_is_every_tools_name_description_and_schema()
+    {
+        var tools = Compose().Tools;
+
+        Assert.Equal(2, tools.Count);
+        Assert.Equal(
+            tools[0].Name.Length + tools[0].Description.Length + tools[0].JsonSchema.GetRawText().Length +
+            tools[1].Name.Length + tools[1].Description.Length + tools[1].JsonSchema.GetRawText().Length,
+            StewardTools.Size(tools));
+    }
+
     [Fact]
     public async Task A_read_answers_inside_a_data_envelope_and_is_traced()
     {

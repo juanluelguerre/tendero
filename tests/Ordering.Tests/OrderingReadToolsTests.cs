@@ -28,8 +28,10 @@ public sealed class OrderingReadToolsTests
                     [new CategorySales("MUGS", 4, 40m), new CategorySales(null, 2, 80m)]),
                 GetProductPerformanceQuery performance => new ProductPerformance(performance.Period, performance.Ranking,
                     performance.Category, "EUR", 7, [new ProductSales("p-1", "Mug", 4, 40m)]),
+                // Every reason is in the query's answer, zero included; a model is given only those with units.
                 GetReturnsSummaryQuery returns => new ReturnsSummary(returns.Period, 2, 3,
-                    [new ReasonUnits(ReturnReason.Damaged, 3)], 1, [new SkuReturns("MUG-1", 3, [new ReasonUnits(ReturnReason.Damaged, 3)])]),
+                    [new ReasonUnits(ReturnReason.WrongSize, 0), new ReasonUnits(ReturnReason.Damaged, 3)], 1,
+                    [new SkuReturns("MUG-1", 3, [new ReasonUnits(ReturnReason.WrongSize, 0), new ReasonUnits(ReturnReason.Damaged, 3)])]),
                 _ => throw new NotSupportedException(query.GetType().Name),
             };
             return Task.FromResult((TResult)answer);
@@ -46,6 +48,42 @@ public sealed class OrderingReadToolsTests
     }
 
     private static JsonElement Arguments(string json) => JsonDocument.Parse(json).RootElement.Clone();
+
+    /// <summary>A table as the panel reads it: its key, and each column's key and kind. The
+    /// panel's headings are translations of these names, so a name changed here alone is a
+    /// heading that reads as a key.</summary>
+    private static string Shape(ResultTable table) =>
+        $"{table.Key}: {string.Join(", ", table.Columns.Select(column => $"{column.Key} {column.Kind}"))}";
+
+    [Fact]
+    public async Task Each_tools_tables_are_named_as_the_panel_reads_them()
+    {
+        var (tools, _) = Compose();
+        async Task<string[]> Shapes(string tool, string arguments) =>
+            [.. (await tools.Single(candidate => candidate.Name == tool).ReadAsync(Arguments(arguments), TestContext.Current.CancellationToken)).Tables!.Select(Shape)];
+
+        Assert.Equal(
+        [
+            "salesFigures: period Term, revenue Money, orders Number, units Number, averageOrder Money",
+            "salesByCategory: category Text, units Number, revenue Money",
+            "bestSellers: sku Text, name Text, units Number, revenue Money",
+        ], await Shapes("sales_summary", "{}"));
+        Assert.Equal(["productPerformance: name Text, units Number, revenue Money"], await Shapes("product_performance", "{}"));
+        Assert.Equal(["returnsByReason: reason Term, units Number", "returnsBySku: sku Text, units Number"], await Shapes("returns_summary", "{}"));
+    }
+
+    /// <summary>The two periods are rows the panel names: "current" and "previous" are terms it translates.</summary>
+    [Fact]
+    public async Task The_sales_figures_are_this_period_and_the_one_before_as_terms()
+    {
+        var (tools, _) = Compose();
+
+        var answer = await tools.Single(tool => tool.Name == "sales_summary").ReadAsync(Arguments("{}"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["current", "previous"], answer.Tables![0].Rows.Select(row => row[0].Text));
+        Assert.Equal([3m, 2m], answer.Tables[0].Rows.Select(row => row[2].Number!.Value));
+        Assert.Equal(["MUGS", "uncategorised"], answer.Tables[1].Rows.Select(row => row[0].Text));
+    }
 
     [Fact]
     public void Ordering_registers_its_three_tools()
@@ -99,5 +137,8 @@ public sealed class OrderingReadToolsTests
         var returns = (ReturnsNow)answer.Data;
         Assert.Equal(("Damaged", 3), (returns.ByReason.Single().Reason, returns.ByReason.Single().Units));
         Assert.Equal("MUG-1", returns.BySku.Single().Sku);
+        // A reason nobody gave is not a row: of five reasons a model would read four zeros as news.
+        Assert.Equal("Damaged", returns.BySku.Single().ByReason.Single().Reason);
+        Assert.Equal(["Damaged"], answer.Tables![0].Rows.Select(row => row[0].Text));
     }
 }

@@ -40,6 +40,8 @@ public sealed class RestockListTests
 
         Assert.Equal(["LOW"], list.Rows.Select(row => row.Sku));
         Assert.Equal(Restocking.At, list.RestockAt);
+        // No warehouse was asked for, so none is unknown.
+        Assert.False(list.UnknownWarehouse);
     }
 
     /// <summary>The need is the shop's (R-7.1's point is summed over the warehouses),
@@ -92,6 +94,20 @@ public sealed class RestockListTests
         Assert.Equal((1m, 4m), (sells.PerDay, sells.CoverageDays));
         var still = list.Rows.Single(row => row.Sku == "STILL");
         Assert.Equal(((decimal?)null, (decimal?)null), (still.PerDay, still.CoverageDays));
+    }
+
+    /// <summary>Sold out is first whether or not it sells: with no sales it has no days of cover,
+    /// and by cover alone it would be last — behind what still has units on the shelf.</summary>
+    [Fact]
+    public async Task What_is_sold_out_and_does_not_sell_is_still_first()
+    {
+        var stock = new FakeStock();
+        stock.Put("FAST", "MAD", 5);    // 56 sold: 2 a day, 2.5 days
+        stock.Put("GONE", "MAD", 0);    // nothing sold: no cover to rank by
+
+        var list = await List(stock, new() { ["FAST"] = 56 });
+
+        Assert.Equal(["GONE", "FAST"], list.Rows.Select(row => row.Sku));
     }
 
     [Fact]

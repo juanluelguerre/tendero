@@ -32,6 +32,54 @@ public sealed class CatalogReadToolsTests
 
     private static JsonElement Arguments(string json) => JsonDocument.Parse(json).RootElement.Clone();
 
+    /// <summary>A table as the panel reads it: its key, and each column's key and kind. The
+    /// panel's headings are translations of these names, so a name changed here alone is a
+    /// heading that reads as a key.</summary>
+    private static string Shape(ResultTable table) =>
+        $"{table.Key}: {string.Join(", ", table.Columns.Select(column => $"{column.Key} {column.Kind}"))}";
+
+    [Fact]
+    public async Task Each_tools_tables_are_named_as_the_panel_reads_them()
+    {
+        var found = await Tools().Single(tool => tool.Name == "find_products")
+            .ReadAsync(Arguments("""{"text":"flexo"}"""), TestContext.Current.CancellationToken);
+        var gaps = await Tools().Single(tool => tool.Name == "catalogue_gaps")
+            .ReadAsync(Arguments("""{"kind":"MissingName","culture":"en"}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal("foundProducts: code Text, name Text, price Money, status Term, missingCultures Text", Shape(Assert.Single(found.Tables!)));
+        Assert.Equal("catalogueGaps: code Text, name Text", Shape(Assert.Single(gaps.Tables!)));
+
+        // And the rows are the products': the code, the name, the price, the status as a term, what is missing.
+        var row = Assert.Single(found.Tables![0].Rows);
+        Assert.Equal((Lamp.Code, "Flexo articulado", 10m, "Draft", "en"), (row[0].Text, row[1].Text, row[2].Number, row[3].Text, row[4].Text));
+        Assert.Equal((Lamp.Code, "Flexo articulado"), (gaps.Tables![0].Rows.Single()[0].Text, gaps.Tables[0].Rows.Single()[1].Text));
+    }
+
+    /// <summary>A search that finds nothing has a table with no rows and no currency to name, and does not fail.</summary>
+    [Fact]
+    public async Task Finding_nothing_is_an_empty_table()
+    {
+        var answer = await Tools().Single(tool => tool.Name == "find_products")
+            .ReadAsync(Arguments("""{"text":"no such thing"}"""), TestContext.Current.CancellationToken);
+
+        var table = Assert.Single(answer.Tables!);
+        Assert.Empty(table.Rows);
+        Assert.Null(table.Currency);
+    }
+
+    /// <summary>With no language asked for the products are named in the shop's own, Spanish.</summary>
+    [Fact]
+    public async Task With_no_language_asked_for_the_names_are_in_the_shops()
+    {
+        var found = await Tools().Single(tool => tool.Name == "find_products")
+            .ReadAsync(Arguments("""{"text":"mochila"}"""), TestContext.Current.CancellationToken);
+        var gaps = await Tools().Single(tool => tool.Name == "catalogue_gaps")
+            .ReadAsync(Arguments("""{"kind":"DraftWaiting"}"""), TestContext.Current.CancellationToken);
+
+        Assert.Equal("Mochila", ((FoundProducts)found.Data).Products.Single().Name);
+        Assert.Contains("Mochila", ((Gaps)gaps.Data).Items.Select(item => item.Name));
+    }
+
     [Fact]
     public void Catalog_registers_its_two_tools()
     {

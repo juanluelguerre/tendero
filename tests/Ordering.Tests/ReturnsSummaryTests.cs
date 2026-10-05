@@ -72,6 +72,26 @@ public sealed class ReturnsSummaryTests
         Assert.Equal(3, summary.BySku[0].ByReason.Single(row => row.Reason == ReturnReason.Damaged).Units);
     }
 
+    /// <summary>A SKU sent back in two returns counts both, and so does a reason: the largest single line is not the figure.</summary>
+    [Fact]
+    public void Units_are_summed_over_every_return_of_a_sku_and_of_a_reason()
+    {
+        var now = new TestClock();
+        var order = Delivered(now, Line("PANS", 5), Line("MUG", 5));
+        var first = ReturnRequest.Open(now, order, [new(order.Lines[0].VariantId, "PANS", 3, ReturnReason.Damaged, null)], earlier: []);
+        var second = ReturnRequest.Open(now, order,
+        [
+            new(order.Lines[0].VariantId, "PANS", 1, ReturnReason.Damaged, null),
+            new(order.Lines[1].VariantId, "MUG", 2, ReturnReason.Damaged, null),
+        ], earlier: [first]);
+
+        var (summary, _) = Summarise(now, 5, first, second);
+
+        Assert.Equal(4, summary.BySku.Single(row => row.Sku == "PANS").Units);
+        Assert.Equal(4, summary.BySku.Single(row => row.Sku == "PANS").ByReason.Single(row => row.Reason == ReturnReason.Damaged).Units);
+        Assert.Equal(6, summary.ByReason.Single(row => row.Reason == ReturnReason.Damaged).Units);
+    }
+
     /// <summary>No order, no customer, no comment: a return's comment is the
     /// shopper's own words, and these figures may leave the machine (the spec).</summary>
     [Fact]

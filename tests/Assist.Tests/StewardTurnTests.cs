@@ -44,6 +44,20 @@ public sealed class StewardTurnTests
                 [ResultTable.Of("gaps", [new("code", CellKind.Text)], [["MUG-1"]])]));
     }
 
+    /// <summary>A read of five rows, which the panel draws as a table.</summary>
+    private sealed class ShelfTool : IReadTool
+    {
+        public string Name => "look_at_shelf";
+
+        public string Description => "What is on the shelf.";
+
+        public JsonElement ArgumentsSchema { get; } = JsonDocument.Parse("""{"type":"object","properties":{}}""").RootElement.Clone();
+
+        public Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new ReadAnswer(new { items = 5 }, 5, 5,
+                [ResultTable.Of("shelf", [new("code", CellKind.Text)], [["MUG-1"], ["CUP-2"], ["PAN-3"], ["BAG-4"], ["LAMP-5"]])]));
+    }
+
     /// <summary>A read whose arguments are never right: a model's mistake, which it is told.</summary>
     private sealed class PickyTool : IReadTool
     {
@@ -153,6 +167,7 @@ public sealed class StewardTurnTests
         services.AddSingleton<IPrincipalAccessor>(new FixedPrincipal("Lucía"));
         services.AddScoped<IProposableCommand>(_ => new FakeEntry(new() { ["MUG-1"] = "old" }, new ProposalScope()));
         services.AddScoped<IReadTool, GapsTool>();
+        services.AddScoped<IReadTool, ShelfTool>();
         services.AddScoped<IReadTool, PickyTool>();
         services.AddScoped<IReadTool, LeakyTool>();
         var tokens = new SpentTokens(spent, spentToday);
@@ -176,6 +191,9 @@ public sealed class StewardTurnTests
         Assert.Equal(("scripted", false), (answer.Profile, answer.FellBack));
         Assert.Equal(2, answer.Cost!.Calls);
         Assert.Equal(3000, answer.Cost.InputTokens);
+        // The cost line names the model the profile is configured with, not the profile's key.
+        Assert.Equal("scripted", answer.Cost.Model);
+        Assert.False(answer.NearContextLimit);
         Assert.Equal(new ModelProfile { InputPrice = 0.30m, OutputPrice = 2.50m }.CostMicroEuros(3000, 240), answer.Cost.MicroEuros);
     }
 
@@ -190,6 +208,29 @@ public sealed class StewardTurnTests
         Assert.Equal(StewardStatus.Answered, answer.Status);
         Assert.Equal(StewardPrompt.LeakedACall("en"), answer.Text);
         Assert.DoesNotContain("tool_call", answer.Text);
+    }
+
+    /// <summary>The rows a model writes out again are not the answer: the panel draws them, and the sentence stays.</summary>
+    [Fact]
+    public async Task Rows_the_model_copied_from_a_read_are_taken_out_of_its_answer()
+    {
+        await using var shop = Compose("scripted");
+
+        var answer = await shop.Ask("copy the shelf");
+
+        Assert.Equal("Five things are on the shelf.", answer.Text);
+        Assert.Equal(5, Assert.Single(Assert.Single(answer.Reads).Tables!).Rows.Count);
+    }
+
+    /// <summary>An answer that was nothing but the rows says where they are, in the turn's language.</summary>
+    [Fact]
+    public async Task An_answer_that_was_only_the_rows_says_they_are_in_the_table()
+    {
+        await using var shop = Compose("scripted");
+
+        var answer = await shop.Ask("only the shelf");
+
+        Assert.Equal(StewardPrompt.ItIsInTheTable("en"), answer.Text);
     }
 
     /// <summary>What the panel draws of a read travels with the read: the rows' own table, built by the context.</summary>
@@ -227,6 +268,8 @@ public sealed class StewardTurnTests
         Assert.Equal(StewardStatus.Unavailable, answer.Status);
         Assert.Empty(shop.Proposals.All);
         Assert.Empty(answer.ProposalIds);
+        // A model that did not answer is not a conversation too long: starting again would not help.
+        Assert.False(answer.NearContextLimit);
         // No other profile was tried: the panel must not say a fallback failed too.
         Assert.False(answer.FellBack);
     }
@@ -238,7 +281,7 @@ public sealed class StewardTurnTests
 
         var answer = await shop.Ask("hello");
 
-        Assert.Equal((StewardStatus.Unavailable, true), (answer.Status, answer.FellBack));
+        Assert.Equal((StewardStatus.Unavailable, true, false), (answer.Status, answer.FellBack, answer.NearContextLimit));
     }
 
     [Fact]
@@ -272,6 +315,8 @@ public sealed class StewardTurnTests
 
         Assert.Equal(StewardStatus.BudgetExceeded, answer.Status);
         Assert.Null(answer.Cost);
+        // No profile was reached, and the window is not what stopped it.
+        Assert.Equal((false, false, (string?)null), (answer.FellBack, answer.NearContextLimit, answer.Profile));
     }
 
     /// <summary>
@@ -289,6 +334,7 @@ public sealed class StewardTurnTests
         Assert.Equal(StewardStatus.DailyBudgetExceeded, answer.Status);
         Assert.Null(answer.Cost);
         Assert.Empty(shop.Metered());
+        Assert.Equal((false, false), (answer.FellBack, answer.NearContextLimit));
     }
 
     /// <summary>The day is the shop's (ADR 0046): 10:30 in Madrid in January, so it began at 23:00 UTC the day before.</summary>

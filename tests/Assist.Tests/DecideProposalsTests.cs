@@ -279,6 +279,22 @@ public sealed class DecideProposalsTests
         Assert.Equal(("Too literal", "old"), (proposal.Result, shop.World["MUG-1"]));
     }
 
+    /// <summary>A rejection is a write: it is saved, once for the batch — and a batch that rejected nothing saves nothing.</summary>
+    [Fact]
+    public async Task A_batch_that_rejects_is_saved_once_and_one_that_rejects_nothing_is_not()
+    {
+        var shop = Shop(("MUG-1", "old"), ("CUP-2", "old"));
+        var (first, second) = (shop.Propose("MUG-1", "new"), shop.Propose("CUP-2", "new"));
+
+        await shop.Reject("Too literal", first.Id, second.Id);
+        Assert.Equal(1, shop.Rejections.SaveCount);
+
+        // Both are decided now: nothing is waiting, so nothing is written.
+        var again = await shop.Reject("Too literal", first.Id, ProposalId.New(Clock.GetUtcNow()));
+        Assert.Equal([DecisionOutcome.NotWaiting, DecisionOutcome.NotFound], again.Rows.Select(row => row.Outcome));
+        Assert.Equal(1, shop.Rejections.SaveCount);
+    }
+
     [Fact]
     public void A_rejection_needs_a_reason_and_a_batch_is_bounded()
     {
@@ -332,8 +348,11 @@ public sealed class DecideProposalsTests
             new ApproveProposalsHandler(provider.GetRequiredService<IServiceScopeFactory>(), new FixedPrincipal("Lucía"), Clock)
                 .HandleAsync(new ApproveProposalsCommand(ids), cancellationToken);
 
+        /// <summary>What rejecting saved: its handler writes through a unit of work of its own.</summary>
+        public CountingUnitOfWork Rejections { get; } = new();
+
         public Task<ProposalDecisions> Reject(string reason, params ProposalId[] ids) =>
-            new RejectProposalsHandler(Proposals, new CountingUnitOfWork(), new FixedPrincipal("Lucía"), Clock)
+            new RejectProposalsHandler(Proposals, Rejections, new FixedPrincipal("Lucía"), Clock)
                 .HandleAsync(new RejectProposalsCommand(ids, reason), TestContext.Current.CancellationToken);
     }
 }

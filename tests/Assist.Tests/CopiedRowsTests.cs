@@ -120,6 +120,59 @@ public sealed class CopiedRowsTests
         Assert.Equal(answer, CopiedRows.Without(answer, [figures]));
     }
 
+    /// <summary>Every way Markdown writes an item counts: "-", "*", "+", "1." and "1)".</summary>
+    [Fact]
+    public void An_item_is_an_item_whatever_marks_it()
+    {
+        const string answer = "They are.\n\n- Taza de gres\n* Flexo articulado\n+ Mochila urbana\n1. Sartén de hierro\n2) Vaso térmico";
+
+        Assert.Equal("They are.", CopiedRows.Without(answer, [Gaps]));
+    }
+
+    /// <summary>What only looks like an item — a dash with no space, a number with no mark — is a sentence, and stays.</summary>
+    [Fact]
+    public void A_line_that_only_looks_like_an_item_is_left_alone()
+    {
+        const string answer = "-Taza de gres\n1 Flexo articulado\n2.Mochila urbana\n-\nSartén de hierro and Vaso térmico";
+
+        Assert.Equal(answer, CopiedRows.Without(answer, [Gaps]));
+    }
+
+    /// <summary>A three-letter code names a row; a two-letter cell — a language — names nothing.</summary>
+    [Fact]
+    public void A_cell_names_a_row_from_three_characters()
+    {
+        var codes = ResultTable.Of("t", [new("code", CellKind.Text), new("missing", CellKind.Text)],
+            [["MUG", "es"], ["CUP", "en"], ["PAN", "es"], ["BAG", "en"]]);
+
+        Assert.Equal("Four.", CopiedRows.Without("Four.\n\n- MUG\n- CUP\n- PAN\n- BAG", [codes]));
+        const string languages = "- es\n- en\n- es again\n- en again";
+        Assert.Equal(languages, CopiedRows.Without(languages, [codes]));
+    }
+
+    /// <summary>Only the table that copies the rows goes: one of the model's own — figures it worked out — stays whole.</summary>
+    [Fact]
+    public void A_table_that_is_not_a_copy_stays_beside_one_that_is()
+    {
+        const string answer = """
+            | Code | Name |
+            |---|---|
+            | MUG-1 | Taza de gres |
+            | LAMP-2 | Flexo articulado |
+            | BAG-3 | Mochila urbana |
+            | PAN-4 | Sartén de hierro |
+
+            By kind 2:
+
+            | Kind | Count |
+            |---|---|
+            | Kitchen | 3 |
+            | Bags | 1 |
+            """;
+
+        Assert.Equal("By kind 2:\n\n| Kind | Count |\n|---|---|\n| Kitchen | 3 |\n| Bags | 1 |", CopiedRows.Without(answer, [Gaps]));
+    }
+
     [Fact]
     public void With_no_table_drawn_the_answer_is_the_models()
     {
