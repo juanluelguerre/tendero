@@ -7,6 +7,7 @@ using ElGuerre.Tendero.Api;
 using ElGuerre.Tendero.Assist;
 using ElGuerre.Tendero.Assist.Features.DecideProposals;
 using ElGuerre.Tendero.Assist.Steward;
+using ElGuerre.Tendero.Assist.Tino;
 using ElGuerre.Tendero.Catalog;
 using ElGuerre.Tendero.Catalog.Features.ImportProducts;
 using ElGuerre.Tendero.DevIssuer;
@@ -126,6 +127,15 @@ builder.Services.AddRateLimiter(limiter =>
     limiter.AddPolicy(StewardTurnEndpoints.TurnsPerPerson, http => RateLimitPartition.GetFixedWindowLimiter(
         http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject ?? "anonymous",
         _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+
+    // Twelve turns a minute per client for Tino, which anyone may ask (phase 12b):
+    // by the person when one is signed in, and by the address they call from when
+    // nobody is — the only thing an anonymous caller has that is not theirs to choose.
+    limiter.AddPolicy(TinoEndpoints.TurnsPerClient, http => RateLimitPartition.GetFixedWindowLimiter(
+        http.RequestServices.GetRequiredService<IPrincipalAccessor>().Current.Subject is { Length: > 0 } subject
+            ? "person:" + subject
+            : "address:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown"),
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 12, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 });
 
 // Steward's model profiles (ADR 0053), each on its own. The local one has no

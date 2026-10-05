@@ -55,3 +55,59 @@ turn the product will run.
    Spanish question got *Works on induction hobs.*, the English fact's words. In
    the product the reads answer in the conversation's culture, so the facts will
    be in the shopper's language; the suite scores it either way.
+
+## The first real turns (2026-10-05)
+
+The whole stack with `Tendero__Tino=true`, the seed catalogue of 100 products, the
+same model on the GPU, six questions through `POST /api/assistant/turns` — the turn
+the product runs, not a script. The container held 4.8 GB of the card and 1.3 GiB
+of RAM.
+
+**First run: three of six did not answer.** Each ended as `Unavailable / Model`
+after 13 – 18 seconds. The rows in `telemetry.ai_invocations` said why: every one
+of those turns ended with a composing call of **exactly 400 output tokens**. The
+cap was the gathering's, 400, and four products with three reasons each do not fit
+in it; the JSON was cut, and what is cut is not an answer. The three that did
+answer were the short ones.
+
+**The fix, and the second run: six of six.** The composing call has its own cap
+(`Tino:ComposeOutputTokens`, 900) and the instructions ask for the JSON on one
+line. The longest answer then took 548 output tokens.
+
+| Question | Kind | Time | Reads |
+|---|---|---|---|
+| *una sartén que valga para inducción y no pese mucho* | products, 2 | 11.4 s | search ×2, specs |
+| *¿puede ir al horno?* (on a pan's page) | products, 1 | 5.1 s | search, specs, product |
+| *¿cuántos días tengo para devolver algo?* | shop | 2.6 s | return policy ×2 |
+| *a backpack for a laptop* | products, 4 | 12.0 s | search, specs, product ×4 |
+| *quiero algo para la cocina* | products, 4 | 14.6 s | search, specs ×2 |
+| *which is the best pan?* | products, 4 | 11.1 s | search, specs, product ×3 |
+
+Five model calls a turn at most, up to 10,269 input tokens a turn, the largest
+single call 3,076.
+
+**What it answers well.** *¿puede ir al horno?* on the cast iron pan's page: one
+reason, *"Sartén apta para horno"*, cited to the description's sentence that says
+so. The return policy: the shop's own sentence, with the domain's 14 days. The
+backpacks: *"It has an anti-theft back pocket"* cited to the approved claim.
+
+**What it gets wrong, and which step owns it.**
+
+- **A reason that says more than its fact** — T-3's job, and these are its first
+  cases: *"Está hecho de acero inoxidable"* cited to *piezas: 3*; *"Son 2 paños de
+  cocina de lino de color crema"* cited to *material: lino*; *"It is induction-ready
+  and holds 1 L"* cited to *induction: yes*. Each cites a real fact of the right
+  product, so the first check passes them; the figures check catches the litre, and
+  entailment the rest.
+- ***quiero algo para la cocina* is answered, not asked back.** The model searched
+  and listed four things. The prompt asks for a question; T-5's suite scores it.
+- ***no pese mucho* is not answered.** The catalogue holds no weight for those pans,
+  so nothing could be cited — and the answer does not say so. A *sin dato* for a part
+  of a question is not a kind an answer has; noted for the spec.
+- **Time is close to the cap.** 14.6 s of a turn's 20. The gathering reads more
+  than it needs (a search and specs repeated, a product read per candidate).
+  T-5 fixes the caps and the prompt from the suite; a second model slot would not
+  help a single turn.
+- **Reads are lost when no profile answers**: an `Unavailable / Model` says nothing
+  of what was read, because the fallback starts again. It is the storefront's
+  fallback either way.

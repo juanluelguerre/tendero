@@ -80,3 +80,25 @@ the screen it was asked on, and the tools' answers — each inside a `{ data, ro
 total }` envelope that marks catalogue text as data — and nothing else. Every
 tool's answer type is checked by an architecture rule for any field that names a
 customer, an order, an address, a phone or a comment (ADR 0054).
+
+## What Tino reads, and what may leave the machine
+
+Tino, the storefront's assistant (phase 12b, `docs/specs/tino.md`), answers from
+four reads of the shop: its search, a product's page, a product's specifications
+with the claims a person approved, and the return policy. **Everything they carry
+is what the storefront already shows to anyone**: products on sale, their text,
+their prices. They carry nothing of the person asking. Orders arrive in a later
+step (T-4), and then only the asking shopper's own, without a name, an email, a
+phone or an address — the same rule, with its list for a shopper's reads.
+
+Anyone may ask, signed in or not. **The conversation is not kept**: it travels
+with the browser, turn by turn. What stays is one row per model call in
+`telemetry.ai_invocations` — tokens, cost, latency, the prompt's version — with
+the person's subject when one is signed in and nothing when nobody is, and never
+the question or the answer. The question's text is not sent as telemetry either.
+
+**With the local model nothing leaves the machine**, and Tino runs on nothing else:
+no hosted profile is configured for it. One would receive the shopper's questions
+and catalogue text, and — once orders are read — a signed-in shopper's order
+status; that is a decision the author takes with this page in front of them, not
+a default.

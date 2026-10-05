@@ -32,7 +32,16 @@ public sealed class TinoOptions
     /// <summary>The one tried when it does not.</summary>
     public string? Fallback { get; init; }
 
+    /// <summary>A gathering call's answer at most: a tool call, or the word that ends it.</summary>
     public int MaxOutputTokens { get; init; } = 400;
+
+    /// <summary>
+    /// The composing call's answer at most. Its own number because it is the one call
+    /// that writes the whole answer: four products with three reasons each ran past
+    /// 400 tokens on the first real turns, the JSON was cut, and what is cut is not
+    /// an answer (`docs/analysis/tino-models.md`).
+    /// </summary>
+    public int ComposeOutputTokens { get; init; } = 900;
 
     /// <summary>Tool rounds the gathering may take.</summary>
     public int MaxIterations { get; init; } = 3;
@@ -78,8 +87,8 @@ public sealed class TinoTurnValidator : AbstractValidator<TinoTurnCommand>
         RuleFor(x => x.Culture).Must(CultureNegotiation.Supports).WithMessage("Supported cultures: es, en.");
 
         // What the shopper is looking at is written into the instructions: a kind
-        // this phase knows and a code, one short line with nothing that breaks it.
-        RuleFor(x => x.Context!.Kind).Equal(TinoContext.Product).When(x => x.Context is not null);
+        // of the closed set and a code, one short line with nothing that breaks it.
+        RuleFor(x => x.Context!.Kind).IsInEnum().When(x => x.Context is not null);
         RuleFor(x => x.Context!.Key).NotEmpty().MaximumLength(TinoContext.MaxLength)
             .Must(key => key is null || !key.Any(character => char.IsControl(character) || character == '"'))
             .When(x => x.Context is not null);
@@ -231,7 +240,7 @@ public sealed class TinoTurnHandler(
                 new ChatOptions
                 {
                     ResponseFormat = ChatResponseFormat.ForJsonSchema(AnswerSchema.For(sheet), AnswerSchema.Name),
-                    MaxOutputTokens = settings.MaxOutputTokens,
+                    MaxOutputTokens = settings.ComposeOutputTokens,
                     Temperature = 0,
                 },
                 person),

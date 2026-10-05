@@ -394,6 +394,21 @@ var support = builder.AddContainer("support", "ghcr.io/huggingface/text-embeddin
 var steward = string.Equals(builder.Configuration["Tendero:Steward"], "true",
     StringComparison.OrdinalIgnoreCase);
 
+// TINO, THE STOREFRONT'S ASSISTANT (phase 12b), on the same container and the same
+// model, by its own switch:
+//
+//   Tendero__Tino=true dotnet run --project src/AppHost
+//
+// ONLY ON A GPU. A shopper waits seconds: a turn has twenty, and on the CPU this
+// model takes minutes (the measurement above), so every turn would end as "not
+// answering" after making the shopper wait. Without a GPU the switch starts
+// nothing and the API is told nothing, and the storefront says Tino is not
+// available — the search is what there is (the Tino spec, *When no model answers*).
+// It shares the one slot with Steward until a second is measured.
+var tino = inference.UsesGpu && string.Equals(builder.Configuration["Tendero:Tino"], "true",
+    StringComparison.OrdinalIgnoreCase);
+var localModel = steward || tino;
+
 var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama.cpp",
         (inference.UsesGpu ? "server-cuda-" : "server-") + llamaCppRelease)
     .WithArgs("-m", "/models/qwen3.5-4b-q8_0.gguf", "--host", "0.0.0.0", "--port", "8080",
@@ -413,7 +428,7 @@ var stewardModel = builder.AddContainer("steward-model", "ghcr.io/ggml-org/llama
 if (inference.UsesGpu)
     stewardModel.WithArgs("-ngl", "99").WithContainerRuntimeArgs("--gpus", "all");
 
-if (!steward)
+if (!localModel)
     stewardModel.WithExplicitStart();
 
 if (!knowledge)
@@ -424,7 +439,7 @@ if (!knowledge)
 
 // The model is prepared for whichever of the two needs it: Steward's container
 // waits for the same preparation, which is idempotent (it checks the SHA-256).
-if (!knowledge && !steward)
+if (!knowledge && !localModel)
     extractorModel.WithExplicitStart();
 
 // THE GRAFANA STACK, declared always and started on demand (phase 9b, ADR 0036).
@@ -641,9 +656,14 @@ if (rerank)
 // Steward's local profile by the same rule: its address only where its container
 // runs. Without it the API registers no model profile, and Steward has no model —
 // S-3's "unavailable" path, never a call to a container nobody started.
-if (steward)
+if (localModel)
     api.WithEnvironment("Steward__Models__local__Endpoint",
         ReferenceExpression.Create($"{stewardModel.GetEndpoint("http")}/v1/"));
+
+// Tino by the same rule, one step further: it is on only where its model runs, and
+// off it does not answer and says so (GET /api/assistant/status).
+if (tino)
+    api.WithEnvironment("Tino__Enabled", "true").WithEnvironment("Tino__Model", "local");
 
 // A Scripted Steward (phase 12, S-6): CI's browser spec drives the panel, the card,
 // the review and the audit row with a script, because no model fits a runner —

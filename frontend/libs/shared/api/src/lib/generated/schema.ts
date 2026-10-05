@@ -84,6 +84,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/assistant/turns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TakeTinoTurn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/assistant/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GetTinoAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/steward/turns": {
         parameters: {
             query?: never;
@@ -1435,6 +1467,11 @@ export interface components {
             culture: string;
             slug: string;
         };
+        AnsweredProduct: {
+            code: string;
+            name: string;
+            reasons: components["schemas"]["Reason"][];
+        };
         AppliedDiscountResponse: {
             promotionCode: string;
             label: string;
@@ -1779,6 +1816,8 @@ export interface components {
         };
         /** @enum {unknown} */
         FactKind: "Text" | "LocalizedText" | "Number" | "Boolean" | "Option" | null;
+        /** @enum {unknown} */
+        FactSource: "Claim" | "DataSheet" | "Description" | "Policy" | "Order";
         GapRow: {
             productId: string;
             code: string;
@@ -1803,6 +1842,7 @@ export interface components {
             /** Format: double */
             elapsedSeconds: number;
         };
+        JsonElement: unknown;
         LinkIdentityRequest: {
             displayName: null | string;
             culture: null | string;
@@ -1910,6 +1950,12 @@ export interface components {
         };
         MyOrdersResult: {
             orders: components["schemas"]["OrderSummary"][];
+        };
+        NoData: {
+            code: null | string;
+            name: null | string;
+            sentence: string;
+            nearest: components["schemas"]["Reason"][];
         };
         OfferView: {
             code: string;
@@ -2382,6 +2428,14 @@ export interface components {
             /** Format: int32 */
             days: number;
             items: components["schemas"]["RankedProduct"][];
+        };
+        Reason: {
+            text: string;
+            source: components["schemas"]["FactSource"];
+            fact: string;
+            quotes: string[];
+            /** Format: double */
+            support: null | number;
         };
         ReasonCount: {
             reason: components["schemas"]["ReturnReason"];
@@ -2867,6 +2921,51 @@ export interface components {
         TelemetryConfiguration: {
             adapter: string;
         };
+        TinoAnswer: {
+            status: components["schemas"]["TinoStatus"];
+            cause: null | components["schemas"]["TinoCause"];
+            kind: null | components["schemas"]["TinoKind"];
+            products: components["schemas"]["AnsweredProduct"][];
+            says: components["schemas"]["Reason"][];
+            ask: null | string;
+            noData: null | components["schemas"]["NoData"];
+            reads: components["schemas"]["TinoRead"][];
+            searchText: string;
+            /** Format: int32 */
+            reasonsDropped: number;
+            cost: null | components["schemas"]["TurnCost"];
+            profile: null | string;
+            fellBack: boolean;
+            conversationId: string;
+        };
+        TinoAvailability: {
+            available: boolean;
+        };
+        /** @enum {unknown} */
+        TinoCause: "NoProfile" | "Model" | "Time" | "Budget" | "Shop" | "TooLong" | null;
+        TinoContext: {
+            kind: components["schemas"]["TinoContextKind"];
+            key: string;
+        };
+        /** @enum {unknown} */
+        TinoContextKind: "Product";
+        /** @enum {unknown} */
+        TinoKind: "Products" | "Shop" | "Ask" | "NoData" | null;
+        TinoRead: {
+            tool: string;
+            arguments: components["schemas"]["JsonElement"];
+            /** Format: int32 */
+            rows: number;
+            /** Format: int32 */
+            total: null | number;
+        };
+        /** @enum {unknown} */
+        TinoStatus: "Answered" | "Unavailable";
+        TinoTurnRequest: {
+            messages: components["schemas"]["TurnMessage"][];
+            context: null | components["schemas"]["TinoContext"];
+            conversationId: null | string;
+        };
         ToolUse: {
             tool: string;
             /** Format: int32 */
@@ -3074,6 +3173,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TelemetryConfiguration"];
+                };
+            };
+        };
+    };
+    TakeTinoTurn: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TinoTurnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TinoAnswer"];
+                };
+            };
+        };
+    };
+    GetTinoAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TinoAvailability"];
                 };
             };
         };

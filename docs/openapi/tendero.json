@@ -170,6 +170,65 @@
         }
       }
     },
+    "/api/assistant/turns": {
+      "post": {
+        "tags": [
+          "Assistant"
+        ],
+        "operationId": "TakeTinoTurn",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TinoTurnRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TinoAnswer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assistant/status": {
+      "get": {
+        "tags": [
+          "Assistant"
+        ],
+        "operationId": "GetTinoAvailability",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TinoAvailability"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/steward/turns": {
       "post": {
         "tags": [
@@ -4114,6 +4173,28 @@
           }
         }
       },
+      "AnsweredProduct": {
+        "required": [
+          "code",
+          "name",
+          "reasons"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reason"
+            }
+          }
+        }
+      },
       "AppliedDiscountResponse": {
         "required": [
           "promotionCode",
@@ -5475,6 +5556,15 @@
           null
         ]
       },
+      "FactSource": {
+        "enum": [
+          "Claim",
+          "DataSheet",
+          "Description",
+          "Policy",
+          "Order"
+        ]
+      },
       "GapRow": {
         "required": [
           "productId",
@@ -5551,6 +5641,7 @@
           }
         }
       },
+      "JsonElement": {},
       "LinkIdentityRequest": {
         "required": [
           "displayName",
@@ -5991,6 +6082,38 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OrderSummary"
+            }
+          }
+        }
+      },
+      "NoData": {
+        "required": [
+          "code",
+          "name",
+          "sentence",
+          "nearest"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sentence": {
+            "type": "string"
+          },
+          "nearest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reason"
             }
           }
         }
@@ -7806,6 +7929,40 @@
             "items": {
               "$ref": "#/components/schemas/RankedProduct"
             }
+          }
+        }
+      },
+      "Reason": {
+        "required": [
+          "text",
+          "source",
+          "fact",
+          "quotes",
+          "support"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/FactSource"
+          },
+          "fact": {
+            "type": "string"
+          },
+          "quotes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "support": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -9679,6 +9836,230 @@
           }
         }
       },
+      "TinoAnswer": {
+        "required": [
+          "status",
+          "cause",
+          "kind",
+          "products",
+          "says",
+          "ask",
+          "noData",
+          "reads",
+          "searchText",
+          "reasonsDropped",
+          "cost",
+          "profile",
+          "fellBack",
+          "conversationId"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/TinoStatus"
+          },
+          "cause": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TinoCause"
+              }
+            ]
+          },
+          "kind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TinoKind"
+              }
+            ]
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnsweredProduct"
+            }
+          },
+          "says": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reason"
+            }
+          },
+          "ask": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "noData": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NoData"
+              }
+            ]
+          },
+          "reads": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TinoRead"
+            }
+          },
+          "searchText": {
+            "type": "string"
+          },
+          "reasonsDropped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cost": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TurnCost"
+              }
+            ]
+          },
+          "profile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fellBack": {
+            "type": "boolean"
+          },
+          "conversationId": {
+            "type": "string"
+          }
+        }
+      },
+      "TinoAvailability": {
+        "required": [
+          "available"
+        ],
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TinoCause": {
+        "enum": [
+          "NoProfile",
+          "Model",
+          "Time",
+          "Budget",
+          "Shop",
+          "TooLong",
+          null
+        ]
+      },
+      "TinoContext": {
+        "required": [
+          "kind",
+          "key"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/TinoContextKind"
+          },
+          "key": {
+            "type": "string"
+          }
+        }
+      },
+      "TinoContextKind": {
+        "enum": [
+          "Product"
+        ]
+      },
+      "TinoKind": {
+        "enum": [
+          "Products",
+          "Shop",
+          "Ask",
+          "NoData",
+          null
+        ]
+      },
+      "TinoRead": {
+        "required": [
+          "tool",
+          "arguments",
+          "rows",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "tool": {
+            "type": "string"
+          },
+          "arguments": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "rows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "TinoStatus": {
+        "enum": [
+          "Answered",
+          "Unavailable"
+        ]
+      },
+      "TinoTurnRequest": {
+        "required": [
+          "messages",
+          "context",
+          "conversationId"
+        ],
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TurnMessage"
+            }
+          },
+          "context": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TinoContext"
+              }
+            ]
+          },
+          "conversationId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ToolUse": {
         "required": [
           "tool",
@@ -10018,6 +10399,9 @@
   "tags": [
     {
       "name": "Accounts"
+    },
+    {
+      "name": "Assistant"
     },
     {
       "name": "Authentication"

@@ -530,13 +530,14 @@ public sealed class ArchitectureRules
         Assert.Empty(Given(typeof(ElGuerre.Tendero.Assist.Tino.TinoTurnHandler)).Intersect(writing));
         Assert.Equal(writing, Given(typeof(ElGuerre.Tendero.Assist.Steward.StewardTurnHandler)).Intersect(writing));
 
-        // And nothing under Tino's namespace names a proposal.
+        // And nothing under Tino's namespace names a proposal. (Its endpoint does hold
+        // a command dispatcher: the turn itself is a command, and that is all it sends.)
         var tino = typeof(ElGuerre.Tendero.Assist.Tino.TinoTurnHandler).Assembly.GetTypes()
             .Where(type => type.Namespace == typeof(ElGuerre.Tendero.Assist.Tino.TinoTurnHandler).Namespace);
         var reached = tino.SelectMany(type => type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 .Select(field => field.FieldType)
                 .Concat(type.GetConstructors().SelectMany(constructor => constructor.GetParameters()).Select(parameter => parameter.ParameterType)))
-            .Where(type => type == typeof(IProposableCommand) || type == typeof(ElGuerre.Tendero.Assist.ProposableCommands) || type == typeof(ICommandDispatcher));
+            .Where(type => type == typeof(IProposableCommand) || type == typeof(ElGuerre.Tendero.Assist.ProposableCommands));
         Assert.Empty(reached);
     }
 

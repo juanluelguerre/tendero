@@ -382,10 +382,30 @@ ways for Tino:
    `ReadTool<,>`, Steward takes the shopkeeper's reads only, and the customer rule
    keeps a list of names per audience. Still to do here: what both turns share,
    which waits for Tino's turn to exist — extracting it before there is a second
-   user would be guessing its shape.
+   user would be guessing its shape. *Done with T-2*: `Assist/Turns/ProfileWalk`,
+   with Steward's 115 tests unchanged as the proof.
 2. **T-2 · Tino reads** (`P12b-2`). The shopper's tools over the existing queries,
    facts with ids and sources, the typed answer, the turn and its endpoint, the
    caps and the budget, the `Scripted` kind.
+   *As built (2026-10-05)* — plan and its differences in
+   `docs/superpowers/plans/2026-10-05-tino-t2-tino-reads.md`. A turn is **two
+   phases on one profile**, because the local server refuses tools and a schema in
+   one call: a `ChatClientAgent` gathers through `search_products`, `get_product`,
+   `get_product_specs` and `get_return_policy` (three tool rounds at most), and one
+   call composes with no tools, held to a schema built from what was read — one
+   object per kind, the product codes and the fact ids as enums. Code reads the
+   reply (`TinoReply`): a product no read returned, a fact never issued, another
+   product's fact — dropped and counted. `POST /api/assistant/turns` is anonymous
+   by decision, twelve turns a minute per client (the person, or the address);
+   `GET /api/assistant/status` says whether Tino can be asked, from configuration.
+   No answer always carries its cause — `NoProfile`, `Model`, `Time`, `Budget`,
+   `Shop`, `TooLong` — and the shopper's words to search for. The caps: 400 output
+   tokens for a gathering call and 900 for the composing one, 20 seconds a turn,
+   30,000 tokens a conversation, 2,000,000 a day for the whole shop. Seen on the
+   running stack against the local model: six of six questions answered once the
+   composing call had its own cap, in 2.6 to 14.6 seconds
+   (`docs/analysis/tino-models.md`, with what it still gets wrong and which step
+   owns each).
 3. **T-3 · Grounding** (`P12b-3`). The three checks, the drop count, `noData`
    confirmed by code.
 4. **T-4 · After-sale** (`P12b-2b`). `my_orders`, `my_order`, the returnable
