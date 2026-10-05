@@ -99,6 +99,10 @@
     "say": "The tool said: {tool:leaky}"
   },
   {
+    "when": "tool call as text",
+    "say": "<tool_call>{\"name\": \"find_products\", \"arguments\": {\"text\": \"mug\"}}</tool_call>"
+  },
+  {
     "when": "numeric reason",
     "calls": [
       {

@@ -9,7 +9,8 @@ using Microsoft.Extensions.AI;
 namespace ElGuerre.Tendero.Assist.Steward;
 
 /// <param name="Rows">Rows the read carried; the panel says "read … · 12 rows".</param>
-public sealed record ToolUse(string Tool, int Rows, int? Total);
+/// <param name="Tables">What the panel draws of those rows, built by the read's own context.</param>
+public sealed record ToolUse(string Tool, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null);
 
 /// <summary>What one turn's tools did: what was read, what was proposed, what failed.</summary>
 public sealed class StewardTrace
@@ -55,7 +56,7 @@ public static class StewardTools
     private static async Task<object?> ReadAsync(IReadTool read, JsonElement arguments, StewardTrace trace, CancellationToken cancellationToken)
     {
         var answer = await read.ReadAsync(arguments, cancellationToken);
-        trace.Read(new ToolUse(read.Name, answer.Rows, answer.Total));
+        trace.Read(new ToolUse(read.Name, answer.Rows, answer.Total, answer.Tables));
         Activity.Current?.SetTag("tendero.tool.rows", answer.Rows);
 
         return JsonSerializer.SerializeToElement(new { data = answer.Data, rows = answer.Rows, total = answer.Total }, ArgumentSchemas.Json);

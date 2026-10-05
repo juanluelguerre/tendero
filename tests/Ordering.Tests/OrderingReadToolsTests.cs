@@ -64,6 +64,11 @@ public sealed class OrderingReadToolsTests
         Assert.Equal(("Month", 120m, 60m), (sales.Period, sales.Current.Revenue, sales.Previous.Revenue));
         Assert.Equal([("MUGS", 40m), ("uncategorised", 80m)], sales.ByCategory.Select(row => (row.Category, row.Revenue)));
         Assert.Equal("MUG-1", Assert.Single(sales.BestSellers).Sku);
+
+        // What the panel draws is what was read: the period against the one before, the mix, the best sellers.
+        Assert.Equal(["salesFigures", "salesByCategory", "bestSellers"], answer.Tables!.Select(table => table.Key));
+        Assert.Equal([120m, 60m], answer.Tables![0].Rows.Select(row => row[1].Number!.Value));
+        Assert.All(answer.Tables, table => Assert.Equal("EUR", table.Currency));
         Assert.All(queries.Asked, query => Assert.Equal(DashboardPeriod.Month, query switch
         {
             GetSalesSummaryQuery summary => summary.Period,

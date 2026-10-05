@@ -92,6 +92,7 @@ internal sealed class EfProductRepository(TenderoDbContext context)
             $"""
             SELECT p.id AS "Value" FROM catalog.products AS p
             WHERE p.code ILIKE {pattern} ESCAPE '\'
+               OR p.id::text = {typed.ToLowerInvariant()}
                OR EXISTS (SELECT 1 FROM jsonb_each_text(p.name) AS n WHERE n.value ILIKE {pattern} ESCAPE '\')
             """);
     }

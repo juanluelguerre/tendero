@@ -212,7 +212,7 @@ public sealed partial class StewardTurnHandler(
                 activity?.SetTag("assist.profile", name);
 
                 return Answer(command, StewardStatus.Answered,
-                    string.IsNullOrWhiteSpace(response.Text) ? StewardPrompt.StoppedAtTheCap(command.Culture) : response.Text,
+                    Said(response.Text, command.Culture),
                     trace,
                     new TurnCost(calls, input, output, profile.CostMicroEuros(input, output),
                         (int)clock.GetElapsedTime(started).TotalMilliseconds, profile.Model ?? name),
@@ -248,6 +248,12 @@ public sealed partial class StewardTurnHandler(
         activity?.SetTag("assist.unavailable", true);
         return Answer(command, StewardStatus.Unavailable, null, new StewardTrace(), null, null, fellBack, false);
     }
+
+    /// <summary>The model's words, unless it had none or wrote a tool call as text (deterministic: code chooses).</summary>
+    private static string Said(string? text, string culture) =>
+        string.IsNullOrWhiteSpace(text) ? StewardPrompt.StoppedAtTheCap(culture)
+        : StewardPrompt.LeaksACall(text) ? StewardPrompt.LeakedACall(culture)
+        : text;
 
     private DateTimeOffset StartOfShopDay()
     {

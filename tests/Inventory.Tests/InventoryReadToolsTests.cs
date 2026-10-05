@@ -45,6 +45,23 @@ public sealed class InventoryReadToolsTests
         var row = Assert.Single(((ToRestock)answer.Data).Skus);
         Assert.Equal(("CUP", 3, (int?)1, (decimal?)6m), (row.Sku, row.Available, row.InWarehouse, row.CoverageDays));
         Assert.Equal((1, (int?)7), (answer.Rows, answer.Total));
+
+        // A warehouse asked for adds what it holds; the shop's list does not carry the column.
+        var table = Assert.Single(answer.Tables!);
+        Assert.Equal(["sku", "available", "inWarehouse", "perDay", "coverageDays"], table.Columns.Select(column => column.Key));
+        Assert.Equal(table.Columns.Count, Assert.Single(table.Rows).Count);
+    }
+
+    [Fact]
+    public async Task Without_a_warehouse_the_restock_table_has_no_warehouse_column()
+    {
+        var (tool, _) = Compose(new RestockList(null, false, ["BCN", "MAD"], Restocking.At, 1, [new RestockRow("CUP", 0, null, null, null)]));
+
+        var answer = await tool.ReadAsync(Arguments("{}"), TestContext.Current.CancellationToken);
+
+        var table = Assert.Single(answer.Tables!);
+        Assert.Equal(["sku", "available", "perDay", "coverageDays"], table.Columns.Select(column => column.Key));
+        Assert.Equal(table.Columns.Count, Assert.Single(table.Rows).Count);
     }
 
     /// <summary>A warehouse the shop does not have goes back to the model with the

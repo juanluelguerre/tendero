@@ -36,4 +36,20 @@ public sealed class StockToRestockTool(IQueryDispatcher queries) : ReadTool<Stoc
             [.. list.Rows.Select(row => new SkuToRestock(row.Sku, row.Available, row.InWarehouse, row.PerDay, row.CoverageDays))]);
         return (data, data.Skus.Count, list.Total);
     }
+
+    protected override IReadOnlyList<ResultTable> Tables(ToRestock data) =>
+    [
+        ResultTable.Of("stockToRestock",
+            [
+                new("sku", CellKind.Text), new("available", CellKind.Number),
+                .. data.Warehouse is null ? Array.Empty<ResultColumn>() : [new ResultColumn("inWarehouse", CellKind.Number)],
+                new("perDay", CellKind.Number), new("coverageDays", CellKind.Days),
+            ],
+            data.Skus.Select(row => (IReadOnlyList<object?>)
+            [
+                row.Sku, row.Available,
+                .. data.Warehouse is null ? Array.Empty<object?>() : [row.InWarehouse],
+                row.PerDay, row.CoverageDays,
+            ])),
+    ];
 }

@@ -31,7 +31,56 @@ public interface IReadTool
 /// <param name="Data">The tool's own DTO: codes, names, figures — never a customer.</param>
 /// <param name="Rows">How many rows it carries, for the panel's "read … · 12 rows".</param>
 /// <param name="Total">How many there were in all, when the read is capped.</param>
-public sealed record ReadAnswer(object Data, int Rows, int? Total);
+/// <param name="Tables">What the panel draws from the same rows: built by code from the read, so
+/// what is shown is what was read and not the model's retelling of it.</param>
+public sealed record ReadAnswer(object Data, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null);
+
+/// <summary>How the panel formats a cell: a number in the reader's culture, money in the table's currency.</summary>
+public enum CellKind
+{
+    Text,
+
+    /// <summary>A word of the shop's own — a status, a reason — that the panel translates, and shows as it is when it cannot.</summary>
+    Term,
+
+    Number,
+    Money,
+    Days,
+}
+
+/// <param name="Key">What the column holds, for the panel's heading.</param>
+public sealed record ResultColumn(string Key, CellKind Kind);
+
+/// <summary>One cell: a number when the column is one, the text otherwise; empty when the read had nothing.</summary>
+public sealed record ResultCell(string? Text, decimal? Number);
+
+/// <summary>
+/// A table the panel draws from a read's rows (P12-10): the columns say how each
+/// is formatted, and the headings and terms are the panel's to translate. At most
+/// <see cref="ReadLimits.MaxRows"/> rows, and only what the read's own DTO carries —
+/// so what the architecture rule keeps customer fields out of keeps them out here.
+/// </summary>
+/// <param name="Key">What the table is, for its title.</param>
+/// <param name="Currency">For the money columns.</param>
+public sealed record ResultTable(
+    string Key, string? Currency, IReadOnlyList<ResultColumn> Columns, IReadOnlyList<IReadOnlyList<ResultCell>> Rows)
+{
+    /// <summary>A table from plain values: a string is text, a number is a number, null is empty.</summary>
+    public static ResultTable Of(
+        string key, IReadOnlyList<ResultColumn> columns, IEnumerable<IReadOnlyList<object?>> rows, string? currency = null) =>
+        new(key, currency, columns,
+        [
+            .. rows.Take(ReadLimits.MaxRows).Select(row => (IReadOnlyList<ResultCell>)
+            [
+                .. row.Select(value => value switch
+                {
+                    null => new ResultCell(null, null),
+                    string text => new ResultCell(text, null),
+                    _ => new ResultCell(null, Convert.ToDecimal(value, System.Globalization.CultureInfo.InvariantCulture)),
+                }),
+            ]),
+        ]);
+}
 
 /// <summary>
 /// What every read tool does the same way: read the arguments, run the read through
@@ -57,6 +106,9 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
     protected abstract Task<(TData Data, int Rows, int? Total)> ReadAsync(
         TArgs arguments, IQueryDispatcher queries, CancellationToken cancellationToken);
 
+    /// <summary>What the panel draws of what was read; none when a read has no rows worth a table.</summary>
+    protected virtual IReadOnlyList<ResultTable> Tables(TData data) => [];
+
     public async Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default)
     {
         TArgs read;
@@ -73,7 +125,7 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
         try
         {
             var (data, rows, total) = await ReadAsync(read, queries, cancellationToken);
-            return new ReadAnswer(data, rows, total);
+            return new ReadAnswer(data, rows, total, Tables(data));
         }
         catch (ValidationException refused)
         {

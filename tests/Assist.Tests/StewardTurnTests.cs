@@ -40,7 +40,8 @@ public sealed class StewardTurnTests
         public JsonElement ArgumentsSchema { get; } = JsonDocument.Parse("""{"type":"object","properties":{}}""").RootElement.Clone();
 
         public Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default) =>
-            Task.FromResult(new ReadAnswer(new { items = new[] { "MUG-1" } }, 1, 1));
+            Task.FromResult(new ReadAnswer(new { items = new[] { "MUG-1" } }, 1, 1,
+                [ResultTable.Of("gaps", [new("code", CellKind.Text)], [["MUG-1"]])]));
     }
 
     /// <summary>A read whose arguments are never right: a model's mistake, which it is told.</summary>
@@ -170,12 +171,38 @@ public sealed class StewardTurnTests
 
         Assert.Equal(StewardStatus.Answered, answer.Status);
         Assert.StartsWith("I read the gaps and proposed:", answer.Text);
-        Assert.Equal(new ToolUse("look_at_gaps", 1, 1), Assert.Single(answer.Reads));
+        Assert.Equal(("look_at_gaps", 1, 1), (Assert.Single(answer.Reads).Tool, answer.Reads[0].Rows, answer.Reads[0].Total));
         Assert.Equal(shop.Proposals.All[0].Id.ToString(), Assert.Single(answer.ProposalIds));
         Assert.Equal(("scripted", false), (answer.Profile, answer.FellBack));
         Assert.Equal(2, answer.Cost!.Calls);
         Assert.Equal(3000, answer.Cost.InputTokens);
         Assert.Equal(new ModelProfile { InputPrice = 0.30m, OutputPrice = 2.50m }.CostMicroEuros(3000, 240), answer.Cost.MicroEuros);
+    }
+
+    /// <summary>A small model writes its call as text: the shopkeeper gets a fixed message, not the markup.</summary>
+    [Fact]
+    public async Task A_tool_call_written_as_text_is_not_shown_as_the_answer()
+    {
+        await using var shop = Compose("scripted");
+
+        var answer = await shop.Ask("tool call as text");
+
+        Assert.Equal(StewardStatus.Answered, answer.Status);
+        Assert.Equal(StewardPrompt.LeakedACall("en"), answer.Text);
+        Assert.DoesNotContain("tool_call", answer.Text);
+    }
+
+    /// <summary>What the panel draws of a read travels with the read: the rows' own table, built by the context.</summary>
+    [Fact]
+    public async Task A_reads_tables_travel_with_it()
+    {
+        await using var shop = Compose("scripted");
+
+        var answer = await shop.Ask("Which products have no English name?");
+
+        var table = Assert.Single(Assert.Single(answer.Reads).Tables ?? []);
+        Assert.Equal("gaps", table.Key);
+        Assert.Equal([new ResultCell("MUG-1", null)], Assert.Single(table.Rows));
     }
 
     [Fact]

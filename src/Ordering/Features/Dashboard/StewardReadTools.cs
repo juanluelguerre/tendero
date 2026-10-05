@@ -46,6 +46,26 @@ public sealed class SalesSummaryTool(IQueryDispatcher queries) : ReadTool<Period
 
     private static Figures Of(SalesFigures figures) =>
         new(figures.Revenue, figures.Orders, figures.Units, figures.AverageOrderValue);
+
+    protected override IReadOnlyList<ResultTable> Tables(SalesNow data) =>
+    [
+        ResultTable.Of("salesFigures",
+            [new("period", CellKind.Term), new("revenue", CellKind.Money), new("orders", CellKind.Number),
+                new("units", CellKind.Number), new("averageOrder", CellKind.Money)],
+            [
+                ["current", data.Current.Revenue, data.Current.Orders, data.Current.Units, data.Current.AverageOrderValue],
+                ["previous", data.Previous.Revenue, data.Previous.Orders, data.Previous.Units, data.Previous.AverageOrderValue],
+            ],
+            data.Currency),
+        ResultTable.Of("salesByCategory",
+            [new("category", CellKind.Text), new("units", CellKind.Number), new("revenue", CellKind.Money)],
+            data.ByCategory.Select(row => (IReadOnlyList<object?>)[row.Category, row.Units, row.Revenue]),
+            data.Currency),
+        ResultTable.Of("bestSellers",
+            [new("sku", CellKind.Text), new("name", CellKind.Text), new("units", CellKind.Number), new("revenue", CellKind.Money)],
+            data.BestSellers.Select(row => (IReadOnlyList<object?>)[row.Sku, row.Name, row.Units, row.Revenue]),
+            data.Currency),
+    ];
 }
 
 public sealed record PerformanceArguments(
@@ -76,6 +96,14 @@ public sealed class ProductPerformanceTool(IQueryDispatcher queries) : ReadTool<
             [.. ranked.Rows.Select(row => new RankedSales(row.ProductId, row.Name, row.Units, row.Revenue))]);
         return (data, data.Products.Count, ranked.Total);
     }
+
+    protected override IReadOnlyList<ResultTable> Tables(ProductsRanked data) =>
+    [
+        ResultTable.Of("productPerformance",
+            [new("name", CellKind.Text), new("units", CellKind.Number), new("revenue", CellKind.Money)],
+            data.Products.Select(row => (IReadOnlyList<object?>)[row.Name, row.Units, row.Revenue]),
+            data.Currency),
+    ];
 }
 
 public sealed record ReturnsNow(string Period, int Returns, int Units, IReadOnlyList<ReasonReturned> ByReason, int SkuTotal, IReadOnlyList<SkuReturned> BySku);
@@ -105,4 +133,14 @@ public sealed class ReturnsSummaryTool(IQueryDispatcher queries) : ReadTool<Peri
     }
 
     private static ReasonReturned Reason(ReasonUnits row) => new(row.Reason.ToString(), row.Units);
+
+    protected override IReadOnlyList<ResultTable> Tables(ReturnsNow data) =>
+    [
+        ResultTable.Of("returnsByReason",
+            [new("reason", CellKind.Term), new("units", CellKind.Number)],
+            data.ByReason.Select(row => (IReadOnlyList<object?>)[row.Reason, row.Units])),
+        ResultTable.Of("returnsBySku",
+            [new("sku", CellKind.Text), new("units", CellKind.Number)],
+            data.BySku.Select(row => (IReadOnlyList<object?>)[row.Sku, row.Units])),
+    ];
 }

@@ -63,6 +63,12 @@ public sealed class ProductListSearchTests(PostgresFixture postgres)
         Assert.Equal([kettle.Code], await Found("100%"));
         Assert.Empty(await Found("0%urban"));
 
+        // A product's id, whole and in any case (Steward is given ids by the gap reads
+        // and asked about them): exact, never a part of one, which would match by luck.
+        Assert.Equal([backpack.Code], await Found(backpack.Id.Value.ToString()));
+        Assert.Equal([backpack.Code], await Found(backpack.Id.Value.ToString().ToUpperInvariant()));
+        Assert.Empty(await Found(backpack.Id.Value.ToString()[..8]));
+
         Assert.Equal(3, (await reader.ListAsync(null, "  ", null, 1, 20, ct)).Total);
 
         // A culture missing from the jsonb's keys (S-3a): the lamp has no English

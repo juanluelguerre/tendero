@@ -4963,6 +4963,15 @@
           }
         }
       },
+      "CellKind": {
+        "enum": [
+          "Text",
+          "Term",
+          "Number",
+          "Money",
+          "Days"
+        ]
+      },
       "ChangeAgentTrustRequest": {
         "required": [
           "trust"
@@ -8135,6 +8144,78 @@
           }
         }
       },
+      "ResultCell": {
+        "required": [
+          "text",
+          "number"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "number": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "ResultColumn": {
+        "required": [
+          "key",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/CellKind"
+          }
+        }
+      },
+      "ResultTable": {
+        "required": [
+          "key",
+          "currency",
+          "columns",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResultColumn"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/ResultCell"
+              }
+            }
+          }
+        }
+      },
       "ReturnDecision": {
         "enum": [
           "Approve",
@@ -9619,6 +9700,15 @@
               "integer"
             ],
             "format": "int32"
+          },
+          "tables": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ResultTable"
+            }
           }
         }
       },

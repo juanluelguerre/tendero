@@ -1642,6 +1642,8 @@ export interface components {
             /** Format: int32 */
             depth: number;
         };
+        /** @enum {unknown} */
+        CellKind: "Text" | "Term" | "Number" | "Money" | "Days";
         ChangeAgentTrustRequest: {
             trust: components["schemas"]["AgentTrust"];
         };
@@ -2470,6 +2472,21 @@ export interface components {
             /** Format: double */
             coverageDays: null | number;
         };
+        ResultCell: {
+            text: null | string;
+            /** Format: double */
+            number: null | number;
+        };
+        ResultColumn: {
+            key: string;
+            kind: components["schemas"]["CellKind"];
+        };
+        ResultTable: {
+            key: string;
+            currency: null | string;
+            columns: components["schemas"]["ResultColumn"][];
+            rows: components["schemas"]["ResultCell"][][];
+        };
         /** @enum {unknown} */
         ReturnDecision: "Approve" | "Reject" | "Receive" | "Refund";
         ReturnLineRequest: {
@@ -2856,6 +2873,7 @@ export interface components {
             rows: number;
             /** Format: int32 */
             total: null | number;
+            tables?: null | components["schemas"]["ResultTable"][];
         };
         /** @enum {unknown} */
         TranslationOutcome: "Translated" | "Unchanged" | "Archived" | "NotFound";

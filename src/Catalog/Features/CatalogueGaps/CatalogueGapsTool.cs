@@ -31,4 +31,11 @@ public sealed class CatalogueGapsTool(IQueryDispatcher queries) : ReadTool<Catal
             [.. gaps.Rows.Select(row => new GapItem(row.ProductId, row.Code, row.Name))]);
         return (data, data.Items.Count, gaps.Total);
     }
+
+    protected override IReadOnlyList<ResultTable> Tables(Gaps data) =>
+    [
+        ResultTable.Of("catalogueGaps",
+            [new("code", CellKind.Text), new("name", CellKind.Text)],
+            data.Items.Select(row => (IReadOnlyList<object?>)[row.Code, row.Name])),
+    ];
 }

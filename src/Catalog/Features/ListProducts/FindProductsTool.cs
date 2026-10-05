@@ -42,4 +42,11 @@ public sealed class FindProductsTool(IQueryDispatcher queries) : ReadTool<FindPr
         ]);
         return (found, found.Products.Count, page.Total);
     }
+
+    protected override IReadOnlyList<ResultTable> Tables(FoundProducts data) =>
+    [
+        ResultTable.Of("foundProducts",
+            [new("code", CellKind.Text), new("name", CellKind.Text), new("status", CellKind.Term), new("missingCultures", CellKind.Text)],
+            data.Products.Select(row => (IReadOnlyList<object?>)[row.Code, row.Name, row.Status, string.Join(", ", row.MissingCultures)])),
+    ];
 }
