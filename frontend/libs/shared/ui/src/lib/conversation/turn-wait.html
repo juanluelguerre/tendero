@@ -1,0 +1,8 @@
+<span
+  >{{ working() }} <span class="tabular-nums">{{ seconds() }} s</span></span
+>
+@if (slow(); as words) {
+  @if (late()) {
+    <span class="basis-full text-3xs">{{ words }}</span>
+  }
+}

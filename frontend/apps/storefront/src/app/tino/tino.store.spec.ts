@@ -135,6 +135,10 @@ describe('the tino store', () => {
         },
       }),
     );
+    // The product it is about is read as a card, as an answer's products are.
+    const cards = http.expectOne((req) => req.url === Cards);
+    cards.flush({ items: [hit('PAN-1')] });
+    expect(store.exchanges()[0].cards.map((card) => card.code)).toEqual(['PAN-1']);
     expect(telemetry.trackEvent).toHaveBeenLastCalledWith(
       'tino_answered',
       expect.objectContaining({ kind: 'no_data', reasons: 2, products: 0 }),

@@ -5,7 +5,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import type { AnsweredProduct, SearchHit } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
-import { Composer, ConversationScroll, Icon, Notice } from '@tendero/shared-ui';
+import { Composer, ConversationScroll, Icon, Notice, TurnWait } from '@tendero/shared-ui';
 import { filter, map } from 'rxjs';
 import { ProductCard } from '../../product-card/product-card';
 import { ShopLinks } from '../../shop-links';
@@ -24,6 +24,8 @@ interface Named {
 interface Drawn {
   readonly exchange: Exchange;
   readonly named: readonly Named[];
+  /** The card of the product a "its details do not say" is about, when the shop could read one. */
+  readonly about: SearchHit | null;
   /** What the search behind the answer was asked, and how many it found, when there is more to see. */
   readonly more: { readonly text: string; readonly total: number } | null;
 }
@@ -39,7 +41,17 @@ interface Drawn {
  */
 @Component({
   selector: 'storefront-tino-panel',
-  imports: [TranslocoDirective, RouterLink, Icon, Notice, Composer, ConversationScroll, ProductCard, TinoSource],
+  imports: [
+    TranslocoDirective,
+    RouterLink,
+    Icon,
+    Notice,
+    Composer,
+    ConversationScroll,
+    TurnWait,
+    ProductCard,
+    TinoSource,
+  ],
   templateUrl: './tino-panel.html',
   // A product followed is a click on a link inside one of an answer's products: heard
   // here, on the host, as the home's modules hear theirs — the list items are not controls.
@@ -71,7 +83,8 @@ export class TinoPanel {
         product,
         card: exchange.cards.find((card) => card.code === product.code) ?? null,
       }));
-      return { exchange, named, more: moreOf(exchange) };
+      const about = exchange.cards.find((card) => card.code === answer?.noData?.code) ?? null;
+      return { exchange, named, about, more: moreOf(exchange) };
     }),
   );
 

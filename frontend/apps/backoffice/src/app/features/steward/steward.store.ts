@@ -1,10 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import { patchState, signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import type { ScreenContext, StewardAnswer, StewardTurnRequest, TurnMessage } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
-import { catchError, EMPTY, pipe, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { type ConversationExchange, withConversation } from '@tendero/shared-util';
+import { catchError, EMPTY, pipe, switchMap, takeUntil, tap } from 'rxjs';
 import { StewardService } from '../../data-access/steward.service';
 import { WaitingStore } from '../../shell/waiting.store';
 import { BackofficeUsage } from '../../usage';
@@ -13,9 +14,7 @@ import { BackofficeUsage } from '../../usage';
 export type ExchangeState = 'asking' | 'answered' | 'stopped' | 'failed' | 'tooMany';
 
 /** A question and what came back. The answer may say no model answered: that is an answer too. */
-export interface Exchange {
-  readonly id: number;
-  readonly question: string;
+export interface Exchange extends ConversationExchange {
   readonly state: ExchangeState;
   readonly answer: StewardAnswer | null;
 }
@@ -33,32 +32,27 @@ export interface ConversationCost {
 /** Statuses after which this conversation cannot go on: only a new one does — or tomorrow, for the day's budget. */
 const Ending: readonly StewardAnswer['status'][] = ['BudgetExceeded', 'ConversationTooLong', 'DailyBudgetExceeded'];
 
-let exchanges = 0;
-
 /**
  * Steward's conversation (phase 12; ADR 0047: a root store, so closing the panel
  * does not end the conversation — reopening it finds it). The conversation lives here
  * and travels with every turn — the server keeps none (spec, decision 6) — and a
  * page reload forgets it. A turn can be stopped: the request is aborted, which
- * stops the model's work on the server, and the panel can be asked again.
+ * stops the model's work on the server, and the panel can be asked again. That
+ * much is `withConversation`'s, shared with Tino's; what a turn sends and what
+ * an answer means are Steward's, here.
  */
 export const StewardStore = signalStore(
   { providedIn: 'root' },
-  withState({
-    conversationId: null as string | null,
-    exchanges: [] as readonly Exchange[],
-  }),
+  withConversation<Exchange>(),
   withProps(() => ({
     _steward: inject(StewardService),
     _culture: inject(CultureStore),
     _waiting: inject(WaitingStore),
     _usage: inject(BackofficeUsage),
-    _stop: new Subject<void>(),
   })),
   withComputed((store) => {
-    const last = computed(() => store.exchanges()[store.exchanges().length - 1] ?? null);
+    const last = store._last;
     return {
-      busy: computed(() => last()?.state === 'asking'),
       /** Everything said so far, as the next turn sends it: questions and the answers that had words. */
       _history: computed<TurnMessage[]>(() =>
         store.exchanges().flatMap((exchange) =>
@@ -90,10 +84,7 @@ export const StewardStore = signalStore(
     };
   }),
   withMethods((store) => {
-    const settle = (id: number, change: Partial<Exchange>) =>
-      patchState(store, (state) => ({
-        exchanges: state.exchanges.map((exchange) => (exchange.id === id ? { ...exchange, ...change } : exchange)),
-      }));
+    const settle = store._settle;
 
     /** One turn at a time: a new question never overtakes one on its way (the panel waits for it). */
     const send = rxMethod<{ id: number; request: StewardTurnRequest }>(
@@ -123,26 +114,13 @@ export const StewardStore = signalStore(
         const text = question.trim();
         if (!text || store.busy() || store.ended()) return;
 
-        const id = ++exchanges;
+        const id = store._begin(text, { answer: null });
         const request: StewardTurnRequest = {
           messages: [...store._history(), { role: 'user', text }],
           screen,
           conversationId: store.conversationId(),
         };
-        patchState(store, (state) => ({
-          exchanges: [...state.exchanges, { id, question: text, state: 'asking' as const, answer: null }],
-        }));
         send({ id, request });
-      },
-      /** Stops the turn on its way. What it proposed before stopping waits in Proposals. */
-      stop(): void {
-        const asking = store.exchanges().find((exchange) => exchange.state === 'asking');
-        store._stop.next();
-        if (asking) settle(asking.id, { state: 'stopped' });
-      },
-      newConversation(): void {
-        store._stop.next();
-        patchState(store, { conversationId: null, exchanges: [] });
       },
     };
   }),

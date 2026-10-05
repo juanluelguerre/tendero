@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CultureStore } from '@tendero/shared-i18n';
-import { Composer, ConversationScroll, Icon, Notice } from '@tendero/shared-ui';
+import { Composer, ConversationScroll, Icon, Notice, TurnWait } from '@tendero/shared-ui';
 import { filter } from 'rxjs';
 import { WaitingStore } from '../../../shell/waiting.store';
 import { ProposalCard } from '../proposal-card/proposal-card';
@@ -14,7 +14,6 @@ import { StewardStore } from '../steward.store';
 import { CostLinePipe } from './cost-line.pipe';
 import { StewardMarkdown } from './steward-markdown/steward-markdown';
 import { StewardTable } from './steward-table/steward-table';
-import { StewardWait } from './steward-wait/steward-wait';
 
 /**
  * Steward's panel (phase 12; spec, *The panel*): beside the content from 1024 px,
@@ -38,7 +37,7 @@ import { StewardWait } from './steward-wait/steward-wait';
     ProposalCard,
     ProposalReview,
     CostLinePipe,
-    StewardWait,
+    TurnWait,
     StewardMarkdown,
     StewardTable,
   ],

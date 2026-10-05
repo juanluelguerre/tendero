@@ -1,11 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { computed, inject } from '@angular/core';
-import { patchState, signalStore, withComputed, withMethods, withProps, withState } from '@ngrx/signals';
+import { patchState, signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import type { SearchHit, TinoAnswer, TinoContext, TinoReason, TinoTurnRequest, TurnMessage } from '@tendero/shared-api';
 import { CultureStore } from '@tendero/shared-i18n';
 import { Telemetry, type TrackedEvents } from '@tendero/shared-telemetry';
-import { catchError, map, type Observable, of, pipe, Subject, switchMap, takeUntil, tap } from 'rxjs';
+import { type ConversationExchange, withConversation } from '@tendero/shared-util';
+import { catchError, map, type Observable, of, pipe, switchMap, takeUntil, tap } from 'rxjs';
 import { ProductSearchService } from '../data-access/product-search.service';
 import { TinoService } from '../data-access/tino.service';
 
@@ -20,9 +21,7 @@ export type FallbackCause = TrackedEvents['tino_unavailable']['cause'];
  * products it names, read by their codes; for the fallback, what the search found
  * for the shopper's words. Never anything a model wrote.
  */
-export interface Exchange {
-  readonly id: number;
-  readonly question: string;
+export interface Exchange extends ConversationExchange {
   readonly state: ExchangeState;
   readonly answer: TinoAnswer | null;
   readonly cards: readonly SearchHit[];
@@ -69,12 +68,11 @@ function wordsOf(answer: TinoAnswer): string {
     .join('\n');
 }
 
-let exchanges = 0;
-
 /**
  * Tino's conversation (phase 12b; ADR 0047: a root store, so closing the panel
  * does not end it). The conversation lives here and travels with every turn —
- * the server keeps none — and a page reload forgets it.
+ * the server keeps none — and a page reload forgets it. That much is
+ * `withConversation`'s, shared with Steward's; what follows is Tino's.
  *
  * **When Tino does not answer the search does** (invariant 8): whatever the
  * cause — no model, the turn's time, the day's budget, the request itself
@@ -83,21 +81,16 @@ let exchanges = 0;
  */
 export const TinoStore = signalStore(
   { providedIn: 'root' },
-  withState({
-    conversationId: null as string | null,
-    exchanges: [] as readonly Exchange[],
-  }),
+  withConversation<Exchange>(),
   withProps(() => ({
     _tino: inject(TinoService),
     _search: inject(ProductSearchService),
     _culture: inject(CultureStore),
     _telemetry: inject(Telemetry),
-    _stop: new Subject<void>(),
   })),
   withComputed((store) => {
-    const last = computed(() => store.exchanges()[store.exchanges().length - 1] ?? null);
+    const last = store._last;
     return {
-      busy: computed(() => last()?.state === 'asking'),
       /** Everything said so far, as the next turn sends it: questions and the answers that had words. */
       _history: computed<TurnMessage[]>(() =>
         store.exchanges().flatMap((exchange) => {
@@ -115,10 +108,7 @@ export const TinoStore = signalStore(
     };
   }),
   withMethods((store) => {
-    const settle = (id: number, change: Partial<Exchange>) =>
-      patchState(store, (state) => ({
-        exchanges: state.exchanges.map((exchange) => (exchange.id === id ? { ...exchange, ...change } : exchange)),
-      }));
+    const settle = store._settle;
 
     /** The search's results for the shopper's words: what there is when Tino is not. */
     const searched = (text: string): Observable<Pick<Exchange, 'cards' | 'found'>> =>
@@ -134,9 +124,14 @@ export const TinoStore = signalStore(
       );
     };
 
-    /** The cards of the products an answer names, in its order: the shop's read of those codes. */
+    /**
+     * The cards of the products an answer names, in its order: the shop's read of
+     * those codes. The product a "its details do not say" is about is one of them —
+     * the sentence says "this product", and the conversation outlives the page.
+     */
     const answered = (id: number, answer: TinoAnswer) => {
-      const codes = answer.products.map((product) => product.code);
+      const about = answer.noData?.code;
+      const codes = [...answer.products.map((product) => product.code), ...(about ? [about] : [])];
       const cards$ =
         codes.length > 0
           ? store._search.cards(store._culture.active(), { codes }).pipe(
@@ -188,29 +183,13 @@ export const TinoStore = signalStore(
         const text = question.trim();
         if (!text || store.busy()) return;
 
-        const id = ++exchanges;
+        const id = store._begin(text, { answer: null, cards: [], found: 0, cause: null });
         const request: TinoTurnRequest = {
           messages: [...store._history(), { role: 'user', text }],
           context,
           conversationId: store.conversationId(),
         };
-        patchState(store, (state) => ({
-          exchanges: [
-            ...state.exchanges,
-            { id, question: text, state: 'asking' as const, answer: null, cards: [], found: 0, cause: null },
-          ],
-        }));
         send({ id, question: text, request });
-      },
-      /** Stops the turn on its way: the request is aborted, and the model's work with it. */
-      stop(): void {
-        const asking = store.exchanges().find((exchange) => exchange.state === 'asking');
-        store._stop.next();
-        if (asking) settle(asking.id, { state: 'stopped' });
-      },
-      newConversation(): void {
-        store._stop.next();
-        patchState(store, { conversationId: null, exchanges: [] });
       },
     };
   }),

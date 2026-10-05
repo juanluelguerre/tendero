@@ -39,6 +39,8 @@ const Paths = {
   filter: 'M4 5h16l-6 7.5V19l-4-2v-4.5z',
   /** Send the question. */
   send: 'M12 19V5 M6 11l6-6 6 6',
+  /** Stop the turn on its way: a player's square, and the one icon that is filled (`Filled`). */
+  stop: 'M8.5 7h7a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 7 15.5v-7A1.5 1.5 0 0 1 8.5 7z',
   /** No model answered. */
   unavailable: 'M4 4l16 16 M9.5 5.5A6 6 0 0 1 18 11a4 4 0 0 1 1.5 7.6 M16 19H7a4 4 0 0 1-1.3-7.8',
 
@@ -71,6 +73,13 @@ const Paths = {
 
 export type IconName = keyof typeof Paths;
 
+/**
+ * The icons that are a solid shape and not a line. Stop is: as an outline its
+ * square reads as an empty box, and a square in a ring as nothing in particular;
+ * solid, it is the stop of every player and every assistant.
+ */
+const Filled: ReadonlySet<IconName> = new Set<IconName>(['stop']);
+
 @Component({
   selector: 'lib-icon',
   templateUrl: './icon.html',
@@ -81,4 +90,5 @@ export class Icon {
   /** The line's weight, in the grid's units. */
   readonly stroke = input(1.6);
   protected readonly path = computed(() => Paths[this.name()]);
+  protected readonly fill = computed(() => (Filled.has(this.name()) ? 'currentColor' : 'none'));
 }

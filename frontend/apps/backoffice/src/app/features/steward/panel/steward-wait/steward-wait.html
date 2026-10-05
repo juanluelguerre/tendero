@@ -1,9 +1,0 @@
-<ng-container *transloco="let t">
-  <span
-    >{{ t('steward.working') }}
-    <span class="tabular-nums">{{ t('steward.elapsed', { seconds: seconds() }) }}</span></span
-  >
-  @if (slow()) {
-    <span class="basis-full text-3xs">{{ t('steward.slow') }}</span>
-  }
-</ng-container>

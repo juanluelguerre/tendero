@@ -127,8 +127,15 @@ describe('the tino panel', () => {
           nearest: [reason('Es de hierro fundido.')],
         },
       }),
+      { cards: { items: [hit('PAN-1', 'Sartén de hierro fundido')] } },
     );
 
+    // Which product "this product" is: the shop's card of it, above the sentence.
+    const card = element.querySelector('[data-kind="NoData"] storefront-product-card')!;
+    expect(card.textContent).toContain('Sartén de hierro fundido');
+    expect(card.compareDocumentPosition(element.querySelector('[data-kind="NoData"] lib-notice')!)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
     expect(element.textContent).toContain('La ficha de este producto no indica si puede ir al lavavajillas.');
     expect(element.textContent).toContain('tino.nearest');
     expect(element.querySelectorAll('storefront-tino-source')).toHaveLength(1);
@@ -222,9 +229,18 @@ describe('the tino panel', () => {
       conversationId: null,
     });
     expect(composer.value).toBe('');
-    // On its way: one line and a way to stop, and the box does not send another.
+    // On its way: one line, and where sending was, a way to stop it — and nothing to send with.
     expect(element.textContent).toContain('tino.working');
-    expect(element.querySelector<HTMLButtonElement>('footer button[type="submit"]')!.disabled).toBe(true);
+    expect(element.querySelector('footer button[type="submit"]')).toBeNull();
+    const stop = element.querySelector<HTMLButtonElement>('footer button[data-stop]')!;
+    expect(stop.getAttribute('aria-label')).toBe('tino.stop');
+
+    stop.click();
+    fixture.detectChanges();
+
+    expect(turn.cancelled).toBe(true);
+    expect(element.textContent).toContain('tino.stopped');
+    expect(element.querySelector('footer button[type="submit"]')).not.toBeNull();
   });
 
   it('empties the box when Enter comes before the page has drawn what was typed', async () => {
