@@ -1103,6 +1103,47 @@
       "stock_to_restock": "stock to restock",
       "returns_summary": "returns"
     },
+    "tables": {
+      "foundProducts": "Products",
+      "catalogueGaps": "Catalogue gaps",
+      "salesFigures": "Sales",
+      "salesByCategory": "Revenue by category",
+      "bestSellers": "Best sellers",
+      "productPerformance": "Product performance",
+      "stockToRestock": "Stock to restock",
+      "returnsByReason": "Returns by reason",
+      "returnsBySku": "Most returned SKUs"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "status": "Status",
+      "missingCultures": "Missing names",
+      "period": "Period",
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "units": "Units",
+      "averageOrder": "Average order",
+      "category": "Category",
+      "sku": "SKU",
+      "available": "Available",
+      "inWarehouse": "In warehouse",
+      "perDay": "Sold a day",
+      "coverageDays": "Days of cover",
+      "reason": "Reason"
+    },
+    "terms": {
+      "current": "This period",
+      "previous": "Previous period",
+      "Draft": "Draft",
+      "Active": "On sale",
+      "Archived": "Archived",
+      "WrongSize": "Wrong size",
+      "NotAsDescribed": "Not as described",
+      "Damaged": "Damaged",
+      "WrongItem": "Wrong item",
+      "ChangedMind": "Changed their mind"
+    },
     "card": {
       "heading": "{{count}} proposals · {{topic}}",
       "headingOne": "1 proposal · {{topic}}",

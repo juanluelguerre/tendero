@@ -75,6 +75,26 @@ describe('the steward panel', () => {
   });
 
   /** What the model writes with Markdown is drawn as such, and markup it writes stays text. */
+  it('draws the rows a read returned as a table, and none for a read with no rows', async () => {
+    const table = (rows: number) => ({
+      key: 'catalogueGaps',
+      currency: null,
+      columns: [{ key: 'code', kind: 'Text' as const }],
+      rows: Array.from({ length: rows }, (_, i) => [{ text: `MUG-${i}`, number: null }]),
+    });
+    const element = await asked(
+      answer({
+        reads: [
+          { tool: 'catalogue_gaps', rows: 2, total: 2, tables: [table(2)] },
+          { tool: 'find_products', rows: 0, total: 0, tables: [{ ...table(0), key: 'foundProducts' }] },
+        ],
+      }),
+    );
+
+    expect(element.querySelectorAll('backoffice-steward-table')).toHaveLength(1);
+    expect(element.querySelectorAll('backoffice-steward-table td')).toHaveLength(2);
+  });
+
   it("draws the answer's Markdown: bold, a list and a table, and never its HTML", async () => {
     const element = await asked(
       answer({

@@ -23,6 +23,7 @@ import { StewardDoorStore } from '../steward-door.store';
 import { StewardStore } from '../steward.store';
 import { CostLinePipe } from './cost-line.pipe';
 import { StewardMarkdown } from './steward-markdown/steward-markdown';
+import { StewardTable } from './steward-table/steward-table';
 import { StewardWait } from './steward-wait/steward-wait';
 
 /**
@@ -47,6 +48,7 @@ import { StewardWait } from './steward-wait/steward-wait';
     CostLinePipe,
     StewardWait,
     StewardMarkdown,
+    StewardTable,
   ],
   templateUrl: './steward-panel.html',
   styleUrl: './steward-panel.css',

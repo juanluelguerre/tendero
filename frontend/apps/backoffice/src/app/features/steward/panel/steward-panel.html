@@ -148,6 +148,18 @@
                   }
                 }
 
+                <!-- What the reads returned, drawn by the shop's own code from the rows: the
+                     model's sentence above says what they mean, and these are what they are. -->
+                @if (answer.status === 'Answered') {
+                  @for (read of answer.reads; track $index) {
+                    @for (table of read.tables ?? []; track table.key) {
+                      @if (table.rows.length > 0) {
+                        <backoffice-steward-table [table]="table" />
+                      }
+                    }
+                  }
+                }
+
                 @if (answer.proposalIds.length > 0 && answer.status === 'Answered') {
                   <backoffice-proposal-card
                     [ids]="answer.proposalIds"

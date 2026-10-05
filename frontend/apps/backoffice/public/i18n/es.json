@@ -1103,6 +1103,47 @@
       "stock_to_restock": "stock por reponer",
       "returns_summary": "devoluciones"
     },
+    "tables": {
+      "foundProducts": "Productos",
+      "catalogueGaps": "Huecos del catálogo",
+      "salesFigures": "Ventas",
+      "salesByCategory": "Ingresos por categoría",
+      "bestSellers": "Más vendidos",
+      "productPerformance": "Rendimiento por producto",
+      "stockToRestock": "Stock por reponer",
+      "returnsByReason": "Devoluciones por motivo",
+      "returnsBySku": "SKU más devueltos"
+    },
+    "columns": {
+      "code": "Código",
+      "name": "Nombre",
+      "status": "Estado",
+      "missingCultures": "Nombres que faltan",
+      "period": "Periodo",
+      "revenue": "Ingresos",
+      "orders": "Pedidos",
+      "units": "Unidades",
+      "averageOrder": "Pedido medio",
+      "category": "Categoría",
+      "sku": "SKU",
+      "available": "Disponible",
+      "inWarehouse": "En almacén",
+      "perDay": "Vendidas al día",
+      "coverageDays": "Días de cobertura",
+      "reason": "Motivo"
+    },
+    "terms": {
+      "current": "Este periodo",
+      "previous": "Periodo anterior",
+      "Draft": "Borrador",
+      "Active": "A la venta",
+      "Archived": "Archivado",
+      "WrongSize": "Talla equivocada",
+      "NotAsDescribed": "No era como se describía",
+      "Damaged": "Dañado",
+      "WrongItem": "Artículo equivocado",
+      "ChangedMind": "Cambió de idea"
+    },
     "card": {
       "heading": "{{count}} propuestas · {{topic}}",
       "headingOne": "1 propuesta · {{topic}}",

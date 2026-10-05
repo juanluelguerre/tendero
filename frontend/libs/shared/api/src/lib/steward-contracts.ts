@@ -23,6 +23,12 @@ export type ScreenContext = Schemas['ScreenContext'];
 export type StewardAnswer = Schemas['StewardAnswer'];
 export type StewardStatus = Schemas['StewardStatus'];
 export type ToolUse = Schemas['ToolUse'];
+
+/** What a read's rows are drawn as: the server builds it, the panel formats and translates it. */
+export type ResultTable = Schemas['ResultTable'];
+export type ResultColumn = Schemas['ResultColumn'];
+export type ResultCell = Schemas['ResultCell'];
+export type CellKind = Schemas['CellKind'];
 export type TurnCost = Schemas['TurnCost'];
 
 /** A proposal as a person reads it, in their language, with what became of it. */
