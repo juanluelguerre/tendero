@@ -298,6 +298,38 @@ Chrome-only and under incubation at the W3C Web Machine Learning Community
 Group, and that label travels with it in the code rather than being discovered
 by a reader later.
 
+## Steward, the backoffice copilot
+
+One turn is one command (`StewardTurnCommand`): the conversation so far travels with
+the client and the server keeps nothing between turns. A short-lived agent (Microsoft
+Agent Framework, invariant 9) is given a closed set of tools — the contexts' reads
+(`IReadTool`) and one `propose_<name>` per proposable command — and a model profile
+(`AI`, ADR 0053), with a fallback profile, a cap on tool rounds, a token budget per
+conversation and per person per shop's day, and a deadline.
+
+```mermaid
+flowchart LR
+    P[Shopkeeper] -->|question + screen| T[StewardTurn · Assist]
+    T -->|IReadTool| R[A context's query → its own DTO + the tables the panel draws]
+    T -->|propose_ tool| PA[ProposeActions → ActionProposal, unapplied]
+    T -->|IChatClient, metered| M[Model profile · local or hosted]
+    PA --> Q[Proposals list · review]
+    P -->|approve / reject| D[DecideProposals]
+    D -->|ICommandDispatcher, as the approving person| C[The context's own command]
+    C --> AU[Audit row carrying the proposal's id]
+```
+
+- **A model proposes commands, never prose and never a write** (ADR 0019). What it
+  can change is exactly the list of `IProposableCommand`s; approving runs the
+  command through the dispatcher a click uses.
+- **What a read returned is drawn by the shop.** Each read's context builds the
+  tables the panel shows (`ResultTable`); the model's sentence says what they mean.
+- **Code decides what code can**: a refused payload goes back to the model as the
+  tool's answer, a stale proposal does not run, rows the model copies are taken out,
+  a tool call written as text is replaced by a fixed message.
+- **With no model answering the backoffice is unchanged** (invariant 8): the turn
+  says so, stores nothing, and the panel offers the same lists without AI.
+
 ## Observability
 
 OpenTelemetry from slice 1: every I/O slice opens an `ActivitySource` span with
@@ -410,13 +442,20 @@ flowchart TB
         I[Inventory]
         O[Ordering]
         A[Accounts]
+        K[Knowledge · phase 10]
+        AS[Assist · phase 12]
         S[Search]
         D[DevIssuer]
+        M[Mcp]
         U[Ucp · phase 9]
     end
-    SK[ElGuerre.Tendero.SharedKernel<br/>Money · LocalizedText · ids · CQRS · domain events]
+    AI[ElGuerre.Tendero.AI<br/>the model port · phase 12]
+    SK[ElGuerre.Tendero.SharedKernel<br/>Money · LocalizedText · ids · CQRS · domain events<br/>IProposableCommand · IReadTool]
     Exec --> Adapters --> Ctx --> SK
     Exec --> Ctx
+    K --> AI
+    AS --> AI
+    AI --> SK
 ```
 
 `Persistence` implements the ports the slices declare (`IProductRepository`,
@@ -426,6 +465,10 @@ Elasticsearch exists. Both facts are architecture tests, not conventions.
 `Search` referencing `Catalog` and `Inventory` — the contexts it projects — is
 the one edge that does not point straight down (ADR 0007), and `Catalog` and
 `Ordering` reference `Inventory`'s ports for availability, never its domain.
+`Assist` and `Knowledge` reference `AI`, the model port, which is not a context;
+`Assist` references no context at all — it runs their commands through
+`IProposableCommand` and reads them through `IReadTool`, both in the kernel
+(ADRs 0052, 0054).
 The Docker diagram above is the target. Qdrant and Text Embeddings Inference
 are declared since phase 8 and start on demand (`Tendero__Vectors=true`); Redis is
 not declared until the phase that reads it; the Grafana stack is declared since

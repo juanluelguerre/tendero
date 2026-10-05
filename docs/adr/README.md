@@ -20,6 +20,7 @@
 | [0016](0016-quoted-live-frozen-at-order.md) | Prices are quoted live and frozen at order time | accepted |
 | [0017](0017-the-identity-provider-is-a-port.md) | The identity provider is a port; the first adapter was a development issuer | accepted |
 | [0018](0018-the-ai-writes-claims-not-products.md) | The AI writes claims, not products | accepted |
+| [0019](0019-the-copilot-proposes-commands-never-prose.md) | The copilot proposes commands, never prose: what a model produces that can change the shop is a registered command, stored unapplied for a person to decide | accepted |
 | [0020](0020-transports-over-the-dispatcher.md) | MCP and UCP are transports over the dispatcher | accepted |
 | [0021](0021-the-manifest-is-derived.md) | The UCP manifest is derived from a capability registry | accepted |
 | [0022](0022-an-agent-is-a-principal-not-a-customer.md) | An agent is a principal, not a customer | accepted |
@@ -67,5 +68,5 @@ reserved, because a flag guards behaviour that exists, and none since 2026-09-17
 when one became a capability and the other met its removal condition; 0018 in phase 10,
 written first, before the domain it constrains. 0022 was written in phase 11, once the
 registry, delegation, mandates and the shop's own rules existed to be decided about.
-What is still reserved and still unwritten: **0019** (the copilot proposes
-commands, never prose).
+0019 was the last reservation, written at phase 12's close, once Steward had been
+built and measured. Nothing is reserved now.

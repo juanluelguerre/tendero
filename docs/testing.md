@@ -95,6 +95,8 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/Knowledge` | `Knowledge.Tests` | 72.33 % | 57.91 % | 2026-09-27 · first run 49.76 % |
 | `src/Accounts` | `Accounts.Tests` | 80.08 % | 58.31 % | 2026-09-29 · R-7/R-8 close, first run 75.52 % |
 | `src/Pricing` | `Pricing.Tests` | 83.06 % | 62.59 % | 2026-09-29 · first baseline, first run 81.41 % |
+| `src/Assist` | `Assist.Tests` | 84.76 % | 78.27 % | 2026-10-05 · phase 12's close, first baseline, first run 67.97 % |
+| `src/AI` | `AI.Tests` | 72.02 % | 57.35 % | 2026-10-05 · phase 12's close, first baseline, one run |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
 (`-m 'File.cs{a..b}'`) and sets no baseline: a score over twenty mutants is not
@@ -639,6 +641,105 @@ found the rest.** Closed, each with a test the survivor itself proved red:
 - **Predate R-9**: `Order.cs`'s guards, messages, taxes and payment (20, run 2 had
   no timeouts where run 1 had four), and the dashboard's returns windows and the
   currency's `Concat`, classified at phase 11's close.
+
+**Phase 12's close (2026-10-05)** — Steward: the `Assist` context and the model
+port (`AI`), both new and so mutated whole, each setting its first baseline; and
+five projects the phase touched in a few files, each **scoped to those files** and
+setting none. Every run alone, one after the other. Reports are in
+`docs/blog/reports/2026-10-05-phase-12-steward/stryker/`.
+
+| project | mutated with | run 1 | run 2 | survivors |
+|---|---|---:|---:|---:|
+| `src/Assist` | `Assist.Tests` | 67.97 % | **84.76 %** | 115 → 57 |
+| `src/AI` | `AI.Tests` | **72.02 %** | — | 47 |
+| `src/SharedKernel`, scoped (`Proposals.cs`, `ReadTools.cs`, `ReadLimits.cs`, `Cqrs/AuditStep.cs`) | its three suites | 77.97 % | — | 13 |
+| `src/Catalog`, scoped (`CatalogueGaps/`, `FindProductsTool.cs`, `SetProductTranslation/`, `WithdrawProductProposal.cs`) | `Catalog.Tests` | 76.47 % | — | 24 |
+| `src/Inventory`, scoped (`RestockList.cs`, `StockToRestockTool.cs`) | `Inventory.Tests`, `Integration.Tests` | 78.95 % | — | 8 |
+| `src/Ordering`, scoped (`ProductPerformance.cs`, `ReturnsSummary.cs`, `StewardReadTools.cs`) | `Ordering.Tests`, `Integration.Tests` | 43.10 % | — | 33 |
+| `src/Knowledge`, scoped (`ApproveClaims.cs`) | `Knowledge.Tests` | 100 % | — | 0 (2 killed, 6 without coverage) |
+
+**Only `Assist` was run twice.** The tests the scoped runs and `AI`'s run asked
+for were written after them and proved at level 1 instead — the mutation made by
+hand, the test seen red, the code restored — and the percentages above are the
+runs', not what those tests would now give. Said plainly because a second column
+of dashes can read as *nothing was found*.
+
+**What Stryker found, and what closed it.**
+
+- **The prompt had no test at all** (`StewardPrompt`, 6 of 39 killed). The wording
+  is a model's to be measured against, but four things in it are code's: the
+  language it falls back to, the screen it is told (none, a page, a page and what it
+  shows), that a quote in the screen cannot close the quotes it is written inside,
+  and that every fixed sentence exists in both languages. Run 2: 39 of 39.
+- **A rejection was never seen to be saved.** The tests read the proposal from the
+  same in-memory list the handler wrote, so `SaveChanges` survived being removed.
+  Now a batch that rejects saves once, and one that rejects nothing saves nothing.
+- **A proposal tool's schema was never read** — the `{ items: [ payload + reason ] }`
+  a grammar is built from, where S-6 had already found two bugs no test could. Its
+  types, its required names and the reason's description are asserted now, and so
+  is what the tools cost the window (`Sum` had survived as `Max`).
+- **An answer that was only the rows.** `CopiedRows` leaving nothing falls back to
+  a fixed sentence, and nothing asked for it; nor for a turn's flags when no model
+  is reached, which a fallback's mutant set wrongly.
+- **The tables' names are a contract with the panel, and nothing held it.** A key
+  or a column renamed in a context is a heading that reads as a key in the
+  backoffice, and every one of those strings survived (27 of Ordering's 33). Each
+  context's tools test now states its tables as `key: column Kind, …`.
+- **Sold out and not selling was last, not first — in the mutant.** The restock
+  list sorts sold out first; the only test had its sold-out SKU selling, so cover
+  alone put it first and `Available > 0` survived as `>= 0`. A SKU with no stock
+  and no sales is asked for now.
+- **Returns were summed nowhere a test looked.** A SKU in two returns, a reason on
+  two lines: `Sum` survived as `Max` twice. And a reason nobody gave was never
+  tested as *not a row* in what a model reads.
+- **`ModelCall.Options` could replace a caller's options** (`??=` survived as
+  `=`): the caller's temperature and what it had already said of the call are
+  asserted kept.
+
+**Left, and what each is.**
+
+- **Not mutated at all: `ProposeActions.cs`.** Its 48 mutants are compile errors —
+  Stryker's safe mode removes every mutation in a method it cannot compile one of —
+  so the file has no score, not a good one. So it was mutated by hand at this
+  close, four times: a refused check stored (red, five tests), the snapshot not
+  stored (red), a refused row losing its place (red) — and **the batch saved only
+  when every row was stored, which survived**: no test had a batch with one row
+  accepted and one refused *and* looked at what was saved. It does now, and the
+  mutation is red. The same safe mode took 163 of Assist's mutants and 151 of the
+  kernel's, which is why a percentage is never the whole of a close.
+- **Runner artefacts**: a `static readonly` initialiser is evaluated once, before
+  a mutant is switched on — `ListProposals`' filter table, the meters' names and
+  descriptions in `StewardTurn`, `MeteringChatClient` and `AIInvocationLog`,
+  `ProposalApplication.Done`.
+- **Equivalent**: `Filter == All ? null : Statuses[All]` (every status either
+  way); a result cut at exactly its maximum length; `cost > 0` against `>= 0`
+  before adding it to a counter; a warehouse's `Sum` over a SKU's shelves, of
+  which it has one; `(body.Ids ?? [])` behind a validator that refuses both.
+- **Estimates, by design**: the turn's token arithmetic — four characters a token,
+  `Sum` of what was said, the smallest candidate's need, the 80 % that says *near
+  the limit*, `>` against `>=` at the budgets. An estimate the window's margin
+  absorbs; a boundary test would pin a number nobody should rely on.
+- **Noise**: guard clauses on arguments (`ThrowIfNull`, `ThrowIfNullOrWhiteSpace`),
+  exception and refusal wordings, span and agent names, a JSON writer's indentation.
+- **Held by other suites**: the composition roots' `TryAdd` defaults, by
+  `Api.Tests`; a query validator's `IsInEnum`, by the wire's closed sets (ADR
+  0043) and `StewardReadsBindingTests`; the profile's bearer key and its timeout,
+  by the contract suite a real endpoint runs.
+- **A test double in a production assembly**: `ScriptedChatClient` (17 of AI's
+  47). It is how CI's browser spec and the suite's dry run have a model, so it
+  ships; its survivors are its own corners (a delay of zero, a path into an array's
+  end), not the shop's behaviour.
+- **Found by looking, not by a mutant**: the panel's table was never seen at the
+  panel's width until the close's captures — columns cut, a name one word a line, 42
+  rows in a conversation — and its `@defer` waited for an idle browser. Fixed with
+  the component's own specs (a column nothing fills is not drawn; eight rows, then
+  the rest on a press); the layout itself is held by the pictures in
+  `docs/blog/reports/2026-10-05-phase-12-steward/screens/`, not by a test.
+- **Real, and waiting**: an approval retried (`proposal.Retry` removed survives —
+  the retry's own effect is not asserted beyond the command having run); the
+  worker's batch cleared after a stop; the audit's redaction reading inherited
+  attributes; the role of an earlier assistant message in a turn's history. Small,
+  written here rather than closed at this close.
 
 ## Property-based (CsCheck)
 

@@ -59,7 +59,7 @@ code for a blog series on AI architecture.
 
 ## What runs today
 
-Phases 0–11 of [the board](docs/delivery-plan.md) are in, and so is most of a
+Phases 0–12 of [the board](docs/delivery-plan.md) are in, and so is most of a
 redesign of both frontends. The shop works end to end on a hundred-product
 catalogue; a browser agent can shop in it, and an external agent can read its
 catalogue and **buy** over MCP or UCP:
@@ -90,15 +90,26 @@ catalogue and **buy** over MCP or UCP:
   was approved, and applies its own rules on top: suspended agents place
   nothing, a cap per order follows how far the shop trusts the agent, and there
   is a ceiling on orders per hour.
+- **Steward, the backoffice copilot** (phase 12). Ask it about sales, stock,
+  returns or the catalogue in Spanish or English: it reads the shop through six
+  typed reads, each owned by its context, and what they return is drawn as tables
+  the shop's own code builds. Ask it for a change and it **proposes commands** —
+  never prose, never a write — that a person reviews and approves in bulk, each
+  with its value before and after and an audit row naming who proposed and who
+  approved (ADR 0019). It runs on a local 4-billion-parameter model, about two
+  seconds a turn on a laptop GPU, measured by a suite that compares what it
+  stored with what it should have — no judge model
+  ([docs/analysis/steward-models.md](docs/analysis/steward-models.md)). With no
+  model answering, the backoffice is unchanged.
 - **The redesign.** The backoffice is organised by job — a side rail, one
   index-and-pane pattern for every list, a command palette — and its home is a
   dashboard of the whole shop at a glance: tabs per area, a full-screen wall,
   and every figure computed by the context that owns it (ADR 0048). The
   storefront gained its department menu, campaigns and a wider layout.
 
-**2,030 backend tests (2,007 green, 23 skipped with a reason), 555 frontend
-tests and 62 browser tests** (2026-09-30). What is next is the backoffice
-copilot (phase 12).
+**2,397 backend tests (2,371 green, 26 skipped with a reason), 743 frontend
+tests and 74 browser tests** (2026-10-05). What is next is Tino, the storefront's
+shopping assistant (phase 12b).
 
 ## Architecture at a glance
 
@@ -120,21 +131,22 @@ flowchart TB
     Backend -->|OTel · Tendero__Observability| OBS[Grafana · Tempo · Prometheus · Loki]
     SF -->|RUM · Web Vitals, errors, traces| OBS
     WK -->|on demand · phase 10| KN[llama.cpp · Qwen3.5-4B + TEI · NLI]
-    Backend -.->|GenAI traces · phase 12| LF[Langfuse]
+    API -->|on demand · phase 12| ST[llama.cpp · Qwen3.5-4B · Steward's model]
     EXT[Catalog connectors: seed · Shopify...] --> API
     PAY[Payments: fake · stripe-mock · Stripe test] --- API
 ```
 
-Dotted edges are designed and not built; the phase each one lands in is on the
-arrow. What is solid runs today. The C4 view of the same system, held to the
+Everything drawn runs today; *on demand* is a resource a switch starts
+([below](#the-local-stack-aspire)). GenAI calls are traced and metered through
+OpenTelemetry into the Grafana stack, one row per call. The C4 view of the same system, held to the
 AppHost by a script, is in [docs/c4/](docs/c4/README.md).
 
 Key principles:
 
-- **Six bounded contexts that share no entities** — `Catalog`, `Pricing`,
-  `Inventory`, `Ordering`, `Accounts` and `Knowledge` (claims a model proposes
-  and a person approves, ADR 0018); `Search` is a projection over them,
-  not a context. A crossing carries values or an event record, never a
+- **Seven bounded contexts that share no entities** — `Catalog`, `Pricing`,
+  `Inventory`, `Ordering`, `Accounts`, `Knowledge` (claims a model proposes
+  and a person approves, ADR 0018) and `Assist` (commands a model proposes and a
+  person decides, ADR 0052); `Search` is a projection over them, not a context. A crossing carries values or an event record, never a
   reference: an order snapshots the product's name and price, and stock is keyed
   on a SKU so inventory never learns what a product is (ADR 0014).
 - **The outbox is the process manager.** Placing an order holds stock, failing
@@ -163,6 +175,87 @@ Key principles:
   analyzers, `LocalizedText` everywhere user-facing, and an explicit `?culture=`
   that beats `Accept-Language` because an agent has no browser locale
   (ADR 0013).
+
+### Which architecture this is
+
+**Not Clean Architecture, and not Onion** — there are no `Application`,
+`Domain` and `Infrastructure` projects stacked across the whole system. It is a
+**modular monolith of bounded contexts**, each a project of its own, each
+organised inside as **vertical slices**, reaching everything outside itself
+through **ports and adapters**, around a **pure domain**. From Clean it keeps the
+one idea that matters — *dependencies point inward* — and drops the horizontal
+layers. Architecture tests compute every arrow below by reflection; a reference
+that should not exist fails the build, not a review.
+
+```mermaid
+flowchart TB
+    subgraph Hosts [Composition roots — the only places that know everything]
+        API[Api · HTTP, Carter modules]
+        WK[Workers · outbox, projections]
+    end
+    subgraph Surfaces [Transports and projections — own no state]
+        MCP[Mcp]
+        UCP[Ucp]
+        SEARCH[Search · a projection over the contexts]
+    end
+    subgraph Contexts [Bounded contexts — one project each, slices inside]
+        CAT[Catalog]
+        ORD[Ordering]
+        ACC[Accounts]
+        KNO[Knowledge]
+        ASS[Assist]
+    end
+    subgraph Pure [Pure contexts — the kernel and nothing else]
+        PRI[Pricing]
+        INV[Inventory]
+    end
+    AI[AI · the model port, not a context]
+    SK[SharedKernel · values, ids, CQRS, events, IProposableCommand, IReadTool]
+    PER[Persistence · the only project that knows EF Core exists]
+
+    Hosts --> Surfaces
+    Hosts --> Contexts
+    Hosts --> PER
+    Surfaces --> Contexts
+    Surfaces --> Pure
+    CAT --> INV
+    ORD --> INV
+    ORD --> PRI
+    KNO --> AI
+    ASS --> AI
+    Contexts --> SK
+    Pure --> SK
+    AI --> SK
+    PER -. implements the contexts' ports .-> Contexts
+    PER -.-> Pure
+```
+
+Solid arrows are project references; the dotted ones are `Persistence`
+implementing ports the contexts declare — it depends on them, never they on it.
+
+Inside a context, every feature is one folder:
+
+```
+src/Catalog/
+  Domain/                      # aggregates, values, events — references the kernel only
+  Features/
+    ImportProducts/            # one slice: command, validator, handler, endpoint, together
+    PublishProduct/
+    ListProducts/              #   …and FindProductsTool, the read a model may make of it
+  Ports/                       # what the context needs from outside, said in its terms
+  Adapters/  Connectors/       # the adapters that are the context's own to write
+```
+
+| The piece | What it is best at | Why here, and what it costs |
+|---|---|---|
+| **Modular monolith** | One deployable, one transaction where one is wanted, boundaries a compiler checks | A shop's contexts change together and are read together; services would buy operational cost for an independence nobody needs yet. *Cost*: one process scales as one, and the discipline is tests, not a network. |
+| **Bounded contexts that share no entities** (ADR 0014) | Each context can change its model without asking | An order snapshots a product's name and price; stock is keyed on a SKU and never learns what a product is. *Cost*: values are copied across a crossing, and a crossing has to be designed. |
+| **Vertical slices** (ADR 0001) | A feature is read, changed and deleted in one folder | The unit of change in a shop is a feature, not a layer. Slices never reference each other. *Cost*: a little duplication between slices, by choice — shared behaviour goes down to the kernel or out to a port. |
+| **Ports and adapters** (ADR 0003) | Swapping what is outside without touching what is inside; a contract suite every adapter inherits | Catalogue sources, payments, identity, models, search engines are all things with credible alternatives. `Ports/` holds *what the context needs*, in its own words — a repository is one, a payment provider is another — which is why there is no `Repositories/` folder and no `Port` suffix: the folder already says it. *Cost*: an interface per boundary, even with one adapter today. |
+| **A pure domain** (invariant 4) | Rules testable with properties and no database | `Pricing` and `Inventory` reference the kernel and nothing else, which is what makes the promotion engine and the allocation strategies provable. *Cost*: no EF attribute, no HTTP type, ever — mapping lives in `Persistence`. |
+| **CQRS with our own dispatchers** | One pipeline every command goes through: validation, audit, handler | The audit and the proposals depend on it — an approved proposal runs exactly what a click runs. Hand-written, because MediatR's licence changed (the licensing policy). *Cost*: forty lines we own. |
+| **Events through an outbox** (ADR 0024) | Side effects that survive a crash and never run inside a request | Indexing, the stock saga, projections and model calls are all handlers of events a transaction wrote. *Cost*: eventual consistency, and a worker to run. |
+| **A context publishes a port; another uses it blind** (ADRs 0052, 0054) | A copilot that can read and propose across the shop while referencing none of it | `Assist` runs other contexts' commands through `IProposableCommand` and reads them through `IReadTool`, both in the kernel: each context decides what a model may propose and read of it. *Cost*: a little model-facing code in each context. |
 
 Full plan: [docs/initial-plan.md](docs/initial-plan.md) ·
 Architecture: [docs/architecture.md](docs/architecture.md) ·
@@ -559,6 +652,8 @@ src/
   Ordering/                # cart, checkout, orders, payments, returns, the stock saga, the dashboard's figures
   Accounts/                # customers and guests, agents, the audit log's reader
   Knowledge/               # claims with source, support and approval (ADR 0018)
+  Assist/                  # Steward: proposals a model makes and a person decides (ADRs 0019, 0052)
+  AI/                      # the model port: profiles, one pipeline, one metered row per call (ADR 0053)
   Search/                  # lexical and hybrid search, indexing, vectors, search status
   Mcp/  Ucp/               # the agent surfaces: MCP tools, UCP discovery and checkout, AP2
   DevIssuer/               # OIDC discovery, JWKS and signed tokens, Development only
@@ -622,7 +717,7 @@ deferred with its measured number — is
 | 10 | Knowledge: product claims with source and confidence | ✅ nine models measured before one was chosen; a review queue, specs with source chips, comparisons that say "no data" |
 | 11 | UCP transactional, AP2 and Know Your Agent | ✅ **the headline** — checkout over REST and MCP, AP2 mandates verified against terms the shop signed, the shop's own rules for agents, test orders |
 | R | The redesign: backoffice by job, storefront navigation, the dashboard | 🚧 measured against a baseline walkthrough |
-| 12 | **Steward**, the backoffice copilot, and the AI observability panel | 🔜 |
+| 12 | **Steward**, the backoffice copilot | ✅ it proposes commands a person approves, never prose; six typed reads owned by their contexts; a local model measured by a suite with no judge. The hosted profiles and the AI panel wait |
 | 12b | **Tino**, the storefront's shopping assistant, with voice and after-sale tools | 🔜 answers only from approved claims, citing each one |
 | 13 | Multimodal search and the kit solver | 🔜 |
 
