@@ -23,6 +23,8 @@ public sealed record TopSeller(string Sku, string Name, int Units, decimal Reven
 /// <summary><c>sales_summary</c>: the period against the one before, with this period's mix by category.</summary>
 public sealed class SalesSummaryTool(IQueryDispatcher queries) : ReadTool<PeriodArguments, SalesNow>(queries)
 {
+    public override ToolAudience Audience => ToolAudience.Shopkeeper;
+
     public override string Name => "sales_summary";
 
     public override string Description =>
@@ -81,6 +83,8 @@ public sealed record RankedSales(string ProductId, string Name, int Units, decim
 /// <summary><c>product_performance</c>: the products that sell most or least.</summary>
 public sealed class ProductPerformanceTool(IQueryDispatcher queries) : ReadTool<PerformanceArguments, ProductsRanked>(queries)
 {
+    public override ToolAudience Audience => ToolAudience.Shopkeeper;
+
     public override string Name => "product_performance";
 
     public override string Description =>
@@ -115,6 +119,8 @@ public sealed record SkuReturned(string Sku, int Units, IReadOnlyList<ReasonRetu
 /// <summary><c>returns_summary</c>: returns opened in a period, by reason and by SKU — nobody's words in it.</summary>
 public sealed class ReturnsSummaryTool(IQueryDispatcher queries) : ReadTool<PeriodArguments, ReturnsNow>(queries)
 {
+    public override ToolAudience Audience => ToolAudience.Shopkeeper;
+
     public override string Name => "returns_summary";
 
     public override string Description =>

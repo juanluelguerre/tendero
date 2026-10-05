@@ -15,6 +15,9 @@ namespace ElGuerre.Tendero.SharedKernel;
 /// </summary>
 public interface IReadTool
 {
+    /// <summary>Whose agent may be handed this read. A tool says it; none is everybody's.</summary>
+    ToolAudience Audience { get; }
+
     /// <summary>The tool's name as the model sees it: snake_case, stable.</summary>
     string Name { get; }
 
@@ -26,6 +29,20 @@ public interface IReadTool
     /// <summary>An argument the model got wrong is an <see cref="ArgumentException"/>
     /// it can read, never a fault.</summary>
     Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Who a read is for (ADR 0054, amended in phase 12b). An agent is built from the
+/// reads of its own audience and no other: the shopkeeper's copilot never reads a
+/// shopper's order, and the shopper's assistant never reads the shop's sales.
+/// </summary>
+public enum ToolAudience
+{
+    /// <summary>The backoffice copilot, asked by a shopkeeper: the shop's figures, and no customer.</summary>
+    Shopkeeper,
+
+    /// <summary>The storefront's assistant, asked by a shopper: what the shop sells, and that shopper's own orders.</summary>
+    Shopper,
 }
 
 /// <param name="Data">The tool's own DTO: codes, names, figures — never a customer.</param>
@@ -96,6 +113,8 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
     private static readonly JsonSerializerOptions Json = ArgumentSchemas.Json;
 
     private static readonly JsonElement Schema = ArgumentSchemas.Of(typeof(TArgs));
+
+    public abstract ToolAudience Audience { get; }
 
     public abstract string Name { get; }
 

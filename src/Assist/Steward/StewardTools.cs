@@ -30,7 +30,8 @@ public sealed class StewardTrace
 
 /// <summary>
 /// Steward's tools, a closed set (the spec, *What Steward reads* and *What Steward
-/// proposes*): the contexts' reads (<see cref="IReadTool"/>), and one proposal tool
+/// proposes*): the contexts' reads for a shopkeeper (<see cref="IReadTool"/>,
+/// <see cref="ToolAudience.Shopkeeper"/> — a shopper's read is never Steward's), and one proposal tool
 /// per proposable command, generated from its payload's schema. Nothing here
 /// approves or rejects — no tool can.
 /// </summary>
@@ -39,7 +40,7 @@ public static class StewardTools
     public static IReadOnlyList<AIFunction> For(
         IEnumerable<IReadTool> reads, ProposableCommands proposals, ICommandDispatcher commands, ProposalSource source, StewardTrace trace) =>
     [
-        .. reads.Select(read => (AIFunction)new JsonTool(read.Name, read.Description, read.ArgumentsSchema,
+        .. reads.Where(read => read.Audience == ToolAudience.Shopkeeper).Select(read => (AIFunction)new JsonTool(read.Name, read.Description, read.ArgumentsSchema,
             (arguments, ct) => ReadAsync(read, arguments, trace, ct))),
         .. proposals.All.Select(entry => (AIFunction)new JsonTool(
             "propose_" + JsonNamingPolicy.SnakeCaseLower.ConvertName(entry.Name),

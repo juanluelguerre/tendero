@@ -21,6 +21,8 @@ public sealed record FoundProduct(
 /// </summary>
 public sealed class FindProductsTool(IQueryDispatcher queries) : ReadTool<FindProductsArguments, FoundProducts>(queries)
 {
+    public override ToolAudience Audience => ToolAudience.Shopkeeper;
+
     public override string Name => "find_products";
 
     public override string Description =>

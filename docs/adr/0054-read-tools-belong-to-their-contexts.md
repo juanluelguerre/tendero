@@ -44,3 +44,30 @@ proposable through `IProposableCommand`.
   DTO. That is the price of the context deciding what a model may read of it.
 - The six tools are also usable by any other agent the shop builds (Tino, phase
   12b) through the same port.
+
+## Amended 2026-10-05 — a read has an audience (phase 12b, at the author's request)
+
+Phase 12 had one agent, so every registered read was Steward's. Tino, the
+storefront's assistant (`docs/specs/tino.md`), is a second one, asked by a shopper,
+and the port as written would have handed it the shop's sales and handed Steward a
+shopper's orders.
+
+1. **`IReadTool` declares its `Audience`** — `Shopkeeper` or `Shopper`. It is
+   abstract on `ReadTool<,>`: a read that says none does not compile. An agent is
+   built from its own audience's reads only; `StewardTools` takes the shopkeeper's,
+   and a test registers a shopper's read beside them and finds it absent.
+2. **Decision 2 is per audience.** A shopkeeper's read still names no customer and
+   no order. A shopper's read may carry **an order of the asking principal** —
+   found through `IPrincipalAccessor`, never by an id the model was given — and
+   still nothing that says who they are or where they live: no name, email, phone,
+   address or recipient. The architecture rule holds one list of names per
+   audience and fails if an audience has none.
+3. **The support port moved to `AI`** (`ElGuerre.Tendero.AI.Support`):
+   `ISupportScorer` and its two TEI adapters. It lived in Knowledge, which Assist
+   may not reference, and a scorer is a model reached through a port — what `AI`
+   is for (ADR 0053). Knowledge uses it as before and still registers it; the
+   generative yes/no scorer stays in Knowledge, behind its namespace fence, because
+   it reads OpenAI's raw log-probabilities.
+
+Not yet exercised: no shopper's read exists until phase 12b builds them, so the
+shopper's half of the rule has a list and no tool to hold to it.

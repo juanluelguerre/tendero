@@ -33,6 +33,8 @@ public sealed class StewardTurnTests
 
     private sealed class GapsTool : IReadTool
     {
+        public ToolAudience Audience => ToolAudience.Shopkeeper;
+
         public string Name => "look_at_gaps";
 
         public string Description => "What the catalogue lacks.";
@@ -47,6 +49,8 @@ public sealed class StewardTurnTests
     /// <summary>A read of five rows, which the panel draws as a table.</summary>
     private sealed class ShelfTool : IReadTool
     {
+        public ToolAudience Audience => ToolAudience.Shopkeeper;
+
         public string Name => "look_at_shelf";
 
         public string Description => "What is on the shelf.";
@@ -63,6 +67,8 @@ public sealed class StewardTurnTests
     {
         public const string Complaint = "kind must be Missing or Draft.";
 
+        public ToolAudience Audience => ToolAudience.Shopkeeper;
+
         public string Name => "picky";
 
         public string Description => "Refuses every argument.";
@@ -78,6 +84,8 @@ public sealed class StewardTurnTests
     private sealed class LeakyTool : IReadTool
     {
         public const string Secret = "Host=db;Password=hunter2";
+
+        public ToolAudience Audience => ToolAudience.Shopkeeper;
 
         public string Name => "leaky";
 

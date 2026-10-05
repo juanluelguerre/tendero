@@ -3,7 +3,7 @@ using System.Diagnostics.Metrics;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Ports;
-using ElGuerre.Tendero.Knowledge.Support;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.DependencyInjection;
 

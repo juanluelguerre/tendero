@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.Knowledge.Chat;
-using ElGuerre.Tendero.Knowledge.Support;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.SearchEval.Claims;
 
 namespace ElGuerre.Tendero.SearchEval.Suites;

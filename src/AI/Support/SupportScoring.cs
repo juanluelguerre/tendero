@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 
-namespace ElGuerre.Tendero.Knowledge.Support;
+namespace ElGuerre.Tendero.AI.Support;
 
 /// <summary>
 /// Does this text say this claim? A number from 0 to 1 for <c>Evidence.Support</c>

@@ -155,6 +155,8 @@ public sealed class ReadToolTests
 
     private sealed class ShelfTool(IQueryDispatcher queries) : ReadTool<ShelfArguments, ShelfView>(queries)
     {
+        public override ToolAudience Audience => ToolAudience.Shopkeeper;
+
         public override string Name => "look_at_shelf";
 
         public override string Description => "What is on a shelf.";

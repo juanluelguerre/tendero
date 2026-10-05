@@ -1,4 +1,4 @@
-using ElGuerre.Tendero.Knowledge.Support;
+using ElGuerre.Tendero.AI.Support;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;

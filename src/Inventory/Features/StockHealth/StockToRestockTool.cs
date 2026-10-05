@@ -19,6 +19,8 @@ public sealed record SkuToRestock(string Sku, int Available, int? InWarehouse, d
 /// </summary>
 public sealed class StockToRestockTool(IQueryDispatcher queries) : ReadTool<StockToRestockArguments, ToRestock>(queries)
 {
+    public override ToolAudience Audience => ToolAudience.Shopkeeper;
+
     public override string Name => "stock_to_restock";
 
     public override string Description =>

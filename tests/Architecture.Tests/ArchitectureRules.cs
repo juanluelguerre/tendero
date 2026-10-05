@@ -431,12 +431,27 @@ public sealed class ArchitectureRules
     /// Steward reads*): with a hosted profile, a tool's answer is what leaves the
     /// machine. Every read tool derives <see cref="ReadTool{TArgs, TData}"/>, so its
     /// answer's type can be read, and nothing reachable from it names a customer,
-    /// an order, an address or a shopper's words.
+    /// an address or a shopper's words.
+    ///
+    /// The rule is per audience (ADR 0054, amended in phase 12b). A shopkeeper's
+    /// read names no order either: Steward answers with aggregates. A shopper's read
+    /// may carry an order — the asking shopper's own, found through the principal —
+    /// and still nothing that says who they are or where they live.
     /// </summary>
     [Fact]
     public void A_read_tool_carries_no_customer_field()
     {
-        string[] forbidden = ["CustomerId", "Customer", "Email", "Address", "OrderId", "Comment", "Phone", "FirstName", "LastName", "DisplayName"];
+        string[] whoTheyAre =
+        [
+            "CustomerId", "Customer", "Email", "Address", "Comment", "Phone", "FirstName", "LastName", "DisplayName",
+            "RecipientName", "Recipient", "City", "PostalCode", "Line1", "Line2",
+        ];
+        var forbidden = new Dictionary<ToolAudience, string[]>
+        {
+            [ToolAudience.Shopkeeper] = [.. whoTheyAre, "OrderId"],
+            [ToolAudience.Shopper] = whoTheyAre,
+        };
+        Assert.Equal(Enum.GetValues<ToolAudience>().Order(), forbidden.Keys.Order());
 
         var tools = Solution.All
             .SelectMany(assembly => assembly.GetTypes())
@@ -454,12 +469,18 @@ public sealed class ArchitectureRules
                 continue;
             }
 
+            var audience = AudienceOf(tool);
             foreach (var (type, property) in Reachable(data))
-                if (forbidden.Contains(property, StringComparer.OrdinalIgnoreCase))
-                    offending.Add($"{tool.Name}: {type.Name}.{property}");
+                if (forbidden[audience].Contains(property, StringComparer.OrdinalIgnoreCase))
+                    offending.Add($"{tool.Name} ({audience}): {type.Name}.{property}");
         }
 
         Assert.True(offending.Count == 0, "Read tools that carry a customer:\n" + string.Join('\n', offending));
+
+        // The audience is a constant of the class, so it is read from an instance
+        // nothing was given to: no constructor runs, and the getter needs none.
+        static ToolAudience AudienceOf(Type tool) =>
+            ((IReadTool)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(tool)).Audience;
 
         static Type? DataOf(Type type)
         {

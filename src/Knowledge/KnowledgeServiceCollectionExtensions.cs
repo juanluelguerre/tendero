@@ -3,7 +3,7 @@ using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Features.ProposeClaims;
-using ElGuerre.Tendero.Knowledge.Support;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;

@@ -16,6 +16,8 @@ public sealed record GapItem(string ProductId, string Code, string Name);
 /// <summary><c>catalogue_gaps</c> (phase 12, S-3b): what the catalogue lacks, fifty at most with the total.</summary>
 public sealed class CatalogueGapsTool(IQueryDispatcher queries) : ReadTool<CatalogueGapsArguments, Gaps>(queries)
 {
+    public override ToolAudience Audience => ToolAudience.Shopkeeper;
+
     public override string Name => "catalogue_gaps";
 
     public override string Description =>
