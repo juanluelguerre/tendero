@@ -50,7 +50,7 @@ A shopper **could not, or not at a cost worth paying**:
 1. find a product by need rather than by name — *for induction, not heavy,
    under 40 €* — and see **why** each result fits, with the source of each reason;
 2. ask about one product — *does it go in the dishwasher?* — and get the approved
-   claim or an honest *the shop does not say*;
+   claim or an honest *this product's details do not say*;
 3. ask about their own order — *where is it?*, *can I still return it?* — without
    finding the screen.
 
@@ -95,7 +95,7 @@ JSON schema (the local server constrains the output to it), one of four kinds:
 | `products` | up to four product codes, and for each one to three **reasons**: a sentence and the id of the fact it cites | a card per product, **built by code from the read** — name, picture, price, availability, never the model's — and under it each reason with its **source chip**; *See all 14 results* links to the search the tool ran |
 | `order` | sentences about an order, each citing a fact of that order or of the policy | the order's status line built by code, the sentences with their chips, and a link to the order's page (where a return is opened) |
 | `ask` | one question back to the shopper | the question |
-| `noData` | what was asked that the shop does not know | *The shop does not say whether …* (*sin dato*), and the nearest thing it does know, cited |
+| `noData` | what was asked that the shop does not know | *This product's details don't say whether …* (*sin dato*), and the nearest thing they do say, cited |
 
 A **fact** is one row of what a tool returned, given an id by code for the turn
 (`f1`, `f2`, …) and a source:
@@ -107,6 +107,14 @@ A **fact** is one row of what a tool returned, given an id by code for the turn
 | the product's description | one sentence of it | *From the product's description* |
 | price, availability, an offer | built by code from Pricing and Inventory's answer | none: it is on the card |
 | the return policy, the order | *Returns: 30 days from delivery* | *Return policy* · *Your order* |
+
+**Who lacks the fact is said precisely** (the author, 2026-10-05). What is missing
+is missing from a product's details, not withheld by the shop, so the sentence
+names the product's details: *This product's details don't say whether it can go
+in the oven* / *La ficha de este producto no indica si puede ir al horno*. For
+something that is the shop's own — a policy it has not written — it is *We don't
+have that information* / *No tenemos ese dato*. The sentence is code's, in es and
+en; the model supplies only what was asked about and which product.
 
 ### Grounding, before anything is shown
 
