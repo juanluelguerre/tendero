@@ -19,10 +19,13 @@ namespace ElGuerre.Tendero.AI.Chat;
 /// an argument written <c>{from:tool:path}</c> takes that tool's latest result at
 /// that path — <c>data.products.0.productId</c> — so a script can find a product
 /// and then propose for it, though its id is minted at import.</param>
+/// <param name="Reply">What it answers a call that asks for JSON of a schema
+/// (phase 12b): the object itself, or a string to answer something that is not JSON.
+/// Such a call has no tools, so the step's calls are not made again.</param>
 public sealed record ScriptedTurn(
     string When, IReadOnlyList<ScriptedCall>? Calls = null, string? Say = null,
     int InputTokens = 100, int OutputTokens = 20, int DelayMs = 0, bool Always = false, bool ThenFail = false,
-    IReadOnlyList<ScriptedCall>? Then = null);
+    IReadOnlyList<ScriptedCall>? Then = null, JsonElement? Reply = null);
 
 public sealed record ScriptedCall(string Tool, JsonElement Arguments);
 
@@ -60,6 +63,18 @@ public sealed class ScriptedChatClient(IReadOnlyList<ScriptedTurn> script, TimeS
             using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             deadline.CancelAfter(timeout);
             await Task.Delay(step.DelayMs, deadline.Token);
+        }
+
+        // A call held to a schema is answered with the step's reply, as it is written.
+        if (options?.ResponseFormat is ChatResponseFormatJson)
+        {
+            var reply = step.Reply switch
+            {
+                { ValueKind: JsonValueKind.String } text => text.GetString() ?? "",
+                { } json => json.GetRawText(),
+                null => NotScripted,
+            };
+            return Answer(new ChatMessage(ChatRole.Assistant, reply), step.InputTokens, step.OutputTokens);
         }
 
         // How many rounds of calls this turn has made since the person spoke.

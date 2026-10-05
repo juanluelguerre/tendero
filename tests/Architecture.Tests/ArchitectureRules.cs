@@ -514,6 +514,32 @@ public sealed class ArchitectureRules
         }
     }
 
+    /// <summary>
+    /// Tino reads, and nothing else (the Tino spec, *The tools*): the storefront's
+    /// assistant is asked by anyone, signed in or not, so it is built with no way to
+    /// propose or run a command. Its turn is handed neither the proposable commands
+    /// nor a command dispatcher; Steward's, which proposes, is handed both — which is
+    /// what shows this rule is looking at the right thing.
+    /// </summary>
+    [Fact]
+    public void The_shoppers_assistant_is_built_with_no_way_to_propose_or_run_a_command()
+    {
+        static Type[] Given(Type handler) => [.. handler.GetConstructors().Single().GetParameters().Select(parameter => parameter.ParameterType)];
+        Type[] writing = [typeof(ElGuerre.Tendero.Assist.ProposableCommands), typeof(ICommandDispatcher)];
+
+        Assert.Empty(Given(typeof(ElGuerre.Tendero.Assist.Tino.TinoTurnHandler)).Intersect(writing));
+        Assert.Equal(writing, Given(typeof(ElGuerre.Tendero.Assist.Steward.StewardTurnHandler)).Intersect(writing));
+
+        // And nothing under Tino's namespace names a proposal.
+        var tino = typeof(ElGuerre.Tendero.Assist.Tino.TinoTurnHandler).Assembly.GetTypes()
+            .Where(type => type.Namespace == typeof(ElGuerre.Tendero.Assist.Tino.TinoTurnHandler).Namespace);
+        var reached = tino.SelectMany(type => type.GetFields(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                .Select(field => field.FieldType)
+                .Concat(type.GetConstructors().SelectMany(constructor => constructor.GetParameters()).Select(parameter => parameter.ParameterType)))
+            .Where(type => type == typeof(IProposableCommand) || type == typeof(ElGuerre.Tendero.Assist.ProposableCommands) || type == typeof(ICommandDispatcher));
+        Assert.Empty(reached);
+    }
+
     /// <summary>A tool's name is how the model calls it: one per tool, and none that a
     /// proposal tool or a decision would be called.</summary>
     [Fact]

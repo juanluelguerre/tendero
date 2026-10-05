@@ -50,9 +50,6 @@ public sealed class StewardOptions
     public int TurnSeconds { get; init; } = 600;
 }
 
-/// <param name="Role">"user" or "assistant".</param>
-public sealed record TurnMessage(string Role, string Text);
-
 /// <summary>
 /// One turn of a conversation with Steward (phase 12). The conversation travels
 /// with the client — the server keeps nothing between turns. Not audited itself:
@@ -88,9 +85,6 @@ public enum StewardStatus
 public sealed record StewardAnswer(
     StewardStatus Status, string? Text, IReadOnlyList<ToolUse> Reads, IReadOnlyList<string> ProposalIds,
     TurnCost? Cost, string? Profile, bool FellBack, bool NearContextLimit, string ConversationId);
-
-/// <summary>What the turn cost, at the answering profile's price: the panel's cost line adds these up.</summary>
-public sealed record TurnCost(int Calls, long InputTokens, long OutputTokens, long MicroEuros, int Milliseconds, string Model);
 
 public sealed class StewardTurnValidator : AbstractValidator<StewardTurnCommand>
 {

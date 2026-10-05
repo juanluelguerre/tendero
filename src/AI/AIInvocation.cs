@@ -43,6 +43,10 @@ public interface IAIInvocationReader
 
     /// <summary>What a person's calls spent, input and output, from a moment on — their day's budget (P12-9).</summary>
     Task<long> PersonTokensSinceAsync(string subject, DateTimeOffset since, CancellationToken cancellationToken = default);
+
+    /// <summary>What every call made for one operation spent, input and output, from a
+    /// moment on, whoever asked — the shop's day of an assistant anyone may ask (phase 12b).</summary>
+    Task<long> OperationTokensSinceAsync(string operation, DateTimeOffset since, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Where the rows go: Persistence, on a context of its own, as the audit.</summary>

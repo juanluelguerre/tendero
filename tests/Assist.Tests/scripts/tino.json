@@ -1,0 +1,76 @@
+[
+  {
+    "when": "induction",
+    "calls": [{ "tool": "search_products", "arguments": { "text": "sartén inducción", "culture": "es", "maxPrice": 40 } }],
+    "then": [{ "tool": "get_product_specs", "arguments": { "codes": ["PAN-1", "PAN-2"], "culture": "es" } }],
+    "say": "DONE",
+    "reply": {
+      "kind": "products",
+      "products": [
+        {
+          "code": "PAN-1",
+          "reasons": [
+            { "says": "Vale para inducción.", "cites": "f1" },
+            { "says": "Pesa 0,8 kg.", "cites": "f2" }
+          ]
+        },
+        {
+          "code": "PAN-2",
+          "reasons": [
+            { "says": "Pesa más que la de aluminio.", "cites": "f2" },
+            { "says": "Pesa 2,3 kg.", "cites": "f3" }
+          ]
+        }
+      ]
+    },
+    "inputTokens": 900,
+    "outputTokens": 60
+  },
+  {
+    "when": "something for the kitchen",
+    "say": "DONE",
+    "reply": { "kind": "ask", "ask": "What will you cook with it?" }
+  },
+  {
+    "when": "oven",
+    "calls": [{ "tool": "get_product_specs", "arguments": { "codes": ["PAN-1"], "culture": "es" } }],
+    "say": "DONE",
+    "reply": {
+      "kind": "noData",
+      "code": "PAN-1",
+      "about": "si puede ir al horno",
+      "language": "es",
+      "nearest": [{ "says": "Pesa 0,8 kg.", "cites": "f2" }]
+    }
+  },
+  {
+    "when": "devolver",
+    "calls": [{ "tool": "get_return_policy", "arguments": { "culture": "es" } }],
+    "say": "DONE",
+    "reply": { "kind": "shop", "says": [{ "says": "Tienes 30 días desde la entrega.", "cites": "f1" }] }
+  },
+  {
+    "when": "prose",
+    "calls": [{ "tool": "search_products", "arguments": { "text": "sartén" } }],
+    "say": "DONE",
+    "reply": "The aluminium pan is the best one and it is dishwasher safe."
+  },
+  {
+    "when": "ghost",
+    "calls": [{ "tool": "search_products", "arguments": { "text": "sartén" } }],
+    "say": "DONE",
+    "reply": { "kind": "products", "products": [{ "code": "PAN-99", "reasons": [{ "says": "Es de oro.", "cites": "f99" }] }] }
+  },
+  {
+    "when": "sales",
+    "calls": [{ "tool": "sales_summary", "arguments": { "period": "Month" } }],
+    "say": "DONE",
+    "reply": { "kind": "unknown", "language": "en" }
+  },
+  {
+    "when": "slow",
+    "delayMs": 5000,
+    "say": "DONE",
+    "reply": { "kind": "ask", "ask": "Which one?" }
+  }
+]

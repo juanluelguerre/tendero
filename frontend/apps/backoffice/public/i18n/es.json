@@ -82,6 +82,7 @@
       "SetProductTranslationCommand": "Traducir un producto",
       "StewardTurnCommand": "Preguntar a Steward",
       "SuspendAgentCommand": "Suspender un agente",
+      "TinoTurnCommand": "Preguntar a Tino",
       "UnscheduleCampaignCommand": "Desprogramar una campaña",
       "UpdateCampaignCommand": "Editar una campaña",
       "UpdateCheckoutSessionCommand": "Actualizar un pago",

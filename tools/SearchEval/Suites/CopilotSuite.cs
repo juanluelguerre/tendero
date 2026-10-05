@@ -3,6 +3,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Ports;
 using ElGuerre.Tendero.Assist.Steward;
+using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SearchEval.Copilot;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Steward;
+using ElGuerre.Tendero.Assist.Tino;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,9 +18,15 @@ public static class AssistServiceCollectionExtensions
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddSingleton(ModelProfiles.None);
         if (configuration is not null)
+        {
             services.Configure<StewardOptions>(configuration.GetSection(StewardOptions.SectionName));
+            services.Configure<TinoOptions>(configuration.GetSection(TinoOptions.SectionName));
+        }
         else
+        {
             services.AddOptions<StewardOptions>();
+            services.AddOptions<TinoOptions>();
+        }
         return services;
     }
 }

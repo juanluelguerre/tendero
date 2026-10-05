@@ -384,6 +384,15 @@
         "proposals_reviewed",
         "steward_unavailable"
       ]
+    },
+    {
+      "name": "Tino",
+      "area": "storefront",
+      "question": "Does Tino answer, with which kind of answer — and when it does not, why: no model, the model's failure, time, or the day's budget?",
+      "decision": "The turn's seconds and the shop's daily budget; the default profile and its fallback. A model failing often means the prompt or the model, not the shop; its events — whether an answer leads to a product — arrive with the storefront (T-6).",
+      "signals": [
+        "tendero.tino.turns"
+      ]
     }
   ],
   "events": [
@@ -1349,6 +1358,47 @@
         "fell_back": {
           "type": "boolean",
           "description": "Whether a profile after the first was reached."
+        }
+      }
+    },
+    {
+      "name": "tendero.tino.turns",
+      "instrument": "counter",
+      "unit": "{turn}",
+      "description": "Tino's turns, by status, by cause when it did not answer, and by the kind of answer.",
+      "attributes": {
+        "status": {
+          "type": "string",
+          "values": [
+            "answered",
+            "unavailable"
+          ],
+          "description": "TinoStatus, labelled by MetricLabels.",
+          "from": "TinoStatus"
+        },
+        "cause": {
+          "type": "string",
+          "values": [
+            "none",
+            "no_profile",
+            "model",
+            "time",
+            "budget",
+            "shop",
+            "too_long"
+          ],
+          "description": "TinoCause, labelled by MetricLabels; none when Tino answered."
+        },
+        "kind": {
+          "type": "string",
+          "values": [
+            "none",
+            "products",
+            "shop",
+            "ask",
+            "no_data"
+          ],
+          "description": "TinoKind, labelled by MetricLabels; none when Tino did not answer."
         }
       }
     }

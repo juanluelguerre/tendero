@@ -2,6 +2,7 @@ using System.Text.Json;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.Assist.Ports;
 using ElGuerre.Tendero.Assist.Steward;
+using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.Configuration;
@@ -109,6 +110,9 @@ public sealed class StewardTurnTests
             Asked = (subject, since);
             return Task.FromResult(today);
         }
+
+        public Task<long> OperationTokensSinceAsync(string operation, DateTimeOffset since, CancellationToken cancellationToken = default) =>
+            Task.FromResult(0L);
     }
 
     private sealed class Shop(ServiceProvider provider, InMemoryProposals proposals, SpentTokens tokens) : IAsyncDisposable

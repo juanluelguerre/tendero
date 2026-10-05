@@ -82,6 +82,7 @@
       "SetProductTranslationCommand": "Translate a product",
       "StewardTurnCommand": "Ask Steward",
       "SuspendAgentCommand": "Suspend an agent",
+      "TinoTurnCommand": "Ask Tino",
       "UnscheduleCampaignCommand": "Unschedule a campaign",
       "UpdateCampaignCommand": "Edit a campaign",
       "UpdateCheckoutSessionCommand": "Update a checkout",

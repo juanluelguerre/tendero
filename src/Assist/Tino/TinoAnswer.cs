@@ -1,5 +1,5 @@
 using System.Text.Json;
-using ElGuerre.Tendero.Assist.Steward;
+using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Assist.Tino;
@@ -29,6 +29,9 @@ public enum TinoCause
 
     /// <summary>The shop's own code failed.</summary>
     Shop,
+
+    /// <summary>The conversation no longer fits any profile's window: a new one starts again.</summary>
+    TooLong,
 }
 
 /// <summary>The shapes an answer has (the Tino spec, *An answer*; <c>Order</c> arrives in T-4).</summary>

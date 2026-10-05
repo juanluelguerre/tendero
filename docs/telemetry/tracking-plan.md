@@ -11,7 +11,7 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-41 features: **36** answered by a signal emitted today,
+42 features: **37** answered by a signal emitted today,
 **0** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
@@ -35,6 +35,7 @@ everything here that is not *planned* is emitted.
 | Campaign card | Do shoppers open the campaign card, before a campaign starts as well as while it runs? | If the before card is not opened, the teaser is not worth its place. | `campaign_card_opened` | emitted |
 | Browsing trail | Do shoppers clear what the shop remembers of their browsing, one entry at a time or all of it? | If many clear it, the trail is felt as surveillance; show less, or ask first. | `trail_cleared` | emitted |
 | Suggestions and trends | Do Puede que te guste and Tendencias lead to products as often as the new arrivals do, and does the vector re-rank beat the rule alone? | If suggestions lead to products no more often than the new arrivals do, the rule is not worth its place above them; if the vector re-rank does not beat the rule alone, it is switched off. | `product_viewed` | emitted |
+| Tino | Does Tino answer, with which kind of answer — and when it does not, why: no model, the model's failure, time, or the day's budget? | The turn's seconds and the shop's daily budget; the default profile and its fallback. A model failing often means the prompt or the model, not the shop; its events — whether an answer leads to a product — arrive with the storefront (T-6). | `tendero.tino.turns` | emitted |
 
 ### Backoffice
 
@@ -642,3 +643,17 @@ Answers:
 |---|---|---|---|
 | `status` | string | `answered`, `unavailable`, `budget_exceeded`, `conversation_too_long`, `daily_budget_exceeded` | StewardStatus, labelled by MetricLabels. |
 | `fell_back` | boolean | — | Whether a profile after the first was reached. |
+
+### `tendero.tino.turns`
+
+counter, unit `{turn}`. Tino's turns, by status, by cause when it did not answer, and by the kind of answer.
+
+Answers:
+
+- **Tino** — Does Tino answer, with which kind of answer — and when it does not, why: no model, the model's failure, time, or the day's budget?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `status` | string | `answered`, `unavailable` | TinoStatus, labelled by MetricLabels. |
+| `cause` | string | `none`, `no_profile`, `model`, `time`, `budget`, `shop`, `too_long` | TinoCause, labelled by MetricLabels; none when Tino answered. |
+| `kind` | string | `none`, `products`, `shop`, `ask`, `no_data` | TinoKind, labelled by MetricLabels; none when Tino did not answer. |

@@ -51,5 +51,11 @@ public sealed class AIInvocationRowsTests(PostgresFixture postgres)
         Assert.Equal(1842, await reader.PersonTokensSinceAsync("lucia", Instant.AddHours(-1), ct));
         Assert.Equal(0, await reader.PersonTokensSinceAsync("lucia", Instant.AddSeconds(1), ct));
         Assert.Equal(0, await reader.PersonTokensSinceAsync("nobody", Instant.AddHours(-1), ct));
+
+        // An operation's tokens since a moment, whoever asked: the shop's day of an
+        // assistant anyone may ask (phase 12b).
+        Assert.Equal(1842, await reader.OperationTokensSinceAsync("steward.turn", Instant.AddHours(-1), ct));
+        Assert.Equal(0, await reader.OperationTokensSinceAsync("steward.turn", Instant.AddSeconds(1), ct));
+        Assert.Equal(0, await reader.OperationTokensSinceAsync("tino.turn", Instant.AddHours(-1), ct));
     }
 }
