@@ -31,7 +31,7 @@ public static class TinoReply
 
     /// <returns>The answer the reply holds, or null when it holds none: not JSON, no
     /// kind, or nothing left once what does not hold was dropped.</returns>
-    public static TinoBody? Read(string? reply, FactSheet sheet)
+    public static TinoBody? Read(string? reply, FactSheet sheet, TinoContext? context = null)
     {
         Written? written;
         try
@@ -79,7 +79,10 @@ public static class TinoReply
             case "ask":
                 return IsAQuestion(written.Ask) ? new(TinoKind.Ask, [], [], written.Ask!.Trim(), null, 0) : null;
 
-            case "noData" when sheet.Product(written.Code) is { } about && Completes(written.About):
+            // Only about the product on the shopper's screen (AnswerSchema): "this product's
+            // details" said of one nobody showed them is the next case, not this one.
+            case "noData" when AnswerSchema.OnScreen(sheet, context) is { } about
+                && sheet.Product(written.Code)?.Key == about.Key && Completes(written.About):
                 return new(TinoKind.NoData, [], [], null,
                     new NoData(about.Key, about.Name, TinoPrompt.NoData(Language(written.Language), true, Trimmed(written.About!)),
                         Reasons(written.Nearest, about.Key, sheet, ref dropped)),
@@ -88,7 +91,8 @@ public static class TinoReply
                     written.Claim?.Trim() is { Length: > 0 and <= MaxSentence } claim ? claim : null);
 
             // The shop has no such information — and so does a noData about a product
-            // the turn never read: there is nothing of it to say anything about.
+            // the turn never read, or one that is not on the shopper's screen: there is
+            // nothing the shopper can see for it to be about.
             case "unknown" or "noData":
                 return new(TinoKind.NoData, [], [], null,
                     new NoData(null, null, TinoPrompt.NoData(Language(written.Language), false, ""), []), dropped);

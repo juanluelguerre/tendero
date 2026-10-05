@@ -11,6 +11,9 @@ namespace ElGuerre.Tendero.Assist.Tests.Tino;
 /// </summary>
 public sealed class TinoReplyTests
 {
+    /// <summary>The shopper is on the aluminium pan's page: what "this product" means.</summary>
+    internal static readonly TinoContext OnTheAluminiumPan = new(TinoContextKind.Product, "PAN-ALU-24");
+
     /// <summary>
     /// f1 the aluminium pan's approved claim, f2 its weight, f3 the iron pan's
     /// description, f4 its weight, f5 the return policy; a third pan the search
@@ -175,7 +178,7 @@ public sealed class TinoReplyTests
         {
             kind = "noData", code = "PAN-ALU-24", about, language,
             nearest = new[] { new { says = "Vale para inducción.", cites = "f1" }, new { says = "La de hierro sí.", cites = "f3" } },
-        }), Pans())!;
+        }), Pans(), OnTheAluminiumPan)!;
 
         Assert.Equal(TinoKind.NoData, body.Kind);
         Assert.Equal(("PAN-ALU-24", "Sartén de aluminio de 24 cm", sentence), (body.NoData!.Code, body.NoData.Name, body.NoData.Sentence));
@@ -196,7 +199,7 @@ public sealed class TinoReplyTests
     [InlineData("")]
     public void What_was_asked_about_is_a_phrase_or_the_answer_is_only_that_the_shop_has_no_such_information(string about)
     {
-        var body = TinoReply.Read(JsonSerializer.Serialize(new { kind = "noData", code = "PAN-ALU-24", about, language = "es", nearest = Array.Empty<object>() }), Pans())!;
+        var body = TinoReply.Read(JsonSerializer.Serialize(new { kind = "noData", code = "PAN-ALU-24", about, language = "es", nearest = Array.Empty<object>() }), Pans(), OnTheAluminiumPan)!;
 
         Assert.Equal((null, "No tenemos ese dato."), (body.NoData!.Code, body.NoData.Sentence));
     }
@@ -211,9 +214,32 @@ public sealed class TinoReplyTests
         var body = TinoReply.Read(JsonSerializer.Serialize(new
         {
             kind = "noData", code = "PAN-ALU-24", about = "si puede ir al horno", claim = written, language = "es", nearest = Array.Empty<object>(),
-        }), Pans())!;
+        }), Pans(), OnTheAluminiumPan)!;
 
         Assert.Equal(claim, body.Claim);
+    }
+
+    /// <summary>
+    /// A model that is not held to the schema can still write it. "This product's
+    /// details" about a product that is not on the shopper's screen — no page, another
+    /// product's page, an order's — is only that the shop has no such information:
+    /// the sentence would point at something they cannot see.
+    /// </summary>
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(TinoContextKind.Product, "PAN-IRON-26")]
+    [InlineData(TinoContextKind.Order, "PAN-ALU-24")]
+    public void What_a_product_does_not_say_is_said_only_of_the_product_on_the_shoppers_screen(TinoContextKind? looking, string? key)
+    {
+        var body = TinoReply.Read(JsonSerializer.Serialize(new
+        {
+            kind = "noData", code = "PAN-ALU-24", about = "si es roja", claim = "Es roja.", language = "es",
+            nearest = new[] { new { says = "Vale para inducción.", cites = "f1" } },
+        }), Pans(), looking is { } kind ? new TinoContext(kind, key!) : null)!;
+
+        Assert.Equal((TinoKind.NoData, null, "No tenemos ese dato."), (body.Kind, body.NoData!.Code, body.NoData.Sentence));
+        Assert.Empty(body.NoData.Nearest);
+        Assert.Null(body.Claim);
     }
 
     [Theory]
@@ -222,7 +248,7 @@ public sealed class TinoReplyTests
     [InlineData("""{"kind":"noData","code":"PAN-GOLD-99","about":"si es de oro","language":"es","nearest":[]}""", "No tenemos ese dato.")]
     public void What_the_shop_does_not_hold_names_no_product(string reply, string sentence)
     {
-        var body = TinoReply.Read(reply, Pans())!;
+        var body = TinoReply.Read(reply, Pans(), OnTheAluminiumPan)!;
 
         Assert.Equal((TinoKind.NoData, null, sentence), (body.Kind, body.NoData!.Code, body.NoData.Sentence));
         Assert.Empty(body.NoData.Nearest);

@@ -282,7 +282,7 @@ public sealed class TinoTurnHandler(
             ModelCall.Options(Operation, command.ConversationId, TinoPrompt.Version,
                 new ChatOptions
                 {
-                    ResponseFormat = ChatResponseFormat.ForJsonSchema(AnswerSchema.For(sheet), AnswerSchema.Name),
+                    ResponseFormat = ChatResponseFormat.ForJsonSchema(AnswerSchema.For(sheet, command.Context), AnswerSchema.Name),
                     MaxOutputTokens = settings.ComposeOutputTokens,
                     Temperature = 0,
                 },
@@ -290,7 +290,7 @@ public sealed class TinoTurnHandler(
             cancellationToken);
 
         // What was written is not an answer: the model's failure, worth another profile.
-        var read = TinoReply.Read(composed.Text, sheet)
+        var read = TinoReply.Read(composed.Text, sheet, command.Context)
             ?? throw new UnusableAnswerException("Tino's model wrote nothing that is an answer.");
 
         // And what is an answer is held to its facts before any of it is shown.

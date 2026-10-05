@@ -83,6 +83,31 @@ public sealed class FactSheetAndSchemaTests
     private static JsonElement Kind(FactSheet sheet, string kind) =>
         Kinds(sheet).Single(shape => shape.GetProperty("properties").GetProperty("kind").GetProperty("const").GetString() == kind);
 
+    private static JsonElement[] KindsFor(FactSheet sheet, TinoContext? context) =>
+        [.. AnswerSchema.For(sheet, context).GetProperty("anyOf").EnumerateArray()];
+
+    /// <summary>
+    /// "This product's details do not say…" needs a product the shopper can see. Asked
+    /// from the home page — "do you have a red T-shirt?" — the sentence pointed at a
+    /// product nobody had shown them (the author's walk, 2026-10-05). The kind exists
+    /// only about the product on their screen, and only when the turn read it.
+    /// </summary>
+    [Theory]
+    [InlineData(null, null, false)]
+    [InlineData(TinoContextKind.Product, "PAN-ALU-24", true)]
+    [InlineData(TinoContextKind.Product, "PAN-GOLD-99", false)]
+    [InlineData(TinoContextKind.Order, "PAN-ALU-24", false)]
+    public void What_a_product_does_not_say_is_offered_only_about_the_product_on_the_shoppers_screen(
+        TinoContextKind? looking, string? key, bool offered)
+    {
+        var context = looking is { } kind ? new TinoContext(kind, key!) : null;
+
+        var kinds = KindsFor(TinoReplyTests.Pans(), context)
+            .Select(shape => shape.GetProperty("properties").GetProperty("kind").GetProperty("const").GetString());
+
+        Assert.Equal(offered, kinds.Contains("noData"));
+    }
+
     private static string[] Values(JsonElement schema) => [.. schema.GetProperty("enum").EnumerateArray().Select(value => value.GetString()!)];
 
     private static string[] KindsOf(FactSheet sheet) =>
@@ -100,7 +125,7 @@ public sealed class FactSheetAndSchemaTests
                 shape.GetProperty("required").EnumerateArray().Select(name => name.GetString()));
         }
 
-        Assert.Equal(["products", "noData", "shop", "unknown", "ask"], KindsOf(TinoReplyTests.Pans()));
+        Assert.Equal(["products", "shop", "unknown", "ask"], KindsOf(TinoReplyTests.Pans()));
     }
 
     /// <summary>What a grammar is built from: a code or a citation outside these cannot be written.</summary>
@@ -119,13 +144,17 @@ public sealed class FactSheetAndSchemaTests
     }
 
     [Fact]
-    public void The_shop_kind_cites_the_shops_facts_and_no_data_names_a_product_read_and_a_language()
+    public void The_shop_kind_cites_the_shops_facts_and_no_data_names_the_product_on_the_screen_and_a_language()
     {
         var sheet = TinoReplyTests.Pans();
 
         Assert.Equal(["f5"], Values(Kind(sheet, "shop").GetProperty("properties").GetProperty("says").GetProperty("items").GetProperty("properties").GetProperty("cites")));
-        var noData = Kind(sheet, "noData").GetProperty("properties");
-        Assert.Equal(["PAN-ALU-24", "PAN-IRON-26", "PAN-STEEL-28"], Values(noData.GetProperty("code")));
+        var noData = KindsFor(sheet, TinoReplyTests.OnTheAluminiumPan)
+            .Single(shape => shape.GetProperty("properties").GetProperty("kind").GetProperty("const").GetString() == "noData")
+            .GetProperty("properties");
+        // "This product" is the one the shopper is looking at, and what is nearest is its own.
+        Assert.Equal(["PAN-ALU-24"], Values(noData.GetProperty("code")));
+        Assert.Equal(["f1", "f2"], Values(noData.GetProperty("nearest").GetProperty("items").GetProperty("properties").GetProperty("cites")));
         Assert.Equal(["es", "en"], Values(noData.GetProperty("language")));
         // What grounding holds the product's facts against is asked for, as every field is.
         Assert.Equal("string", noData.GetProperty("claim").GetProperty("type").GetString());
@@ -152,7 +181,7 @@ public sealed class FactSheetAndSchemaTests
         var reasons = Kind(searched, "products").GetProperty("properties").GetProperty("products").GetProperty("items").GetProperty("properties").GetProperty("reasons");
 
         Assert.Equal(0, reasons.GetProperty("maxItems").GetInt32());
-        Assert.Equal(["products", "noData", "unknown", "ask"], KindsOf(searched));
+        Assert.Equal(["products", "unknown", "ask"], KindsOf(searched));
     }
 
     // ---------- a shopper's orders ----------
@@ -209,7 +238,7 @@ public sealed class FactSheetAndSchemaTests
     {
         var sheet = WithAnOrder();
 
-        Assert.Equal(["products", "noData", "order", "shop", "unknown", "ask"], KindsOf(sheet));
+        Assert.Equal(["products", "order", "shop", "unknown", "ask"], KindsOf(sheet));
         var order = Kind(sheet, "order").GetProperty("properties");
         Assert.Equal(["order1"], Values(order.GetProperty("order")));
         var says = order.GetProperty("says");

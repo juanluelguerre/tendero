@@ -30,7 +30,11 @@ public static class AnswerSchema
 
     public const int MaxReasons = 2;
 
-    public static JsonElement For(FactSheet sheet)
+    /// <summary>The product on the shopper's screen, when this turn read it; otherwise none.</summary>
+    public static Subject? OnScreen(FactSheet sheet, TinoContext? context) =>
+        context is { Kind: TinoContextKind.Product } ? sheet.Product(context.Key) : null;
+
+    public static JsonElement For(FactSheet sheet, TinoContext? context = null)
     {
         var codes = sheet.Products.Select(product => product.Key).ToArray();
         var productFacts = sheet.Facts.Where(fact => sheet.Product(fact.Fact.Subject) is not null).Select(fact => fact.Id).ToArray();
@@ -49,14 +53,23 @@ public static class AnswerSchema
             {
                 ["products"] = Array(Object(new JsonObject { ["code"] = Enum(codes), ["reasons"] = reasons }), 1, MaxProducts),
             }));
-            kinds.Add(Kind("noData", new JsonObject
+
+            // "This product's details do not say…" needs a product the shopper can see.
+            // It is offered only about the one on their screen, when the turn read it:
+            // asked from anywhere else — "do you have a red T-shirt?" — the sentence
+            // would point at a product nobody showed them.
+            if (OnScreen(sheet, context) is { } shown)
             {
-                ["code"] = Enum(codes),
-                ["about"] = Text(),
-                ["claim"] = Text(),
-                ["language"] = Enum(CultureNegotiation.Supported),
-                ["nearest"] = productFacts.Length > 0 ? Array(Cited(productFacts), 0, MaxReasons) : Array(Cited(["none"]), 0, 0),
-            }));
+                var its = sheet.Facts.Where(fact => fact.Fact.Subject == shown.Key).Select(fact => fact.Id).ToArray();
+                kinds.Add(Kind("noData", new JsonObject
+                {
+                    ["code"] = Enum([shown.Key]),
+                    ["about"] = Text(),
+                    ["claim"] = Text(),
+                    ["language"] = Enum(CultureNegotiation.Supported),
+                    ["nearest"] = its.Length > 0 ? Array(Cited(its), 0, MaxReasons) : Array(Cited(["none"]), 0, 0),
+                }));
+            }
         }
 
         // An order of the shopper's: which one, and sentences that each cite a fact of
