@@ -2,11 +2,11 @@
   <figure class="m-0 grid gap-1">
     <figcaption class="eyebrow">{{ t('steward.tables.' + table().key) }}</figcaption>
     <div class="overflow-x-auto">
-      <table class="table">
+      <table class="table text-2xs">
         <thead>
           <tr>
-            @for (column of table().columns; track column.key) {
-              <th [class.text-end]="numeric()[$index]">{{ t('steward.columns.' + column.key) }}</th>
+            @for (heading of headings(); track heading.key) {
+              <th class="px-2 py-2" [class.text-end]="heading.numeric">{{ t('steward.columns.' + heading.key) }}</th>
             }
           </tr>
         </thead>
@@ -14,7 +14,13 @@
           @for (row of rows(); track $index) {
             <tr>
               @for (cell of row; track $index) {
-                <td [class.text-end]="numeric()[$index]" [class.tabular-nums]="numeric()[$index]">
+                <!-- Figures and the row's own code keep to one line; a name wraps. -->
+                <td
+                  class="px-2 py-2"
+                  [class.text-end]="cell.numeric"
+                  [class.tabular-nums]="cell.numeric"
+                  [class.whitespace-nowrap]="cell.numeric || $first"
+                >
                   {{ cell.term ? t('steward.terms.' + cell.text) : cell.text }}
                 </td>
               }
@@ -23,5 +29,15 @@
         </tbody>
       </table>
     </div>
+    @if (long()) {
+      <button
+        type="button"
+        class="button button--small button--quiet justify-self-start"
+        [attr.aria-expanded]="expanded()"
+        (click)="expanded.set(!expanded())"
+      >
+        {{ expanded() ? t('steward.table.showFewer') : t('steward.table.showAll', { count: total() }) }}
+      </button>
+    }
   </figure>
 </ng-container>

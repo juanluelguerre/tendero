@@ -1119,7 +1119,7 @@
       "name": "Nombre",
       "status": "Estado",
       "price": "Precio",
-      "missingCultures": "Nombres que faltan",
+      "missingCultures": "Sin nombre en",
       "period": "Periodo",
       "revenue": "Ingresos",
       "orders": "Pedidos",
@@ -1127,10 +1127,10 @@
       "averageOrder": "Pedido medio",
       "category": "Categoría",
       "sku": "SKU",
-      "available": "Disponible",
-      "inWarehouse": "En almacén",
-      "perDay": "Vendidas al día",
-      "coverageDays": "Días de cobertura",
+      "available": "Quedan",
+      "inWarehouse": "Allí",
+      "perDay": "Al día",
+      "coverageDays": "Cobertura (días)",
       "reason": "Motivo"
     },
     "terms": {
@@ -1193,7 +1193,11 @@
       "body": "Vuelve a empezar mañana. No se pierde nada de lo propuesto: espera en Propuestas, y el resto del backoffice funciona como siempre."
     },
     "near": "Esta conversación está cerca del límite del modelo. Empieza una nueva para tu próxima pregunta.",
-    "newConversation": "Nueva conversación"
+    "newConversation": "Nueva conversación",
+    "table": {
+      "showAll": "Mostrar las {{count}}",
+      "showFewer": "Mostrar menos"
+    }
   },
   "claimsBulk": {
     "door": "Revisar juntas las afirmaciones de este producto",

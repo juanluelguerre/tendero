@@ -11,6 +11,7 @@ const words = {
     tables: { salesFigures: 'Sales' },
     columns: { period: 'Period', revenue: 'Revenue', orders: 'Orders', sku: 'SKU' },
     terms: { current: 'This period', Damaged: 'Damaged' },
+    table: { showAll: 'Show all {{count}}', showFewer: 'Show fewer' },
   },
 };
 
@@ -73,15 +74,94 @@ describe('the steward table', () => {
     expect(cells.map((cell) => cell.classList.contains('text-end'))).toEqual([false, true, true]);
   });
 
-  it('shows a dash where the read had nothing', () => {
-    const empty: ResultTable = {
+  it('shows a dash where one row had nothing and another did', () => {
+    const uneven: ResultTable = {
+      key: 'salesFigures',
+      currency: null,
+      columns: [
+        { key: 'sku', kind: 'Text' },
+        { key: 'orders', kind: 'Number' },
+      ],
+      rows: [
+        [
+          { text: 'MUG-1', number: null },
+          { text: null, number: null },
+        ],
+        [
+          { text: 'CUP-2', number: null },
+          { text: null, number: 3 },
+        ],
+      ],
+    };
+
+    const cells = [...drawn(uneven).querySelectorAll('td')].map((cell) => cell.textContent?.trim());
+
+    expect(cells).toEqual(['MUG-1', '—', 'CUP-2', '3']);
+  });
+
+  it('does not draw a column no row has anything in: the panel is narrow', () => {
+    const sparse: ResultTable = {
+      key: 'salesFigures',
+      currency: null,
+      columns: [
+        { key: 'sku', kind: 'Text' },
+        { key: 'period', kind: 'Text' },
+        { key: 'orders', kind: 'Number' },
+      ],
+      rows: [
+        [
+          { text: 'MUG-1', number: null },
+          { text: '', number: null },
+          { text: null, number: 0 },
+        ],
+        [
+          { text: 'CUP-2', number: null },
+          { text: null, number: null },
+          { text: null, number: 2 },
+        ],
+      ],
+    };
+    const element = drawn(sparse);
+
+    expect([...element.querySelectorAll('th')].map((cell) => cell.textContent)).toEqual(['SKU', 'Orders']);
+    // A zero is a figure, not nothing.
+    expect([...element.querySelectorAll('td')].map((cell) => cell.textContent?.trim())).toEqual([
+      'MUG-1',
+      '0',
+      'CUP-2',
+      '2',
+    ]);
+  });
+
+  it('keeps figures and the row’s code on one line and lets the rest wrap', () => {
+    const cells = [...drawn(sales).querySelectorAll('td')];
+
+    expect(cells.map((cell) => cell.classList.contains('whitespace-nowrap'))).toEqual([true, true, true]);
+  });
+
+  it('shows a long read’s first rows, and the rest when asked', () => {
+    const long: ResultTable = {
       key: 'salesFigures',
       currency: null,
       columns: [{ key: 'sku', kind: 'Text' }],
-      rows: [[{ text: null, number: null }]],
+      rows: Array.from({ length: 12 }, (_, index) => [{ text: `SKU-${index}`, number: null }]),
     };
+    const element = drawn(long);
+    const button = element.querySelector('button') as HTMLButtonElement;
 
-    expect(drawn(empty).querySelector('td')?.textContent?.trim()).toBe('—');
+    expect(element.querySelectorAll('tbody tr')).toHaveLength(8);
+    expect(button.textContent?.trim()).toBe('Show all 12');
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+
+    button.click();
+    TestBed.tick();
+
+    expect(element.querySelectorAll('tbody tr')).toHaveLength(12);
+    expect(element.querySelector('button')?.textContent?.trim()).toBe('Show fewer');
+  });
+
+  it('offers nothing to expand when every row is already there', () => {
+    expect(drawn(sales).querySelector('button')).toBeNull();
   });
 
   it('never draws a cell as markup', () => {

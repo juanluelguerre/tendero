@@ -1,7 +1,10 @@
 @if (door.isOpen()) {
   @if (wide()) {
+    <!-- The panel loads as soon as the door opens (on immediate): the person has asked
+         for it, and the default — when the browser is idle — can be seconds on a busy
+         screen, an empty column in the meantime. -->
     <aside class="h-full w-panel border-s border-hairline bg-surface" [attr.aria-label]="name()">
-      @defer {
+      @defer (on immediate) {
         <backoffice-steward-panel class="h-full" />
       }
     </aside>
@@ -14,7 +17,7 @@
       (close)="door.close()"
       [attr.aria-label]="name()"
     >
-      @defer {
+      @defer (on immediate) {
         <backoffice-steward-panel class="h-full" />
       }
     </dialog>

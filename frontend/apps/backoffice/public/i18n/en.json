@@ -1119,18 +1119,18 @@
       "name": "Name",
       "status": "Status",
       "price": "Price",
-      "missingCultures": "Missing names",
+      "missingCultures": "No name in",
       "period": "Period",
       "revenue": "Revenue",
       "orders": "Orders",
       "units": "Units",
-      "averageOrder": "Average order",
+      "averageOrder": "Avg. order",
       "category": "Category",
       "sku": "SKU",
-      "available": "Available",
-      "inWarehouse": "In warehouse",
-      "perDay": "Sold a day",
-      "coverageDays": "Days of cover",
+      "available": "Left",
+      "inWarehouse": "There",
+      "perDay": "A day",
+      "coverageDays": "Cover (days)",
       "reason": "Reason"
     },
     "terms": {
@@ -1193,7 +1193,11 @@
       "body": "It starts again tomorrow. Nothing already proposed is lost: it waits in Proposals, and the rest of the backoffice works as usual."
     },
     "near": "This conversation is near the model's limit. Start a new one for your next question.",
-    "newConversation": "New conversation"
+    "newConversation": "New conversation",
+    "table": {
+      "showAll": "Show all {{count}}",
+      "showFewer": "Show fewer"
+    }
   },
   "claimsBulk": {
     "door": "Review this product's claims together",
