@@ -655,5 +655,5 @@ Answers:
 | Attribute | Type | Values | Meaning |
 |---|---|---|---|
 | `status` | string | `answered`, `unavailable` | TinoStatus, labelled by MetricLabels. |
-| `cause` | string | `none`, `no_profile`, `model`, `time`, `budget`, `shop`, `too_long` | TinoCause, labelled by MetricLabels; none when Tino answered. |
+| `cause` | string | `none`, `no_profile`, `model`, `time`, `budget`, `shop`, `too_long`, `scorer` | TinoCause, labelled by MetricLabels; none when Tino answered. |
 | `kind` | string | `none`, `products`, `shop`, `ask`, `no_data` | TinoKind, labelled by MetricLabels; none when Tino did not answer. |

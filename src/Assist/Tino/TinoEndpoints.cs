@@ -1,5 +1,6 @@
 using Carter;
 using ElGuerre.Tendero.AI;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Builder;
@@ -54,12 +55,13 @@ public sealed class TinoEndpoints : ICarterModule
         // entry says "not available" rather than failing on the first question.
         // Configured, not probed: no model is called to answer it (the plan's ruling 8).
         app.MapGet("/api/assistant/status",
-                Ok<TinoAvailability> (IOptions<TinoOptions> options, ModelProfiles profiles) =>
+                Ok<TinoAvailability> (IOptions<TinoOptions> options, ModelProfiles profiles, IEnumerable<ISupportScorer> scorers) =>
                 {
                     var settings = options.Value;
                     string?[] names = [settings.Model, settings.Fallback];
                     return TypedResults.Ok(new TinoAvailability(
-                        settings.Enabled && names.Any(name => name is { Length: > 0 } && profiles.Find(name) is not null)));
+                        settings.Enabled && scorers.Any()
+                        && names.Any(name => name is { Length: > 0 } && profiles.Find(name) is not null)));
                 })
             .AllowAnonymous()
             .WithTags("Assistant")

@@ -1,5 +1,8 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ElGuerre.Tendero.AI.Support;
 
@@ -65,4 +68,34 @@ public sealed class TeiRerankerSupportScorer(HttpClient http) : ISupportScorer
     }
 
     private sealed record Rank([property: JsonPropertyName("index")] int Index, [property: JsonPropertyName("score")] double Score);
+}
+
+public static class SupportServiceCollectionExtensions
+{
+    /// <summary>Where the AppHost says the scorer's container answers, when it started it.</summary>
+    public const string EndpointKey = "services:support:http:0";
+
+    /// <summary>
+    /// The support scorer, for whoever in this host needs it — the claims pipeline
+    /// (Knowledge) and the shopper's assistant (Assist) — registered once and only
+    /// when the AppHost handed its address over: an address nothing answers would
+    /// fail every call, no address at all is no scorer, which each caller has an
+    /// answer for.
+    /// </summary>
+    public static IServiceCollection AddSupportScorer(this IServiceCollection services, IConfiguration configuration)
+    {
+        if (configuration[EndpointKey] is { Length: > 0 } support)
+        {
+            // Its own HttpClient, not the factory's: the default resilience handler
+            // retries for thirty seconds, and whoever waits on a scorer that is down
+            // should hear so, not wait.
+            services.TryAddSingleton<ISupportScorer>(new TeiNliSupportScorer(new HttpClient
+            {
+                BaseAddress = new Uri(new Uri(support), "/"),
+                Timeout = TimeSpan.FromSeconds(30),
+            }));
+        }
+
+        return services;
+    }
 }

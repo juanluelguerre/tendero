@@ -45,6 +45,7 @@ public static class AnswerSchema
             {
                 ["code"] = Enum(codes),
                 ["about"] = Text(),
+                ["claim"] = Text(),
                 ["language"] = Enum(CultureNegotiation.Supported),
                 ["nearest"] = productFacts.Length > 0 ? Array(Cited(productFacts), 0, MaxReasons) : Array(Cited(["none"]), 0, 0),
             }));

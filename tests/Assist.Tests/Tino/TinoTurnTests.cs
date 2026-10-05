@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElGuerre.Tendero.AI;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Assist.Tino;
 using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
@@ -106,9 +107,12 @@ public sealed class TinoTurnTests
         public CommercePrincipal Current { get; } = new(null, null, null, null, []);
     }
 
-    private sealed class Shop(ServiceProvider provider, Spent spent) : IAsyncDisposable
+    private sealed class Shop(ServiceProvider provider, Spent spent, GroundingTests.Scorer? scorer) : IAsyncDisposable
     {
         public Spent Spent { get; } = spent;
+
+        /// <summary>The pairs the support scorer was asked, in order.</summary>
+        public IReadOnlyList<(string Premise, string Sentence)> Scored => scorer?.Asked ?? [];
 
         public IReadOnlyList<AIInvocation> Metered()
         {
@@ -131,7 +135,7 @@ public sealed class TinoTurnTests
 
     private static Shop Compose(
         string? model = "scripted", string? fallback = null, bool enabled = true, long spentToday = 0, long spentInConversation = 0,
-        int turnSeconds = 20, int contextTokens = 8192)
+        int turnSeconds = 20, int contextTokens = 8192, bool withScorer = true, Func<string, string, double>? support = null)
     {
         var settings = new Dictionary<string, string?>
         {
@@ -169,9 +173,14 @@ public sealed class TinoTurnTests
         services.AddScoped<IReadTool, Sales>();
         var spent = new Spent(spentToday, spentInConversation);
         services.AddSingleton<IAIInvocationReader>(spent);
+        // Every sentence is said by its fact unless a test says otherwise: what a
+        // score does to an answer is GroundingTests', what a turn does with grounding is here.
+        var scorer = withScorer ? new GroundingTests.Scorer(support ?? ((_, _) => 0.95)) : null;
+        if (scorer is not null)
+            services.AddSingleton<ISupportScorer>(scorer);
         services.AddAssist(configuration);
         services.AddModelProfiles(configuration);
-        return new Shop(services.BuildServiceProvider(), spent);
+        return new Shop(services.BuildServiceProvider(), spent, scorer);
     }
 
     // ---------- an answer ----------
@@ -256,7 +265,8 @@ public sealed class TinoTurnTests
     [Fact]
     public async Task What_a_products_details_do_not_say_is_said_by_code_with_the_nearest_facts()
     {
-        await using var shop = Compose();
+        // No fact of the pan says it can go in the oven; its weight is its weight.
+        await using var shop = Compose(support: (_, sentence) => sentence == "Puede ir al horno." ? 0.05 : 0.95);
 
         var answer = await shop.Ask("¿puede ir al oven?", new TinoContext(TinoContextKind.Product, "PAN-1"));
 
@@ -291,7 +301,62 @@ public sealed class TinoTurnTests
         Assert.Equal((TinoKind.NoData, "We don't have that information."), (answer.Kind, answer.NoData!.Sentence));
     }
 
+    // ---------- held to its facts ----------
+
+    /// <summary>The citation is real and the product is right, and the fact does not say it: not shown, and counted.</summary>
+    [Fact]
+    public async Task A_reason_its_fact_does_not_say_is_not_shown_and_is_counted_with_the_others()
+    {
+        await using var shop = Compose(support: (_, sentence) => sentence == "Pesa 0,8 kg." ? 0.1 : 0.95);
+
+        var answer = await shop.Ask("una sartén para induction que no pese");
+
+        Assert.Equal(["Vale para inducción."], answer.Products[0].Reasons.Select(reason => reason.Text));
+        // One the reply's reader dropped (another product's fact) and one grounding dropped.
+        Assert.Equal(2, answer.ReasonsDropped);
+        // Held to the product's name and the fact, and only what the reader let through was asked about.
+        Assert.Contains(("Sartén de aluminio. Apta para inducción: sí", "Vale para inducción."), shop.Scored);
+        Assert.DoesNotContain(shop.Scored, scored => scored.Sentence == "Pesa más que la de aluminio.");
+    }
+
+    /// <summary>The model said the details do not say it, and one of them does: the shopper gets the fact.</summary>
+    [Fact]
+    public async Task A_sin_dato_a_fact_contradicts_becomes_that_fact()
+    {
+        await using var shop = Compose(support: (premise, sentence) => sentence == "Pesa 0,8 kg." && premise.Contains("Peso") ? 0.95 : 0.05);
+
+        var answer = await shop.Ask("¿cuánto pesa? dime el weight", new TinoContext(TinoContextKind.Product, "PAN-1"));
+
+        Assert.Equal(TinoKind.Products, answer.Kind);
+        Assert.Null(answer.NoData);
+        var reason = answer.Products.Single().Reasons.Single();
+        Assert.Equal(("Pesa 0,8 kg.", FactSource.DataSheet, "Peso: 0.8 kg"), (reason.Text, reason.Source, reason.Fact));
+    }
+
     // ---------- no answer, and why ----------
+
+    /// <summary>An answer nothing held to its facts is not shown — so with no scorer, no model is asked for one.</summary>
+    [Fact]
+    public async Task With_no_support_scorer_tino_does_not_answer_and_no_model_is_asked()
+    {
+        await using var shop = Compose(withScorer: false);
+
+        AssertUnavailable(await shop.Ask("una sartén para induction"), TinoCause.Scorer, "una sartén para induction");
+        Assert.Empty(shop.Metered());
+    }
+
+    /// <summary>The fallback profile would need the same scorer: it is not asked.</summary>
+    [Fact]
+    public async Task A_scorer_that_does_not_answer_ends_the_turn_and_the_fallback_is_not_asked()
+    {
+        await using var shop = Compose(fallback: "second", support: (_, _) => throw new HttpRequestException("connection refused"));
+
+        var answer = await shop.Ask("una sartén para induction que no pese");
+
+        AssertUnavailable(answer, TinoCause.Scorer, "una sartén para induction que no pese");
+        Assert.Equal(("scripted", false), (answer.Profile, answer.FellBack));
+        Assert.All(shop.Metered(), row => Assert.Equal("scripted", row.Profile));
+    }
 
     private static void AssertUnavailable(TinoAnswer answer, TinoCause cause, string searchText)
     {

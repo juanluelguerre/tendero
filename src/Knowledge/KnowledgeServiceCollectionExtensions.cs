@@ -18,7 +18,7 @@ public static class KnowledgeServiceCollectionExtensions
     public const string ExtractorEndpointKey = "services:extractor:http:0";
 
     /// <summary>Where the AppHost hands over the support scorer's address.</summary>
-    public const string SupportEndpointKey = "services:support:http:0";
+    public const string SupportEndpointKey = SupportServiceCollectionExtensions.EndpointKey;
 
     /// <summary>The model the extractor serves, as the claims' provenance records it (ADR 0018).</summary>
     public static readonly ExtractorModel Extractor = new(
@@ -53,17 +53,9 @@ public static class KnowledgeServiceCollectionExtensions
                 (provider, _) => new ChatClaimExtractor(provider.GetRequiredService<IChatClient>()));
         }
 
-        if (configuration[SupportEndpointKey] is { Length: > 0 } support)
-        {
-            // Its own HttpClient, not the factory's: the default resilience handler
-            // retries for thirty seconds, and a claim waiting on a scorer that is
-            // down should hear so, not wait.
-            services.AddSingleton<ISupportScorer>(new TeiNliSupportScorer(new HttpClient
-            {
-                BaseAddress = new Uri(new Uri(support), "/"),
-                Timeout = TimeSpan.FromSeconds(30),
-            }));
-        }
+        // The scorer is the model port's to register (phase 12b): the shopper's
+        // assistant holds its answers to it too.
+        services.AddSupportScorer(configuration);
 
         services.AddSingleton(Extractor);
         return services;

@@ -1,4 +1,5 @@
 using ElGuerre.Tendero.AI;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Assist.Steward;
 using ElGuerre.Tendero.Assist.Tino;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +22,10 @@ public static class AssistServiceCollectionExtensions
         {
             services.Configure<StewardOptions>(configuration.GetSection(StewardOptions.SectionName));
             services.Configure<TinoOptions>(configuration.GetSection(TinoOptions.SectionName));
+
+            // What Tino holds its answers to (the spec, *Grounding*): the scorer, when
+            // the host was given its address.
+            services.AddSupportScorer(configuration);
         }
         else
         {

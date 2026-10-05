@@ -2942,7 +2942,7 @@ export interface components {
             available: boolean;
         };
         /** @enum {unknown} */
-        TinoCause: "NoProfile" | "Model" | "Time" | "Budget" | "Shop" | "TooLong" | null;
+        TinoCause: "NoProfile" | "Model" | "Time" | "Budget" | "Shop" | "TooLong" | "Scorer" | null;
         TinoContext: {
             kind: components["schemas"]["TinoContextKind"];
             key: string;

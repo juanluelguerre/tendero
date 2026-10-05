@@ -178,6 +178,8 @@ public sealed class TinoReplyTests
 
         Assert.Equal(TinoKind.NoData, body.Kind);
         Assert.Equal(("PAN-ALU-24", "Sartén de aluminio de 24 cm", sentence), (body.NoData!.Code, body.NoData.Name, body.NoData.Sentence));
+        // No claim was written, so there is nothing for grounding to hold the facts against.
+        Assert.Null(body.Claim);
         // The nearest facts are that product's own; another's is dropped.
         Assert.Equal(["Vale para inducción."], body.NoData.Nearest.Select(reason => reason.Text));
         Assert.Equal(1, body.Dropped);
@@ -196,6 +198,21 @@ public sealed class TinoReplyTests
         var body = TinoReply.Read(JsonSerializer.Serialize(new { kind = "noData", code = "PAN-ALU-24", about, language = "es", nearest = Array.Empty<object>() }), Pans())!;
 
         Assert.Equal((null, "No tenemos ese dato."), (body.NoData!.Code, body.NoData.Sentence));
+    }
+
+    /// <summary>The statement the model says no fact makes travels to grounding, which checks that none does.</summary>
+    [Theory]
+    [InlineData("  Puede ir al horno.  ", "Puede ir al horno.")]
+    [InlineData("", null)]
+    [InlineData("   ", null)]
+    public void A_sin_dato_carries_the_claim_it_denies_when_one_was_written(string written, string? claim)
+    {
+        var body = TinoReply.Read(JsonSerializer.Serialize(new
+        {
+            kind = "noData", code = "PAN-ALU-24", about = "si puede ir al horno", claim = written, language = "es", nearest = Array.Empty<object>(),
+        }), Pans())!;
+
+        Assert.Equal(claim, body.Claim);
     }
 
     [Theory]

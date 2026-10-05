@@ -432,10 +432,12 @@ if (!localModel)
     stewardModel.WithExplicitStart();
 
 if (!knowledge)
-{
     extractor.WithExplicitStart();
+
+// The support scorer is the claims pipeline's and Tino's: an answer is held to its
+// facts by it (the Tino spec, *Grounding*), so Tino's switch starts it too.
+if (!knowledge && !tino)
     support.WithExplicitStart();
-}
 
 // The model is prepared for whichever of the two needs it: Steward's container
 // waits for the same preparation, which is idempotent (it checks the SHA-256).
@@ -663,7 +665,8 @@ if (localModel)
 // Tino by the same rule, one step further: it is on only where its model runs, and
 // off it does not answer and says so (GET /api/assistant/status).
 if (tino)
-    api.WithEnvironment("Tino__Enabled", "true").WithEnvironment("Tino__Model", "local");
+    api.WithEnvironment("Tino__Enabled", "true").WithEnvironment("Tino__Model", "local")
+        .WithReference(support.GetEndpoint("http"));
 
 // A Scripted Steward (phase 12, S-6): CI's browser spec drives the panel, the card,
 // the review and the audit row with a script, because no model fits a runner —

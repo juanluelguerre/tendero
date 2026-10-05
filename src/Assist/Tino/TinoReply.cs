@@ -23,7 +23,7 @@ public static class TinoReply
 
     private sealed record Written(
         string? Kind, IReadOnlyList<WrittenProduct>? Products, IReadOnlyList<Cited>? Says, string? Ask,
-        string? Code, string? About, string? Language, IReadOnlyList<Cited>? Nearest);
+        string? Code, string? About, string? Claim, string? Language, IReadOnlyList<Cited>? Nearest);
 
     private sealed record WrittenProduct(string? Code, IReadOnlyList<Cited>? Reasons);
 
@@ -75,7 +75,9 @@ public static class TinoReply
                 return new(TinoKind.NoData, [], [], null,
                     new NoData(about.Key, about.Name, TinoPrompt.NoData(Language(written.Language), true, Trimmed(written.About!)),
                         Reasons(written.Nearest, about.Key, sheet, ref dropped)),
-                    dropped);
+                    dropped,
+                    // What grounding holds the product's facts against; without one there is nothing to confirm.
+                    written.Claim?.Trim() is { Length: > 0 and <= MaxSentence } claim ? claim : null);
 
             // The shop has no such information — and so does a noData about a product
             // the turn never read: there is nothing of it to say anything about.

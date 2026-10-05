@@ -1385,7 +1385,8 @@
             "time",
             "budget",
             "shop",
-            "too_long"
+            "too_long",
+            "scorer"
           ],
           "description": "TinoCause, labelled by MetricLabels; none when Tino answered."
         },

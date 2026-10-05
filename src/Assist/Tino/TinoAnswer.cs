@@ -32,6 +32,9 @@ public enum TinoCause
 
     /// <summary>The conversation no longer fits any profile's window: a new one starts again.</summary>
     TooLong,
+
+    /// <summary>The support scorer is not there, or did not answer: nothing was checked, so nothing is shown.</summary>
+    Scorer,
 }
 
 /// <summary>The shapes an answer has (the Tino spec, *An answer*; <c>Order</c> arrives in T-4).</summary>
@@ -80,5 +83,8 @@ public sealed record TinoAnswer(
     TurnCost? Cost, string? Profile, bool FellBack, string ConversationId);
 
 /// <summary>What the model's reply holds once code has read it: one of the kinds, and how much of it was dropped.</summary>
+/// <param name="Claim">For a <see cref="TinoKind.NoData"/> about a product, the statement
+/// the model says its details do not make — what grounding checks that none of them does.</param>
 public sealed record TinoBody(
-    TinoKind Kind, IReadOnlyList<AnsweredProduct> Products, IReadOnlyList<Reason> Says, string? Ask, NoData? NoData, int Dropped);
+    TinoKind Kind, IReadOnlyList<AnsweredProduct> Products, IReadOnlyList<Reason> Says, string? Ask, NoData? NoData, int Dropped,
+    string? Claim = null);

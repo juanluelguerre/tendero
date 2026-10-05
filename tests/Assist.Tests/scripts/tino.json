@@ -39,9 +39,16 @@
       "kind": "noData",
       "code": "PAN-1",
       "about": "si puede ir al horno",
+      "claim": "Puede ir al horno.",
       "language": "es",
       "nearest": [{ "says": "Pesa 0,8 kg.", "cites": "f2" }]
     }
+  },
+  {
+    "when": "weight",
+    "calls": [{ "tool": "get_product_specs", "arguments": { "codes": ["PAN-1"], "culture": "es" } }],
+    "say": "DONE",
+    "reply": { "kind": "noData", "code": "PAN-1", "about": "cuánto pesa", "claim": "Pesa 0,8 kg.", "language": "es", "nearest": [] }
   },
   {
     "when": "devolver",

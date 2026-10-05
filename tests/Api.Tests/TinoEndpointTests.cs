@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using ElGuerre.Tendero.AI;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Assist.Tino;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.AspNetCore.Authorization;
@@ -49,7 +50,7 @@ public sealed class TinoEndpointTests
     }
 
     private static (HttpClient Client, RecordingDispatcher Dispatcher, IDisposable Owner) Compose(
-        TinoOptions? options = null, IReadOnlyDictionary<string, ModelProfile>? profiles = null)
+        TinoOptions? options = null, IReadOnlyDictionary<string, ModelProfile>? profiles = null, bool withScorer = false)
     {
         var dispatcher = new RecordingDispatcher();
         var root = new TenderoApiFactory();
@@ -62,6 +63,8 @@ public sealed class TinoEndpointTests
                 services.AddSingleton(Options.Create(options));
             if (profiles is not null)
                 services.AddSingleton(new ModelProfiles(profiles));
+            if (withScorer)
+                services.AddSingleton<ISupportScorer>(new NoScorer());
         }));
         return (factory.CreateClient(), dispatcher, root);
     }
@@ -149,25 +152,33 @@ public sealed class TinoEndpointTests
         Assert.NotNull(endpoint.Metadata.GetMetadata<IAllowAnonymous>());
     }
 
+    /// <summary>A scorer that is there: being registered is all the status asks of it.</summary>
+    private sealed class NoScorer : ISupportScorer
+    {
+        public Task<double> ScoreAsync(string text, string claim, CancellationToken cancellationToken) => throw new NotSupportedException();
+    }
+
     private static readonly Dictionary<string, ModelProfile> Local = new() { ["local"] = new ModelProfile { Kind = ModelKind.Scripted } };
 
-    public static TheoryData<string, TinoOptions?, bool, bool> Availabilities => new()
+    public static TheoryData<string, TinoOptions?, bool, bool, bool> Availabilities => new()
     {
-        { "as the shop ships: off", null, false, false },
-        { "on, with its profile", new TinoOptions { Enabled = true, Model = "local" }, true, true },
-        { "on, with only its fallback registered", new TinoOptions { Enabled = true, Model = "hosted", Fallback = "local" }, true, true },
-        { "off, though its profile is there", new TinoOptions { Enabled = false, Model = "local" }, true, false },
-        { "on, and no profile of that name", new TinoOptions { Enabled = true, Model = "hosted" }, true, false },
-        { "on, and no profile named", new TinoOptions { Enabled = true }, true, false },
+        { "as the shop ships: off", null, false, false, false },
+        { "on, with its profile and the scorer", new TinoOptions { Enabled = true, Model = "local" }, true, true, true },
+        { "on, with only its fallback registered", new TinoOptions { Enabled = true, Model = "hosted", Fallback = "local" }, true, true, true },
+        { "off, though everything is there", new TinoOptions { Enabled = false, Model = "local" }, true, true, false },
+        { "on, and no profile of that name", new TinoOptions { Enabled = true, Model = "hosted" }, true, true, false },
+        { "on, and no profile named", new TinoOptions { Enabled = true }, true, true, false },
+        // An answer nothing can hold to its facts is not shown, so without the scorer there is no Tino.
+        { "on, with its profile and no scorer", new TinoOptions { Enabled = true, Model = "local" }, true, false, false },
     };
 
     /// <summary>What the storefront asks before drawing Tino's door: configured, never probed — no model is called.</summary>
     [Theory]
     [MemberData(nameof(Availabilities))]
-    public async Task Tino_is_available_when_it_is_on_and_a_profile_it_names_is_registered(
-        string what, TinoOptions? options, bool withProfile, bool available)
+    public async Task Tino_is_available_when_it_is_on_a_profile_it_names_is_registered_and_the_scorer_is_there(
+        string what, TinoOptions? options, bool withProfile, bool withScorer, bool available)
     {
-        var (client, dispatcher, owner) = Compose(options, withProfile ? Local : null);
+        var (client, dispatcher, owner) = Compose(options, withProfile ? Local : null, withScorer);
         using var _ = owner;
 
         var status = await client.GetFromJsonAsync<TinoAvailability>("/api/assistant/status", TestContext.Current.CancellationToken);

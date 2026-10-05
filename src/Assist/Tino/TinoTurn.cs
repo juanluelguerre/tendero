@@ -3,6 +3,7 @@ using System.Diagnostics.Metrics;
 using System.Text.Json;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.AI.Chat;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
 using FluentValidation;
@@ -57,6 +58,13 @@ public sealed class TinoOptions
     /// this is what bounds the cost of an endpoint anyone may call.
     /// </summary>
     public long ShopDailyTokenBudget { get; init; } = 2_000_000;
+
+    /// <summary>
+    /// How sure the support scorer must be that a fact says a sentence for the
+    /// sentence to be shown. A first value, from thirty-two pairs of the first real
+    /// turns (`docs/analysis/tino-models.md`); the `assistant` suite fixes it (T-5).
+    /// </summary>
+    public double SupportThreshold { get; init; } = 0.5;
 }
 
 /// <summary>
@@ -127,6 +135,7 @@ public sealed class TinoTurnHandler(
     ModelProfiles profiles,
     IAIInvocationReader usage,
     IPrincipalAccessor principal,
+    IEnumerable<ISupportScorer> scorers,
     IOptions<ShopOptions> shop,
     IOptions<TinoOptions> options,
     TimeProvider clock,
@@ -149,6 +158,12 @@ public sealed class TinoTurnHandler(
         var settings = options.Value;
         if (!settings.Enabled)
             return Unavailable(command, TinoCause.NoProfile, [], null, false);
+
+        // No scorer, no Tino: an answer nothing held to its facts is not shown, so
+        // no model is asked for one.
+        if (scorers.FirstOrDefault() is not { } scorer)
+            return Unavailable(command, TinoCause.Scorer, [], null, false);
+        var grounding = new Grounding(scorer, settings.SupportThreshold);
 
         var gathering = TinoPrompt.ToGather(command.Culture, command.Context);
         var composing = TinoPrompt.ToCompose(command.Context);
@@ -173,7 +188,7 @@ public sealed class TinoTurnHandler(
             return Unavailable(command, TinoCause.Budget, [], null, false);
 
         var walk = await ProfileWalk.RunAsync("Tino", candidates, settings.TurnSeconds, clock, logger,
-            (candidate, turn) => AskAsync(candidate, gathering, composing, command, settings, turn),
+            (candidate, turn) => AskAsync(candidate, gathering, composing, grounding, command, settings, turn),
             _ => false,
             cancellationToken);
 
@@ -189,6 +204,9 @@ public sealed class TinoTurnHandler(
         return Unavailable(command, walk.End switch
         {
             WalkEnd.OutOfTime => TinoCause.Time,
+            // The scorer failing is the shop's failure, with a name of its own: the
+            // fallback profile was not tried, because it would need the same scorer.
+            WalkEnd.Broken when walk.Candidate is { ScorerFailed: true } => TinoCause.Scorer,
             WalkEnd.Broken => TinoCause.Shop,
             WalkEnd.TooLong => TinoCause.TooLong,
             WalkEnd.NoProfile => TinoCause.NoProfile,
@@ -203,8 +221,8 @@ public sealed class TinoTurnHandler(
     /// and is held to the schema built from what was read.
     /// </summary>
     private async Task<(TinoBody Body, TurnCost Cost)> AskAsync(
-        Candidate candidate, string gathering, string composing, TinoTurnCommand command, TinoOptions settings,
-        CancellationToken cancellationToken)
+        Candidate candidate, string gathering, string composing, Grounding grounding, TinoTurnCommand command,
+        TinoOptions settings, CancellationToken cancellationToken)
     {
         var started = clock.GetTimestamp();
         var person = principal.Current.Subject;
@@ -247,8 +265,20 @@ public sealed class TinoTurnHandler(
             cancellationToken);
 
         // What was written is not an answer: the model's failure, worth another profile.
-        var body = TinoReply.Read(composed.Text, sheet)
+        var read = TinoReply.Read(composed.Text, sheet)
             ?? throw new UnusableAnswerException("Tino's model wrote nothing that is an answer.");
+
+        // And what is an answer is held to its facts before any of it is shown.
+        TinoBody body;
+        try
+        {
+            body = await grounding.HoldAsync(read, sheet, cancellationToken);
+        }
+        catch (SupportUnavailableException)
+        {
+            candidate.ScorerFailed = true;
+            throw;
+        }
 
         var calls = gathered.Messages.Count(message => message.Role == ChatRole.Assistant) + 1;
         var input = (gathered.Usage?.InputTokenCount ?? 0) + (composed.Usage?.InputTokenCount ?? 0);
@@ -292,5 +322,8 @@ public sealed class TinoTurnHandler(
         public IReadOnlyList<AIFunction> Tools { get; set; } = [];
 
         public int Needs { get; set; }
+
+        /// <summary>The turn on this profile stopped because the support scorer did not answer.</summary>
+        public bool ScorerFailed { get; set; }
     }
 }

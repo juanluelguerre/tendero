@@ -24,7 +24,7 @@ public sealed record TinoContext(TinoContextKind Kind, string Key)
 /// </summary>
 public static class TinoPrompt
 {
-    public const string Version = "tino-2026-10-05b";
+    public const string Version = "tino-2026-10-05c";
 
     /// <summary>What the model says when it has read enough. Its text in this phase is never shown.</summary>
     public const string Done = "DONE";
@@ -63,7 +63,8 @@ public static class TinoPrompt
           sentences, each citing a fact whose "about" is SHOP.
         - kind "noData": the facts do not say what was asked about a product. "code" is the
           product. "about" completes the sentence "This product's details don't say ..." —
-          for example "whether it can go in the oven" / "si puede ir al horno". "nearest"
+          for example "whether it can go in the oven" / "si puede ir al horno". "claim" is
+          the statement no fact makes, as a sentence: "It can go in the oven." "nearest"
           holds up to 3 facts of that product that are close to what was asked, each as a
           reason; it may be empty.
         - kind "unknown": the question is about the shop and no fact answers it.

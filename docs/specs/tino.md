@@ -408,6 +408,19 @@ ways for Tino:
    owns each).
 3. **T-3 · Grounding** (`P12b-3`). The three checks, the drop count, `noData`
    confirmed by code.
+   *As built (2026-10-05)* — `docs/superpowers/plans/2026-10-05-tino-t3-grounding.md`.
+   Each reason is held to **the product's name and the fact it cites**: its figures
+   compared (`Figures`), then its meaning scored by the support port, 0.5 or over
+   to stand (`Tino:SupportThreshold`, from 32 measured pairs). The name is in the
+   premise because the fact alone lost seven good reasons of eighteen. A *sin dato*
+   carries the claim it denies, and if a fact of that product says the claim the
+   answer becomes that fact. With no scorer Tino is not available and no model is
+   asked; a scorer that fails mid-turn ends it as `Unavailable / Scorer`, with no
+   fallback. The scorer's registration moved to `AI`, and Tino's switch starts its
+   container. On the running stack: nine of nine answered, 33 reasons shown, 4
+   dropped, none of the first run's false ones among the shown. Two limits written
+   down for T-5: a sentence the product's **name** says passes under whatever fact
+   it cites, and a fact that says the **opposite** of a *sin dato* is not seen.
 4. **T-4 · After-sale** (`P12b-2b`). `my_orders`, `my_order`, the returnable
    answer from Ordering, a guest's order from the screen's context, the isolation
    tests — one customer's order asked for by another, a guest's by a wrong id.

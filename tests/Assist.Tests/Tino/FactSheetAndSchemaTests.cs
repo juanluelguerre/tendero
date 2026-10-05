@@ -127,6 +127,8 @@ public sealed class FactSheetAndSchemaTests
         var noData = Kind(sheet, "noData").GetProperty("properties");
         Assert.Equal(["PAN-ALU-24", "PAN-IRON-26", "PAN-STEEL-28"], Values(noData.GetProperty("code")));
         Assert.Equal(["es", "en"], Values(noData.GetProperty("language")));
+        // What grounding holds the product's facts against is asked for, as every field is.
+        Assert.Equal("string", noData.GetProperty("claim").GetProperty("type").GetString());
         Assert.Equal(["es", "en"], Values(Kind(sheet, "unknown").GetProperty("properties").GetProperty("language")));
     }
 
