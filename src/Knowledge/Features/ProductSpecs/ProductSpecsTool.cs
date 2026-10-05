@@ -66,6 +66,9 @@ public sealed class ProductSpecsTool(IQueryDispatcher queries) : ReadTool<Produc
             spec.Approved ? spec.Quotes : null, spec.Support))),
     ];
 
+    protected override IReadOnlyList<Subject> Subjects(SpecsForShopper data) =>
+        [.. data.Products.Select(product => new Subject(product.Code, product.Name))];
+
     private static SpecForShopper Spec(string text, SpecEvidence? evidence) =>
         new(text, evidence is not null, [.. evidence?.Quotes.Select(quote => quote.Text) ?? []], evidence?.Support);
 

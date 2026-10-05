@@ -66,6 +66,8 @@ public sealed class SearchProductsToolTests
             .ReadAsync(Arguments("""{"text":"sartén"}"""), TestContext.Current.CancellationToken);
 
         Assert.Empty(answer.Facts!);
+        // But it says which products there are: an answer may name these, and no other.
+        Assert.Equal([new Subject("PAN-1", "Sartén")], answer.Subjects);
     }
 
     [Fact]

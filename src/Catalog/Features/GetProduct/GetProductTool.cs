@@ -49,4 +49,6 @@ public sealed class GetProductTool(IQueryDispatcher queries) : ReadTool<GetProdu
 
     protected override IReadOnlyList<Fact> Facts(ProductPageForShopper data) =>
         [.. data.Description.Select(sentence => new Fact(data.Code, FactSource.Description, sentence))];
+
+    protected override IReadOnlyList<Subject> Subjects(ProductPageForShopper data) => [new Subject(data.Code, data.Name)];
 }

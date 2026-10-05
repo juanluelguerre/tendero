@@ -109,6 +109,7 @@ public sealed class ProductSpecsToolTests
         var answer = await Read(Pans());
 
         Assert.Equal((7, (int?)null), (answer.Rows, answer.Total));
+        Assert.Equal([new Subject("PAN-ALU-24", "Sartén de aluminio"), new Subject("PAN-IRON-26", "Sartén de hierro")], answer.Subjects);
     }
 
     [Fact]

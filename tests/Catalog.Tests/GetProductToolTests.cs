@@ -41,6 +41,7 @@ public sealed class GetProductToolTests
         var page = Assert.IsType<ProductPageForShopper>(answer.Data);
         Assert.Equal(("PAN-IRON-26", "Sartén de hierro fundido de 26 cm", "Vertex", "Sartenes"), (page.Code, page.Name, page.Brand, page.Category));
         Assert.Equal(2, page.Description.Count);
+        Assert.Equal([new Subject("PAN-IRON-26", "Sartén de hierro fundido de 26 cm")], answer.Subjects);
         Assert.Equal((1, (int?)null), (answer.Rows, answer.Total));
     }
 

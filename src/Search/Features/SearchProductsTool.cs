@@ -73,4 +73,7 @@ public sealed class SearchProductsTool(IQueryDispatcher queries) : ReadTool<Sear
                 arguments.OnOffer, arguments.InStock));
         return (found, found.Products.Count, total);
     }
+
+    protected override IReadOnlyList<Subject> Subjects(ProductsForShopper data) =>
+        [.. data.Products.Select(product => new Subject(product.Code, product.Name))];
 }

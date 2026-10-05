@@ -52,8 +52,16 @@ public enum ToolAudience
 /// what is shown is what was read and not the model's retelling of it.</param>
 /// <param name="Facts">What the read says that an answer may cite (phase 12b): each a
 /// sentence with what it is about and where it comes from.</param>
+/// <param name="Subjects">The products the read returned, by code and name: what an
+/// answer may name, whether or not the read said anything citable about them.</param>
 public sealed record ReadAnswer(
-    object Data, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null, IReadOnlyList<Fact>? Facts = null);
+    object Data, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null, IReadOnlyList<Fact>? Facts = null,
+    IReadOnlyList<Subject>? Subjects = null);
+
+/// <summary>A product a read returned (phase 12b): the shopper's assistant may name it,
+/// and names no product that is not one of these.</summary>
+/// <param name="Key">The product's public code — what a <see cref="Fact"/> about it has as its subject.</param>
+public sealed record Subject(string Key, string Name);
 
 /// <summary>Where a fact comes from: what the shopper is shown beside a sentence that cites it.</summary>
 public enum FactSource
@@ -170,6 +178,9 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
     /// <summary>What an answer may cite of what was read; none for a read whose answer is figures.</summary>
     protected virtual IReadOnlyList<Fact> Facts(TData data) => [];
 
+    /// <summary>The products the read returned; none for a read that is about no product.</summary>
+    protected virtual IReadOnlyList<Subject> Subjects(TData data) => [];
+
     public async Task<ReadAnswer> ReadAsync(JsonElement arguments, CancellationToken cancellationToken = default)
     {
         TArgs read;
@@ -186,7 +197,7 @@ public abstract class ReadTool<TArgs, TData>(IQueryDispatcher queries) : IReadTo
         try
         {
             var (data, rows, total) = await ReadAsync(read, queries, cancellationToken);
-            return new ReadAnswer(data, rows, total, Tables(data), [.. Facts(data).Take(ReadLimits.MaxFacts)]);
+            return new ReadAnswer(data, rows, total, Tables(data), [.. Facts(data).Take(ReadLimits.MaxFacts)], Subjects(data));
         }
         catch (ValidationException refused)
         {

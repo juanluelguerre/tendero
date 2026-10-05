@@ -41,5 +41,6 @@ public sealed class ReturnPolicyToolTests
         Assert.Equal([new Fact(Fact.TheShop, FactSource.Policy, expected)], answer.Facts);
         Assert.Equal(new ReturnPolicyForShopper(Days, expected), answer.Data);
         Assert.Equal((1, (int?)null), (answer.Rows, answer.Total));
+        Assert.Empty(answer.Subjects!);
     }
 }
