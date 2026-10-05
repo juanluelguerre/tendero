@@ -79,6 +79,19 @@
         "Tendero__Steward": "true"
       }
     },
+    "https-tino": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17130;http://localhost:15130",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_ENVIRONMENT": "Development",
+        "ASPIRE_DASHBOARD_OTLP_HTTP_ENDPOINT_URL": "https://localhost:21130",
+        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22130",
+        "Tendero__Tino": "true"
+      }
+    },
     "https-all": {
       "commandName": "Project",
       "dotnetRunMessages": true,
@@ -91,7 +104,8 @@
         "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22130",
         "Tendero__Vectors": "true",
         "Tendero__Knowledge": "true",
-        "Tendero__Steward": "true"
+        "Tendero__Steward": "true",
+        "Tendero__Tino": "true"
       }
     },
     "https-observability": {
