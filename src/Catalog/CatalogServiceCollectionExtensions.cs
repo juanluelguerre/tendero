@@ -50,6 +50,9 @@ public static class CatalogServiceCollectionExtensions
         services.AddScoped<IReadTool, FindProductsTool>();
         services.AddScoped<IReadTool, CatalogueGapsTool>();
 
+        // And what the storefront's assistant may read of it (phase 12b): a shopper's.
+        services.AddScoped<IReadTool, Features.GetProduct.GetProductTool>();
+
         return services;
     }
 

@@ -81,9 +81,12 @@ public sealed class CatalogReadToolsTests
     }
 
     [Fact]
-    public void Catalog_registers_its_two_tools()
+    public void Catalog_registers_its_two_tools_for_the_shopkeeper_and_one_for_the_shopper()
     {
-        Assert.Equal(["catalogue_gaps", "find_products"], Tools().Select(tool => tool.Name).Order());
+        var byAudience = Tools().ToLookup(tool => tool.Audience, tool => tool.Name);
+
+        Assert.Equal(["catalogue_gaps", "find_products"], byAudience[ToolAudience.Shopkeeper].Order());
+        Assert.Equal(["get_product"], byAudience[ToolAudience.Shopper]);
     }
 
     [Fact]
