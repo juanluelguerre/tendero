@@ -47,6 +47,9 @@ public sealed class CatalogReadToolsTests
         var found = Assert.Single(((FoundProducts)answer.Data).Products);
         Assert.Equal((Lamp.Code, "Flexo articulado", "Draft"), (found.Code, found.Name, found.Status));
         Assert.Equal(["en"], found.MissingCultures);
+        // Its own price, so "the cheapest" has an answer; the table's currency is the rows'.
+        Assert.Equal((Lamp.Price.Amount, Lamp.Price.Currency), (found.Price, found.Currency));
+        Assert.Equal(Lamp.Price.Currency, Assert.Single(answer.Tables!).Currency);
         Assert.Equal((1, (int?)1), (answer.Rows, answer.Total));
     }
 

@@ -212,7 +212,7 @@ public sealed partial class StewardTurnHandler(
                 activity?.SetTag("assist.profile", name);
 
                 return Answer(command, StewardStatus.Answered,
-                    Said(response.Text, command.Culture),
+                    Said(response.Text, command.Culture, trace),
                     trace,
                     new TurnCost(calls, input, output, profile.CostMicroEuros(input, output),
                         (int)clock.GetElapsedTime(started).TotalMilliseconds, profile.Model ?? name),
@@ -249,11 +249,21 @@ public sealed partial class StewardTurnHandler(
         return Answer(command, StewardStatus.Unavailable, null, new StewardTrace(), null, null, fellBack, false);
     }
 
-    /// <summary>The model's words, unless it had none or wrote a tool call as text (deterministic: code chooses).</summary>
-    private static string Said(string? text, string culture) =>
-        string.IsNullOrWhiteSpace(text) ? StewardPrompt.StoppedAtTheCap(culture)
-        : StewardPrompt.LeaksACall(text) ? StewardPrompt.LeakedACall(culture)
-        : text;
+    /// <summary>
+    /// The model's words, unless it had none or wrote a tool call as text; and without
+    /// the rows it copied from a read the panel already draws as a table. Deterministic:
+    /// the model phrases, code chooses (invariant 12).
+    /// </summary>
+    private static string Said(string? text, string culture, StewardTrace trace)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return StewardPrompt.StoppedAtTheCap(culture);
+        if (StewardPrompt.LeaksACall(text))
+            return StewardPrompt.LeakedACall(culture);
+
+        var own = CopiedRows.Without(text, trace.Reads.SelectMany(read => read.Tables ?? []));
+        return own.Length > 0 ? own : StewardPrompt.ItIsInTheTable(culture);
+    }
 
     private DateTimeOffset StartOfShopDay()
     {

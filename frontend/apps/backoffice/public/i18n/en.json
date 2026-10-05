@@ -1118,6 +1118,7 @@
       "code": "Code",
       "name": "Name",
       "status": "Status",
+      "price": "Price",
       "missingCultures": "Missing names",
       "period": "Period",
       "revenue": "Revenue",

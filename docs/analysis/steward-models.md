@@ -8,12 +8,13 @@ laboratory, so the rows compare.
 
 ## How
 
-`tools/SearchEval --suite copilot` (its README): 24 cases in es and en over the
+`tools/SearchEval --suite copilot` (its README): 24 cases in es and en (26 from
+2026-10-05, with two on the answer's language) over the
 seed catalogue (100 products), in a disposable Postgres the suite migrates and
 seeds; each case a fresh conversation through the turn the API runs. A case
 passes when the model made the reads it should, with the arguments that matter,
 and stored exactly the proposals it should — compared, no judge model. A dry run
-with a scripted model scores 24/24, which proves the suite before a model is
+with a scripted model scores every case, which proves the suite before a model is
 measured with it.
 
 ## Results
@@ -22,6 +23,7 @@ measured with it.
 |---|---|---|---|---|---|---|---|---|---|
 | **local** — Qwen3.5-4B Q8, llama.cpp `server-v0.5.0`, 12 CPUs, 6 GB, 8,192 window | **22/24 (92 %)** | 100 % | 96 % | 96 % | 22.5 s | 132 s | 4,195 | 5,996 | 0 |
 | **local on the GPU** — the same Qwen3.5-4B Q8, llama.cpp CUDA 12 image, every layer offloaded, RTX 5070 Laptop (8 GB) | **22/24 (92 %)** | 96 % | 92 % | 100 % | **1.9 s** | 8.9 s | 4,268 | 6,117 | 0 |
+| **local on the GPU, prompt `steward-2026-10-05`** (P12-10) — same model, image and card; two runs | **23/24 and 24/24** | 100 % · 100 % | 96 % · 100 % | 100 % · 100 % | 2.2 s · 2.2 s | 7.1 s · 7.4 s | 4,766 · 4,904 | 5,926 · 6,056 | 0 |
 | hosted (S-7) | | | | | | | | | |
 | small — Phi-4-mini Q8 (MIT), same llama.cpp and settings | **1/24 (4 %)**, not a verdict on the model: **its tools never reached it** | 8 % | 8 % | 75 % (only "never approves" passes) | 4.0 s | 8.7 s | 311 | 375 | 0 |
 | small — Qwen3-1.7B Q8 (Apache-2.0), same llama.cpp and settings | **9/24 (38 %)** | 46 % | 42 % | 75 % | 8.9 s | 15.9 s | 2,633 | 3,444 | 0 |
@@ -107,3 +109,72 @@ faster at the median and fifteen at the worst. It holds 4.8 GB of the card's 8 G
 `server-cuda-v0.5.0` works with the machine's driver (610.88); `server-cuda13-v0.5.0`
 refuses to start: *requirement error: unsatisfied condition: cuda>=13.4*. The
 AppHost uses the GPU when the embeddings do (`Tendero__Inference__Device`).
+
+## The prompt of P12-10, measured (2026-10-05)
+
+The prompt changed (`steward-2026-10-05`: say only what a tool returned, do not copy
+the rows, call the `propose_` tool, no picture descriptions, answer in the language
+of the last message, the panel draws Markdown) and the suite was run twice on the same
+model, image and card as the row above it: **23 of 24, then 24 of 24**, against 22 of
+24 before. Two runs are not a distribution — the 4B varies between runs, and the one
+miss (`restock-barcelona`: it sent `Barcelona`, was told the warehouses, and asked
+the shopkeeper instead of asking again) passed on the second. What can be said is that
+the new prompt cost nothing the suite measures; tokens a turn rose from 4,268 to about
+4,800, which is the longer instructions.
+
+What the suite does not score, read from the 48 answers:
+
+- **Language**: every answer was in the language of its question. The suite sends each
+  case with its own culture, so the case that failed for the author — a Spanish
+  question under an English culture — is **still unmeasured**; it needs a case of its
+  own.
+- **A tool call written as text**: none in 48 answers, so the guard was not exercised
+  by a real model here (its test is the scripted one).
+- **Not copying the rows is followed in part.** Short where a read returned nothing or
+  a figure; but `gaps-alt-text` still lists its 18 products, and `gaps-drafts` and
+  `restock-barcelona` write long lists (one a Markdown table) that the panel now draws
+  as a table as well. The instruction does not hold on a 4B; if the duplication
+  matters, code has to enforce it, not the prompt.
+- **`find-cheapest-lamp` passes on its tools and answers badly**: it narrates its plan
+  ("I need to search…"), reads `sales_summary` looking for prices, and no read carries
+  a price. The gap is a missing read, not the model.
+- **The picture rule holds**: asked what lacks alt text, it listed the products and
+  said it cannot see or describe pictures.
+
+## Three things that followed, measured the same day
+
+The reading above led to three changes, and the suite was run again — **each run on a
+fresh database**, five in all, on the same model and card.
+
+| | Passed (of 26) |
+|---|---|
+| With all three changes, two runs | 23 · 25 |
+| The same without the price on `find_products`, three runs | 25 · 23 · 25 |
+
+1. **The suite scores the answer's language where a case asks for it.** Two cases:
+   a Spanish question under an English culture — the author's — and its mirror. The
+   language is told by the commonest words of the answer's opening, no model
+   (`CopilotScoring.LanguageOf`). **Spanish under English: 7 of 7.** English under
+   Spanish: 5 of 7 — a Spanish culture still pulls a 4B back to Spanish two times in
+   seven, which the prompt does not cure.
+2. **Rows the model copies are taken out by code** (`CopiedRows`): a list item or a
+   Markdown table row that names a row of a table the panel draws goes, once there are
+   more than three; the line that only announced them goes too, and one that states a
+   figure stays as a sentence. On the real answers `gaps-alt-text` fell from about
+   1,100 characters to about 200, and the count is still said.
+3. **`find_products` carries the price.** `find-cheapest-lamp` now answers the
+   question — the right lamp at its price, twice of two — and no longer reads
+   `sales_summary` for something it does not hold. It costs nothing the suite measures:
+   the two rows above are the same spread.
+
+**What five runs say about the earlier two.** 23 to 25 of 26 is the spread, and the
+24 of 24 above was the lucky end of it. Two cases fail by turns and neither is new:
+`restock-barcelona` (told the warehouses, it asks the shopkeeper instead of asking
+again) in four runs of five, and `translate-beanie-spanish` (the product already has
+a Spanish name, so it declines to propose another) in three of five. Both are the 4B
+not acting; code cannot propose for it, and a hosted profile is S-7's question.
+
+**A trap in the method.** Two runs made on the database a dry run had just used scored
+23 and 23 with failures of a different kind (a proposal for the wrong product, a search
+for the new name). They are not counted above. A database per run, or the comparison
+means nothing.

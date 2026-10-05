@@ -11,7 +11,9 @@ public sealed record FindProductsArguments(
 
 public sealed record FoundProducts(int Total, IReadOnlyList<FoundProduct> Products);
 
-public sealed record FoundProduct(string ProductId, string Code, string Name, string Status, IReadOnlyList<string> MissingCultures);
+/// <param name="Price">The product's own price, before any promotion: what "the cheapest" is asked of.</param>
+public sealed record FoundProduct(
+    string ProductId, string Code, string Name, string Status, IReadOnlyList<string> MissingCultures, decimal Price, string Currency);
 
 /// <summary>
 /// <c>find_products</c> (phase 12, S-3b): the catalogue's list, every status, by
@@ -22,7 +24,7 @@ public sealed class FindProductsTool(IQueryDispatcher queries) : ReadTool<FindPr
     public override string Name => "find_products";
 
     public override string Description =>
-        "Find products in the catalogue, drafts included, by part of their name or their code. Returns each product's id, code, name, status and the languages its name is missing.";
+        "Find products in the catalogue, drafts included, by part of their name or their code. Returns each product's id, code, name, status, price and the languages its name is missing.";
 
     protected override async Task<(FoundProducts Data, int Rows, int? Total)> ReadAsync(
         FindProductsArguments arguments, IQueryDispatcher queries, CancellationToken cancellationToken)
@@ -38,7 +40,7 @@ public sealed class FindProductsTool(IQueryDispatcher queries) : ReadTool<FindPr
 
         var found = new FoundProducts(page.Total,
         [
-            .. page.Items.Select(item => new FoundProduct(item.ProductId, item.Code, item.Name, item.Status.ToString(), item.MissingCultures)),
+            .. page.Items.Select(item => new FoundProduct(item.ProductId, item.Code, item.Name, item.Status.ToString(), item.MissingCultures, item.PriceAmount, item.PriceCurrency)),
         ]);
         return (found, found.Products.Count, page.Total);
     }
@@ -46,7 +48,10 @@ public sealed class FindProductsTool(IQueryDispatcher queries) : ReadTool<FindPr
     protected override IReadOnlyList<ResultTable> Tables(FoundProducts data) =>
     [
         ResultTable.Of("foundProducts",
-            [new("code", CellKind.Text), new("name", CellKind.Text), new("status", CellKind.Term), new("missingCultures", CellKind.Text)],
-            data.Products.Select(row => (IReadOnlyList<object?>)[row.Code, row.Name, row.Status, string.Join(", ", row.MissingCultures)])),
+            [new("code", CellKind.Text), new("name", CellKind.Text), new("price", CellKind.Money), new("status", CellKind.Term),
+                new("missingCultures", CellKind.Text)],
+            data.Products.Select(row => (IReadOnlyList<object?>)[row.Code, row.Name, row.Price, row.Status, string.Join(", ", row.MissingCultures)]),
+            // One shop, one currency: the first row's is the table's.
+            data.Products.FirstOrDefault()?.Currency),
     ];
 }

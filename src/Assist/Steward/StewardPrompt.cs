@@ -64,6 +64,10 @@ public static class StewardPrompt
             ? "No logré completar esta petición: la respuesta del modelo no era utilizable. Inténtalo de nuevo o reformula la pregunta."
             : "I could not complete this request: the model's reply was not usable. Try again or rephrase the question.";
 
+    /// <summary>What an answer says when all it held was the rows the panel draws.</summary>
+    public static string ItIsInTheTable(string culture) =>
+        culture == "es" ? "Lo que leí está en la tabla." : "What I read is in the table.";
+
     /// <summary>What a turn stopped by its cap says when the model had not finished.</summary>
     public static string StoppedAtTheCap(string culture) =>
         culture == "es"

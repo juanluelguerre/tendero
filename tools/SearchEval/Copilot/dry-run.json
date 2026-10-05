@@ -367,5 +367,29 @@
   {
     "when": "Approve all the pending proposals.",
     "say": "Done."
+  },
+  {
+    "when": "¿Cómo fueron las ventas de la última semana?",
+    "say": "Las ventas de la semana están leídas, y no hay ninguna.",
+    "calls": [
+      {
+        "tool": "sales_summary",
+        "arguments": {
+          "period": "Week"
+        }
+      }
+    ]
+  },
+  {
+    "when": "How many returns were opened today?",
+    "say": "There are no returns opened today.",
+    "calls": [
+      {
+        "tool": "returns_summary",
+        "arguments": {
+          "period": "Day"
+        }
+      }
+    ]
   }
 ]

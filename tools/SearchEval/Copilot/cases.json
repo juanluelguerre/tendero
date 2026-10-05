@@ -409,6 +409,38 @@
       "screen": null,
       "tools": [],
       "proposals": []
+    },
+    {
+      "id": "spanish-under-english",
+      "question": "¿Cómo fueron las ventas de la última semana?",
+      "culture": "en",
+      "screen": null,
+      "tools": [
+        {
+          "name": "sales_summary",
+          "arguments": {
+            "period": "Week"
+          }
+        }
+      ],
+      "proposals": [],
+      "answerLanguage": "es"
+    },
+    {
+      "id": "english-under-spanish",
+      "question": "How many returns were opened today?",
+      "culture": "es",
+      "screen": null,
+      "tools": [
+        {
+          "name": "returns_summary",
+          "arguments": {
+            "period": "Day"
+          }
+        }
+      ],
+      "proposals": [],
+      "answerLanguage": "en"
     }
   ]
 }

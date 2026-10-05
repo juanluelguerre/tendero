@@ -1118,6 +1118,7 @@
       "code": "Código",
       "name": "Nombre",
       "status": "Estado",
+      "price": "Precio",
       "missingCultures": "Nombres que faltan",
       "period": "Periodo",
       "revenue": "Ingresos",

@@ -67,6 +67,41 @@ public sealed class CopilotScoringTests
     }
 
     /// <summary>A question that only asks must not propose: a proposal nobody asked for fails the case.</summary>
+    /// <summary>A Spanish question under an English culture is answered in Spanish (P12-10): the case says so, and words decide.</summary>
+    [Fact]
+    public void An_answer_in_another_language_than_the_case_asks_for_fails_it()
+    {
+        var spanish = Case([]) with { AnswerLanguage = "es" };
+
+        var right = CopilotScoring.Judge(spanish, [], [], Codes, Measure with { Answer = "Esta semana no hay ventas registradas en la tienda." });
+        var wrong = CopilotScoring.Judge(spanish, [], [], Codes, Measure with { Answer = "There are no sales in the shop this week." });
+
+        Assert.True(right.Passed);
+        Assert.False(wrong.Passed);
+        Assert.False(wrong.RightLanguage);
+        Assert.Contains("answered in en, not es", Assert.Single(wrong.Problems));
+    }
+
+    /// <summary>A case that asks for no language is not judged on one, whatever the answer.</summary>
+    [Fact]
+    public void A_case_that_asks_for_no_language_is_not_judged_on_one()
+    {
+        var verdict = CopilotScoring.Judge(Case([]), [], [], Codes, Measure with { Answer = "Hecho." });
+
+        Assert.True(verdict.Passed);
+    }
+
+    /// <summary>The product names an answer lists are the catalogue's language, not the answer's: only its opening is read.</summary>
+    [Theory]
+    [InlineData("There are 3 lamps in the catalogue:\n\n- Lámpara de escritorio con carga\n- Flexo de taller para el banco\n- Lámpara de la mesa de la sala", "en")]
+    [InlineData("Hay 2 productos sin nombre en inglés.\n\n- The lamp of the desk\n- The bag for the gym", "es")]
+    [InlineData("OK.", null)]
+    [InlineData(null, null)]
+    public void The_language_is_read_from_the_answers_opening(string? answer, string? expected)
+    {
+        Assert.Equal(expected, CopilotScoring.LanguageOf(answer));
+    }
+
     [Fact]
     public void A_proposal_nobody_expected_fails_the_case()
     {

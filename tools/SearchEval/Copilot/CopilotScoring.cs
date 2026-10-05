@@ -18,13 +18,16 @@ public sealed record CopilotCases(int Version, IReadOnlyList<CopilotCase> Cases)
 /// <param name="Tools">The reads it should make, each with the arguments that matter.</param>
 /// <param name="Proposals">What it should store; empty means nothing — a question that
 /// only asks must not propose.</param>
+/// <param name="AnswerLanguage">The language the answer must be in, when the case is about
+/// that: a question in Spanish under an English culture is answered in Spanish (P12-10).</param>
 public sealed record CopilotCase(
     string Id,
     string Question,
     string Culture,
     CopilotScreen? Screen,
     IReadOnlyList<ExpectedTool> Tools,
-    IReadOnlyList<ExpectedProposal> Proposals);
+    IReadOnlyList<ExpectedProposal> Proposals,
+    string? AnswerLanguage = null);
 
 public sealed record CopilotScreen(string Page, string? Subject, string? SubjectProduct);
 
@@ -54,11 +57,12 @@ public sealed record TurnMeasure(
 /// <param name="RightTools">Every expected read was made.</param>
 /// <param name="ValidArguments">Every expected read was made with the arguments that matter.</param>
 /// <param name="ExactProposals">Exactly the expected proposals were stored, no more.</param>
+/// <param name="RightLanguage">The answer is in the language the case asks for; true when it asks for none.</param>
 public sealed record CaseVerdict(
     string Id, bool RightTools, bool ValidArguments, bool ExactProposals,
-    IReadOnlyList<string> Called, IReadOnlyList<string> Problems, TurnMeasure Measure)
+    IReadOnlyList<string> Called, IReadOnlyList<string> Problems, TurnMeasure Measure, bool RightLanguage = true)
 {
-    public bool Passed => RightTools && ValidArguments && ExactProposals && Measure.Error is null;
+    public bool Passed => RightTools && ValidArguments && ExactProposals && RightLanguage && Measure.Error is null;
 }
 
 public sealed record CopilotScore(
@@ -144,8 +148,35 @@ public static class CopilotScoring
             problems.Add("proposed besides: " + string.Join(", ", unmatched.Select(extra => $"{extra.Command} {extra.Subject}")));
         }
 
+        var rightLanguage = true;
+        if (expected.AnswerLanguage is { } wantedLanguage && LanguageOf(measure.Answer) is var spoken && spoken != wantedLanguage)
+        {
+            rightLanguage = false;
+            problems.Add($"answered in {spoken ?? "no language it could be told"}, not {wantedLanguage}");
+        }
+
         return new CaseVerdict(expected.Id, rightTools, validArguments, exact,
-            [.. calls.Select(call => call.Name)], problems, measure);
+            [.. calls.Select(call => call.Name)], problems, measure, rightLanguage);
+    }
+
+    private static readonly Dictionary<string, HashSet<string>> CommonWords = new()
+    {
+        ["es"] = ["el", "la", "los", "las", "de", "del", "que", "en", "hay", "un", "una", "es", "con", "para", "por", "se", "no", "y", "esta", "este", "han", "ha", "son", "al"],
+        ["en"] = ["the", "of", "and", "is", "are", "to", "in", "there", "with", "for", "you", "that", "this", "have", "has", "were", "was", "no", "it", "on", "at", "been"],
+    };
+
+    /// <summary>
+    /// The language an answer is written in, es or en, by its commonest words — no model.
+    /// Read from its first paragraph: what follows is often a list of product names,
+    /// which are in the catalogue's language and not the answer's. Null when the words
+    /// do not say (too short, or a tie).
+    /// </summary>
+    public static string? LanguageOf(string? answer)
+    {
+        var opening = (answer ?? "").Replace("\r\n", "\n", StringComparison.Ordinal).Trim().Split("\n\n", 2)[0];
+        var words = opening.ToLowerInvariant().Split([' ', '\n', ',', '.', ':', ';', '¿', '?', '¡', '!', '(', ')', '"', '*'], StringSplitOptions.RemoveEmptyEntries);
+        var counts = CommonWords.ToDictionary(pair => pair.Key, pair => words.Count(pair.Value.Contains));
+        return counts["es"] == counts["en"] ? null : counts["es"] > counts["en"] ? "es" : "en";
     }
 
     /// <summary>Every wanted field holds: exact ignoring case and spacing, or contained when it starts with ~.</summary>

@@ -507,7 +507,7 @@ notifications and alerts.
    `tendero.steward.turns` and the `ai-usage.json` dashboard beside `shop-pulse`;
    the four events, `proposals_reviewed` with a `kind` of proposals or claims; the
    `copilot` suite in `tools/SearchEval`, composed in-process over a disposable
-   Postgres, 24 cases; the Scripted model in rounds with `{from:tool:path}`; the
+   Postgres, 24 cases (26 since P12-10); the Scripted model in rounds with `{from:tool:path}`; the
    browser spec, in CI, over `Tendero__StewardScript`; the audit links a row to its
    proposal. **Measured** (`docs/analysis/steward-models.md`): the local 4B passes
    22 of 24, p50 22.5 s, the largest call 5,996 tokens — the window stays 8,192,
