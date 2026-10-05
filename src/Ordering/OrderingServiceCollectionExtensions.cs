@@ -111,6 +111,9 @@ public static class OrderingServiceCollectionExtensions
         services.AddScoped<IReadTool, ProductPerformanceTool>();
         services.AddScoped<IReadTool, ReturnsSummaryTool>();
 
+        // And what the storefront's assistant may read of it (phase 12b): a shopper's.
+        services.AddScoped<IReadTool, Features.Returns.ReturnPolicyTool>();
+
         return services;
     }
 }
