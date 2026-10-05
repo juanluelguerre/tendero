@@ -16,12 +16,33 @@
 }
 
 /* Tino's panel sits beside the page, fixed and the window's whole height, while it
-   is open on a wide screen; the page — its header with it — keeps its own width
-   beside it instead of running under it. Tried under a header that spanned the
-   window, as Steward's is (2026-10-05): this shop's header is a centred frame, and
-   it either left a gap above the panel or stopped lining up with the page. The
-   host's look that depends on a state, so it lives here (CLAUDE.md, *The host's
-   own look*). */
+   is open on a wide screen. The page — its header with it — keeps its own width
+   beside it, and **the page under the header is then what scrolls, not the window**: the window's
+   scrollbar would sit at the panel's right, as if it were the panel's, and this one
+   is at the page's edge, left of the panel, as the backoffice's page scrolls beside
+   Steward — and it starts under the awning, so the header has no bar beside it. The
+   shell carries the scroll position across (shell.ts). Tried under a
+   header that spanned the window, as Steward's is (2026-10-05): this shop's header
+   is a centred frame, and it either left a gap above the panel or stopped lining up
+   with the page. The host's look that depends on a state, so it lives here
+   (CLAUDE.md, *The host's own look*). */
 :host(.tino-docked) {
-  padding-inline-end: var(--container-panel);
+  height: 100dvh;
+  margin-inline-end: var(--container-panel);
+  overflow: hidden;
+}
+
+:host(.tino-docked) > [data-page] {
+  overflow-y: auto;
+}
+
+/* Docked, the header's rows start where the page starts and run to the panel's edge:
+   the search, Tino's door, the account and the basket sit at the panel's left, and
+   the awning under them already ran that far. The page's own frame stays centred in
+   the room the panel leaves; its left margin is worked out here so the brand keeps
+   to the page's edge (the author, 2026-10-05). */
+:host(.tino-docked) > header .page-frame {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline-start: max(var(--spacing-5), calc((100% - var(--container-app)) / 2 + var(--spacing-5)));
 }

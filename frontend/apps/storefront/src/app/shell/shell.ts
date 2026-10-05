@@ -1,5 +1,16 @@
 import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
-import { Component, computed, DOCUMENT, type ElementRef, inject, signal, viewChild } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DOCUMENT,
+  effect,
+  ElementRef,
+  inject,
+  Injector,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -65,6 +76,7 @@ export class Shell {
   private readonly taxonomy = inject(TaxonomyStore);
 
   private readonly drawer = viewChild.required<ElementRef<HTMLDialogElement>>('drawer');
+  private readonly page = viewChild.required<ElementRef<HTMLElement>>('page');
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
 
   protected readonly culture = this.cultureStore.active;
@@ -125,6 +137,27 @@ export class Shell {
 
     // Created with the shell, so the page wears the chosen theme from the start.
     inject(ThemeStore);
+
+    // Docked, the page under the header scrolls instead of the window (shell.css): where
+    // the shopper was goes with them across the change, in both directions — the DOM's,
+    // so an effect.
+    const injector = inject(Injector);
+    let docked = false;
+    effect(() => {
+      const now = this.tino.docked();
+      if (now === docked) return;
+      docked = now;
+      const view = this.document.defaultView;
+      const page = this.page().nativeElement;
+      const at = now ? (view?.scrollY ?? 0) : page.scrollTop;
+      afterNextRender(
+        () => {
+          if (now) page.scrollTop = at;
+          else view?.scrollTo(0, at);
+        },
+        { injector },
+      );
+    });
 
     // A navigation is an answer: whatever was open to find it closes.
     this.router.events

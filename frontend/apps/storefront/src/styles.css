@@ -25,12 +25,26 @@
     box-sizing: border-box;
   }
 
+  /* Scrollbars are thin and quiet everywhere, as in the backoffice: the thumb in the
+     hairline's own colour on no track. The standard properties, no dependency. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-hairline-strong) transparent;
+  }
+
   html {
     /* The dev server can serve a page shorter than the viewport; without this the
        scrollbar appears and disappears between searches and the whole layout
        jumps sideways by its width. */
     scrollbar-gutter: stable;
     -webkit-text-size-adjust: 100%;
+  }
+
+  /* With Tino's panel docked the shell scrolls, beside the panel, and the window does
+     not: there is no scrollbar of the window's to keep room for at the panel's right. */
+  html:has(storefront-shell.tino-docked) {
+    overflow: hidden;
+    scrollbar-gutter: auto;
   }
 
   body {

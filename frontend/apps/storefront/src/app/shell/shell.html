@@ -52,10 +52,12 @@
 
       <!-- The shop's one search, in the same place on every page, as the large
            shops have it: the search page no longer carries a second box
-           (the author, the redesign's second walkthrough). -->
+           (the author, the redesign's second walkthrough). At the row's right end,
+           beside Tino's door, as the backoffice's search sits beside Steward's
+           (the author, 2026-10-05): the box pushes itself and what follows it there. -->
       <ng-container *ngTemplateOutlet="search; context: { $implicit: 'row' }" />
 
-      <div class="ms-auto flex items-center gap-3 max-md:ms-0">
+      <div class="flex items-center gap-3">
         <!-- Tino's door (phase 12b), where Steward's is in the backoffice: before the
              account, outlined in clay because it is an agent's, pressed while its
              panel is open, its icon alone on a phone. Where Tino cannot be asked the
@@ -199,18 +201,25 @@
   </div>
 
   <!-- The signature, and the only decoration in the system. It marks where the
-       chrome ends and the shop begins. -->
-  <hr class="awning" />
+       chrome ends and the shop begins. It never gives its height away: with Tino
+       docked the shell is a column of the window's height that scrolls, and a rule
+       with nothing in it was the one item a flex column could shrink to nothing. -->
+  <hr class="awning flex-none" />
 
-  <main id="main" class="page-frame flex-1 pt-6 pb-8 max-md:pt-5 max-md:pb-6"><router-outlet /></main>
+  <!-- The page under the chrome. With Tino docked it is what scrolls — not the window
+       and not the shell — so its scrollbar starts under the awning and stops at the
+       panel's edge, and the header never has a bar beside it (shell.css). -->
+  <div class="flex min-h-0 flex-1 flex-col" data-page #page>
+    <main id="main" class="page-frame flex-1 pt-6 pb-8 max-md:pt-5 max-md:pb-6"><router-outlet /></main>
 
-  <storefront-compare-tray />
+    <storefront-compare-tray />
 
-  <footer class="border-t border-hairline">
-    <div class="page-frame flex flex-wrap items-center justify-between gap-3 py-5 text-2xs">
-      <span class="muted">{{ t('brand.name') }} · {{ t('brand.tagline') }}</span>
-    </div>
-  </footer>
+    <footer class="border-t border-hairline">
+      <div class="page-frame flex flex-wrap items-center justify-between gap-3 py-5 text-2xs">
+        <span class="muted">{{ t('brand.name') }} · {{ t('brand.tagline') }}</span>
+      </div>
+    </footer>
+  </div>
 
   <!-- The phone's menu: a modal dialog, so the platform traps the focus, closes
        on Esc and makes the page behind it inert. It floats, so it is allowed a
@@ -247,7 +256,7 @@
   <ng-template #search let-variant>
     <form
       class="relative flex"
-      [class]="variant === 'row' ? 'max-w-search flex-1 max-md:hidden' : 'w-full'"
+      [class]="variant === 'row' ? 'ms-auto max-w-search flex-1 max-md:hidden' : 'w-full'"
       role="search"
       (submit)="$event.preventDefault(); find(box.value)"
     >
