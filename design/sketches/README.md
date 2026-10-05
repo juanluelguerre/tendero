@@ -32,6 +32,14 @@ Excalidraw has no colour variables, so every stroke is a literal hex, and
 `design-mockups.spec.ts` reads these files too: a hex the palette does not own
 fails it. Article 01 tells how the two compared.
 
+**Which tool for which rung** (2026-10-05, after six screens of one feature were
+drawn in both — `../unpublished/mockups/storefront-tino/`): **Excalidraw while
+what the screen does can still change** — a sketch, and any diagram; **pen.dev
+once that is settled and how it looks is the question** — a mockup, with the
+shop's fonts, real pictures and the tokens by name. A mockup forced out of
+Excalidraw competes badly; a sketch polished in pen.dev moves the talk to the
+button's colour before anyone has asked whether the button should exist.
+
 ## Until 2026-09-21 this folder was empty, and that was the finding
 
 Tendero never drew one. The sketch's job here was done by **prose** — `P8-11` in

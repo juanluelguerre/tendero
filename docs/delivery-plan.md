@@ -875,8 +875,8 @@ call are built there.
 - [ ] `P12b-2b` **After-sale tools**, at the author's request (2026-09-26): *where is my order?* and *can I return it?*, answered from **that customer's** orders, returns and the return policy — the place the big shops get the most value from retrieval (Klarna reported its assistant handling two thirds of its service chats in 2024). Read-only and scoped to the signed-in principal: an order is found through `IPrincipalAccessor`, never by a number typed into the chat; opening a return stays the storefront's own form, which the answer links to — the assistant explains, the customer acts — **M**
 - [ ] `P12b-3` Grounding before sending: every factual sentence is held to the claim or product field it cites through the support port of `P10-0`; a sentence nothing supports is dropped, and counted — **M**
 - [ ] `P12b-4` The storefront conversation: es and en, one clay action, agent-driven actions in clay; **degrades to the search results** when no model answers (invariant 8), and the test proves it — **M**
-- [ ] `P12b-5` `ISpeechToText` with two adapters compared under one protocol: the browser's Web Speech API (no server, but Chrome sends the audio to Google) and **whisper.cpp** in a container, weights pinned by revision (ADR 0031), limits sized from a measurement; the text box is the non-AI path — **M**
-- [ ] `P12b-6` Voice in the assistant and in the search box on mobile; accessibility checked with the tokens and the keyboard, not assumed — **M**
+- [ ] `P12b-5` *(postponed 2026-10-05 by the author to phase 13 and after, with the image work — not part of 12b's close)* `ISpeechToText` with two adapters compared under one protocol: the browser's Web Speech API (no server, but Chrome sends the audio to Google) and **whisper.cpp** in a container, weights pinned by revision (ADR 0031), limits sized from a measurement; the text box is the non-AI path — **M**
+- [ ] `P12b-6` *(postponed with `P12b-5`)* Voice in the assistant and in the search box on mobile; accessibility checked with the tokens and the keyboard, not assumed — **M**
 - [ ] `P12b-7` `assistant` eval suite in `SearchEval`: questions with the claims each answer must cite; a fact with no citation fails, no judge — **M**
 - [ ] `P12b-8` ADR — **S**
 
@@ -885,7 +885,7 @@ reads — typed tools only, the grounding check before anything is shown. And th
 voice route that looks cheapest sends shoppers' audio to a third party: that is
 a decision for the author with the comparison in front of them, not a default.
 
-**Demo.** Spoken: *"una sartén que valga para inducción y no pese mucho"*. The
+**Demo.** Typed (spoken, once voice arrives with phase 13): *"una sartén que valga para inducción y no pese mucho"*. The
 answer lists two pans, and each claim carries its chip: *"base de acero para
 inducción" — approved by the shopkeeper*. The model is stopped; the same question
 typed returns the search results, and says so.
@@ -902,6 +902,10 @@ what a microphone changes about the questions people ask. `#AIEngineering #RAG #
 ## Phase 13 · Multimodal and the kit solver
 
 `no empezada` · priority **medium** · size **L**
+
+**Carried here on 2026-10-05, by the author**: voice (`P12b-5`, `P12b-6` — the
+tasks stay written in phase 12b and are done here or after), beside the image
+work already waiting (`docs/analysis/image-models.md`).
 
 - [ ] `P13-1` Tokenizer-fidelity fixture test **before** committing to in-process ONNX — **S**
 - [ ] `P13-2` SigLIP 2 via ONNX Runtime; `IImageEmbeddingGenerator` — **L**
