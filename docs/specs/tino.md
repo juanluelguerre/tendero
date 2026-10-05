@@ -88,12 +88,14 @@ it cannot show (no "popular", no "best" without the figure and its source).
 ### An answer
 
 The model does not write the answer's text freely. Its last message is held to a
-JSON schema (the local server constrains the output to it), one of four kinds:
+JSON schema (the local server constrains the output to it), one of five kinds
+(`shop` was added on 2026-10-05, after the spike in `docs/analysis/tino-models.md`):
 
 | Kind | What the model writes | What code draws |
 |---|---|---|
 | `products` | up to four product codes, and for each one to three **reasons**: a sentence and the id of the fact it cites | a card per product, **built by code from the read** — name, picture, price, availability, never the model's — and under it each reason with its **source chip**; *See all 14 results* links to the search the tool ran |
 | `order` | sentences about an order, each citing a fact of that order or of the policy | the order's status line built by code, the sentences with their chips, and a link to the order's page (where a return is opened) |
+| `shop` | one to three sentences about the shop itself — its return policy — each citing a fact of the shop | the sentences with their chips |
 | `ask` | one question back to the shopper | the question |
 | `noData` | what was asked that the shop does not know | *This product's details don't say whether …* (*sin dato*), and the nearest thing they do say, cited |
 
