@@ -58,10 +58,36 @@ public sealed record ReadAnswer(
     object Data, int Rows, int? Total, IReadOnlyList<ResultTable>? Tables = null, IReadOnlyList<Fact>? Facts = null,
     IReadOnlyList<Subject>? Subjects = null);
 
-/// <summary>A product a read returned (phase 12b): the shopper's assistant may name it,
-/// and names no product that is not one of these.</summary>
-/// <param name="Key">The product's public code — what a <see cref="Fact"/> about it has as its subject.</param>
-public sealed record Subject(string Key, string Name);
+/// <summary>What a read can be about, besides the shop itself.</summary>
+public enum SubjectKind
+{
+    Product,
+
+    /// <summary>An order of the asking shopper's.</summary>
+    Order,
+}
+
+/// <summary>
+/// Something a read returned (phase 12b): a product, or an order of the asking
+/// shopper's. The shopper's assistant may name it, and names nothing that is not
+/// one of these.
+/// </summary>
+/// <param name="Key">What a <see cref="Fact"/> about it has as its subject: a product's
+/// public code, or an order's reference within this turn (<c>order1</c>).</param>
+/// <param name="Reference">What the storefront links to — an order's id. It is never
+/// part of what the model is shown: a read's subjects are not its data.</param>
+public sealed record Subject(string Key, string Name, SubjectKind Kind = SubjectKind.Product, string? Reference = null);
+
+/// <summary>
+/// What the shopper is looking at when they ask, for a read that needs it and must
+/// not get it from the model (phase 12b): the order on the screen. Scoped to the
+/// request; the turn sets it from what the browser sent beside the question, and
+/// whoever reads it checks, as the order's own page does, that the asker may.
+/// </summary>
+public sealed class ShopperScreen
+{
+    public string? OrderId { get; set; }
+}
 
 /// <summary>Where a fact comes from: what the shopper is shown beside a sentence that cites it.</summary>
 public enum FactSource
@@ -80,6 +106,9 @@ public enum FactSource
 
     /// <summary>The asking shopper's own order.</summary>
     Order,
+
+    /// <summary>Something the shop tells whoever asks — that order questions need signing in.</summary>
+    Notice,
 }
 
 /// <summary>
