@@ -192,7 +192,12 @@
          moves image BYTES around and never decodes a pixel (ADR 0011). This is
          the first thing that needs to, because seed/IMAGES-TODO.md asks for
          1400px WebP at quality 82 with no alpha channel, and SDXL emits a 1024px
-         tensor. Resize, flatten onto an opaque canvas, encode. -->
+         tensor. Resize, flatten onto an opaque canvas, encode.
+         Since phase 13a it is also in src/AI, approved by the author on
+         2026-10-06 (tier 1, linked): a stored picture is WebP and llama.cpp's
+         server does not decode it, so it is written again as PNG, in memory,
+         before a model is sent it (Chat/Pictures.cs). The shop still stores and
+         serves bytes it never decodes; what decodes is the path to a model. -->
     <PackageVersion Include="SkiaSharp" Version="4.153.1" />
     <!-- SkiaSharp.NativeAssets.Linux 4.153.1 - MIT, verified in the nuspec, and
          it declares no dependency of its own. It is not an optional extra: the

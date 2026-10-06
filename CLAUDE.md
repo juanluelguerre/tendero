@@ -76,6 +76,7 @@ dotnet run --project src/AppHost              # full stack via Aspire
 Tendero__Observability=true dotnet run --project src/AppHost  # + the Grafana stack (or profile https-observability)
 Tendero__Steward=true dotnet run --project src/AppHost        # + Steward's local model (6 GB, on the GPU when there is one; ADR 0053; or profile https-steward; profile https-all turns on vectors, knowledge, Steward and Tino)
 Tendero__Tino=true dotnet run --project src/AppHost           # + Tino, the storefront's assistant, on the same local model and the support scorer — only on a GPU; without one it stays off and says so; or profile https-tino
+Tendero__Vision=true dotnet run --project src/AppHost         # + the local model's eyes: its vision projector, converted once (8.8 GB of download), so the same model reads pictures — only on a GPU (ADR 0031; docs/specs/images.md)
 Tendero__StewardScript=frontend/apps/backoffice-e2e/steward.script.json dotnet run --project src/AppHost  # Steward from a script (CI's browser spec)
 Tendero__TinoScript=frontend/apps/storefront-e2e/tino.script.json dotnet run --project src/AppHost      # Tino from a script, on any machine (CI's browser spec; TINO_SCRIPTED=1 to run it locally)
 dotnet build -warnaserror                     # warnings are errors, always

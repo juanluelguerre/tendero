@@ -7,6 +7,15 @@
     "outputTokens": 15
   },
   {
+    "when": "what is drawn",
+    "pictures": 1,
+    "say": "A frying pan."
+  },
+  {
+    "when": "what is drawn",
+    "say": "I was sent no picture."
+  },
+  {
     "when": "hello",
     "say": "Hello.",
     "inputTokens": 12,

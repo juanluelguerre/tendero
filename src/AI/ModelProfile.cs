@@ -44,6 +44,14 @@ public sealed class ModelProfile
 
     public decimal OutputPrice { get; init; }
 
+    /// <summary>
+    /// Whether the model behind this profile reads pictures (phase 13a): the local
+    /// one does only when its server was started with the vision projector, and
+    /// nothing in a profile's address says so. Declared, so a feature that needs a
+    /// picture read asks before it calls and has its path without one.
+    /// </summary>
+    public bool ReadsPictures { get; init; }
+
     /// <summary>The window the profile is driven against.</summary>
     public int ContextTokens { get; init; } = 8192;
 

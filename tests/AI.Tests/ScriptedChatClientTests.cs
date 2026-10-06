@@ -180,6 +180,26 @@ public sealed class ScriptedChatClientTests
         Assert.Equal(ScriptedChatClient.NotScripted, answer.Text);
     }
 
+    /// <summary>
+    /// A step may ask for pictures (phase 13a): it answers only a message that
+    /// carries that many, so a pipeline that forgot to send the picture gets a
+    /// different answer in CI and not the right one by luck.
+    /// </summary>
+    [Theory]
+    [InlineData(1, "A frying pan.")]
+    [InlineData(0, "I was sent no picture.")]
+    [InlineData(2, "I was sent no picture.")]
+    public async Task A_step_that_asks_for_pictures_answers_only_a_message_that_carries_that_many(int pictures, string said)
+    {
+        var picture = Pictures.ForModel(PicturesTests.Encoded(SkiaSharp.SKEncodedImageFormat.Webp));
+        List<AIContent> contents = [.. Enumerable.Repeat<AIContent>(picture, pictures), new TextContent("Say what is drawn.")];
+
+        var answer = await Scripted().GetResponseAsync(
+            [new ChatMessage(ChatRole.User, contents)], cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal(said, answer.Text);
+    }
+
     [Fact]
     public async Task A_question_it_was_not_scripted_for_says_so()
     {

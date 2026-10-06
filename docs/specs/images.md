@@ -47,6 +47,7 @@ before the batch that would cross it.
 | Batch | Date | Pictures | Calls | Spent (about) | Running total | Outcome |
 |---|---|---|---|---|---|---|
 | 1 | 2026-10-06 | `B10SHO0102` to `B10SHO0106` | 5 | $0.15 | $0.15 | **accepted by the author**, with `B10SHO0106` to be redrawn: an emblem on its side |
+| 2 | 2026-10-06 | `B10SHO0107`, `B10SHO0108`, `B10SHI0201` to `B10SHI0203` | 5 or 6 (one picture took the time of two) | $0.15–0.18 | $0.39 at most | **the first batch through the shop model's five checks: 5 of 5 pass**; shown to the author, waiting |
 | 1, redraws | 2026-10-06 | `B10SHO0106`, twice | 2 | $0.06 | $0.21 | the first redraw carried the emblem again — the hand-wash symbol, drawn from *"Hand washable."* in the description; with that sentence kept out of the prompt (`WithoutCareInstructions`), the second is clean |
 
 A picture is accepted only when it is **right for its product's description** and
@@ -88,9 +89,29 @@ checks. Measured on the 23 pictures there are: all 23 pass the five questions; t
 description check refuses no right picture and **misses 3 to 4 wrong ones in 23**,
 always a right kind of object with something wrong about it (one pan for a set of
 three, a backpack for a duffel) — so a person's look at each batch stays
-(`tools/SeedImages/README.md`). *Still to do in this step*: the shop's side — the
-projector in the AppHost's model, a reader that turns the store's WebP into what
-the server decodes, the scripted client carrying a picture, the store's path.
+(`tools/SeedImages/README.md`).
+
+*The second half, the shop's side (2026-10-06)*:
+
+- **`Tendero__Vision=true`** starts the local model with its projector, after a
+  `vision-projector` job has converted it (limited to 4 GB: the conversion's own
+  memory peaked at 2.6). Only on a GPU, as Tino: it is where it was measured. The
+  API is then told the `local` profile reads pictures.
+- **`ModelProfile.ReadsPictures`**: declared, because nothing in a profile's
+  address says whether its server has eyes. What needs a picture read asks first,
+  and takes its path without a model when the answer is no.
+- **`Pictures.ForModel`** (`src/AI/Chat`): the one place that turns a stored
+  picture into what a model is sent — decoded and written again as PNG, in memory.
+- **The scripted client** answers a step marked `"pictures": n` only when the
+  message carries that many, so a pipeline that forgot the picture fails in CI.
+  **The in-process ONNX client refuses** a conversation with a picture in it; it
+  used to drop it and answer anyway.
+- **Proved against the real model**: a contract test sends a WebP through the
+  shop's own factory to the server started as the stack starts it; the model names
+  its colour and the picture's tokens are in `Usage`. It skips where no such
+  server runs. The whole chat contract passes on the server with the projector too.
+- **Not needed after all**: `Catalog:Images:RootPath` in the AppHost. The spike
+  wanted a container to read the store; the API reads it and sends the bytes.
 
 One model serves text and pictures (5.5 GB of 8 with the projector; two do not
 fit). What changes in code:

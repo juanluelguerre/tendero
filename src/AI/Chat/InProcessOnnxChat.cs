@@ -49,6 +49,9 @@ internal sealed class OnnxGenerationChatClient : IChatClient
     {
         ArgumentNullException.ThrowIfNull(messages);
 
+        // The template below is fed each message's text and nothing else.
+        Pictures.RefuseIn(messages, "The in-process ONNX profile");
+
         // One generation at a time: the model holds its own memory, and the
         // extractors ask one product at a time anyway.
         lock (gate)
