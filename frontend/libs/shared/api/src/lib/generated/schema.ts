@@ -2276,6 +2276,7 @@ export interface components {
             missingCultures: string[];
             /** Format: date-time */
             updatedAt: string;
+            images: components["schemas"]["ReviewedImage"][];
         };
         ProductImageView: {
             imageId: string;
@@ -2683,6 +2684,12 @@ export interface components {
         };
         /** @enum {unknown} */
         ReviewOutcome: "Approved" | "Rejected" | "NotWaiting" | "WeakSupport" | "NotFound";
+        ReviewedImage: {
+            id: string;
+            alt: {
+                [key: string]: string;
+            };
+        };
         SalesFigures: {
             /** Format: double */
             revenue: number;

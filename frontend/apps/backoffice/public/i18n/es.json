@@ -966,7 +966,14 @@
     "yes": "Sí",
     "no": "No",
     "loading": "Cargando el producto…",
-    "failed": "No se ha podido cargar este producto."
+    "failed": "No se ha podido cargar este producto.",
+    "altText": {
+      "title": "Qué dice cada imagen",
+      "hint": "Texto alternativo: lo que se le dice a quien no puede ver la imagen. En los dos idiomas, una frase en cada uno.",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "notSaved": "No se guardó: hace falta una frase en cada idioma, de 300 caracteres como mucho."
+    }
   },
   "palette": {
     "title": "Ir a, o buscar",

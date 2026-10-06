@@ -56,6 +56,29 @@ public sealed class ReviewProductTests
         Assert.Equal(22m, litres.Number);
     }
 
+    /// <summary>
+    /// What each picture says, per language and as stored (phase 13a): a language a
+    /// picture is not described in is absent, never filled from the other — the
+    /// screen where a shopkeeper types alt text shows exactly what is missing.
+    /// </summary>
+    [Fact]
+    public async Task Shows_what_each_picture_says_in_each_language_as_stored()
+    {
+        var product = Product.Create(Clock, LocalizedText.From("es", "Taza"), new Money(9m, "EUR"));
+        product.AddImage(Clock, new ImageId("cover"), LocalizedText.Both("A white mug.", "Una taza blanca."));
+        product.AddImage(Clock, new ImageId("side"), LocalizedText.From("es", "La taza de lado."));
+        product.AddImage(Clock, new ImageId("top"));
+
+        var review = (await Handler(product).HandleAsync(new ReviewProductQuery(product.Code, "en"), TestContext.Current.CancellationToken))!;
+
+        Assert.Equal(["cover", "side", "top"], review.Images.Select(image => image.Id));
+        Assert.Equal(("Una taza blanca.", "A white mug."), (review.Images[0].Alt["es"], review.Images[0].Alt["en"]));
+        Assert.Equal(["es"], review.Images[1].Alt.Keys);
+        Assert.Empty(review.Images[2].Alt);
+        // The ids alone are still there, in the same order, for whoever only draws them.
+        Assert.Equal(review.Images.Select(image => image.Id), review.ImageIds);
+    }
+
     [Fact]
     public async Task Names_a_defined_attribute_by_its_label_in_the_culture_asked_for()
     {

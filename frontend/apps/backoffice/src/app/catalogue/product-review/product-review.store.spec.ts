@@ -38,6 +38,39 @@ describe('the product review store', () => {
     expect(reviews()).toEqual([]);
   });
 
+  /** The path with no model: what a shopkeeper types is written by the same command an approval runs, then the product is read again. */
+  it('writes the alt text a person typed for a picture, in both languages, and reads the product again', async () => {
+    const store = TestBed.inject(ProductReviewStore);
+    TestBed.runInInjectionContext(() => store.follow(signal('TAZA')));
+    TestBed.tick();
+    http.expectOne((req) => req.url.endsWith('/TAZA/review')).flush({ productId: 'p1', code: 'TAZA', images: [] });
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+
+    store.describe('p1', 'cover', { es: 'Una taza blanca.', en: 'A white mug.' });
+    const written = http.expectOne(`${Products}/p1/images/cover/alt`);
+    expect([written.request.method, written.request.body, store.saving()]).toEqual([
+      'PUT',
+      { es: 'Una taza blanca.', en: 'A white mug.' },
+      'cover',
+    ]);
+    written.flush({ productId: 'p1', imageId: 'cover', outcome: 'Described' });
+    await new Promise((resolve) => setTimeout(resolve));
+    TestBed.tick();
+
+    expect([store.saving(), store.notSaved(), reviews()]).toEqual([null, null, ['/TAZA/review']]);
+  });
+
+  /** Refused — a blank language, a sentence too long — the words stay in their boxes and the picture is named as not saved. */
+  it('says which picture was not saved when the words are refused, and reads nothing again', () => {
+    const store = TestBed.inject(ProductReviewStore);
+
+    store.describe('p1', 'cover', { es: '', en: 'A white mug.' });
+    http.expectOne(`${Products}/p1/images/cover/alt`).flush('bad', { status: 400, statusText: 'Bad Request' });
+
+    expect([store.saving(), store.notSaved(), reviews()]).toEqual([null, 'cover', []]);
+  });
+
   it('follows the product it is given', () => {
     const store = TestBed.inject(ProductReviewStore);
     const code = signal('MOCHILA-30L');

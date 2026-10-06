@@ -104,5 +104,11 @@ step redrawn against the code.
   the model did not describe — the picture in the pane, a sentence corrected and
   approved, the catalogue written with the person's words. Captures 05 to 07 in
   the phase's report.
-- **Still to build**: the alt text field on the product's own screen — the path
-  with no model has its endpoint and no screen yet.
+- **The product's own screen** built 2026-10-07: the review a product opens in
+  (the review queue's pane and the Products screen's) lists each picture with what
+  it says in each language, in boxes, and a quiet *Save* that wakes when the words
+  change. `ProductForReview.images` carries them, as stored. It is the path with
+  no model, seen in a browser with every model stopped.
+
+**I-3 is built.** What it leaves for the phase's close: Stryker over the projects
+it touched, the phase's ADR, and the event's first numbers.

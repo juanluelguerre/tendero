@@ -966,7 +966,14 @@
     "yes": "Yes",
     "no": "No",
     "loading": "Loading the product…",
-    "failed": "Could not load this product."
+    "failed": "Could not load this product.",
+    "altText": {
+      "title": "What each picture says",
+      "hint": "Alt text: what someone who cannot see the picture is told. Both languages, a sentence each.",
+      "save": "Save",
+      "saving": "Saving…",
+      "notSaved": "Not saved: both languages need a sentence, 300 characters at most."
+    }
   },
   "palette": {
     "title": "Go to, or find",

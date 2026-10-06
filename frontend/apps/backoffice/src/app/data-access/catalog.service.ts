@@ -9,6 +9,8 @@ import type {
   DefineVariantsResponse,
   ImportResult,
   ProductForReview,
+  SetImageAltTextRequest,
+  SetImageAltTextResponse,
   ProductListPage,
   ProductStatus,
   PublishProductResponse,
@@ -107,6 +109,17 @@ export class CatalogService {
     return this.http.get<ProductForReview>(`${this.baseUrl}/api/catalog/products/${encodeURIComponent(code)}/review`, {
       params: new HttpParams().set('culture', culture),
     });
+  }
+
+  /**
+   * Says what one of a product's pictures shows, in both languages (phase 13a):
+   * the path with no model, and the same command an approved proposal runs.
+   */
+  describeImage(productId: string, imageId: string, alt: SetImageAltTextRequest): Observable<SetImageAltTextResponse> {
+    return this.http.put<SetImageAltTextResponse>(
+      `${this.baseUrl}/api/catalog/products/${productId}/images/${encodeURIComponent(imageId)}/alt`,
+      alt,
+    );
   }
 
   import(source = 'seed'): Observable<ImportResult> {

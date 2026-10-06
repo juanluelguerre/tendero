@@ -7229,7 +7229,8 @@
           "imageIds",
           "attributes",
           "missingCultures",
-          "updatedAt"
+          "updatedAt",
+          "images"
         ],
         "type": "object",
         "properties": {
@@ -7294,6 +7295,12 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewedImage"
+            }
           }
         }
       },
@@ -8869,6 +8876,24 @@
           "WeakSupport",
           "NotFound"
         ]
+      },
+      "ReviewedImage": {
+        "required": [
+          "id",
+          "alt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "alt": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
       },
       "SalesFigures": {
         "required": [

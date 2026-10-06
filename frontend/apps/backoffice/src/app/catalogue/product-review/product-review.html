@@ -59,6 +59,49 @@
       </section>
     }
 
+    @if (product.images.length > 0) {
+      <!-- What each picture says, per language as stored: an empty box is a picture a
+           screen reader has nothing to say about. Typed here, with no model: the same
+           command an approved proposal runs (phase 13a). -->
+      <section class="grid gap-2">
+        <h3 class="eyebrow">{{ t('altText.title') }}</h3>
+        <p class="m-0 text-3xs text-muted">{{ t('altText.hint') }}</p>
+        @for (draft of altsForm; track $index) {
+          @let picture = alts()[$index];
+          <div class="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+            <span class="relative size-control-xl overflow-hidden rounded-md border border-hairline bg-raised">
+              <img class="object-contain" [ngSrc]="images.of(picture.id)" fill alt="" />
+            </span>
+            <div class="grid gap-1">
+              @for (culture of cultures; track culture) {
+                <label class="grid gap-hair text-3xs text-muted">
+                  <span>{{ t('culture.' + culture) }}</span>
+                  <textarea
+                    class="rounded-md border border-hairline-strong bg-surface p-2 text-xs text-body"
+                    rows="2"
+                    [formField]="draft[culture]"
+                  ></textarea>
+                </label>
+              }
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  class="button button--quiet"
+                  [disabled]="!changed($index) || store.saving() === picture.id"
+                  (click)="save(product.productId, $index)"
+                >
+                  {{ store.saving() === picture.id ? t('altText.saving') : t('altText.save') }}
+                </button>
+                @if (store.notSaved() === picture.id) {
+                  <span class="text-3xs text-danger" role="alert">{{ t('altText.notSaved') }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
     @if (product.attributes.length > 0) {
       <section class="grid gap-1">
         <h3 class="eyebrow">{{ t('attributes') }}</h3>

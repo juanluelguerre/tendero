@@ -41,7 +41,12 @@ public sealed record ProductForReview(
     IReadOnlyList<string> ImageIds,
     IReadOnlyList<ProductAttributeView> Attributes,
     IReadOnlyList<string> MissingCultures,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    /// <summary>Each picture with what it says, in the gallery's order: where a shopkeeper reads and types its alt text.</summary>
+    IReadOnlyList<ReviewedImage> Images);
+
+/// <param name="Alt">Culture to text, as stored: a culture that is absent is a picture not described in it.</param>
+public sealed record ReviewedImage(string Id, IReadOnlyDictionary<string, string> Alt);
 
 public sealed class ReviewProductValidator : AbstractValidator<ReviewProductQuery>
 {
@@ -114,7 +119,11 @@ public sealed class ReviewProductHandler(
             // code: a review hides nothing the product carries.
             [.. product.Attributes.Select(value => ProductAttributes.Render(value, attributes.ByCode(value.Code), query.Culture))],
             [.. Cultures.Where(culture => !product.Name.Cultures.Contains(culture))],
-            product.UpdatedAt);
+            product.UpdatedAt,
+            [
+                .. product.Images.OrderBy(image => image.SortOrder).Select(image => new ReviewedImage(
+                    image.Id.Value, image.Alt is { } alt ? AsStored(alt) : new Dictionary<string, string>())),
+            ]);
     }
 
     /// <summary>The texts as stored, per culture, with no fallback: an absence is the finding.</summary>

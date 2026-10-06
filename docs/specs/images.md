@@ -150,6 +150,18 @@ author. **A-1 is built**: `Product.DescribeImage`, the command `SetImageAltText`
 — the path with no model, first — and an import that carries no alt text now keeps
 the one the product has.
 
+*As built (2026-10-07)*: all six slices. A shopkeeper asks for a batch of five
+from the Proposals list; the job reads each picture with the profile that says it
+reads pictures and stores a proposal carrying the picture; the review shows the
+picture beside two boxes of words, and approving sends the person's corrections
+when there are any — a third decision, for every proposal whose change is words,
+with what the model wrote kept beside what was applied. Steward is not offered the
+command: it cannot see a picture. A proposal says who proposed it. The product's
+own screen has the same boxes with no model behind them. Seen end to end on the
+real stack with `Tendero__Vision=true`. **Rulings the author took on the way**: an
+edit is a decision of its own; the command is a job's and not Steward's; the
+review names the proposer (`docs/plans/2026-10-06-images-i3-alt-text.md`).
+
 ### I-4 · What a picture says, as claims — and against the data
 
 - **Claims.** `SourceKind.ProductImage` joins `ProductDescription`. Its document
