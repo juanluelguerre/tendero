@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.SharedKernel;
 
@@ -137,21 +136,8 @@ public static partial class ClaimVetting
 /// purpose — function words, counted — and enough to catch what P10-0 saw: one
 /// "Spanish" statement in six written in English at 4 bits, every one at 2B.
 /// </summary>
-public static partial class StatementLanguage
+public static class StatementLanguage
 {
-    private static readonly Dictionary<string, HashSet<string>> FunctionWords = new()
-    {
-        ["es"] = ["el", "la", "los", "las", "es", "de", "con", "y", "se", "que", "un", "una", "para", "en", "tiene", "del", "sin"],
-        ["en"] = ["the", "is", "of", "with", "and", "a", "an", "it", "for", "in", "has", "to", "can", "without"],
-    };
-
-    public static bool Is(string text, string language)
-    {
-        var words = Words().Matches((text ?? "").ToLowerInvariant()).Select(match => match.Value).ToArray();
-        var other = language == "es" ? "en" : "es";
-        return words.Count(FunctionWords[language].Contains) >= words.Count(FunctionWords[other].Contains);
-    }
-
-    [GeneratedRegex("[a-záéíóúñü]+")]
-    private static partial Regex Words();
+    /// <summary>The kernel's count (<see cref="WrittenLanguage"/>), which an agent's answer is held to as well.</summary>
+    public static bool Is(string text, string language) => WrittenLanguage.Is(text, language);
 }

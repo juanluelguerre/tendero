@@ -199,10 +199,26 @@ instructions — unlike Tino, where code sets the language of the reads and writ
 its own sentences. Two of the four runs had a second line, last in the prompt
 (*Write your answer in English only.*, `…06b`): **it changed nothing, and was taken
 out again.** A Spanish question pulls the 4B to Spanish whatever it is told.
-What is left to choose is the author's: accept it (the shopkeeper who writes
-Spanish gets Spanish), have code tell the answer's language
-(`CopilotScoring.LanguageOf` already does, with no model) and ask again, or leave
-it to S-7's hosted profiles.
+**Ruled by the author the same day: both agents answer in the language chosen in
+the menu.** So code holds it (prompt `steward-2026-10-06b`): an answer plainly in
+another language than the screen's — told by its function words, no model
+(`WrittenLanguage`, in the kernel, the count Knowledge already held a claim's
+statement to) — is handed back to the same profile to be said again, with no tools
+and nothing else to read. What comes back is shown only if it is in the screen's
+language **and states the same figures, no more and no fewer**; otherwise the
+answer stands as first written. One more call, only on the turns that need it.
+
+| Run (a database each) | `spanish-under-english` | The answer | Whole suite |
+|---|---|---|---|
+| 5 | pass, 2.9 s | *Last week's sales were 0 € in revenue, 0 orders, 0 units…* | 24 of 26 |
+| 6 | **answered in English**; scored *no language it could be told* | *\*\*Last week's data (no prior comparison):\*\** and a list | 23 of 26 |
+| 7 | pass, 4.1 s | *Sales data for the last week shows zero across all metrics…* | 24 of 26 |
+
+Three of three in English, against none of four. Run 6 is the judge's miss, not
+Steward's: `CopilotScoring.LanguageOf` reads the answer's opening paragraph, which
+there is a heading with no function word in it. The case costs one to two seconds
+more than its twin, the second call. `english-under-spanish` still passes without
+it, three of three.
 
 **Whole suite: 24 of 26 on the first run** (`translate-beanie-spanish`, a known
 one, and the language case). **The other three runs do not count for anything but

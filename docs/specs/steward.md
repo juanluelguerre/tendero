@@ -105,8 +105,12 @@ contexts compute the figures and apply the rules (invariant 12).
   beside the whole frame — the header and the page's footer included, the window's
   height — as Tino's stands beside the shop; the header ends at its edge. Until
   then it sat under a header that spanned the window. **Steward answers in the
-  language of the shopkeeper's screen**, whatever language they write in (the same
-  day, the rule Tino took): prompt `steward-2026-10-06`.
+  language of the shopkeeper's screen** — the one chosen in the menu — whatever
+  language they write in (the same day, the rule Tino took). The instructions say
+  it, and code holds it, because the local model does not: an answer plainly in
+  another language is said again by the same profile, and shown only if it is then
+  in the screen's language with the same figures (`docs/analysis/steward-models.md`).
+  Prompt `steward-2026-10-06b`.
 - Its head names the **screen context** it was opened on (*On: Products · Active*,
   a product's page, an order). The context is sent with each question, so
   "translate this one" needs no code.

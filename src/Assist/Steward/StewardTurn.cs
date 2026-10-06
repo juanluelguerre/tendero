@@ -178,7 +178,8 @@ public sealed partial class StewardTurnHandler(
             {
                 var started = clock.GetTimestamp();
                 var response = await RunAsync(candidate, instructions, command, history, settings, turn);
-                return (Response: response, Milliseconds: (int)clock.GetElapsedTime(started).TotalMilliseconds);
+                var again = await InTheScreensLanguageAsync(candidate, response.Text, command, settings, turn);
+                return (Response: response, Again: again, Milliseconds: (int)clock.GetElapsedTime(started).TotalMilliseconds);
             },
             candidate => candidate.Trace.Proposed.Count > 0,
             cancellationToken);
@@ -186,15 +187,15 @@ public sealed partial class StewardTurnHandler(
         switch (walk.End)
         {
             case WalkEnd.Answered:
-                var (response, milliseconds) = walk.Answer;
+                var (response, again, milliseconds) = walk.Answer;
                 var (name, profile, trace) = (walk.Candidate!.Name, walk.Candidate.Profile, walk.Candidate.Trace);
-                var calls = response.Messages.Count(message => message.Role == ChatRole.Assistant);
-                var input = response.Usage?.InputTokenCount ?? 0;
-                var output = response.Usage?.OutputTokenCount ?? 0;
+                var calls = response.Messages.Count(message => message.Role == ChatRole.Assistant) + (again is null ? 0 : 1);
+                var input = (response.Usage?.InputTokenCount ?? 0) + (again?.Usage?.InputTokenCount ?? 0);
+                var output = (response.Usage?.OutputTokenCount ?? 0) + (again?.Usage?.OutputTokenCount ?? 0);
                 activity?.SetTag("assist.profile", name);
 
                 return Answer(command, StewardStatus.Answered,
-                    Said(response.Text, command.Culture, trace),
+                    Said(SaidAgain(response.Text, again?.Text, command.Culture), command.Culture, trace),
                     trace,
                     new TurnCost(calls, input, output, profile.CostMicroEuros(input, output), milliseconds, profile.Model ?? name),
                     name, walk.FellBack, walk.Candidate.Needs > profile.ContextTokens * 0.8);
@@ -272,6 +273,48 @@ public sealed partial class StewardTurnHandler(
                 "steward.turn", command.ConversationId, StewardPrompt.Version, person: principal.Current.Subject)),
             cancellationToken: cancellationToken);
     }
+
+    /// <summary>
+    /// The answer asked for once more when it is plainly in another language than the
+    /// screen's (the author, 2026-10-06: both agents answer in the language chosen in
+    /// the shop's menu). The same profile, no tools, the answer as the only thing it
+    /// is given; metered as the turn's. Null when there was nothing to say again.
+    /// A provider failing here loses nothing: the answer as first written stands.
+    /// </summary>
+    private async Task<ChatResponse?> InTheScreensLanguageAsync(
+        Candidate candidate, string? text, StewardTurnCommand command, StewardOptions settings, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(text) || StewardPrompt.LeaksACall(text)
+            || WrittenLanguage.Of(text) is not { } written || written == command.Culture)
+            return null;
+
+        try
+        {
+            return await candidate.Client.GetResponseAsync(
+                [new(ChatRole.System, StewardPrompt.ToSayAgain(command.Culture)), new(ChatRole.User, text)],
+                ModelCall.Options("steward.turn", command.ConversationId, StewardPrompt.Version,
+                    new ChatOptions { MaxOutputTokens = settings.MaxOutputTokens, Temperature = 0 },
+                    principal.Current.Subject),
+                cancellationToken);
+        }
+        catch (Exception failure) when (failure is not OperationCanceledException)
+        {
+            logger.LogWarning(failure, "Steward's answer could not be said again in the screen's language; it stands as written.");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Which of the two is shown: the answer said again only when it is in the
+    /// screen's language now and states the same figures, no more and no fewer —
+    /// compared, not trusted (invariant 12). Anything else, the answer as first written.
+    /// </summary>
+    internal static string? SaidAgain(string? first, string? again, string culture) =>
+        !string.IsNullOrWhiteSpace(again) && first is not null
+        && WrittenLanguage.Of(again) == culture
+        && Figures.AllIn(again, first) && Figures.AllIn(first, again)
+            ? again
+            : first;
 
     /// <summary>Every turn ends here, so every turn is counted here, once.</summary>
     private static StewardAnswer Answer(

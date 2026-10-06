@@ -1,5 +1,6 @@
 using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Assist.Tino;
+using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
 using Xunit;
 

@@ -143,5 +143,33 @@
   {
     "when": "hello",
     "say": "Hello."
+  },
+  {
+    "when": "sales, wrongly",
+    "say": "Las ventas de la semana fueron de 120 € en 3 pedidos y no hay devoluciones.",
+    "inputTokens": 1000,
+    "outputTokens": 40
+  },
+  {
+    "when": "Las ventas de la semana",
+    "say": "The week's sales were 120 € in 3 orders and there are no returns.",
+    "inputTokens": 200,
+    "outputTokens": 30
+  },
+  {
+    "when": "returns, wrongly",
+    "say": "Las devoluciones de la semana fueron 5 y todas se han resuelto."
+  },
+  {
+    "when": "Las devoluciones de la semana",
+    "say": "There were 7 returns in the week and all of them are resolved."
+  },
+  {
+    "when": "stock, wrongly",
+    "say": "El almacén de la tienda tiene todo lo que se pide."
+  },
+  {
+    "when": "El almacén de la tienda",
+    "say": "El almacén tiene de todo para la tienda."
   }
 ]

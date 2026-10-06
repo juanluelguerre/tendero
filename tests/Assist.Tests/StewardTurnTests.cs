@@ -246,6 +246,48 @@ public sealed class StewardTurnTests
     }
 
     /// <summary>What the panel draws of a read travels with the read: the rows' own table, built by the context.</summary>
+    // ---------- the screen's language ----------
+
+    /// <summary>
+    /// The screen is in English and the model answered in Spanish, as the local one
+    /// does to a Spanish question whatever its instructions say (four runs of four,
+    /// 2026-10-06): the same profile is asked to say it again in the screen's
+    /// language, and that call is part of what the turn cost.
+    /// </summary>
+    [Fact]
+    public async Task An_answer_in_another_language_than_the_screens_is_said_again_in_the_screens()
+    {
+        await using var shop = Compose("scripted");
+
+        var answer = await shop.Ask("the week's sales, wrongly");
+
+        Assert.Equal("The week's sales were 120 € in 3 orders and there are no returns.", answer.Text);
+        Assert.Equal((2, 1200L, 70L), (answer.Cost!.Calls, answer.Cost.InputTokens, answer.Cost.OutputTokens));
+    }
+
+    /// <summary>Saying it again may not change what it says: a figure that is not the answer's own, and the answer stays as it was.</summary>
+    [Fact]
+    public async Task Said_again_with_another_figure_the_answer_stays_as_the_model_first_wrote_it()
+    {
+        await using var shop = Compose("scripted");
+
+        var answer = await shop.Ask("the week's returns, wrongly");
+
+        Assert.Equal("Las devoluciones de la semana fueron 5 y todas se han resuelto.", answer.Text);
+        // The call was made, and is counted.
+        Assert.Equal(2, answer.Cost!.Calls);
+    }
+
+    [Fact]
+    public async Task Said_again_and_still_not_in_the_screens_language_the_answer_stays_as_it_was()
+    {
+        await using var shop = Compose("scripted");
+
+        var answer = await shop.Ask("the stock, wrongly");
+
+        Assert.Equal("El almacén de la tienda tiene todo lo que se pide.", answer.Text);
+    }
+
     [Fact]
     public async Task A_reads_tables_travel_with_it()
     {

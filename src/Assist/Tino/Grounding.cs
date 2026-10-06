@@ -1,32 +1,8 @@
-using System.Globalization;
-using System.Text.RegularExpressions;
 using ElGuerre.Tendero.AI.Support;
+using ElGuerre.Tendero.Assist.Turns;
 using ElGuerre.Tendero.SharedKernel;
 
 namespace ElGuerre.Tendero.Assist.Tino;
-
-/// <summary>
-/// The figures of a sentence against the text it rests on (the Tino spec,
-/// *Grounding*, the second check). A model that scores meaning is weak with
-/// numbers, so a number is not scored: it is compared. Every figure a reason
-/// states must be one the fact states.
-/// </summary>
-public static partial class Figures
-{
-    /// <summary>Whether every number in <paramref name="sentence"/> is a number of <paramref name="premise"/>.</summary>
-    public static bool AllIn(string sentence, string premise)
-    {
-        var known = Of(premise).ToHashSet();
-        return Of(sentence).All(known.Contains);
-    }
-
-    /// <summary>The numbers a text states, as values: <c>0,8</c> and <c>0.80</c> are the same figure, in either language.</summary>
-    public static IEnumerable<decimal> Of(string text) =>
-        Number().Matches(text).Select(match => decimal.Parse(match.Value.Replace(',', '.'), CultureInfo.InvariantCulture));
-
-    [GeneratedRegex(@"\d+(?:[.,]\d+)?", RegexOptions.CultureInvariant)]
-    private static partial Regex Number();
-}
 
 /// <summary>The support scorer did not answer: nothing can be shown, because nothing was checked.</summary>
 public sealed class SupportUnavailableException(Exception inner) : Exception("The support scorer did not answer.", inner);

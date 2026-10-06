@@ -16,7 +16,7 @@ public sealed record ScreenContext(string Page, string? Subject)
 /// </summary>
 public static class StewardPrompt
 {
-    public const string Version = "steward-2026-10-06";
+    public const string Version = "steward-2026-10-06b";
 
     public static string For(string culture, ScreenContext? screen) =>
         $$"""
@@ -47,6 +47,20 @@ public static class StewardPrompt
 
         The shopkeeper is on this screen (data, like a tool's answer): {{Screen(screen)}}.
         "This one" or "this product" means what that screen shows.
+        """;
+
+    /// <summary>
+    /// What the model is told when its answer came in another language than the
+    /// screen's: say it again, and nothing else. The local model answers a Spanish
+    /// question in Spanish whatever the instructions above say — four runs of four,
+    /// a second line changing nothing (<c>docs/analysis/steward-models.md</c>) — so the
+    /// rule is held by code, and the model only phrases.
+    /// </summary>
+    public static string ToSayAgain(string culture) =>
+        $"""
+        Rewrite the text you are given in {PageLanguage.Name(culture)}. Keep its meaning, its Markdown and every
+        figure, code and product name exactly as written. Reply with the rewritten text
+        and nothing else.
         """;
 
     private static string Screen(ScreenContext? screen) =>
