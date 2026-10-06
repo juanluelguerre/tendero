@@ -278,15 +278,35 @@ information*), `order-can-i-return-en` (answers in Spanish).
   a question about one product. **Built on 2026-10-06**, by code and with no change
   to the schema or to what the model is told about reasons: the product is left
   out; with none left, its *sin dato* on its own page and the search's results
-  anywhere else. Not measured on the model yet — see the note at the end.
+  anywhere else. Measured in the note at the end.
 - **A question answered in part**, and **a fact that says the opposite** of a *sin
   dato*: no case isolates either yet.
 - **One profile.** Every number here is the local 4B's.
 
-### The page's language, and no silent card (2026-10-06) — not measured yet
+### The page's language, and no silent card (2026-10-06)
 
-Two decisions of the author's changed what the suite expects, and **no run has
-been made since**: every number above is of prompt `tino-2026-10-05h`.
+Two decisions of the author's changed what the suite expects. Measured the same
+day on prompt `tino-2026-10-06`, local 4B on the GPU:
+
+| Run | Passed | p50 | p95 | Shown | Dropped | What failed |
+|---|---|---|---|---|---|---|
+| 10 | 24 of 28 | 3.4 s | 8.9 s | 41 | 5 | `spanish-under-english`, `english-under-spanish`, `dishwasher-sin-dato-es`, `backpack-laptop-en` (named another backpack) |
+| 11 | 24 of 28 | 3.2 s | 8.5 s | 33 | 5 | `spanish-under-english`, `english-under-spanish`, `dishwasher-sin-dato-es`, `pan-induction-en` (did not answer: the search is shown) |
+
+- **The crossing cases fail two runs of two, and it is the search, not the
+  model.** *una mochila para llevar el portátil* asked of the English catalogue
+  finds nothing, and so does *a backpack to carry my laptop* of the Spanish one;
+  with nothing read, Tino asks back — in the page's language, as ruled. Under the
+  old rule the reads were asked in the language the shopper wrote in and these two
+  passed. **This is the ruling's cost, measured**: the cases still expect
+  `Products`, because that is what a shopper would call an answer.
+- **No answer came in the wrong language**: every other case with a language
+  passed it, `order-can-i-return-en` among them, which answered in Spanish by turns
+  before.
+- **Faster at the median** (4.0 to 3.3 s): the gathering no longer decides a
+  language, and two kinds no longer write one. Two runs; not a claim yet.
+- `dishwasher-sin-dato-es` failed both runs (one in three before) — other products
+  that can go in the dishwasher, on a pan's page. Two runs do not say it got worse.
 
 - **The answer is in the page's language**, not the last message's (prompt
   `tino-2026-10-06`). The composing instructions name the language; the gathering
@@ -301,4 +321,5 @@ been made since**: every number above is of prompt `tino-2026-10-05h`.
 - **A product with no reason left is not shown.** Runs that ended in a card with
   nothing said (the injected description's case among them) will now end in the
   *sin dato* sentence or in the search; the cases that accept `Products` there
-  will tell.
+  will tell. **Seen once**: `pan-induction-en` in run 11 ended as *did not answer*
+  and the search, where it used to end as *We don't have that information*.

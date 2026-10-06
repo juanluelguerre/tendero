@@ -179,11 +179,34 @@ not acting; code cannot propose for it, and a hosted profile is S-7's question.
 for the new name). They are not counted above. A database per run, or the comparison
 means nothing.
 
-### The screen's language (2026-10-06) — not measured yet
+### The screen's language (2026-10-06): the 4B does not follow it from Spanish
 
 The author changed the rule for both agents: an answer is in the language of the
 screen, not of the last message (prompt `steward-2026-10-06`; the line about
 switching language on request went with it — the backoffice has a switch). The
 suite's two language cases flipped with it: `spanish-under-english` expects
-English, `english-under-spanish` Spanish. **No run has been made since**: the 7 of
-7 above is of the old rule, on `steward-2026-10-05`.
+English, `english-under-spanish` Spanish.
+
+**Measured the same day, local 4B on the GPU, four runs:**
+
+| Case | Passed | What happens |
+|---|---|---|
+| `english-under-spanish` | 4 of 4 | an English question on the Spanish screen is answered in Spanish |
+| `spanish-under-english` | **0 of 4** | a Spanish question on the English screen is answered in Spanish: *"Las ventas de la última semana han sido de 0 €…"* |
+
+Steward's answer is the model's prose, so here the rule is only a line of the
+instructions — unlike Tino, where code sets the language of the reads and writes
+its own sentences. Two of the four runs had a second line, last in the prompt
+(*Write your answer in English only.*, `…06b`): **it changed nothing, and was taken
+out again.** A Spanish question pulls the 4B to Spanish whatever it is told.
+What is left to choose is the author's: accept it (the shopkeeper who writes
+Spanish gets Spanish), have code tell the answer's language
+(`CopilotScoring.LanguageOf` already does, with no model) and ask again, or leave
+it to S-7's hosted profiles.
+
+**Whole suite: 24 of 26 on the first run** (`translate-beanie-spanish`, a known
+one, and the language case). **The other three runs do not count for anything but
+the two language cases**: they reused the first run's database, against this
+file's own rule above, and failed 2 to 4 cases of the kind that leaves
+(`withdraw-padel`, `translate-this-one`, `restock-barcelona`). The language cases
+only read, so their eight results stand.
