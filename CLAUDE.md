@@ -510,6 +510,13 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 - Blog publication order and drafts: `docs/blog/index.md`
 - The book's outline, conventions and material map: `docs/book/README.md`
 
+## Verification and environment
+
+- After every Edit or scripted file write, re-read the file or check `git diff` to confirm the change was actually applied. Do not write files with heredocs.
+- Do not chain destructive or dependent shell commands so that later ones keep running after an earlier one fails.
+- For new behaviour, write the failing test first and see it fail before implementing. For code that already exists, the test earns its place with a hand mutation (Testing rules).
+- When a session ends or is interrupted, list any temporary files, secrets, ports or containers left behind.
+
 ## Do NOT
 
 - Do not add cross-slice references "just this once". When a second slice needs
