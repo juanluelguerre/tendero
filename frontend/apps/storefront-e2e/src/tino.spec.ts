@@ -18,7 +18,7 @@ test.describe('Tino', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/es');
     // Analytics are the shopper's to refuse; the door works either way.
-    const refuse = page.getByRole('button', { name: /solo las necesarias|rechazar/i });
+    const refuse = page.getByRole('button', { name: /no permitir|solo las necesarias|rechazar/i });
     if (await refuse.isVisible().catch(() => false)) await refuse.click();
   });
 
@@ -36,6 +36,17 @@ test.describe('Tino', () => {
     await door(page).click();
     await expect(door(page)).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#tino-question')).toBeFocused();
+
+    // Docked, the page under the header is what scrolls, at the panel's left: the
+    // awning keeps its height (a flex column once shrank it to nothing), and the
+    // window has no scrollbar of its own.
+    expect((await page.locator('hr.awning').boundingBox())?.height).toBeGreaterThan(0);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
+    const edges = await page.evaluate(() => ({
+      page: document.querySelector('storefront-shell [data-page]')!.getBoundingClientRect().right,
+      panel: document.querySelector('storefront-tino-dock aside')!.getBoundingClientRect().left,
+    }));
+    expect(edges.page).toBe(edges.panel);
 
     await ask(page, 'una sartén que valga para inducción');
 

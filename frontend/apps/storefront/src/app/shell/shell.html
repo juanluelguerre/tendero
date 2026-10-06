@@ -208,8 +208,11 @@
 
   <!-- The page under the chrome. With Tino docked it is what scrolls — not the window
        and not the shell — so its scrollbar starts under the awning and stops at the
-       panel's edge, and the header never has a bar beside it (shell.css). -->
-  <div class="flex min-h-0 flex-1 flex-col" data-page #page>
+       panel's edge, and the header never has a bar beside it (shell.css). Positioned,
+       so what is absolutely placed inside it — every `sr-only` — scrolls with it: in
+       an unpositioned scroller those sat where the page would have put them and made
+       the document taller than the window (the browser spec measures it). -->
+  <div class="relative flex min-h-0 flex-1 flex-col" data-page #page>
     <main id="main" class="page-frame flex-1 pt-6 pb-8 max-md:pt-5 max-md:pb-6"><router-outlet /></main>
 
     <storefront-compare-tray />
