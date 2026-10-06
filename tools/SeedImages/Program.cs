@@ -16,6 +16,14 @@ string? Value(string flag)
     return at >= 0 && at + 1 < args.Length ? args[at + 1] : null;
 }
 
+// Which model looks: Ollama, where the checks started, or the shop's own model on
+// llama.cpp's server. `--ollama` is the first one's old way of naming its url.
+IVisionModel Vision() => (Value("--provider") ?? "ollama") switch
+{
+    "llama" => new LlamaVision(Value("--url") ?? "http://localhost:39481", Value("--model") ?? "Qwen/Qwen3.5-4B"),
+    _ => new OllamaVision(Value("--url") ?? Value("--ollama") ?? "http://localhost:11434", Value("--model") ?? "qwen3.5:9b"),
+};
+
 switch (command)
 {
     case "inspect":
@@ -41,10 +49,14 @@ switch (command)
     case "verify":
         return Verify(
             Value("--in"),
-            Value("--ollama") ?? "http://localhost:11434",
-            Value("--model") ?? "qwen3.5:9b",
+            Vision(),
+            Value("--only"),
+            Value("--reference"),
             args.Contains("--ci"),
             args.Contains("--describe"));
+
+    case "pairs":
+        return Pairs(Value("--in"), Vision(), int.TryParse(Value("--offset"), out var offset) ? offset : 1);
 
     case "probe":
         return Probe(Value("--in"));
@@ -71,8 +83,15 @@ switch (command)
                                                       draw the missing illustrations.
                                                       gemini by default and needs
                                                       GEMINI_API_KEY; sdxl needs --models
-              verify --in <dir> [--ollama <url>] [--model <name>] [--ci]
-                                                      ask a vision model what it sees
+              verify [--in <dir>] [--only <id,id>] [--provider ollama|llama] [--url <url>]
+                     [--model <name>] [--reference <id>] [--ci]
+                                                      ask a vision model what it sees: text,
+                                                      colour, a scene, whether it is the product
+                                                      described, and whether it is drawn as the
+                                                      reference picture is
+              pairs [--in <dir>] [--offset <n>] [--provider ollama|llama] [--url <url>] [--model <name>]
+                                                      measure the description check: every picture
+                                                      against its own product and against another's
               probe --in <dir|file>                   where the object sits in images that exist
               tokens --models <dir>                   what each line of the prompt costs
               dry-run [--only <id>] [--take <n>] [--models <dir>]
@@ -400,20 +419,28 @@ static int Probe(string? input)
     return failures == 0 ? 0 : 1;
 }
 
-// The half of the job Ollama is actually for. It looks at finished pictures and
-// answers closed questions about them: is there text, what colour is the object,
-// and is anything drawn besides the product.
+// The half of the job a vision model is actually for. It looks at finished
+// pictures and answers closed questions about them: is there text, what colour is
+// the object, is anything drawn besides the product, is it the product its data
+// describes, and is it drawn as the reference pictures are.
 //
-// That last one is why this exists. A tiled sheet of products fills the frame and
-// the pixel probe catches it; a lamp standing on a desk leaves a perfectly good
-// margin and no amount of counting will say so.
-static int Verify(string? input, string ollama, string model, bool ci, bool describe)
+// The scene question is why this exists. A tiled sheet of products fills the frame
+// and the pixel probe catches it; a lamp standing on a desk leaves a perfectly good
+// margin and no amount of counting will say so. The last two arrived with phase
+// 13a: a picture is accepted only when it is right for its product's description
+// and in the register of the ones that exist.
+//
+// Every line it prints is a proposal: a person accepts the batch.
+static int Verify(string? input, IVisionModel model, string? only, string? reference, bool ci, bool describe)
 {
     var root = RepositoryRoot.Find();
     input ??= Path.Combine(root, "seed", "images");
 
+    var wanted = only?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     var files = Directory.Exists(input)
-        ? Directory.EnumerateFiles(input, "*.webp").Order().ToArray()
+        ? Directory.EnumerateFiles(input, "*.webp").Order()
+            .Where(file => wanted is null || wanted.Contains(Path.GetFileNameWithoutExtension(file), StringComparer.OrdinalIgnoreCase))
+            .ToArray()
         : File.Exists(input) ? [input] : [];
 
     if (files.Length == 0)
@@ -428,11 +455,9 @@ static int Verify(string? input, string ollama, string model, bool ci, bool desc
     var colours = ColourLexicon.Read(Path.Combine(root, "seed", "attributes.sample.json"));
     var vocabulary = colours.EnglishLabels;
 
-    var vision = new OllamaVisionClient(ollama, model);
-
     try
     {
-        vision.EnsureReachable();
+        model.EnsureReachable();
     }
     catch (InvalidOperationException failure)
     {
@@ -440,7 +465,15 @@ static int Verify(string? input, string ollama, string model, bool ci, bool desc
         return 2;
     }
 
-    Console.WriteLine($"asking {model} about {files.Length} image(s)...");
+    var vision = new VisionChecks(model);
+
+    // One of the pictures drawn by hand, which set the register every other one
+    // is held to. It is never compared with itself.
+    reference ??= "B10SHO0101";
+    var referenceFile = Path.Combine(root, "seed", "images", reference + ".webp");
+    var referenceBytes = File.Exists(referenceFile) ? File.ReadAllBytes(referenceFile) : null;
+
+    Console.WriteLine($"asking {model.Name} about {files.Length} image(s)...");
     Console.WriteLine();
 
     var flagged = 0;
@@ -448,16 +481,18 @@ static int Verify(string? input, string ollama, string model, bool ci, bool desc
     foreach (var file in files)
     {
         var itemId = Path.GetFileNameWithoutExtension(file);
+        var bytes = File.ReadAllBytes(file);
 
         if (describe)
         {
             Console.WriteLine($"--- {itemId}");
-            Console.WriteLine(vision.Describe(File.ReadAllBytes(file), Path.ChangeExtension(file, ".sent.png")));
+            Console.WriteLine(vision.Describe(bytes, Path.ChangeExtension(file, ".sent.png")));
             Console.WriteLine();
             continue;
         }
 
-        var verdict = vision.Ask(File.ReadAllBytes(file), vocabulary);
+        var verdict = vision.Look(bytes, vocabulary);
+        var product = products.GetValueOrDefault(itemId);
 
         List<string> faults = [];
 
@@ -465,13 +500,20 @@ static int Verify(string? input, string ollama, string model, bool ci, bool desc
             faults.Add("something else is drawn beside the product");
 
         if (verdict.HasText)
-            faults.Add("there is text in it");
+            faults.Add("there is text or a symbol in it");
+
+        if (product is not null && vision.Against(bytes, product.EnglishName, product.EnglishDescription) is { Matches: false } against)
+            faults.Add($"it shows \"{against.Shows}\", not the product described: {against.Differs}");
+
+        if (referenceBytes is not null && !string.Equals(itemId, reference, StringComparison.OrdinalIgnoreCase)
+            && vision.Beside(bytes, referenceBytes) is { } beside && !(beside.SameStyle && beside.SameBackground))
+            faults.Add($"it is not drawn as {reference} is: {beside.Differs}");
 
         // A colour mismatch is reported and NOT treated the same way. The
         // catalogue's colour for an invented product is arbitrary and the drawing
         // is the expensive part, so seed/IMAGES-TODO.md says the cheap repair is
         // to change the catalogue -- which is a person's call, not a retry.
-        if (products.GetValueOrDefault(itemId)?.SpanishColour is { } spanish
+        if (product?.SpanishColour is { } spanish
             && colours.English(spanish) is { } declared
             && !string.Equals(declared, verdict.Colour, StringComparison.OrdinalIgnoreCase)
             && !string.Equals(verdict.Colour, "other", StringComparison.OrdinalIgnoreCase))
@@ -486,11 +528,78 @@ static int Verify(string? input, string ollama, string model, bool ci, bool desc
         }
 
         flagged++;
-        Console.WriteLine($"REDO  {itemId,-14}  {string.Join("; ", faults)}");
+        Console.WriteLine($"LOOK  {itemId,-14}  {string.Join("; ", faults)}");
     }
 
     Console.WriteLine();
-    Console.WriteLine($"{files.Length - flagged} of {files.Length} are usable as they are.");
+    Console.WriteLine($"{files.Length - flagged} of {files.Length} pass every check; the rest are for a person to look at.");
 
     return flagged == 0 || !ci ? 0 : 1;
+}
+
+// How often the description check is wrong, measured before it is trusted with a
+// batch (the phase 13a spec, I-1). Every picture is shown twice: with its own
+// product's name and description, where "it does not match" is a false alarm, and
+// with another product's, where "it matches" is a miss. The other product is the
+// next one in the folder, so the pairing is the same on every run -- and the hard
+// one, because neighbours in the folder are neighbours in the catalogue: a shoe
+// beside a shoe. `--offset` pairs each with one further away.
+static int Pairs(string? input, IVisionModel model, int offset)
+{
+    var root = RepositoryRoot.Find();
+    input ??= Path.Combine(root, "seed", "images");
+
+    var products = ProductCatalogue.Read(Path.Combine(root, "seed", "products.sample.json"))
+        .ToDictionary(product => product.ItemId, StringComparer.OrdinalIgnoreCase);
+    var files = Directory.EnumerateFiles(input, "*.webp").Order()
+        .Where(file => products.ContainsKey(Path.GetFileNameWithoutExtension(file)))
+        .ToArray();
+
+    if (files.Length < 2)
+    {
+        Console.Error.WriteLine($"Pairs needs at least two pictures of known products at '{input}'.");
+        return 2;
+    }
+
+    try
+    {
+        model.EnsureReachable();
+    }
+    catch (InvalidOperationException failure)
+    {
+        Console.Error.WriteLine(failure.Message);
+        return 2;
+    }
+
+    var vision = new VisionChecks(model);
+    var (falseAlarms, misses) = (0, 0);
+
+    for (var index = 0; index < files.Length; index++)
+    {
+        var bytes = File.ReadAllBytes(files[index]);
+        var own = products[Path.GetFileNameWithoutExtension(files[index])];
+        var other = products[Path.GetFileNameWithoutExtension(files[(index + offset) % files.Length])];
+
+        var right = vision.Against(bytes, own.EnglishName, own.EnglishDescription);
+        var wrong = vision.Against(bytes, other.EnglishName, other.EnglishDescription);
+
+        if (!right.Matches)
+        {
+            falseAlarms++;
+            Console.WriteLine($"FALSE ALARM  {own.ItemId,-12} is \"{own.EnglishName}\" and was refused: {right.Differs}");
+        }
+
+        if (wrong.Matches)
+        {
+            misses++;
+            Console.WriteLine($"MISS         {own.ItemId,-12} shows \"{wrong.Shows}\" and passed as \"{other.EnglishName}\"");
+        }
+    }
+
+    Console.WriteLine();
+    Console.WriteLine($"{model.Name}: {files.Length} pictures, each against its own product and another's.");
+    Console.WriteLine($"  false alarms (its own product refused): {falseAlarms} of {files.Length}");
+    Console.WriteLine($"  misses (another product accepted):      {misses} of {files.Length}");
+
+    return 0;
 }

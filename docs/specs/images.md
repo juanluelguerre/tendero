@@ -78,6 +78,20 @@ ADR 0031 with its hash.
 the step stops there and the author is told what was found: a third party's file
 is not a fallback this spec may take on its own.
 
+*As built (2026-10-06), the first half*: it does. `src/AppHost/scripts/prepare-vision.sh`
+converts the projector from the pinned revision with the pinned converter — 672 MB,
+SHA-256 `1a039fd0…b7f5`, recorded in ADR 0031 — and the server loads it beside the
+Q8 text half in 5.7 GB of the card. **The image tool asks it first**: `verify` and a
+new `pairs` command reach a vision model through a port, `IVisionModel`, with two
+adapters (Ollama, and llama.cpp's server — the shop's model), and carry I-1's two
+checks. Measured on the 23 pictures there are: all 23 pass the five questions; the
+description check refuses no right picture and **misses 3 to 4 wrong ones in 23**,
+always a right kind of object with something wrong about it (one pan for a set of
+three, a backpack for a duffel) — so a person's look at each batch stays
+(`tools/SeedImages/README.md`). *Still to do in this step*: the shop's side — the
+projector in the AppHost's model, a reader that turns the store's WebP into what
+the server decodes, the scripted client carrying a picture, the store's path.
+
 One model serves text and pictures (5.5 GB of 8 with the projector; two do not
 fit). What changes in code:
 

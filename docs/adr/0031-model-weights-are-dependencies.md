@@ -186,3 +186,29 @@ is not counted as degraded, because nothing that was configured failed.
 anchor build in ADR 0032 hit it and now sends batches of 32. The reranker's depth
 setting has no upper bound yet, so a depth above 32 would be refused by the model
 server — recorded on the board's backlog.
+
+## Amended 2026-10-06 — the model's vision projector, converted by us
+
+Phase 13a gives the shop's chat model eyes. `Qwen/Qwen3.5-4B` at the revision
+already checked (`851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a`, Apache-2.0) is
+`Qwen3_5ForConditionalGeneration`: the same weights carry a vision tower, and
+llama.cpp serves it from a second file, the projector (`--mmproj`). No maker
+publishes that file, and rule 5 refuses a third party's — the one a spike had
+used on 2026-10-05.
+
+**So it is converted here, as the text half is**: `prepare-vision.sh` downloads
+the same revision and runs the pinned llama.cpp's own
+`convert_hf_to_gguf.py --mmproj --outtype f16` (image `full-v0.5.0`, whose
+converter registers this architecture for projectors).
+
+| | |
+|---|---|
+| File | `qwen3.5-4b-mmproj-f16.gguf`, 672,423,392 bytes, 298 tensors |
+| SHA-256 | `1a039fd06185e9e28093b7afc19bc6750203801512fa25c9e063ebe6efc0b7f5` |
+| Licence | the revision's own, Apache-2.0: it is the same model, not a second one |
+| Tier | 2 — served by the llama.cpp container beside the application |
+| On the card | 5.7 GB with the Q8 text half, against 4.8 GB without |
+
+The script holds the file to that hash and refuses any other, as the extractor's
+does. Nothing was added to the licence check: no new model entered, only a
+second file of one already in.

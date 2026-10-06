@@ -156,9 +156,69 @@ product. Text or a scene marks the image to be drawn again. **A colour mismatch 
 a note and never a retry** — `seed/IMAGES-TODO.md` already decided the cheap
 repair there is to change the catalogue, and that is a person's call.
 
-It needs Ollama running and a model with vision. `qwen3.5:9b` is the default and
-fits in the card; the image travels on a **chat** message, because
-`/api/generate` accepts an `images` field, answers 200 and ignores it.
+**Two more questions since phase 13a**, because a picture is accepted only when it
+is right for its product and drawn as the others are:
+
+- **Is it the product described?** The model says what it sees, is then told the
+  product's name and description, and says whether they match and what differs.
+- **Is it drawn as the reference is?** The candidate beside one of the pictures
+  drawn by hand (`--reference`, `B10SHO0101` by default): the same flat
+  illustration, the same plain background.
+
+**Every line `verify` prints is a proposal.** It says `LOOK`, not `REDO`: a person
+looks at the batch and accepts it, and a flagged picture is redrawn or its
+catalogue entry corrected, whichever is wrong.
+
+### Who looks: a port with two adapters
+
+`IVisionModel` is to the vision pass what `IIllustrationGenerator` is to the
+drawing: pictures and a question in, an answer held to a schema out. What is
+asked and how it is read is shared (`VisionChecks`).
+
+| `--provider` | what it is | needs |
+|---|---|---|
+| `ollama` (default) | a vision model behind Ollama; `qwen3.5:9b` fits the card. The image travels on a **chat** message, because `/api/generate` accepts an `images` field, answers 200 and ignores it | Ollama installed, and the model pulled |
+| `llama` | **the shop's own model** on llama.cpp's server, with its vision projector | the container the stack already uses, and the projector `prepare-vision.sh` converts |
+
+The second is the one phase 13a uses: the model that accepts a picture is the one
+that will later read it for alt text and claims, on weights converted by us from
+the pinned revision (ADR 0031).
+
+```bash
+# Once: convert the projector (8.8 GB of download, 672 MB kept).
+docker run --rm --entrypoint sh -v tendero-extractor-models:/models \
+  -v "$PWD/src/AppHost/scripts:/scripts:ro" ghcr.io/ggml-org/llama.cpp:full-v0.5.0 /scripts/prepare-vision.sh
+
+# The model with its eyes, on the GPU (5.7 GB of the card's 8).
+docker run -d --name tendero-vision-model --label com.docker.compose.project=tendero \
+  --gpus all --memory 7g --memory-swap 7g --cpus 12 -p 39481:8080 \
+  -v tendero-extractor-models:/models:ro ghcr.io/ggml-org/llama.cpp:server-cuda-v0.5.0 \
+  -m /models/qwen3.5-4b-q8_0.gguf --mmproj /models/qwen3.5-4b-mmproj-f16.gguf \
+  --host 0.0.0.0 --port 8080 -c 8192 -np 1 -t 12 --jinja --load-mode none --cache-ram 0 \
+  --chat-template-kwargs '{"enable_thinking":false}' -ngl 99
+
+dotnet run --project tools/SeedImages -- verify --provider llama --only B10SHO0102,B10SHO0103
+dotnet run --project tools/SeedImages -- pairs --provider llama
+docker rm -f tendero-vision-model
+```
+
+### How often the description check is wrong
+
+`pairs` shows every picture twice — with its own product's data and with another
+product's — before the check is trusted with a batch. Measured on 2026-10-06, the
+shop's model, 23 pictures, about 1.4 s a question:
+
+| Paired with | Its own product refused (false alarm) | Another product accepted (miss) |
+|---|---|---|
+| the next product in the folder (`--offset 1`, a shoe beside a shoe) | 0 of 23 | **4 of 23** |
+| one eleven further on (`--offset 11`) | 0 of 23 | **3 of 23** |
+
+It never refuses a right picture, and it misses about one wrong one in seven —
+always the same way: **the kind of object is right and something about it is
+not**. One pan passed as a set of three; a backpack as a gym duffel; a ceramic
+table lamp as a desk lamp with a USB port; a trail shoe as a racing shoe. So it
+catches a picture of the wrong thing, not a picture of the right thing drawn
+wrong, and the person's look at the batch is not optional.
 
 ## The prompts
 
