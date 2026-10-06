@@ -42,7 +42,11 @@ public sealed class ModelProfileTests
     {
         var profile = new ModelProfile
         {
-            Kind = kind, Endpoint = endpoint is null ? null : new Uri(endpoint), Model = model, Auth = auth, ApiKey = key,
+            Kind = kind,
+            Endpoint = endpoint is null ? null : new Uri(endpoint),
+            Model = model,
+            Auth = auth,
+            ApiKey = key,
         };
 
         Assert.Contains(profile.Problems("gemini"), problem => problem.Contains(lacking) && problem.Contains("gemini"));

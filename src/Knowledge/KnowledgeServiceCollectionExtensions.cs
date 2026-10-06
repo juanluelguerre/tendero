@@ -1,9 +1,9 @@
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.AI.Chat;
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Knowledge.Chat;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Features.ProposeClaims;
-using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.SharedKernel;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;

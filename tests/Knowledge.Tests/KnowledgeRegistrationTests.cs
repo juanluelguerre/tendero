@@ -1,6 +1,6 @@
 using ElGuerre.Tendero.AI;
-using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.AI.Support;
+using ElGuerre.Tendero.Knowledge.Extraction;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

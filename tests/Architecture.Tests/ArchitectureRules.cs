@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
-using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Catalog;
+using ElGuerre.Tendero.Catalog.Connectors;
 using ElGuerre.Tendero.Inventory;
 using ElGuerre.Tendero.Knowledge;
 using ElGuerre.Tendero.Ordering;

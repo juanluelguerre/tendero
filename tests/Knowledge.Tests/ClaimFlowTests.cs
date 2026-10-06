@@ -1,9 +1,9 @@
+using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.Knowledge.Domain;
 using ElGuerre.Tendero.Knowledge.Extraction;
 using ElGuerre.Tendero.Knowledge.Features.ProposeClaims;
 using ElGuerre.Tendero.Knowledge.Features.RecordDescription;
 using ElGuerre.Tendero.Knowledge.Ports;
-using ElGuerre.Tendero.AI.Support;
 using ElGuerre.Tendero.SharedKernel;
 using ElGuerre.Tendero.Tests;
 using Microsoft.Extensions.DependencyInjection;

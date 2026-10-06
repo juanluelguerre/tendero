@@ -176,7 +176,10 @@ public sealed class TinoReplyTests
     {
         var body = TinoReply.Read(JsonSerializer.Serialize(new
         {
-            kind = "noData", code = "PAN-ALU-24", about, language,
+            kind = "noData",
+            code = "PAN-ALU-24",
+            about,
+            language,
             nearest = new[] { new { says = "Vale para inducción.", cites = "f1" }, new { says = "La de hierro sí.", cites = "f3" } },
         }), Pans(), OnTheAluminiumPan)!;
 
@@ -213,7 +216,12 @@ public sealed class TinoReplyTests
     {
         var body = TinoReply.Read(JsonSerializer.Serialize(new
         {
-            kind = "noData", code = "PAN-ALU-24", about = "si puede ir al horno", claim = written, language = "es", nearest = Array.Empty<object>(),
+            kind = "noData",
+            code = "PAN-ALU-24",
+            about = "si puede ir al horno",
+            claim = written,
+            language = "es",
+            nearest = Array.Empty<object>(),
         }), Pans(), OnTheAluminiumPan)!;
 
         Assert.Equal(claim, body.Claim);
@@ -233,7 +241,11 @@ public sealed class TinoReplyTests
     {
         var body = TinoReply.Read(JsonSerializer.Serialize(new
         {
-            kind = "noData", code = "PAN-ALU-24", about = "si es roja", claim = "Es roja.", language = "es",
+            kind = "noData",
+            code = "PAN-ALU-24",
+            about = "si es roja",
+            claim = "Es roja.",
+            language = "es",
             nearest = new[] { new { says = "Vale para inducción.", cites = "f1" } },
         }), Pans(), looking is { } kind ? new TinoContext(kind, key!) : null)!;
 

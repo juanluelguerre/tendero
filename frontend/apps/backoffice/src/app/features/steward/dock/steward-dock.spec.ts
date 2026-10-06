@@ -24,10 +24,13 @@ describe('the steward dock', () => {
   }
 
   beforeEach(() => {
-    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+    // Assigned, not `??=`: other specs in this worker stand in for the dialog with a
+    // `close` that fires no event, and whichever ran first would be the one kept —
+    // this spec is about that event, and failed one run in four without its own.
+    HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
       this.open = true;
     };
-    HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+    HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
       this.open = false;
       this.dispatchEvent(new Event('close'));
     };

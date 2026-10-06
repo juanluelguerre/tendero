@@ -11,10 +11,10 @@ using ElGuerre.Tendero.Ordering;
 using ElGuerre.Tendero.Ordering.Features.Dashboard;
 using ElGuerre.Tendero.Persistence;
 using ElGuerre.Tendero.SharedKernel;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 
 namespace ElGuerre.Tendero.SearchEval.Copilot;
