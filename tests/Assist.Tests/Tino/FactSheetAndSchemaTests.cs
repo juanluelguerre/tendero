@@ -182,6 +182,25 @@ public sealed class FactSheetAndSchemaTests
 
         Assert.Equal(0, reasons.GetProperty("maxItems").GetInt32());
         Assert.Equal(["products", "unknown", "ask"], KindsOf(searched));
+
+        // On that product's page its details can still be said not to say something:
+        // with nothing of it to cite, there is no nearest fact to offer.
+        var nearest = KindsFor(searched, new TinoContext(TinoContextKind.Product, "PAN-1"))
+            .Single(shape => shape.GetProperty("properties").GetProperty("kind").GetProperty("const").GetString() == "noData")
+            .GetProperty("properties").GetProperty("nearest");
+        Assert.Equal(0, nearest.GetProperty("maxItems").GetInt32());
+    }
+
+    /// <summary>An order with nothing said of it cannot be answered about: there would be no sentence to cite.</summary>
+    [Fact]
+    public void An_order_read_with_no_fact_of_its_own_is_not_a_kind_of_answer()
+    {
+        var sheet = new FactSheet();
+        sheet.Add(new ReadAnswer(new { }, 1, 1,
+            Facts: [new Fact(Fact.TheShop, FactSource.Policy, "Las devoluciones se aceptan durante 14 días.")],
+            Subjects: [new Subject("order1", "Pedido del 1 de enero de 2026", SubjectKind.Order, "0199-real-id")]));
+
+        Assert.Equal(["shop", "unknown", "ask"], KindsOf(sheet));
     }
 
     // ---------- a shopper's orders ----------

@@ -153,11 +153,13 @@ public sealed class TinoTurnTests
             return rows;
         }
 
-        public async Task<TinoAnswer> Ask(string question, TinoContext? context = null)
+        public Task<TinoAnswer> Ask(string question, TinoContext? context = null) => Ask([new TurnMessage("user", question)], context);
+
+        public async Task<TinoAnswer> Ask(IReadOnlyList<TurnMessage> conversation, TinoContext? context = null)
         {
             await using var scope = provider.CreateAsyncScope();
             return await scope.ServiceProvider.GetRequiredService<ICommandDispatcher>().SendAsync(
-                new TinoTurnCommand([new TurnMessage("user", question)], context, "conv-1", "es"), TestContext.Current.CancellationToken);
+                new TinoTurnCommand(conversation, context, "conv-1", "es"), TestContext.Current.CancellationToken);
         }
 
         public ValueTask DisposeAsync() => provider.DisposeAsync();
@@ -449,9 +451,13 @@ public sealed class TinoTurnTests
     [Fact]
     public async Task With_no_support_scorer_tino_does_not_answer_and_no_model_is_asked()
     {
-        await using var shop = Compose(withScorer: false);
+        await using var shop = Compose(withScorer: false, fallback: "second");
 
-        AssertUnavailable(await shop.Ask("una sartén para induction"), TinoCause.Scorer, "una sartén para induction");
+        var answer = await shop.Ask("una sartén para induction");
+
+        AssertUnavailable(answer, TinoCause.Scorer, "una sartén para induction");
+        // No profile was tried, so none was fallen back to — whatever is configured.
+        Assert.Equal((null, false), (answer.Profile, answer.FellBack));
         Assert.Empty(shop.Metered());
     }
 
@@ -465,6 +471,9 @@ public sealed class TinoTurnTests
 
         AssertUnavailable(answer, TinoCause.Scorer, "una sartén para induction que no pese");
         Assert.Equal(("scripted", false), (answer.Profile, answer.FellBack));
+        // What the turn had read by then still travels: the storefront's search starts from it.
+        Assert.NotEmpty(answer.Reads);
+        Assert.Contains(answer.Reads, read => read.Tool == "search_products");
         Assert.All(shop.Metered(), row => Assert.Equal("scripted", row.Profile));
     }
 
@@ -538,7 +547,11 @@ public sealed class TinoTurnTests
     {
         await using var shop = Compose(model: model);
 
-        AssertUnavailable(await shop.Ask("una sartén"), TinoCause.NoProfile, "una sartén");
+        var answer = await shop.Ask("una sartén");
+
+        AssertUnavailable(answer, TinoCause.NoProfile, "una sartén");
+        Assert.Equal((null, false), (answer.Profile, answer.FellBack));
+        Assert.Empty(answer.Reads);
         Assert.Empty(shop.Metered());
         Assert.Null(shop.Spent.Asked);
     }
@@ -547,9 +560,12 @@ public sealed class TinoTurnTests
     [Fact]
     public async Task Switched_off_it_does_not_answer_and_no_model_is_asked()
     {
-        await using var shop = Compose(enabled: false);
+        await using var shop = Compose(enabled: false, fallback: "second");
 
-        AssertUnavailable(await shop.Ask("una sartén para induction"), TinoCause.NoProfile, "una sartén para induction");
+        var answer = await shop.Ask("una sartén para induction");
+
+        AssertUnavailable(answer, TinoCause.NoProfile, "una sartén para induction");
+        Assert.Equal((null, false), (answer.Profile, answer.FellBack));
         Assert.Empty(shop.Metered());
     }
 
@@ -593,9 +609,12 @@ public sealed class TinoTurnTests
     [Fact]
     public async Task The_conversations_tokens_spent_no_model_is_asked()
     {
-        await using var shop = Compose(spentInConversation: 100_000);
+        await using var shop = Compose(spentInConversation: 100_000, fallback: "second");
 
-        AssertUnavailable(await shop.Ask("una sartén para induction"), TinoCause.Budget, "una sartén para induction");
+        var answer = await shop.Ask("una sartén para induction");
+
+        AssertUnavailable(answer, TinoCause.Budget, "una sartén para induction");
+        Assert.Equal((null, false), (answer.Profile, answer.FellBack));
         Assert.Empty(shop.Metered());
     }
 
@@ -606,6 +625,72 @@ public sealed class TinoTurnTests
 
         AssertUnavailable(await shop.Ask("una sartén para induction"), TinoCause.TooLong, "una sartén para induction");
         Assert.Empty(shop.Metered());
+    }
+
+    private const string Question = "una sartén para induction que no pese";
+
+    /// <summary>The most already spent — of the day when <paramref name="ofTheDay"/>, of the conversation otherwise — with which the question is still a turn.</summary>
+    private static async Task<long> MostSpentThatStillAnswers(bool ofTheDay, long budget)
+    {
+        // Between "nothing fits" and "everything fits": the turn's own need is a few thousand tokens.
+        var (answers, refuses) = (budget - 50_000, budget);
+        while (refuses - answers > 1)
+        {
+            var spent = (answers + refuses) / 2;
+            await using var shop = ofTheDay ? Compose(spentToday: spent) : Compose(spentInConversation: spent);
+            if ((await shop.Ask(Question)).Status == TinoStatus.Answered)
+                answers = spent;
+            else
+                refuses = spent;
+        }
+
+        return answers;
+    }
+
+    /// <summary>
+    /// A budget is what may be spent, to the token: a turn that would end exactly on it
+    /// is a turn. Both budgets are asked the same thing of the same turn, so where each
+    /// stops answering differs by exactly what the budgets differ by — whatever the
+    /// turn's own need is, which this test does not have to know.
+    /// </summary>
+    [Fact]
+    public async Task Both_budgets_stop_at_the_same_token_of_the_turn()
+    {
+        var settings = new TinoOptions();
+
+        var ofTheDay = await MostSpentThatStillAnswers(ofTheDay: true, settings.ShopDailyTokenBudget);
+        var ofTheConversation = await MostSpentThatStillAnswers(ofTheDay: false, settings.ConversationTokenBudget);
+
+        Assert.Equal(settings.ShopDailyTokenBudget - settings.ConversationTokenBudget, ofTheDay - ofTheConversation);
+        // And the turn's need is its first call's, not nothing: something was held back for it.
+        Assert.InRange(settings.ConversationTokenBudget - ofTheConversation, settings.MaxOutputTokens, 20_000);
+    }
+
+    /// <summary>
+    /// What a conversation asks of the window is all of it, not its longest message:
+    /// in a window where one long message still fits, two of them do not.
+    /// </summary>
+    [Fact]
+    public async Task The_window_is_asked_for_the_whole_conversation_not_its_longest_message()
+    {
+        var long1 = new TurnMessage("user", new string('a', TinoTurnValidator.MaxMessage));
+        var long2 = new TurnMessage("assistant", new string('b', TinoTurnValidator.MaxMessage));
+        IReadOnlyList<TurnMessage> one = [long1, new TurnMessage("assistant", "ok"), new TurnMessage("user", Question)];
+        IReadOnlyList<TurnMessage> two = [long1, long2, new TurnMessage("user", Question)];
+
+        // The smallest window, in steps of a hundred tokens, that holds the conversation with one long message.
+        var window = 300;
+        for (; window < 8192; window += 100)
+        {
+            await using var probe = Compose(contextTokens: window);
+            if ((await probe.Ask(one)).Status == TinoStatus.Answered)
+                break;
+        }
+
+        await using var shop = Compose(contextTokens: window);
+
+        Assert.Equal(TinoStatus.Answered, (await shop.Ask(one)).Status);
+        AssertUnavailable(await shop.Ask(two), TinoCause.TooLong, Question);
     }
 
     // ---------- what a turn takes ----------

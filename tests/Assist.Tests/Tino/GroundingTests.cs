@@ -34,6 +34,41 @@ public sealed class GroundingTests
     private static Task<TinoBody> Hold(TinoBody body, Scorer scorer, FactSheet? sheet = null, double threshold = 0.5) =>
         new Grounding(scorer, threshold).HoldAsync(body, sheet ?? new FactSheet(), TestContext.Current.CancellationToken);
 
+    /// <summary>A scorer that fails as it is told to, for what a failure is and what it is not.</summary>
+    private sealed class Failing(Func<Exception> failure) : ISupportScorer
+    {
+        public Task<double> ScoreAsync(string text, string claim, CancellationToken cancellationToken) => throw failure();
+    }
+
+    private static readonly TinoBody OneReason =
+        Products(new AnsweredProduct("PAN-1", "Sartén de hierro", [About("Es de hierro fundido.", "material: hierro fundido")]));
+
+    /// <summary>
+    /// The scorer's own timeout arrives as a cancellation nobody asked for: that is the
+    /// scorer not answering — the turn ends as the shop's failure, with its name.
+    /// </summary>
+    [Fact]
+    public async Task A_scorer_that_times_out_is_the_scorer_not_answering()
+    {
+        var grounding = new Grounding(new Failing(() => new TaskCanceledException("the scorer took too long")), 0.5);
+
+        var failure = await Assert.ThrowsAsync<SupportUnavailableException>(
+            () => grounding.HoldAsync(OneReason, new FactSheet(), TestContext.Current.CancellationToken));
+
+        Assert.IsType<TaskCanceledException>(failure.InnerException);
+    }
+
+    /// <summary>The shopper stopping the turn is not the scorer's failure: it is the turn ending, as asked.</summary>
+    [Fact]
+    public async Task A_turn_the_shopper_stopped_is_a_cancellation_not_the_scorers_failure()
+    {
+        using var stopped = new CancellationTokenSource();
+        await stopped.CancelAsync();
+        var grounding = new Grounding(new Failing(() => new OperationCanceledException(stopped.Token)), 0.5);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() => grounding.HoldAsync(OneReason, new FactSheet(), stopped.Token));
+    }
+
     // ---------- the figures ----------
 
     [Theory]

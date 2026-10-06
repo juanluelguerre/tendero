@@ -95,7 +95,7 @@ dotnet tool run dotnet-stryker --config-file stryker-config.json --skip-version-
 | `src/Knowledge` | `Knowledge.Tests` | 72.33 % | 57.91 % | 2026-09-27 · first run 49.76 % |
 | `src/Accounts` | `Accounts.Tests` | 80.08 % | 58.31 % | 2026-09-29 · R-7/R-8 close, first run 75.52 % |
 | `src/Pricing` | `Pricing.Tests` | 83.06 % | 62.59 % | 2026-09-29 · first baseline, first run 81.41 % |
-| `src/Assist` | `Assist.Tests` | 84.76 % | 78.27 % | 2026-10-05 · phase 12's close, first baseline, first run 67.97 % |
+| `src/Assist` | `Assist.Tests` | 86.26 % | 80.03 % | 2026-10-06 · phase 12b's close, with Tino in it; first run 84.69 %, under phase 12's 84.76 % |
 | `src/AI` | `AI.Tests` | 72.02 % | 57.35 % | 2026-10-05 · phase 12's close, first baseline, one run |
 
 A project the phase touched in a few lines only is run **scoped to those lines**
@@ -740,6 +740,82 @@ of dashes can read as *nothing was found*.
   worker's batch cleared after a stop; the audit's redaction reading inherited
   attributes; the role of an earlier assistant message in a turn's history. Small,
   written here rather than closed at this close.
+
+**Phase 12b's close (2026-10-06)** — Tino, the storefront's assistant: `Assist`
+whole, because Tino is a third of it now, and six projects the phase touched in a
+few files, each **scoped to those files** and setting no baseline. Every run alone,
+one after the other, with no stack running — the first attempt shared the machine
+with one and had not finished after 85 minutes. Reports are in
+`docs/blog/reports/2026-10-05-phase-12b-tino/stryker/`.
+
+| project | mutated with | run 1 | run 2 | survivors |
+|---|---|---:|---:|---:|
+| `src/Assist` | `Assist.Tests` | 84.69 % | **86.26 %** | 100 → 90 |
+| `src/SharedKernel`, scoped (`ReadTools.cs`, `ReadLimits.cs`, `Sentences.cs`) | its three suites | 96.55 % | — | 2 |
+| `src/Search`, scoped (`SearchProductsTool.cs`) | `Search.Tests`, `SearchEval.Tests` | 100 % | — | 0 (1 without coverage) |
+| `src/Catalog`, scoped (`GetProductTool.cs`) | `Catalog.Tests` | 72.73 % | — | 3 |
+| `src/Knowledge`, scoped (`ProductSpecsTool.cs`) | `Knowledge.Tests` | 92.59 % | — | 2 |
+| `src/AI`, scoped (`SupportScoring.cs`, `ScriptedChatClient.cs`, `ModelFailures.cs`, `AIInvocation.cs`) | `AI.Tests` | 65.67 % | — | 23 |
+| `src/Ordering`, scoped (`ReturnPolicyTool.cs`, `ShopperOrders.cs`) | `Ordering.Tests`, `Integration.Tests` | 73.08 % | — | 35 |
+
+**`Assist`'s first run was under its baseline** by seven hundredths — Tino's code
+had arrived with weaker tests than Steward's had been left with. **Only `Assist`
+was run twice**; what the scoped runs asked for, and two gaps `Assist`'s second run
+still showed, were closed after them and proved at level 1, so the percentages
+above are the runs' and not what those tests would now give.
+
+**What Stryker found, and what closed it.**
+
+- **A turn that asked no model said nothing of whether it had fallen back** — and
+  nothing checked. No scorer, switched off, no profile, a budget spent: each is now
+  asserted to name no profile and no fallback, with one configured.
+- **What a turn had read was lost from a turn that failed after reading**
+  (`walk.Candidate?.Reads ?? []` survived as `[]`). The storefront's search starts
+  from those reads; the scorer failing mid-turn now asserts they travel.
+- **The scorer timing out and the shopper pressing Stop arrive as the same
+  exception**, and the filter that tells them apart had no test on either side. A
+  timeout is the scorer not answering; a cancellation asked for is the turn ending.
+- **An order read with nothing said of it was a kind of answer** in the mutant
+  (`&&` as `||`): there would have been no sentence to cite.
+- **A budget's edge** (`>` survived as `>=`, twice). Both budgets are asked the same
+  thing of the same turn, so where each stops answering differs by exactly what the
+  budgets differ by — a test that does not need to know what a turn costs.
+- **The window was asked for the longest message, not the conversation** in the
+  mutant (`Sum` as `Max`): in the smallest window that holds one long message, two
+  do not fit.
+- **An order's sentences in English, and every state's word in either language**
+  (27 of `Ordering`'s 35). The tests read the Spanish of a delivered order and one
+  English sentence; a shopper writing in English could have been answered half in
+  Spanish. Every state now has its word asserted in both, and a delivered order is
+  read in English sentence by sentence — the one on the screen, the latest, what
+  can be returned, nothing left, the day the time ended.
+- **A product in no category** crashed the mutant of the product's read (`> 0` as
+  `>= 0`) and nothing asked for one.
+
+**Left, and what each is.**
+
+- **`ScriptedChatClient`** (21 of `AI`'s 23): a test double, the model the browser
+  specs and the turns' tests run on. Its survivors are its own corners — the service
+  key, a regex's options, the token counts it invents. It is exercised by
+  everything that uses it and tested for what the scripts rely on; mutation-testing
+  a double further is testing the test.
+- **Metric names, a log's subject, an exception's message** (`TinoTurn` 162, 204,
+  338 to 341; `Grounding` 32; `SupportScoring` 113; `GetProductTool` 36): noise.
+  `tendero.tino.turns` is held by the tracking plan's own test, by name.
+- **`AnswerSchema`'s descriptions** (six string mutants): what the model is told a
+  field is for. The `assistant` suite measures those words; a unit test would pin
+  the wording and say nothing of whether it works.
+- **Equivalent**: `orders.Length >= 0` (order facts exist only for orders read);
+  `fact.Fact.Quotes ?? []` with its right side removed; the language's fallback in
+  `TinoReply` (an unsupported language falls to the same sentence either way);
+  `name.Length >= 0` in a premise (a product read always has a name).
+- **Written down, not closed**: a claim's quotes surviving a *sin dato* turned into
+  a product answer (`Grounding` 85 — the test's fact has none); the smallest tool
+  budget in the window's sum (`TinoTurn` 191, one of two arithmetic mutants);
+  `Sentences`' two edges; `ProductSpecsTool`'s evidence on a row with none. And
+  **`TinoEndpoints` has no unit coverage** (18 mutants): the endpoint is held by
+  `Api.Tests`' contract and policy tests, which this run does not mutate with.
+- **Steward's survivors are phase 12's**, classified above; none is new.
 
 ## Property-based (CsCheck)
 

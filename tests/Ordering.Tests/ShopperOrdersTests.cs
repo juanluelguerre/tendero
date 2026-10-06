@@ -340,6 +340,65 @@ public sealed class ShopperOrdersTests
         Assert.Equal("El plazo para devolverlo terminó el 15 de enero de 2026.", orders[1].Says[^1]);
     }
 
+    /// <summary>
+    /// An order's state is the shop's word for it, in the shopper's language — what Tino
+    /// cites when it is asked where an order is. Every state has one, in both.
+    /// </summary>
+    [Theory]
+    [InlineData(OrderStatus.Pending, "pendiente de pago", "waiting for payment")]
+    [InlineData(OrderStatus.PaymentAuthorized, "pago autorizado, confirmándose", "payment authorised, being confirmed")]
+    [InlineData(OrderStatus.PaymentFailed, "el pago falló", "the payment failed")]
+    [InlineData(OrderStatus.Confirmed, "confirmado, en preparación", "confirmed, being prepared")]
+    [InlineData(OrderStatus.Shipped, "enviado, en camino", "shipped, on its way")]
+    [InlineData(OrderStatus.Delivered, "entregado", "delivered")]
+    [InlineData(OrderStatus.Cancelled, "cancelado", "cancelled")]
+    public async Task Every_state_of_an_order_has_the_shops_word_for_it_in_both_languages(OrderStatus status, string es, string en)
+    {
+        var clock = new TestClock(NewYear);
+        var (tool, _) = Tool(SignedIn(Ana), [AnOrder(Ana, clock, status)], clock);
+
+        async Task<IReadOnlyList<string>> Said(string culture) =>
+            Assert.Single(((OrdersForShopper)(await tool.ReadAsync(Arguments($$"""{"culture":"{{culture}}"}"""), Ct)).Data).Orders).Says;
+
+        Assert.Contains($"Su estado es: {es}.", await Said("es"));
+        Assert.Contains($"Its status is: {en}.", await Said("en"));
+    }
+
+    /// <summary>The same order, the same sentences, in English: none is left in the other language.</summary>
+    [Fact]
+    public async Task A_delivered_order_is_said_in_english_sentence_by_sentence()
+    {
+        var clock = new TestClock(new DateTimeOffset(2025, 12, 31, 23, 30, 0, TimeSpan.Zero));
+        var older = AnOrder(Ana, clock, OrderStatus.Delivered, Boots(), Socks(2));
+        clock.Advance(TimeSpan.FromHours(1));
+        var newer = AnOrder(Ana, clock, OrderStatus.Delivered, Boots());
+        var back = ReturnRequest.Open(clock, newer, [new(newer.Lines[0].VariantId, "BOOTS-42", 1, ReturnReason.WrongSize, null)], earlier: []);
+        var (tool, _) = Tool(SignedIn(Ana), [older, newer], clock, onScreen: older.Id.ToString(), returns: [back]);
+
+        var orders = ((OrdersForShopper)(await tool.ReadAsync(Arguments("""{"culture":"en"}"""), Ct)).Data).Orders;
+
+        // The one on the screen comes first.
+        Assert.Equal(
+            [
+                "This is the order the shopper is looking at.",
+                "The order was placed on 1 January 2026.",
+                "Its status is: delivered.",
+                "It was delivered on 1 January 2026.",
+                "It holds 1 × Botines de piel (42).",
+                "It holds 2 × Calcetines de lana.",
+                FormattableString.Invariant($"Total: {older.Totals.Total.Amount:0.00} EUR."),
+                "1 × Botines de piel (42) can be returned until 15 January 2026.",
+                "2 × Calcetines de lana can be returned until 15 January 2026.",
+            ],
+            orders[0].Says);
+        Assert.Equal("This is the shopper's most recent order.", orders[1].Says[0]);
+        Assert.Equal("Nothing of it is left to return.", orders[1].Says[^1]);
+
+        clock.Advance(TimeSpan.FromDays(30));
+        var later = ((OrdersForShopper)(await tool.ReadAsync(Arguments("""{"culture":"en"}"""), Ct)).Data).Orders;
+        Assert.Equal("The time to return it ended on 15 January 2026.", later[0].Says[^1]);
+    }
+
     [Fact]
     public async Task What_is_already_on_its_way_back_is_not_offered_again()
     {

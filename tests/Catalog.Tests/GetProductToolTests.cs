@@ -60,6 +60,18 @@ public sealed class GetProductToolTests
             answer.Facts);
     }
 
+    /// <summary>A product the shopkeeper has not filed yet is still a page: it has no category to name, and says none.</summary>
+    [Fact]
+    public async Task A_product_in_no_category_has_a_page_and_names_none()
+    {
+        var unfiled = Pan("Sartén precurada.") with { Category = [] };
+
+        var answer = await new GetProductTool(new Shop(unfiled))
+            .ReadAsync(Arguments("""{"code":"PAN-IRON-26"}"""), TestContext.Current.CancellationToken);
+
+        Assert.Null(((ProductPageForShopper)answer.Data).Category);
+    }
+
     [Fact]
     public async Task A_product_with_no_description_has_a_page_and_no_facts()
     {
