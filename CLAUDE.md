@@ -503,7 +503,9 @@ and reconstructing it later is exactly what the notebook exists to prevent.
 - ADR index: `docs/adr/README.md`
 - Terms used without being defined (NDCG@10, BM25, UCP, the outbox…): `docs/glossary.md`
 - Pointing an agent at the MCP server and the UCP profile: `docs/mcp.md`
-- Feature specs in progress: `docs/specs/`
+- Feature specs: `docs/specs/` — one living spec per feature, named for it; a
+  design written before a feature goes here too, never in a folder named for a tool
+- Implementation plans, dated, one per run: `docs/plans/`
 - Blog article workflow: `docs/blog-workflow.md`
 - Blog publication order and drafts: `docs/blog/index.md`
 - The book's outline, conventions and material map: `docs/book/README.md`

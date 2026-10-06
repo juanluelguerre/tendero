@@ -8,7 +8,7 @@
 
 **Tech Stack:** Angular 22 (signals, `rxResource`, `@defer`, `NgComponentOutlet` with inputs, container queries), Transloco, ECharts 6.1.0 through our own directive, Vitest 4, Playwright against the running stack.
 
-**Spec:** `docs/specs/backoffice-dashboard.md` — *Behavior* (Overview, tabs, full screen, size contract, phone, accessibility), *The data*, and *Building it, in order* (D-3 to D-6). Plan 1 (`docs/superpowers/plans/2026-09-29-dashboard-series-and-chart-engines.md`) built D-1 and D-2.
+**Spec:** `docs/specs/backoffice-dashboard.md` — *Behavior* (Overview, tabs, full screen, size contract, phone, accessibility), *The data*, and *Building it, in order* (D-3 to D-6). Plan 1 (`docs/plans/2026-09-29-dashboard-series-and-chart-engines.md`) built D-1 and D-2.
 
 ## Global Constraints
 

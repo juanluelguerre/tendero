@@ -388,7 +388,7 @@ ways for Tino:
    facts with ids and sources, the typed answer, the turn and its endpoint, the
    caps and the budget, the `Scripted` kind.
    *As built (2026-10-05)* — plan and its differences in
-   `docs/superpowers/plans/2026-10-05-tino-t2-tino-reads.md`. A turn is **two
+   `docs/plans/2026-10-05-tino-t2-tino-reads.md`. A turn is **two
    phases on one profile**, because the local server refuses tools and a schema in
    one call: a `ChatClientAgent` gathers through `search_products`, `get_product`,
    `get_product_specs` and `get_return_policy` (three tool rounds at most), and one
@@ -408,7 +408,7 @@ ways for Tino:
    owns each).
 3. **T-3 · Grounding** (`P12b-3`). The three checks, the drop count, `noData`
    confirmed by code.
-   *As built (2026-10-05)* — `docs/superpowers/plans/2026-10-05-tino-t3-grounding.md`.
+   *As built (2026-10-05)* — `docs/plans/2026-10-05-tino-t3-grounding.md`.
    Each reason is held to **the product's name and the fact it cites**: its figures
    compared (`Figures`), then its meaning scored by the support port, 0.5 or over
    to stand (`Tino:SupportThreshold`, from 32 measured pairs). The name is in the
@@ -424,7 +424,7 @@ ways for Tino:
 4. **T-4 · After-sale** (`P12b-2b`). `my_orders`, `my_order`, the returnable
    answer from Ordering, a guest's order from the screen's context, the isolation
    tests — one customer's order asked for by another, a guest's by a wrong id.
-   *As built (2026-10-05)* — `docs/superpowers/plans/2026-10-05-tino-t4-after-sale.md`.
+   *As built (2026-10-05)* — `docs/plans/2026-10-05-tino-t4-after-sale.md`.
    **One read, not two**: `my_orders` takes the language and nothing that names an
    order, so there is no id for a model to pass or a shopper to type. It answers
    with the order on the screen — read by the rule its own page reads it by

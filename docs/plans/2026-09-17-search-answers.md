@@ -8,7 +8,7 @@
 
 **Tech Stack:** .NET 11 preview, C# 14, xUnit v3, Elastic.Clients.Elasticsearch, Microsoft.Extensions.AI `IEmbeddingGenerator`, Qdrant, Text Embeddings Inference, Angular 22 + Transloco + vitest, Playwright, Stryker.NET 5.0.0.
 
-**Spec:** `docs/superpowers/specs/2026-09-17-search-no-answer-design.md` — read it before any task.
+**Spec:** `docs/specs/search-no-answer.md` — read it before any task.
 
 ## Global Constraints
 
