@@ -64,6 +64,7 @@
       "PaymentWebhookCommand": "Payment provider's notice",
       "PlaceOrderCommand": "Place an order",
       "ProposeActionsCommand": "Propose changes",
+      "ProposeAltTextCommand": "Propose alt text for pictures",
       "ProposeClaimsCommand": "Propose claims from a description",
       "PublishProductCommand": "Publish a product",
       "RecordBrowsingCommand": "Record a product viewed or a search",

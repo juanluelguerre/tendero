@@ -64,6 +64,7 @@
       "PaymentWebhookCommand": "Aviso del proveedor de pago",
       "PlaceOrderCommand": "Hacer un pedido",
       "ProposeActionsCommand": "Proponer cambios",
+      "ProposeAltTextCommand": "Proponer texto alternativo para imágenes",
       "ProposeClaimsCommand": "Proponer afirmaciones de una descripción",
       "PublishProductCommand": "Publicar un producto",
       "RecordBrowsingCommand": "Registrar un producto visto o una búsqueda",

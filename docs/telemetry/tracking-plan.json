@@ -386,6 +386,16 @@
       ]
     },
     {
+      "name": "Alt text for pictures",
+      "area": "backoffice",
+      "question": "Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?",
+      "decision": "Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes.",
+      "signals": [
+        "tendero.alt_text.pictures",
+        "image_alt_proposal_decided"
+      ]
+    },
+    {
       "name": "Tino",
       "area": "storefront",
       "question": "Is Tino used, and from where; what kind of answer does it give and how much of what the model writes survives; does an answer lead to a product — and when it does not answer, why?",
@@ -991,6 +1001,23 @@
           "description": "The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off."
         }
       }
+    },
+    {
+      "name": "image_alt_proposal_decided",
+      "planned": "P13a-3",
+      "description": "A proposed alt text for a product picture was decided by a person: approved as the model wrote it, approved after the person corrected it, or rejected. The decision and the language of the screen, never the words.",
+      "consent": "staff",
+      "attributes": {
+        "decision": {
+          "type": "string",
+          "values": [
+            "approved",
+            "edited",
+            "rejected"
+          ],
+          "description": "What the person did with the proposal."
+        }
+      }
     }
   ],
   "metrics": [
@@ -1510,6 +1537,23 @@
             "order"
           ],
           "description": "TinoKind, labelled by MetricLabels; none when Tino did not answer."
+        }
+      }
+    },
+    {
+      "name": "tendero.alt_text.pictures",
+      "instrument": "counter",
+      "unit": "{picture}",
+      "description": "Pictures the alt-text job took, by what became of each.",
+      "attributes": {
+        "outcome": {
+          "type": "string",
+          "values": [
+            "proposed",
+            "skipped",
+            "failed"
+          ],
+          "description": "proposed: a description was stored for a person to review. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be proposed."
         }
       }
     }

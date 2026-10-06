@@ -20,6 +20,20 @@ public sealed class ListProposalsTests
     private static ActionProposal Proposal(string subject, string? display = null) =>
         ActionProposal.Propose(FakeEntry.CommandName, "{}", subject, "{}", "Because.", Provenance, Clock, display);
 
+    /// <summary>The picture a proposal is about travels with its view, as an id the backoffice asks the shop's image endpoint for.</summary>
+    [Fact]
+    public async Task A_proposal_about_a_picture_says_which_and_one_about_words_says_none()
+    {
+        var (handler, proposals) = Handler();
+        var words = FakeEntry.Display("Taza", "(empty)", "Mug");
+        proposals.Add(Proposal("MUG-1", (words with { Image = "9f2c" }).ToJson()));
+        proposals.Add(Proposal("MUG-2", words.ToJson()));
+
+        var page = await handler.HandleAsync(new ListProposalsQuery(ProposalFilter.ToReview, null, 1, 20, "en"), TestContext.Current.CancellationToken);
+
+        Assert.Equal(["9f2c", null], page.Items.OrderBy(item => item.Subject).Select(item => item.Image));
+    }
+
     private static (ListProposalsHandler Handler, InMemoryProposals Proposals) Handler()
     {
         var proposals = new InMemoryProposals();

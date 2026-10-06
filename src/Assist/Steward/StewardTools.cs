@@ -43,7 +43,9 @@ public static class StewardTools
     [
         .. reads.Where(read => read.Audience == ToolAudience.Shopkeeper).Select(read => (AIFunction)new JsonTool(read.Name, read.Description, read.ArgumentsSchema,
             (arguments, ct) => ReadAsync(read, arguments, trace, ct))),
-        .. proposals.All.Select(entry => (AIFunction)new JsonTool(
+        // A command that takes seeing its subject is a job's to propose: this turn
+        // carries no picture, so it is not offered one to describe.
+        .. proposals.All.Where(entry => !entry.OnlyFromAJob).Select(entry => (AIFunction)new JsonTool(
             "propose_" + JsonNamingPolicy.SnakeCaseLower.ConvertName(entry.Name),
             $"Propose to {entry.Label.In("en").ToLowerInvariant()}: one item per change, each with the reason a person will read. Nothing changes until a person approves.",
             ProposalSchema(entry.PayloadSchema),

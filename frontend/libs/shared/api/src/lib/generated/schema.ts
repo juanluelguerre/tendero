@@ -180,6 +180,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/steward/alt-text/propose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ProposeAltText"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/catalog/products/{id}/withdraw": {
         parameters: {
             query?: never;
@@ -1479,6 +1495,8 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /** @enum {unknown} */
+        AltTextStatus: "Ran" | "NothingToDescribe" | "NoModel";
         AlternateSlug: {
             culture: string;
             slug: string;
@@ -2351,6 +2369,7 @@ export interface components {
             decidedAt: null | string;
             result: null | string;
             provenance: components["schemas"]["ProposalProvenanceView"];
+            image?: null | string;
         };
         ProposalsPage: {
             items: components["schemas"]["ProposalView"][];
@@ -2361,6 +2380,18 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
             counts: components["schemas"]["ProposalFilterCount"][];
+        };
+        ProposeAltTextRequest: {
+            /** Format: int32 */
+            count: null | number;
+        };
+        ProposeAltTextResult: {
+            status: components["schemas"]["AltTextStatus"];
+            proposals: string[];
+            /** Format: int32 */
+            skipped: number;
+            /** Format: int32 */
+            failed: number;
         };
         /** @enum {unknown} */
         PublishOutcome: "Published" | "AlreadyActive" | "Archived" | "NotFound";
@@ -3355,6 +3386,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProposalDecisionsResponse"];
+                };
+            };
+        };
+    };
+    ProposeAltText: {
+        parameters: {
+            query?: {
+                culture?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": null | components["schemas"]["ProposeAltTextRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposeAltTextResult"];
                 };
             };
         };

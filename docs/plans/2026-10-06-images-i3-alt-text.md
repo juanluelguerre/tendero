@@ -30,7 +30,7 @@ step redrawn against the code.
 | **A-5** | The backoffice: the button that starts a batch, the picture in the review, the alt field on the product's screen (the non-AI path's screen) | no |
 | **A-6** | The event `image_alt_proposal_decided`, the tracking plan, es and en, OpenAPI and the generated types | partly: *edited* |
 
-## Rulings the author owes
+## Rulings — all three taken as proposed (the author, 2026-10-06)
 
 1. **"Approves, edits or rejects".** There is no edit today, for any proposal.
    *Proposed*: an edit is a **decision of its own** — approve with the text the
@@ -53,3 +53,31 @@ step redrawn against the code.
   reader reads comfortably.
 - The job runs in the API host, on request. Not a polling worker: five at a time
   is a person's decision each time (the author, 2026-10-06), not a queue to drain.
+
+## Progress
+
+- **A-1** built 2026-10-06: the command, its endpoint, the import that keeps an alt.
+- **A-2** built 2026-10-06, the server's half: `ProposalDisplay.Image` and
+  `ProposalView.image`; `SetImageAltTextProposal` in Catalog, whose snapshot is
+  that one picture's words; `IProposableCommand.OnlyFromAJob`, true for this entry
+  alone, and Steward's tools leave such an entry out (ruling 2). The picture drawn
+  in the review is A-5.
+- **A-3** built 2026-10-06: `IUndescribedPictures` in the kernel, answered by
+  Catalog per picture and per language, in a stable order.
+- **A-4** built 2026-10-06: the job, `src/Assist/AltText` — beside Steward and
+  Tino, not under `Features/`, because it sends `ProposeActionsCommand` and a slice
+  may not name another. `POST /api/steward/alt-text/propose` (a shopkeeper's), at
+  most five pictures, the profile `AltText:Model` (`local`) only if it says it
+  reads pictures. A picture with a proposal waiting is left alone; what the model
+  wrote that cannot be proposed — not the shape asked, a language missing, a
+  sentence in the wrong language, one the command refuses — is counted, and the
+  rest of the batch goes on. Metric `tendero.alt_text.pictures`. **On the real
+  model** (the 4B with its projector, two seed pictures): *Zapato de casa gris con
+  forro blanco y suela con círculos* / *Grey house shoe with white lining and
+  circular sole pattern*; *Mochila verde oliva con detalles naranjas y bolsillos
+  laterales…* / *Green olive backpack with orange accents…*. Right about what is
+  drawn, and a word a person would change in each (*zapatilla*, *olive green*):
+  the case for ruling 1, made by the first two.
+- **Still to build**: ruling 1 (approve with the corrected text), ruling 3 (who
+  proposed, on the proposal — a column, so a migration), A-5 (the backoffice) and
+  A-6 (the event, planned in the tracking plan as `image_alt_proposal_decided`).

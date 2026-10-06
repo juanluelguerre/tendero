@@ -398,6 +398,51 @@
         }
       }
     },
+    "/api/steward/alt-text/propose": {
+      "post": {
+        "tags": [
+          "Steward"
+        ],
+        "operationId": "ProposeAltText",
+        "parameters": [
+          {
+            "name": "culture",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ProposeAltTextRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposeAltTextResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/products/{id}/withdraw": {
       "post": {
         "tags": [
@@ -4220,6 +4265,13 @@
           }
         }
       },
+      "AltTextStatus": {
+        "enum": [
+          "Ran",
+          "NothingToDescribe",
+          "NoModel"
+        ]
+      },
       "AlternateSlug": {
         "required": [
           "culture",
@@ -7666,6 +7718,12 @@
           },
           "provenance": {
             "$ref": "#/components/schemas/ProposalProvenanceView"
+          },
+          "image": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7702,6 +7760,49 @@
             "items": {
               "$ref": "#/components/schemas/ProposalFilterCount"
             }
+          }
+        }
+      },
+      "ProposeAltTextRequest": {
+        "required": [
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProposeAltTextResult": {
+        "required": [
+          "status",
+          "proposals",
+          "skipped",
+          "failed"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/AltTextStatus"
+          },
+          "proposals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

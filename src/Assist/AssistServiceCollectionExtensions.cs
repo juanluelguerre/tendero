@@ -26,6 +26,7 @@ public static class AssistServiceCollectionExtensions
         {
             services.Configure<StewardOptions>(configuration.GetSection(StewardOptions.SectionName));
             services.Configure<TinoOptions>(configuration.GetSection(TinoOptions.SectionName));
+            services.Configure<AltText.AltTextOptions>(configuration.GetSection(AltText.AltTextOptions.SectionName));
 
             // What Tino holds its answers to (the spec, *Grounding*): the scorer, when
             // the host was given its address.

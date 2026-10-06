@@ -59,6 +59,26 @@ public sealed class StewardToolsTests
             Task.FromResult(new ReadAnswer(new { orders = Array.Empty<string>() }, 0, 0));
     }
 
+    /// <summary>A command only a job that sees its subject may propose: registered like any other, and never Steward's tool.</summary>
+    private sealed class NeedsEyes : IProposableCommand
+    {
+        public string Name => "DescribePicture";
+
+        public LocalizedText Label { get; } = LocalizedText.Both("Describe a picture", "Describir una imagen");
+
+        public JsonElement PayloadSchema { get; } = JsonDocument.Parse("""{"type":"object","properties":{}}""").RootElement.Clone();
+
+        public bool OnlyFromAJob => true;
+
+        public Task<ProposalCheck> CheckAsync(JsonElement payload, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ProposalCheck.Invalid("Not for Steward."));
+
+        public Task<string?> NowAsync(JsonElement payload, CancellationToken cancellationToken = default) => Task.FromResult<string?>(null);
+
+        public Task<ProposalApplication> ApplyAsync(JsonElement payload, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ProposalApplication.Failed("Not for Steward."));
+    }
+
     private static (IReadOnlyList<AIFunction> Tools, StewardTrace Trace, InMemoryProposals Proposals) Compose()
     {
         var proposals = new InMemoryProposals();
@@ -69,6 +89,7 @@ public sealed class StewardToolsTests
         services.AddSingleton<IUnitOfWork>(new CountingUnitOfWork());
         services.AddSingleton<IPrincipalAccessor>(new FixedPrincipal("Lucía"));
         services.AddScoped<IProposableCommand>(scope => new FakeEntry(new() { ["MUG-1"] = "old" }, new ProposalScope()));
+        services.AddScoped<IProposableCommand, NeedsEyes>();
         services.AddAssist();
         var scope = services.BuildServiceProvider().CreateScope().ServiceProvider;
 
@@ -85,6 +106,7 @@ public sealed class StewardToolsTests
         var names = Compose().Tools.Select(tool => tool.Name).Order().ToArray();
 
         // my_orders is registered too, and is a shopper's: Steward is never handed it.
+        // Nor a command that takes seeing a picture: Steward's turn carries none.
         Assert.Equal(["look_at_shelf", "propose_set_value"], names);
         Assert.DoesNotContain(names, name => name.Contains("approve") || name.Contains("reject"));
     }

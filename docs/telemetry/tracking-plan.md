@@ -11,8 +11,8 @@ everything here that is not *planned* is emitted.
 
 ## The audit
 
-42 features: **37** answered by a signal emitted today,
-**0** by a signal planned, and **5** with no signal, each saying why.
+43 features: **37** answered by a signal emitted today,
+**1** by a signal planned, and **5** with no signal, each saying why.
 
 ### Storefront
 
@@ -57,6 +57,7 @@ everything here that is not *planned* is emitted.
 | Palette and list shortcuts | Does anybody reach screens and records through the palette, or move down a queue with j and k, and does the pane get used rather than the row? | R-6 keeps the shortcuts only if they are used (R-2, P11); a palette nobody opens after a month is simplified to screens alone; a pane nobody acts from goes back to the drawing board in R-3. | `backoffice_affordance_used`, `backoffice_action_taken` | emitted |
 | Stock search and filters | Does the shopkeeper narrow the stock list, by searching or by the restock and sold-out filters, and which? | If the search goes unused in a month while the filters are used, restocking is the screen's job and it opens on Restock; if neither is used, the dashboard's figure is where stock is read and the screen keeps only the count. | `backoffice_affordance_used` | emitted |
 | Steward | Is Steward used, from where, what does it cost — and are its proposals worth reviewing, or reviewed at all? | Where it lives and how it is reached; which tools to add or drop; the default profile. Above 30 % rejected, the prompt or the model is the problem, not the screen; unticked at zero batch after batch is the rubber stamp R-2 feared. | `steward_opened`, `steward_answered`, `proposals_reviewed`, `steward_unavailable` | emitted |
+| Alt text for pictures | Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read? | Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes. | `tendero.alt_text.pictures`, `image_alt_proposal_decided` | planned (P13a-3) |
 
 ### Agents
 
@@ -402,6 +403,18 @@ Answers:
 |---|---|---|---|
 | `cause` | string | `no_profile`, `model`, `time`, `budget`, `shop`, `too_long`, `scorer`, `too_many`, `network`, `not_available` | The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. |
 
+### `image_alt_proposal_decided`
+
+browser event, staff · **planned, P13a-3**. A proposed alt text for a product picture was decided by a person: approved as the model wrote it, approved after the person corrected it, or rejected. The decision and the language of the screen, never the words.
+
+Answers:
+
+- **Alt text for pictures** — Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `decision` | string | `approved`, `edited`, `rejected` | What the person did with the proposal. |
+
 ## Metrics
 
 Created by a Tendero `Meter` (`TelemetrySources`), as a static field. No
@@ -711,3 +724,15 @@ Answers:
 | `status` | string | `answered`, `unavailable` | TinoStatus, labelled by MetricLabels. |
 | `cause` | string | `none`, `no_profile`, `model`, `time`, `budget`, `shop`, `too_long`, `scorer` | TinoCause, labelled by MetricLabels; none when Tino answered. |
 | `kind` | string | `none`, `products`, `shop`, `ask`, `no_data`, `order` | TinoKind, labelled by MetricLabels; none when Tino did not answer. |
+
+### `tendero.alt_text.pictures`
+
+counter, unit `{picture}`. Pictures the alt-text job took, by what became of each.
+
+Answers:
+
+- **Alt text for pictures** — Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?
+
+| Attribute | Type | Values | Meaning |
+|---|---|---|---|
+| `outcome` | string | `proposed`, `skipped`, `failed` | proposed: a description was stored for a person to review. skipped: the store had no such picture, or its bytes were not one. failed: the model did not describe it in a way that can be proposed. |

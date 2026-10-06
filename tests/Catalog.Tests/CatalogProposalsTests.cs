@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ElGuerre.Tendero.Catalog.Domain;
+using ElGuerre.Tendero.Catalog.Features.SetImageAltText;
 using ElGuerre.Tendero.Catalog.Features.SetProductTranslation;
 using ElGuerre.Tendero.Catalog.Features.WithdrawProduct;
 using ElGuerre.Tendero.Catalog.Ports;
@@ -131,6 +132,98 @@ public sealed class CatalogProposalsTests
             Assert.Equal(["en", "es"], entry.Label.Cultures.Order());
     }
 
+    // ---------- a picture's alt text ----------
+
+    private static readonly ImageId Cover = new("9f2c");
+
+    private static Product WithACover()
+    {
+        var product = AProduct();
+        product.AddImage(Clock, Cover);
+        return product;
+    }
+
+    private static JsonElement AltText(Product product, string image = "9f2c") => Payload(
+        $$"""{"productId":"{{product.Id.Value}}","imageId":"{{image}}","spanish":"Cafetera italiana de aluminio.","english":"Aluminium moka pot."}""");
+
+    /// <summary>
+    /// The snapshot is that one picture's words, so a proposal goes stale when
+    /// somebody described that picture meanwhile and not when another one changed;
+    /// and the display carries which picture, for whoever reviews it to see.
+    /// </summary>
+    [Fact]
+    public async Task Alt_text_is_about_the_products_code_snapshots_that_pictures_words_and_carries_the_picture()
+    {
+        var product = WithACover();
+        var entry = Entries(product).Single(e => e.Name == "SetImageAltText");
+
+        var check = await entry.CheckAsync(AltText(product), TestContext.Current.CancellationToken);
+
+        Assert.True(check.IsValid);
+        Assert.Equal(product.Code, check.Subject);
+        Assert.Equal("""{"image":"9f2c","spanish":null,"english":null}""", check.Now);
+        var display = check.Display!;
+        Assert.Equal(("9f2c", "Cafetera", "Alt text", "Texto alternativo"),
+            (display.Image, display.Title.In("es"), display.Kind.In("en"), display.Kind.In("es")));
+        Assert.Equal(
+            [("Alt text · ES", "Cafetera italiana de aluminio."), ("Alt text · EN", "Aluminium moka pot.")],
+            display.Changes.Select(change => (change.Field.In("en"), change.Proposed!.In("en"))));
+        Assert.All(display.Changes, change => Assert.Null(change.Now));
+    }
+
+    [Fact]
+    public async Task Alt_text_already_there_is_what_the_snapshot_and_the_display_say_is_there_now()
+    {
+        var product = WithACover();
+        product.DescribeImage(Clock, Cover, LocalizedText.Both("A moka pot.", "Una cafetera."));
+        var entry = Entries(product).Single(e => e.Name == "SetImageAltText");
+
+        var check = await entry.CheckAsync(AltText(product), TestContext.Current.CancellationToken);
+
+        Assert.Equal("""{"image":"9f2c","spanish":"Una cafetera.","english":"A moka pot."}""", check.Now);
+        Assert.Equal(["Una cafetera.", "A moka pot."], check.Display!.Changes.Select(change => change.Now!.In("en")));
+    }
+
+    /// <summary>A picture that is not the product's, or a product out of the catalogue, is no subject: nothing is proposed, and an open proposal goes stale.</summary>
+    [Fact]
+    public async Task A_picture_the_product_does_not_have_and_an_archived_product_are_no_subject()
+    {
+        var product = WithACover();
+        var entry = Entries(product).Single(e => e.Name == "SetImageAltText");
+
+        Assert.False((await entry.CheckAsync(AltText(product, "another"), TestContext.Current.CancellationToken)).IsValid);
+        Assert.Null(await entry.NowAsync(AltText(product, "another"), TestContext.Current.CancellationToken));
+
+        product.Archive(Clock);
+        Assert.Null(await entry.NowAsync(AltText(product), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Applying_alt_text_writes_both_languages()
+    {
+        var product = WithACover();
+        var entry = Entries(product).Single(e => e.Name == "SetImageAltText");
+
+        var application = await entry.ApplyAsync(AltText(product), TestContext.Current.CancellationToken);
+
+        Assert.True(application.Applied);
+        var alt = product.Images.Single().Alt!;
+        Assert.Equal(("Cafetera italiana de aluminio.", "Aluminium moka pot."), (alt.Values["es"], alt.Values["en"]));
+    }
+
+    /// <summary>
+    /// Describing a picture takes seeing it. Steward's turn carries no picture, so
+    /// this one command is proposed by the job that reads pictures and by nobody
+    /// who cannot (the author, 2026-10-06); the others are anybody's.
+    /// </summary>
+    [Fact]
+    public void Only_alt_text_is_kept_for_a_job_that_sees_the_picture()
+    {
+        var onlyFromAJob = Entries(AProduct()).Where(entry => entry.OnlyFromAJob).Select(entry => entry.Name);
+
+        Assert.Equal(["SetImageAltText"], onlyFromAJob);
+    }
+
     private static Product AProduct() => Product.Create(Clock, LocalizedText.From("es", "Cafetera"), new Money(10m, "EUR"));
 
     private static JsonElement Payload(string json) => JsonDocument.Parse(json).RootElement.Clone();
@@ -144,6 +237,7 @@ public sealed class CatalogProposalsTests
         services.AddSingleton<IUnitOfWork>(new CountingUnitOfWork());
         services.AddScoped<IProposableCommand, SetProductTranslationProposal>();
         services.AddScoped<IProposableCommand, WithdrawProductProposal>();
+        services.AddScoped<IProposableCommand, SetImageAltTextProposal>();
         return [.. services.BuildServiceProvider().CreateScope().ServiceProvider.GetServices<IProposableCommand>()];
     }
 }

@@ -1,0 +1,33 @@
+[
+  {
+    "when": "Cafetera",
+    "pictures": 1,
+    "reply": { "es": "Una cafetera italiana de aluminio con el mango negro.", "en": "An aluminium moka pot with a black handle." },
+    "inputTokens": 1100,
+    "outputTokens": 40
+  },
+  {
+    "when": "Taza",
+    "pictures": 1,
+    "reply": { "es": "Una taza blanca de cerámica con asa.", "en": "A white ceramic mug with a handle." }
+  },
+  {
+    "when": "Prosa",
+    "pictures": 1,
+    "reply": "I am sorry, I cannot describe that picture."
+  },
+  {
+    "when": "Idioma",
+    "pictures": 1,
+    "reply": { "es": "A white mug with a handle on the side.", "en": "A white mug with a handle on the side." }
+  },
+  {
+    "when": "Vacío",
+    "pictures": 1,
+    "reply": { "es": "  ", "en": "A white mug with a handle." }
+  },
+  {
+    "when": "Cafetera",
+    "reply": { "es": "Sin imagen no se puede describir nada de la cafetera.", "en": "With no picture there is nothing of the pot to describe." }
+  }
+]

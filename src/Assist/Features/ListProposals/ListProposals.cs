@@ -60,7 +60,8 @@ public sealed record ProposalView(
     string? DecidedBy,
     DateTimeOffset? DecidedAt,
     string? Result,
-    ProposalProvenanceView Provenance);
+    ProposalProvenanceView Provenance,
+    string? Image = null);
 
 public sealed record ProposalChangeView(string Field, string? Now, string? Proposed);
 
@@ -143,7 +144,8 @@ public sealed class ListProposalsHandler(IProposalRepository proposals, Proposab
             proposal.DecidedAt,
             proposal.Result,
             new ProposalProvenanceView(
-                provenance.Profile, provenance.Model, provenance.PromptVersion, provenance.ConversationId, provenance.TraceId, provenance.AskedBy));
+                provenance.Profile, provenance.Model, provenance.PromptVersion, provenance.ConversationId, provenance.TraceId, provenance.AskedBy),
+            display?.Image);
     }
 }
 
