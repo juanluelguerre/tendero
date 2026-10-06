@@ -42,3 +42,7 @@ export type ProposalFilter = Schemas['ProposalFilter'];
 export type ProposalDecisionView = Schemas['ProposalDecisionView'];
 export type ProposalDecisionsResponse = Schemas['ProposalDecisionsResponse'];
 export type DecisionOutcome = Schemas['DecisionOutcome'];
+
+/** What a batch of alt texts came to: the proposals stored, and the pictures skipped or failed. */
+export type ProposeAltTextResult = Schemas['ProposeAltTextResult'];
+export type AltTextStatus = Schemas['AltTextStatus'];

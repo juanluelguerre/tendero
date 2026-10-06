@@ -141,6 +141,11 @@ export class BackofficeUsage {
     this.telemetry.trackEvent('proposals_reviewed', { kind, ...counts });
   }
 
+  /** What a person did with a proposed alt text: approved as written, corrected first, or rejected. */
+  imageAltProposalDecided(decision: TrackedEvents['image_alt_proposal_decided']['decision']): void {
+    this.telemetry.trackEvent('image_alt_proposal_decided', { decision });
+  }
+
   /** Steward's proposals decided, counted from what the server did to each row. */
   proposalsDecided(answer: ProposalDecisionsResponse, shown: Pick<Reviewed, 'proposed' | 'unticked'>): void {
     this.proposalsReviewed('proposals', {

@@ -1004,7 +1004,6 @@
     },
     {
       "name": "image_alt_proposal_decided",
-      "planned": "P13a-3",
       "description": "A proposed alt text for a product picture was decided by a person: approved as the model wrote it, approved after the person corrected it, or rejected. The decision and the language of the screen, never the words.",
       "consent": "staff",
       "attributes": {

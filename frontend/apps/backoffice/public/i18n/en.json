@@ -1000,7 +1000,7 @@
   },
   "proposals": {
     "title": "Proposals",
-    "hint": "What Steward proposed. Nothing here has changed the shop until someone approves it.",
+    "hint": "What Steward and the alt-text job proposed. Nothing here has changed the shop until someone approves it.",
     "filterLabel": "Show proposals",
     "filter": {
       "ToReview": "To review",
@@ -1058,6 +1058,26 @@
       "confirm": "Reject",
       "keep": "Keep it",
       "reason": "Why not? It is what the next prompt is judged against."
+    },
+    "picture": "The picture of {{title}} this proposal is about",
+    "proposedWords": "Proposed — correct it if it is not right",
+    "correctHint": "Approving sends your words. What the model wrote is kept beside them.",
+    "refused": "These words were not taken:",
+    "approveCorrected": "Approve with corrections",
+    "edited": "A person corrected its words first.",
+    "proposer": {
+      "Steward": "Steward",
+      "AltTextJob": "Alt-text job"
+    },
+    "altText": {
+      "describe": "Describe {{count}} pictures",
+      "describing": "Reading the pictures…",
+      "notDescribed": "{{count}} could not be described.",
+      "result": {
+        "Ran": "{{proposed}} descriptions are waiting below for your review.",
+        "NothingToDescribe": "Every picture is described or has a proposal waiting.",
+        "NoModel": "No model that reads pictures is running. Type the alt text on the product instead."
+      }
     }
   },
   "proposalReview": {

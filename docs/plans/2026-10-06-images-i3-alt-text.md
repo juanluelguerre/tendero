@@ -90,7 +90,19 @@ step redrawn against the code.
 - **Ruling 3** built 2026-10-07: a proposal says what proposed it
   (`ProposalProvenance.Proposer`: `Steward`, `AltTextJob`), served on the view; one
   stored before the name existed was Steward's.
-- **Still to build**: A-5 (the backoffice: the batch's button, the picture and the
-  editable words in the review, who proposed, the alt field on the product's
-  screen) and A-6 (the event `image_alt_proposal_decided`, planned in the tracking
-  plan).
+- **A-5** built 2026-10-07, all but one screen: on the Proposals list a quiet
+  *Describe 5 pictures* asks for a batch and says what it came to; the pane shows
+  the picture a proposal is about, the words in boxes where the proposal offers
+  them (a Signal Form over a signal of the pane's, reset when another proposal
+  opens), *Approve with corrections* when a word was changed, the server's reason
+  when the words are refused, who proposed, and that a decided one was edited.
+- **A-6** built 2026-10-07: `image_alt_proposal_decided` — approved, edited,
+  rejected — emitted by the proposals store for this command alone, and no longer
+  *planned* in the tracking plan.
+- **Seen end to end on the real stack** (`Tendero__Vision=true`, the first time
+  the AppHost's switch ran): three batches from the screen — 5, 5, and 3 with 2
+  the model did not describe — the picture in the pane, a sentence corrected and
+  approved, the catalogue written with the person's words. Captures 05 to 07 in
+  the phase's report.
+- **Still to build**: the alt text field on the product's own screen — the path
+  with no model has its endpoint and no screen yet.

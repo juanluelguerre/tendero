@@ -1000,7 +1000,7 @@
   },
   "proposals": {
     "title": "Propuestas",
-    "hint": "Lo que Steward propuso. Nada de aquí ha cambiado la tienda hasta que alguien lo apruebe.",
+    "hint": "Lo que propusieron Steward y el trabajo de texto alternativo. Nada de esto ha cambiado la tienda hasta que alguien lo aprueba.",
     "filterLabel": "Mostrar propuestas",
     "filter": {
       "ToReview": "Por revisar",
@@ -1058,6 +1058,26 @@
       "confirm": "Rechazar",
       "keep": "Conservarla",
       "reason": "¿Por qué no? Es con lo que se juzgará el próximo prompt."
+    },
+    "picture": "La imagen de {{title}} de la que trata esta propuesta",
+    "proposedWords": "Propuesto: corrígelo si no es correcto",
+    "correctHint": "Al aprobar se envían tus palabras. Lo que escribió el modelo se guarda junto a ellas.",
+    "refused": "Estas palabras no se aceptaron:",
+    "approveCorrected": "Aprobar con correcciones",
+    "edited": "Una persona corrigió antes sus palabras.",
+    "proposer": {
+      "Steward": "Steward",
+      "AltTextJob": "Trabajo de texto alternativo"
+    },
+    "altText": {
+      "describe": "Describir {{count}} imágenes",
+      "describing": "Leyendo las imágenes…",
+      "notDescribed": "{{count}} no se pudieron describir.",
+      "result": {
+        "Ran": "{{proposed}} descripciones esperan abajo tu revisión.",
+        "NothingToDescribe": "Todas las imágenes están descritas o tienen una propuesta esperando.",
+        "NoModel": "No hay ningún modelo que lea imágenes en marcha. Escribe el texto alternativo en el producto."
+      }
     }
   },
   "proposalReview": {

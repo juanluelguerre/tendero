@@ -11,7 +11,13 @@ import {
   withState,
 } from '@ngrx/signals';
 import { extendResource } from '@ngrx/signals/resource';
-import type { ProposalDecisionsResponse, ProposalFilter, ProposalView } from '@tendero/shared-api';
+import type {
+  ProposalDecisionView,
+  ProposalDecisionsResponse,
+  ProposalFilter,
+  ProposalView,
+  ProposeAltTextResult,
+} from '@tendero/shared-api';
 import { isSessionExpired } from '@tendero/shared-auth';
 import { CultureStore } from '@tendero/shared-i18n';
 import { StewardService } from '../../../data-access/steward.service';
@@ -23,6 +29,12 @@ import { withWorklistUrl } from '../../../worklist/with-worklist-url';
 /** The chips, in the order a person sorts their work (the spec, *The Proposals list*). */
 export const ProposalFilters: readonly ProposalFilter[] = ['ToReview', 'Applied', 'Rejected', 'Failed', 'All'];
 
+/** Pictures a batch of alt texts describes: what a person reviews at once (the author, 2026-10-06). */
+export const AltTextBatch = 5;
+
+/** The command a picture's description is proposed as: its decisions are an event of their own. */
+const AltTextCommand = 'SetImageAltText';
+
 /**
  * The Proposals list's shared state (ADR 0047): the filter, the page and the
  * open proposal in the URL, the rows with every chip's count from the server,
@@ -31,7 +43,15 @@ export const ProposalFilters: readonly ProposalFilter[] = ['ToReview', 'Applied'
  * reviewer goes down the list without losing their place.
  */
 export const ProposalsStore = signalStore(
-  withState({ busy: null as string | null }),
+  withState({
+    busy: null as string | null,
+    /** Why the corrected words were refused; the proposal still waits, open. */
+    refusal: null as string | null,
+    /** A batch of alt texts is being read by the model. */
+    describing: false,
+    /** What the last batch asked for from this screen came to. */
+    described: null as ProposeAltTextResult | null,
+  }),
   withWorklistUrl(),
   withProps(() => ({
     _steward: inject(StewardService),
@@ -85,7 +105,7 @@ export const ProposalsStore = signalStore(
 
     /** Read the list again and move to the next row, as the claims queue does. */
     const settle = (proposal: ProposalView) => {
-      patchState(store, { busy: null });
+      patchState(store, { busy: null, refusal: null });
       if (store.selectedId() === proposal.id) {
         const list = store.proposals();
         const next = list[list.findIndex((candidate) => candidate.id === proposal.id) + 1];
@@ -98,6 +118,21 @@ export const ProposalsStore = signalStore(
     /** The pane decides a batch of one: reported once the server said what became of it. */
     const decided = (proposal: ProposalView) => (answer: ProposalDecisionsResponse) => {
       store._usage.proposalsDecided(answer, { proposed: 1, unticked: 0 });
+      const outcome = answer.rows[0]?.outcome;
+      if (proposal.command === AltTextCommand && (outcome === 'Applied' || outcome === 'Rejected'))
+        store._usage.imageAltProposalDecided(outcome === 'Applied' ? 'approved' : 'rejected');
+      settle(proposal);
+    };
+
+    /** The corrected words taken or refused: refused, the proposal stays open with the reason. */
+    const corrected = (proposal: ProposalView) => (decision: ProposalDecisionView) => {
+      if (decision.outcome === 'Invalid') {
+        patchState(store, { busy: null, refusal: decision.reason ?? '' });
+        return;
+      }
+      store._usage.proposalsDecided({ rows: [decision] }, { proposed: 1, unticked: 0 });
+      if (proposal.command === AltTextCommand && decision.outcome === 'Applied')
+        store._usage.imageAltProposalDecided('edited');
       settle(proposal);
     };
 
@@ -112,13 +147,35 @@ export const ProposalsStore = signalStore(
       filterBy(key: string): void {
         navigate({ filter: key === 'ToReview' ? null : key, page: null, proposal: null });
       },
-      open,
+      open(proposal: ProposalView): void {
+        patchState(store, { refusal: null });
+        open(proposal);
+      },
       close(): void {
+        patchState(store, { refusal: null });
         navigate({ proposal: null });
       },
       approve(proposal: ProposalView): void {
         patchState(store, { busy: proposal.id });
         store._steward.approve([proposal.id]).subscribe({ next: decided(proposal), error: failed(proposal) });
+      },
+      /** The third decision: approved with the words the person corrected, by the key of each. */
+      approveEdited(proposal: ProposalView, edits: Readonly<Record<string, string>>): void {
+        patchState(store, { busy: proposal.id, refusal: null });
+        store._steward
+          .approveEdited(proposal.id, edits)
+          .subscribe({ next: corrected(proposal), error: failed(proposal) });
+      },
+      /** Asks for a batch of alt texts; when it is back, the list is read again to show them. */
+      describePictures(): void {
+        patchState(store, { describing: true, described: null });
+        store._steward.proposeAltText(AltTextBatch, store._culture.active()).subscribe({
+          next: (described) => {
+            patchState(store, { describing: false, described });
+            store._list.reload();
+          },
+          error: () => patchState(store, { describing: false }),
+        });
       },
       reject(proposal: ProposalView, reason: string): void {
         patchState(store, { busy: proposal.id });

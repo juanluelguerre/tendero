@@ -1,9 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import type {
+  ProposalDecisionView,
   ProposalDecisionsResponse,
   ProposalFilter,
   ProposalsPage,
+  ProposeAltTextResult,
   StewardAnswer,
   StewardTurnRequest,
 } from '@tendero/shared-api';
@@ -51,6 +53,30 @@ export class StewardService {
   /** Runs each proposal's command as whoever is signed in; one row per proposal. */
   approve(ids: readonly string[]): Observable<ProposalDecisionsResponse> {
     return this.http.post<ProposalDecisionsResponse>(`${this.baseUrl}/api/steward/proposals/approve`, { ids });
+  }
+
+  /**
+   * Approves one proposal with the words the person corrected, each by the key of
+   * the change it belongs to. Words the server refuses come back as `Invalid`
+   * with the reason, and the proposal still waits.
+   */
+  approveEdited(id: string, edits: Readonly<Record<string, string>>): Observable<ProposalDecisionView> {
+    return this.http.post<ProposalDecisionView>(
+      `${this.baseUrl}/api/steward/proposals/${encodeURIComponent(id)}/approve-edited`,
+      { edits },
+    );
+  }
+
+  /**
+   * Asks the alt-text job for a batch: the next pictures nobody has described,
+   * read by the model and stored as proposals. Nothing is written to the catalogue.
+   */
+  proposeAltText(count: number, culture: string): Observable<ProposeAltTextResult> {
+    return this.http.post<ProposeAltTextResult>(
+      `${this.baseUrl}/api/steward/alt-text/propose`,
+      { count },
+      { params: new HttpParams().set('culture', culture) },
+    );
   }
 
   /** The reason is required: it is what a change to the prompt is judged against. */

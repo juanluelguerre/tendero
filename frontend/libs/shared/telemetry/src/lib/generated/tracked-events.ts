@@ -338,6 +338,17 @@ export interface TrackedEvents {
     /** The turn's cause; too_many for the rate limit, network when the request itself failed, not_available when the door was opened while Tino is off. */
     readonly cause: 'no_profile' | 'model' | 'time' | 'budget' | 'shop' | 'too_long' | 'scorer' | 'too_many' | 'network' | 'not_available';
   };
+
+  /**
+   * A proposed alt text for a product picture was decided by a person: approved as the model wrote it, approved after the person corrected it, or rejected. The decision and the language of the screen, never the words.
+   *
+   * Alt text for pictures: Are the descriptions a model proposes for product pictures good enough to approve as written — and does the job get through its batches, or stall on pictures it cannot read?
+   * Decides: Below half approved unedited, the job stops proposing in batches and proposes on request, one picture at a time. Failed or skipped above one in five is the model or the store, not the reviewer: the prompt, the profile or the pictures are what changes.
+   */
+  readonly image_alt_proposal_decided: {
+    /** What the person did with the proposal. */
+    readonly decision: 'approved' | 'edited' | 'rejected';
+  };
 }
 
 /**
@@ -371,4 +382,5 @@ export const TRACKED_EVENT_CONSENT: Readonly<Record<keyof TrackedEvents, 'behavi
   tino_answered: 'behavioural',
   tino_result_followed: 'behavioural',
   tino_unavailable: 'behavioural',
+  image_alt_proposal_decided: 'staff',
 };

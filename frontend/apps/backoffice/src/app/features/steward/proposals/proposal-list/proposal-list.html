@@ -1,8 +1,26 @@
 <ng-container *transloco="let t">
   <header class="page-head">
     <h1 class="page-title">{{ t('proposals.title') }}</h1>
+    <!-- A batch of alt texts, asked for by a person: five pictures a time, each read by
+         the model and left here as a proposal. Quiet: the view's clay action is Approve. -->
+    <button
+      type="button"
+      class="button button--quiet"
+      [disabled]="store.describing()"
+      (click)="store.describePictures()"
+    >
+      {{ store.describing() ? t('proposals.altText.describing') : t('proposals.altText.describe', { count: batch }) }}
+    </button>
   </header>
   <p class="page-hint">{{ t('proposals.hint') }}</p>
+  @if (store.described(); as described) {
+    <p class="page-hint" role="status">
+      {{ t('proposals.altText.result.' + described.status, { proposed: described.proposals.length }) }}
+      @if (described.skipped + described.failed > 0) {
+        {{ t('proposals.altText.notDescribed', { count: described.skipped + described.failed }) }}
+      }
+    </p>
+  }
 
   <div class="worklist-tools">
     <backoffice-filter-chips
