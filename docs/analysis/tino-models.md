@@ -233,6 +233,42 @@ nothing said of it — true, and not an answer. Written down below.
 | `dishwasher-sin-dato-es` | 1 of 3 | on a pan's page, answers with other products that are dishwasher safe, each under its own card |
 | `pan-induction-en`, `best-is-not-ranked-en` | 1 of 3 each | *We don't have that information* where products were expected |
 
+### After the author's walk: *this product's details* only on that product's page (2026-10-06)
+
+The kind `noData` left the schema wherever no product is on the shopper's screen
+(the spec's T-6 notes say why). The suite was run again, and it found what the
+unit tests could not: **the instructions' new wording broke a case the change had
+nothing to do with.**
+
+| Run | Prompt | Passed | p50 | p95 | Shown | Dropped | What failed |
+|---|---|---|---|---|---|---|---|
+| 6 | `…g` | 24 of 28 | 4.1 s | 11.6 s | 40 | 15 | `shipping-unknown-es`, two orders asked by nobody (`ask`), `order-of-a-guest-on-its-page-es` |
+| 7 | `…g` | 25 of 28 | 4.1 s | 8.6 s | 36 | 11 | `best-is-not-ranked-en`, one order asked by nobody, `order-of-a-guest-on-its-page-es` |
+| 8 | `…h` | 26 of 28 | 4.0 s | 10.5 s | 40 | 6 | `english-under-spanish`, `order-can-i-return-en` |
+| 9 | `…h` | 26 of 28 | 4.1 s | 8.9 s | 33 | 10 | `pan-induction-es`, `english-under-spanish` |
+
+`g` explained the rule to the model in five lines, with an example about a red
+T-shirt. A guest on their order's page asking where it was then got *"this is the
+order the shopper is looking at"* and its date, not that it had been sent: **four
+runs of four** on the order cases alone, against none of two on the code as it was
+measured at T-5. Nothing in those five lines is about orders. `h` says it in the
+two lines the kind had before, with *the product the shopper is looking at* in
+them, and leaves the rule to the schema, where it is enforced anyway: the case
+passes again, six runs of six.
+
+Two things to keep from it. **A 4B model reads every line of its instructions as
+weight on every answer**: an example about T-shirts moved an answer about an
+order. And **a rule code enforces does not need explaining to the model** — the
+explanation cost a case and bought nothing. The two orders *asked by nobody* that
+answered `ask` in runs 6 and 7 did not recur in six further runs of those cases;
+the suite's isolation holds — no run showed a line of an order to anyone who could
+not read it.
+
+What a run still gets wrong moves from run to run, as before: one or two of
+`shipping-unknown-es` (reads `my_orders` for a shipping question),
+`english-under-spanish` (asks back), `pan-induction-es` (*we don't have that
+information*), `order-can-i-return-en` (answers in Spanish).
+
 **What the suite does not settle.**
 
 - **The threshold stays 0.5.** The suite compares what is shown; it has no labels

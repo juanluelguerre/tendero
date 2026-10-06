@@ -27,7 +27,7 @@ public sealed record TinoContext(TinoContextKind Kind, string Key)
 /// </summary>
 public static class TinoPrompt
 {
-    public const string Version = "tino-2026-10-05g";
+    public const string Version = "tino-2026-10-05h";
 
     /// <summary>What the model says when it has read enough. Its text in this phase is never shown.</summary>
     public const string Done = "DONE";
@@ -76,11 +76,8 @@ public static class TinoPrompt
           reference; "my last order" is the one whose facts say it is the most recent. 1 or 2
           sentences, each citing a fact of that order or a SHOP fact. Say
           only what the facts say: never work out a date or a number of days yourself.
-        - kind "noData": ONLY when the shopper is looking at a product and the facts do not
-          say what was asked about THAT product. "code" is that product, even when other
-          products have what was asked. With no product on the screen there is no such
-          kind: "do you have a red T-shirt?" is kind "products" with what there is and
-          what its facts say, or kind "unknown".
+        - kind "noData": the facts do not say what was asked about the product the shopper
+          is looking at. "code" is THAT product, even when other products have it.
           "about" completes the sentence "This product's details don't say ..." —
           for example "whether it can go in the oven" / "si puede ir al horno". "claim" is
           the statement no fact makes, as a sentence: "It can go in the oven." "nearest"
