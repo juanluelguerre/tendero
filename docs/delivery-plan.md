@@ -946,6 +946,51 @@ phrases, the solver decides. `#AIEngineering #ecommerce #dotnet`
 
 ---
 
+## Phase 15 · The shopper's account: profile, addresses, payment methods, preferences
+
+`no empezada — para más adelante` · priority **medium** · size **L** — added
+2026-10-06 at the author's request, after the images (13a), the kit solver (13c)
+and voice (14). It schedules what the backlog had recorded unscheduled since
+2026-09-04 (*A real account, and the menu it earns*, below): today the account
+page is one screen — who you are, sign out, your orders — and a shop people come
+back to remembers more about them than that.
+
+What the author asked for: **the shopper's settings, profile and parameters** — a
+favourite or default way to pay, a default address knowing there can be several,
+payments, and the rest of what a returning customer expects not to type twice.
+
+- [ ] `P15-1` Spec and mock-ups (in English), before anything is built: the sections, what each holds, what checkout reads from them, and **which facts are the identity provider's and which are the shop's** — a name and an email come in the token and are not ours to edit (invariant 10); an address book and a preference are — **S**
+- [ ] `P15-2` **Address book** in `Accounts`: several addresses per customer, each named by the shopper, **one default for delivery and one for billing**; add, edit, remove, choose the default. `Address` already exists in the SharedKernel and is frozen onto orders, so an edit never changes an order placed — **M**
+- [ ] `P15-3` **Checkout reads the account**: the default address preselected and another one a choice, never a form to retype; a new address typed at checkout can be kept. A guest's checkout is unchanged — **M**
+- [ ] `P15-4` **Saved payment methods — never card data.** A provider-side token and a masked label (*Visa ending 4242, expires 08/28*), a default among them, removal. It is a change to `IPaymentProvider` (tokenise, charge a token, forget a token) and to `FakePaymentProvider` and the contract suite **before it is a screen** — **L**
+- [ ] `P15-5` **Preferred way to pay**: the default method preselected at checkout, another one a choice; a method that has expired or was declined is said so and is not silently skipped — **M**
+- [ ] `P15-6` **Profile and preferences**: language and currency (`Customer` already carries both), and what the shop may send — order emails always, marketing only by consent, recorded with its date as the analytics consent is — **S/M**
+- [ ] `P15-7` **The account's menu**, last: it was declined on 2026-09-04 because a menu with one item is chrome pretending to be structure. Three real sections is when it earns its place, so it is built after them, not before — **S**
+- [ ] `P15-8` **What an agent may use of it.** A default address and a saved method are exactly what a delegated checkout wants to reuse; whether a mandate (phase 11, AP2) may name them, and how the shopper sees and withdraws that, is decided in the spec and not discovered in the code — **M**
+- [ ] `P15-9` **The shopper's own data**: see what the shop holds, and remove the account — what is erased, and what an order keeps because the law makes the shop keep it. `docs/privacy.md` says both — **M**
+- [ ] `P15-10` The tracking plan's events with the question each answers (ADR 0036), an ADR for the payment token, and the close — **S**
+
+**Risks.** Payment data: a PAN stored anywhere is out of the question, and a token
+that outlives the customer's wish to keep it is the same mistake made later. A
+default address applied without being shown is an order sent to the wrong house.
+And the identity provider owns part of the profile: a screen that lets a shopper
+edit what the issuer will overwrite at the next sign-in is a bug by design.
+
+**Demo.** A returning shopper checks out in two clicks: *deliver to* **Home** ·
+*pay with* **Visa ending 4242** — both chosen beforehand, both changeable there.
+Then the account: a second address added and made the default, the card removed,
+and the next checkout asking for a way to pay instead of assuming one.
+
+**Evidences.** A tokenised payment port with a contract suite; an aggregate of
+the customer's own (`Accounts`) that an order snapshots and never references
+(invariant 1); consent and erasure as domain operations with an audit row.
+
+**Article.** *"The shop remembered my address, and nothing it should not"* — what
+a customer's account may hold, what it must not, and where the line runs through
+the payment port. `#ecommerce #dotnet #payments #privacy #DDD`
+
+---
+
 ## Standing backlog — deferred, with the number
 
 Not scheduled. Each is recorded so the deferral is a decision rather than an
@@ -1017,6 +1062,9 @@ oversight, and each is a paragraph in some future article.
 | **A storefront that looks like a shop** | the home page and the taxonomy landed 2026-09-04 and the returns promise 2026-09-07; what is left is the editorial imagery, and a delivery promise the code cannot make yet — a rate needs an address | Deliberately after the floor. See below — it is the largest single item here and the only one that is not deferred for scale |
 
 ### A real account, and the menu it earns
+
+**Scheduled on 2026-10-06 as phase 15** (above), by the author; gift vouchers
+stay here, unscheduled.
 
 Recorded 2026-09-04, unscheduled. Today the account page is one screen: who you
 are, sign out, and your orders. A shop people come back to has more, and the
