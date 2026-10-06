@@ -116,7 +116,7 @@ during which phases 0–5 refill the queue.
 | Date | Article | State |
 |---|---|---|
 | 2026-09-16 | 00 · From CocktailDev to Tendero | **published** — [elguerre.com](https://elguerre.com/2026/09/16/tendero-ai-native-ecommerce-dotnet/), tag `blog/00-from-cocktaildev-to-tendero` |
-| 2026-09-29 | **01 · Design before code: a design system, a sketch and a prototype** | outline — to write: one ugly sketch per app, the draft, its tag |
+| 2026-09-29 | **01 · Why design before code when an AI agent builds the screen in minutes: sketch, mockup and prototype** | outline — to write: one ugly sketch per app, the draft, its tag |
 | 2026-10-13 | 02 · One port, N catalogs | ready — tag `blog/02-one-port-n-catalogs`, re-checked 2026-09-21 |
 | 2026-10-27 | 03 · Search with regression tests: NDCG as a CI gate | ready |
 | 2026-11-10 | **04 · Tests that had never failed** (Stryker.NET) | outline, material complete — needs a tag of its own, cut after 2026-09-16 |
