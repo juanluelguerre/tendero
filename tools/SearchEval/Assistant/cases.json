@@ -170,13 +170,13 @@
       "id": "spanish-under-english",
       "culture": "en",
       "question": "una mochila para llevar el portátil",
-      "expect": { "kinds": ["Products"], "tools": ["search_products"], "language": "es" }
+      "expect": { "kinds": ["Products"], "tools": ["search_products"], "language": "en" }
     },
     {
       "id": "english-under-spanish",
       "culture": "es",
       "question": "a backpack to carry my laptop",
-      "expect": { "kinds": ["Products"], "tools": ["search_products"], "language": "en" }
+      "expect": { "kinds": ["Products"], "tools": ["search_products"], "language": "es" }
     },
     {
       "id": "order-where-is-it-es",

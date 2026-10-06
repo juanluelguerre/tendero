@@ -2,7 +2,8 @@
   {
     "when": "prose",
     "calls": [{ "tool": "search_products", "arguments": { "text": "sartén" } }],
+    "then": [{ "tool": "get_product_specs", "arguments": { "codes": ["PAN-2"] } }],
     "say": "DONE",
-    "reply": { "kind": "products", "products": [{ "code": "PAN-2", "reasons": [] }] }
+    "reply": { "kind": "products", "products": [{ "code": "PAN-2", "reasons": [{ "says": "Pesa 2,3 kg.", "cites": "f1" }] }] }
   }
 ]

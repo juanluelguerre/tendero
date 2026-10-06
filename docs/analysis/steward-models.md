@@ -178,3 +178,12 @@ not acting; code cannot propose for it, and a hosted profile is S-7's question.
 23 and 23 with failures of a different kind (a proposal for the wrong product, a search
 for the new name). They are not counted above. A database per run, or the comparison
 means nothing.
+
+### The screen's language (2026-10-06) — not measured yet
+
+The author changed the rule for both agents: an answer is in the language of the
+screen, not of the last message (prompt `steward-2026-10-06`; the line about
+switching language on request went with it — the backoffice has a switch). The
+suite's two language cases flipped with it: `spanish-under-english` expects
+English, `english-under-spanish` Spanish. **No run has been made since**: the 7 of
+7 above is of the old rule, on `steward-2026-10-05`.

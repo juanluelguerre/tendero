@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using ElGuerre.Tendero.AI;
 using ElGuerre.Tendero.AI.Chat;
 using ElGuerre.Tendero.AI.Support;
@@ -119,15 +120,18 @@ public sealed class TinoTurnValidator : AbstractValidator<TinoTurnCommand>
 /// </summary>
 public static class TinoTools
 {
-    public static IReadOnlyList<AIFunction> For(IEnumerable<IReadTool> reads, FactSheet sheet, List<TinoRead> trace) =>
+    /// <param name="culture">The page's language. Every read is asked in it, whatever
+    /// the model wrote there: which language a fact comes back in is not a model's to choose.</param>
+    public static IReadOnlyList<AIFunction> For(IEnumerable<IReadTool> reads, FactSheet sheet, List<TinoRead> trace, string culture) =>
     [
         .. reads.Where(read => read.Audience == ToolAudience.Shopper).Select(read => (AIFunction)new JsonTool(
             read.Name, read.Description, read.ArgumentsSchema,
-            async (arguments, cancellationToken) =>
+            async (written, cancellationToken) =>
             {
+                var arguments = In(culture, written);
                 var answer = await read.ReadAsync(arguments, cancellationToken);
                 sheet.Add(answer);
-                trace.Add(new TinoRead(read.Name, arguments.Clone(), answer.Rows, answer.Total));
+                trace.Add(new TinoRead(read.Name, arguments, answer.Rows, answer.Total));
                 Activity.Current?.SetTag("tendero.tool.rows", answer.Rows);
 
                 // Inside a data envelope, as Steward's reads: a description reaches the
@@ -136,6 +140,13 @@ public static class TinoTools
                     new { data = answer.Data, rows = answer.Rows, total = answer.Total }, ArgumentSchemas.Json);
             })),
     ];
+
+    private static JsonElement In(string culture, JsonElement written)
+    {
+        var asked = JsonObject.Create(written) ?? [];
+        asked["culture"] = culture;
+        return JsonSerializer.SerializeToElement(asked);
+    }
 }
 
 public sealed class TinoTurnHandler(
@@ -179,15 +190,15 @@ public sealed class TinoTurnHandler(
         // model and not through it: no tool takes an order's id as an argument.
         screen.OrderId = command.Context is { Kind: TinoContextKind.Order } looking ? looking.Key : null;
 
-        var gathering = TinoPrompt.ToGather(command.Culture, command.Context);
-        var composing = TinoPrompt.ToCompose(command.Context);
+        var gathering = TinoPrompt.ToGather(command.Context);
+        var composing = TinoPrompt.ToCompose(command.Culture, command.Context);
         var said = command.Messages.Sum(message => message.Text.Length);
         var candidates = ProfileWalk.Find(services, profiles, settings.Model, settings.Fallback)
             .Select(found => new Candidate(found.Name, found.Client, found.Profile))
             .ToList();
         foreach (var candidate in candidates)
         {
-            candidate.Tools = TinoTools.For(reads, candidate.Sheet, candidate.Reads);
+            candidate.Tools = TinoTools.For(reads, candidate.Sheet, candidate.Reads, command.Culture);
             candidate.Needs = ProfileWalk.Tokens(gathering.Length + JsonTool.Size(candidate.Tools) + said) + settings.MaxOutputTokens;
         }
 
@@ -290,7 +301,7 @@ public sealed class TinoTurnHandler(
             cancellationToken);
 
         // What was written is not an answer: the model's failure, worth another profile.
-        var read = TinoReply.Read(composed.Text, sheet, command.Context)
+        var read = TinoReply.Read(composed.Text, sheet, command.Culture, command.Context)
             ?? throw new UnusableAnswerException("Tino's model wrote nothing that is an answer.");
 
         // And what is an answer is held to its facts before any of it is shown.
@@ -305,13 +316,41 @@ public sealed class TinoTurnHandler(
             throw;
         }
 
-        // An answer that is only sentences, with none of them left, says nothing: the
-        // model's failure, like one that was never an answer. (A product with no
-        // reason left is still a product a read returned.)
-        if (body is { Kind: TinoKind.Shop or TinoKind.Order, Says.Count: 0 })
-            throw new UnusableAnswerException("Nothing Tino's model wrote was said by the fact it cited.");
+        // An answer with nothing left to say says nothing: the model's failure, like
+        // one that was never an answer, and the storefront's search is what there is.
+        var said = Said(body, sheet, command)
+            ?? throw new UnusableAnswerException("Nothing Tino's model wrote was said by the fact it cited.");
 
-        return (body, Cost(candidate, started, gathered, composed));
+        return (said, Cost(candidate, started, gathered, composed));
+    }
+
+    /// <summary>
+    /// What of an answer is still an answer once grounding has dropped what did not
+    /// hold, or null when nothing is. A card with nothing said of it is never shown
+    /// (the author, 2026-10-06): a product left with no reason is left out, and when
+    /// that leaves none, what is true is said by code — on a product's page, that its
+    /// details do not say what was asked; anywhere else, nothing.
+    /// </summary>
+    private static TinoBody? Said(TinoBody body, FactSheet sheet, TinoTurnCommand command)
+    {
+        switch (body)
+        {
+            case { Kind: TinoKind.Shop or TinoKind.Order, Says.Count: 0 }:
+                return null;
+
+            case { Kind: TinoKind.Products }:
+                var explained = body.Products.Where(product => product.Reasons.Count > 0).ToList();
+                if (explained.Count > 0)
+                    return body with { Products = explained };
+
+                return AnswerSchema.OnScreen(sheet, command.Context) is { } shown
+                    ? new TinoBody(TinoKind.NoData, [], [], null,
+                        new NoData(shown.Key, shown.Name, TinoPrompt.DoesNotSay(command.Culture), []), body.Dropped)
+                    : null;
+
+            default:
+                return body;
+        }
     }
 
     /// <summary>What both phases cost; a turn code answered has no composing call.</summary>

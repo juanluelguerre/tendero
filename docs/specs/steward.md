@@ -100,7 +100,13 @@ contexts compute the figures and apply the rules (invariant 12).
 ### The panel
 
 - Opens from **Steward** in the header, or *Ask Steward* in the palette (Ctrl K).
-  420 px beside the content from 1024 px; a full-screen sheet below.
+  420 px beside the content from 1024 px; a full-screen sheet below. *As built,
+  and changed on 2026-10-06 by the author*: docked from 85 rem, the panel stands
+  beside the whole frame — the header and the page's footer included, the window's
+  height — as Tino's stands beside the shop; the header ends at its edge. Until
+  then it sat under a header that spanned the window. **Steward answers in the
+  language of the shopkeeper's screen**, whatever language they write in (the same
+  day, the rule Tino took): prompt `steward-2026-10-06`.
 - Its head names the **screen context** it was opened on (*On: Products · Active*,
   a product's page, an order). The context is sent with each question, so
   "translate this one" needs no code.

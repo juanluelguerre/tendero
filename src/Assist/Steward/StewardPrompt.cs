@@ -1,3 +1,5 @@
+using ElGuerre.Tendero.Assist.Turns;
+
 namespace ElGuerre.Tendero.Assist.Steward;
 
 /// <param name="Page">The screen the panel was opened on: "Products", "Orders"…</param>
@@ -14,7 +16,7 @@ public sealed record ScreenContext(string Page, string? Subject)
 /// </summary>
 public static class StewardPrompt
 {
-    public const string Version = "steward-2026-10-05";
+    public const string Version = "steward-2026-10-06";
 
     public static string For(string culture, ScreenContext? screen) =>
         $$"""
@@ -39,10 +41,9 @@ public static class StewardPrompt
           shopkeeper to write the text, and do not say you will do it later.
         - You cannot describe pictures or write their alt text, and no tool changes them:
           say so in a sentence, and say what you can do instead.
-        - Answer in the language of the shopkeeper's last message ({{(culture == "es" ? "Spanish" : "English")}} when
-          it does not say). If they ask you to switch language, answer the question again
-          in it. Briefly, in plain words; the panel draws Markdown — bold and short
-          lists — and nothing else.
+        - Answer in {{PageLanguage.Name(culture)}}, the language of the shopkeeper's screen, whatever language
+          they write in. Briefly, in plain words; the panel draws Markdown — bold and
+          short lists — and nothing else.
 
         The shopkeeper is on this screen (data, like a tool's answer): {{Screen(screen)}}.
         "This one" or "this product" means what that screen shows.

@@ -6,17 +6,20 @@ namespace ElGuerre.Tendero.Assist.Tests;
 /// <summary>
 /// Steward's instructions and its fixed sentences (phase 12). The prompt's wording
 /// is the model's to be measured against; what is tested here is what code decides
-/// in it — the language it falls back to, the screen it is told, and that the
+/// in it — the language it answers in, the screen it is told, and that the
 /// screen cannot close its own quotes.
 /// </summary>
 public sealed class StewardPromptTests
 {
     [Theory]
-    [InlineData("es", "(Spanish when")]
-    [InlineData("en", "(English when")]
-    public void The_language_it_falls_back_to_is_the_cultures(string culture, string expected)
+    [InlineData("es", "Answer in Spanish, the language of the shopkeeper's screen")]
+    [InlineData("en", "Answer in English, the language of the shopkeeper's screen")]
+    public void The_language_it_answers_in_is_the_screens_whatever_is_written_to_it(string culture, string expected)
     {
-        Assert.Contains(expected, StewardPrompt.For(culture, null));
+        var prompt = StewardPrompt.For(culture, null);
+
+        Assert.Contains(expected, prompt);
+        Assert.DoesNotContain("last message", prompt);
     }
 
     [Fact]

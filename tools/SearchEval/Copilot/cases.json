@@ -424,7 +424,7 @@
         }
       ],
       "proposals": [],
-      "answerLanguage": "es"
+      "answerLanguage": "en"
     },
     {
       "id": "english-under-spanish",
@@ -440,7 +440,7 @@
         }
       ],
       "proposals": [],
-      "answerLanguage": "en"
+      "answerLanguage": "es"
     }
   ]
 }

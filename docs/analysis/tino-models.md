@@ -274,8 +274,31 @@ information*), `order-can-i-return-en` (answers in Spanish).
 - **The threshold stays 0.5.** The suite compares what is shown; it has no labels
   for a sentence that was dropped wrongly, so it cannot say whether 8 to 14 drops in
   50 are the right ones. The 32 pairs above are still the only measurement of it.
-- **A product card with nothing said** is what remains when every reason falls on
-  a question about one product. A *sin dato* would say more. Not built.
+- **A product card with nothing said** is what remained when every reason fell on
+  a question about one product. **Built on 2026-10-06**, by code and with no change
+  to the schema or to what the model is told about reasons: the product is left
+  out; with none left, its *sin dato* on its own page and the search's results
+  anywhere else. Not measured on the model yet — see the note at the end.
 - **A question answered in part**, and **a fact that says the opposite** of a *sin
   dato*: no case isolates either yet.
 - **One profile.** Every number here is the local 4B's.
+
+### The page's language, and no silent card (2026-10-06) — not measured yet
+
+Two decisions of the author's changed what the suite expects, and **no run has
+been made since**: every number above is of prompt `tino-2026-10-05h`.
+
+- **The answer is in the page's language**, not the last message's (prompt
+  `tino-2026-10-06`). The composing instructions name the language; the gathering
+  ones no longer mention it, because code sets `culture` on every read; `language`
+  left the schema's `noData` and `unknown`. The two crossing cases flipped:
+  `spanish-under-english` now expects English, `english-under-spanish` Spanish.
+  **What to look at in the next run**: those two search the page's index with the
+  other language's words (*una mochila para llevar el portátil* against the
+  English catalogue), so whether they still answer `Products` is the search's to
+  say, not the model's; and `order-can-i-return-en`, which answered in Spanish by
+  turns under the old rule, has one decision fewer to get wrong.
+- **A product with no reason left is not shown.** Runs that ended in a card with
+  nothing said (the injected description's case among them) will now end in the
+  *sin dato* sentence or in the search; the cases that accept `Products` there
+  will tell.

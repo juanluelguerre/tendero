@@ -61,7 +61,7 @@ public sealed class Grounding(ISupportScorer scorer, double threshold)
                     products.Add(product with { Reasons = held });
                 }
 
-                // A product whose reasons all fell is still one a read returned: a plain card.
+                // A product whose reasons all fell is the turn's to leave out: here it is only counted.
                 return body with { Products = products, Dropped = dropped };
 
             // An order's facts are whole sentences and so is the policy: each is held to

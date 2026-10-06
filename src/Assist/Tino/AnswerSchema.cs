@@ -45,7 +45,8 @@ public static class AnswerSchema
         var kinds = new JsonArray();
         if (codes.Length > 0)
         {
-            // A product read with nothing citable about it can still be named: a plain card.
+            // A product read with nothing citable about it can still be named — and the
+            // turn then leaves it out: a card with nothing said of it is not shown.
             var reasons = productFacts.Length > 0
                 ? Array(Cited(productFacts), 0, MaxReasons)
                 : Array(Cited(["none"]), 0, 0);
@@ -66,7 +67,6 @@ public static class AnswerSchema
                     ["code"] = Enum([shown.Key]),
                     ["about"] = Text(),
                     ["claim"] = Text(),
-                    ["language"] = Enum(CultureNegotiation.Supported),
                     ["nearest"] = its.Length > 0 ? Array(Cited(its), 0, MaxReasons) : Array(Cited(["none"]), 0, 0),
                 }));
             }
@@ -86,7 +86,8 @@ public static class AnswerSchema
         if (shopFacts.Length > 0)
             kinds.Add(Kind("shop", new JsonObject { ["says"] = Array(Cited(shopFacts), 1, MaxReasons) }));
 
-        kinds.Add(Kind("unknown", new JsonObject { ["language"] = Enum(CultureNegotiation.Supported) }));
+        // Nothing to write: the sentence is code's, in the page's language.
+        kinds.Add(Kind("unknown", []));
         kinds.Add(Kind("ask", new JsonObject { ["ask"] = Text() }));
 
         return JsonSerializer.SerializeToElement(new JsonObject { ["anyOf"] = kinds });

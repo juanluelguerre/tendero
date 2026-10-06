@@ -12,14 +12,14 @@ namespace ElGuerre.Tendero.SearchEval.Copilot;
 /// </summary>
 public sealed record CopilotCases(int Version, IReadOnlyList<CopilotCase> Cases);
 
-/// <param name="Culture">The language the question is asked in: es or en.</param>
+/// <param name="Culture">The language of the screen the question is asked on: es or en.</param>
 /// <param name="Screen">The screen it is asked on; <see cref="CopilotScreen.SubjectProduct"/>
 /// names a product whose code the laboratory fills in, minted at import as it is.</param>
 /// <param name="Tools">The reads it should make, each with the arguments that matter.</param>
 /// <param name="Proposals">What it should store; empty means nothing — a question that
 /// only asks must not propose.</param>
 /// <param name="AnswerLanguage">The language the answer must be in, when the case is about
-/// that: a question in Spanish under an English culture is answered in Spanish (P12-10).</param>
+/// that: a question in Spanish on an English screen is answered in English (the screen's language, 2026-10-06).</param>
 public sealed record CopilotCase(
     string Id,
     string Question,

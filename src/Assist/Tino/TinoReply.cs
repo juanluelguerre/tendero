@@ -23,15 +23,16 @@ public static class TinoReply
 
     private sealed record Written(
         string? Kind, IReadOnlyList<WrittenProduct>? Products, IReadOnlyList<Cited>? Says, string? Ask,
-        string? Code, string? About, string? Claim, string? Language, IReadOnlyList<Cited>? Nearest, string? Order);
+        string? Code, string? About, string? Claim, IReadOnlyList<Cited>? Nearest, string? Order);
 
     private sealed record WrittenProduct(string? Code, IReadOnlyList<Cited>? Reasons);
 
     private sealed record Cited(string? Says, string? Cites);
 
+    /// <param name="culture">The page's language: the one code's own sentences are written in.</param>
     /// <returns>The answer the reply holds, or null when it holds none: not JSON, no
     /// kind, or nothing left once what does not hold was dropped.</returns>
-    public static TinoBody? Read(string? reply, FactSheet sheet, TinoContext? context = null)
+    public static TinoBody? Read(string? reply, FactSheet sheet, string culture, TinoContext? context = null)
     {
         Written? written;
         try
@@ -84,7 +85,7 @@ public static class TinoReply
             case "noData" when AnswerSchema.OnScreen(sheet, context) is { } about
                 && sheet.Product(written.Code)?.Key == about.Key && Completes(written.About):
                 return new(TinoKind.NoData, [], [], null,
-                    new NoData(about.Key, about.Name, TinoPrompt.NoData(Language(written.Language), true, Trimmed(written.About!)),
+                    new NoData(about.Key, about.Name, TinoPrompt.NoData(culture, true, Trimmed(written.About!)),
                         Reasons(written.Nearest, about.Key, sheet, ref dropped)),
                     dropped,
                     // What grounding holds the product's facts against; without one there is nothing to confirm.
@@ -95,7 +96,7 @@ public static class TinoReply
             // nothing the shopper can see for it to be about.
             case "unknown" or "noData":
                 return new(TinoKind.NoData, [], [], null,
-                    new NoData(null, null, TinoPrompt.NoData(Language(written.Language), false, ""), []), dropped);
+                    new NoData(null, null, TinoPrompt.NoData(culture, false, ""), []), dropped);
 
             default:
                 return null;
@@ -139,6 +140,4 @@ public static class TinoReply
         Trimmed(about ?? "") is { Length: > 0 and <= MaxAbout } phrase && phrase.IndexOfAny(['.', ';', ':', '!', '\n']) < 0;
 
     private static string Trimmed(string about) => about.Trim().TrimEnd('.', '?', '!', ' ');
-
-    private static string Language(string? language) => CultureNegotiation.Supports(language) ? language! : CultureNegotiation.Default;
 }

@@ -82,8 +82,12 @@ it cannot show (no "popular", no "best" without the figure and its source).
   typed and checked whole before anything is shown — see below).
 - The composer, and under it the promise: *Tino answers from what this shop has
   verified. It can be wrong about what you meant, never about what it cites.*
-- es and en; the answer follows the language of the last message (P12-10's rule
-  and its scoring, reused).
+- es and en; **the answer is in the page's language**, the one the shopper chose
+  with the shop's switch, whatever language they write in (the author, 2026-10-06:
+  *hi* had got English in a Spanish shop). Code knows it — the culture the endpoint
+  negotiated — so no model decides it: the reads are asked in it, code's own
+  sentences are written in it, and the instructions name it. Steward follows the
+  same rule. Until that day it followed the language of the last message.
 
 ### An answer
 
@@ -135,9 +139,13 @@ Each reason passes three checks, in this order, all in code:
    claim.
 
 A dropped reason is **counted** (`reasonsDropped`, on the turn and in its event),
-never shown, never silently replaced. A product left with no reason is still
-shown if a tool returned it — as a plain card, with no reason — because the
-search found it; a product code no tool returned is dropped. An `ask` may carry no
+never shown, never silently replaced. **A card with nothing said of it is never
+shown** (the author, 2026-10-06; until then it was a plain card): a product left
+with no reason is left out of the answer, and when that leaves none, code says what
+is true — on a product's page, *This product's details don't say what you asked* /
+*La ficha de este producto no indica lo que preguntas*; anywhere else the turn ends
+as the model's failure and the panel shows the search's results for the same
+words. A product code no tool returned is dropped. An `ask` may carry no
 digit and no product name. `noData` is offered by the model and **confirmed by
 code**: it stands only if no fact read this turn supports the opposite.
 
